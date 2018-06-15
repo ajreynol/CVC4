@@ -245,4 +245,27 @@ class TheoryStringsRewriterWhite : public CxxTest::TestSuite
     Node res_a_repl_substr = Rewriter::rewrite(a_repl_substr);
     TS_ASSERT_EQUALS(res_repl_substr_a, res_a_repl_substr);
   }
+
+  void testRewriteIndexOf()
+  {
+    TypeNode strType = d_nm->stringType();
+
+    Node a = d_nm->mkConst(::CVC4::String("A"));
+    Node b = d_nm->mkConst(::CVC4::String("B"));
+    Node x = d_nm->mkVar("x", strType);
+    Node one = d_nm->mkConst(Rational(1));
+
+    // Same normal form for:
+    //
+    // (str.to.int (str.indexof "A" x 1))
+    //
+    // (str.to.int (str.indexof "B" x 1))
+    Node a_idof_x = d_nm->mkNode(kind::STRING_STRIDOF, a, x, one);
+    Node itos_a_idof_x = d_nm->mkNode(kind::STRING_ITOS, a_idof_x);
+    Node b_idof_x = d_nm->mkNode(kind::STRING_STRIDOF, b, x, one);
+    Node itos_b_idof_x = d_nm->mkNode(kind::STRING_ITOS, b_idof_x);
+    Node res_itos_a_idof_x = Rewriter::rewrite(itos_a_idof_x);
+    Node res_itos_b_idof_x = Rewriter::rewrite(itos_b_idof_x);
+    TS_ASSERT_EQUALS(res_itos_a_idof_x, res_itos_b_idof_x);
+  }
 };

@@ -1990,24 +1990,6 @@ Node TheoryStringsRewriter::rewriteIndexof( Node node ) {
           return returnRewrite(node, ret, "idof-def-ctn");
         }
       }
-
-      // strip symbolic length
-      Node new_len = node[2];
-      std::vector<Node> nr;
-      if (stripSymbolicLength(children0, nr, 1, new_len))
-      {
-        // For example:
-        // z>str.len( x1 ) and str.contains( x2, y )-->true
-        // implies
-        // str.indexof( str.++( x1, x2 ), y, z ) --->
-        // str.len( x1 ) + str.indexof( x2, y, z-str.len(x1) )
-        Node nn = mkConcat(kind::STRING_CONCAT, children0);
-        Node ret =
-            nm->mkNode(kind::PLUS,
-                       nm->mkNode(kind::MINUS, node[2], new_len),
-                       nm->mkNode(kind::STRING_STRIDOF, nn, node[1], new_len));
-        return returnRewrite(node, ret, "idof-strip-sym-len");
-      }
     }
     else
     {
@@ -2015,6 +1997,24 @@ Node TheoryStringsRewriter::rewriteIndexof( Node node ) {
       Node negone = nm->mkConst(Rational(-1));
       return returnRewrite(node, negone, "idof-nctn");
     }
+  }
+
+  // strip symbolic length
+  Node new_len = node[2];
+  std::vector<Node> nr;
+  if (stripSymbolicLength(children0, nr, 1, new_len))
+  {
+    // For example:
+    // z>str.len( x1 )
+    // implies
+    // str.indexof( str.++( x1, x2 ), y, z ) --->
+    // str.len( x1 ) + str.indexof( x2, y, z-str.len(x1) )
+    Node nn = mkConcat(kind::STRING_CONCAT, children0);
+    Node ret =
+        nm->mkNode(kind::PLUS,
+                   nm->mkNode(kind::MINUS, node[2], new_len),
+                   nm->mkNode(kind::STRING_STRIDOF, nn, node[1], new_len));
+    return returnRewrite(node, ret, "idof-strip-sym-len");
   }
 
   if (node[2].isConst() && node[2].getConst<Rational>().sgn()==0)
