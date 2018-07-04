@@ -1678,9 +1678,6 @@ Node TheoryStringsRewriter::rewriteContains( Node node ) {
           Node ret = NodeManager::currentNM()->mkConst(false);
           return returnRewrite(node, ret, "ctn-lhs-emptystr");
         }
-        // contains( "", x ) ---> ( "" = x )
-        Node ret = node[0].eqNode(node[1]);
-        return returnRewrite(node, ret, "ctn-lhs-emptystr-eq");
       }
       else if (node[1].getKind() == kind::STRING_CONCAT)
       {
@@ -1823,6 +1820,7 @@ Node TheoryStringsRewriter::rewriteContains( Node node ) {
       }
     }
     Trace("strings-rewrite-multiset") << "For " << node << " : " << std::endl;
+    bool sameConst = true;
     for (const Node& ch : chars)
     {
       Trace("strings-rewrite-multiset") << "  # occurrences of substring ";
@@ -1834,7 +1832,66 @@ Node TheoryStringsRewriter::rewriteContains( Node node ) {
         Node ret = NodeManager::currentNM()->mkConst(false);
         return returnRewrite(node, ret, "ctn-mset-nss");
       }
+      else if (count_const[0][ch] > count_const[1][ch])
+      {
+        sameConst = false;
+      }
     }
+
+    if (sameConst)
+    {
+      // At this point, we know that both the first and the second argument
+      // both contain the same constants. Now we can check if there are
+      // non-const components that appear in the second argument but not the
+      // first. If there are, we know that the str.contains is true iff those
+      // components are empty, so we can pull them out of the str.contains. For
+      // example:
+      //
+      // (str.contains (str.++ "A" x) (str.++ y x "A")) -->
+      //   (and (str.contains (str.++ "A" x) (str.++ x "A")) (= y ""))
+      //
+      // These equalities can be used by other rewrites for subtitutions.
+
+      // Find all non-const components that appear in the second argument but
+      // not the first
+      std::unordered_set<Node, NodeHashFunction> nConstEmpty;
+      for (std::pair<const Node, unsigned>& nncp : num_nconst[1])
+      {
+        if (nncp.second > num_nconst[0][nncp.first])
+        {
+          nConstEmpty.insert(nncp.first);
+        }
+      }
+
+      // Check if there are any non-const components that must be empty
+      if (nConstEmpty.size() > 0)
+      {
+        // Generate str.contains of the (potentially) non-empty parts
+        std::vector<Node> cs;
+        std::vector<Node> nnc2;
+        for (const Node& n : nc2)
+        {
+          if (nConstEmpty.find(n) == nConstEmpty.end())
+          {
+            nnc2.push_back(n);
+          }
+        }
+        cs.push_back(nm->mkNode(
+            kind::STRING_STRCTN, node[0], mkConcat(kind::STRING_CONCAT, nnc2)));
+
+        // Generate equalities for the parts that must be empty
+        Node emptyStr = nm->mkConst(String(""));
+        for (const Node& n : nConstEmpty)
+        {
+          cs.push_back(nm->mkNode(kind::EQUAL, n, emptyStr));
+        }
+
+        Assert(cs.size() >= 2);
+        Node res = nm->mkNode(kind::AND, cs);
+        return returnRewrite(node, res, "ctn-mset-substs");
+      }
+    }
+
     // TODO (#1180): count the number of 2,3,4,.. character substrings
     // for example:
     // str.contains( str.++( x, "cbabc" ), str.++( "cabbc", x ) ) ---> false
@@ -1842,6 +1899,7 @@ Node TheoryStringsRewriter::rewriteContains( Node node ) {
     // note this is orthogonal reasoning to inductive reasoning
     // via regular membership reduction in Liang et al CAV 2015.
   }
+
   // TODO (#1180): abstract interpretation with multi-set domain
   // to show first argument is a strict subset of second argument
 
@@ -2159,23 +2217,6 @@ Node TheoryStringsRewriter::rewriteReplace( Node node ) {
     }
   }
 
-  if (node[0].isConst())
-  {
-    // str.replace( "", x, t ) ---> str.replace( "", x, t{x->""} )
-    CVC4::String s = node[0].getConst<String>();
-    if (s.empty())
-    {
-      TNode v = node[1];
-      TNode s = node[0];
-      Node sn2 = node[2].substitute(v, s);
-      if (sn2 != node[2])
-      {
-        Node ret = nm->mkNode(STRING_STRREPL, node[0], node[1], sn2);
-        return returnRewrite(node, ret, "repl-empty-subs");
-      }
-    }
-  }
-
   if (node[0] == node[2])
   {
     // ( len( y )>=len(x) ) => str.replace( x, y, x ) ---> x
@@ -2239,6 +2280,61 @@ Node TheoryStringsRewriter::rewriteReplace( Node node ) {
     {
       // ~contains( t, s ) => ( replace( t, s, r ) ----> t )
       return returnRewrite(node, node[0], "rpl-nctn");
+    }
+  }
+  else if (cmp_conr.getKind() == kind::EQUAL || cmp_conr.getKind() == kind::AND)
+  {
+    // Rewriting the str.contains may return equalities of the form (= x "").
+    // In that case, we can substitute the variables appearing in those
+    // equalities with the empty string in the third argument of the
+    // str.replace. For example:
+    //
+    // (str.replace x (str.++ x y) y) --> (str.replace x (str.++ x y) "")
+    //
+    // This can be done because str.replace changes x iff (str.++ x y) is in x
+    // but that means that y must be empty in that case. Thus, we can
+    // substitute y with "" in the third argument. Note that the third argument
+    // does not matter when the str.replace does not apply.
+    //
+    Node empty = nm->mkConst(::CVC4::String(""));
+
+    // Collect the equalities of the form (= x "")
+    std::set<TNode> emptyNodes;
+    if (cmp_conr.getKind() == kind::EQUAL)
+    {
+      if (cmp_conr[0] == empty)
+      {
+        emptyNodes.insert(cmp_conr[1]);
+      }
+      else if (cmp_conr[1] == empty)
+      {
+        emptyNodes.insert(cmp_conr[0]);
+      }
+    }
+    else
+    {
+      for (const Node& c : cmp_conr)
+      {
+        if (c[0] == empty)
+        {
+          emptyNodes.insert(c[1]);
+        }
+        else if (c[1] == empty)
+        {
+          emptyNodes.insert(c[0]);
+        }
+      }
+    }
+
+    if (emptyNodes.size() > 0)
+    {
+      // Perform the substitutions
+      std::vector<TNode> substs(emptyNodes.size(), TNode(empty));
+      Node nn2 = node[2].substitute(
+          emptyNodes.begin(), emptyNodes.end(), substs.begin(), substs.end());
+
+      Node res = nm->mkNode(kind::STRING_STRREPL, node[0], node[1], nn2);
+      return returnRewrite(node, res, "rpl-cnts-substs");
     }
   }
 
