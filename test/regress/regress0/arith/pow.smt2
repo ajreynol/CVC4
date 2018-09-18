@@ -1,0 +1,8 @@
+(set-logic ALL)
+(declare-fun a () Int)
+(declare-fun b () Int)
+(declare-fun c () Int)
+(declare-fun x () Real)
+(assert (= c (^ a b)))
+(assert (= x (sin (+ x 1))))
+(check-sat)
