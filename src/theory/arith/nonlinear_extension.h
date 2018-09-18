@@ -696,6 +696,9 @@ class NonlinearExtension {
   * which the current model value for an argument of an
   * application of a transcendental function resides.
   *
+  * For pow(a,b):
+  *	region #1 is 0<= a,b <= infty
+  *
   * For exp( x ):
   *   region #1 is -infty < x < infty
   * For sin( x ):

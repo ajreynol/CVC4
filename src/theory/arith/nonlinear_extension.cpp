@@ -3934,6 +3934,7 @@ std::vector<Node> NonlinearExtension::checkTranscendentalMonotonic() {
   for (std::pair<const Kind, std::vector<Node> >& tfl : d_f_map)
   {
     Kind k = tfl.first;
+    std::cout << "panda k " << k << std::endl;
     if (k == EXPONENTIAL || k == SINE)
     {
       for (const Node& tf : tfl.second)
@@ -3947,6 +3948,24 @@ std::vector<Node> NonlinearExtension::checkTranscendentalMonotonic() {
           sorted_tf_args[k].push_back(a);
           tf_arg_to_term[k][a] = tf;
         }
+      }
+    } else if (k == POW) {
+      for (const Node& tf : tfl.second)
+      {
+	    Node a = tf[0];
+	    Node b = tf[1];
+	    computeModelValue(a, 1);
+	    computeModelValue(b, 1);
+	    Assert(d_mv[1].find(a) != d_mv[1].end());
+	    Assert(d_mv[1].find(b) != d_mv[1].end());
+	    if (d_mv[1][a].isConst() && d_mv[1][b].isConst()) {
+		    Trace("nl-ext-tf-mono-debug") << "...tf term : " << a << std::endl;
+		    Trace("nl-ext-tf-mono-debug") << "...tf term : " << b << std::endl;
+		    sorted_tf_args[k].push_back(a);
+		    sorted_tf_args[k].push_back(b);
+		    tf_arg_to_term[k][a] = tf;
+		    tf_arg_to_term[k][b] = tf;
+	    }
       }
     }
   }
@@ -3984,6 +4003,11 @@ std::vector<Node> NonlinearExtension::checkTranscendentalMonotonic() {
       else if (k == EXPONENTIAL)
       {
         mpoints.push_back( Node::null() );
+      }
+      else if (k == POW) {
+	mpoints.push_back(d_zero);
+	mpoints.push_back(d_one);
+	mpoints.push_back(d_two);
       }
       if( !mpoints.empty() ){
         //get model values for points
@@ -4103,6 +4127,11 @@ std::vector<Node> NonlinearExtension::checkTranscendentalTangentPlanes()
       // initial approximation is superior.
       continue;
     }
+    if (k == POW)
+    { 
+	    continue;
+	    //We currently do not use Taylor approximation for POW
+    }
     Trace("nl-ext-tftp-debug2") << "Taylor variables: " << std::endl;
     Trace("nl-ext-tftp-debug2")
         << "          taylor_real_fv : " << d_taylor_real_fv << std::endl;
@@ -4146,6 +4175,9 @@ std::vector<Node> NonlinearExtension::checkTranscendentalTangentPlanes()
 
 bool NonlinearExtension::isRefineableTfFun(Node tf)
 {
+  if (tf.getKind() == POW) {
+	  return false;
+  }
   Assert(tf.getKind() == SINE || tf.getKind() == EXPONENTIAL);
   if (tf.getKind() == SINE)
   {
@@ -4503,6 +4535,12 @@ int NonlinearExtension::regionToMonotonicityDir(Kind k, int region)
     {
       return 1;
     }
+  }
+  else if (k == POW)
+  {
+	  if (region == 1) {
+		  return 1;
+	  }
   }
   return 0;
 }
