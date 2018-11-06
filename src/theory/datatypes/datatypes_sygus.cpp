@@ -1032,7 +1032,26 @@ Node SygusSymBreakNew::registerSearchValue(Node a,
                             << ", type=" << tn << std::endl;
     Node bv = d_tds->sygusToBuiltin(cnv, tn);
     Trace("sygus-sb-debug") << "  ......builtin is " << bv << std::endl;
-    Node bvr = d_tds->getExtRewriter()->extendedRewrite(bv);
+    Node bvr = bv;
+    if( options::sygusSymBreakEvalOnly() )
+    {
+      bool allConstArg = true;
+      for( const Node& bvrc : bvr )
+      {
+        if( !bvrc.isConst() )
+        {
+          allConstArg = false;
+        }
+      }
+      if( allConstArg )
+      {
+        bvr = Rewriter::rewrite(bvr);
+      }
+    }
+    else
+    {
+      bvr = d_tds->getExtRewriter()->extendedRewrite(bv);
+    }
     Trace("sygus-sb-debug") << "  ......search value rewrites to " << bvr << std::endl;
     Trace("dt-sygus") << "  * DT builtin : " << n << " -> " << bvr << std::endl;
     unsigned sz = d_tds->getSygusTermSize( nv );      

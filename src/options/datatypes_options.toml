@@ -113,6 +113,15 @@ header = "options/datatypes_options.h"
   help       = "dynamic sygus symmetry breaking lemmas"
 
 [[option]]
+  name       = "sygusSymBreakEvalOnly"
+  category   = "regular"
+  long       = "sygus-sym-break-eval-only"
+  type       = "bool"
+  default    = "true"
+  read_only  = true
+  help       = "only use evaluation for dynamic sygus symmetry breaking lemmas"
+
+[[option]]
   name       = "sygusSymBreakPbe"
   category   = "regular"
   long       = "sygus-sym-break-pbe"
