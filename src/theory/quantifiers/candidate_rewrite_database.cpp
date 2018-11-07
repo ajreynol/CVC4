@@ -208,7 +208,7 @@ bool CandidateRewriteDatabase::addTerm(Node sol,
         }        
         static unsigned counter = 1;
         std::stringstream ss;
-        ss << "./str-term-small/str-term-small_" << counter << ".smt2";
+        ss << "./str-term-small-rw/str-term-small-rw_" << counter << ".smt2";
         counter++;
         Printer* p = Printer::getPrinter(options::outputLanguage());
         out << "Write file " << ss.str() << std::endl;
