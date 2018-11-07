@@ -205,7 +205,26 @@ bool CandidateRewriteDatabase::addTerm(Node sol,
             out << sol << " " << eq_sol;
           }
           out << ")" << std::endl;
-        }
+        }        
+        static unsigned counter = 1;
+        std::stringstream ss;
+        ss << "./str-term-small/str-term-small_" << counter << ".smt2";
+        counter++;
+        Printer* p = Printer::getPrinter(options::outputLanguage());
+        out << "Write file " << ss.str() << std::endl;
+        std::fstream str;
+        str.open(ss.str().c_str(),std::ios::out);
+        str << "(set-logic QF_S)" << std::endl;
+        str << "(declare-fun x () String)" << std::endl;
+        str << "(declare-fun y () String)" << std::endl;
+        str << "(declare-fun z () Int)" << std::endl;
+        str << "(assert (not (= ";
+        p->toStreamSygus(str, sol);
+        str << " ";
+        p->toStreamSygus(str, eq_sol);
+        str << ")))" << std::endl;
+        str << "(check-sat)" << std::endl;
+        str.close(); 
         // we count this as printed, despite not literally printing it
         rew_print = true;
         // debugging information
