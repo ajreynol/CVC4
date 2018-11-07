@@ -310,7 +310,26 @@ bool SygusEnumerator::TermCache::addTerm(Node n)
   if (options::sygusSymBreakDynamic())
   {
     Node bn = d_tds->sygusToBuiltin(n);
-    Node bnr = d_tds->getExtRewriter()->extendedRewrite(bn);
+    Node bnr = bn;
+    if( options::sygusSymBreakEvalOnly() )
+    {
+      bool allConstArg = true;
+      for( const Node& bnrc : bnr )
+      {
+        if( !bnrc.isConst() )
+        {
+          allConstArg = false;
+        }
+      }
+      if( allConstArg )
+      {
+        bnr = Rewriter::rewrite(bnr);
+      }
+    }
+    else
+    {
+      bnr = d_tds->getExtRewriter()->extendedRewrite(bn);
+    }
     // must be unique up to rewriting
     if (d_bterms.find(bnr) != d_bterms.end())
     {
