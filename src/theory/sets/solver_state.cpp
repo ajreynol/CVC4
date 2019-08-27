@@ -575,6 +575,19 @@ void SolverState::debugPrintSet(Node s, const char* c) const
   }
 }
 
+const vector<Node> SolverState::getSetsEqClasses(const TypeNode & t) const
+{
+    vector<Node> representatives;
+    for(const auto eqc : getSetsEqClasses())
+    {
+        if(eqc.getType().getSetElementType() == t)
+        {
+            representatives.push_back(eqc);
+        }
+    }
+    return representatives;
+}
+
 }  // namespace sets
 }  // namespace theory
 }  // namespace CVC4

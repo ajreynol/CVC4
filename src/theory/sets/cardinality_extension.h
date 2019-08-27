@@ -302,6 +302,11 @@ class CardinalityExtension
    * function.
    */
   void checkNormalForm(Node eqc, std::vector<Node>& intro_sets);
+  /**
+   * add a constraint (subset S (as univset t) for each equivalent
+   * class S whose elements have type t
+   */
+  void assertUnivSetSubsetConstraints(TypeNode & t);
   /** element types of sets for which cardinality is enabled */
   std::map<TypeNode, bool> d_t_card_enabled;
   /**

@@ -123,6 +123,9 @@ class SolverState
   bool isCongruent(Node n) const;
   /** Get the list of all equivalence classes of set type */
   const std::vector<Node>& getSetsEqClasses() const { return d_set_eqc; }
+    /** Get the list of all equivalence classes of set type that have type t */
+  const std::vector<Node> getSetsEqClasses(const TypeNode& t) const;
+
   /**
    * Get the list of non-variable sets that exists in the equivalence class
    * whose representative is r.
@@ -200,10 +203,12 @@ class SolverState
   /** debug print set */
   void debugPrintSet(Node s, const char* c) const;
 
- private:
   /** constants */
   Node d_true;
   Node d_false;
+
+private:
+
   /** the empty vector and map */
   std::vector<Node> d_emptyVec;
   std::map<Node, Node> d_emptyMap;

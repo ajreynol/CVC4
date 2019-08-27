@@ -63,10 +63,28 @@ void CardinalityExtension::registerTerm(Node n)
     ss << "ERROR: cannot use cardinality on sets with finite element "
           "type (term is "
        << n << ")." << std::endl;
-    throw LogicException(ss.str());
+    assertUnivSetSubsetConstraints(tnc);
     // TODO (#1123): extend approach for this case
   }
   Trace("sets-card-debug") << "...finished register term" << std::endl;
+}
+
+void CardinalityExtension::assertUnivSetSubsetConstraints(TypeNode & t)
+{
+  // get the universe set of this type;
+  Node univ = d_state.getUnivSet(t);
+  // get all equivalent classes of type t
+  vector<Node> representatives = d_state.getSetsEqClasses(t);
+  // add new lemmas for subset constraints
+  NodeManager* nm = NodeManager::currentNM();
+  for(const auto & representative : representatives)
+  {
+    if(representative != univ) // exclude this trivial case
+    {
+      Node subset = nm->mkNode(kind::SUBSET, representative, univ);
+      d_im.assertInference(subset, d_state.d_true, "UnivSet cardinality", 0);
+    }
+  }
 }
 
 void CardinalityExtension::check()
@@ -905,6 +923,8 @@ void CardinalityExtension::mkModelValueElementsFor(
     }
   }
 }
+
+
 
 }  // namespace sets
 }  // namespace theory
