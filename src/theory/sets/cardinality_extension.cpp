@@ -13,6 +13,7 @@
  ** cardinality constraints.
  **/
 
+
 #include "theory/sets/cardinality_extension.h"
 
 #include "expr/emptyset.h"
@@ -20,6 +21,7 @@
 #include "options/sets_options.h"
 #include "theory/sets/normal_form.h"
 #include "theory/valuation.h"
+
 
 using namespace std;
 using namespace CVC4::kind;
@@ -71,18 +73,43 @@ void CardinalityExtension::registerTerm(Node n)
 
 void CardinalityExtension::assertUnivSetSubsetConstraints(TypeNode & t)
 {
-  // get the universe set of this type;
-  Node univ = d_state.getUnivSet(t);
+  //ToDo: make sure this function is noop when t is already processed.
+  NodeManager* nm = NodeManager::currentNM();
+
+  // get the universe set of type t
+  Node univ = d_state.getUnivSet(nm->mkSetType(t)); // ToDo: investigate refactoring nm->mkSetType
   // get all equivalent classes of type t
   vector<Node> representatives = d_state.getSetsEqClasses(t);
+  // get the cardinality of the finite type t
+
+  Cardinality card = t.getCardinality();
+  if(! card.isFinite())
+  {
+    std::stringstream message;
+    message << "ERROR: the cardinality of type '" << t << "' is not supported" << std::endl;
+    throw LogicException(message.str());
+  }
+  int typeCardinality = card.getFiniteCardinality().getSignedInt();
+  if(typeCardinality <= 0)
+  {
+    std::stringstream message;
+    message << "ERROR: type '" << t << "' has cardinality " << typeCardinality << std::endl;
+    throw LogicException(message.str());
+  }
+
+  Node cardinalityNode = nm->mkConst<Rational>(typeCardinality);
   // add new lemmas for subset constraints
-  NodeManager* nm = NodeManager::currentNM();
   for(const auto & representative : representatives)
   {
     if(representative != univ) // exclude this trivial case
     {
       Node subset = nm->mkNode(kind::SUBSET, representative, univ);
+      // true => representative is a subset of the univ
       d_im.assertInference(subset, d_state.d_true, "UnivSet cardinality", 0);
+      // true => card univ <= typeCardinality
+      Node cardUniv = nm->mkNode(kind::CARD, univ);
+      Node leq = nm->mkNode(kind::LEQ, cardUniv, cardinalityNode);
+      d_im.assertInference(leq, d_state.d_true, "type cardinality", 1);
     }
   }
 }
