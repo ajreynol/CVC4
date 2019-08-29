@@ -87,9 +87,13 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   Assert(t.isInterpretedFinite());
   NodeManager* nm = NodeManager::currentNM();
   // get the universe set of type t
-  Node univ = d_state.getUnivSet(nm->mkSetType(t)); // ToDo: investigate refactoring nm->mkSetType
+  // ToDo: investigate refactoring nm->mkSetType
+  Node univ = d_state.getUnivSet(nm->mkSetType(t));
+  // Force cvc4 to build the cardinality graph for the universe set
+  univ = d_state.getProxy(univ);
   // get all equivalent classes of type t
   vector<Node> representatives = d_state.getSetsEqClasses(t);
+  //ToDo: handle the case when representatives are changed
   // get the cardinality of the finite type t
   Cardinality card = t.getCardinality();
   Node typeCardinality = nm->mkConst(Rational(card.getFiniteCardinality()));

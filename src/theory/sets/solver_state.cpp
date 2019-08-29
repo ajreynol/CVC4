@@ -391,7 +391,7 @@ Node SolverState::getProxy(Node n)
 {
   Kind nk = n.getKind();
   if (nk != EMPTYSET && nk != SINGLETON && nk != INTERSECTION && nk != SETMINUS
-      && nk != UNION)
+      && nk != UNION && nk != UNIVERSE_SET)
   {
     return n;
   }
