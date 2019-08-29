@@ -303,10 +303,16 @@ class CardinalityExtension
    */
   void checkNormalForm(Node eqc, std::vector<Node>& intro_sets);
   /**
-   * add a constraint (subset S (as univset t) for each equivalent
-   * class S whose elements have type t
+   * add cardinality lemmas for each finite type
    */
-  void assertUnivSetSubsetConstraints(TypeNode & t);
+  void checkFiniteTypes();
+
+  /**
+   * add 2 lemmas for the finite type t:
+   * 1- (=> true (subset S (as univset t)) where S is a set term of type t
+   * 2- (=> true (<= (card (as univset t)) n) where n is the cardinality of t
+   */
+  void checkFiniteType(TypeNode & t);
   /** element types of sets for which cardinality is enabled */
   std::map<TypeNode, bool> d_t_card_enabled;
   /**

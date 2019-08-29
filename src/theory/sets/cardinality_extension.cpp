@@ -65,39 +65,35 @@ void CardinalityExtension::registerTerm(Node n)
     ss << "ERROR: cannot use cardinality on sets with finite element "
           "type (term is "
        << n << ")." << std::endl;
-    assertUnivSetSubsetConstraints(tnc);
     // TODO (#1123): extend approach for this case
   }
   Trace("sets-card-debug") << "...finished register term" << std::endl;
 }
 
-void CardinalityExtension::assertUnivSetSubsetConstraints(TypeNode & t)
+void CardinalityExtension::checkFiniteTypes()
 {
-  //ToDo: make sure this function is noop when t is already processed.
-  NodeManager* nm = NodeManager::currentNM();
+  for(std::pair<const TypeNode, bool> & pair: d_t_card_enabled)
+  {
+    TypeNode type = pair.first;
+    if(pair.second && type.isInterpretedFinite())
+    {
+      checkFiniteType(type);
+    }
+  }
+}
 
+void CardinalityExtension::checkFiniteType(TypeNode & t)
+{
+  Assert(t.isInterpretedFinite());
+  NodeManager* nm = NodeManager::currentNM();
   // get the universe set of type t
   Node univ = d_state.getUnivSet(nm->mkSetType(t)); // ToDo: investigate refactoring nm->mkSetType
   // get all equivalent classes of type t
   vector<Node> representatives = d_state.getSetsEqClasses(t);
   // get the cardinality of the finite type t
-
   Cardinality card = t.getCardinality();
-  if(! card.isFinite())
-  {
-    std::stringstream message;
-    message << "ERROR: the cardinality of type '" << t << "' is not supported" << std::endl;
-    throw LogicException(message.str());
-  }
-  int typeCardinality = card.getFiniteCardinality().getSignedInt();
-  if(typeCardinality <= 0)
-  {
-    std::stringstream message;
-    message << "ERROR: type '" << t << "' has cardinality " << typeCardinality << std::endl;
-    throw LogicException(message.str());
-  }
+  Node typeCardinality = nm->mkConst(Rational(card.getFiniteCardinality()));
 
-  Node cardinalityNode = nm->mkConst<Rational>(typeCardinality);
   // add new lemmas for subset constraints
   for(const auto & representative : representatives)
   {
@@ -105,10 +101,10 @@ void CardinalityExtension::assertUnivSetSubsetConstraints(TypeNode & t)
     {
       Node subset = nm->mkNode(kind::SUBSET, representative, univ);
       // true => representative is a subset of the univ
-      d_im.assertInference(subset, d_state.d_true, "UnivSet cardinality", 0);
+      d_im.assertInference(subset, d_state.d_true, "UnivSet cardinality", 1);
       // true => card univ <= typeCardinality
       Node cardUniv = nm->mkNode(kind::CARD, univ);
-      Node leq = nm->mkNode(kind::LEQ, cardUniv, cardinalityNode);
+      Node leq = nm->mkNode(kind::LEQ, cardUniv, typeCardinality);
       d_im.assertInference(leq, d_state.d_true, "type cardinality", 1);
     }
   }
@@ -116,6 +112,7 @@ void CardinalityExtension::assertUnivSetSubsetConstraints(TypeNode & t)
 
 void CardinalityExtension::check()
 {
+  checkFiniteTypes();
   checkRegister();
   if (d_im.hasProcessed())
   {
