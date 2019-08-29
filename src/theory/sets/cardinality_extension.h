@@ -349,6 +349,11 @@ class CardinalityExtension
    * ( A ^ B ), and (B \ A).
    */
   std::map<Node, Node> d_localBase;
+
+  /**
+   * a map to story proxy nodes for the universe sets
+   */
+  std::map<Node, Node> d_univProxy;
 }; /* class CardinalityExtension */
 
 }  // namespace sets

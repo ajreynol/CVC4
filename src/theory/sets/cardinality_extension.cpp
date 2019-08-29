@@ -89,8 +89,16 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   // get the universe set of type t
   // ToDo: investigate refactoring nm->mkSetType
   Node univ = d_state.getUnivSet(nm->mkSetType(t));
+  std::map<Node, Node>::iterator it = d_univProxy.find(univ);
+  if(it != d_univProxy.end())
+  {
+    return;
+  }
+
   // Force cvc4 to build the cardinality graph for the universe set
-  univ = d_state.getProxy(univ);
+  Node proxy = d_state.getProxy(univ);
+  d_univProxy[univ] = proxy;
+
   // get all equivalent classes of type t
   vector<Node> representatives = d_state.getSetsEqClasses(t);
   //ToDo: handle the case when representatives are changed
@@ -103,11 +111,11 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   {
     if(representative != univ) // exclude this trivial case
     {
-      Node subset = nm->mkNode(kind::SUBSET, representative, univ);
+      Node subset = nm->mkNode(kind::SUBSET, representative, proxy);
       // true => representative is a subset of the univ
       d_im.assertInference(subset, d_state.d_true, "UnivSet cardinality", 1);
       // true => card univ <= typeCardinality
-      Node cardUniv = nm->mkNode(kind::CARD, univ);
+      Node cardUniv = nm->mkNode(kind::CARD, proxy);
       Node leq = nm->mkNode(kind::LEQ, cardUniv, typeCardinality);
       d_im.assertInference(leq, d_state.d_true, "type cardinality", 1);
     }
