@@ -21,7 +21,7 @@
 #include "options/sets_options.h"
 #include "theory/sets/normal_form.h"
 #include "theory/valuation.h"
-
+#include "theory/type_set.h"
 
 using namespace std;
 using namespace CVC4::kind;
@@ -929,9 +929,26 @@ void CardinalityExtension::mkModelValueElementsFor(
       unsigned vu = v.getConst<Rational>().getNumerator().toUnsignedInt();
       Assert(els.size() <= vu);
       NodeManager* nm = NodeManager::currentNM();
+      TypeSet typeSet;
+      if(elementType.isInterpretedFinite())
+      {
+        for(const Node & element: els)
+        {
+          typeSet.add(elementType, element);
+        }
+      }
       while (els.size() < vu)
       {
-        els.push_back(nm->mkNode(SINGLETON, nm->mkSkolem("msde", elementType)));
+        if(elementType.isInterpretedFinite())
+        {
+          // here we can safely enumerate the finite type to get a unique element in each iteration
+          Node element = nm->mkNode(SINGLETON, typeSet.nextTypeEnum(elementType));
+          els.push_back(element);
+        }
+        else
+        {
+          els.push_back(nm->mkNode(SINGLETON, nm->mkSkolem("msde", elementType)));
+        }
       }
     }
     else
