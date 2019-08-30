@@ -932,18 +932,59 @@ void CardinalityExtension::mkModelValueElementsFor(
       TypeSet typeSet;
       if(elementType.isInterpretedFinite())
       {
-        for(const Node & element: els)
+        vector<Node> & constants = d_finite_type_elements[elementType];
+        for(const Node & it : els)
         {
-          typeSet.add(elementType, element);
+          Assert(it.getKind() == SINGLETON);
+          Node element = it[0];
+          Assert(d_ee.getRepresentative(element) == element);
+          if(std::find(constants.begin(), constants.end(), element) != constants.end())
+          {
+            continue;
+          }
+          if(element.isConst())
+          {
+            // add the element to the constants list
+            constants.push_back(element);
+            continue;
+          }
+
+          if(element.getKind() == SKOLEM)
+          {
+            //ToDo: check if there is a constant in the equivalence class
+            // assign a constant to this skolem element
+            Node constant = typeSet.nextTypeEnum(elementType);
+            //ToDo: review this need for this
+            d_state.registerTerm(element, elementType, constant);
+            typeSet.add(elementType, element);
+            constants.push_back(element);
+            continue;
+          }
+
+          std::stringstream ss;
+          ss << "This finite element " << element << " of kind " << element.getKind()
+             << " is not yet supported"<< std::endl;
+          throw LogicException(ss.str());
         }
       }
       while (els.size() < vu)
       {
         if(elementType.isInterpretedFinite())
         {
-          // here we can safely enumerate the finite type to get a unique element in each iteration
-          Node element = nm->mkNode(SINGLETON, typeSet.nextTypeEnum(elementType));
-          els.push_back(element);
+          // At this point we are sure the formula is satisfiable and all cardinality constraints are satisfied.
+          // Since this type is finite, there is a single cardinality graph for all sets of this type because
+          // the cardinality of the universe set was added by CardinalityExtension::checkFiniteType.
+          // This means we have enough slack elements for each disjoint leaf in the cardanlity graph.
+          // Therefore we can safely enumerate the finite type to get a unique element in each iteration.
+          vector<Node> & constants = d_finite_type_elements[elementType];
+          Node constant;
+          do
+          {
+            constant = typeSet.nextTypeEnum(elementType);
+          }
+          while(std::find(constants.begin(), constants.end(), constant) != constants.end());
+          Node singleton = nm->mkNode(SINGLETON, constant);
+          els.push_back(singleton);
         }
         else
         {

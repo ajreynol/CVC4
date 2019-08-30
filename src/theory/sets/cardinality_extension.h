@@ -351,9 +351,14 @@ class CardinalityExtension
   std::map<Node, Node> d_localBase;
 
   /**
-   * a map to story proxy nodes for the universe sets
+   * a map to store proxy nodes for the universe sets
    */
   std::map<Node, Node> d_univProxy;
+
+  /**
+   * a map to store the elements used so far for each finite type
+   */
+  std::map<TypeNode, std::vector<Node> > d_finite_type_elements;
 }; /* class CardinalityExtension */
 
 }  // namespace sets
