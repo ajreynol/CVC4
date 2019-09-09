@@ -21,7 +21,6 @@
 #include "options/sets_options.h"
 #include "theory/sets/normal_form.h"
 #include "theory/valuation.h"
-#include "theory/type_set.h"
 
 using namespace std;
 using namespace CVC4::kind;
@@ -929,9 +928,9 @@ void CardinalityExtension::mkModelValueElementsFor(
       unsigned vu = v.getConst<Rational>().getNumerator().toUnsignedInt();
       Assert(els.size() <= vu);
       NodeManager* nm = NodeManager::currentNM();
-      TypeSet typeSet;
       if(elementType.isInterpretedFinite())
       {
+        // get all constants of this type encountered so far
         vector<Node> & constants = d_finite_type_elements[elementType];
         for(const Node & it : els)
         {
@@ -940,23 +939,34 @@ void CardinalityExtension::mkModelValueElementsFor(
           Assert(d_ee.getRepresentative(element) == element);
           if(std::find(constants.begin(), constants.end(), element) != constants.end())
           {
+            // the constant is already in the map
             continue;
           }
           if(element.isConst())
           {
             // add the element to the constants list
             constants.push_back(element);
+            d_finite_symbolic_constant[element] = element;
             continue;
           }
 
           if(element.getKind() == SKOLEM)
           {
-            //ToDo: check if there is a constant in the equivalence class
-            // assign a constant to this skolem element
-            Node constant = typeSet.nextTypeEnum(elementType);
-            //ToDo: review this need for this
-            d_state.registerTerm(element, elementType, constant);
-            typeSet.add(elementType, element);
+            // assign a new constant to this skolem element
+            Node constant = d_finite_type_enumerator.nextTypeEnum(elementType);
+
+            //ToDo: review the performance of this
+            eq::EqClassIterator eqcIterator = eq::EqClassIterator(element, & d_ee);
+
+            while( !eqcIterator.isFinished() )
+            {
+              Node node = (*eqcIterator);
+              d_finite_symbolic_constant[node] = constant;
+              Trace("sets-model") << "Skolem element " << node << " = " << constant << std::endl;
+              ++eqcIterator;
+            }
+
+            Trace("sets-model") << "Skolem element " << element << " = " << constant << std::endl;
             constants.push_back(element);
             continue;
           }
@@ -974,13 +984,13 @@ void CardinalityExtension::mkModelValueElementsFor(
           // At this point we are sure the formula is satisfiable and all cardinality constraints are satisfied.
           // Since this type is finite, there is a single cardinality graph for all sets of this type because
           // the cardinality of the universe set was added by CardinalityExtension::checkFiniteType.
-          // This means we have enough slack elements for each disjoint leaf in the cardanlity graph.
+          // This means we have enough slack elements for each disjoint leaf in the cardinality graph.
           // Therefore we can safely enumerate the finite type to get a unique element in each iteration.
           vector<Node> & constants = d_finite_type_elements[elementType];
           Node constant;
           do
           {
-            constant = typeSet.nextTypeEnum(elementType);
+            constant = d_finite_type_enumerator.nextTypeEnum(elementType);
           }
           while(std::find(constants.begin(), constants.end(), constant) != constants.end());
           Node singleton = nm->mkNode(SINGLETON, constant);

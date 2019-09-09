@@ -22,6 +22,7 @@
 #include "theory/sets/inference_manager.h"
 #include "theory/sets/solver_state.h"
 #include "theory/uf/equality_engine.h"
+#include "theory/type_set.h"
 
 namespace CVC4 {
 namespace theory {
@@ -359,6 +360,16 @@ class CardinalityExtension
    * a map to store the elements used so far for each finite type
    */
   std::map<TypeNode, std::vector<Node> > d_finite_type_elements;
+
+  /**
+   * a map from a symbolic element to its assigned constant
+   */
+  std::map<Node, Node> d_finite_symbolic_constant;
+  /**
+   * an enumerator for finite type
+   */
+  TypeSet d_finite_type_enumerator;
+
 }; /* class CardinalityExtension */
 
 }  // namespace sets
