@@ -369,7 +369,6 @@ class CardinalityExtension
    * an enumerator for finite type
    */
   TypeSet d_finite_type_enumerator;
-
 }; /* class CardinalityExtension */
 
 }  // namespace sets

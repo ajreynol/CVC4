@@ -907,6 +907,17 @@ bool CardinalityExtension::isModelValueBasic(Node eqc)
   return d_nf[eqc].size() == 1 && d_nf[eqc][0] == eqc;
 }
 
+void getNewConstant(const TypeNode &elementType, vector<Node> &constants, TypeSet & typeSet, Node & constant)
+{
+  do
+  {
+    constant = typeSet.nextTypeEnum(elementType);
+  }
+  while(find(constants.begin(), constants.end(), constant) != constants.end());
+  constants.push_back(constant);
+}
+
+
 void CardinalityExtension::mkModelValueElementsFor(
     Valuation& val,
     Node eqc,
@@ -952,8 +963,15 @@ void CardinalityExtension::mkModelValueElementsFor(
 
           if(element.getKind() == SKOLEM)
           {
+            if(d_finite_symbolic_constant.find(element) != d_finite_symbolic_constant.end())
+            {
+              // continue if we already assigned a constant to this skolem element
+              continue;
+            }
+
             // assign a new constant to this skolem element
-            Node constant = d_finite_type_enumerator.nextTypeEnum(elementType);
+            Node constant;
+            getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
 
             //ToDo: review the performance of this
             eq::EqClassIterator eqcIterator = eq::EqClassIterator(element, & d_ee);
@@ -967,7 +985,6 @@ void CardinalityExtension::mkModelValueElementsFor(
             }
 
             Trace("sets-model") << "Skolem element " << element << " = " << constant << std::endl;
-            constants.push_back(element);
             continue;
           }
 
@@ -988,11 +1005,7 @@ void CardinalityExtension::mkModelValueElementsFor(
           // Therefore we can safely enumerate the finite type to get a unique element in each iteration.
           vector<Node> & constants = d_finite_type_elements[elementType];
           Node constant;
-          do
-          {
-            constant = d_finite_type_enumerator.nextTypeEnum(elementType);
-          }
-          while(std::find(constants.begin(), constants.end(), constant) != constants.end());
+          getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
           Node singleton = nm->mkNode(SINGLETON, constant);
           els.push_back(singleton);
         }
