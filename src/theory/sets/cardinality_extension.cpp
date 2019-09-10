@@ -980,11 +980,9 @@ void CardinalityExtension::mkModelValueElementsFor(
             {
               Node node = (*eqcIterator);
               d_finite_symbolic_constant[node] = constant;
-              Trace("sets-model") << "Skolem element " << node << " = " << constant << std::endl;
+              Trace("sets-model") << "Map a skolem element to a constant: " << node << " = " << constant << std::endl;
               ++eqcIterator;
             }
-
-            Trace("sets-model") << "Skolem element " << element << " = " << constant << std::endl;
             continue;
           }
 
@@ -1025,6 +1023,8 @@ void CardinalityExtension::mkModelValueElementsFor(
     Trace("sets-model") << "Build value for " << eqc
                         << " based on normal form, size = " << d_nf[eqc].size()
                         << std::endl;
+
+    Trace("sets-model") << eqc << " = union [" ;
     // it is union of venn regions
     for (unsigned j = 0; j < d_nf[eqc].size(); j++)
     {
@@ -1032,12 +1032,14 @@ void CardinalityExtension::mkModelValueElementsFor(
       if (itm != mvals.end())
       {
         els.push_back(itm->second);
+        Trace("sets-model") << ", " << itm->second;
       }
       else
       {
         Assert(false);
       }
     }
+    Trace("sets-model") << "]" << std::endl;
   }
 }
 
