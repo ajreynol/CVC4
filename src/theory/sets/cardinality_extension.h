@@ -368,7 +368,7 @@ class CardinalityExtension
    */
   std::map<Node, Node> d_finite_symbolic_constant;
   /**
-   * an enumerator for finite type
+   * an enumerator for finite types
    */
   TypeSet d_finite_type_enumerator;
 }; /* class CardinalityExtension */

@@ -58,14 +58,6 @@ void CardinalityExtension::registerTerm(Node n)
     d_eqc_to_card_term[r] = n;
     registerCardinalityTerm(n[0]);
   }
-  if (tnc.isInterpretedFinite())
-  {
-    std::stringstream ss;
-    ss << "ERROR: cannot use cardinality on sets with finite element "
-          "type (term is "
-       << n << ")." << std::endl;
-    // TODO (#1123): extend approach for this case
-  }
   Trace("sets-card-debug") << "...finished register term" << std::endl;
 }
 
@@ -100,7 +92,6 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
 
   // get all equivalent classes of type t
   vector<Node> representatives = d_state.getSetsEqClasses(t);
-  //ToDo: handle the case when representatives are changed
   // get the cardinality of the finite type t
   Cardinality card = t.getCardinality();
   Node typeCardinality = nm->mkConst(Rational(card.getFiniteCardinality()));
@@ -108,7 +99,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   Node cardUniv = nm->mkNode(kind::CARD, proxy);
   Node leq = nm->mkNode(kind::LEQ, cardUniv, typeCardinality);
   /** (=> true (<= (card (as univset t)) cardUniv) */
-  d_im.assertInference(leq, d_state.d_true, "type cardinality", 1);
+  d_im.assertInference(leq, d_state.d_true, "finite type cardinality", 1);
 
   // add subset lemmas for sets and membership lemmas for negative members
   for(Node & representative : representatives)
@@ -117,7 +108,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
     {
       Node subset = nm->mkNode(kind::SUBSET, representative, proxy);
       /** (=> true (subset representative (as univset t)) */
-      d_im.assertInference(subset, d_state.d_true, "UnivSet is a super set", 1);
+      d_im.assertInference(subset, d_state.d_true, "univset is a super set", 1);
 
       // negative members are members in the universe set
       const std::map<Node, Node>& negativeMembers = d_state.getNegativeMembers(representative);
@@ -125,7 +116,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
       {
         Node membership = nm->mkNode(MEMBER, negativeMember.first, univ);
         /** (=> true (member negativeMember (as univset t))) */
-        d_im.assertInference(membership, d_state.d_true, "UnivSet membership", 1);
+        d_im.assertInference(membership, d_state.d_true, "univset membership", 1);
       }
     }
   }
@@ -917,6 +908,10 @@ bool CardinalityExtension::isModelValueBasic(Node eqc)
   return d_nf[eqc].size() == 1 && d_nf[eqc][0] == eqc;
 }
 
+/**
+ * This function assigns a new value of type elementType to the variable constant
+ * and pushes this value into the list constants
+ */
 void getNewConstant(const TypeNode &elementType, vector<Node> &constants, TypeSet & typeSet, Node & constant)
 {
   do
