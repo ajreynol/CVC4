@@ -990,7 +990,7 @@ void CardinalityExtension::mkModelValueElementsFor(
               Trace("sets-model") << "Map an element to a constant: " << node << " = " << constant << std::endl;
               ++eqcIterator;
             }
-            model->assertEquality(element, constant, true);
+//            model->assertEquality(element, constant, true);
             continue;
           }
 

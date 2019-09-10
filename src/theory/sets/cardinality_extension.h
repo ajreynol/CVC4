@@ -125,7 +125,9 @@ class CardinalityExtension
   void mkModelValueElementsFor(Valuation& v,
                                Node eqc,
                                std::vector<Node>& els,
-                               const std::map<Node, Node>& mvals);
+                               const std::map<Node, Node>& mvals,
+                               TheoryModel * model
+                               );
   /** get ordered sets equivalence classes
    *
    * Get the ordered set of equivalence classes computed by this class. This
