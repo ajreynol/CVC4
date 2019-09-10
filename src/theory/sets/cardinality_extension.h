@@ -309,9 +309,11 @@ class CardinalityExtension
   void checkFiniteTypes();
 
   /**
-   * add 2 lemmas for the finite type t:
-   * 1- (=> true (subset S (as univset t)) where S is a set term of type t
-   * 2- (=> true (<= (card (as univset t)) n) where n is the cardinality of t
+   * This function adds the following lemmas for the finite type t for each S
+   * where S is a set term of type t, and for each negative member x not in S
+   * 1- (=> true (<= (card (as univset t)) n) where n is the cardinality of t
+   * 2- (=> true (subset S (as univset t)) where S is a set term of type t
+   * 3- (=> true (member s (as univset t)))
    */
   void checkFiniteType(TypeNode & t);
   /** element types of sets for which cardinality is enabled */

@@ -105,25 +105,26 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   Cardinality card = t.getCardinality();
   Node typeCardinality = nm->mkConst(Rational(card.getFiniteCardinality()));
 
-  // true => card univ <= typeCardinality
   Node cardUniv = nm->mkNode(kind::CARD, proxy);
   Node leq = nm->mkNode(kind::LEQ, cardUniv, typeCardinality);
+  /** (=> true (<= (card (as univset t)) cardUniv) */
   d_im.assertInference(leq, d_state.d_true, "type cardinality", 1);
 
-  // add new lemmas for subset constraints
+  // add subset lemmas for sets and membership lemmas for negative members
   for(Node & representative : representatives)
   {
-    if(representative != univ) // exclude this trivial case
+    if(representative != univ) // the univrse set is a subset of itself
     {
       Node subset = nm->mkNode(kind::SUBSET, representative, proxy);
-      // true => representative is a subset of the universe set
+      /** (=> true (subset representative (as univset t)) */
       d_im.assertInference(subset, d_state.d_true, "UnivSet is a super set", 1);
+
       // negative members are members in the universe set
       const std::map<Node, Node>& negativeMembers = d_state.getNegativeMembers(representative);
       for (const std::pair<Node,  Node> & negativeMember: negativeMembers)
       {
-        // true => negativeMember is a member of the universe set
         Node membership = nm->mkNode(MEMBER, negativeMember.first, univ);
+        /** (=> true (member negativeMember (as univset t))) */
         d_im.assertInference(membership, d_state.d_true, "UnivSet membership", 1);
       }
     }
