@@ -361,7 +361,7 @@ void TheorySetsPrivate::fullEffortCheck(){
             }
             else
             {
-              //ToDo: review card univ terms
+              //ToDo: review what to do here
             }
           }
         }

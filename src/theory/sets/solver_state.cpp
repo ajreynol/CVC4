@@ -578,7 +578,7 @@ void SolverState::debugPrintSet(Node s, const char* c) const
 const vector<Node> SolverState::getSetsEqClasses(const TypeNode & t) const
 {
     vector<Node> representatives;
-    for(const auto eqc : getSetsEqClasses())
+    for(const Node & eqc : getSetsEqClasses())
     {
         if(eqc.getType().getSetElementType() == t)
         {

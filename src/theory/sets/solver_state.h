@@ -121,9 +121,9 @@ class SolverState
    * class.
    */
   bool isCongruent(Node n) const;
-  /** Get the list of all equivalence classes of set type */
+  /** Get the list of all equivalence classes of set terms */
   const std::vector<Node>& getSetsEqClasses() const { return d_set_eqc; }
-    /** Get the list of all equivalence classes of set type that have type t */
+    /** Get the list of all equivalence classes of set terms that have element type t */
   const std::vector<Node> getSetsEqClasses(const TypeNode& t) const;
 
   /**
@@ -192,10 +192,7 @@ class SolverState
   Node getProxy(Node n);
   /** Get the empty set of type tn */
   Node getEmptySet(TypeNode tn);
-  /** Get the universe set of type tn where tn has kind SET_TYPE.
-   *  For example, to get the universe set of of all booleans
-   *
-   * */
+  /** Get the universe set of type tn */
   Node getUnivSet(TypeNode tn);
   /**
    * Get the skolem cache of this theory, which manages a database of introduced
