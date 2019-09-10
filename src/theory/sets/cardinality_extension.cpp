@@ -105,18 +105,27 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   Cardinality card = t.getCardinality();
   Node typeCardinality = nm->mkConst(Rational(card.getFiniteCardinality()));
 
+  // true => card univ <= typeCardinality
+  Node cardUniv = nm->mkNode(kind::CARD, proxy);
+  Node leq = nm->mkNode(kind::LEQ, cardUniv, typeCardinality);
+  d_im.assertInference(leq, d_state.d_true, "type cardinality", 1);
+
   // add new lemmas for subset constraints
-  for(const auto & representative : representatives)
+  for(Node & representative : representatives)
   {
     if(representative != univ) // exclude this trivial case
     {
       Node subset = nm->mkNode(kind::SUBSET, representative, proxy);
-      // true => representative is a subset of the univ
-      d_im.assertInference(subset, d_state.d_true, "UnivSet cardinality", 1);
-      // true => card univ <= typeCardinality
-      Node cardUniv = nm->mkNode(kind::CARD, proxy);
-      Node leq = nm->mkNode(kind::LEQ, cardUniv, typeCardinality);
-      d_im.assertInference(leq, d_state.d_true, "type cardinality", 1);
+      // true => representative is a subset of the universe set
+      d_im.assertInference(subset, d_state.d_true, "UnivSet is a super set", 1);
+      // negative members are members in the universe set
+      const std::map<Node, Node>& negativeMembers = d_state.getNegativeMembers(representative);
+      for (const std::pair<Node,  Node> & negativeMember: negativeMembers)
+      {
+        // true => negativeMember is a member of the universe set
+        Node membership = nm->mkNode(MEMBER, negativeMember.first, univ);
+        d_im.assertInference(membership, d_state.d_true, "UnivSet membership", 1);
+      }
     }
   }
 }
@@ -961,15 +970,15 @@ void CardinalityExtension::mkModelValueElementsFor(
             continue;
           }
 
-          if(element.getKind() == SKOLEM)
+          if(element.getKind() == SKOLEM || element.getKind() == VARIABLE)
           {
             if(d_finite_symbolic_constant.find(element) != d_finite_symbolic_constant.end())
             {
-              // continue if we already assigned a constant to this skolem element
+              // continue if we already assigned a constant to this element
               continue;
             }
 
-            // assign a new constant to this skolem element
+            // assign a new constant to this element
             Node constant;
             getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
 
@@ -980,7 +989,7 @@ void CardinalityExtension::mkModelValueElementsFor(
             {
               Node node = (*eqcIterator);
               d_finite_symbolic_constant[node] = constant;
-              Trace("sets-model") << "Map a skolem element to a constant: " << node << " = " << constant << std::endl;
+              Trace("sets-model") << "Map an element to a constant: " << node << " = " << constant << std::endl;
               ++eqcIterator;
             }
             continue;
