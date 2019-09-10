@@ -21,6 +21,7 @@
 #include "options/sets_options.h"
 #include "theory/sets/normal_form.h"
 #include "theory/valuation.h"
+#include "theory/theory_model.h"
 
 using namespace std;
 using namespace CVC4::kind;
@@ -927,7 +928,8 @@ void CardinalityExtension::mkModelValueElementsFor(
     Valuation& val,
     Node eqc,
     std::vector<Node>& els,
-    const std::map<Node, Node>& mvals)
+    const std::map<Node, Node>& mvals,
+    TheoryModel * model)
 {
   TypeNode elementType = eqc.getType().getSetElementType();
   if (isModelValueBasic(eqc))
@@ -988,6 +990,7 @@ void CardinalityExtension::mkModelValueElementsFor(
               Trace("sets-model") << "Map an element to a constant: " << node << " = " << constant << std::endl;
               ++eqcIterator;
             }
+            model->assertEquality(element, constant, true);
             continue;
           }
 

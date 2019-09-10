@@ -1062,7 +1062,7 @@ bool TheorySetsPrivate::collectModelInfo(TheoryModel* m)
       if( d_card_enabled ){
         // make the slack elements for the equivalence class based on set
         // cardinality
-        d_cardSolver->mkModelValueElementsFor(val, eqc, els, mvals);
+        d_cardSolver->mkModelValueElementsFor(val, eqc, els, mvals, m);
       }
       Node rep = NormalForm::mkBop( kind::UNION, els, eqc.getType() );
       rep = Rewriter::rewrite( rep );
