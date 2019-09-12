@@ -949,6 +949,7 @@ void CardinalityExtension::mkModelValueElementsFor(
       if(elementType.isInterpretedFinite())
       {
         // get all constants of this type encountered so far
+        collectFiniteTypeSetsConstants(model);
         vector<Node> & constants = d_finite_type_elements[elementType];
         for(const Node & it : els)
         {
@@ -990,7 +991,7 @@ void CardinalityExtension::mkModelValueElementsFor(
               Trace("sets-model") << "Map an element to a constant: " << node << " = " << constant << std::endl;
               ++eqcIterator;
             }
-//            model->assertEquality(element, constant, true);
+            model->assertEquality(element, constant, true);
             continue;
           }
 
@@ -1051,6 +1052,27 @@ void CardinalityExtension::mkModelValueElementsFor(
   }
 }
 
+void CardinalityExtension::collectFiniteTypeSetsConstants(TheoryModel * model)
+{
+  if(d_finite_type_constants_processed)
+  {
+    return;
+  }
+  for (const Node & set : getOrderedSetsEqClasses())
+  {
+    for (const std::pair<const Node, Node>& pair : d_state.getMembers(set))
+    {
+      Node member = pair.first;
+      Node modelRepresentative = model->getRepresentative(member);
+      if(modelRepresentative.isConst())
+      {
+        d_finite_symbolic_constant[member] = modelRepresentative;
+        d_finite_type_elements[member.getType()].push_back(modelRepresentative);
+      }
+    }
+  }
+  d_finite_type_constants_processed = true;
+}
 
 
 }  // namespace sets
