@@ -950,56 +950,6 @@ void CardinalityExtension::mkModelValueElementsFor(
       {
         // get all constants of this type encountered so far
         collectFiniteTypeSetsConstants(model);
-        vector<Node> & constants = d_finite_type_constants[elementType];
-        for(const Node & it : els)
-        {
-          Assert(it.getKind() == SINGLETON);
-          Node element = it[0];
-          Assert(d_ee.getRepresentative(element) == element);
-          if(std::find(constants.begin(), constants.end(), element) != constants.end())
-          {
-            // the constant is already in the map
-            continue;
-          }
-          if(element.isConst())
-          {
-            // add the element to the constants list
-            constants.push_back(element);
-            d_finite_symbolic_constant[element] = element;
-            continue;
-          }
-
-          if(element.getKind() == SKOLEM || element.getKind() == VARIABLE)
-          {
-            if(d_finite_symbolic_constant.find(element) != d_finite_symbolic_constant.end())
-            {
-              // continue if we already assigned a constant to this element
-              continue;
-            }
-
-            // assign a new constant to this element
-            Node constant;
-            getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
-
-            //ToDo: review the performance of this
-            eq::EqClassIterator eqcIterator = eq::EqClassIterator(element, & d_ee);
-
-            while( !eqcIterator.isFinished() )
-            {
-              Node node = (*eqcIterator);
-              d_finite_symbolic_constant[node] = constant;
-              Trace("sets-model") << "Map an element to a constant: " << node << " = " << constant << std::endl;
-              ++eqcIterator;
-            }
-            model->assertEquality(element, constant, true);
-            continue;
-          }
-
-          std::stringstream ss;
-          ss << "This finite element " << element << " of kind " << element.getKind()
-             << " is not yet supported"<< std::endl;
-          throw LogicException(ss.str());
-        }
       }
       while (els.size() < vu)
       {
@@ -1066,7 +1016,6 @@ void CardinalityExtension::collectFiniteTypeSetsConstants(TheoryModel * model)
       Node modelRepresentative = model->getRepresentative(member);
       if(modelRepresentative.isConst())
       {
-        d_finite_symbolic_constant[member] = modelRepresentative;
         d_finite_type_constants[member.getType()].push_back(modelRepresentative);
       }
     }

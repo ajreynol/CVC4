@@ -371,11 +371,7 @@ class CardinalityExtension
   bool d_finite_type_constants_processed = false;
 
   /**
-   * a map from a symbolic element to its assigned constant
-   */
-  std::map<Node, Node> d_finite_symbolic_constant;
-  /**
-   * an enumerator for finite types
+   * an enumerator for finite types' constants
    */
   TypeSet d_finite_type_enumerator;
 }; /* class CardinalityExtension */
