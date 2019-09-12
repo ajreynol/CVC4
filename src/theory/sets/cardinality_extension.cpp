@@ -13,7 +13,6 @@
  ** cardinality constraints.
  **/
 
-
 #include "theory/sets/cardinality_extension.h"
 
 #include "expr/emptyset.h"
@@ -982,8 +981,6 @@ void CardinalityExtension::mkModelValueElementsFor(
     Trace("sets-model") << "Build value for " << eqc
                         << " based on normal form, size = " << d_nf[eqc].size()
                         << std::endl;
-
-    Trace("sets-model") << eqc << " = union [" ;
     // it is union of venn regions
     for (unsigned j = 0; j < d_nf[eqc].size(); j++)
     {
@@ -991,14 +988,12 @@ void CardinalityExtension::mkModelValueElementsFor(
       if (itm != mvals.end())
       {
         els.push_back(itm->second);
-        Trace("sets-model") << ", " << itm->second;
       }
       else
       {
         Assert(false);
       }
     }
-    Trace("sets-model") << "]" << std::endl;
   }
 }
 
