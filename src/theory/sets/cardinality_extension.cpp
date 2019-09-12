@@ -950,7 +950,7 @@ void CardinalityExtension::mkModelValueElementsFor(
       {
         // get all constants of this type encountered so far
         collectFiniteTypeSetsConstants(model);
-        vector<Node> & constants = d_finite_type_elements[elementType];
+        vector<Node> & constants = d_finite_type_constants[elementType];
         for(const Node & it : els)
         {
           Assert(it.getKind() == SINGLETON);
@@ -1010,7 +1010,7 @@ void CardinalityExtension::mkModelValueElementsFor(
           // the cardinality of the universe set was added by CardinalityExtension::checkFiniteType.
           // This means we have enough slack elements for each disjoint leaf in the cardinality graph.
           // Therefore we can safely enumerate the finite type to get a unique element in each iteration.
-          vector<Node> & constants = d_finite_type_elements[elementType];
+          vector<Node> & constants = d_finite_type_constants[elementType];
           Node constant;
           getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
           Node singleton = nm->mkNode(SINGLETON, constant);
@@ -1067,7 +1067,7 @@ void CardinalityExtension::collectFiniteTypeSetsConstants(TheoryModel * model)
       if(modelRepresentative.isConst())
       {
         d_finite_symbolic_constant[member] = modelRepresentative;
-        d_finite_type_elements[member.getType()].push_back(modelRepresentative);
+        d_finite_type_constants[member.getType()].push_back(modelRepresentative);
       }
     }
   }
