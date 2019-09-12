@@ -92,7 +92,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   d_univProxy[univ] = proxy;
 
   // get all equivalent classes of type t
-  vector<Node> representatives = d_state.getSetsEqClasses(t);
+  const vector<Node> & representatives = d_state.getSetsEqClasses(t);
   // get the cardinality of the finite type t
   Cardinality card = t.getCardinality();
   Node typeCardinality = nm->mkConst(Rational(card.getFiniteCardinality()));
@@ -103,7 +103,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   d_im.assertInference(leq, d_state.d_true, "finite type cardinality", 1);
 
   // add subset lemmas for sets and membership lemmas for negative members
-  for(Node & representative : representatives)
+  for(const Node & representative : representatives)
   {
     if(representative != univ) // the univrse set is a subset of itself
     {
@@ -913,14 +913,13 @@ bool CardinalityExtension::isModelValueBasic(Node eqc)
  * This function assigns a new value of type elementType to the variable constant
  * and pushes this value into the list constants
  */
-void getNewConstant(const TypeNode &elementType, vector<Node> &constants, TypeSet & typeSet, Node & constant)
+void getNewConstant(const TypeNode &elementType, TheoryModel * model, TypeSet & typeSet, Node & constant)
 {
   do
   {
     constant = typeSet.nextTypeEnum(elementType);
   }
-  while(find(constants.begin(), constants.end(), constant) != constants.end());
-  constants.push_back(constant);
+  while(model->hasTerm(constant));
 }
 
 
@@ -948,29 +947,29 @@ void CardinalityExtension::mkModelValueElementsFor(
       NodeManager* nm = NodeManager::currentNM();
       if(elementType.isInterpretedFinite())
       {
-        // get all constants of this type encountered so far
-        vector<Node> & constants = d_finite_type_elements[elementType];
+        vector<Node> & constants = d_finite_type_constants[elementType];
         for(const Node & it : els)
         {
           Assert(it.getKind() == SINGLETON);
           Node element = it[0];
-          Assert(d_ee.getRepresentative(element) == element);
-          if(std::find(constants.begin(), constants.end(), element) != constants.end())
+          Node modelRepresentative =  model->getRepresentative(element);
+          if(std::find(constants.begin(), constants.end(), modelRepresentative) != constants.end())
           {
             // the constant is already in the map
             continue;
           }
-          if(element.isConst())
+          if(modelRepresentative.isConst())
           {
             // add the element to the constants list
-            constants.push_back(element);
-            d_finite_symbolic_constant[element] = element;
+            constants.push_back(modelRepresentative);
+            //ToDo: review removing this line
+            d_finite_symbolic_constant[element] = modelRepresentative;
             continue;
           }
 
-          if(element.getKind() == SKOLEM || element.getKind() == VARIABLE)
+          if(modelRepresentative.getKind() == SKOLEM || modelRepresentative.getKind() == VARIABLE)
           {
-            if(d_finite_symbolic_constant.find(element) != d_finite_symbolic_constant.end())
+            if(d_finite_symbolic_constant.find(modelRepresentative) != d_finite_symbolic_constant.end())
             {
               // continue if we already assigned a constant to this element
               continue;
@@ -978,10 +977,10 @@ void CardinalityExtension::mkModelValueElementsFor(
 
             // assign a new constant to this element
             Node constant;
-            getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
+            getNewConstant(elementType, model, d_finite_type_enumerator, constant);
 
             //ToDo: review the performance of this
-            eq::EqClassIterator eqcIterator = eq::EqClassIterator(element, & d_ee);
+            eq::EqClassIterator eqcIterator = eq::EqClassIterator(modelRepresentative, & d_ee);
 
             while( !eqcIterator.isFinished() )
             {
@@ -990,12 +989,12 @@ void CardinalityExtension::mkModelValueElementsFor(
               Trace("sets-model") << "Map an element to a constant: " << node << " = " << constant << std::endl;
               ++eqcIterator;
             }
-//            model->assertEquality(element, constant, true);
+            model->assertEquality(modelRepresentative, constant, true);
             continue;
           }
 
           std::stringstream ss;
-          ss << "This finite element " << element << " of kind " << element.getKind()
+          ss << "This finite element " << modelRepresentative << " of kind " << element.getKind()
              << " is not yet supported"<< std::endl;
           throw LogicException(ss.str());
         }
@@ -1004,14 +1003,24 @@ void CardinalityExtension::mkModelValueElementsFor(
       {
         if(elementType.isInterpretedFinite())
         {
+          vector<Node> & constants = d_finite_type_constants[elementType];
+          //if not already there, add constant elements in els to constants
+          for(Node & node : els)
+          {
+            Node modelRepresentative = model->getRepresentative(node);
+            if(std::find(constants.begin(), constants.end(), modelRepresentative) != constants.end())
+            {
+              constants.push_back(modelRepresentative);
+            }
+          }
           // At this point we are sure the formula is satisfiable and all cardinality constraints are satisfied.
           // Since this type is finite, there is a single cardinality graph for all sets of this type because
           // the cardinality of the universe set was added by CardinalityExtension::checkFiniteType.
           // This means we have enough slack elements for each disjoint leaf in the cardinality graph.
           // Therefore we can safely enumerate the finite type to get a unique element in each iteration.
-          vector<Node> & constants = d_finite_type_elements[elementType];
+
           Node constant;
-          getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
+          getNewConstant(elementType, model, d_finite_type_enumerator, constant);
           Node singleton = nm->mkNode(SINGLETON, constant);
           els.push_back(singleton);
         }
@@ -1050,9 +1059,6 @@ void CardinalityExtension::mkModelValueElementsFor(
     Trace("sets-model") << "]" << std::endl;
   }
 }
-
-
-
 }  // namespace sets
 }  // namespace theory
 }  // namespace CVC4

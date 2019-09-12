@@ -359,11 +359,10 @@ class CardinalityExtension
    * a map to store proxy nodes for the universe sets
    */
   std::map<Node, Node> d_univProxy;
-
   /**
-   * a map to store the elements used so far for each finite type
+   * a map to store the constants used so far for each finite type
    */
-  std::map<TypeNode, std::vector<Node> > d_finite_type_elements;
+  std::map<TypeNode, std::vector<Node> > d_finite_type_constants;
 
   /**
    * a map from a symbolic element to its assigned constant
