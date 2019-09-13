@@ -94,6 +94,13 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   vector<Node> representatives = d_state.getSetsEqClasses(t);
   // get the cardinality of the finite type t
   Cardinality card = t.getCardinality();
+  if(!card.isFinite())
+  {
+    //ToDo: support uninterpreted types with --finite-model-find
+    std::stringstream message;
+    message << "The cardinality "<< card << " of the finite type " << t << " is not supported yet." << endl;
+    Assert(false, message.str().c_str());
+  }
   Node typeCardinality = nm->mkConst(Rational(card.getFiniteCardinality()));
 
   Node cardUniv = nm->mkNode(kind::CARD, proxy);
