@@ -918,7 +918,7 @@ void getNewConstant(const TypeNode &elementType, vector<Node> &constants, TypeSe
   {
     constant = typeSet.nextTypeEnum(elementType);
   }
-  while(find(constants.begin(), constants.end(), constant) != constants.end());
+  while(std::find(constants.begin(), constants.end(), constant) != constants.end());
   constants.push_back(constant);
 }
 
@@ -964,6 +964,13 @@ void CardinalityExtension::mkModelValueElementsFor(
           getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
           Node singleton = nm->mkNode(SINGLETON, constant);
           els.push_back(singleton);
+          Trace("sets-model") << "Added slack constant " << constant  << " to set " << eqc << std::endl;
+          Trace("sets-model") << "Set " << eqc  << " = { ";
+          for(unsigned int i = 0; i < els.size() - 1; i ++)
+          {
+            Trace("sets-model") << els[0][0]<< ", ";
+          }
+          Trace("sets-model") << els[els.size() - 1][0] << "}" << endl;
         }
         else
         {
@@ -1009,9 +1016,16 @@ void CardinalityExtension::collectFiniteTypeSetsConstants(TheoryModel * model)
     {
       Node member = pair.first;
       Node modelRepresentative = model->getRepresentative(member);
+      Trace("sets-model") << "set member " << member  << " has representative " << modelRepresentative << std::endl;
       if(modelRepresentative.isConst())
       {
         d_finite_type_constants[member.getType()].push_back(modelRepresentative);
+      }
+      else
+      {
+        std::stringstream message;
+        message << "The representative " << modelRepresentative << " in TheoryModel" << " is not a constant";
+        Assert(false, message.str().c_str());
       }
     }
   }
