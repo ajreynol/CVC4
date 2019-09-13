@@ -352,17 +352,10 @@ void TheorySetsPrivate::fullEffortCheck(){
           // some kinds of cardinality we cannot handle
           if (nk == kind::UNIVERSE_SET || d_rels->isRelationKind(nk))
           {
-            if(d_rels->isRelationKind(nk))
-            {
-              d_full_check_incomplete = true;
-              Trace("sets-incomplete")
-                      << "Sets : incomplete because of " << n << "." << std::endl;
-              // TODO (#1124) handle this case
-            }
-            else
-            {
-              //ToDo: review what to do here
-            }
+            d_full_check_incomplete = true;
+            Trace("sets-incomplete")
+                << "Sets : incomplete because of " << n << "." << std::endl;
+            // TODO (#1124) handle this case
           }
         }
         else
@@ -1062,7 +1055,7 @@ bool TheorySetsPrivate::collectModelInfo(TheoryModel* m)
       if( d_card_enabled ){
         // make the slack elements for the equivalence class based on set
         // cardinality
-        d_cardSolver->mkModelValueElementsFor(val, eqc, els, mvals, m);
+        d_cardSolver->mkModelValueElementsFor(val, eqc, els, mvals);
       }
       Node rep = NormalForm::mkBop( kind::UNION, els, eqc.getType() );
       rep = Rewriter::rewrite( rep );
