@@ -34,7 +34,7 @@ CardinalityExtension::CardinalityExtension(SolverState& s,
                                            eq::EqualityEngine& e,
                                            context::Context* c,
                                            context::UserContext* u)
-    : d_state(s), d_im(im), d_ee(e), d_card_processed(u)
+    : d_state(s), d_im(im), d_ee(e), d_card_processed(u), d_finite_type_constants_processed(false)
 {
   d_zero = NodeManager::currentNM()->mkConst(Rational(0));
   // we do congruence over cardinality
@@ -104,10 +104,11 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   // add subset lemmas for sets and membership lemmas for negative members
   for(Node & representative : representatives)
   {
-    if(representative != univ) // the univrse set is a subset of itself
+    if(representative != d_ee.getRepresentative(univ)) // the univrse set is a subset of itself
     {
       Node subset = nm->mkNode(kind::SUBSET, representative, proxy);
       /** (=> true (subset representative (as univset t)) */
+      d_state.isEntailed(subset, true);
       d_im.assertInference(subset, d_state.d_true, "univset is a super set", 1);
 
       // negative members are members in the universe set

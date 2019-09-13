@@ -350,12 +350,12 @@ void TheorySetsPrivate::fullEffortCheck(){
           // if we do not handle the kind, set incomplete
           Kind nk = n[0].getKind();
           // some kinds of cardinality we cannot handle
-          if (nk == kind::UNIVERSE_SET || d_rels->isRelationKind(nk))
+          if (d_rels->isRelationKind(nk))
           {
-            d_full_check_incomplete = true;
-            Trace("sets-incomplete")
-                << "Sets : incomplete because of " << n << "." << std::endl;
-            // TODO (#1124) handle this case
+              d_full_check_incomplete = true;
+              Trace("sets-incomplete")
+                      << "Sets : incomplete because of " << n << "." << std::endl;
+              // TODO (#1124) handle this case
           }
         }
         else
