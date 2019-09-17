@@ -1020,6 +1020,10 @@ void CardinalityExtension::collectFiniteTypeSetsConstants(TheoryModel * model)
   }
   for (const Node & set : getOrderedSetsEqClasses())
   {
+    if(! set.getType().isInterpretedFinite())
+    {
+      continue;
+    }
     for (const std::pair<const Node, Node>& pair : d_state.getMembers(set))
     {
       Node member = pair.first;
