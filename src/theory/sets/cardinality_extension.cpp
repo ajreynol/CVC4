@@ -953,11 +953,12 @@ void CardinalityExtension::mkModelValueElementsFor(
       unsigned vu = v.getConst<Rational>().getNumerator().toUnsignedInt();
       Assert(els.size() <= vu);
       NodeManager* nm = NodeManager::currentNM();
-      if(elementType.isInterpretedFinite())
-      {
-        // get all constants of this type encountered so far
-        collectFiniteTypeSetsConstants(model);
-      }
+      //ToDo: remove this if block if it is no longer needed
+//      if(elementType.isInterpretedFinite())
+//      {
+//        // get all constants of this type encountered so far
+//        // collectFiniteTypeSetsConstants(model);
+//      }
       while (els.size() < vu)
       {
         if(elementType.isInterpretedFinite())
@@ -967,16 +968,25 @@ void CardinalityExtension::mkModelValueElementsFor(
           // the cardinality of the universe set was added by CardinalityExtension::checkFiniteType.
           // This means we have enough slack elements for each disjoint leaf in the cardinality graph.
           // Therefore we can safely enumerate the finite type to get a unique element in each iteration.
-          vector<Node> & constants = d_finite_type_constants[elementType];
-          Node constant;
-          getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
-          Node singleton = nm->mkNode(SINGLETON, constant);
+
+//          vector<Node> & constants = d_finite_type_constants[elementType];
+//          Node constant;
+//          getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
+//          Node singleton = nm->mkNode(SINGLETON, constant);
+//          els.push_back(singleton);
+
+          Node slack =  nm->mkSkolem("slack", elementType);
+          Node singleton = nm->mkNode(SINGLETON,slack);
+          std::vector<Node> elementsCopy = els;
+          // pass a copy of previous elements so that the new slack element is distinct
+          model->setAssignmentExclusionSet(singleton, elementsCopy);
           els.push_back(singleton);
-          Trace("sets-model") << "Added slack constant " << constant  << " to set " << eqc << std::endl;
+
+          Trace("sets-model") << "Added slack element " << slack  << " to set " << eqc << std::endl;
           Trace("sets-model") << "Set " << eqc  << " = { ";
           for(unsigned int i = 0; i < els.size() - 1; i ++)
           {
-            Trace("sets-model") << els[0][0]<< ", ";
+            Trace("sets-model") << els[i][0]<< ", ";
           }
           Trace("sets-model") << els[els.size() - 1][0] << "}" << endl;
         }
