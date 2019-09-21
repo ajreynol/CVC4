@@ -139,6 +139,28 @@ public:
    * during Theory's collectModelInfo( ... ) functions.
    */
   void assertSkeleton(TNode n);
+  /** set assignment exclusion set
+   *
+   * This method sets the "assignment exclusion set" for term n. This is a
+   * set of terms whose value n must be distinct from in the model.
+   *
+   * This method should be used sparingly, and in a way such that model
+   * building is still guaranteed to succeed. Typically, n is intended to be an
+   * assignable term of finite type. Thus, for example, this method should not
+   * be called with a vector eset that is greater than the cardinality of the
+   * type of n. Additionally, this method should not be called in a way that
+   * introduces cyclic dependencies on the assignment order of terms in the
+   * model. For example, providing { y } as the assignment exclusion set of x
+   * and { x } as the assignment exclusion set of y will cause model building
+   * to fail.
+   */
+  void setAssignmentExclusionSet(TNode n, const std::vector<Node>& eset);
+  /** get assignment exclusion set for term n
+   *
+   * This method returns true if n has been given an assignment exclusion set,
+   * and appends it to eset. Otherwise it returns false.
+   */
+  bool getAssignmentExclusionSet(TNode n, std::vector<Node>& eset);
   /** record approximation
    *
    * This notifies this model that the value of n was approximated in this
@@ -299,9 +321,13 @@ public:
   std::unordered_set<Kind, kind::KindHashFunction> d_not_evaluated_kinds;
   /** a set of kinds that are semi-evaluated */
   std::unordered_set<Kind, kind::KindHashFunction> d_semi_evaluated_kinds;
-  /** map of representatives of equality engine to used representatives in
-   * representative set */
+  /**
+   * Map of representatives of equality engine to used representatives in
+   * representative set
+   */
   std::map<Node, Node> d_reps;
+  /** Map of terms to their assignment exclusion set. */
+  std::map<Node, std::vector<Node> > d_assignExcSet;
   /** stores set of representatives for each type */
   RepSet d_rep_set;
   /** true/false nodes */

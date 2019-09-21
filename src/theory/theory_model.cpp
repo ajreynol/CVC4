@@ -509,6 +509,26 @@ void TheoryModel::assertSkeleton(TNode n)
   d_reps[ n ] = n;
 }
 
+void TheoryModel::setAssignmentExclusionSet(TNode n,
+                                            const std::vector<Node>& eset)
+{
+  Trace("model-builder-debug")
+      << "Exclude values of " << n << " : " << eset << std::endl;
+  std::vector<Node>& aes = d_assignExcSet[n];
+  aes.insert(aes.end(), eset.begin(), eset.end());
+}
+
+bool TheoryModel::getAssignmentExclusionSet(TNode n, std::vector<Node>& eset)
+{
+  std::map<Node, std::vector<Node> >::iterator ita = d_assignExcSet.find(n);
+  if (ita == d_assignExcSet.end())
+  {
+    return false;
+  }
+  eset.insert(eset.end(), ita->second.begin(), ita->second.end());
+  return true;
+}
+
 void TheoryModel::recordApproximation(TNode n, TNode pred)
 {
   Trace("model-builder-debug")
