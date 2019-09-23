@@ -825,7 +825,7 @@ bool TheoryEngineModelBuilder::buildModel(Model* m)
     // that has both assignable and evaluable expressions will get assigned.
     if (!changed)
     {
-      Assert(!assignOne);  // check for infinite loop!
+//      Assert(!assignOne);  // check for infinite loop!
       assignOne = true;
     }
   }
