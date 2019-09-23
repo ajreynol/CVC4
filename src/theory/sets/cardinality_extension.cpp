@@ -977,9 +977,14 @@ void CardinalityExtension::mkModelValueElementsFor(
 
           Node slack =  nm->mkSkolem("slack", elementType);
           Node singleton = nm->mkNode(SINGLETON,slack);
-          std::vector<Node> elementsCopy = els;
+          std::vector<Node> elementsCopy;
+          for(const Node & node: els)
+          {
+            // add the element not the singleton
+            elementsCopy.push_back(node[0]);
+          }
           // pass a copy of previous elements so that the new slack element is distinct
-          model->setAssignmentExclusionSet(singleton, elementsCopy);
+          model->setAssignmentExclusionSet(slack, elementsCopy);
           els.push_back(singleton);
 
           Trace("sets-model") << "Added slack element " << slack  << " to set " << eqc << std::endl;
