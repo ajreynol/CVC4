@@ -361,23 +361,20 @@ class CardinalityExtension
   std::map<Node, Node> d_univProxy;
 
   /**
-   * collect finite type constants of set elements already generated in the model
+   * collect the set elements of all sets of finite types in model, and
+   * store them in the field d_finite_type_elements
    */
-  void collectFiniteTypeSetsConstants(TheoryModel * model);
+  void collectFiniteTypeSetElements(TheoryModel * model);
   /**
    * a map to store the elements used so far for each finite type
    */
-  std::map<TypeNode, std::vector<Node> > d_finite_type_constants;
+  std::map<TypeNode, std::vector<Node> > d_finite_type_elements;
   /** This boolean determines whether we already collected finite type constants
    *  present in the current model.
    *  Default value is false
    */
   bool d_finite_type_constants_processed;
 
-  /**
-   * an enumerator for finite types' constants
-   */
-  TypeSet d_finite_type_enumerator;
 }; /* class CardinalityExtension */
 
 }  // namespace sets

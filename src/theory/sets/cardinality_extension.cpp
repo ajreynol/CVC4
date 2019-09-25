@@ -916,21 +916,6 @@ bool CardinalityExtension::isModelValueBasic(Node eqc)
   return d_nf[eqc].size() == 1 && d_nf[eqc][0] == eqc;
 }
 
-/**
- * This function assigns a new value of type elementType to the variable constant
- * and pushes this value into the list constants
- */
-void getNewConstant(const TypeNode &elementType, vector<Node> &constants, TypeSet & typeSet, Node & constant)
-{
-  do
-  {
-    constant = typeSet.nextTypeEnum(elementType);
-  }
-  while(std::find(constants.begin(), constants.end(), constant) != constants.end());
-  constants.push_back(constant);
-}
-
-
 void CardinalityExtension::mkModelValueElementsFor(
     Valuation& val,
     Node eqc,
@@ -957,37 +942,33 @@ void CardinalityExtension::mkModelValueElementsFor(
       if(elementType.isInterpretedFinite())
       {
         // get all constants members of this finite type
-        collectFiniteTypeSetsConstants(model);
+        collectFiniteTypeSetElements(model);
       }
       while (els.size() < vu)
       {
         if(elementType.isInterpretedFinite())
         {
           // At this point we are sure the formula is satisfiable and all cardinality constraints are satisfied.
-          // Since this type is finite, there is a single cardinality graph for all sets of this type because
-          // the cardinality of the universe set was added by CardinalityExtension::checkFiniteType.
-          // This means we have enough slack elements for each disjoint leaf in the cardinality graph.
-          // Therefore we can safely enumerate the finite type to get a unique element in each iteration.
+          // Since this type is finite, there is only one single cardinality graph for all sets of this type because
+          // the universe cardinality constraint has been added by CardinalityExtension::checkFiniteType.
+          // This means we have enough slack elements for all disjoint leaves in the cardinality graph.
+          // So we can safely add distinct slack elements that are different than current members of these leaves
 
           //ToDo: review changing the data structure to a list to avoid heavy copy
-          vector<Node> exclusionSet = d_finite_type_constants[elementType];
-//          Node constant;
-//          getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
-//          Node singleton = nm->mkNode(SINGLETON, constant);
-//          els.push_back(singleton);
+          vector<Node> exclusionSet = d_finite_type_elements[elementType];
 
           Node slack =  nm->mkSkolem("slack", elementType);
           Node singleton = nm->mkNode(SINGLETON,slack);
           std::vector<Node> elementsCopy;
           for(const Node & node: els)
           {
-            // add the element not the singleton
+            // add the element not the singleton set
             elementsCopy.push_back(node[0]);
           }
           // pass a copy of previous elements so that the new slack element is distinct
           model->setAssignmentExclusionSet(slack, exclusionSet);
           els.push_back(singleton);
-          d_finite_type_constants[elementType].push_back(slack);
+          d_finite_type_elements[elementType].push_back(slack);
 
           Trace("sets-model") << "ExclusionSet: Element " << slack
                     << " is excluded from set" << exclusionSet << std::endl;
@@ -1026,7 +1007,7 @@ void CardinalityExtension::mkModelValueElementsFor(
   }
 }
 
-void CardinalityExtension::collectFiniteTypeSetsConstants(TheoryModel * model)
+void CardinalityExtension::collectFiniteTypeSetElements(TheoryModel * model)
 {
   if(d_finite_type_constants_processed)
   {
@@ -1048,7 +1029,7 @@ void CardinalityExtension::collectFiniteTypeSetsConstants(TheoryModel * model)
         Trace("sets-model")<< "The representative " << modelRepresentative <<
         " in TheoryModel" << " is not a constant" << std::endl;
       }
-      d_finite_type_constants[member.getType()].push_back(modelRepresentative);
+      d_finite_type_elements[member.getType()].push_back(modelRepresentative);
     }
   }
   d_finite_type_constants_processed = true;
