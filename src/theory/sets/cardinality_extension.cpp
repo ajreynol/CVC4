@@ -1019,6 +1019,11 @@ void CardinalityExtension::collectFiniteTypeSetElements(TheoryModel * model)
     {
       continue;
     }
+    if(! isModelValueBasic(set))
+    {
+      // only consider leaves in the cardinality graph
+      continue;
+    }
     for (const std::pair<const Node, Node>& pair : d_state.getMembers(set))
     {
       Node member = pair.first;
