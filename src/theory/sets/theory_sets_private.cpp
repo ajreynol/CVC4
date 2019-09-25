@@ -1008,6 +1008,22 @@ EqualityStatus TheorySetsPrivate::getEqualityStatus(TNode a, TNode b) {
 /******************** Model generation ********************/
 /******************** Model generation ********************/
 
+namespace
+{
+    void traceSetElementsRecursively(const Node &n)
+    {
+      if (n.getKind() == SINGLETON)
+      {
+        Trace("sets-model") << n[0] << ", ";
+      }
+      if (n.getKind() == UNION)
+      {
+        traceSetElementsRecursively(n[0]);
+        traceSetElementsRecursively(n[1]);
+      }
+    }
+}
+
 bool TheorySetsPrivate::collectModelInfo(TheoryModel* m)
 {
   Trace("sets-model") << "Set collect model info" << std::endl;
@@ -1066,6 +1082,11 @@ bool TheorySetsPrivate::collectModelInfo(TheoryModel* m)
         return false;
       }
       m->assertSkeleton(rep);
+
+      //ToDo: remove this debugging information
+      Trace("sets-model") << "Set " << eqc << " = { ";
+      traceSetElementsRecursively(rep);
+      Trace("sets-model") << "}" << endl;
     }
   }
   return true;

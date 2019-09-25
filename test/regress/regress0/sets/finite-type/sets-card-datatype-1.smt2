@@ -1,5 +1,5 @@
 (set-logic ALL_SUPPORTED)
-;(set-info :status unsat)
+(set-info :status sat)
 (set-option :produce-models true)
 (set-option :sets-ext true)
 (declare-datatype Rec ((mkRec (r1 (_ BitVec 2)) (r2 (_ BitVec 2)))))

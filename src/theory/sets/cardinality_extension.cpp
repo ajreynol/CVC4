@@ -953,12 +953,12 @@ void CardinalityExtension::mkModelValueElementsFor(
       unsigned vu = v.getConst<Rational>().getNumerator().toUnsignedInt();
       Assert(els.size() <= vu);
       NodeManager* nm = NodeManager::currentNM();
-      //ToDo: remove this if block if it is no longer needed
-//      if(elementType.isInterpretedFinite())
-//      {
-//        // get all constants of this type encountered so far
-//        // collectFiniteTypeSetsConstants(model);
-//      }
+
+      if(elementType.isInterpretedFinite())
+      {
+        // get all constants members of this finite type
+        collectFiniteTypeSetsConstants(model);
+      }
       while (els.size() < vu)
       {
         if(elementType.isInterpretedFinite())
@@ -969,7 +969,8 @@ void CardinalityExtension::mkModelValueElementsFor(
           // This means we have enough slack elements for each disjoint leaf in the cardinality graph.
           // Therefore we can safely enumerate the finite type to get a unique element in each iteration.
 
-//          vector<Node> & constants = d_finite_type_constants[elementType];
+          //ToDo: review changing the data structure to a list to avoid heavy copy
+          vector<Node> exclusionSet = d_finite_type_constants[elementType];
 //          Node constant;
 //          getNewConstant(elementType, constants, d_finite_type_enumerator, constant);
 //          Node singleton = nm->mkNode(SINGLETON, constant);
@@ -984,16 +985,14 @@ void CardinalityExtension::mkModelValueElementsFor(
             elementsCopy.push_back(node[0]);
           }
           // pass a copy of previous elements so that the new slack element is distinct
-          model->setAssignmentExclusionSet(slack, elementsCopy);
+          model->setAssignmentExclusionSet(slack, exclusionSet);
           els.push_back(singleton);
+          d_finite_type_constants[elementType].push_back(slack);
+
+          Trace("sets-model") << "ExclusionSet: Element " << slack
+                    << " is excluded from set" << exclusionSet << std::endl;
 
           Trace("sets-model") << "Added slack element " << slack  << " to set " << eqc << std::endl;
-          Trace("sets-model") << "Set " << eqc  << " = { ";
-          for(unsigned int i = 0; i < els.size() - 1; i ++)
-          {
-            Trace("sets-model") << els[i][0]<< ", ";
-          }
-          Trace("sets-model") << els[els.size() - 1][0] << "}" << endl;
         }
         else
         {
@@ -1044,16 +1043,12 @@ void CardinalityExtension::collectFiniteTypeSetsConstants(TheoryModel * model)
       Node member = pair.first;
       Node modelRepresentative = model->getRepresentative(member);
       Trace("sets-model") << "set member " << member  << " has representative " << modelRepresentative << std::endl;
-      if(modelRepresentative.isConst())
+      if(!modelRepresentative.isConst())
       {
-        d_finite_type_constants[member.getType()].push_back(modelRepresentative);
+        Trace("sets-model")<< "The representative " << modelRepresentative <<
+        " in TheoryModel" << " is not a constant" << std::endl;
       }
-      else
-      {
-        std::stringstream message;
-        message << "The representative " << modelRepresentative << " in TheoryModel" << " is not a constant";
-        Assert(false, message.str().c_str());
-      }
+      d_finite_type_constants[member.getType()].push_back(modelRepresentative);
     }
   }
   d_finite_type_constants_processed = true;
