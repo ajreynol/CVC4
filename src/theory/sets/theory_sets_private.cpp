@@ -1010,16 +1010,23 @@ EqualityStatus TheorySetsPrivate::getEqualityStatus(TNode a, TNode b) {
 
 namespace
 {
-    void traceSetElementsRecursively(const Node &n)
+    /**
+     * This function is a helper function to print sets as
+     * Set A = { a0, a1, a2 }
+     * instead of
+     * (union (singleton a0) (union (singleton a1) (singleton a2)))
+     */
+    void traceSetElementsRecursively(const Node & set)
     {
-      if (n.getKind() == SINGLETON)
+      Assert(set.getType().isSet());
+      if (set.getKind() == SINGLETON)
       {
-        Trace("sets-model") << n[0] << ", ";
+        Trace("sets-model") << set[0] << ", ";
       }
-      if (n.getKind() == UNION)
+      if (set.getKind() == UNION)
       {
-        traceSetElementsRecursively(n[0]);
-        traceSetElementsRecursively(n[1]);
+        traceSetElementsRecursively(set[0]);
+        traceSetElementsRecursively(set[1]);
       }
     }
 }
