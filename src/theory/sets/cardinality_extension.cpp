@@ -111,7 +111,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   // add subset lemmas for sets and membership lemmas for negative members
   for(Node & representative : representatives)
   {
-    if(representative != d_ee.getRepresentative(univ)) // the univrse set is a subset of itself
+    if(representative != d_ee.getRepresentative(univ)) // the universe set is a subset of itself
     {
       Node subset = nm->mkNode(kind::SUBSET, representative, proxy);
       /** (=> true (subset representative (as univset t)) */
@@ -125,6 +125,17 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
         Node membership = nm->mkNode(MEMBER, negativeMember.first, univ);
         /** (=> true (member negativeMember (as univset t))) */
         d_im.assertInference(membership, d_state.d_true, "univset membership", 1);
+      }
+
+      /** this rule inspired by a corner case says the current set can not be the universe*/
+      if(negativeMembers.size() > 0)
+      {
+        Node cardRepresentative = nm->mkNode(kind::CARD, representative);
+        Node less = nm->mkNode(kind::LT, cardRepresentative, cardUniv);
+//        Node member = nm->mkNode(kind::MEMBER, negativeMembers.begin()->first, representative);
+//        Node notMember = nm->mkNode(kind::NOT, member);
+        //ToDo: review this assertion and its reason notMember above
+        d_im.assertInference(less, d_state.d_true, "representative does not equal univset", 1);
       }
     }
   }

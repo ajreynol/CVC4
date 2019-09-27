@@ -315,7 +315,10 @@ class CardinalityExtension
    * where S is a set term of type t, and for each negative member x not in S
    * 1- (=> true (<= (card (as univset t)) n) where n is the cardinality of t
    * 2- (=> true (subset S (as univset t)) where S is a set term of type t
-   * 3- (=> true (member s (as univset t)))
+   * 3- (=> true (member x (as univset t)))
+   * ToDo: review this rule which I think is not necessary
+   * 4- If rule 3 is applied for the set S, then S is a proper subset of univset.
+   * i.e. (=>  (not (member x S)) (< (card S) (card univset)))
    */
   void checkFiniteType(TypeNode & t);
   /** element types of sets for which cardinality is enabled */
