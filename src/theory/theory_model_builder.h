@@ -115,28 +115,8 @@ class TheoryEngineModelBuilder : public ModelBuilder
    * If this method returns a non-null node c, then c is a constant and some
    * term in the equivalence class of t evaluates to c based on the current
    * state of the model m.
-   *
-   * It sets assignable to true if there is an assignable term in r, it sets
-   * evaluable to true if there is a term in r that is not assignable.
    */
-  Node evaluateEqc(TheoryModel* m, TNode r, bool& assignable, bool& evaluable);
-  /** is equivalence class r assignable?
-   *
-   * An equivalence class r is assignable if:
-   * (1) It contains at least one assignable expression (see below) and
-   * (2) for each term t in r, all terms in the assignment exclusion set of t
-   * (if it has one) have already been assigned values.
-   *
-   * If r is assignable, this method returns true and appends the constants that
-   * have been assigned to the assignment exclusion set of all terms t in r to
-   * eset.
-   *
-   * It sets evaluable to true if there is a term in r that is not assignable.
-   */
-  bool isAssignableEqc(TheoryModel* m,
-                       TNode r,
-                       std::vector<Node>& eset,
-                       bool& evaluable);
+  Node evaluateEqc(TheoryModel* m, TNode r);
   /** is n an assignable expression?
    *
    * A term n is an assignable expression if its value is unconstrained by a
@@ -148,27 +128,7 @@ class TheoryEngineModelBuilder : public ModelBuilder
    * Assignable terms must be first-order, that is, all instances of the above
    * terms are not assignable if they have a higher-order (function) type.
    */
-  bool isAssignableExpression(TNode n);
-  /** Process equivalence class internal
-   *
-   * This is a helper function for evaluateEqc and isAssignableEqc.
-   *
-   * If doEval is true, it returns a non-null node c if some term t in r
-   * evaluates to c based on the current state of m.
-   *
-   * If doComputeEset is true, it adds terms to eset that are in the assignment
-   * exclusion set of some term t in r.
-   *
-   * It sets assignable to true if there is an assignable term in r, it sets
-   * evaluable to true if there is a term in r that is not assignable.
-   */
-  Node processEqcInternal(TheoryModel* m,
-                          TNode r,
-                          bool& assignable,
-                          bool& evaluable,
-                          std::vector<Node>& eset,
-                          bool doEval,
-                          bool doComputeEset);
+  bool isAssignable(TNode n);
   /** add assignable subterms
    * Adds all assignable subterms of n to tm's equality engine.
    */
@@ -254,6 +214,45 @@ class TheoryEngineModelBuilder : public ModelBuilder
   /** mapping from terms to the constant associated with their equivalence class
    */
   std::map<Node, Node> d_constantReps;
+
+  /** Theory engine model builder assigner class
+   *
+   * This manages the assignment of values to a terms of a given type.
+   * In particular, it is a wrapper over a type enumerator that is restricted
+   * by a set of values that it cannot generate, called an "assignment exclusion
+   * set".
+   */
+  class Assigner
+  {
+   public:
+    Assigner() : d_te(nullptr), d_isActive(false) {}
+    /**
+     * Initialize this assigner to generate values of type tn, with properties
+     * tep and assignment exclusion set aes.
+     */
+    void initialize(TypeNode tn,
+                    TypeEnumeratorProperties* tep,
+                    const std::vector<Node>& aes);
+    /** get the next term, or null if it does not exist */
+    Node getNextAssignment();
+    /** The type enumerator */
+    std::unique_ptr<TypeEnumerator> d_te;
+    /** The assignment exclusion set of this */
+    std::vector<Node> d_assignExcSet;
+    /**
+     * Is active, flag set to true when all values in d_assignExcSet are
+     * constant.
+     */
+    bool d_isActive;
+  };
+  /** Is the given Assigner ready to assign values?
+   *
+   * This returns true if all values in the assignment exclusion set of a have
+   * known value according to the state of this model builder (via a lookup
+   * in d_constantReps). It updates the assignment exclusion vector of a to
+   * these values whenever possible.
+   */
+  bool isAssignerActive(TheoryModel* tm, Assigner& a);
 
   //------------------------------------for codatatypes
   /** is v an excluded codatatype value?
