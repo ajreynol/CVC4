@@ -45,6 +45,7 @@ void CardinalityExtension::reset()
 {
   d_eqc_to_card_term.clear();
   d_t_card_enabled.clear();
+  d_finite_type_elements.clear();
 }
 void CardinalityExtension::registerTerm(Node n)
 {
