@@ -966,7 +966,7 @@ void CardinalityExtension::mkModelValueElementsFor(
           std::vector<Node> elementsCopy;
           for(const Node & node: els)
           {
-            // add the element not the singleton set
+            // add the element, not the singleton set
             elementsCopy.push_back(node[0]);
           }
           // pass a copy of previous elements so that the new slack element is distinct
