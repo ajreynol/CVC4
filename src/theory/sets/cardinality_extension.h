@@ -138,6 +138,9 @@ class CardinalityExtension
    */
   const std::vector<Node>& getOrderedSetsEqClasses() { return d_oSetEqc; }
 
+  //ToDo: add documentation
+  const std::map<TypeNode, std::vector<TNode> > & getSlackElements() const {return d_finite_type_slack_elements;}
+  const std::vector<Node> & getFiniteTypeMembers(TypeNode typeNode);
  private:
   /** constants */
   Node d_zero;
@@ -372,6 +375,8 @@ class CardinalityExtension
    * a map to store the elements used so far for each finite type
    */
   std::map<TypeNode, std::vector<Node> > d_finite_type_elements;
+
+  std::map<TypeNode, std::vector<TNode> > d_finite_type_slack_elements;
   /** This boolean determines whether we already collected finite type constants
    *  present in the current model.
    *  Default value is false

@@ -46,6 +46,7 @@ void CardinalityExtension::reset()
   d_eqc_to_card_term.clear();
   d_t_card_enabled.clear();
   d_finite_type_elements.clear();
+  d_finite_type_slack_elements.clear();
 }
 void CardinalityExtension::registerTerm(Node n)
 {
@@ -958,25 +959,10 @@ void CardinalityExtension::mkModelValueElementsFor(
           // This means we have enough slack elements for all disjoint leaves in the cardinality graph.
           // So we can safely add distinct slack elements that are different than current members of these leaves
 
-          //ToDo: review changing the data structure to a list to avoid heavy copy
-          vector<Node> exclusionSet = d_finite_type_elements[elementType];
-
           Node slack =  nm->mkSkolem("slack", elementType);
           Node singleton = nm->mkNode(SINGLETON,slack);
-          std::vector<Node> elementsCopy;
-          for(const Node & node: els)
-          {
-            // add the element, not the singleton set
-            elementsCopy.push_back(node[0]);
-          }
-          // pass a copy of previous elements so that the new slack element is distinct
-          model->setAssignmentExclusionSet(slack, exclusionSet);
           els.push_back(singleton);
-          d_finite_type_elements[elementType].push_back(slack);
-
-          Trace("sets-model") << "ExclusionSet: Element " << slack
-                    << " is excluded from set" << exclusionSet << std::endl;
-
+          d_finite_type_slack_elements[elementType].push_back(slack);
           Trace("sets-model") << "Added slack element " << slack  << " to set " << eqc << std::endl;
         }
         else
@@ -1044,6 +1030,10 @@ void CardinalityExtension::collectFiniteTypeSetElements(TheoryModel * model)
   d_finite_type_constants_processed = true;
 }
 
+const std::vector<Node> & CardinalityExtension::getFiniteTypeMembers(TypeNode typeNode)
+{
+  return d_finite_type_elements[typeNode];
+}
 
 }  // namespace sets
 }  // namespace theory
