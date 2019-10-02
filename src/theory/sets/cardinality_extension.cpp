@@ -120,22 +120,14 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
 
       // negative members are members in the universe set
       const std::map<Node, Node>& negativeMembers = d_state.getNegativeMembers(representative);
+
       for (const std::pair<Node,  Node> & negativeMember: negativeMembers)
       {
-        Node membership = nm->mkNode(MEMBER, negativeMember.first, univ);
+        Node member = nm->mkNode(MEMBER, negativeMember.first, univ);
+        // negativeMember.second which is the reason of the negative membership has kind MEMBER. sO We need to negate it
+        Node notMember = nm->mkNode(NOT, negativeMember.second);
         /** (=> true (member negativeMember (as univset t))) */
-        d_im.assertInference(membership, d_state.d_true, "univset membership", 1);
-      }
-
-      /** this rule inspired by a corner case says the current set can not be the universe*/
-      if(negativeMembers.size() > 0)
-      {
-        Node cardRepresentative = nm->mkNode(kind::CARD, representative);
-        Node less = nm->mkNode(kind::LT, cardRepresentative, cardUniv);
-//        Node member = nm->mkNode(kind::MEMBER, negativeMembers.begin()->first, representative);
-//        Node notMember = nm->mkNode(kind::NOT, member);
-        //ToDo: review this assertion and its reason notMember above
-        d_im.assertInference(less, d_state.d_true, "representative does not equal univset", 1);
+        d_im.assertInference(member, notMember, "negative members are in the universe", 1);
       }
     }
   }
