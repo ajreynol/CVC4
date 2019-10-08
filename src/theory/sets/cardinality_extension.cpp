@@ -1024,7 +1024,11 @@ void CardinalityExtension::collectFiniteTypeSetElements(TheoryModel * model)
         Trace("sets-model")<< "The representative " << modelRepresentative <<
         " in TheoryModel" << " is not a constant" << std::endl;
       }
-      d_finite_type_elements[member.getType()].push_back(modelRepresentative);
+      std::vector<Node> & elements = d_finite_type_elements[member.getType()];
+      if(std::find(elements.begin(), elements.end(), modelRepresentative) == elements.end())
+      {
+        elements.push_back(modelRepresentative);
+      }
     }
   }
   d_finite_type_constants_processed = true;
