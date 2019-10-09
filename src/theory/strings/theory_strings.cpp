@@ -638,12 +638,14 @@ bool TheoryStrings::collectModelInfo(TheoryModel* m)
       // get the model value for lts[i]
       len_value = d_valuation.getModelValue(lts[i]);
     }
+    Trace("strings-model") << "Length value is " << len_value << std::endl;
     if (len_value.isNull())
     {
       lts_values.push_back(Node::null());
     }
     else
     {
+      Assert(len_value.isConst());
       Assert(len_value.getConst<Rational>() <= Rational(String::maxSize()),
              "Exceeded UINT32_MAX in string model");
       unsigned lvalue =
