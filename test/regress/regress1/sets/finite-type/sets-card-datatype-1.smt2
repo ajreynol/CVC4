@@ -12,4 +12,3 @@
 (assert (= (card (intersection A B)) 1))
 (assert (= universe (as univset (Set Rec))))
 (check-sat)
-(get-model)

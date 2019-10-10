@@ -9,4 +9,4 @@
 (assert (= (card B) 2))
 (assert (= universe (as univset (Set Bool))))
 (check-sat)
-(get-model)
+

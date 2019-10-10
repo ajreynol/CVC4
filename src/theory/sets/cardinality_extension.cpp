@@ -83,14 +83,19 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   // ToDo: investigate refactoring nm->mkSetType
   Node univ = d_state.getUnivSet(nm->mkSetType(t));
   std::map<Node, Node>::iterator it = d_univProxy.find(univ);
-  if(it != d_univProxy.end())
+  Node proxy;
+  if(it == d_univProxy.end())
   {
-    return;
+    // Force cvc4 to build the cardinality graph for the universe set
+    Trace("sets-lemma") << "Created a new proxy for " << univ << std::endl;
+    proxy = d_state.getProxy(univ);
+    d_univProxy[univ] = proxy;
   }
-
-  // Force cvc4 to build the cardinality graph for the universe set
-  Node proxy = d_state.getProxy(univ);
-  d_univProxy[univ] = proxy;
+  else
+  {
+    proxy = it->second;
+    Trace("sets-lemma") << "used proxy " << proxy << " for " << univ << std::endl;
+  }
 
   // get all equivalent classes of type t
   vector<Node> representatives = d_state.getSetsEqClasses(t);
@@ -108,17 +113,27 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   Node cardUniv = nm->mkNode(kind::CARD, proxy);
   Node leq = nm->mkNode(kind::LEQ, cardUniv, typeCardinality);
   /** (=> true (<= (card (as univset t)) cardUniv) */
-  d_im.assertInference(leq, d_state.d_true, "finite type cardinality", 1);
+  if(! d_state.isEntailed(leq, true))
+  {
+    d_im.assertInference(leq, d_state.d_true, "finite type cardinality", 1);
+  }
 
   // add subset lemmas for sets and membership lemmas for negative members
   for(Node & representative : representatives)
   {
     if(representative != d_ee.getRepresentative(univ)) // the universe set is a subset of itself
     {
-      Node subset = nm->mkNode(kind::SUBSET, representative, proxy);
+        Node vr = d_state.getVariableSet(representative);
+        if (vr.isNull()) {
+            continue;
+        }
+      Node subset = nm->mkNode(kind::SUBSET, vr, proxy);
+        subset = Rewriter::rewrite(subset);
       /** (=> true (subset representative (as univset t)) */
-      d_state.isEntailed(subset, true);
-      d_im.assertInference(subset, d_state.d_true, "univset is a super set", 1);
+      if(! d_state.isEntailed(subset, true))
+      {
+        d_im.assertInference(subset, d_state.d_true, "univset is a super set", 1);
+      }
 
       // negative members are members in the universe set
       const std::map<Node, Node>& negativeMembers = d_state.getNegativeMembers(representative);
