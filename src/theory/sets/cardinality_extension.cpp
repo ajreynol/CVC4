@@ -112,7 +112,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
 
   Node cardUniv = nm->mkNode(kind::CARD, proxy);
   Node leq = nm->mkNode(kind::LEQ, cardUniv, typeCardinality);
-  
+
   /** (=> true (<= (card (as univset t)) cardUniv) */
   if(! d_state.isEntailed(leq, true))
   {
@@ -124,13 +124,17 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   {
     if(representative != d_ee.getRepresentative(univ)) // the universe set is a subset of itself
     {
-        Node vr = d_state.getVariableSet(representative);
-        if (vr.isNull()) {
-            continue;
-        }
-      Node subset = nm->mkNode(kind::SUBSET, vr, proxy);
-        subset = Rewriter::rewrite(subset);
+      // here we only add representatives with variables to avoid adding infinite equivalent generated
+      // terms to the cardinality graph
+      Node variable = d_state.getVariableSet(representative);
+      if (variable.isNull())
+      {
+          continue;
+      }
+
       /** (=> true (subset representative (as univset t)) */
+      Node subset = nm->mkNode(kind::SUBSET, variable, proxy);
+      subset = Rewriter::rewrite(subset);
       if(! d_state.isEntailed(subset, true))
       {
         d_im.assertInference(subset, d_state.d_true, "univset is a super set", 1);
