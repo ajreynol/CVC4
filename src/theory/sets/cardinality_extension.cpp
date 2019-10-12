@@ -47,6 +47,7 @@ void CardinalityExtension::reset()
   d_t_card_enabled.clear();
   d_finite_type_elements.clear();
   d_finite_type_slack_elements.clear();
+  d_univProxy.clear();
 }
 void CardinalityExtension::registerTerm(Node n)
 {
