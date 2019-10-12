@@ -1524,16 +1524,22 @@ set(regress_1_tests
   regress1/sets/card-vc6-minimized.smt2
   regress1/sets/copy_check_heap_access_33_4.smt2
   regress1/sets/deepmeas0.hs.fqout.cvc4.41.smt2
+  regress1/sets/finite-type/sets-card-arrcolor.smt2
+  regress1/sets/finite-type/sets-card-arrunit.smt2
   regress1/sets/finite-type/sets-card-bool-1.smt2
   regress1/sets/finite-type/sets-card-bool-2.smt2
   regress1/sets/finite-type/sets-card-bool-3.smt2
   regress1/sets/finite-type/sets-card-bool-4.smt2
+  regress1/sets/finite-type/sets-card-bool-rec.smt2
   regress1/sets/finite-type/sets-card-bv-1.smt2
   regress1/sets/finite-type/sets-card-bv-2.smt2
   regress1/sets/finite-type/sets-card-bv-3.smt2
   regress1/sets/finite-type/sets-card-bv-4.smt2
+  regress1/sets/finite-type/sets-card-color.smt2
+  regress1/sets/finite-type/sets-card-color-sat.smt2
   regress1/sets/finite-type/sets-card-datatype-1.smt2
   regress1/sets/finite-type/sets-card-datatype-2.smt2
+  regress1/sets/finite-type/sets-card-neg-mem-union-2.smt2
   regress1/sets/fuzz14418.smt2
   regress1/sets/fuzz15201.smt2
   regress1/sets/fuzz31811.smt2
