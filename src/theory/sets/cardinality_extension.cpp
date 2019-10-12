@@ -88,14 +88,12 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   if(it == d_univProxy.end())
   {
     // Force cvc4 to build the cardinality graph for the universe set
-    Trace("sets-lemma") << "Created a new proxy for " << univ << std::endl;
     proxy = d_state.getProxy(univ);
     d_univProxy[univ] = proxy;
   }
   else
   {
     proxy = it->second;
-    Trace("sets-lemma") << "used proxy " << proxy << " for " << univ << std::endl;
   }
 
   // get all equivalent classes of type t
@@ -109,10 +107,12 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
     message << "The cardinality "<< card << " of the finite type " << t << " is not supported yet." << endl;
     Assert(false, message.str().c_str());
   }
+
   Node typeCardinality = nm->mkConst(Rational(card.getFiniteCardinality()));
 
   Node cardUniv = nm->mkNode(kind::CARD, proxy);
   Node leq = nm->mkNode(kind::LEQ, cardUniv, typeCardinality);
+  
   /** (=> true (<= (card (as univset t)) cardUniv) */
   if(! d_state.isEntailed(leq, true))
   {
