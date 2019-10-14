@@ -366,20 +366,22 @@ class CardinalityExtension
   std::map<Node, Node> d_localBase;
 
   /**
-   * a map to store proxy nodes for the universe sets
+   * a map to store proxy nodes for the universe sets of finite types
    */
   std::map<Node, Node> d_univProxy;
 
   /**
-   * collect the set elements of all sets of finite types in model, and
+   * collect the elements in all sets of finite types in model, and
    * store them in the field d_finite_type_elements
    */
   void collectFiniteTypeSetElements(TheoryModel * model);
   /**
-   * a map to store the elements used so far for each finite type
+   * a map to store the non-slack elements encountered so far in all finite types
    */
   std::map<TypeNode, std::vector<Node> > d_finite_type_elements;
-
+  /**
+   * a map to store slack elements in all finite types
+   */
   std::map<TypeNode, std::vector<TNode> > d_finite_type_slack_elements;
   /** This boolean determines whether we already collected finite type constants
    *  present in the current model.
