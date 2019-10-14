@@ -359,6 +359,7 @@ void TheorySetsPrivate::fullEffortCheck(){
               // TODO (#1124):  The issue can be divided into 4 parts
               // 1- Supporting the universe cardinality for finite types with finite cardinality (done)
               // 2- Supporting the universe cardinality for for uninterpreted sorts with finite-model-find (pending)
+              //    See the implementation of CardinalityExtension::checkFiniteType
               // 3- Supporting the universe cardinality for non-finite types (pending, easy)
               // 4- Supporting cardinality for relations (hard)
           }
@@ -1017,23 +1018,32 @@ namespace
 {
     /**
      * This function is a helper function to print sets as
-     * Set A = { a0, a1, a2 }
+     * Set A = { a0, a1, a2, }
      * instead of
      * (union (singleton a0) (union (singleton a1) (singleton a2)))
      */
-    void traceSetElementsRecursively(const Node & set)
+    void traceSetElementsRecursively(stringstream & stream, const Node & set)
     {
       Assert(set.getType().isSet());
       if (set.getKind() == SINGLETON)
       {
-        Trace("sets-model") << set[0] << ", ";
+        stream << set[0] << ", ";
       }
       if (set.getKind() == UNION)
       {
-        traceSetElementsRecursively(set[0]);
-        traceSetElementsRecursively(set[1]);
+        traceSetElementsRecursively(stream, set[0]);
+        traceSetElementsRecursively(stream, set[1]);
       }
     }
+
+    std::string traceElements(const Node & set)
+    {
+      std::stringstream stream;
+      traceSetElementsRecursively(stream, set);
+      return stream.str();
+    }
+
+
 }
 
 bool TheorySetsPrivate::collectModelInfo(TheoryModel* m)
@@ -1096,9 +1106,7 @@ bool TheorySetsPrivate::collectModelInfo(TheoryModel* m)
       m->assertSkeleton(rep);
 
       //ToDo: remove this debugging information
-      Trace("sets-model") << "Set " << eqc << " = { ";
-      traceSetElementsRecursively(rep);
-      Trace("sets-model") << "}" << endl;
+      Trace("sets-model") << "Set " << eqc << " = { " << traceElements(rep) << " }" << std::endl;
     }
   }
 
