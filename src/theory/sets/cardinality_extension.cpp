@@ -968,7 +968,7 @@ void CardinalityExtension::mkModelValueElementsFor(
 
       if(elementType.isInterpretedFinite())
       {
-        // get all constants members of this finite type
+        // get all members of this finite type
         collectFiniteTypeSetElements(model);
       }
       while (els.size() < vu)
@@ -978,8 +978,9 @@ void CardinalityExtension::mkModelValueElementsFor(
           // At this point we are sure the formula is satisfiable and all cardinality constraints are satisfied.
           // Since this type is finite, there is only one single cardinality graph for all sets of this type because
           // the universe cardinality constraint has been added by CardinalityExtension::checkFiniteType.
-          // This means we have enough slack elements for all disjoint leaves in the cardinality graph.
-          // So we can safely add distinct slack elements that are different than current members of these leaves
+          // This means we have enough slack elements of this finite type for all disjoint leaves in the
+          // cardinality graph. Therefore we can safely add new distinct slack elements for the leaves without worrying
+          // about conflicts with the current members of this finite type.
 
           Node slack =  nm->mkSkolem("slack", elementType);
           Node singleton = nm->mkNode(SINGLETON,slack);
@@ -1040,12 +1041,6 @@ void CardinalityExtension::collectFiniteTypeSetElements(TheoryModel * model)
     {
       Node member = pair.first;
       Node modelRepresentative = model->getRepresentative(member);
-      Trace("sets-model") << "set member " << member  << " has representative " << modelRepresentative << std::endl;
-      if(!modelRepresentative.isConst())
-      {
-        Trace("sets-model")<< "The representative " << modelRepresentative <<
-        " in TheoryModel" << " is not a constant" << std::endl;
-      }
       std::vector<Node> & elements = d_finite_type_elements[member.getType()];
       if(std::find(elements.begin(), elements.end(), modelRepresentative) == elements.end())
       {
