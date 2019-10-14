@@ -134,6 +134,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
 
       /** (=> true (subset representative (as univset t)) */
       Node subset = nm->mkNode(kind::SUBSET, variable, proxy);
+      // subset terms are rewritten as union terms: (subset A B) implies (= (union A B) B)
       subset = Rewriter::rewrite(subset);
       if(! d_state.isEntailed(subset, true))
       {
@@ -146,9 +147,10 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
       for (const std::pair<Node,  Node> & negativeMember: negativeMembers)
       {
         Node member = nm->mkNode(MEMBER, negativeMember.first, univ);
-        // negativeMember.second which is the reason of the negative membership has kind MEMBER. sO We need to negate it
+        // negativeMember.second is the reason for the negative membership and has kind MEMBER. So We
+        // specify the negation as the reason for the negative membership lemma
         Node notMember = nm->mkNode(NOT, negativeMember.second);
-        /** (=> true (member negativeMember (as univset t))) */
+        /** (=> (not (member negativeMember representative))) (member negativeMember (as univset t))) */
         d_im.assertInference(member, notMember, "negative members are in the universe", 1);
       }
     }
