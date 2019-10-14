@@ -350,12 +350,17 @@ void TheorySetsPrivate::fullEffortCheck(){
           // if we do not handle the kind, set incomplete
           Kind nk = n[0].getKind();
           // some kinds of cardinality we cannot handle
-          if (d_rels->isRelationKind(nk))
+          if ((nk == kind::UNIVERSE_SET && !n[0].getType().isInterpretedFinite()) ||
+                  d_rels->isRelationKind(nk))
           {
               d_full_check_incomplete = true;
               Trace("sets-incomplete")
                       << "Sets : incomplete because of " << n << "." << std::endl;
-              // TODO (#1124) handle this case
+              // TODO (#1124):  The issue can be divided into 4 parts
+              // 1- Supporting the universe cardinality for finite types with finite cardinality (done)
+              // 2- Supporting the universe cardinality for for uninterpreted sorts with finite-model-find (pending)
+              // 3- Supporting the universe cardinality for non-finite types (pending, easy)
+              // 4- Supporting cardinality for relations (hard)
           }
         }
         else
