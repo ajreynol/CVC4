@@ -1105,7 +1105,6 @@ bool TheorySetsPrivate::collectModelInfo(TheoryModel* m)
       }
       m->assertSkeleton(rep);
 
-      //ToDo: remove this debugging information
       Trace("sets-model") << "Set " << eqc << " = { " << traceElements(rep) << " }" << std::endl;
     }
   }
