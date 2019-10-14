@@ -146,7 +146,7 @@ class CardinalityExtension
   const std::map<TypeNode, std::vector<TNode> > & getFiniteTypeSlackElements() const {return d_finite_type_slack_elements;}
   /**
    * get non-slack members in all sets of the given finite type. This function is called by
-   * TheorySetsPrivate::collectModelInfo to specify the exclusion set
+   * TheorySetsPrivate::collectModelInfo to specify the exclusion sets for TheoryModel
    */
   const std::vector<Node> & getFiniteTypeMembers(TypeNode typeNode);
  private:
@@ -320,16 +320,12 @@ class CardinalityExtension
    * add cardinality lemmas for each finite type
    */
   void checkFiniteTypes();
-
   /**
    * This function adds the following lemmas for the finite type t for each S
-   * where S is a set term of type t, and for each negative member x not in S
+   * where S is a (a representative) set term of type t, and for each negative member x not in S
    * 1- (=> true (<= (card (as univset t)) n) where n is the cardinality of t
    * 2- (=> true (subset S (as univset t)) where S is a set term of type t
-   * 3- (=> true (member x (as univset t)))
-   * ToDo: review this rule which I think is not necessary
-   * 4- If rule 3 is applied for the set S, then S is a proper subset of univset.
-   * i.e. (=>  (not (member x S)) (< (card S) (card univset)))
+   * 3- (=> (not (member negativeMember S))) (member negativeMember (as univset t)))
    */
   void checkFiniteType(TypeNode & t);
   /** element types of sets for which cardinality is enabled */
