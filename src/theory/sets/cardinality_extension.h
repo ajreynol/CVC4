@@ -138,8 +138,12 @@ class CardinalityExtension
    */
   const std::vector<Node>& getOrderedSetsEqClasses() { return d_oSetEqc; }
 
-  //ToDo: add documentation
-  const std::map<TypeNode, std::vector<TNode> > & getSlackElements() const {return d_finite_type_slack_elements;}
+  /**
+   * get the slack elements generated for each finite type. This function is called by
+   * TheorySetsPrivate::collectModelInfo in order to ask the TheoryModel to exclude these
+   * slack elements from the members in all sets of that type.
+   */
+  const std::map<TypeNode, std::vector<TNode> > & getFiniteTypeSlackElements() const {return d_finite_type_slack_elements;}
   const std::vector<Node> & getFiniteTypeMembers(TypeNode typeNode);
  private:
   /** constants */

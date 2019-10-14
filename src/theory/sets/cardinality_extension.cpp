@@ -34,7 +34,11 @@ CardinalityExtension::CardinalityExtension(SolverState& s,
                                            eq::EqualityEngine& e,
                                            context::Context* c,
                                            context::UserContext* u)
-    : d_state(s), d_im(im), d_ee(e), d_card_processed(u), d_finite_type_constants_processed(false)
+    : d_state(s),
+      d_im(im),
+      d_ee(e),
+      d_card_processed(u),
+      d_finite_type_constants_processed(false)
 {
   d_zero = NodeManager::currentNM()->mkConst(Rational(0));
   // we do congruence over cardinality

@@ -1100,13 +1100,12 @@ bool TheorySetsPrivate::collectModelInfo(TheoryModel* m)
   // handle slack elements constraints for finite types
   if(d_card_enabled)
   {
-    const std::map<TypeNode, std::vector<TNode> > & slackElements = d_cardSolver->getSlackElements();
+    const std::map<TypeNode, std::vector<TNode> > & slackElements = d_cardSolver->getFiniteTypeSlackElements();
     for (const std::pair<TypeNode, std::vector<TNode> > & pair: slackElements)
     {
       const std::vector<Node> & members = d_cardSolver->getFiniteTypeMembers(pair.first);
       m->setAssignmentExclusionSetGroup(pair.second, members);
       Trace("sets-model") << "ExclusionSet: Group " << pair.second << " is excluded from set" << members << std::endl;
-
     }
   }
   return true;
