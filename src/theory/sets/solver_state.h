@@ -123,7 +123,8 @@ class SolverState
   bool isCongruent(Node n) const;
   /** Get the list of all equivalence classes of set terms */
   const std::vector<Node>& getSetsEqClasses() const { return d_set_eqc; }
-    /** Get the list of all equivalence classes of set terms that have element type t */
+  /** Get the list of all equivalence classes of set terms that have element
+   * type t */
   const std::vector<Node> getSetsEqClasses(const TypeNode& t) const;
 
   /**
@@ -203,10 +204,9 @@ class SolverState
   /** debug print set */
   void debugPrintSet(Node s, const char* c) const;
   /** get the constant true */
-  const Node & getTrue() const {return d_true;}
+  const Node& getTrue() const { return d_true; }
 
-private:
-
+ private:
   /** constants */
   Node d_true;
   Node d_false;

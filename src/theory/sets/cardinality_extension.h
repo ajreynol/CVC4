@@ -21,8 +21,8 @@
 #include "context/context.h"
 #include "theory/sets/inference_manager.h"
 #include "theory/sets/solver_state.h"
-#include "theory/uf/equality_engine.h"
 #include "theory/type_set.h"
+#include "theory/uf/equality_engine.h"
 
 namespace CVC4 {
 namespace theory {
@@ -126,8 +126,7 @@ class CardinalityExtension
                                Node eqc,
                                std::vector<Node>& els,
                                const std::map<Node, Node>& mvals,
-                               TheoryModel * model
-                               );
+                               TheoryModel* model);
   /** get ordered sets equivalence classes
    *
    * Get the ordered set of equivalence classes computed by this class. This
@@ -139,16 +138,22 @@ class CardinalityExtension
   const std::vector<Node>& getOrderedSetsEqClasses() { return d_oSetEqc; }
 
   /**
-   * get the slack elements generated for each finite type. This function is called by
-   * TheorySetsPrivate::collectModelInfo to ask the TheoryModel to exclude these
-   * slack elements from the members in all sets of that type.
+   * get the slack elements generated for each finite type. This function is
+   * called by TheorySetsPrivate::collectModelInfo to ask the TheoryModel to
+   * exclude these slack elements from the members in all sets of that type.
    */
-  const std::map<TypeNode, std::vector<TNode> > & getFiniteTypeSlackElements() const {return d_finite_type_slack_elements;}
+  const std::map<TypeNode, std::vector<TNode> >& getFiniteTypeSlackElements()
+      const
+  {
+    return d_finite_type_slack_elements;
+  }
   /**
-   * get non-slack members in all sets of the given finite type. This function is called by
-   * TheorySetsPrivate::collectModelInfo to specify the exclusion sets for TheoryModel
+   * get non-slack members in all sets of the given finite type. This function
+   * is called by TheorySetsPrivate::collectModelInfo to specify the exclusion
+   * sets for TheoryModel
    */
-  const std::vector<Node> & getFiniteTypeMembers(TypeNode typeNode);
+  const std::vector<Node>& getFiniteTypeMembers(TypeNode typeNode);
+
  private:
   /** constants */
   Node d_zero;
@@ -322,12 +327,13 @@ class CardinalityExtension
   void checkFiniteTypes();
   /**
    * This function adds the following lemmas for the finite type t for each S
-   * where S is a (a representative) set term of type t, and for each negative member x not in S
-   * 1- (=> true (<= (card (as univset t)) n) where n is the cardinality of t
-   * 2- (=> true (subset S (as univset t)) where S is a set term of type t
-   * 3- (=> (not (member negativeMember S))) (member negativeMember (as univset t)))
+   * where S is a (a representative) set term of type t, and for each negative
+   * member x not in S 1- (=> true (<= (card (as univset t)) n) where n is the
+   * cardinality of t 2- (=> true (subset S (as univset t)) where S is a set
+   * term of type t 3- (=> (not (member negativeMember S))) (member
+   * negativeMember (as univset t)))
    */
-  void checkFiniteType(TypeNode & t);
+  void checkFiniteType(TypeNode& t);
   /** element types of sets for which cardinality is enabled */
   std::map<TypeNode, bool> d_t_card_enabled;
   /**
@@ -374,9 +380,10 @@ class CardinalityExtension
    * collect the elements in all sets of finite types in model, and
    * store them in the field d_finite_type_elements
    */
-  void collectFiniteTypeSetElements(TheoryModel * model);
+  void collectFiniteTypeSetElements(TheoryModel* model);
   /**
-   * a map to store the non-slack elements encountered so far in all finite types
+   * a map to store the non-slack elements encountered so far in all finite
+   * types
    */
   std::map<TypeNode, std::vector<Node> > d_finite_type_elements;
   /**
