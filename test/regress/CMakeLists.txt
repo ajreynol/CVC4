@@ -1558,7 +1558,7 @@ set(regress_1_tests
   regress1/sets/finite-type/sets-card-color-sat.smt2
   regress1/sets/finite-type/sets-card-datatype-1.smt2
   regress1/sets/finite-type/sets-card-datatype-2.smt2
-  regress1/sets/finite-type/sets-card-neg-mem-union-2.smt2
+  regress1/sets/finite-type/sets-card-neg-mem-union-1.smt2
   regress1/sets/fuzz14418.smt2
   regress1/sets/fuzz15201.smt2
   regress1/sets/fuzz31811.smt2
@@ -2222,6 +2222,7 @@ set(regression_disabled_tests
   regress1/rewriterules/test_guards.smt2
   regress1/rewriterules/why3_vstte10_max_sum_harness2.smt2
   regress1/sets/setofsets-disequal.smt2
+  regress1/sets/finite-type/sets-card-neg-mem-union-2.smt2
   regress1/simple-rdl-definefun.smt2
   # does not solve after minor modification to search
   regress1/sygus/car_3.lus.sy
