@@ -84,8 +84,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
 {
   Assert(t.isInterpretedFinite());
   NodeManager* nm = NodeManager::currentNM();
-  // get the universe set of type t
-  // ToDo: investigate refactoring nm->mkSetType
+  // get the universe set (as univset (Set t))
   Node univ = d_state.getUnivSet(nm->mkSetType(t));
   std::map<Node, Node>::iterator it = d_univProxy.find(univ);
   Node proxy;
@@ -106,7 +105,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   Cardinality card = t.getCardinality();
   if(!card.isFinite())
   {
-    //ToDo: support uninterpreted types with --finite-model-find
+    //ToDo (#1123): support uninterpreted sorts with --finite-model-find
     std::stringstream message;
     message << "The cardinality "<< card << " of the finite type " << t << " is not supported yet." << endl;
     Assert(false, message.str().c_str());
@@ -120,7 +119,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
   /** (=> true (<= (card (as univset t)) cardUniv) */
   if(! d_state.isEntailed(leq, true))
   {
-    d_im.assertInference(leq, d_state.d_true, "finite type cardinality", 1);
+    d_im.assertInference(leq, d_state.getTrue(), "finite type cardinality", 1);
   }
 
   // add subset lemmas for sets and membership lemmas for negative members
@@ -142,7 +141,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
       subset = Rewriter::rewrite(subset);
       if(! d_state.isEntailed(subset, true))
       {
-        d_im.assertInference(subset, d_state.d_true, "univset is a super set", 1);
+        d_im.assertInference(subset, d_state.getTrue(), "univset is a super set", 1);
       }
 
       // negative members are members in the universe set
@@ -151,7 +150,7 @@ void CardinalityExtension::checkFiniteType(TypeNode & t)
       for (const std::pair<Node,  Node> & negativeMember: negativeMembers)
       {
         Node member = nm->mkNode(MEMBER, negativeMember.first, univ);
-        // negativeMember.second is the reason for the negative membership and has kind MEMBER. So We
+        // negativeMember.second is the reason for the negative membership and has kind MEMBER. So we
         // specify the negation as the reason for the negative membership lemma
         Node notMember = nm->mkNode(NOT, negativeMember.second);
         /** (=> (not (member negativeMember representative))) (member negativeMember (as univset t))) */

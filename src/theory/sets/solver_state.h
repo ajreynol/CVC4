@@ -202,12 +202,14 @@ class SolverState
   // --------------------------------------- end commonly used terms
   /** debug print set */
   void debugPrintSet(Node s, const char* c) const;
+  /** get the constant true */
+  const Node & getTrue() const {return d_true;}
+
+private:
 
   /** constants */
   Node d_true;
   Node d_false;
-
-private:
 
   /** the empty vector and map */
   std::vector<Node> d_emptyVec;
