@@ -2718,8 +2718,8 @@ DECLARE_PRIMED_VAR_TOK : { PARSER_STATE->sygus_v1() }?'declare-primed-var';
 CONSTRAINT_TOK : { PARSER_STATE->sygus()}?'constraint';
 INV_CONSTRAINT_TOK : { PARSER_STATE->sygus()}?'inv-constraint';
 SET_OPTIONS_TOK : { PARSER_STATE->sygus() }? 'set-options';
-SYGUS_CONSTANT_TOK : { PARSER_STATE->sygus() }? 'Constant';
-SYGUS_VARIABLE_TOK : { PARSER_STATE->sygus() }? 'Variable';
+SYGUS_CONSTANT_TOK : 'Constant';
+SYGUS_VARIABLE_TOK : 'Variable';
 SYGUS_INPUT_VARIABLE_TOK : { PARSER_STATE->sygus_v1() }? 'InputVariable';
 SYGUS_LOCAL_VARIABLE_TOK : { PARSER_STATE->sygus_v1() }? 'LocalVariable';
 
