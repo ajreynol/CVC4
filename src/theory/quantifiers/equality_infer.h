@@ -53,10 +53,6 @@ private:
     context::CDO< bool > d_solved;
     //master equivalence class (a union find)
     context::CDO< Node > d_master;
-    //a vector of equalities t1=t2 for which eqNotifyMerge(t1,t2) was called that explains d_rep
-    //NodeList d_rep_exp;
-    //the list of other eqc where this variable may be appear
-    //NodeList d_uselist;
   };
 
   /** track explanations */

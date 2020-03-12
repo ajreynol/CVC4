@@ -29,7 +29,6 @@ using namespace std;
 namespace CVC4 {
 
 EqualityInference::EqcInfo::EqcInfo(context::Context* c) : d_rep( c ), d_valid( c, false ), d_solved( c, false ), d_master(c)
-//, d_rep_exp(c), d_uselist(c) 
 {
 
 }
@@ -61,9 +60,6 @@ void EqualityInference::addToExplanationEqc( std::vector< Node >& exp, Node eqc 
       addToExplanation( exp, d_rep_exp_data[eqc][i] );
     }
   }
-  //for( unsigned i=0; i<d_eqci[n]->d_rep_exp.size(); i++ ){
-  //  addToExplanation( exp, d_eqci[n]->d_rep_exp[i] );
-  //}
 }
 
 void EqualityInference::addToExplanationEqc( Node eqc, std::vector< Node >& exp_to_add ) {
@@ -81,9 +77,6 @@ void EqualityInference::addToExplanationEqc( Node eqc, std::vector< Node >& exp_
     }
     n_re++;
   }
-  //for( unsigned i=0; i<exp_to_add.size(); i++ ){
-  //  eqci->d_rep_exp.push_back( exp_to_add[i] );
-  //}
 }
 
 Node EqualityInference::getMaster( Node t, EqcInfo * eqc, bool& updated, Node new_m ) {
@@ -210,7 +203,6 @@ void EqualityInference::eqNotifyNewClass(TNode t) {
 }
 
 void EqualityInference::addToUseList( Node used, Node eqc ) {
-#if 1
   NodeIntMap::iterator ul_i = d_uselist.find( used );
   int n_ul = 0;
   if( ul_i != d_uselist.end() ){
@@ -223,18 +215,6 @@ void EqualityInference::addToUseList( Node used, Node eqc ) {
   }else{
     d_uselist_data[used].push_back( eqc );  
   }
-#else
-  std::map< Node, EqcInfo * >::iterator itu = d_eqci.find( used );
-  EqcInfo * eqci_used;
-  if( itu==d_eqci.end() ){
-    eqci_used = new EqcInfo( d_c );
-    d_eqci[used] = eqci_used;
-  }else{
-    eqci_used = itu->second;
-  }
-  Trace("eq-infer-debug") << "      add to use list : " << used << " -> " << eqc << std::endl;
-  eqci_used->d_uselist.push_back( eqc );
-#endif
 }
 
 void EqualityInference::setEqcRep( Node t, Node r, std::vector< Node >& exp_to_add, EqcInfo * eqci ) {
