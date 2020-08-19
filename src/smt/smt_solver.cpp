@@ -132,6 +132,22 @@ Result SmtSolver::checkSatisfiability(Assertions& as,
   // then, initialize the assertions
   as.initializeCheckSat(assumptions, inUnsatCore, isEntailmentCheck);
 
+  if (isEntailmentCheck)
+  {
+    if (assumptions.size()==1)
+    {
+      Dump("benchmark") << QueryCommand(assumptions[0], inUnsatCore);
+    }
+  }
+  else if (assumptions.empty())
+  {
+    Dump("benchmark") << CheckSatCommand();
+  }
+  else
+  {
+    Dump("benchmark") << CheckSatAssumingCommand(assumptions);
+  }
+  
   // make the check
   Assert(d_smt.isFullyInited());
 

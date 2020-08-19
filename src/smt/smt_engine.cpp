@@ -937,7 +937,6 @@ void SmtEngine::notifyPostSolvePost()
 
 Result SmtEngine::checkSat(const Expr& assumption, bool inUnsatCore)
 {
-  Dump("benchmark") << CheckSatCommand(assumption);
   std::vector<Node> assump;
   if (!assumption.isNull())
   {
@@ -948,14 +947,6 @@ Result SmtEngine::checkSat(const Expr& assumption, bool inUnsatCore)
 
 Result SmtEngine::checkSat(const vector<Expr>& assumptions, bool inUnsatCore)
 {
-  if (assumptions.empty())
-  {
-    Dump("benchmark") << CheckSatCommand();
-  }
-  else
-  {
-    Dump("benchmark") << CheckSatAssumingCommand(assumptions);
-  }
   std::vector<Node> assumps;
   for (const Expr& e : assumptions)
   {
@@ -966,7 +957,6 @@ Result SmtEngine::checkSat(const vector<Expr>& assumptions, bool inUnsatCore)
 
 Result SmtEngine::checkEntailed(const Expr& node, bool inUnsatCore)
 {
-  Dump("benchmark") << QueryCommand(node, inUnsatCore);
   return checkSatInternal(node.isNull()
                               ? std::vector<Node>()
                               : std::vector<Node>{Node::fromExpr(node)},
