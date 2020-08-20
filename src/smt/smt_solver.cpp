@@ -22,6 +22,7 @@
 #include "smt/smt_engine_state.h"
 #include "theory/theory_engine.h"
 #include "theory/theory_traits.h"
+#include "smt/dump_manager.h"
 
 namespace CVC4 {
 namespace smt {
