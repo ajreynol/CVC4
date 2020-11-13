@@ -772,7 +772,7 @@ void TheorySetsPrivate::checkReduceComprehensions()
 
 void TheorySetsPrivate::postCheck(Theory::Effort level)
 {
-  Trace("sets-check") << "Sets finished assertions effort " << level
+  Trace("sets-check") << "Sets postCheck " << level << ", conflict=" << d_state.isInConflict() << ", needCheck = " << d_external.d_valuation.needCheck()
                       << std::endl;
   // invoke full effort check, relations check
   if (!d_state.isInConflict())
