@@ -79,7 +79,7 @@ void DumpManager::nmNotifyNewSort(TypeNode tn, uint32_t flags)
   DeclareTypeNodeCommand c(tn.getAttribute(expr::VarNameAttr()), 0, tn);
   if ((flags & ExprManager::SORT_FLAG_PLACEHOLDER) == 0)
   {
-    d_dm.addToModelCommandAndDump(c, flags);
+    addToModelCommandAndDump(c, flags);
   }
 }
 
@@ -90,7 +90,7 @@ void DumpManager::nmNotifyNewSortConstructor(TypeNode tn, uint32_t flags)
                            tn);
   if ((flags & ExprManager::SORT_FLAG_PLACEHOLDER) == 0)
   {
-    d_dm.addToModelCommandAndDump(c);
+    addToModelCommandAndDump(c);
   }
 }
 
@@ -107,7 +107,7 @@ void DumpManager::nmNotifyNewDatatypes(const std::vector<TypeNode>& dtts,
       }
     }
     DeclareDatatypeNodeCommand c(dtts);
-    d_dm.addToModelCommandAndDump(c);
+    addToModelCommandAndDump(c);
   }
 }
 
@@ -117,7 +117,7 @@ void DumpManager::nmNotifyNewVar(TNode n, uint32_t flags)
       n.getAttribute(expr::VarNameAttr()), n, n.getType());
   if ((flags & ExprManager::VAR_FLAG_DEFINED) == 0)
   {
-    d_dm.addToModelCommandAndDump(c, flags);
+    addToModelCommandAndDump(c, flags);
   }
 }
 
@@ -134,7 +134,7 @@ void DumpManager::nmNotifyNewSkolem(TNode n,
   }
   if ((flags & ExprManager::VAR_FLAG_DEFINED) == 0)
   {
-    d_dm.addToModelCommandAndDump(c, flags, false, "skolems");
+    addToModelCommandAndDump(c, flags, false, "skolems");
   }
 }
 
