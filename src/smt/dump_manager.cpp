@@ -23,9 +23,7 @@ namespace CVC4 {
 namespace smt {
 
 DumpManager::DumpManager(OutputManager& om, context::UserContext* u)
-    : d_outMgr(om),
-      d_fullyInited(false),
-      d_dumpCommands()
+    : d_outMgr(om), d_fullyInited(false), d_dumpCommands()
 {
 }
 
@@ -76,7 +74,6 @@ void DumpManager::setPrintFuncInModel(Node f, bool p)
   // TODO (cvc4-wishues/issues/75): implement
 }
 
-
 void DumpManager::nmNotifyNewSort(TypeNode tn, uint32_t flags)
 {
   DeclareTypeNodeCommand c(tn.getAttribute(expr::VarNameAttr()), 0, tn);
@@ -86,8 +83,7 @@ void DumpManager::nmNotifyNewSort(TypeNode tn, uint32_t flags)
   }
 }
 
-void DumpManager::nmNotifyNewSortConstructor(TypeNode tn,
-                                                        uint32_t flags)
+void DumpManager::nmNotifyNewSortConstructor(TypeNode tn, uint32_t flags)
 {
   DeclareTypeNodeCommand c(tn.getAttribute(expr::VarNameAttr()),
                            tn.getAttribute(expr::SortArityAttr()),
@@ -98,8 +94,8 @@ void DumpManager::nmNotifyNewSortConstructor(TypeNode tn,
   }
 }
 
-void DumpManager::nmNotifyNewDatatypes(
-    const std::vector<TypeNode>& dtts, uint32_t flags)
+void DumpManager::nmNotifyNewDatatypes(const std::vector<TypeNode>& dtts,
+                                       uint32_t flags)
 {
   if ((flags & NodeManager::DATATYPE_FLAG_PLACEHOLDER) == 0)
   {
@@ -126,8 +122,8 @@ void DumpManager::nmNotifyNewVar(TNode n, uint32_t flags)
 }
 
 void DumpManager::nmNotifyNewSkolem(TNode n,
-                                               const std::string& comment,
-                                               uint32_t flags)
+                                    const std::string& comment,
+                                    uint32_t flags)
 {
   std::string id = n.getAttribute(expr::VarNameAttr());
   DeclareFunctionNodeCommand c(id, n, n.getType());

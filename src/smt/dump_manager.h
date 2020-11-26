@@ -20,10 +20,10 @@
 #include <memory>
 #include <vector>
 
+#include "base/listener.h"
 #include "context/cdlist.h"
 #include "expr/node.h"
 #include "smt/output_manager.h"
-#include "base/listener.h"
 
 namespace CVC4 {
 
