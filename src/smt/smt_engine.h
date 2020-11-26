@@ -1017,12 +1017,12 @@ class CVC4_PUBLIC SmtEngine
   std::unique_ptr<smt::AbstractValues> d_absValues;
   /** Assertions manager */
   std::unique_ptr<smt::Assertions> d_asserts;
+  /** the output manager for commands */
+  mutable OutputManager d_outMgr;
   /** The dump manager */
   std::unique_ptr<smt::DumpManager> d_dumpm;
   /** Resource out listener */
   std::unique_ptr<smt::ResourceOutListener> d_routListener;
-  /** Node manager listener */
-  std::unique_ptr<smt::SmtNodeManagerListener> d_snmListener;
 
   /** The SMT solver */
   std::unique_ptr<smt::SmtSolver> d_smtSolver;
@@ -1097,9 +1097,6 @@ class CVC4_PUBLIC SmtEngine
 
   /** The options object */
   Options d_options;
-
-  /** the output manager for commands */
-  mutable OutputManager d_outMgr;
 
   /**
    * Manager for limiting time and abstract resource usage.

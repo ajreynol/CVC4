@@ -22,6 +22,8 @@
 
 #include "context/cdlist.h"
 #include "expr/node.h"
+#include "smt/output_manager.h"
+#include "base/listener.h"
 
 namespace CVC4 {
 
@@ -30,14 +32,14 @@ class NodeCommand;
 namespace smt {
 
 /**
- * This utility is responsible for:
- * implementing some dumping traces e.g. --dump=declarations.
+ * This utility is responsible for implementing some dumping traces e.g.
+ * --dump=declarations.
  */
-class DumpManager
+class DumpManager : public NodeManagerListener
 {
 
  public:
-  DumpManager(context::UserContext* u);
+  DumpManager(OutputManager& om, context::UserContext* u);
   ~DumpManager();
   /**
    * Finish init, called during SmtEngine::finishInit, which is triggered
@@ -61,8 +63,26 @@ class DumpManager
    * Set that function f should print in the model if and only if p is true.
    */
   void setPrintFuncInModel(Node f, bool p);
-
+  //------------------------------ node manager listener interface
+  /** Notify when new sort is created */
+  void nmNotifyNewSort(TypeNode tn, uint32_t flags) override;
+  /** Notify when new sort constructor is created */
+  void nmNotifyNewSortConstructor(TypeNode tn, uint32_t flags) override;
+  /** Notify when list of datatypes is created */
+  void nmNotifyNewDatatypes(const std::vector<TypeNode>& dtts,
+                            uint32_t flags) override;
+  /** Notify when new variable is created */
+  void nmNotifyNewVar(TNode n, uint32_t flags) override;
+  /** Notify when new skolem is created */
+  void nmNotifyNewSkolem(TNode n,
+                         const std::string& comment,
+                         uint32_t flags) override;
+  /** Notify when a term is deleted */
+  void nmNotifyDeleteNode(TNode n) override {}
+  //------------------------------ end node manager listener interface
  private:
+  /** Reference to the output manager */
+  OutputManager& d_outMgr;
   /** Fully inited */
   bool d_fullyInited;
   /**

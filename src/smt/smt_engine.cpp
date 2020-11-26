@@ -78,9 +78,9 @@ SmtEngine::SmtEngine(NodeManager* nm, Options* optr)
       d_nodeManager(nm),
       d_absValues(new AbstractValues(d_nodeManager)),
       d_asserts(new Assertions(getUserContext(), *d_absValues.get())),
-      d_dumpm(new DumpManager(getUserContext())),
+      d_outMgr(this),
+      d_dumpm(new DumpManager(d_outMgr, getUserContext())),
       d_routListener(new ResourceOutListener(*this)),
-      d_snmListener(new SmtNodeManagerListener(*d_dumpm.get(), d_outMgr)),
       d_smtSolver(nullptr),
       d_proofManager(nullptr),
       d_model(nullptr),
@@ -97,7 +97,6 @@ SmtEngine::SmtEngine(NodeManager* nm, Options* optr)
       d_isInternalSubsolver(false),
       d_statisticsRegistry(nullptr),
       d_stats(nullptr),
-      d_outMgr(this),
       d_resourceManager(nullptr),
       d_optm(nullptr),
       d_pp(nullptr),
@@ -127,7 +126,7 @@ SmtEngine::SmtEngine(NodeManager* nm, Options* optr)
       new ResourceManager(*d_statisticsRegistry.get(), d_options));
   d_optm.reset(new smt::OptionsManager(&d_options, d_resourceManager.get()));
   // listen to node manager events
-  d_nodeManager->subscribeEvents(d_snmListener.get());
+  d_nodeManager->subscribeEvents(d_dumpm.get());
   // listen to resource out
   d_resourceManager->registerListener(d_routListener.get());
   // make statistics

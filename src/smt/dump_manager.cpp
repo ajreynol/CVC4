@@ -22,8 +22,9 @@
 namespace CVC4 {
 namespace smt {
 
-DumpManager::DumpManager(context::UserContext* u)
-    : d_fullyInited(false),
+DumpManager::DumpManager(OutputManager& om, context::UserContext* u)
+    : d_outMgr(om),
+      d_fullyInited(false),
       d_dumpCommands()
 {
 }
@@ -73,6 +74,72 @@ void DumpManager::setPrintFuncInModel(Node f, bool p)
 {
   Trace("setp-model") << "Set printInModel " << f << " to " << p << std::endl;
   // TODO (cvc4-wishues/issues/75): implement
+}
+
+
+void DumpManager::nmNotifyNewSort(TypeNode tn, uint32_t flags)
+{
+  DeclareTypeNodeCommand c(tn.getAttribute(expr::VarNameAttr()), 0, tn);
+  if ((flags & ExprManager::SORT_FLAG_PLACEHOLDER) == 0)
+  {
+    d_dm.addToModelCommandAndDump(c, flags);
+  }
+}
+
+void DumpManager::nmNotifyNewSortConstructor(TypeNode tn,
+                                                        uint32_t flags)
+{
+  DeclareTypeNodeCommand c(tn.getAttribute(expr::VarNameAttr()),
+                           tn.getAttribute(expr::SortArityAttr()),
+                           tn);
+  if ((flags & ExprManager::SORT_FLAG_PLACEHOLDER) == 0)
+  {
+    d_dm.addToModelCommandAndDump(c);
+  }
+}
+
+void DumpManager::nmNotifyNewDatatypes(
+    const std::vector<TypeNode>& dtts, uint32_t flags)
+{
+  if ((flags & NodeManager::DATATYPE_FLAG_PLACEHOLDER) == 0)
+  {
+    if (Configuration::isAssertionBuild())
+    {
+      for (CVC4_UNUSED const TypeNode& dt : dtts)
+      {
+        Assert(dt.isDatatype());
+      }
+    }
+    DeclareDatatypeNodeCommand c(dtts);
+    d_dm.addToModelCommandAndDump(c);
+  }
+}
+
+void DumpManager::nmNotifyNewVar(TNode n, uint32_t flags)
+{
+  DeclareFunctionNodeCommand c(
+      n.getAttribute(expr::VarNameAttr()), n, n.getType());
+  if ((flags & ExprManager::VAR_FLAG_DEFINED) == 0)
+  {
+    d_dm.addToModelCommandAndDump(c, flags);
+  }
+}
+
+void DumpManager::nmNotifyNewSkolem(TNode n,
+                                               const std::string& comment,
+                                               uint32_t flags)
+{
+  std::string id = n.getAttribute(expr::VarNameAttr());
+  DeclareFunctionNodeCommand c(id, n, n.getType());
+  if (Dump.isOn("skolems") && comment != "")
+  {
+    d_outMgr.getPrinter().toStreamCmdComment(d_outMgr.getDumpOut(),
+                                             id + " is " + comment);
+  }
+  if ((flags & ExprManager::VAR_FLAG_DEFINED) == 0)
+  {
+    d_dm.addToModelCommandAndDump(c, flags, false, "skolems");
+  }
 }
 
 }  // namespace smt
