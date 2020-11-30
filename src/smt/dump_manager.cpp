@@ -18,6 +18,8 @@
 #include "options/smt_options.h"
 #include "smt/dump.h"
 #include "smt/node_command.h"
+#include "expr/node_manager_attributes.h"
+#include "printer/printer.h"
 
 namespace CVC4 {
 namespace smt {

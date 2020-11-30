@@ -330,16 +330,15 @@ SmtEngine::~SmtEngine()
 
     d_absValues.reset(nullptr);
     d_asserts.reset(nullptr);
-    d_dumpm.reset(nullptr);
 
     d_sygusSolver.reset(nullptr);
 
     d_smtSolver.reset(nullptr);
 
     d_stats.reset(nullptr);
-    d_nodeManager->unsubscribeEvents(d_snmListener.get());
-    d_snmListener.reset(nullptr);
+    d_nodeManager->unsubscribeEvents(d_dumpm.get());
     d_routListener.reset(nullptr);
+    d_dumpm.reset(nullptr);
     d_optm.reset(nullptr);
     d_pp.reset(nullptr);
     // d_resourceManager must be destroyed before d_statisticsRegistry
