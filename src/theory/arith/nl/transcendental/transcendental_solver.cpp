@@ -92,7 +92,7 @@ bool TranscendentalSolver::preprocessAssertionsCheckModel(
     Node pa = a;
     if (!pvars.empty())
     {
-      pa = arithSubstitute(pa, pvars, psubs);
+      pa = expr::theorySubstitute(THEORY_ARITH, pa, pvars, psubs);
       pa = Rewriter::rewrite(pa);
     }
     if (!pa.isConst() || !pa.getConst<bool>())

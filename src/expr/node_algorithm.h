@@ -26,6 +26,7 @@
 
 #include "expr/node.h"
 #include "expr/type_node.h"
+#include "theory/theory_id.h"
 
 namespace CVC4 {
 namespace expr {
@@ -233,6 +234,19 @@ void getComponentTypes(
 bool match(Node n1,
            Node n2,
            std::unordered_map<Node, Node, NodeHashFunction>& subs);
+
+
+/** Theory substitute
+ *
+ * This computes the substitution n { vars -> subs }, but with the caveat
+ * that subterms of n that belong to a theory other than the given one are
+ * not traversed. In other words, terms that belong to other theories are
+ * treated as atomic variables. For example, using tid = THEORY_ARITH:
+ *   (5*f(x) + 7*x ){ x -> 3 } returns 5*f(x) + 7*3.
+ * Notice that Boolean terms (those belonging to THEORY_BOOL) and builtin
+ * operators e.g. lambda, choice (those belonging to THEORY_BUILTIN) are traversed.
+ */
+Node theorySubstitute(TheoryId tid, Node n, std::vector<Node>& vars, std::vector<Node>& subs);
 
 }  // namespace expr
 }  // namespace CVC4
