@@ -293,7 +293,7 @@ bool NlModel::checkModel(const std::vector<Node>& assertions,
       // apply the substitution to a
       if (!d_check_model_vars.empty())
       {
-        av = expr::theorySubstitute(THEORY_ARITH, av, d_check_model_vars, d_check_model_subs);
+        av = arithSubstitute(av, d_check_model_vars, d_check_model_subs);
         av = Rewriter::rewrite(av);
       }
       // simple check literal
@@ -356,7 +356,7 @@ bool NlModel::addCheckModelSubstitution(TNode v, TNode s)
   for (unsigned i = 0, size = d_check_model_subs.size(); i < size; i++)
   {
     Node ms = d_check_model_subs[i];
-    Node mss = expr::theorySubstitute(THEORY_ARITH, ms, varsTmp, subsTmp);
+    Node mss = arithSubstitute(ms, varsTmp, subsTmp);
     if (mss != ms)
     {
       mss = Rewriter::rewrite(mss);
@@ -438,11 +438,6 @@ void NlModel::setUsedApproximate() { d_used_approx = true; }
 
 bool NlModel::usedApproximate() const { return d_used_approx; }
 
-
-Node NlModel::expr::theorySubstitute(THEORY_ARITH, Node n, std::vector<Node>& vars, std::vector<Node>& subs)
-{
-  return expr::theorySubstitute(THEORY_ARITH, n, vars, subs);
-}
 bool NlModel::solveEqualitySimple(Node eq,
                                   unsigned d,
                                   std::vector<NlLemma>& lemmas)
@@ -450,7 +445,7 @@ bool NlModel::solveEqualitySimple(Node eq,
   Node seq = eq;
   if (!d_check_model_vars.empty())
   {
-    seq = expr::theorySubstitute(THEORY_ARITH, eq, d_check_model_vars, d_check_model_subs);
+    seq = arithSubstitute(eq, d_check_model_vars, d_check_model_subs);
     seq = Rewriter::rewrite(seq);
     if (seq.isConst())
     {
@@ -902,7 +897,7 @@ bool NlModel::simpleCheckModelLit(Node lit)
             for (unsigned r = 0; r < 2; r++)
             {
               qsubs.push_back(boundn[r]);
-              Node ts = expr::theorySubstitute(THEORY_ARITH, t, qvars, qsubs);
+              Node ts = arithSubstitute(t, qvars, qsubs);
               tcmpn[r] = Rewriter::rewrite(ts);
               qsubs.pop_back();
             }
@@ -943,7 +938,7 @@ bool NlModel::simpleCheckModelLit(Node lit)
   if (!qvars.empty())
   {
     Assert(qvars.size() == qsubs.size());
-    Node slit = expr::theorySubstitute(THEORY_ARITH, lit, qvars, qsubs);
+    Node slit = arithSubstitute(lit, qvars, qsubs);
     slit = Rewriter::rewrite(slit);
     return simpleCheckModelLit(slit);
   }

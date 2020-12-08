@@ -763,7 +763,7 @@ bool match(Node x,
 }
 
 
-Node theorySubstitute(TheoryId tid, Node n, std::vector<Node>& vars, std::vector<Node>& subs)
+Node theorySubstitute(theory::TheoryId tid, Node n, std::vector<Node>& vars, std::vector<Node>& subs)
 {
   Assert(vars.size() == subs.size());
   NodeManager* nm = NodeManager::currentNM();
@@ -795,14 +795,10 @@ Node theorySubstitute(TheoryId tid, Node n, std::vector<Node>& vars, std::vector
       }
       else
       {
-        TheoryId ctid = theory::kindToTheoryId(ck);
-        if ((ctid != tid && ctid != THEORY_BOOL
-             && ctid != THEORY_BUILTIN)
-            || isTranscendentalKind(ck))
+        theory::TheoryId ctid = theory::kindToTheoryId(ck);
+        if (ctid != tid && ctid != theory::THEORY_BOOL
+             && ctid != theory::THEORY_BUILTIN)
         {
-          // Do not traverse beneath applications that belong to another theory
-          // besides (core) arithmetic. Notice that transcendental function
-          // applications are also not traversed here.
           visited[cur] = cur;
         }
         else

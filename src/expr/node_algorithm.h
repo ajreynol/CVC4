@@ -246,7 +246,7 @@ bool match(Node n1,
  * Notice that Boolean terms (those belonging to THEORY_BOOL) and builtin
  * operators e.g. lambda, choice (those belonging to THEORY_BUILTIN) are traversed.
  */
-Node theorySubstitute(TheoryId tid, Node n, std::vector<Node>& vars, std::vector<Node>& subs);
+Node theorySubstitute(theory::TheoryId tid, Node n, std::vector<Node>& vars, std::vector<Node>& subs);
 
 }  // namespace expr
 }  // namespace CVC4

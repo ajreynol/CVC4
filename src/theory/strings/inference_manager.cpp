@@ -19,6 +19,7 @@
 #include "theory/rewriter.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/strings/word.h"
+#include "expr/node_algorithm.h"
 
 using namespace std;
 using namespace CVC4::context;
@@ -196,8 +197,7 @@ void InferenceManager::sendInference(InferInfo& ii, bool asLemma)
     }
     if (unproc.empty())
     {
-      Node eqs = ii.d_conc.substitute(
-          vars.begin(), vars.end(), subs.begin(), subs.end());
+      Node eqs = expr::theorySubstitute(THEORY_STRINGS, ii.d_conc, vars, subs);
       InferInfo iiSubsLem;
       iiSubsLem.d_sim = this;
       // keep the same id for now, since we are transforming the form of the
