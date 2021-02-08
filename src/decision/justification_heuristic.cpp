@@ -464,7 +464,8 @@ JustificationHeuristic::handleAndOrEasy(TNode node, SatValue desiredVal)
          or (node.getKind() == kind::OR and desiredVal == SAT_VALUE_TRUE));
 
   SatValue desiredValInverted = invertValue(desiredVal);
-  for (TNode curNode : node){
+  for (TNode curNode : node)
+  {
     if ( tryGetSatValue(curNode) != desiredValInverted ) {
       SearchResult ret = findSplitterRec(curNode, desiredVal);
       if(ret != DONT_KNOW) {
@@ -490,7 +491,8 @@ JustificationHeuristic::SearchResult JustificationHeuristic::handleAndOrHard(TNo
 
   bool noSplitter = true;
   int i_st = getStartIndex(node);
-  for (TNode curNode : node){
+  for (TNode curNode : node)
+  {
     SearchResult ret = findSplitterRec(curNode, desiredVal);
     if (ret == FOUND_SPLITTER) {
       if(i != i_st) saveStartIndex(node, i);
@@ -555,9 +557,10 @@ JustificationHeuristic::SearchResult JustificationHeuristic::handleITE(TNode nod
 
     if(trueChildVal == desiredVal || falseChildVal == invertValue(desiredVal)) {
       ifDesiredVal = SAT_VALUE_TRUE;
-    } else if(trueChildVal == invertValue(desiredVal) ||
-              falseChildVal == desiredVal
-              ) {
+    }
+    else if (trueChildVal == invertValue(desiredVal)
+             || falseChildVal == desiredVal)
+    {
       ifDesiredVal = SAT_VALUE_FALSE;
     } else {
       ifDesiredVal = SAT_VALUE_TRUE;
