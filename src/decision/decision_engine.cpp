@@ -30,7 +30,6 @@ DecisionEngine::DecisionEngine(context::Context* sc,
                                ResourceManager* rm)
     : d_enabledITEStrategy(nullptr),
       d_needIteSkolemMap(),
-      d_relevancyStrategy(nullptr),
       d_assertions(uc),
       d_cnfStream(nullptr),
       d_satSolver(nullptr),
@@ -83,34 +82,6 @@ SatLiteral DecisionEngine::getNext(bool& stopSearch)
   return d_enabledITEStrategy == nullptr
              ? undefSatLiteral
              : d_enabledITEStrategy->getNext(stopSearch);
-}
-
-bool DecisionEngine::isRelevant(SatVariable var)
-{
-  Debug("decision") << "isRelevant(" << var <<")" << std::endl;
-  if (d_relevancyStrategy != nullptr)
-  {
-    //Assert(d_cnfStream->hasNode(var));
-    return d_relevancyStrategy->isRelevant( d_cnfStream->getNode(SatLiteral(var)) );
-  }
-  else
-  {
-    return true;
-  }
-}
-
-SatValue DecisionEngine::getPolarity(SatVariable var)
-{
-  Debug("decision") << "getPolarity(" << var <<")" << std::endl;
-  if (d_relevancyStrategy != nullptr)
-  {
-    Assert(isRelevant(var));
-    return d_relevancyStrategy->getPolarity( d_cnfStream->getNode(SatLiteral(var)) );
-  }
-  else
-  {
-    return SAT_VALUE_UNKNOWN;
-  }
 }
 
 void DecisionEngine::addAssertions(const std::vector<Node>& assertions,

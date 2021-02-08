@@ -105,14 +105,6 @@ class DecisionEngine {
   /** Gets the next decision based on strategies that are enabled */
   SatLiteral getNext(bool& stopSearch);
 
-  /** Is a sat variable relevant */
-  bool isRelevant(SatVariable var);
-
-  /**
-   * Try to get tell SAT solver what polarity to try for a
-   * decision. Return SAT_VALUE_UNKNOWN if it can't help
-   */
-  SatValue getPolarity(SatVariable var);
 
   /** Is the DecisionEngine in a state where it has solved everything? */
   bool isDone() {

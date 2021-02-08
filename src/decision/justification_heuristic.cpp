@@ -386,8 +386,6 @@ JustificationHeuristic::findSplitterRec(TNode node, SatValue desiredVal)
     }
     else {
       Assert(d_decisionEngine->hasSatLiteral(node));
-      if(d_curThreshold != 0 && getWeightPolarized(node, desiredVal) >= d_curThreshold)
-        return DONT_KNOW;
       SatVariable v =
         d_decisionEngine->getSatLiteral(node).getSatVariable();
       d_curDecision = SatLiteral(v, /* negated = */ desiredVal != SAT_VALUE_TRUE );
@@ -465,7 +463,6 @@ JustificationHeuristic::handleAndOrEasy(TNode node, SatValue desiredVal)
   Assert((node.getKind() == kind::AND and desiredVal == SAT_VALUE_FALSE)
          or (node.getKind() == kind::OR and desiredVal == SAT_VALUE_TRUE));
 
-  int numChildren = node.getNumChildren();
   SatValue desiredValInverted = invertValue(desiredVal);
   for (TNode curNode : node){
     if ( tryGetSatValue(curNode) != desiredValInverted ) {
@@ -491,7 +488,6 @@ JustificationHeuristic::SearchResult JustificationHeuristic::handleAndOrHard(TNo
   Assert((node.getKind() == kind::AND and desiredVal == SAT_VALUE_TRUE)
          or (node.getKind() == kind::OR and desiredVal == SAT_VALUE_FALSE));
 
-  int numChildren = node.getNumChildren();
   bool noSplitter = true;
   int i_st = getStartIndex(node);
   for (TNode curNode : node){
@@ -510,12 +506,6 @@ JustificationHeuristic::SearchResult JustificationHeuristic::handleBinaryEasy(TN
                                               TNode node2,
                                               SatValue desiredVal2)
 {
-  if(options::decisionUseWeight() &&
-     getWeightPolarized(node1, desiredVal1) > getWeightPolarized(node2, desiredVal2)) {
-    swap(node1, node2);
-    swap(desiredVal1, desiredVal2);
-  }
-
   if ( tryGetSatValue(node1) != invertValue(desiredVal1) ) {
     SearchResult ret = findSplitterRec(node1, desiredVal1);
     if(ret != DONT_KNOW)
@@ -535,12 +525,6 @@ JustificationHeuristic::SearchResult JustificationHeuristic::handleBinaryHard(TN
                                               TNode node2,
                                               SatValue desiredVal2)
 {
-  if(options::decisionUseWeight() &&
-     getWeightPolarized(node1, desiredVal1) > getWeightPolarized(node2, desiredVal2)) {
-    swap(node1, node2);
-    swap(desiredVal1, desiredVal2);
-  }
-
   bool noSplitter = true;
   SearchResult ret;
 
@@ -572,9 +556,7 @@ JustificationHeuristic::SearchResult JustificationHeuristic::handleITE(TNode nod
     if(trueChildVal == desiredVal || falseChildVal == invertValue(desiredVal)) {
       ifDesiredVal = SAT_VALUE_TRUE;
     } else if(trueChildVal == invertValue(desiredVal) ||
-              falseChildVal == desiredVal ||
-              (options::decisionUseWeight() &&
-               getWeightPolarized(node[1], true) > getWeightPolarized(node[2], false))
+              falseChildVal == desiredVal
               ) {
       ifDesiredVal = SAT_VALUE_FALSE;
     } else {
