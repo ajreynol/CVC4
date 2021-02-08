@@ -101,17 +101,6 @@ class JustificationHeuristic : public ITEDecisionStrategy {
   /** computed polarized weight cache */
   WeightCache d_weightCache;
 
-
-  class myCompareClass {
-    JustificationHeuristic* d_jh;
-    bool d_b;
-  public:
-    myCompareClass(JustificationHeuristic* jh, bool b):d_jh(jh),d_b(b) {};
-    bool operator() (TNode n1, TNode n2) {
-      return d_jh->getWeightPolarized(n1, d_b) < d_jh->getWeightPolarized(n2, d_b);
-    }
-  };
-
 public:
   JustificationHeuristic(CVC4::DecisionEngine* de,
                          context::UserContext *uc,
@@ -143,9 +132,6 @@ public:
   void setExploredThreshold(TNode);
   void setPrvsIndex(int);
   int  getPrvsIndex();
-  DecisionWeight getWeightPolarized(TNode n, bool polarity);
-  DecisionWeight getWeightPolarized(TNode n, SatValue);
-  static DecisionWeight getWeight(TNode);
   bool compareByWeightFalse(TNode, TNode);
   bool compareByWeightTrue(TNode, TNode);
   TNode getChildByWeight(TNode n, int i, bool polarity);

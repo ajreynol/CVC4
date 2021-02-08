@@ -254,116 +254,6 @@ void JustificationHeuristic::setPrvsIndex(int prvsIndex)
     d_threshPrvsIndex = prvsIndex;
 }
 
-DecisionWeight JustificationHeuristic::getWeightPolarized(TNode n, SatValue satValue)
-{
-  Assert(satValue == SAT_VALUE_TRUE || satValue == SAT_VALUE_FALSE);
-  return getWeightPolarized(n, satValue == SAT_VALUE_TRUE);
-}
-
-DecisionWeight JustificationHeuristic::getWeightPolarized(TNode n, bool polarity)
-{
-  if (options::decisionWeightInternal()
-      != options::DecisionWeightInternal::USR1)
-  {
-    return getWeight(n);
-  }
-
-  if(d_weightCache.find(n) == d_weightCache.end()) {
-    Kind k = n.getKind();
-    theory::TheoryId tId  = theory::kindToTheoryId(k);
-    DecisionWeight dW1, dW2;
-    if(tId != theory::THEORY_BOOL) {
-      dW1 = dW2 = getWeight(n);
-    } else {
-
-      if(k == kind::OR) {
-        dW1 = numeric_limits<DecisionWeight>::max(), dW2 = 0;
-        for(TNode::iterator i=n.begin(); i != n.end(); ++i) {
-          dW1 = min(dW1, getWeightPolarized(*i, true));
-          dW2 = max(dW2, getWeightPolarized(*i, false));
-        }
-      } else if(k == kind::AND) {
-        dW1 = 0, dW2 = numeric_limits<DecisionWeight>::max();
-        for(TNode::iterator i=n.begin(); i != n.end(); ++i) {
-          dW1 = max(dW1, getWeightPolarized(*i, true));
-          dW2 = min(dW2, getWeightPolarized(*i, false));
-        }
-      } else if(k == kind::IMPLIES) {
-        dW1 = min(getWeightPolarized(n[0], false),
-                  getWeightPolarized(n[1], true));
-        dW2 = max(getWeightPolarized(n[0], true),
-                  getWeightPolarized(n[1], false));
-      } else if(k == kind::NOT) {
-        dW1 = getWeightPolarized(n[0], false);
-        dW2 = getWeightPolarized(n[0], true);
-      } else {
-        dW1 = 0;
-        for(TNode::iterator i=n.begin(); i != n.end(); ++i) {
-          dW1 = max(dW1, getWeightPolarized(*i, true));
-          dW1 = max(dW1, getWeightPolarized(*i, false));
-        }
-        dW2 = dW1;
-      }
-
-    }
-    d_weightCache[n] = make_pair(dW1, dW2);
-  }
-  return polarity ? d_weightCache[n].get().first : d_weightCache[n].get().second;
-}
-
-DecisionWeight JustificationHeuristic::getWeight(TNode n) {
-  if(!n.hasAttribute(DecisionWeightAttr()) ) {
-    options::DecisionWeightInternal combiningFn =
-        options::decisionWeightInternal();
-
-    if (combiningFn == options::DecisionWeightInternal::OFF
-        || n.getNumChildren() == 0)
-    {
-      if (options::decisionRandomWeight() != 0)
-      {
-        n.setAttribute(DecisionWeightAttr(),
-            Random::getRandom().pick(0, options::decisionRandomWeight()-1));
-      }
-    }
-    else if (combiningFn == options::DecisionWeightInternal::MAX)
-    {
-      DecisionWeight dW = 0;
-      for (TNode::iterator i = n.begin(); i != n.end(); ++i)
-        dW = max(dW, getWeight(*i));
-      n.setAttribute(DecisionWeightAttr(), dW);
-    }
-    else if (combiningFn == options::DecisionWeightInternal::SUM
-             || combiningFn == options::DecisionWeightInternal::USR1)
-    {
-      DecisionWeight dW = 0;
-      for (TNode::iterator i = n.begin(); i != n.end(); ++i)
-        dW = max(dW, getWeight(*i));
-      n.setAttribute(DecisionWeightAttr(), dW);
-    }
-    else
-    {
-      Unreachable();
-    }
-  }
-  return n.getAttribute(DecisionWeightAttr());
-}
-
-typedef vector<TNode> ChildList;
-TNode JustificationHeuristic::getChildByWeight(TNode n, int i, bool polarity) {
-  if(options::decisionUseWeight()) {
-    // TODO: Optimize storing & access
-    if(d_childCache.find(n) == d_childCache.end()) {
-      ChildList list0(n.begin(), n.end()), list1(n.begin(), n.end());
-      std::sort(list0.begin(), list0.end(), JustificationHeuristic::myCompareClass(this,false));
-      std::sort(list1.begin(), list1.end(), JustificationHeuristic::myCompareClass(this,true));
-      d_childCache[n] = make_pair(list0, list1);
-    }
-    return polarity ? d_childCache[n].get().second[i] : d_childCache[n].get().first[i];
-  } else {
-    return n[i];
-  }
-}
-
 SatValue JustificationHeuristic::tryGetSatValue(Node n)
 {
   Debug("decision") << "   "  << n << " has sat value " << " ";
@@ -577,8 +467,7 @@ JustificationHeuristic::handleAndOrEasy(TNode node, SatValue desiredVal)
 
   int numChildren = node.getNumChildren();
   SatValue desiredValInverted = invertValue(desiredVal);
-  for(int i = 0; i < numChildren; ++i) {
-    TNode curNode = getChildByWeight(node, i, desiredVal);
+  for (TNode curNode : node){
     if ( tryGetSatValue(curNode) != desiredValInverted ) {
       SearchResult ret = findSplitterRec(curNode, desiredVal);
       if(ret != DONT_KNOW) {
@@ -605,8 +494,7 @@ JustificationHeuristic::SearchResult JustificationHeuristic::handleAndOrHard(TNo
   int numChildren = node.getNumChildren();
   bool noSplitter = true;
   int i_st = getStartIndex(node);
-  for(int i = i_st; i < numChildren; ++i) {
-    TNode curNode = getChildByWeight(node, i, desiredVal);
+  for (TNode curNode : node){
     SearchResult ret = findSplitterRec(curNode, desiredVal);
     if (ret == FOUND_SPLITTER) {
       if(i != i_st) saveStartIndex(node, i);
