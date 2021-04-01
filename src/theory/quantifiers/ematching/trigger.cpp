@@ -65,6 +65,18 @@ Trigger::Trigger(QuantifiersState& qs,
     {
       Trace("trigger") << "   " << n << std::endl;
     }
+    if (options::debugTrigger())
+    {
+      Node qname = d_qreg.getNameForQuant(q);
+      Options& sopts = smt::currentSmtEngine()->getOptions();
+      std::ostream& out = *sopts.getOut();
+      out << "(trigger " << qname;
+      for (const Node& n : d_nodes)
+      {
+        out << " " << n;
+      }
+      out << ")" << std::endl;
+    }
   }
   QuantifiersStatistics& stats = qs.getStats();
   if( d_nodes.size()==1 ){
