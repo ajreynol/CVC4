@@ -526,6 +526,11 @@ sygusCommand returns [std::unique_ptr<cvc5::Command> cmd]
       PARSER_STATE->defineVar(name, var);
       cmd.reset(new DeclareSygusVarCommand(name, var, t));
     }
+  | /* set-feature */
+    SET_FEATURE_TOK keyword[name] symbolicExpr[sexpr] 
+    {
+      // set-feature is currently ignored
+    }
   | /* synth-fun */
     ( SYNTH_FUN_TOK { isInv = false; }
       | SYNTH_INV_TOK { isInv = true; range = SOLVER->getBooleanSort(); }
@@ -2209,6 +2214,7 @@ PUSH_TOK : 'push';
 POP_TOK : 'pop';
 AS_TOK : 'as';
 CONST_TOK : { !PARSER_STATE->strictModeEnabled() }? 'const';
+SET_FEATURE_TOK : { PARSER_STATE->sygus() }?'set-feature';
 
 // extended commands
 DECLARE_CODATATYPE_TOK : { PARSER_STATE->v2_6() || PARSER_STATE->sygus() }? 'declare-codatatype';
