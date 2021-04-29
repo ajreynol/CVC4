@@ -131,8 +131,7 @@ TypeNode NodeConverter::convertType(TypeNode tn)
   {
     return tn;
   }
-  Trace("nconv-debug")
-      << "NodeConverter::convertType: " << tn << std::endl;
+  Trace("nconv-debug") << "NodeConverter::convertType: " << tn << std::endl;
   std::unordered_map<TypeNode, TypeNode, TypeNodeHashFunction>::iterator it;
   std::vector<TypeNode> visit;
   TypeNode cur;
@@ -214,8 +213,8 @@ TypeNode NodeConverter::convertType(TypeNode tn)
   } while (!visit.empty());
   Assert(d_tcache.find(tn) != d_tcache.end());
   Assert(!d_tcache.find(tn)->second.isNull());
-  Trace("nconv-debug")
-      << "NodeConverter::convertType: returns " << d_tcache[tn] << std::endl;
+  Trace("nconv-debug") << "NodeConverter::convertType: returns " << d_tcache[tn]
+                       << std::endl;
   return d_tcache[tn];
 }
 
