@@ -1309,13 +1309,14 @@ void Solver::uncheckedEnqueue(Lit p, CRef from)
 
 CRef Solver::propagate(TheoryCheckType type)
 {
-  /*
-  if (decisionLevel() < assumptions.size())
+  if (options::propAssumpWait())
   {
-    type = CHECK_WITHOUT_THEORY;
-    //return CRef_Undef;
+    if (decisionLevel() < assumptions.size())
+    {
+      type = CHECK_WITHOUT_THEORY;
+      //return CRef_Undef;
+    }
   }
-  */
     CRef confl = CRef_Undef;
     recheck = false;
     theoryConflict = false;

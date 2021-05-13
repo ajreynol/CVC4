@@ -82,3 +82,11 @@ header = "options/prop_options.h"
   default    = "false"
   read_only  = true
   help       = "instead of solving minisat dumps the asserted clauses in Dimacs format"
+
+[[option]]
+  name       = "propAssumpWait"
+  category   = "regular"
+  long       = "prop-assump-wait"
+  type       = "bool"
+  default    = "false"
+  help       = "theory propagate before assumptions"
