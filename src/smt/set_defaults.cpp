@@ -762,10 +762,10 @@ void setDefaults(LogicInfo& logic, bool isInternalSubsolver)
   }
 
   // If in arrays, set the UF handler to arrays
-  if (logic.isTheoryEnabled(THEORY_ARRAYS) && !options::ufHo()
-      && !options::finiteModelFind()
-      && (!logic.isQuantified()
-          || (logic.isQuantified() && !logic.isTheoryEnabled(THEORY_UF))))
+  if (logic.isTheoryEnabled(THEORY_ARRAYS)
+      && ((!logic.isQuantified() && !options::ufHo()
+      && !options::finiteModelFind())
+          || !logic.isTheoryEnabled(THEORY_UF)))
   {
     Theory::setUninterpretedSortOwner(THEORY_ARRAYS);
   }
