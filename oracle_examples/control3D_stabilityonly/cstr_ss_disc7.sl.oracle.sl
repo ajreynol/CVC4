@@ -66,7 +66,7 @@
 
 (declare-oracle-fun isStable  ((_ FloatingPoint 11 53)(_ FloatingPoint 11 53)(_ FloatingPoint 11 53)(_ FloatingPoint 11 53)
 	(_ FloatingPoint 11 53)(_ FloatingPoint 11 53)(_ FloatingPoint 11 53)(_ FloatingPoint 11 53)
-	(_ FloatingPoint 11 53)) Bool isstable3)
+	(_ FloatingPoint 11 53)) Bool isstable3x3)
 (constraint (isStable AminusBK00 AminusBK01 AminusBK02 AminusBK10 AminusBK11 AminusBK12 AminusBK20 AminusBK21 AminusBK22))
 
 
