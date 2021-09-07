@@ -2,7 +2,7 @@
 
 # turn the given pixel processing function into C
 
-./smt2c "$1" > pixel_oracle.c
+smt2c "$1" > pixel_oracle.c
 
 cat << EOM >> pixel_oracle.c
 
@@ -12,9 +12,7 @@ void *malloc(unsigned long);
 
 unsigned char target(unsigned char pixel)
 {
-  if(pixel < 100)
-    return 0;
-  return pixel; // invert
+  return ~ pixel; // invert
 }
 
 int main()
@@ -41,29 +39,25 @@ int main()
     data_tweak[index] = tweak(data_src[index]);
 
   // compare with target
-  int count=0;
-  int success=1;
   for(int index = 0; index < pixels; index++)
   {
     if(data_target[index] != data_tweak[index])
     {
-      success=0;
       // they differ; report the expected mapping
-      if(count%37==0)
-        printf("false (_ bv%d 8) (_ bv%d 8)\n", data_src[index], data_target[index]);
-      count++;
+      printf("false (_ bv%d 8) (_ bv%d 8)\n", data_src[index], data_target[index]);
+      return 0;
     }
   }
 
-  if(success==1)
-    printf("true (_ bv%d 8) (_ bv%d 8)\n", 0, 0);
+  // they match
+  printf("true (_ bv%d 8) (_ bv%d 8)\n", 0, 0);
 }
 EOM
 
 # compile
 
-gcc pixel_oracle.c stb_image.o -o pixel_oracle
+gcc pixel_oracle.c stb_image.o -o pixel_oracle -lm
 
 # run
 
-./pixel_oracle
+pixel_oracle
