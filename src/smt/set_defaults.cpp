@@ -982,11 +982,6 @@ bool SetDefaults::incompatibleWithModels(const Options& opts,
     reason << "unconstrained-simp";
     return true;
   }
-  else if (opts.smt.sortInference)
-  {
-    reason << "sort-inference";
-    return true;
-  }
   else if (opts.prop.minisatSimpMode == options::MinisatSimpMode::ALL)
   {
     reason << "minisat-simplification";
