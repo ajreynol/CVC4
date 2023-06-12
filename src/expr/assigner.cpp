@@ -240,6 +240,24 @@ bool Assigner::isAssignEq(const Node& n, Node& v, Node& c)
   return false;
 }
 
+bool Assigner::isVarElimEq(const Node& n, Node& v, Node& s)
+{
+  Kind k = n.getKind();
+  if (k == EQUAL)
+  {
+    for (size_t i = 0; i < 2; i++)
+    {
+      if (n[i].isVar())
+      {
+        v = n[i];
+        s = n[1 - i];
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 AssignerDb::AssignerDb() {}
 
 Assigner* AssignerDb::registerAssigner(const Node& n)

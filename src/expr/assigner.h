@@ -47,6 +47,7 @@ class Assigner
   static bool isLiteralCube(const Node& n);
   static Node getSatLiteral(const Node& n);
   static bool isAssignEq(const Node& n, Node& v, Node& c);
+  static bool isVarElimEq(const Node& n, Node& v, Node& s);
 
  private:
   bool init(const Node& n);

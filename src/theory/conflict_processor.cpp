@@ -89,15 +89,55 @@ TrustNode ConflictProcessor::processLemma(const TrustNode& lem)
       break;
     }
   }
+  // the form of the target literal as it will appear in the final lemma.
+  Node tgtLitFinal;
+  std::vector<Node> auxExplain;
   if (tgtLit.isNull())
   {
     // NOTE: could do unification here
-    Trace("confp-debug") << "No target for " << lemma << std::endl;
-    return TrustNode::null();
+    Subs selim;
+    std::vector<TNode> tgtLitsCheck = tgtLits;
+    tgtLits.clear();
+    for (TNode tlit : tgtLitsCheck)
+    {
+      Node v, ss;
+      if (tlit.getKind()==NOT && Assigner::isVarElimEq(tlit[0], v, ss) && !selim.contains(v))
+      {
+        Node sss = selim.apply(ss);
+        auxExplain.push_back(tlit);
+        selim.add(v, sss);
+      }
+      else
+      {
+        tgtLits.push_back(tlit);
+      }
+    }
+    // check tgtLits again
+    if (!selim.empty())
+    {
+      for (TNode tlit : tgtLits)
+      {
+        Node tlits = selim.apply(tlit);
+        if (checkSubstitution(s, tlits, true))
+        {
+          Trace("confp") << "...found target using " << selim.size() << " auxiliary equalities" << std::endl;
+          tgtLit = tlit;
+          tgtLitFinal = tlits;
+          break;
+        }
+      }
+    }
+    if (tgtLit.isNull())
+    {
+      Trace("confp-debug") << "No target for " << lemma << std::endl;
+      return TrustNode::null();
+    }
+  }
+  else
+  {
+    tgtLitFinal = tgtLit;
   }
   bool minimized = false;
-  // the form of the target literal as it will appear in the final lemma.
-  Node tgtLitFinal = tgtLit;
   // we are minimized if there were multiple target literals and we found a
   // single one that sufficed
   if (tgtLits.size() > 1)
@@ -269,6 +309,7 @@ TrustNode ConflictProcessor::processLemma(const TrustNode& lem)
         clause.push_back(e.second.negate());
       }
     }
+    clause.insert(clause.end(), auxExplain.begin(), auxExplain.end());
     if (tgtLitFinal.getKind() == OR)
     {
       clause.insert(clause.end(), tgtLitFinal.begin(), tgtLitFinal.end());
