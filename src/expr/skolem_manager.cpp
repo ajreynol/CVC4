@@ -49,6 +49,7 @@ const char* toString(SkolemFunId id)
     case SkolemFunId::SQRT: return "SQRT";
     case SkolemFunId::TRANSCENDENTAL_PURIFY_ARG:
       return "TRANSCENDENTAL_PURIFY_ARG";
+    case SkolemFunId::FP_UF_ABSTRACTION: return "FP_UF_ABSTRACTION";
     case SkolemFunId::SHARED_SELECTOR: return "SHARED_SELECTOR";
     case SkolemFunId::QUANTIFIERS_SKOLEMIZE: return "QUANTIFIERS_SKOLEMIZE";
     case SkolemFunId::QUANTIFIERS_SYNTH_FUN_EMBED:

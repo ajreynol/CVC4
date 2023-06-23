@@ -551,7 +551,7 @@ void TheoryFp::registerTerm(TNode node)
     Node sk = sm->mkPurifySkolem(node);
     handleLemma(node.eqNode(sk), InferenceId::FP_REGISTER_TERM);
     d_abstractionMap.insert(sk, node);
-
+    
     Node pd =
         nm->mkNode(kind::IMPLIES,
                    nm->mkNode(kind::OR,
@@ -565,7 +565,6 @@ void TheoryFp::registerTerm(TNode node)
         nm->mkNode(kind::FLOATINGPOINT_IS_ZERO, node[0]),
         nm->mkNode(kind::EQUAL, node, nm->mkConstReal(Rational(0U))));
     handleLemma(z, InferenceId::FP_REGISTER_TERM);
-    return;
 
     // TODO : bounds on the output from largest floats, #1914
   }
@@ -590,10 +589,29 @@ void TheoryFp::registerTerm(TNode node)
                    nm->mkConst(FloatingPoint::makeZero(
                        node.getType().getConst<FloatingPointSize>(), false))));
     handleLemma(z, InferenceId::FP_REGISTER_TERM);
-    return;
 
     // TODO : rounding-mode specific bounds on floats that don't give infinity
     // BEWARE of directed rounding!   #1914
+  }
+  
+  
+  if (k == kind::FLOATINGPOINT_TO_REAL_TOTAL || k == kind::FLOATINGPOINT_TO_FP_FROM_REAL)
+  {
+    NodeManager* nm = NodeManager::currentNM();
+    SkolemManager* sm = nm->getSkolemManager();
+    std::vector<TypeNode> argTypes;
+    for (const Node& nc : node)
+    {
+      argTypes.push_back(nc.getType());
+    }
+    TypeNode ftype = nm->mkFunctionType(argTypes, node.getType());
+    Node sk = sm->mkSkolemFunction(SkolemFunId::FP_UF_ABSTRACTION, ftype, {node.getOperator()});
+    std::vector< Node> children;
+    children.push_back(sk);
+    children.insert(children.end(), node.begin(), node.end());
+    Node uflem = nm->mkNode(EQUAL, node, nm->mkNode(APPLY_UF, children));
+    handleLemma(uflem, InferenceId::FP_REGISTER_TERM);
+    return;
   }
 
   /* When not word-blasting lazier, we word-blast every term on

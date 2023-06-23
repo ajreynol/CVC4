@@ -48,6 +48,8 @@ enum class SkolemFunId
    * is between -pi and pi
    */
   TRANSCENDENTAL_PURIFY_ARG,
+  /** FP to_real */
+  FP_UF_ABSTRACTION,
   /** a shared selector */
   SHARED_SELECTOR,
   /**
