@@ -558,9 +558,10 @@ bool Solver::addClause_(vec<Lit>& ps, bool removable, ClauseId& id)
             d_pfManager->registerSatLitAssumption(ps[0]);
           }
           // AJR (line 647)
+          // handles unit clauses not learned in the standard way
           SatClause satClause;
           satClause.push_back(MinisatSatSolver::toSatLiteral(ps[0]));
-          // d_proxy->notifySatClause(satClause);
+          d_proxy->notifySatClause(satClause);
         }
         CRef confl = propagate(CHECK_WITHOUT_THEORY);
         if (!(ok = (confl == CRef_Undef)))
