@@ -1134,6 +1134,7 @@ void TheoryEngine::assertFact(TNode literal)
 }
 
 bool TheoryEngine::propagate(TNode literal, theory::TheoryId theory) {
+  Assert (literal.getKind()!=kind::NOT);
   Trace("theory::propagate")
       << "TheoryEngine::propagate(" << literal << ", " << theory << ")" << endl;
 

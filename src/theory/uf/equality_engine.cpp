@@ -571,10 +571,12 @@ bool EqualityEngine::assertEquality(TNode eq,
             // Store the propagation
             storePropagatedDisequality(aTag, aSharedId, bSharedId);
             // Notify
+            /*
             Trace("equality::trigger") << d_name << "::eq::addEquality(" << eq << "," << (polarity ? "true" : "false") << ": notifying " << aTag << " for " << d_nodes[aSharedId] << " != " << d_nodes[bSharedId] << std::endl;
             if (!d_notify->eqNotifyTriggerTermEquality(aTag, d_nodes[aSharedId], d_nodes[bSharedId], false)) {
               break;
             }
+            */
           }
           // Pop the next tags
           aTag = TheoryIdSetUtil::setPop(aTags);
@@ -1738,7 +1740,7 @@ void EqualityEngine::addTriggerEquality(TNode eq) {
     skipTrigger = true;
   }
   if (areDisequal(eq[0], eq[1], true)) {
-    d_notify->eqNotifyTriggerPredicate(eq, false);
+    //d_notify->eqNotifyTriggerPredicate(eq, false);
     skipTrigger = true;
   }
 
@@ -1781,7 +1783,7 @@ void EqualityEngine::addTriggerPredicate(TNode predicate) {
     skipTrigger = true;
   }
   if (areEqual(predicate, d_false)) {
-    d_notify->eqNotifyTriggerPredicate(predicate, false);
+    //d_notify->eqNotifyTriggerPredicate(predicate, false);
     skipTrigger = true;
   }
 
@@ -2032,7 +2034,7 @@ void EqualityEngine::propagate() {
                 d_deducedDisequalityReasons.push_back(EqualityPair(original, d_falseId));
               }
               storePropagatedDisequality(THEORY_LAST, lhsId, rhsId);
-              if (!d_notify->eqNotifyTriggerPredicate(triggerInfo.d_trigger,
+              if (triggerInfo.d_polarity && !d_notify->eqNotifyTriggerPredicate(triggerInfo.d_trigger,
                                                      triggerInfo.d_polarity))
               {
                 d_done = true;
@@ -2042,7 +2044,7 @@ void EqualityEngine::propagate() {
           else
           {
             // Equalities are simple
-            if (!d_notify->eqNotifyTriggerPredicate(triggerInfo.d_trigger,
+            if (triggerInfo.d_polarity && !d_notify->eqNotifyTriggerPredicate(triggerInfo.d_trigger,
                                                    triggerInfo.d_polarity))
             {
               d_done = true;
@@ -2051,7 +2053,7 @@ void EqualityEngine::propagate() {
         }
         else
         {
-          if (!d_notify->eqNotifyTriggerPredicate(triggerInfo.d_trigger,
+          if (triggerInfo.d_polarity && !d_notify->eqNotifyTriggerPredicate(triggerInfo.d_trigger,
                                                  triggerInfo.d_polarity))
           {
             d_done = true;
