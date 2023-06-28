@@ -21,10 +21,8 @@
 #include "expr/codatatype_bound_variable.h"
 #include "expr/dtype.h"
 #include "expr/dtype_cons.h"
-#include "expr/node_algorithm.h"
 #include "expr/type_matcher.h"
 #include "theory/datatypes/project_op.h"
-#include "theory/datatypes/sygus_datatype_utils.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
 #include "theory/datatypes/tuple_utils.h"
 #include "util/rational.h"
@@ -35,6 +33,16 @@ namespace datatypes {
 
 TypeNode DatatypeConstructorTypeRule::preComputeType(NodeManager* nm, TNode n)
 {
+  TypeNode consType = n.getOperator().getTypeOrNull();
+  if (consType.isDatatypeConstructor())
+  {
+    TypeNode t = consType.getDatatypeConstructorRangeType();
+    // if not parametric, the return type can be obtained from constructor op
+    if (!t.isParametricDatatype())
+    {
+      return t;
+    }
+  }
   return TypeNode::null();
 }
 TypeNode DatatypeConstructorTypeRule::computeType(NodeManager* nodeManager,
@@ -119,7 +127,7 @@ TypeNode DatatypeConstructorTypeRule::computeType(NodeManager* nodeManager,
         }
       }
     }
-    return consType.getDatatypeConstructorRangeType();
+    return t;
   }
 }
 
@@ -215,7 +223,7 @@ TypeNode DatatypeSelectorTypeRule::computeType(NodeManager* nodeManager,
 
 TypeNode DatatypeTesterTypeRule::preComputeType(NodeManager* nm, TNode n)
 {
-  return TypeNode::null();
+  return nm->booleanType();
 }
 TypeNode DatatypeTesterTypeRule::computeType(NodeManager* nodeManager,
                                              TNode n,
@@ -319,7 +327,7 @@ TypeNode DatatypeUpdateTypeRule::computeType(NodeManager* nodeManager,
 
 TypeNode DatatypeAscriptionTypeRule::preComputeType(NodeManager* nm, TNode n)
 {
-  return TypeNode::null();
+  return n.getOperator().getConst<AscriptionType>().getType();
 }
 TypeNode DatatypeAscriptionTypeRule::computeType(NodeManager* nodeManager,
                                                  TNode n,
@@ -371,7 +379,7 @@ Cardinality ConstructorProperties::computeCardinality(TypeNode type)
 
 TypeNode DtSizeTypeRule::preComputeType(NodeManager* nm, TNode n)
 {
-  return TypeNode::null();
+  return nm->integerType();
 }
 TypeNode DtSizeTypeRule::computeType(NodeManager* nodeManager,
                                      TNode n,
@@ -395,7 +403,7 @@ TypeNode DtSizeTypeRule::computeType(NodeManager* nodeManager,
 
 TypeNode DtBoundTypeRule::preComputeType(NodeManager* nm, TNode n)
 {
-  return TypeNode::null();
+  return nm->booleanType();
 }
 TypeNode DtBoundTypeRule::computeType(NodeManager* nodeManager,
                                       TNode n,
@@ -488,27 +496,7 @@ TypeNode DtSygusEvalTypeRule::computeType(NodeManager* nodeManager,
       }
     }
   }
-  TypeNode tn = dt.getSygusType();
-  // if abstract type, then we consult the builtin equivalent of the first
-  // argument.
-  if (tn.isAbstract())
-  {
-    Trace("ajr-temp") << "Type check " << n << std::endl;
-    Node bn = utils::sygusToBuiltin(n[0]);
-    // don't consider abstract subterms
-    if (!expr::hasAbstractSubterm(bn))
-    {
-      Trace("ajr-temp") << "Type check " << n << " via " << bn << " "
-                        << bn.getTypeOrNull(true) << std::endl;
-      TypeNode btn = bn.getTypeOrNull(true);
-      // if the type cannot be computed, we return the original type below
-      if (!btn.isNull())
-      {
-        return btn;
-      }
-    }
-  }
-  return tn;
+  return dt.getSygusType();
 }
 
 TypeNode MatchTypeRule::preComputeType(NodeManager* nm, TNode n)
