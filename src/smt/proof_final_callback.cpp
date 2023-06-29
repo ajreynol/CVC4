@@ -35,7 +35,6 @@ namespace smt {
 
 ProofFinalCallback::ProofFinalCallback(Env& env)
     : EnvObj(env),
-      d_pr(d_env.getProofNodeManager()),
       d_ruleCount(statisticsRegistry().registerHistogram<PfRule>(
           "finalProof::ruleCount")),
       d_instRuleIds(statisticsRegistry().registerHistogram<theory::InferenceId>(
@@ -69,7 +68,8 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
                                       bool& continueUpdate)
 {
   // rewrite the proof now
-  d_pr->rewrite(pn);
+  ProofRewriter pr(d_env.getProofNodeManager());
+  pr.rewrite(pn);
   PfRule r = pn->getRule();
   ProofNodeManager* pnm = d_env.getProofNodeManager();
   Assert(pnm != nullptr);

@@ -23,6 +23,7 @@
 #include <unordered_set>
 
 #include "proof/proof_node_updater.h"
+#include "proof/proof_rewriter.h"
 #include "rewriter/rewrites.h"
 #include "smt/env_obj.h"
 #include "theory/inference_id.h"
@@ -49,8 +50,6 @@ class ProofFinalCallback : protected EnvObj, public ProofNodeUpdaterCallback
   bool wasPedanticFailure(std::ostream& out) const;
 
  private:
-  /** Proof rewriter */
-  ProofRewriter d_pr;
   /** Counts number of postprocessed proof nodes for each kind of proof rule */
   HistogramStat<PfRule> d_ruleCount;
   /**

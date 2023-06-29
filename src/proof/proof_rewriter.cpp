@@ -16,6 +16,8 @@
 
 #include "proof/proof_rewriter.h"
 
+#include "proof/proof_rule_checker.h"
+
 namespace cvc5::internal {
   
 ProofRewriter::ProofRewriter(ProofNodeManager* pnm) : d_pnm(pnm) {}
@@ -24,7 +26,7 @@ void ProofRewriter::rewrite(std::shared_ptr<ProofNode> pn)
 {
   PfRule id = pn->getRule();
   const std::vector<std::shared_ptr<ProofNode>>& children = pn->getChildren();
-  ProofNode* pnr = nullptr;
+  std::shared_ptr<ProofNode> pnr = nullptr;
   if (id==PfRule::SYMM)
   {
     if (children[0]->getRule()==PfRule::SYMM)
@@ -37,7 +39,7 @@ void ProofRewriter::rewrite(std::shared_ptr<ProofNode> pn)
     if (children[0]->getRule()==PfRule::AND_INTRO)
     {
       uint32_t i;
-      if (getUInt32(pn->getArgs()[0], i))
+      if (ProofRuleChecker::getUInt32(pn->getArguments()[0], i))
       {
         Assert (i<children[0]->getChildren().size());
         pnr = children[0]->getChildren()[i];
@@ -46,7 +48,7 @@ void ProofRewriter::rewrite(std::shared_ptr<ProofNode> pn)
   }
   if (pnr!=nullptr)
   {
-    d_pnm->updateNode(pn.get(), pnr);
+    d_pnm->updateNode(pn.get(), pnr.get());
   }
 }
 
