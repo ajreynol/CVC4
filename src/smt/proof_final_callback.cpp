@@ -58,6 +58,10 @@ ProofFinalCallback::ProofFinalCallback(Env& env)
 
 void ProofFinalCallback::initializeUpdate()
 {
+  if (d_pr==nullptr)
+  {
+    d_pr.reset(new ProofRewriter(d_env.getProofNodeManager()));
+  }
   d_pedanticFailure = false;
   d_pedanticFailureOut.str("");
   ++d_numFinalProofs;
@@ -68,8 +72,7 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
                                       bool& continueUpdate)
 {
   // rewrite the proof now
-  ProofRewriter pr(d_env.getProofNodeManager());
-  pr.rewrite(pn);
+  d_pr->rewrite(pn);
   PfRule r = pn->getRule();
   ProofNodeManager* pnm = d_env.getProofNodeManager();
   Assert(pnm != nullptr);
