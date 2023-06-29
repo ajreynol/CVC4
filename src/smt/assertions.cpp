@@ -118,7 +118,14 @@ void Assertions::addFormula(TNode n,
   Trace("smt") << "Assertions::addFormula(" << n
                << ", isFunDef = " << isFunDef << std::endl;
   // if a non-recursive define-fun, just add as a top-level substitution
+  Node vdef;
+  Node vsubs;
   if (n.getKind() == EQUAL && n[0].isVar())
+  {
+    vdef = n[0];
+    vsubs = n[1];
+  }
+  if (!vdef.isNull())
   {
     TrustSubstitutionMap& tsm = d_env.getTopLevelSubstitutions();
     // deteremine if we can just immediately turn the equality into a
@@ -133,12 +140,12 @@ void Assertions::addFormula(TNode n,
       if (!options().base.incrementalSolving)
       {
         // The left hand side cannot already be a substitution.
-        if (!tsm.get().hasSubstitution(n[0]))
+        if (!tsm.get().hasSubstitution(vdef))
         {
           // The right hand side (after substitution) cannot contain the left
           // hand side.
-          Node ns = tsm.apply(n[1]);
-          addDef = !expr::hasSubterm(ns, n[0]);
+          Node ns = tsm.apply(vsubs);
+          addDef = !expr::hasSubterm(ns, vdef);
         }
       }
     }
@@ -147,7 +154,7 @@ void Assertions::addFormula(TNode n,
       Trace("smt") << "...add as definition" << std::endl;
       // A define-fun is an assumption in the overall proof, thus
       // we justify the substitution with ASSUME here.
-      tsm.addSubstitution(n[0], n[1], PfRule::ASSUME, {}, {n});
+      tsm.addSubstitution(vdef, vsubs, PfRule::ASSUME, {}, {n});
       return;
     }
   }
