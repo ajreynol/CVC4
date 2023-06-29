@@ -202,6 +202,8 @@ libcvc5_add_sources(
   proof/proof_node_manager.h
   proof/proof_node_updater.cpp
   proof/proof_node_updater.h
+  proof/proof_rewriter.cpp
+  proof/proof_rewriter.h
   proof/proof_rule.cpp
   proof/proof_rule.h
   proof/proof_rule_checker.cpp

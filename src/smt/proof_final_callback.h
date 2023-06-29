@@ -49,6 +49,8 @@ class ProofFinalCallback : protected EnvObj, public ProofNodeUpdaterCallback
   bool wasPedanticFailure(std::ostream& out) const;
 
  private:
+  /** Proof rewriter */
+  ProofRewriter d_pr;
   /** Counts number of postprocessed proof nodes for each kind of proof rule */
   HistogramStat<PfRule> d_ruleCount;
   /**
