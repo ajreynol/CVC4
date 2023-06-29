@@ -147,12 +147,10 @@ void Assertions::addFormula(TNode n,
       Trace("smt") << "...add as definition" << std::endl;
       // A define-fun is an assumption in the overall proof, thus
       // we justify the substitution with ASSUME here.
-      tsm.addSubstitution(
-          n[0], n[1], PfRule::ASSUME, {}, {n});
+      tsm.addSubstitution(n[0], n[1], PfRule::ASSUME, {}, {n});
       return;
     }
   }
-  
 
   // Ensure that it does not contain free variables
   if (maybeHasFv)
