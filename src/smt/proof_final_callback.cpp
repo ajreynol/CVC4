@@ -72,7 +72,7 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
                                       bool& continueUpdate)
 {
   // rewrite the proof now
-  d_pr->rewrite(pn);
+  //d_pr->rewrite(pn);
   PfRule r = pn->getRule();
   ProofNodeManager* pnm = d_env.getProofNodeManager();
   Assert(pnm != nullptr);

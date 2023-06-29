@@ -46,6 +46,31 @@ void ProofRewriter::rewrite(std::shared_ptr<ProofNode> pn)
       }
     }
   }
+  else if (id==PfRule::EQ_RESOLVE)
+  {
+    if (children[0]->getRule()==PfRule::EQ_RESOLVE && children[0]->getChildren()[0]->getResult()==pn->getResult())
+    {
+      pnr = children[0]->getChildren()[0];
+    }
+  }
+  if (pnr==nullptr)
+  {
+    for (std::shared_ptr<ProofNode> c : children)
+    {
+      const std::vector<std::shared_ptr<ProofNode>>& children2 = c->getChildren();
+      if (c->getResult()==pn->getResult())
+      {
+        AlwaysAssert(id==PfRule::SCOPE || c->getRule()==PfRule::SCOPE) << "Found child proof eq " << id << " at " << c->getRule();
+      }
+      for (size_t i=0, nchildren = children2.size(); i<nchildren; i++)
+      {
+        if (children2[i]->getResult()==pn->getResult())
+        {
+          AlwaysAssert(id==PfRule::SCOPE || c->getRule()==PfRule::SCOPE) << "Found child proof eq " << id << " under " << c->getRule() << " at child " << i << std::endl << *pn.get();
+        }
+      }
+    }
+  }
   if (pnr!=nullptr)
   {
     d_pnm->updateNode(pn.get(), pnr.get());
