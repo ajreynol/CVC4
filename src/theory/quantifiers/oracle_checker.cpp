@@ -30,7 +30,8 @@ bool OracleChecker::checkConsistent(Node app,
                                     std::vector<Node>& lemmas)
 {
   Node result = evaluateApp(app);
-  Trace("oracle-calls") << "checkConsistent " << app << " == " << result << " vs " << val << std::endl;
+  Trace("oracle-calls") << "checkConsistent " << app << " == " << result
+                        << " vs " << val << std::endl;
   if (result != val)
   {
     lemmas.push_back(result.eqNode(app));
