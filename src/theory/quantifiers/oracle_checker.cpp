@@ -18,8 +18,8 @@
 #include "expr/node_algorithm.h"
 #include "options/base_options.h"
 #include "smt/env.h"
-#include "theory/rewriter.h"
 #include "smt/logic_exception.h"
+#include "theory/rewriter.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -69,10 +69,12 @@ Node OracleChecker::evaluateApp(Node app)
     d_env.output(options::OutputTag::ORACLES)
         << "(oracle-call " << app << " " << ret << ")" << std::endl;
   }
-  if (ret.getType()!=app.getType())
+  if (ret.getType() != app.getType())
   {
     std::stringstream ss;
-    ss << "Evaluated an oracle call with an unexpected type: " << app << " = " << ret << " whose type is " << ret.getType() << ", expected " << app.getType();
+    ss << "Evaluated an oracle call with an unexpected type: " << app << " = "
+       << ret << " whose type is " << ret.getType() << ", expected "
+       << app.getType();
     throw LogicException(ss.str());
   }
   Assert(!ret.isNull());
