@@ -1077,7 +1077,7 @@ std::string DefineOracleInterfaceCommand::getCommandName() const
 
 void DefineOracleInterfaceCommand::toStream(std::ostream& out) const
 {
-  Printer::getPrinter(out)->toStreamCmdDefineOracleInterface(
+  internal::Printer::getPrinter(out)->toStreamCmdDefineOracleInterface(
       out,
       termVectorToNodes(d_inputs),
       termVectorToNodes(d_outputs),
