@@ -19,6 +19,7 @@
 #include "options/base_options.h"
 #include "smt/env.h"
 #include "theory/rewriter.h"
+#include "smt/logic_exception.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -29,7 +30,6 @@ bool OracleChecker::checkConsistent(Node app,
                                     std::vector<Node>& lemmas)
 {
   Node result = evaluateApp(app);
-  Trace("oracle-calls") << "checkConsistent " << app << " == " << result << " vs " << val << std::endl;
   if (result != val)
   {
     lemmas.push_back(result.eqNode(app));
@@ -68,6 +68,12 @@ Node OracleChecker::evaluateApp(Node app)
     // of the binary.
     d_env.output(options::OutputTag::ORACLES)
         << "(oracle-call " << app << " " << ret << ")" << std::endl;
+  }
+  if (ret.getType()!=app.getType())
+  {
+    std::stringstream ss;
+    ss << "Evaluated an oracle call with an unexpected type: " << app << " = " << ret << " whose type is " << ret.getType() << ", expected " << app.getType();
+    throw LogicException(ss.str());
   }
   Assert(!ret.isNull());
   return ret;
