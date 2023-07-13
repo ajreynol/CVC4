@@ -60,6 +60,7 @@ Node OracleChecker::evaluateApp(Node app)
     return app;
   }
   Node ret = retv[0];
+  ret = rewrite(ret);
   if (ranOracle)
   {
     // prints the result of the oracle, if it was computed in the call above.
