@@ -150,7 +150,6 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       // call oracle
       Node fappWithValues = nm->mkNode(APPLY_UF, arguments);
       Node predictedResponse = eq->getRepresentative(fapp);
-      Trace("oracle-calls") << "Check " << fappWithValues << " == " << predictedResponse << std::endl;
       if (!d_ochecker->checkConsistent(
               fappWithValues, predictedResponse, learnedLemmas))
       {
