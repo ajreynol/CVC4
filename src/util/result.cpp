@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -143,7 +143,6 @@ ostream& operator<<(ostream& out, const Result& r) {
   Language language = options::ioutils::getOutputLanguage(out);
   switch (language) {
     case Language::LANG_SYGUS_V2: r.toStreamSmt2(out); break;
-    case Language::LANG_TPTP: r.toStreamTptp(out); break;
     default:
       if (language::isLangSmt2(language))
       {
@@ -182,23 +181,6 @@ void Result::toStreamSmt2(ostream& out) const {
     return;
   }
   toStreamDefault(out);
-}
-
-void Result::toStreamTptp(std::ostream& out) const {
-  out << "% SZS status ";
-  if (d_status == Result::SAT)
-  {
-    out << "Satisfiable";
-  }
-  else if (d_status == Result::UNSAT)
-  {
-    out << "Unsatisfiable";
-  }
-  else
-  {
-    out << "GaveUp";
-  }
-  out << " for " << getInputName();
 }
 
 }  // namespace cvc5::internal

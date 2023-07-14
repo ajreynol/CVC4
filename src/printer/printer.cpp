@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Abdalrhman Mohamed, Andrew Reynolds, Gereon Kremer
+ *   Abdalrhman Mohamed, Andrew Reynolds, Andres Noetzli
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -17,13 +17,14 @@
 #include <sstream>
 #include <string>
 
+#include "expr/node.h"
 #include "options/base_options.h"
 #include "options/language.h"
 #include "options/printer_options.h"
 #include "printer/ast/ast_printer.h"
 #include "printer/smt2/smt2_printer.h"
-#include "printer/tptp/tptp_printer.h"
 #include "proof/unsat_core.h"
+#include "smt/model.h"
 #include "theory/quantifiers/instantiation_list.h"
 
 using namespace std;
@@ -39,9 +40,6 @@ unique_ptr<Printer> Printer::makePrinter(Language lang)
     case Language::LANG_SMTLIB_V2_6:
       return unique_ptr<Printer>(
           new printer::smt2::Smt2Printer(printer::smt2::smt2_6_variant));
-
-    case Language::LANG_TPTP:
-      return unique_ptr<Printer>(new printer::tptp::TptpPrinter());
 
     case Language::LANG_SYGUS_V2:
       // sygus version 2.0 does not have discrepancies with smt2, hence we use
@@ -471,6 +469,11 @@ void Printer::toStreamCmdGetUnsatCore(std::ostream& out) const
 void Printer::toStreamCmdGetDifficulty(std::ostream& out) const
 {
   printUnknownCommand(out, "get-difficulty");
+}
+
+void Printer::toStreamCmdGetTimeoutCore(std::ostream& out) const
+{
+  printUnknownCommand(out, "get-timeout-core");
 }
 
 void Printer::toStreamCmdGetLearnedLiterals(std::ostream& out,

@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -114,8 +114,7 @@ Node ModelBlocker::getModelBlocker(const std::vector<Node>& assertions,
               // quantified formulas can be queried
               n = rewrite(n);
               Node vn = m->getValue(n);
-              Assert(vn.isConst());
-              if (vn.getConst<bool>() == cpol)
+              if (vn.isConst() && vn.getConst<bool>() == cpol)
               {
                 impl = cpol ? n : n.negate();
                 break;

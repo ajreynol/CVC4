@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -51,13 +51,6 @@ class ParserStateCallback
   virtual void parseError(const std::string& msg) = 0;
   /** Unexpectedly encountered an EOF */
   virtual void unexpectedEOF(const std::string& msg) = 0;
-  /**
-   * Preempt the next returned command with other ones; used to
-   * support the :named attribute in SMT-LIBv2, which implicitly
-   * inserts a new command before the current one. Also used in TPTP
-   * because function and predicate symbols are implicitly declared.
-   */
-  virtual void preemptCommand(std::unique_ptr<Command> cmd) = 0;
 };
 
 /**
@@ -122,29 +115,6 @@ class CVC5_EXPORT ParserState
    * otherwise.
    */
   Term getVariable(const std::string& name);
-
-  /**
-   * Gets the function currently bound to name.
-   *
-   * @param name the name of the variable
-   * @return the variable expression
-   * Only returns a function if its name is not overloaded, returns null
-   * otherwise.
-   */
-  Term getFunction(const std::string& name);
-
-  /**
-   * Returns the expression that name should be interpreted as, based on the
-   * current binding.
-   *
-   * The symbol name should be declared.
-   * This creates the expression that the string "name" should be interpreted
-   * as. Typically this corresponds to a variable, but it may also correspond to
-   * a nullary constructor or a defined function.
-   * Only returns an expression if its name is not overloaded, returns null
-   * otherwise.
-   */
-  virtual Term getExpressionForName(const std::string& name);
 
   /**
    * Returns the expression that name should be interpreted as, based on the
@@ -336,16 +306,13 @@ class CVC5_EXPORT ParserState
   Sort mkUnresolvedType(const std::string& name, size_t arity);
 
   /**
-   * Creates and binds sorts of a list of mutually-recursive datatype
-   * declarations.
+   * Creates sorts of a list of mutually-recursive datatype declarations.
    *
-   * For each symbol defined by the datatype, if a symbol with name already
-   * exists, then if doOverload is true, we create overloaded operators. Else,
-   * if doOverload is false, the existing expression is shadowed by the new
-   * expression.
+   * For each symbol defined by the datatype, it checks whether the binding
+   * will succeed. However, it does not actually implement the binding yet,
+   * as this is only done when the command is executed.
    */
-  std::vector<Sort> bindMutualDatatypeTypes(
-      std::vector<DatatypeDecl>& datatypes, bool doOverload = false);
+  std::vector<Sort> mkMutualDatatypeTypes(std::vector<DatatypeDecl>& datatypes);
 
   /** make flat function type
    *
@@ -457,8 +424,6 @@ class CVC5_EXPORT ParserState
   void parseError(const std::string& msg);
   /** Unexpectedly encountered an EOF */
   void unexpectedEOF(const std::string& msg);
-  /** Preempt command */
-  void preemptCommand(std::unique_ptr<Command> cmd);
   //-------------------- end callbacks to parser
   /** Issue a warning to the user, but only once per attribute. */
   void attributeNotSupported(const std::string& attr);
@@ -570,19 +535,6 @@ class CVC5_EXPORT ParserState
  protected:
   /** The API Solver object. */
   Solver* d_solver;
-  /**
-   * A string to prepend to the name of all declared symbols, which helps
-   * when converting benchmarks from one format to another.
-   *
-   * The print namespace does not impact the symbol bindings. For example,
-   * if a variable "x" is declared and the print namespace is "tptp.", then
-   * we bind the symbol "x" to a variable whose name is "tptp.x". This means
-   * that "x" can be parsed, but the variable will be printed as "tptp.x".
-   *
-   * !!!!!!!!! This is only necessary for the TPTP to smt2 conversion, and
-   * can be deleted if the TPTP parser is deleted.
-   */
-  std::string d_printNamespace;
 
  private:
   /** The callback */
@@ -621,13 +573,6 @@ class CVC5_EXPORT ParserState
    * Owns the memory of the Commands in the queue.
    */
   std::list<Command*> d_commandQueue;
-
-  /** Lookup a symbol in the given namespace (as specified by the type).
-   * Only returns a symbol if it is not overloaded, returns null otherwise.
-   */
-  Term getSymbol(const std::string& var_name, SymbolType type);
-  /** Get name for user name */
-  std::string getNameForUserName(const std::string& name) const;
 }; /* class Parser */
 
 /** Compute the unsigned integer for a token. */
