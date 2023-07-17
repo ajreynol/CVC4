@@ -61,8 +61,9 @@ OracleEngine::OracleEngine(Env& env,
 
 void OracleEngine::presolve()
 {
-  // ensure all oracle functions in top-level substitutions occur in
-  // lemmas
+  // Ensure all oracle functions in top-level substitutions occur in
+  // lemmas. Otherwise the oracles will not be invoked for those values
+  // and the model will be inaccurate.
   std::unordered_map<Node, Node> subs =
       d_env.getTopLevelSubstitutions().get().getSubstitutions();
   std::unordered_set<Node> visited;
