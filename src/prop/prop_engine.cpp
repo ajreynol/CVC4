@@ -335,6 +335,9 @@ void PropEngine::requirePhase(TNode n, bool phase) {
   Assert(n.getType().isBoolean());
   SatLiteral lit = d_cnfStream->getLiteral(n);
   d_satSolver->requirePhase(phase ? lit : ~lit);
+  
+  // also notify the theory proxy, which owns the decision engine
+  d_theoryProxy->requirePhase(n, phase);
 }
 
 bool PropEngine::isDecision(Node lit) const {

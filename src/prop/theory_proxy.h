@@ -207,6 +207,15 @@ class TheoryProxy : protected EnvObj, public Registrar
   /** Get literal type using ZLL utility */
   modes::LearnedLitType getLiteralType(const Node& lit) const;
 
+  /**
+   * If ever n is decided upon, it must be in the given phase.  This
+   * occurs *globally*, i.e., even if the literal is untranslated by
+   * user pop and retranslated, it keeps this phase.  The associated
+   * variable will _always_ be phase-locked.
+   *
+   * This call is forwarded to the decision engine if it exists.
+   */
+  void requirePhase(TNode n, bool phase);
  private:
   /** The prop engine we are using. */
   PropEngine* d_propEngine;
