@@ -52,7 +52,7 @@ OracleEngine::OracleEngine(Env& env,
                            TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
       d_oracleFuns(userContext()),
-      d_ochecker(tr.getOracleChecker()),
+      d_ochecker(env.getOracleChecker()),
       d_consistencyCheckPassed(false)
 {
   Assert(d_ochecker != nullptr);

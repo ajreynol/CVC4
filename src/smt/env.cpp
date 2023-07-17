@@ -32,6 +32,7 @@
 #include "theory/trust_substitutions.h"
 #include "util/resource_manager.h"
 #include "util/statistics_registry.h"
+#include "theory/quantifiers/oracle_checker.h"
 
 using namespace cvc5::internal::smt;
 
@@ -77,6 +78,11 @@ void Env::finishInit(ProofNodeManager* pnm)
   }
   d_topLevelSubs.reset(
       new theory::TrustSubstitutionMap(*this, d_userContext.get()));
+
+  if (d_options.quantifiers.oracles)
+  {
+    d_ochecker.reset(new theory::quantifiers::OracleChecker(*this));
+  }
 }
 
 void Env::shutdown()
@@ -262,6 +268,11 @@ void Env::declareSepHeap(TypeNode locT, TypeNode dataT)
   // remember the types we have set
   d_sepLocType = locT;
   d_sepDataType = dataT;
+}
+
+theory::quantifiers::OracleChecker* Env::getOracleChecker() const
+{
+  return d_ochecker.get();
 }
 
 }  // namespace cvc5::internal

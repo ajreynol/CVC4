@@ -43,19 +43,14 @@ TermRegistry::TermRegistry(Env& env,
                                            : new TermDb(env, qs, qr)),
       d_echeck(new EntailmentCheck(env, qs, *d_termDb.get())),
       d_sygusTdb(nullptr),
-      d_ochecker(nullptr),
       d_vtsCache(new VtsTermCache(env)),
       d_ievalMan(new ieval::InstEvaluatorManager(env, qs, *d_termDb.get())),
       d_qmodel(nullptr)
 {
-  if (options().quantifiers.oracles)
-  {
-    d_ochecker.reset(new OracleChecker(env));
-  }
   if (options().quantifiers.sygus || options().quantifiers.sygusInst)
   {
     // must be constructed here since it is required for datatypes finistInit
-    d_sygusTdb.reset(new TermDbSygus(env, qs, d_ochecker.get()));
+    d_sygusTdb.reset(new TermDbSygus(env, qs));
   }
   Trace("quant-engine-debug") << "Initialize quantifiers engine." << std::endl;
 }
@@ -161,11 +156,6 @@ TermDb* TermRegistry::getTermDatabase() const { return d_termDb.get(); }
 TermDbSygus* TermRegistry::getTermDatabaseSygus() const
 {
   return d_sygusTdb.get();
-}
-
-OracleChecker* TermRegistry::getOracleChecker() const
-{
-  return d_ochecker.get();
 }
 
 EntailmentCheck* TermRegistry::getEntailmentCheck() const
