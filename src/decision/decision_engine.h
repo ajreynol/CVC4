@@ -18,6 +18,8 @@
 #ifndef CVC5__DECISION__DECISION_ENGINE_H
 #define CVC5__DECISION__DECISION_ENGINE_H
 
+#include <unordered_set>
+
 #include "expr/node.h"
 #include "prop/cnf_stream.h"
 #include "prop/sat_solver.h"
@@ -65,6 +67,17 @@ class DecisionEngine : protected EnvObj
    */
   virtual bool needsActiveSkolemDefs() const { return false; }
 
+  /**
+   * If ever n is decided upon, it must be in the given phase.  This
+   * occurs *globally*, i.e., even if the literal is untranslated by
+   * user pop and retranslated, it keeps this phase.  The associated
+   * variable will _always_ be phase-locked.
+   *
+   * @param n the node in question; must have an associated SAT literal
+   * @param phase the phase to use
+   */
+  void requirePhase(TNode n, bool phase);
+
  protected:
   /** Get next internal, the engine-specific implementation of getNext */
   virtual prop::SatLiteral getNextInternal(bool& stopSearch) = 0;
@@ -72,6 +85,8 @@ class DecisionEngine : protected EnvObj
   prop::CDCLTSatSolver* d_satSolver;
   /** Pointer to the CNF stream */
   prop::CnfStream* d_cnfStream;
+  /** Decisions to flip */
+  std::set<prop::SatLiteral> d_flipDec;
 };
 
 /**
