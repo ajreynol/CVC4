@@ -476,13 +476,5 @@ std::vector<Node> TheoryProxy::getLearnedZeroLevelLiteralsForRestart() const
   return {};
 }
 
-void TheoryProxy::requirePhase(TNode n, bool phase)
-{
-  if (d_decisionEngine!=nullptr)
-  {
-    d_decisionEngine->requirePhase(n, phase);
-  }
-}
-
 }  // namespace prop
 }  // namespace cvc5::internal

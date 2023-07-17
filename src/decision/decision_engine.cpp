@@ -22,29 +22,14 @@ namespace decision {
 DecisionEngine::DecisionEngine(Env& env,
                                prop::CDCLTSatSolver* ss,
                                prop::CnfStream* cs)
-    : EnvObj(env), d_satSolver(ss), d_cnfStream(cs), d_flipDec()
+    : EnvObj(env), d_satSolver(ss), d_cnfStream(cs)
 {
 }
 
 prop::SatLiteral DecisionEngine::getNext(bool& stopSearch)
 {
   resourceManager()->spendResource(Resource::DecisionStep);
-  prop::SatLiteral lit = getNextInternal(stopSearch);
-  if (d_flipDec.find(lit)!=d_flipDec.end())
-  {
-    return ~lit;
-  }
-  return lit;
-}
-
-void DecisionEngine::requirePhase(TNode n, bool phase)
-{
-  if (d_cnfStream!=nullptr)
-  {
-    prop::SatLiteral lit = d_cnfStream->getLiteral(n);
-    lit = phase ? ~lit : lit;
-    d_flipDec.insert(lit);
-  }
+  return getNextInternal(stopSearch);
 }
 
 DecisionEngineEmpty::DecisionEngineEmpty(Env& env)
