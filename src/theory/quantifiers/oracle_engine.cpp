@@ -183,9 +183,19 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       // call oracle
       Node fappWithValues = nm->mkNode(APPLY_UF, arguments);
       Node predictedResponse = fm->getValue(fapp);
-      if (!d_ochecker->checkConsistent(
-              fappWithValues, predictedResponse, learnedLemmas))
+      Node result = d_ochecker->checkConsistent(
+              fappWithValues, predictedResponse);
+      if (!result.isNull())
       {
+        std::vector<Node> ant;
+        for (size_t i=0, nchild = fapp.getNumChildren(); i<nchild; i++)
+        {
+          ant.push_back(fapp[i].eqNode(arguments[i+1]));
+        }
+        Node antn = nm->mkAnd(ant);
+        Node conc = nm->mkNode(EQUAL, fapp, result);
+        Node lem = nm->mkNode(IMPLIES, antn, conc);
+        learnedLemmas.push_back(lem);
         allFappsConsistent = false;
       }
     }
