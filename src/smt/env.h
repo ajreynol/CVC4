@@ -54,7 +54,7 @@ class Rewriter;
 class TrustSubstitutionMap;
 
 namespace quantifiers {
-  class OracleChecker;
+class OracleChecker;
 }
 }
 
@@ -265,6 +265,7 @@ class Env
 
   /** get oracle checker */
   theory::quantifiers::OracleChecker* getOracleChecker() const;
+
  private:
   /* Private initialization ------------------------------------------------- */
 
