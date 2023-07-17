@@ -194,11 +194,10 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
           eqa = rewrite(eqa);
           d_qim.requirePhase(eqa, true);
           ant.push_back(eqa);
-          
         }
         Node antn = nm->mkAnd(ant);
         Node conc = nm->mkNode(EQUAL, fapp, result);
-        Node lem = nm->mkNode(IMPLIES, antn, conc);
+        Node lem = nm->mkNode(OR, conc, antn.notNode());
         learnedLemmas.push_back(lem);
         allFappsConsistent = false;
       }
