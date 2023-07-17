@@ -190,7 +190,11 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         std::vector<Node> ant;
         for (size_t i=0, nchild = fapp.getNumChildren(); i<nchild; i++)
         {
-          ant.push_back(fapp[i].eqNode(arguments[i+1]));
+          Node eqa = fapp[i].eqNode(arguments[i+1]);
+          eqa = rewrite(eqa);
+          d_qim.requirePhase(eqa, true);
+          ant.push_back(eqa);
+          
         }
         Node antn = nm->mkAnd(ant);
         Node conc = nm->mkNode(EQUAL, fapp, result);
