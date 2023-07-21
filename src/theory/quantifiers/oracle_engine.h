@@ -20,6 +20,7 @@
 
 #include "theory/quantifiers/oracle_checker.h"
 #include "theory/quantifiers/quant_module.h"
+#include "theory/decision_strategy.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -111,6 +112,8 @@ class OracleEngine : public QuantifiersModule
    * oracle interface quantified formulas?
    */
   bool d_consistencyCheckPassed;
+  /** For ensuring */
+  DecisionStrategyVector d_dstrat;
 };
 
 }  // namespace quantifiers

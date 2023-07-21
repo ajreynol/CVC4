@@ -25,6 +25,7 @@
 #include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_tuple_enumerator.h"
 #include "theory/trust_substitutions.h"
+#include "theory/decision_manager.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::context;
@@ -54,7 +55,8 @@ OracleEngine::OracleEngine(Env& env,
     : QuantifiersModule(env, qs, qim, qr, tr),
       d_oracleFuns(userContext()),
       d_ochecker(env.getOracleChecker()),
-      d_consistencyCheckPassed(false)
+      d_consistencyCheckPassed(false),
+      d_dstrat(env, "OracleArgValue", qs.getValuation())
 {
   Assert(d_ochecker != nullptr);
 }
@@ -92,6 +94,9 @@ void OracleEngine::presolve() {
       }
     }
   }
+    d_qim.getDecisionManager()->registerStrategy(
+        DecisionManager::STRAT_ORACLE_ARG_VALUE, &d_dstrat,
+        DecisionManager::STRAT_SCOPE_LOCAL_SOLVE);
 }
 
 bool OracleEngine::needsCheck(Theory::Effort e)
@@ -192,7 +197,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         {
           Node eqa = fapp[i].eqNode(arguments[i+1]);
           eqa = rewrite(eqa);
-          d_qim.requirePhase(eqa, true);
+          d_dstrat.addLiteral(eqa);
           ant.push_back(eqa);
         }
         Node antn = nm->mkAnd(ant);
