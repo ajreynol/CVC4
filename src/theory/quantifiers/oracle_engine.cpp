@@ -94,6 +94,8 @@ void OracleEngine::presolve() {
       }
     }
   }
+  // register the decision strategy which will insist that arguments are
+  // decided to be equal to values.
     d_qim.getDecisionManager()->registerStrategy(
         DecisionManager::STRAT_ORACLE_ARG_VALUE, &d_dstrat,
         DecisionManager::STRAT_SCOPE_LOCAL_SOLVE);
@@ -192,11 +194,18 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
               fappWithValues, predictedResponse);
       if (!result.isNull())
       {
+        // Note that we add (=> (= args values) (= (f args) result))
+        // instead of (= (f values) result) here. The latter may be more
+        // compact, but we require introducing literals for (= args values)
+        // so that they can be preferred by the decision strategy.
         std::vector<Node> ant;
         for (size_t i=0, nchild = fapp.getNumChildren(); i<nchild; i++)
         {
           Node eqa = fapp[i].eqNode(arguments[i+1]);
           eqa = rewrite(eqa);
+          // Insist that the decision strategy tries to make (= args values)
+          // true first. This is to ensure that the value of the oracle can be
+          // used.
           d_dstrat.addLiteral(eqa);
           ant.push_back(eqa);
         }
