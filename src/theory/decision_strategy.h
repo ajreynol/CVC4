@@ -147,9 +147,7 @@ class DecisionStrategySingleton : public DecisionStrategyFmf
 class DecisionStrategyVector : public DecisionStrategyFmf
 {
  public:
-  DecisionStrategyVector(Env& env,
-                         const char* name,
-                         Valuation valuation);
+  DecisionStrategyVector(Env& env, const char* name, Valuation valuation);
   /**
    * Make the n^th literal of this strategy. This method returns d_literal if
    * n=0, null otherwise.
@@ -159,6 +157,7 @@ class DecisionStrategyVector : public DecisionStrategyFmf
   std::string identify() const override { return d_name; }
 
   void addLiteral(const Node& n);
+
  private:
   /** the name of this strategy */
   std::string d_name;

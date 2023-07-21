@@ -18,9 +18,9 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__ORACLE_ENGINE_H
 #define CVC5__THEORY__QUANTIFIERS__ORACLE_ENGINE_H
 
+#include "theory/decision_strategy.h"
 #include "theory/quantifiers/oracle_checker.h"
 #include "theory/quantifiers/quant_module.h"
-#include "theory/decision_strategy.h"
 
 namespace cvc5::internal {
 namespace theory {

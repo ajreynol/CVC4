@@ -18,6 +18,7 @@
 #include "expr/attribute.h"
 #include "expr/skolem_manager.h"
 #include "options/quantifiers_options.h"
+#include "theory/decision_manager.h"
 #include "theory/quantifiers/first_order_model.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
@@ -25,7 +26,6 @@
 #include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_tuple_enumerator.h"
 #include "theory/trust_substitutions.h"
-#include "theory/decision_manager.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::context;
@@ -96,9 +96,10 @@ void OracleEngine::presolve() {
   }
   // register the decision strategy which will insist that arguments are
   // decided to be equal to values.
-    d_qim.getDecisionManager()->registerStrategy(
-        DecisionManager::STRAT_ORACLE_ARG_VALUE, &d_dstrat,
-        DecisionManager::STRAT_SCOPE_LOCAL_SOLVE);
+  d_qim.getDecisionManager()->registerStrategy(
+      DecisionManager::STRAT_ORACLE_ARG_VALUE,
+      &d_dstrat,
+      DecisionManager::STRAT_SCOPE_LOCAL_SOLVE);
 }
 
 bool OracleEngine::needsCheck(Theory::Effort e)
@@ -190,8 +191,8 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       // call oracle
       Node fappWithValues = nm->mkNode(APPLY_UF, arguments);
       Node predictedResponse = fm->getValue(fapp);
-      Node result = d_ochecker->checkConsistent(
-              fappWithValues, predictedResponse);
+      Node result =
+          d_ochecker->checkConsistent(fappWithValues, predictedResponse);
       if (!result.isNull())
       {
         // Note that we add (=> (= args values) (= (f args) result))
@@ -199,9 +200,9 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         // compact, but we require introducing literals for (= args values)
         // so that they can be preferred by the decision strategy.
         std::vector<Node> ant;
-        for (size_t i=0, nchild = fapp.getNumChildren(); i<nchild; i++)
+        for (size_t i = 0, nchild = fapp.getNumChildren(); i < nchild; i++)
         {
-          Node eqa = fapp[i].eqNode(arguments[i+1]);
+          Node eqa = fapp[i].eqNode(arguments[i + 1]);
           eqa = rewrite(eqa);
           // Insist that the decision strategy tries to make (= args values)
           // true first. This is to ensure that the value of the oracle can be

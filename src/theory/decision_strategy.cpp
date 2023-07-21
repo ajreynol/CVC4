@@ -74,7 +74,8 @@ Node DecisionStrategyFmf::getNextDecisionRequest()
       else
       {
         Trace("dec-strategy-debug") << "...already assigned true." << std::endl;
-        // the current literal has been decided with the right polarity, we are done
+        // the current literal has been decided with the right polarity, we are
+        // done
         d_has_curr_literal = true;
       }
     }
@@ -145,17 +146,16 @@ Node DecisionStrategySingleton::mkLiteral(unsigned n)
 
 Node DecisionStrategySingleton::getSingleLiteral() { return d_literal; }
 
-
 DecisionStrategyVector::DecisionStrategyVector(Env& env,
-                                                     const char* name,
-                                                     Valuation valuation)
+                                               const char* name,
+                                               Valuation valuation)
     : DecisionStrategyFmf(env, valuation), d_name(name)
 {
 }
 
 Node DecisionStrategyVector::mkLiteral(unsigned n)
 {
-  if (n<d_literals.size())
+  if (n < d_literals.size())
   {
     return d_literals[n];
   }
