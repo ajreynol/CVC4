@@ -34,6 +34,14 @@ name   = "SMT Layer"
   help       = "apply Boolean constant propagation as a substituion during simplification"
 
 [[option]]
+  name       = "simplificationConjoinLits"
+  category   = "expert"
+  long       = "simplification-conjoin-lits"
+  type       = "bool"
+  default    = "true"
+  help       = "conjoin literals learned by preprocessing"
+
+[[option]]
   name       = "staticLearning"
   category   = "regular"
   long       = "static-learning"

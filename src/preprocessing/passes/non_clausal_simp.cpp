@@ -365,39 +365,44 @@ PreprocessingPassResult NonClausalSimp::applyInternal(
   // Learned literals to conjoin. If proofs are enabled, all these are
   // justified by d_llpg.
   std::vector<Node> learnedLitsToConjoin;
-
-  for (size_t i = 0; i < learned_literals.size(); ++i)
+  if (options().smt.simplificationConjoinLits)
   {
-    Node learned = learned_literals[i].getNode();
-    Assert(top_level_substs.apply(learned) == learned);
-    // process learned literal
-    learned = processLearnedLit(
-        learned, newSubstitutions.get(), constantPropagations.get());
-    if (s.find(learned) != s.end())
+    for (size_t i = 0; i < learned_literals.size(); ++i)
     {
-      continue;
+      Node learned = learned_literals[i].getNode();
+      Assert(top_level_substs.apply(learned) == learned);
+      // process learned literal
+      learned = processLearnedLit(
+          learned, newSubstitutions.get(), constantPropagations.get());
+      if (s.find(learned) != s.end())
+      {
+        continue;
+      }
+      s.insert(learned);
+      learnedLitsToConjoin.push_back(learned);
+      Trace("non-clausal-simplify")
+          << "non-clausal learned : " << learned << std::endl;
     }
-    s.insert(learned);
-    learnedLitsToConjoin.push_back(learned);
-    Trace("non-clausal-simplify")
-        << "non-clausal learned : " << learned << std::endl;
   }
   learned_literals.clear();
 
-  for (SubstitutionMap::iterator pos = cps.begin(); pos != cps.end(); ++pos)
+  if (options().smt.simplificationConjoinLits)
   {
-    Node cProp = (*pos).first.eqNode((*pos).second);
-    Assert(top_level_substs.apply(cProp) == cProp);
-    // process learned literal (substitutions only)
-    cProp = processLearnedLit(cProp, newSubstitutions.get(), nullptr);
-    if (s.find(cProp) != s.end())
+    for (SubstitutionMap::iterator pos = cps.begin(); pos != cps.end(); ++pos)
     {
-      continue;
+      Node cProp = (*pos).first.eqNode((*pos).second);
+      Assert(top_level_substs.apply(cProp) == cProp);
+      // process learned literal (substitutions only)
+      cProp = processLearnedLit(cProp, newSubstitutions.get(), nullptr);
+      if (s.find(cProp) != s.end())
+      {
+        continue;
+      }
+      s.insert(cProp);
+      learnedLitsToConjoin.push_back(cProp);
+      Trace("non-clausal-simplify")
+          << "non-clausal constant propagation : " << cProp << std::endl;
     }
-    s.insert(cProp);
-    learnedLitsToConjoin.push_back(cProp);
-    Trace("non-clausal-simplify")
-        << "non-clausal constant propagation : " << cProp << std::endl;
   }
 
   // Add new substitutions to topLevelSubstitutions
