@@ -20,6 +20,7 @@
 
 #include <iosfwd>
 #include <memory>
+
 #include "expr/skolem_manager.h"
 
 namespace cvc5::internal {
@@ -61,6 +62,6 @@ struct CanonVarHashFunction
   size_t operator()(const CanonVar& cv) const;
 }; /* struct CanonVarHashFunction */
 
-} 
+}  // namespace cvc5::internal
 
 #endif /* CVC5__EMPTY_SET_H */

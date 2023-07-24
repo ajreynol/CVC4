@@ -21,11 +21,13 @@
 
 namespace cvc5::internal {
 
-std::ostream& operator<<(std::ostream& out, const CanonVar& asa) {
-  return out << "CanonVar(" <<  << asa.getType() << ')';
+std::ostream& operator<<(std::ostream& out, const CanonVar& asa)
+{
+  return out << "CanonVar(" < < < < asa.getType() << ')';
 }
 
-size_t CanonVarHashFunction::operator()(const CanonVar& cv) const {
+size_t CanonVarHashFunction::operator()(const CanonVar& cv) const
+{
   return std::hash<TypeNode>()(cv.getType());
 }
 
@@ -33,11 +35,18 @@ size_t CanonVarHashFunction::operator()(const CanonVar& cv) const {
  * Constructs an emptyset of the specified type. Note that the argument
  * is the type of the set itself, NOT the type of the elements.
  */
-CanonVar::CanonVar(const TypeNode& setType) : d_id(id), d_type(new TypeNode(setType)) {}
+CanonVar::CanonVar(const TypeNode& setType)
+    : d_id(id), d_type(new TypeNode(setType))
+{
+}
 
-CanonVar::CanonVar(const CanonVar& cv) : d_id(cv.getId()), d_type(new TypeNode(cv.getType())) {}
+CanonVar::CanonVar(const CanonVar& cv)
+    : d_id(cv.getId()), d_type(new TypeNode(cv.getType()))
+{
+}
 
-CanonVar& CanonVar::operator=(const CanonVar& cv) {
+CanonVar& CanonVar::operator=(const CanonVar& cv)
+{
   (*d_type) = cv.getType();
   return *this;
 }
