@@ -50,11 +50,11 @@
 #include "expr/kind.h"
 #include "expr/metakind.h"
 #include "expr/node.h"
-#include "expr/skolem_manager.h"
 #include "expr/node_algorithm.h"
 #include "expr/node_builder.h"
 #include "expr/node_manager.h"
 #include "expr/sequence.h"
+#include "expr/skolem_manager.h"
 #include "expr/sygus_grammar.h"
 #include "expr/type_node.h"
 #include "options/base_options.h"
@@ -6199,7 +6199,8 @@ Term Solver::mkCanonicalConst(const std::string& id,
   CVC5_API_SOLVER_CHECK_TERMS(children);
   internal::SkolemManager* sm = d_nm->getSkolemManager();
   internal::SkolemFunId sfid = sm->stringToSkolemFunId(id);
-  CVC5_API_ARG_CHECK_EXPECTED(sfid != internal::SkolemFunId::NONE, id) << "String identifier corresponding to skolem function";
+  CVC5_API_ARG_CHECK_EXPECTED(sfid != internal::SkolemFunId::NONE, id)
+      << "String identifier corresponding to skolem function";
   //////// all checks before this line
   std::vector<internal::Node> cnodes = Term::termVectorToNodes(children);
   internal::Node res = sm->mkSkolemFunction(sfid, *sort.d_type, cnodes);

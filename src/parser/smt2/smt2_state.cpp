@@ -1069,7 +1069,7 @@ void Smt2State::parseOpApplyTypeAscription(ParseOp& p, Sort type)
       p.d_expr = d_solver->mkFiniteFieldElem(rest, type);
       return;
     }
-    else if (p.d_kind==CONSTANT)
+    else if (p.d_kind == CONSTANT)
     {
       p.d_expr = d_solver->mkConst(type, "_placeholder_");
     }
@@ -1365,7 +1365,8 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
   }
   else if (p.d_kind == CONSTANT)
   {
-    Trace("parser") << "mkCanonicalConst " << p.d_name << " " << p.d_expr.getSort() << " " << args << std::endl;
+    Trace("parser") << "mkCanonicalConst " << p.d_name << " "
+                    << p.d_expr.getSort() << " " << args << std::endl;
     Term ret = d_solver->mkCanonicalConst(p.d_name, p.d_expr.getSort(), args);
     Trace("parser") << "Returned " << ret << std::endl;
     return ret;

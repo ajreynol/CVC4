@@ -355,16 +355,16 @@ SkolemFunId SkolemManager::stringToSkolemFunId(const std::string& str)
   {
     size_t begin = static_cast<size_t>(SkolemFunId::NONE);
     size_t end = static_cast<size_t>(SkolemFunId::UNKNOWN);
-    for (size_t i = begin+1; i < end; i++)
+    for (size_t i = begin + 1; i < end; i++)
     {
       std::stringstream ss;
       SkolemFunId id = static_cast<SkolemFunId>(i);
       ss << id;
       d_strToId[ss.str()] = id;
-    } 
+    }
   }
   std::map<std::string, SkolemFunId>::iterator it = d_strToId.find(str);
-  if (it!=d_strToId.end())
+  if (it != d_strToId.end())
   {
     return it->second;
   }

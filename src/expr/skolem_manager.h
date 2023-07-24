@@ -426,6 +426,7 @@ class SkolemManager
    * Get the skolem function id for str, if it exists.
    */
   SkolemFunId stringToSkolemFunId(const std::string& str);
+
  private:
   /** Cache of skolem functions for mkSkolemFunction above. */
   std::map<std::tuple<SkolemFunId, TypeNode, Node>, Node> d_skolemFuns;
