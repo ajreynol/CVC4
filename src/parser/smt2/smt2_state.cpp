@@ -1053,7 +1053,7 @@ void Smt2State::parseOpApplyTypeAscription(ParseOp& p, Sort type)
       // of the given type. The kind INTERNAL_KIND is used to mark that we
       // are a placeholder.
       p.d_kind = INTERNAL_KIND;
-      p.d_expr = d_solver->mkConst(type, "_placeholder_");
+      p.d_expr = d_solver->mkConst(type);
       return;
     }
     else if (p.d_name.find("ff") == 0)
@@ -1073,7 +1073,7 @@ void Smt2State::parseOpApplyTypeAscription(ParseOp& p, Sort type)
     {
       // same as the placeholder for constant arrays above, store the type
       // in a placeholder expr.
-      p.d_expr = d_solver->mkConst(type, "_placeholder_");
+      p.d_expr = d_solver->mkConst(type);
     }
     if (p.d_expr.isNull())
     {

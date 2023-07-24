@@ -6160,8 +6160,26 @@ Term Solver::mkConst(const Sort& sort,
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_SOLVER_CHECK_SORT(sort);
   //////// all checks before this line
-  internal::Node res =
-      symbol ? d_nm->mkVar(*symbol, *sort.d_type) : d_nm->mkVar(*sort.d_type);
+  internal::Node res;
+  if (symbol)
+  {
+    if (d_slv->getOptions().expr.canonConst)
+    {
+      internal::SkolemManager * sm = d_nm->getSkolemManager();
+      std::vector<internal::Node> cacheVals;
+      // indexed by its name
+      cacheVals.push_back(d_nm->mkConst(internal::String(*symbol)));
+      res = sm->mkSkolemFunction(internal::SkolemFunId::INPUT_VARIABLE, *sort.d_type, cacheVals);
+    }
+    else
+    {
+      res = d_nm->mkVar(*symbol, *sort.d_type);
+    }
+  }
+  else
+  {
+    res = d_nm->mkVar(*sort.d_type);
+  }
   (void)res.getType(true); /* kick off type checking */
   increment_vars_consts_stats(sort, false);
   return Term(d_nm, res);
