@@ -1223,7 +1223,10 @@ Node CegInstantiator::applySubstitutionToLiteral( Node lit, std::vector< Node >&
   
 bool CegInstantiator::check() {
   // maybe just sat?
-
+  if (isSatisfied())
+  {
+    return true;
+  }
   processAssertions();
   for( unsigned r=0; r<2; r++ ){
     d_effort = r == 0 ? CEG_INST_EFFORT_STANDARD : CEG_INST_EFFORT_FULL;
@@ -1587,12 +1590,18 @@ bool CegInstantiator::isSatisfied()
     vars.push_back(v);
     subs.push_back(s);
   }
+  if (vars.empty())
+  {
+    return false;
+  }
   Node qs =
       d_quant.substitute(vars.begin(), vars.end(), subs.begin(), subs.end());
   qs = rewrite(qs).negate();
+  Trace("cegqi-check-sat") << "CegInstantiator: " << d_quant << std::endl;
+  Trace("cegqi-check-sat") << "CegInstantiator: check-sat " << qs << std::endl;
   SubsolverSetupInfo ssi(d_env);
   Result r = checkWithSubsolver(qs, ssi);
-  return r.getStatus() == Result::SAT;
+  return r.getStatus() == Result::UNSAT;
 }
 
 }  // namespace quantifiers
