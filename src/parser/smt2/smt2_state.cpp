@@ -767,6 +767,10 @@ void Smt2State::setLogic(std::string name)
       addOperator(POW2, "int.pow2");
     }
   }
+  if (!strictModeEnabled())
+  {
+    addIndexedOperator(CONSTANT, "const");
+  }
 
   if (d_logic.isTheoryEnabled(internal::theory::THEORY_ARRAYS))
   {
@@ -1065,6 +1069,10 @@ void Smt2State::parseOpApplyTypeAscription(ParseOp& p, Sort type)
       p.d_expr = d_solver->mkFiniteFieldElem(rest, type);
       return;
     }
+    else if (p.d_kind==CONSTANT)
+    {
+      p.d_expr = d_solver->mkConst(type, "_placeholder_");
+    }
     if (p.d_expr.isNull())
     {
       std::stringstream ss;
@@ -1354,6 +1362,13 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
     Term iop = mkIndexedOp(p.d_kind, {p.d_name}, args);
     kind = p.d_kind;
     args.insert(args.begin(), iop);
+  }
+  else if (p.d_kind == CONSTANT)
+  {
+    Trace("parser") << "mkCanonicalConst " << p.d_name << " " << p.d_expr.getSort() << " " << args << std::endl;
+    Term ret = d_solver->mkCanonicalConst(p.d_name, p.d_expr.getSort(), args);
+    Trace("parser") << "Returned " << ret << std::endl;
+    return ret;
   }
   else if (p.d_kind != NULL_TERM)
   {

@@ -50,6 +50,7 @@
 #include "expr/kind.h"
 #include "expr/metakind.h"
 #include "expr/node.h"
+#include "expr/skolem_manager.h"
 #include "expr/node_algorithm.h"
 #include "expr/node_builder.h"
 #include "expr/node_manager.h"
@@ -6181,6 +6182,27 @@ Term Solver::mkVar(const Sort& sort,
                               : d_nm->mkBoundVar(*sort.d_type);
   (void)res.getType(true); /* kick off type checking */
   increment_vars_consts_stats(sort, true);
+  return Term(d_nm, res);
+  ////////
+  CVC5_API_TRY_CATCH_END;
+}
+
+/* Create variables                                                           */
+/* -------------------------------------------------------------------------- */
+
+Term Solver::mkCanonicalConst(const std::string& id,
+                              const Sort& sort,
+                              const std::vector<Term>& children) const
+{
+  CVC5_API_TRY_CATCH_BEGIN;
+  CVC5_API_SOLVER_CHECK_SORT(sort);
+  CVC5_API_SOLVER_CHECK_TERMS(children);
+  internal::SkolemManager* sm = d_nm->getSkolemManager();
+  internal::SkolemFunId sfid = sm->stringToSkolemFunId(id);
+  CVC5_API_ARG_CHECK_EXPECTED(sfid != internal::SkolemFunId::NONE, id) << "String identifier corresponding to skolem function";
+  //////// all checks before this line
+  std::vector<internal::Node> cnodes = Term::termVectorToNodes(children);
+  internal::Node res = sm->mkSkolemFunction(sfid, *sort.d_type, cnodes);
   return Term(d_nm, res);
   ////////
   CVC5_API_TRY_CATCH_END;
