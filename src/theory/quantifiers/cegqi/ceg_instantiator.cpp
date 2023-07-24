@@ -32,6 +32,7 @@
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_util.h"
 #include "theory/rewriter.h"
+#include "theory/smt_engine_subsolver.h"
 #include "util/rational.h"
 
 using namespace std;
@@ -56,6 +57,16 @@ CegInstantiator::CegInstantiator(Env& env,
       d_is_nested_quant(false),
       d_effort(CEG_INST_EFFORT_NONE)
 {
+  // get the free symbols
+  std::unordered_set<Node> syms;
+  expr::getSymbols(q, syms);
+  for (const Node& s : syms)
+  {
+    if (s.getType().isFirstClass())
+    {
+      d_freeSyms.push_back(s);
+    }
+  }
 }
 
 CegInstantiator::~CegInstantiator() {
@@ -1211,6 +1222,8 @@ Node CegInstantiator::applySubstitutionToLiteral( Node lit, std::vector< Node >&
 }
   
 bool CegInstantiator::check() {
+  // maybe just sat?
+  
   processAssertions();
   for( unsigned r=0; r<2; r++ ){
     d_effort = r == 0 ? CEG_INST_EFFORT_STANDARD : CEG_INST_EFFORT_FULL;
@@ -1558,6 +1571,27 @@ void CegInstantiator::registerCounterexampleLemma(Node lem,
     Node alemr = rewrite(alem);
     collectCeAtoms(alemr);
   }
+}
+
+bool CegInstantiator::isSatisfied()
+{
+  if (!options().quantifiers.cegqiCheckSat)
+  {
+    return false;
+  }
+  std::vector<Node> vars;
+  std::vector<Node> subs;
+  for( const Node& v : d_freeSyms)
+  {
+    Node s = getModelValue(v);
+    vars.push_back(v);
+    subs.push_back(s);
+  }
+  Node qs = d_quant.substitute(vars.begin(), vars.end(), subs.begin(), subs.end());
+  qs = rewrite(qs).negate();
+  SubsolverSetupInfo ssi(d_env);
+  Result r = checkWithSubsolver(qs, ssi);
+  return r.getStatus()==Result::SAT;
 }
 
 }  // namespace quantifiers

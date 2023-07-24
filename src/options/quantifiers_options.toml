@@ -1535,6 +1535,14 @@ name   = "Quantifiers"
   default    = "false"
   help       = "process nested quantified formulas with quantifier elimination in counterexample-based quantifier instantiation"
 
+[[option]]
+  name       = "cegqiCheckSat"
+  category   = "expert"
+  long       = "cegqi-check-sat"
+  type       = "bool"
+  default    = "false"
+  help       = "eagerly check sat"
+
 # CEGQI for arithmetic
 
 [[option]]

@@ -291,6 +291,8 @@ class CegInstantiator : protected EnvObj
    * and sending on the output channel of this class.
    */
   std::vector<Node> d_input_vars;
+  /** The free symbols */
+  std::vector<Node> d_freeSyms;
   /** register variable */
   void registerVariable(Node v);
   //-------------------------------the variables
@@ -415,6 +417,8 @@ class CegInstantiator : protected EnvObj
   static CegHandledStatus isCbqiSort(
       TypeNode tn, std::map<TypeNode, CegHandledStatus>& visited);
   //------------------------------------ end  static queries
+  /** is sat */
+  bool isSatisfied();
 };
 
 }  // namespace quantifiers
