@@ -25,7 +25,7 @@ CanonConstConverter::CanonConstConverter() {}
 
 Node CanonConstConverter::postConvert(Node n)
 {
-  if (n.getKind()!=kind::SKOLEM)
+  if (n.getKind() != kind::SKOLEM)
   {
     return n;
   }
@@ -43,7 +43,7 @@ Node CanonConstConverter::postConvert(Node n)
   std::vector<Node> children;
   if (!cacheVal.isNull())
   {
-    if (cacheVal.getKind()==kind::SEXPR)
+    if (cacheVal.getKind() == kind::SEXPR)
     {
       children.insert(children.end(), cacheVal.begin(), cacheVal.end());
     }

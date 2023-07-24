@@ -6165,11 +6165,12 @@ Term Solver::mkConst(const Sort& sort,
   {
     if (d_slv->getOptions().expr.canonConst)
     {
-      internal::SkolemManager * sm = d_nm->getSkolemManager();
+      internal::SkolemManager* sm = d_nm->getSkolemManager();
       std::vector<internal::Node> cacheVals;
       // indexed by its name
       cacheVals.push_back(d_nm->mkConst(internal::String(*symbol)));
-      res = sm->mkSkolemFunction(internal::SkolemFunId::INPUT_VARIABLE, *sort.d_type, cacheVals);
+      res = sm->mkSkolemFunction(
+          internal::SkolemFunId::INPUT_VARIABLE, *sort.d_type, cacheVals);
     }
     else
     {
