@@ -23,7 +23,7 @@ namespace cvc5::internal {
 
 std::ostream& operator<<(std::ostream& out, const CanonVar& asa)
 {
-  return out << "CanonVar(" < < < < asa.getType() << ')';
+  return out << "CanonVar(" << asa.getId() << " " << asa.getType() << ')';
 }
 
 size_t CanonVarHashFunction::operator()(const CanonVar& cv) const
@@ -31,11 +31,7 @@ size_t CanonVarHashFunction::operator()(const CanonVar& cv) const
   return std::hash<TypeNode>()(cv.getType());
 }
 
-/**
- * Constructs an emptyset of the specified type. Note that the argument
- * is the type of the set itself, NOT the type of the elements.
- */
-CanonVar::CanonVar(const TypeNode& setType)
+CanonVar::CanonVar(SkolemFunId id, const TypeNode& setType)
     : d_id(id), d_type(new TypeNode(setType))
 {
 }
@@ -59,7 +55,7 @@ bool CanonVar::operator==(const CanonVar& cv) const
   return getType() == cv.getType();
 }
 
-bool CanonVar::operator!=(const CanonVar& cv) const { return !(*this == es); }
+bool CanonVar::operator!=(const CanonVar& cv) const { return !(*this == cv); }
 bool CanonVar::operator<(const CanonVar& cv) const
 {
   return getType() < cv.getType();
@@ -70,7 +66,7 @@ bool CanonVar::operator<=(const CanonVar& cv) const
   return getType() <= cv.getType();
 }
 
-bool CanonVar::operator>(const CanonVar& cv) const { return !(*this <= es); }
-bool CanonVar::operator>=(const CanonVar& cv) const { return !(*this < es); }
+bool CanonVar::operator>(const CanonVar& cv) const { return !(*this <= cv); }
+bool CanonVar::operator>=(const CanonVar& cv) const { return !(*this < cv); }
 
 }  // namespace cvc5::internal
