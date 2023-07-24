@@ -1607,6 +1607,7 @@ bool CegInstantiator::isSatisfied()
   Trace("cegqi-check-sat") << "CegInstantiator: check-sat " << qs << std::endl;
   SubsolverSetupInfo ssi(d_env);
   Result r = checkWithSubsolver(qs, ssi);
+  Trace("cegqi-check-sat") << "...returns " << r << std::endl;
   return r.getStatus() == Result::UNSAT;
 }
 
