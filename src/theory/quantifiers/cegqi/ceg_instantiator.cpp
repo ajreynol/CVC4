@@ -1584,6 +1584,7 @@ bool CegInstantiator::isSatisfied()
   }
   std::vector<Node> vars;
   std::vector<Node> subs;
+  // TODO: only legal values
   for (const Node& v : d_freeSyms)
   {
     Node s = getModelValue(v);
@@ -1595,8 +1596,13 @@ bool CegInstantiator::isSatisfied()
     return false;
   }
   Node qs =
-      d_quant.substitute(vars.begin(), vars.end(), subs.begin(), subs.end());
-  qs = rewrite(qs).negate();
+      d_quant.substitute(vars.begin(), vars.end(), subs.begin(), subs.end()).negate();
+  qs = rewrite(qs);
+  if (qs.isConst())
+  {
+    return !qs.getConst<bool>();
+  }
+  // TODO: disable checking
   Trace("cegqi-check-sat") << "CegInstantiator: " << d_quant << std::endl;
   Trace("cegqi-check-sat") << "CegInstantiator: check-sat " << qs << std::endl;
   SubsolverSetupInfo ssi(d_env);
