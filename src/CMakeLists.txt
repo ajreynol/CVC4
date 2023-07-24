@@ -593,6 +593,8 @@ libcvc5_add_sources(
   theory/booleans/type_enumerator.h
   theory/builtin/abstract_type.cpp
   theory/builtin/abstract_type.h
+  theory/builtin/canon_var.cpp
+  theory/builtin/canon_var.h
   theory/builtin/generic_op.cpp
   theory/builtin/generic_op.h
   theory/builtin/proof_checker.cpp
