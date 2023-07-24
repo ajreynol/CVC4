@@ -6163,6 +6163,7 @@ Term Solver::mkConst(const Sort& sort,
   internal::Node res;
   if (symbol)
   {
+    // if we are constructing canonical constants
     if (d_slv->getOptions().expr.canonConst)
     {
       internal::SkolemManager* sm = d_nm->getSkolemManager();

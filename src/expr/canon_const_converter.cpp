@@ -23,7 +23,7 @@ namespace cvc5::internal {
 
 CanonConstConverter::CanonConstConverter() {}
 
-Node CanonConstConverter::postConvert(Node n)
+Node CanonConstConverter::preConvert(Node n)
 {
   if (n.getKind() != kind::SKOLEM)
   {

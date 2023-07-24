@@ -34,7 +34,7 @@ class CanonConstConverter : public NodeConverter
   CanonConstConverter();
   ~CanonConstConverter() {}
   /** convert node n as described above during post-order traversal */
-  Node postConvert(Node n) override;
+  Node preConvert(Node n) override;
 };
 
 }  // namespace cvc5::internal
