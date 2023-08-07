@@ -992,6 +992,7 @@ Node SolverEngine::findSynth(modes::FindSynthTarget fst, const TypeNode& gtn)
     d_findSynthSolver.reset(new FindSynthSolver(*d_env.get()));
   }
   Node ret = d_findSynthSolver->findSynth(fst, gtnu);
+  d_state->notifyFindSynth(!ret.isNull());
   return ret;
 }
 
@@ -1004,7 +1005,9 @@ Node SolverEngine::findSynthNext()
         "Cannot find-synth-next unless immediately preceded by a successful "
         "call to find-synth(-next).");
   }
-  return d_findSynthSolver->findSynthNext();
+  Node ret = d_findSynthSolver->findSynthNext();
+  d_state->notifyFindSynth(!ret.isNull());
+  return ret;
 }
 
 /*
