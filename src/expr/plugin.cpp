@@ -17,6 +17,7 @@
 
 #include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
+#include "expr/subtype_elim_node_converter.h"
 
 namespace cvc5::internal {
 
@@ -28,6 +29,9 @@ Node Plugin::getSharableFormula(const Node& n)
     // cannot share formulas with skolems currently
     return Node::null();
   }
+  // also eliminate subtyping
+  SubtypeElimNodeConverter senc;
+  on = senc.convert(on);
   return on;
 }
 
