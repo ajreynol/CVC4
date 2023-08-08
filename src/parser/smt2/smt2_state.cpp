@@ -12,7 +12,7 @@
  *
  * Definitions of SMT2 constants.
  */
-#include "parser/smt2/smt2.h"
+#include "parser/smt2/smt2_state.h"
 
 #include <algorithm>
 
@@ -404,6 +404,32 @@ modes::ProofComponent Smt2State::getProofComponent(const std::string& pc)
   }
   parseError(std::string("Unknown proof component `") + pc + "'");
   return modes::ProofComponent::PROOF_COMPONENT_FULL;
+}
+
+modes::FindSynthTarget Smt2State::getFindSynthTarget(const std::string& fst)
+{
+  if (fst == "enum")
+  {
+    return modes::FindSynthTarget::FIND_SYNTH_TARGET_ENUM;
+  }
+  else if (fst == "rewrite")
+  {
+    return modes::FindSynthTarget::FIND_SYNTH_TARGET_REWRITE;
+  }
+  else if (fst == "rewrite_unsound")
+  {
+    return modes::FindSynthTarget::FIND_SYNTH_TARGET_REWRITE_UNSOUND;
+  }
+  else if (fst == "rewrite_input")
+  {
+    return modes::FindSynthTarget::FIND_SYNTH_TARGET_REWRITE_INPUT;
+  }
+  else if (fst == "query")
+  {
+    return modes::FindSynthTarget::FIND_SYNTH_TARGET_QUERY;
+  }
+  parseError(std::string("Unknown find synth target `") + fst + "'");
+  return modes::FindSynthTarget::FIND_SYNTH_TARGET_ENUM;
 }
 
 bool Smt2State::isTheoryEnabled(internal::theory::TheoryId theory) const
