@@ -1,6 +1,6 @@
 ###############################################################################
 # Top contributors (to current version):
-#   Mathias Preiner, Andrew Reynolds, Andres Noetzli
+#   Andrew Reynolds, Mathias Preiner, Andres Noetzli
 #
 # This file is part of the cvc5 project.
 #
@@ -26,6 +26,8 @@ set(libcvc5parserapi_src_files
 )
 
 set(libcvc5parser_src_files
+  commands.h
+  command_status.h
   input.cpp
   input.h
   lexer.cpp
@@ -51,6 +53,8 @@ set(libcvc5parser_src_files
   smt2/smt2_parser.h
   smt2/smt2_term_parser.cpp
   smt2/smt2_term_parser.h
+  sym_manager.cpp
+  sym_manager.h
   symbol_table.cpp
   symbol_table.h
   tokens.cpp

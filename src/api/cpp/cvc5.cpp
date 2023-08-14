@@ -3581,6 +3581,10 @@ Term Term::getRealAlgebraicNumberDefiningPolynomial(const Term& v) const
       d_node->getKind() == internal::Kind::REAL_ALGEBRAIC_NUMBER, *d_node)
       << "Term to be a real algebraic number when calling "
          "getRealAlgebraicNumberDefiningPolynomial()";
+  CVC5_API_ARG_CHECK_EXPECTED(
+      v.getKind() == Kind::VARIABLE, v)
+      << "Expected a variable as argument when calling "
+         "getRealAlgebraicNumberDefiningPolynomial()";
 #ifndef CVC5_POLY_IMP
   throw CVC5ApiException(
       "Expected libpoly enabled build when calling "
@@ -5670,8 +5674,10 @@ Sort Solver::mkSequenceSort(const Sort& elemSort) const
 Sort Solver::mkAbstractSort(SortKind k) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  //////// all checks before this line
   internal::Kind ik = extToIntSortKind(k);
+  CVC5_API_CHECK(d_nm->isSortKindAbstractable(ik))
+      << "Cannot construct abstract type for kind " << k;
+  //////// all checks before this line
   return Sort(d_nm, d_nm->mkAbstractType(ik));
   ////////
   CVC5_API_TRY_CATCH_END;
@@ -7878,6 +7884,33 @@ std::vector<Term> Solver::getSynthSolutions(
   }
 
   return synthSolution;
+  ////////
+  CVC5_API_TRY_CATCH_END;
+}
+
+Term Solver::findSynth(modes::FindSynthTarget fst) const
+{
+  CVC5_API_TRY_CATCH_BEGIN;
+  //////// all checks before this line
+  return Term(d_nm, d_slv->findSynth(fst, internal::TypeNode::null()));
+  ////////
+  CVC5_API_TRY_CATCH_END;
+}
+
+Term Solver::findSynth(modes::FindSynthTarget fst, Grammar& grammar) const
+{
+  CVC5_API_TRY_CATCH_BEGIN;
+  //////// all checks before this line
+  return Term(d_nm, d_slv->findSynth(fst, *grammar.resolve().d_type));
+  ////////
+  CVC5_API_TRY_CATCH_END;
+}
+
+Term Solver::findSynthNext() const
+{
+  CVC5_API_TRY_CATCH_BEGIN;
+  //////// all checks before this line
+  return Term(d_nm, d_slv->findSynthNext());
   ////////
   CVC5_API_TRY_CATCH_END;
 }
