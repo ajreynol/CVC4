@@ -802,7 +802,15 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
   {
     passerts.push_back(a);
   }
-  std::pair<Result, std::vector<Node>> ret = tcm.getTimeoutCore(passerts);
+  const context::CDHashMap<size_t, Node>& ppsm =
+      d_smtSolver->getPreprocessedSkolemMap();
+  std::map<size_t, Node> ppSkolemMap;
+  for (auto& pk : ppsm)
+  {
+    ppSkolemMap[pk.first] = pk.second;
+  }
+  std::pair<Result, std::vector<Node>> ret =
+      tcm.getTimeoutCore(passerts, ppSkolemMap);
   // convert the preprocessed assertions to input assertions
   std::vector<Node> core = convertPreprocessedToInput(ret.second, true);
   endCall();
@@ -983,6 +991,7 @@ Node SolverEngine::findSynth(modes::FindSynthTarget fst, const TypeNode& gtn)
     d_findSynthSolver.reset(new FindSynthSolver(*d_env.get()));
   }
   Node ret = d_findSynthSolver->findSynth(fst, gtnu);
+  d_state->notifyFindSynth(!ret.isNull());
   return ret;
 }
 
@@ -995,7 +1004,9 @@ Node SolverEngine::findSynthNext()
         "Cannot find-synth-next unless immediately preceded by a successful "
         "call to find-synth(-next).");
   }
-  return d_findSynthSolver->findSynthNext();
+  Node ret = d_findSynthSolver->findSynthNext();
+  d_state->notifyFindSynth(!ret.isNull());
+  return ret;
 }
 
 /*

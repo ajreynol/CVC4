@@ -346,12 +346,12 @@ void Printer::toStreamCmdDeclareVar(std::ostream& out,
 }
 
 void Printer::toStreamCmdSynthFun(std::ostream& out,
-                                  Node f,
+                                  const std::string& id,
                                   const std::vector<Node>& vars,
-                                  bool isInv,
+                                  TypeNode rangeType,
                                   TypeNode sygusType) const
 {
-  printUnknownCommand(out, isInv ? "synth-inv" : "synth-fun");
+  printUnknownCommand(out, "synth-fun");
 }
 
 void Printer::toStreamCmdConstraint(std::ostream& out, Node n) const
@@ -377,6 +377,18 @@ void Printer::toStreamCmdCheckSynth(std::ostream& out) const
 void Printer::toStreamCmdCheckSynthNext(std::ostream& out) const
 {
   printUnknownCommand(out, "check-synth-next");
+}
+
+void Printer::toStreamCmdFindSynth(std::ostream& out,
+                                   modes::FindSynthTarget fst,
+                                   TypeNode sygusType) const
+{
+  printUnknownCommand(out, "find-synth");
+}
+
+void Printer::toStreamCmdFindSynthNext(std::ostream& out) const
+{
+  printUnknownCommand(out, "find-synth-next");
 }
 
 void Printer::toStreamCmdSimplify(std::ostream& out, Node n) const
