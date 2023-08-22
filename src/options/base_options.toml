@@ -303,3 +303,12 @@ name   = "Base"
   category   = "undocumented"
   type       = "std::vector<std::string>"
   default    = '{}'
+
+[[option]]
+  name       = "safeOptions"
+  category   = "common"
+  short      = "i"
+  long       = "safe-options"
+  type       = "bool"
+  default    = "false"
+  help       = "enable safe options, which throws an option exception if the provided options are experimental"

@@ -151,6 +151,10 @@ class SetDefaults : protected EnvObj
    */
   void widenLogic(LogicInfo& logic, const Options& opts) const;
   //------------------------- options setting, post finalization of logic
+  /** 
+   * Check safe options
+   */
+  void checkSafeOptions(const Options& opts) const;
   /**
    * Set all default options, after we have finalized the logic.
    */

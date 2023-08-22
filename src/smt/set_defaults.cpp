@@ -103,12 +103,21 @@ SetDefaults::SetDefaults(Env& env, bool isInternalSubsolver)
 
 void SetDefaults::setDefaults(LogicInfo& logic, Options& opts)
 {
+  if (!d_isInternalSubsolver && opts.base.safeOptions)
+  {
+    checkSafeOptions(opts);
+  }
   // initial changes that are independent of logic, and may impact the logic
   setDefaultsPre(opts);
   // now, finalize the logic
   finalizeLogic(logic, opts);
   // further changes to options based on the logic
   setDefaultsPost(logic, opts);
+}
+
+void SetDefaults::checkSafeOptions(const Options& opts) const
+{
+  
 }
 
 void SetDefaults::setDefaultsPre(Options& opts)
