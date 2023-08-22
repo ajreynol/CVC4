@@ -115,10 +115,7 @@ void SetDefaults::setDefaults(LogicInfo& logic, Options& opts)
   setDefaultsPost(logic, opts);
 }
 
-void SetDefaults::checkSafeOptions(const Options& opts) const
-{
-  
-}
+void SetDefaults::checkSafeOptions(const Options& opts) const {}
 
 void SetDefaults::setDefaultsPre(Options& opts)
 {
