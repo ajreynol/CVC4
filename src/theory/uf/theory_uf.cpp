@@ -194,9 +194,10 @@ void TheoryUF::notifyFact(TNode atom, bool pol, TNode fact, bool isInternal)
       }
     }
     break;
-    case kind::BOOLEAN_TERM_VARIABLE:
-    {
-      /*
+    default: break;
+  }
+  // if atom is Boolean term variable?
+       /*
       Node lit = pol ? Node(atom) : atom.notNode();
       // if this is a proxy literal, see if we should expand it
       if (d_bvarsProcessed.find(lit) == d_bvarsProcessed.end())
@@ -216,10 +217,6 @@ void TheoryUF::notifyFact(TNode atom, bool pol, TNode fact, bool isInternal)
         }
       }
       */
-    }
-    break;
-    default: break;
-  }
 }
 //--------------------------------- end standard check
 
@@ -269,7 +266,7 @@ TrustNode TheoryUF::ppRewrite(TNode node, std::vector<SkolemLemma>& lems)
                                            : arith::eliminateInt2Bv(node);
     return TrustNode::mkTrustRewrite(node, ret);
   }
-  else if (k == kind::BOOLEAN_TERM_VARIABLE)
+  else if (k == kind::SKOLEM)
   {
     Node def;
     SkolemFunId id;

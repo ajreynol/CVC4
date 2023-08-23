@@ -245,10 +245,11 @@ bool SkolemManager::isAbstractValue(TNode n) const
 
 Node SkolemManager::mkProxyLit(const Node& lit)
 {
+  // FIXME: originally marked as BOOLEAN_TERM_VARIABLE
   Assert(lit.getType().isBoolean());
   NodeManager* nm = NodeManager::currentNM();
   return mkSkolemFunction(
-      SkolemFunId::PROXY_LIT, nm->booleanType(), lit, SKOLEM_BOOL_TERM_VAR);
+      SkolemFunId::PROXY_LIT, nm->booleanType(), lit);
 }
 
 Node SkolemManager::getOriginalForm(Node n)
