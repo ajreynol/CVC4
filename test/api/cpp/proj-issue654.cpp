@@ -18,18 +18,18 @@
 using namespace cvc5;
 int main(void)
 {
-Solver solver;
-solver.setOption("incremental", "false");
-solver.setOption("produce-interpolants", "true");
-solver.setOption("incremental", "true");
-Sort s0 = solver.getRealSort();
-Term t1 = solver.mkConst(s0, "_x15");
-Term t2 = solver.mkReal(7972974285720917);
-Op o3 = solver.mkOp(Kind::LT);
-Term t4 = solver.mkTerm(o3, {t2, t1});
-Sort s5 = t4.getSort();
-solver.assertFormula(t4);
-Term t6 = solver.getInterpolant(t4);
+  Solver solver;
+  solver.setOption("incremental", "false");
+  solver.setOption("produce-interpolants", "true");
+  solver.setOption("incremental", "true");
+  Sort s0 = solver.getRealSort();
+  Term t1 = solver.mkConst(s0, "_x15");
+  Term t2 = solver.mkReal(7972974285720917);
+  Op o3 = solver.mkOp(Kind::LT);
+  Term t4 = solver.mkTerm(o3, {t2, t1});
+  Sort s5 = t4.getSort();
+  solver.assertFormula(t4);
+  Term t6 = solver.getInterpolant(t4);
 
-return 0;
+  return 0;
 }
