@@ -30,7 +30,7 @@ int main(void)
   Term t6 = solver.mkTerm(Kind::BAG_MAKE, {t2, t3});
   Sort s7 = t6.getSort();
   Term t8 = solver.mkTerm(Kind::BAG_UNION_DISJOINT, {t6, t6});
-  Op o9 = solver.mkOp(BAG_CARD);
+  Op o9 = solver.mkOp(Kind::BAG_CARD);
   Term t10 = solver.mkTerm(o9, {t8});
   Op o11 = solver.mkOp(Kind::SEQ_UPDATE);
   Term t12 = solver.mkTerm(o11, {t4, t10, t4});
