@@ -25,7 +25,7 @@ solver.setOption("incremental", "true");
 Sort s0 = solver.getRealSort();
 Term t1 = solver.mkConst(s0, "_x15");
 Term t2 = solver.mkReal(7972974285720917);
-Op o3 = solver.mkOp(LT);
+Op o3 = solver.mkOp(Kind::LT);
 Term t4 = solver.mkTerm(o3, {t2, t1});
 Sort s5 = t4.getSort();
 solver.assertFormula(t4);

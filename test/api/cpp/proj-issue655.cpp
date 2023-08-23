@@ -78,7 +78,7 @@ Datatype dt20 = s16.getDatatype();
 DatatypeConstructor dtc21 = dt20.operator[]("_cons17");
 Term t22 = dtc21.getTesterTerm();
 Sort s23 = t22.getSort();
-Term t24 = solver.mkTerm(APPLY_TESTER, {t22, t19});
+Term t24 = solver.mkTerm(Kind::APPLY_TESTER, {t22, t19});
 Term t25 = solver.getAbduct(t24);
 
 return 0;
