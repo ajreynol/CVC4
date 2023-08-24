@@ -15,21 +15,19 @@
  */
 #include <cvc5/cvc5.h>
 
-#include <cvc5/cvc5.h>
-
 using namespace cvc5;
 int main(void)
 {
-Solver solver;
-solver.setOption("incremental", "false");
-solver.setOption("produce-interpolants", "true");
-solver.setOption("interpolants-mode", "assumptions");
-Sort s0 = solver.getBooleanSort();
-Term t1 = solver.mkConst(s0, "_x1");
-Term t2 = solver.mkBoolean(false);
-solver.assertFormula(t1);
-solver.assertFormula(t1);
-Term t3 = solver.getInterpolant(t2);
+  Solver solver;
+  solver.setOption("incremental", "false");
+  solver.setOption("produce-interpolants", "true");
+  solver.setOption("interpolants-mode", "assumptions");
+  Sort s0 = solver.getBooleanSort();
+  Term t1 = solver.mkConst(s0, "_x1");
+  Term t2 = solver.mkBoolean(false);
+  solver.assertFormula(t1);
+  solver.assertFormula(t1);
+  Term t3 = solver.getInterpolant(t2);
 
-return 0;
+  return 0;
 }
