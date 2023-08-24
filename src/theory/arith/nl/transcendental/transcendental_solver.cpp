@@ -396,6 +396,7 @@ bool TranscendentalSolver::checkTfTangentPlanesFun(Node tf, unsigned d)
     // we may want to continue getting better bounds
     return false;
   }
+  // does not work as intended since we are checking for multiple d
   std::pair<bool, bool> key(is_tangent, is_secant);
   std::map<Node, std::pair<bool, bool>>::iterator it = d_lastCheck.find(tf);
   if (it!=d_lastCheck.end() && it->second==key)
