@@ -384,7 +384,7 @@ bool TranscendentalSolver::checkTfTangentPlanesFun(Node tf, unsigned d)
       }
     }
   }
-
+  
   // Figure 3: P( c )
   if (is_tangent || is_secant)
   {
@@ -396,6 +396,14 @@ bool TranscendentalSolver::checkTfTangentPlanesFun(Node tf, unsigned d)
     // we may want to continue getting better bounds
     return false;
   }
+  std::pair<bool, bool> key(is_tangent, is_secant);
+  std::map<Node, std::pair<bool, bool>>::iterator it = d_lastCheck.find(tf);
+  if (it!=d_lastCheck.end() && it->second==key)
+  {
+    d_lastCheck.erase(tf);
+    return false;
+  }
+  d_lastCheck[tf] = key;
 
   if (is_tangent)
   {

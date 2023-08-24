@@ -214,6 +214,8 @@ class TranscendentalSolver : protected EnvObj
   transcendental::ExponentialSolver d_expSlv;
   /** The solver responsible for the sine function */
   transcendental::SineSolver d_sineSlv;
+  /** The last result of checking each transcendental function */
+  std::map<Node, std::pair<bool, bool>> d_lastCheck;
 }; /* class TranscendentalSolver */
 
 }  // namespace transcendental
