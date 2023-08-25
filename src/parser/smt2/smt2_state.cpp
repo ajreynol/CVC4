@@ -1002,7 +1002,7 @@ void Smt2State::checkThatLogicIsSet()
     {
       SymManager* sm = getSymbolManager();
       // the calls to setLogic below set the logic on the solver directly
-      if (sm->isLogicForced())
+      if (sm->isLogicSet())
       {
         setLogic(sm->getLogic());
       }
