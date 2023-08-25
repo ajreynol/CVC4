@@ -1968,31 +1968,7 @@ cdef class Solver:
             result.append(term)
         return result
 
-    def findSynth(self, fst):
-        """
-            Find a target term of interest using sygus enumeration, with no
-            provided grammar.
-   
-            The solver will infer which grammar to use in this call, which by
-            default will be the grammars specified by the
-            function(s)-to-synthesize in the current context.
-
-            SyGuS v2:
-
-            .. code-block:: smtlib
-
-                ( find-synth :target )
-
-            :param fst: The identifier specifying what kind of term to find.
-            :param grammar: The grammar for the term.
-            :return: The result of the find, which is the null term if this
-                     call failed.
-        """
-        cdef Term term = Term(self)
-        term.cterm = self.csolver.findSynth(<c_FindSynthTarget> fst.value)
-        return term
-
-    def findSynth(self, fst, Grammar grammar):
+    def findSynth(self, fst, Grammar grammar=None):
         """
             Find a target term of interest using sygus enumeration with a
             provided grammar.
@@ -2004,11 +1980,16 @@ cdef class Solver:
                 ( find-synth :target G)
 
             :param fst: The identifier specifying what kind of term to find.
+            :param grammar: The grammar for the term.
             :return: The result of the find, which is the null term if this
                      call failed.
         """
         cdef Term term = Term(self)
-        term.cterm = self.csolver.findSynth(<c_FindSynthTarget> fst.value, grammar.cgrammar)
+        if grammar is None:
+            term.cterm = self.csolver.findSynth(<c_FindSynthTarget> fst.value)
+        else:
+            term.cterm = self.csolver.findSynth(<c_FindSynthTarget> fst.value,
+                                                grammar.cgrammar)
         return term
         
     def findSynthNext(self):
@@ -2075,7 +2056,7 @@ cdef class Solver:
         sort.csort = self.csolver.declareDatatype(symbol.encode(), v)
         return sort
 
-    def declareFun(self, str symbol, list sorts, Sort sort):
+    def declareFun(self, str symbol, list sorts, Sort sort, fresh=True):
         """
             Declare n-ary function symbol.
 
@@ -2088,6 +2069,10 @@ cdef class Solver:
             :param symbol: The name of the function.
             :param sorts: The sorts of the parameters to this function.
             :param sort: The sort of the return value of this function.
+            :param fresh: If true, then this method always returns a new Term.
+                          Otherwise, this method will always return the
+                          same Term for each call with the given sorts and
+                          symbol where fresh is false.
             :return: The function.
         """
         cdef Term term = Term(self)
@@ -2095,8 +2080,9 @@ cdef class Solver:
         for s in sorts:
             v.push_back((<Sort?> s).csort)
         term.cterm = self.csolver.declareFun(symbol.encode(),
-                                             <const vector[c_Sort]&> v,
-                                             sort.csort)
+                                            <const vector[c_Sort]&> v,
+                                            sort.csort,
+                                            <bint> fresh)
         return term
 
     def declareSort(self, str symbol, int arity):
@@ -2234,7 +2220,7 @@ cdef class Solver:
 
         self.csolver.defineFunsRec(vf, vbv, vt, glb)
 
-    def getProof(self, c = ProofComponent.PROOF_COMPONENT_FULL):
+    def getProof(self, c = ProofComponent.FULL):
         """
             Get a proof associated with the most recent call to checkSat.
 
@@ -2251,11 +2237,11 @@ cdef class Solver:
                          versions.
             :param c: The component of the proof to return 
             :return: A string representing the proof. This takes into account
-            proof-format-mode when c is PROOF_COMPONENT_FULL.
+            proof-format-mode when c is FULL.
         """
         return self.csolver.getProof(<c_ProofComponent> c.value)
 
-    def getLearnedLiterals(self, type = LearnedLitType.LEARNED_LIT_INPUT):
+    def getLearnedLiterals(self, type = LearnedLitType.INPUT):
         """
             Get a list of literals that are entailed by the current set of assertions
 
@@ -2880,7 +2866,7 @@ cdef class Solver:
                         versions.
 
             :param conj: The conjecture term.
-            :param grammar: A grammar for the inteprolant.
+            :param grammar: A grammar for the interpolant.
             :return: The interpolant.
                      See :cpp:func:`cvc5::Solver::getInterpolant` for details.
         """

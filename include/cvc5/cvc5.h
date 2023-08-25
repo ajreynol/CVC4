@@ -3868,6 +3868,9 @@ class CVC5_EXPORT Solver
   /**
    * Create a free constant.
    *
+   * Note that the returned term is always fresh, even if the same arguments
+   * were provided on a previous call to mkConst.
+   *
    * SMT-LIB:
    *
    * \verbatim embed:rst:leading-asterisk
@@ -3880,6 +3883,7 @@ class CVC5_EXPORT Solver
    * @param sort The sort of the constant.
    * @param symbol The name of the constant (optional).
    * @return The constant.
+   *
    */
   Term mkConst(const Sort& sort,
                const std::optional<std::string>& symbol = std::nullopt) const;
@@ -3887,6 +3891,10 @@ class CVC5_EXPORT Solver
   /**
    * Create a bound variable to be used in a binder (i.e., a quantifier, a
    * lambda, or a witness binder).
+   *
+   * Note that the returned term is always fresh, even if the same arguments
+   * were provided on a previous call to mkConst.
+   *
    * @param sort The sort of the variable.
    * @param symbol The name of the variable (optional).
    * @return The variable.
@@ -4045,11 +4053,15 @@ class CVC5_EXPORT Solver
    * @param symbol The name of the function.
    * @param sorts The sorts of the parameters to this function.
    * @param sort The sort of the return value of this function.
+   * @param fresh If true, then this method always returns a new Term.
+   * Otherwise, this method will always return the same Term
+   * for each call with the given sorts and symbol where fresh is false.
    * @return The function.
    */
   Term declareFun(const std::string& symbol,
                   const std::vector<Sort>& sorts,
-                  const Sort& sort) const;
+                  const Sort& sort,
+                  bool fresh = true) const;
 
   /**
    * Declare uninterpreted sort.
@@ -4352,10 +4364,10 @@ class CVC5_EXPORT Solver
    * @param c The component of the proof to return
    * @return A string representing the proof. This takes into account
    * :ref:`proof-format-mode <lbl-option-proof-format-mode>` when `c` is
-   * `PROOF_COMPONENT_FULL`.
+   * `ProofComponent::FULL`.
    */
   std::string getProof(
-      modes::ProofComponent c = modes::PROOF_COMPONENT_FULL) const;
+      modes::ProofComponent c = modes::ProofComponent::FULL) const;
 
   /**
    * Get a list of learned literals that are entailed by the current set of
@@ -4367,7 +4379,7 @@ class CVC5_EXPORT Solver
    * @return A list of literals that were learned at top-level.
    */
   std::vector<Term> getLearnedLiterals(
-      modes::LearnedLitType t = modes::LEARNED_LIT_INPUT) const;
+      modes::LearnedLitType t = modes::LearnedLitType::INPUT) const;
 
   /**
    * Get the value of the given term in the current model.

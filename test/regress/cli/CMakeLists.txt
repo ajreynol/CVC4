@@ -995,8 +995,10 @@ set(regress_0_tests
   regress0/parser/fp_value.smt2
   regress0/parser/force_logic_set_logic.smt2
   regress0/parser/force_logic_success.smt2
+  regress0/parser/fresh-declarations.smt2
   regress0/parser/get-model-sort-constructor.smt2
   regress0/parser/get-value-empty-err.smt2
+  regress0/parser/global-dec-cli.smt2
   regress0/parser/issue5163.smt2
   regress0/parser/issue6908-get-value-uc.smt2
   regress0/parser/issue7274.smt2
@@ -1094,6 +1096,9 @@ set(regress_0_tests
   regress0/printer/empty_symbol_name.smt2
   regress0/printer/get-value-no-letify.smt2
   regress0/printer/incomplete.smt2
+  regress0/printer/issue9928.smt2
+  regress0/printer/issue9938-1.smt2
+  regress0/printer/issue9938-2.smt2
   regress0/printer/learned-lit-output.smt2
   regress0/printer/let_shadowing.smt2
   regress0/printer/portfolio-out.smt2
@@ -1394,6 +1399,7 @@ set(regress_0_tests
   regress0/seq/proj-issue586-nth-update-no-fact-2.smt2
   regress0/seq/proj-issue604-reg-closure.smt2
   regress0/seq/proj-issue642-cycle-irr.smt2
+  regress0/seq/proj-issue653.smt2
   regress0/seq/quant_len_trigger.smt2
   regress0/seq/query0-subtype-skel.smt2
   regress0/seq/query1-subtype.smt2
@@ -1693,6 +1699,7 @@ set(regress_0_tests
   regress0/symmetric.smtv1.smt2
   regress0/test11.cvc.smt2
   regress0/test9.cvc.smt2
+  regress0/timeout_core_empty.smt2
   regress0/timeout_core_simple.smt2
   regress0/tptp/ARI086=1.smt2
   regress0/tptp/DAT001=1.smt2
@@ -2515,6 +2522,7 @@ set(regress_1_tests
   regress1/quantifiers/issue8881-rd-types.smt2
   regress1/quantifiers/issue9545-mini-agg.smt2
   regress1/quantifiers/issue993.smt2
+  regress1/quantifiers/issue9949.smt2
   regress1/quantifiers/javafe.ast.StmtVec.009.smt2
   regress1/quantifiers/lia-witness-div-pp.smt2
   regress1/quantifiers/lra-vts-inf.smt2
@@ -2766,8 +2774,11 @@ set(regress_1_tests
   regress1/sets/set_map_negative_members.smt2
   regress1/sets/set_map_positive_members.smt2
   regress1/sets/set_map_unsat1.smt2
+  regress1/sets/set-map-test.smt2
+  regress1/sets/set-map-test2.smt2
   regress1/sets/sharingbug.smt2
   regress1/sets/univ-set-uf-elim.smt2
+  regress1/sets/univ-semantics.smt2
   regress1/simplification_bug4.smt2
   regress1/sqrt2-sort-inf-unk.smt2
   regress1/strings/artemis-0512-nonterm.smt2

@@ -1578,6 +1578,31 @@ public class Solver implements IPointer
       long pointer, String symbol, long[] sortPointers, long sortPointer);
 
   /**
+   * Declare n-ary function symbol.
+   *
+   * SMT-LIB:
+   * {@code
+   *   ( declare-fun <symbol> ( <sort>* ) <sort> )
+   * }
+   *
+   * @param symbol The name of the function.
+   * @param sorts The sorts of the parameters to this function.
+   * @param sort The sort of the return value of this function.
+   * @param fresh If true, then this method always returns a new Term.
+   * Otherwise, this method will always return the same Term
+   * for each call with the given sorts and symbol where fresh is false.
+   * @return The function.
+   */
+  public Term declareFun(String symbol, Sort[] sorts, Sort sort, boolean fresh)
+  {
+    long[] sortPointers = Utils.getPointers(sorts);
+    long termPointer = declareFun(pointer, symbol, sortPointers, sort.getPointer(), fresh);
+    return new Term(termPointer);
+  }
+
+  private native long declareFun(
+      long pointer, String symbol, long[] sortPointers, long sortPointer, boolean fresh);
+  /**
    * Declare uninterpreted sort.
    *
    * SMT-LIB:
@@ -2060,7 +2085,7 @@ public class Solver implements IPointer
    *
    * @param c The component of the proof to return
    * @return A string representing the proof. This is equivalent to getProof
-   * when c is PROOF_COMPONENT_FULL.
+   * when c is FULL.
    */
   public String getProof(ProofComponent c)
   {
