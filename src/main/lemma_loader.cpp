@@ -18,6 +18,8 @@
 #include "base/check.h"
 #include "base/output.h"
 #include "parser/api/cpp/input_parser.h"
+#include "parser/api/cpp/symbol_manager.h"
+#include "parser/sym_manager.h"
 
 namespace cvc5 {
 namespace main {
@@ -45,7 +47,7 @@ std::vector<Term> LemmaLoader::check()
     // use the input language specified by the options
     ip.setFileInput(d_solver->getOption("input-language"), d_filename);
     // set the logic
-    ip.setLogic(d_symman->getLogic());
+    ip.setLogic(d_symman->get()->getLogic());
     // reads a list of formulas
     //   F1 .... Fn
     // each of which will be sent as a lemma
