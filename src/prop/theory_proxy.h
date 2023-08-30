@@ -162,7 +162,7 @@ class TheoryProxy : protected EnvObj, public Registrar
   TNode getNode(SatLiteral lit);
 
   void notifyRestart();
-  
+
   void notifyDecision(SatLiteral var);
 
   void spendResource(Resource r);
@@ -267,7 +267,7 @@ class TheoryProxy : protected EnvObj, public Registrar
   /** */
   class SatNotify : public context::ContextNotifyObj
   {
-  public:
+   public:
     SatNotify(context::Context* c);
     ~SatNotify();
     void contextNotifyPop() override;
