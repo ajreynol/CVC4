@@ -69,6 +69,7 @@ TheoryProxy::TheoryProxy(Env& env,
   {
     d_zll = std::make_unique<ZeroLevelLearner>(env, theoryEngine);
   }
+  // TODO: guard this
   d_snotify.reset(new SatNotify(context()));
 }
 
@@ -404,11 +405,11 @@ void TheoryProxy::notifyRestart() {
 void TheoryProxy::notifyDecision(SatLiteral lit)
 {
   Node n = getNode(lit);
-  // TODO: output decided n at the given timestamp
-
+  
+  // output decided n at the given timestamp
   SatNotify::output(n, false);
 
-  // add so we remember this decision
+  // remember this decision so that we know what to output on backtrack
   d_snotify->d_decision = n;
 }
 
