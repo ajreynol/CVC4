@@ -66,6 +66,7 @@ TheoryProxy::TheoryProxy(Env& env,
   {
     d_zll = std::make_unique<ZeroLevelLearner>(env, theoryEngine);
   }
+  d_snotify.reset(new SatNotify(context()));
 }
 
 TheoryProxy::~TheoryProxy() {
@@ -397,6 +398,15 @@ void TheoryProxy::notifyRestart() {
   d_theoryEngine->notifyRestart();
 }
 
+void TheoryProxy::notifyDecision(SatLiteral lit)
+{
+  Node n = getNode(lit);
+  // TODO: output decided n at the given timestamp
+  
+  // add so we remember
+  d_snotify.d_decisions.push_back(n);
+}
+
 void TheoryProxy::spendResource(Resource r)
 {
   d_theoryEngine->spendResource(r);
@@ -486,5 +496,15 @@ std::vector<Node> TheoryProxy::getLearnedZeroLevelLiteralsForRestart() const
   return {};
 }
 
+TheoryProxy::SatNotify::SatNotify(context::Context* c) : context::ContextNotifyObj(c){}
+TheoryProxy::SatNotify::~SatNotify(){}
+void TheoryProxy::SatNotify::contextNotifyPop() {
+  // ????
+  Assert (!d_decisions.empty());
+  Node last = d_decisions[d_decisions.size()-1];
+  // TODO: output
+}
+
+  
 }  // namespace prop
 }  // namespace cvc5::internal

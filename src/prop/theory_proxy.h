@@ -162,6 +162,8 @@ class TheoryProxy : protected EnvObj, public Registrar
   TNode getNode(SatLiteral lit);
 
   void notifyRestart();
+  
+  void notifyDecision(SatLiteral var);
 
   void spendResource(Resource r);
 
@@ -262,6 +264,16 @@ class TheoryProxy : protected EnvObj, public Registrar
    * are dynamically activated only when decision=justification.
    */
   bool d_activatedSkDefs;
+  /** */
+  class SatNotify : public context::ContextNotifyObj
+  {
+  public:
+    SatNotify(context::Context* c);
+    ~SatNotify();
+    void contextNotifyPop() override;
+    context::CDList<Node> d_decisions;
+  };
+  std::unique_ptr<SatNotify> d_snotify;
 }; /* class TheoryProxy */
 
 }  // namespace prop
