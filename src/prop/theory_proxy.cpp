@@ -409,7 +409,6 @@ void TheoryProxy::notifyDecision(SatLiteral lit)
   SatNotify::output(n, false);
 
   // add so we remember this decision
-  d_snotify->d_decisions.push_back(n);
   d_snotify->d_decision = n;
 }
 
@@ -503,15 +502,14 @@ std::vector<Node> TheoryProxy::getLearnedZeroLevelLiteralsForRestart() const
 }
 
 TheoryProxy::SatNotify::SatNotify(context::Context* c)
-    : context::ContextNotifyObj(c), d_decisions(c), d_decision(c)
+    : context::ContextNotifyObj(c), d_decision(c)
 {
 }
 TheoryProxy::SatNotify::~SatNotify() {}
 void TheoryProxy::SatNotify::contextNotifyPop()
 {
-  AlwaysAssert(!d_decisions.empty());
-  Node last = d_decisions[d_decisions.size() - 1];
-  output(last, true);
+  Assert(!d_decision.get().isNull());
+  output(d_decision.get(), true);
 }
 void TheoryProxy::SatNotify::output(const Node& n, bool wasBacktrack)
 {

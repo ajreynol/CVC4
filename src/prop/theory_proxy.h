@@ -271,7 +271,6 @@ class TheoryProxy : protected EnvObj, public Registrar
     SatNotify(context::Context* c);
     ~SatNotify();
     void contextNotifyPop() override;
-    context::CDList<Node> d_decisions;
     context::CDO<Node> d_decision;
     static void output(const Node& n, bool wasUndo);
   };
