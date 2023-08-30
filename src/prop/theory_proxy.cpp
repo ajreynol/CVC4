@@ -405,7 +405,7 @@ void TheoryProxy::notifyRestart() {
 void TheoryProxy::notifyDecision(SatLiteral lit)
 {
   Node n = getNode(lit);
-  
+
   // output decided n at the given timestamp
   SatNotify::output(n, false);
 
