@@ -19,6 +19,7 @@
 #include <unordered_set>
 
 #include "expr/node_algorithm.h"
+#include "printer/smt2/smt2_printer.h"
 #include "expr/skolem_manager.h"
 #include "options/quantifiers_options.h"
 #include "theory/bv/theory_bv_utils.h"
@@ -448,7 +449,8 @@ void SygusInst::registerQuantifier(Node q)
 
     Trace("sygus-inst") << "Construct (default) datatype for " << var
                         << std::endl
-                        << tn << std::endl;
+                        << printer::smt2::Smt2Printer::sygusGrammarString(tn)<< std::endl;
+    Assert(tn.isWellFounded());
   }
 
   registerCeLemma(q, types);
