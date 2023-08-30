@@ -1678,9 +1678,9 @@ lbool Solver::search(int nof_conflicts)
           check_type = CHECK_FINAL;
           continue;
         }
-        /// TODO: fix compile
-        d_proxy->notifyDecision(nextLit);
       }
+      // notify the theory proxy
+      d_proxy->notifyDecision(MinisatSatSolver::toSatLiteral(next));
 
       // Increase decision level and enqueue 'next'
       newDecisionLevel();
