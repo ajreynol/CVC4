@@ -53,7 +53,7 @@
 #include "smt/logic_exception.h"
 #include "smt/model.h"
 #include "smt/model_blocker.h"
-#include "smt/model_core_builder.h"
+#include "theory/theory_model.h"
 #include "smt/preprocessor.h"
 #include "smt/proof_manager.h"
 #include "smt/quant_elim_solver.h"
@@ -656,22 +656,8 @@ TheoryModel* SolverEngine::getAvailableModel(const char* c) const
     ss << "Cannot " << c << " when produce-models options is off.";
     throw ModalException(ss.str().c_str());
   }
-
-  TheoryEngine* te = d_smtSolver->getTheoryEngine();
-  Assert(te != nullptr);
-  // If the solver is in UNKNOWN mode, we use the latest available model (e.g.,
-  // one that was generated for a last call check). Note that the model is SAT
-  // context-independent internally, so this works even if the SAT solver has
-  // backtracked since the model was generated. We disable the resource manager
-  // while building or getting the model. In general, we should not be spending
-  // resources while building a model, but this ensures that we return a model
-  // if a problem was solved within the allocated resources.
-  getResourceManager()->setEnabled(false);
-  TheoryModel* m = d_state->getMode() == SmtMode::SAT_UNKNOWN
-                       ? te->getModel()
-                       : te->getBuiltModel();
-  getResourceManager()->setEnabled(true);
-
+  // ask the SMT solver for the model
+  TheoryModel * m = d_smtSolver->getAvailableModel(d_state->getMode());
   if (m == nullptr)
   {
     std::stringstream ss;
@@ -680,21 +666,6 @@ TheoryModel* SolverEngine::getAvailableModel(const char* c) const
           "check-sat was interrupted?";
     throw RecoverableModalException(ss.str().c_str());
   }
-  // compute the model core if necessary and not done so already
-  const Options& opts = d_env->getOptions();
-  if (opts.smt.modelCoresMode != options::ModelCoresMode::NONE
-      && !m->isUsingModelCore())
-  {
-    // If we enabled model cores, we compute a model core for m based on our
-    // (expanded) assertions using the model core builder utility. Notice that
-    // we get the assertions using the getAssertionsInternal, which does not
-    // impact whether we are in "sat" mode
-    std::vector<Node> asserts = getAssertionsInternal();
-    d_smtSolver->getPreprocessor()->applySubstitutions(asserts);
-    ModelCoreBuilder mcb(*d_env.get());
-    mcb.setModelCore(asserts, m, opts.smt.modelCoresMode);
-  }
-
   return m;
 }
 

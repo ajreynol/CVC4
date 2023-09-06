@@ -189,7 +189,8 @@ void TimeoutCoreManager::getNextAssertions(
       d_asymbols.insert(syms.begin(), syms.end());
     }
     // reset the definitions
-    d_defIncluded.clear();
+    d_defIncluded = d_globalDefIncluded;
+    d_symDefIncluded.clear();
   }
   else
   {
@@ -207,7 +208,7 @@ void TimeoutCoreManager::getNextAssertions(
   Trace("smt-to-core")
       << "...finished get next assertions, #current assertions = "
       << d_ainfo.size() << ", #free variables = " << d_asymbols.size()
-      << ", #asserts and skolem defs=" << nextAsserts.size() << std::endl;
+      << ", #asserts and defs=" << nextAsserts.size() << std::endl;
 }
 
 void TimeoutCoreManager::getActiveDefinitions(std::vector<Node>& nextAsserts)
@@ -342,13 +343,20 @@ void TimeoutCoreManager::initializeAssertions(
     // redundant or correspond to definitions.
     for (const Node& a : asserts)
     {
+      // check if the assertion rewrites to true after preprocessing
       Node ar = rewrite(tlsm.apply(a));
       if (ar.isConst() && ar.getConst<bool>())
       {
+        if (a.getKind()==kind::EQUAL && a[1].getKind()==kind::LAMBDA)
+        {
+          // define-fun are always included
+          d_globalDefIncluded.insert(a);
+        }
         continue;
       }
       d_ppAsserts.push_back(a);
     }
+    d_defIncluded = d_globalDefIncluded;
     // we furthermore have no skolem definitions
   }
   else
@@ -394,6 +402,7 @@ void TimeoutCoreManager::initializeAssertions(
     expr::getSymbols(d_ppAsserts[i], d_syms[i]);
   }
   Trace("smt-to-core") << "after processing, #asserts = " << d_ppAsserts.size()
+                       << ", #global-defs = " << d_globalDefIncluded.size()
                        << ", #skolem-defs = " << d_skolemToAssert.size()
                        << std::endl;
 }
@@ -540,9 +549,11 @@ const std::vector<Node>& TimeoutCoreManager::computeDefsFor(const Node& s)
     return it->second;
   }
   Assert(d_tls.find(s) != d_tls.end());
+  Trace("smt-to-core") << "Compute defining assertions for " << s << std::endl;
   Node eq = s.eqNode(d_tls[s]);
   theory::TrustSubstitutionMap& tls = d_env.getTopLevelSubstitutions();
   std::shared_ptr<ProofNode> pf = tls.getProofFor(eq);
+  Assert (pf!=nullptr);
   Trace("smt-to-core") << "Proof for " << eq << " is " << *pf.get()
                        << std::endl;
   expr::getFreeAssumptions(pf.get(), d_defToAssert[s]);

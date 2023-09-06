@@ -28,6 +28,7 @@
 #include "smt/preprocessor.h"
 #include "theory/logic_info.h"
 #include "util/result.h"
+#include "smt/smt_mode.h"
 
 namespace cvc5::internal {
 
@@ -43,6 +44,7 @@ class PropEngine;
 
 namespace theory {
 class QuantifiersEngine;
+class TheoryModel;
 }
 
 namespace smt {
@@ -131,6 +133,8 @@ class SmtSolver : protected EnvObj
    * processes the results based on the options.
    */
   Result checkSatInternal();
+  
+  theory::TheoryModel* getAvailableModel(SmtMode mode);
 
  private:
   /** Whether we track information necessary for deep restarts */

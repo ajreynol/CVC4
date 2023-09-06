@@ -28,6 +28,8 @@
 #include "theory/logic_info.h"
 #include "theory/theory_engine.h"
 #include "theory/theory_traits.h"
+#include "smt/model_core_builder.h"
+#include "theory/theory_model.h"
 
 using namespace std;
 
@@ -257,5 +259,44 @@ void SmtSolver::resetTrail()
   d_propEngine->resetTrail();
 }
 
+theory::TheoryModel* SmtSolver::getAvailableModel(SmtMode mode)
+{
+  Assert(d_theoryEngine != nullptr);
+  // If the solver is in UNKNOWN mode, we use the latest available model (e.g.,
+  // one that was generated for a last call check). Note that the model is SAT
+  // context-independent internally, so this works even if the SAT solver has
+  // backtracked since the model was generated. We disable the resource manager
+  // while building or getting the model. In general, we should not be spending
+  // resources while building a model, but this ensures that we return a model
+  // if a problem was solved within the allocated resources.
+  resourceManager()->setEnabled(false);
+  theory::TheoryModel* m = mode == SmtMode::SAT_UNKNOWN
+                       ? d_theoryEngine->getModel()
+                       : d_theoryEngine->getBuiltModel();
+  resourceManager()->setEnabled(true);
+
+  if (m == nullptr)
+  {
+    return m;
+  }
+  // compute the model core if necessary and not done so already
+  if (options().smt.modelCoresMode != options::ModelCoresMode::NONE
+      && !m->isUsingModelCore())
+  {
+    // If we enabled model cores, we compute a model core for m based on our
+    // (expanded) assertions using the model core builder utility. Notice that
+    // we get the assertions using the getAssertionsInternal, which does not
+    // impact whether we are in "sat" mode
+    d_asserts.refresh();
+    const context::CDList<Node>& al = d_asserts.getAssertionList();
+    std::vector<Node> asserts(al.begin(), al.end());
+    d_pp.applySubstitutions(asserts);
+    ModelCoreBuilder mcb(d_env);
+    mcb.setModelCore(asserts, m, options().smt.modelCoresMode);
+  }
+
+  return m;
+}
+  
 }  // namespace smt
 }  // namespace cvc5::internal

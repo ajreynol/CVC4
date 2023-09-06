@@ -168,6 +168,7 @@ class TimeoutCoreManager : protected EnvObj
   std::unordered_map<Node, std::vector<Node>> d_defToAssert;
   std::unordered_set<Node> d_symDefIncluded;
   std::unordered_set<Node> d_defIncluded;
+  std::unordered_set<Node> d_globalDefIncluded;
   const std::vector<Node>& computeDefsFor(const Node& s);
 };
 
