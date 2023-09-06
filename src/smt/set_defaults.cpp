@@ -218,8 +218,7 @@ void SetDefaults::setDefaultsPre(Options& opts)
   }
   if (opts.smt.produceDifficulty)
   {
-      SET_AND_NOTIFY(
-          Smt, produceRelevantAssertions, true, "produce difficulty");
+    SET_AND_NOTIFY(Smt, produceRelevantAssertions, true, "produce difficulty");
   }
 
   // if unsat cores are disabled, then unsat cores mode should be OFF. Similarly

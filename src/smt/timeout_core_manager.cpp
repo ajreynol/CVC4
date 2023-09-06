@@ -347,7 +347,7 @@ void TimeoutCoreManager::initializeAssertions(
       Node ar = rewrite(tlsm.apply(a));
       if (ar.isConst() && ar.getConst<bool>())
       {
-        if (a.getKind()==kind::EQUAL && a[1].getKind()==kind::LAMBDA)
+        if (a.getKind() == kind::EQUAL && a[1].getKind() == kind::LAMBDA)
         {
           // define-fun are always included
           d_globalDefIncluded.insert(a);
@@ -553,7 +553,7 @@ const std::vector<Node>& TimeoutCoreManager::computeDefsFor(const Node& s)
   Node eq = s.eqNode(d_tls[s]);
   theory::TrustSubstitutionMap& tls = d_env.getTopLevelSubstitutions();
   std::shared_ptr<ProofNode> pf = tls.getProofFor(eq);
-  Assert (pf!=nullptr);
+  Assert(pf != nullptr);
   Trace("smt-to-core") << "Proof for " << eq << " is " << *pf.get()
                        << std::endl;
   expr::getFreeAssumptions(pf.get(), d_defToAssert[s]);

@@ -23,13 +23,13 @@
 #include "smt/assertions.h"
 #include "smt/env.h"
 #include "smt/logic_exception.h"
+#include "smt/model_core_builder.h"
 #include "smt/preprocessor.h"
 #include "smt/solver_engine_stats.h"
 #include "theory/logic_info.h"
 #include "theory/theory_engine.h"
-#include "theory/theory_traits.h"
-#include "smt/model_core_builder.h"
 #include "theory/theory_model.h"
+#include "theory/theory_traits.h"
 
 using namespace std;
 
@@ -271,8 +271,8 @@ theory::TheoryModel* SmtSolver::getAvailableModel(SmtMode mode)
   // if a problem was solved within the allocated resources.
   resourceManager()->setEnabled(false);
   theory::TheoryModel* m = mode == SmtMode::SAT_UNKNOWN
-                       ? d_theoryEngine->getModel()
-                       : d_theoryEngine->getBuiltModel();
+                               ? d_theoryEngine->getModel()
+                               : d_theoryEngine->getBuiltModel();
   resourceManager()->setEnabled(true);
 
   if (m == nullptr)
@@ -297,6 +297,6 @@ theory::TheoryModel* SmtSolver::getAvailableModel(SmtMode mode)
 
   return m;
 }
-  
+
 }  // namespace smt
 }  // namespace cvc5::internal

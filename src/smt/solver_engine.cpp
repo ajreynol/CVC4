@@ -53,7 +53,6 @@
 #include "smt/logic_exception.h"
 #include "smt/model.h"
 #include "smt/model_blocker.h"
-#include "theory/theory_model.h"
 #include "smt/preprocessor.h"
 #include "smt/proof_manager.h"
 #include "smt/quant_elim_solver.h"
@@ -79,6 +78,7 @@
 #include "theory/rewriter.h"
 #include "theory/smt_engine_subsolver.h"
 #include "theory/theory_engine.h"
+#include "theory/theory_model.h"
 #include "util/random.h"
 #include "util/rational.h"
 #include "util/resource_manager.h"
@@ -657,7 +657,7 @@ TheoryModel* SolverEngine::getAvailableModel(const char* c) const
     throw ModalException(ss.str().c_str());
   }
   // ask the SMT solver for the model
-  TheoryModel * m = d_smtSolver->getAvailableModel(d_state->getMode());
+  TheoryModel* m = d_smtSolver->getAvailableModel(d_state->getMode());
   if (m == nullptr)
   {
     std::stringstream ss;

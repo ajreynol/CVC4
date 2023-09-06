@@ -26,9 +26,9 @@
 #include "smt/assertions.h"
 #include "smt/env_obj.h"
 #include "smt/preprocessor.h"
+#include "smt/smt_mode.h"
 #include "theory/logic_info.h"
 #include "util/result.h"
-#include "smt/smt_mode.h"
 
 namespace cvc5::internal {
 
@@ -133,7 +133,7 @@ class SmtSolver : protected EnvObj
    * processes the results based on the options.
    */
   Result checkSatInternal();
-  
+
   theory::TheoryModel* getAvailableModel(SmtMode mode);
 
  private:
