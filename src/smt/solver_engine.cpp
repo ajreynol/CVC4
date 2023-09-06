@@ -657,10 +657,11 @@ TheoryModel* SolverEngine::getAvailableModel(const char* c) const
     ss << "Cannot " << c << " when produce-models options is off.";
     throw ModalException(ss.str().c_str());
   }
-  Assert (d_activeSolver!=nullptr);
-  Assert ( d_activeSolver->d_smtSolver!=nullptr);
+  Assert(d_activeSolver != nullptr);
+  Assert(d_activeSolver->d_smtSolver != nullptr);
   // ask the SMT solver for the model
-  TheoryModel* m = d_activeSolver->d_smtSolver->getAvailableModel(d_state->getMode());
+  TheoryModel* m =
+      d_activeSolver->d_smtSolver->getAvailableModel(d_state->getMode());
   if (m == nullptr)
   {
     std::stringstream ss;
@@ -731,7 +732,7 @@ Result SolverEngine::checkSatInternal(const std::vector<Node>& assumptions)
                << endl;
   // notify our state of the check-sat result
   d_state->notifyCheckSatResult(r);
-  
+
   setActiveSolver(r, this);
 
   if (d_env->getOptions().base.statisticsEveryQuery)
@@ -744,7 +745,7 @@ Result SolverEngine::checkSatInternal(const std::vector<Node>& assumptions)
   return Result(r, filename);
 }
 
-void SolverEngine::setActiveSolver(Result r, SolverEngine * solver)
+void SolverEngine::setActiveSolver(Result r, SolverEngine* solver)
 {
   d_activeSolver = solver;
   // Check that SAT results generate a model correctly.
@@ -812,7 +813,7 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
   }
   d_state->notifyCheckSatResult(ret.first);
   setActiveSolver(ret.first, d_tcm->getSubSolver());
-  Assert (d_activeSolver->d_smtSolver!=nullptr);
+  Assert(d_activeSolver->d_smtSolver != nullptr);
   endCall();
   return std::pair<Result, std::vector<Node>>(ret.first, core);
 }

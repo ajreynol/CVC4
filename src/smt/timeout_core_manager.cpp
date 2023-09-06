@@ -97,10 +97,7 @@ std::pair<Result, std::vector<Node>> TimeoutCoreManager::getTimeoutCore(
   getActiveDefinitions(toCore);
   return std::pair<Result, std::vector<Node>>(result, toCore);
 }
-SolverEngine * TimeoutCoreManager::getSubSolver()
-{
-  return d_subSolver.get();
-}
+SolverEngine* TimeoutCoreManager::getSubSolver() { return d_subSolver.get(); }
 
 void TimeoutCoreManager::includeAssertion(size_t index, bool& removedAssertion)
 {

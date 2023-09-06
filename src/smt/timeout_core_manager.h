@@ -83,7 +83,8 @@ class TimeoutCoreManager : protected EnvObj
       const std::vector<Node>& ppAsserts,
       const std::map<size_t, Node>& ppSkolemMap);
   /** Get the SMT solver */
-  SolverEngine * getSubSolver();
+  SolverEngine* getSubSolver();
+
  private:
   /** initialize assertions */
   void initializeAssertions(const std::vector<Node>& asserts,
