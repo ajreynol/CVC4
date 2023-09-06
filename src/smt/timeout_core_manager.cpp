@@ -60,12 +60,6 @@ std::pair<Result, std::vector<Node>> TimeoutCoreManager::getTimeoutCore(
   d_syms.clear();
   initializeAssertions(asserts, ppAsserts, ppSkolemMap);
 
-  // trivial case: empty assertions
-  if (d_ppAsserts.empty())
-  {
-    return std::pair<Result, std::vector<Node>>(Result(Result::SAT), {});
-  }
-
   std::vector<size_t> nextInclude;
   Result result;
   bool checkAgain = true;
@@ -462,8 +456,7 @@ bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
   allAssertsSat = true;
   size_t indexScore = 0;
   size_t nasserts = d_ppAsserts.size();
-  Assert(nasserts > 0);
-  size_t startIndex = Random::getRandom().pick(0, nasserts - 1);
+  size_t startIndex = nasserts==0 ? 0 : Random::getRandom().pick(0, nasserts - 1);
   currModel.resize(nasserts);
   bool hadFalseAssert = false;
   for (size_t i = 0; i < nasserts; i++)

@@ -1496,7 +1496,7 @@ UnsatCore SolverEngine::getUnsatCoreInternal(bool isInternal)
         "UNSAT response.");
   }
   // generate with new proofs
-  PropEngine* pe = d_smtSolver->getPropEngine();
+  PropEngine* pe = d_activeSolver->d_smtSolver->getPropEngine();
   Assert(pe != nullptr);
 
   // make the proof corresponding to a dummy step (SAT_REFUTATION) of the
