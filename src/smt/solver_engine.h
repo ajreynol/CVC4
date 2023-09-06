@@ -68,6 +68,7 @@ class AbductionSolver;
 class InterpolationSolver;
 class QuantElimSolver;
 class FindSynthSolver;
+class TimeoutCoreManager;
 
 struct SolverEngineStatistics;
 class PfManager;
@@ -1047,6 +1048,8 @@ class CVC5_EXPORT SolverEngine
    */
   std::vector<Node> convertPreprocessedToInput(const std::vector<Node>& ppa,
                                                bool isInternal);
+  /** */
+  void setActiveSolver(Result r, SolverEngine * solver);
   /* Members -------------------------------------------------------------- */
 
   /** Solver instance that owns this SolverEngine instance. */
@@ -1103,6 +1106,11 @@ class CVC5_EXPORT SolverEngine
   std::unique_ptr<smt::InterpolationSolver> d_interpolSolver;
   /** The solver for quantifier elimination queries */
   std::unique_ptr<smt::QuantElimSolver> d_quantElimSolver;
+  /** The timeout core manager */
+  std::unique_ptr<smt::TimeoutCoreManager> d_tcm;
+  
+  /** The solver that has the current model */
+  SolverEngine * d_activeSolver;
 
   /**
    * The logic set by the user. The actual logic, which may extend the user's

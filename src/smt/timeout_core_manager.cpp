@@ -97,6 +97,10 @@ std::pair<Result, std::vector<Node>> TimeoutCoreManager::getTimeoutCore(
   getActiveDefinitions(toCore);
   return std::pair<Result, std::vector<Node>>(result, toCore);
 }
+SolverEngine * TimeoutCoreManager::getSubSolver()
+{
+  return d_subSolver.get();
+}
 
 void TimeoutCoreManager::includeAssertion(size_t index, bool& removedAssertion)
 {
@@ -245,23 +249,23 @@ Result TimeoutCoreManager::checkSatNext(const std::vector<Node>& nextAssertions,
   Trace("smt-to-core") << "--- checkSatNext #models=" << d_modelValues.size()
                        << std::endl;
   Trace("smt-to-core") << "checkSatNext: preprocess" << std::endl;
-  std::unique_ptr<SolverEngine> subSolver;
+  d_subSolver.reset(nullptr);
   Result result;
   theory::initializeSubsolver(
-      subSolver, d_env, true, options().smt.toCoreTimeout);
-  subSolver->setOption("produce-models", "true");
+      d_subSolver, d_env, true, options().smt.toCoreTimeout);
+  d_subSolver->setOption("produce-models", "true");
   // must produce relevant assertions
   if (options().smt.toCoreMinSimplification)
   {
-    subSolver->setOption("produce-relevant-assertions", "true");
+    d_subSolver->setOption("produce-relevant-assertions", "true");
   }
   Trace("smt-to-core") << "checkSatNext: assert to subsolver" << std::endl;
   for (const Node& a : nextAssertions)
   {
-    subSolver->assertFormula(a);
+    d_subSolver->assertFormula(a);
   }
   Trace("smt-to-core") << "checkSatNext: check with subsolver" << std::endl;
-  result = subSolver->checkSat();
+  result = d_subSolver->checkSat();
   Trace("smt-to-core") << "checkSatNext: ...result is " << result << std::endl;
   if (result.getStatus() == Result::UNKNOWN
       && result.getUnknownExplanation() == UnknownExplanation::TIMEOUT)
@@ -290,7 +294,7 @@ Result TimeoutCoreManager::checkSatNext(const std::vector<Node>& nextAssertions,
   }
   Trace("smt-to-core") << "checkSatNext: recordCurrentModel" << std::endl;
   bool allAssertsSat;
-  if (recordCurrentModel(allAssertsSat, nextInclude, subSolver.get()))
+  if (recordCurrentModel(allAssertsSat, nextInclude))
   {
     Trace("smt-to-core") << "...return, check again" << std::endl;
     return Result(Result::UNKNOWN, UnknownExplanation::REQUIRES_CHECK_AGAIN);
@@ -408,15 +412,14 @@ void TimeoutCoreManager::initializeAssertions(
 }
 
 bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
-                                            std::vector<size_t>& nextInclude,
-                                            SolverEngine* subSolver)
+                                            std::vector<size_t>& nextInclude)
 {
   nextInclude.clear();
   // If doing minimum simplification, check if we had a definition that was
   // not included. if so, we must add it.
   if (options().smt.toCoreMinSimplification)
   {
-    std::unordered_set<TNode> rset = subSolver->getRelevantAssertions();
+    std::unordered_set<TNode> rset = d_subSolver->getRelevantAssertions();
     Trace("smt-to-core") << "Relevant assertions:";
     std::unordered_set<Node> syms;
     std::unordered_set<TNode> visited;
@@ -452,6 +455,7 @@ bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
     }
     if (newDef)
     {
+      Trace("smt-to-core") << "...include new definition" << std::endl;
       return true;
     }
   }
@@ -469,7 +473,7 @@ bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
   {
     size_t ii = (i + startIndex) % nasserts;
     Node a = d_ppAsserts[ii];
-    Node av = subSolver->getValue(a);
+    Node av = d_subSolver->getValue(a);
     av = av.isConst() ? av : Node::null();
     currModel[ii] = av;
     if (av == d_true)

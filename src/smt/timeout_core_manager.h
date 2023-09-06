@@ -82,7 +82,8 @@ class TimeoutCoreManager : protected EnvObj
       const std::vector<Node>& asserts,
       const std::vector<Node>& ppAsserts,
       const std::map<size_t, Node>& ppSkolemMap);
-
+  /** Get the SMT solver */
+  SolverEngine * getSubSolver();
  private:
   /** initialize assertions */
   void initializeAssertions(const std::vector<Node>& asserts,
@@ -103,8 +104,7 @@ class TimeoutCoreManager : protected EnvObj
    * assertions.
    */
   bool recordCurrentModel(bool& allAssertsSat,
-                          std::vector<size_t>& nextInclude,
-                          SolverEngine* subSolver);
+                          std::vector<size_t>& nextInclude);
   /** Include the i^th assertion */
   void includeAssertion(size_t index, bool& removedAssertion);
   /**
@@ -114,7 +114,8 @@ class TimeoutCoreManager : protected EnvObj
   bool hasCurrentSharedSymbol(size_t i) const;
   /** Add skolem definitions */
   void getActiveDefinitions(std::vector<Node>& nextAssertions);
-
+  /** Subsolver */
+  std::unique_ptr<SolverEngine> d_subSolver;
   /** Common nodes */
   Node d_true;
   Node d_false;

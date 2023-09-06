@@ -113,6 +113,7 @@ SolverEngine::SolverEngine(const Options* optr)
       d_abductSolver(nullptr),
       d_interpolSolver(nullptr),
       d_quantElimSolver(nullptr),
+      d_activeSolver(nullptr),
       d_isInternalSubsolver(false),
       d_stats(nullptr)
 {
@@ -656,8 +657,10 @@ TheoryModel* SolverEngine::getAvailableModel(const char* c) const
     ss << "Cannot " << c << " when produce-models options is off.";
     throw ModalException(ss.str().c_str());
   }
+  Assert (d_activeSolver!=nullptr);
+  Assert ( d_activeSolver->d_smtSolver!=nullptr);
   // ask the SMT solver for the model
-  TheoryModel* m = d_smtSolver->getAvailableModel(d_state->getMode());
+  TheoryModel* m = d_activeSolver->d_smtSolver->getAvailableModel(d_state->getMode());
   if (m == nullptr)
   {
     std::stringstream ss;
@@ -728,7 +731,22 @@ Result SolverEngine::checkSatInternal(const std::vector<Node>& assumptions)
                << endl;
   // notify our state of the check-sat result
   d_state->notifyCheckSatResult(r);
+  
+  setActiveSolver(r, this);
 
+  if (d_env->getOptions().base.statisticsEveryQuery)
+  {
+    printStatisticsDiff();
+  }
+
+  // set the filename on the result
+  const std::string& filename = d_env->getOptions().driver.filename;
+  return Result(r, filename);
+}
+
+void SolverEngine::setActiveSolver(Result r, SolverEngine * solver)
+{
+  d_activeSolver = solver;
   // Check that SAT results generate a model correctly.
   if (d_env->getOptions().smt.checkModels)
   {
@@ -754,15 +772,6 @@ Result SolverEngine::checkSatInternal(const std::vector<Node>& assumptions)
       checkUnsatCore();
     }
   }
-
-  if (d_env->getOptions().base.statisticsEveryQuery)
-  {
-    printStatisticsDiff();
-  }
-
-  // set the filename on the result
-  const std::string& filename = d_env->getOptions().driver.filename;
-  return Result(r, filename);
 }
 
 std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
@@ -772,7 +781,7 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
   // refresh the assertions, to ensure we have applied preprocessing to
   // all current assertions
   d_smtDriver->refreshAssertions();
-  TimeoutCoreManager tcm(*d_env.get());
+  d_tcm.reset(new TimeoutCoreManager(*d_env.get()));
   // get the preprocessed assertions
   std::vector<Node> asserts = getAssertionsInternal();
   const context::CDList<Node>& assertions =
@@ -786,7 +795,7 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
     ppSkolemMap[pk.first] = pk.second;
   }
   std::pair<Result, std::vector<Node>> ret =
-      tcm.getTimeoutCore(asserts, passerts, ppSkolemMap);
+      d_tcm->getTimeoutCore(asserts, passerts, ppSkolemMap);
   std::vector<Node> core;
   if (!options().smt.toCoreMinSimplification)
   {
@@ -801,6 +810,9 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
     // doesn't require conversion
     core = ret.second;
   }
+  d_state->notifyCheckSatResult(ret.first);
+  setActiveSolver(ret.first, d_tcm->getSubSolver());
+  Assert (d_activeSolver->d_smtSolver!=nullptr);
   endCall();
   return std::pair<Result, std::vector<Node>>(ret.first, core);
 }
@@ -1555,7 +1567,7 @@ void SolverEngine::checkModel(bool hardFailure)
   // check the model with the theory engine for debugging
   if (options().smt.debugCheckModels)
   {
-    TheoryEngine* te = d_smtSolver->getTheoryEngine();
+    TheoryEngine* te = d_activeSolver->d_smtSolver->getTheoryEngine();
     Assert(te != nullptr);
     te->checkTheoryAssertionsWithModel(hardFailure);
   }
