@@ -704,6 +704,13 @@ class CVC5_EXPORT SolverEngine
       std::map<Node, std::vector<std::vector<Node>>>& insts);
 
   /**
+   * Get relevant assertions. This returns a set of assertions that are
+   * currently asserted to the TheoryEngine that propositionally entail the
+   * (preprocessed) input formula and all theory lemmas that have been marked
+   * NEEDS_JUSTIFY. For more details on this, see relevance_manager.h.
+   */
+  std::unordered_set<TNode> getRelevantAssertions();
+  /**
    * Get an unsatisfiable core (only if immediately preceded by an UNSAT
    * query). Only permitted if cvc5 was built with unsat-core support and
    * produce-unsat-cores is on.

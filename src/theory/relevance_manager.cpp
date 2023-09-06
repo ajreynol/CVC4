@@ -544,7 +544,7 @@ void RelevanceManager::notifyLemma(TNode n,
                                    const std::vector<Node>& sks)
 {
   // add to assertions
-  if (options().theory.relevanceFilter && isLemmaPropertyNeedsJustify(p))
+  if (isLemmaPropertyNeedsJustify(p))
   {
     notifyPreprocessedAssertion(n, false);
     notifyPreprocessedAssertions(skAsserts, false);

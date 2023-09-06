@@ -19,6 +19,7 @@
 
 #include <cvc5/cvc5_types.h>
 #include "expr/node_algorithm.h"
+#include "proof/proof_node_algorithm.h"
 #include "options/base_options.h"
 #include "options/smt_options.h"
 #include "printer/printer.h"
@@ -92,7 +93,7 @@ std::pair<Result, std::vector<Node>> TimeoutCoreManager::getTimeoutCore(
     toCore.push_back(d_ppAsserts[a.first]);
   }
   // include the skolem definitions
-  getActiveSkolemDefinitions(toCore);
+  getActiveDefinitions(toCore);
   return std::pair<Result, std::vector<Node>>(result, toCore);
 }
 
@@ -186,6 +187,8 @@ void TimeoutCoreManager::getNextAssertions(
       std::unordered_set<Node>& syms = d_syms[a.first];
       d_asymbols.insert(syms.begin(), syms.end());
     }
+    // reset the definitions
+    d_defIncluded.clear();
   }
   else
   {
@@ -198,7 +201,8 @@ void TimeoutCoreManager::getNextAssertions(
   }
 
   // include the skolem definitions
-  getActiveSkolemDefinitions(nextAsserts);
+  getActiveDefinitions(nextAsserts);
+  
 
   Trace("smt-to-core")
       << "...finished get next assertions, #current assertions = "
@@ -206,7 +210,7 @@ void TimeoutCoreManager::getNextAssertions(
       << ", #asserts and skolem defs=" << nextAsserts.size() << std::endl;
 }
 
-void TimeoutCoreManager::getActiveSkolemDefinitions(
+void TimeoutCoreManager::getActiveDefinitions(
     std::vector<Node>& nextAsserts)
 {
   if (!d_skolemToAssert.empty())
@@ -224,6 +228,11 @@ void TimeoutCoreManager::getActiveSkolemDefinitions(
         nextAsserts.push_back(itk->second);
       }
     }
+  }  
+  // include the definitions
+  for (const Node& d : d_defIncluded)
+  {
+    nextAsserts.push_back(d);
   }
 }
 
@@ -241,6 +250,11 @@ Result TimeoutCoreManager::checkSatNext(const std::vector<Node>& nextAssertions,
   theory::initializeSubsolver(
       subSolver, d_env, true, options().smt.toCoreTimeout);
   subSolver->setOption("produce-models", "true");
+  // must produce relevant assertions
+  if (options().smt.toCoreMinSimplification)
+  {
+    subSolver->setOption("produce-relevant-assertions", "true");
+  }
   Trace("smt-to-core") << "checkSatNext: assert to subsolver" << std::endl;
   for (const Node& a : nextAssertions)
   {
@@ -323,11 +337,6 @@ void TimeoutCoreManager::initializeAssertions(
       {
         Trace("smt-to-core")
             << "Substitution: " << s.first << " -> " << s.second << std::endl;
-        /*
-        Node eq = s.first.eqNode(s.second);
-        std::shared_ptr<ProofNode> pf = tls.getProofFor(eq);
-        Trace("smt-to-core") << "Proof is "<< *pf.get() << std::endl;
-        */
       }
     }
     // add assertions that do not rewrite to true, as these are either
@@ -341,6 +350,7 @@ void TimeoutCoreManager::initializeAssertions(
       }
       d_ppAsserts.push_back(a);
     }
+    // we furthermore have no skolem definitions
   }
   else
   {
@@ -394,6 +404,49 @@ bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
                                             SolverEngine* subSolver)
 {
   nextInclude.clear();
+  // If doing minimum simplification, check if we had a definition that was
+  // not included. if so, we must add it.
+  if (options().smt.toCoreMinSimplification)
+  {
+    std::unordered_set<TNode> rset = subSolver->getRelevantAssertions();
+    Trace("smt-to-core") << "Relevant assertions:";
+    std::unordered_set<Node> syms;
+    std::unordered_set<TNode> visited;
+    for (TNode r : rset)
+    {
+      Trace("smt-to-core") << " " << r;
+      expr::getSymbols(r, syms, visited);
+    }
+    bool newDef = false;
+    Trace("smt-to-core") << std::endl;
+    for (const Node& s : syms)
+    {
+      if (d_tls.find(s)==d_tls.end())
+      {
+        // not a symbol with a definition
+        continue;
+      }
+      if (d_symDefIncluded.find(s)!=d_symDefIncluded.end())
+      {
+        // definition was already included
+        continue;
+      }
+      std::vector<Node> defs = computeDefsFor(s);
+      d_symDefIncluded.insert(s);
+      for (const Node& d : defs)
+      {
+        if (d_defIncluded.find(d)==d_defIncluded.end())
+        {
+          d_defIncluded.insert(d);
+          newDef = true;
+        }
+      }
+    }
+    if (newDef)
+    {
+      return true;
+    }
+  }
   // allocate the model value vector
   d_modelValues.emplace_back();
   std::vector<Node>& currModel = d_modelValues.back();
@@ -477,6 +530,23 @@ bool TimeoutCoreManager::hasCurrentSharedSymbol(size_t i) const
     }
   }
   return false;
+}
+
+const std::vector<Node>& TimeoutCoreManager::computeDefsFor(const Node& s)
+{
+  std::unordered_map<Node, std::vector<Node>>::iterator it = d_defToAssert.find(s);
+  if (it!=d_defToAssert.end())
+  {
+    return it->second;
+  }
+  Assert (d_tls.find(s)!=d_tls.end());
+  Node eq = s.eqNode(d_tls[s]);
+  theory::TrustSubstitutionMap& tls = d_env.getTopLevelSubstitutions();
+  std::shared_ptr<ProofNode> pf = tls.getProofFor(eq);
+  Trace("smt-to-core") << "Proof for " << eq << " is "<< *pf.get() << std::endl;
+  expr::getFreeAssumptions(pf.get(), d_defToAssert[s]);
+  Trace("smt-to-core") << "Free assumptions are " << d_defToAssert[s] << std::endl;
+  return d_defToAssert[s]; 
 }
 
 }  // namespace smt

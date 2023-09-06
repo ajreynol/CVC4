@@ -1946,6 +1946,31 @@ void SolverEngine::getInstantiationTermVectors(
   qe->getInstantiationTermVectors(q, tvecs);
 }
 
+std::unordered_set<TNode> SolverEngine::getRelevantAssertions()
+{
+  if (d_state->getMode() != SmtMode::SAT
+      && d_state->getMode() != SmtMode::SAT_UNKNOWN)
+  {
+    std::stringstream ss;
+    ss << "Cannot get relevant assertions unless immediately preceded by SAT or UNKNOWN response.";
+    throw RecoverableModalException(ss.str().c_str());
+  }
+  if (!d_env->getOptions().smt.produceRelevantAssertions)
+  {
+    throw ModalException(
+        "Cannot get difficulty when produce relevant assertions option is off.");
+  }
+  // get difficulty map from theory engine first
+  TheoryEngine* te = d_smtSolver->getTheoryEngine();
+  bool success = false;
+  std::unordered_set<TNode> ret = te->getRelevantAssertions(success);
+  if (!success)
+  {
+    throw ModalException("Failed to get relevant assertions.");
+  }
+  return ret;
+}
+
 std::vector<Node> SolverEngine::getAssertions()
 {
   Trace("smt") << "SMT getAssertions()" << endl;

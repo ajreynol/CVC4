@@ -95,23 +95,25 @@ class TimeoutCoreManager : protected EnvObj
   Result checkSatNext(const std::vector<Node>& nextAssertions,
                       std::vector<size_t>& nextInclude);
   /**
-   * Record current model, return true if we set d_nextIndexToInclude,
-   * indicating that we want to include a new assertion
-   * (d_ppAsserts[d_nextIndexToInclude]).
+   * Record current model, return true if nextInclude is non-empty, which
+   * contains the list of indices of new assertions that we would like to
+   * add for the next check-sat call.
    *
    * @param allAssertsSat set to true if the current model satisfies all
    * assertions.
    */
   bool recordCurrentModel(bool& allAssertsSat,
                           std::vector<size_t>& nextInclude,
-                          SolverEngine* subSolver = nullptr);
-  /** Include assertion */
+                          SolverEngine* subSolver);
+  /** Include the i^th assertion */
   void includeAssertion(size_t index, bool& removedAssertion);
-  /** Does the i^th assertion have a current shared symbol (a free symbol in
-   * d_asymbols). */
+  /** 
+   * Does the i^th assertion have a current shared symbol (a free symbol in
+   * d_asymbols).
+   */
   bool hasCurrentSharedSymbol(size_t i) const;
   /** Add skolem definitions */
-  void getActiveSkolemDefinitions(std::vector<Node>& nextAssertions);
+  void getActiveDefinitions(std::vector<Node>& nextAssertions);
 
   /** Common nodes */
   Node d_true;
@@ -163,6 +165,10 @@ class TimeoutCoreManager : protected EnvObj
 
   //----------------
   std::unordered_map<Node, Node> d_tls;
+  std::unordered_map<Node, std::vector<Node>> d_defToAssert;
+  std::unordered_set<Node> d_symDefIncluded;
+  std::unordered_set<Node> d_defIncluded;
+  const std::vector<Node>& computeDefsFor(const Node& s);
 };
 
 }  // namespace smt

@@ -530,3 +530,11 @@ name   = "SMT Layer"
   type       = "bool"
   default    = "false"
   help       = "minimize the level of simplification"
+
+[[option]]
+  name       = "produceRelevantAssertions"
+  category   = "regular"
+  long       = "produce-relevant-assertions"
+  type       = "bool"
+  default    = "false"
+  help       = "support getRelevantAssertions"
