@@ -784,7 +784,6 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
   d_smtDriver->refreshAssertions();
   d_tcm.reset(new TimeoutCoreManager(*d_env.get()));
   // get the preprocessed assertions
-  std::vector<Node> asserts = getAssertionsInternal();
   const context::CDList<Node>& assertions =
       d_smtSolver->getPreprocessedAssertions();
   std::vector<Node> passerts(assertions.begin(), assertions.end());
@@ -796,7 +795,7 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
     ppSkolemMap[pk.first] = pk.second;
   }
   std::pair<Result, std::vector<Node>> ret =
-      d_tcm->getTimeoutCore(asserts, passerts, ppSkolemMap);
+      d_tcm->getTimeoutCore(d_smtSolver->getAssertions(), passerts, ppSkolemMap);
   std::vector<Node> core;
   if (!options().smt.toCoreMinSimplification)
   {
@@ -1308,11 +1307,7 @@ std::vector<Node> SolverEngine::getAssertionsInternal() const
   // ensure that global declarations are processed
   d_smtSolver->getAssertions().refresh();
   const CDList<Node>& al = d_smtSolver->getAssertions().getAssertionList();
-  std::vector<Node> res;
-  for (const Node& n : al)
-  {
-    res.emplace_back(n);
-  }
+  std::vector<Node> res(al.begin(), al.end());
   return res;
 }
 

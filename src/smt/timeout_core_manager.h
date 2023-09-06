@@ -21,6 +21,7 @@
 #include "smt/assertions.h"
 #include "smt/env_obj.h"
 #include "util/result.h"
+#include "expr/subs.h"
 
 namespace cvc5::internal {
 
@@ -79,7 +80,7 @@ class TimeoutCoreManager : protected EnvObj
    * result has the same guarantees as a response to checkSat.
    */
   std::pair<Result, std::vector<Node>> getTimeoutCore(
-      const std::vector<Node>& asserts,
+      const Assertions& asserts,
       const std::vector<Node>& ppAsserts,
       const std::map<size_t, Node>& ppSkolemMap);
   /** Get the SMT solver */
@@ -87,7 +88,7 @@ class TimeoutCoreManager : protected EnvObj
 
  private:
   /** initialize assertions */
-  void initializeAssertions(const std::vector<Node>& asserts,
+  void initializeAssertions(const Assertions& asserts,
                             const std::vector<Node>& ppAsserts,
                             const std::map<size_t, Node>& ppSkolemMap);
   /** get next assertions */
@@ -125,6 +126,7 @@ class TimeoutCoreManager : protected EnvObj
    * rewriting on
    */
   std::vector<Node> d_ppAsserts;
+  std::vector<Node> d_ppAssertsOrig;
   /** Number of non-skolem definitions, a prefix of d_ppAsserts */
   size_t d_numAssertsNsk;
   /**
@@ -170,6 +172,8 @@ class TimeoutCoreManager : protected EnvObj
   std::unordered_map<Node, std::vector<Node>> d_defToAssert;
   std::unordered_set<Node> d_symDefIncluded;
   std::unordered_set<Node> d_defIncluded;
+  std::unordered_set<Node> d_globalDefIncluded;
+  Subs d_globalDefSubs;
   const std::vector<Node>& computeDefsFor(const Node& s);
 };
 

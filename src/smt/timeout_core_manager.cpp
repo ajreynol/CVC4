@@ -46,7 +46,7 @@ TimeoutCoreManager::TimeoutCoreManager(Env& env)
 }
 
 std::pair<Result, std::vector<Node>> TimeoutCoreManager::getTimeoutCore(
-    const std::vector<Node>& asserts,
+    const Assertions& asserts,
     const std::vector<Node>& ppAsserts,
     const std::map<size_t, Node>& ppSkolemMap)
 {
@@ -83,8 +83,8 @@ std::pair<Result, std::vector<Node>> TimeoutCoreManager::getTimeoutCore(
   std::vector<Node> toCore;
   for (std::pair<const size_t, AssertInfo>& a : d_ainfo)
   {
-    Assert(a.first < d_ppAsserts.size());
-    toCore.push_back(d_ppAsserts[a.first]);
+    Assert(a.first < d_ppAssertsOrig.size());
+    toCore.push_back(d_ppAssertsOrig[a.first]);
   }
   // include the skolem definitions
   getActiveDefinitions(toCore);
@@ -205,7 +205,16 @@ void TimeoutCoreManager::getNextAssertions(
   }
 
   // include the skolem definitions
+  size_t prevIndex = nextAsserts.size();
   getActiveDefinitions(nextAsserts);
+  if (!d_globalDefSubs.empty())
+  {
+    // apply global definitions to them
+    for (size_t i=prevIndex, nasserts=nextAsserts.size(); i<nasserts; i++)
+    {
+      nextAsserts[i] = rewrite(d_globalDefSubs.apply(nextAsserts[i]));
+    }
+  }
 
   Trace("smt-to-core")
       << "...finished get next assertions, #current assertions = "
@@ -319,12 +328,11 @@ Result TimeoutCoreManager::checkSatNext(const std::vector<Node>& nextAssertions,
 }
 
 void TimeoutCoreManager::initializeAssertions(
-    const std::vector<Node>& asserts,
+    const Assertions& asserts,
     const std::vector<Node>& ppAsserts,
     const std::map<size_t, Node>& ppSkolemMap)
 {
   Trace("smt-to-core") << "initializeAssertions" << std::endl;
-  Trace("smt-to-core") << "#asserts = " << asserts.size() << std::endl;
   Trace("smt-to-core") << "#ppAsserts = " << ppAsserts.size() << std::endl;
   std::vector<Node> skDefs;
   if (options().smt.toCoreMinSimplification)
@@ -345,12 +353,24 @@ void TimeoutCoreManager::initializeAssertions(
     // redundant or correspond to definitions.
     std::vector<Node> dvars;
     std::vector<Node> dsubs;
-    for (const Node& a : asserts)
+    d_globalDefSubs.clear();
+    const context::CDList<Node>& ald = asserts.getAssertionListDefinitions();
+    Trace("smt-to-core") << "#definitions = " << ald.size() << std::endl;
+    for (const Node& a : ald)
     {
       if (a.getKind() == kind::EQUAL && a[1].getKind() == kind::LAMBDA)
       {
-        dvars.push_back(a[0]);
-        dsubs.push_back(a[1]);
+        d_globalDefSubs.add(a[0], a[1]);
+        d_globalDefIncluded.insert(a);
+      }
+    }
+    const context::CDList<Node>& al = asserts.getAssertionList();
+    Trace("smt-to-core") << "#asserts = " << al.size() << std::endl;
+    for (const Node& a : al)
+    {
+      if (d_globalDefIncluded.find(a)!=d_globalDefIncluded.end())
+      {
+        // skip global definitions
         continue;
       }
       // check if the assertion rewrites to true after preprocessing
@@ -359,11 +379,9 @@ void TimeoutCoreManager::initializeAssertions(
       {
         continue;
       }
-      d_ppAsserts.push_back(a);
-    }
-    for (Node& p : d_ppAsserts)
-    {
-      p = p.substitute(dvars.begin(), dvars.end(), dsubs.begin(), dsubs.end());
+      ar = rewrite(d_globalDefSubs.apply(a));
+      d_ppAsserts.push_back(ar);
+      d_ppAssertsOrig.push_back(a);
     }
     d_defIncluded.clear();
     // we furthermore have no skolem definitions
@@ -386,7 +404,7 @@ void TimeoutCoreManager::initializeAssertions(
           // false assertion, we are done
           d_ppAsserts.clear();
           d_ppAsserts.push_back(pa);
-          return;
+          break;
         }
       }
       itc = ppSkolemMap.find(i);
@@ -400,6 +418,7 @@ void TimeoutCoreManager::initializeAssertions(
         skDefs.push_back(pa);
       }
     }
+    d_ppAssertsOrig = d_ppAsserts;
   }
   // remember the size of the prefix of non-skolem definitions
   d_numAssertsNsk = d_ppAsserts.size();
@@ -558,18 +577,29 @@ const std::vector<Node>& TimeoutCoreManager::computeDefsFor(const Node& s)
     return it->second;
   }
   Assert(d_tls.find(s) != d_tls.end());
-  Trace("smt-to-core") << "Compute defining assertions for " << s << std::endl;
+  Trace("smt-to-core-debug") << "Compute defining assertions for " << s << std::endl;
   theory::TrustSubstitutionMap& tls = d_env.getTopLevelSubstitutions();
   TrustNode trn = tls.applyTrusted(s);
-  Trace("smt-to-core") << "getProofFor " << trn.getProven() << std::endl;
+  Trace("smt-to-core-debug") << "getProofFor " << trn.getProven() << std::endl;
   std::shared_ptr<ProofNode> pf = trn.toProofNode();
   Assert(pf != nullptr);
-  Trace("smt-to-core") << "Proof for " << trn.getProven()  << " is " << *pf.get()
+  Trace("smt-to-core-debug") << "Proof for " << trn.getProven()  << " is " << *pf.get()
                        << std::endl;
-  expr::getFreeAssumptions(pf.get(), d_defToAssert[s]);
-  Trace("smt-to-core") << "Free assumptions are " << d_defToAssert[s]
+  std::vector<Node>& ret = d_defToAssert[s];
+  std::vector<Node> fassumps;
+  expr::getFreeAssumptions(pf.get(), fassumps);
+  for (const Node& a : fassumps)
+  {
+    // skip define
+    if (d_globalDefIncluded.find(a)!=d_globalDefIncluded.end())
+    {
+      continue;
+    }
+    ret.push_back(a);
+  }
+  Trace("smt-to-core-debug") << "Free assumptions are " << ret
                        << std::endl;
-  return d_defToAssert[s];
+  return ret;
 }
 
 }  // namespace smt
