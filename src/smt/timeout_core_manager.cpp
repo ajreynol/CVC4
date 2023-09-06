@@ -84,11 +84,18 @@ std::pair<Result, std::vector<Node>> TimeoutCoreManager::getTimeoutCore(
   for (std::pair<const size_t, AssertInfo>& a : d_ainfo)
   {
     Assert(a.first < d_ppAsserts.size());
-    Trace("smt-to-core-asserts") << "...return #" << a.first << std::endl;
     toCore.push_back(d_ppAsserts[a.first]);
   }
   // include the skolem definitions
   getActiveDefinitions(toCore);
+  for (const Node& c : toCore)
+  {
+    Trace("to-core-result") << "core: " << c << std::endl;
+  }
+  for (const Node& d : d_symDefIncluded)
+  {
+    Trace("to-core-result") << "defined symbol: " << d << std::endl;
+  }
   return std::pair<Result, std::vector<Node>>(result, toCore);
 }
 SolverEngine* TimeoutCoreManager::getSubSolver() { return d_subSolver.get(); }
@@ -184,7 +191,7 @@ void TimeoutCoreManager::getNextAssertions(
       d_asymbols.insert(syms.begin(), syms.end());
     }
     // reset the definitions
-    d_defIncluded = d_globalDefIncluded;
+    d_defIncluded.clear();
     d_symDefIncluded.clear();
   }
   else
@@ -336,22 +343,29 @@ void TimeoutCoreManager::initializeAssertions(
     }
     // add assertions that do not rewrite to true, as these are either
     // redundant or correspond to definitions.
+    std::vector<Node> dvars;
+    std::vector<Node> dsubs;
     for (const Node& a : asserts)
     {
+      if (a.getKind() == kind::EQUAL && a[1].getKind() == kind::LAMBDA)
+      {
+        dvars.push_back(a[0]);
+        dsubs.push_back(a[1]);
+        continue;
+      }
       // check if the assertion rewrites to true after preprocessing
       Node ar = rewrite(tlsm.apply(a));
       if (ar.isConst() && ar.getConst<bool>())
       {
-        if (a.getKind() == kind::EQUAL && a[1].getKind() == kind::LAMBDA)
-        {
-          // define-fun are always included
-          d_globalDefIncluded.insert(a);
-        }
         continue;
       }
       d_ppAsserts.push_back(a);
     }
-    d_defIncluded = d_globalDefIncluded;
+    for (Node& p : d_ppAsserts)
+    {
+      p = p.substitute(dvars.begin(), dvars.end(), dsubs.begin(), dsubs.end());
+    }
+    d_defIncluded.clear();
     // we furthermore have no skolem definitions
   }
   else
@@ -397,7 +411,6 @@ void TimeoutCoreManager::initializeAssertions(
     expr::getSymbols(d_ppAsserts[i], d_syms[i]);
   }
   Trace("smt-to-core") << "after processing, #asserts = " << d_ppAsserts.size()
-                       << ", #global-defs = " << d_globalDefIncluded.size()
                        << ", #skolem-defs = " << d_skolemToAssert.size()
                        << std::endl;
 }
@@ -449,6 +462,7 @@ bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
       Trace("smt-to-core") << "...include new definition" << std::endl;
       return true;
     }
+    Trace("smt-to-core") << "...no new definition" << std::endl;
   }
   // allocate the model value vector
   d_modelValues.emplace_back();
@@ -464,6 +478,7 @@ bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
     size_t ii = (i + startIndex) % nasserts;
     Node a = d_ppAsserts[ii];
     Node av = d_subSolver->getValue(a);
+    Trace("smt-to-core-mv") << "M(" << a << ") = " << av << std::endl;
     av = av.isConst() ? av : Node::null();
     currModel[ii] = av;
     if (av == d_true)
@@ -544,11 +559,12 @@ const std::vector<Node>& TimeoutCoreManager::computeDefsFor(const Node& s)
   }
   Assert(d_tls.find(s) != d_tls.end());
   Trace("smt-to-core") << "Compute defining assertions for " << s << std::endl;
-  Node eq = s.eqNode(d_tls[s]);
   theory::TrustSubstitutionMap& tls = d_env.getTopLevelSubstitutions();
-  std::shared_ptr<ProofNode> pf = tls.getProofFor(eq);
+  TrustNode trn = tls.applyTrusted(s);
+  Trace("smt-to-core") << "getProofFor " << trn.getProven() << std::endl;
+  std::shared_ptr<ProofNode> pf = trn.toProofNode();
   Assert(pf != nullptr);
-  Trace("smt-to-core") << "Proof for " << eq << " is " << *pf.get()
+  Trace("smt-to-core") << "Proof for " << trn.getProven()  << " is " << *pf.get()
                        << std::endl;
   expr::getFreeAssumptions(pf.get(), d_defToAssert[s]);
   Trace("smt-to-core") << "Free assumptions are " << d_defToAssert[s]

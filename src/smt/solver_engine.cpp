@@ -811,9 +811,12 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
     // doesn't require conversion
     core = ret.second;
   }
-  d_state->notifyCheckSatResult(ret.first);
-  setActiveSolver(ret.first, d_tcm->getSubSolver());
-  Assert(d_activeSolver->d_smtSolver != nullptr);
+  // if we happened to find a definitive solution, set the active solver
+  if (ret.first.getStatus()!=Result::UNKNOWN)
+  {
+    d_state->notifyCheckSatResult(ret.first);
+    setActiveSolver(ret.first, d_tcm->getSubSolver());
+  }
   endCall();
   return std::pair<Result, std::vector<Node>>(ret.first, core);
 }
