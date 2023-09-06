@@ -98,7 +98,7 @@ std::pair<Result, std::vector<Node>> TimeoutCoreManager::getTimeoutCore(
 
 void TimeoutCoreManager::includeAssertion(size_t index, bool& removedAssertion)
 {
-// should have set index which is not already included
+  // should have set index which is not already included
   Assert(index < d_ppAsserts.size());
   Assert(d_ainfo.find(index) == d_ainfo.end());
   // initialize the assertion info
@@ -153,8 +153,9 @@ void TimeoutCoreManager::includeAssertion(size_t index, bool& removedAssertion)
   Trace("smt-to-core") << "...covers " << ainext.d_coverModels << " models"
                        << std::endl;
 }
-  
-void TimeoutCoreManager::getNextAssertions(const std::vector<size_t>& nextInclude, std::vector<Node>& nextAsserts)
+
+void TimeoutCoreManager::getNextAssertions(
+    const std::vector<size_t>& nextInclude, std::vector<Node>& nextAsserts)
 {
   if (d_modelValues.empty())
   {
@@ -226,7 +227,8 @@ void TimeoutCoreManager::getActiveSkolemDefinitions(
   }
 }
 
-Result TimeoutCoreManager::checkSatNext(const std::vector<Node>& nextAssertions, std::vector<size_t>& nextInclude)
+Result TimeoutCoreManager::checkSatNext(const std::vector<Node>& nextAssertions,
+                                        std::vector<size_t>& nextInclude)
 {
   verbose(1) << "TimeoutCoreManager::checkSatNext, #assertions="
              << nextAssertions.size() << ", #models=" << d_modelValues.size()
@@ -301,7 +303,7 @@ Result TimeoutCoreManager::checkSatNext(const std::vector<Node>& nextAssertions,
 }
 
 void TimeoutCoreManager::initializeAssertions(
-      const std::vector<Node>& asserts,
+    const std::vector<Node>& asserts,
     const std::vector<Node>& ppAsserts,
     const std::map<size_t, Node>& ppSkolemMap)
 {
@@ -319,7 +321,8 @@ void TimeoutCoreManager::initializeAssertions(
     {
       for (const std::pair<const Node, Node>& s : d_tls)
       {
-        Trace("smt-to-core") << "Substitution: " << s.first << " -> " << s.second << std::endl;
+        Trace("smt-to-core")
+            << "Substitution: " << s.first << " -> " << s.second << std::endl;
         /*
         Node eq = s.first.eqNode(s.second);
         std::shared_ptr<ProofNode> pf = tls.getProofFor(eq);
@@ -386,7 +389,8 @@ void TimeoutCoreManager::initializeAssertions(
                        << std::endl;
 }
 
-bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat, std::vector<size_t>& nextInclude,
+bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
+                                            std::vector<size_t>& nextInclude,
                                             SolverEngine* subSolver)
 {
   nextInclude.clear();

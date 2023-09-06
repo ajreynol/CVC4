@@ -85,14 +85,15 @@ class TimeoutCoreManager : protected EnvObj
 
  private:
   /** initialize assertions */
-  void initializeAssertions(
-      const std::vector<Node>& asserts,
-      const std::vector<Node>& ppAsserts,
-      const std::map<size_t, Node>& ppSkolemMap);
+  void initializeAssertions(const std::vector<Node>& asserts,
+                            const std::vector<Node>& ppAsserts,
+                            const std::map<size_t, Node>& ppSkolemMap);
   /** get next assertions */
-  void getNextAssertions(const std::vector<size_t>& nextInclude, std::vector<Node>& nextAssertions);
+  void getNextAssertions(const std::vector<size_t>& nextInclude,
+                         std::vector<Node>& nextAssertions);
   /** check sat next */
-  Result checkSatNext(const std::vector<Node>& nextAssertions, std::vector<size_t>& nextInclude);
+  Result checkSatNext(const std::vector<Node>& nextAssertions,
+                      std::vector<size_t>& nextInclude);
   /**
    * Record current model, return true if we set d_nextIndexToInclude,
    * indicating that we want to include a new assertion
@@ -101,7 +102,8 @@ class TimeoutCoreManager : protected EnvObj
    * @param allAssertsSat set to true if the current model satisfies all
    * assertions.
    */
-  bool recordCurrentModel(bool& allAssertsSat, std::vector<size_t>& nextInclude,
+  bool recordCurrentModel(bool& allAssertsSat,
+                          std::vector<size_t>& nextInclude,
                           SolverEngine* subSolver = nullptr);
   /** Include assertion */
   void includeAssertion(size_t index, bool& removedAssertion);
@@ -158,7 +160,7 @@ class TimeoutCoreManager : protected EnvObj
   std::unordered_set<Node> d_asymbols;
   /** Free symbols of each assertion */
   std::map<size_t, std::unordered_set<Node>> d_syms;
-  
+
   //----------------
   std::unordered_map<Node, Node> d_tls;
 };
