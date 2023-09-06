@@ -189,7 +189,8 @@ void SetDefaults::setDefaultsPre(Options& opts)
     // if proofs weren't enabled by user, and we are producing difficulty
     if (opts.smt.produceDifficulty)
     {
-      SET_AND_NOTIFY(Smt, produceRelevantAssertions, true, "produce difficulty");
+      SET_AND_NOTIFY(
+          Smt, produceRelevantAssertions, true, "produce difficulty");
       SET_AND_NOTIFY(Smt, produceProofs, true, "produce difficulty");
       // ensure at least preprocessing proofs are enabled
       if (opts.smt.proofMode == options::ProofMode::OFF)

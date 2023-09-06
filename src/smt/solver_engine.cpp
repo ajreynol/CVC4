@@ -1952,13 +1952,15 @@ std::unordered_set<TNode> SolverEngine::getRelevantAssertions()
       && d_state->getMode() != SmtMode::SAT_UNKNOWN)
   {
     std::stringstream ss;
-    ss << "Cannot get relevant assertions unless immediately preceded by SAT or UNKNOWN response.";
+    ss << "Cannot get relevant assertions unless immediately preceded by SAT "
+          "or UNKNOWN response.";
     throw RecoverableModalException(ss.str().c_str());
   }
   if (!d_env->getOptions().smt.produceRelevantAssertions)
   {
     throw ModalException(
-        "Cannot get difficulty when produce relevant assertions option is off.");
+        "Cannot get difficulty when produce relevant assertions option is "
+        "off.");
   }
   // get difficulty map from theory engine first
   TheoryEngine* te = d_smtSolver->getTheoryEngine();

@@ -107,7 +107,7 @@ class TimeoutCoreManager : protected EnvObj
                           SolverEngine* subSolver);
   /** Include the i^th assertion */
   void includeAssertion(size_t index, bool& removedAssertion);
-  /** 
+  /**
    * Does the i^th assertion have a current shared symbol (a free symbol in
    * d_asymbols).
    */

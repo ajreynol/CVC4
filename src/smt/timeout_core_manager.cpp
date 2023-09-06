@@ -15,14 +15,15 @@
 
 #include "smt/timeout_core_manager.h"
 
+#include <cvc5/cvc5_types.h>
+
 #include <fstream>
 
-#include <cvc5/cvc5_types.h>
 #include "expr/node_algorithm.h"
-#include "proof/proof_node_algorithm.h"
 #include "options/base_options.h"
 #include "options/smt_options.h"
 #include "printer/printer.h"
+#include "proof/proof_node_algorithm.h"
 #include "prop/prop_engine.h"
 #include "smt/env.h"
 #include "smt/print_benchmark.h"
@@ -202,7 +203,6 @@ void TimeoutCoreManager::getNextAssertions(
 
   // include the skolem definitions
   getActiveDefinitions(nextAsserts);
-  
 
   Trace("smt-to-core")
       << "...finished get next assertions, #current assertions = "
@@ -210,8 +210,7 @@ void TimeoutCoreManager::getNextAssertions(
       << ", #asserts and skolem defs=" << nextAsserts.size() << std::endl;
 }
 
-void TimeoutCoreManager::getActiveDefinitions(
-    std::vector<Node>& nextAsserts)
+void TimeoutCoreManager::getActiveDefinitions(std::vector<Node>& nextAsserts)
 {
   if (!d_skolemToAssert.empty())
   {
@@ -228,7 +227,7 @@ void TimeoutCoreManager::getActiveDefinitions(
         nextAsserts.push_back(itk->second);
       }
     }
-  }  
+  }
   // include the definitions
   for (const Node& d : d_defIncluded)
   {
@@ -421,12 +420,12 @@ bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
     Trace("smt-to-core") << std::endl;
     for (const Node& s : syms)
     {
-      if (d_tls.find(s)==d_tls.end())
+      if (d_tls.find(s) == d_tls.end())
       {
         // not a symbol with a definition
         continue;
       }
-      if (d_symDefIncluded.find(s)!=d_symDefIncluded.end())
+      if (d_symDefIncluded.find(s) != d_symDefIncluded.end())
       {
         // definition was already included
         continue;
@@ -435,7 +434,7 @@ bool TimeoutCoreManager::recordCurrentModel(bool& allAssertsSat,
       d_symDefIncluded.insert(s);
       for (const Node& d : defs)
       {
-        if (d_defIncluded.find(d)==d_defIncluded.end())
+        if (d_defIncluded.find(d) == d_defIncluded.end())
         {
           d_defIncluded.insert(d);
           newDef = true;
@@ -534,19 +533,22 @@ bool TimeoutCoreManager::hasCurrentSharedSymbol(size_t i) const
 
 const std::vector<Node>& TimeoutCoreManager::computeDefsFor(const Node& s)
 {
-  std::unordered_map<Node, std::vector<Node>>::iterator it = d_defToAssert.find(s);
-  if (it!=d_defToAssert.end())
+  std::unordered_map<Node, std::vector<Node>>::iterator it =
+      d_defToAssert.find(s);
+  if (it != d_defToAssert.end())
   {
     return it->second;
   }
-  Assert (d_tls.find(s)!=d_tls.end());
+  Assert(d_tls.find(s) != d_tls.end());
   Node eq = s.eqNode(d_tls[s]);
   theory::TrustSubstitutionMap& tls = d_env.getTopLevelSubstitutions();
   std::shared_ptr<ProofNode> pf = tls.getProofFor(eq);
-  Trace("smt-to-core") << "Proof for " << eq << " is "<< *pf.get() << std::endl;
+  Trace("smt-to-core") << "Proof for " << eq << " is " << *pf.get()
+                       << std::endl;
   expr::getFreeAssumptions(pf.get(), d_defToAssert[s]);
-  Trace("smt-to-core") << "Free assumptions are " << d_defToAssert[s] << std::endl;
-  return d_defToAssert[s]; 
+  Trace("smt-to-core") << "Free assumptions are " << d_defToAssert[s]
+                       << std::endl;
+  return d_defToAssert[s];
 }
 
 }  // namespace smt
