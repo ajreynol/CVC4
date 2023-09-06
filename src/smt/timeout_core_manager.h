@@ -79,18 +79,20 @@ class TimeoutCoreManager : protected EnvObj
    * result has the same guarantees as a response to checkSat.
    */
   std::pair<Result, std::vector<Node>> getTimeoutCore(
+      const std::vector<Node>& asserts,
       const std::vector<Node>& ppAsserts,
       const std::map<size_t, Node>& ppSkolemMap);
 
  private:
   /** initialize assertions */
-  void initializePreprocessedAssertions(
+  void initializeAssertions(
+      const std::vector<Node>& asserts,
       const std::vector<Node>& ppAsserts,
       const std::map<size_t, Node>& ppSkolemMap);
   /** get next assertions */
-  void getNextAssertions(std::vector<Node>& nextAssertions);
+  void getNextAssertions(const std::vector<size_t>& nextInclude, std::vector<Node>& nextAssertions);
   /** check sat next */
-  Result checkSatNext(const std::vector<Node>& nextAssertions);
+  Result checkSatNext(const std::vector<Node>& nextAssertions, std::vector<size_t>& nextInclude);
   /**
    * Record current model, return true if we set d_nextIndexToInclude,
    * indicating that we want to include a new assertion
@@ -99,8 +101,10 @@ class TimeoutCoreManager : protected EnvObj
    * @param allAssertsSat set to true if the current model satisfies all
    * assertions.
    */
-  bool recordCurrentModel(bool& allAssertsSat,
+  bool recordCurrentModel(bool& allAssertsSat, std::vector<size_t>& nextInclude,
                           SolverEngine* subSolver = nullptr);
+  /** Include assertion */
+  void includeAssertion(size_t index, bool& removedAssertion);
   /** Does the i^th assertion have a current shared symbol (a free symbol in
    * d_asymbols). */
   bool hasCurrentSharedSymbol(size_t i) const;
@@ -136,8 +140,6 @@ class TimeoutCoreManager : protected EnvObj
    * Mapping from indices in d_modelToAssert to index of the assertion that
    * covers them */
   std::unordered_map<size_t, size_t> d_modelToAssert;
-  /** The next index of an assertion to include */
-  size_t d_nextIndexToInclude;
   /** Information about an assertion. */
   class AssertInfo
   {
@@ -156,6 +158,9 @@ class TimeoutCoreManager : protected EnvObj
   std::unordered_set<Node> d_asymbols;
   /** Free symbols of each assertion */
   std::map<size_t, std::unordered_set<Node>> d_syms;
+  
+  //----------------
+  std::unordered_map<Node, Node> d_tls;
 };
 
 }  // namespace smt

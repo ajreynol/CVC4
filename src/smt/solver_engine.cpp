@@ -803,13 +803,10 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
   d_smtDriver->refreshAssertions();
   TimeoutCoreManager tcm(*d_env.get());
   // get the preprocessed assertions
+  std::vector<Node> asserts = getAssertionsInternal();
   const context::CDList<Node>& assertions =
       d_smtSolver->getPreprocessedAssertions();
-  std::vector<Node> passerts;
-  for (const Node& a : assertions)
-  {
-    passerts.push_back(a);
-  }
+  std::vector<Node> passerts(assertions.begin(), assertions.end());
   const context::CDHashMap<size_t, Node>& ppsm =
       d_smtSolver->getPreprocessedSkolemMap();
   std::map<size_t, Node> ppSkolemMap;
@@ -818,12 +815,20 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
     ppSkolemMap[pk.first] = pk.second;
   }
   std::pair<Result, std::vector<Node>> ret =
-      tcm.getTimeoutCore(passerts, ppSkolemMap);
-  // convert the preprocessed assertions to input assertions
+      tcm.getTimeoutCore(asserts, passerts, ppSkolemMap);
   std::vector<Node> core;
-  if (!ret.second.empty())
+  if (!options().smt.toCoreMinSimplification)
   {
-    core = convertPreprocessedToInput(ret.second, true);
+    // convert the preprocessed assertions to input assertions
+    if (!ret.second.empty())
+    {
+      core = convertPreprocessedToInput(ret.second, true);
+    }
+  }
+  else
+  {
+    // doesn't require conversion
+    core = ret.second;
   }
   endCall();
   return std::pair<Result, std::vector<Node>>(ret.first, core);
