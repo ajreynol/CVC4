@@ -51,6 +51,7 @@ std::pair<Result, std::vector<Node>> TimeoutCoreManager::getTimeoutCore(
     const std::map<size_t, Node>& ppSkolemMap)
 {
   d_ppAsserts.clear();
+  d_ppAssertsOrig.clear();
   d_skolemToAssert.clear();
   d_modelValues.clear();
   d_modelToAssert.clear();
@@ -377,6 +378,7 @@ void TimeoutCoreManager::initializeAssertions(
       Node ar = rewrite(tlsm.apply(a));
       if (ar.isConst() && ar.getConst<bool>())
       {
+        Trace("smt-to-core") << "...skip assertion " << a << std::endl;
         continue;
       }
       ar = rewrite(d_globalDefSubs.apply(a));
@@ -424,6 +426,7 @@ void TimeoutCoreManager::initializeAssertions(
   d_numAssertsNsk = d_ppAsserts.size();
   // now, append the skolem definitions to the end of the assertion list
   d_ppAsserts.insert(d_ppAsserts.end(), skDefs.begin(), skDefs.end());
+  d_ppAssertsOrig.insert(d_ppAssertsOrig.end(), skDefs.begin(), skDefs.end()); 
   Trace("smt-to-core") << "get symbols..." << std::endl;
   for (size_t i = 0, npasserts = d_ppAsserts.size(); i < npasserts; i++)
   {
