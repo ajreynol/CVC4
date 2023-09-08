@@ -23,14 +23,14 @@
 namespace cvc5 {
 
 namespace parser {
-class SymbolManager;
+class SymManager;
 }
 
 class OracleBinaryCaller
 {
  public:
   OracleBinaryCaller(Solver* slv,
-                     parser::SymbolManager* sm,
+                     parser::SymManager* sm,
                      std::string binName)
       : d_slv(slv),
         d_sm(sm),
@@ -47,7 +47,7 @@ class OracleBinaryCaller
   /** pointer to solver */
   Solver* d_slv;
   /** pointer to symbol manager */
-  parser::SymbolManager* d_sm;
+  parser::SymManager* d_sm;
   /** binary name */
   std::string d_binaryName;
   /** name for parse errors */

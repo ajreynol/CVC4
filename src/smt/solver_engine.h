@@ -257,6 +257,15 @@ class CVC5_EXPORT SolverEngine
   std::string getOption(const std::string& key) const;
 
   /**
+   * Notify that a declare-fun or declare-const was made for n. This only
+   * impacts the SMT mode.
+   */
+  void declareConst(const Node& n);
+  /**
+   * Notify that a declare-sort was made for tn. This only impacts the SMT mode.
+   */
+  void declareSort(const TypeNode& tn);
+  /**
    * Define function func in the current context to be:
    *   (lambda (formals) formula)
    * This adds func to the list of defined functions, which indicates that
@@ -737,7 +746,7 @@ class CVC5_EXPORT SolverEngine
    * Only permitted if cvc5 was built with proof support and the proof option
    * is on.
    */
-  std::string getProof(modes::ProofComponent c = modes::PROOF_COMPONENT_FULL);
+  std::string getProof(modes::ProofComponent c = modes::ProofComponent::FULL);
 
   /**
    * Get the current set of assertions.  Only permitted if the

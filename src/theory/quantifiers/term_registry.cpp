@@ -47,6 +47,15 @@ TermRegistry::TermRegistry(Env& env,
       d_ievalMan(new ieval::InstEvaluatorManager(env, qs, *d_termDb.get())),
       d_qmodel(nullptr)
 {
+  if (options().quantifiers.oracles)
+  {
+    d_ochecker.reset(new OracleChecker(env));
+  }
+  if (options().quantifiers.cegqiBv)
+  {
+    // if doing instantiation for BV, need the inverter class
+    d_bvInvert.reset(new BvInverter(options(), env.getRewriter()));
+  }
   if (options().quantifiers.sygus || options().quantifiers.sygusInst)
   {
     // must be constructed here since it is required for datatypes finistInit
@@ -158,6 +167,11 @@ TermDbSygus* TermRegistry::getTermDatabaseSygus() const
   return d_sygusTdb.get();
 }
 
+OracleChecker* TermRegistry::getOracleChecker() const
+{
+  return d_ochecker.get();
+}
+
 EntailmentCheck* TermRegistry::getEntailmentCheck() const
 {
   return d_echeck.get();
@@ -171,6 +185,8 @@ TermEnumeration* TermRegistry::getTermEnumeration() const
 TermPools* TermRegistry::getTermPools() const { return d_termPools.get(); }
 
 VtsTermCache* TermRegistry::getVtsTermCache() const { return d_vtsCache.get(); }
+
+BvInverter* TermRegistry::getBvInverter() const { return d_bvInvert.get(); }
 
 ieval::InstEvaluatorManager* TermRegistry::getInstEvaluatorManager() const
 {

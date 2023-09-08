@@ -84,6 +84,7 @@
 #include "util/resource_manager.h"
 #include "util/sexpr.h"
 #include "util/statistics_registry.h"
+#include "util/string.h"
 
 // required for hacks related to old proofs for unsat cores
 #include "base/configuration.h"
@@ -511,6 +512,13 @@ void SolverEngine::debugCheckFunctionBody(Node formula,
   }
 }
 
+void SolverEngine::declareConst(const Node& c) { d_state->notifyDeclaration(); }
+
+void SolverEngine::declareSort(const TypeNode& tn)
+{
+  d_state->notifyDeclaration();
+}
+
 void SolverEngine::defineFunction(Node func,
                                   const std::vector<Node>& formals,
                                   Node formula,
@@ -812,7 +820,11 @@ std::pair<Result, std::vector<Node>> SolverEngine::getTimeoutCore()
   std::pair<Result, std::vector<Node>> ret =
       tcm.getTimeoutCore(passerts, ppSkolemMap);
   // convert the preprocessed assertions to input assertions
-  std::vector<Node> core = convertPreprocessedToInput(ret.second, true);
+  std::vector<Node> core;
+  if (!ret.second.empty())
+  {
+    core = convertPreprocessedToInput(ret.second, true);
+  }
   endCall();
   return std::pair<Result, std::vector<Node>>(ret.first, core);
 }
@@ -933,8 +945,8 @@ SynthResult SolverEngine::checkSynth(bool isNext)
 
 Node SolverEngine::findSynth(modes::FindSynthTarget fst, const TypeNode& gtn)
 {
-  beginCall();
   Trace("smt") << "SolverEngine::findSynth " << fst << std::endl;
+  beginCall(true);
   // The grammar(s) we will use. This may be more than one if doing rewrite
   // rule synthesis from input or if no grammar is specified, indicating we
   // wish to use grammars for each function-to-synthesize.
@@ -948,7 +960,7 @@ Node SolverEngine::findSynth(modes::FindSynthTarget fst, const TypeNode& gtn)
     gtnu.push_back(ggtn);
   }
   // if synthesizing rewrite rules from input, we infer the grammar here
-  if (fst == modes::FindSynthTarget::FIND_SYNTH_TARGET_REWRITE_INPUT)
+  if (fst == modes::FindSynthTarget::REWRITE_INPUT)
   {
     if (!gtn.isNull())
     {
@@ -991,6 +1003,8 @@ Node SolverEngine::findSynth(modes::FindSynthTarget fst, const TypeNode& gtn)
     d_findSynthSolver.reset(new FindSynthSolver(*d_env.get()));
   }
   Node ret = d_findSynthSolver->findSynth(fst, gtnu);
+  d_state->notifyFindSynth(!ret.isNull());
+  endCall();
   return ret;
 }
 
@@ -1003,7 +1017,9 @@ Node SolverEngine::findSynthNext()
         "Cannot find-synth-next unless immediately preceded by a successful "
         "call to find-synth(-next).");
   }
-  return d_findSynthSolver->findSynthNext();
+  Node ret = d_findSynthSolver->findSynthNext();
+  d_state->notifyFindSynth(!ret.isNull());
+  return ret;
 }
 
 /*
@@ -1052,7 +1068,7 @@ void SolverEngine::declareOracleFun(
   }
   else
   {
-    outputs.push_back(nm->mkBoundVar(tn.getRangeType()));
+    outputs.push_back(nm->mkBoundVar(tn));
     app = var;
   }
   // makes equality assumption
@@ -1636,9 +1652,10 @@ std::string SolverEngine::getProof(modes::ProofComponent c)
   {
     throw ModalException("Cannot get a proof when proof option is off.");
   }
-  // The component modes::PROOF_COMPONENT_PREPROCESS returns the proof of
-  // all preprocessed assertions. It does not require being in an unsat state.
-  if (c != modes::PROOF_COMPONENT_RAW_PREPROCESS
+  // The component modes::ProofComponent::PREPROCESS returns
+  // the proof of all preprocessed assertions. It does not require being in an
+  // unsat state.
+  if (c != modes::ProofComponent::RAW_PREPROCESS
       && d_state->getMode() != SmtMode::UNSAT)
   {
     throw RecoverableModalException(
@@ -1653,7 +1670,7 @@ std::string SolverEngine::getProof(modes::ProofComponent c)
   bool connectMkOuterScope = false;
   bool commentProves = true;
   options::ProofFormatMode mode = options::ProofFormatMode::NONE;
-  if (c == modes::PROOF_COMPONENT_RAW_PREPROCESS)
+  if (c == modes::ProofComponent::RAW_PREPROCESS)
   {
     // use all preprocessed assertions
     const context::CDList<Node>& assertions =
@@ -1667,20 +1684,20 @@ std::string SolverEngine::getProof(modes::ProofComponent c)
       ps.push_back(pnm->mkAssume(a));
     }
   }
-  else if (c == modes::PROOF_COMPONENT_SAT)
+  else if (c == modes::ProofComponent::SAT)
   {
     ps.push_back(pe->getProof(false));
     // don't need to comment that it proves false
     commentProves = false;
   }
-  else if (c == modes::PROOF_COMPONENT_THEORY_LEMMAS
-           || c == modes::PROOF_COMPONENT_PREPROCESS)
+  else if (c == modes::ProofComponent::THEORY_LEMMAS
+           || c == modes::ProofComponent::PREPROCESS)
   {
     ps = pe->getProofLeaves(c);
     // connect to preprocess proofs for preprocess mode
-    connectToPreprocess = (c == modes::PROOF_COMPONENT_PREPROCESS);
+    connectToPreprocess = (c == modes::ProofComponent::PREPROCESS);
   }
-  else if (c == modes::PROOF_COMPONENT_FULL)
+  else if (c == modes::ProofComponent::FULL)
   {
     ps.push_back(pe->getProof(true));
     connectToPreprocess = true;

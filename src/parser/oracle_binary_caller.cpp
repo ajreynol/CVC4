@@ -13,13 +13,12 @@
  * Oracle caller
  */
 
-#include "parser/api/cpp/oracle_binary_caller.h"
+#include "parser/oracle_binary_caller.h"
 
 #include <sstream>
 
 #include "base/output.h"
-#include "parser/api/cpp/command.h"
-#include "parser/api/cpp/input_parser.h"
+#include <cvc5/cvc5_parser.h>
 #include "util/run.h"
 
 namespace cvc5 {
@@ -52,11 +51,11 @@ std::vector<Term> OracleBinaryCaller::runOracle(const std::vector<Term>& input)
   std::istringstream oracle_response_istream(stdout_stream.str());
 
   // initialize a new parser for the given solver and symbol manager
-  parser::InputParser iparser(d_slv, d_sm);
+  //FIXME: carry symbol table
+  parser::InputParser iparser(d_slv);
   iparser.setStreamInput(d_slv->getOption("input-language"),
                          oracle_response_istream,
                          d_parseStreamName);
-  iparser.setLogic(d_sm->getLogic());
   // currently assumes a single output
   std::vector<Term> output;
   Term t = iparser.nextExpression();
