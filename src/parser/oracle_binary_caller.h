@@ -29,9 +29,7 @@ class SymManager;
 class OracleBinaryCaller
 {
  public:
-  OracleBinaryCaller(Solver* slv,
-                     parser::SymManager* sm,
-                     std::string binName)
+  OracleBinaryCaller(Solver* slv, parser::SymManager* sm, std::string binName)
       : d_slv(slv),
         d_sm(sm),
         d_binaryName(binName),

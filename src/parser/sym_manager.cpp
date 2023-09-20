@@ -291,7 +291,7 @@ const std::string& SymManager::Implementation::getLastSynthName() const
 }
 
 OracleBinaryCaller& SymManager::Implementation::getOracleBinaryCaller(
-    Solver* slv, SymManager * sm, const std::string& name)
+    Solver* slv, SymManager* sm, const std::string& name)
 {
   std::map<std::string, std::unique_ptr<OracleBinaryCaller>>::iterator it =
       d_oracleBinCalls.find(name);
@@ -533,8 +533,7 @@ const std::string& SymManager::getLastSynthName() const
   return d_implementation->getLastSynthName();
 }
 
-OracleBinaryCaller& SymManager::getOracleBinaryCaller(
-    const std::string& name)
+OracleBinaryCaller& SymManager::getOracleBinaryCaller(const std::string& name)
 {
   return d_implementation->getOracleBinaryCaller(d_solver, this, name);
 }

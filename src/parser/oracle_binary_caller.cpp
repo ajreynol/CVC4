@@ -15,10 +15,11 @@
 
 #include "parser/oracle_binary_caller.h"
 
+#include <cvc5/cvc5_parser.h>
+
 #include <sstream>
 
 #include "base/output.h"
-#include <cvc5/cvc5_parser.h>
 #include "util/run.h"
 
 namespace cvc5 {
