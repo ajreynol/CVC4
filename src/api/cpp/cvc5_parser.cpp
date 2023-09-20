@@ -33,14 +33,19 @@ namespace parser {
 /* SymbolManager                                                              */
 /* -------------------------------------------------------------------------- */
 
-SymbolManager::SymbolManager(cvc5::Solver* s) { d_sm.reset(new SymManager(s)); }
+SymbolManager::SymbolManager(cvc5::Solver* s) { 
+  d_allocSm.reset(new SymManager(s)); 
+  d_sm = d_allocSm.get();
+}
 
+SymbolManager::SymbolManager(cvc5::Solver* s, SymManager* sm) : d_sm(sm) {}
+  
 SymbolManager::~SymbolManager() {}
 
 bool SymbolManager::isLogicSet() const { return d_sm->isLogicSet(); }
 const std::string& SymbolManager::getLogic() const { return d_sm->getLogic(); }
 
-SymManager* SymbolManager::toSymManager() { return d_sm.get(); }
+SymManager* SymbolManager::toSymManager() { return d_sm; }
 
 /* -------------------------------------------------------------------------- */
 /* Command                                                                    */

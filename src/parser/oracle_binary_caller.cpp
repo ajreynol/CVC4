@@ -51,8 +51,8 @@ std::vector<Term> OracleBinaryCaller::runOracle(const std::vector<Term>& input)
   std::istringstream oracle_response_istream(stdout_stream.str());
 
   // initialize a new parser for the given solver and symbol manager
-  //FIXME: carry symbol table
-  parser::InputParser iparser(d_slv);
+  parser::SymbolManager sm(d_slv, d_sm);
+  parser::InputParser iparser(d_slv, &sm);
   iparser.setStreamInput(d_slv->getOption("input-language"),
                          oracle_response_istream,
                          d_parseStreamName);

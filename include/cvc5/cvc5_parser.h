@@ -80,10 +80,13 @@ class CVC5_EXPORT SymbolManager
   const std::string& getLogic() const;
 
  private:
+  SymbolManager(cvc5::Solver* s, SymManager* sm);
   /** Get the underlying implementation */
   SymManager* toSymManager();
   /** The implementation of the symbol manager */
-  std::shared_ptr<SymManager> d_sm;
+  std::unique_ptr<SymManager> d_allocSm;
+  /** The symbol manager we are using */
+  SymManager* d_sm;
 };
 
 /**
