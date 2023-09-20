@@ -13,12 +13,11 @@
  * Lemma loader for cvc5.
  */
 
+#include <cvc5/cvc5_parser.h>
 #include "main/lemma_loader.h"
 
 #include "base/check.h"
 #include "base/output.h"
-#include "parser/api/cpp/input_parser.h"
-#include "parser/api/cpp/symbol_manager.h"
 #include "parser/sym_manager.h"
 
 namespace cvc5 {

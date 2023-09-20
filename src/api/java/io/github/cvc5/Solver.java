@@ -1628,6 +1628,34 @@ public class Solver implements IPointer
   private native long declareSort(long pointer, String symbol, int arity);
 
   /**
+   * Declare uninterpreted sort.
+   *
+   * SMT-LIB:
+   * {@code
+   *   ( declare-sort <symbol> <numeral> )
+   * }
+   *
+   * @api.note This corresponds to mkUninterpretedSort() const if arity = 0, and
+   *           to mkUninterpretedSortConstructorSort() const if arity &gt; 0.
+   *
+   * @param symbol The name of the sort.
+   * @param arity The arity of the sort.
+   * @param fresh If true, then this method always returns a new Sort.
+   * Otherwise, this method will always return the same Sort
+   * for each call with the given arity and symbol where fresh is false.
+   * @return The sort.
+   * @throws CVC5ApiException
+   */
+  public Sort declareSort(String symbol, int arity, boolean fresh) throws CVC5ApiException
+  {
+    Utils.validateUnsigned(arity, "arity");
+    long sortPointer = declareSort(pointer, symbol, arity, fresh);
+    return new Sort(sortPointer);
+  }
+
+  private native long declareSort(long pointer, String symbol, int arity, boolean fresh);
+
+  /**
    * Define n-ary function in the current context.
    *
    * SMT-LIB:
@@ -2718,6 +2746,32 @@ public class Solver implements IPointer
   }
 
   private native void setLogic(long pointer, String logic) throws CVC5ApiException;
+
+  /**
+   * Is logic set? Returns whether we called setLogic yet for this solver.
+   *
+   * @return whether we called setLogic yet for this solver.
+   */
+  public boolean isLogicSet()
+  {
+    return isLogicSet(pointer);
+  }
+
+  private native boolean isLogicSet(long pointer);
+
+  /**
+   * Get the logic set the solver.
+   *
+   * @api.note Asserts isLogicSet().
+   *
+   * @return The logic used by the solver.
+   */
+  public String getLogic() throws CVC5ApiException
+  {
+    return getLogic(pointer);
+  }
+
+  private native String getLogic(long pointer) throws CVC5ApiException;
 
   /**
    * Set option.

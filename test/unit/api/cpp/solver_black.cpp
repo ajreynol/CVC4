@@ -1174,6 +1174,20 @@ TEST_F(TestApiBlackSolver, declareSort)
   ASSERT_NO_THROW(d_solver.declareSort("", 2));
 }
 
+TEST_F(TestApiBlackSolver, declareSortFresh)
+{
+  Sort t1 = d_solver.declareSort(std::string("b"), 0, true);
+  Sort t2 = d_solver.declareSort(std::string("b"), 0, false);
+  Sort t3 = d_solver.declareSort(std::string("b"), 0, false);
+  ASSERT_FALSE(t1 == t2);
+  ASSERT_FALSE(t1 == t3);
+  ASSERT_TRUE(t2 == t3);
+  Sort t4 = d_solver.declareSort(std::string("c"), 0, false);
+  ASSERT_FALSE(t2 == t4);
+  Sort t5 = d_solver.declareSort(std::string("b"), 1, false);
+  ASSERT_FALSE(t2 == t5);
+}
+
 TEST_F(TestApiBlackSolver, defineSort)
 {
   Sort sortVar0 = d_solver.mkParamSort("T0");
@@ -2707,6 +2721,20 @@ TEST_F(TestApiBlackSolver, setLogic)
   ASSERT_THROW(d_solver.setLogic("AF_BV"), CVC5ApiException);
   d_solver.assertFormula(d_solver.mkTrue());
   ASSERT_THROW(d_solver.setLogic("AUFLIRA"), CVC5ApiException);
+}
+
+TEST_F(TestApiBlackSolver, isLogicSet)
+{
+  ASSERT_FALSE(d_solver.isLogicSet());
+  ASSERT_NO_THROW(d_solver.setLogic("QF_BV"));
+  ASSERT_TRUE(d_solver.isLogicSet());
+}
+
+TEST_F(TestApiBlackSolver, getLogic)
+{
+  ASSERT_THROW(d_solver.getLogic(), CVC5ApiException);
+  ASSERT_NO_THROW(d_solver.setLogic("QF_BV"));
+  ASSERT_EQ(d_solver.getLogic(), "QF_BV");
 }
 
 TEST_F(TestApiBlackSolver, setOption)
