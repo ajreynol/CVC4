@@ -335,6 +335,7 @@ SymManager::SymManager(cvc5::Solver* s)
       d_globalDeclarations(false),
       d_freshDeclarations(true),
       d_logicIsForced(false),
+      d_logicIsSet(false),
       d_logic()
 {
 }
@@ -557,8 +558,11 @@ void SymManager::setLogic(const std::string& logic, bool isForced)
     d_logicIsForced = isForced;
     d_logic = logic;
   }
+  d_logicIsSet = true;
 }
 bool SymManager::isLogicForced() const { return d_logicIsForced; }
+
+bool SymManager::isLogicSet() const { return d_logicIsSet; }
 
 const std::string& SymManager::getLogic() const { return d_logic; }
 
