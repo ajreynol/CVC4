@@ -94,7 +94,7 @@ bool InstStrategyPool::checkCompleteFor(Node q)
     return false;
   }
   // otherwise, any quantified formula with a user pool is marked as complete
-  return d_userPools.find(q)!=d_userPools.end();
+  return d_userPools.find(q) != d_userPools.end();
 }
 
 bool InstStrategyPool::hasProductSemantics(Node q, Node p)
