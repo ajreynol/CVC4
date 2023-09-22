@@ -1,4 +1,4 @@
-; COMMAND-LINE: --pool-inst-trust
+; COMMAND-LINE: --pool-inst-trust -q
 ; EXPECT: sat
 (set-logic ALL)
 (declare-fun f (Int) Int)
