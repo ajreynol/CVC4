@@ -591,6 +591,14 @@ name   = "Quantifiers"
   help       = "pool-based instantiation: instantiate with ground terms occurring in user-specified pools"
 
 [[option]]
+  name       = "poolInstTrust"
+  category   = "expert"
+  long       = "pool-inst-trust"
+  type       = "bool"
+  default    = "false"
+  help       = "trust that provided pools are complete for the quantified formulas they annotate"
+
+[[option]]
   name       = "userPoolQuant"
   category   = "expert"
   long       = "user-pool=MODE"

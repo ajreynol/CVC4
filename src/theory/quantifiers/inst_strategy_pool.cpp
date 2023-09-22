@@ -87,6 +87,16 @@ void InstStrategyPool::checkOwnership(Node q)
   }
 }
 
+bool InstStrategyPool::checkCompleteFor(Node q)
+{
+  if (!options().quantifiers.poolInstTrust)
+  {
+    return false;
+  }
+  // otherwise, any quantified formula with a user pool is marked as complete
+  return d_userPools.find(q)!=d_userPools.end();
+}
+
 bool InstStrategyPool::hasProductSemantics(Node q, Node p)
 {
   Assert(q.getKind() == EXISTS || q.getKind() == FORALL);
