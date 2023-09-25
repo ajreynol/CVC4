@@ -106,6 +106,7 @@ class Assertions : protected EnvObj
    * definitions if using --eager-elim-defs.
    */
   const theory::SubstitutionMap& getEagerElimDefsSubstitution() const;
+
  private:
   /**
    * Fully type-check the argument, and also type-check that it's

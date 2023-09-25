@@ -20,19 +20,20 @@ namespace cvc5::internal {
 /** convert node n as described above during post-order traversal */
 Node BetaReduceNodeConverter::postConvert(Node n)
 {
-  if (n.getKind()==kind::APPLY_UF && n.getOperator().getKind()==kind::LAMBDA)
+  if (n.getKind() == kind::APPLY_UF
+      && n.getOperator().getKind() == kind::LAMBDA)
   {
     Node lam = n.getOperator();
     std::vector<Node> vars(lam[0].begin(), lam[0].end());
     std::vector<Node> subs(n.begin(), n.end());
     // only reduce if arity is correct
-    if (vars.size()==subs.size())
+    if (vars.size() == subs.size())
     {
-      return lam[1].substitute(vars.begin(), vars.end(), subs.begin(), subs.end());
+      return lam[1].substitute(
+          vars.begin(), vars.end(), subs.begin(), subs.end());
     }
   }
   return n;
 }
 
 }  // namespace cvc5::internal
-

@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include "base/modal_exception.h"
+#include "expr/beta_reduce_converter.h"
 #include "expr/node_algorithm.h"
 #include "options/base_options.h"
 #include "options/expr_options.h"
@@ -26,7 +27,6 @@
 #include "smt/env.h"
 #include "theory/trust_substitutions.h"
 #include "util/result.h"
-#include "expr/beta_reduce_converter.h"
 
 using namespace cvc5::internal::theory;
 using namespace cvc5::internal::kind;
@@ -112,7 +112,7 @@ void Assertions::addFormula(TNode n,
   {
     // must apply the definition substitution first
     ns = d_definitionSubs.apply(n);
-    if (ns!=n)
+    if (ns != n)
     {
       // do beta-reductions
       BetaReduceNodeConverter brnc;
@@ -140,8 +140,8 @@ void Assertions::addFormula(TNode n,
     // true, nothing to do
     return;
   }
-  Trace("smt") << "Assertions::addFormula(" << ns
-               << ", isFunDef = " << isFunDef << std::endl;
+  Trace("smt") << "Assertions::addFormula(" << ns << ", isFunDef = " << isFunDef
+               << std::endl;
   if (isFunDef)
   {
     // if a non-recursive define-fun, just add as a top-level substitution
