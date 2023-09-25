@@ -245,13 +245,10 @@ SynthResult SygusSolver::checkSynth(bool isNext)
     {
       // we generate a new solver engine to do the SyGuS query
       Assertions& as = d_smtSolver.getAssertions();
-      initializeSygusSubsolver(d_subsolver, as);
+      initializeSygusSubsolver(d_conj, d_subsolver, as);
 
       // store the pointer (context-dependent)
       d_subsolverCd = d_subsolver.get();
-
-      // also assert the internal SyGuS conjecture
-      d_subsolver->assertFormula(d_conj);
     }
   }
   else
@@ -407,10 +404,6 @@ void SygusSolver::checkSynthSolution(Assertions& as,
   for (const Node& conj : conjs)
   {
     // Start new SMT engine to check solutions
-    std::unique_ptr<SolverEngine> solChecker;
-    initializeSygusSubsolver(solChecker, as);
-    solChecker->getOptions().writeSmt().checkSynthSol = false;
-    solChecker->getOptions().writeQuantifiers().sygusRecFun = false;
     Assert(conj.getKind() == FORALL);
     Node conjBody = conj[1];
     // we must apply substitutions here, since define-fun may contain the
@@ -427,7 +420,10 @@ void SygusSolver::checkSynthSolution(Assertions& as,
     }
     Trace("check-synth-sol")
         << "Substituted body of assertion to " << conjBody << "\n";
-    solChecker->assertFormula(conjBody);
+    std::unique_ptr<SolverEngine> solChecker;
+    initializeSygusSubsolver(conjBody, solChecker, as);
+    solChecker->getOptions().writeSmt().checkSynthSol = false;
+    solChecker->getOptions().writeQuantifiers().sygusRecFun = false;
     Result r = solChecker->checkSat();
     if (isVerboseOn(1))
     {
@@ -462,34 +458,45 @@ void SygusSolver::checkSynthSolution(Assertions& as,
   }
 }
 
-void SygusSolver::initializeSygusSubsolver(std::unique_ptr<SolverEngine>& se,
+void SygusSolver::initializeSygusSubsolver(const Node& conj,
+                                           std::unique_ptr<SolverEngine>& se,
                                            Assertions& as)
 {
   initializeSubsolver(se, d_env);
   std::unordered_set<Node> processed;
-  // if we did not spawn a subsolver for the main check, the overall SyGuS
-  // conjecture has been added as an assertion. Do not add it here, which
-  // is important for check-synth-sol. Adding this also has no impact
-  // when spawning a subsolver for the main check.
-  processed.insert(d_conj);
-  // carry the ordinary define-fun definitions
-  const context::CDList<Node>& alistDefs = as.getAssertionListDefinitions();
-  for (const Node& def : alistDefs)
+  if (options().smt.eagerElimDefs)
   {
-    // only consider define-fun, represented as (= f (lambda ...)).
-    if (def.getKind() == EQUAL)
+    // if we are eagerly eliminating definitions, apply it to the conjecture.
+    const theory::SubstitutionMap& sm = as.getEagerElimDefsSubstitution();
+    Node conjs = sm.apply(conj);
+    se->assertFormula(conjs);
+  }
+  else
+  {
+    // if we did not spawn a subsolver for the main check, the overall SyGuS
+    // conjecture has been added as an assertion. Do not add it here, which
+    // is important for check-synth-sol. Adding this also has no impact
+    // when spawning a subsolver for the main check.
+    // carry the ordinary define-fun definitions
+    const context::CDList<Node>& alistDefs = as.getAssertionListDefinitions();
+    for (const Node& def : alistDefs)
     {
-      Assert(def[0].isVar());
-      std::vector<Node> formals;
-      Node dbody = def[1];
-      if (def[1].getKind() == LAMBDA)
+      // only consider define-fun, represented as (= f (lambda ...)).
+      if (def.getKind() == EQUAL)
       {
-        formals.insert(formals.end(), def[1][0].begin(), def[1][0].end());
-        dbody = dbody[1];
+        Assert(def[0].isVar());
+        std::vector<Node> formals;
+        Node dbody = def[1];
+        if (def[1].getKind() == LAMBDA)
+        {
+          formals.insert(formals.end(), def[1][0].begin(), def[1][0].end());
+          dbody = dbody[1];
+        }
+        se->defineFunction(def[0], formals, dbody);
+        processed.insert(def);
       }
-      se->defineFunction(def[0], formals, dbody);
-      processed.insert(def);
     }
+    se->assertFormula(conj);
   }
   // Also assert auxiliary assertions, which typically correspond to
   // quantified formulas for define-fun-rec only.

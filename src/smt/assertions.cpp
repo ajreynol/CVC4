@@ -215,5 +215,10 @@ void Assertions::ensureBoolean(const Node& n)
   }
 }
 
+const theory::SubstitutionMap& Assertions::getEagerElimDefsSubstitution() const
+{
+  return d_definitionSubs;
+}
+
 }  // namespace smt
 }  // namespace cvc5::internal

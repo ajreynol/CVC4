@@ -101,6 +101,11 @@ class Assertions : protected EnvObj
    * on initializeCheckSat.
    */
   std::vector<Node>& getAssumptions();
+  /**
+   * Get the substitutions that were eagerly eliminated when asserting
+   * definitions if using --eager-elim-defs.
+   */
+  const theory::SubstitutionMap& getEagerElimDefsSubstitution() const;
  private:
   /**
    * Fully type-check the argument, and also type-check that it's
