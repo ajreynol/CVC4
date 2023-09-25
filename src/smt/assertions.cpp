@@ -95,6 +95,8 @@ const context::CDList<Node>& Assertions::getAssertionListDefinitions() const
 std::unordered_set<Node> Assertions::getCurrentAssertionListDefinitions() const
 {
   std::unordered_set<Node> defSet;
+  // if eagerly eliminating definitions, construct the definitions from the
+  // substitutions.
   if (options().smt.eagerElimDefs)
   {
     std::unordered_map<Node, Node> ssm = d_definitionSubs.getSubstitutions();
@@ -129,6 +131,7 @@ void Assertions::addFormula(TNode n,
     }
     if (isFunDef && ns.getKind() == EQUAL && ns[0].isVar())
     {
+      Trace("smt") << "Add substitution " << ns[0] << " -> " << ns[1] << std::endl;
       // add the definition substitution
       d_definitionSubs.addSubstitution(ns[0], ns[1]);
       // also add to top-level substitutions as a trusted rule
@@ -136,7 +139,6 @@ void Assertions::addFormula(TNode n,
           ns[0], ns[1], PfRule::PREPROCESS_LEMMA, {}, {ns});
       return;
     }
-    isFunDef = false;
   }
   // add to assertion list
   d_assertionList.push_back(ns);
