@@ -24,6 +24,7 @@
 #include "context/cdo.h"
 #include "expr/node.h"
 #include "smt/env_obj.h"
+#include "theory/substitutions.h"
 
 namespace cvc5::internal {
 namespace smt {
@@ -141,6 +142,8 @@ class Assertions : protected EnvObj
    * The list of assumptions from the previous call to checkSatisfiability.
    */
   std::vector<Node> d_assumptions;
+  /** The defition substitutions, if using --eager-elim-defs */
+  theory::SubstitutionMap d_definitionSubs;
 };
 
 }  // namespace smt
