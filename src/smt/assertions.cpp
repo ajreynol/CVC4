@@ -92,9 +92,18 @@ const context::CDList<Node>& Assertions::getAssertionListDefinitions() const
   return d_assertionListDefs;
 }
 
-std::unordered_set<Node> Assertions::getCurrentAssertionListDefitions() const
+std::unordered_set<Node> Assertions::getCurrentAssertionListDefinitions() const
 {
   std::unordered_set<Node> defSet;
+  if (options().smt.eagerElimDefs)
+  {
+    std::unordered_map<Node, Node> ssm = d_definitionSubs.getSubstitutions();
+    for (const std::pair<const Node, Node>& s : ssm)
+    {
+      defSet.insert(s.first.eqNode(s.second));
+    }
+    return defSet;
+  }
   for (const Node& a : d_assertionListDefs)
   {
     defSet.insert(a);
@@ -213,11 +222,6 @@ void Assertions::ensureBoolean(const Node& n)
        << "Its type      : " << type;
     throw TypeCheckingExceptionPrivate(n, ss.str());
   }
-}
-
-const theory::SubstitutionMap& Assertions::getEagerElimDefsSubstitution() const
-{
-  return d_definitionSubs;
 }
 
 }  // namespace smt

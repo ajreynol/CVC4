@@ -92,20 +92,20 @@ class Assertions : protected EnvObj
   /**
    * Get assertions list corresponding to the original list of assertions
    * that correspond to definitions (define-fun or define-fun-rec).
+   * 
+   * Note that this set is empty if --eager-elim-defs is true.
    */
   const context::CDList<Node>& getAssertionListDefinitions() const;
-  /** Get the set corresponding to the above */
-  std::unordered_set<Node> getCurrentAssertionListDefitions() const;
+  /**
+   * Get the set corresponding to the above, which additional contains
+   * eagerly eliminated definitions if --eager-elim-defs is true.
+   */
+  std::unordered_set<Node> getCurrentAssertionListDefinitions() const;
   /**
    * Get the list of assumptions, which are those registered to this class
    * on initializeCheckSat.
    */
   std::vector<Node>& getAssumptions();
-  /**
-   * Get the substitutions that were eagerly eliminated when asserting
-   * definitions if using --eager-elim-defs.
-   */
-  const theory::SubstitutionMap& getEagerElimDefsSubstitution() const;
 
  private:
   /**

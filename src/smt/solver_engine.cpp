@@ -1538,8 +1538,8 @@ void SolverEngine::checkUnsatCore()
   d_env->verbose(1) << "SolverEngine::checkUnsatCore(): pushing core assertions"
                     << std::endl;
   // set up the subsolver
-  std::unordered_set<Node> adefs =
-      d_smtSolver->getAssertions().getCurrentAssertionListDefitions();
+  Assertions& as = d_smtSolver->getAssertions();
+  std::unordered_set<Node> adefs = as.getCurrentAssertionListDefinitions();
   std::unordered_set<Node> removed;
   assertToSubsolver(*coreChecker.get(), core.getCore(), adefs, removed);
   Result r;

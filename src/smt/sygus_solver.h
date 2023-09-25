@@ -214,8 +214,7 @@ class SygusSolver : protected EnvObj
    * This constructs a subsolver se, and makes calls to add all define-fun
    * and auxilary assertions.
    */
-  void initializeSygusSubsolver(const Node& conj,
-                                std::unique_ptr<SolverEngine>& se,
+  void initializeSygusSubsolver(std::unique_ptr<SolverEngine>& se,
                                 Assertions& as);
   /** Are we using a subsolver for the SyGuS query? */
   bool usingSygusSubsolver() const;
