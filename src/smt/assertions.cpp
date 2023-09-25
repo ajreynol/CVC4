@@ -139,6 +139,7 @@ void Assertions::addFormula(TNode n,
           ns[0], ns[1], PfRule::PREPROCESS_LEMMA, {}, {ns});
       return;
     }
+    isFunDef = false;
   }
   // add to assertion list
   d_assertionList.push_back(ns);
