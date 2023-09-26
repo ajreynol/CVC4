@@ -41,12 +41,13 @@ void PluginModule::check(Theory::Effort e)
     // substitutions.
     Node slem = d_env.getTopLevelSubstitutions().apply(lem);
     // send the lemma
-    d_out.lemma(slem);
+    d_out.lemma(slem, InferenceId::PLUGIN_LEMMA);
   }
 }
 
 void PluginModule::notifyLemma(TNode n,
-                               theory::LemmaProperty p,
+                               InferenceId id,
+                               LemmaProperty p,
                                const std::vector<Node>& skAsserts,
                                const std::vector<Node>& sks)
 {
