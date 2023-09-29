@@ -103,7 +103,12 @@ inline std::ostream& operator<<(std::ostream& out, OutputChannelCallType type)
 class DummyOutputChannel : public theory::OutputChannel
 {
  public:
-  DummyOutputChannel() {}
+  DummyOutputChannel(StatisticsRegistry& sr,
+                     TheoryEngine* engine,
+                     const std::string& name)
+      : theory::OutputChannel(sr, engine, name)
+  {
+  }
   ~DummyOutputChannel() override {}
 
   void safePoint(Resource r) override {}
