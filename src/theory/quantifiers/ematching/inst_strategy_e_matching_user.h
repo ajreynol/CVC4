@@ -51,7 +51,10 @@ class InstStrategyUserPatterns : public InstStrategy
   /** reset instantiation round for the given effort */
   void processResetInstantiationRound(Theory::Effort effort) override;
   /** Process quantified formula q at the given effort */
-  InstStrategyStatus process(Node f, Theory::Effort effort, int e, ieval::TermEvaluatorMode tev) override;
+  InstStrategyStatus process(Node f,
+                             Theory::Effort effort,
+                             int e,
+                             ieval::TermEvaluatorMode tev) override;
   /** explicitly provided patterns */
   std::map<Node, std::vector<inst::Trigger*> > d_user_gen;
   /** waiting to be generated patterns */

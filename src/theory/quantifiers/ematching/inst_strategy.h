@@ -23,8 +23,8 @@
 #include "expr/node.h"
 #include "options/quantifiers_options.h"
 #include "smt/env_obj.h"
-#include "theory/theory.h"
 #include "theory/quantifiers/ieval/term_evaluator.h"
+#include "theory/theory.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -66,7 +66,10 @@ class InstStrategy : protected EnvObj
   /** reset instantiation */
   virtual void processResetInstantiationRound(Theory::Effort effort) = 0;
   /** process method, returns a status */
-  virtual InstStrategyStatus process(Node f, Theory::Effort effort, int e, ieval::TermEvaluatorMode tev) = 0;
+  virtual InstStrategyStatus process(Node f,
+                                     Theory::Effort effort,
+                                     int e,
+                                     ieval::TermEvaluatorMode tev) = 0;
   /** identify */
   virtual std::string identify() const;
 

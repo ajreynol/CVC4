@@ -77,7 +77,9 @@ void InstantiationEngine::presolve() {
   }
 }
 
-void InstantiationEngine::doInstantiationRound( Theory::Effort effort, ieval::TermEvaluatorMode tev ){
+void InstantiationEngine::doInstantiationRound(Theory::Effort effort,
+                                               ieval::TermEvaluatorMode tev)
+{
   size_t lastWaiting = d_qim.numPendingLemmas();
   //iterate over an internal effort level e
   int e = 0;
@@ -172,23 +174,26 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
   {
     size_t lastWaiting = d_qim.numPendingLemmas();
     size_t starti = options().quantifiers.ematchingStratifyIEval ? 0 : 2;
-    for (size_t i=starti; i<3; i++)
+    for (size_t i = starti; i < 3; i++)
     {
-      ieval::TermEvaluatorMode tev = (i==0 ? ieval::TermEvaluatorMode::CONFLICT : (i==1 ? ieval::TermEvaluatorMode::PROP : ieval::TermEvaluatorMode::NO_ENTAIL));
+      ieval::TermEvaluatorMode tev =
+          (i == 0 ? ieval::TermEvaluatorMode::CONFLICT
+                  : (i == 1 ? ieval::TermEvaluatorMode::PROP
+                            : ieval::TermEvaluatorMode::NO_ENTAIL));
       doInstantiationRound(e, tev);
       if (d_qstate.isInConflict())
       {
         Assert(d_qim.numPendingLemmas() > lastWaiting);
         Trace("inst-engine") << "Conflict, added lemmas = "
-                            << (d_qim.numPendingLemmas() - lastWaiting)
-                            << ", from ieval effort " << i << std::endl;
+                             << (d_qim.numPendingLemmas() - lastWaiting)
+                             << ", from ieval effort " << i << std::endl;
         break;
       }
       else if (d_qim.hasPendingLemma())
       {
-        Trace("inst-engine") << "Added lemmas = "
-                            << (d_qim.numPendingLemmas() - lastWaiting)
-                            << ", from ieval effort " << i << std::endl;
+        Trace("inst-engine")
+            << "Added lemmas = " << (d_qim.numPendingLemmas() - lastWaiting)
+            << ", from ieval effort " << i << std::endl;
         break;
       }
     }

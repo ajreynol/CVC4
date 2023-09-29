@@ -67,7 +67,10 @@ class InstStrategyAutoGenTriggers : public InstStrategy
   /** process functions */
   void processResetInstantiationRound(Theory::Effort effort) override;
   /** Process */
-  InstStrategyStatus process(Node q, Theory::Effort effort, int e, ieval::TermEvaluatorMode tev) override;
+  InstStrategyStatus process(Node q,
+                             Theory::Effort effort,
+                             int e,
+                             ieval::TermEvaluatorMode tev) override;
   /**
    * Generate triggers for quantified formula q.
    */

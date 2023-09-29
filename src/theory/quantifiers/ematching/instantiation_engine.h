@@ -55,7 +55,8 @@ class InstantiationEngine : public QuantifiersModule {
 
  private:
   /** do instantiation round */
-  void doInstantiationRound(Theory::Effort effort, ieval::TermEvaluatorMode tev);
+  void doInstantiationRound(Theory::Effort effort,
+                            ieval::TermEvaluatorMode tev);
   /** Return true if this module should process quantified formula q */
   bool shouldProcess(Node q);
   /** instantiation strategies */

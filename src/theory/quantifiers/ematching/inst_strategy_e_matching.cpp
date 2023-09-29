@@ -109,9 +109,8 @@ void InstStrategyAutoGenTriggers::processResetInstantiationRound( Theory::Effort
   Trace("inst-alg-debug") << "done reset auto-gen triggers" << std::endl;
 }
 
-InstStrategyStatus InstStrategyAutoGenTriggers::process(Node f,
-                                                        Theory::Effort effort,
-                                                        int e, ieval::TermEvaluatorMode tev)
+InstStrategyStatus InstStrategyAutoGenTriggers::process(
+    Node f, Theory::Effort effort, int e, ieval::TermEvaluatorMode tev)
 {
   options::UserPatMode upMode = getInstUserPatMode();
   // we don't auto-generate triggers if the mode is trust or strict
