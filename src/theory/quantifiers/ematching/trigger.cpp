@@ -130,6 +130,11 @@ Trigger::~Trigger() {
   delete d_mg;
 }
 
+void Trigger::setEvaluatorMode(ieval::TermEvaluatorMode tev)
+{
+  d_instMatch.setEvaluatorMode(tev);
+}
+
 void Trigger::resetInstantiationRound() { d_mg->resetInstantiationRound(); }
 
 void Trigger::reset(Node eqc) { d_mg->reset(eqc); }

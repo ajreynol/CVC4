@@ -61,7 +61,7 @@ void InstStrategyUserPatterns::processResetInstantiationRound(
 
 InstStrategyStatus InstStrategyUserPatterns::process(Node q,
                                                      Theory::Effort effort,
-                                                     int e)
+                                                     int e, ieval::TermEvaluatorMode tev)
 {
   if (e == 0)
   {
@@ -105,6 +105,7 @@ InstStrategyStatus InstStrategyUserPatterns::process(Node q,
       t->debugPrint("process-trigger");
       Trace("process-trigger") << "..." << std::endl;
     }
+    t->setEvaluatorMode(tev);
     unsigned numInst = t->addInstantiations();
     Trace("process-trigger")
         << "  Done, numInst = " << numInst << "." << std::endl;

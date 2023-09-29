@@ -111,7 +111,7 @@ void InstStrategyAutoGenTriggers::processResetInstantiationRound( Theory::Effort
 
 InstStrategyStatus InstStrategyAutoGenTriggers::process(Node f,
                                                         Theory::Effort effort,
-                                                        int e)
+                                                        int e, ieval::TermEvaluatorMode tev)
 {
   options::UserPatMode upMode = getInstUserPatMode();
   // we don't auto-generate triggers if the mode is trust or strict
@@ -217,6 +217,7 @@ InstStrategyStatus InstStrategyAutoGenTriggers::process(Node f,
       Trace("process-trigger") << "  Process ";
       tr->debugPrint("process-trigger");
       Trace("process-trigger") << "..." << std::endl;
+      tr->setEvaluatorMode(tev);
       unsigned numInst = tr->addInstantiations();
       hasInst = numInst > 0 || hasInst;
       Trace("process-trigger")

@@ -218,6 +218,14 @@ name   = "Quantifiers"
   help = "Quantifiers module considers only ground terms connected to current assertions."
 
 [[option]]
+  name       = "ematchingStratifyIEval"
+  category   = "regular"
+  long       = "e-matching-stratify-ieval"
+  type       = "bool"
+  default    = "false"
+  help       = "whether to stratify E-matching"
+
+[[option]]
   name       = "termDbCd"
   category   = "expert"
   long       = "term-db-cd"

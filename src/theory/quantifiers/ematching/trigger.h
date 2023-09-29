@@ -111,6 +111,11 @@ class Trigger : protected EnvObj
           Node q,
           std::vector<Node>& nodes);
   virtual ~Trigger();
+  /**
+   * Set evaluator mode. This can be modified if there are no variable
+   * assignments.
+   */
+  void setEvaluatorMode(ieval::TermEvaluatorMode tev);
   /** get the generator associated with this trigger */
   IMGenerator* getGenerator() { return d_mg; }
   /** Reset instantiation round.
