@@ -172,7 +172,7 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
   {
     size_t lastWaiting = d_qim.numPendingLemmas();
     size_t starti = options().quantifiers.ematchingStratifyIEval ? 0 : 2;
-    for (size_t i=0; i<3; i++)
+    for (size_t i=starti; i<3; i++)
     {
       ieval::TermEvaluatorMode tev = (i==0 ? ieval::TermEvaluatorMode::CONFLICT : (i==1 ? ieval::TermEvaluatorMode::PROP : ieval::TermEvaluatorMode::NO_ENTAIL));
       doInstantiationRound(e, tev);
