@@ -211,8 +211,8 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
           ant.push_back(eqa);
         }
         Node antn = nm->mkAnd(ant);
-        Node conc = nm->mkNode(EQUAL, fapp, result);
-        Node lem = nm->mkNode(OR, conc, antn.notNode());
+        Node conc = nm->mkNode(Kind::EQUAL, fapp, result);
+        Node lem = nm->mkNode(Kind::OR, conc, antn.notNode());
         learnedLemmas.push_back(lem);
         allFappsConsistent = false;
       }
