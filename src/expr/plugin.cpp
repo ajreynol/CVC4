@@ -24,7 +24,7 @@ namespace cvc5::internal {
 Node Plugin::getSharableFormula(const Node& n)
 {
   Node on = SkolemManager::getOriginalForm(n);
-  if (expr::hasSubtermKind(kind::SKOLEM, on))
+  if (expr::hasSubtermKind(Kind::SKOLEM, on))
   {
     // cannot share formulas with skolems currently
     return Node::null();
