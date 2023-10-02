@@ -27,6 +27,27 @@ namespace theory {
 namespace quantifiers {
 namespace ieval {
 
+const char* toString(TermEvaluatorMode tev)
+{
+  switch(tev)
+  {
+  case TermEvaluatorMode::NONE: return "NONE";
+  case TermEvaluatorMode::CONFLICT: return "CONFLICT";
+  case TermEvaluatorMode::PROP: return "PROP";
+  case TermEvaluatorMode::NO_ENTAIL: return "NO_ENTAIL";
+  case TermEvaluatorMode::MODEL: return "MODEL";
+    default:
+      break;
+  }
+  return "?";
+}
+
+std::ostream& operator<<(std::ostream& out, TermEvaluatorMode tev)
+{
+  out << toString(tev);
+  return out;
+}
+
 TermEvaluator::TermEvaluator(Env& env, TermEvaluatorMode tev)
     : EnvObj(env), d_tevMode(tev)
 {

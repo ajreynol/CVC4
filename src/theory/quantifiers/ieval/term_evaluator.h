@@ -47,6 +47,21 @@ enum class TermEvaluatorMode : uint32_t
   MODEL,
 };
 
+/**
+ * @param tev The term evaluator mode to write to the stream
+ * @return The name of the inference
+ */
+const char* toString(TermEvaluatorMode tev);
+
+/**
+ * Writes an inference name to a stream.
+ *
+ * @param out The stream to write to
+ * @param tev The term evaluator mode to write to the stream
+ * @return The stream
+ */
+std::ostream& operator<<(std::ostream& out, TermEvaluatorMode tev);
+
 class State;
 
 class TermEvaluator : protected EnvObj

@@ -186,14 +186,14 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
         Assert(d_qim.numPendingLemmas() > lastWaiting);
         Trace("inst-engine") << "Conflict, added lemmas = "
                              << (d_qim.numPendingLemmas() - lastWaiting)
-                             << ", from ieval effort " << i << std::endl;
+                             << ", from ieval effort " << tev << std::endl;
         break;
       }
       else if (d_qim.hasPendingLemma())
       {
         Trace("inst-engine")
             << "Added lemmas = " << (d_qim.numPendingLemmas() - lastWaiting)
-            << ", from ieval effort " << i << std::endl;
+            << ", from ieval effort " << tev << std::endl;
         break;
       }
     }
