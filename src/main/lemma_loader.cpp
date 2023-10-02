@@ -14,6 +14,7 @@
  */
 
 #include <cvc5/cvc5_parser.h>
+#include <cvc5/cvc5_types.h>
 #include "main/lemma_loader.h"
 
 #include "base/check.h"
@@ -44,14 +45,14 @@ std::vector<Term> LemmaLoader::check()
     alreadyReadFromFile = true;
     parser::InputParser ip(d_solver, d_symman);
     // use the input language specified by the options
-    ip.setFileInput(d_solver->getOption("input-language"), d_filename);
+    ip.setFileInput(modes::InputLanguage::SMT_LIB_2_6, d_filename);
     // reads a list of formulas
     //   F1 .... Fn
     // each of which will be sent as a lemma
     Term lem;
     for (;;)
     {
-      lem = ip.nextExpression();
+      lem = ip.nextTerm();
       if (lem.isNull())
       {
         break;
