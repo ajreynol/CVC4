@@ -1,3 +1,5 @@
+; EXPECT: sat
+; EXPECT: sat
 (set-info :smt-lib-version 2.6)
 (set-logic AUFBVFPDTNIRA)
 (set-option :incremental true)
