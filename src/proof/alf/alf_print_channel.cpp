@@ -53,7 +53,7 @@ void AlfPrintChannelOut::printAssume(TNode n, size_t i, bool isPush)
 void AlfPrintChannelOut::printStep(const std::string& rname,
                                    TNode n,
                                    size_t i,
-                                   const std::vector<Node>& premises,
+                                   const std::vector<size_t>& premises,
                                    const std::vector<Node>& args,
                                    bool isPop)
 {
@@ -67,7 +67,7 @@ void AlfPrintChannelOut::printStep(const std::string& rname,
   if (!premises.empty())
   {
     d_out << " :premises (";
-    for (const Node& p : premises)
+    for (size_t p : premises)
     {
       if (firstTime)
       {
@@ -77,7 +77,7 @@ void AlfPrintChannelOut::printStep(const std::string& rname,
       {
         d_out << " ";
       }
-      printNodeInternal(d_out, p);
+      d_out << "@p" << p;
     }
     d_out << ")";
   }
@@ -116,23 +116,17 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r, TNode n, size_t i, TNode nc
 
 void AlfPrintChannelOut::printNodeInternal(std::ostream& out, Node n)
 {
-  std::stringstream ss;
-  options::ioutils::applyOutputLanguage(ss, Language::LANG_SMTLIB_V2_6);
+  options::ioutils::applyOutputLanguage(out, Language::LANG_SMTLIB_V2_6);
+  options::ioutils::applyDagThresh(out, 0);
   Node nc = d_lbind.convert(n, d_termLetPrefix, true);
-  nc.toStream(ss);
-  std::string s = ss.str();
-  out << s;
+  nc.toStream(out);
 }
 
 void AlfPrintChannelOut::printTypeNodeInternal(std::ostream& out, TypeNode tn)
 {
   // due to use of special names in the node converter, we must clean symbols
-  std::stringstream ss;
-  options::ioutils::applyOutputLanguage(ss, Language::LANG_SMTLIB_V2_6);
-  tn.toStream(ss);
-  std::string s = ss.str();
-  // cleanSymbols(s);
-  out << s;
+  options::ioutils::applyOutputLanguage(out, Language::LANG_SMTLIB_V2_6);
+  tn.toStream(out);
 }
 
 AlfPrintChannelPre::AlfPrintChannelPre(LetBinding& lbind) : d_lbind(lbind) {}
@@ -147,7 +141,7 @@ void AlfPrintChannelPre::printAssume(TNode n, size_t i, bool isPush)
 void AlfPrintChannelPre::printStep(const std::string& rname,
                                    TNode n,
                                    size_t i,
-                                   const std::vector<Node>& premises,
+                                   const std::vector<size_t>& premises,
                                    const std::vector<Node>& args,
                                    bool isPop)
 {
@@ -155,8 +149,6 @@ void AlfPrintChannelPre::printStep(const std::string& rname,
   {
     processInternal(n);
   }
-  // don't process premises, even if they may be non-variable, as this
-  // will introduce internal (proof) symbols into the letification
   for (const Node& a : args)
   {
     processInternal(a);

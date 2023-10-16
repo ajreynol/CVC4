@@ -493,6 +493,7 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
     printProofInternal(aout, pnBody);
   }
   // if flattened, print the full proof as ident
+  /*
   if (!d_proofFlatten)
   {
     d_pfIdCounter++;
@@ -503,6 +504,7 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
           "identity", pnBody->getResult(), d_pfIdCounter, {it->second}, {});
     }
   }
+  */
 }
 
 void AlfPrinter::printProofInternal(AlfPrintChannel* out, const ProofNode* pn)
@@ -667,11 +669,9 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
     }
     default: break;
   }
-  ProofNodeToSExpr pntse;
   for (size_t i = 0, nargs = pargs.size(); i < nargs; i++)
   {
-    ProofNodeToSExpr::ArgFormat f = pntse.getArgumentFormat(pn, i);
-    Node av = d_tproc.convert(pntse.getArgument(pargs[i], f));
+    Node av = d_tproc.convert(pargs[i]);
     args.push_back(av);
   }
 }
@@ -732,6 +732,7 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
     getArgsFromProofRule(pn, args);
   }
   // if not flattening proofs
+  /*
   if (!d_proofFlatten)
   {
     std::vector<Node> pargs;
@@ -783,6 +784,7 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
     }
     return;
   }
+  */
   size_t id = allocateProofId(pn, wasAlloc);
   // if we don't handle the rule, print trust
   if (!handled)
@@ -790,7 +792,7 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
     out->printTrustStep(pn->getRule(), conclusionPrint, id, conclusion);
     return;
   }
-  std::vector<Node> premises;
+  std::vector<size_t> premises;
   // get the premises
   std::map<Node, size_t>::iterator ita;
   std::map<const ProofNode*, size_t>::iterator itp;
@@ -810,7 +812,7 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
       Assert(itp != d_pletMap.end());
       pid = itp->second;
     }
-    premises.push_back(allocatePremise(pid));
+    premises.push_back(pid);
   }
   std::string rname = getRuleName(pn);
   out->printStep(rname, conclusionPrint, id, premises, args, isPop);
