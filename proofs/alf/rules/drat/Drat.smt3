@@ -32,7 +32,7 @@
 ; It returns "true" if the preamble of the DRAT proof file matches (modulo renaming
 ; identifiers) the input clauses, as determined by the first arguments.
 
-(declare-oracle-fun drat-verify (String String) Bool ./drat-verify.sh)
+(declare-oracle-fun drat-verify (String String) Bool ./drat-verify)
 
 ; ./drat-check.sh
 ; - A DRAT proof file, whose file name is given as a String.
@@ -47,9 +47,9 @@
 (declare-rule drat_refutation ((F Bool) (D String) (P String))
   :premise-list F and
   :args (D P)
-;  :requires (((drat-verify (to_drat_input F) D) true) ((drat-check D P) true))
+  :requires (((drat-verify (to_drat_input F) D) true) ((drat-check D P) true))
 ;  :requires (((drat-verify (to_drat_input F) D) true))
-  :requires (((drat-check D P) true))
+;  :requires (((drat-check D P) true))
   :conclusion false
 )
 

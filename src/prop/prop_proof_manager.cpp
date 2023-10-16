@@ -176,13 +176,20 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
     auto cit = clauses.begin();
     while (cit != clauses.end())
     {
-      if (d_proofCnfStream->hasLiteral(*cit))
+      // never include true
+      if (cit->isConst() && cit->getConst<bool>())
+      {
+        clauses.erase(cit);
+        continue;
+      }
+      else if (d_proofCnfStream->hasLiteral(*cit))
       {
         SatLiteral il = d_proofCnfStream->getLiteral(*cit);
         if (std::find(unsatAssumptions.begin(), unsatAssumptions.end(), il)
             == unsatAssumptions.end())
         {
           clauses.erase(cit);
+          continue;
         }
       }
       cit++;
