@@ -111,6 +111,8 @@ class MinisatSatSolver : public CDCLTSatSolver, protected EnvObj
   std::shared_ptr<ProofNode> getProof(
       const std::vector<Node>& clauses) override;
 
+  bool needsMinimizeClausesForGetProof() const override;
+
  private:
 
   /** The SatSolver used */

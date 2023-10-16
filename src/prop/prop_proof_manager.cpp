@@ -123,19 +123,8 @@ void PropPfManager::dumpDimacs(const std::string& filename, const std::vector<No
   std::stringstream dclauses;
   SatVariable maxVar = 0;
   // get the unsat core from cadical
-  std::vector<SatLiteral> unsatAssumptions;
-  d_satSolver->getUnsatAssumptions(unsatAssumptions);
   for (const Node& i : clauses)
   {
-    if (d_proofCnfStream->hasLiteral(i))
-    {
-      SatLiteral il = d_proofCnfStream->getLiteral(i);
-      if (std::find(unsatAssumptions.begin(), unsatAssumptions.end(), il)
-          == unsatAssumptions.end())
-      {
-        continue;
-      }
-    }
     std::vector<Node> lits;
     if (i.getKind() == Kind::OR)
     {
@@ -179,6 +168,27 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   std::vector<Node> lemmas = d_proofCnfStream->getLemmaClauses();
   Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
   clauses.insert(clauses.end(), lemmas.begin(), lemmas.end());
+
+  if (d_satSolver->needsMinimizeClausesForGetProof())
+  {
+    std::vector<SatLiteral> unsatAssumptions;
+    d_satSolver->getUnsatAssumptions(unsatAssumptions);
+    auto cit = clauses.begin();
+    while (cit != clauses.end())
+    {
+      if (d_proofCnfStream->hasLiteral(*cit))
+      {
+        SatLiteral il = d_proofCnfStream->getLiteral(*cit);
+        if (std::find(unsatAssumptions.begin(), unsatAssumptions.end(), il)
+            == unsatAssumptions.end())
+        {
+          clauses.erase(cit);
+        }
+      }
+      cit++;
+    }
+  }
+
   std::shared_ptr<ProofNode> conflictProof = d_satSolver->getProof(clauses);
   // if DRAT, must dump dimacs
   if (conflictProof->getRule()==ProofRule::DRAT_REFUTATION)

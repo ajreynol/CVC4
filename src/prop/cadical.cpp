@@ -1265,6 +1265,8 @@ SatProofManager* CadicalSolver::getProofManager()
   return nullptr;
 }
 
+bool CadicalSolver::needsMinimizeClausesForGetProof() const { return true; }
+
 /* -------------------------------------------------------------------------- */
 }  // namespace prop
 }  // namespace cvc5::internal

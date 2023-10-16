@@ -93,6 +93,8 @@ class CadicalSolver : public CDCLTSatSolver, protected EnvObj
 
   SatProofManager* getProofManager() override;
 
+  bool needsMinimizeClausesForGetProof() const override;
+
  private:
   /**
    * Constructor.

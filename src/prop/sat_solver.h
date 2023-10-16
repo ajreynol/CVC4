@@ -177,6 +177,10 @@ class CDCLTSatSolver : public SatSolver
   /** This is temporary until SAT DRAT proofs are integrated. */
   virtual SatProofManager* getProofManager() = 0;
 
+  /** Is `true` if the set of clauses handed to `getProof` must be
+   * minimized to the unsat core.
+   */
+  virtual bool needsMinimizeClausesForGetProof() const = 0;
 }; /* class CDCLTSatSolver */
 
 inline std::ostream& operator <<(std::ostream& out, prop::SatLiteral lit) {
