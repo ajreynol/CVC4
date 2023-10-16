@@ -171,29 +171,28 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
 
   if (d_satSolver->needsMinimizeClausesForGetProof())
   {
+    std::vector<Node> minClauses;
     std::vector<SatLiteral> unsatAssumptions;
     d_satSolver->getUnsatAssumptions(unsatAssumptions);
-    auto cit = clauses.begin();
-    while (cit != clauses.end())
+    for (const Node& nc : clauses)
     {
       // never include true
-      if (cit->isConst() && cit->getConst<bool>())
+      if (nc.isConst() && nc.getConst<bool>())
       {
-        clauses.erase(cit);
         continue;
       }
-      else if (d_proofCnfStream->hasLiteral(*cit))
+      else if (d_proofCnfStream->hasLiteral(nc))
       {
-        SatLiteral il = d_proofCnfStream->getLiteral(*cit);
+        SatLiteral il = d_proofCnfStream->getLiteral(nc);
         if (std::find(unsatAssumptions.begin(), unsatAssumptions.end(), il)
             == unsatAssumptions.end())
-        {
-          clauses.erase(cit);
+        {        
           continue;
         }
       }
-      cit++;
+      minClauses.push_back(nc);
     }
+    clauses = minClauses;
   }
 
   std::shared_ptr<ProofNode> conflictProof = d_satSolver->getProof(clauses);
