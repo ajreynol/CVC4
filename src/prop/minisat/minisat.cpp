@@ -303,7 +303,7 @@ std::shared_ptr<ProofNode> MinisatSatSolver::getProof(
   return d_minisat->getProof();
 }
 
-bool MinisatSatSolver::needsMinimizeClausesForGetProof() const { return true; }
+bool MinisatSatSolver::needsMinimizeClausesForGetProof() const { return false; }
 
 /** Incremental interface */
 
