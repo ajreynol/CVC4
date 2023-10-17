@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 #/space/ajreynol/cvc5-ajr/proofs/alf/rules/drat/drat-trim $1 $2
 
+#INPUT=$1
+#PROOF=$2
+
 # Emptying IFS supresses word splitting by Bash
 # Using '"' in IFS makes bash drop the quotes
 IFS= read -r line

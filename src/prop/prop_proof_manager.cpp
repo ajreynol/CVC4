@@ -158,7 +158,7 @@ void PropPfManager::dumpDimacs(const std::string& filename, const std::vector<No
     nclause++;
   }
   std::fstream dout(filename, std::ios::out);
-  dout << "p cnf " << maxVar << " " << clauses.size() << std::endl;
+  dout << "p cnf " << maxVar << " " << nclause << std::endl;
   dout << dclauses.str();
   dout.close();
 }
