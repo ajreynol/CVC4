@@ -230,3 +230,11 @@ name   = "Proof"
   type       = "bool"
   default    = "false"
   help       = "Print the DRAT proof in binary format"
+
+[[option]]
+  name       = "satExternalProve"
+  category   = "expert"
+  long       = "sat-external-prove"
+  type       = "bool"
+  default    = "false"
+  help       = "Reprove the DIMACS generated from SMT externally"

@@ -936,7 +936,7 @@ CadicalSolver::CadicalSolver(Env& env,
       d_assertionLevel(0),
       d_statistics(registry, name)
 {
-  if (env.isSatProofProducing())
+  if (env.isSatProofProducing() && !options().proof.satExternalProve)
   {
     std::stringstream ssp;
     ssp << options().driver.filename << ".drat_proof.txt";
@@ -1233,29 +1233,25 @@ std::shared_ptr<ProofNode> CadicalSolver::getProof(
 {
   Assert(d_env.isSatProofProducing());
   std::vector<Node> args;
-  d_solver->flush_proof_trace();
   NodeManager* nm = NodeManager::currentNM();
   std::stringstream dinputFile;
   dinputFile << options().driver.filename << ".drat_input.cnf";
   // d_solver->write_dimacs(dimacs.c_str());
   Node dfile = nm->mkConst(String(dinputFile.str()));
   args.push_back(dfile);
-  Node pfile = nm->mkConst(String(d_pfFile));
-  args.push_back(pfile);
-  ProofRule r = ProofRule::DRAT_REFUTATION;
-  /*
-  std::vector<Node> core;
-  std::vector<SatLiteral> unsat_assumptions;
-  d_satSolver->getUnsatAssumptions(unsat_assumptions);
-  for (const SatLiteral& lit : unsat_assumptions)
-  {
-    core.push_back(d_proofCnfStream->getNode(lit));
-  }
-  Trace("sat-proof") << "Core is " << core << std::endl;
-  */
-  CDProof cdp(d_env);
   Node falsen = NodeManager::currentNM()->mkConst(false);
-  cdp.addStep(falsen, r, clauses, args);
+  CDProof cdp(d_env);
+  if (options().proof.satExternalProve)
+  {
+    cdp.addStep(falsen, ProofRule::SAT_EXTERNAL_PROVE, clauses, args);
+  }
+  else
+  {
+    d_solver->flush_proof_trace();
+    Node pfile = nm->mkConst(String(d_pfFile));
+    args.push_back(pfile);
+    cdp.addStep(falsen, ProofRule::DRAT_REFUTATION, clauses, args);
+  }
   return cdp.getProofFor(falsen);
 }
 

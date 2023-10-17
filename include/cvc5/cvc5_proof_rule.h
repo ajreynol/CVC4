@@ -506,6 +506,7 @@ enum ENUM(ProofRule) : uint32_t
    */
   EVALUE(DRAT_REFUTATION),
 
+  EVALUE(SAT_EXTERNAL_PROVE),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Boolean -- Resolution**

@@ -35,9 +35,9 @@
 (declare-oracle-fun drat-verify (String String) Bool ./drat-verify)
 
 ; ./drat-check.sh
+; - A DIMACS input file, whose file name is given as a String.
 ; - A DRAT proof file, whose file name is given as a String.
-; It returns "true" if the DRAT proof file is a valid refutation proof.
-
+; It returns "true" if the DIMAC + DRAT proof file is a valid refutation proof.
 (declare-oracle-fun drat-check (String String) Bool ./drat-check.sh)
 
 ; The DRAT proof rule.
@@ -53,3 +53,15 @@
   :conclusion false
 )
 
+; ./sat-prove.sh
+; It returns "true" if the DIMACs file is unsatisfiable .
+(declare-oracle-fun run_sat_prove (String) Bool ./sat-prove.sh)
+
+(declare-rule sat_external_prove ((F Bool) (D String))
+  :premise-list F and
+  :args (D)
+;  :requires (((drat-verify (to_drat_input F) D) true) ((run_sat_prove D) true))
+;  :requires (((drat-verify (to_drat_input F) D) true))
+  :requires (((run_sat_prove D) true))
+  :conclusion false
+)

@@ -136,6 +136,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::INSTANTIATE:
     case ProofRule::SKOLEMIZE:
     case ProofRule::DRAT_REFUTATION:
+    case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ENCODE_PRED_TRANSFORM:
     case ProofRule::DSL_REWRITE:
     // alf rule is handled
