@@ -26,6 +26,7 @@ cadical $INPUT $INPUT.proof --binary=false > /dev/null
 #echo "run drat-trim"
 RESULT=$(drat-trim $INPUT $INPUT.proof)
 #echo "finished"
+rm -f $INPUT.proof
 
 if [[ $RESULT == *"s VERIFIED"* ]];
 then
@@ -35,3 +36,4 @@ else
       echo "error: $RESULT"
       exit 1
 fi
+
