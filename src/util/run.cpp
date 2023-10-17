@@ -14,7 +14,6 @@
  */
 
 #include "run.h"
-
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/stat.h>
@@ -180,6 +179,7 @@ std::string shell_quote(const std::string& src)
       && src.find('>') == std::string::npos
       && src.find('<') == std::string::npos
       && src.find('^') == std::string::npos
+      && src.find('#') == std::string::npos
       && src.find('\'') == std::string::npos)
   {
     // seems fine -- return as is
@@ -234,14 +234,16 @@ int run(const std::string& what,
   if (!std_input.empty()) command += " < " + shell_quote(std_input);
 
   if (!std_error.empty()) command += " 2> " + shell_quote(std_error);
-
+  
   FILE* stream = popen(command.c_str(), "r");
 
   if (stream != nullptr)
   {
     int ch;
-    while ((ch = fgetc(stream)) != EOF) std_output << (unsigned char)ch;
-
+    while ((ch = fgetc(stream)) != EOF)
+    {
+      std_output << (unsigned char)ch;
+    }
     return pclose(stream);
   }
   else

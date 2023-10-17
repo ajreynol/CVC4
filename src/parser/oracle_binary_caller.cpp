@@ -39,7 +39,15 @@ std::vector<Term> OracleBinaryCaller::runOracle(const std::vector<Term>& input)
     oss << arg;
     sargs.push_back(oss.str());
   }
-  // Trace("ajr-temp") << "Input : \"" << oss.str() << "\"" << std::endl;
+  if (TraceIsOn("oracle-debug"))
+  {
+    Trace("oracle-debug") << "Input:" << std::endl;
+    for (std::string& s : sargs)
+    {
+      Trace("oracle-debug") << s << std::endl;
+    }
+    Trace("oracle-debug") << "end" << std::endl;
+  }
 
   // Run the oracle binary for `sargs`, which indicates a list of
   // smt2 terms as strings.
@@ -47,7 +55,7 @@ std::vector<Term> OracleBinaryCaller::runOracle(const std::vector<Term>& input)
 
   run(d_binaryName, sargs, "", stdout_stream, "");
 
-  // std::cout << "Got: " << stdout_stream.str() << std::endl;
+  Trace("oracle-debug")<< "Got: " << stdout_stream.str() << std::endl;
 
   std::istringstream oracle_response_istream(stdout_stream.str());
 
