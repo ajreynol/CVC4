@@ -184,7 +184,8 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   std::vector<Node> clauses(cset.begin(), cset.end());
   std::shared_ptr<ProofNode> conflictProof = d_satSolver->getProof(clauses);
   // if DRAT, must dump dimacs
-  if (conflictProof->getRule()==ProofRule::DRAT_REFUTATION)
+  ProofRule r = conflictProof->getRule();
+  if (r==ProofRule::DRAT_REFUTATION || r==ProofRule::SAT_EXTERNAL_PROVE)
   {
     std::stringstream dinputFile;
     dinputFile << conflictProof->getArguments()[0].getConst<String>().toString();
