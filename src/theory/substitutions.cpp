@@ -68,7 +68,6 @@ Node SubstitutionMap::internalSubstitute(TNode t,
   while (!toVisit.empty())
   {
     count++;
-    Trace("ajr-temp") << "count=" << count << std::endl;
     // The current node we are processing
     substitution_stack_element& stackHead = toVisit.back();
     TNode current = stackHead.d_node;

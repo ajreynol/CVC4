@@ -173,14 +173,15 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   }
   // retrieve the SAT solver's refutation proof
   Trace("sat-proof") << "PropPfManager::getProof: Getting proof of false\n";
-  std::vector<Node> clauses(assumptions.begin(), assumptions.end());
+  std::unordered_set<Node> cset(assumptions.begin(), assumptions.end());
   Trace("cnf-input") << "#assumptions=" << assumptions.size() << std::endl;
   std::vector<Node> inputs = d_proofCnfStream->getInputClauses();
-  clauses.insert(clauses.end(), inputs.begin(), inputs.end());
+  cset.insert(inputs.begin(), inputs.end());
   Trace("cnf-input") << "#input=" << inputs.size() << std::endl;
   std::vector<Node> lemmas = d_proofCnfStream->getLemmaClauses();
   Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
-  clauses.insert(clauses.end(), lemmas.begin(), lemmas.end());
+  cset.insert(lemmas.begin(), lemmas.end());
+  std::vector<Node> clauses(cset.begin(), cset.end());
   std::shared_ptr<ProofNode> conflictProof = d_satSolver->getProof(clauses);
   // if DRAT, must dump dimacs
   if (conflictProof->getRule()==ProofRule::DRAT_REFUTATION)
