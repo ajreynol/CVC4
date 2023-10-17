@@ -22,7 +22,9 @@ fi
 
 #echo "RUN: drat-trim $INPUT $PROOF"
 #echo "run cadical"
-cadical $INPUT $INPUT.proof --binary=false > /dev/null
+cadical $INPUT $INPUT.proof > /dev/null
+# without binary makes drat-trim fail sometimes
+#cadical $INPUT $INPUT.proof --binary=false > /dev/null
 #echo "run drat-trim"
 RESULT=$(drat-trim $INPUT $INPUT.proof)
 #echo "finished"

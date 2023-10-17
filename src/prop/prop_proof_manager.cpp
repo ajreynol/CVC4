@@ -123,20 +123,8 @@ void PropPfManager::dumpDimacs(const std::string& filename, const std::vector<No
   std::stringstream dclauses;
   SatVariable maxVar = 0;
   // get the unsat core from cadical
-  std::vector<SatLiteral> unsatAssumptions;
-  d_satSolver->getUnsatAssumptions(unsatAssumptions);
-  size_t nclause = 0;
   for (const Node& i : clauses)
   {
-    if (d_proofCnfStream->hasLiteral(i))
-    {
-      SatLiteral il = d_proofCnfStream->getLiteral(i);
-      if (std::find(unsatAssumptions.begin(), unsatAssumptions.end(), il)
-          == unsatAssumptions.end())
-      {
-        continue;
-      }
-    }
     std::vector<Node> lits;
     if (i.getKind() == Kind::OR)
     {
@@ -155,10 +143,9 @@ void PropPfManager::dumpDimacs(const std::string& filename, const std::vector<No
       dclauses << (lit.isNegated() ? "-" : "") << v << " ";
     }
     dclauses << "0" << std::endl;
-    nclause++;
   }
   std::fstream dout(filename, std::ios::out);
-  dout << "p cnf " << maxVar << " " << nclause << std::endl;
+  dout << "p cnf " << maxVar << " " << clauses.size() << std::endl;
   dout << dclauses.str();
   dout.close();
 }
@@ -182,6 +169,33 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
   cset.insert(lemmas.begin(), lemmas.end());
   std::vector<Node> clauses(cset.begin(), cset.end());
+  
+  if (d_satSolver->needsMinimizeClausesForGetProof())
+  {
+    std::vector<Node> minClauses;
+    std::vector<SatLiteral> unsatAssumptions;
+    d_satSolver->getUnsatAssumptions(unsatAssumptions);
+    for (const Node& nc : clauses)
+    {
+      // never include true
+      if (nc.isConst() && nc.getConst<bool>())
+      {
+        continue;
+      }
+      else if (d_proofCnfStream->hasLiteral(nc))
+      {
+        SatLiteral il = d_proofCnfStream->getLiteral(nc);
+        if (std::find(unsatAssumptions.begin(), unsatAssumptions.end(), il)
+            == unsatAssumptions.end())
+        {        
+          continue;
+        }
+      }
+      minClauses.push_back(nc);
+    }
+    clauses = minClauses;
+  }
+
   std::shared_ptr<ProofNode> conflictProof = d_satSolver->getProof(clauses);
   // if DRAT, must dump dimacs
   ProofRule r = conflictProof->getRule();
