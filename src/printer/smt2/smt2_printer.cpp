@@ -837,7 +837,7 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
         }
         else
         {
-          out << "tuple ";
+          out << "tuple";
         }
       }
       break;
