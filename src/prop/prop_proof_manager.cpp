@@ -161,21 +161,14 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   // retrieve the SAT solver's refutation proof
   Trace("sat-proof") << "PropPfManager::getProof: Getting proof of false\n";
   std::unordered_set<Node> cset(assumptions.begin(), assumptions.end());
-  Trace("cnf-input") << "#assumptions=" << assumptions.size() << std::endl;
-  std::vector<Node> inputs = d_proofCnfStream->getInputClauses();
-  cset.insert(inputs.begin(), inputs.end());
-  Trace("cnf-input") << "#input=" << inputs.size() << std::endl;
-  std::vector<Node> lemmas = d_proofCnfStream->getLemmaClauses();
-  Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
-  cset.insert(lemmas.begin(), lemmas.end());
-  std::vector<Node> clauses(cset.begin(), cset.end());
+  Trace("cnf-input") << "#assumptions=" << cset.size() << std::endl;
   
   if (d_satSolver->needsMinimizeClausesForGetProof())
   {
-    std::vector<Node> minClauses;
+    std::vector<Node> minAssumptions;
     std::vector<SatLiteral> unsatAssumptions;
     d_satSolver->getUnsatAssumptions(unsatAssumptions);
-    for (const Node& nc : clauses)
+    for (const Node& nc : cset)
     {
       // never include true
       if (nc.isConst() && nc.getConst<bool>())
@@ -191,11 +184,20 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
           continue;
         }
       }
-      minClauses.push_back(nc);
+      minAssumptions.push_back(nc);
     }
-    clauses = minClauses;
+    cset.clear();
+    cset.insert(minAssumptions.begin(), minAssumptions.end());
+    Trace("cnf-input") << "#assumptions (min)=" << cset.size() << std::endl;
   }
-
+  std::vector<Node> inputs = d_proofCnfStream->getInputClauses();
+  cset.insert(inputs.begin(), inputs.end());
+  Trace("cnf-input") << "#input=" << inputs.size() << std::endl;
+  std::vector<Node> lemmas = d_proofCnfStream->getLemmaClauses();
+  Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
+  cset.insert(lemmas.begin(), lemmas.end());
+  std::vector<Node> clauses(cset.begin(), cset.end());
+  
   std::shared_ptr<ProofNode> conflictProof = d_satSolver->getProof(clauses);
   // if DRAT, must dump dimacs
   ProofRule r = conflictProof->getRule();
