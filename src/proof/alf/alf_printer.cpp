@@ -10,7 +10,7 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * The printer for the experimental Alf format.
+ * The printer for the AletheLF format.
  */
 
 #include "proof/alf/alf_printer.h"
@@ -55,6 +55,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
   const std::vector<Node> pargs = pfn->getArguments();
   switch (pfn->getRule())
   {
+    // List of handled rules
     case ProofRule::REFL:
     case ProofRule::SYMM:
     case ProofRule::TRANS:
@@ -216,6 +217,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::ARITH_TRANS_SINE_APPROX_BELOW_POS:
     case ProofRule::ARITH_NL_COVERING_DIRECT:
     case ProofRule::ARITH_NL_COVERING_RECURSIVE:
+    // otherwise not handled
     default: break;
   }
   return false;
@@ -386,7 +388,7 @@ void AlfPrinter::printLetList(std::ostream& out, LetBinding& lbind)
     Node n = letList[i];
     Node def = lbind.convert(n, d_termLetPrefix, false);
     Node f = lbind.convert(n, d_termLetPrefix, true);
-    // use define function which does not invoke type checking
+    // use define command which does not invoke type checking
     out << "(define " << f << " () " << def << ")" << std::endl;
   }
 }
@@ -531,9 +533,8 @@ void AlfPrinter::printProofInternal(AlfPrintChannel* out, const ProofNode* pn)
         visit.pop_back();
         continue;
       }
+      // print preorder traversal
       printStepPre(out, cur);
-      // a normal rule application, compute the proof arguments, which
-      // notice in the case of PI also may modify our passumeMap.
       processingChildren[cur] = true;
       // will revisit this proof node
       const std::vector<std::shared_ptr<ProofNode>>& children =
@@ -549,6 +550,7 @@ void AlfPrinter::printProofInternal(AlfPrintChannel* out, const ProofNode* pn)
     if (pit->second)
     {
       processingChildren[cur] = false;
+      // print postorder traversal
       printStepPost(out, cur);
     }
   } while (!visit.empty());
@@ -679,6 +681,7 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
 
 void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
 {
+  Assert(pn->getRule() != ProofRule::ASSUME);
   // if we have yet to allocate a proof id, do it now
   bool wasAlloc = false;
   bool isPop = false;
@@ -826,6 +829,7 @@ size_t AlfPrinter::allocateAssumePushId(const ProofNode* pn)
   {
     return it->second;
   }
+  Assert(pn->getRule() == ProofRule::ALF_RULE);
   // pn is a Alf SCOPE
   Node a = pn->getArguments()[2];
   bool wasAlloc = false;

@@ -238,3 +238,4 @@ name   = "Proof"
   type       = "bool"
   default    = "false"
   help       = "Reprove the DIMACS generated from SMT externally"
+
