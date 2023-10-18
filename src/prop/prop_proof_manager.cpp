@@ -118,7 +118,8 @@ std::vector<std::shared_ptr<ProofNode>> PropPfManager::getProofLeaves(
   return usedPfs;
 }
 
-void PropPfManager::dumpDimacs(const std::string& filename, const std::vector<Node>& clauses)
+void PropPfManager::dumpDimacs(const std::string& filename,
+                               const std::vector<Node>& clauses)
 {
   std::stringstream dclauses;
   SatVariable maxVar = 0;
@@ -162,7 +163,7 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   Trace("sat-proof") << "PropPfManager::getProof: Getting proof of false\n";
   std::unordered_set<Node> cset(assumptions.begin(), assumptions.end());
   Trace("cnf-input") << "#assumptions=" << cset.size() << std::endl;
-  
+
   if (d_satSolver->needsMinimizeClausesForGetProof())
   {
     std::vector<Node> minAssumptions;
@@ -180,7 +181,7 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
         SatLiteral il = d_proofCnfStream->getLiteral(nc);
         if (std::find(unsatAssumptions.begin(), unsatAssumptions.end(), il)
             == unsatAssumptions.end())
-        {        
+        {
           continue;
         }
       }
@@ -197,14 +198,15 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
   cset.insert(lemmas.begin(), lemmas.end());
   std::vector<Node> clauses(cset.begin(), cset.end());
-  
+
   std::shared_ptr<ProofNode> conflictProof = d_satSolver->getProof(clauses);
   // if DRAT, must dump dimacs
   ProofRule r = conflictProof->getRule();
-  if (r==ProofRule::DRAT_REFUTATION || r==ProofRule::SAT_EXTERNAL_PROVE)
+  if (r == ProofRule::DRAT_REFUTATION || r == ProofRule::SAT_EXTERNAL_PROVE)
   {
     std::stringstream dinputFile;
-    dinputFile << conflictProof->getArguments()[0].getConst<String>().toString();
+    dinputFile
+        << conflictProof->getArguments()[0].getConst<String>().toString();
     dumpDimacs(dinputFile.str(), clauses);
   }
 
