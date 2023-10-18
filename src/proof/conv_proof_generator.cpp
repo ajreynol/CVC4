@@ -22,6 +22,7 @@
 #include "proof/proof_checker.h"
 #include "proof/proof_node.h"
 #include "proof/proof_node_algorithm.h"
+#include "printer/let_binding.h"
 
 using namespace cvc5::internal::kind;
 
@@ -254,10 +255,39 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node n)
   return pfn;
 }
 
+Node TConvProofGenerator::getProofForRewritingConvert(Node t, LazyCDProof& pf, TermContext* tc)
+{
+  Trace("tconv-convert") << "Convert " << t << ", policy " << d_policy << std::endl;
+  Trace("tconv-convert") << "Rewrite steps:" << std::endl;
+  for (size_t r = 0; r < 2; r++)
+  {
+    const NodeNodeMap& rm = r == 0 ? d_preRewriteMap : d_postRewriteMap;
+    Trace("tconv-convert") << "Rewrite steps (" << (r == 0 ? "pre" : "post")
+          << "):" << std::endl;
+    for (NodeNodeMap::const_iterator it = rm.begin(); it != rm.end();
+          ++it)
+    {
+      Trace("tconv-convert") << (*it).first << " -> " << (*it).second << std::endl;
+    }
+  }
+  // first, letify the term
+  LetBinding lbind;
+  std::vector<Node> letList;
+  lbind.letify(t, letList);
+  Trace("tconv-convert") << "Letify " << t << ", process " << letList.size() << " subterms:" << std::endl;
+  for (const Node& l : letList)
+  {
+    Trace("tconv-convert") <<  l << std::endl;
+  }
+  return t;
+}
+
 Node TConvProofGenerator::getProofForRewriting(Node t,
                                                LazyCDProof& pf,
                                                TermContext* tctx)
 {
+  getProofForRewritingConvert(t, pf, tctx);
+  
   NodeManager* nm = NodeManager::currentNM();
   // Invariant: if visited[hash(t)] = s or rewritten[hash(t)] = s and t,s are
   // distinct, then pf is able to generate a proof of t=s. We must

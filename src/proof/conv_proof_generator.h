@@ -240,6 +240,8 @@ class TConvProofGenerator : protected EnvObj, public ProofGenerator
    * returns the proved equality t = t'.
    */
   Node getProofForRewriting(Node t, LazyCDProof& pf, TermContext* tc = nullptr);
+  /** Same as above but uses convert proof steps */
+  Node getProofForRewritingConvert(Node t, LazyCDProof& pf, TermContext* tc = nullptr);
   /**
    * Register rewrite step, returns the equality t=s if t is distinct from s
    * and a rewrite step has not already been registered for t.
