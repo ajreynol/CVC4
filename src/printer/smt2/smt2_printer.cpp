@@ -645,6 +645,45 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
     out << "))";
     return true;
   }
+  else if (k == Kind::MATCH_BIND_CASE || k == Kind::MATCH_CASE)
+  {
+    out << '(';
+    // ignore the binder for MATCH_BIND_CASE
+    size_t patIndex = (k == Kind::MATCH_BIND_CASE ? 1 : 0);
+    // The pattern should be printed as a pattern (symbol applied to symbols),
+    // not as a term. In particular, this means we should not print any
+    // type ascriptions (if any).
+    if (n[patIndex].getKind() == Kind::APPLY_CONSTRUCTOR)
+    {
+      if (n[patIndex].getNumChildren() > 0)
+      {
+        out << "(";
+      }
+      Node op = n[patIndex].getOperator();
+      const DType& dt = DType::datatypeOf(op);
+      size_t index = DType::indexOf(op);
+      out << dt[index].getConstructor();
+      for (const Node& nc : n[patIndex])
+      {
+        out << " ";
+        toStream(out, nc, toDepth, lbind);
+      }
+      if (n[patIndex].getNumChildren() > 0)
+      {
+        out << ")";
+      }
+    }
+    else
+    {
+      // otherwise, a variable, just print
+      Assert(n[patIndex].isVar());
+      toStream(out, n[patIndex], toDepth, lbind);
+    }
+    out << " ";
+    toStream(out, n[patIndex + 1], toDepth, lbind);
+    out << ")";
+    return true;
+  }
   else if (k == Kind::BOUND_VAR_LIST)
   {
     out << '(';
@@ -664,157 +703,19 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
     out << ')';
     return true;
   }
-
-  bool stillNeedToPrintParams = true;
-  bool printed = false;
-  // operator
-  if (n.getNumChildren() != 0)
+  else if (k==Kind::SET_UNIVERSE)
   {
-    out << '(';
-  }
-  switch (k)
-  {
-    case Kind::MATCH_BIND_CASE:
-    case Kind::MATCH_CASE:
-    {
-      // ignore the binder for MATCH_BIND_CASE
-      size_t patIndex = (k == Kind::MATCH_BIND_CASE ? 1 : 0);
-      // The pattern should be printed as a pattern (symbol applied to symbols),
-      // not as a term. In particular, this means we should not print any
-      // type ascriptions (if any).
-      if (n[patIndex].getKind() == Kind::APPLY_CONSTRUCTOR)
-      {
-        if (n[patIndex].getNumChildren() > 0)
-        {
-          out << "(";
-        }
-        Node op = n[patIndex].getOperator();
-        const DType& dt = DType::datatypeOf(op);
-        size_t index = DType::indexOf(op);
-        out << dt[index].getConstructor();
-        for (const Node& nc : n[patIndex])
-        {
-          out << " ";
-          toStream(out, nc, toDepth, lbind);
-        }
-        if (n[patIndex].getNumChildren() > 0)
-        {
-          out << ")";
-        }
-      }
-      else
-      {
-        // otherwise, a variable, just print
-        Assert(n[patIndex].isVar());
-        toStream(out, n[patIndex], toDepth, lbind);
-      }
-      out << " ";
-      toStream(out, n[patIndex + 1], toDepth, lbind);
-      out << ")";
-    }
-      return true;
-
-    case Kind::REAL_ALGEBRAIC_NUMBER:
-    {
-      const RealAlgebraicNumber& ran =
-          n.getOperator().getConst<RealAlgebraicNumber>();
-      out << "(_ real_algebraic_number " << ran << ")";
-      break;
-    }
-    case Kind::INDEXED_ROOT_PREDICATE_OP:
-    {
-      const IndexedRootPredicate& irp = n.getConst<IndexedRootPredicate>();
-      out << "(_ root_predicate " << irp.d_index << ")";
-      stillNeedToPrintParams = false;
-      break;
-    }
-
-  case Kind::BITVECTOR_BITOF:
-    out << "(_ bitOf " << n.getOperator().getConst<BitVectorBitOf>().d_bitIndex
-        << ") ";
-    stillNeedToPrintParams = false;
-    break;
-
-
-  // sets
-  case Kind::SET_UNIVERSE:
     out << "(as set.universe " << n.getType() << ")";
     return true;
-
-  case Kind::APPLY_CONSTRUCTOR:
-  {
-    const DType& dt = DType::datatypeOf(n.getOperator());
-    if (dt.isTuple())
-    {
-      stillNeedToPrintParams = false;
-      if (dt[0].getNumArgs() == 0)
-      {
-        out << "tuple.unit";
-      }
-      else
-      {
-        out << "tuple ";
-      }
-    }
-    break;
   }
-  case Kind::APPLY_SELECTOR:
+  else if (k==Kind::SEP_NIL)
   {
-    Node op = n.getOperator();
-    const DType& dt = DType::datatypeOf(op);
-    if (dt.isTuple())
-    {
-      stillNeedToPrintParams = false;
-      out << "(_ tuple.select " << DType::indexOf(op) << ") ";
-    }
-  }
-  break;
-  case Kind::APPLY_TESTER:
-  {
-    stillNeedToPrintParams = false;
-    Node op = n.getOperator();
-    size_t cindex = DType::indexOf(op);
-    const DType& dt = DType::datatypeOf(op);
-    out << "(_ is ";
-    toStream(
-        out, dt[cindex].getConstructor(), toDepth < 0 ? toDepth : toDepth - 1);
-    out << ") ";
-  }
-  break;
-  case Kind::APPLY_UPDATER:
-  {
-    stillNeedToPrintParams = false;
-    Node op = n.getOperator();
-    size_t index = DType::indexOf(op);
-    const DType& dt = DType::datatypeOf(op);
-    size_t cindex = DType::cindexOf(op);
-    if (dt.isTuple())
-    {
-      out << "(_ tuple.update " << DType::indexOf(op) << ") ";
-    }
-    else
-    {
-      out << "(_ update ";
-      toStream(out,
-               dt[cindex][index].getSelector(),
-               toDepth < 0 ? toDepth : toDepth - 1);
-      out << ") ";
-    }
-  }
-  break;
-
-  // separation logic
-  case Kind::SEP_NIL:
     out << "(as sep.nil " << n.getType() << ")";
     return true;
-
-    // quantifiers
-  case Kind::FORALL:
-  case Kind::EXISTS:
-  case Kind::LAMBDA:
-  case Kind::WITNESS:
+  }
+  else if (k==Kind::FORALL || k==Kind::EXISTS || k==Kind::LAMBDA || k==Kind::WITNESS)
   {
-    out << smtKindString(k) << " ";
+    out << '(' << smtKindString(k) << " ";
     // do not letify the bound variable list
     toStream(out, n[0], toDepth, nullptr);
     out << " ";
@@ -895,6 +796,95 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
     return true;
   }
 
+  bool stillNeedToPrintParams = true;
+  bool printed = true;
+  // operator
+  if (n.getNumChildren() != 0)
+  {
+    out << '(';
+  }
+  switch (k)
+  {
+  case Kind::REAL_ALGEBRAIC_NUMBER:
+  {
+    const RealAlgebraicNumber& ran =
+        n.getOperator().getConst<RealAlgebraicNumber>();
+    out << "(_ real_algebraic_number " << ran << ")";
+    break;
+  }
+  case Kind::INDEXED_ROOT_PREDICATE_OP:
+  {
+    const IndexedRootPredicate& irp = n.getConst<IndexedRootPredicate>();
+    out << "(_ root_predicate " << irp.d_index << ")";
+    stillNeedToPrintParams = false;
+    break;
+  }
+  case Kind::BITVECTOR_BITOF:
+    out << "(_ bitOf " << n.getOperator().getConst<BitVectorBitOf>().d_bitIndex
+        << ")";
+    stillNeedToPrintParams = false;
+    break;
+  case Kind::APPLY_CONSTRUCTOR:
+  {
+    const DType& dt = DType::datatypeOf(n.getOperator());
+    if (dt.isTuple())
+    {
+      stillNeedToPrintParams = false;
+      if (dt[0].getNumArgs() == 0)
+      {
+        out << "tuple.unit";
+      }
+      else
+      {
+        out << "tuple ";
+      }
+    }
+    break;
+  }
+  case Kind::APPLY_SELECTOR:
+  {
+    Node op = n.getOperator();
+    const DType& dt = DType::datatypeOf(op);
+    if (dt.isTuple())
+    {
+      stillNeedToPrintParams = false;
+      out << "(_ tuple.select " << DType::indexOf(op) << ")";
+    }
+  }
+  break;
+  case Kind::APPLY_TESTER:
+  {
+    stillNeedToPrintParams = false;
+    Node op = n.getOperator();
+    size_t cindex = DType::indexOf(op);
+    const DType& dt = DType::datatypeOf(op);
+    out << "(_ is ";
+    toStream(
+        out, dt[cindex].getConstructor(), toDepth < 0 ? toDepth : toDepth - 1);
+    out << ")";
+  }
+  break;
+  case Kind::APPLY_UPDATER:
+  {
+    stillNeedToPrintParams = false;
+    Node op = n.getOperator();
+    size_t index = DType::indexOf(op);
+    const DType& dt = DType::datatypeOf(op);
+    size_t cindex = DType::cindexOf(op);
+    if (dt.isTuple())
+    {
+      out << "(_ tuple.update " << DType::indexOf(op) << ")";
+    }
+    else
+    {
+      out << "(_ update ";
+      toStream(out,
+               dt[cindex][index].getSelector(),
+               toDepth < 0 ? toDepth : toDepth - 1);
+      out << ")";
+    }
+  }
+  break;
   // kinds that don't print their operator
   case Kind::APPLY_INDEXED_SYMBOLIC:  // operator is printed as kind
   case Kind::SEXPR:
@@ -902,38 +892,38 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
   case Kind::PARAMETRIC_DATATYPE:
   case Kind::INST_PATTERN:
   case Kind::INST_NO_PATTERN:
-  case Kind::INST_PATTERN_LIST: break;
+  case Kind::INST_PATTERN_LIST:
+    printed = false;
+    break;
   default:
     // by default, print the kind using the smtKindString utility
     if (n.getMetaKind() != kind::metakind::PARAMETERIZED)
     {
       out << smtKindString(k);
-      printed = true;
     }
     break;
   }
   if (n.getMetaKind() == kind::metakind::PARAMETERIZED
       && stillNeedToPrintParams)
   {
-  if (toDepth != 0)
-  {
-    toStream(out, n.getOperator(), toDepth < 0 ? toDepth : toDepth - 1, lbind);
-  }
-  else
-  {
-    out << "(...)";
-  }
-  printed = true;
+    if (toDepth != 0)
+    {
+      toStream(out, n.getOperator(), toDepth < 0 ? toDepth : toDepth - 1, lbind);
+    }
+    else
+    {
+      out << "(...)";
+    }
   }
   // finished if we have no children
   if (n.getNumChildren() == 0)
   {
-  return true;
+    return true;
   }
   if (printed)
   {
-  // if printed anything, now add a space
-  out << ' ';
+    // if printed anything, now add a space
+    out << ' ';
   }
   return false;
 }
@@ -950,41 +940,41 @@ void Smt2Printer::toStream(std::ostream& out,
   visit.emplace_back(n, 0, toDepth);
   do
   {
-  cur = std::get<0>(visit.back());
-  curChild = std::get<1>(visit.back());
-  cdepth = std::get<2>(visit.back());
-  if (curChild == 0)
-  {
-    // print the operator
-    // if printed as standalone, we are done
-    if (toStreamBase(out, cur, cdepth, lbind))
+    cur = std::get<0>(visit.back());
+    curChild = std::get<1>(visit.back());
+    cdepth = std::get<2>(visit.back());
+    if (curChild == 0)
     {
+      // print the operator
+      // if printed as standalone, we are done
+      if (toStreamBase(out, cur, cdepth, lbind))
+      {
+        visit.pop_back();
+        continue;
+      }
+      else if (cdepth == 0)
+      {
+        visit.pop_back();
+        out << "(...)";
+        continue;
+      }
+    }
+    if (curChild < cur.getNumChildren())
+    {
+      std::get<1>(visit.back())++;
+      // toStreamBase akready adds space, skip adding space before first child
+      if (curChild > 0)
+      {
+        out << ' ';
+      }
+      visit.emplace_back(cur[curChild], 0, cdepth < 0 ? cdepth : cdepth - 1);
+    }
+    else
+    {
+      Assert(cur.getNumChildren() > 0);
+      out << ')';
       visit.pop_back();
-      continue;
     }
-    else if (cdepth == 0)
-    {
-      visit.pop_back();
-      out << "(...)";
-      continue;
-    }
-  }
-  if (curChild < cur.getNumChildren())
-  {
-    std::get<1>(visit.back())++;
-    // toStreamBase akready adds space, skip adding space before first child
-    if (curChild > 0)
-    {
-      out << ' ';
-    }
-    visit.emplace_back(cur[curChild], 0, cdepth < 0 ? cdepth : cdepth - 1);
-  }
-  else
-  {
-    Assert(cur.getNumChildren() > 0);
-    out << ')';
-    visit.pop_back();
-  }
   } while (!visit.empty());
 }
 
