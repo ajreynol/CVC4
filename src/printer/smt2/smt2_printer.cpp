@@ -148,11 +148,12 @@ void Smt2Printer::toStreamWithLetify(std::ostream& out,
     toStream(out, n, toDepth);
     return;
   }
-  std::stringstream cparen;
+  std::string cparen;
   std::vector<Node> letList;
   lbind->letify(n, letList);
   if (!letList.empty())
   {
+    std::stringstream cparens;
     std::map<Node, uint32_t>::const_iterator it;
     for (size_t i = 0, nlets = letList.size(); i < nlets; i++)
     {
@@ -163,13 +164,14 @@ void Smt2Printer::toStreamWithLetify(std::ostream& out,
       Node nlc = lbind->convert(nl, "_let_", false);
       toStream(out, nlc, toDepth, lbind);
       out << ")) ";
-      cparen << ")";
+      cparens << ")";
     }
+    cparen = cparens.str();
   }
   Node nc = lbind->convert(n, "_let_");
   // print the body, passing the lbind object
   toStream(out, nc, toDepth, lbind);
-  out << cparen.str();
+  out << cparen;
   lbind->popScope();
 }
 
@@ -1068,7 +1070,6 @@ void Smt2Printer::toStream(std::ostream& out,
       out << ' ';
     }
   }
-  stringstream parens;
 
   for(size_t i = 0, c = 1; i < n.getNumChildren(); ) {
     if(toDepth != 0) {
@@ -1082,7 +1083,7 @@ void Smt2Printer::toStream(std::ostream& out,
   }
   if (n.getNumChildren() != 0)
   {
-    out << parens.str() << ')';
+    out << ')';
   }
 }
 
