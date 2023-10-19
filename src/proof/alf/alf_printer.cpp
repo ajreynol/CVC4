@@ -57,6 +57,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::TRUE_ELIM:
     case ProofRule::FALSE_INTRO:
     case ProofRule::FALSE_ELIM:
+    case ProofRule::CONVERT:
     case ProofRule::SPLIT:
     case ProofRule::EQ_RESOLVE:
     case ProofRule::MODUS_PONENS:

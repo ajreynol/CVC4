@@ -179,3 +179,11 @@ name   = "Proof"
   type       = "bool"
   default    = "false"
   help       = "Print reference to original file instead of redeclaring"
+
+[[option]]
+  name       = "proofUseConvert"
+  category   = "expert"
+  long       = "proof-use-convert"
+  type       = "bool"
+  default    = "false"
+  help       = "Use CONVERT proof rule in term conversion proofs"

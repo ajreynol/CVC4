@@ -511,8 +511,7 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
             {
               if (cur[i] == ret[i])
               {
-                // ensure we have a REFL step
-                pf.addStep(cur[i].eqNode(cur[i]), ProofRule::REFL, {}, {cur[i]});
+                // don't add REFL yet
                 continue;
               }
               Node cn = cur[i];
@@ -702,7 +701,18 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
         if (itw==waitConvert.end())
         {
           Assert (visited.find(curHash)!=visited.end());
-          pfChildren.push_back(cur.eqNode(visited[curHash]));
+          Node rcur = visited[curHash];
+          if (cur==rcur)
+          {
+            if (cur.getNumChildren()==0)
+            {
+              // optimization: not even worthwhile if zero children
+              continue;
+            }
+            // ensure we have a REFL step
+            pf.addStep(cur.eqNode(cur), ProofRule::REFL, {}, {cur});
+          }
+          pfChildren.push_back(cur.eqNode(rcur));
           continue;
         }
         // otherwise, we traverse to children
@@ -718,7 +728,6 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
         }
         else
         {
-          visit.push_back(cur);
           // visit operator if apply uf
           if (d_rewriteOps && cur.getKind() == Kind::APPLY_UF)
           {
