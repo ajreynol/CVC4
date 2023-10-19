@@ -509,16 +509,19 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
             }
             for (size_t i = 0, size = cur.getNumChildren(); i < size; i++)
             {
-              if (cur[i] != ret[i])
+              if (cur[i] == ret[i])
               {
-                Node cn = cur[i];
-                if (tctx != nullptr)
-                {
-                  uint32_t cnval = tctx->computeValue(cur, curCVal, i);
-                  cn = TCtxNode::computeNodeHash(cn, cnval);
-                }
-                needConvert.push_back(cn);
+                // ensure we have a REFL step
+                pf.addStep(cur[i].eqNode(cur[i]), ProofRule::REFL, {}, {cur[i]});
+                continue;
               }
+              Node cn = cur[i];
+              if (tctx != nullptr)
+              {
+                uint32_t cnval = tctx->computeValue(cur, curCVal, i);
+                cn = TCtxNode::computeNodeHash(cn, cnval);
+              }
+              needConvert.push_back(cn);
             }
             // ensure that proofs are made for terms whose proofs are used
             // more than once (to avoid exponential explosion)
@@ -540,7 +543,7 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
                 waitConvert.erase(itw);
               }
             }
-            waitConvert[cur] = true;
+            waitConvert[curHash] = true;
           }
           else
           {
@@ -621,6 +624,12 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
           // require a trans step to connect here
           if (!rret.isNull() && childChanged)
           {
+            if (useConvert)
+            {
+              // must convert the current
+              waitConvert.erase(curHash);
+              toConvert.insert(curHash);
+            }
             std::vector<Node> pfChildren;
             pfChildren.push_back(cur.eqNode(ret));
             pfChildren.push_back(ret.eqNode(rret));
@@ -661,7 +670,66 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
       Node cr = it->second;
       // replay the proof
       std::vector<Node> pfChildren;
-      
+      std::vector<Node> visit;
+      if (tctx != nullptr)
+      {
+        Assert (visitctx->empty());
+        visitctx->pushHash(c);
+      }
+      else
+      {
+        visit.push_back(t);
+      }
+      Node cur;
+      uint32_t curCVal = 0;
+      Node curHash;
+      do
+      {
+        // pop the top element
+        if (tctx != nullptr)
+        {
+          std::pair<Node, uint32_t> curPair = visitctx->getCurrent();
+          cur = curPair.first;
+          curCVal = curPair.second;
+          curHash = TCtxNode::computeNodeHash(cur, curCVal);
+          visitctx->pop();
+        }
+        else
+        {
+          cur = visit.back();
+          curHash = cur;
+          visit.pop_back();
+        }
+        itw = waitConvert.find(curHash);
+        // if not waiting to convert, we add it as a child
+        if (itw==waitConvert.end())
+        {
+          Assert (visited.find(curHash)!=visited.end());
+          pfChildren.push_back(cur.eqNode(visited[curHash]));
+          continue;
+        }
+        // otherwise, we traverse to children
+        if (tctx != nullptr)
+        {
+          visitctx->push(cur, curCVal);
+          // visit operator if apply uf
+          if (d_rewriteOps && cur.getKind() == Kind::APPLY_UF)
+          {
+            visitctx->pushOp(cur, curCVal);
+          }
+          visitctx->pushChildren(cur, curCVal);
+        }
+        else
+        {
+          visit.push_back(cur);
+          // visit operator if apply uf
+          if (d_rewriteOps && cur.getKind() == Kind::APPLY_UF)
+          {
+            visit.push_back(cur.getOperator());
+          }
+          visit.insert(visit.end(), cur.begin(), cur.end());
+        }
+      } while (!(tctx != nullptr ? visitctx->empty() : visit.empty()));
       pf.addStep(c.eqNode(cr), ProofRule::CONVERT, pfChildren, {c});
     }
   }

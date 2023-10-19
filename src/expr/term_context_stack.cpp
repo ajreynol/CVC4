@@ -24,7 +24,7 @@ TCtxStack::TCtxStack(const TermContext* tctx) : d_tctx(tctx) {}
 void TCtxStack::pushInitial(Node t)
 {
   Assert(d_stack.empty());
-  d_stack.push_back(std::pair<Node, uint32_t>(t, d_tctx->initialValue()));
+  d_stack.emplace_back(t, d_tctx->initialValue());
 }
 
 void TCtxStack::pushChildren(Node t, uint32_t tval)
@@ -43,19 +43,31 @@ void TCtxStack::pushChild(Node t, uint32_t tval, size_t index)
   uint32_t tcval = d_tctx->computeValue(t, tval, index);
   Trace("tctx-debug") << "TCtxStack::pushChild: returned " << t << "[" << index
                       << "] / " << tval << " ---> " << tcval << std::endl;
-  d_stack.push_back(std::pair<Node, uint32_t>(t[index], tcval));
+  d_stack.emplace_back(t[index], tcval);
 }
 
 void TCtxStack::pushOp(Node t, uint32_t tval)
 {
   Assert(t.hasOperator());
   uint32_t toval = d_tctx->computeValueOp(t, tval);
-  d_stack.push_back(std::pair<Node, uint32_t>(t.getOperator(), toval));
+  d_stack.emplace_back(t.getOperator(), toval);
 }
 
 void TCtxStack::push(Node t, uint32_t tval)
 {
-  d_stack.push_back(std::pair<Node, uint32_t>(t, tval));
+  d_stack.emplace_back(t, tval);
+}
+
+bool TCtxStack::pushHash(Node h)
+{
+  uint32_t tval;
+  Node t = TCtxNode::decomposeNodeHash(h, tval);
+  if (t.isNull())
+  {
+    return false;
+  }
+  d_stack.emplace_back(t, tval);
+  return true;
 }
 
 void TCtxStack::pop() { d_stack.pop_back(); }

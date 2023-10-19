@@ -49,6 +49,8 @@ class TCtxStack
   void pushOp(Node t, uint32_t tval);
   /** Push t to the stack with term context hash tval. */
   void push(Node t, uint32_t tval);
+  /** Push a hashed term (term plus term context hash) */
+  bool pushHash(Node h);
   /** Pop a term from the context */
   void pop();
   /** Clear the stack */
