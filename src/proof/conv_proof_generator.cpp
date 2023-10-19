@@ -258,6 +258,7 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
                                                LazyCDProof& pf,
                                                TermContext* tctx)
 {
+  bool useConvert = false;
   NodeManager* nm = NodeManager::currentNM();
   // Invariant: if visited[hash(t)] = s or rewritten[hash(t)] = s and t,s are
   // distinct, then pf is able to generate a proof of t=s. We must
@@ -271,6 +272,11 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
   std::unordered_map<Node, Node>::iterator it;
   std::unordered_map<Node, Node>::iterator itr;
   std::map<Node, std::shared_ptr<ProofNode> >::iterator itc;
+  // set of terms that require convert proof steps
+  std::unordered_set<Node> toConvert;
+  // set of terms waiting to use convert proof steps
+  std::map<Node, bool> waitConvert;
+  std::map<Node, bool>::iterator itw;
   Trace("tconv-pf-gen-rewrite")
       << "TConvProofGenerator::getProofForRewriting: " << toStringDebug()
       << std::endl;
@@ -485,35 +491,89 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
         {
           ret = nm->mkNode(ck, children);
           rewritten[curHash] = ret;
-          // congruence to show (cur = ret)
-          ProofRule congRule = ProofRule::CONG;
-          std::vector<Node> pfChildren;
-          std::vector<Node> pfArgs;
-          if (ck == Kind::APPLY_UF && children[0] != cur.getOperator())
+          if (useConvert)
           {
-            // use HO_CONG if the operator changed
-            congRule = ProofRule::HO_CONG;
-            pfChildren.push_back(cur.getOperator().eqNode(children[0]));
+            Assert (toConvert.find(cur)==toConvert.end());
+            Assert (waitConvert.find(cur)==waitConvert.end());
+            // get the LHS of changed children
+            std::vector<Node> needConvert;
+            if (ck == Kind::APPLY_UF && children[0] != cur.getOperator())
+            {
+              Node cop = cur.getOperator();
+              if (tctx != nullptr)
+              {
+                uint32_t coval = tctx->computeValueOp(cur, curCVal);
+                cop = TCtxNode::computeNodeHash(cop, coval);
+              }
+              needConvert.push_back(cop);
+            }
+            for (size_t i = 0, size = cur.getNumChildren(); i < size; i++)
+            {
+              if (cur[i] != ret[i])
+              {
+                Node cn = cur[i];
+                if (tctx != nullptr)
+                {
+                  uint32_t cnval = tctx->computeValue(cur, curCVal, i);
+                  cn = TCtxNode::computeNodeHash(cn, cnval);
+                }
+                needConvert.push_back(cn);
+              }
+            }
+            // ensure that proofs are made for terms whose proofs are used
+            // more than once (to avoid exponential explosion)
+            for (const Node& nc : needConvert)
+            {
+              itw = waitConvert.find(nc);
+              if (itw==waitConvert.end())
+              {
+                continue;
+              }
+              if (itw->second)
+              {
+                itw->second = false;
+              }
+              else
+              {
+                Assert (toConvert.find(nc)==toConvert.end());
+                toConvert.insert(nc);
+                waitConvert.erase(itw);
+              }
+            }
+            waitConvert[cur] = true;
           }
           else
           {
-            pfArgs.push_back(ProofRuleChecker::mkKindNode(ck));
-            if (kind::metaKindOf(ck) == kind::metakind::PARAMETERIZED)
+            // congruence to show (cur = ret)
+            ProofRule congRule = ProofRule::CONG;
+            std::vector<Node> pfChildren;
+            std::vector<Node> pfArgs;
+            if (ck == Kind::APPLY_UF && children[0] != cur.getOperator())
             {
-              pfArgs.push_back(cur.getOperator());
+              // use HO_CONG if the operator changed
+              congRule = ProofRule::HO_CONG;
+              pfChildren.push_back(cur.getOperator().eqNode(children[0]));
             }
-          }
-          for (size_t i = 0, size = cur.getNumChildren(); i < size; i++)
-          {
-            if (cur[i] == ret[i])
+            else
             {
-              // ensure REFL proof for unchanged children
-              pf.addStep(cur[i].eqNode(cur[i]), ProofRule::REFL, {}, {cur[i]});
+              pfArgs.push_back(ProofRuleChecker::mkKindNode(ck));
+              if (kind::metaKindOf(ck) == kind::metakind::PARAMETERIZED)
+              {
+                pfArgs.push_back(cur.getOperator());
+              }
             }
-            pfChildren.push_back(cur[i].eqNode(ret[i]));
+            for (size_t i = 0, size = cur.getNumChildren(); i < size; i++)
+            {
+              if (cur[i] == ret[i])
+              {
+                // ensure REFL proof for unchanged children
+                pf.addStep(cur[i].eqNode(cur[i]), ProofRule::REFL, {}, {cur[i]});
+              }
+              pfChildren.push_back(cur[i].eqNode(ret[i]));
+            }
+            Node result = cur.eqNode(ret);
+            pf.addStep(result, congRule, pfChildren, pfArgs);
           }
-          Node result = cur.eqNode(ret);
-          pf.addStep(result, congRule, pfChildren, pfArgs);
           // must update the hash
           retHash = ret;
           if (tctx != nullptr)
@@ -585,6 +645,27 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
   } while (!(tctx != nullptr ? visitctx->empty() : visit.empty()));
   Assert(visited.find(tinitialHash) != visited.end());
   Assert(!visited.find(tinitialHash)->second.isNull());
+  
+  // if we are waiting to convert the top-level, ensure it is marked to convert
+  if (waitConvert.find(tinitialHash)!=waitConvert.end())
+  {
+    toConvert.insert(tinitialHash);
+  }
+  // go back and fill in convert steps
+  if (!toConvert.empty())
+  {
+    for (const Node& c : toConvert)
+    {
+      it = visited.find(c);
+      Assert (it!=visited.end());
+      Node cr = it->second;
+      // replay the proof
+      std::vector<Node> pfChildren;
+      
+      pf.addStep(c.eqNode(cr), ProofRule::CONVERT, pfChildren, {c});
+    }
+  }
+  
   Trace("tconv-pf-gen-rewrite")
       << "...finished, return " << visited[tinitialHash] << std::endl;
   // return the conclusion of the overall proof
