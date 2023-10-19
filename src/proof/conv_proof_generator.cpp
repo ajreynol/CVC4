@@ -258,7 +258,7 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
                                                LazyCDProof& pf,
                                                TermContext* tctx)
 {
-  bool useConvert = false;
+  bool useConvert = options().proof.proofUseConvert;
   NodeManager* nm = NodeManager::currentNM();
   // Invariant: if visited[hash(t)] = s or rewritten[hash(t)] = s and t,s are
   // distinct, then pf is able to generate a proof of t=s. We must
@@ -670,7 +670,6 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
       Node cr = it->second;
       // replay the proof
       std::vector<Node> pfChildren;
-      std::vector<Node> visit;
       if (tctx != nullptr)
       {
         Assert (visitctx->empty());
@@ -678,11 +677,9 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
       }
       else
       {
+        Assert (visit.empty());
         visit.push_back(t);
       }
-      Node cur;
-      uint32_t curCVal = 0;
-      Node curHash;
       do
       {
         // pop the top element
