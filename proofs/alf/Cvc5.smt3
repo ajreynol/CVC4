@@ -15,7 +15,6 @@
 (include "./rules/Quantifiers.smt3")
 (include "./theories/Datatypes.smt3")
 (include "./theories/SepLogic.smt3")
-; specific plugins
 (include "./rules/drat/Drat.smt3")
 
 ; extensions
@@ -42,7 +41,11 @@
   )
 )
 
-; converts x to an equivalent form
+; Converts x to an equivalent form, for ProofRule::ENCODE_TRANSFORM.
+; This side condition is used to convert between the native
+; representation in cvc5 to the form expected by DSL rewrite rules.
+; In particular, we convert:
+; - Word constants "ABC" to concatenations of chars (str.++ "A" "B" "C").
 (program encode_transform ((T Type) (S Type) (f (-> S T)) (x T) (y S))
   (T) T
   (
@@ -118,4 +121,5 @@
 ; ProofRule::EVALUATE
 (declare-rule evaluate ((U Type) (t U))
   :args (t)
-  :conclusion (= t (run_evaluate t)))
+  :conclusion (= t (run_evaluate t))
+)
