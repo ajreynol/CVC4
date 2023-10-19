@@ -22,6 +22,8 @@
 #include "proof/proof_checker.h"
 #include "proof/proof_node.h"
 #include "proof/proof_node_algorithm.h"
+#include "proof/proof_node_manager.h"
+#include "smt/env.h"
 
 using namespace cvc5::internal::kind;
 
@@ -273,10 +275,10 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
   std::unordered_map<Node, Node>::iterator itr;
   std::map<Node, std::shared_ptr<ProofNode> >::iterator itc;
   // set of terms that require convert proof steps
-  std::unordered_set<Node> toConvert;
+  std::unordered_map<Node, Node> toConvert;
   // set of terms waiting to use convert proof steps
-  std::map<Node, bool> waitConvert;
-  std::map<Node, bool>::iterator itw;
+  std::map<Node, std::pair<bool, Node>> waitConvert;
+  std::map<Node, std::pair<bool, Node>>::iterator itw;
   Trace("tconv-pf-gen-rewrite")
       << "TConvProofGenerator::getProofForRewriting: " << toStringDebug()
       << std::endl;
@@ -412,20 +414,27 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
         Assert(cur != rcur);
         // the final rewritten form of cur is the final form of rcur
         Node rcurFinal = visited[rcurHash];
-        Assert(!rcurFinal.isNull());
+        Assert(!rcurFinal.isNull());          
+        if (useConvert)
+        {
+          itw = waitConvert.find(curHash);
+          if (itw!=waitConvert.end())
+          {
+            toConvert[curHash] = itw->second.second;
+            waitConvert.erase(itw);
+          }
+        }
         if (rcurFinal != rcur)
         {
-          /*
           if (useConvert)
           {
             itw = waitConvert.find(rcurHash);
             if (itw!=waitConvert.end())
             {
+              toConvert[rcurHash] = itw->second.second;
               waitConvert.erase(itw);
-              toConvert.insert(rcurHash);
             }
           }
-          */
           // must connect via TRANS
           std::vector<Node> pfChildren;
           pfChildren.push_back(cur.eqNode(rcur));
@@ -540,20 +549,24 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
               itw = waitConvert.find(nc);
               if (itw==waitConvert.end())
               {
+                // proof for child already exists
                 continue;
               }
-              if (itw->second)
+              if (itw->second.first)
               {
-                itw->second = false;
+                // proof for child has not yet been referenced
+                itw->second.first = false;
               }
               else
               {
+                // proof for child has been referenced twice, make it concrete
                 Assert (toConvert.find(nc)==toConvert.end());
-                toConvert.insert(nc);
+                toConvert[nc] = itw->second.second;
                 waitConvert.erase(itw);
               }
             }
-            waitConvert[curHash] = true;
+            // will use convert for this, we are waiting
+            waitConvert[curHash] = std::pair<bool,Node>(true, ret);
           }
           else
           {
@@ -636,9 +649,9 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
           {
             if (useConvert)
             {
+              toConvert[curHash] = ret;
               // must convert the current
               waitConvert.erase(curHash);
-              toConvert.insert(curHash);
             }
             std::vector<Node> pfChildren;
             pfChildren.push_back(cur.eqNode(ret));
@@ -666,9 +679,10 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
   Assert(!visited.find(tinitialHash)->second.isNull());
   
   // if we are waiting to convert the top-level, ensure it is marked to convert
-  if (waitConvert.find(tinitialHash)!=waitConvert.end())
+  itw = waitConvert.find(tinitialHash);
+  if (itw!=waitConvert.end())
   {
-    toConvert.insert(tinitialHash);
+    toConvert[tinitialHash] = itw->second.second;
   }
   if (useConvert)
   {
@@ -677,11 +691,12 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
   // go back and fill in convert steps
   if (!toConvert.empty())
   {
-    for (const Node& c : toConvert)
+    ProofChecker * pc = d_env.getProofNodeManager()->getChecker();
+    for (const std::pair<const Node, Node>& p : toConvert)
     {
+      Node c = p.first;
       it = visited.find(c);
-      Assert (it!=visited.end());
-      Node cr = it->second;
+      Node cr = p.second;
       // replay the proof
       std::vector<Node> pfChildren;
       if (tctx != nullptr)
@@ -751,13 +766,17 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
           }
         }
       } while (!(tctx != nullptr ? visitctx->empty() : visit.empty()));
-      Trace("tconv-pf-gen-rewrite") << "...add convert proof " << c << " == " << cr << std::endl;
-      pf.addStep(c.eqNode(cr), ProofRule::CONVERT, pfChildren, {c});
+      Node eq = pc->checkDebug(ProofRule::CONVERT, pfChildren, {c});
+      Trace("tconv-pf-gen-rewrite") << "...add convert proof " << pfChildren << ", " << c << " : " << eq << std::endl;
+      pf.addStep(eq, ProofRule::CONVERT, pfChildren, {c});
     }
   }
   
   Trace("tconv-pf-gen-rewrite")
       << "...finished, return " << visited[tinitialHash] << std::endl;
+      Node eqr = t.eqNode(visited[tinitialHash]);
+  Trace("tconv-pf-gen-rewrite") << "Conversion proof for " << eqr << " is" << std::endl;
+  Trace("tconv-pf-gen-rewrite") << *pf.getProofFor(eqr) << std::endl;
   // return the conclusion of the overall proof
   return t.eqNode(visited[tinitialHash]);
 }
