@@ -129,7 +129,7 @@ int main()
       {
         FAIL;
       }
-      alf_to_dimacs.insert(std::pair(alf_int, dimacs_int));
+      alf_to_dimacs.insert(std::pair<int, int>(alf_int, dimacs_int));
       known_dimacs.insert(dimacs_int);
       continue;
     }
