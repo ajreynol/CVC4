@@ -122,3 +122,27 @@
 ; HO_APP_ENCODE
 
 ; BETA_REDUCE
+
+
+(program run_convert
+  ((T Type) (U Type) (x U) (y U) (f (-> T U)) (a T) (z1 @List) (z2 @List) (w T))
+  (U @List) (@Pair U @List)
+  (
+    ((run_convert x (@list (= x y) z2)) (@pair y z2))
+    ((run_convert (skolem w) z2)        (@pair (skolem w) z2))   ; do not traverse into skolems
+    ((run_convert (f a) (@list z1 z2))  (alf.match ((fr (-> T U)) (zr @List)) (run_convert f (@list z1 z2))
+                                                (((@pair fr zr)
+                                                    (alf.match ((ar T) (zrr @List)) (run_convert a zr)
+                                                      (((@pair ar zrr) (@pair (fr ar) zrr))))))))
+    ((run_convert x z2)                 (@pair x z2))
+  )
+)
+
+(declare-rule convert ((T Type) (t T) (L @List))
+  :premise-list L @list
+  :args (t)
+  :conclusion (alf.match ((s T) (L2 @List)) (run_convert t L)   ; using L2 does not ensure all equalities are used
+                (
+                  ((@pair s L2) (= t s))
+                ))
+)

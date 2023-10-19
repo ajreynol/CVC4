@@ -37,6 +37,8 @@ class TCtxStack
    * Push all children of t to the stack, where tval is the term context hash
    * of t. */
   void pushChildren(Node t, uint32_t tval);
+  /** Same as above, in reverse order */
+  void pushRChildren(Node t, uint32_t tval);
   /**
    * Push the child of t with the given index to the stack, where tval is
    * the term context hash of t.

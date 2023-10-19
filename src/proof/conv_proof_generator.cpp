@@ -415,6 +415,17 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
         Assert(!rcurFinal.isNull());
         if (rcurFinal != rcur)
         {
+          /*
+          if (useConvert)
+          {
+            itw = waitConvert.find(rcurHash);
+            if (itw!=waitConvert.end())
+            {
+              waitConvert.erase(itw);
+              toConvert.insert(rcurHash);
+            }
+          }
+          */
           // must connect via TRANS
           std::vector<Node> pfChildren;
           pfChildren.push_back(cur.eqNode(rcur));
@@ -659,6 +670,10 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
   {
     toConvert.insert(tinitialHash);
   }
+  if (useConvert)
+  {
+    Trace("tconv-pf-gen-rewrite") << "...go back and prove " << toConvert.size() << " steps with convert" << std::endl;
+  }
   // go back and fill in convert steps
   if (!toConvert.empty())
   {
@@ -724,18 +739,19 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
           {
             visitctx->pushOp(cur, curCVal);
           }
-          visitctx->pushChildren(cur, curCVal);
+          visitctx->pushRChildren(cur, curCVal);
         }
         else
         {
+          visit.insert(visit.end(), cur.rbegin(), cur.rend());
           // visit operator if apply uf
           if (d_rewriteOps && cur.getKind() == Kind::APPLY_UF)
           {
             visit.push_back(cur.getOperator());
           }
-          visit.insert(visit.end(), cur.begin(), cur.end());
         }
       } while (!(tctx != nullptr ? visitctx->empty() : visit.empty()));
+      Trace("tconv-pf-gen-rewrite") << "...add convert proof " << c << " == " << cr << std::endl;
       pf.addStep(c.eqNode(cr), ProofRule::CONVERT, pfChildren, {c});
     }
   }
