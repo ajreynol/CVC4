@@ -118,6 +118,7 @@ const char* toString(ProofRule id)
     case ProofRule::HO_APP_ENCODE: return "HO_APP_ENCODE";
     case ProofRule::HO_CONG: return "HO_CONG";
     case ProofRule::BETA_REDUCE: return "BETA_REDUCE";
+    case ProofRule::CONVERT: return "CONVERT";
     //================================================= Array rules
     case ProofRule::ARRAYS_READ_OVER_WRITE: return "ARRAYS_READ_OVER_WRITE";
     case ProofRule::ARRAYS_READ_OVER_WRITE_CONTRA:

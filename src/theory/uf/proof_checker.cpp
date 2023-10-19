@@ -37,6 +37,7 @@ void UfProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::HO_CONG, this);
   pc->registerChecker(ProofRule::HO_APP_ENCODE, this);
   pc->registerChecker(ProofRule::BETA_REDUCE, this);
+  pc->registerChecker(ProofRule::CONVERT, this);
 }
 
 Node UfProofRuleChecker::checkInternal(ProofRule id,
@@ -226,6 +227,78 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
     Node ret = lambda[1].substitute(
         vars.begin(), vars.end(), subs.begin(), subs.end());
     return app.eqNode(ret);
+  }
+  else if (id == ProofRule::CONVERT)
+  {
+    NodeManager* nm = NodeManager::currentNM();
+    Assert (args.size()==1);
+    std::vector<std::pair<TNode, size_t>> visit;
+    std::map<TNode, std::vector<Node>> ret;
+    std::map<TNode, std::vector<Node>>::iterator it;
+    TNode cur;
+    size_t curChild;
+    visit.emplace_back(args[0], 0);
+    size_t chindex = 0;
+    size_t chsize = children.size();
+    do
+    {
+      cur = visit.back().first;
+      curChild = visit.back().second;
+      if (curChild == 0)
+      {
+        // check if rewrite
+        if (chindex<chsize && children[chindex][0]==cur)
+        {
+          // take RHS and increment
+          ret[cur].push_back(children[chindex][1]);
+          chindex++;
+          visit.pop_back();
+          continue;
+        }
+        if (cur.getKind()==Kind::APPLY_UF)
+        {
+          visit.back().second++;
+          visit.emplace_back(cur.getOperator(), 0);
+          continue;
+        }
+      }
+      if (cur.getKind()==Kind::APPLY_UF)
+      {
+        curChild--;
+      }
+      if (curChild < cur.getNumChildren())
+      {
+        // process next child
+        visit.back().second++;
+        visit.emplace_back(cur[curChild], 0);
+      }
+      else
+      {
+        // construct the converted term
+        bool childChanged = false;
+        std::vector<Node> cc;
+        if (cur.getMetaKind() == kind::metakind::PARAMETERIZED) 
+        {
+          cc.push_back(cur.getOperator());
+        }
+        cc.insert(cc.end(), cur.begin(), cur.end());
+        for (size_t i=0, ccsize = cc.size(); i<ccsize; i++)
+        {
+          size_t ii = ccsize-(i+1);
+          it = ret.find(cc[ii]);
+          Assert(it != ret.end());
+          Assert(!it->second.empty());
+          childChanged = childChanged || cc[ii] != it->second.back();
+          cc[ii] = it->second.back();
+          it->second.pop_back();
+        }
+        Node rcur = childChanged ? nm->mkNode(cur.getKind(), cc) : Node(cur);
+        ret[cur].push_back(rcur);
+        visit.pop_back();
+      }
+    } while (!visit.empty());
+    Assert (ret[args[0]].size()==1);
+    return args[0].eqNode(ret[args[0]].back());
   }
   // no rule
   return Node::null();

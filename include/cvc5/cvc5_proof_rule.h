@@ -1212,6 +1212,18 @@ enum ENUM(ProofRule) : uint32_t
    * \endverbatim
    */
   EVALUE(BETA_REDUCE),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Equality -- Convert**
+   *
+   * .. math::
+   *
+   *   \inferrule{t_1=s_1,\dots,t_n=s_n\mid t}{t = t'}
+   *
+   * where t is converted to t' recursively via the given equality list.
+   * \endverbatim
+   */
+  EVALUE(CONVERT),
 
   /**
    * \verbatim embed:rst:leading-asterisk
