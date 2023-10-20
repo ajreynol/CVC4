@@ -277,12 +277,17 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
         // construct the converted term
         bool childChanged = false;
         std::vector<Node> cc;
-        if (cur.getMetaKind() == kind::metakind::PARAMETERIZED) 
+        size_t start = 0;
+        if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
         {
           cc.push_back(cur.getOperator());
+          if (cur.getKind()!=Kind::APPLY_UF) 
+          {
+            start = 1;
+          }
         }
         cc.insert(cc.end(), cur.begin(), cur.end());
-        for (size_t i=0, ccsize = cc.size(); i<ccsize; i++)
+        for (size_t i=0, ccsize = cc.size(), cend = ccsize-start; i<cend; i++)
         {
           size_t ii = ccsize-(i+1);
           it = ret.find(cc[ii]);

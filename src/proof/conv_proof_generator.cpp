@@ -84,7 +84,8 @@ void TConvProofGenerator::addRewriteStep(Node t,
   Node eq = registerRewriteStep(t, s, tctx, isPre);
   if (!eq.isNull())
   {
-    d_proof.addLazyStep(eq, pg, trustId, isClosed);
+    //d_proof.addLazyStep(eq, pg, trustId, isClosed);
+    d_proof.addStep(eq, ProofRule::THEORY_REWRITE, {}, {eq});
   }
 }
 
@@ -695,6 +696,7 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
     {
       Node c = p.first;
       Node cr = p.second;
+      Node corig;
       Trace("tconv-convert") << "Prove via convert: " << c << " == " << cr << std::endl;
       // replay the proof
       std::vector<Node> pfChildren;
@@ -702,12 +704,15 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
       if (tctx != nullptr)
       {
         Assert (visitctx->empty());
-        visitctx->pushHash(c);
+        uint32_t cval;
+        corig = TCtxNode::decomposeNodeHash(c, cval);
+        visitctx->push(corig, cval);
       }
       else
       {
         Assert (visit.empty());
         visit.push_back(c);
+        corig = c;
       }
       // traverse
       do
@@ -753,16 +758,17 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
         // otherwise, we traverse to children
         if (tctx != nullptr)
         {
-          visitctx->push(cur, curCVal);
+          // visit in reverse order
+          visitctx->pushRChildren(cur, curCVal);
           // visit operator if apply uf
           if (d_rewriteOps && cur.getKind() == Kind::APPLY_UF)
           {
             visitctx->pushOp(cur, curCVal);
           }
-          visitctx->pushRChildren(cur, curCVal);
         }
         else
         {
+          // visit in reverse order
           visit.insert(visit.end(), cur.rbegin(), cur.rend());
           // visit operator if apply uf
           if (d_rewriteOps && cur.getKind() == Kind::APPLY_UF)
@@ -771,9 +777,9 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
           }
         }
       } while (!(tctx != nullptr ? visitctx->empty() : visit.empty()));
-      Node eq = pc->checkDebug(ProofRule::CONVERT, pfChildren, {c});
+      Node eq = pc->checkDebug(ProofRule::CONVERT, pfChildren, {corig});
       Trace("tconv-convert") << "...add convert proof " << pfChildren << ", " << c << " : " << eq << std::endl;
-      pf.addStep(eq, ProofRule::CONVERT, pfChildren, {c});
+      pf.addStep(eq, ProofRule::CONVERT, pfChildren, {corig});
     }
   }
   Node tret = visited[tinitialHash];
