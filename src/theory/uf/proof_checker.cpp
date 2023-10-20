@@ -230,9 +230,14 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
   }
   else if (id == ProofRule::CONVERT)
   {
+    // We do a tree traversal over args[0] in this method, where the list
+    // of (equality) premises is iterated over and used to rewrite its subterms.
     NodeManager* nm = NodeManager::currentNM();
     Assert(args.size() == 1);
+    // Nodes to visit and the index of their child we have processed
     std::vector<std::pair<TNode, size_t>> visit;
+    // Mapping nodes to their processed form. This is a vector since a term
+    // may be visited multiple times.
     std::map<TNode, std::vector<Node>> ret;
     std::map<TNode, std::vector<Node>>::iterator it;
     TNode cur;
@@ -240,29 +245,38 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
     visit.emplace_back(args[0], 0);
     size_t chindex = 0;
     size_t chsize = children.size();
+    bool isApplyUf;
     do
     {
       cur = visit.back().first;
       curChild = visit.back().second;
+      isApplyUf = cur.getKind()==Kind::APPLY_UF;
       if (curChild == 0)
       {
-        // check if rewrite
-        if (chindex < chsize && children[chindex][0] == cur)
+        if (chsize==chindex)
         {
-          // take RHS and increment
+          // no more rewriting, don't recurse
+          ret[cur].push_back(cur);
+          visit.pop_back();
+          continue;
+        }
+        // check if we write (LHS of the current equality)
+        if (children[chindex][0] == cur)
+        {
+          // take RHS of the equality and increment
           ret[cur].push_back(children[chindex][1]);
           chindex++;
           visit.pop_back();
           continue;
         }
-        if (cur.getKind() == Kind::APPLY_UF)
+        if (isApplyUf)
         {
           visit.back().second++;
           visit.emplace_back(cur.getOperator(), 0);
           continue;
         }
       }
-      if (cur.getKind() == Kind::APPLY_UF)
+      if (isApplyUf)
       {
         curChild--;
       }
@@ -281,8 +295,9 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
         if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
         {
           cc.push_back(cur.getOperator());
-          if (cur.getKind() != Kind::APPLY_UF)
+          if (!isApplyUf)
           {
+            // we did not process the operator
             start = 1;
           }
         }
