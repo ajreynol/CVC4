@@ -38,7 +38,7 @@ void TCtxStack::pushRChildren(Node t, uint32_t tval)
 {
   for (size_t i = 0, nchild = t.getNumChildren(); i < nchild; i++)
   {
-    pushChild(t, tval, nchild-(i+1));
+    pushChild(t, tval, nchild - (i + 1));
   }
 }
 
@@ -60,10 +60,7 @@ void TCtxStack::pushOp(Node t, uint32_t tval)
   d_stack.emplace_back(t.getOperator(), toval);
 }
 
-void TCtxStack::push(Node t, uint32_t tval)
-{
-  d_stack.emplace_back(t, tval);
-}
+void TCtxStack::push(Node t, uint32_t tval) { d_stack.emplace_back(t, tval); }
 
 bool TCtxStack::pushHash(Node h)
 {

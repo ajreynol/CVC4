@@ -187,8 +187,10 @@ void Smt2Printer::toStream(std::ostream& out,
 
   NodeManager* nm = NodeManager::currentNM();
   // constant
-  if(n.getMetaKind() == kind::metakind::CONSTANT) {
-    switch(n.getKind()) {
+  if (n.getMetaKind() == kind::metakind::CONSTANT)
+  {
+    switch (n.getKind())
+    {
       case Kind::TYPE_CONSTANT:
         switch (n.getConst<TypeConstant>())
         {
@@ -524,20 +526,23 @@ void Smt2Printer::toStream(std::ostream& out,
   Kind k = n.getKind();
   if (k == Kind::SORT_TYPE)
   {
-    if(n.getNumChildren() != 0) {
-      out << '(';
+    if (n.getNumChildren() != 0)
+    {
+    out << '(';
     }
     if (n.hasName())
     {
-      std::string name = n.getName();
-      out << cvc5::internal::quoteSymbol(name);
+    std::string name = n.getName();
+    out << cvc5::internal::quoteSymbol(name);
     }
-    if(n.getNumChildren() != 0) {
-      for(unsigned i = 0; i < n.getNumChildren(); ++i) {
-	      out << ' ';
-              toStream(out, n[i], toDepth);
-      }
-      out << ')';
+    if (n.getNumChildren() != 0)
+    {
+    for (unsigned i = 0; i < n.getNumChildren(); ++i)
+    {
+      out << ' ';
+      toStream(out, n[i], toDepth);
+    }
+    out << ')';
     }
     return;
   }
@@ -584,7 +589,8 @@ void Smt2Printer::toStream(std::ostream& out,
   {
     // abstract value
     std::string s = n.getName();
-    out << "(as " << cvc5::internal::quoteSymbol(s) << " " << n.getType() << ")";
+    out << "(as " << cvc5::internal::quoteSymbol(s) << " " << n.getType()
+        << ")";
     return;
   }
   else if (n.isVar())
@@ -632,7 +638,8 @@ void Smt2Printer::toStream(std::ostream& out,
   {
     out << '(';
   }
-  switch(k) {
+  switch (k)
+  {
     // builtin theory
     case Kind::FUNCTION_TYPE:
       out << "->";
@@ -759,7 +766,7 @@ void Smt2Printer::toStream(std::ostream& out,
       break;
     }
 
-  // string theory
+      // string theory
     case Kind::REGEXP_REPEAT:
     case Kind::REGEXP_LOOP:
     {
@@ -778,86 +785,86 @@ void Smt2Printer::toStream(std::ostream& out,
     {
       out << smtKindString(k) << " ";
     }
-  break;
-
-  case Kind::BITVECTOR_EXTRACT:
-  case Kind::BITVECTOR_REPEAT:
-  case Kind::BITVECTOR_ZERO_EXTEND:
-  case Kind::BITVECTOR_SIGN_EXTEND:
-  case Kind::BITVECTOR_ROTATE_LEFT:
-  case Kind::BITVECTOR_ROTATE_RIGHT:
-  case Kind::INT_TO_BITVECTOR:
-    toStream(out, n.getOperator(), toDepth, nullptr);
-    out << ' ';
-    stillNeedToPrintParams = false;
-    break;
-  case Kind::BITVECTOR_BITOF:
-    out << "(_ bitOf " << n.getOperator().getConst<BitVectorBitOf>().d_bitIndex
-        << ") ";
-    stillNeedToPrintParams = false;
     break;
 
-  // strings
-  case Kind::SEQ_UNIT:
-  {
-    out << smtKindString(k) << " ";
-    toStream(out, n[0], toDepth < 0 ? toDepth : toDepth - 1);
-    out << ")";
-    return;
-  }
-  break;
-
-  // sets
-  case Kind::SET_SINGLETON:
-  {
-    out << smtKindString(k) << " ";
-    toStream(out, n[0], toDepth < 0 ? toDepth : toDepth - 1);
-    out << ")";
-    return;
-  }
-  break;
-  case Kind::SET_UNIVERSE:
-    out << "(as set.universe " << n.getType() << ")";
-    break;
-
-  // bags
-  case Kind::BAG_MAKE:
-  {
-    // print (bag (BAG_MAKE_OP Real) 1 3) as (bag 1.0 3)
-    out << smtKindString(k) << " ";
-    toStream(out, n[0], toDepth < 0 ? toDepth : toDepth - 1);
-    out << " " << n[1] << ")";
-    return;
-  }
-
-  // fp theory
-  case Kind::FLOATINGPOINT_TO_FP_FROM_IEEE_BV:
-  case Kind::FLOATINGPOINT_TO_FP_FROM_FP:
-  case Kind::FLOATINGPOINT_TO_FP_FROM_REAL:
-  case Kind::FLOATINGPOINT_TO_FP_FROM_SBV:
-  case Kind::FLOATINGPOINT_TO_FP_FROM_UBV:
-  case Kind::FLOATINGPOINT_TO_UBV:
-  case Kind::FLOATINGPOINT_TO_SBV:
-    out << n.getOperator() << ' ';
-    stillNeedToPrintParams = false;
-    break;
-
-  case Kind::APPLY_CONSTRUCTOR:
-  {
-    const DType& dt = DType::datatypeOf(n.getOperator());
-    if (dt.isTuple())
-    {
+    case Kind::BITVECTOR_EXTRACT:
+    case Kind::BITVECTOR_REPEAT:
+    case Kind::BITVECTOR_ZERO_EXTEND:
+    case Kind::BITVECTOR_SIGN_EXTEND:
+    case Kind::BITVECTOR_ROTATE_LEFT:
+    case Kind::BITVECTOR_ROTATE_RIGHT:
+    case Kind::INT_TO_BITVECTOR:
+      toStream(out, n.getOperator(), toDepth, nullptr);
+      out << ' ';
       stillNeedToPrintParams = false;
-      if (dt[0].getNumArgs() == 0)
-      {
-        out << "tuple.unit";
-      }
-      else
-      {
-        out << "tuple ";
-      }
+      break;
+    case Kind::BITVECTOR_BITOF:
+      out << "(_ bitOf "
+          << n.getOperator().getConst<BitVectorBitOf>().d_bitIndex << ") ";
+      stillNeedToPrintParams = false;
+      break;
+
+    // strings
+    case Kind::SEQ_UNIT:
+    {
+      out << smtKindString(k) << " ";
+      toStream(out, n[0], toDepth < 0 ? toDepth : toDepth - 1);
+      out << ")";
+      return;
     }
     break;
+
+    // sets
+    case Kind::SET_SINGLETON:
+    {
+      out << smtKindString(k) << " ";
+      toStream(out, n[0], toDepth < 0 ? toDepth : toDepth - 1);
+      out << ")";
+      return;
+    }
+    break;
+    case Kind::SET_UNIVERSE:
+      out << "(as set.universe " << n.getType() << ")";
+      break;
+
+    // bags
+    case Kind::BAG_MAKE:
+    {
+      // print (bag (BAG_MAKE_OP Real) 1 3) as (bag 1.0 3)
+      out << smtKindString(k) << " ";
+      toStream(out, n[0], toDepth < 0 ? toDepth : toDepth - 1);
+      out << " " << n[1] << ")";
+      return;
+    }
+
+    // fp theory
+    case Kind::FLOATINGPOINT_TO_FP_FROM_IEEE_BV:
+    case Kind::FLOATINGPOINT_TO_FP_FROM_FP:
+    case Kind::FLOATINGPOINT_TO_FP_FROM_REAL:
+    case Kind::FLOATINGPOINT_TO_FP_FROM_SBV:
+    case Kind::FLOATINGPOINT_TO_FP_FROM_UBV:
+    case Kind::FLOATINGPOINT_TO_UBV:
+    case Kind::FLOATINGPOINT_TO_SBV:
+      out << n.getOperator() << ' ';
+      stillNeedToPrintParams = false;
+      break;
+
+    case Kind::APPLY_CONSTRUCTOR:
+    {
+      const DType& dt = DType::datatypeOf(n.getOperator());
+      if (dt.isTuple())
+      {
+        stillNeedToPrintParams = false;
+        if (dt[0].getNumArgs() == 0)
+        {
+          out << "tuple.unit";
+        }
+        else
+        {
+          out << "tuple ";
+        }
+      }
+      break;
   }
   case Kind::TUPLE_PROJECT:
   case Kind::TABLE_PROJECT:
@@ -868,16 +875,16 @@ void Smt2Printer::toStream(std::ostream& out,
   case Kind::RELATION_AGGREGATE:
   case Kind::RELATION_PROJECT:
   {
-    toStream(out, n.getOperator(), toDepth, nullptr);
-    out << ' ';
-    stillNeedToPrintParams = false;
-    break;
+      toStream(out, n.getOperator(), toDepth, nullptr);
+      out << ' ';
+      stillNeedToPrintParams = false;
+      break;
   }
   case Kind::CONSTRUCTOR_TYPE:
   {
-    out << n[n.getNumChildren()-1];
-    return;
-    break;
+      out << n[n.getNumChildren() - 1];
+      return;
+      break;
   }
   case Kind::APPLY_SELECTOR:
   {

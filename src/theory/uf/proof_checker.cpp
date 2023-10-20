@@ -231,7 +231,7 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
   else if (id == ProofRule::CONVERT)
   {
     NodeManager* nm = NodeManager::currentNM();
-    Assert (args.size()==1);
+    Assert(args.size() == 1);
     std::vector<std::pair<TNode, size_t>> visit;
     std::map<TNode, std::vector<Node>> ret;
     std::map<TNode, std::vector<Node>>::iterator it;
@@ -247,7 +247,7 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
       if (curChild == 0)
       {
         // check if rewrite
-        if (chindex<chsize && children[chindex][0]==cur)
+        if (chindex < chsize && children[chindex][0] == cur)
         {
           // take RHS and increment
           ret[cur].push_back(children[chindex][1]);
@@ -255,14 +255,14 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
           visit.pop_back();
           continue;
         }
-        if (cur.getKind()==Kind::APPLY_UF)
+        if (cur.getKind() == Kind::APPLY_UF)
         {
           visit.back().second++;
           visit.emplace_back(cur.getOperator(), 0);
           continue;
         }
       }
-      if (cur.getKind()==Kind::APPLY_UF)
+      if (cur.getKind() == Kind::APPLY_UF)
       {
         curChild--;
       }
@@ -281,15 +281,16 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
         if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
         {
           cc.push_back(cur.getOperator());
-          if (cur.getKind()!=Kind::APPLY_UF) 
+          if (cur.getKind() != Kind::APPLY_UF)
           {
             start = 1;
           }
         }
         cc.insert(cc.end(), cur.begin(), cur.end());
-        for (size_t i=0, ccsize = cc.size(), cend = ccsize-start; i<cend; i++)
+        for (size_t i = 0, ccsize = cc.size(), cend = ccsize - start; i < cend;
+             i++)
         {
-          size_t ii = ccsize-(i+1);
+          size_t ii = ccsize - (i + 1);
           it = ret.find(cc[ii]);
           Assert(it != ret.end());
           Assert(!it->second.empty());
@@ -302,7 +303,7 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
         visit.pop_back();
       }
     } while (!visit.empty());
-    Assert (ret[args[0]].size()==1);
+    Assert(ret[args[0]].size() == 1);
     return args[0].eqNode(ret[args[0]].back());
   }
   // no rule
