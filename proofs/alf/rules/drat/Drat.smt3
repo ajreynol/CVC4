@@ -41,15 +41,13 @@
 (declare-oracle-fun run_drat_check (String String) Bool ./drat-check.sh)
 
 ; The DRAT proof rule.
-; Takes arbitrary list of premises, an atom mapping, and the file name of a DRAT
-; proof and invokes the two oracles above.
-
+; Takes arbitrary list of premises, the file name of a DIMACS input, and the
+; file name of a DRAT proof and invokes the oracles run_drat_verify and
+; run_drat_check.
 (declare-rule drat_refutation ((F Bool) (D String) (P String))
   :premise-list F and
   :args (D P)
-;  :requires (((run_drat_verify (to_drat_input F) D) true) ((run_drat_check D P) true))
-;  :requires (((run_drat_verify (to_drat_input F) D) true))
-  :requires (((run_drat_check D P) true))
+  :requires (((run_drat_verify (to_drat_input F) D) true) ((run_drat_check D P) true))
   :conclusion false
 )
 
@@ -58,11 +56,12 @@
 ; generated and checked. This is done by calling CaDiCaL and drat-trim.
 (declare-oracle-fun run_sat_prove (String) Bool ./sat-prove.sh)
 
+; The SAT external prove rule.
+; Takes arbitrary list of premises, the file name of a DIMACS input, and invokes
+; the oracles run_drat_verify and run_sat_prove.
 (declare-rule sat_external_prove ((F Bool) (D String))
   :premise-list F and
   :args (D)
-;  :requires (((run_drat_verify (to_drat_input F) D) true) ((run_sat_prove D) true))
-;  :requires (((run_drat_verify (to_drat_input F) D) true))
-  :requires (((run_sat_prove D) true))
+  :requires (((run_drat_verify (to_drat_input F) D) true) ((run_sat_prove D) true))
   :conclusion false
 )
