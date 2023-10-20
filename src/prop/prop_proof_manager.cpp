@@ -20,9 +20,9 @@
 #include "proof/proof_node_algorithm.h"
 #include "prop/prop_proof_manager.h"
 #include "prop/sat_solver.h"
+#include "prop/sat_solver_factory.h"
 #include "smt/env.h"
 #include "util/string.h"
-#include "prop/sat_solver_factory.h"
 
 namespace cvc5::internal {
 namespace prop {
@@ -198,20 +198,18 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   std::vector<Node> lemmas = d_proofCnfStream->getLemmaClauses();
   Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
   cset.insert(lemmas.begin(), lemmas.end());
-    
+
   std::vector<Node> clauses;
   // go back and minimize assumptions
-  if (options().proof.satProofMinDimacs && d_satSolver->needsMinimizeClausesForGetProof())
+  if (options().proof.satProofMinDimacs
+      && d_satSolver->needsMinimizeClausesForGetProof())
   {
     Trace("cnf-input-min") << "Make cadical..." << std::endl;
     CDCLTSatSolver* csm = SatSolverFactory::createCadical(
         d_env, statisticsRegistry(), d_env.getResourceManager());
     NullRegistrar nreg;
     context::Context nctx;
-    CnfStream csms(d_env,
-                  csm,
-                  &nreg,
-                  &nctx);
+    CnfStream csms(d_env, csm, &nreg, &nctx);
     Trace("cnf-input-min") << "Get literals..." << std::endl;
     std::vector<SatLiteral> csma;
     std::map<SatLiteral, Node> litToNode;
@@ -222,18 +220,20 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
       csma.emplace_back(lit);
       litToNode[lit] = c;
     }
-    Trace("cnf-input-min") << "Solve under " << csma.size() << " assumptions..." << std::endl;
+    Trace("cnf-input-min") << "Solve under " << csma.size() << " assumptions..."
+                           << std::endl;
     SatValue res = csm->solve(csma);
-    if (res==SAT_VALUE_FALSE)
+    if (res == SAT_VALUE_FALSE)
     {
       Trace("cnf-input-min") << "...got unsat" << std::endl;
       std::vector<SatLiteral> uassumptions;
       csm->getUnsatAssumptions(uassumptions);
-      Trace("cnf-input-min") << "...#unsat assumptions=" << uassumptions.size() << std::endl;
+      Trace("cnf-input-min")
+          << "...#unsat assumptions=" << uassumptions.size() << std::endl;
       delete csm;
       for (const SatLiteral& lit : uassumptions)
       {
-        Assert (litToNode.find(lit)!=litToNode.end());
+        Assert(litToNode.find(lit) != litToNode.end());
         clauses.emplace_back(litToNode[lit]);
       }
     }
