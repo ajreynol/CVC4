@@ -84,8 +84,8 @@ void TConvProofGenerator::addRewriteStep(Node t,
   Node eq = registerRewriteStep(t, s, tctx, isPre);
   if (!eq.isNull())
   {
-    // d_proof.addLazyStep(eq, pg, trustId, isClosed);
-    d_proof.addStep(eq, ProofRule::THEORY_REWRITE, {}, {eq});
+    d_proof.addLazyStep(eq, pg, trustId, isClosed);
+    //d_proof.addStep(eq, ProofRule::THEORY_REWRITE, {}, {eq});
   }
 }
 
@@ -671,7 +671,10 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
           // it is final
           Assert(!ret.isNull());
           visited[curHash] = ret;
-          doCache(curHash, cur, ret, pf);
+          if (waitConvert.find(curHash)==waitConvert.end())
+          {
+            doCache(curHash, cur, ret, pf);
+          }
         }
       }
     }
@@ -786,6 +789,7 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
       Trace("tconv-convert") << "...add convert proof " << pfChildren << ", "
                              << c << " : " << eq << std::endl;
       pf.addStep(eq, ProofRule::CONVERT, pfChildren, {corig});
+      //doCache(c, eq[0], eq[1], pf);
     }
   }
   Node tret = visited[tinitialHash];

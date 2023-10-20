@@ -260,7 +260,9 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
           visit.pop_back();
           continue;
         }
-        // check if we write (LHS of the current equality)
+        // Check if we rewrite (LHS of the current equality).
+        // Note this may correspond to a reflexive step, which specifies not to
+        // recurse.
         if (children[chindex][0] == cur)
         {
           // take RHS of the equality and increment
