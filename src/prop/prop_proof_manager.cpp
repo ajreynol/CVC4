@@ -23,6 +23,7 @@
 #include "prop/sat_solver_factory.h"
 #include "smt/env.h"
 #include "util/string.h"
+#include "expr/skolem_manager.h"
 
 namespace cvc5::internal {
 namespace prop {
@@ -213,10 +214,44 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
     Trace("cnf-input-min") << "Get literals..." << std::endl;
     std::vector<SatLiteral> csma;
     std::map<SatLiteral, Node> litToNode;
+    NodeManager * nm = NodeManager::currentNM();
+    SkolemManager * skm = nm->getSkolemManager();
     for (const Node& c : cset)
     {
-      csms.ensureLiteral(c);
-      SatLiteral lit = csms.getLiteral(c);
+      // abstract nodes
+      Node ca = c;
+      if (c.getKind()==Kind::OR)
+      {
+        std::vector<Node> cls;
+        bool childChanged = false;
+        for (const Node& cl : c)
+        {
+          bool negated = cl.getKind()==Kind::NOT;
+          Node cla = negated ? cl[0] : cl;
+          if (d_env.theoryOf(cla) == theory::THEORY_BOOL && !cla.isVar())
+          {
+            Node k = skm->mkPurifySkolem(cla);
+            Trace("cnf-input-min-assert") << "Purify: " << k << " == " << cla << std::endl;
+            cls.push_back(negated ? k.notNode() : k);
+            childChanged = true;
+          }
+          else
+          {
+            cls.push_back(cl);
+          }
+        }
+        if (childChanged)
+        {
+          ca = nm->mkNode(Kind::OR, cls);
+        }
+      }
+      else if (d_env.theoryOf(c) == theory::THEORY_BOOL && !c.isVar())
+      {
+        ca = skm->mkPurifySkolem(c);
+      }
+      Trace("cnf-input-min-assert") << "Assert: " << ca << std::endl;
+      csms.ensureLiteral(ca);
+      SatLiteral lit = csms.getLiteral(ca);
       csma.emplace_back(lit);
       litToNode[lit] = c;
     }
