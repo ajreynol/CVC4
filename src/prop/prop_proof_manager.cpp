@@ -167,8 +167,12 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
   cset.insert(lemmas.begin(), lemmas.end());
 
+  // the set of clauses to pass to SAT solver for getProof
   std::vector<Node> clauses;
-  // go back and minimize assumptions
+  // output for dimacs file
+  std::stringstream dumpDimacs;
+  bool alreadyDumpDimacs = false;
+  // go back and minimize assumptions if option is set and SAT solver uses it
   if (options().proof.satProofMinDimacs
       && d_satSolver->needsMinimizeClausesForGetProof())
   {
@@ -181,66 +185,84 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
     Trace("cnf-input-min") << "Get literals..." << std::endl;
     std::vector<SatLiteral> csma;
     std::map<SatLiteral, Node> litToNode;
+    std::map<SatLiteral, Node> litToNodeAbs;
     NodeManager * nm = NodeManager::currentNM();
+    TypeNode bt = nm->booleanType();
+    TypeNode ft = nm->mkFunctionType({bt}, bt);
     SkolemManager * skm = nm->getSkolemManager();
+    // Function used to ensure that subformulas are not treated by CNF below.
+    Node litOf = skm->mkDummySkolem("litOf", ft);
     for (const Node& c : cset)
     {
-      // abstract nodes
       Node ca = c;
+      std::vector<SatLiteral> satClause;
+      std::vector<Node> lits;
       if (c.getKind()==Kind::OR)
       {
-        std::vector<Node> cls;
-        bool childChanged = false;
-        for (const Node& cl : c)
+        lits.insert(lits.end(), c.begin(), c.end());
+      }
+      else
+      {
+        lits.push_back(c);
+      }
+      // For each literal l in the current clause, if it has Boolean substructure,
+      // we replace it with (litOf l), which will be treated as a literal.
+      // We do this since we require that the clause be treated verbatim by the SAT
+      // solver, otherwise the unsat core will not include the necessary clauses
+      // (e.g. it will skip those corresponding to CNF conversion).
+      std::vector<Node> cls;
+      bool childChanged = false;
+      for (const Node& cl : c)
+      {
+        bool negated = cl.getKind()==Kind::NOT;
+        Node cla = negated ? cl[0] : cl;
+        if (d_env.theoryOf(cla) == theory::THEORY_BOOL && !cla.isVar())
         {
-          bool negated = cl.getKind()==Kind::NOT;
-          Node cla = negated ? cl[0] : cl;
-          if (d_env.theoryOf(cla) == theory::THEORY_BOOL && !cla.isVar())
-          {
-            Node k = skm->mkPurifySkolem(cla);
-            Trace("cnf-input-min-assert") << "Purify: " << k << " == " << cla << std::endl;
-            cls.push_back(negated ? k.notNode() : k);
-            childChanged = true;
-          }
-          else
-          {
-            cls.push_back(cl);
-          }
+          Node k = nm->mkNode(Kind::APPLY_UF, {litOf, cla});
+          cls.push_back(negated ? k.notNode() : k);
+          childChanged = true;
         }
-        if (childChanged)
+        else
         {
-          ca = nm->mkNode(Kind::OR, cls);
+          cls.push_back(cl);
         }
       }
-      else if (d_env.theoryOf(c) == theory::THEORY_BOOL && !c.isVar())
+      if (childChanged)
       {
-        ca = skm->mkPurifySkolem(c);
+        ca = nm->mkOr(cls);
       }
       Trace("cnf-input-min-assert") << "Assert: " << ca << std::endl;
       csms.ensureLiteral(ca);
       SatLiteral lit = csms.getLiteral(ca);
       csma.emplace_back(lit);
       litToNode[lit] = c;
+      litToNodeAbs[lit] = ca;
     }
     Trace("cnf-input-min") << "Solve under " << csma.size() << " assumptions..."
                            << std::endl;
     SatValue res = csm->solve(csma);
     if (res == SAT_VALUE_FALSE)
     {
+      // we successfully reproved the input
       Trace("cnf-input-min") << "...got unsat" << std::endl;
       std::vector<SatLiteral> uassumptions;
       csm->getUnsatAssumptions(uassumptions);
       Trace("cnf-input-min")
           << "...#unsat assumptions=" << uassumptions.size() << std::endl;
+      std::vector<Node> aclauses;
       for (const SatLiteral& lit : uassumptions)
       {
         Assert(litToNode.find(lit) != litToNode.end());
         Trace("cnf-input-min-result") << "assert: " << litToNode[lit] << std::endl;
         clauses.emplace_back(litToNode[lit]);
+        aclauses.emplace_back(litToNodeAbs[lit]);
       }
+      alreadyDumpDimacs = true;
+      csms.dumpDimacs(dumpDimacs, aclauses);
     }
     else
     {
+      // should never happen, if it does, we revert to the entire input
       Trace("cnf-input-min") << "...got sat" << std::endl;
       Assert(false) << "Failed to minimize DIMACS";
       clauses.insert(clauses.end(), cset.begin(), cset.end());
@@ -261,7 +283,14 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
     dinputFile
         << conflictProof->getArguments()[0].getConst<String>().toString();
     std::fstream dout(dinputFile.str(), std::ios::out);
-    d_proofCnfStream->dumpDimacs(dout, clauses);
+    if (alreadyDumpDimacs)
+    {
+      dout << dumpDimacs.str();
+    }
+    else
+    {
+      d_proofCnfStream->dumpDimacs(dout, clauses);
+    }
     dout.close();
   }
 
