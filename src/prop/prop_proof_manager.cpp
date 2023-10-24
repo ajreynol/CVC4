@@ -120,39 +120,6 @@ std::vector<std::shared_ptr<ProofNode>> PropPfManager::getProofLeaves(
   return usedPfs;
 }
 
-void PropPfManager::dumpDimacs(const std::string& filename,
-                               const std::vector<Node>& clauses)
-{
-  std::stringstream dclauses;
-  SatVariable maxVar = 0;
-  // get the unsat core from cadical
-  for (const Node& i : clauses)
-  {
-    std::vector<Node> lits;
-    if (i.getKind() == Kind::OR)
-    {
-      lits.insert(lits.end(), i.begin(), i.end());
-    }
-    else
-    {
-      lits.push_back(i);
-    }
-    Trace("dimacs-debug") << "Print " << i << std::endl;
-    for (const Node& l : lits)
-    {
-      SatLiteral lit = d_proofCnfStream->getLiteral(l);
-      SatVariable v = lit.getSatVariable();
-      maxVar = v > maxVar ? v : maxVar;
-      dclauses << (lit.isNegated() ? "-" : "") << v << " ";
-    }
-    dclauses << "0" << std::endl;
-  }
-  std::fstream dout(filename, std::ios::out);
-  dout << "p cnf " << maxVar << " " << clauses.size() << std::endl;
-  dout << dclauses.str();
-  dout.close();
-}
-
 std::shared_ptr<ProofNode> PropPfManager::getProof(
     const context::CDList<Node>& assumptions, bool connectCnf)
 {
@@ -265,10 +232,10 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
       csm->getUnsatAssumptions(uassumptions);
       Trace("cnf-input-min")
           << "...#unsat assumptions=" << uassumptions.size() << std::endl;
-      delete csm;
       for (const SatLiteral& lit : uassumptions)
       {
         Assert(litToNode.find(lit) != litToNode.end());
+        Trace("cnf-input-min-result") << "assert: " << litToNode[lit] << std::endl;
         clauses.emplace_back(litToNode[lit]);
       }
     }
@@ -278,6 +245,7 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
       Assert(false) << "Failed to minimize DIMACS";
       clauses.insert(clauses.end(), cset.begin(), cset.end());
     }
+    delete csm;
   }
   else
   {
@@ -292,7 +260,9 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
     std::stringstream dinputFile;
     dinputFile
         << conflictProof->getArguments()[0].getConst<String>().toString();
-    dumpDimacs(dinputFile.str(), clauses);
+    std::fstream dout(dinputFile.str(), std::ios::out);
+    d_proofCnfStream->dumpDimacs(dout, clauses);
+    dout.close();
   }
 
   Assert(conflictProof);
