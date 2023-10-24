@@ -311,13 +311,6 @@ class Smt2Printer : public cvc5::internal::Printer
   /**
    * The main printing method for nodes n.
    */
-  bool toStreamBase(std::ostream& out,
-                    TNode n,
-                    int toDepth,
-                    LetBinding* lbind = nullptr) const;
-  /**
-   * The main printing method for nodes n.
-   */
   void toStream(std::ostream& out,
                 TNode n,
                 int toDepth,
