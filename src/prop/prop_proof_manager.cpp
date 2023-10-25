@@ -212,7 +212,7 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
       // (e.g. it will skip those corresponding to CNF conversion).
       std::vector<Node> cls;
       bool childChanged = false;
-      for (const Node& cl : c)
+      for (const Node& cl : lits)
       {
         bool negated = cl.getKind()==Kind::NOT;
         Node cla = negated ? cl[0] : cl;
