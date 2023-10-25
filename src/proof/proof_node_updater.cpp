@@ -291,7 +291,7 @@ void ProofNodeUpdater::runFinalize(
     if (!expr::containsAssumption(cur.get(), cfaMap, cfaAllowed))
     {
       Trace("pf-process-debug")
-          << "No assumption pf: " << *cur.get() << std::endl;
+          << "No assumption pf: " << res << std::endl;
       // cache result if we are merging subproofs
       resCache[res] = cur;
       // go back and merge into the non-closed proofs of the same fact
@@ -309,9 +309,33 @@ void ProofNodeUpdater::runFinalize(
     }
     else
     {
-      Trace("pf-process-debug") << "Assumption pf: " << *cur.get() << ", with "
+      Trace("pf-process-debug") << "Assumption pf: " << res << ", with "
                                 << cfaAllowed.size() << std::endl;
       resCacheNcWaiting[res].push_back(cur);
+    }
+    // now, do deep update of children
+    std::map<Node, std::shared_ptr<ProofNode>>::iterator itr;
+    const std::vector<std::shared_ptr<ProofNode>>& ccp = cur->getChildren();
+    std::vector<std::shared_ptr<ProofNode>> newChildren;
+    bool childChanged = false;
+    for (const std::shared_ptr<ProofNode>& cp : ccp)
+    {
+      Node cpres = cp->getResult();
+      itr = resCache.find(cpres);
+      if (itr!=resCache.end() && itr->second!=cp)
+      {
+        newChildren.emplace_back(itr->second);
+        childChanged = true;
+      }
+      else
+      {
+        newChildren.emplace_back(cp);
+      }
+    }
+    if (childChanged)
+    {
+      ProofNodeManager* pnm = d_env.getProofNodeManager();
+      pnm->updateNode(cur.get(), cur->getRule(), newChildren, cur->getArguments());
     }
   }
   if (d_debugFreeAssumps)
