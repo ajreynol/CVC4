@@ -42,7 +42,7 @@ class Smt2State : public ParserState
  public:
   Smt2State(ParserStateCallback* psc,
             Solver* solver,
-            SymbolManager* sm,
+            SymManager* sm,
             bool strictMode = false,
             bool isSygus = false);
 
@@ -93,6 +93,8 @@ class Smt2State : public ParserState
   modes::LearnedLitType getLearnedLitType(const std::string& mode);
   /** Parse proof component */
   modes::ProofComponent getProofComponent(const std::string& pc);
+  /** Parse find synth target */
+  modes::FindSynthTarget getFindSynthTarget(const std::string& fst);
 
   bool isTheoryEnabled(internal::theory::TheoryId theory) const;
 
@@ -209,7 +211,7 @@ class Smt2State : public ParserState
    *              transition relation.
    * @return The command that adds an invariant constraint
    */
-  std::unique_ptr<Command> invConstraint(const std::vector<std::string>& names);
+  std::unique_ptr<Cmd> invConstraint(const std::vector<std::string>& names);
 
   /**
    * Sets the logic for the current benchmark. Declares any logic and
@@ -409,13 +411,13 @@ class Smt2State : public ParserState
    *
    * @return An instance of `PushCommand`
    */
-  std::unique_ptr<Command> handlePush(std::optional<uint32_t> nscopes);
+  std::unique_ptr<Cmd> handlePush(std::optional<uint32_t> nscopes);
   /**
    * Handles a pop command.
    *
    * @return An instance of `PopCommand`
    */
-  std::unique_ptr<Command> handlePop(std::optional<uint32_t> nscopes);
+  std::unique_ptr<Cmd> handlePop(std::optional<uint32_t> nscopes);
 
  private:
   void addArithmeticOperators();

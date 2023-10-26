@@ -28,25 +28,25 @@ Smt2Lexer::Smt2Lexer(bool isStrict, bool isSygus)
       d_isStrict(isStrict),
       d_isSygus(isSygus)
 {
-  for (char ch = 'a'; ch <= 'z'; ++ch)
+  for (int32_t ch = 'a'; ch <= 'z'; ++ch)
   {
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::SYMBOL_START);
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::SYMBOL);
   }
-  for (char ch = 'a'; ch <= 'f'; ++ch)
+  for (int32_t ch = 'a'; ch <= 'f'; ++ch)
   {
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::HEXADECIMAL_DIGIT);
   }
-  for (char ch = 'A'; ch <= 'Z'; ++ch)
+  for (int32_t ch = 'A'; ch <= 'Z'; ++ch)
   {
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::SYMBOL_START);
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::SYMBOL);
   }
-  for (char ch = 'A'; ch <= 'F'; ++ch)
+  for (int32_t ch = 'A'; ch <= 'F'; ++ch)
   {
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::HEXADECIMAL_DIGIT);
   }
-  for (char ch = '0'; ch <= '9'; ++ch)
+  for (int32_t ch = '0'; ch <= '9'; ++ch)
   {
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::HEXADECIMAL_DIGIT);
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::DECIMAL_DIGIT);
@@ -55,10 +55,14 @@ Smt2Lexer::Smt2Lexer(bool isStrict, bool isSygus)
   d_charClass['0'] |= static_cast<uint32_t>(CharacterClass::BIT);
   d_charClass['1'] |= static_cast<uint32_t>(CharacterClass::BIT);
   // ~!@$%^&*_-+|=<>.?/
-  for (char ch : s_extraSymbolChars)
+  for (int32_t ch : s_extraSymbolChars)
   {
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::SYMBOL_START);
     d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::SYMBOL);
+  }
+  for (int32_t ch : s_printableAsciiChars)
+  {
+    d_charClass[ch] |= static_cast<uint32_t>(CharacterClass::PRINTABLE);
   }
   // whitespace
   d_charClass[' '] |= static_cast<uint32_t>(CharacterClass::WHITESPACE);
@@ -90,7 +94,7 @@ Token Smt2Lexer::nextTokenInternal()
 Token Smt2Lexer::computeNextToken()
 {
   bumpSpan();
-  char ch;
+  int32_t ch;
   // skip whitespace and comments
   for (;;)
   {
@@ -182,6 +186,10 @@ Token Smt2Lexer::computeNextToken()
         {
           return Token::UNTERMINATED_STRING_LITERAL;
         }
+        else if (!isCharacterClass(ch, CharacterClass::PRINTABLE))
+        {
+          parseError("Non-printable character in string literal");
+        }
         else if (ch == '"')
         {
           pushToToken(ch);
@@ -244,9 +252,9 @@ Token Smt2Lexer::computeNextToken()
   return Token::NONE;
 }
 
-bool Smt2Lexer::parseLiteralChar(char chc)
+bool Smt2Lexer::parseLiteralChar(int32_t chc)
 {
-  char ch = nextChar();
+  int32_t ch = nextChar();
   if (ch != chc)
   {
     // will be an error
@@ -258,7 +266,7 @@ bool Smt2Lexer::parseLiteralChar(char chc)
 
 bool Smt2Lexer::parseChar(CharacterClass cc)
 {
-  char ch = nextChar();
+  int32_t ch = nextChar();
   if (!isCharacterClass(ch, cc))
   {
     // will be an error
@@ -271,7 +279,7 @@ bool Smt2Lexer::parseChar(CharacterClass cc)
 bool Smt2Lexer::parseNonEmptyCharList(CharacterClass cc)
 {
   // must contain at least one character
-  char ch = nextChar();
+  int32_t ch = nextChar();
   if (!isCharacterClass(ch, cc))
   {
     // will be an error
@@ -284,7 +292,7 @@ bool Smt2Lexer::parseNonEmptyCharList(CharacterClass cc)
 
 void Smt2Lexer::parseCharList(CharacterClass cc)
 {
-  char ch;
+  int32_t ch;
   for (;;)
   {
     ch = nextChar();
