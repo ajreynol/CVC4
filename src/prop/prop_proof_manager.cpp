@@ -15,6 +15,7 @@
 
 #include "prop/prop_proof_manager.h"
 
+#include "expr/skolem_manager.h"
 #include "options/main_options.h"
 #include "proof/proof_ensure_closed.h"
 #include "proof/proof_node_algorithm.h"
@@ -23,7 +24,6 @@
 #include "prop/sat_solver_factory.h"
 #include "smt/env.h"
 #include "util/string.h"
-#include "expr/skolem_manager.h"
 
 namespace cvc5::internal {
 namespace prop {
@@ -186,10 +186,10 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
     std::vector<SatLiteral> csma;
     std::map<SatLiteral, Node> litToNode;
     std::map<SatLiteral, Node> litToNodeAbs;
-    NodeManager * nm = NodeManager::currentNM();
+    NodeManager* nm = NodeManager::currentNM();
     TypeNode bt = nm->booleanType();
     TypeNode ft = nm->mkFunctionType({bt}, bt);
-    SkolemManager * skm = nm->getSkolemManager();
+    SkolemManager* skm = nm->getSkolemManager();
     // Function used to ensure that subformulas are not treated by CNF below.
     Node litOf = skm->mkDummySkolem("litOf", ft);
     for (const Node& c : cset)
@@ -197,7 +197,7 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
       Node ca = c;
       std::vector<SatLiteral> satClause;
       std::vector<Node> lits;
-      if (c.getKind()==Kind::OR)
+      if (c.getKind() == Kind::OR)
       {
         lits.insert(lits.end(), c.begin(), c.end());
       }
@@ -205,16 +205,17 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
       {
         lits.push_back(c);
       }
-      // For each literal l in the current clause, if it has Boolean substructure,
-      // we replace it with (litOf l), which will be treated as a literal.
-      // We do this since we require that the clause be treated verbatim by the SAT
-      // solver, otherwise the unsat core will not include the necessary clauses
-      // (e.g. it will skip those corresponding to CNF conversion).
+      // For each literal l in the current clause, if it has Boolean
+      // substructure, we replace it with (litOf l), which will be treated as a
+      // literal. We do this since we require that the clause be treated
+      // verbatim by the SAT solver, otherwise the unsat core will not include
+      // the necessary clauses (e.g. it will skip those corresponding to CNF
+      // conversion).
       std::vector<Node> cls;
       bool childChanged = false;
       for (const Node& cl : lits)
       {
-        bool negated = cl.getKind()==Kind::NOT;
+        bool negated = cl.getKind() == Kind::NOT;
         Node cla = negated ? cl[0] : cl;
         if (d_env.theoryOf(cla) == theory::THEORY_BOOL && !cla.isVar())
         {
@@ -253,7 +254,8 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
       for (const SatLiteral& lit : uassumptions)
       {
         Assert(litToNode.find(lit) != litToNode.end());
-        Trace("cnf-input-min-result") << "assert: " << litToNode[lit] << std::endl;
+        Trace("cnf-input-min-result")
+            << "assert: " << litToNode[lit] << std::endl;
         clauses.emplace_back(litToNode[lit]);
         aclauses.emplace_back(litToNodeAbs[lit]);
       }

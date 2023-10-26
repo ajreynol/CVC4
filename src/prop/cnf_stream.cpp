@@ -778,9 +778,7 @@ CnfStream::Statistics::Statistics(StatisticsRegistry& sr,
 {
 }
 
-
-void CnfStream::dumpDimacs(std::ostream& out,
-                           const std::vector<Node>& clauses)
+void CnfStream::dumpDimacs(std::ostream& out, const std::vector<Node>& clauses)
 {
   std::stringstream dclauses;
   SatVariable maxVar = 0;

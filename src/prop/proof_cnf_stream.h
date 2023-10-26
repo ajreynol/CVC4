@@ -153,8 +153,8 @@ class ProofCnfStream : protected EnvObj, public ProofGenerator
   /**
    * Dump dimacs of the given clauses to the given file.
    */
-  void dumpDimacs(std::ostream& out,
-                  const std::vector<Node>& clauses);
+  void dumpDimacs(std::ostream& out, const std::vector<Node>& clauses);
+
  private:
   /**
    * Same as above, except that uses the saved d_removable flag. It calls the
