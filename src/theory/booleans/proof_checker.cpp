@@ -930,7 +930,7 @@ Node BoolProofRuleChecker::checkInternal(ProofRule id,
         args[0], args[0][1].notNode(), args[0][2].notNode()};
     return NodeManager::currentNM()->mkNode(Kind::OR, disjuncts);
   }
-  if (id == ProofRule::SAT_REFUTATION || id == ProofRule::DRAT_REFUTATION)
+  if (id == ProofRule::SAT_REFUTATION || id == ProofRule::DRAT_REFUTATION || id == ProofRule::SAT_EXTERNAL_PROVE)
   {
     Assert(args.size() == (id == ProofRule::SAT_REFUTATION ? 0 : 2));
     return NodeManager::currentNM()->mkConst(false);
