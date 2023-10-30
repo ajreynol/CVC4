@@ -38,7 +38,7 @@ bool isMaybeBoolean(const TypeNode& tn)
  */
 bool checkMaybeBitVector(const TypeNode& tn, std::ostream* errOut)
 {
-  if (tn.isMaybeKind(kind::BITVECTOR_TYPE))
+  if (tn.isMaybeKind(Kind::BITVECTOR_TYPE))
   {
     return true;
   }
@@ -55,17 +55,17 @@ bool checkMaybeBitVector(const TypeNode& tn, std::ostream* errOut)
  */
 TypeNode ensureBv(NodeManager* nm, const TypeNode& tn)
 {
-  if (tn.getKind() == kind::ABSTRACT_TYPE
-      && tn.getAbstractedKind() == kind::ABSTRACT_TYPE)
+  if (tn.getKind() == Kind::ABSTRACT_TYPE
+      && tn.getAbstractedKind() == Kind::ABSTRACT_TYPE)
   {
-    return nm->mkAbstractType(kind::BITVECTOR_TYPE);
+    return nm->mkAbstractType(Kind::BITVECTOR_TYPE);
   }
   return tn;
 }
 
 Cardinality CardinalityComputer::computeCardinality(TypeNode type)
 {
-  Assert(type.getKind() == kind::BITVECTOR_TYPE);
+  Assert(type.getKind() == Kind::BITVECTOR_TYPE);
 
   uint32_t size = type.getConst<BitVectorSize>();
   if (size == 0)
@@ -96,6 +96,38 @@ TypeNode BitVectorConstantTypeRule::computeType(NodeManager* nodeManager,
     }
   }
   return nodeManager->mkBitVectorType(n.getConst<BitVector>().getSize());
+}
+
+TypeNode BitVectorConstantSymbolicTypeRule::preComputeType(NodeManager* nm,
+                                                           TNode n)
+{
+  return TypeNode::null();
+}
+TypeNode BitVectorConstantSymbolicTypeRule::computeType(
+    NodeManager* nodeManager, TNode n, bool check, std::ostream* errOut)
+{
+  if (check)
+  {
+    for (const Node& nc : n)
+    {
+      const TypeNode& tn = nc.getTypeOrNull();
+      if (!tn.isInteger() && !tn.isFullyAbstract())
+      {
+        (*errOut)
+            << "expecting integer argument to symbolic bitvector constant";
+        return TypeNode::null();
+      }
+    }
+  }
+  if (n[1].isConst())
+  {
+    const Rational& r = n[1].getConst<Rational>();
+    if (r.sgn() == 1 && r.getNumerator().fitsUnsignedInt())
+    {
+      return nodeManager->mkBitVectorType(r.getNumerator().toUnsignedInt());
+    }
+  }
+  return nodeManager->mkAbstractType(Kind::BITVECTOR_TYPE);
 }
 
 TypeNode BitVectorFixedWidthTypeRule::preComputeType(NodeManager* nm, TNode n)
@@ -214,6 +246,23 @@ TypeNode BitVectorBVPredTypeRule::computeType(NodeManager* nodeManager,
   return nodeManager->mkBitVectorType(1);
 }
 
+TypeNode BitVectorSizeTypeRule::preComputeType(NodeManager* nm, TNode n)
+{
+  return nm->integerType();
+}
+TypeNode BitVectorSizeTypeRule::computeType(NodeManager* nodeManager,
+                                            TNode n,
+                                            bool check,
+                                            std::ostream* errOut)
+{
+  TypeNode t = n[0].getTypeOrNull(check);
+  if (!checkMaybeBitVector(t, errOut))
+  {
+    return TypeNode::null();
+  }
+  return nodeManager->integerType();
+}
+
 TypeNode BitVectorConcatTypeRule::preComputeType(NodeManager* nm, TNode n)
 {
   return TypeNode::null();
@@ -249,7 +298,7 @@ TypeNode BitVectorConcatTypeRule::computeType(NodeManager* nodeManager,
   // if any child is abstract, we are abstract
   if (isAbstract)
   {
-    return nodeManager->mkAbstractType(kind::BITVECTOR_TYPE);
+    return nodeManager->mkAbstractType(Kind::BITVECTOR_TYPE);
   }
   return nodeManager->mkBitVectorType(size);
 }
@@ -449,7 +498,7 @@ TypeNode BitVectorExtendTypeRule::computeType(NodeManager* nodeManager,
     return ensureBv(nodeManager, t);
   }
   Assert(t.isBitVector());
-  uint32_t extendAmount = n.getKind() == kind::BITVECTOR_SIGN_EXTEND
+  uint32_t extendAmount = n.getKind() == Kind::BITVECTOR_SIGN_EXTEND
                               ? n.getOperator().getConst<BitVectorSignExtend>()
                               : n.getOperator().getConst<BitVectorZeroExtend>();
   return nodeManager->mkBitVectorType(extendAmount + t.getBitVectorSize());

@@ -44,6 +44,7 @@ class NodeTemplate;
 typedef NodeTemplate<true> Node;
 typedef NodeTemplate<false> TNode;
 class TypeNode;
+class ProofNode;
 
 class Env;
 class UnsatCore;
@@ -153,15 +154,12 @@ class CVC5_EXPORT SolverEngine
 
   /**
    * Set the logic of the script.
-   * @throw ModalException, LogicException
-   */
-  void setLogic(const char* logic);
-
-  /**
-   * Set the logic of the script.
    * @throw ModalException
    */
   void setLogic(const LogicInfo& logic);
+
+  /** Has the logic been set by a call to setLogic? */
+  bool isLogicSet() const;
 
   /** Get the logic information currently set. */
   const LogicInfo& getLogicInfo() const;
@@ -255,6 +253,15 @@ class CVC5_EXPORT SolverEngine
    */
   std::string getOption(const std::string& key) const;
 
+  /**
+   * Notify that a declare-fun or declare-const was made for n. This only
+   * impacts the SMT mode.
+   */
+  void declareConst(const Node& n);
+  /**
+   * Notify that a declare-sort was made for tn. This only impacts the SMT mode.
+   */
+  void declareSort(const TypeNode& tn);
   /**
    * Define function func in the current context to be:
    *   (lambda (formals) formula)
@@ -531,13 +538,6 @@ class CVC5_EXPORT SolverEngine
    * (list, num, etc.) is determined by printInstMode.
    */
   void printInstantiations(std::ostream& out);
-  /**
-   * Print the current proof. This method should be called after an UNSAT
-   * response. It gets the proof of false from the PropEngine and passes
-   * it to the ProofManager, which post-processes the proof and prints it
-   * in the proper format.
-   */
-  void printProof();
 
   /**
    * Get synth solution.
@@ -701,12 +701,20 @@ class CVC5_EXPORT SolverEngine
    */
   UnsatCore getUnsatCore();
 
+  /** Get the lemmas used to derive UNSAT. Only permitted if cvc5 was built with
+   * unsat cores support and produce-unsat-core-lemmas is on. */
+  std::vector<Node> getUnsatCoreLemmas();
+
   /**
    * Get a refutation proof (only if immediately preceded by an UNSAT query).
    * Only permitted if cvc5 was built with proof support and the proof option
    * is on.
    */
-  std::string getProof(modes::ProofComponent c = modes::PROOF_COMPONENT_FULL);
+  std::vector<std::shared_ptr<ProofNode>> getProof(
+      modes::ProofComponent c = modes::ProofComponent::FULL);
+
+  // TODO: this goes away after proof printing went into ProofNode
+  void proofToString(std::ostream& out, std::shared_ptr<ProofNode> fp);
 
   /**
    * Get the current set of assertions.  Only permitted if the
@@ -903,8 +911,8 @@ class CVC5_EXPORT SolverEngine
   void assertFormulaInternal(const Node& formula);
 
   /**
-   * Check that a generated proof checks. This method is the same as printProof,
-   * but does not print the proof. Like that method, it should be called
+   * Check that a generated proof checks. This method is the same as getProof,
+   * but does not return the proof. Like that method, it should be called
    * after an UNSAT response. It ensures that a well-formed proof of false
    * can be constructed by the combination of the PropEngine and ProofManager.
    */
@@ -918,6 +926,8 @@ class CVC5_EXPORT SolverEngine
   /**
    * Check that a generated Model (via getModel()) actually satisfies
    * all user assertions.
+   * @param hardFailure True have a failed model check should result in an
+   *                    InternalError rather than only issue a warning.
    */
   void checkModel(bool hardFailure = true);
 
@@ -1031,6 +1041,14 @@ class CVC5_EXPORT SolverEngine
    */
   std::vector<Node> convertPreprocessedToInput(const std::vector<Node>& ppa,
                                                bool isInternal);
+
+  /**
+   * Prints a proof node using a proof format of choice.
+   */
+  void printProof(std::ostream& out,
+                  std::shared_ptr<ProofNode> fp,
+                  modes::ProofFormat proofFormat);
+
   /* Members -------------------------------------------------------------- */
 
   /** Solver instance that owns this SolverEngine instance. */
@@ -1093,6 +1111,8 @@ class CVC5_EXPORT SolverEngine
    * logic, lives in the Env class.
    */
   LogicInfo d_userLogic;
+  /** Has the above logic been initialized? */
+  bool d_userLogicSet;
 
   /** Whether this is an internal subsolver. */
   bool d_isInternalSubsolver;
