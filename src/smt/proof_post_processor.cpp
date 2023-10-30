@@ -662,6 +662,8 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     std::vector<TNode> ssList;
     std::vector<TNode> fromList;
     std::vector<ProofGenerator*> pgs;
+    // Mapping assumptions corresponding to substitutions to the (argument,
+    // premise) of their AND_ELIM proof.
     std::map<Node, std::pair<size_t, Node>> aeReconstruct;
     // first, compute the entire substitution
     for (size_t i = 0, nchild = children.size(); i < nchild; i++)
@@ -670,17 +672,17 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       builtin::BuiltinProofRuleChecker::getSubstitutionFor(
           children[i], vsList, ssList, fromList, ids);
       // ensure proofs for each formula in fromList can be reconstructed if
-      // we need
+      // we need to later via AND_ELIM
       if (children[i].getKind() == Kind::AND && ids == MethodId::SB_DEFAULT)
       {
         for (size_t j = 0, nchildi = children[i].getNumChildren(); j < nchildi;
              j++)
         {
+          // just remember the reference, don't add the proof step here.
           aeReconstruct[children[i][j]] = std::pair<size_t,Node>(j, children[i]);
         }
       }
     }
-    Trace("ajr-temp") << "expand subs " << vsList.size() << " " << ids << " " << ida << " to " << t << std::endl;
     std::vector<Node> vvec;
     std::vector<Node> svec;
     for (size_t i = 0, nvs = vsList.size(); i < nvs; i++)
@@ -826,9 +828,11 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     }
     else
     {
-      // go back and fill in proofs
+      // go back and fill in proofs from AND_ELIM steps if necessary
       if (!aeReconstruct.empty())
       {
+        // get all free assumptions, if any matches a proof from AND_ELIM,
+        // then we link the proof now.
         std::map<Node, std::vector<std::shared_ptr<ProofNode>>> amap;
         expr::getFreeAssumptionsMap(pfn, amap);
         std::map<Node, std::pair<size_t, Node>>::iterator itae;
