@@ -54,7 +54,8 @@ class ScopeCounter
 };
 
 ProcessAssertions::ProcessAssertions(Env& env, SolverEngineStatistics& stats)
-    : EnvObj(env), d_slvStats(stats), d_preprocessingPassContext(nullptr)
+    : EnvObj(env), d_slvStats(stats), d_preprocessingPassContext(nullptr),
+      d_ppTime(statisticsRegistry().registerTimer("preprocessTime"))
 {
   d_true = NodeManager::currentNM()->mkConst(true);
 }
@@ -90,6 +91,7 @@ void ProcessAssertions::spendResource(Resource r)
 bool ProcessAssertions::apply(AssertionPipeline& ap)
 {
   Assert(d_preprocessingPassContext != nullptr);
+  TimerStat::CodeTimer ppTime(d_ppTime);
   // Dump the assertions
   dumpAssertions("assertions::pre-everything", ap);
   Trace("assertions::pre-everything") << std::endl;

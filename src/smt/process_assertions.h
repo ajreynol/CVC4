@@ -25,6 +25,7 @@
 #include "preprocessing/preprocessing_pass.h"
 #include "smt/env_obj.h"
 #include "util/resource_manager.h"
+#include "util/statistics_stats.h"
 
 namespace cvc5::internal {
 
@@ -96,6 +97,8 @@ class ProcessAssertions : protected EnvObj
    * Number of calls of simplify assertions active.
    */
   unsigned d_simplifyAssertionsDepth;
+  /** time spent in preprocessing */
+  TimerStat d_ppTime;
   /** Spend resource r by the resource manager of this class. */
   void spendResource(Resource r);
   /**
