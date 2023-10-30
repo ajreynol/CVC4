@@ -419,24 +419,23 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
         Assert(!rcurFinal.isNull());
         if (useConvert)
         {
-          itw = waitConvert.find(curHash);
-          if (itw != waitConvert.end())
+          for (size_t i=0; i<2; i++)
           {
-            toConvert[curHash] = itw->second.second;
-            waitConvert.erase(itw);
+            Node ch = i==0 ? curHash : rcurHash;
+            if (i==1 && rcurFinal == rcur)
+            {
+              break;
+            }
+            itw = waitConvert.find(ch);
+            if (itw != waitConvert.end())
+            {
+              toConvert[ch] = itw->second.second;
+              waitConvert.erase(itw);
+            }
           }
         }
         if (rcurFinal != rcur)
         {
-          if (useConvert)
-          {
-            itw = waitConvert.find(rcurHash);
-            if (itw != waitConvert.end())
-            {
-              toConvert[rcurHash] = itw->second.second;
-              waitConvert.erase(itw);
-            }
-          }
           // must connect via TRANS
           std::vector<Node> pfChildren;
           pfChildren.push_back(cur.eqNode(rcur));
@@ -706,6 +705,8 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
       Trace("tconv-convert")
           << "Prove via convert: " << c << " == " << cr << std::endl;
       // replay the proof
+      // TODO: revert if trivial?
+      bool traversed = false;
       std::vector<Node> pfChildren;
       // push initial
       if (tctx != nullptr)
@@ -749,18 +750,23 @@ Node TConvProofGenerator::getProofForRewriting(Node t,
             Node rcur = visited[curHash];
             if (cur == rcur)
             {
-              if (cur.getNumChildren() == 0)
+              if (cur.getNumChildren() == 0 && cur.getKind()!=Kind::SKOLEM)
               {
                 // optimization: not even worthwhile if zero children
                 continue;
               }
               // ensure we have a REFL step
-              pf.addStep(cur.eqNode(cur), ProofRule::REFL, {}, {cur});
+              //pf.addStep(cur.eqNode(cur), ProofRule::REFL, {}, {cur});
+              continue;
             }
             Trace("tconv-convert") << "...add " << cur.eqNode(rcur)
                                    << ", from hash " << curHash << std::endl;
             pfChildren.push_back(cur.eqNode(rcur));
             continue;
+          }
+          else
+          {
+            traversed = true;
           }
         }
         // otherwise, we traverse to children
