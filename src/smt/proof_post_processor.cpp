@@ -281,7 +281,6 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   else if (id == ProofRule::MACRO_SR_PRED_INTRO)
   {
     std::vector<Node> tchildren;
-    std::vector<Node> sargs = args;
     // take into account witness form, if necessary
     bool reqWitness = d_wfpm.requiresWitnessFormIntro(args[0]);
     Trace("smt-proof-pp-debug")
@@ -297,16 +296,25 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     // We call the expandMacros method on MACRO_SR_EQ_INTRO, where notice
     // that this rule application is immediately expanded in the recursive
     // call and not added to the proof.
-    Node conc =
-        expandMacros(ProofRule::MACRO_SR_EQ_INTRO, children, sargs, cdp);
-    Trace("smt-proof-pp-debug")
-        << "...pred intro conclusion is " << conc << std::endl;
-    Assert(!conc.isNull());
-    Assert(conc.getKind() == Kind::EQUAL);
-    Assert(conc[0] == args[0]);
-    tchildren.push_back(conc);
-    if (reqWitness)
+    if (!reqWitness)
     {
+      std::vector<Node> rargs;
+      rargs.emplace_back(args[0]);
+      rargs.emplace_back(mkMethodId(MethodId::RW_REWRITE));
+      Node conc = expandMacros(ProofRule::REWRITE, {}, rargs, cdp);
+      Assert(conc.getKind() == Kind::EQUAL);
+      tchildren.push_back(conc);
+    }
+    else
+    {
+      Node conc =
+          expandMacros(ProofRule::MACRO_SR_EQ_INTRO, children, args, cdp);
+      Trace("smt-proof-pp-debug")
+          << "...pred intro conclusion is " << conc << std::endl;
+      Assert(!conc.isNull());
+      Assert(conc.getKind() == Kind::EQUAL);
+      Assert(conc[0] == args[0]);
+      tchildren.push_back(conc);
       Node weq = addProofForWitnessForm(conc[1], cdp);
       Trace("smt-proof-pp-debug") << "...weq is " << weq << std::endl;
       if (addToTransChildren(weq, tchildren))
@@ -334,12 +342,24 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     // (EQ_RESOLVE
     //   children[0]
     //   (MACRO_SR_EQ_INTRO children[1:] :args children[0] ++ args))
-    std::vector<Node> schildren(children.begin() + 1, children.end());
-    std::vector<Node> srargs;
-    srargs.push_back(children[0]);
-    srargs.insert(srargs.end(), args.begin(), args.end());
-    Node conc =
-        expandMacros(ProofRule::MACRO_SR_EQ_INTRO, schildren, srargs, cdp);
+    // maybe just rewrite is enough?
+    Node conc;
+    if (rewrite(children[0])==res)
+    {
+      std::vector<Node> rargs;
+      rargs.emplace_back(children[0]);
+      rargs.emplace_back(mkMethodId(MethodId::RW_REWRITE));
+      conc = expandMacros(ProofRule::REWRITE, {}, rargs, cdp);
+    }
+    else
+    {
+      std::vector<Node> schildren(children.begin() + 1, children.end());
+      std::vector<Node> srargs;
+      srargs.push_back(children[0]);
+      srargs.insert(srargs.end(), args.begin(), args.end());
+      conc =
+          expandMacros(ProofRule::MACRO_SR_EQ_INTRO, schildren, srargs, cdp);
+    }
     Assert(!conc.isNull());
     Assert(conc.getKind() == Kind::EQUAL);
     Assert(conc[0] == children[0]);
@@ -382,16 +402,25 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       std::vector<Node> tchildrenr;
       // first rewrite children[0], then args[0]
       sargs[0] = r == 0 ? children[0] : args[0];
-      // t = apply_SR(t)
-      Node eq =
-          expandMacros(ProofRule::MACRO_SR_EQ_INTRO, schildren, sargs, cdp);
-      Trace("smt-proof-pp-debug")
-          << "transform subs_rewrite (" << r << "): " << eq << std::endl;
-      Assert(!eq.isNull() && eq.getKind() == Kind::EQUAL && eq[0] == sargs[0]);
-      addToTransChildren(eq, tchildrenr);
-      // apply_SR(t) = toWitness(apply_SR(t))
-      if (reqWitness)
+      if (!reqWitness)
       {
+        std::vector<Node> rargs;
+        rargs.emplace_back(sargs[0]);
+        rargs.emplace_back(mkMethodId(MethodId::RW_REWRITE));
+        Node eq = expandMacros(ProofRule::REWRITE, {}, rargs, cdp);
+        Assert(eq.getKind() == Kind::EQUAL);
+        addToTransChildren(eq, tchildrenr);
+      }
+      else
+      {
+        // apply_SR(t) = toWitness(apply_SR(t))
+        // t = apply_SR(t)
+        Node eq =
+            expandMacros(ProofRule::MACRO_SR_EQ_INTRO, schildren, sargs, cdp);
+        Trace("smt-proof-pp-debug")
+            << "transform subs_rewrite (" << r << "): " << eq << std::endl;
+        Assert(!eq.isNull() && eq.getKind() == Kind::EQUAL && eq[0] == sargs[0]);
+        addToTransChildren(eq, tchildrenr);
         Node weq = addProofForWitnessForm(eq[1], cdp);
         Trace("smt-proof-pp-debug")
             << "transform toWitness (" << r << "): " << weq << std::endl;
@@ -633,24 +662,25 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     std::vector<TNode> ssList;
     std::vector<TNode> fromList;
     std::vector<ProofGenerator*> pgs;
+    std::map<Node, std::pair<size_t, Node>> aeReconstruct;
     // first, compute the entire substitution
     for (size_t i = 0, nchild = children.size(); i < nchild; i++)
     {
       // get the substitution
       builtin::BuiltinProofRuleChecker::getSubstitutionFor(
           children[i], vsList, ssList, fromList, ids);
-      // ensure proofs for each formula in fromList
+      // ensure proofs for each formula in fromList can be reconstructed if
+      // we need
       if (children[i].getKind() == Kind::AND && ids == MethodId::SB_DEFAULT)
       {
         for (size_t j = 0, nchildi = children[i].getNumChildren(); j < nchildi;
              j++)
         {
-          Node nodej = nm->mkConstInt(Rational(j));
-          cdp->addStep(
-              children[i][j], ProofRule::AND_ELIM, {children[i]}, {nodej});
+          aeReconstruct[children[i][j]] = std::pair<size_t,Node>(j, children[i]);
         }
       }
     }
+    Trace("ajr-temp") << "expand subs " << vsList.size() << " " << ids << " " << ida << " to " << t << std::endl;
     std::vector<Node> vvec;
     std::vector<Node> svec;
     for (size_t i = 0, nvs = vsList.size(); i < nvs; i++)
@@ -755,6 +785,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         // (SUBS F1 ... Fn t) ---> (TRANS (SUBS F1 t) ... (SUBS Fn tn))
         Node curr = t;
         std::vector<Node> transChildren;
+        std::map<Node, std::pair<size_t, Node>>::iterator itae;
         for (size_t i = 0, nvs = vsList.size(); i < nvs; i++)
         {
           size_t ii = nvs - 1 - i;
@@ -767,8 +798,16 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
             transChildren.push_back(eqo);
             // ensure the proof for the substitution exists
             addProofForSubsStep(var, subs, fromList[ii], cdp);
+            Node eqs = var.eqNode(subs);
+            // might need to link via AND_ELIM
+            itae = aeReconstruct.find(eqs);
+            if (itae!=aeReconstruct.end())
+            {
+              Node nodej = nm->mkConstInt(Rational(itae->second.first));
+              cdp->addStep(eqs, ProofRule::AND_ELIM, {itae->second.second}, {nodej});
+            }
             // do the single step SUBS on curr with the default arguments
-            cdp->addStep(eqo, ProofRule::SUBS, {var.eqNode(subs)}, {curr});
+            cdp->addStep(eqo, ProofRule::SUBS, {eqs}, {curr});
             curr = next;
           }
         }
@@ -787,6 +826,28 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     }
     else
     {
+      // go back and fill in proofs
+      if (!aeReconstruct.empty())
+      {
+        std::map<Node, std::vector<std::shared_ptr<ProofNode>>> amap;
+        expr::getFreeAssumptionsMap(pfn, amap);
+        std::map<Node, std::pair<size_t, Node>>::iterator itae;
+        ProofNodeManager * pnm = d_env.getProofNodeManager();
+        for (std::pair<const Node, std::vector<std::shared_ptr<ProofNode>>>& as : amap)
+        {
+          itae = aeReconstruct.find(as.first);
+          if (itae==aeReconstruct.end())
+          {
+            continue;
+          }
+          Node nodej = nm->mkConstInt(Rational(itae->second.first));
+          std::shared_ptr<ProofNode> premise = cdp->getProofFor(itae->second.second);
+          for (std::shared_ptr<ProofNode>& a : as.second)
+          {
+            pnm->updateNode(a.get(), ProofRule::AND_ELIM, {premise}, {nodej});
+          }
+        }
+      }
       cdp->addProof(pfn);
     }
     return eqq;
