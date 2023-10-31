@@ -125,7 +125,7 @@ struct MonomialComparator
     {
       return false;
     }
-    return LeafNodeComparator()(av, bv);
+    return TermComparator()(av, bv);
   }
   static TNode getVar(TNode a)
   {

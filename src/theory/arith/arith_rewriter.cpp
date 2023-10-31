@@ -458,19 +458,22 @@ RewriteResponse ArithRewriter::postRewritePlus(TNode t)
     }
     cv = ncv;
   }
+  Node retSum;
   if (uniqueCh)
   {
-    Node retSum = NodeManager::currentNM()->mkNode(Kind::ADD, children);
-    return RewriteResponse(REWRITE_DONE, retSum);
+    retSum = NodeManager::currentNM()->mkNode(Kind::ADD, children);
+    Trace("ajr-temp") << "R: " << t << " -> " << retSum << std::endl;
   }
-  
-  // otherwise, reconstruct the sum
-  rewriter::Sum sum;
-  for (const auto& child : children)
+  else
   {
-    rewriter::addToSum(sum, child);
+    // otherwise, reconstruct the sum
+    rewriter::Sum sum;
+    for (const auto& child : children)
+    {
+      rewriter::addToSum(sum, child);
+    }
+    retSum = rewriter::collectSum(sum);
   }
-  Node retSum = rewriter::collectSum(sum);
   retSum = rewriter::maybeEnsureReal(t.getType(), retSum);
   return RewriteResponse(REWRITE_DONE, retSum);
 }
