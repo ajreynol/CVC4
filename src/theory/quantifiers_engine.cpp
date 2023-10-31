@@ -660,7 +660,14 @@ void QuantifiersEngine::assertQuantifier( Node f, bool pol ){
   d_treg.addTerm(d_qreg.getInstConstantBody(f), true);
 }
 
-void QuantifiersEngine::eqNotifyNewClass(TNode t) { d_treg.addTerm(t); }
+void QuantifiersEngine::eqNotifyNewClass(TNode t) { d_treg.addTerm(t); 
+  Trace("eager-inst") << "new class: " << t << std::endl;
+}
+
+void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
+{
+  Trace("eager-inst") << "merge: " << t1 << " " << t2 << std::endl;
+}
 
 void QuantifiersEngine::markRelevant( Node q ) {
   d_model->markRelevant( q );
