@@ -932,7 +932,7 @@ Node BoolProofRuleChecker::checkInternal(ProofRule id,
   }
   if (id == ProofRule::SAT_REFUTATION || id == ProofRule::DRAT_REFUTATION || id == ProofRule::SAT_EXTERNAL_PROVE)
   {
-    Assert(args.size() == (id == ProofRule::SAT_REFUTATION ? 0 : 2));
+    Assert(args.size() == (id == ProofRule::SAT_REFUTATION ? 0 : (id==ProofRule::SAT_EXTERNAL_PROVE ? 1 : 2)));
     return NodeManager::currentNM()->mkConst(false);
   }
   // no rule

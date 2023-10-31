@@ -868,6 +868,11 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     Rewriter* rr = d_env.getRewriter();
     Node ret = d_env.rewriteViaMethod(args[0], idr);
     Node eq = args[0].eqNode(ret);
+    if (ret==args[0])
+    {
+      cdp->addStep(eq, ProofRule::REFL, {}, {args[0]});
+      return eq;
+    }
     if (idr == MethodId::RW_REWRITE || idr == MethodId::RW_REWRITE_EQ_EXT)
     {
       // rewrites from theory::Rewriter
