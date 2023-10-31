@@ -109,6 +109,39 @@ struct TermComparator
   }
 };
 
+struct MonomialComparator
+{
+  bool operator()(TNode a, TNode b) const
+  {
+    if (a == b) return false;
+    TNode av = getVar(a);
+    TNode bv = getVar(b);
+    if (av.isNull())
+    {
+      // use node comparison if both constants, this will be discarded
+      return bv.isNull() ? a<b : true;
+    }
+    else if (bv.isNull())
+    {
+      return false;
+    }
+    return LeafNodeComparator()(av, bv);
+  }
+  static TNode getVar(TNode a)
+  {
+    if (a.getKind()==Kind::MULT)
+    {
+      Assert (a.getNumChildren()==2 && a[0].isConst());
+      return a[1];
+    }
+    else if (a.isConst())
+    {
+      return TNode::null();
+    }
+    return a;
+  }
+};
+
 }  // namespace cvc5::internal::theory::arith::rewriter
 
 #endif

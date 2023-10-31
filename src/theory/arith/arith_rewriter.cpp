@@ -443,6 +443,28 @@ RewriteResponse ArithRewriter::postRewritePlus(TNode t)
   std::vector<TNode> children;
   expr::algorithm::flatten(t, children, Kind::ADD, Kind::TO_REAL);
 
+  // maybe just requires rearranging the order?
+  rewriter::MonomialComparator mc;
+  std::sort(children.begin(), children.end(), mc);
+  bool uniqueCh = true;
+  TNode cv = rewriter::MonomialComparator::getVar(children[0]);
+  for (size_t i=1, nchildren=children.size(); i<nchildren; i++)
+  {
+    TNode ncv = rewriter::MonomialComparator::getVar(children[i]);
+    if (cv==ncv)
+    {
+      uniqueCh = false;
+      break;
+    }
+    cv = ncv;
+  }
+  if (uniqueCh)
+  {
+    Node retSum = NodeManager::currentNM()->mkNode(Kind::ADD, children);
+    return RewriteResponse(REWRITE_DONE, retSum);
+  }
+  
+  // otherwise, reconstruct the sum
   rewriter::Sum sum;
   for (const auto& child : children)
   {
