@@ -386,8 +386,8 @@ void AlfPrinter::printLetList(std::ostream& out, LetBinding& lbind)
   for (size_t i = 0, nlets = letList.size(); i < nlets; i++)
   {
     Node n = letList[i];
-    Node def = lbind.convert(n, d_termLetPrefix, false);
-    Node f = lbind.convert(n, d_termLetPrefix, true);
+    Node def = lbind.convert(n, false);
+    Node f = lbind.convert(n, true);
     // use define command which does not invoke type checking
     out << "(define " << f << " () " << def << ")" << std::endl;
   }
@@ -402,7 +402,7 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
   const std::vector<Node>& assertions = pfn->getChildren()[0]->getArguments();
   const ProofNode* pnBody = pfn->getChildren()[0]->getChildren()[0].get();
 
-  LetBinding lbind;
+  LetBinding lbind(d_termLetPrefix);
   AlfPrintChannelPre aletify(lbind);
   AlfPrintChannelOut aprint(out, lbind, d_termLetPrefix);
 

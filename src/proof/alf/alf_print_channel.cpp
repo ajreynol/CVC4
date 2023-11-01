@@ -19,6 +19,7 @@
 
 #include "expr/node_algorithm.h"
 #include "proof/alf/alf_proof_rule.h"
+#include "printer/printer.h"
 
 namespace cvc5::internal {
 namespace proof {
@@ -118,8 +119,9 @@ void AlfPrintChannelOut::printNodeInternal(std::ostream& out, Node n)
 {
   options::ioutils::applyOutputLanguage(out, Language::LANG_SMTLIB_V2_6);
   options::ioutils::applyDagThresh(out, 0);
-  Node nc = d_lbind.convert(n, d_termLetPrefix, true);
-  nc.toStream(out);
+  Printer::getPrinter(out)->toStream(out, n, &d_lbind);
+  //Node nc = d_lbind.convert(n, d_termLetPrefix, true);
+  //nc.toStream(out);
 }
 
 void AlfPrintChannelOut::printTypeNodeInternal(std::ostream& out, TypeNode tn)
