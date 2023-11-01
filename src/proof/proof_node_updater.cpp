@@ -124,7 +124,7 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
   std::map<Node, std::shared_ptr<ProofNode>>::iterator itc;
   do
   {
-    Assert (!resCachec.empty());
+    Assert(!resCachec.empty());
     cur = visit.back();
     visit.pop_back();
     it = visited.find(cur);
@@ -153,7 +153,13 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
         // no further changes should be made to cur according to the callback
         Trace("pf-process-debug")
             << "...marked to not continue update." << std::endl;
-        runFinalize(cur, fa, resCache, resCacheNcWaiting, resCachec.back(), cfaMap, cfaAllowed);
+        runFinalize(cur,
+                    fa,
+                    resCache,
+                    resCacheNcWaiting,
+                    resCachec.back(),
+                    cfaMap,
+                    cfaAllowed);
         continue;
       }
       traversing.push_back(cur);
@@ -203,7 +209,13 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
       // replaced.
       if (!checkMergeProof(cur, resCache, cfaMap))
       {
-        runFinalize(cur, fa, resCache, resCacheNcWaiting, resCachec.back(), cfaMap, cfaAllowed);
+        runFinalize(cur,
+                    fa,
+                    resCache,
+                    resCacheNcWaiting,
+                    resCachec.back(),
+                    cfaMap,
+                    cfaAllowed);
       }
     }
   } while (!visit.empty());
@@ -297,7 +309,7 @@ void ProofNodeUpdater::runFinalize(
   }
   if (d_mergeSubproofs)
   {
-    bool isScope = cur->getRule()==ProofRule::SCOPE;
+    bool isScope = cur->getRule() == ProofRule::SCOPE;
     Node res = cur->getResult();
     Trace("ajr-temp") << "Process " << *cur.get() << std::endl;
     // cache the result if we don't contain an assumption
@@ -324,7 +336,7 @@ void ProofNodeUpdater::runFinalize(
     {
       std::map<Node, std::shared_ptr<ProofNode>>::const_iterator itc;
       itc = resCachec.find(res);
-      if (itc==resCachec.end())
+      if (itc == resCachec.end())
       {
         resCachec[res] = cur;
         Trace("ajr-temp") << "Set to res" << std::endl;
@@ -332,7 +344,8 @@ void ProofNodeUpdater::runFinalize(
       else
       {
         ProofNodeManager* pnm = d_env.getProofNodeManager();
-        Trace("ajr-temp") << "Update ctx " << res << " " << *cur.get() << " with " << *itc->second.get() << std::endl;
+        Trace("ajr-temp") << "Update ctx " << res << " " << *cur.get()
+                          << " with " << *itc->second.get() << std::endl;
         pnm->updateNode(cur.get(), itc->second.get());
       }
       Trace("pf-process-debug") << "Assumption pf: " << res << ", with "
@@ -370,7 +383,7 @@ void ProofNodeUpdater::runFinalize(
           newChildren.emplace_back(itr->second);
           Trace("ajr-temp") << "...child changed ctx " << cpres << std::endl;
           childChanged = true;
-          AlwaysAssert (itr->second!=cur);
+          AlwaysAssert(itr->second != cur);
           continue;
         }
       }
@@ -410,7 +423,8 @@ bool ProofNodeUpdater::checkMergeProof(
     {
       ProofNodeManager* pnm = d_env.getProofNodeManager();
       Assert(pnm != nullptr);
-      Trace("ajr-temp") << "Update " << res << " " << *cur.get() << " with " << *itc->second.get() << std::endl;
+      Trace("ajr-temp") << "Update " << res << " " << *cur.get() << " with "
+                        << *itc->second.get() << std::endl;
       // already have a proof, merge it into this one
       pnm->updateNode(cur.get(), itc->second.get());
       // does not contain free assumptions since the range of resCache does
