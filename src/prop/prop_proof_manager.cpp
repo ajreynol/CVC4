@@ -296,7 +296,8 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   std::shared_ptr<ProofNode> conflictProof;
   if (hasFalseAssert)
   {
-    Assert (clauses.size()==1 && clauses[0].isConst() && !clauses[0].getConst<bool>());
+    Assert(clauses.size() == 1 && clauses[0].isConst()
+           && !clauses[0].getConst<bool>());
     conflictProof = d_env.getProofNodeManager()->mkAssume(clauses[0]);
   }
   else
