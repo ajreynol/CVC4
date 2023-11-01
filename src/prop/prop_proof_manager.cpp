@@ -133,17 +133,31 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   std::unordered_set<Node> cset(assumptions.begin(), assumptions.end());
   Trace("cnf-input") << "#assumptions=" << cset.size() << std::endl;
 
-  if (d_satSolver->needsMinimizeClausesForGetProof())
+  bool hasFalseAssert = false;
+  bool computeClauses = d_satSolver->needsMinimizeClausesForGetProof();
+  if (computeClauses)
   {
     std::vector<Node> minAssumptions;
     std::vector<SatLiteral> unsatAssumptions;
     d_satSolver->getUnsatAssumptions(unsatAssumptions);
     for (const Node& nc : cset)
     {
-      // never include true
-      if (nc.isConst() && nc.getConst<bool>())
+      if (nc.isConst())
       {
-        continue;
+        if (nc.getConst<bool>())
+        {
+          // never include true
+          continue;
+        }
+        else
+        {
+          hasFalseAssert = true;
+          Trace("cnf-input") << "...found false assumption" << std::endl;
+          // if false exists, take it only
+          minAssumptions.clear();
+          minAssumptions.push_back(nc);
+          break;
+        }
       }
       else if (d_proofCnfStream->hasLiteral(nc))
       {
@@ -161,20 +175,23 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
     Trace("cnf-input") << "#assumptions (min)=" << cset.size() << std::endl;
   }
   std::vector<Node> inputs = d_proofCnfStream->getInputClauses();
-  cset.insert(inputs.begin(), inputs.end());
   Trace("cnf-input") << "#input=" << inputs.size() << std::endl;
   std::vector<Node> lemmas = d_proofCnfStream->getLemmaClauses();
   Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
-  cset.insert(lemmas.begin(), lemmas.end());
+  if (!hasFalseAssert)
+  {
+    cset.insert(inputs.begin(), inputs.end());
+    cset.insert(lemmas.begin(), lemmas.end());
+  }
 
   // the set of clauses to pass to SAT solver for getProof
   std::vector<Node> clauses;
   // output for dimacs file
   std::stringstream dumpDimacs;
   bool alreadyDumpDimacs = false;
-  // go back and minimize assumptions if option is set and SAT solver uses it
-  if (options().proof.satProofMinDimacs
-      && d_satSolver->needsMinimizeClausesForGetProof())
+  // go back and minimize assumptions if option is set and SAT solver uses it.
+  // we don't do this if we found false as a (preprocessed) input formula
+  if (computeClauses && !hasFalseAssert && options().proof.satProofMinDimacs)
   {
     Trace("cnf-input-min") << "Make cadical..." << std::endl;
     CDCLTSatSolver* csm = SatSolverFactory::createCadical(
@@ -276,7 +293,16 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
     clauses.insert(clauses.end(), cset.begin(), cset.end());
   }
 
-  std::shared_ptr<ProofNode> conflictProof = d_satSolver->getProof(clauses);
+  std::shared_ptr<ProofNode> conflictProof;
+  if (hasFalseAssert)
+  {
+    Assert (clauses.size()==1 && clauses[0].isConst() && !clauses[0].getConst<bool>());
+    conflictProof = d_env.getProofNodeManager()->mkAssume(clauses[0]);
+  }
+  else
+  {
+    conflictProof = d_satSolver->getProof(clauses);
+  }
   // if DRAT, must dump dimacs
   ProofRule r = conflictProof->getRule();
   if (r == ProofRule::DRAT_REFUTATION || r == ProofRule::SAT_EXTERNAL_PROVE)
