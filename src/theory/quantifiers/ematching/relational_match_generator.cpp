@@ -58,6 +58,11 @@ RelationalMatchGenerator::RelationalMatchGenerator(
       << "Failed to initialize RelationalMatchGenerator";
 }
 
+void RelationalMatchGenerator::resetInstantiationRound()
+{
+  d_counter = 0;
+}
+
 bool RelationalMatchGenerator::reset(Node eqc)
 {
   d_counter = 0;

@@ -58,6 +58,8 @@ class RelationalMatchGenerator : public InstMatchGenerator
   RelationalMatchGenerator(
       Env& env, Trigger* tparent, Node rtrigger, bool hasPol, bool pol);
 
+  /** Reset instantiation round */
+  void resetInstantiationRound() override;
   /** Reset */
   bool reset(Node eqc) override;
   /** Get the next match. */
