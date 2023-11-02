@@ -132,6 +132,7 @@ Trigger::~Trigger() {
 
 void Trigger::setEvaluatorMode(ieval::TermEvaluatorMode tev)
 {
+  d_mg->resetInstantiationRound();
   d_instMatch.setEvaluatorMode(tev);
 }
 

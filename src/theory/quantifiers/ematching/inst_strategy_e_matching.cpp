@@ -207,15 +207,9 @@ InstStrategyStatus InstStrategyAutoGenTriggers::process(
         // trigger is null or currently disabled
         continue;
       }
-      if (d_processed_trigger[f].find(tr) != d_processed_trigger[f].end())
-      {
-        // trigger is already processed this round
-        continue;
-      }
-      d_processed_trigger[f][tr] = true;
       Trace("process-trigger") << "  Process ";
       tr->debugPrint("process-trigger");
-      Trace("process-trigger") << "..." << std::endl;
+      Trace("process-trigger") << " (" << tev << ")..." << std::endl;
       tr->setEvaluatorMode(tev);
       unsigned numInst = tr->addInstantiations();
       hasInst = numInst > 0 || hasInst;
