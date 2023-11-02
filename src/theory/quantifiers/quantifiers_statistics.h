@@ -18,9 +18,9 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__QUANTIFIERS_STATISTICS_H
 #define CVC5__THEORY__QUANTIFIERS__QUANTIFIERS_STATISTICS_H
 
+#include "theory/quantifiers/ieval/term_evaluator.h"
 #include "util/statistics_registry.h"
 #include "util/statistics_stats.h"
-#include "theory/quantifiers/ieval/term_evaluator.h"
 
 namespace cvc5::internal {
 namespace theory {

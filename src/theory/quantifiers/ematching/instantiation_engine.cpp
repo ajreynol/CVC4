@@ -198,7 +198,7 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
               << ", from ieval effort " << tev;
           if (d_qstate.isInConflict())
           {
-             Trace("inst-engine") << ", in conflict";
+            Trace("inst-engine") << ", in conflict";
           }
           Trace("inst-engine") << std::endl;
         }

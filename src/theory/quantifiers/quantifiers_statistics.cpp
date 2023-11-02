@@ -21,10 +21,9 @@ namespace quantifiers {
 
 QuantifiersStatistics::QuantifiersStatistics(StatisticsRegistry& sr)
     : d_time(sr.registerTimer("QuantifiersEngine::checkTime")),
-      d_cbqi_time(sr.registerTimer(
-          "tQuantifiersEngine::time_conflict_based_inst")),
-      d_ematching_time(
-          sr.registerTimer("QuantifiersEngine::time_ematching")),
+      d_cbqi_time(
+          sr.registerTimer("tQuantifiersEngine::time_conflict_based_inst")),
+      d_ematching_time(sr.registerTimer("QuantifiersEngine::time_ematching")),
       d_num_quant(sr.registerInt("QuantifiersEngine::Num_Quantifiers")),
       d_instantiation_rounds(
           sr.registerInt("QuantifiersEngine::Rounds_Instantiation_Full")),
@@ -35,7 +34,8 @@ QuantifiersStatistics::QuantifiersStatistics(StatisticsRegistry& sr)
       d_multi_triggers(sr.registerInt("QuantifiersEngine::Triggers_Multi")),
       d_red_alpha_equiv(
           sr.registerInt("QuantifiersEngine::Reductions_Alpha_Equivalence")),
-      d_ematchingLevel(sr.registerHistogram<ieval::TermEvaluatorMode>("QuantifiersEngine::ematching_level"))
+      d_ematchingLevel(sr.registerHistogram<ieval::TermEvaluatorMode>(
+          "QuantifiersEngine::ematching_level"))
 {
 }
 
