@@ -147,7 +147,8 @@ void InstantiationEngine::reset_round( Theory::Effort e ){
 
 void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
 {
-  CodeTimer codeTimer(d_qstate.getStats().d_ematching_time);
+  QuantifiersStatistics& qs = d_qstate.getStats();
+  CodeTimer codeTimer(qs.d_ematching_time);
   if (quant_e != QEFFORT_STANDARD)
   {
     return;
@@ -187,19 +188,21 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
                   : (i == 1 ? ieval::TermEvaluatorMode::PROP
                             : ieval::TermEvaluatorMode::NO_ENTAIL));
       doInstantiationRound(e, tev);
-      if (d_qstate.isInConflict())
+      if (d_qstate.isInConflict() || d_qim.hasPendingLemma())
       {
         Assert(d_qim.numPendingLemmas() > lastWaiting);
-        Trace("inst-engine") << "Conflict, added lemmas = "
-                             << (d_qim.numPendingLemmas() - lastWaiting)
-                             << ", from ieval effort " << tev << std::endl;
-        break;
-      }
-      else if (d_qim.hasPendingLemma())
-      {
-        Trace("inst-engine")
-            << "Added lemmas = " << (d_qim.numPendingLemmas() - lastWaiting)
-            << ", from ieval effort " << tev << std::endl;
+        if (TraceIsOn("inst-engine"))
+        {
+          Trace("inst-engine")
+              << "Added lemmas = " << (d_qim.numPendingLemmas() - lastWaiting)
+              << ", from ieval effort " << tev;
+          if (d_qstate.isInConflict())
+          {
+             Trace("inst-engine") << ", in conflict";
+          }
+          Trace("inst-engine") << std::endl;
+        }
+        qs.d_ematchingLevel << tev;
         break;
       }
     }

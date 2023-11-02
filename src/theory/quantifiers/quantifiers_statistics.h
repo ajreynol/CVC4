@@ -20,6 +20,7 @@
 
 #include "util/statistics_registry.h"
 #include "util/statistics_stats.h"
+#include "theory/quantifiers/ieval/term_evaluator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -43,6 +44,8 @@ class QuantifiersStatistics
   IntStat d_simple_triggers;
   IntStat d_multi_triggers;
   IntStat d_red_alpha_equiv;
+  /** Which level e-matching rounds terminated on */
+  HistogramStat<ieval::TermEvaluatorMode> d_ematchingLevel;
 };
 
 }  // namespace quantifiers
