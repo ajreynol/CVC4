@@ -85,7 +85,7 @@ void InstantiationEngine::doInstantiationRound(Theory::Effort effort,
   int e = 0;
   int eLimit = effort==Theory::EFFORT_LAST_CALL ? 10 : 2;
   bool finished = false;
-  bool singleQuant = (tev != ieval::TermEvaluatorMode::NO_ENTAIL
+  bool singleQuant = (tev == ieval::TermEvaluatorMode::CONFLICT
                       && !options().quantifiers.cbqiAllConflict);
   //while unfinished, try effort level=0,1,2....
   while( !finished && e<=eLimit ){
