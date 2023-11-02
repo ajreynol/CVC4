@@ -18,6 +18,8 @@
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/ematching/trigger_database.h"
 #include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_registry.h"
+#include "theory/quantifiers/first_order_model.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory::quantifiers::inst;
@@ -112,6 +114,14 @@ InstStrategyStatus InstStrategyUserPatterns::process(
     {
       // we are already in conflict
       break;
+    }
+    if (tev!=ieval::TermEvaluatorMode::NO_ENTAIL)
+    {
+      // mark relevant but don't break
+      if (numInst>0)
+      {
+        d_treg.getModel()->markRelevant(q);
+      }
     }
   }
   return InstStrategyStatus::STATUS_UNKNOWN;

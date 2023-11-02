@@ -85,21 +85,22 @@ void InstantiationEngine::doInstantiationRound(Theory::Effort effort,
   int e = 0;
   int eLimit = effort==Theory::EFFORT_LAST_CALL ? 10 : 2;
   bool finished = false;
+  bool singleQuant = (tev!=ieval::TermEvaluatorMode::NO_ENTAIL && !options().quantifiers.cbqiAllConflict);
   //while unfinished, try effort level=0,1,2....
   while( !finished && e<=eLimit ){
     Trace("inst-engine-debug") << "IE: Prepare instantiation (" << e << ")." << std::endl;
     finished = true;
     //instantiate each quantifier
-    for( unsigned i=0; i<d_quants.size(); i++ ){
-      Node q = d_quants[i];
+    for (const Node& q : d_quants)
+    {
       Trace("inst-engine-debug") << "IE: Instantiate " << q << "..." << std::endl;
       //int e_use = d_quantEngine->getRelevance( q )==-1 ? e - 1 : e;
       int e_use = e;
       if( e_use>=0 ){
         Trace("inst-engine-debug") << "inst-engine : " << q << std::endl;
         //check each instantiation strategy
-        for( unsigned j=0; j<d_instStrategies.size(); j++ ){
-          InstStrategy* is = d_instStrategies[j];
+        for (InstStrategy* is : d_instStrategies)
+        {
           Trace("inst-engine-debug") << "Do " << is->identify() << " " << e_use << std::endl;
           InstStrategyStatus quantStatus = is->process(q, effort, e_use, tev);
           Trace("inst-engine-debug")
@@ -113,6 +114,10 @@ void InstantiationEngine::doInstantiationRound(Theory::Effort effort,
           else if (quantStatus == InstStrategyStatus::STATUS_UNFINISHED)
           {
             finished = false;
+          }
+          if (singleQuant && d_qim.hasPendingLemma())
+          {
+            return;
           }
         }
       }

@@ -22,6 +22,8 @@
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_registry.h"
 #include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_registry.h"
+#include "theory/quantifiers/first_order_model.h"
 #include "util/random.h"
 
 using namespace cvc5::internal::kind;
@@ -212,6 +214,16 @@ InstStrategyStatus InstStrategyAutoGenTriggers::process(
       Trace("process-trigger") << " (" << tev << ")..." << std::endl;
       tr->setEvaluatorMode(tev);
       unsigned numInst = tr->addInstantiations();
+      if (tev!=ieval::TermEvaluatorMode::NO_ENTAIL)
+      {
+        // Mark relevant if numInst>0 and break, since other triggers will
+        // also likely give no results.
+        if (numInst>0)
+        {
+          d_treg.getModel()->markRelevant(f);
+        }
+        break;
+      }
       hasInst = numInst > 0 || hasInst;
       Trace("process-trigger")
           << "  Done, numInst = " << numInst << "." << std::endl;
