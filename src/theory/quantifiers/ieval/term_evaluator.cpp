@@ -29,15 +29,14 @@ namespace ieval {
 
 const char* toString(TermEvaluatorMode tev)
 {
-  switch(tev)
+  switch (tev)
   {
-  case TermEvaluatorMode::NONE: return "NONE";
-  case TermEvaluatorMode::CONFLICT: return "CONFLICT";
-  case TermEvaluatorMode::PROP: return "PROP";
-  case TermEvaluatorMode::NO_ENTAIL: return "NO_ENTAIL";
-  case TermEvaluatorMode::MODEL: return "MODEL";
-    default:
-      break;
+    case TermEvaluatorMode::NONE: return "NONE";
+    case TermEvaluatorMode::CONFLICT: return "CONFLICT";
+    case TermEvaluatorMode::PROP: return "PROP";
+    case TermEvaluatorMode::NO_ENTAIL: return "NO_ENTAIL";
+    case TermEvaluatorMode::MODEL: return "MODEL";
+    default: break;
   }
   return "?";
 }

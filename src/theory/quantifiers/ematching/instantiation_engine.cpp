@@ -85,7 +85,8 @@ void InstantiationEngine::doInstantiationRound(Theory::Effort effort,
   int e = 0;
   int eLimit = effort==Theory::EFFORT_LAST_CALL ? 10 : 2;
   bool finished = false;
-  bool singleQuant = (tev!=ieval::TermEvaluatorMode::NO_ENTAIL && !options().quantifiers.cbqiAllConflict);
+  bool singleQuant = (tev != ieval::TermEvaluatorMode::NO_ENTAIL
+                      && !options().quantifiers.cbqiAllConflict);
   //while unfinished, try effort level=0,1,2....
   while( !finished && e<=eLimit ){
     Trace("inst-engine-debug") << "IE: Prepare instantiation (" << e << ")." << std::endl;
