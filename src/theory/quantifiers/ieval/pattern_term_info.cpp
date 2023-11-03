@@ -89,7 +89,7 @@ bool PatTermInfo::notifyChild(State& s,
     childValues.push_back(pcv);
   }
   // call the evaluator
-  d_eq = tec->evaluate(s, d_pattern, childValues);
+  d_eq = tec->evaluate(s, *this, childValues);
   Assert(!d_eq.get().isNull());
   Trace("ieval") << "  " << d_pattern << " := " << d_eq.get() << " (evaluate)"
                  << std::endl;

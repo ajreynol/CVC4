@@ -76,7 +76,7 @@ class TermEvaluator : protected EnvObj
    * Called when all children of n have been assigned values childValues.
    */
   virtual TNode evaluate(const State& s,
-                         TNode n,
+                         PatTermInfo& p,
                          const std::vector<TNode>& childValues) = 0;
 
  protected:
@@ -107,10 +107,13 @@ class TermEvaluatorEntailed : public TermEvaluator
                              Node& exp) override;
   /** Evaluate term */
   TNode evaluate(const State& s,
-                 TNode n,
+                 PatTermInfo& p,
                  const std::vector<TNode>& childValues) override;
 
  protected:
+  /** Return false if we fail to match */
+  virtual bool partialEvaluateChildMatch(
+      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp);
   /** Is in relevant domain? */
   virtual bool inRelevantDomain(TNode f, size_t i, TNode r);
   /** Get congruent term */

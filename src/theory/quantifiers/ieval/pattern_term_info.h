@@ -89,7 +89,7 @@ class PatTermInfo
   //==================
   Node d_mop;
   context::CDO<TNodeTrie*> d_trie;
-  context::CDO<TNode> d_trieWatchChild;
+  context::CDO<size_t> d_trieWatchChild;
 };
 
 }  // namespace ieval

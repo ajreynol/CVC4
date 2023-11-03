@@ -65,22 +65,11 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
       exp = child;
       return val;
     }
-    // if we are not in the relevant domain, we are immediately "none". We only
-    // do this if we are in conflict/prop mode
-    if (d_checkRelDom)
+    // run the implementation specific match evaluation
+    if (!partialEvaluateChildMatch(s, p, child, val, exp))
     {
-      TNode n = p.d_pattern;
-      // scan the argument list of n to find occurrences of the child
-      for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
-      {
-        if (n[i] == child && !inRelevantDomain(p.d_mop, i, val))
-        {
-          exp = child;
-          return s.getNone();
-        }
-      }
+      return s.getNone();
     }
-    // otherwise possibly update the watched children
     return d_null;
   }
   TNode n = p.d_pattern;
@@ -157,21 +146,51 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
   return d_null;
 }
 
+bool TermEvaluatorEntailed::partialEvaluateChildMatch(
+      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
+{
+  Assert (!p.d_mop.isNull());
+  // if we are not in the relevant domain, we are immediately "none". We only
+  // do this if we are in conflict/prop mode
+  if (!d_checkRelDom)
+  {
+    return true;
+  }
+  TNode n = p.d_pattern;
+  // scan the argument list of n to find occurrences of the child
+  for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
+  {
+    if (n[i] == child && !inRelevantDomain(p.d_mop, i, val))
+    {
+      exp = child;
+      return false;
+    }
+  }
+  // otherwise possibly update the watched children
+  if (p.d_trie==nullptr)
+  {
+    p.d_trie = d_tdb.getTermArgTrie(p.d_mop);
+    p.d_trieWatchChild = 0;
+    
+  }
+  return true;
+}
+
 TNode TermEvaluatorEntailed::evaluate(const State& s,
-                                      TNode n,
+                                      PatTermInfo& p,
                                       const std::vector<TNode>& childValues)
 {
+  TNode n = p.d_pattern;
   // if an existing ground term, just return representative
   if (!expr::hasBoundVar(n) && d_qs.hasTerm(n))
   {
     return d_qs.getRepresentative(n);
   }
-  TNode mop = d_tdb.getMatchOperator(n);
-  if (!mop.isNull())
+  if (!p.d_mop.isNull())
   {
     TNode ret;
     // see if we are congruent to a term known by the term database
-    Node eval = getCongruentTerm(mop, childValues);
+    Node eval = getCongruentTerm(p.d_mop, childValues);
     if (!eval.isNull())
     {
       ret = d_qs.getRepresentative(eval);
