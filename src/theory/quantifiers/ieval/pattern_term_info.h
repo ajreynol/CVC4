@@ -86,9 +86,16 @@ class PatTermInfo
    * we only consider cases where a single child forced the evaluation.
    */
   context::CDO<TNode> d_evalExpChild;
-  //==================
+  /** The match operator */
   Node d_mop;
+  /** The current position in a trie we are considering */
   context::CDO<TNodeTrie*> d_trie;
+  /**
+   * The current child in the trie we have traversed to. In other words, the
+   * depth of d_trie is d_trieWatchChild and corresponds to the terms of this
+   * term's match operator where the first d_trieWatchChild have been assigned
+   * values.
+   */
   context::CDO<size_t> d_trieWatchChild;
 };
 

@@ -172,16 +172,16 @@ TNode TermEvaluatorEntailed::partialEvaluateChildMatch(
   }
   else
   {
-    Assert(p.d_trieWatchChild < p.d_pattern.getNumChildren());
-    trieNeedsUpdate = (p.d_pattern[p.d_trieWatchChild] == child);
+    Assert(p.d_trieWatchChild < n.getNumChildren());
+    trieNeedsUpdate = (n[p.d_trieWatchChild] == child);
   }
   if (trieNeedsUpdate)
   {
-    size_t nchild = p.d_pattern.getNumChildren();
+    size_t nchild = n.getNumChildren();
     TNodeTrie* cur = p.d_trie.get();
     while (p.d_trieWatchChild < nchild)
     {
-      TNode v = s.getValue(p.d_pattern[p.d_trieWatchChild]);
+      TNode v = s.getValue(n[p.d_trieWatchChild]);
       if (v.isNull())
       {
         p.d_trie = cur;
