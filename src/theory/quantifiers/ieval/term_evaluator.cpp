@@ -147,9 +147,9 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
 }
 
 bool TermEvaluatorEntailed::partialEvaluateChildMatch(
-      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
+    const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
 {
-  Assert (!p.d_mop.isNull());
+  Assert(!p.d_mop.isNull());
   // if we are not in the relevant domain, we are immediately "none". We only
   // do this if we are in conflict/prop mode
   if (!d_checkRelDom)
@@ -167,11 +167,10 @@ bool TermEvaluatorEntailed::partialEvaluateChildMatch(
     }
   }
   // otherwise possibly update the watched children
-  if (p.d_trie==nullptr)
+  if (p.d_trie == nullptr)
   {
     p.d_trie = d_tdb.getTermArgTrie(p.d_mop);
     p.d_trieWatchChild = 0;
-    
   }
   return true;
 }
