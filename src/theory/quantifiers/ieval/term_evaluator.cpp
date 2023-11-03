@@ -329,18 +329,19 @@ bool TermEvaluatorEntailed::inRelevantDomain(TNode f, size_t i, TNode r)
   return d_tdb.inRelevantDomain(f, i, r);
 }
 
-TNode TermEvaluatorEntailed::getCongruentTerm(Node f, const std::vector<TNode>& args)
+TNode TermEvaluatorEntailed::getCongruentTerm(Node f,
+                                              const std::vector<TNode>& args)
 {
   return d_tdb.getCongruentTerm(f, args);
 }
 
 TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
-                                             TermEvaluatorMode tev,
-                                             QuantifiersState& qs,
-                                             TermDb& tdb)
+                                                       TermEvaluatorMode tev,
+                                                       QuantifiersState& qs,
+                                                       TermDb& tdb)
     : TermEvaluatorEntailed(env, tev, qs, tdb), d_tdbe(tdb.getTermDbEager())
 {
-  Assert (d_tdbe!=nullptr);
+  Assert(d_tdbe != nullptr);
 }
 
 bool TermEvaluatorEntailedEager::inRelevantDomain(TNode f, size_t i, TNode r)
@@ -348,7 +349,8 @@ bool TermEvaluatorEntailedEager::inRelevantDomain(TNode f, size_t i, TNode r)
   return d_tdbe->inRelevantDomain(f, i, r);
 }
 
-TNode TermEvaluatorEntailedEager::getCongruentTerm(Node f, const std::vector<TNode>& args)
+TNode TermEvaluatorEntailedEager::getCongruentTerm(
+    Node f, const std::vector<TNode>& args)
 {
   return d_tdbe->getCongruentTerm(f, args);
 }

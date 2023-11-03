@@ -708,7 +708,7 @@ bool QuantInfo::isTConstraintSpurious(const std::vector<Node>& terms)
     return false;
   }
   EntailmentCheck* echeck = d_parent->getTermRegistry().getEntailmentCheck();
-  //check whether the instantiation evaluates as expected
+  // check whether the instantiation evaluates as expected
   std::map<TNode, TNode> subs;
   for (size_t i = 0, tsize = terms.size(); i < tsize; i++)
   {
@@ -722,7 +722,8 @@ bool QuantInfo::isTConstraintSpurious(const std::vector<Node>& terms)
         << "  " << d_extra_var[i] << " -> " << n << std::endl;
     subs[d_extra_var[i]] = n;
   }
-  if (d_parent->atConflictEffort()) {
+  if (d_parent->atConflictEffort())
+  {
     Trace("qcf-instance-check")
         << "Possible conflict instance for " << d_q << " : " << std::endl;
     if (!echeck->isEntailed(d_q[1], subs, false, false))
@@ -731,14 +732,18 @@ bool QuantInfo::isTConstraintSpurious(const std::vector<Node>& terms)
           << "...not entailed to be false." << std::endl;
       return true;
     }
-  }else{
+  }
+  else
+  {
     // see if the body of the quantified formula evaluates to a Boolean
     // combination of known terms under the current substitution. We use
     // the helper method evaluateTerm from the entailment check utility.
     Node inst_eval = echeck->evaluateTerm(
         d_q[1], subs, false, options().quantifiers.cbqiTConstraint, true);
-    if( TraceIsOn("qcf-instance-check") ){
-      Trace("qcf-instance-check") << "Possible propagating instance for " << d_q << " : " << std::endl;
+    if (TraceIsOn("qcf-instance-check"))
+    {
+      Trace("qcf-instance-check")
+          << "Possible propagating instance for " << d_q << " : " << std::endl;
       Trace("qcf-instance-check") << "  " << terms << std::endl;
       Trace("qcf-instance-check")
           << "...evaluates to " << inst_eval << std::endl;
@@ -752,7 +757,9 @@ bool QuantInfo::isTConstraintSpurious(const std::vector<Node>& terms)
     {
       Trace("qcf-instance-check") << "...spurious." << std::endl;
       return true;
-    }else{
+    }
+    else
+    {
       if (Configuration::isDebugBuild())
       {
         if (!d_parent->isPropagatingInstance(inst_eval))

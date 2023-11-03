@@ -40,13 +40,14 @@ class TermDbEager : protected EnvObj
   void eqNotifyNewClass(TNode t);
   /** notification when master equality engine is updated */
   void eqNotifyMerge(TNode t1, TNode t2);
-  
+
   /** Is in relevant domain? */
   bool inRelevantDomain(TNode f, size_t i, TNode r);
   /** Get congruent term */
   TNode getCongruentTerm(Node f, const std::vector<TNode>& args);
+
  private:
-   Node d_null;
+  Node d_null;
 };
 
 }  // namespace quantifiers

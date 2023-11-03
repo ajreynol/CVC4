@@ -123,9 +123,10 @@ class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
 {
  public:
   TermEvaluatorEntailedEager(Env& env,
-                        TermEvaluatorMode tev,
-                        QuantifiersState& qs,
-                        TermDb& tdb);
+                             TermEvaluatorMode tev,
+                             QuantifiersState& qs,
+                             TermDb& tdb);
+
  protected:
   /** Is in relevant domain? */
   bool inRelevantDomain(TNode f, size_t i, TNode r) override;

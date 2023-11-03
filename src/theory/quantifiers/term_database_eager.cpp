@@ -21,19 +21,11 @@ namespace quantifiers {
 
 TermDbEager::TermDbEager(Env& env, QuantifiersState& qs) : EnvObj(env) {}
 
-void TermDbEager::eqNotifyNewClass(TNode t)
-{
-}
+void TermDbEager::eqNotifyNewClass(TNode t) {}
 
-void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
-{
-  
-}
+void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {}
 
-bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
-{
-  return false;
-}
+bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r) { return false; }
 
 TNode TermDbEager::getCongruentTerm(Node f, const std::vector<TNode>& args)
 {
@@ -43,4 +35,3 @@ TNode TermDbEager::getCongruentTerm(Node f, const std::vector<TNode>& args)
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
-

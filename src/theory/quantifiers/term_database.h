@@ -26,9 +26,9 @@
 #include "expr/attribute.h"
 #include "expr/node_trie.h"
 #include "theory/quantifiers/quant_util.h"
+#include "theory/quantifiers/term_database_eager.h"
 #include "theory/theory.h"
 #include "theory/type_enumerator.h"
-#include "theory/quantifiers/term_database_eager.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -214,6 +214,7 @@ class TermDb : public QuantifiersUtil {
   Node getEligibleTermInEqc(TNode r);
   /** get the eager version of this class */
   TermDbEager* getTermDbEager();
+
  protected:
   /** The quantifiers state object */
   QuantifiersState& d_qstate;

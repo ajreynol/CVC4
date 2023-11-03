@@ -699,10 +699,7 @@ TNode TermDb::getCongruentTerm(Node f, const std::vector<TNode>& args)
   return d_func_map_trie[f].existsTerm( args );
 }
 
-TermDbEager* TermDb::getTermDbEager()
-{
-  return d_tde.get();
-}
+TermDbEager* TermDb::getTermDbEager() { return d_tde.get(); }
 
 }  // namespace quantifiers
 }  // namespace theory
