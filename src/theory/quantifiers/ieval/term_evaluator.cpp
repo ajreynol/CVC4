@@ -54,8 +54,36 @@ TNode TermEvaluatorEntailed::evaluateBase(const State& s, TNode n)
 }
 
 TNode TermEvaluatorEntailed::partialEvaluateChild(
-    const State& s, TNode n, TNode child, TNode val, Node& exp)
+    const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
 {
+  // if a matchable operator
+  if (!p.d_mop.isNull())
+  {
+    if (s.isNone(val))
+    {
+      // none for a matchable operator returns none
+      exp = child;
+      return val;
+    }
+    // if we are not in the relevant domain, we are immediately "none". We only
+    // do this if we are in conflict/prop mode
+    if (d_checkRelDom)
+    {
+      TNode n = p.d_pattern;
+      // scan the argument list of n to find occurrences of the child
+      for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
+      {
+        if (n[i] == child && !inRelevantDomain(p.d_mop, i, val))
+        {
+          exp = child;
+          return s.getNone();
+        }
+      }
+    }
+    // otherwise possibly update the watched children
+    return d_null;
+  }
+  TNode n = p.d_pattern;
   // if a Boolean connective, handle short circuiting
   Kind k = n.getKind();
   // Implies and xor are eliminated from the propositional skeleton of
@@ -114,7 +142,7 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
         }
       }
     }
-    return Node::null();
+    return d_null;
   }
   else if (s.isNone(val))
   {
@@ -124,35 +152,15 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
     exp = child;
     return val;
   }
-  // if we are not in the relevant domain, we are immediately "none". We only
-  // do this if we are in conflict/prop mode
-  if (d_checkRelDom)
-  {
-    TNode mop = d_tdb.getMatchOperator(n);
-    if (!mop.isNull())
-    {
-      // scan the argument list of n to find occurrences of the child
-      for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
-      {
-        if (n[i] == child && !inRelevantDomain(mop, i, val))
-        {
-          exp = child;
-          return s.getNone();
-        }
-      }
-    }
-  }
   // NOTE: could do other short circuiting like zero for mult, this is omitted
   // for the sake of simplicity.
-  return Node::null();
+  return d_null;
 }
 
 TNode TermEvaluatorEntailed::evaluate(const State& s,
                                       TNode n,
                                       const std::vector<TNode>& childValues)
 {
-  // set to unknown, handle cases
-  TNode ret = s.getNone();
   // if an existing ground term, just return representative
   if (!expr::hasBoundVar(n) && d_qs.hasTerm(n))
   {
@@ -161,6 +169,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   TNode mop = d_tdb.getMatchOperator(n);
   if (!mop.isNull())
   {
+    TNode ret;
     // see if we are congruent to a term known by the term database
     Node eval = getCongruentTerm(mop, childValues);
     if (!eval.isNull())
@@ -169,9 +178,15 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
       // Note that ret may be an (unassigned, non-constant) Boolean. We do
       // not turn this into "none" here yet.
     }
+    else
+    {
+      ret = s.getNone();
+    }
     return ret;
   }
 
+  // set to unknown, handle cases
+  TNode ret;
   Kind k = n.getKind();
   NodeManager* nm = NodeManager::currentNM();
   Assert(k != Kind::NOT);
@@ -188,7 +203,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
       {
         // unknown (possibly none), we are done
         Trace("ieval-state-debug") << "...unknown child of AND/OR" << std::endl;
-        return ret;
+        return s.getNone();
       }
       else
       {
@@ -241,6 +256,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   }
   else if (k == Kind::ITE)
   {
+    ret = s.getNone();
     TNode cval1 = childValues[0];
     Assert(!cval1.isNull());
     if (cval1.isConst())

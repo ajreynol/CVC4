@@ -307,7 +307,7 @@ PatTermInfo& State::getOrMkPatTermInfo(TNode p)
   {
     it = d_pInfo.emplace(p, d_ctx).first;
     // initialize the pattern
-    it->second.initialize(p);
+    it->second.initialize(p, d_tdb.getMatchOperator(p));
   }
   return it->second;
 }

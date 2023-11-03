@@ -49,6 +49,7 @@ enum class TermEvaluatorMode : uint32_t
 };
 
 class State;
+class PatTermInfo;
 
 class TermEvaluator : protected EnvObj
 {
@@ -69,7 +70,7 @@ class TermEvaluator : protected EnvObj
    * reason for the evaluation. This can be used for explanations.
    */
   virtual TNode partialEvaluateChild(
-      const State& s, TNode n, TNode child, TNode val, Node& exp) = 0;
+      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp) = 0;
   /**
    * Evaluate term
    * Called when all children of n have been assigned values childValues.
@@ -100,7 +101,7 @@ class TermEvaluatorEntailed : public TermEvaluator
   TNode evaluateBase(const State& s, TNode n) override;
   /** Partial evaluate child */
   TNode partialEvaluateChild(
-      const State& s, TNode n, TNode child, TNode val, Node& exp) override;
+      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp) override;
   /** Evaluate term */
   TNode evaluate(const State& s,
                  TNode n,
@@ -117,6 +118,8 @@ class TermEvaluatorEntailed : public TermEvaluator
   TermDb& d_tdb;
   /** Whether we are using an optimization for checking the relevant domain */
   bool d_checkRelDom;
+  /** The null node */
+  Node d_null;
 };
 
 class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
