@@ -134,7 +134,7 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
       // scan the argument list of n to find occurrences of the child
       for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
       {
-        if (n[i] == child && !d_tdb.inRelevantDomain(mop, i, val))
+        if (n[i] == child && !inRelevantDomain(mop, i, val))
         {
           exp = child;
           return s.getNone();
@@ -162,7 +162,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   if (!mop.isNull())
   {
     // see if we are congruent to a term known by the term database
-    Node eval = d_tdb.getCongruentTerm(mop, childValues);
+    Node eval = getCongruentTerm(mop, childValues);
     if (!eval.isNull())
     {
       ret = d_qs.getRepresentative(eval);
@@ -322,6 +322,35 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   // NOTE: could do theory entailment checks here, although this is omitted
   // for the sake of performance.
   return ret;
+}
+
+bool TermEvaluatorEntailed::inRelevantDomain(TNode f, size_t i, TNode r)
+{
+  return d_tdb.inRelevantDomain(f, i, r);
+}
+
+TNode TermEvaluatorEntailed::getCongruentTerm(Node f, const std::vector<TNode>& args)
+{
+  return d_tdb.getCongruentTerm(f, args);
+}
+
+TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
+                                             TermEvaluatorMode tev,
+                                             QuantifiersState& qs,
+                                             TermDb& tdb)
+    : TermEvaluatorEntailed(env, tev, qs, tdb), d_tdbe(tdb.getTermDbEager())
+{
+  Assert (d_tdbe!=nullptr);
+}
+
+bool TermEvaluatorEntailedEager::inRelevantDomain(TNode f, size_t i, TNode r)
+{
+  return d_tdbe->inRelevantDomain(f, i, r);
+}
+
+TNode TermEvaluatorEntailedEager::getCongruentTerm(Node f, const std::vector<TNode>& args)
+{
+  return d_tdbe->getCongruentTerm(f, args);
 }
 
 }  // namespace ieval

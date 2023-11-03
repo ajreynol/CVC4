@@ -29,6 +29,7 @@ namespace quantifiers {
 
 class QuantifiersState;
 class TermDb;
+class TermDbEager;
 
 namespace ieval {
 
@@ -105,13 +106,33 @@ class TermEvaluatorEntailed : public TermEvaluator
                  TNode n,
                  const std::vector<TNode>& childValues) override;
 
- private:
+ protected:
+  /** Is in relevant domain? */
+  virtual bool inRelevantDomain(TNode f, size_t i, TNode r);
+  /** Get congruent term */
+  virtual TNode getCongruentTerm(Node f, const std::vector<TNode>& args);
   /** Quantifiers state */
   QuantifiersState& d_qs;
   /** Pointer to the term database */
   TermDb& d_tdb;
   /** Whether we are using an optimization for checking the relevant domain */
   bool d_checkRelDom;
+};
+
+class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
+{
+ public:
+  TermEvaluatorEntailedEager(Env& env,
+                        TermEvaluatorMode tev,
+                        QuantifiersState& qs,
+                        TermDb& tdb);
+ protected:
+  /** Is in relevant domain? */
+  bool inRelevantDomain(TNode f, size_t i, TNode r) override;
+  /** Get congruent term */
+  TNode getCongruentTerm(Node f, const std::vector<TNode>& args) override;
+  /** Eager utility */
+  TermDbEager* d_tdbe;
 };
 
 }  // namespace ieval

@@ -50,7 +50,7 @@ class State : protected EnvObj
   bool initialize();
 
   /** Set evaluator mode */
-  void setEvaluatorMode(TermEvaluatorMode tev);
+  void setEvaluatorMode(TermEvaluatorMode tev, bool isEager);
 
   /**
    * Watch quantified formula with the given variables and body. This impacts

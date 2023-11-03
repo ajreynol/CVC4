@@ -106,6 +106,9 @@ QuantifiersEngine::QuantifiersEngine(
   d_util.push_back(qim.getInstantiate());
   d_util.push_back(tr.getTermPools());
   d_util.push_back(tr.getInstEvaluatorManager());
+  
+  // get the eager terms database
+  d_tdbe = tr.getTermDatabase()->getTermDbEager();
 }
 
 QuantifiersEngine::~QuantifiersEngine() {}
@@ -661,12 +664,19 @@ void QuantifiersEngine::assertQuantifier( Node f, bool pol ){
 }
 
 void QuantifiersEngine::eqNotifyNewClass(TNode t) { d_treg.addTerm(t); 
-  Trace("eager-inst") << "new class: " << t << std::endl;
+  
+  if (d_tdbe!=nullptr)
+  {
+    d_tdbe->eqNotifyNewClass(t);
+  }
 }
 
 void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
 {
-  Trace("eager-inst") << "merge: " << t1 << " " << t2 << std::endl;
+  if (d_tdbe!=nullptr)
+  {
+    d_tdbe->eqNotifyMerge(t1,t2);
+  }
 }
 
 void QuantifiersEngine::markRelevant( Node q ) {

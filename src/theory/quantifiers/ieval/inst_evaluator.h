@@ -84,7 +84,8 @@ class InstEvaluator : protected EnvObj
                 TermEvaluatorMode tev,
                 bool genLearning = false,
                 bool canonize = false,
-                bool trackAssignedQuant = false);
+                bool trackAssignedQuant = false,
+                bool isEager = false);
   /**
    * Set that we are watching quantified formula q. This can only be done if
    * there are no variable assignments yet.
@@ -131,7 +132,7 @@ class InstEvaluator : protected EnvObj
 
  private:
   /** Set evaluator mode. */
-  void setEvaluatorMode(TermEvaluatorMode tev);
+  void setEvaluatorMode(TermEvaluatorMode tev, bool isEager);
   /** Initialize the state, return false if we are infeasible. */
   bool initialize();
   /** Push internal, helper for push methods above */

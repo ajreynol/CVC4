@@ -69,7 +69,7 @@ bool State::initialize()
   return true;
 }
 
-void State::setEvaluatorMode(TermEvaluatorMode tev)
+void State::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
 {
   d_tevMode = tev;
   // initialize the term evaluator, which is freshly allocated
@@ -78,7 +78,14 @@ void State::setEvaluatorMode(TermEvaluatorMode tev)
   {
     // finding conflict, propagating, or non-entailed instances all
     // involve the entailment term evaluator
-    d_tec.reset(new TermEvaluatorEntailed(d_env, tev, d_qstate, d_tdb));
+    if (isEager)
+    {
+      d_tec.reset(new TermEvaluatorEntailedEager(d_env, tev, d_qstate, d_tdb));
+    }
+    else
+    {
+      d_tec.reset(new TermEvaluatorEntailed(d_env, tev, d_qstate, d_tdb));
+    }
   }
 }
 

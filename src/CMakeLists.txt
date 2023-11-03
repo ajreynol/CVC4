@@ -1036,6 +1036,8 @@ libcvc5_add_sources(
   theory/quantifiers/sygus_sampler.h
   theory/quantifiers/term_database.cpp
   theory/quantifiers/term_database.h
+  theory/quantifiers/term_database_eager.cpp
+  theory/quantifiers/term_database_eager.h
   theory/quantifiers/term_enumeration.cpp
   theory/quantifiers/term_enumeration.h
   theory/quantifiers/term_pools.cpp
