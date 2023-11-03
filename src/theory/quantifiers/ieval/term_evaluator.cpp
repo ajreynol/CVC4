@@ -172,14 +172,14 @@ TNode TermEvaluatorEntailed::partialEvaluateChildMatch(
   }
   else
   {
-    Assert (p.d_trieWatchChild<p.d_pattern.getNumChildren());
-    trieNeedsUpdate = (p.d_pattern[p.d_trieWatchChild]==child);
+    Assert(p.d_trieWatchChild < p.d_pattern.getNumChildren());
+    trieNeedsUpdate = (p.d_pattern[p.d_trieWatchChild] == child);
   }
   if (trieNeedsUpdate)
   {
     size_t nchild = p.d_pattern.getNumChildren();
     TNodeTrie* cur = p.d_trie.get();
-    while (p.d_trieWatchChild<nchild)
+    while (p.d_trieWatchChild < nchild)
     {
       TNode v = s.getValue(p.d_pattern[p.d_trieWatchChild]);
       if (v.isNull())
@@ -189,7 +189,7 @@ TNode TermEvaluatorEntailed::partialEvaluateChildMatch(
         return d_null;
       }
       auto it = cur->d_data.find(v);
-      if (it==cur->d_data.end())
+      if (it == cur->d_data.end())
       {
         // matching is infeasible, but with no explanation since it depends on
         // >1 children
@@ -198,9 +198,9 @@ TNode TermEvaluatorEntailed::partialEvaluateChildMatch(
       cur = &it->second;
       p.d_trieWatchChild = p.d_trieWatchChild + 1;
     }
-    if (p.d_trieWatchChild==nchild)
+    if (p.d_trieWatchChild == nchild)
     {
-      Assert (cur->hasData());
+      Assert(cur->hasData());
       TNode ret = cur->getData();
       return d_qs.getRepresentative(ret);
     }

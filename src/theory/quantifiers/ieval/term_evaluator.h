@@ -134,8 +134,11 @@ class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
 
  protected:
   /** Is in relevant domain? */
-  TNode partialEvaluateChildMatch(
-      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp) override;
+  TNode partialEvaluateChildMatch(const State& s,
+                                  PatTermInfo& p,
+                                  TNode child,
+                                  TNode val,
+                                  Node& exp) override;
   /** Eager utility */
   TermDbEager* d_tdbe;
 };
