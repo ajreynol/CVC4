@@ -27,7 +27,12 @@ namespace quantifiers {
 namespace ieval {
 
 PatTermInfo::PatTermInfo(context::Context* c)
-    : d_eq(c), d_numUnassigned(c, 0), d_parentNotify(c), d_evalExpChild(c), d_trie(c, nullptr), d_trieWatchChild(c)
+    : d_eq(c),
+      d_numUnassigned(c, 0),
+      d_parentNotify(c),
+      d_evalExpChild(c),
+      d_trie(c, nullptr),
+      d_trieWatchChild(c)
 {
 }
 

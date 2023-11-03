@@ -100,8 +100,11 @@ class TermEvaluatorEntailed : public TermEvaluator
   /** Evaluate base */
   TNode evaluateBase(const State& s, TNode n) override;
   /** Partial evaluate child */
-  TNode partialEvaluateChild(
-      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp) override;
+  TNode partialEvaluateChild(const State& s,
+                             PatTermInfo& p,
+                             TNode child,
+                             TNode val,
+                             Node& exp) override;
   /** Evaluate term */
   TNode evaluate(const State& s,
                  TNode n,
