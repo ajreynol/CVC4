@@ -133,6 +133,10 @@ void InstantiationEngine::doInstantiationRound(Theory::Effort effort,
 }
 
 bool InstantiationEngine::needsCheck( Theory::Effort e ){
+  if (options().quantifiers.ematchingStratifyIEval && e==Theory::EFFORT_FULL)
+  {
+    return true;
+  }
   return d_qstate.getInstWhenNeedsCheck(e);
 }
 
@@ -180,8 +184,18 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
   if (quantActive)
   {
     size_t lastWaiting = d_qim.numPendingLemmas();
-    size_t starti = options().quantifiers.ematchingStratifyIEval ? 0 : 2;
-    for (size_t i = starti; i < 3; i++)
+    size_t starti, endi;
+    if (options().quantifiers.ematchingStratifyIEval && e==Theory::EFFORT_FULL)
+    {
+      starti = 0;
+      endi = d_qstate.getInstWhenNeedsCheck(e) ? 2 : 1;
+    }
+    else
+    {
+      starti = 2;
+      endi = 2;
+    }
+    for (size_t i = starti; i <= endi; i++)
     {
       ieval::TermEvaluatorMode tev =
           (i == 0 ? ieval::TermEvaluatorMode::CONFLICT
