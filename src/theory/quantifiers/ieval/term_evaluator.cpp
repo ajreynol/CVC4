@@ -65,12 +65,8 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
       exp = child;
       return val;
     }
-    // run the implementation specific match evaluation
-    if (!partialEvaluateChildMatch(s, p, child, val, exp))
-    {
-      return s.getNone();
-    }
-    return d_null;
+    // run the implementation-specific match evaluation
+    return partialEvaluateChildMatch(s, p, child, val, exp);
   }
   TNode n = p.d_pattern;
   // if a Boolean connective, handle short circuiting
@@ -146,7 +142,7 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
   return d_null;
 }
 
-bool TermEvaluatorEntailed::partialEvaluateChildMatch(
+TNode TermEvaluatorEntailed::partialEvaluateChildMatch(
     const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
 {
   Assert(!p.d_mop.isNull());
@@ -154,25 +150,65 @@ bool TermEvaluatorEntailed::partialEvaluateChildMatch(
   // do this if we are in conflict/prop mode
   if (!d_checkRelDom)
   {
-    return true;
+    return d_null;
   }
   TNode n = p.d_pattern;
   // scan the argument list of n to find occurrences of the child
   for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
   {
-    if (n[i] == child && !inRelevantDomain(p.d_mop, i, val))
+    if (n[i] == child && !d_tdb.inRelevantDomain(p.d_mop, i, val))
     {
       exp = child;
-      return false;
+      return s.getNone();
     }
   }
+  bool trieNeedsUpdate = false;
   // otherwise possibly update the watched children
   if (p.d_trie == nullptr)
   {
     p.d_trie = d_tdb.getTermArgTrie(p.d_mop);
     p.d_trieWatchChild = 0;
+    trieNeedsUpdate = true;
   }
-  return true;
+  else
+  {
+    Assert (p.d_trieWatchChild<p.d_pattern.getNumChildren());
+    trieNeedsUpdate = (p.d_pattern[p.d_trieWatchChild]==child);
+  }
+  if (trieNeedsUpdate)
+  {
+    size_t nchild = p.d_pattern.getNumChildren();
+    TNodeTrie* cur = p.d_trie.get();
+    while (p.d_trieWatchChild<nchild)
+    {
+      TNode v = s.getValue(p.d_pattern[p.d_trieWatchChild]);
+      if (v.isNull())
+      {
+        p.d_trie = cur;
+        // child not evaluated yet, we watch and wait
+        return d_null;
+      }
+      auto it = cur->d_data.find(v);
+      if (it==cur->d_data.end())
+      {
+        // matching is infeasible, but with no explanation since it depends on
+        // >1 children
+        return s.getNone();
+      }
+      cur = &it->second;
+      p.d_trieWatchChild = p.d_trieWatchChild + 1;
+    }
+    if (p.d_trieWatchChild==nchild)
+    {
+      Assert (cur->hasData());
+      TNode ret = cur->getData();
+      return d_qs.getRepresentative(ret);
+    }
+    // otherwise remember the update to the trie
+    p.d_trie = cur;
+  }
+  // nothing to do
+  return d_null;
 }
 
 TNode TermEvaluatorEntailed::evaluate(const State& s,
@@ -189,7 +225,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   {
     TNode ret;
     // see if we are congruent to a term known by the term database
-    Node eval = getCongruentTerm(p.d_mop, childValues);
+    Node eval = d_tdb.getCongruentTerm(p.d_mop, childValues);
     if (!eval.isNull())
     {
       ret = d_qs.getRepresentative(eval);
@@ -358,17 +394,6 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   return ret;
 }
 
-bool TermEvaluatorEntailed::inRelevantDomain(TNode f, size_t i, TNode r)
-{
-  return d_tdb.inRelevantDomain(f, i, r);
-}
-
-TNode TermEvaluatorEntailed::getCongruentTerm(Node f,
-                                              const std::vector<TNode>& args)
-{
-  return d_tdb.getCongruentTerm(f, args);
-}
-
 TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
                                                        TermEvaluatorMode tev,
                                                        QuantifiersState& qs,
@@ -378,15 +403,10 @@ TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
   Assert(d_tdbe != nullptr);
 }
 
-bool TermEvaluatorEntailedEager::inRelevantDomain(TNode f, size_t i, TNode r)
+TNode TermEvaluatorEntailedEager::partialEvaluateChildMatch(
+    const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
 {
-  return d_tdbe->inRelevantDomain(f, i, r);
-}
-
-TNode TermEvaluatorEntailedEager::getCongruentTerm(
-    Node f, const std::vector<TNode>& args)
-{
-  return d_tdbe->getCongruentTerm(f, args);
+  return d_null;
 }
 
 }  // namespace ieval

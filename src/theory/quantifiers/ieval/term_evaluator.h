@@ -111,13 +111,9 @@ class TermEvaluatorEntailed : public TermEvaluator
                  const std::vector<TNode>& childValues) override;
 
  protected:
-  /** Return false if we fail to match */
-  virtual bool partialEvaluateChildMatch(
+  /**  */
+  virtual TNode partialEvaluateChildMatch(
       const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp);
-  /** Is in relevant domain? */
-  virtual bool inRelevantDomain(TNode f, size_t i, TNode r);
-  /** Get congruent term */
-  virtual TNode getCongruentTerm(Node f, const std::vector<TNode>& args);
   /** Quantifiers state */
   QuantifiersState& d_qs;
   /** Pointer to the term database */
@@ -138,9 +134,8 @@ class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
 
  protected:
   /** Is in relevant domain? */
-  bool inRelevantDomain(TNode f, size_t i, TNode r) override;
-  /** Get congruent term */
-  TNode getCongruentTerm(Node f, const std::vector<TNode>& args) override;
+  TNode partialEvaluateChildMatch(
+      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp) override;
   /** Eager utility */
   TermDbEager* d_tdbe;
 };

@@ -403,6 +403,8 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
     // quantified formula is already inactive
     return;
   }
+  Trace("ieval-state-debug") << "Notify quant constraint " << q.getId() << " "
+                             << p << " == " << val << std::endl;
   Assert(!val.isNull());
   Assert(val.getType().isBoolean());
   if (!val.isConst() && val != d_none)
@@ -412,8 +414,6 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
     // (unassigned) Boolean term.
     val = d_some;
   }
-  Trace("ieval-state-debug") << "Notify quant constraint " << q.getId() << " "
-                             << p << " == " << val << std::endl;
   Assert(d_numActiveQuant.get() > 0);
   // check whether we should set inactive
   bool setInactive = false;
