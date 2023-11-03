@@ -62,8 +62,6 @@ class TermRegistry : protected EnvObj
    * @param withinQuant whether n occurs within a quantified formula body
    */
   void addTerm(TNode n, bool withinQuant = false);
-  /** Called when merging */
-  void merge(TNode t1, TNode t2);
 
   /** get term for type
    *
