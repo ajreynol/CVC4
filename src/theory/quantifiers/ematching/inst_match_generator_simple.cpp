@@ -80,7 +80,7 @@ bool InstMatchGeneratorSimple::reset(Node eqc)
     // must match
     if (!d_eqc.isNull())
     {
-      if (d_qstate.areEqual(eqc, d_eqc)!=d_pol)
+      if (d_qstate.areEqual(eqc, d_eqc) != d_pol)
       {
         return false;
       }
@@ -100,12 +100,12 @@ bool InstMatchGeneratorSimple::reset(Node eqc)
     d_tat = tdb->getTermArgTrie(Node::null(), d_op);
     d_eqcDeq = d_qstate.getRepresentative(d_eqc);
   }
-  return d_tat!=nullptr;
+  return d_tat != nullptr;
 }
 
 uint64_t InstMatchGeneratorSimple::addInstantiations(InstMatch& m)
 {
-  Assert (d_tat!=nullptr);
+  Assert(d_tat != nullptr);
   uint64_t addedLemmas = 0;
   if (!d_eqcDeq.isNull())
   {
