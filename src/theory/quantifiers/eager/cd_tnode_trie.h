@@ -31,16 +31,16 @@ class CDTNodeTrieAllocator;
 
 class CDTNodeTrie
 {
-public:
-    CDTNodeTrie(context::Context* c);
-    /** List of reps and children, possible stale */
-    context::CDList<TNode> d_reps;
-    /** The children */
-    context::CDList<CDTNodeTrie*> d_repChildren;
-    /** The size of d_reps that is valid */
-    context::CDO<size_t> d_repSize;
-    /** Adds term without cleaning */
-    void add(CDTNodeTrieAllocator* a, const std::vector<TNode>& args, TNode t);
+ public:
+  CDTNodeTrie(context::Context* c);
+  /** List of reps and children, possible stale */
+  context::CDList<TNode> d_reps;
+  /** The children */
+  context::CDList<CDTNodeTrie*> d_repChildren;
+  /** The size of d_reps that is valid */
+  context::CDO<size_t> d_repSize;
+  /** Adds term without cleaning */
+  void add(CDTNodeTrieAllocator* a, const std::vector<TNode>& args, TNode t);
   /** For leaf nodes : does this node have data? */
   bool hasData() const { return !d_reps.empty(); }
   /** For leaf nodes : get the node corresponding to this leaf. */
@@ -49,13 +49,14 @@ public:
 
 class CDTNodeTrieAllocator
 {
-public:
-    CDTNodeTrieAllocator(context::Context* c);
-    /** Allocate a new trie node */
-    CDTNodeTrie* alloc();
-private:
-    context::Context* d_ctx;
-    std::vector<std::unique_ptr<CDTNodeTrie>> d_alloc;
+ public:
+  CDTNodeTrieAllocator(context::Context* c);
+  /** Allocate a new trie node */
+  CDTNodeTrie* alloc();
+
+ private:
+  context::Context* d_ctx;
+  std::vector<std::unique_ptr<CDTNodeTrie>> d_alloc;
 };
 
 /**
@@ -63,24 +64,27 @@ private:
  */
 class CDTNodeTrieIterator
 {
-public:
-    CDTNodeTrieIterator(CDTNodeTrieAllocator* a, QuantifiersState& qs, CDTNodeTrie* cdtnt);
-    /** Get the next child in this trie and push it */
-    TNode pushNextChild();
-    /** Push the child r */
-    bool push(TNode r);
-    /** Pop the last push */
-    void pop();
-    /** Get the term at the current leaf */
-    TNode getData();
-private:
-    void setActive(const std::vector<CDTNodeTrie*>& active);
-    CDTNodeTrieAllocator* d_alloc;
-    QuantifiersState& d_qs;
-    CDTNodeTrie* d_active;
-    std::vector<std::pair<TNode,std::vector<CDTNodeTrie*>>> d_curChildren;
-    size_t d_cindex;
-    Node d_null;
+ public:
+  CDTNodeTrieIterator(CDTNodeTrieAllocator* a,
+                      QuantifiersState& qs,
+                      CDTNodeTrie* cdtnt);
+  /** Get the next child in this trie and push it */
+  TNode pushNextChild();
+  /** Push the child r */
+  bool push(TNode r);
+  /** Pop the last push */
+  void pop();
+  /** Get the term at the current leaf */
+  TNode getData();
+
+ private:
+  void setActive(const std::vector<CDTNodeTrie*>& active);
+  CDTNodeTrieAllocator* d_alloc;
+  QuantifiersState& d_qs;
+  CDTNodeTrie* d_active;
+  std::vector<std::pair<TNode, std::vector<CDTNodeTrie*>>> d_curChildren;
+  size_t d_cindex;
+  Node d_null;
 };
 
 }  // namespace quantifiers

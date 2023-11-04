@@ -579,8 +579,7 @@ void TermDb::setHasTerm( Node n ) {
   }
 }
 
-void TermDb::presolve() {
-}
+void TermDb::presolve() {}
 
 bool TermDb::reset( Theory::Effort effort ){
   d_op_nonred_count.clear();

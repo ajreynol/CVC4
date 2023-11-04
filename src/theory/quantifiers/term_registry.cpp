@@ -76,9 +76,7 @@ void TermRegistry::finishInit(FirstOrderModel* fm,
   }
 }
 
-void TermRegistry::presolve()
-{
-}
+void TermRegistry::presolve() {}
 
 void TermRegistry::addTerm(TNode n, bool withinQuant)
 {

@@ -19,9 +19,14 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-CDTNodeTrie::CDTNodeTrie(context::Context* c) : d_reps(c), d_repChildren(c), d_repSize(c, 0) {}
+CDTNodeTrie::CDTNodeTrie(context::Context* c)
+    : d_reps(c), d_repChildren(c), d_repSize(c, 0)
+{
+}
 
-void CDTNodeTrie::add(CDTNodeTrieAllocator* a, const std::vector<TNode>& args, TNode t)
+void CDTNodeTrie::add(CDTNodeTrieAllocator* a,
+                      const std::vector<TNode>& args,
+                      TNode t)
 {
 }
 
@@ -29,36 +34,31 @@ CDTNodeTrieAllocator::CDTNodeTrieAllocator(context::Context* c) : d_ctx(c) {}
 
 CDTNodeTrie* CDTNodeTrieAllocator::alloc()
 {
-    d_alloc.emplace_back(std::unique_ptr<CDTNodeTrie>(new CDTNodeTrie(d_ctx)));
-    return d_alloc.back().get();
+  d_alloc.emplace_back(std::unique_ptr<CDTNodeTrie>(new CDTNodeTrie(d_ctx)));
+  return d_alloc.back().get();
 }
 
-CDTNodeTrieIterator::CDTNodeTrieIterator(CDTNodeTrieAllocator* a, QuantifiersState& qs, CDTNodeTrie* cdtnt) : d_alloc(a), d_qs(qs)
+CDTNodeTrieIterator::CDTNodeTrieIterator(CDTNodeTrieAllocator* a,
+                                         QuantifiersState& qs,
+                                         CDTNodeTrie* cdtnt)
+    : d_alloc(a), d_qs(qs)
 {
-    setActive({cdtnt});
+  setActive({cdtnt});
 }
-TNode CDTNodeTrieIterator::pushNextChild()
-{
-    return d_null;
-}
-bool CDTNodeTrieIterator::push(TNode r)
-{
-    return false;
-}
-void CDTNodeTrieIterator::pop()
-{
-}
+TNode CDTNodeTrieIterator::pushNextChild() { return d_null; }
+bool CDTNodeTrieIterator::push(TNode r) { return false; }
+void CDTNodeTrieIterator::pop() {}
 TNode CDTNodeTrieIterator::getData()
 {
-    Assert (d_active!=nullptr);
-    Assert (d_active->hasData());
-    return d_active->getData();
+  Assert(d_active != nullptr);
+  Assert(d_active->hasData());
+  return d_active->getData();
 }
 void CDTNodeTrieIterator::setActive(const std::vector<CDTNodeTrie*>& active)
 {
-    Assert (!active.empty());
+  Assert(!active.empty());
 }
 
-}
-}
-}
+}  // namespace quantifiers
+}  // namespace theory
+}  // namespace cvc5::internal
