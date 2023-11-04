@@ -781,7 +781,10 @@ libcvc5_add_sources(
   theory/quantifiers/conjecture_generator.h
   theory/quantifiers/dynamic_rewrite.cpp
   theory/quantifiers/dynamic_rewrite.h
+  theory/quantifiers/eager/cd_tnode_trie.cpp
+  theory/quantifiers/eager/cd_tnode_trie.h
   theory/quantifiers/ematching/candidate_generator.cpp
+  theory/quantifiers/ematching/candidate_generator.h
   theory/quantifiers/ematching/candidate_generator.h
   theory/quantifiers/ematching/ho_trigger.cpp
   theory/quantifiers/ematching/ho_trigger.h
