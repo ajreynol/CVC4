@@ -47,6 +47,7 @@ class QuantifiersState;
 class QuantifiersRegistry;
 class Skolemize;
 class TermDb;
+class TermDbEager;
 class TermDbSygus;
 class TermEnumeration;
 class TermRegistry;
@@ -184,6 +185,8 @@ class QuantifiersEngine : protected EnvObj
   TheoryEngine* d_te;
   /** Pointer to the proof node manager */
   ProofNodeManager* d_pnm;
+  /** Eager term databse */
+  quantifiers::TermDbEager* d_tdbe;
   /** vector of utilities for quantifiers */
   std::vector<QuantifiersUtil*> d_util;
   /** vector of modules for quantifiers */

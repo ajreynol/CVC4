@@ -54,8 +54,21 @@ TNode TermEvaluatorEntailed::evaluateBase(const State& s, TNode n)
 }
 
 TNode TermEvaluatorEntailed::partialEvaluateChild(
-    const State& s, TNode n, TNode child, TNode val, Node& exp)
+    const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
 {
+  // if a matchable operator
+  if (!p.d_mop.isNull())
+  {
+    if (s.isNone(val))
+    {
+      // none for a matchable operator returns none
+      exp = child;
+      return val;
+    }
+    // run the implementation-specific match evaluation
+    return partialEvaluateChildMatch(s, p, child, val, exp);
+  }
+  TNode n = p.d_pattern;
   // if a Boolean connective, handle short circuiting
   Kind k = n.getKind();
   // Implies and xor are eliminated from the propositional skeleton of
@@ -114,7 +127,7 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
         }
       }
     }
-    return Node::null();
+    return d_null;
   }
   else if (s.isNone(val))
   {
@@ -124,54 +137,110 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
     exp = child;
     return val;
   }
-  // if we are not in the relevant domain, we are immediately "none". We only
-  // do this if we are in conflict/prop mode
-  if (d_checkRelDom)
-  {
-    TNode mop = d_tdb.getMatchOperator(n);
-    if (!mop.isNull())
-    {
-      // scan the argument list of n to find occurrences of the child
-      for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
-      {
-        if (n[i] == child && !d_tdb.inRelevantDomain(mop, i, val))
-        {
-          exp = child;
-          return s.getNone();
-        }
-      }
-    }
-  }
   // NOTE: could do other short circuiting like zero for mult, this is omitted
   // for the sake of simplicity.
-  return Node::null();
+  return d_null;
+}
+
+TNode TermEvaluatorEntailed::partialEvaluateChildMatch(
+    const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
+{
+  Assert(!p.d_mop.isNull());
+  // if we are not in the relevant domain, we are immediately "none". We only
+  // do this if we are in conflict/prop mode
+  if (!d_checkRelDom)
+  {
+    return d_null;
+  }
+  TNode n = p.d_pattern;
+  // scan the argument list of n to find occurrences of the child
+  for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
+  {
+    if (n[i] == child && !d_tdb.inRelevantDomain(p.d_mop, i, val))
+    {
+      exp = child;
+      return s.getNone();
+    }
+  }
+  bool trieNeedsUpdate = false;
+  // otherwise possibly update the watched children
+  if (p.d_trie == nullptr)
+  {
+    p.d_trie = d_tdb.getTermArgTrie(p.d_mop);
+    p.d_trieWatchChild = 0;
+    trieNeedsUpdate = true;
+  }
+  else
+  {
+    Assert(p.d_trieWatchChild < n.getNumChildren());
+    trieNeedsUpdate = (n[p.d_trieWatchChild] == child);
+  }
+  if (trieNeedsUpdate)
+  {
+    size_t nchild = n.getNumChildren();
+    TNodeTrie* cur = p.d_trie.get();
+    while (p.d_trieWatchChild < nchild)
+    {
+      TNode v = s.getValue(n[p.d_trieWatchChild]);
+      if (v.isNull())
+      {
+        p.d_trie = cur;
+        // child not evaluated yet, we watch and wait
+        return d_null;
+      }
+      auto it = cur->d_data.find(v);
+      if (it == cur->d_data.end())
+      {
+        // matching is infeasible, but with no explanation since it depends on
+        // >1 children
+        return s.getNone();
+      }
+      cur = &it->second;
+      p.d_trieWatchChild = p.d_trieWatchChild + 1;
+    }
+    if (p.d_trieWatchChild == nchild)
+    {
+      Assert(cur->hasData());
+      TNode ret = cur->getData();
+      return d_qs.getRepresentative(ret);
+    }
+    // otherwise remember the update to the trie
+    p.d_trie = cur;
+  }
+  // nothing to do
+  return d_null;
 }
 
 TNode TermEvaluatorEntailed::evaluate(const State& s,
-                                      TNode n,
+                                      PatTermInfo& p,
                                       const std::vector<TNode>& childValues)
 {
-  // set to unknown, handle cases
-  TNode ret = s.getNone();
+  TNode n = p.d_pattern;
   // if an existing ground term, just return representative
   if (!expr::hasBoundVar(n) && d_qs.hasTerm(n))
   {
     return d_qs.getRepresentative(n);
   }
-  TNode mop = d_tdb.getMatchOperator(n);
-  if (!mop.isNull())
+  if (!p.d_mop.isNull())
   {
+    TNode ret;
     // see if we are congruent to a term known by the term database
-    Node eval = d_tdb.getCongruentTerm(mop, childValues);
+    Node eval = d_tdb.getCongruentTerm(p.d_mop, childValues);
     if (!eval.isNull())
     {
       ret = d_qs.getRepresentative(eval);
       // Note that ret may be an (unassigned, non-constant) Boolean. We do
       // not turn this into "none" here yet.
     }
+    else
+    {
+      ret = s.getNone();
+    }
     return ret;
   }
 
+  // set to unknown, handle cases
+  TNode ret;
   Kind k = n.getKind();
   NodeManager* nm = NodeManager::currentNM();
   Assert(k != Kind::NOT);
@@ -188,7 +257,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
       {
         // unknown (possibly none), we are done
         Trace("ieval-state-debug") << "...unknown child of AND/OR" << std::endl;
-        return ret;
+        return s.getNone();
       }
       else
       {
@@ -241,6 +310,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   }
   else if (k == Kind::ITE)
   {
+    ret = s.getNone();
     TNode cval1 = childValues[0];
     Assert(!cval1.isNull());
     if (cval1.isConst())
@@ -322,6 +392,21 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   // NOTE: could do theory entailment checks here, although this is omitted
   // for the sake of performance.
   return ret;
+}
+
+TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
+                                                       TermEvaluatorMode tev,
+                                                       QuantifiersState& qs,
+                                                       TermDb& tdb)
+    : TermEvaluatorEntailed(env, tev, qs, tdb), d_tdbe(tdb.getTermDbEager())
+{
+  Assert(d_tdbe != nullptr);
+}
+
+TNode TermEvaluatorEntailedEager::partialEvaluateChildMatch(
+    const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
+{
+  return d_null;
 }
 
 }  // namespace ieval

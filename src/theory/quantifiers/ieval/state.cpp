@@ -69,7 +69,7 @@ bool State::initialize()
   return true;
 }
 
-void State::setEvaluatorMode(TermEvaluatorMode tev)
+void State::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
 {
   d_tevMode = tev;
   // initialize the term evaluator, which is freshly allocated
@@ -78,7 +78,14 @@ void State::setEvaluatorMode(TermEvaluatorMode tev)
   {
     // finding conflict, propagating, or non-entailed instances all
     // involve the entailment term evaluator
-    d_tec.reset(new TermEvaluatorEntailed(d_env, tev, d_qstate, d_tdb));
+    if (isEager)
+    {
+      d_tec.reset(new TermEvaluatorEntailedEager(d_env, tev, d_qstate, d_tdb));
+    }
+    else
+    {
+      d_tec.reset(new TermEvaluatorEntailed(d_env, tev, d_qstate, d_tdb));
+    }
   }
 }
 
@@ -300,7 +307,7 @@ PatTermInfo& State::getOrMkPatTermInfo(TNode p)
   {
     it = d_pInfo.emplace(p, d_ctx).first;
     // initialize the pattern
-    it->second.initialize(p);
+    it->second.initialize(p, d_tdb.getMatchOperator(p));
   }
   return it->second;
 }
@@ -396,6 +403,8 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
     // quantified formula is already inactive
     return;
   }
+  Trace("ieval-state-debug") << "Notify quant constraint " << q.getId() << " "
+                             << p << " == " << val << std::endl;
   Assert(!val.isNull());
   Assert(val.getType().isBoolean());
   if (!val.isConst() && val != d_none)
@@ -405,8 +414,6 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
     // (unassigned) Boolean term.
     val = d_some;
   }
-  Trace("ieval-state-debug") << "Notify quant constraint " << q.getId() << " "
-                             << p << " == " << val << std::endl;
   Assert(d_numActiveQuant.get() > 0);
   // check whether we should set inactive
   bool setInactive = false;

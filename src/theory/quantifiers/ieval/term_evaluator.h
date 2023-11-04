@@ -29,6 +29,7 @@ namespace quantifiers {
 
 class QuantifiersState;
 class TermDb;
+class TermDbEager;
 
 namespace ieval {
 
@@ -48,6 +49,7 @@ enum class TermEvaluatorMode : uint32_t
 };
 
 class State;
+class PatTermInfo;
 
 class TermEvaluator : protected EnvObj
 {
@@ -68,13 +70,13 @@ class TermEvaluator : protected EnvObj
    * reason for the evaluation. This can be used for explanations.
    */
   virtual TNode partialEvaluateChild(
-      const State& s, TNode n, TNode child, TNode val, Node& exp) = 0;
+      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp) = 0;
   /**
    * Evaluate term
    * Called when all children of n have been assigned values childValues.
    */
   virtual TNode evaluate(const State& s,
-                         TNode n,
+                         PatTermInfo& p,
                          const std::vector<TNode>& childValues) = 0;
 
  protected:
@@ -98,20 +100,47 @@ class TermEvaluatorEntailed : public TermEvaluator
   /** Evaluate base */
   TNode evaluateBase(const State& s, TNode n) override;
   /** Partial evaluate child */
-  TNode partialEvaluateChild(
-      const State& s, TNode n, TNode child, TNode val, Node& exp) override;
+  TNode partialEvaluateChild(const State& s,
+                             PatTermInfo& p,
+                             TNode child,
+                             TNode val,
+                             Node& exp) override;
   /** Evaluate term */
   TNode evaluate(const State& s,
-                 TNode n,
+                 PatTermInfo& p,
                  const std::vector<TNode>& childValues) override;
 
- private:
+ protected:
+  /**  */
+  virtual TNode partialEvaluateChildMatch(
+      const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp);
   /** Quantifiers state */
   QuantifiersState& d_qs;
   /** Pointer to the term database */
   TermDb& d_tdb;
   /** Whether we are using an optimization for checking the relevant domain */
   bool d_checkRelDom;
+  /** The null node */
+  Node d_null;
+};
+
+class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
+{
+ public:
+  TermEvaluatorEntailedEager(Env& env,
+                             TermEvaluatorMode tev,
+                             QuantifiersState& qs,
+                             TermDb& tdb);
+
+ protected:
+  /** Is in relevant domain? */
+  TNode partialEvaluateChildMatch(const State& s,
+                                  PatTermInfo& p,
+                                  TNode child,
+                                  TNode val,
+                                  Node& exp) override;
+  /** Eager utility */
+  TermDbEager* d_tdbe;
 };
 
 }  // namespace ieval

@@ -23,6 +23,7 @@
 #include "context/cdlist.h"
 #include "context/cdo.h"
 #include "expr/node.h"
+#include "expr/node_trie.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -44,9 +45,7 @@ class PatTermInfo
  public:
   PatTermInfo(context::Context* c);
   /** initialize */
-  void initialize(TNode pattern);
-  /** Reset round */
-  void resetRound();
+  void initialize(TNode pattern, TNode matchOp);
   /**
    * Is active, return false if d_eq has been set to a ground term, possibly
    * the "none" term (indicating that this pattern is not entailed to be equal
@@ -87,6 +86,17 @@ class PatTermInfo
    * we only consider cases where a single child forced the evaluation.
    */
   context::CDO<TNode> d_evalExpChild;
+  /** The match operator */
+  Node d_mop;
+  /** The current position in a trie we are considering */
+  context::CDO<TNodeTrie*> d_trie;
+  /**
+   * The current child in the trie we have traversed to. In other words, the
+   * depth of d_trie is d_trieWatchChild and corresponds to the terms of this
+   * term's match operator where the first d_trieWatchChild have been assigned
+   * values.
+   */
+  context::CDO<size_t> d_trieWatchChild;
 };
 
 }  // namespace ieval

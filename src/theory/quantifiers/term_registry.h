@@ -61,7 +61,7 @@ class TermRegistry : protected EnvObj
    * @param n the term to add
    * @param withinQuant whether n occurs within a quantified formula body
    */
-  void addTerm(Node n, bool withinQuant = false);
+  void addTerm(TNode n, bool withinQuant = false);
 
   /** get term for type
    *

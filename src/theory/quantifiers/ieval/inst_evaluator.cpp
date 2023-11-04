@@ -28,7 +28,8 @@ InstEvaluator::InstEvaluator(Env& env,
                              TermEvaluatorMode tev,
                              bool genLearning,
                              bool canonize,
-                             bool trackAssignedQuant)
+                             bool trackAssignedQuant,
+                             bool isEager)
     : EnvObj(env),
       d_context(),
       d_genLearning(genLearning),
@@ -39,7 +40,7 @@ InstEvaluator::InstEvaluator(Env& env,
       d_quantList(&d_context),
       d_varList(&d_context)
 {
-  setEvaluatorMode(tev);
+  setEvaluatorMode(tev, isEager);
 }
 
 void InstEvaluator::watch(Node q)
@@ -187,10 +188,10 @@ std::vector<Node> InstEvaluator::getInstantiationFor(Node q) const
 
 bool InstEvaluator::isFeasible() const { return !d_state.isFinished(); }
 
-void InstEvaluator::setEvaluatorMode(TermEvaluatorMode tev)
+void InstEvaluator::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
 {
   Assert(d_context.getLevel() == 0);
-  d_state.setEvaluatorMode(tev);
+  d_state.setEvaluatorMode(tev, isEager);
 }
 
 void InstEvaluator::learnFailure()

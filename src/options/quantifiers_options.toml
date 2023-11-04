@@ -218,14 +218,6 @@ name   = "Quantifiers"
   help = "Quantifiers module considers only ground terms connected to current assertions."
 
 [[option]]
-  name       = "termDbCd"
-  category   = "expert"
-  long       = "term-db-cd"
-  type       = "bool"
-  default    = "true"
-  help       = "register terms in term database based on the SAT context"
-
-[[option]]
   name       = "registerQuantBodyTerms"
   category   = "expert"
   long       = "register-quant-body-terms"
@@ -766,22 +758,6 @@ name   = "Quantifiers"
   help       = "cbqi experimental variable ordering"
 
 [[option]]
-  name       = "cbqiEagerTest"
-  category   = "expert"
-  long       = "cbqi-eager-test"
-  type       = "bool"
-  default    = "true"
-  help       = "optimization, test cbqi instances eagerly"
-
-[[option]]
-  name       = "cbqiEagerCheckRd"
-  category   = "expert"
-  long       = "cbqi-eager-check-rd"
-  type       = "bool"
-  default    = "true"
-  help       = "optimization, eagerly check relevant domain of matched position"
-
-[[option]]
   name       = "cbqiSkipRd"
   category   = "expert"
   long       = "cbqi-skip-rd"
@@ -814,6 +790,14 @@ name   = "Quantifiers"
 [[option.mode.USE_LEARN]]
   name = "use-learn"
   help = "Use instantiation evaluation, and generalize learning."
+
+[[option]]
+  name       = "cbqiEager"
+  category   = "regular"
+  long       = "cbqi-eager"
+  type       = "bool"
+  default    = "false"
+  help       = "Enable eager instantiation"
 
 ### Induction options
 
