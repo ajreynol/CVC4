@@ -664,6 +664,10 @@ InstMatchGenerator* InstMatchGenerator::getInstMatchGenerator(Env& env,
                                                               Node q,
                                                               Node n)
 {
+  if (TriggerTermInfo::isSimpleTrigger(n))
+  {
+    return new InstMatchGeneratorSimple(env, tparent, q, n);
+  }
   // maybe variable match generator
   if (n.getKind() != Kind::INST_CONSTANT)
   {

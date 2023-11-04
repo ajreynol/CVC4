@@ -97,10 +97,10 @@ Trigger::Trigger(Env& env,
     if (TriggerTermInfo::isSimpleTrigger(d_nodes[0]))
     {
       d_mg = new InstMatchGeneratorSimple(env, this, q, d_nodes[0]);
-      ++(stats.d_triggers);
+      ++(stats.d_simple_triggers);
     }else{
       d_mg = InstMatchGenerator::mkInstMatchGenerator(env, this, q, d_nodes[0]);
-      ++(stats.d_simple_triggers);
+      ++(stats.d_triggers);
     }
   }else{
     if (options().quantifiers.multiTriggerCache)

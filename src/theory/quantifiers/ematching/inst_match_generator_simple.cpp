@@ -65,58 +65,73 @@ InstMatchGeneratorSimple::InstMatchGeneratorSimple(Env& env,
         d_var_num[i] = -1;
       }
     }
-    d_match_pattern_arg_types.push_back(d_match_pattern[i].getType());
   }
   TermDb* tdb = d_treg.getTermDatabase();
   d_op = tdb->getMatchOperator(d_match_pattern);
 }
 
 void InstMatchGeneratorSimple::resetInstantiationRound() {}
-uint64_t InstMatchGeneratorSimple::addInstantiations(InstMatch& m)
+
+bool InstMatchGeneratorSimple::reset(Node eqc)
 {
-  uint64_t addedLemmas = 0;
-  TNodeTrie* tat;
   TermDb* tdb = d_treg.getTermDatabase();
-  if (d_eqc.isNull())
+  if (!eqc.isNull())
   {
-    tat = tdb->getTermArgTrie(d_op);
+    // must match
+    if (!d_eqc.isNull())
+    {
+      if (d_qstate.areEqual(eqc, d_eqc)!=d_pol)
+      {
+        return false;
+      }
+    }
+    d_tat = tdb->getTermArgTrie(eqc, d_op);
+  }
+  else if (d_eqc.isNull())
+  {
+    d_tat = tdb->getTermArgTrie(d_op);
+  }
+  else if (d_pol)
+  {
+    d_tat = tdb->getTermArgTrie(d_eqc, d_op);
   }
   else
   {
-    if (d_pol)
+    d_tat = tdb->getTermArgTrie(Node::null(), d_op);
+    d_eqcDeq = d_qstate.getRepresentative(d_eqc);
+  }
+  return d_tat!=nullptr;
+}
+
+uint64_t InstMatchGeneratorSimple::addInstantiations(InstMatch& m)
+{
+  Assert (d_tat!=nullptr);
+  uint64_t addedLemmas = 0;
+  if (!d_eqcDeq.isNull())
+  {
+    // iterate over all classes except d_eqcDeq
+    if (!d_qstate.isInConflict())
     {
-      tat = tdb->getTermArgTrie(d_eqc, d_op);
-    }
-    else
-    {
-      // iterate over all classes except r
-      tat = tdb->getTermArgTrie(Node::null(), d_op);
-      if (tat && !d_qstate.isInConflict())
+      for (std::pair<const TNode, TNodeTrie>& t : d_tat->d_data)
       {
-        Node r = d_qstate.getRepresentative(d_eqc);
-        for (std::pair<const TNode, TNodeTrie>& t : tat->d_data)
+        if (t.first != d_eqcDeq)
         {
-          if (t.first != r)
+          addInstantiations(m, addedLemmas, 0, &(t.second));
+          if (d_qstate.isInConflict())
           {
-            m.resetAll();
-            addInstantiations(m, addedLemmas, 0, &(t.second));
-            if (d_qstate.isInConflict())
-            {
-              break;
-            }
+            break;
           }
         }
       }
-      tat = nullptr;
     }
+    return addedLemmas;
   }
   Trace("simple-trigger-debug")
-      << "Adding instantiations based on " << tat << " from " << d_op << " "
+      << "Adding instantiations based on " << d_tat << " from " << d_op << " "
       << d_eqc << std::endl;
-  if (tat && !d_qstate.isInConflict())
+  if (d_tat && !d_qstate.isInConflict())
   {
-    m.resetAll();
-    addInstantiations(m, addedLemmas, 0, tat);
+    addInstantiations(m, addedLemmas, 0, d_tat);
   }
   return addedLemmas;
 }
@@ -166,7 +181,7 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
       {
         Node t = tt.first;
         // using representatives, just check if equal
-        Assert(t.getType() == d_match_pattern_arg_types[argIndex]);
+        Assert(t.getType() == d_match_pattern[argIndex].getType());
         bool wasSet = !m.get(v).isNull();
         if (!m.set(v, t))
         {

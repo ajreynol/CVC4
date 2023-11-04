@@ -51,6 +51,8 @@ class InstMatchGeneratorSimple : public IMGenerator
 
   /** Reset instantiation round. */
   void resetInstantiationRound() override;
+  /** Reset */
+  bool reset(Node eqc) override;
   /** Add instantiations. */
   uint64_t addInstantiations(InstMatch& m) override;
   /** Get active score. */
@@ -72,10 +74,8 @@ class InstMatchGeneratorSimple : public IMGenerator
    */
   bool d_pol;
   Node d_eqc;
-  /** Match pattern arg types.
-   * Cached values of d_match_pattern[i].getType().
-   */
-  std::vector<TypeNode> d_match_pattern_arg_types;
+  TNodeTrie* d_tat;
+  Node d_eqcDeq;
   /** The match operator d_match_pattern (see TermDb::getMatchOperator). */
   Node d_op;
   /**
