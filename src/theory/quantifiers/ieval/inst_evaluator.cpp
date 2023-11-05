@@ -191,7 +191,7 @@ bool InstEvaluator::isFeasible() const { return !d_state.isFinished(); }
 TNode InstEvaluator::get(TNode v) const
 {
   NodeNodeMap::const_iterator it = d_varMap.find(v);
-  if (it!=d_varMap.end())
+  if (it != d_varMap.end())
   {
     return it->second;
   }

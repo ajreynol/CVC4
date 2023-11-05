@@ -16,9 +16,9 @@
 #include "theory/quantifiers/eager/trigger_info.h"
 
 #include "expr/node_algorithm.h"
-#include "theory/quantifiers/term_database_eager.h"
-#include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_database.h"
+#include "theory/quantifiers/term_database_eager.h"
 #include "theory/uf/equality_engine.h"
 
 namespace cvc5::internal {
@@ -59,7 +59,6 @@ void TriggerInfo::doMatching(TermDbEager& tde, TNode t)
   {
   }
   // assign variables
-
 }
 
 void TriggerInfo::doMatchingEqc(TermDbEager& tde, TNode r)
@@ -67,13 +66,13 @@ void TriggerInfo::doMatchingEqc(TermDbEager& tde, TNode r)
   // enumerate terms from the equivalence class with the same operator
   TermDb& tdb = tde.getTermDb();
   eq::EqualityEngine* ee = tde.getState().getEqualityEngine();
-  Assert (ee->hasTerm(r));
-  eq::EqClassIterator eqi( r, ee );
-  while( !eqi.isFinished() )
+  Assert(ee->hasTerm(r));
+  eq::EqClassIterator eqi(r, ee);
+  while (!eqi.isFinished())
   {
     Node n = *eqi;
     ++eqi;
-    if (tdb.getMatchOperator(n)==d_op)
+    if (tdb.getMatchOperator(n) == d_op)
     {
       doMatching(tde, n);
     }
