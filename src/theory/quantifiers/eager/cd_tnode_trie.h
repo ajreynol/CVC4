@@ -52,9 +52,7 @@ class CDTNodeTrie
   /** For leaf nodes : does this node have data? */
   bool hasData() const { return !d_data.get().isNull(); }
   /** For leaf nodes : get the node corresponding to this leaf. */
-  TNode getData() const {
-    return d_data.get();
-}
+  TNode getData() const { return d_data.get(); }
   CDTNodeTrie* push_back(CDTNodeTrieAllocator* al, TNode r);
 };
 
@@ -93,12 +91,14 @@ class CDTNodeTrieIterator
   QuantifiersState& d_qs;
   class StackFrame
   {
-  public:
-    StackFrame(CDTNodeTrieAllocator* al, QuantifiersState& qs, CDTNodeTrie* active);
+   public:
+    StackFrame(CDTNodeTrieAllocator* al,
+               QuantifiersState& qs,
+               CDTNodeTrie* active);
     CDTNodeTrie* d_active;
     std::map<TNode, CDTNodeTrie*> d_curChildren;
     std::map<TNode, CDTNodeTrie*>::iterator d_cit;
-    bool isFinished() const { return d_cit==d_curChildren.end(); }
+    bool isFinished() const { return d_cit == d_curChildren.end(); }
   };
   std::vector<StackFrame> d_stack;
   Node d_null;
