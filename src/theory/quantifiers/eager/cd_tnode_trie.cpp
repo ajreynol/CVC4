@@ -52,9 +52,9 @@ void CDTNodeTrie::add(CDTNodeTrieAllocator* al,
     }
     else
     {
-      Assert (it->second<cur->d_repChildren.size());
+      Assert(it->second < cur->d_repChildren.size());
       cur = cur->d_repChildren[it->second];
-      Assert (cur->d_data.get()==a);
+      Assert(cur->d_data.get() == a);
     }
   }
   if (!cur->hasData())
@@ -67,12 +67,13 @@ void CDTNodeTrie::add(CDTNodeTrieAllocator* al,
 CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
 {
   // TODO: optimization, can fill in empty child that was disabled?
-  // this would require being more careful since its internal data would be stale
+  // this would require being more careful since its internal data would be
+  // stale
   CDTNodeTrie* ret;
   if (d_repSize < d_repChildren.size())
   {
     ret = d_repChildren[d_repSize];
-    Assert (ret!=nullptr);
+    Assert(ret != nullptr);
     ret->clear();
   }
   else
@@ -80,7 +81,7 @@ CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
     ret = al->alloc();
     d_repChildren.push_back(ret);
   }
-  Assert (ret!=nullptr);
+  Assert(ret != nullptr);
   Assert(d_repChildren[d_repSize] == ret);
   ret->d_data = r;
   d_repMap[r] = d_repSize;
@@ -88,10 +89,7 @@ CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
   return ret;
 }
 
-CDTNodeTrieAllocator::CDTNodeTrieAllocator(context::Context* c)
-    : d_ctx(c)
-{
-}
+CDTNodeTrieAllocator::CDTNodeTrieAllocator(context::Context* c) : d_ctx(c) {}
 
 CDTNodeTrie* CDTNodeTrieAllocator::alloc()
 {
@@ -127,8 +125,7 @@ TNode CDTNodeTrieIterator::pushNextChild()
     {
       ret = d_null;
     }
-  }
-  while (ret.isNull());
+  } while (ret.isNull());
   return ret;
 }
 
@@ -148,7 +145,7 @@ bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 {
   d_stack.emplace_back(d_alloc, d_qs, cdtnt);
   // if not at leaf, and already finished (no children), we are done
-  if (d_stack.size()<d_depth && d_stack.back().isFinished())
+  if (d_stack.size() < d_depth && d_stack.back().isFinished())
   {
     d_stack.pop_back();
     return false;
@@ -164,7 +161,7 @@ void CDTNodeTrieIterator::pop()
 
 TNode CDTNodeTrieIterator::getData()
 {
-  Assert(d_stack.size()==d_depth);
+  Assert(d_stack.size() == d_depth);
   Assert(d_stack.back().d_active->hasData());
   return d_stack.back().d_active->getData();
 }

@@ -18,14 +18,17 @@
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 
-
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-TermDbEager::TermDbEager(Env& env, QuantifiersState& qs, TermDb& tdb) : EnvObj(env), d_qs(qs), d_tdb(tdb), d_cdalloc(context()) {}
+TermDbEager::TermDbEager(Env& env, QuantifiersState& qs, TermDb& tdb)
+    : EnvObj(env), d_qs(qs), d_tdb(tdb), d_cdalloc(context())
+{
+}
 
-void TermDbEager::eqNotifyNewClass(TNode t) {
+void TermDbEager::eqNotifyNewClass(TNode t)
+{
   // add to the eager trie
   TNode mop = d_tdb.getMatchOperator(t);
   if (mop.isNull())
@@ -52,10 +55,10 @@ TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
 CDTNodeTrie* TermDbEager::getTrieFor(TNode op)
 {
   std::map<TNode, std::shared_ptr<CDTNodeTrie>>::iterator it = d_trie.find(op);
-  if (it==d_trie.end())
+  if (it == d_trie.end())
   {
     auto itt = d_trie.insert({op, std::make_shared<CDTNodeTrie>(context())});
-    Assert (itt.second);
+    Assert(itt.second);
     return itt.first->second.get();
   }
   return it->second.get();
