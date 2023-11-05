@@ -35,18 +35,11 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   {
     eager::FunInfo& finfo = getFunInfo(f);
     std::vector<TNode> reps;
-    for (size_t i = 0, nchildren = t.getNumChildren(); i < nchildren; i++)
+    for (TNode tc : t)
     {
-      TNode r = d_qs.getRepresentative(t[i]);
-      reps.emplace_back(r);
-      // add relevant domains
-      finfo.addRelevantDomain(i, r);
+      reps.emplace_back(d_qs.getRepresentative(tc));
     }
-    if (finfo.d_trie.add(&d_cdalloc, reps, t))
-    {
-      // increment count
-      finfo.d_count = finfo.d_count + 1;
-    }
+    finfo.addTerm(*this, t, reps);
   }
 }
 

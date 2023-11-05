@@ -46,6 +46,15 @@ class TriggerInfo
 
  private:
   /** Instantiation evaluator */
+
+
+  Node d_pattern;
+  /** ground arguments */
+  std::vector<size_t> d_gargs;
+  /** variable arguments */
+  std::vector<size_t> d_vargs;
+  /** other arguments */
+  std::vector<size_t> d_oargs;
 };
 
 }  // namespace eager

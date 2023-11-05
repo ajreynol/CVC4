@@ -15,12 +15,36 @@
 
 #include "theory/quantifiers/eager/fun_info.h"
 
+#include "theory/quantifiers/term_database_eager.h"
+#include "theory/quantifiers/eager/trigger_info.h"
+
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 namespace eager {
 
 FunInfo::FunInfo(context::Context* c) : d_trie(c), d_count(c, 0) {}
+
+bool FunInfo::addTerm(TermDbEager& tde, TNode t, const std::vector<TNode>& reps)
+{
+    if (!d_trie.add(tde.getCdtAlloc(), reps, t))
+    {
+        return false;
+    }
+    d_count = d_count + 1;
+    for (size_t i = 0, nchildren = reps.size(); i < nchildren; i++)
+    {
+        // add relevant domains
+        addRelevantDomain(i, reps[i]);
+    }
+    // try matching?
+    for (TriggerInfo* tr : d_triggers)
+    {
+        tr->doMatching(tde, t);
+        // TODO: break?
+    }
+    return true;
+}
 
 void FunInfo::addRelevantDomain(size_t i, TNode r)
 {

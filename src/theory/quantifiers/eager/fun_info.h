@@ -27,6 +27,9 @@
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
+
+class TermDbEager;
+
 namespace eager {
 
 class TriggerInfo;
@@ -35,6 +38,9 @@ class FunInfo
 {
  public:
   FunInfo(context::Context* c);
+  /** Add term */
+  bool addTerm(TermDbEager& tde, TNode t, const std::vector<TNode>& args);
+
   /** Add relevant domain */
   void addRelevantDomain(size_t i, TNode r);
   /** Is in relevant domain */
