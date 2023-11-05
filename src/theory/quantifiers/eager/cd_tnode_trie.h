@@ -65,7 +65,7 @@ class CDTNodeTrieAllocator
 
  private:
   context::Context* d_ctx;
-  context::CDList<std::shared_ptr<CDTNodeTrie>> d_alloc;
+  std::vector<std::shared_ptr<CDTNodeTrie>> d_alloc;
 };
 
 /**
@@ -76,7 +76,8 @@ class CDTNodeTrieIterator
  public:
   CDTNodeTrieIterator(CDTNodeTrieAllocator* al,
                       QuantifiersState& qs,
-                      CDTNodeTrie* cdtnt);
+                      CDTNodeTrie* cdtnt,
+                      size_t depth);
   /** Get the next child in this trie and push it */
   TNode pushNextChild();
   /** Push the child r */
@@ -101,6 +102,7 @@ class CDTNodeTrieIterator
     bool isFinished() const { return d_cit == d_curChildren.end(); }
   };
   std::vector<StackFrame> d_stack;
+  size_t d_depth;
   Node d_null;
   bool pushInternal(CDTNodeTrie* cdtnt);
 };

@@ -22,19 +22,21 @@
 
 #include "expr/node.h"
 #include "smt/env_obj.h"
+#include "theory/quantifiers/eager/cd_tnode_trie.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
 class QuantifiersState;
+class TermDb;
 
 /**
  */
 class TermDbEager : protected EnvObj
 {
  public:
-  TermDbEager(Env& env, QuantifiersState& qs);
+  TermDbEager(Env& env, QuantifiersState& qs, TermDb& tdb);
 
   /** notification when master equality engine is updated */
   void eqNotifyNewClass(TNode t);
@@ -44,10 +46,16 @@ class TermDbEager : protected EnvObj
   /** Is in relevant domain? */
   bool inRelevantDomain(TNode f, size_t i, TNode r);
   /** Get congruent term */
-  TNode getCongruentTerm(Node f, const std::vector<TNode>& args);
+  TNode getCongruentTerm(TNode f, const std::vector<TNode>& args);
 
  private:
+  CDTNodeTrie* getTrieFor(TNode op);
   Node d_null;
+  QuantifiersState& d_qs;
+  TermDb& d_tdb;
+  CDTNodeTrieAllocator d_cdalloc;
+  /** */
+  std::map<TNode, std::shared_ptr<CDTNodeTrie>> d_trie;
 };
 
 }  // namespace quantifiers

@@ -52,7 +52,7 @@ TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
   d_consistent_ee = true;
   d_true = NodeManager::currentNM()->mkConst(true);
   d_false = NodeManager::currentNM()->mkConst(false);
-  d_tde.reset(new TermDbEager(env, qs));
+  d_tde.reset(new TermDbEager(env, qs, *this));
 }
 
 TermDb::~TermDb(){

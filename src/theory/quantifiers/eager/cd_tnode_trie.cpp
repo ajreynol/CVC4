@@ -52,7 +52,9 @@ void CDTNodeTrie::add(CDTNodeTrieAllocator* al,
     }
     else
     {
+      Assert (it->second<cur->d_repChildren.size());
       cur = cur->d_repChildren[it->second];
+      Assert (cur->d_data.get()==a);
     }
   }
   if (!cur->hasData())
@@ -65,10 +67,12 @@ void CDTNodeTrie::add(CDTNodeTrieAllocator* al,
 CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
 {
   // TODO: optimization, can fill in empty child that was disabled?
+  // this would require being more careful since its internal data would be stale
   CDTNodeTrie* ret;
   if (d_repSize < d_repChildren.size())
   {
     ret = d_repChildren[d_repSize];
+    Assert (ret!=nullptr);
     ret->clear();
   }
   else
@@ -76,6 +80,7 @@ CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
     ret = al->alloc();
     d_repChildren.push_back(ret);
   }
+  Assert (ret!=nullptr);
   Assert(d_repChildren[d_repSize] == ret);
   ret->d_data = r;
   d_repMap[r] = d_repSize;
@@ -84,20 +89,21 @@ CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
 }
 
 CDTNodeTrieAllocator::CDTNodeTrieAllocator(context::Context* c)
-    : d_ctx(c), d_alloc(c)
+    : d_ctx(c)
 {
 }
 
 CDTNodeTrie* CDTNodeTrieAllocator::alloc()
 {
-  d_alloc.push_back(std::shared_ptr<CDTNodeTrie>(new CDTNodeTrie(d_ctx)));
+  d_alloc.emplace_back(std::shared_ptr<CDTNodeTrie>(new CDTNodeTrie(d_ctx)));
   return d_alloc.back().get();
 }
 
 CDTNodeTrieIterator::CDTNodeTrieIterator(CDTNodeTrieAllocator* a,
                                          QuantifiersState& qs,
-                                         CDTNodeTrie* cdtnt)
-    : d_alloc(a), d_qs(qs)
+                                         CDTNodeTrie* cdtnt,
+                                         size_t depth)
+    : d_alloc(a), d_qs(qs), d_depth(depth)
 {
   d_stack.emplace_back(d_alloc, qs, cdtnt);
 }
@@ -141,8 +147,8 @@ bool CDTNodeTrieIterator::push(TNode r)
 bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 {
   d_stack.emplace_back(d_alloc, d_qs, cdtnt);
-  // if already finished (no children), we are done
-  if (d_stack.back().isFinished())
+  // if not at leaf, and already finished (no children), we are done
+  if (d_stack.size()<d_depth && d_stack.back().isFinished())
   {
     d_stack.pop_back();
     return false;
@@ -158,9 +164,8 @@ void CDTNodeTrieIterator::pop()
 
 TNode CDTNodeTrieIterator::getData()
 {
-  Assert(!d_stack.empty());
-  Assert(d_active != nullptr);
-  Assert(d_active->hasData());
+  Assert(d_stack.size()==d_depth);
+  Assert(d_stack.back().d_active->hasData());
   return d_stack.back().d_active->getData();
 }
 
@@ -207,6 +212,8 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
         else
         {
           // must add to active
+          // note this could be made easier by a level of indirection,
+          // i.e. have ccn point to cc directly
           CDTNodeTrie* ccn = active->push_back(al, r);
           ccn->d_toMerge.push_back(cc);
           d_curChildren[r] = ccn;
