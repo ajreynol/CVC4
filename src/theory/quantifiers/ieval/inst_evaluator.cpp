@@ -173,7 +173,7 @@ std::vector<Node> InstEvaluator::getInstantiationFor(Node q) const
   {
     // must get the canonized variable
     Node vc = lookupCanonicalTerm(v);
-    it = d_varMap.find(v);
+    it = d_varMap.find(vc);
     if (it != d_varMap.end())
     {
       inst.push_back(it->second);
@@ -187,6 +187,16 @@ std::vector<Node> InstEvaluator::getInstantiationFor(Node q) const
 }
 
 bool InstEvaluator::isFeasible() const { return !d_state.isFinished(); }
+
+TNode InstEvaluator::get(TNode v) const
+{
+  NodeNodeMap::const_iterator it = d_varMap.find(v);
+  if (it!=d_varMap.end())
+  {
+    return it->second;
+  }
+  return d_null;
+}
 
 void InstEvaluator::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
 {

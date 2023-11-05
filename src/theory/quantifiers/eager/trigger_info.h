@@ -34,20 +34,23 @@ class TriggerInfo
  public:
   TriggerInfo(context::Context* c);
   /** Initialize */
-  void initialize(TermDbEager& tde, const Node& t);
+  void initialize(TermDbEager& tde, const Node& t, const Node& f);
   /** */
   void watch(const Node& q);
 
   void doMatching(TermDbEager& tde, TNode t);
 
-  void doMatchingEqc(TermDbEager& tde, TNode eqc);
+  void doMatchingEqc(TermDbEager& tde, TNode r);
 
   void doMatchingAll(TermDbEager& tde);
 
  private:
   /** Instantiation evaluator */
 
+  /** The pattern */
   Node d_pattern;
+  /** The operator */
+  Node d_op;
   /** ground arguments */
   std::vector<size_t> d_gargs;
   /** variable arguments */

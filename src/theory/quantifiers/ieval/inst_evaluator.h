@@ -129,6 +129,8 @@ class InstEvaluator : protected EnvObj
    * lead to instantiations that are entailed by the ground context.
    */
   bool isFeasible() const;
+  /** Get the value of v, if assigned, or null otherwise */
+  TNode get(TNode v) const;
 
  private:
   /** Set evaluator mode. */
@@ -178,6 +180,8 @@ class InstEvaluator : protected EnvObj
   NodeList d_varList;
   /** An index trie, if we are using generalized learning */
   std::unique_ptr<IndexTrie> d_itrie;
+  /** Null term */
+  Node d_null;
 };
 
 }  // namespace ieval

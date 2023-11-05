@@ -73,9 +73,9 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
   {
     d_tinfo.emplace(t, context());
     it = d_tinfo.find(t);
-    it->second.initialize(*this, t);
-    // add to triggers for the function
     TNode f = d_tdb.getMatchOperator(t);
+    it->second.initialize(*this, t, f);
+    // add to triggers for the function
     Assert(!f.isNull());
     eager::FunInfo& finfo = getFunInfo(f);
     finfo.d_triggers.emplace_back(&it->second);
