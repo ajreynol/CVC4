@@ -25,11 +25,11 @@ TriggerInfo::TriggerInfo(context::Context* c) {}
 void TriggerInfo::initialize(TermDbEager& tde, const Node& t)
 {
   d_pattern = t;
-  for (size_t i=0, nargs = t.getNumChildren(); i<nargs; i++)
+  for (size_t i = 0, nargs = t.getNumChildren(); i < nargs; i++)
   {
     if (expr::hasBoundVar(t[i]))
     {
-      if (t[i].getKind()==Kind::BOUND_VARIABLE)
+      if (t[i].getKind() == Kind::BOUND_VARIABLE)
       {
         d_vargs.emplace_back(i);
       }

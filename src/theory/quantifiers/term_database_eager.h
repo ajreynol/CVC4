@@ -58,6 +58,7 @@ class TermDbEager : protected EnvObj
 
   //==========
   CDTNodeTrieAllocator* getCdtAlloc() { return &d_cdalloc; }
+
  private:
   Node d_null;
   QuantifiersState& d_qs;
