@@ -102,6 +102,7 @@ class CDTNodeTrieIterator
   };
   std::vector<StackFrame> d_stack;
   Node d_null;
+  bool pushInternal(CDTNodeTrie* cdtnt);
 };
 
 }  // namespace quantifiers

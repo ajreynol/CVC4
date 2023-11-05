@@ -105,17 +105,24 @@ CDTNodeTrieIterator::CDTNodeTrieIterator(CDTNodeTrieAllocator* a,
 TNode CDTNodeTrieIterator::pushNextChild()
 {
   Assert(!d_stack.empty());
-  StackFrame& sf = d_stack.back();
-  if (sf.isFinished())
-  {
-    return d_null;
-  }
   CDTNodeTrie* next;
   TNode ret;
-  ret = sf.d_cit->first;
-  next = sf.d_cit->second;
-  ++sf.d_cit;
-  d_stack.emplace_back(d_alloc, d_qs, next);
+  do
+  {
+    StackFrame& sf = d_stack.back();
+    if (sf.isFinished())
+    {
+      return d_null;
+    }
+    ret = sf.d_cit->first;
+    next = sf.d_cit->second;
+    ++sf.d_cit;
+    if (!pushInternal(next))
+    {
+      ret = d_null;
+    }
+  }
+  while (ret.isNull());
   return ret;
 }
 
@@ -128,7 +135,18 @@ bool CDTNodeTrieIterator::push(TNode r)
   {
     return false;
   }
-  d_stack.emplace_back(d_alloc, d_qs, it->second);
+  return pushInternal(it->second);
+}
+
+bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
+{
+  d_stack.emplace_back(d_alloc, d_qs, cdtnt);
+  // if already finished (no children), we are done
+  if (d_stack.back().isFinished())
+  {
+    d_stack.pop_back();
+    return false;
+  }
   return true;
 }
 
@@ -216,7 +234,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
         process.emplace_back(cur->d_toMerge[i]);
         i++;
       } while (i < ntomerge);
-      // we've processed all
+      // mark we've processed all
       cur->d_toMergeProcessed = ntomerge;
     }
   } while (!process.empty());
