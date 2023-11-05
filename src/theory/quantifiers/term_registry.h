@@ -38,6 +38,7 @@ namespace quantifiers {
 
 class FirstOrderModel;
 class OracleChecker;
+class TermDbEager;
 
 /**
  * Term Registry, which manages notifying modules within quantifiers about
@@ -100,6 +101,8 @@ class TermRegistry : protected EnvObj
 
   /** get term database */
   TermDb* getTermDatabase() const;
+  /** get eager term database */
+  TermDbEager* getTermDatabaseEager() const;
   /** get term database sygus */
   TermDbSygus* getTermDatabaseSygus() const;
   /** get oracle checker */
@@ -144,6 +147,8 @@ class TermRegistry : protected EnvObj
   std::unique_ptr<TermPools> d_termPools;
   /** term database */
   std::unique_ptr<TermDb> d_termDb;
+  /** term database */
+  std::unique_ptr<TermDbEager> d_termDbEager;
   /** entailment check */
   std::unique_ptr<EntailmentCheck> d_echeck;
   /** sygus term database */

@@ -26,6 +26,7 @@
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_util.h"
+#include "theory/quantifiers/term_database_eager.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -41,6 +42,7 @@ TermRegistry::TermRegistry(Env& env,
       d_termPools(new TermPools(env, qs)),
       d_termDb(logicInfo().isHigherOrder() ? new HoTermDb(env, qs, qr)
                                            : new TermDb(env, qs, qr)),
+      d_termDbEager(new TermDbEager(env, qs, *d_termDb.get())),
       d_echeck(new EntailmentCheck(env, qs, *d_termDb.get())),
       d_sygusTdb(nullptr),
       d_ochecker(nullptr),
@@ -139,6 +141,8 @@ void TermRegistry::processSkolemization(Node q,
 }
 
 TermDb* TermRegistry::getTermDatabase() const { return d_termDb.get(); }
+
+TermDbEager* TermRegistry::getTermDatabaseEager() const { return d_termDbEager.get(); }
 
 TermDbSygus* TermRegistry::getTermDatabaseSygus() const
 {

@@ -34,21 +34,31 @@ class CDTNodeTrie
 {
  public:
   CDTNodeTrie(context::Context* c);
+  /**
+   * The data, which is either the leaf data, or the label of the incoming edge.
+   * This is null for the root node.
+   */
   context::CDO<TNode> d_data;
-  /** List of reps and children, possible stale */
+  /**
+   * Mapping from reps to the index in d_repChildren, possible stale.
+   * This data is kept for fast lookups to single children.
+   */
   context::CDHashMap<TNode, size_t> d_repMap;
-  /** The children */
+  /** The children, stored in a non-context-depedent manner. */
   std::vector<CDTNodeTrie*> d_repChildren;
-  /** The size of d_reps that is valid */
+  /**
+   * The size of d_reps that may be valid in this context. Note that some
+   * children in the valid range may be invalid.
+   */
   context::CDO<size_t> d_repSize;
-  /** To merge */
+  /** List of cousins we are waiting to merge */
   context::CDList<CDTNodeTrie*> d_toMerge;
-  /** To merge index */
+  /** The index in the above vector we have processed */
   context::CDO<size_t> d_toMergeProcessed;
   /** clear */
   void clear();
   /** Adds term without cleaning */
-  void add(CDTNodeTrieAllocator* al, const std::vector<TNode>& args, TNode t);
+  bool add(CDTNodeTrieAllocator* al, const std::vector<TNode>& args, TNode t);
   /** For leaf nodes : does this node have data? */
   bool hasData() const { return !d_data.get().isNull(); }
   /** For leaf nodes : get the node corresponding to this leaf. */

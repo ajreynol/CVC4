@@ -783,6 +783,12 @@ libcvc5_add_sources(
   theory/quantifiers/dynamic_rewrite.h
   theory/quantifiers/eager/cd_tnode_trie.cpp
   theory/quantifiers/eager/cd_tnode_trie.h
+  theory/quantifiers/eager/fun_info.cpp
+  theory/quantifiers/eager/fun_info.h
+  theory/quantifiers/eager/quant_info.cpp
+  theory/quantifiers/eager/quant_info.h
+  theory/quantifiers/eager/trigger_info.cpp
+  theory/quantifiers/eager/trigger_info.h
   theory/quantifiers/ematching/candidate_generator.cpp
   theory/quantifiers/ematching/candidate_generator.h
   theory/quantifiers/ematching/candidate_generator.h

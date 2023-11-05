@@ -30,38 +30,87 @@ TermDbEager::TermDbEager(Env& env, QuantifiersState& qs, TermDb& tdb)
 void TermDbEager::eqNotifyNewClass(TNode t)
 {
   // add to the eager trie
-  TNode mop = d_tdb.getMatchOperator(t);
-  if (mop.isNull())
+  TNode f = d_tdb.getMatchOperator(t);
+  if (!f.isNull())
   {
+    eager::FunInfo& finfo = getFunInfo(f);
     std::vector<TNode> reps;
-    for (const Node& tc : t)
+    for (size_t i=0, nchildren = t.getNumChildren(); i<nchildren; i++)
     {
-      reps.emplace_back(d_qs.getRepresentative(tc));
+      TNode r = d_qs.getRepresentative(t[i]);
+      reps.emplace_back(r);
+      // add relevant domains
+      finfo.addRelevantDomain(i, r);
     }
-    CDTNodeTrie* tt = getTrieFor(mop);
-    tt->add(&d_cdalloc, reps, t);
+    if (finfo.d_trie.add(&d_cdalloc, reps, t))
+    {
+      // increment count
+      finfo.d_count = finfo.d_count+1;
+    }
   }
 }
 
 void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {}
 
-bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r) { return false; }
+bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r) {
+  eager::FunInfo& finfo = getFunInfo(f);
+  return finfo.inRelevantDomain(i, r);
+}
 
 TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
 {
-  return d_null;
+  eager::FunInfo& finfo = getFunInfo(f);
+  // add
+  CDTNodeTrieIterator itt(&d_cdalloc, d_qs, &finfo.d_trie, args.size());
+  for (TNode a : args)
+  {
+    if (!itt.push(a))
+    {
+      return d_null;
+    }
+  }
+  return itt.getData();
 }
 
-CDTNodeTrie* TermDbEager::getTrieFor(TNode op)
+eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
 {
-  std::map<TNode, std::shared_ptr<CDTNodeTrie>>::iterator it = d_trie.find(op);
-  if (it == d_trie.end())
+  std::map<TNode, eager::TriggerInfo>::iterator it = d_tinfo.find(t);
+  if (it == d_tinfo.end())
   {
-    auto itt = d_trie.insert({op, std::make_shared<CDTNodeTrie>(context())});
-    Assert(itt.second);
-    return itt.first->second.get();
+    d_tinfo.emplace(t, context());
+    it = d_tinfo.find(t);
+    it->second.initialize(*this, t);
+    // add to triggers for the function
+    TNode f = d_tdb.getMatchOperator(t);
+    Assert (!f.isNull());
+    eager::FunInfo& finfo = getFunInfo(f);
+    finfo.d_triggers.emplace_back(&it->second);
   }
-  return it->second.get();
+  return &it->second;
+}
+
+eager::FunInfo& TermDbEager::getFunInfo(TNode f)
+{
+  Assert (!f.isNull());
+  std::map<TNode, eager::FunInfo>::iterator it = d_finfo.find(f);
+  if (it == d_finfo.end())
+  {
+    d_finfo.emplace(f, context());
+    it = d_finfo.find(f);
+  }
+  return it->second;
+}
+
+eager::QuantInfo& TermDbEager::getQuantInfo(TNode q)
+{
+  std::map<TNode, eager::QuantInfo>::iterator it = d_qinfo.find(q);
+  if (it == d_qinfo.end())
+  {
+    d_qinfo.emplace(q, context());
+    it = d_qinfo.find(q);
+    it->second.initialize(*this, q);
+  }
+  return it->second;
 }
 
 }  // namespace quantifiers

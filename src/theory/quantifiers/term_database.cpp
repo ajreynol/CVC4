@@ -52,7 +52,6 @@ TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
   d_consistent_ee = true;
   d_true = NodeManager::currentNM()->mkConst(true);
   d_false = NodeManager::currentNM()->mkConst(false);
-  d_tde.reset(new TermDbEager(env, qs, *this));
 }
 
 TermDb::~TermDb(){
@@ -697,8 +696,6 @@ TNode TermDb::getCongruentTerm(Node f, const std::vector<TNode>& args)
   computeUfTerms( f );
   return d_func_map_trie[f].existsTerm( args );
 }
-
-TermDbEager* TermDb::getTermDbEager() { return d_tde.get(); }
 
 }  // namespace quantifiers
 }  // namespace theory

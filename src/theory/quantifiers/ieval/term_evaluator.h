@@ -130,7 +130,8 @@ class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
   TermEvaluatorEntailedEager(Env& env,
                              TermEvaluatorMode tev,
                              QuantifiersState& qs,
-                             TermDb& tdb);
+                             TermDb& tdb,
+                             TermDbEager* tde);
 
  protected:
   /** Is in relevant domain? */

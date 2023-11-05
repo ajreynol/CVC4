@@ -397,8 +397,9 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
 TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
                                                        TermEvaluatorMode tev,
                                                        QuantifiersState& qs,
-                                                       TermDb& tdb)
-    : TermEvaluatorEntailed(env, tev, qs, tdb), d_tdbe(tdb.getTermDbEager())
+                                                       TermDb& tdb,
+                                                       TermDbEager* tde)
+    : TermEvaluatorEntailed(env, tev, qs, tdb), d_tdbe(tde)
 {
   Assert(d_tdbe != nullptr);
 }

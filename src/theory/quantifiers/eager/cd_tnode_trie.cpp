@@ -37,7 +37,7 @@ void CDTNodeTrie::clear()
   d_toMergeProcessed = d_toMerge.size();
 }
 
-void CDTNodeTrie::add(CDTNodeTrieAllocator* al,
+bool CDTNodeTrie::add(CDTNodeTrieAllocator* al,
                       const std::vector<TNode>& args,
                       TNode t)
 {
@@ -61,7 +61,9 @@ void CDTNodeTrie::add(CDTNodeTrieAllocator* al,
   {
     // just set the data, without constructing child
     cur->d_data = t;
+    return true;
   }
+  return false;
 }
 
 CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
@@ -225,6 +227,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
         {
           // if we are active, we must mark this as disabled
           cc->d_data = TNode::null();
+          // TODO: as an optimization, we could decrement d_repSize if we are the last child.
         }
       }
     }

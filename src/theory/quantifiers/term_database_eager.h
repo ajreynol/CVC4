@@ -22,7 +22,9 @@
 
 #include "expr/node.h"
 #include "smt/env_obj.h"
-#include "theory/quantifiers/eager/cd_tnode_trie.h"
+#include "theory/quantifiers/eager/fun_info.h"
+#include "theory/quantifiers/eager/quant_info.h"
+#include "theory/quantifiers/eager/trigger_info.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -47,15 +49,23 @@ class TermDbEager : protected EnvObj
   bool inRelevantDomain(TNode f, size_t i, TNode r);
   /** Get congruent term */
   TNode getCongruentTerm(TNode f, const std::vector<TNode>& args);
-
+  /** Get trigger info */
+  eager::TriggerInfo* getTriggerInfo(const Node& t);
+  /** Get quant info */
+  eager::QuantInfo& getQuantInfo(TNode q);
+  /** Get fun info */
+  eager::FunInfo& getFunInfo(TNode f);
  private:
-  CDTNodeTrie* getTrieFor(TNode op);
   Node d_null;
   QuantifiersState& d_qs;
   TermDb& d_tdb;
   CDTNodeTrieAllocator d_cdalloc;
   /** */
-  std::map<TNode, std::shared_ptr<CDTNodeTrie>> d_trie;
+  std::map<TNode, eager::TriggerInfo> d_tinfo;
+  /** */
+  std::map<TNode, eager::FunInfo> d_finfo;
+  /** */
+  std::map<TNode, eager::QuantInfo> d_qinfo;
 };
 
 }  // namespace quantifiers

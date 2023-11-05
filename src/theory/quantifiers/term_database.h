@@ -26,7 +26,6 @@
 #include "expr/attribute.h"
 #include "expr/node_trie.h"
 #include "theory/quantifiers/quant_util.h"
-#include "theory/quantifiers/term_database_eager.h"
 #include "theory/theory.h"
 #include "theory/type_enumerator.h"
 
@@ -212,8 +211,6 @@ class TermDb : public QuantifiersUtil {
   bool isTermEligibleForInstantiation(TNode n, TNode f);
   /** get eligible term in equivalence class of r */
   Node getEligibleTermInEqc(TNode r);
-  /** get the eager version of this class */
-  TermDbEager* getTermDbEager();
 
  protected:
   /** The quantifiers state object */
@@ -222,8 +219,6 @@ class TermDb : public QuantifiersUtil {
   QuantifiersInferenceManager* d_qim;
   /** The quantifiers registry */
   QuantifiersRegistry& d_qreg;
-  /** The eager version of the term database */
-  std::unique_ptr<TermDbEager> d_tde;
   /** terms processed */
   NodeSet d_processed;
   /** map from types to ground terms for that type */
