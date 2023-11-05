@@ -20,8 +20,8 @@
 #include "theory/quantifiers/quantifiers_macros.h"
 #include "theory/quantifiers/quantifiers_modules.h"
 #include "theory/quantifiers/quantifiers_rewriter.h"
-#include "theory/trust_substitutions.h"
 #include "theory/quantifiers/term_database_eager.h"
+#include "theory/trust_substitutions.h"
 #include "theory/valuation.h"
 
 using namespace cvc5::internal::kind;

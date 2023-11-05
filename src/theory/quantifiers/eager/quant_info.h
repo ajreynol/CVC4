@@ -18,8 +18,8 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__EAGER__QUANT_INFO_H
 #define CVC5__THEORY__QUANTIFIERS__EAGER__QUANT_INFO_H
 
-#include "expr/node.h"
 #include "context/cdo.h"
+#include "expr/node.h"
 #include "theory/quantifiers/eager/trigger_info.h"
 
 namespace cvc5::internal {
@@ -32,16 +32,17 @@ namespace eager {
 
 class QuantInfo
 {
-public:
+ public:
   QuantInfo(context::Context* c);
   /** Initialize */
   void initialize(TermDbEager& tde, const Node& q);
-private:
+
+ private:
   /** List of triggers */
   std::vector<TriggerInfo*> d_triggers;
 };
 
-}
+}  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

@@ -55,6 +55,7 @@ class TermDbEager : protected EnvObj
   eager::QuantInfo& getQuantInfo(TNode q);
   /** Get fun info */
   eager::FunInfo& getFunInfo(TNode f);
+
  private:
   Node d_null;
   QuantifiersState& d_qs;

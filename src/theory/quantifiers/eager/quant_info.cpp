@@ -22,12 +22,9 @@ namespace quantifiers {
 namespace eager {
 
 QuantInfo::QuantInfo(context::Context* c) {}
-void QuantInfo::initialize(TermDbEager& tde, const Node& q)
-{
-}
+void QuantInfo::initialize(TermDbEager& tde, const Node& q) {}
 
-}
+}  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
-

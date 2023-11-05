@@ -81,7 +81,8 @@ void State::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
     if (isEager)
     {
       // FIXME: connect
-      d_tec.reset(new TermEvaluatorEntailedEager(d_env, tev, d_qstate, d_tdb, nullptr));
+      d_tec.reset(
+          new TermEvaluatorEntailedEager(d_env, tev, d_qstate, d_tdb, nullptr));
     }
     else
     {

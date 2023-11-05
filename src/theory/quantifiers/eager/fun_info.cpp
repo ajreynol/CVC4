@@ -24,16 +24,12 @@ FunInfo::FunInfo(context::Context* c) : d_trie(c), d_count(c, 0) {}
 
 void FunInfo::addRelevantDomain(size_t i, TNode r)
 {
-    //TODO
+  // TODO
 }
 
-bool FunInfo::inRelevantDomain(size_t i, TNode r) const
-{
-    return false;
-}
+bool FunInfo::inRelevantDomain(size_t i, TNode r) const { return false; }
 
-}
+}  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
-

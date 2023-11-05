@@ -18,8 +18,8 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__EAGER__TRIGGER_INFO_H
 #define CVC5__THEORY__QUANTIFIERS__EAGER__TRIGGER_INFO_H
 
-#include "expr/node.h"
 #include "context/cdo.h"
+#include "expr/node.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -31,7 +31,7 @@ namespace eager {
 
 class TriggerInfo
 {
-public:
+ public:
   TriggerInfo(context::Context* c);
   /** Initialize */
   void initialize(TermDbEager& tde, const Node& t);
@@ -43,12 +43,12 @@ public:
   void doMatchingEqc(TermDbEager& tde, TNode eqc);
 
   void doMatchingAll(TermDbEager& tde);
-private:
-  /** Instantiation evaluator */
 
+ private:
+  /** Instantiation evaluator */
 };
 
-}
+}  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

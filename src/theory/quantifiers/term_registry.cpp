@@ -25,8 +25,8 @@
 #include "theory/quantifiers/oracle_checker.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_state.h"
-#include "theory/quantifiers/term_util.h"
 #include "theory/quantifiers/term_database_eager.h"
+#include "theory/quantifiers/term_util.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -142,7 +142,10 @@ void TermRegistry::processSkolemization(Node q,
 
 TermDb* TermRegistry::getTermDatabase() const { return d_termDb.get(); }
 
-TermDbEager* TermRegistry::getTermDatabaseEager() const { return d_termDbEager.get(); }
+TermDbEager* TermRegistry::getTermDatabaseEager() const
+{
+  return d_termDbEager.get();
+}
 
 TermDbSygus* TermRegistry::getTermDatabaseSygus() const
 {

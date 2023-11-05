@@ -35,7 +35,7 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   {
     eager::FunInfo& finfo = getFunInfo(f);
     std::vector<TNode> reps;
-    for (size_t i=0, nchildren = t.getNumChildren(); i<nchildren; i++)
+    for (size_t i = 0, nchildren = t.getNumChildren(); i < nchildren; i++)
     {
       TNode r = d_qs.getRepresentative(t[i]);
       reps.emplace_back(r);
@@ -45,14 +45,15 @@ void TermDbEager::eqNotifyNewClass(TNode t)
     if (finfo.d_trie.add(&d_cdalloc, reps, t))
     {
       // increment count
-      finfo.d_count = finfo.d_count+1;
+      finfo.d_count = finfo.d_count + 1;
     }
   }
 }
 
 void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {}
 
-bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r) {
+bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
+{
   eager::FunInfo& finfo = getFunInfo(f);
   return finfo.inRelevantDomain(i, r);
 }
@@ -82,7 +83,7 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     it->second.initialize(*this, t);
     // add to triggers for the function
     TNode f = d_tdb.getMatchOperator(t);
-    Assert (!f.isNull());
+    Assert(!f.isNull());
     eager::FunInfo& finfo = getFunInfo(f);
     finfo.d_triggers.emplace_back(&it->second);
   }
@@ -91,7 +92,7 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
 
 eager::FunInfo& TermDbEager::getFunInfo(TNode f)
 {
-  Assert (!f.isNull());
+  Assert(!f.isNull());
   std::map<TNode, eager::FunInfo>::iterator it = d_finfo.find(f);
   if (it == d_finfo.end())
   {

@@ -33,7 +33,7 @@ class TriggerInfo;
 
 class FunInfo
 {
-public:
+ public:
   FunInfo(context::Context* c);
   /** Add relevant domain */
   void addRelevantDomain(size_t i, TNode r);
@@ -47,7 +47,7 @@ public:
   std::vector<TriggerInfo*> d_triggers;
 };
 
-}
+}  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

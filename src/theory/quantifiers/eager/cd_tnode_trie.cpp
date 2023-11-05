@@ -227,7 +227,8 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
         {
           // if we are active, we must mark this as disabled
           cc->d_data = TNode::null();
-          // TODO: as an optimization, we could decrement d_repSize if we are the last child.
+          // TODO: as an optimization, we could decrement d_repSize if we are
+          // the last child.
         }
       }
     }

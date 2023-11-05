@@ -36,8 +36,8 @@
 #include "theory/quantifiers/quantifiers_statistics.h"
 #include "theory/quantifiers/relevant_domain.h"
 #include "theory/quantifiers/skolemize.h"
-#include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_database_eager.h"
+#include "theory/quantifiers/term_registry.h"
 #include "theory/theory_engine.h"
 
 using namespace std;

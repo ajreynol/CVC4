@@ -24,21 +24,13 @@ TriggerInfo::TriggerInfo(context::Context* c) {}
 /** Initialize */
 void TriggerInfo::initialize(TermDbEager& tde, const Node& t) {}
 
+void TriggerInfo::doMatching(TermDbEager& tde, TNode t) {}
 
-void TriggerInfo::doMatching(TermDbEager& tde, TNode t)
-{
-}
+void TriggerInfo::doMatchingEqc(TermDbEager& tde, TNode eqc) {}
 
-void TriggerInfo::doMatchingEqc(TermDbEager& tde, TNode eqc)
-{
-}
+void TriggerInfo::doMatchingAll(TermDbEager& tde) {}
 
-void TriggerInfo::doMatchingAll(TermDbEager& tde)
-{
-}
-
-
-}
+}  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
