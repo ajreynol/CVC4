@@ -369,7 +369,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
       {
         Trace("ieval-state-debug")
             << "...some child of evaluated term" << std::endl;
-        return ret;
+        return s.getNone();
       }
     }
     Node preTerm;
