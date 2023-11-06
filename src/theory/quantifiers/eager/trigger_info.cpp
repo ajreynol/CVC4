@@ -31,10 +31,7 @@ TriggerInfo::TriggerInfo(TermDbEager& tde)
 {
 }
 
-void TriggerInfo::watch(const Node& q)
-{
-  
-}
+void TriggerInfo::watch(const Node& q) {}
 
 void TriggerInfo::initialize(const Node& t, const Node& f)
 {
@@ -318,8 +315,7 @@ bool TriggerInfo::doMatchingAll()
   // found an instantiation, we will sanitize it based on the actual term,
   // to ensure the match post-instantiation is syntactic
   TNode data = itt.getCurrentData();
-  Assert (!data.isNull());
-
+  Assert(!data.isNull());
 
   return true;
 }

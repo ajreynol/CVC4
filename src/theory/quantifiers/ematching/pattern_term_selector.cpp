@@ -50,10 +50,12 @@ bool PatternTermSelector::isUsable(const Options& opts, Node n, Node q)
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(n);
-  do {
+  do
+  {
     cur = visit.back();
     visit.pop_back();
-    if (visited.find(cur) != visited.end()) {
+    if (visited.find(cur) != visited.end())
+    {
       continue;
     }
     visited.insert(cur);

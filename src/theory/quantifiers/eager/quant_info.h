@@ -36,7 +36,10 @@ class QuantInfo
  public:
   QuantInfo(context::Context* c);
   /** Initialize */
-  void initialize(const Options& opts, QuantifiersRegistry& qr, TermDbEager& tde, const Node& q);
+  void initialize(const Options& opts,
+                  QuantifiersRegistry& qr,
+                  TermDbEager& tde,
+                  const Node& q);
 
  private:
   /** List of triggers */

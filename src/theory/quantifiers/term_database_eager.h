@@ -21,11 +21,11 @@
 #include <vector>
 
 #include "expr/node.h"
+#include "expr/term_canonize.h"
 #include "smt/env_obj.h"
 #include "theory/quantifiers/eager/fun_info.h"
 #include "theory/quantifiers/eager/quant_info.h"
 #include "theory/quantifiers/eager/trigger_info.h"
-#include "expr/term_canonize.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -39,7 +39,10 @@ class TermDb;
 class TermDbEager : protected EnvObj
 {
  public:
-  TermDbEager(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr, TermDb& tdb);
+  TermDbEager(Env& env,
+              QuantifiersState& qs,
+              QuantifiersRegistry& qr,
+              TermDb& tdb);
 
   /** notification when master equality engine is updated */
   void eqNotifyNewClass(TNode t);

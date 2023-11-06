@@ -26,9 +26,12 @@ namespace eager {
 
 QuantInfo::QuantInfo(context::Context* c) {}
 
-void QuantInfo::initialize(const Options& opts, QuantifiersRegistry& qr, TermDbEager& tde, const Node& q) 
+void QuantInfo::initialize(const Options& opts,
+                           QuantifiersRegistry& qr,
+                           TermDbEager& tde,
+                           const Node& q)
 {
-  Assert (q.getKind()==Kind::FORALL);
+  Assert(q.getKind() == Kind::FORALL);
   inst::PatternTermSelector pts(opts, q, opts.quantifiers.triggerSelMode);
   std::vector<Node> patTerms;
   std::map<Node, inst::TriggerTermInfo> tinfo;
@@ -39,7 +42,7 @@ void QuantInfo::initialize(const Options& opts, QuantifiersRegistry& qr, TermDbE
   {
     inst::TriggerTermInfo& tip = tinfo[p];
     // must be a single trigger
-    if (tip.d_fv.size()!=nvars)
+    if (tip.d_fv.size() != nvars)
     {
       continue;
     }
