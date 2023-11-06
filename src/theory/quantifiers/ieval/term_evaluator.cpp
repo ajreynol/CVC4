@@ -381,9 +381,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
 }
 
 TNode TermEvaluatorEntailed::evaluateMatch(
-      const State& s, 
-                                      PatTermInfo& p,
-                                      const std::vector<TNode>& childValues)
+    const State& s, PatTermInfo& p, const std::vector<TNode>& childValues)
 {
   TNode ret;
   // see if we are congruent to a term known by the term database

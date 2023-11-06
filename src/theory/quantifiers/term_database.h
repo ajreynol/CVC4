@@ -214,6 +214,7 @@ class TermDb : public QuantifiersUtil {
   Node getEligibleTermInEqc(TNode r);
   /** */
   TermDbEager* getTermDbEager() { return d_tde; }
+
  protected:
   /** The quantifiers state object */
   QuantifiersState& d_qstate;

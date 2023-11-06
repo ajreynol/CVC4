@@ -58,9 +58,10 @@ TermDb::~TermDb(){
 
 }
 
-void TermDb::finishInit(QuantifiersInferenceManager* qim, TermDbEager* tde) {
+void TermDb::finishInit(QuantifiersInferenceManager* qim, TermDbEager* tde)
+{
   d_qim = qim;
-  d_tde = tde;  
+  d_tde = tde;
 }
 
 void TermDb::registerQuantifier( Node q ) {

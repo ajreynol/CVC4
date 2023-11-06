@@ -115,10 +115,9 @@ class TermEvaluatorEntailed : public TermEvaluator
   virtual TNode partialEvaluateChildMatch(
       const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp);
   /**  */
-  virtual TNode evaluateMatch(
-      const State& s, 
-                                      PatTermInfo& p,
-                                      const std::vector<TNode>& childValues);
+  virtual TNode evaluateMatch(const State& s,
+                              PatTermInfo& p,
+                              const std::vector<TNode>& childValues);
   /** Quantifiers state */
   QuantifiersState& d_qs;
   /** Pointer to the term database */

@@ -80,8 +80,7 @@ void State::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
     // involve the entailment term evaluator
     if (isEager)
     {
-      d_tec.reset(
-          new TermEvaluatorEntailedEager(d_env, tev, d_qstate, d_tdb));
+      d_tec.reset(new TermEvaluatorEntailedEager(d_env, tev, d_qstate, d_tdb));
     }
     else
     {
