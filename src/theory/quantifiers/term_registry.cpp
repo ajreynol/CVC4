@@ -66,7 +66,7 @@ TermRegistry::TermRegistry(Env& env,
   }
   if (options().quantifiers.cbqiEager)
   {
-    d_termDbEager.reset(new TermDbEager(env, qs, *d_termDb.get()));
+    d_termDbEager.reset(new TermDbEager(env, qs, qr, *d_termDb.get()));
   }
   Trace("quant-engine-debug") << "Initialize quantifiers engine." << std::endl;
 }

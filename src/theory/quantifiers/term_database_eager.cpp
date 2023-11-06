@@ -22,8 +22,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-TermDbEager::TermDbEager(Env& env, QuantifiersState& qs, TermDb& tdb)
-    : EnvObj(env), d_qs(qs), d_tdb(tdb), d_cdalloc(context())
+TermDbEager::TermDbEager(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr, TermDb& tdb)
+    : EnvObj(env), d_qs(qs), d_qreg(qr), d_tdb(tdb), d_cdalloc(context())
 {
 }
 
@@ -107,7 +107,7 @@ eager::QuantInfo& TermDbEager::getQuantInfo(TNode q)
   {
     d_qinfo.emplace(q, context());
     it = d_qinfo.find(q);
-    it->second.initialize(*this, q);
+    it->second.initialize(options(), d_qreg, *this, q);
   }
   return it->second;
 }

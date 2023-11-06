@@ -46,34 +46,41 @@ PatternTermSelector::~PatternTermSelector() {}
 
 bool PatternTermSelector::isUsable(const Options& opts, Node n, Node q)
 {
-  if (quantifiers::TermUtil::getInstConstAttr(n) != q)
-  {
-    return true;
-  }
-  if (TriggerTermInfo::isAtomicTrigger(n))
-  {
-    for (const Node& nc : n)
+  std::unordered_set<TNode> visited;
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(n);
+  do {
+    cur = visit.back();
+    visit.pop_back();
+    if (visited.find(cur) != visited.end()) {
+      continue;
+    }
+    visited.insert(cur);
+    if (quantifiers::TermUtil::getInstConstAttr(cur) != q)
     {
-      if (!isUsable(opts, nc, q))
+      continue;
+    }
+    if (TriggerTermInfo::isAtomicTrigger(cur))
+    {
+      visit.insert(visit.end(), cur.begin(), cur.end());
+      continue;
+    }
+    else if (cur.getKind() == Kind::INST_CONSTANT)
+    {
+      continue;
+    }
+    if (opts.quantifiers.purifyTriggers)
+    {
+      Node x = getInversionVariable(cur);
+      if (!x.isNull())
       {
-        return false;
+        continue;
       }
     }
-    return true;
-  }
-  else if (n.getKind() == Kind::INST_CONSTANT)
-  {
-    return true;
-  }
-  if (opts.quantifiers.purifyTriggers)
-  {
-    Node x = getInversionVariable(n);
-    if (!x.isNull())
-    {
-      return true;
-    }
-  }
-  return false;
+    return false;
+  } while (!visit.empty());
+  return true;
 }
 
 Node PatternTermSelector::getIsUsableEq(const Options& opts, Node q, Node n)

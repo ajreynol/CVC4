@@ -25,6 +25,7 @@
 #include "theory/quantifiers/eager/fun_info.h"
 #include "theory/quantifiers/eager/quant_info.h"
 #include "theory/quantifiers/eager/trigger_info.h"
+#include "expr/term_canonize.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -38,7 +39,7 @@ class TermDb;
 class TermDbEager : protected EnvObj
 {
  public:
-  TermDbEager(Env& env, QuantifiersState& qs, TermDb& tdb);
+  TermDbEager(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr, TermDb& tdb);
 
   /** notification when master equality engine is updated */
   void eqNotifyNewClass(TNode t);
@@ -66,6 +67,8 @@ class TermDbEager : protected EnvObj
  private:
   Node d_null;
   QuantifiersState& d_qs;
+  /** The quantifiers registry */
+  QuantifiersRegistry& d_qreg;
   TermDb& d_tdb;
   CDTNodeTrieAllocator d_cdalloc;
   /** */
@@ -74,6 +77,8 @@ class TermDbEager : protected EnvObj
   std::map<TNode, eager::FunInfo> d_finfo;
   /** */
   std::map<TNode, eager::QuantInfo> d_qinfo;
+  /** Term canonizer */
+  expr::TermCanonize d_tcanon;
 };
 
 }  // namespace quantifiers

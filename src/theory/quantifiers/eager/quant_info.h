@@ -27,6 +27,7 @@ namespace theory {
 namespace quantifiers {
 
 class TermDbEager;
+class QuantifiersRegistry;
 
 namespace eager {
 
@@ -35,7 +36,7 @@ class QuantInfo
  public:
   QuantInfo(context::Context* c);
   /** Initialize */
-  void initialize(TermDbEager& tde, const Node& q);
+  void initialize(const Options& opts, QuantifiersRegistry& qr, TermDbEager& tde, const Node& q);
 
  private:
   /** List of triggers */

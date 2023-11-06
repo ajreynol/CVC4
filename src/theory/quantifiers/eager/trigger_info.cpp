@@ -31,11 +31,17 @@ TriggerInfo::TriggerInfo(TermDbEager& tde)
 {
 }
 
+void TriggerInfo::watch(const Node& q)
+{
+  
+}
+
 void TriggerInfo::initialize(const Node& t, const Node& f)
 {
   d_pattern = t;
   d_op = f;
   d_arity = t.getNumChildren();
+  // classify each child of the pattern as either variable, compound or ground.
   for (size_t i = 0, nargs = t.getNumChildren(); i < nargs; i++)
   {
     if (expr::hasBoundVar(t[i]))
@@ -92,11 +98,11 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie,
   // assign variables
   for (size_t v : d_vargs)
   {
-    TNode tv = qs.getRepresentative(t[v]);
     TNode vv = ie->get(d_pattern[v]);
     if (!vv.isNull())
     {
-      if (vv != tv)
+      // if already assigned, must be equal
+      if (!qs.areEqual(vv, t[v]))
       {
         return false;
       }
@@ -104,12 +110,12 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie,
     else
     {
       // if infeasible to push, we are done
-      if (!ie->push(d_pattern[v], tv))
+      if (!ie->push(d_pattern[v], t[v]))
       {
         return false;
       }
+      // increment the number of pushes
       npush++;
-      // TODO: remember tv?
     }
   }
   // initialize the children to equivalence classes, returning false if its
@@ -139,14 +145,20 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie,
       Assert(cnpush == 0);
       if (pushStack.empty())
       {
+        // finished
         return false;
       }
       // pop the variables assigned last
       ie->pop(pushStack.back());
       pushStack.pop_back();
     }
-    // matched
+    // successfully matched
     pushStack.push_back(cnpush);
+  }
+  // increment npush by sum
+  for (size_t cnpush : pushStack)
+  {
+    npush += cnpush;
   }
   return true;
 }
@@ -217,7 +229,7 @@ bool TriggerInfo::doMatchingAll()
     {
       if (!qs.hasTerm(d_pattern[g]))
       {
-        return true;
+        return false;
       }
     }
     // note this could be context-depedendent but probably not worthwhile?
@@ -227,86 +239,87 @@ bool TriggerInfo::doMatchingAll()
   size_t level = 1;
   std::map<size_t, bool> binding;
   std::map<size_t, bool>::iterator itb;
-  while (true)
+  do
   {
-    do
+    Assert(level <= d_children.size());
+    // if we are a compound subchild, push next child
+    if (d_children[level - 1] != nullptr)
     {
-      Assert(level <= d_children.size());
-      // if we are a compound subchild, push next child
-      if (d_children[level - 1] != nullptr)
+      TNode next = itt.pushNextChild();
+      bool isActive = false;
+      if (next.isNull()
+          || d_children[level - 1]->initMatchingEqc(next, isActive))
       {
-        TNode next = itt.pushNextChild();
-        bool isActive = false;
-        if (next.isNull()
-            || d_children[level - 1]->initMatchingEqc(next, isActive))
+        itt.pop();
+      }
+      else if (isActive)
+      {
+        // TODO
+      }
+    }
+    else
+    {
+      TNode pc = d_pattern[level - 1];
+      TNode r;
+      if (pc.getKind() == Kind::BOUND_VARIABLE)
+      {
+        itb = binding.find(level);
+        if (itb == binding.end())
         {
-          itt.pop();
+          // if the first time, check whether we will be binding
+          r = d_ieval->get(pc);
+          binding[level] = (r.isNull());
         }
-        else if (isActive)
+        else if (itb->second)
         {
-          // TODO
+          // otherwise, if we are binding, pop the previous binding.
+          // we know that r will be null again
+          d_ieval->pop();
+        }
+        else
+        {
+          // get its value again
+          r = d_ieval->get(pc);
         }
       }
       else
       {
-        TNode pc = d_pattern[level - 1];
-        TNode r;
-        if (pc.getKind() == Kind::BOUND_VARIABLE)
-        {
-          itb = binding.find(level);
-          if (itb == binding.end())
-          {
-            // if the first time, check whether we will be binding
-            r = d_ieval->get(pc);
-            binding[level] = (r.isNull());
-          }
-          else if (itb->second)
-          {
-            // otherwise, if we are binding, pop the previous binding.
-            // we know that r will be null again
-            d_ieval->pop();
-          }
-          else
-          {
-            // get its value again
-            r = d_ieval->get(pc);
-          }
-        }
-        else
-        {
-          r = qs.getRepresentative(pc);
-        }
-        if (!r.isNull())
-        {
-          if (!itt.push(r))
-          {
-            // go back a level
-            itt.pop();
-          }
-        }
-        else
-        {
-          r = itt.pushNextChild();
-          // if no more children to push, go back a level
-          // if the child we just pushed is infeasible, pop to continue on this
-          // level
-          if (r.isNull() || !d_ieval->push(pc, r))
-          {
-            // go back a level
-            itt.pop();
-          }
-        }
+        r = qs.getRepresentative(pc);
       }
-      // processing a new level
-      level = itt.getLevel();
-      if (level == 0)
+      if (!r.isNull())
       {
-        return true;
+        if (!itt.push(r))
+        {
+          // go back a level
+          itt.pop();
+        }
       }
-    } while (level <= d_arity);
+      else
+      {
+        r = itt.pushNextChild();
+        // if no more children to push, go back a level
+        // if the child we just pushed is infeasible, pop to continue on this
+        // level
+        if (r.isNull() || !d_ieval->push(pc, r))
+        {
+          // go back a level
+          itt.pop();
+        }
+      }
+    }
+    // processing a new level
+    level = itt.getLevel();
+    if (level == 0)
+    {
+      return false;
+    }
+  } while (level <= d_arity);
 
-    // found an instantiation
-  }
+  // found an instantiation, we will sanitize it based on the actual term,
+  // to ensure the match post-instantiation is syntactic
+  TNode data = itt.getCurrentData();
+  Assert (!data.isNull());
+
 
   return true;
 }
