@@ -42,7 +42,7 @@ TermRegistry::TermRegistry(Env& env,
       d_termPools(new TermPools(env, qs)),
       d_termDb(logicInfo().isHigherOrder() ? new HoTermDb(env, qs, qr)
                                            : new TermDb(env, qs, qr)),
-      d_termDbEager(new TermDbEager(env, qs, *d_termDb.get())),
+      d_termDbEager(nullptr),
       d_echeck(new EntailmentCheck(env, qs, *d_termDb.get())),
       d_sygusTdb(nullptr),
       d_ochecker(nullptr),
@@ -64,6 +64,10 @@ TermRegistry::TermRegistry(Env& env,
     // must be constructed here since it is required for datatypes finistInit
     d_sygusTdb.reset(new TermDbSygus(env, qs, d_ochecker.get()));
   }
+  if (options().quantifiers.cbqiEager)
+  {
+    d_termDbEager.reset(new TermDbEager(env, qs, *d_termDb.get()));
+  }
   Trace("quant-engine-debug") << "Initialize quantifiers engine." << std::endl;
 }
 
@@ -71,7 +75,7 @@ void TermRegistry::finishInit(FirstOrderModel* fm,
                               QuantifiersInferenceManager* qim)
 {
   d_qmodel = fm;
-  d_termDb->finishInit(qim);
+  d_termDb->finishInit(qim, d_termDbEager.get());
   if (d_sygusTdb.get())
   {
     d_sygusTdb->finishInit(qim);

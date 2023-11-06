@@ -223,22 +223,8 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   }
   if (!p.d_mop.isNull())
   {
-    TNode ret;
-    // see if we are congruent to a term known by the term database
-    Node eval = d_tdb.getCongruentTerm(p.d_mop, childValues);
-    if (!eval.isNull())
-    {
-      ret = d_qs.getRepresentative(eval);
-      // Note that ret may be an (unassigned, non-constant) Boolean. We do
-      // not turn this into "none" here yet.
-    }
-    else
-    {
-      ret = s.getNone();
-    }
-    return ret;
+    return evaluateMatch(s, p, childValues);
   }
-
   // set to unknown, handle cases
   TNode ret;
   Kind k = n.getKind();
@@ -394,12 +380,32 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   return ret;
 }
 
+TNode TermEvaluatorEntailed::evaluateMatch(
+      const State& s, 
+                                      PatTermInfo& p,
+                                      const std::vector<TNode>& childValues)
+{
+  TNode ret;
+  // see if we are congruent to a term known by the term database
+  Node eval = d_tdb.getCongruentTerm(p.d_mop, childValues);
+  if (!eval.isNull())
+  {
+    ret = d_qs.getRepresentative(eval);
+    // Note that ret may be an (unassigned, non-constant) Boolean. We do
+    // not turn this into "none" here yet.
+  }
+  else
+  {
+    ret = s.getNone();
+  }
+  return ret;
+}
+
 TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
                                                        TermEvaluatorMode tev,
                                                        QuantifiersState& qs,
-                                                       TermDb& tdb,
-                                                       TermDbEager* tde)
-    : TermEvaluatorEntailed(env, tev, qs, tdb), d_tdbe(tde)
+                                                       TermDb& tdb)
+    : TermEvaluatorEntailed(env, tev, qs, tdb), d_tdbe(tdb.getTermDbEager())
 {
   Assert(d_tdbe != nullptr);
 }

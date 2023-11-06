@@ -36,6 +36,7 @@ namespace quantifiers {
 class QuantifiersState;
 class QuantifiersInferenceManager;
 class QuantifiersRegistry;
+class TermDbEager;
 
 /** Context-dependent list of nodes */
 class DbList
@@ -76,7 +77,7 @@ class TermDb : public QuantifiersUtil {
   TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr);
   virtual ~TermDb();
   /** Finish init, which sets the inference manager */
-  void finishInit(QuantifiersInferenceManager* qim);
+  void finishInit(QuantifiersInferenceManager* qim, TermDbEager* tde);
   /** presolve (called once per user check-sat) */
   void presolve() override;
   /** reset (calculate which terms are active) */
@@ -211,12 +212,15 @@ class TermDb : public QuantifiersUtil {
   bool isTermEligibleForInstantiation(TNode n, TNode f);
   /** get eligible term in equivalence class of r */
   Node getEligibleTermInEqc(TNode r);
-
+  /** */
+  TermDbEager* getTermDbEager() { return d_tde; }
  protected:
   /** The quantifiers state object */
   QuantifiersState& d_qstate;
   /** Pointer to the quantifiers inference manager */
   QuantifiersInferenceManager* d_qim;
+  /** Pointer to the eager term db (if using) */
+  TermDbEager* d_tde;
   /** The quantifiers registry */
   QuantifiersRegistry& d_qreg;
   /** terms processed */

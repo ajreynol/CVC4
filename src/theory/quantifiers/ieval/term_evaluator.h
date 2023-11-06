@@ -114,6 +114,11 @@ class TermEvaluatorEntailed : public TermEvaluator
   /**  */
   virtual TNode partialEvaluateChildMatch(
       const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp);
+  /**  */
+  virtual TNode evaluateMatch(
+      const State& s, 
+                                      PatTermInfo& p,
+                                      const std::vector<TNode>& childValues);
   /** Quantifiers state */
   QuantifiersState& d_qs;
   /** Pointer to the term database */
@@ -130,8 +135,7 @@ class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
   TermEvaluatorEntailedEager(Env& env,
                              TermEvaluatorMode tev,
                              QuantifiersState& qs,
-                             TermDb& tdb,
-                             TermDbEager* tde);
+                             TermDb& tdb);
 
  protected:
   /** Is in relevant domain? */
