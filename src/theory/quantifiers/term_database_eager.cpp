@@ -63,7 +63,7 @@ TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
       return d_null;
     }
   }
-  return itt.getData();
+  return itt.getCurrentData();
 }
 
 bool TermDbEager::isCongruent(TNode t) const

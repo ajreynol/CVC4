@@ -22,7 +22,7 @@ namespace theory {
 namespace quantifiers {
 
 CDTNodeTrie::CDTNodeTrie(context::Context* c)
-    : d_data(c),
+    : d_edge(c),
       d_repMap(c),
       d_repSize(c, 0),
       d_toMerge(c),
@@ -32,7 +32,7 @@ CDTNodeTrie::CDTNodeTrie(context::Context* c)
 
 void CDTNodeTrie::clear()
 {
-  d_data = TNode::null();
+  d_edge = TNode::null();
   d_repSize = 0;
   d_toMergeProcessed = d_toMerge.size();
 }
@@ -48,14 +48,15 @@ bool CDTNodeTrie::add(CDTNodeTrieAllocator* al,
     it = cur->d_repMap.find(a);
     if (it == cur->d_repMap.end())
     {
+      // NOTE: if using stale, we would confirm that the next has the right data
       cur = cur->push_back(al, a);
     }
     else
     {
       Assert(it->second < cur->d_repChildren.size());
       cur = cur->d_repChildren[it->second];
-      Assert(cur->d_data.get() == a);
     }
+    Assert(cur->d_edge.get() == a);
   }
   // set data, which will return false if we already have data
   return cur->setData(al, t);
@@ -63,12 +64,14 @@ bool CDTNodeTrie::add(CDTNodeTrieAllocator* al,
 
 bool CDTNodeTrie::setData(CDTNodeTrieAllocator* al, TNode t)
 {
-  if (d_data.get().isNull())
+  // data is stored as an element in the domain of d_repMap
+  if (d_repMap.empty())
   {
     // just set the data, without constructing child
-    d_data = t;
+    d_repMap[t] = 0;
     return true;
   }
+  // otherwise, t is congruent
   al->markCongruent(t);
   return false;
 }
@@ -83,19 +86,37 @@ CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
   {
     ret = d_repChildren[d_repSize];
     Assert(ret != nullptr);
+    // NOTE clearing is not necessary currently
     ret->clear();
   }
   else
   {
     ret = al->alloc();
-    d_repChildren.push_back(ret);
+    d_repChildren.emplace_back(ret);
   }
   Assert(ret != nullptr);
   Assert(d_repChildren[d_repSize] == ret);
-  ret->d_data = r;
+  ret->d_edge = r;
   d_repMap[r] = d_repSize;
   d_repSize = d_repSize + 1;
   return ret;
+}
+
+void CDTNodeTrie::addToMerge(CDTNodeTrieAllocator* al, CDTNodeTrie* t, bool isChildLeaf)
+{
+  if (isChildLeaf)
+  {
+    // if we are at leaf, set the data
+    Assert(t->hasData());
+    setData(al, t->getData());
+  }
+  else
+  {
+    // if we are not at the leaf, add to merge vector
+    d_toMerge.push_back(t);
+  }
+  // mark that cc's should no longer be considered as a child
+  t->d_edge = TNode::null();
 }
 
 CDTNodeTrieAllocator::CDTNodeTrieAllocator(context::Context* c)
@@ -130,13 +151,16 @@ TNode CDTNodeTrieIterator::pushNextChild()
     Assert(sf.d_pushed.empty());
     if (sf.isFinished())
     {
+      // finished children at the current level
       return d_null;
     }
     ret = sf.d_cit->first;
     next = sf.d_cit->second;
+    Assert (next->d_edge.get()==ret);
     ++sf.d_cit;
     if (!pushInternal(next))
     {
+      // rare case where the current has no children?
       ret = d_null;
     }
   } while (ret.isNull());
@@ -163,10 +187,19 @@ bool CDTNodeTrieIterator::push(TNode r)
 
 bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 {
+  // if pushing to a leaf, set the data
+  if (d_stack.size()==d_depth)
+  {
+    Assert (!d_curData.isNull());
+    d_curData = cdtnt->getData();
+    return true;
+  }
+  // otherwise, compute the children
+  // determine if the children are leafs, which impacts how we merge nodes
   bool isChildLeaf = (d_stack.size() + 1 == d_depth);
   d_stack.emplace_back(d_alloc, d_qs, cdtnt, isChildLeaf);
-  // if not at leaf, and already finished (no children), we are done
-  if (!isChildLeaf && d_stack.back().isFinished())
+  // in the rare case we already finished (no children), we are done
+  if (d_stack.back().isFinished())
   {
     d_stack.pop_back();
     return false;
@@ -176,15 +209,21 @@ bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 
 void CDTNodeTrieIterator::pop()
 {
+  // if at a leaf, undo the data
+  if (!d_curData.isNull())
+  {
+    d_curData = d_null;
+    return;
+  }
+  // otherwise pop the stack
   Assert(!d_stack.empty());
   d_stack.pop_back();
 }
 
-TNode CDTNodeTrieIterator::getData()
+TNode CDTNodeTrieIterator::getCurrentData()
 {
-  Assert(d_stack.size() == d_depth);
-  Assert(d_stack.back().d_active->hasData());
-  return d_stack.back().d_active->getData();
+  Assert (!d_curData.isNull());
+  return d_curData;
 }
 
 CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
@@ -192,8 +231,10 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
                                             CDTNodeTrie* active,
                                             bool isChildLeaf)
 {
+  Assert (active!=nullptr);
   d_active = active;
   std::map<TNode, CDTNodeTrie*>::iterator it;
+  context::CDHashMap<TNode, size_t>::iterator itr;
   // process and merge the children
   CDTNodeTrie* cur;
   std::vector<CDTNodeTrie*> process;
@@ -203,31 +244,42 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
   {
     cur = process.back();
     process.pop_back();
+    // process all children of the trie to process
     for (size_t i = 0, nreps = cur->d_repSize; i < nreps; i++)
     {
       CDTNodeTrie* cc = cur->d_repChildren[i];
-      TNode n = cc->d_data;
+      TNode n = cc->d_edge;
       if (n.isNull())
       {
-        // already merged
+        // child was already merged elsewhere
         continue;
       }
       TNode r = qs.getRepresentative(n);
       it = d_curChildren.find(r);
-      // if we have yet to see this representative
+      // if we have yet to see this child edge
       if (it == d_curChildren.end())
       {
         if (cur == active)
         {
           // if the original, we are done
-          d_curChildren[r] = cc;
           if (n != r)
           {
+            // maybe forward merge to another child
+            itr = active->d_repMap.find(r);
+            if (itr!=active->d_repMap.end())
+            {
+              ccTgt = active->d_repChildren[itr->second];
+              Assert (ccTgt->d_edge.get()==r);
+              ccTgt->addToMerge(al, cc, isChildLeaf);
+              // we will process the child later in the list
+              continue;
+            }
             // keep the same but need to replace the representative, note that
             // n is stale and not cleaned up
-            cc->d_data = r;
+            cc->d_edge = r;
             cc->d_repMap[r] = i;
           }
+          d_curChildren[r] = cc;
           continue;
         }
         else
@@ -245,19 +297,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
         ccTgt = it->second;
       }
       // now, perform the merge cc to ccTgt.
-      if (isChildLeaf)
-      {
-        // if we are at leaf, set the data
-        Assert(!cc->d_data.get().isNull());
-        ccTgt->setData(al, cc->d_data.get());
-      }
-      else
-      {
-        // if we are not at the leaf, add to merge vector
-        ccTgt->d_toMerge.push_back(cc);
-        // mark that cc's data should no longer be considered
-        cc->d_data = TNode::null();
-      }
+      ccTgt->addToMerge(al, cc, isChildLeaf);
     }
     // process those waiting to merge with this
     size_t ntomerge = cur->d_toMerge.size();
@@ -273,7 +313,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
       cur->d_toMergeProcessed = ntomerge;
     }
   } while (!process.empty());
-
+  // start the iterator
   d_cit = d_curChildren.begin();
 }
 

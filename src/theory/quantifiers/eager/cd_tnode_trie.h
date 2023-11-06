@@ -36,13 +36,14 @@ class CDTNodeTrie
  public:
   CDTNodeTrie(context::Context* c);
   /**
-   * The data, which is either the leaf data, or the label of the incoming edge.
-   * This is null for the root node.
+   * The label of the incoming edge. This is null for the root node.
    */
-  context::CDO<TNode> d_data;
+  context::CDO<TNode> d_edge;
   /**
    * Mapping from reps to the index in d_repChildren, possible stale.
    * This data is kept for fast lookups to single children.
+   *
+   * This map is also used to store the data of leafs.
    */
   context::CDHashMap<TNode, size_t> d_repMap;
   /** The children, stored in a non-context-depedent manner. */
@@ -61,12 +62,15 @@ class CDTNodeTrie
   /** Adds term without cleaning */
   bool add(CDTNodeTrieAllocator* al, const std::vector<TNode>& args, TNode t);
   /** For leaf nodes : does this node have data? */
-  bool hasData() const { return !d_data.get().isNull(); }
+  bool hasData() const { return !d_repMap.empty(); }
   /** Set data, return true if we set */
   bool setData(CDTNodeTrieAllocator* al, TNode t);
   /** For leaf nodes : get the node corresponding to this leaf. */
-  TNode getData() const { return d_data.get(); }
+  TNode getData() const { return d_repMap.begin()->first; }
+  /** Push back */
   CDTNodeTrie* push_back(CDTNodeTrieAllocator* al, TNode r);
+  /** Add to merge */
+  void addToMerge(CDTNodeTrieAllocator* al, CDTNodeTrie* t, bool isChildLeaf);
 };
 
 class CDTNodeTrieAllocator
@@ -85,7 +89,9 @@ class CDTNodeTrieAllocator
 
  private:
   context::Context* d_ctx;
+  /** The set of terms we have determined are congruent in the current ctx */
   context::CDHashSet<Node> d_congruent;
+  /** All trie nodes we have allocated */
   std::vector<std::shared_ptr<CDTNodeTrie>> d_alloc;
 };
 
@@ -106,7 +112,7 @@ class CDTNodeTrieIterator
   /** Pop the last push */
   void pop();
   /** Get the term at the current leaf */
-  TNode getData();
+  TNode getCurrentData();
   /** Get level */
   size_t getLevel() const { return d_stack.size(); }
 
@@ -127,6 +133,7 @@ class CDTNodeTrieIterator
     bool isFinished() const { return d_cit == d_curChildren.end(); }
   };
   std::vector<StackFrame> d_stack;
+  TNode d_curData;
   size_t d_depth;
   Node d_null;
   bool pushInternal(CDTNodeTrie* cdtnt);
