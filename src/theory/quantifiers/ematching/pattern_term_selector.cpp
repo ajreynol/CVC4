@@ -106,9 +106,7 @@ Node PatternTermSelector::getIsUsableEq(Node q, Node n)
   return Node::null();
 }
 
-bool PatternTermSelector::isUsableEqTerms(Node q,
-                                          Node n1,
-                                          Node n2)
+bool PatternTermSelector::isUsableEqTerms(Node q, Node n1, Node n2)
 {
   if (n1.getKind() == Kind::INST_CONSTANT)
   {
@@ -154,8 +152,7 @@ bool PatternTermSelector::isUsableEqTerms(Node q,
   return false;
 }
 
-Node PatternTermSelector::getIsUsableTrigger(Node n,
-                                             Node q)
+Node PatternTermSelector::getIsUsableTrigger(Node n, Node q)
 {
   bool pol = true;
   Trace("trigger-debug") << "Is " << n << " a usable trigger?" << std::endl;
@@ -171,7 +168,7 @@ Node PatternTermSelector::getIsUsableTrigger(Node n,
   }
   else if (TriggerTermInfo::isRelationalTrigger(n))
   {
-    Node rtr = getIsUsableEq( q, n);
+    Node rtr = getIsUsableEq(q, n);
     if (rtr.isNull() && n[0].getType().isRealOrInt())
     {
       // try to solve relation
@@ -230,8 +227,7 @@ Node PatternTermSelector::getIsUsableTrigger(Node n,
   return Node::null();
 }
 
-bool PatternTermSelector::isUsableAtomicTrigger(Node n,
-                                                Node q)
+bool PatternTermSelector::isUsableAtomicTrigger(Node n, Node q)
 {
   return quantifiers::TermUtil::getInstConstAttr(n) == q
          && TriggerTermInfo::isAtomicTrigger(n) && isUsable(n, q);
