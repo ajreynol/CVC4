@@ -34,12 +34,29 @@ PatternTermSelector::PatternTermSelector(const Options& opts,
                                          options::TriggerSelMode tstrt,
                                          const std::vector<Node>& exc,
                                          bool filterInst)
-    : d_opts(opts),
+    : d_quant(q),
+      d_tstrt(tstrt),
+      d_excluded(exc),
+      d_filterInst(filterInst),
+      d_purifyTriggers(opts.quantifiers.purifyTriggers),
+      d_relTriggers(opts.quantifiers.relationalTriggers)
+{
+}
+
+PatternTermSelector::PatternTermSelector(Node q,
+                    options::TriggerSelMode tstrt,
+                    const std::vector<Node>& exc,
+                    bool filterInst,
+                    bool purifyTriggers,
+                    bool relationalTriggers) :
       d_quant(q),
       d_tstrt(tstrt),
       d_excluded(exc),
-      d_filterInst(filterInst)
+      d_filterInst(filterInst),
+      d_purifyTriggers(purifyTriggers),
+      d_relTriggers(relationalTriggers)
 {
+  
 }
 
 PatternTermSelector::~PatternTermSelector() {}
@@ -72,7 +89,7 @@ bool PatternTermSelector::isUsable(Node n, Node q)
     {
       continue;
     }
-    if (d_opts.quantifiers.purifyTriggers)
+    if (d_purifyTriggers)
     {
       Node x = getInversionVariable(cur);
       if (!x.isNull())
@@ -110,7 +127,7 @@ bool PatternTermSelector::isUsableEqTerms(Node q, Node n1, Node n2)
 {
   if (n1.getKind() == Kind::INST_CONSTANT)
   {
-    if (d_opts.quantifiers.relationalTriggers)
+    if (d_relTriggers)
     {
       Node q1 = quantifiers::TermUtil::getInstConstAttr(n1);
       if (q1 != q)
@@ -135,7 +152,7 @@ bool PatternTermSelector::isUsableEqTerms(Node q, Node n1, Node n2)
   }
   else if (isUsableAtomicTrigger(n1, q))
   {
-    if (d_opts.quantifiers.relationalTriggers
+    if (d_relTriggers
         && n2.getKind() == Kind::INST_CONSTANT
         && quantifiers::TermUtil::getInstConstAttr(n2) == q
         && !expr::hasSubterm(n1, n2))
@@ -182,7 +199,7 @@ Node PatternTermSelector::getIsUsableTrigger(Node n, Node q)
           {
             if (it->first.getKind() == Kind::INST_CONSTANT)
             {
-              trySolve = d_opts.quantifiers.relationalTriggers;
+              trySolve = d_relTriggers;
             }
             else if (isUsableTrigger(it->first, q))
             {

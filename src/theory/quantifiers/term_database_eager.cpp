@@ -110,7 +110,7 @@ eager::QuantInfo& TermDbEager::getQuantInfo(TNode q)
   {
     d_qinfo.emplace(q, context());
     it = d_qinfo.find(q);
-    it->second.initialize(options(), d_qreg, *this, q);
+    it->second.initialize(d_qreg, *this, q);
   }
   return it->second;
 }

@@ -52,6 +52,13 @@ class PatternTermSelector
                       options::TriggerSelMode tstrt,
                       const std::vector<Node>& exc = {},
                       bool filterInst = true);
+  /** Custom version with options specified manually */
+  PatternTermSelector(Node q,
+                      options::TriggerSelMode tstrt,
+                      const std::vector<Node>& exc = {},
+                      bool filterInst = true,
+                      bool purifyTriggers = false,
+                      bool relationalTriggers = false);
   ~PatternTermSelector();
   /** collect pattern terms
    *
@@ -185,8 +192,6 @@ class PatternTermSelector
                           Node n2,
                           const std::vector<Node>& fv1,
                           const std::vector<Node>& fv2);
-  /** Reference to options */
-  const Options& d_opts;
   /** The quantified formula this trigger is for. */
   Node d_quant;
   /** The trigger selection strategy */
@@ -195,6 +200,10 @@ class PatternTermSelector
   std::vector<Node> d_excluded;
   /** Whether we are filtering instances */
   bool d_filterInst;
+  /** Whether we are purifying triggers */
+  bool d_purifyTriggers;
+  /** Whether we are using relational triggers */
+  bool d_relTriggers;
 };
 
 }  // namespace inst
