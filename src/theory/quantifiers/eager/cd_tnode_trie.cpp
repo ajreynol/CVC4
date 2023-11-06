@@ -98,7 +98,10 @@ CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
   return ret;
 }
 
-CDTNodeTrieAllocator::CDTNodeTrieAllocator(context::Context* c) : d_ctx(c), d_congruent(c) {}
+CDTNodeTrieAllocator::CDTNodeTrieAllocator(context::Context* c)
+    : d_ctx(c), d_congruent(c)
+{
+}
 
 CDTNodeTrie* CDTNodeTrieAllocator::alloc()
 {
@@ -124,7 +127,7 @@ TNode CDTNodeTrieIterator::pushNextChild()
   {
     StackFrame& sf = d_stack.back();
     // shouldn't mix pushNextChild and push
-    Assert (sf.d_pushed.empty());
+    Assert(sf.d_pushed.empty());
     if (sf.isFinished())
     {
       return d_null;
@@ -145,7 +148,7 @@ bool CDTNodeTrieIterator::push(TNode r)
   Assert(!d_stack.empty());
   StackFrame& sf = d_stack.back();
   // can't push the same child more than once
-  if (sf.d_pushed.find(r)!=sf.d_pushed.end())
+  if (sf.d_pushed.find(r) != sf.d_pushed.end())
   {
     return false;
   }
@@ -160,7 +163,7 @@ bool CDTNodeTrieIterator::push(TNode r)
 
 bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 {
-  bool isChildLeaf = (d_stack.size()+1==d_depth);
+  bool isChildLeaf = (d_stack.size() + 1 == d_depth);
   d_stack.emplace_back(d_alloc, d_qs, cdtnt, isChildLeaf);
   // if not at leaf, and already finished (no children), we are done
   if (!isChildLeaf && d_stack.back().isFinished())
@@ -245,7 +248,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
       if (isChildLeaf)
       {
         // if we are at leaf, set the data
-        Assert (!cc->d_data.get().isNull());
+        Assert(!cc->d_data.get().isNull());
         ccTgt->setData(al, cc->d_data.get());
       }
       else

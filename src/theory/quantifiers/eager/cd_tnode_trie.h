@@ -78,7 +78,11 @@ class CDTNodeTrieAllocator
   /** Mark congruent */
   void markCongruent(TNode t) { d_congruent.insert(t); }
   /** Is term congruent? */
-  bool isCongruent(TNode t) const { return d_congruent.find(t)!=d_congruent.end(); }
+  bool isCongruent(TNode t) const
+  {
+    return d_congruent.find(t) != d_congruent.end();
+  }
+
  private:
   context::Context* d_ctx;
   context::CDHashSet<Node> d_congruent;

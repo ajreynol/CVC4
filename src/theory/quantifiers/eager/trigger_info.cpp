@@ -16,17 +16,20 @@
 #include "theory/quantifiers/eager/trigger_info.h"
 
 #include "expr/node_algorithm.h"
+#include "theory/quantifiers/ieval/inst_evaluator.h"
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_database_eager.h"
-#include "theory/quantifiers/ieval/inst_evaluator.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 namespace eager {
 
-TriggerInfo::TriggerInfo(TermDbEager& tde) : d_tde(tde), d_isAllGargs(false), d_arity(0) {}
+TriggerInfo::TriggerInfo(TermDbEager& tde)
+    : d_tde(tde), d_isAllGargs(false), d_arity(0)
+{
+}
 
 void TriggerInfo::initialize(const Node& t, const Node& f)
 {
@@ -58,9 +61,9 @@ void TriggerInfo::initialize(const Node& t, const Node& f)
 
 bool TriggerInfo::doMatching(TNode t)
 {
-  Assert (d_ieval!=nullptr);
-  Assert (t.getNumChildren()==d_pattern.getNumChildren());
-  Assert (t.getOperator()==d_pattern.getOperator());
+  Assert(d_ieval != nullptr);
+  Assert(t.getNumChildren() == d_pattern.getNumChildren());
+  Assert(t.getOperator() == d_pattern.getOperator());
   size_t npush = 0;
   bool ret = doMatchingInternal(d_ieval.get(), t, npush);
   if (ret)
@@ -72,7 +75,9 @@ bool TriggerInfo::doMatching(TNode t)
   return ret;
 }
 
-bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& npush)
+bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie,
+                                     TNode t,
+                                     size_t& npush)
 {
   QuantifiersState& qs = d_tde.getState();
   // ground arguments must match
@@ -91,7 +96,7 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& 
     TNode vv = ie->get(d_pattern[v]);
     if (!vv.isNull())
     {
-      if (vv!=tv)
+      if (vv != tv)
       {
         return false;
       }
@@ -107,7 +112,8 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& 
       // TODO: remember tv?
     }
   }
-  // initialize the children to equivalence classes, returning false if its infeasible
+  // initialize the children to equivalence classes, returning false if its
+  // infeasible
   std::vector<size_t> activeOArgs;
   for (size_t o : d_oargs)
   {
@@ -124,13 +130,13 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& 
   }
   size_t noargs = activeOArgs.size();
   std::vector<size_t> pushStack;
-  while (pushStack.size()<noargs)
+  while (pushStack.size() < noargs)
   {
     size_t cnpush = 0;
     size_t o = activeOArgs[pushStack.size()];
     if (!d_children[o]->doMatchingEqcNext(ie, cnpush))
     {
-      Assert (cnpush==0);
+      Assert(cnpush == 0);
       if (pushStack.empty())
       {
         return false;
@@ -147,17 +153,17 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& 
 
 bool TriggerInfo::isLegalCandidate(TNode n) const
 {
-  return d_tde.getTermDb().getMatchOperator(n)==d_op && !d_tde.isCongruent(n);
+  return d_tde.getTermDb().getMatchOperator(n) == d_op && !d_tde.isCongruent(n);
 }
-  
+
 bool TriggerInfo::initMatchingEqc(TNode r, bool& isActive)
 {
-  // In the rare case we are a (common) subterm, we may already have an assigned eqc.
-  // If this does not match, we are infeasible. If this matches, we don't set isActive
-  // and return true.
+  // In the rare case we are a (common) subterm, we may already have an assigned
+  // eqc. If this does not match, we are infeasible. If this matches, we don't
+  // set isActive and return true.
   if (!d_eqc.isNull())
   {
-    return (d_eqc==r);
+    return (d_eqc == r);
   }
   isActive = true;
   d_eqc = r;
@@ -225,13 +231,14 @@ bool TriggerInfo::doMatchingAll()
   {
     do
     {
-      Assert (level<=d_children.size());
+      Assert(level <= d_children.size());
       // if we are a compound subchild, push next child
-      if (d_children[level-1]!=nullptr)
+      if (d_children[level - 1] != nullptr)
       {
         TNode next = itt.pushNextChild();
         bool isActive = false;
-        if (next.isNull() || d_children[level-1]->initMatchingEqc(next, isActive))
+        if (next.isNull()
+            || d_children[level - 1]->initMatchingEqc(next, isActive))
         {
           itt.pop();
         }
@@ -242,12 +249,12 @@ bool TriggerInfo::doMatchingAll()
       }
       else
       {
-        TNode pc = d_pattern[level-1];
+        TNode pc = d_pattern[level - 1];
         TNode r;
-        if (pc.getKind()==Kind::BOUND_VARIABLE)
+        if (pc.getKind() == Kind::BOUND_VARIABLE)
         {
           itb = binding.find(level);
-          if (itb==binding.end())
+          if (itb == binding.end())
           {
             // if the first time, check whether we will be binding
             r = d_ieval->get(pc);
@@ -281,7 +288,8 @@ bool TriggerInfo::doMatchingAll()
         {
           r = itt.pushNextChild();
           // if no more children to push, go back a level
-          // if the child we just pushed is infeasible, pop to continue on this level
+          // if the child we just pushed is infeasible, pop to continue on this
+          // level
           if (r.isNull() || !d_ieval->push(pc, r))
           {
             // go back a level
@@ -291,12 +299,12 @@ bool TriggerInfo::doMatchingAll()
       }
       // processing a new level
       level = itt.getLevel();
-      if (level==0)
+      if (level == 0)
       {
         return true;
       }
-    }while (level<=d_arity);
-    
+    } while (level <= d_arity);
+
     // found an instantiation
   }
 

@@ -42,7 +42,6 @@ class TriggerInfo
 
   bool doMatching(TNode t);
 
-
   bool doMatchingAll();
 
  private:
