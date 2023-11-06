@@ -131,11 +131,13 @@ void InstStrategyUserPatterns::addUserPattern(Node q, Node pat)
       // skip duplicate pattern term
       continue;
     }
+    // check if usable
     Node pat_use = pts.getIsUsableTrigger(p, q);
     if (pat_use.isNull())
     {
       Trace("trigger-warn") << "User-provided trigger is not usable : " << pat
                             << " because of " << p << std::endl;
+      // this may be part of a multi-pattern, where we terminate now
       return;
     }
     nodes.push_back(pat_use);

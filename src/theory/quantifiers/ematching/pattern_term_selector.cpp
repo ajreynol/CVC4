@@ -60,7 +60,7 @@ PatternTermSelector::PatternTermSelector(Node q,
 
 PatternTermSelector::~PatternTermSelector() {}
 
-bool PatternTermSelector::isUsable(Node n, Node q)
+bool PatternTermSelector::isUsable(Node n, Node q) const
 {
   std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
@@ -101,7 +101,7 @@ bool PatternTermSelector::isUsable(Node n, Node q)
   return true;
 }
 
-Node PatternTermSelector::getIsUsableEq(Node q, Node n)
+Node PatternTermSelector::getIsUsableEq(Node q, Node n) const
 {
   Assert(TriggerTermInfo::isRelationalTrigger(n));
   for (size_t i = 0; i < 2; i++)
@@ -122,7 +122,7 @@ Node PatternTermSelector::getIsUsableEq(Node q, Node n)
   return Node::null();
 }
 
-bool PatternTermSelector::isUsableEqTerms(Node q, Node n1, Node n2)
+bool PatternTermSelector::isUsableEqTerms(Node q, Node n1, Node n2) const
 {
   if (n1.getKind() == Kind::INST_CONSTANT)
   {
@@ -167,7 +167,7 @@ bool PatternTermSelector::isUsableEqTerms(Node q, Node n1, Node n2)
   return false;
 }
 
-Node PatternTermSelector::getIsUsableTrigger(Node n, Node q)
+Node PatternTermSelector::getIsUsableTrigger(Node n, Node q) const
 {
   bool pol = true;
   Trace("trigger-debug") << "Is " << n << " a usable trigger?" << std::endl;
@@ -242,13 +242,13 @@ Node PatternTermSelector::getIsUsableTrigger(Node n, Node q)
   return Node::null();
 }
 
-bool PatternTermSelector::isUsableAtomicTrigger(Node n, Node q)
+bool PatternTermSelector::isUsableAtomicTrigger(Node n, Node q) const
 {
   return quantifiers::TermUtil::getInstConstAttr(n) == q
          && TriggerTermInfo::isAtomicTrigger(n) && isUsable(n, q);
 }
 
-bool PatternTermSelector::isUsableTrigger(Node n, Node q)
+bool PatternTermSelector::isUsableTrigger(Node n, Node q) const
 {
   Node nu = getIsUsableTrigger(n, q);
   return !nu.isNull();
@@ -498,7 +498,7 @@ void PatternTermSelector::collectInternal(
 int PatternTermSelector::isInstanceOf(Node n1,
                                       Node n2,
                                       const std::vector<Node>& fv1,
-                                      const std::vector<Node>& fv2)
+                                      const std::vector<Node>& fv2) const
 {
   Assert(n1 != n2);
   int status = 0;
@@ -586,7 +586,7 @@ int PatternTermSelector::isInstanceOf(Node n1,
   return status;
 }
 
-void PatternTermSelector::filterInstances(std::vector<Node>& nodes)
+void PatternTermSelector::filterInstances(std::vector<Node>& nodes) const
 {
   std::map<unsigned, std::vector<Node> > fvs;
   for (size_t i = 0, size = nodes.size(); i < size; i++)
