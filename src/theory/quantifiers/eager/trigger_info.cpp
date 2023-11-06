@@ -112,21 +112,14 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& 
   for (size_t o : d_oargs)
   {
     TNode tor = qs.getRepresentative(t[o]);
-    TNode oeqc = d_children[o]->d_eqc;
-    // In the rare case we are a (common) subterm, we may already have an assigned eqc.
-    // If this does not match, we are infeasible. If this matches, we skip.
-    if (!oeqc.isNull())
-    {
-      if (oeqc!=tor)
-      {
-        return false;
-      }
-      continue;
-    }
-    activeOArgs.emplace_back(o);
-    if (!d_children[o]->initMatchingEqc(tor))
+    bool isActive = false;
+    if (!d_children[o]->initMatchingEqc(tor, isActive))
     {
       return false;
+    }
+    if (isActive)
+    {
+      activeOArgs.emplace_back(o);
     }
   }
   size_t noargs = activeOArgs.size();
@@ -152,16 +145,22 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& 
   return true;
 }
 
-bool TriggerInfo::initMatchingEqc(TNode r)
+bool TriggerInfo::isLegalCandidate(TNode n) const
 {
-  // we may be using this trigger in multiple contexts
+  return d_tde.getTermDb().getMatchOperator(n)==d_op && !d_tde.isCongruent(n);
+}
+  
+bool TriggerInfo::initMatchingEqc(TNode r, bool& isActive)
+{
+  // In the rare case we are a (common) subterm, we may already have an assigned eqc.
+  // If this does not match, we are infeasible. If this matches, we don't set isActive
+  // and return true.
   if (!d_eqc.isNull())
   {
-    // FIXME: distinguish this case!
-    return d_eqc==r;
+    return (d_eqc==r);
   }
+  isActive = true;
   d_eqc = r;
-  TermDb& tdb = d_tde.getTermDb();
   eq::EqualityEngine* ee = d_tde.getState().getEqualityEngine();
   Assert(ee->hasTerm(r));
   d_eqi = eq::EqClassIterator(r, ee);
@@ -169,25 +168,25 @@ bool TriggerInfo::initMatchingEqc(TNode r)
   while (!d_eqi.isFinished())
   {
     Node n = *d_eqi;
-    if (tdb.getMatchOperator(n) == d_op)
+    if (isLegalCandidate(n))
     {
       // note we don't increment d_eqi, it will be ready when we get next
       return true;
     }
     ++d_eqi;
   }
+  d_eqc = Node::null();
   return false;
 }
 
 bool TriggerInfo::doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush)
 {
   // enumerate terms from the equivalence class with the same operator
-  TermDb& tdb = d_tde.getTermDb();
   while (!d_eqi.isFinished())
   {
     Node n = *d_eqi;
     ++d_eqi;
-    if (tdb.getMatchOperator(n) == d_op)
+    if (isLegalCandidate(n))
     {
       if (doMatchingInternal(ie, n, npush))
       {
@@ -195,6 +194,7 @@ bool TriggerInfo::doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush)
       }
     }
   }
+  d_eqc = Node::null();
   return false;
 }
 
@@ -219,7 +219,6 @@ bool TriggerInfo::doMatchingAll()
   }
   CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, &finfo.d_trie, d_arity);
   size_t level = 1;
-  std::vector<TNode> matched;
   std::map<size_t, bool> binding;
   std::map<size_t, bool>::iterator itb;
   while (true)
@@ -227,17 +226,18 @@ bool TriggerInfo::doMatchingAll()
     do
     {
       Assert (level<=d_children.size());
-      // if we are a subchild, push next child
+      // if we are a compound subchild, push next child
       if (d_children[level-1]!=nullptr)
       {
         TNode next = itt.pushNextChild();
-        if (next.isNull() || d_children[level-1]->initMatchingEqc(next))
+        bool isActive = false;
+        if (next.isNull() || d_children[level-1]->initMatchingEqc(next, isActive))
         {
           itt.pop();
         }
-        else
+        else if (isActive)
         {
-          matched.push_back(next);
+          // TODO
         }
       }
       else
@@ -276,10 +276,6 @@ bool TriggerInfo::doMatchingAll()
             // go back a level
             itt.pop();
           }
-          else
-          {
-            matched.push_back(r);
-          }
         }
         else
         {
@@ -291,10 +287,6 @@ bool TriggerInfo::doMatchingAll()
             // go back a level
             itt.pop();
           }
-          else
-          {
-            matched.push_back(r);
-          }
         }
       }
       // processing a new level
@@ -304,15 +296,8 @@ bool TriggerInfo::doMatchingAll()
         return true;
       }
     }while (level<=d_arity);
-
-    // now, match children for the current match
-    // FIXME: maybe move up?
-    for (size_t o : d_oargs)
-    {
-      size_t cnpush = 0;
-      d_children[o]->doMatchingEqcNext(d_ieval.get(), cnpush);
-    }
-    // if successful, go back
+    
+    // found an instantiation
   }
 
   return true;

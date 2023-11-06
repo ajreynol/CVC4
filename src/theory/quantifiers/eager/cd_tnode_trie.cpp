@@ -57,16 +57,19 @@ bool CDTNodeTrie::add(CDTNodeTrieAllocator* al,
       Assert(cur->d_data.get() == a);
     }
   }
-  if (!cur->hasData())
+  // set data, which will return false if we already have data
+  return cur->setData(al, t);
+}
+
+bool CDTNodeTrie::setData(CDTNodeTrieAllocator* al, TNode t)
+{
+  if (d_data.get().isNull())
   {
     // just set the data, without constructing child
-    cur->d_data = t;
+    d_data = t;
     return true;
   }
-  else
-  {
-    al->markCongruent(t);
-  }
+  al->markCongruent(t);
   return false;
 }
 
@@ -109,7 +112,7 @@ CDTNodeTrieIterator::CDTNodeTrieIterator(CDTNodeTrieAllocator* a,
                                          size_t depth)
     : d_alloc(a), d_qs(qs), d_depth(depth)
 {
-  d_stack.emplace_back(d_alloc, qs, cdtnt);
+  pushInternal(cdtnt);
 }
 
 TNode CDTNodeTrieIterator::pushNextChild()
@@ -157,9 +160,10 @@ bool CDTNodeTrieIterator::push(TNode r)
 
 bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 {
-  d_stack.emplace_back(d_alloc, d_qs, cdtnt);
+  bool isChildLeaf = (d_stack.size()+1==d_depth);
+  d_stack.emplace_back(d_alloc, d_qs, cdtnt, isChildLeaf);
   // if not at leaf, and already finished (no children), we are done
-  if (d_stack.size() < d_depth && d_stack.back().isFinished())
+  if (!isChildLeaf && d_stack.back().isFinished())
   {
     d_stack.pop_back();
     return false;
@@ -182,7 +186,8 @@ TNode CDTNodeTrieIterator::getData()
 
 CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
                                             QuantifiersState& qs,
-                                            CDTNodeTrie* active)
+                                            CDTNodeTrie* active,
+                                            bool isChildLeaf)
 {
   d_active = active;
   std::map<TNode, CDTNodeTrie*>::iterator it;
@@ -190,6 +195,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
   CDTNodeTrie* cur;
   std::vector<CDTNodeTrie*> process;
   process.emplace_back(active);
+  CDTNodeTrie* ccTgt;
   do
   {
     cur = process.back();
@@ -219,29 +225,35 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
             cc->d_data = r;
             cc->d_repMap[r] = i;
           }
+          continue;
         }
         else
         {
           // must add to active
           // note this could be made easier by a level of indirection,
           // i.e. have ccn point to cc directly
-          CDTNodeTrie* ccn = active->push_back(al, r);
-          ccn->d_toMerge.push_back(cc);
-          d_curChildren[r] = ccn;
+          ccTgt = active->push_back(al, r);
+          d_curChildren[r] = ccTgt;
         }
-        i++;
       }
       else
       {
         // mark that it will need to be merged
-        it->second->d_toMerge.push_back(cc);
-        if (cur == active)
-        {
-          // if we are active, we must mark this as disabled
-          cc->d_data = TNode::null();
-          // TODO: as an optimization, we could decrement d_repSize if we are
-          // the last child, which also leads to stale data
-        }
+        ccTgt = it->second;
+      }
+      // now, perform the merge cc to ccTgt.
+      if (isChildLeaf)
+      {
+        // if we are at leaf, set the data
+        Assert (!cc->d_data.get().isNull());
+        ccTgt->setData(al, cc->d_data.get());
+      }
+      else
+      {
+        // if we are not at the leaf, add to merge vector
+        ccTgt->d_toMerge.push_back(cc);
+        // mark that cc's data should no longer be considered
+        cc->d_data = TNode::null();
       }
     }
     // process those waiting to merge with this

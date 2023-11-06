@@ -47,7 +47,7 @@ class TriggerInfo
 
  private:
   bool isLegalCandidate(TNode n) const;
-  bool initMatchingEqc(TNode r);
+  bool initMatchingEqc(TNode r, bool& isActive);
   bool doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush);
   bool doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& npush);
   TermDbEager& d_tde;
