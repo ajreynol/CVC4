@@ -300,7 +300,7 @@ PatTermInfo& State::getOrMkPatTermInfo(TNode p)
   {
     it = d_pInfo.emplace(p, d_ctx).first;
     // initialize the pattern
-    it->second.initialize(p);
+    it->second.initialize(p, d_tdb.getMatchOperator(p));
   }
   return it->second;
 }
@@ -396,6 +396,8 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
     // quantified formula is already inactive
     return;
   }
+  Trace("ieval-state-debug") << "Notify quant constraint " << q.getId() << " "
+                             << p << " == " << val << std::endl;
   Assert(!val.isNull());
   Assert(val.getType().isBoolean());
   if (!val.isConst() && val != d_none)
@@ -405,8 +407,6 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
     // (unassigned) Boolean term.
     val = d_some;
   }
-  Trace("ieval-state-debug") << "Notify quant constraint " << q.getId() << " "
-                             << p << " == " << val << std::endl;
   Assert(d_numActiveQuant.get() > 0);
   // check whether we should set inactive
   bool setInactive = false;

@@ -53,7 +53,7 @@ InstEvaluator* InstEvaluatorManager::getEvaluator(Node q, TermEvaluatorMode tev)
     return nullptr;
   }
   options::IevalMode mode = options().quantifiers.ievalMode;
-  if (options().quantifiers.ievalMode == options::IevalMode::OFF)
+  if (mode == options::IevalMode::OFF)
   {
     // not using instantiation evaluation, don't construct
     return nullptr;

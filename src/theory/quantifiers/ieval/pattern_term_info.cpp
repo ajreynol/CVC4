@@ -27,14 +27,20 @@ namespace quantifiers {
 namespace ieval {
 
 PatTermInfo::PatTermInfo(context::Context* c)
-    : d_eq(c), d_numUnassigned(c, 0), d_parentNotify(c), d_evalExpChild(c)
+    : d_eq(c),
+      d_numUnassigned(c, 0),
+      d_parentNotify(c),
+      d_evalExpChild(c),
+      d_trie(c, nullptr),
+      d_trieWatchChild(c)
 {
 }
 
-void PatTermInfo::initialize(TNode pattern)
+void PatTermInfo::initialize(TNode pattern, TNode matchOp)
 {
   Assert(!pattern.isNull());
   d_pattern = pattern;
+  d_mop = matchOp;
 }
 
 bool PatTermInfo::isActive() const { return d_eq.get().isNull(); }
@@ -54,7 +60,7 @@ bool PatTermInfo::notifyChild(State& s,
   // ============================ handle short circuiting
   // maybe remember the child for explanations
   Node exp;
-  d_eq = tec->partialEvaluateChild(s, d_pattern, child, val, exp);
+  d_eq = tec->partialEvaluateChild(s, *this, child, val, exp);
   if (!d_eq.get().isNull())
   {
     Trace("ieval") << "  " << d_pattern << " := " << d_eq.get()
@@ -83,7 +89,7 @@ bool PatTermInfo::notifyChild(State& s,
     childValues.push_back(pcv);
   }
   // call the evaluator
-  d_eq = tec->evaluate(s, d_pattern, childValues);
+  d_eq = tec->evaluate(s, *this, childValues);
   Assert(!d_eq.get().isNull());
   Trace("ieval") << "  " << d_pattern << " := " << d_eq.get() << " (evaluate)"
                  << std::endl;
