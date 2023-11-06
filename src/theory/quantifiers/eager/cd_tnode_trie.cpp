@@ -102,7 +102,9 @@ CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
   return ret;
 }
 
-void CDTNodeTrie::addToMerge(CDTNodeTrieAllocator* al, CDTNodeTrie* t, bool isChildLeaf)
+void CDTNodeTrie::addToMerge(CDTNodeTrieAllocator* al,
+                             CDTNodeTrie* t,
+                             bool isChildLeaf)
 {
   if (isChildLeaf)
   {
@@ -156,7 +158,7 @@ TNode CDTNodeTrieIterator::pushNextChild()
     }
     ret = sf.d_cit->first;
     next = sf.d_cit->second;
-    Assert (next->d_edge.get()==ret);
+    Assert(next->d_edge.get() == ret);
     ++sf.d_cit;
     if (!pushInternal(next))
     {
@@ -188,9 +190,9 @@ bool CDTNodeTrieIterator::push(TNode r)
 bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 {
   // if pushing to a leaf, set the data
-  if (d_stack.size()==d_depth)
+  if (d_stack.size() == d_depth)
   {
-    Assert (!d_curData.isNull());
+    Assert(!d_curData.isNull());
     d_curData = cdtnt->getData();
     return true;
   }
@@ -222,7 +224,7 @@ void CDTNodeTrieIterator::pop()
 
 TNode CDTNodeTrieIterator::getCurrentData()
 {
-  Assert (!d_curData.isNull());
+  Assert(!d_curData.isNull());
   return d_curData;
 }
 
@@ -231,7 +233,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
                                             CDTNodeTrie* active,
                                             bool isChildLeaf)
 {
-  Assert (active!=nullptr);
+  Assert(active != nullptr);
   d_active = active;
   std::map<TNode, CDTNodeTrie*>::iterator it;
   context::CDHashMap<TNode, size_t>::iterator itr;
@@ -266,10 +268,10 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
           {
             // maybe forward merge to another child
             itr = active->d_repMap.find(r);
-            if (itr!=active->d_repMap.end())
+            if (itr != active->d_repMap.end())
             {
               ccTgt = active->d_repChildren[itr->second];
-              Assert (ccTgt->d_edge.get()==r);
+              Assert(ccTgt->d_edge.get() == r);
               ccTgt->addToMerge(al, cc, isChildLeaf);
               // we will process the child later in the list
               continue;
