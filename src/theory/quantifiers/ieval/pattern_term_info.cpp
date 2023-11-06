@@ -90,9 +90,9 @@ bool PatTermInfo::notifyChild(State& s,
   }
   // call the evaluator
   d_eq = tec->evaluate(s, *this, childValues);
-  Assert(!d_eq.get().isNull());
   Trace("ieval") << "  " << d_pattern << " := " << d_eq.get() << " (evaluate)"
                  << std::endl;
+  Assert(!d_eq.get().isNull());
   return true;
 }
 
