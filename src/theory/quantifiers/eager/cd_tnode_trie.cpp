@@ -63,6 +63,10 @@ bool CDTNodeTrie::add(CDTNodeTrieAllocator* al,
     cur->d_data = t;
     return true;
   }
+  else
+  {
+    al->markCongruent(t);
+  }
   return false;
 }
 
@@ -91,7 +95,7 @@ CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
   return ret;
 }
 
-CDTNodeTrieAllocator::CDTNodeTrieAllocator(context::Context* c) : d_ctx(c) {}
+CDTNodeTrieAllocator::CDTNodeTrieAllocator(context::Context* c) : d_ctx(c), d_congruent(c) {}
 
 CDTNodeTrie* CDTNodeTrieAllocator::alloc()
 {

@@ -34,21 +34,23 @@ namespace eager {
 class TriggerInfo
 {
  public:
-  TriggerInfo(context::Context* c);
+  TriggerInfo(TermDbEager& tde);
   /** Initialize */
-  void initialize(TermDbEager& tde, const Node& t, const Node& f);
+  void initialize(const Node& t, const Node& f);
   /** */
   void watch(const Node& q);
 
-  bool doMatching(TermDbEager& tde, TNode t);
+  bool doMatching(TNode t);
 
 
-  bool doMatchingAll(TermDbEager& tde);
+  bool doMatchingAll();
 
  private:
-  bool initMatchingEqc(TermDbEager& tde, TNode r);
-  bool doMatchingEqcNext(TermDbEager& tde, ieval::InstEvaluator* ie, size_t& npush);
-  bool doMatchingInternal(TermDbEager& tde, ieval::InstEvaluator* ie, TNode t, size_t& npush);
+  bool isLegalCandidate(TNode n) const;
+  bool initMatchingEqc(TNode r);
+  bool doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush);
+  bool doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& npush);
+  TermDbEager& d_tde;
   /** Are ground children */
   bool d_isAllGargs;
   /** Instantiation evaluator */

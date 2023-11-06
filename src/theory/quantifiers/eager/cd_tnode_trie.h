@@ -19,6 +19,7 @@
 #define CVC5__THEORY__QUANTIFIERS__EAGER__CD_TNODE_TRIE_H
 
 #include "context/cdhashmap.h"
+#include "context/cdhashset.h"
 #include "context/cdlist.h"
 #include "context/cdo.h"
 #include "expr/node.h"
@@ -72,9 +73,13 @@ class CDTNodeTrieAllocator
   CDTNodeTrieAllocator(context::Context* c);
   /** Allocate a new trie node */
   CDTNodeTrie* alloc();
-
+  /** Mark congruent */
+  void markCongruent(TNode t) { d_congruent.insert(t); }
+  /** Is term congruent? */
+  bool isCongruent(TNode t) const { return d_congruent.find(t)!=d_congruent.end(); }
  private:
   context::Context* d_ctx;
+  context::CDHashSet<Node> d_congruent;
   std::vector<std::shared_ptr<CDTNodeTrie>> d_alloc;
 };
 

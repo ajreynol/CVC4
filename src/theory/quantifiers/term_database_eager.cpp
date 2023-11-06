@@ -66,15 +66,20 @@ TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
   return itt.getData();
 }
 
+bool TermDbEager::isCongruent(TNode t) const
+{
+  return d_cdalloc.isCongruent(t);
+}
+
 eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
 {
   std::map<TNode, eager::TriggerInfo>::iterator it = d_tinfo.find(t);
   if (it == d_tinfo.end())
   {
-    d_tinfo.emplace(t, context());
+    d_tinfo.emplace(t, *this);
     it = d_tinfo.find(t);
     TNode f = d_tdb.getMatchOperator(t);
-    it->second.initialize(*this, t, f);
+    it->second.initialize(t, f);
     // add to triggers for the function
     Assert(!f.isNull());
     eager::FunInfo& finfo = getFunInfo(f);

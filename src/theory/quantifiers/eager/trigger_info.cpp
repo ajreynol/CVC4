@@ -26,9 +26,9 @@ namespace theory {
 namespace quantifiers {
 namespace eager {
 
-TriggerInfo::TriggerInfo(context::Context* c) : d_isAllGargs(false), d_arity(0) {}
+TriggerInfo::TriggerInfo(TermDbEager& tde) : d_tde(tde), d_isAllGargs(false), d_arity(0) {}
 
-void TriggerInfo::initialize(TermDbEager& tde, const Node& t, const Node& f)
+void TriggerInfo::initialize(const Node& t, const Node& f)
 {
   d_pattern = t;
   d_op = f;
@@ -45,7 +45,7 @@ void TriggerInfo::initialize(TermDbEager& tde, const Node& t, const Node& f)
       else
       {
         d_oargs.emplace_back(i);
-        d_children.emplace_back(tde.getTriggerInfo(t[i]));
+        d_children.emplace_back(d_tde.getTriggerInfo(t[i]));
       }
     }
     else
@@ -56,13 +56,13 @@ void TriggerInfo::initialize(TermDbEager& tde, const Node& t, const Node& f)
   }
 }
 
-bool TriggerInfo::doMatching(TermDbEager& tde, TNode t)
+bool TriggerInfo::doMatching(TNode t)
 {
   Assert (d_ieval!=nullptr);
   Assert (t.getNumChildren()==d_pattern.getNumChildren());
   Assert (t.getOperator()==d_pattern.getOperator());
   size_t npush = 0;
-  bool ret = doMatchingInternal(tde, d_ieval.get(), t, npush);
+  bool ret = doMatchingInternal(d_ieval.get(), t, npush);
   if (ret)
   {
     // TODO: add instantiation(s)
@@ -72,9 +72,9 @@ bool TriggerInfo::doMatching(TermDbEager& tde, TNode t)
   return ret;
 }
 
-bool TriggerInfo::doMatchingInternal(TermDbEager& tde, ieval::InstEvaluator* ie, TNode t, size_t& npush)
+bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& npush)
 {
-  QuantifiersState& qs = tde.getState();
+  QuantifiersState& qs = d_tde.getState();
   // ground arguments must match
   for (size_t g : d_gargs)
   {
@@ -108,28 +108,41 @@ bool TriggerInfo::doMatchingInternal(TermDbEager& tde, ieval::InstEvaluator* ie,
     }
   }
   // initialize the children to equivalence classes, returning false if its infeasible
+  std::vector<size_t> activeOArgs;
   for (size_t o : d_oargs)
   {
     TNode tor = qs.getRepresentative(t[o]);
-    if (!d_children[o]->initMatchingEqc(tde, tor))
+    TNode oeqc = d_children[o]->d_eqc;
+    // In the rare case we are a (common) subterm, we may already have an assigned eqc.
+    // If this does not match, we are infeasible. If this matches, we skip.
+    if (!oeqc.isNull())
+    {
+      if (oeqc!=tor)
+      {
+        return false;
+      }
+      continue;
+    }
+    activeOArgs.emplace_back(o);
+    if (!d_children[o]->initMatchingEqc(tor))
     {
       return false;
     }
   }
-  // do each
-  size_t noargs = d_oargs.size();
+  size_t noargs = activeOArgs.size();
   std::vector<size_t> pushStack;
   while (pushStack.size()<noargs)
   {
     size_t cnpush = 0;
-    size_t o = d_oargs[pushStack.size()];
-    if (!d_children[o]->doMatchingEqcNext(tde, ie, cnpush))
+    size_t o = activeOArgs[pushStack.size()];
+    if (!d_children[o]->doMatchingEqcNext(ie, cnpush))
     {
       Assert (cnpush==0);
       if (pushStack.empty())
       {
         return false;
       }
+      // pop the variables assigned last
       ie->pop(pushStack.back());
       pushStack.pop_back();
     }
@@ -139,7 +152,7 @@ bool TriggerInfo::doMatchingInternal(TermDbEager& tde, ieval::InstEvaluator* ie,
   return true;
 }
 
-bool TriggerInfo::initMatchingEqc(TermDbEager& tde, TNode r)
+bool TriggerInfo::initMatchingEqc(TNode r)
 {
   // we may be using this trigger in multiple contexts
   if (!d_eqc.isNull())
@@ -148,8 +161,8 @@ bool TriggerInfo::initMatchingEqc(TermDbEager& tde, TNode r)
     return d_eqc==r;
   }
   d_eqc = r;
-  TermDb& tdb = tde.getTermDb();
-  eq::EqualityEngine* ee = tde.getState().getEqualityEngine();
+  TermDb& tdb = d_tde.getTermDb();
+  eq::EqualityEngine* ee = d_tde.getState().getEqualityEngine();
   Assert(ee->hasTerm(r));
   d_eqi = eq::EqClassIterator(r, ee);
   // find the first
@@ -166,17 +179,17 @@ bool TriggerInfo::initMatchingEqc(TermDbEager& tde, TNode r)
   return false;
 }
 
-bool TriggerInfo::doMatchingEqcNext(TermDbEager& tde, ieval::InstEvaluator* ie, size_t& npush)
+bool TriggerInfo::doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush)
 {
   // enumerate terms from the equivalence class with the same operator
-  TermDb& tdb = tde.getTermDb();
+  TermDb& tdb = d_tde.getTermDb();
   while (!d_eqi.isFinished())
   {
     Node n = *d_eqi;
     ++d_eqi;
     if (tdb.getMatchOperator(n) == d_op)
     {
-      if (doMatchingInternal(tde, ie, n, npush))
+      if (doMatchingInternal(ie, n, npush))
       {
         return true;
       }
@@ -185,11 +198,11 @@ bool TriggerInfo::doMatchingEqcNext(TermDbEager& tde, ieval::InstEvaluator* ie, 
   return false;
 }
 
-bool TriggerInfo::doMatchingAll(TermDbEager& tde)
+bool TriggerInfo::doMatchingAll()
 {
-  QuantifiersState& qs = tde.getState();
+  QuantifiersState& qs = d_tde.getState();
   // now traverse the term index
-  FunInfo& finfo = tde.getFunInfo(d_op);
+  FunInfo& finfo = d_tde.getFunInfo(d_op);
   if (!d_isAllGargs)
   {
     // all ground terms must exist
@@ -204,7 +217,7 @@ bool TriggerInfo::doMatchingAll(TermDbEager& tde)
     // note this could be context-depedendent but probably not worthwhile?
     d_isAllGargs = true;
   }
-  CDTNodeTrieIterator itt(tde.getCdtAlloc(), qs, &finfo.d_trie, d_arity);
+  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, &finfo.d_trie, d_arity);
   size_t level = 1;
   std::vector<TNode> matched;
   std::map<size_t, bool> binding;
@@ -218,7 +231,7 @@ bool TriggerInfo::doMatchingAll(TermDbEager& tde)
       if (d_children[level-1]!=nullptr)
       {
         TNode next = itt.pushNextChild();
-        if (next.isNull() || d_children[level-1]->initMatchingEqc(tde, next))
+        if (next.isNull() || d_children[level-1]->initMatchingEqc(next))
         {
           itt.pop();
         }
@@ -297,7 +310,7 @@ bool TriggerInfo::doMatchingAll(TermDbEager& tde)
     for (size_t o : d_oargs)
     {
       size_t cnpush = 0;
-      d_children[o]->doMatchingEqcNext(tde, d_ieval.get(), cnpush);
+      d_children[o]->doMatchingEqcNext(d_ieval.get(), cnpush);
     }
     // if successful, go back
   }

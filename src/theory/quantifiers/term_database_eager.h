@@ -49,6 +49,8 @@ class TermDbEager : protected EnvObj
   bool inRelevantDomain(TNode f, size_t i, TNode r);
   /** Get congruent term */
   TNode getCongruentTerm(TNode f, const std::vector<TNode>& args);
+  /** Is term congruent */
+  bool isCongruent(TNode t) const;
   /** Get trigger info */
   eager::TriggerInfo* getTriggerInfo(const Node& t);
   /** Get quant info */
