@@ -75,7 +75,7 @@ class PatternTermSelector
    * (2) Relational triggers are put into solved form, e.g.
    *      getIsUsableTrigger( (= (+ x a) 5), q ) may return (= x (- 5 a)).
    */
-  static Node getIsUsableTrigger(const Options& opts, Node n, Node q);
+  Node getIsUsableTrigger(Node n, Node q);
   /** get the variable associated with an inversion for n
    *
    * A term n with an inversion variable x has the following property :
@@ -109,21 +109,21 @@ class PatternTermSelector
    * A usable trigger is one that is matchable and contains free variables only
    * from q.
    */
-  static bool isUsableTrigger(const Options& opts, Node n, Node q);
+  bool isUsableTrigger(Node n, Node q);
   /** Is n a usable atomic trigger?
    *
    * A usable atomic trigger is a term that is both a useable trigger and an
    * atomic trigger.
    */
-  static bool isUsableAtomicTrigger(const Options& opts, Node n, Node q);
+  bool isUsableAtomicTrigger(Node n, Node q);
   /** is subterm of trigger usable (helper function for isUsableTrigger) */
-  static bool isUsable(const Options& opts, Node n, Node q);
+  bool isUsable(Node n, Node q);
   /** returns an equality that is equivalent to the equality eq and
    * is a usable trigger for q if one exists, otherwise returns Node::null().
    */
-  static Node getIsUsableEq(const Options& opts, Node q, Node eq);
+  Node getIsUsableEq(Node q, Node eq);
   /** returns whether n1 == n2 is a usable (relational) trigger for q. */
-  static bool isUsableEqTerms(const Options& opts, Node q, Node n1, Node n2);
+  bool isUsableEqTerms(Node q, Node n1, Node n2);
   /** Helper for collect, with a fixed strategy for selection and filtering */
   void collectInternal(Node n,
                        std::vector<Node>& patTerms,
