@@ -38,11 +38,13 @@ bool FunInfo::addTerm(TermDbEager& tde, TNode t, const std::vector<TNode>& reps)
     addRelevantDomain(i, reps[i]);
   }
   // try matching?
+  /*
   for (TriggerInfo* tr : d_triggers)
   {
     tr->doMatching(tde, t);
     // TODO: break?
   }
+  */
   return true;
 }
 

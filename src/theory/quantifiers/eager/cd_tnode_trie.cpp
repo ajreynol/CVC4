@@ -116,6 +116,8 @@ TNode CDTNodeTrieIterator::pushNextChild()
   do
   {
     StackFrame& sf = d_stack.back();
+    // shouldn't mix pushNextChild and push
+    Assert (sf.d_pushed.empty());
     if (sf.isFinished())
     {
       return d_null;
@@ -135,6 +137,12 @@ bool CDTNodeTrieIterator::push(TNode r)
 {
   Assert(!d_stack.empty());
   StackFrame& sf = d_stack.back();
+  // can't push the same child more than once
+  if (sf.d_pushed.find(r)!=sf.d_pushed.end())
+  {
+    return false;
+  }
+  sf.d_pushed.insert(r);
   std::map<TNode, CDTNodeTrie*>::iterator it = sf.d_curChildren.find(r);
   if (it == sf.d_curChildren.end())
   {
@@ -228,7 +236,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
           // if we are active, we must mark this as disabled
           cc->d_data = TNode::null();
           // TODO: as an optimization, we could decrement d_repSize if we are
-          // the last child.
+          // the last child, which also leads to stale data
         }
       }
     }

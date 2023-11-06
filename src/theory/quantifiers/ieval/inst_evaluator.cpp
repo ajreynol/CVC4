@@ -151,7 +151,12 @@ bool InstEvaluator::pushInternal(TNode v,
   return true;
 }
 
-void InstEvaluator::pop() { d_context.pop(); }
+void InstEvaluator::pop(size_t nscopes) {
+  for (size_t i=0; i<nscopes; i++)
+  {
+    d_context.pop();
+  }
+}
 
 void InstEvaluator::resetAll(bool isSoft)
 {

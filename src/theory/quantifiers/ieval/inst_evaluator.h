@@ -106,7 +106,7 @@ class InstEvaluator : protected EnvObj
   /** Same as above, without tracking assigned quantifiers */
   bool push(TNode v, TNode s);
   /** pop the last (successful) push */
-  void pop();
+  void pop(size_t nscopes = 1);
   /**
    * Reset all variable assignments.
    *

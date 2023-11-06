@@ -96,6 +96,8 @@ class CDTNodeTrieIterator
   void pop();
   /** Get the term at the current leaf */
   TNode getData();
+  /** Get level */
+  size_t getLevel() const { return d_stack.size(); }
 
  private:
   CDTNodeTrieAllocator* d_alloc;
@@ -109,6 +111,7 @@ class CDTNodeTrieIterator
     CDTNodeTrie* d_active;
     std::map<TNode, CDTNodeTrie*> d_curChildren;
     std::map<TNode, CDTNodeTrie*>::iterator d_cit;
+    std::unordered_set<TNode> d_pushed;
     bool isFinished() const { return d_cit == d_curChildren.end(); }
   };
   std::vector<StackFrame> d_stack;
