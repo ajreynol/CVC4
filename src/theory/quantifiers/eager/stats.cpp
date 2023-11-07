@@ -20,13 +20,12 @@ namespace theory {
 namespace quantifiers {
 namespace eager {
 
-Stats::Stats(StatisticsRegistry& sr) :
-      d_ntriggers(sr.registerInt("quantifiers::eager::num_triggers"))
-      {
-      }
-
+Stats::Stats(StatisticsRegistry& sr)
+    : d_ntriggers(sr.registerInt("quantifiers::eager::num_triggers"))
+{
 }
+
+}  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
-

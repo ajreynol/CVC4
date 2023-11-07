@@ -37,7 +37,7 @@ class Stats
   IntStat d_ntriggers;
 };
 
-}
+}  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

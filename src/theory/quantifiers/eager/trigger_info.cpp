@@ -31,10 +31,7 @@ TriggerInfo::TriggerInfo(TermDbEager& tde)
 {
 }
 
-void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist)
-{
-
-}
+void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist) {}
 
 void TriggerInfo::initialize(const Node& t, const Node& f)
 {

@@ -189,9 +189,9 @@ class PatternTermSelector
    * Notice that n1 and n2 are in instantiation constant form.
    */
   int isInstanceOf(Node n1,
-                          Node n2,
-                          const std::vector<Node>& fv1,
-                          const std::vector<Node>& fv2) const;
+                   Node n2,
+                   const std::vector<Node>& fv1,
+                   const std::vector<Node>& fv2) const;
   /** The quantified formula this trigger is for. */
   Node d_quant;
   /** The trigger selection strategy */

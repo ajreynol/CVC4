@@ -15,9 +15,9 @@
 
 #include "theory/quantifiers/eager/quant_info.h"
 
-#include "theory/quantifiers/term_database_eager.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/quantifiers_registry.h"
+#include "theory/quantifiers/term_database_eager.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -48,7 +48,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
     {
       continue;
     }
-    if (processed.find(p)!=processed.end())
+    if (processed.find(p) != processed.end())
     {
       // in rare cases there may be a repeated pattern??
       continue;
@@ -64,7 +64,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
     std::vector<Node> vlist;
     for (const Node& v : q[0])
     {
-      Assert (visited.find(v)!=visited.end());
+      Assert(visited.find(v) != visited.end());
       vlist.emplace_back(visited[v]);
     }
     ti->watch(q, vlist);
