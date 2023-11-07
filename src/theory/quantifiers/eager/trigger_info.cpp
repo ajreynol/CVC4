@@ -36,7 +36,7 @@ void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist)
 {
   if (d_ieval == nullptr)
   {
-    // initialize the evaluator
+    // initialize the evaluator if not already done so
     d_ieval.reset(new ieval::InstEvaluator(d_tde.getEnv(),
                                            d_tde.getState(),
                                            d_tde.getTermDb(),
@@ -50,7 +50,13 @@ void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist)
     s.add(q[0][i], vlist[i]);
   }
   Node qs = s.apply(q);
-  d_ieval->watch(qs);
+  // this should probably always hold, or else we have a duplicate trigger
+  // for the same quantified formula.
+  if (d_quantMap.find(qs)==d_quantMap.end())
+  {
+    d_ieval->watch(qs);
+    d_quantMap[qs] = q;
+  }
 }
 
 void TriggerInfo::initialize(const Node& t, const Node& f)

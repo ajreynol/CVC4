@@ -56,6 +56,8 @@ class TriggerInfo
   bool d_isAllGargs;
   /** Instantiation evaluator */
   std::unique_ptr<ieval::InstEvaluator> d_ieval;
+  /** Matching quantified formulas registered to the ieval to their original */
+  std::map<Node, Node> d_quantMap;
   /** The pattern */
   Node d_pattern;
   /** The operator */

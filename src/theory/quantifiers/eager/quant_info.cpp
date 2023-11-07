@@ -18,6 +18,8 @@
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/quantifiers_registry.h"
 #include "theory/quantifiers/term_database_eager.h"
+#include "options/quantifiers_options.h"
+#include "smt/env.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -35,13 +37,48 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   Assert(q.getKind() == Kind::FORALL);
   Stats& s = d_tde.getStats();
   ++(s.d_nquant);
+  const Options& opts = d_tde.getEnv().getOptions();
   expr::TermCanonize& canon = d_tde.getTermCanon();
-  // select trigger
-  inst::PatternTermSelector pts(q, options::TriggerSelMode::MAX);
-  std::vector<Node> patTerms;
   std::map<Node, inst::TriggerTermInfo> tinfo;
-  Node bd = qr.getInstConstantBody(q);
-  pts.collect(bd, patTerms, tinfo);
+  inst::PatternTermSelector pts(q, options::TriggerSelMode::MAX);
+  // get the user patterns
+  std::vector<Node> userPatTerms;
+  options::UserPatMode pmode = opts.quantifiers.userPatternsQuant;
+  if (pmode != options::UserPatMode::IGNORE)
+  {
+    if (q.getNumChildren()==3)
+    {
+      for (const Node& p : q[2])
+      {
+        // only consider single triggers
+        if (p.getKind()==Kind::INST_PATTERN && p.getNumChildren()==1)
+        {
+          Node patu = pts.getIsUsableTrigger(p[0], q);
+          if (!patu.isNull())
+          {
+            userPatTerms.emplace_back(patu);
+          }
+        }
+      }
+    }
+  }
+  std::vector<Node> patTerms;
+  if (userPatTerms.empty() || (pmode != options::UserPatMode::TRUST && pmode != options::UserPatMode::STRICT))
+  {
+    // auto-infer the patterns
+    Node bd = qr.getInstConstantBody(q);
+    pts.collect(bd, patTerms, tinfo);
+  }
+  for (const Node& up : userPatTerms)
+  {
+    Node upc = qr.substituteBoundVariablesToInstConstants(up, q);
+    if (tinfo.find(upc)!=tinfo.end())
+    {
+      continue;
+    }
+    tinfo[upc].init(q, upc);
+    patTerms.emplace_back(upc);
+  }
   size_t nvars = q[0].getNumChildren();
   std::unordered_set<Node> processed;
   for (const Node& p : patTerms)
