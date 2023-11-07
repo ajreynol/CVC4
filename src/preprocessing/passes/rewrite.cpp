@@ -33,7 +33,8 @@ Rewrite::Rewrite(PreprocessingPassContext* preprocContext)
 PreprocessingPassResult Rewrite::applyInternal(
   AssertionPipeline* assertionsToPreprocess)
 {
-  for (unsigned i = 0; i < assertionsToPreprocess->size(); ++i) {
+  for (unsigned i = 0; i < assertionsToPreprocess->size(); ++i)
+  {
     assertionsToPreprocess->replace(i, rewrite((*assertionsToPreprocess)[i]));
   }
 

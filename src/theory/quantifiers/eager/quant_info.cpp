@@ -15,11 +15,11 @@
 
 #include "theory/quantifiers/eager/quant_info.h"
 
+#include "options/quantifiers_options.h"
+#include "smt/env.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/quantifiers_registry.h"
 #include "theory/quantifiers/term_database_eager.h"
-#include "options/quantifiers_options.h"
-#include "smt/env.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -46,12 +46,12 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   options::UserPatMode pmode = opts.quantifiers.userPatternsQuant;
   if (pmode != options::UserPatMode::IGNORE)
   {
-    if (q.getNumChildren()==3)
+    if (q.getNumChildren() == 3)
     {
       for (const Node& p : q[2])
       {
         // only consider single triggers
-        if (p.getKind()==Kind::INST_PATTERN && p.getNumChildren()==1)
+        if (p.getKind() == Kind::INST_PATTERN && p.getNumChildren() == 1)
         {
           Node patu = pts.getIsUsableTrigger(p[0], q);
           if (!patu.isNull())
@@ -63,7 +63,9 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
     }
   }
   std::vector<Node> patTerms;
-  if (userPatTerms.empty() || (pmode != options::UserPatMode::TRUST && pmode != options::UserPatMode::STRICT))
+  if (userPatTerms.empty()
+      || (pmode != options::UserPatMode::TRUST
+          && pmode != options::UserPatMode::STRICT))
   {
     // auto-infer the patterns
     Node bd = qr.getInstConstantBody(q);
@@ -72,7 +74,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   for (const Node& up : userPatTerms)
   {
     Node upc = qr.substituteBoundVariablesToInstConstants(up, q);
-    if (tinfo.find(upc)!=tinfo.end())
+    if (tinfo.find(upc) != tinfo.end())
     {
       continue;
     }

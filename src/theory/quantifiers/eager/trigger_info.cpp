@@ -52,7 +52,7 @@ void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist)
   Node qs = s.apply(q);
   // this should probably always hold, or else we have a duplicate trigger
   // for the same quantified formula.
-  if (d_quantMap.find(qs)==d_quantMap.end())
+  if (d_quantMap.find(qs) == d_quantMap.end())
   {
     d_ieval->watch(qs);
     d_quantMap[qs] = q;
