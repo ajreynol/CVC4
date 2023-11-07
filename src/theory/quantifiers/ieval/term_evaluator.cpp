@@ -19,6 +19,7 @@
 #include "theory/quantifiers/ieval/state.h"
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
+#include "theory/quantifiers/term_database_eager.h"
 
 using namespace cvc5::internal::kind;
 
@@ -411,7 +412,43 @@ TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
 TNode TermEvaluatorEntailedEager::partialEvaluateChildMatch(
     const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
 {
+  // same as non-eager case, but with eager term database
+  Assert(!p.d_mop.isNull());
+  if (!d_checkRelDom)
+  {
+    return d_null;
+  }
+  TNode n = p.d_pattern;
+  // scan the argument list of n to find occurrences of the child
+  for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
+  {
+    if (n[i] == child && !d_tdbe->inRelevantDomain(p.d_mop, i, val))
+    {
+      exp = child;
+      return s.getNone();
+    }
+  }
   return d_null;
+}
+
+TNode TermEvaluatorEntailedEager::evaluateMatch(
+    const State& s, PatTermInfo& p, const std::vector<TNode>& childValues)
+{
+  // same as non-eager case, but with eager term database
+  TNode ret;
+  // see if we are congruent to a term known by the eager term database
+  Node eval = d_tdbe->getCongruentTerm(p.d_mop, childValues);
+  if (!eval.isNull())
+  {
+    ret = d_qs.getRepresentative(eval);
+    // Note that ret may be an (unassigned, non-constant) Boolean. We do
+    // not turn this into "none" here yet.
+  }
+  else
+  {
+    ret = s.getNone();
+  }
+  return ret;
 }
 
 }  // namespace ieval

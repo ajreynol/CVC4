@@ -137,12 +137,16 @@ class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
                              TermDb& tdb);
 
  protected:
-  /** Is in relevant domain? */
+  /**  */
   TNode partialEvaluateChildMatch(const State& s,
                                   PatTermInfo& p,
                                   TNode child,
                                   TNode val,
                                   Node& exp) override;
+  /**  */
+  TNode evaluateMatch(const State& s,
+                              PatTermInfo& p,
+                              const std::vector<TNode>& childValues) override;
   /** Eager utility */
   TermDbEager* d_tdbe;
 };
