@@ -42,7 +42,8 @@ void FunInfo::addTerm(TermDbEager& tde, TNode t)
   {
     reps.emplace_back(qs.getRepresentative(tc));
   }
-  if (!d_trie.add(tde.getCdtAlloc(), reps, t))
+  // add and refactor the trie
+  if (!d_trie.add(tde.getCdtAlloc(), qs, reps, t))
   {
     // congruent
     return;
@@ -79,6 +80,7 @@ void FunInfo::setActive(TermDbEager& tde, bool active)
   d_active = active;
   if (active)
   {
+    // if activated, add terms now
     std::vector<TNode> next;
     d_terms.get(next);
     for (TNode n : next)

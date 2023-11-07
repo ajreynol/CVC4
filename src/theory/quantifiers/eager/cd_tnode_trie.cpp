@@ -38,6 +38,30 @@ void CDTNodeTrie::clear()
 }
 
 bool CDTNodeTrie::add(CDTNodeTrieAllocator* al,
+                      QuantifiersState& qs,
+                      const std::vector<TNode>& args,
+                      TNode t)
+{
+  size_t nargs = args.size();
+  // push using the iterator
+  CDTNodeTrieIterator itt(al, qs, this, nargs);
+  for (size_t i=0; i<nargs; i++)
+  {
+    if (!itt.push(args[i]))
+    {
+      // if we fail to push, we are a new sub-trie, add the rest directly
+      CDTNodeTrie* cur = itt.getCurrent();
+      for (size_t j=i; j<nargs; j++)
+      {
+        cur = cur->push_back(al, args[j]);
+      }
+      return cur->setData(al, t);
+    }
+  }
+  return itt.setData(t);
+}
+
+bool CDTNodeTrie::addSimple(CDTNodeTrieAllocator* al,
                       const std::vector<TNode>& args,
                       TNode t)
 {
@@ -78,6 +102,7 @@ bool CDTNodeTrie::setData(CDTNodeTrieAllocator* al, TNode t)
 
 CDTNodeTrie* CDTNodeTrie::push_back(CDTNodeTrieAllocator* al, TNode r)
 {
+  Assert (d_repMap.find(r)==d_repMap.end());
   // TODO: optimization, can fill in empty child that was disabled?
   // this would require being more careful since its internal data would be
   // stale
@@ -226,6 +251,22 @@ TNode CDTNodeTrieIterator::getCurrentData()
 {
   Assert(d_curData != nullptr && d_curData->hasData());
   return d_curData->getData();
+}
+
+CDTNodeTrie* CDTNodeTrieIterator::getCurrent()
+{
+  Assert (!d_stack.empty());
+  if (d_curData!=nullptr)
+  {
+    return d_curData;
+  }
+  return d_stack.back().d_active;
+}
+
+bool CDTNodeTrieIterator::setData(TNode n)
+{
+  Assert(d_curData != nullptr);
+  return d_curData->setData(d_alloc, n);
 }
 
 CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,

@@ -72,6 +72,10 @@ class TriggerInfo
   //======== eqc matching
   TNode d_eqc;
   eq::EqClassIterator d_eqi;
+  /** Active? */
+  //context::CDO<bool> d_active;
+  /** Wait list */
+  //WaitList d_terms;
 };
 
 }  // namespace eager
