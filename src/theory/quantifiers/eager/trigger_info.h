@@ -22,6 +22,7 @@
 #include "expr/node.h"
 #include "theory/quantifiers/ieval/inst_evaluator.h"
 #include "theory/uf/equality_engine.h"
+#include "theory/quantifiers/eager/util.h"
 
 namespace cvc5::internal {
 namespace theory {
