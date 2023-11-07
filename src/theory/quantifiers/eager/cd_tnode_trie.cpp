@@ -136,7 +136,7 @@ CDTNodeTrieIterator::CDTNodeTrieIterator(CDTNodeTrieAllocator* a,
                                          QuantifiersState& qs,
                                          CDTNodeTrie* cdtnt,
                                          size_t depth)
-    : d_alloc(a), d_qs(qs), d_depth(depth)
+    : d_alloc(a), d_qs(qs), d_curData(nullptr), d_depth(depth)
 {
   pushInternal(cdtnt);
 }
@@ -192,8 +192,8 @@ bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
   // if pushing to a leaf, set the data
   if (d_stack.size() == d_depth)
   {
-    Assert(!d_curData.isNull());
-    d_curData = cdtnt->getData();
+    Assert(d_curData==nullptr);
+    d_curData = cdtnt;
     return true;
   }
   // otherwise, compute the children
@@ -212,9 +212,9 @@ bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 void CDTNodeTrieIterator::pop()
 {
   // if at a leaf, undo the data
-  if (!d_curData.isNull())
+  if (d_curData!=nullptr)
   {
-    d_curData = d_null;
+    d_curData = nullptr;
     return;
   }
   // otherwise pop the stack
@@ -224,8 +224,8 @@ void CDTNodeTrieIterator::pop()
 
 TNode CDTNodeTrieIterator::getCurrentData()
 {
-  Assert(!d_curData.isNull());
-  return d_curData;
+  Assert(d_curData!=nullptr && d_curData->hasData());
+  return d_curData->getData();
 }
 
 CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,

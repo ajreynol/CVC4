@@ -133,7 +133,7 @@ class CDTNodeTrieIterator
     bool isFinished() const { return d_cit == d_curChildren.end(); }
   };
   std::vector<StackFrame> d_stack;
-  TNode d_curData;
+  CDTNodeTrie* d_curData;
   size_t d_depth;
   Node d_null;
   bool pushInternal(CDTNodeTrie* cdtnt);

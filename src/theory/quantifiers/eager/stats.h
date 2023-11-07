@@ -35,6 +35,9 @@ class Stats
  public:
   Stats(StatisticsRegistry& sr);
   IntStat d_ntriggers;
+  IntStat d_ntriggersUnique;
+  IntStat d_nquant;
+  IntStat d_nquantNoTrigger;
 };
 
 }  // namespace eager

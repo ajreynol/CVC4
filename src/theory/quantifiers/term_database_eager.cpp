@@ -42,12 +42,7 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   if (!f.isNull())
   {
     eager::FunInfo& finfo = getFunInfo(f);
-    std::vector<TNode> reps;
-    for (TNode tc : t)
-    {
-      reps.emplace_back(d_qs.getRepresentative(tc));
-    }
-    finfo.addTerm(*this, t, reps);
+    finfo.addTerm(*this, t);
   }
 }
 
@@ -90,6 +85,7 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     it->second.initialize(t, f);
     // add to triggers for the function
     Assert(!f.isNull());
+    ++(d_stats.d_ntriggersUnique);
     eager::FunInfo& finfo = getFunInfo(f);
     finfo.d_triggers.emplace_back(&it->second);
   }

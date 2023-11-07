@@ -32,6 +32,8 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
                            const Node& q)
 {
   Assert(q.getKind() == Kind::FORALL);
+  Stats& s = tde.getStats();
+  ++(s.d_nquant);
   expr::TermCanonize& canon = tde.getTermCanon();
   inst::PatternTermSelector pts(q, options::TriggerSelMode::MAX);
   std::vector<Node> patTerms;
@@ -69,6 +71,11 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
     }
     ti->watch(q, vlist);
     d_triggers.emplace_back(ti);
+    ++(s.d_ntriggers);
+  }
+  if (d_triggers.empty())
+  {
+    ++(s.d_nquantNoTrigger);
   }
 }
 
