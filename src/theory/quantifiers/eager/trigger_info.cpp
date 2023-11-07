@@ -31,7 +31,10 @@ TriggerInfo::TriggerInfo(TermDbEager& tde)
 {
 }
 
-void TriggerInfo::watch(const Node& q) {}
+void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist)
+{
+
+}
 
 void TriggerInfo::initialize(const Node& t, const Node& f)
 {
@@ -72,9 +75,9 @@ bool TriggerInfo::doMatching(TNode t)
   if (ret)
   {
     // TODO: add instantiation(s)
+    // cleanup the assignment
+    d_ieval->pop(npush);
   }
-  // cleanup the assignment
-  d_ieval->pop(npush);
   return ret;
 }
 
@@ -101,6 +104,7 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie,
       // if already assigned, must be equal
       if (!qs.areEqual(vv, t[v]))
       {
+        ie->pop(npush);
         return false;
       }
     }
@@ -109,6 +113,7 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie,
       // if infeasible to push, we are done
       if (!ie->push(d_pattern[v], t[v]))
       {
+        ie->pop(npush);
         return false;
       }
       // increment the number of pushes
@@ -124,6 +129,7 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie,
     bool isActive = false;
     if (!d_children[o]->initMatchingEqc(tor, isActive))
     {
+      ie->pop(npush);
       return false;
     }
     if (isActive)
@@ -143,6 +149,7 @@ bool TriggerInfo::doMatchingInternal(ieval::InstEvaluator* ie,
       if (pushStack.empty())
       {
         // finished
+        ie->pop(npush);
         return false;
       }
       // pop the variables assigned last

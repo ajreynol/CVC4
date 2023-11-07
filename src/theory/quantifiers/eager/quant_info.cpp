@@ -15,6 +15,7 @@
 
 #include "theory/quantifiers/eager/quant_info.h"
 
+#include "theory/quantifiers/term_database_eager.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/quantifiers_registry.h"
 
@@ -31,12 +32,14 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
                            const Node& q)
 {
   Assert(q.getKind() == Kind::FORALL);
+  expr::TermCanonize& canon = tde.getTermCanon();
   inst::PatternTermSelector pts(q, options::TriggerSelMode::MAX);
   std::vector<Node> patTerms;
   std::map<Node, inst::TriggerTermInfo> tinfo;
   Node bd = qr.getInstConstantBody(q);
   pts.collect(bd, patTerms, tinfo);
   size_t nvars = q[0].getNumChildren();
+  std::unordered_set<Node> processed;
   for (const Node& p : patTerms)
   {
     inst::TriggerTermInfo& tip = tinfo[p];
@@ -45,8 +48,27 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
     {
       continue;
     }
-    // convert back
+    if (processed.find(p)!=processed.end())
+    {
+      // in rare cases there may be a repeated pattern??
+      continue;
+    }
+    processed.insert(p);
+    // convert back to bound variables
     Node t = qr.substituteInstConstantsToBoundVariables(p, q);
+    // now, canonize
+    std::map<TNode, Node> visited;
+    Node tc = canon.getCanonicalTerm(t, visited);
+    eager::TriggerInfo* ti = tde.getTriggerInfo(tc);
+    // get the variable list that we canonized to
+    std::vector<Node> vlist;
+    for (const Node& v : q[0])
+    {
+      Assert (visited.find(v)!=visited.end());
+      vlist.emplace_back(visited[v]);
+    }
+    ti->watch(q, vlist);
+    d_triggers.emplace_back(ti);
   }
 }
 

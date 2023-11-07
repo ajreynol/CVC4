@@ -25,6 +25,7 @@
 #include "smt/env_obj.h"
 #include "theory/quantifiers/eager/fun_info.h"
 #include "theory/quantifiers/eager/quant_info.h"
+#include "theory/quantifiers/eager/stats.h"
 #include "theory/quantifiers/eager/trigger_info.h"
 
 namespace cvc5::internal {
@@ -64,6 +65,8 @@ class TermDbEager : protected EnvObj
 
   //==========
   TermDb& getTermDb() { return d_tdb; }
+  expr::TermCanonize& getTermCanon() { return d_tcanon; }
+  eager::Stats& getStats() { return d_stats; }
   QuantifiersState& getState() { return d_qs; }
   CDTNodeTrieAllocator* getCdtAlloc() { return &d_cdalloc; }
 
@@ -82,6 +85,8 @@ class TermDbEager : protected EnvObj
   std::map<TNode, eager::QuantInfo> d_qinfo;
   /** Term canonizer */
   expr::TermCanonize d_tcanon;
+  /** Stats */
+  eager::Stats d_stats;
 };
 
 }  // namespace quantifiers

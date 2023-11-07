@@ -38,7 +38,7 @@ class TriggerInfo
   /** Initialize */
   void initialize(const Node& t, const Node& f);
   /** */
-  void watch(const Node& q);
+  void watch(const Node& q, const std::vector<Node>& vlist);
 
   bool doMatching(TNode t);
 

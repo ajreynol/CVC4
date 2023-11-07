@@ -26,7 +26,7 @@ TermDbEager::TermDbEager(Env& env,
                          QuantifiersState& qs,
                          QuantifiersRegistry& qr,
                          TermDb& tdb)
-    : EnvObj(env), d_qs(qs), d_qreg(qr), d_tdb(tdb), d_cdalloc(context())
+    : EnvObj(env), d_qs(qs), d_qreg(qr), d_tdb(tdb), d_cdalloc(context()), d_stats(statisticsRegistry())
 {
 }
 

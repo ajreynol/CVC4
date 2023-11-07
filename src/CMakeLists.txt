@@ -787,6 +787,8 @@ libcvc5_add_sources(
   theory/quantifiers/eager/fun_info.h
   theory/quantifiers/eager/quant_info.cpp
   theory/quantifiers/eager/quant_info.h
+  theory/quantifiers/eager/stats.cpp
+  theory/quantifiers/eager/stats.h
   theory/quantifiers/eager/trigger_info.cpp
   theory/quantifiers/eager/trigger_info.h
   theory/quantifiers/ematching/candidate_generator.cpp
