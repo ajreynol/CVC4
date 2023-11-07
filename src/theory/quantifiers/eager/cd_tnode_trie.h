@@ -59,9 +59,14 @@ class CDTNodeTrie
   context::CDO<size_t> d_toMergeProcessed;
   /** clear */
   void clear();
-  bool add(CDTNodeTrieAllocator* al, QuantifiersState& qs, const std::vector<TNode>& args, TNode t);
+  bool add(CDTNodeTrieAllocator* al,
+           QuantifiersState& qs,
+           const std::vector<TNode>& args,
+           TNode t);
   /** Adds term without cleaning */
-  bool addSimple(CDTNodeTrieAllocator* al, const std::vector<TNode>& args, TNode t);
+  bool addSimple(CDTNodeTrieAllocator* al,
+                 const std::vector<TNode>& args,
+                 TNode t);
   /** For leaf nodes : does this node have data? */
   bool hasData() const { return !d_repMap.empty(); }
   /** Set data, return true if we set */

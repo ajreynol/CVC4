@@ -37,7 +37,7 @@ class TriggerInfo;
 
 class RelDomInfo
 {
-public:
+ public:
   RelDomInfo(context::Context* c);
   /** The domain */
   context::CDHashSet<Node> d_dom;
@@ -67,7 +67,8 @@ class FunInfo
   context::CDO<bool> d_active;
   /** Wait list */
   WaitList d_terms;
-private:
+
+ private:
   TermDbEager& d_tde;
   /** */
   std::vector<RelDomInfo> d_rinfo;

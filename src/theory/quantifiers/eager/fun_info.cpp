@@ -27,7 +27,7 @@ namespace eager {
 RelDomInfo::RelDomInfo(context::Context* c) : d_dom(c) {}
 bool RelDomInfo::hasTerm(QuantifiersState& qs, TNode r)
 {
-  if (d_dom.find(r)!=d_dom.end())
+  if (d_dom.find(r) != d_dom.end())
   {
     return true;
   }
@@ -36,7 +36,11 @@ bool RelDomInfo::hasTerm(QuantifiersState& qs, TNode r)
 }
 
 FunInfo::FunInfo(TermDbEager& tde)
-    : d_trie(tde.getSatContext()), d_count(tde.getSatContext(), 0), d_active(tde.getSatContext(), false), d_terms(tde.getSatContext()), d_tde(tde)
+    : d_trie(tde.getSatContext()),
+      d_count(tde.getSatContext(), 0),
+      d_active(tde.getSatContext(), false),
+      d_terms(tde.getSatContext()),
+      d_tde(tde)
 {
   // initialize the relevant domain
 }
@@ -78,14 +82,14 @@ void FunInfo::addTerm(TNode t)
 
 void FunInfo::addRelevantDomain(size_t i, TNode r)
 {
-  Assert (i<d_rinfo.size());
+  Assert(i < d_rinfo.size());
   d_rinfo[i].d_dom.insert(r);
 }
 
-bool FunInfo::inRelevantDomain(size_t i, TNode r) 
-{ 
-  Assert (i<d_rinfo.size());
-  return d_rinfo[i].hasTerm(d_tde.getState(), r); 
+bool FunInfo::inRelevantDomain(size_t i, TNode r)
+{
+  Assert(i < d_rinfo.size());
+  return d_rinfo[i].hasTerm(d_tde.getState(), r);
 }
 
 void FunInfo::setActive(bool active)

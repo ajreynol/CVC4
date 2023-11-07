@@ -20,9 +20,9 @@
 
 #include "context/cdo.h"
 #include "expr/node.h"
+#include "theory/quantifiers/eager/util.h"
 #include "theory/quantifiers/ieval/inst_evaluator.h"
 #include "theory/uf/equality_engine.h"
-#include "theory/quantifiers/eager/util.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -73,9 +73,9 @@ class TriggerInfo
   TNode d_eqc;
   eq::EqClassIterator d_eqi;
   /** Active? */
-  //context::CDO<bool> d_active;
+  // context::CDO<bool> d_active;
   /** Wait list */
-  //WaitList d_terms;
+  // WaitList d_terms;
 };
 
 }  // namespace eager
