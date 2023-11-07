@@ -73,7 +73,7 @@ class TermDbEager : protected EnvObj
   context::Context* getSatContext() { return context(); }
 
   /** Add instantiation */
-  //void addInstantiation();
+  // void addInstantiation();
  private:
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   Node d_null;
