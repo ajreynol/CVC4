@@ -16,15 +16,18 @@
 #include "theory/quantifiers/eager/fun_info.h"
 
 #include "theory/quantifiers/eager/trigger_info.h"
-#include "theory/quantifiers/term_database_eager.h"
 #include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_database_eager.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 namespace eager {
 
-FunInfo::FunInfo(context::Context* c) : d_trie(c), d_count(c, 0), d_active(c, false), d_terms(c) {}
+FunInfo::FunInfo(context::Context* c)
+    : d_trie(c), d_count(c, 0), d_active(c, false), d_terms(c)
+{
+}
 
 void FunInfo::addTerm(TermDbEager& tde, TNode t)
 {
@@ -34,11 +37,11 @@ void FunInfo::addTerm(TermDbEager& tde, TNode t)
     return;
   }
   QuantifiersState& qs = tde.getState();
-    std::vector<TNode> reps;
-    for (TNode tc : t)
-    {
-        reps.emplace_back(qs.getRepresentative(tc));
-    }
+  std::vector<TNode> reps;
+  for (TNode tc : t)
+  {
+    reps.emplace_back(qs.getRepresentative(tc));
+  }
   if (!d_trie.add(tde.getCdtAlloc(), reps, t))
   {
     // congruent
@@ -69,20 +72,20 @@ bool FunInfo::inRelevantDomain(size_t i, TNode r) const { return false; }
 
 void FunInfo::setActive(TermDbEager& tde, bool active)
 {
-if (d_active.get()==active)
-{
+  if (d_active.get() == active)
+  {
     return;
-}
-d_active = active;
-    if (active)
+  }
+  d_active = active;
+  if (active)
+  {
+    std::vector<TNode> next;
+    d_terms.get(next);
+    for (TNode n : next)
     {
-        std::vector<TNode> next;
-        d_terms.get(next);
-        for (TNode n : next)
-        {
-            addTerm(tde, n);
-        }
+      addTerm(tde, n);
     }
+  }
 }
 
 }  // namespace eager

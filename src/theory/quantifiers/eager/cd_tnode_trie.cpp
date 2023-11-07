@@ -192,7 +192,7 @@ bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
   // if pushing to a leaf, set the data
   if (d_stack.size() == d_depth)
   {
-    Assert(d_curData==nullptr);
+    Assert(d_curData == nullptr);
     d_curData = cdtnt;
     return true;
   }
@@ -212,7 +212,7 @@ bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 void CDTNodeTrieIterator::pop()
 {
   // if at a leaf, undo the data
-  if (d_curData!=nullptr)
+  if (d_curData != nullptr)
   {
     d_curData = nullptr;
     return;
@@ -224,7 +224,7 @@ void CDTNodeTrieIterator::pop()
 
 TNode CDTNodeTrieIterator::getCurrentData()
 {
-  Assert(d_curData!=nullptr && d_curData->hasData());
+  Assert(d_curData != nullptr && d_curData->hasData());
   return d_curData->getData();
 }
 

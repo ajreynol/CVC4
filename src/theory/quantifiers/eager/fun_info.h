@@ -36,12 +36,12 @@ class TriggerInfo;
 
 class WaitList
 {
-public:
+ public:
   WaitList(context::Context* c) : d_list(c), d_index(c, 0) {}
   void push_back(TNode n) { d_list.push_back(n); }
   TNode getNext()
   {
-    if (d_index.get()<d_list.size())
+    if (d_index.get() < d_list.size())
     {
       TNode ret = d_list[d_index.get()];
       d_index = d_index + 1;
@@ -52,10 +52,10 @@ public:
   void get(std::vector<TNode>& next)
   {
     size_t size = d_list.size();
-    size_t i=d_index.get();
-    if (i<size)
+    size_t i = d_index.get();
+    if (i < size)
     {
-      for (; i<size; i++)
+      for (; i < size; i++)
       {
         next.emplace_back(d_list[i]);
       }
