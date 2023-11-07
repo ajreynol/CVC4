@@ -48,7 +48,7 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   if (!f.isNull())
   {
     eager::FunInfo* finfo = getFunInfo(f);
-    if (finfo==nullptr)
+    if (finfo == nullptr)
     {
       finfo = getOrMkFunInfo(f, t.getNumChildren());
     }
@@ -61,7 +61,7 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {}
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
 {
   eager::FunInfo* finfo = getFunInfo(f);
-  if (finfo==nullptr)
+  if (finfo == nullptr)
   {
     return false;
   }
@@ -71,7 +71,7 @@ bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
 TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
 {
   eager::FunInfo* finfo = getFunInfo(f);
-  if (finfo==nullptr)
+  if (finfo == nullptr)
   {
     return d_null;
   }

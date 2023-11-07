@@ -145,8 +145,8 @@ class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
                                   Node& exp) override;
   /**  */
   TNode evaluateMatch(const State& s,
-                              PatTermInfo& p,
-                              const std::vector<TNode>& childValues) override;
+                      PatTermInfo& p,
+                      const std::vector<TNode>& childValues) override;
   /** Eager utility */
   TermDbEager* d_tdbe;
 };

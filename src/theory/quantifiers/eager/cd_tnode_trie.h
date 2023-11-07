@@ -115,7 +115,7 @@ class CDTNodeTrieIterator
                       QuantifiersState& qs,
                       CDTNodeTrie* cdtnt,
                       size_t depth);
-  /** 
+  /**
    * Get the next child in the iteration and push it.
    * Returns the term that was pushed if successful or the null node otherwise.
    */
@@ -132,6 +132,7 @@ class CDTNodeTrieIterator
   bool setData(TNode n);
   /** Get level */
   size_t getLevel() const { return d_stack.size(); }
+
  private:
   /** Pointer to the allocator */
   CDTNodeTrieAllocator* d_alloc;
@@ -157,7 +158,7 @@ class CDTNodeTrieIterator
   size_t d_depth;
   /** The null node */
   Node d_null;
-  /** 
+  /**
    * Push the iteration to the given node, which should be a child of the
    * current active node (d_stack.back().d_active). Return true if we
    * successfully pushed.

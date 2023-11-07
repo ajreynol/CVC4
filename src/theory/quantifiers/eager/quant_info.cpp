@@ -25,10 +25,12 @@ namespace quantifiers {
 
 namespace eager {
 
-QuantInfo::QuantInfo(TermDbEager& tde) : d_tde(tde), d_status(tde.getSatContext()) {}
+QuantInfo::QuantInfo(TermDbEager& tde)
+    : d_tde(tde), d_status(tde.getSatContext())
+{
+}
 
-void QuantInfo::initialize(QuantifiersRegistry& qr,
-                           const Node& q)
+void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
 {
   Assert(q.getKind() == Kind::FORALL);
   Stats& s = d_tde.getStats();
@@ -80,10 +82,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   }
 }
 
-void QuantInfo::notifyAsserted()
-{
-  
-}
+void QuantInfo::notifyAsserted() {}
 
 }  // namespace eager
 }  // namespace quantifiers

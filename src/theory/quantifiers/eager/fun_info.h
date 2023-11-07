@@ -65,6 +65,7 @@ class FunInfo
   context::CDO<size_t> d_count;
   /** Triggers with this as top symbol */
   std::vector<TriggerInfo*> d_triggers;
+
  private:
   /** Reference to the eager term database */
   TermDbEager& d_tde;

@@ -47,7 +47,7 @@ FunInfo::FunInfo(TermDbEager& tde)
 void FunInfo::initialize(TNode f, size_t nchild)
 {
   // initialize the relevant domain
-  for (size_t i=0; i<nchild; i++)
+  for (size_t i = 0; i < nchild; i++)
   {
     d_rinfo.emplace_back(new RelDomInfo(d_tde.getSatContext()));
   }

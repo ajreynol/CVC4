@@ -39,6 +39,7 @@ class QuantInfo
   void initialize(QuantifiersRegistry& qr, const Node& q);
   /** Set that we are asserted */
   void notifyAsserted();
+
  private:
   enum class TriggerStatus
   {
