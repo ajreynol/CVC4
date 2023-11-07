@@ -59,6 +59,10 @@ class CDTNodeTrie
   context::CDO<size_t> d_toMergeProcessed;
   /** clear */
   void clear();
+  /**
+   * Adds a term, possibly refactoring this trie.
+   * Returns true if t was added to the trie, false otherwise.
+   */
   bool add(CDTNodeTrieAllocator* al,
            QuantifiersState& qs,
            const std::vector<TNode>& args,
@@ -69,13 +73,13 @@ class CDTNodeTrie
                  TNode t);
   /** For leaf nodes : does this node have data? */
   bool hasData() const { return !d_repMap.empty(); }
-  /** Set data, return true if we set */
+  /** Set data, return true if sucessful, else t is marked congruent */
   bool setData(CDTNodeTrieAllocator* al, TNode t);
   /** For leaf nodes : get the node corresponding to this leaf. */
   TNode getData() const { return d_repMap.begin()->first; }
-  /** Push back */
+  /** Push an edge r and return the child */
   CDTNodeTrie* push_back(CDTNodeTrieAllocator* al, TNode r);
-  /** Add to merge */
+  /** Mark that t should be merged into this trie. */
   void addToMerge(CDTNodeTrieAllocator* al, CDTNodeTrie* t, bool isChildLeaf);
 };
 
@@ -111,22 +115,25 @@ class CDTNodeTrieIterator
                       QuantifiersState& qs,
                       CDTNodeTrie* cdtnt,
                       size_t depth);
-  /** Get the next child in this trie and push it */
+  /** 
+   * Get the next child in the iteration and push it.
+   * Returns the term that was pushed if successful or the null node otherwise.
+   */
   TNode pushNextChild();
-  /** Push the child r */
+  /** Push the child r. Returns true if successul. */
   bool push(TNode r);
   /** Pop the last push */
   void pop();
-  /** Get the term at the current leaf */
+  /** Get the data at the leaf we are at */
   TNode getCurrentData();
-  /** Get the current trie we are at */
+  /** Get the leaf we are at */
   CDTNodeTrie* getCurrent();
-  /** Set the data */
+  /** Set the data of the current leaf */
   bool setData(TNode n);
   /** Get level */
   size_t getLevel() const { return d_stack.size(); }
-
  private:
+  /** Pointer to the allocator */
   CDTNodeTrieAllocator* d_alloc;
   QuantifiersState& d_qs;
   class StackFrame
@@ -142,10 +149,19 @@ class CDTNodeTrieIterator
     std::unordered_set<TNode> d_pushed;
     bool isFinished() const { return d_cit == d_curChildren.end(); }
   };
+  /** The iteration stack */
   std::vector<StackFrame> d_stack;
+  /** The leaf we iterated to */
   CDTNodeTrie* d_curData;
+  /** The overall depth we are iterating to */
   size_t d_depth;
+  /** The null node */
   Node d_null;
+  /** 
+   * Push the iteration to the given node, which should be a child of the
+   * current active node (d_stack.back().d_active). Return true if we
+   * successfully pushed.
+   */
   bool pushInternal(CDTNodeTrie* cdtnt);
 };
 

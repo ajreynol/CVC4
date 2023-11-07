@@ -49,6 +49,8 @@ void FunInfo::addTerm(TNode t)
 {
   if (!d_active.get())
   {
+    // If we are not active, then ignore for now.
+    // This is the case if there are no non-ground terms for this function.
     d_terms.push_back(t);
     return;
   }
