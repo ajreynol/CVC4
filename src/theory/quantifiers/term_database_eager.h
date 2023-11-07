@@ -61,7 +61,7 @@ class TermDbEager : protected EnvObj
   /** Get quant info */
   eager::QuantInfo& getQuantInfo(TNode q);
   /** Get fun info */
-  eager::FunInfo& getFunInfo(TNode f);
+  eager::FunInfo* getFunInfo(TNode f);
 
   //==========
   TermDb& getTermDb() { return d_tdb; }
@@ -69,6 +69,7 @@ class TermDbEager : protected EnvObj
   eager::Stats& getStats() { return d_stats; }
   QuantifiersState& getState() { return d_qs; }
   CDTNodeTrieAllocator* getCdtAlloc() { return &d_cdalloc; }
+  context::Context* getSatContext() { return context(); }
 
  private:
   Node d_null;

@@ -41,8 +41,8 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   TNode f = d_tdb.getMatchOperator(t);
   if (!f.isNull())
   {
-    eager::FunInfo& finfo = getFunInfo(f);
-    finfo.addTerm(*this, t);
+    eager::FunInfo* finfo = getFunInfo(f);
+    finfo->addTerm(t);
   }
 }
 
@@ -50,19 +50,20 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {}
 
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
 {
-  eager::FunInfo& finfo = getFunInfo(f);
-  return finfo.inRelevantDomain(i, r);
+  eager::FunInfo* finfo = getFunInfo(f);
+  return finfo->inRelevantDomain(i, r);
 }
 
 TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
 {
-  eager::FunInfo& finfo = getFunInfo(f);
-  // add
-  CDTNodeTrieIterator itt(&d_cdalloc, d_qs, &finfo.d_trie, args.size());
+  eager::FunInfo* finfo = getFunInfo(f);
+  // add using the iterator
+  CDTNodeTrieIterator itt(&d_cdalloc, d_qs, &finfo->d_trie, args.size());
   for (TNode a : args)
   {
     if (!itt.push(a))
     {
+      // failed
       return d_null;
     }
   }
@@ -86,22 +87,22 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     // add to triggers for the function
     Assert(!f.isNull());
     ++(d_stats.d_ntriggersUnique);
-    eager::FunInfo& finfo = getFunInfo(f);
-    finfo.d_triggers.emplace_back(&it->second);
+    eager::FunInfo* finfo = getFunInfo(f);
+    finfo->d_triggers.emplace_back(&it->second);
   }
   return &it->second;
 }
 
-eager::FunInfo& TermDbEager::getFunInfo(TNode f)
+eager::FunInfo* TermDbEager::getFunInfo(TNode f)
 {
   Assert(!f.isNull());
   std::map<TNode, eager::FunInfo>::iterator it = d_finfo.find(f);
   if (it == d_finfo.end())
   {
-    d_finfo.emplace(f, context());
+    d_finfo.emplace(f, *this);
     it = d_finfo.find(f);
   }
-  return it->second;
+  return &it->second;
 }
 
 eager::QuantInfo& TermDbEager::getQuantInfo(TNode q)

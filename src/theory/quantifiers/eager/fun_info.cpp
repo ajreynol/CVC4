@@ -24,26 +24,38 @@ namespace theory {
 namespace quantifiers {
 namespace eager {
 
-FunInfo::FunInfo(context::Context* c)
-    : d_trie(c), d_count(c, 0), d_active(c, false), d_terms(c)
+RelDomInfo::RelDomInfo(context::Context* c) : d_dom(c) {}
+bool RelDomInfo::hasTerm(QuantifiersState& qs, TNode r)
 {
+  if (d_dom.find(r)!=d_dom.end())
+  {
+    return true;
+  }
+  // TODO: check if any have become equal?
+  return false;
 }
 
-void FunInfo::addTerm(TermDbEager& tde, TNode t)
+FunInfo::FunInfo(TermDbEager& tde)
+    : d_trie(tde.getSatContext()), d_count(tde.getSatContext(), 0), d_active(tde.getSatContext(), false), d_terms(tde.getSatContext()), d_tde(tde)
+{
+  // initialize the relevant domain
+}
+
+void FunInfo::addTerm(TNode t)
 {
   if (!d_active.get())
   {
     d_terms.push_back(t);
     return;
   }
-  QuantifiersState& qs = tde.getState();
+  QuantifiersState& qs = d_tde.getState();
   std::vector<TNode> reps;
   for (TNode tc : t)
   {
     reps.emplace_back(qs.getRepresentative(tc));
   }
   // add and refactor the trie
-  if (!d_trie.add(tde.getCdtAlloc(), qs, reps, t))
+  if (!d_trie.add(d_tde.getCdtAlloc(), qs, reps, t))
   {
     // congruent
     return;
@@ -66,12 +78,17 @@ void FunInfo::addTerm(TermDbEager& tde, TNode t)
 
 void FunInfo::addRelevantDomain(size_t i, TNode r)
 {
-  // TODO
+  Assert (i<d_rinfo.size());
+  d_rinfo[i].d_dom.insert(r);
 }
 
-bool FunInfo::inRelevantDomain(size_t i, TNode r) const { return false; }
+bool FunInfo::inRelevantDomain(size_t i, TNode r) 
+{ 
+  Assert (i<d_rinfo.size());
+  return d_rinfo[i].hasTerm(d_tde.getState(), r); 
+}
 
-void FunInfo::setActive(TermDbEager& tde, bool active)
+void FunInfo::setActive(bool active)
 {
   if (d_active.get() == active)
   {
@@ -85,7 +102,7 @@ void FunInfo::setActive(TermDbEager& tde, bool active)
     d_terms.get(next);
     for (TNode n : next)
     {
-      addTerm(tde, n);
+      addTerm(n);
     }
   }
 }

@@ -35,28 +35,42 @@ namespace eager {
 
 class TriggerInfo;
 
+class RelDomInfo
+{
+public:
+  RelDomInfo(context::Context* c);
+  /** The domain */
+  context::CDHashSet<Node> d_dom;
+  /** Has term? */
+  bool hasTerm(QuantifiersState& qs, TNode r);
+};
+
 class FunInfo
 {
  public:
-  FunInfo(context::Context* c);
+  FunInfo(TermDbEager& tde);
   /** Add term */
-  void addTerm(TermDbEager& tde, TNode t);
+  void addTerm(TNode t);
   /** Add relevant domain */
   void addRelevantDomain(size_t i, TNode r);
   /** Is in relevant domain */
-  bool inRelevantDomain(size_t i, TNode r) const;
+  bool inRelevantDomain(size_t i, TNode r);
   /** Activate */
-  void setActive(TermDbEager& tde, bool active);
+  void setActive(bool active);
   /** All terms */
   CDTNodeTrie d_trie;
   /** Number of terms for this function */
   context::CDO<size_t> d_count;
-  /** Triggers with top symbol */
+  /** Triggers with this as top symbol */
   std::vector<TriggerInfo*> d_triggers;
   /** Active? */
   context::CDO<bool> d_active;
   /** Wait list */
   WaitList d_terms;
+private:
+  TermDbEager& d_tde;
+  /** */
+  std::vector<RelDomInfo> d_rinfo;
 };
 
 }  // namespace eager

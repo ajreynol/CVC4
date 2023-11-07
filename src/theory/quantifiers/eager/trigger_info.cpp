@@ -221,7 +221,7 @@ bool TriggerInfo::doMatchingAll()
 {
   QuantifiersState& qs = d_tde.getState();
   // now traverse the term index
-  FunInfo& finfo = d_tde.getFunInfo(d_op);
+  FunInfo* finfo = d_tde.getFunInfo(d_op);
   if (!d_isAllGargs)
   {
     // all ground terms must exist
@@ -236,7 +236,7 @@ bool TriggerInfo::doMatchingAll()
     // note this could be context-depedendent but probably not worthwhile?
     d_isAllGargs = true;
   }
-  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, &finfo.d_trie, d_arity);
+  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, &finfo->d_trie, d_arity);
   size_t level = 1;
   std::map<size_t, bool> binding;
   std::map<size_t, bool>::iterator itb;
