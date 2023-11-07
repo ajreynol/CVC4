@@ -64,6 +64,7 @@ class TermDbEager : protected EnvObj
   eager::FunInfo* getFunInfo(TNode f);
 
   //==========
+  Env& getEnv() { return d_env; }
   TermDb& getTermDb() { return d_tdb; }
   expr::TermCanonize& getTermCanon() { return d_tcanon; }
   eager::Stats& getStats() { return d_stats; }
@@ -71,6 +72,8 @@ class TermDbEager : protected EnvObj
   CDTNodeTrieAllocator* getCdtAlloc() { return &d_cdalloc; }
   context::Context* getSatContext() { return context(); }
 
+  /** Add instantiation */
+  //void addInstantiation();
  private:
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   Node d_null;

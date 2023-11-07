@@ -20,6 +20,7 @@
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_database_eager.h"
+#include "expr/subs.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -31,7 +32,23 @@ TriggerInfo::TriggerInfo(TermDbEager& tde)
 {
 }
 
-void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist) {}
+void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist)
+{
+  if (d_ieval==nullptr)
+  {
+    // initialize the evaluator
+    d_ieval.reset(new ieval::InstEvaluator(d_tde.getEnv(), d_tde.getState(), d_tde.getTermDb(), ieval::TermEvaluatorMode::PROP));
+  }
+  Assert (q.getKind()==Kind::FORALL);
+  Assert (vlist.size()==q[0].getNumChildren());
+  Subs s;
+  for (size_t i=0, nvars=vlist.size(); i<nvars; i++)
+  {
+    s.add(q[0][i], vlist[i]);
+  }
+  Node qs = s.apply(q);
+  d_ieval->watch(qs);
+}
 
 void TriggerInfo::initialize(const Node& t, const Node& f)
 {
