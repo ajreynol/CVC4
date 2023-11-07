@@ -38,11 +38,19 @@ bool RelDomInfo::hasTerm(QuantifiersState& qs, TNode r)
 FunInfo::FunInfo(TermDbEager& tde)
     : d_trie(tde.getSatContext()),
       d_count(tde.getSatContext(), 0),
+      d_tde(tde),
       d_active(tde.getSatContext(), false),
-      d_terms(tde.getSatContext()),
-      d_tde(tde)
+      d_terms(tde.getSatContext())
+{
+}
+
+void FunInfo::initialize(TNode f, size_t nchild)
 {
   // initialize the relevant domain
+  for (size_t i=0; i<nchild; i++)
+  {
+    d_rinfo.emplace_back(new RelDomInfo(d_tde.getSatContext()));
+  }
 }
 
 void FunInfo::addTerm(TNode t)
@@ -85,13 +93,13 @@ void FunInfo::addTerm(TNode t)
 void FunInfo::addRelevantDomain(size_t i, TNode r)
 {
   Assert(i < d_rinfo.size());
-  d_rinfo[i].d_dom.insert(r);
+  d_rinfo[i]->d_dom.insert(r);
 }
 
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
   Assert(i < d_rinfo.size());
-  return d_rinfo[i].hasTerm(d_tde.getState(), r);
+  return d_rinfo[i]->hasTerm(d_tde.getState(), r);
 }
 
 void FunInfo::setActive(bool active)

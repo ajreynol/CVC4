@@ -25,16 +25,16 @@ namespace quantifiers {
 
 namespace eager {
 
-QuantInfo::QuantInfo(context::Context* c) {}
+QuantInfo::QuantInfo(TermDbEager& tde) : d_tde(tde), d_status(tde.getSatContext()) {}
 
 void QuantInfo::initialize(QuantifiersRegistry& qr,
-                           TermDbEager& tde,
                            const Node& q)
 {
   Assert(q.getKind() == Kind::FORALL);
-  Stats& s = tde.getStats();
+  Stats& s = d_tde.getStats();
   ++(s.d_nquant);
-  expr::TermCanonize& canon = tde.getTermCanon();
+  expr::TermCanonize& canon = d_tde.getTermCanon();
+  // select trigger
   inst::PatternTermSelector pts(q, options::TriggerSelMode::MAX);
   std::vector<Node> patTerms;
   std::map<Node, inst::TriggerTermInfo> tinfo;
@@ -61,7 +61,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
     // now, canonize
     std::map<TNode, Node> visited;
     Node tc = canon.getCanonicalTerm(t, visited);
-    eager::TriggerInfo* ti = tde.getTriggerInfo(tc);
+    eager::TriggerInfo* ti = d_tde.getTriggerInfo(tc);
     // get the variable list that we canonized to
     std::vector<Node> vlist;
     for (const Node& v : q[0])
@@ -70,6 +70,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
       vlist.emplace_back(visited[v]);
     }
     ti->watch(q, vlist);
+    d_status[d_triggers.size()] = TriggerStatus::INACTIVE;
     d_triggers.emplace_back(ti);
     ++(s.d_ntriggers);
   }
@@ -77,6 +78,11 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   {
     ++(s.d_nquantNoTrigger);
   }
+}
+
+void QuantInfo::notifyAsserted()
+{
+  
 }
 
 }  // namespace eager

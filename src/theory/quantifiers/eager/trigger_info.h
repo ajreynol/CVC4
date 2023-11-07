@@ -50,6 +50,7 @@ class TriggerInfo
   bool initMatchingEqc(TNode r, bool& isActive);
   bool doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush);
   bool doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& npush);
+  /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Are ground children */
   bool d_isAllGargs;

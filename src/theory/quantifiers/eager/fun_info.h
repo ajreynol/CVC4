@@ -49,6 +49,8 @@ class FunInfo
 {
  public:
   FunInfo(TermDbEager& tde);
+  /** Initialize */
+  void initialize(TNode f, size_t nchild);
   /** Add term */
   void addTerm(TNode t);
   /** Add relevant domain */
@@ -63,15 +65,15 @@ class FunInfo
   context::CDO<size_t> d_count;
   /** Triggers with this as top symbol */
   std::vector<TriggerInfo*> d_triggers;
+ private:
+  /** Reference to the eager term database */
+  TermDbEager& d_tde;
+  /** Relevant domain for the arguments of this function */
+  std::vector<std::unique_ptr<RelDomInfo>> d_rinfo;
   /** Active? */
   context::CDO<bool> d_active;
   /** Wait list */
   WaitList d_terms;
-
- private:
-  TermDbEager& d_tde;
-  /** */
-  std::vector<RelDomInfo> d_rinfo;
 };
 
 }  // namespace eager

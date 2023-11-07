@@ -35,6 +35,12 @@ TermDbEager::TermDbEager(Env& env,
 {
 }
 
+void TermDbEager::assertQuantifier(TNode q)
+{
+  eager::QuantInfo* qinfo = getQuantInfo(q);
+  qinfo->notifyAsserted();
+}
+
 void TermDbEager::eqNotifyNewClass(TNode t)
 {
   // add to the eager trie
@@ -42,6 +48,10 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   if (!f.isNull())
   {
     eager::FunInfo* finfo = getFunInfo(f);
+    if (finfo==nullptr)
+    {
+      finfo = getOrMkFunInfo(f, t.getNumChildren());
+    }
     finfo->addTerm(t);
   }
 }
@@ -51,12 +61,20 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {}
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
 {
   eager::FunInfo* finfo = getFunInfo(f);
+  if (finfo==nullptr)
+  {
+    return false;
+  }
   return finfo->inRelevantDomain(i, r);
 }
 
 TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
 {
   eager::FunInfo* finfo = getFunInfo(f);
+  if (finfo==nullptr)
+  {
+    return d_null;
+  }
   // add using the iterator
   CDTNodeTrieIterator itt(&d_cdalloc, d_qs, &finfo->d_trie, args.size());
   for (TNode a : args)
@@ -99,22 +117,34 @@ eager::FunInfo* TermDbEager::getFunInfo(TNode f)
   std::map<TNode, eager::FunInfo>::iterator it = d_finfo.find(f);
   if (it == d_finfo.end())
   {
-    d_finfo.emplace(f, *this);
-    it = d_finfo.find(f);
+    return nullptr;
   }
   return &it->second;
 }
 
-eager::QuantInfo& TermDbEager::getQuantInfo(TNode q)
+eager::FunInfo* TermDbEager::getOrMkFunInfo(TNode f, size_t nchild)
+{
+  Assert(!f.isNull());
+  std::map<TNode, eager::FunInfo>::iterator it = d_finfo.find(f);
+  if (it == d_finfo.end())
+  {
+    d_finfo.emplace(f, *this);
+    it = d_finfo.find(f);
+    it->second.initialize(f, nchild);
+  }
+  return &it->second;
+}
+
+eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
 {
   std::map<TNode, eager::QuantInfo>::iterator it = d_qinfo.find(q);
   if (it == d_qinfo.end())
   {
-    d_qinfo.emplace(q, context());
+    d_qinfo.emplace(q, *this);
     it = d_qinfo.find(q);
-    it->second.initialize(d_qreg, *this, q);
+    it->second.initialize(d_qreg, q);
   }
-  return it->second;
+  return &it->second;
 }
 
 }  // namespace quantifiers

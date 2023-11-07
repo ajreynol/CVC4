@@ -44,12 +44,12 @@ class TermDbEager : protected EnvObj
               QuantifiersState& qs,
               QuantifiersRegistry& qr,
               TermDb& tdb);
-
+  /** notification that a quantified formula was asserted */
+  void assertQuantifier(TNode q);
   /** notification when master equality engine is updated */
   void eqNotifyNewClass(TNode t);
   /** notification when master equality engine is updated */
   void eqNotifyMerge(TNode t1, TNode t2);
-
   /** Is in relevant domain? */
   bool inRelevantDomain(TNode f, size_t i, TNode r);
   /** Get congruent term */
@@ -59,7 +59,7 @@ class TermDbEager : protected EnvObj
   /** Get trigger info */
   eager::TriggerInfo* getTriggerInfo(const Node& t);
   /** Get quant info */
-  eager::QuantInfo& getQuantInfo(TNode q);
+  eager::QuantInfo* getQuantInfo(TNode q);
   /** Get fun info */
   eager::FunInfo* getFunInfo(TNode f);
 
@@ -72,6 +72,7 @@ class TermDbEager : protected EnvObj
   context::Context* getSatContext() { return context(); }
 
  private:
+  eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   Node d_null;
   QuantifiersState& d_qs;
   /** The quantifiers registry */

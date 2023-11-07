@@ -662,6 +662,10 @@ void QuantifiersEngine::assertQuantifier( Node f, bool pol ){
   }
   // add term to the registry
   d_treg.addTerm(d_qreg.getInstConstantBody(f), true);
+  if (d_tdbe != nullptr)
+  {
+    d_tdbe->assertQuantifier(f);
+  }
 }
 
 void QuantifiersEngine::eqNotifyNewClass(TNode t)

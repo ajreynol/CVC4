@@ -227,11 +227,10 @@ void TermDb::addTerm(Node n)
     DbList* dlt = getOrMkDbListForType(n.getType());
     dlt->d_list.push_back(n);
     // if this is an atomic trigger, consider adding it
-    if (inst::TriggerTermInfo::isAtomicTrigger(n))
+    Node op = getMatchOperator(n);
+    if (!op.isNull())
     {
       Trace("term-db") << "register term in db " << n << std::endl;
-
-      Node op = getMatchOperator(n);
       Trace("term-db-debug") << "  match operator is : " << op << std::endl;
       DbList* dlo = getOrMkDbListForOp(op);
       dlo->d_list.push_back(n);
