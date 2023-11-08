@@ -45,7 +45,7 @@ class TriggerInfo
   void initialize(const Node& t);
   /**
    * Notify this trigger that quantified formula q is using it, where vlist
-   * specifies the substitution. 
+   * specifies the substitution.
    */
   void watch(QuantInfo* qi, const std::vector<Node>& vlist);
 

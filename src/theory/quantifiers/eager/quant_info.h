@@ -43,9 +43,10 @@ class QuantInfo
   Node getQuant() const { return d_quant; }
   /** Is the quantified formula asserted? */
   bool isAsserted() const { return d_asserted.get(); }
+
  private:
-   /** The quantified formula */
-   Node d_quant;
+  /** The quantified formula */
+  Node d_quant;
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** List of triggers */

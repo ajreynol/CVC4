@@ -17,11 +17,11 @@
 
 #include "expr/node_algorithm.h"
 #include "expr/subs.h"
+#include "theory/quantifiers/eager/quant_info.h"
 #include "theory/quantifiers/ieval/inst_evaluator.h"
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_database_eager.h"
-#include "theory/quantifiers/eager/quant_info.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -207,7 +207,7 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   std::vector<size_t>& vargs = d_root->d_vargs;
   for (size_t v : vargs)
   {
-    Assert (v<d_pattern.getNumChildren());
+    Assert(v < d_pattern.getNumChildren());
     varToTerm[d_pattern[v]] = data[v];
   }
 
