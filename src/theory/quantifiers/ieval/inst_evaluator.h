@@ -131,6 +131,9 @@ class InstEvaluator : protected EnvObj
   bool isFeasible() const;
   /** Get the value of v, if assigned, or null otherwise */
   TNode get(TNode v) const;
+  /** Get the value of v, if assigned, or null otherwise */
+  TNode getValue(TNode n) const;
+
 
  private:
   /** Set evaluator mode. */

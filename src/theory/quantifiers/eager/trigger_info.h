@@ -21,6 +21,7 @@
 #include "context/cdo.h"
 #include "expr/node.h"
 #include "theory/quantifiers/eager/util.h"
+#include "theory/quantifiers/eager/pat_term_info.h"
 #include "theory/quantifiers/ieval/inst_evaluator.h"
 #include "theory/uf/equality_engine.h"
 
@@ -37,7 +38,7 @@ class TriggerInfo
  public:
   TriggerInfo(TermDbEager& tde);
   /** Initialize */
-  void initialize(const Node& t, const Node& f);
+  void initialize(const Node& t);
   /** */
   void watch(const Node& q, const std::vector<Node>& vlist);
 
@@ -45,11 +46,9 @@ class TriggerInfo
 
   bool doMatchingAll();
 
+  /** Get patterm term info */
+  PatTermInfo* getPatTermInfo(TNode t);
  private:
-  bool isLegalCandidate(TNode n) const;
-  bool initMatchingEqc(TNode r, bool& isActive);
-  bool doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush);
-  bool doMatchingInternal(ieval::InstEvaluator* ie, TNode t, size_t& npush);
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Are ground children */
@@ -64,17 +63,10 @@ class TriggerInfo
   Node d_op;
   /** The arity */
   size_t d_arity;
-  /** ground arguments */
-  std::vector<size_t> d_gargs;
-  /** variable arguments */
-  std::vector<size_t> d_vargs;
-  /** other arguments */
-  std::vector<size_t> d_oargs;
-  /** children */
-  std::vector<TriggerInfo*> d_children;
-  //======== eqc matching
-  TNode d_eqc;
-  eq::EqClassIterator d_eqi;
+  /** Mapping terms to pat term infos */
+  std::map<TNode, PatTermInfo> d_pinfo;
+  /** The root pattern term */
+  PatTermInfo* d_root;
   /** Active? */
   // context::CDO<bool> d_active;
   /** Wait list */

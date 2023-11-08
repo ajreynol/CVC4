@@ -100,9 +100,9 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
   {
     d_tinfo.emplace(t, *this);
     it = d_tinfo.find(t);
-    TNode f = d_tdb.getMatchOperator(t);
-    it->second.initialize(t, f);
+    it->second.initialize(t);
     // add to triggers for the function
+    TNode f = d_tdb.getMatchOperator(t);
     Assert(!f.isNull());
     ++(d_stats.d_ntriggersUnique);
     eager::FunInfo* finfo = getFunInfo(f);
