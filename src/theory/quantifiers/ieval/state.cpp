@@ -520,7 +520,7 @@ bool State::isSome(TNode n) const { return n == d_some; }
 
 Node State::doRewrite(Node n) const { return rewrite(n); }
 
-bool State::isQuantActive(TNode q, bool reqConflict) const
+bool State::isQuantActive(TNode q) const
 {
   std::map<Node, QuantInfo>::const_iterator it = d_quantInfo.find(q);
   Assert(it != d_quantInfo.end());
@@ -528,11 +528,35 @@ bool State::isQuantActive(TNode q, bool reqConflict) const
   {
     return false;
   }
-  if (reqConflict)
-  {
-    return it->second.isMaybeConflict();
-  }
   return true;
+}
+
+std::vector<Node> State::getActiveQuants(bool& isConflict, bool reqConflict) const
+{
+  Assert (!isConflict);
+  std::vector<Node> quants;
+  for (const std::pair<const Node, QuantInfo>& qi : d_quantInfo)
+  {
+    if (!qi.second.isActive())
+    {
+      continue;
+    }
+    if (qi.second.isMaybeConflict())
+    {
+      if (!isConflict)
+      {
+        // 
+        //quants.clear();
+        isConflict = true;
+      }
+    }
+    else if (reqConflict)// || isConflict)
+    {
+      continue;
+    }
+    quants.emplace_back(qi.first);
+  }
+  return quants;
 }
 
 TNode State::evaluate(TNode n) const

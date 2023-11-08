@@ -44,15 +44,18 @@ class QuantInfo
   /** Is the quantified formula asserted? */
   bool isAsserted() const { return d_asserted.get(); }
   /** Notify that a trigger has been assigned a status */
-  TriggerStatus notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
+  void notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
 
  private:
+  void updateStatus();
   /** The quantified formula */
   Node d_quant;
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** List of triggers */
   std::vector<TriggerInfo*> d_triggers;
+  /** Variable list per trigger */
+  std::vector<std::vector<Node>> d_vlists;
   /** Is asserted */
   context::CDO<bool> d_asserted;
   /** The index in d_triggers that is inactive */

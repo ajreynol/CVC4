@@ -90,6 +90,8 @@ class TermDbEager : protected EnvObj
   TermDb& d_tdb;
   /** The CDTrieNode allocator */
   CDTNodeTrieAllocator d_cdalloc;
+  /** Are we in conflict? */
+  context::CDO<bool> d_conflict;
   /** */
   std::map<TNode, eager::TriggerInfo> d_tinfo;
   /** */
@@ -104,6 +106,8 @@ class TermDbEager : protected EnvObj
   std::map<Node, std::vector<Node>> d_winst;
   /** Add instantiation */
   bool addInstantiation(Node q, std::vector<Node>& terms, InferenceId id);
+  /** Flush instantiations */
+  void flushInstantiations();
 };
 
 }  // namespace quantifiers

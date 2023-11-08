@@ -110,7 +110,8 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
     Node tc = canon.getCanonicalTerm(t, visited);
     eager::TriggerInfo* ti = d_tde.getTriggerInfo(tc);
     // get the variable list that we canonized to
-    std::vector<Node> vlist;
+    d_vlists.emplace_back();
+    std::vector<Node>& vlist = d_vlists.back();
     for (const Node& v : q[0])
     {
       Assert(visited.find(v) != visited.end());
@@ -124,14 +125,67 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   {
     ++(s.d_nquantNoTrigger);
   }
+  else
+  {
+    d_tstatus = TriggerStatus::INACTIVE;
+    updateStatus();
+  }
 }
 
 void QuantInfo::notifyAsserted() { d_asserted = true; }
 
-TriggerStatus QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo,
+void QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo,
                                              TriggerStatus status)
 {
-  return TriggerStatus::NONE;
+  // if we are inactive and we just updated the inactive trigger, update status
+  if (d_tstatus==TriggerStatus::INACTIVE)
+  {
+    Assert (d_tinactiveIndex.get()<d_triggers.size());
+    if (d_triggers[d_tinactiveIndex.get()]==tinfo)
+    {
+      updateStatus();
+    }
+  }
+}
+
+void QuantInfo::updateStatus()
+{
+  Assert (d_tstatus==TriggerStatus::INACTIVE);
+  Assert (d_tinactiveIndex.get()<d_triggers.size());
+  do
+  {
+    TriggerInfo* tnext = d_triggers[d_tinactiveIndex.get()];
+    if (tnext->getStatus()==TriggerStatus::INACTIVE)
+    {
+      // the current trigger is still inactive
+      return;
+    }
+    d_tinactiveIndex = d_tinactiveIndex.get()+1;
+  }while (d_tinactiveIndex.get()<d_triggers.size());
+  
+  // we are at the end, choose a trigger to activate
+  d_tstatus = TriggerStatus::ACTIVE;
+  size_t minTerms = 0;
+  TriggerInfo * bestTrigger = nullptr;
+  for (TriggerInfo* tinfo : d_triggers)
+  {
+    TriggerStatus s = tinfo->getStatus();
+    Assert (s!=TriggerStatus::INACTIVE);
+    if (s==TriggerStatus::ACTIVE)
+    {
+      bestTrigger = tinfo;
+      break;
+    }
+    else if (bestTrigger==nullptr)
+    {
+      bestTrigger = tinfo;
+    }
+    else
+    {
+      Node op = tinfo->getOperator();
+      
+    }
+  }
 }
 
 }  // namespace eager

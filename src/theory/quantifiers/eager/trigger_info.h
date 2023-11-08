@@ -61,19 +61,22 @@ class TriggerInfo
 
   bool doMatchingAll(std::map<Node, std::vector<Node>>& inst);
 
-  /** Notify new ground term */
-  void eqNotifyNewClass(TNode t);
+  /** 
+   * Notify new ground term. Add instantiations to inst as needed.
+   * Return true if we are in conflict.
+   */
+  bool eqNotifyNewClass(TNode t, std::map<Node, std::vector<Node>>& inst);
 
   TriggerStatus getStatus() const { return d_status.get(); }
   void setStatus(TriggerStatus s);
 
+  Node getPattern() const { return d_pattern; }
+  Node getOperator() const { return d_op; }
  private:
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);
   /** Reset */
   bool resetMatching();
-  /** Get active quantifiers */
-  std::vector<Node> getQuantsForInst() const;
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Instantiation evaluator */
@@ -96,6 +99,8 @@ class TriggerInfo
   PatTermInfo* d_root;
   /** Status */
   context::CDO<TriggerStatus> d_status;
+  /** Status proc */
+  std::vector<TriggerStatus> d_statusToProc;
   /** Active? */
   // context::CDO<bool> d_active;
   /** Wait list */

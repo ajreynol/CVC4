@@ -55,8 +55,6 @@ class FunInfo
   bool addTerm(TNode t);
   /** Is in relevant domain */
   bool inRelevantDomain(size_t i, TNode r);
-  /** Activate */
-  void setActive(bool active);
   /** Get trie */
   CDTNodeTrie* getTrie();
   /** Number of terms */
@@ -65,6 +63,8 @@ class FunInfo
   std::vector<TriggerInfo*> d_triggers;
 
  private:
+  /** Activate */
+  void setActive(bool active);
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Relevant domain for the arguments of this function */

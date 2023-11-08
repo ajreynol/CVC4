@@ -34,6 +34,7 @@ TermDbEager::TermDbEager(Env& env,
       d_qim(nullptr),
       d_tdb(tdb),
       d_cdalloc(context()),
+      d_conflict(context()),
       d_stats(statisticsRegistry())
 {
 }
@@ -48,6 +49,11 @@ void TermDbEager::assertQuantifier(TNode q)
 
 void TermDbEager::eqNotifyNewClass(TNode t)
 {
+  if (d_conflict.get())
+  {
+    // already in conflict
+    return;
+  }
   // add to the eager trie
   TNode f = d_tdb.getMatchOperator(t);
   if (!f.isNull())
@@ -63,8 +69,13 @@ void TermDbEager::eqNotifyNewClass(TNode t)
       // notify the triggers with the same top symbol
       for (eager::TriggerInfo* tr : ts)
       {
-        tr->eqNotifyNewClass(t);
+        if (tr->eqNotifyNewClass(t, d_winst))
+        {
+          d_conflict = true;
+          break;
+        }
       }
+      flushInstantiations();
     }
   }
 }
@@ -171,6 +182,20 @@ bool TermDbEager::addInstantiation(Node q,
                                    InferenceId id)
 {
   return d_qim->getInstantiate()->addInstantiation(q, terms, id);
+}
+
+void TermDbEager::flushInstantiations()
+{
+  for (std::pair<const Node, std::vector<Node>>& wi : d_winst)
+  {
+    Node q = wi.first;
+    bool ret = addInstantiation(q, wi.second, InferenceId::QUANTIFIERS_INST_EAGER);
+    if (!ret)
+    {
+      Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
+    }
+  }
+  d_winst.clear();
 }
 
 }  // namespace quantifiers

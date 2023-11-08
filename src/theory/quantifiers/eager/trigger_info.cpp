@@ -90,7 +90,8 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
     return false;
   }
   // add instantiation(s)
-  std::vector<Node> qinsts = getQuantsForInst();
+  bool isConflict = false;
+  std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
   Assert(!qinsts.empty());
   std::map<Node, Node>::iterator itq;
   for (const Node& q : qinsts)
@@ -99,7 +100,7 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
     Assert(itq != d_quantMap.end());
     inst[itq->second] = d_ieval->getInstantiationFor(q);
   }
-  return true;
+  return isConflict;
 }
 
 bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
@@ -209,7 +210,8 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   TNode data = itt.getCurrentData();
   Assert(!data.isNull());
   Assert(data.getNumChildren() == d_pattern.getNumChildren());
-  std::vector<Node> qinsts = getQuantsForInst();
+  bool isConflict = false;
+  std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
   Assert(!qinsts.empty());
   // compute the backwards map
   std::map<Node, Node> varToTerm;
@@ -220,7 +222,7 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
     varToTerm[d_pattern[v]] = data[v];
   }
 
-  return true;
+  return isConflict;
 }
 
 PatTermInfo* TriggerInfo::getPatTermInfo(TNode p)
@@ -257,51 +259,54 @@ bool TriggerInfo::resetMatching()
   return success;
 }
 
-std::vector<Node> TriggerInfo::getQuantsForInst() const
+bool TriggerInfo::eqNotifyNewClass(TNode t, std::map<Node, std::vector<Node>>& inst)
 {
-  std::vector<Node> qinsts = d_ieval->getActiveQuants();
-  if (qinsts.size() > 1)
+  switch (d_status.get())
   {
-    // try to filter to only the ones with conflicts
-    std::vector<Node> qinstsc = d_ieval->getActiveQuants(true);
-    if (!qinstsc.empty() && qinstsc.size() < qinsts.size())
-    {
-      return qinstsc;
-    }
+    case TriggerStatus::ACTIVE:
+      // do the matching against term t
+      return doMatching(t, inst);
+      break;
+    case TriggerStatus::INACTIVE:
+      setStatus(TriggerStatus::WAIT);
+      // if we became active, then match all terms seen thus far
+      if (d_status.get()==TriggerStatus::ACTIVE)
+      {
+        return doMatchingAll(inst);
+      }
+      break;
+    default:
+      break;
   }
-  return qinsts;
-}
-
-void TriggerInfo::eqNotifyNewClass(TNode t)
-{
-  if (d_status.get() == TriggerStatus::INACTIVE)
-  {
-    setStatus(TriggerStatus::WAIT);
-  }
+  return false;
 }
 
 void TriggerInfo::setStatus(TriggerStatus s)
 {
-  if (d_status.get() == s)
+  bool isEmpty = d_statusToProc.empty();
+  d_statusToProc.emplace_back(s);
+  // avoid reentry
+  if (!isEmpty)
   {
     return;
   }
-  TriggerStatus sreq = s;
-  do
+  size_t i = 0;
+  while (i<d_statusToProc.size())
   {
-    d_status = sreq;
-    sreq = TriggerStatus::NONE;
-    // notify that we've changed status
+    s = d_statusToProc[i];
+    i++;
+    if (d_status==s)
+    {
+      continue;
+    }
+    d_status = s;
+    i++;
+    // notify that we've changed status to s
     for (QuantInfo* qi : d_qinfos)
     {
-      TriggerStatus qsreq = qi->notifyTriggerStatus(this, s);
-      if (qsreq != TriggerStatus::NONE)
-      {
-        Assert(sreq == TriggerStatus::NONE || sreq == qsreq);
-        sreq = qsreq;
-      }
+      qi->notifyTriggerStatus(this, s);
     }
-  } while (sreq != TriggerStatus::NONE);
+  }
 }
 
 }  // namespace eager
