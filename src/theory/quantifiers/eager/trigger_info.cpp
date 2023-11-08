@@ -63,7 +63,7 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
     d_ieval->watch(qs);
     d_quantMap[qs] = q;
   }
-  Assert (std::find(d_qinfos.begin(), d_qinfos.end(), qi)==d_qinfos.end());
+  Assert(std::find(d_qinfos.begin(), d_qinfos.end(), qi) == d_qinfos.end());
   d_qinfos.emplace_back(qi);
 }
 
@@ -250,7 +250,7 @@ std::vector<Node> TriggerInfo::getQuantsForInst() const
 
 void TriggerInfo::eqNotifyNewClass(TNode t)
 {
-  if (d_status.get()==TriggerStatus::INACTIVE)
+  if (d_status.get() == TriggerStatus::INACTIVE)
   {
     d_status = TriggerStatus::WAIT;
     for (QuantInfo* qi : d_qinfos)

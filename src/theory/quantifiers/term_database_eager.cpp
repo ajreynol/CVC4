@@ -122,7 +122,7 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     finfo->d_triggers.emplace_back(&it->second);
     // the initial status of the trigger is determined by whether f has
     // ground terms
-    if (finfo->getNumTerms()>0)
+    if (finfo->getNumTerms() > 0)
     {
       it->second.d_status = eager::TriggerStatus::WAIT;
     }

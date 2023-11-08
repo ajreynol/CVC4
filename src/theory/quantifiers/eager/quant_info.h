@@ -45,6 +45,7 @@ class QuantInfo
   bool isAsserted() const { return d_asserted.get(); }
   /** Notify that a trigger has been assigned a status */
   void notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
+
  private:
   /** The quantified formula */
   Node d_quant;
