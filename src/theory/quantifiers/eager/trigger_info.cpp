@@ -344,7 +344,8 @@ bool TriggerInfo::setStatus(TriggerStatus s)
     // if we became active, then match all terms seen thus far
     if (s == TriggerStatus::ACTIVE)
     {
-      Trace("eager-inst-debug") << "Activate trigger: " << d_pattern << std::endl;
+      Trace("eager-inst-debug")
+          << "Activate trigger: " << d_pattern << std::endl;
       d_statusToProc.clear();
       return doMatchingAll();
     }

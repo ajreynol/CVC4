@@ -177,7 +177,7 @@ bool QuantInfo::updateStatus()
   size_t minTerms = 0;
   size_t bestIndex = 0;
   bool bestIndexSet = false;
-  for (size_t i=0, ntriggers=d_triggers.size(); i<ntriggers; i++)
+  for (size_t i = 0, ntriggers = d_triggers.size(); i < ntriggers; i++)
   {
     TriggerInfo* tinfo = d_triggers[i];
     TriggerStatus s = tinfo->getStatus();
@@ -192,7 +192,7 @@ bool QuantInfo::updateStatus()
       Node op = tinfo->getOperator();
       FunInfo* finfo = d_tde.getFunInfo(op);
       size_t cterms = finfo->getNumTerms();
-      if (!bestIndexSet || cterms<minTerms)
+      if (!bestIndexSet || cterms < minTerms)
       {
         bestIndex = i;
         minTerms = cterms;
@@ -200,8 +200,8 @@ bool QuantInfo::updateStatus()
       bestIndexSet = true;
     }
   }
-  Assert (d_triggers.size()==d_vlists.size());
-  Assert (d_triggers.size()==d_triggerWatching.size());
+  Assert(d_triggers.size() == d_vlists.size());
+  Assert(d_triggers.size() == d_triggerWatching.size());
   TriggerInfo* bestTrigger = d_triggers[bestIndex];
   // ensure we are signed up to watch
   if (!d_triggerWatching[bestIndex])
