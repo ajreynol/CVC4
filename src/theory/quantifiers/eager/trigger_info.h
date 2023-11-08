@@ -66,6 +66,7 @@ class TriggerInfo
 
   TriggerStatus getStatus() const { return d_status.get(); }
   void setStatus(TriggerStatus s);
+
  private:
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);

@@ -258,7 +258,7 @@ void TriggerInfo::eqNotifyNewClass(TNode t)
 
 void TriggerInfo::setStatus(TriggerStatus s)
 {
-  if (d_status.get()==s)
+  if (d_status.get() == s)
   {
     return;
   }
@@ -269,7 +269,6 @@ void TriggerInfo::setStatus(TriggerStatus s)
     qi->notifyTriggerStatus(this, s);
   }
 }
-
 
 }  // namespace eager
 }  // namespace quantifiers
