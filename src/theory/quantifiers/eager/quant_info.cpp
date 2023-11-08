@@ -28,7 +28,8 @@ namespace quantifiers {
 namespace eager {
 
 QuantInfo::QuantInfo(TermDbEager& tde)
-    : d_tde(tde), d_asserted(tde.getSatContext())
+    : d_tde(tde), d_asserted(tde.getSatContext()), d_tinactiveIndex(tde.getSatContext(), 0),
+      d_tstatus(tde.getSatContext(), TriggerStatus::NONE)
 {
 }
 
@@ -125,7 +126,10 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
 
 void QuantInfo::notifyAsserted() { d_asserted = true; }
 
-void QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status) {}
+void QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status) 
+{
+  
+}
 
 }  // namespace eager
 }  // namespace quantifiers

@@ -62,6 +62,7 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
   {
     d_ieval->watch(qs);
     d_quantMap[qs] = q;
+    d_quantRMap[q] = qs;
   }
   Assert(std::find(d_qinfos.begin(), d_qinfos.end(), qi) == d_qinfos.end());
   d_qinfos.emplace_back(qi);
@@ -80,7 +81,10 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
   Assert(d_ieval != nullptr);
   Assert(t.getNumChildren() == d_pattern.getNumChildren());
   Assert(t.getOperator() == d_pattern.getOperator());
-  resetMatching();
+  if (!resetMatching())
+  {
+    return false;
+  }
   if (!d_root->doMatching(d_ieval.get(), t))
   {
     return false;
@@ -101,7 +105,10 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
 bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
 {
   Assert(d_ieval != nullptr);
-  resetMatching();
+  if (!resetMatching())
+  {
+    return false;
+  }
   QuantifiersState& qs = d_tde.getState();
   // now traverse the term index
   FunInfo* finfo = d_tde.getFunInfo(d_op);
@@ -227,10 +234,27 @@ PatTermInfo* TriggerInfo::getPatTermInfo(TNode p)
   return &it->second;
 }
 
-void TriggerInfo::resetMatching()
+bool TriggerInfo::resetMatching()
 {
   // reset the assignment completely
   d_ieval->resetAll(false);
+  // now, ensure we don't watch quantified formulas that are no longer asserted
+  bool success = false;
+  for (QuantInfo* qi : d_qinfos)
+  {
+    if (!qi->isAsserted())
+    {
+      Node q = qi->getQuant();
+      Assert (d_quantRMap.find(q)!=d_quantRMap.end());
+      d_ieval->deactivate(d_quantRMap[q]);
+    }
+    else
+    {
+      success = true;
+    }
+  }
+  // success if at least one is asserted
+  return success;
 }
 
 std::vector<Node> TriggerInfo::getQuantsForInst() const

@@ -95,6 +95,8 @@ class InstEvaluator : protected EnvObj
   void watch(Node q);
   /** Same as above, with possibly preprocessed body. */
   void watch(Node q, Node body);
+  /** Deactivate */
+  void deactivate(const Node& q);
   /**
    * Set that we are considering instantiations v -> s.
    *

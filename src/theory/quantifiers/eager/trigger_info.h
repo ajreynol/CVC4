@@ -71,7 +71,7 @@ class TriggerInfo
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);
   /** Reset */
-  void resetMatching();
+  bool resetMatching();
   /** Get active quantifiers */
   std::vector<Node> getQuantsForInst() const;
   /** Reference to the eager term database */
@@ -82,6 +82,8 @@ class TriggerInfo
   std::vector<QuantInfo*> d_qinfos;
   /** Matching quantified formulas registered to the ieval to their original */
   std::map<Node, Node> d_quantMap;
+  /** Reverse of above */
+  std::map<Node, Node> d_quantRMap;
   /** The pattern */
   Node d_pattern;
   /** The operator */

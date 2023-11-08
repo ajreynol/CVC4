@@ -55,6 +55,10 @@ class QuantInfo
   std::vector<TriggerInfo*> d_triggers;
   /** Is asserted */
   context::CDO<bool> d_asserted;
+  /** The index in d_triggers that is inactive */
+  context::CDO<size_t> d_tinactiveIndex;
+  /** The current status */
+  context::CDO<TriggerStatus> d_tstatus;
 };
 
 }  // namespace eager

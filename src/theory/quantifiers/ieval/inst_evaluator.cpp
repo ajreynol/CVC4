@@ -81,6 +81,11 @@ void InstEvaluator::watch(Node q, Node body)
   d_state.watch(q, vars, body);
 }
 
+void InstEvaluator::deactivate(const Node& q)
+{
+  // TODO
+}
+
 bool InstEvaluator::initialize()
 {
   // We ensure initialized before we push, since it is context independent.

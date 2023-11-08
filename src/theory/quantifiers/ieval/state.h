@@ -89,8 +89,6 @@ class State : protected EnvObj
   Node doRewrite(Node n) const;
   /** Is quantifier active? */
   bool isQuantActive(TNode q, bool reqConflict = false) const;
-  /** Set quantified formula inactive */
-  void setQuantInactive(QuantInfo& qi);
 
   /** debugging */
   std::string toString() const;
@@ -98,6 +96,8 @@ class State : protected EnvObj
   std::string toStringDebugSearch() const;
 
  private:
+  /** Set quantified formula inactive */
+  void setQuantInactive(QuantInfo& qi);
   //---------------quantifiers info
   /** Get quantifiers info */
   QuantInfo& getQuantInfo(TNode q);
