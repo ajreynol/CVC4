@@ -132,9 +132,9 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
 }
 
 bool QuantInfo::notifyAsserted()
-{ 
-  Assert (!d_asserted.get());
-  d_asserted = true; 
+{
+  Assert(!d_asserted.get());
+  d_asserted = true;
   return updateStatus();
 }
 
@@ -189,7 +189,7 @@ bool QuantInfo::updateStatus()
       Node op = tinfo->getOperator();
       FunInfo* finfo = d_tde.getFunInfo(op);
       size_t cterms = finfo->getNumTerms();
-      if (cterms<minTerms)
+      if (cterms < minTerms)
       {
         bestTrigger = tinfo;
         minTerms = cterms;

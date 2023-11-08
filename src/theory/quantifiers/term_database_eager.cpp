@@ -81,10 +81,12 @@ void TermDbEager::eqNotifyNewClass(TNode t)
       // notify the triggers with the same top symbol
       for (eager::TriggerInfo* tr : ts)
       {
-        Trace("eager-inst-debug") << "...notify " << tr->getPattern() << std::endl;
+        Trace("eager-inst-debug")
+            << "...notify " << tr->getPattern() << std::endl;
         if (tr->eqNotifyNewClass(t))
         {
-          Trace("eager-inst") << "......conflict " << tr->getPattern() << std::endl;
+          Trace("eager-inst")
+              << "......conflict " << tr->getPattern() << std::endl;
           d_conflict = true;
           break;
         }
@@ -200,7 +202,8 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
 
 bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
 {
-  Trace("eager-inst-debug") << "addInstantiation: " << q << ", " << terms << std::endl;
+  Trace("eager-inst-debug")
+      << "addInstantiation: " << q << ", " << terms << std::endl;
   bool ret = d_qim->getInstantiate()->addInstantiation(
       q, terms, InferenceId::QUANTIFIERS_INST_EAGER);
   if (!ret)

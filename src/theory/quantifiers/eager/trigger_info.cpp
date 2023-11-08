@@ -78,7 +78,8 @@ void TriggerInfo::initialize(const Node& t)
 
 bool TriggerInfo::doMatching(TNode t)
 {
-  Trace("eager-inst-matching") << "doMatching " << d_pattern << " " << t << std::endl;
+  Trace("eager-inst-matching")
+      << "doMatching " << d_pattern << " " << t << std::endl;
   Assert(d_ieval != nullptr);
   Assert(t.getNumChildren() == d_pattern.getNumChildren());
   Assert(t.getOperator() == d_pattern.getOperator());
@@ -95,7 +96,9 @@ bool TriggerInfo::doMatching(TNode t)
   // add instantiation(s)
   bool isConflict = false;
   std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
-  Trace("eager-inst-matching-debug") << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict << std::endl;
+  Trace("eager-inst-matching-debug")
+      << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict
+      << std::endl;
   Assert(!qinsts.empty());
   std::map<Node, Node>::iterator itq;
   for (const Node& q : qinsts)
@@ -221,7 +224,9 @@ bool TriggerInfo::doMatchingAll()
   bool isConflict = false;
   std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
   Assert(!qinsts.empty());
-  Trace("eager-inst-matching-debug") << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict << std::endl;
+  Trace("eager-inst-matching-debug")
+      << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict
+      << std::endl;
   // compute the backwards map
   std::map<Node, Node> varToTerm;
   std::vector<size_t>& vargs = d_root->d_vargs;

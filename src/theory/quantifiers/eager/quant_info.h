@@ -43,7 +43,7 @@ class QuantInfo
   Node getQuant() const { return d_quant; }
   /** Is the quantified formula asserted? */
   bool isAsserted() const { return d_asserted.get(); }
-  /** 
+  /**
    * Notify that a trigger has been assigned a status, return true if conflict.
    */
   bool notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
