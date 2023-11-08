@@ -60,14 +60,11 @@ void TermDbEager::eqNotifyNewClass(TNode t)
     if (finfo->addTerm(t))
     {
       std::vector<eager::TriggerInfo*>& ts = finfo->d_triggers;
-      // try matching?
-      /*
-      for (TriggerInfo* tr : d_triggers)
+      // notify the triggers with the same top symbol
+      for (eager::TriggerInfo* tr : ts)
       {
-        tr->doMatching(tde, t);
-        // TODO: break?
+        tr->eqNotifyNewClass(t);
       }
-      */
     }
   }
 }
@@ -123,7 +120,12 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     ++(d_stats.d_ntriggersUnique);
     eager::FunInfo* finfo = getOrMkFunInfo(f, t.getNumChildren());
     finfo->d_triggers.emplace_back(&it->second);
-    // TODO: maybe match all now
+    // the initial status of the trigger is determined by whether f has
+    // ground terms
+    if (finfo->getNumTerms()>0)
+    {
+      it->second.d_status = eager::TriggerStatus::WAIT;
+    }
   }
   return &it->second;
 }

@@ -35,6 +35,13 @@ namespace eager {
 
 class QuantInfo;
 
+  enum class TriggerStatus
+  {
+    INACTIVE,
+    WAIT,
+    ACTIVE
+  };
+
 class TriggerInfo
 {
   friend class PatTermInfo;
@@ -53,14 +60,11 @@ class TriggerInfo
 
   bool doMatchingAll(std::map<Node, std::vector<Node>>& inst);
 
-  enum class TriggerStatus
-  {
-    INACTIVE,
-    WAIT,
-    ACTIVE
-  };
   /** Status */
   context::CDO<TriggerStatus> d_status;
+  
+  /** Notify new ground term */
+  void eqNotifyNewClass(TNode t);
 
  private:
   /** Get patterm term info */

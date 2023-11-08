@@ -246,6 +246,11 @@ std::vector<Node> TriggerInfo::getQuantsForInst() const
   return qinsts;
 }
 
+void TriggerInfo::eqNotifyNewClass(TNode t)
+{
+  
+}
+
 }  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory
