@@ -28,39 +28,69 @@ namespace theory {
 namespace quantifiers {
 namespace eager {
 
-PatTermInfo::PatTermInfo(TermDbEager& tde) : d_tde(tde) {}
+PatTermInfo::PatTermInfo(TermDbEager& tde) : d_tde(tde), d_nbind(0) {}
 
-void PatTermInfo::initialize(TriggerInfo* tr, const Node& t)
+void PatTermInfo::initialize(TriggerInfo* tr, const Node& t, std::unordered_set<Node>& fvs)
 {
+  Assert (d_pattern.isNull());
   d_pattern = t;
   d_op = d_tde.getTermDb().getMatchOperator(d_pattern);
+  size_t nvarInit = fvs.size();
   // classify each child of the pattern as either variable, compound or ground.
   for (size_t i = 0, nargs = t.getNumChildren(); i < nargs; i++)
   {
     if (expr::hasBoundVar(t[i]))
     {
+      bool processed = false;
       if (t[i].getKind() == Kind::BOUND_VARIABLE)
       {
-        d_vargs.emplace_back(i);
-        d_children.emplace_back(nullptr);
+        // if we haven't seen this variable yet
+        if (fvs.find(t[i])==fvs.end())
+        {
+          processed = true;
+          fvs.insert(t[i]);
+          d_vargs.emplace_back(i);
+          d_children.emplace_back(nullptr);
+          d_bindings.emplace_back(1);
+        }
       }
       else
       {
-        d_oargs.emplace_back(i);
-        d_children.emplace_back(tr->getPatTermInfo(t[i]));
+        std::unordered_set<Node> fvsTmp = fvs;
+        expr::getFreeVariables(t[i], fvsTmp);
+        // check if this will bind new variables
+        size_t newFvSize = fvsTmp.size()-fvs.size();
+        if (newFvSize>0)
+        {
+          processed = true;
+          d_oargs.emplace_back(i);
+          d_children.emplace_back(tr->getPatTermInfo(t[i]));
+          // initialize and add to the free variables
+          d_children.back()->initialize(tr, t, fvs);
+          Assert (fvs.size()==fvsTmp.size());
+          d_bindings.emplace_back(newFvSize);
+        }
+      }
+      if (!processed)
+      {
+        d_gpargs.emplace_back(i);
+        d_children.emplace_back(nullptr);
+        d_bindings.emplace_back(0);
       }
     }
     else
     {
       d_gargs.emplace_back(i);
       d_children.emplace_back(nullptr);
+      d_bindings.emplace_back(0);
     }
   }
+  d_nbind = fvs.size()-nvarInit;
   // TODO: as an optimization, could pre-compute the arguments that are expected to already be bound after binding variables.
   // this would catch cases like f(x, a, x) or f(x, g(b, x)).
 }
 
-bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t, size_t& npush)
+bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
 {
   QuantifiersState& qs = d_tde.getState();
   // ground arguments must match
@@ -73,73 +103,61 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t, size_t& npush)
     }
   }
   // assign variables
-  for (size_t v : d_vargs)
+  for (size_t i=0, nvars = d_vargs.size(); i<nvars; i++)
   {
-    TNode vv = ie->get(d_pattern[v]);
-    if (!vv.isNull())
+    size_t v = d_vargs[i];
+    Assert (ie->get(d_pattern[v]).isNull());
+    // if infeasible to assign, we are done
+    if (!ie->push(d_pattern[v], t[v]))
     {
-      // if already assigned, must be equal
-      if (!qs.areEqual(vv, t[v]))
-      {
-        ie->pop(npush);
-        return false;
-      }
+      ie->pop(i);
+      return false;
     }
-    else
+  }
+  // now, check the terms that are now bound
+  for (size_t g : d_gpargs)
+  {
+    TNode gv = ie->getValue(d_pattern[g]);
+    Assert (!gv.isNull());
+    // note that gv may be none or some, areEqual should be robust
+    if (!qs.areEqual(d_pattern[g], gv))
     {
-      // if infeasible to push, we are done
-      if (!ie->push(d_pattern[v], t[v]))
-      {
-        ie->pop(npush);
-        return false;
-      }
-      // increment the number of pushes
-      npush++;
+      ie->pop(d_vargs.size());
+      return false;
     }
   }
   // initialize the children to equivalence classes, returning false if its
   // infeasible
-  std::vector<size_t> activeOArgs;
   for (size_t o : d_oargs)
   {
     TNode tor = qs.getRepresentative(t[o]);
-    bool isActive = false;
-    if (!d_children[o]->initMatchingEqc(ie, tor, isActive))
+    if (!d_children[o]->initMatchingEqc(ie, tor))
     {
-      ie->pop(npush);
+      ie->pop(d_vargs.size());
       return false;
     }
-    if (isActive)
-    {
-      activeOArgs.emplace_back(o);
-    }
   }
-  size_t noargs = activeOArgs.size();
-  std::vector<size_t> pushStack;
-  while (pushStack.size() < noargs)
+  size_t noargs = d_oargs.size();
+  size_t i = 0;
+  while (i < noargs)
   {
-    size_t cnpush = 0;
-    size_t o = activeOArgs[pushStack.size()];
-    if (!d_children[o]->doMatchingEqcNext(ie, cnpush))
+    size_t o = d_oargs[i];
+    if (!d_children[o]->doMatchingEqcNext(ie))
     {
-      Assert(cnpush == 0);
-      if (pushStack.empty())
+      if (i==0)
       {
-        // finished
-        ie->pop(npush);
+        // failed
         return false;
       }
       // pop the variables assigned last
-      ie->pop(pushStack.back());
-      pushStack.pop_back();
+      i--;
+      ie->pop(d_children[d_oargs[i]]->getNumBindings());
     }
-    // successfully matched
-    pushStack.push_back(cnpush);
-  }
-  // increment npush by sum
-  for (size_t cnpush : pushStack)
-  {
-    npush += cnpush;
+    else
+    {
+      // successfully matched
+      i++;
+    }
   }
   return true;
 }
@@ -149,26 +167,9 @@ bool PatTermInfo::isLegalCandidate(TNode n) const
   return d_tde.getTermDb().getMatchOperator(n) == d_op && !d_tde.isCongruent(n);
 }
 
-bool PatTermInfo::initMatchingEqc(ieval::InstEvaluator* ie, TNode r, bool& isActive)
+bool PatTermInfo::initMatchingEqc(ieval::InstEvaluator* ie, TNode r)
 {
-  // In the rare case we are a (common) subterm, we may already have an assigned
-  // eqc. If this does not match, we are infeasible. If this matches, we don't
-  // set isActive and return true.
-  if (!d_eqc.isNull())
-  {
-    return (d_eqc == r);
-  }
-  // if we have a value based on the inst evaluator, check it
-  TNode pv = ie->getValue(d_pattern);
-  if (!pv.isNull())
-  {
-    // must be equal
-    d_eqc = pv;
-    return (d_eqc==r);
-  }
   // otherwise we will match in this equivalence class
-  isActive = true;
-  d_eqc = r;
   eq::EqualityEngine* ee = d_tde.getState().getEqualityEngine();
   Assert(ee->hasTerm(r));
   d_eqi = eq::EqClassIterator(r, ee);
@@ -186,7 +187,7 @@ bool PatTermInfo::initMatchingEqc(ieval::InstEvaluator* ie, TNode r, bool& isAct
   return false;
 }
 
-bool PatTermInfo::doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush)
+bool PatTermInfo::doMatchingEqcNext(ieval::InstEvaluator* ie)
 {
   // enumerate terms from the equivalence class with the same operator
   while (!d_eqi.isFinished())
@@ -195,13 +196,12 @@ bool PatTermInfo::doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush)
     ++d_eqi;
     if (isLegalCandidate(n))
     {
-      if (doMatching(ie, n, npush))
+      if (doMatching(ie, n))
       {
         return true;
       }
     }
   }
-  d_eqc = Node::null();
   return false;
 }
 

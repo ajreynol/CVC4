@@ -74,8 +74,7 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
   Assert(t.getNumChildren() == d_pattern.getNumChildren());
   Assert(t.getOperator() == d_pattern.getOperator());
   resetMatching();
-  size_t npush = 0;
-  if (!d_root->doMatching(d_ieval.get(), t, npush))
+  if (!d_root->doMatching(d_ieval.get(), t))
   {
     return false;
   }
@@ -83,7 +82,12 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
   std::vector<Node> qinsts = d_ieval->getActiveQuants();
   if (qinsts.size()>1)
   {
-    // TODO: maybe try to filter to only the ones with conflicts?
+    // try to filter to only the ones with conflicts
+    std::vector<Node> qinstsc = d_ieval->getActiveQuants(true);
+    if (!qinstsc.empty() && qinstsc.size()<qinsts.size())
+    {
+      qinsts = qinstsc;
+    }
   }
   Assert(!qinsts.empty());
   std::map<Node, Node>::iterator itq;
@@ -105,67 +109,74 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   FunInfo* finfo = d_tde.getFunInfo(d_op);
   CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), d_arity);
   size_t level = 1;
-  std::map<size_t, bool> binding;
-  std::map<size_t, bool>::iterator itb;
+  std::vector<bool> binding;
   std::vector<PatTermInfo*>& children = d_root->getChildren();
+  PatTermInfo* pti;
+  bool success;
+  TNode pc, r;
   do
   {
     Assert(level <= children.size());
-    // if we are a compound subchild, push next child
-    if (children[level - 1] != nullptr)
+    pti = children[level - 1];
+    success = true;
+    pc = d_pattern[level - 1];
+    // if a non-ground argument
+    if (pti!=nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
     {
-      TNode next = itt.pushNextChild();
-      bool isActive = false;
-      if (next.isNull() || children[level - 1]->initMatchingEqc(d_ieval.get(), next, isActive))
+      Assert (level<=binding.size());
+      if (level==binding.size())
       {
-        itt.pop();
+        // if the first time, check whether we will be binding
+        r = d_ieval->getValue(pc);
+        binding.push_back(r.isNull());
       }
-      else if (isActive)
+      else if (binding[level])
       {
-        // TODO
+        // otherwise, if we are binding, pop the previous binding(s).
+        // we know that r will be null again
+        d_ieval->pop(pti==nullptr ? 1 : pti->getNumBindings());
+      }
+      else
+      {
+        // we are done
+        success = false;
       }
     }
     else
     {
-      TNode pc = d_pattern[level - 1];
-      TNode r;
-      if (pc.getKind() == Kind::BOUND_VARIABLE)
+      // a ground argument, look up its representative
+      r = qs.getRepresentative(pc);
+    }
+    if (success)
+    {
+      if (!r.isNull())
       {
-        itb = binding.find(level);
-        if (itb == binding.end())
+        // if we are traversing a specific child
+        success = itt.push(r);
+      }
+      else
+      {
+        // we are traversing all children
+        r = itt.pushNextChild();
+        if (r.isNull())
         {
-          // if the first time, check whether we will be binding
-          r = d_ieval->get(pc);
-          binding[level] = (r.isNull());
+          // if no more children to push, go back a level
+          success = false;
         }
-        else if (itb->second)
+        else if (pc.getKind()==Kind::BOUND_VARIABLE)
         {
-          // otherwise, if we are binding, pop the previous binding.
-          // we know that r will be null again
-          d_ieval->pop();
+          success = d_ieval->push(pc, r);
+          binding[level] = 1;
         }
         else
         {
-          // get its value again
-          r = d_ieval->get(pc);
+          Assert (pti!=nullptr);
+          success = pti->initMatchingEqc(d_ieval.get(), r);
+          if (success)
+          {
+            success = pti->doMatchingEqcNext(d_ieval.get());
+          }
         }
-      }
-      else
-      {
-        r = qs.getRepresentative(pc);
-      }
-      if (!r.isNull())
-      {
-        if (!itt.push(r))
-        {
-          // go back a level
-          itt.pop();
-        }
-      }
-      else
-      {
-        r = itt.pushNextChild();
-        // if no more children to push, go back a level
         // if the child we just pushed is infeasible, pop to continue on this
         // level
         if (r.isNull() || !d_ieval->push(pc, r))
@@ -174,6 +185,12 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
           itt.pop();
         }
       }
+    }
+    if (!success)
+    {
+      // go back a level
+      binding.pop_back();
+      itt.pop();
     }
     // processing a new level
     level = itt.getLevel();
@@ -198,7 +215,6 @@ PatTermInfo* TriggerInfo::getPatTermInfo(TNode p)
   {
     d_pinfo.emplace(p, d_tde);
     it = d_pinfo.find(p);
-    it->second.initialize(this, p);
   }
   return &it->second;
 }

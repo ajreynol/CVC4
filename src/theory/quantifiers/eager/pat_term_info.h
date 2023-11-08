@@ -41,15 +41,15 @@ class PatTermInfo
  public:
   PatTermInfo(TermDbEager& tde);
   /** Initialize */
-  void initialize(TriggerInfo* tr, const Node& t);
+  void initialize(TriggerInfo* tr, const Node& t, std::unordered_set<Node>& fvs);
   /** Do matching */
-  bool doMatching(ieval::InstEvaluator* ie, TNode t, size_t& npush);
-  bool initMatchingEqc(ieval::InstEvaluator* ie, TNode r, bool& isActive);
-  bool doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush);
+  bool doMatching(ieval::InstEvaluator* ie, TNode t);
+  bool initMatchingEqc(ieval::InstEvaluator* ie, TNode r);
+  bool doMatchingEqcNext(ieval::InstEvaluator* ie);
   /** get ground args */
   const std::vector<size_t>& getGroundArgs() const { return d_gargs; }
   std::vector<PatTermInfo*>& getChildren() { return d_children; }
-
+  size_t getNumBindings() const { return d_nbind; }
  private:
   bool isLegalCandidate(TNode n) const;
   /** Reference to the eager term database */
@@ -62,10 +62,16 @@ class PatTermInfo
   std::vector<size_t> d_gargs;
   /** variable arguments */
   std::vector<size_t> d_vargs;
+  /** ground arguments, post-binding */
+  std::vector<size_t> d_gpargs;
   /** other arguments */
   std::vector<size_t> d_oargs;
   /** children */
   std::vector<PatTermInfo*> d_children;
+  /** the number of variables bound by each child, in order */
+  std::vector<size_t> d_bindings;
+  /** the sum of the number of bindings */
+  size_t d_nbind;
   //======== eqc matching
   TNode d_eqc;
   eq::EqClassIterator d_eqi;
