@@ -49,6 +49,7 @@ void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist)
   {
     s.add(q[0][i], vlist[i]);
   }
+  // rename quantified formula based on the variable list
   Node qs = s.apply(q);
   // this should probably always hold, or else we have a duplicate trigger
   // for the same quantified formula.
@@ -67,23 +68,32 @@ void TriggerInfo::initialize(const Node& t)
   d_root = getPatTermInfo(t);
 }
 
-bool TriggerInfo::doMatching(TNode t)
+bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
 {
   Assert(d_ieval != nullptr);
   Assert(t.getNumChildren() == d_pattern.getNumChildren());
   Assert(t.getOperator() == d_pattern.getOperator());
   size_t npush = 0;
-  bool ret = d_root->doMatching(d_ieval.get(), t, npush);
-  if (ret)
+  if (!d_root->doMatching(d_ieval.get(), t, npush))
   {
-    // TODO: add instantiation(s)
-    // cleanup the assignment
-    d_ieval->pop(npush);
+    return false;
   }
-  return ret;
+  // add instantiation(s)
+  std::vector<Node> qinsts = d_ieval->getActiveQuants();
+  Assert (!qinsts.empty());
+  std::map<Node, Node>::iterator itq;
+  for (const Node& q : qinsts)
+  {
+    itq = d_quantMap.find(q);
+    Assert (itq!=d_quantMap.end());
+    inst[itq->second] = d_ieval->getInstantiationFor(q);
+  }
+  // cleanup the assignment
+  d_ieval->pop(npush);
+  return true;
 }
 
-bool TriggerInfo::doMatchingAll()
+bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
 {
   QuantifiersState& qs = d_tde.getState();
   // now traverse the term index

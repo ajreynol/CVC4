@@ -118,6 +118,8 @@ class InstEvaluator : protected EnvObj
   void resetAll(bool isSoft = true);
   /** Get current instantiation for quantified formula q. */
   std::vector<Node> getInstantiationFor(Node q) const;
+  /** Get the active quantified formulas */
+  std::vector<Node> getActiveQuants() const;
   /**
    * Is feasible, return true if at least one watched quantified formula is
    * feasible.

@@ -192,6 +192,19 @@ std::vector<Node> InstEvaluator::getInstantiationFor(Node q) const
   return inst;
 }
 
+std::vector<Node> InstEvaluator::getActiveQuants() const
+{
+  std::vector<Node> quants;
+  for (const Node& q : d_quantList)
+  {
+    if (d_state.isQuantActive(q))
+    {
+      quants.emplace_back(q);
+    }
+  }
+  return quants;
+}
+
 bool InstEvaluator::isFeasible() const { return !d_state.isFinished(); }
 
 TNode InstEvaluator::get(TNode v) const

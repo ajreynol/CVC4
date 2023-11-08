@@ -42,9 +42,9 @@ class TriggerInfo
   /** */
   void watch(const Node& q, const std::vector<Node>& vlist);
 
-  bool doMatching(TNode t);
+  bool doMatching(TNode t, std::map<Node, std::vector<Node>>& inst);
 
-  bool doMatchingAll();
+  bool doMatchingAll(std::map<Node, std::vector<Node>>& inst);
 
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);
