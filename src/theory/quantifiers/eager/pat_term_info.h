@@ -38,6 +38,7 @@ class TriggerInfo;
 
 class PatTermInfo
 {
+  friend class TriggerInfo;
  public:
   PatTermInfo(TermDbEager& tde);
   /** Initialize */

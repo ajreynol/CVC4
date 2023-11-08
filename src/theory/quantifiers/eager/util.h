@@ -55,6 +55,7 @@ class WaitList
       d_index = size;
     }
   }
+  size_t getWaitSize() const { return d_list.size()-d_index.get(); }
   context::CDList<TNode> d_list;
   context::CDO<size_t> d_index;
 };

@@ -118,6 +118,11 @@ void FunInfo::setActive(bool active)
 
 CDTNodeTrie* FunInfo::getTrie() { return &d_trie; }
 
+size_t FunInfo::getNumTerms() const
+{
+  return d_count.get() + d_terms.getWaitSize();
+}
+
 }  // namespace eager
 }  // namespace quantifiers
 }  // namespace theory

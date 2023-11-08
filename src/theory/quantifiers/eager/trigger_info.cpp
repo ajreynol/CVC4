@@ -109,8 +109,9 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   FunInfo* finfo = d_tde.getFunInfo(d_op);
   CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), d_arity);
   size_t level = 1;
-  std::vector<bool> binding;
-  std::vector<PatTermInfo*>& children = d_root->getChildren();
+  std::vector<bool> iterAllChild;
+  std::vector<PatTermInfo*>& children = d_root->d_children;
+  std::vector<size_t>& nbindings = d_root->d_bindings;
   PatTermInfo* pti;
   bool success;
   TNode pc, r;
@@ -120,32 +121,36 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
     pti = children[level - 1];
     success = true;
     pc = d_pattern[level - 1];
-    // if a non-ground argument
-    if (pti!=nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
+    Assert (level<=iterAllChild.size());
+    if (level==iterAllChild.size())
     {
-      Assert (level<=binding.size());
-      if (level==binding.size())
+      // determine if there is a specific child we are traversing to
+      if (pti!=nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
       {
-        // if the first time, check whether we will be binding
+        // if a non-ground term, we check whether we already have a value based
+        // on the evaluator utility.
+        // note this will typically be null if we are a compound child, although
+        // it may also be "none".
         r = d_ieval->getValue(pc);
-        binding.push_back(r.isNull());
-      }
-      else if (binding[level])
-      {
-        // otherwise, if we are binding, pop the previous binding(s).
-        // we know that r will be null again
-        d_ieval->pop(pti==nullptr ? 1 : pti->getNumBindings());
       }
       else
       {
-        // we are done
-        success = false;
+        // if a ground term, use the representative method directly
+        r = qs.getRepresentative(pc);
       }
+      // if r is null
+      iterAllChild.push_back(r.isNull());
+    }
+    else if (iterAllChild[level])
+    {
+      // otherwise, if we are iterating on children, pop the previous
+      // binding(s).
+      d_ieval->pop(nbindings[level]);
     }
     else
     {
-      // a ground argument, look up its representative
-      r = qs.getRepresentative(pc);
+      // we are not iterating on all children, and thus are done
+      success = false;
     }
     if (success)
     {
@@ -165,31 +170,25 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
         }
         else if (pc.getKind()==Kind::BOUND_VARIABLE)
         {
+          // if we are a bound variable, we try to bind
           success = d_ieval->push(pc, r);
-          binding[level] = 1;
         }
         else
         {
           Assert (pti!=nullptr);
+          // if we are a compound child, we try to match in the eqc
           success = pti->initMatchingEqc(d_ieval.get(), r);
           if (success)
           {
             success = pti->doMatchingEqcNext(d_ieval.get());
           }
         }
-        // if the child we just pushed is infeasible, pop to continue on this
-        // level
-        if (r.isNull() || !d_ieval->push(pc, r))
-        {
-          // go back a level
-          itt.pop();
-        }
       }
     }
     if (!success)
     {
       // go back a level
-      binding.pop_back();
+      iterAllChild.pop_back();
       itt.pop();
     }
     // processing a new level
@@ -204,6 +203,8 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   // to ensure the match post-instantiation is syntactic.
   TNode data = itt.getCurrentData();
   Assert(!data.isNull());
+  Assert(data.getNumChildren()==d_pattern.getNumChildren());
+  
 
   return true;
 }
