@@ -245,7 +245,7 @@ bool TriggerInfo::resetMatching()
     if (!qi->isAsserted())
     {
       Node q = qi->getQuant();
-      Assert (d_quantRMap.find(q)!=d_quantRMap.end());
+      Assert(d_quantRMap.find(q) != d_quantRMap.end());
       d_ieval->deactivate(d_quantRMap[q]);
     }
     else
@@ -295,13 +295,13 @@ void TriggerInfo::setStatus(TriggerStatus s)
     for (QuantInfo* qi : d_qinfos)
     {
       TriggerStatus qsreq = qi->notifyTriggerStatus(this, s);
-      if (qsreq!=TriggerStatus::NONE)
+      if (qsreq != TriggerStatus::NONE)
       {
-        Assert (sreq==TriggerStatus::NONE || sreq==qsreq);
+        Assert(sreq == TriggerStatus::NONE || sreq == qsreq);
         sreq = qsreq;
       }
     }
-  }while (sreq!=TriggerStatus::NONE);
+  } while (sreq != TriggerStatus::NONE);
 }
 
 }  // namespace eager
