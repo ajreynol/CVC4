@@ -63,6 +63,7 @@ class FunInfo
   size_t getNumTerms() const;
   /** Triggers with this as top symbol */
   std::vector<TriggerInfo*> d_triggers;
+
  private:
   /** Reference to the eager term database */
   TermDbEager& d_tde;

@@ -112,11 +112,11 @@ void FunInfo::setActive(bool active)
   }
 }
 
-CDTNodeTrie* FunInfo::getTrie() 
+CDTNodeTrie* FunInfo::getTrie()
 {
   // must be active
   setActive(true);
-  return &d_trie; 
+  return &d_trie;
 }
 
 size_t FunInfo::getNumTerms() const
