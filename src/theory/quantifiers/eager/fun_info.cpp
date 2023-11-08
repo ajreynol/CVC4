@@ -25,6 +25,7 @@ namespace quantifiers {
 namespace eager {
 
 RelDomInfo::RelDomInfo(context::Context* c) : d_dom(c) {}
+
 bool RelDomInfo::hasTerm(QuantifiersState& qs, TNode r)
 {
   if (d_dom.find(r) != d_dom.end())
@@ -36,9 +37,9 @@ bool RelDomInfo::hasTerm(QuantifiersState& qs, TNode r)
 }
 
 FunInfo::FunInfo(TermDbEager& tde)
-    : d_trie(tde.getSatContext()),
+    : d_tde(tde),
+      d_trie(tde.getSatContext()),
       d_count(tde.getSatContext(), 0),
-      d_tde(tde),
       d_active(tde.getSatContext(), false),
       d_terms(tde.getSatContext())
 {
@@ -53,14 +54,14 @@ void FunInfo::initialize(TNode f, size_t nchild)
   }
 }
 
-void FunInfo::addTerm(TNode t)
+bool FunInfo::addTerm(TNode t)
 {
   if (!d_active.get())
   {
     // If we are not active, then ignore for now.
     // This is the case if there are no non-ground terms for this function.
     d_terms.push_back(t);
-    return;
+    return false;
   }
   QuantifiersState& qs = d_tde.getState();
   std::vector<TNode> reps;
@@ -72,7 +73,7 @@ void FunInfo::addTerm(TNode t)
   if (!d_trie.add(d_tde.getCdtAlloc(), qs, reps, t))
   {
     // congruent
-    return;
+    return false;
   }
   d_count = d_count + 1;
   for (size_t i = 0, nchildren = reps.size(); i < nchildren; i++)
@@ -80,6 +81,7 @@ void FunInfo::addTerm(TNode t)
     // add relevant domains
     addRelevantDomain(i, reps[i]);
   }
+  return true;
 }
 
 void FunInfo::addRelevantDomain(size_t i, TNode r)
@@ -91,6 +93,7 @@ void FunInfo::addRelevantDomain(size_t i, TNode r)
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
   Assert(i < d_rinfo.size());
+  Assert (d_tde.getState().getRepresentative(r)==r);
   return d_rinfo[i]->hasTerm(d_tde.getState(), r);
 }
 
@@ -111,6 +114,11 @@ void FunInfo::setActive(bool active)
       addTerm(n);
     }
   }
+}
+
+CDTNodeTrie* FunInfo::getTrie()
+{
+  return &d_trie;
 }
 
 }  // namespace eager

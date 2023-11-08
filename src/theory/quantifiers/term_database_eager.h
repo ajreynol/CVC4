@@ -27,6 +27,7 @@
 #include "theory/quantifiers/eager/quant_info.h"
 #include "theory/quantifiers/eager/stats.h"
 #include "theory/quantifiers/eager/trigger_info.h"
+#include "theory/inference_id.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -100,6 +101,8 @@ class TermDbEager : protected EnvObj
   eager::Stats d_stats;
   /** Waiting instantiations */
   std::map<Node, std::vector<Node>> d_winst;
+  /** Add instantiation */
+  bool addInstantiation(Node q, std::vector<Node>& terms, InferenceId id);
 };
 
 }  // namespace quantifiers

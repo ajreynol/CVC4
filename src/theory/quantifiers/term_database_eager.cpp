@@ -17,6 +17,7 @@
 
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
+#include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 
 namespace cvc5::internal {
@@ -59,16 +60,18 @@ void TermDbEager::eqNotifyNewClass(TNode t)
     {
       finfo = getOrMkFunInfo(f, t.getNumChildren());
     }
-    finfo->addTerm(t);
-    std::vector<eager::TriggerInfo*>& ts = finfo->d_triggers;
-    // try matching?
-    /*
-    for (TriggerInfo* tr : d_triggers)
+    if (finfo->addTerm(t))
     {
-      tr->doMatching(tde, t);
-      // TODO: break?
+      std::vector<eager::TriggerInfo*>& ts = finfo->d_triggers;
+      // try matching?
+      /*
+      for (TriggerInfo* tr : d_triggers)
+      {
+        tr->doMatching(tde, t);
+        // TODO: break?
+      }
+      */
     }
-    */
   }
 }
 
@@ -92,7 +95,7 @@ TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
     return d_null;
   }
   // add using the iterator
-  CDTNodeTrieIterator itt(&d_cdalloc, d_qs, &finfo->d_trie, args.size());
+  CDTNodeTrieIterator itt(&d_cdalloc, d_qs, finfo->getTrie(), args.size());
   for (TNode a : args)
   {
     if (!itt.push(a))
@@ -162,6 +165,11 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
     it->second.initialize(d_qreg, q);
   }
   return &it->second;
+}
+
+bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms, InferenceId id)
+{
+  return d_qim->getInstantiate()->addInstantiation(q, terms, id);
 }
 
 }  // namespace quantifiers

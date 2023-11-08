@@ -52,25 +52,26 @@ class FunInfo
   /** Initialize */
   void initialize(TNode f, size_t nchild);
   /** Add term */
-  void addTerm(TNode t);
-  /** Add relevant domain */
-  void addRelevantDomain(size_t i, TNode r);
+  bool addTerm(TNode t);
   /** Is in relevant domain */
   bool inRelevantDomain(size_t i, TNode r);
   /** Activate */
   void setActive(bool active);
-  /** All terms */
-  CDTNodeTrie d_trie;
-  /** Number of terms for this function */
-  context::CDO<size_t> d_count;
+  /** Get trie */
+  CDTNodeTrie* getTrie();
   /** Triggers with this as top symbol */
   std::vector<TriggerInfo*> d_triggers;
-
  private:
+  /** Add relevant domain */
+  void addRelevantDomain(size_t i, TNode r);
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Relevant domain for the arguments of this function */
   std::vector<std::unique_ptr<RelDomInfo>> d_rinfo;
+  /** All terms */
+  CDTNodeTrie d_trie;
+  /** Number of terms for this function */
+  context::CDO<size_t> d_count;
   /** Active? */
   context::CDO<bool> d_active;
   /** Wait list */
