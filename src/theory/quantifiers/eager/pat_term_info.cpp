@@ -56,6 +56,8 @@ void PatTermInfo::initialize(TriggerInfo* tr, const Node& t)
       d_children.emplace_back(nullptr);
     }
   }
+  // TODO: as an optimization, could pre-compute the arguments that are expected to already be bound after binding variables.
+  // this would catch cases like f(x, a, x) or f(x, g(b, x)).
 }
 
 bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t, size_t& npush)
@@ -102,7 +104,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t, size_t& npush)
   {
     TNode tor = qs.getRepresentative(t[o]);
     bool isActive = false;
-    if (!d_children[o]->initMatchingEqc(tor, isActive))
+    if (!d_children[o]->initMatchingEqc(ie, tor, isActive))
     {
       ie->pop(npush);
       return false;
@@ -147,7 +149,7 @@ bool PatTermInfo::isLegalCandidate(TNode n) const
   return d_tde.getTermDb().getMatchOperator(n) == d_op && !d_tde.isCongruent(n);
 }
 
-bool PatTermInfo::initMatchingEqc(TNode r, bool& isActive)
+bool PatTermInfo::initMatchingEqc(ieval::InstEvaluator* ie, TNode r, bool& isActive)
 {
   // In the rare case we are a (common) subterm, we may already have an assigned
   // eqc. If this does not match, we are infeasible. If this matches, we don't
@@ -156,6 +158,15 @@ bool PatTermInfo::initMatchingEqc(TNode r, bool& isActive)
   {
     return (d_eqc == r);
   }
+  // if we have a value based on the inst evaluator, check it
+  TNode pv = ie->getValue(d_pattern);
+  if (!pv.isNull())
+  {
+    // must be equal
+    d_eqc = pv;
+    return (d_eqc==r);
+  }
+  // otherwise we will match in this equivalence class
   isActive = true;
   d_eqc = r;
   eq::EqualityEngine* ee = d_tde.getState().getEqualityEngine();
@@ -172,7 +183,6 @@ bool PatTermInfo::initMatchingEqc(TNode r, bool& isActive)
     }
     ++d_eqi;
   }
-  d_eqc = Node::null();
   return false;
 }
 

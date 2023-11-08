@@ -50,10 +50,10 @@ class TriggerInfo
   PatTermInfo* getPatTermInfo(TNode t);
 
  private:
+  /** Reset */
+  void resetMatching();
   /** Reference to the eager term database */
   TermDbEager& d_tde;
-  /** Are ground children */
-  bool d_isAllGargs;
   /** Instantiation evaluator */
   std::unique_ptr<ieval::InstEvaluator> d_ieval;
   /** Matching quantified formulas registered to the ieval to their original */

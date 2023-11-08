@@ -44,7 +44,7 @@ class PatTermInfo
   void initialize(TriggerInfo* tr, const Node& t);
   /** Do matching */
   bool doMatching(ieval::InstEvaluator* ie, TNode t, size_t& npush);
-  bool initMatchingEqc(TNode r, bool& isActive);
+  bool initMatchingEqc(ieval::InstEvaluator* ie, TNode r, bool& isActive);
   bool doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush);
   /** get ground args */
   const std::vector<size_t>& getGroundArgs() const { return d_gargs; }

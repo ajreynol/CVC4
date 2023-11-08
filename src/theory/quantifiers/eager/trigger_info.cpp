@@ -28,7 +28,7 @@ namespace quantifiers {
 namespace eager {
 
 TriggerInfo::TriggerInfo(TermDbEager& tde)
-    : d_tde(tde), d_isAllGargs(false), d_arity(0), d_root(nullptr)
+    : d_tde(tde), d_arity(0), d_root(nullptr)
 {
 }
 
@@ -73,6 +73,7 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
   Assert(d_ieval != nullptr);
   Assert(t.getNumChildren() == d_pattern.getNumChildren());
   Assert(t.getOperator() == d_pattern.getOperator());
+  resetMatching();
   size_t npush = 0;
   if (!d_root->doMatching(d_ieval.get(), t, npush))
   {
@@ -88,31 +89,16 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
     Assert(itq != d_quantMap.end());
     inst[itq->second] = d_ieval->getInstantiationFor(q);
   }
-  // cleanup the assignment
-  d_ieval->pop(npush);
   return true;
 }
 
 bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
 {
+  Assert(d_ieval != nullptr);
+  resetMatching();
   QuantifiersState& qs = d_tde.getState();
   // now traverse the term index
   FunInfo* finfo = d_tde.getFunInfo(d_op);
-  if (!d_isAllGargs)
-  {
-    // all ground terms must exist
-    // NOTE: could also check relevant domain?
-    const std::vector<size_t>& gargs = d_root->getGroundArgs();
-    for (size_t g : gargs)
-    {
-      if (!qs.hasTerm(d_pattern[g]))
-      {
-        return false;
-      }
-    }
-    // note this could be context-depedendent but probably not worthwhile?
-    d_isAllGargs = true;
-  }
   CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), d_arity);
   size_t level = 1;
   std::map<size_t, bool> binding;
@@ -126,7 +112,7 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
     {
       TNode next = itt.pushNextChild();
       bool isActive = false;
-      if (next.isNull() || children[level - 1]->initMatchingEqc(next, isActive))
+      if (next.isNull() || children[level - 1]->initMatchingEqc(d_ieval.get(), next, isActive))
       {
         itt.pop();
       }
@@ -194,7 +180,7 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   } while (level <= d_arity);
 
   // found an instantiation, we will sanitize it based on the actual term,
-  // to ensure the match post-instantiation is syntactic
+  // to ensure the match post-instantiation is syntactic.
   TNode data = itt.getCurrentData();
   Assert(!data.isNull());
 
@@ -211,6 +197,12 @@ PatTermInfo* TriggerInfo::getPatTermInfo(TNode p)
     it->second.initialize(this, p);
   }
   return &it->second;
+}
+
+void TriggerInfo::resetMatching()
+{
+  // reset the assignment completely
+  d_ieval->resetAll(false);
 }
 
 }  // namespace eager

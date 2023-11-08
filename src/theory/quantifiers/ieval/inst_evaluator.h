@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "context/cdhashmap.h"
+#include "context/cdhashset.h"
 #include "context/cdlist.h"
 #include "context/context.h"
 #include "expr/node.h"
@@ -58,6 +59,7 @@ namespace ieval {
 class InstEvaluator : protected EnvObj
 {
   using NodeList = context::CDList<Node>;
+  using NodeSet = context::CDHashSet<Node>;
   using NodeNodeMap = context::CDHashMap<Node, Node>;
 
  public:
@@ -182,6 +184,8 @@ class InstEvaluator : protected EnvObj
   NodeList d_quantList;
   /** The (canonical) variables of the quantified formulas we are tracking */
   NodeList d_varList;
+  /** The set of variables in d_varList */
+  NodeSet d_varSet;
   /** An index trie, if we are using generalized learning */
   std::unique_ptr<IndexTrie> d_itrie;
   /** Null term */

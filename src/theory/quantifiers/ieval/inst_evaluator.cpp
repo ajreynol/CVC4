@@ -38,7 +38,8 @@ InstEvaluator::InstEvaluator(Env& env,
       d_state(env, &d_context, qs, tdb),
       d_varMap(&d_context),
       d_quantList(&d_context),
-      d_varList(&d_context)
+      d_varList(&d_context),
+      d_varSet(&d_context)
 {
   setEvaluatorMode(tev, isEager);
 }
@@ -65,15 +66,16 @@ void InstEvaluator::watch(Node q, Node body)
   }
   else
   {
-    // if we aren't canonizing, we should never add more than one quantified
-    // formula
-    Assert(d_quantList.empty());
-    Assert(d_varList.empty());
     vars.insert(vars.end(), q[0].begin(), q[0].end());
   }
   d_quantList.push_back(q);
   for (const Node& v : vars)
   {
+    if (d_varSet.find(v)!=d_varSet.end())
+    {
+      continue;
+    }
+    d_varSet.insert(v);
     d_varList.push_back(v);
   }
   d_state.watch(q, vars, body);
