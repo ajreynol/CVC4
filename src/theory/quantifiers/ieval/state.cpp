@@ -531,9 +531,10 @@ bool State::isQuantActive(TNode q) const
   return true;
 }
 
-std::vector<Node> State::getActiveQuants(bool& isConflict, bool reqConflict) const
+std::vector<Node> State::getActiveQuants(bool& isConflict,
+                                         bool reqConflict) const
 {
-  Assert (!isConflict);
+  Assert(!isConflict);
   std::vector<Node> quants;
   for (const std::pair<const Node, QuantInfo>& qi : d_quantInfo)
   {
@@ -545,12 +546,12 @@ std::vector<Node> State::getActiveQuants(bool& isConflict, bool reqConflict) con
     {
       if (!isConflict)
       {
-        // 
-        //quants.clear();
+        //
+        // quants.clear();
         isConflict = true;
       }
     }
-    else if (reqConflict)// || isConflict)
+    else if (reqConflict)  // || isConflict)
     {
       continue;
     }

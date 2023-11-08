@@ -259,7 +259,8 @@ bool TriggerInfo::resetMatching()
   return success;
 }
 
-bool TriggerInfo::eqNotifyNewClass(TNode t, std::map<Node, std::vector<Node>>& inst)
+bool TriggerInfo::eqNotifyNewClass(TNode t,
+                                   std::map<Node, std::vector<Node>>& inst)
 {
   switch (d_status.get())
   {
@@ -270,13 +271,12 @@ bool TriggerInfo::eqNotifyNewClass(TNode t, std::map<Node, std::vector<Node>>& i
     case TriggerStatus::INACTIVE:
       setStatus(TriggerStatus::WAIT);
       // if we became active, then match all terms seen thus far
-      if (d_status.get()==TriggerStatus::ACTIVE)
+      if (d_status.get() == TriggerStatus::ACTIVE)
       {
         return doMatchingAll(inst);
       }
       break;
-    default:
-      break;
+    default: break;
   }
   return false;
 }
@@ -291,11 +291,11 @@ void TriggerInfo::setStatus(TriggerStatus s)
     return;
   }
   size_t i = 0;
-  while (i<d_statusToProc.size())
+  while (i < d_statusToProc.size())
   {
     s = d_statusToProc[i];
     i++;
-    if (d_status==s)
+    if (d_status == s)
     {
       continue;
     }

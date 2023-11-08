@@ -189,7 +189,8 @@ void TermDbEager::flushInstantiations()
   for (std::pair<const Node, std::vector<Node>>& wi : d_winst)
   {
     Node q = wi.first;
-    bool ret = addInstantiation(q, wi.second, InferenceId::QUANTIFIERS_INST_EAGER);
+    bool ret =
+        addInstantiation(q, wi.second, InferenceId::QUANTIFIERS_INST_EAGER);
     if (!ret)
     {
       Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;

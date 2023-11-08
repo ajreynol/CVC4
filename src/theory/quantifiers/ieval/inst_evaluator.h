@@ -123,7 +123,8 @@ class InstEvaluator : protected EnvObj
   /** Get current instantiation for quantified formula q. */
   std::vector<Node> getInstantiationFor(Node q) const;
   /** Get the active quantified formulas */
-  std::vector<Node> getActiveQuants(bool& isConflict, bool reqConflict = false) const;
+  std::vector<Node> getActiveQuants(bool& isConflict,
+                                    bool reqConflict = false) const;
   /**
    * Is feasible, return true if at least one watched quantified formula is
    * feasible.

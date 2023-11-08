@@ -81,10 +81,7 @@ void InstEvaluator::watch(Node q, Node body)
   d_state.watch(q, vars, body);
 }
 
-void InstEvaluator::deactivate(const Node& q)
-{
-  d_state.deactivate(q);
-}
+void InstEvaluator::deactivate(const Node& q) { d_state.deactivate(q); }
 
 bool InstEvaluator::initialize()
 {
@@ -199,7 +196,8 @@ std::vector<Node> InstEvaluator::getInstantiationFor(Node q) const
   return inst;
 }
 
-std::vector<Node> InstEvaluator::getActiveQuants(bool& isConflict, bool reqConflict) const
+std::vector<Node> InstEvaluator::getActiveQuants(bool& isConflict,
+                                                 bool reqConflict) const
 {
   return d_state.getActiveQuants(isConflict, reqConflict);
 }

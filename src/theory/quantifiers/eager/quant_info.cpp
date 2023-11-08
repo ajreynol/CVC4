@@ -134,14 +134,13 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
 
 void QuantInfo::notifyAsserted() { d_asserted = true; }
 
-void QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo,
-                                             TriggerStatus status)
+void QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status)
 {
   // if we are inactive and we just updated the inactive trigger, update status
-  if (d_tstatus==TriggerStatus::INACTIVE)
+  if (d_tstatus == TriggerStatus::INACTIVE)
   {
-    Assert (d_tinactiveIndex.get()<d_triggers.size());
-    if (d_triggers[d_tinactiveIndex.get()]==tinfo)
+    Assert(d_tinactiveIndex.get() < d_triggers.size());
+    if (d_triggers[d_tinactiveIndex.get()] == tinfo)
     {
       updateStatus();
     }
@@ -150,40 +149,39 @@ void QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo,
 
 void QuantInfo::updateStatus()
 {
-  Assert (d_tstatus==TriggerStatus::INACTIVE);
-  Assert (d_tinactiveIndex.get()<d_triggers.size());
+  Assert(d_tstatus == TriggerStatus::INACTIVE);
+  Assert(d_tinactiveIndex.get() < d_triggers.size());
   do
   {
     TriggerInfo* tnext = d_triggers[d_tinactiveIndex.get()];
-    if (tnext->getStatus()==TriggerStatus::INACTIVE)
+    if (tnext->getStatus() == TriggerStatus::INACTIVE)
     {
       // the current trigger is still inactive
       return;
     }
-    d_tinactiveIndex = d_tinactiveIndex.get()+1;
-  }while (d_tinactiveIndex.get()<d_triggers.size());
-  
+    d_tinactiveIndex = d_tinactiveIndex.get() + 1;
+  } while (d_tinactiveIndex.get() < d_triggers.size());
+
   // we are at the end, choose a trigger to activate
   d_tstatus = TriggerStatus::ACTIVE;
   size_t minTerms = 0;
-  TriggerInfo * bestTrigger = nullptr;
+  TriggerInfo* bestTrigger = nullptr;
   for (TriggerInfo* tinfo : d_triggers)
   {
     TriggerStatus s = tinfo->getStatus();
-    Assert (s!=TriggerStatus::INACTIVE);
-    if (s==TriggerStatus::ACTIVE)
+    Assert(s != TriggerStatus::INACTIVE);
+    if (s == TriggerStatus::ACTIVE)
     {
       bestTrigger = tinfo;
       break;
     }
-    else if (bestTrigger==nullptr)
+    else if (bestTrigger == nullptr)
     {
       bestTrigger = tinfo;
     }
     else
     {
       Node op = tinfo->getOperator();
-      
     }
   }
 }

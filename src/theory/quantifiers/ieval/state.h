@@ -90,7 +90,8 @@ class State : protected EnvObj
   /** Is quantifier active? */
   bool isQuantActive(TNode q) const;
   /** Get the active quantified formulas */
-  std::vector<Node> getActiveQuants(bool& isConflict, bool reqConflict = false) const;
+  std::vector<Node> getActiveQuants(bool& isConflict,
+                                    bool reqConflict = false) const;
   /** Set quantified formula inactive */
   void deactivate(TNode q);
 

@@ -61,7 +61,7 @@ class TriggerInfo
 
   bool doMatchingAll(std::map<Node, std::vector<Node>>& inst);
 
-  /** 
+  /**
    * Notify new ground term. Add instantiations to inst as needed.
    * Return true if we are in conflict.
    */
@@ -72,6 +72,7 @@ class TriggerInfo
 
   Node getPattern() const { return d_pattern; }
   Node getOperator() const { return d_op; }
+
  private:
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);
