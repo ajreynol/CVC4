@@ -17,6 +17,7 @@
 
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
+#include "theory/quantifiers/quantifiers_inference_manager.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -29,10 +30,16 @@ TermDbEager::TermDbEager(Env& env,
     : EnvObj(env),
       d_qs(qs),
       d_qreg(qr),
+      d_qim(nullptr),
       d_tdb(tdb),
       d_cdalloc(context()),
       d_stats(statisticsRegistry())
 {
+}
+
+void TermDbEager::finishInit(QuantifiersInferenceManager* qim)
+{
+  d_qim = qim;
 }
 
 void TermDbEager::assertQuantifier(TNode q)
@@ -53,6 +60,15 @@ void TermDbEager::eqNotifyNewClass(TNode t)
       finfo = getOrMkFunInfo(f, t.getNumChildren());
     }
     finfo->addTerm(t);
+    std::vector<eager::TriggerInfo*>& ts = finfo->d_triggers;
+    // try matching?
+    /*
+    for (TriggerInfo* tr : d_triggers)
+    {
+      tr->doMatching(tde, t);
+      // TODO: break?
+    }
+    */
   }
 }
 
@@ -105,8 +121,9 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     TNode f = d_tdb.getMatchOperator(t);
     Assert(!f.isNull());
     ++(d_stats.d_ntriggersUnique);
-    eager::FunInfo* finfo = getFunInfo(f);
+    eager::FunInfo* finfo = getOrMkFunInfo(f, t.getNumChildren());
     finfo->d_triggers.emplace_back(&it->second);
+    // TODO: maybe match all now
   }
   return &it->second;
 }

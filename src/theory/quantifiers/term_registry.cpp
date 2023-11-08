@@ -80,6 +80,10 @@ void TermRegistry::finishInit(FirstOrderModel* fm,
   {
     d_sygusTdb->finishInit(qim);
   }
+  if (d_termDbEager.get())
+  {
+    d_termDbEager->finishInit(qim);
+  }
 }
 
 void TermRegistry::presolve() {}

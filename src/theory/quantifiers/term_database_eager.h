@@ -32,6 +32,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+class QuantifiersInferenceManager;
 class QuantifiersState;
 class TermDb;
 
@@ -44,6 +45,8 @@ class TermDbEager : protected EnvObj
               QuantifiersState& qs,
               QuantifiersRegistry& qr,
               TermDb& tdb);
+  /** Finish init, which sets the inference manager */
+  void finishInit(QuantifiersInferenceManager* qim);
   /** notification that a quantified formula was asserted */
   void assertQuantifier(TNode q);
   /** notification when master equality engine is updated */
@@ -71,16 +74,19 @@ class TermDbEager : protected EnvObj
   QuantifiersState& getState() { return d_qs; }
   CDTNodeTrieAllocator* getCdtAlloc() { return &d_cdalloc; }
   context::Context* getSatContext() { return context(); }
-
-  /** Add instantiation */
-  // void addInstantiation();
  private:
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
+  /** The null node */
   Node d_null;
+  /** Reference to the quantifiers state */
   QuantifiersState& d_qs;
   /** The quantifiers registry */
   QuantifiersRegistry& d_qreg;
+  /** Pointer to the quantifiers inference manager */
+  QuantifiersInferenceManager* d_qim;
+  /** Reference to term database */
   TermDb& d_tdb;
+  /** The CDTrieNode allocator */
   CDTNodeTrieAllocator d_cdalloc;
   /** */
   std::map<TNode, eager::TriggerInfo> d_tinfo;
@@ -92,6 +98,8 @@ class TermDbEager : protected EnvObj
   expr::TermCanonize d_tcanon;
   /** Stats */
   eager::Stats d_stats;
+  /** Waiting instantiations */
+  std::map<Node, std::vector<Node>> d_winst;
 };
 
 }  // namespace quantifiers

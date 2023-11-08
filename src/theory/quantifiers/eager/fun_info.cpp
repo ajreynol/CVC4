@@ -80,14 +80,6 @@ void FunInfo::addTerm(TNode t)
     // add relevant domains
     addRelevantDomain(i, reps[i]);
   }
-  // try matching?
-  /*
-  for (TriggerInfo* tr : d_triggers)
-  {
-    tr->doMatching(tde, t);
-    // TODO: break?
-  }
-  */
 }
 
 void FunInfo::addRelevantDomain(size_t i, TNode r)
