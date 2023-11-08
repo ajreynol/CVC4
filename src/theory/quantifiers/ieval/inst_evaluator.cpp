@@ -194,12 +194,12 @@ std::vector<Node> InstEvaluator::getInstantiationFor(Node q) const
   return inst;
 }
 
-std::vector<Node> InstEvaluator::getActiveQuants() const
+std::vector<Node> InstEvaluator::getActiveQuants(bool reqConflict) const
 {
   std::vector<Node> quants;
   for (const Node& q : d_quantList)
   {
-    if (d_state.isQuantActive(q))
+    if (d_state.isQuantActive(q, reqConflict))
     {
       quants.emplace_back(q);
     }

@@ -41,18 +41,10 @@ class QuantInfo
   void notifyAsserted();
 
  private:
-  enum class TriggerStatus
-  {
-    INACTIVE,
-    WAIT,
-    ACTIVE
-  };
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** List of triggers */
   std::vector<TriggerInfo*> d_triggers;
-  /** Status of each trigger */
-  context::CDHashMap<size_t, TriggerStatus> d_status;
 };
 
 }  // namespace eager

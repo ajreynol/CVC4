@@ -28,7 +28,7 @@ namespace quantifiers {
 namespace eager {
 
 TriggerInfo::TriggerInfo(TermDbEager& tde)
-    : d_tde(tde), d_arity(0), d_root(nullptr)
+    : d_tde(tde), d_arity(0), d_root(nullptr), d_status(tde.getSatContext(), TriggerStatus::INACTIVE)
 {
 }
 
@@ -81,6 +81,10 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
   }
   // add instantiation(s)
   std::vector<Node> qinsts = d_ieval->getActiveQuants();
+  if (qinsts.size()>1)
+  {
+    // TODO: maybe try to filter to only the ones with conflicts?
+  }
   Assert(!qinsts.empty());
   std::map<Node, Node>::iterator itq;
   for (const Node& q : qinsts)

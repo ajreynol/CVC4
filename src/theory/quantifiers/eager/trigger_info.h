@@ -35,6 +35,7 @@ namespace eager {
 
 class TriggerInfo
 {
+  friend class PatTermInfo;
  public:
   TriggerInfo(TermDbEager& tde);
   /** Initialize */
@@ -46,10 +47,17 @@ class TriggerInfo
 
   bool doMatchingAll(std::map<Node, std::vector<Node>>& inst);
 
+  enum class TriggerStatus
+  {
+    INACTIVE,
+    WAIT,
+    ACTIVE
+  };
+  TriggerStatus getStatus() const { return d_status.get(); }
+  
+ private:
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);
-
- private:
   /** Reset */
   void resetMatching();
   /** Reference to the eager term database */
@@ -68,6 +76,8 @@ class TriggerInfo
   std::map<TNode, PatTermInfo> d_pinfo;
   /** The root pattern term */
   PatTermInfo* d_root;
+  /** Status */
+  context::CDO<TriggerStatus> d_status;
   /** Active? */
   // context::CDO<bool> d_active;
   /** Wait list */

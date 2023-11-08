@@ -513,11 +513,19 @@ bool State::isSome(TNode n) const { return n == d_some; }
 
 Node State::doRewrite(Node n) const { return rewrite(n); }
 
-bool State::isQuantActive(TNode q) const
+bool State::isQuantActive(TNode q, bool reqConflict) const
 {
   std::map<Node, QuantInfo>::const_iterator it = d_quantInfo.find(q);
   Assert(it != d_quantInfo.end());
-  return it->second.isActive();
+  if (!it->second.isActive())
+  {
+    return false;
+  }
+  if (reqConflict)
+  {
+    return it->second.isMaybeConflict();
+  }
+  return true;
 }
 
 TNode State::evaluate(TNode n) const

@@ -28,7 +28,7 @@ namespace quantifiers {
 namespace eager {
 
 QuantInfo::QuantInfo(TermDbEager& tde)
-    : d_tde(tde), d_status(tde.getSatContext())
+    : d_tde(tde)
 {
 }
 
@@ -111,7 +111,6 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
       vlist.emplace_back(visited[v]);
     }
     ti->watch(q, vlist);
-    d_status[d_triggers.size()] = TriggerStatus::INACTIVE;
     d_triggers.emplace_back(ti);
     ++(s.d_ntriggers);
   }
