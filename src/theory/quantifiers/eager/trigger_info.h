@@ -33,16 +33,21 @@ class TermDbEager;
 
 namespace eager {
 
+class QuantInfo;
+
 class TriggerInfo
 {
   friend class PatTermInfo;
 
  public:
   TriggerInfo(TermDbEager& tde);
-  /** Initialize */
+  /** Initialize this trigger for term t */
   void initialize(const Node& t);
-  /** */
-  void watch(const Node& q, const std::vector<Node>& vlist);
+  /**
+   * Notify this trigger that quantified formula q is using it, where vlist
+   * specifies the substitution. 
+   */
+  void watch(QuantInfo* qi, const std::vector<Node>& vlist);
 
   bool doMatching(TNode t, std::map<Node, std::vector<Node>>& inst);
 
@@ -54,7 +59,8 @@ class TriggerInfo
     WAIT,
     ACTIVE
   };
-  TriggerStatus getStatus() const { return d_status.get(); }
+  /** Status */
+  context::CDO<TriggerStatus> d_status;
 
  private:
   /** Get patterm term info */
@@ -79,8 +85,6 @@ class TriggerInfo
   std::map<TNode, PatTermInfo> d_pinfo;
   /** The root pattern term */
   PatTermInfo* d_root;
-  /** Status */
-  context::CDO<TriggerStatus> d_status;
   /** Active? */
   // context::CDO<bool> d_active;
   /** Wait list */

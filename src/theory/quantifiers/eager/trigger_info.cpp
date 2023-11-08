@@ -21,6 +21,7 @@
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_database_eager.h"
+#include "theory/quantifiers/eager/quant_info.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -28,14 +29,14 @@ namespace quantifiers {
 namespace eager {
 
 TriggerInfo::TriggerInfo(TermDbEager& tde)
-    : d_tde(tde),
+    : d_status(tde.getSatContext(), TriggerStatus::INACTIVE),
+      d_tde(tde),
       d_arity(0),
-      d_root(nullptr),
-      d_status(tde.getSatContext(), TriggerStatus::INACTIVE)
+      d_root(nullptr)
 {
 }
 
-void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist)
+void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
 {
   if (d_ieval == nullptr)
   {
@@ -45,6 +46,7 @@ void TriggerInfo::watch(const Node& q, const std::vector<Node>& vlist)
                                            d_tde.getTermDb(),
                                            ieval::TermEvaluatorMode::PROP));
   }
+  Node q = qi->getQuant();
   Assert(q.getKind() == Kind::FORALL);
   Assert(vlist.size() == q[0].getNumChildren());
   Subs s;
@@ -200,13 +202,13 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   Assert(data.getNumChildren() == d_pattern.getNumChildren());
   std::vector<Node> qinsts = getQuantsForInst();
   Assert(!qinsts.empty());
-
-  std::map<Node, Node>::iterator itq;
-  for (const Node& q : qinsts)
+  // compute the backwards map
+  std::map<Node, Node> varToTerm;
+  std::vector<size_t>& vargs = d_root->d_vargs;
+  for (size_t v : vargs)
   {
-    itq = d_quantMap.find(q);
-    Assert(itq != d_quantMap.end());
-    inst[itq->second] = d_ieval->getInstantiationFor(q);
+    Assert (v<d_pattern.getNumChildren());
+    varToTerm[d_pattern[v]] = data[v];
   }
 
   return true;

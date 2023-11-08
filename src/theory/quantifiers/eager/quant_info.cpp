@@ -27,11 +27,13 @@ namespace quantifiers {
 
 namespace eager {
 
-QuantInfo::QuantInfo(TermDbEager& tde) : d_tde(tde) {}
+QuantInfo::QuantInfo(TermDbEager& tde) : d_tde(tde), d_asserted(tde.getSatContext()) {}
 
 void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
 {
+  Assert (d_quant.isNull());
   Assert(q.getKind() == Kind::FORALL);
+  d_quant = q;
   Stats& s = d_tde.getStats();
   ++(s.d_nquant);
   const Options& opts = d_tde.getEnv().getOptions();
@@ -73,6 +75,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
     Node upc = qr.substituteBoundVariablesToInstConstants(up, q);
     if (tinfo.find(upc) != tinfo.end())
     {
+      // user pattern also chosen as an auto-pattern
       continue;
     }
     tinfo[upc].init(q, upc);
@@ -107,7 +110,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
       Assert(visited.find(v) != visited.end());
       vlist.emplace_back(visited[v]);
     }
-    ti->watch(q, vlist);
+    ti->watch(this, vlist);
     d_triggers.emplace_back(ti);
     ++(s.d_ntriggers);
   }
@@ -117,7 +120,9 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   }
 }
 
-void QuantInfo::notifyAsserted() {}
+void QuantInfo::notifyAsserted() {
+  d_asserted = true;
+}
 
 }  // namespace eager
 }  // namespace quantifiers

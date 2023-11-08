@@ -35,16 +35,23 @@ class QuantInfo
 {
  public:
   QuantInfo(TermDbEager& tde);
-  /** Initialize */
+  /** Initialize this for quantified formula q */
   void initialize(QuantifiersRegistry& qr, const Node& q);
-  /** Set that we are asserted */
+  /** Set that the quantified formula for this class is asserted */
   void notifyAsserted();
-
+  /** Get quantified formula */
+  Node getQuant() const { return d_quant; }
+  /** Is the quantified formula asserted? */
+  bool isAsserted() const { return d_asserted.get(); }
  private:
+   /** The quantified formula */
+   Node d_quant;
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** List of triggers */
   std::vector<TriggerInfo*> d_triggers;
+  /** Is asserted */
+  context::CDO<bool> d_asserted;
 };
 
 }  // namespace eager

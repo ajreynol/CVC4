@@ -144,15 +144,18 @@ class CDTNodeTrieIterator
                QuantifiersState& qs,
                CDTNodeTrie* active,
                bool isChildLeaf);
+    /** The trie whose children we are iterating */
     CDTNodeTrie* d_active;
+    /** The children of d_active we computed */
     std::map<TNode, CDTNodeTrie*> d_curChildren;
+    /** Our current iteration in d_curChildren */
     std::map<TNode, CDTNodeTrie*>::iterator d_cit;
-    std::unordered_set<TNode> d_pushed;
+    /** Is the iteration finished */
     bool isFinished() const { return d_cit == d_curChildren.end(); }
   };
   /** The iteration stack */
   std::vector<StackFrame> d_stack;
-  /** The leaf we iterated to */
+  /** The leaf we iterated to, which is not added to d_stack */
   CDTNodeTrie* d_curData;
   /** The overall depth we are iterating to */
   size_t d_depth;
