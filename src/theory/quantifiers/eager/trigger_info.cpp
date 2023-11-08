@@ -78,20 +78,24 @@ void TriggerInfo::initialize(const Node& t)
 
 bool TriggerInfo::doMatching(TNode t)
 {
+  Trace("eager-inst-matching") << "doMatching " << d_pattern << " " << t << std::endl;
   Assert(d_ieval != nullptr);
   Assert(t.getNumChildren() == d_pattern.getNumChildren());
   Assert(t.getOperator() == d_pattern.getOperator());
   if (!resetMatching())
   {
+    Trace("eager-inst-matching-debug") << "...failed reset" << std::endl;
     return false;
   }
   if (!d_root->doMatching(d_ieval.get(), t))
   {
+    Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
     return false;
   }
   // add instantiation(s)
   bool isConflict = false;
   std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
+  Trace("eager-inst-matching-debug") << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict << std::endl;
   Assert(!qinsts.empty());
   std::map<Node, Node>::iterator itq;
   for (const Node& q : qinsts)
@@ -106,9 +110,11 @@ bool TriggerInfo::doMatching(TNode t)
 
 bool TriggerInfo::doMatchingAll()
 {
+  Trace("eager-inst-matching") << "doMatchingAll " << d_pattern << std::endl;
   Assert(d_ieval != nullptr);
   if (!resetMatching())
   {
+    Trace("eager-inst-matching-debug") << "...failed reset" << std::endl;
     return false;
   }
   QuantifiersState& qs = d_tde.getState();
@@ -202,6 +208,7 @@ bool TriggerInfo::doMatchingAll()
     level = itt.getLevel();
     if (level == 0)
     {
+      Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
       return false;
     }
   } while (level <= d_arity);
@@ -214,6 +221,7 @@ bool TriggerInfo::doMatchingAll()
   bool isConflict = false;
   std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
   Assert(!qinsts.empty());
+  Trace("eager-inst-matching-debug") << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict << std::endl;
   // compute the backwards map
   std::map<Node, Node> varToTerm;
   std::vector<size_t>& vargs = d_root->d_vargs;
@@ -222,7 +230,6 @@ bool TriggerInfo::doMatchingAll()
     Assert(v < d_pattern.getNumChildren());
     varToTerm[d_pattern[v]] = data[v];
   }
-
   std::map<Node, Node>::iterator it;
   for (const Node& q : qinsts)
   {
@@ -312,6 +319,7 @@ bool TriggerInfo::setStatus(TriggerStatus s)
     i++;
     if (d_status == s)
     {
+      // no change in status
       continue;
     }
     d_status = s;
@@ -319,7 +327,12 @@ bool TriggerInfo::setStatus(TriggerStatus s)
     // notify that we've changed status to s
     for (QuantInfo* qi : d_qinfos)
     {
-      qi->notifyTriggerStatus(this, s);
+      if (qi->notifyTriggerStatus(this, s))
+      {
+        // conflict discovered
+        d_statusToProc.clear();
+        return true;
+      }
     }
     // if we became active, then match all terms seen thus far
     if (s == TriggerStatus::ACTIVE)

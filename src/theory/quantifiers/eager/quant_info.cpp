@@ -128,13 +128,17 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   else
   {
     d_tstatus = TriggerStatus::INACTIVE;
-    updateStatus();
   }
 }
 
-void QuantInfo::notifyAsserted() { d_asserted = true; }
+bool QuantInfo::notifyAsserted()
+{ 
+  Assert (!d_asserted.get());
+  d_asserted = true; 
+  return updateStatus();
+}
 
-void QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status)
+bool QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status)
 {
   // if we are inactive and we just updated the inactive trigger, update status
   if (d_tstatus == TriggerStatus::INACTIVE)
@@ -142,12 +146,13 @@ void QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status)
     Assert(d_tinactiveIndex.get() < d_triggers.size());
     if (d_triggers[d_tinactiveIndex.get()] == tinfo)
     {
-      updateStatus();
+      return updateStatus();
     }
   }
+  return false;
 }
 
-void QuantInfo::updateStatus()
+bool QuantInfo::updateStatus()
 {
   Assert(d_tstatus == TriggerStatus::INACTIVE);
   Assert(d_tinactiveIndex.get() < d_triggers.size());
@@ -157,7 +162,7 @@ void QuantInfo::updateStatus()
     if (tnext->getStatus() == TriggerStatus::INACTIVE)
     {
       // the current trigger is still inactive
-      return;
+      return false;
     }
     d_tinactiveIndex = d_tinactiveIndex.get() + 1;
   } while (d_tinactiveIndex.get() < d_triggers.size());
@@ -182,8 +187,17 @@ void QuantInfo::updateStatus()
     else
     {
       Node op = tinfo->getOperator();
+      FunInfo* finfo = d_tde.getFunInfo(op);
+      size_t cterms = finfo->getNumTerms();
+      if (cterms<minTerms)
+      {
+        bestTrigger = tinfo;
+        minTerms = cterms;
+      }
     }
   }
+  // activate the best trigger
+  return bestTrigger->setStatus(TriggerStatus::ACTIVE);
 }
 
 }  // namespace eager

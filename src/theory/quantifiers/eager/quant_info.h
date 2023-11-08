@@ -38,16 +38,18 @@ class QuantInfo
   /** Initialize this for quantified formula q */
   void initialize(QuantifiersRegistry& qr, const Node& q);
   /** Set that the quantified formula for this class is asserted */
-  void notifyAsserted();
+  bool notifyAsserted();
   /** Get quantified formula */
   Node getQuant() const { return d_quant; }
   /** Is the quantified formula asserted? */
   bool isAsserted() const { return d_asserted.get(); }
-  /** Notify that a trigger has been assigned a status */
-  void notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
+  /** 
+   * Notify that a trigger has been assigned a status, return true if conflict.
+   */
+  bool notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
 
  private:
-  void updateStatus();
+  bool updateStatus();
   /** The quantified formula */
   Node d_quant;
   /** Reference to the eager term database */
