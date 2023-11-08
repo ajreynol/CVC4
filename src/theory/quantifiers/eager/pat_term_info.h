@@ -39,10 +39,13 @@ class TriggerInfo;
 class PatTermInfo
 {
   friend class TriggerInfo;
+
  public:
   PatTermInfo(TermDbEager& tde);
   /** Initialize */
-  void initialize(TriggerInfo* tr, const Node& t, std::unordered_set<Node>& fvs);
+  void initialize(TriggerInfo* tr,
+                  const Node& t,
+                  std::unordered_set<Node>& fvs);
   /** Do matching */
   bool doMatching(ieval::InstEvaluator* ie, TNode t);
   bool initMatchingEqc(ieval::InstEvaluator* ie, TNode r);
@@ -51,6 +54,7 @@ class PatTermInfo
   const std::vector<size_t>& getGroundArgs() const { return d_gargs; }
   std::vector<PatTermInfo*>& getChildren() { return d_children; }
   size_t getNumBindings() const { return d_nbind; }
+
  private:
   bool isLegalCandidate(TNode n) const;
   /** Reference to the eager term database */

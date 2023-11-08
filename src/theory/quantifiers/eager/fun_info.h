@@ -63,6 +63,7 @@ class FunInfo
   size_t getNumTerms() const;
   /** Triggers with this as top symbol */
   std::vector<TriggerInfo*> d_triggers;
+
  private:
   /** Add relevant domain */
   void addRelevantDomain(size_t i, TNode r);

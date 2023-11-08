@@ -71,7 +71,7 @@ void InstEvaluator::watch(Node q, Node body)
   d_quantList.push_back(q);
   for (const Node& v : vars)
   {
-    if (d_varSet.find(v)!=d_varSet.end())
+    if (d_varSet.find(v) != d_varSet.end())
     {
       continue;
     }

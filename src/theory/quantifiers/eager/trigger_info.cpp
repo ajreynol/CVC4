@@ -28,7 +28,10 @@ namespace quantifiers {
 namespace eager {
 
 TriggerInfo::TriggerInfo(TermDbEager& tde)
-    : d_tde(tde), d_arity(0), d_root(nullptr), d_status(tde.getSatContext(), TriggerStatus::INACTIVE)
+    : d_tde(tde),
+      d_arity(0),
+      d_root(nullptr),
+      d_status(tde.getSatContext(), TriggerStatus::INACTIVE)
 {
 }
 
@@ -80,11 +83,11 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
   }
   // add instantiation(s)
   std::vector<Node> qinsts = d_ieval->getActiveQuants();
-  if (qinsts.size()>1)
+  if (qinsts.size() > 1)
   {
     // try to filter to only the ones with conflicts
     std::vector<Node> qinstsc = d_ieval->getActiveQuants(true);
-    if (!qinstsc.empty() && qinstsc.size()<qinsts.size())
+    if (!qinstsc.empty() && qinstsc.size() < qinsts.size())
     {
       qinsts = qinstsc;
     }
@@ -121,11 +124,11 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
     pti = children[level - 1];
     success = true;
     pc = d_pattern[level - 1];
-    Assert (level<=iterAllChild.size());
-    if (level==iterAllChild.size())
+    Assert(level <= iterAllChild.size());
+    if (level == iterAllChild.size())
     {
       // determine if there is a specific child we are traversing to
-      if (pti!=nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
+      if (pti != nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
       {
         // if a non-ground term, we check whether we already have a value based
         // on the evaluator utility.
@@ -168,14 +171,14 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
           // if no more children to push, go back a level
           success = false;
         }
-        else if (pc.getKind()==Kind::BOUND_VARIABLE)
+        else if (pc.getKind() == Kind::BOUND_VARIABLE)
         {
           // if we are a bound variable, we try to bind
           success = d_ieval->push(pc, r);
         }
         else
         {
-          Assert (pti!=nullptr);
+          Assert(pti != nullptr);
           // if we are a compound child, we try to match in the eqc
           success = pti->initMatchingEqc(d_ieval.get(), r);
           if (success)
@@ -203,8 +206,7 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   // to ensure the match post-instantiation is syntactic.
   TNode data = itt.getCurrentData();
   Assert(!data.isNull());
-  Assert(data.getNumChildren()==d_pattern.getNumChildren());
-  
+  Assert(data.getNumChildren() == d_pattern.getNumChildren());
 
   return true;
 }

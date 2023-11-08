@@ -36,6 +36,7 @@ namespace eager {
 class TriggerInfo
 {
   friend class PatTermInfo;
+
  public:
   TriggerInfo(TermDbEager& tde);
   /** Initialize */
@@ -54,7 +55,7 @@ class TriggerInfo
     ACTIVE
   };
   TriggerStatus getStatus() const { return d_status.get(); }
-  
+
  private:
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);

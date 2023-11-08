@@ -27,10 +27,7 @@ namespace quantifiers {
 
 namespace eager {
 
-QuantInfo::QuantInfo(TermDbEager& tde)
-    : d_tde(tde)
-{
-}
+QuantInfo::QuantInfo(TermDbEager& tde) : d_tde(tde) {}
 
 void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
 {
