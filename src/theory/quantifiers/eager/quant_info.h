@@ -58,6 +58,8 @@ class QuantInfo
   std::vector<TriggerInfo*> d_triggers;
   /** Variable list per trigger */
   std::vector<std::vector<Node>> d_vlists;
+  /** Have we indicated that we want to watch */
+  std::vector<bool> d_triggerWatching;
   /** Is asserted */
   context::CDO<bool> d_asserted;
   /** The index in d_triggers that is inactive */

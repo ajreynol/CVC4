@@ -117,8 +117,8 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
       Assert(visited.find(v) != visited.end());
       vlist.emplace_back(visited[v]);
     }
-    ti->watch(this, vlist);
     d_triggers.emplace_back(ti);
+    d_triggerWatching.emplace_back(false);
     ++(s.d_ntriggers);
   }
   if (d_triggers.empty())
@@ -154,7 +154,11 @@ bool QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status)
 
 bool QuantInfo::updateStatus()
 {
-  Assert(d_tstatus == TriggerStatus::INACTIVE);
+  if (d_tstatus != TriggerStatus::INACTIVE)
+  {
+    // nothing to do
+    return false;
+  }
   Assert(d_tinactiveIndex.get() < d_triggers.size());
   do
   {
@@ -167,34 +171,43 @@ bool QuantInfo::updateStatus()
     d_tinactiveIndex = d_tinactiveIndex.get() + 1;
   } while (d_tinactiveIndex.get() < d_triggers.size());
 
+  Trace("eager-inst-debug") << "Activate quant: " << d_quant << std::endl;
   // we are at the end, choose a trigger to activate
   d_tstatus = TriggerStatus::ACTIVE;
   size_t minTerms = 0;
-  TriggerInfo* bestTrigger = nullptr;
-  for (TriggerInfo* tinfo : d_triggers)
+  size_t bestIndex = 0;
+  bool bestIndexSet = false;
+  for (size_t i=0, ntriggers=d_triggers.size(); i<ntriggers; i++)
   {
+    TriggerInfo* tinfo = d_triggers[i];
     TriggerStatus s = tinfo->getStatus();
     Assert(s != TriggerStatus::INACTIVE);
     if (s == TriggerStatus::ACTIVE)
     {
-      bestTrigger = tinfo;
+      bestIndex = i;
       break;
-    }
-    else if (bestTrigger == nullptr)
-    {
-      bestTrigger = tinfo;
     }
     else
     {
       Node op = tinfo->getOperator();
       FunInfo* finfo = d_tde.getFunInfo(op);
       size_t cterms = finfo->getNumTerms();
-      if (cterms < minTerms)
+      if (!bestIndexSet || cterms<minTerms)
       {
-        bestTrigger = tinfo;
+        bestIndex = i;
         minTerms = cterms;
       }
+      bestIndexSet = true;
     }
+  }
+  Assert (d_triggers.size()==d_vlists.size());
+  Assert (d_triggers.size()==d_triggerWatching.size());
+  TriggerInfo* bestTrigger = d_triggers[bestIndex];
+  // ensure we are signed up to watch
+  if (!d_triggerWatching[bestIndex])
+  {
+    d_triggerWatching[bestIndex] = true;
+    bestTrigger->watch(this, d_vlists[bestIndex]);
   }
   // activate the best trigger
   return bestTrigger->setStatus(TriggerStatus::ACTIVE);

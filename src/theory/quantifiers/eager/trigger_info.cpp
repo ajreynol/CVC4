@@ -64,8 +64,10 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
     d_quantMap[qs] = q;
     d_quantRMap[q] = qs;
   }
-  Assert(std::find(d_qinfos.begin(), d_qinfos.end(), qi) == d_qinfos.end());
-  d_qinfos.emplace_back(qi);
+  if (std::find(d_qinfos.begin(), d_qinfos.end(), qi) == d_qinfos.end())
+  {
+    d_qinfos.emplace_back(qi);
+  }
 }
 
 void TriggerInfo::initialize(const Node& t)
@@ -342,6 +344,7 @@ bool TriggerInfo::setStatus(TriggerStatus s)
     // if we became active, then match all terms seen thus far
     if (s == TriggerStatus::ACTIVE)
     {
+      Trace("eager-inst-debug") << "Activate trigger: " << d_pattern << std::endl;
       d_statusToProc.clear();
       return doMatchingAll();
     }
