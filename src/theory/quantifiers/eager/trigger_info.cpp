@@ -200,9 +200,7 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   Assert(data.getNumChildren() == d_pattern.getNumChildren());
   std::vector<Node> qinsts = getQuantsForInst();
   Assert(!qinsts.empty());
-  
-  
-  
+
   std::map<Node, Node>::iterator itq;
   for (const Node& q : qinsts)
   {
@@ -210,8 +208,7 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
     Assert(itq != d_quantMap.end());
     inst[itq->second] = d_ieval->getInstantiationFor(q);
   }
-  
-  
+
   return true;
 }
 
