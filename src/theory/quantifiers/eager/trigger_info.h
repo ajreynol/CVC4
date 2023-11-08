@@ -61,6 +61,8 @@ class TriggerInfo
   PatTermInfo* getPatTermInfo(TNode t);
   /** Reset */
   void resetMatching();
+  /** Get active quantifiers */
+  std::vector<Node> getQuantsForInst() const;
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Instantiation evaluator */

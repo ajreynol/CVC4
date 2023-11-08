@@ -42,14 +42,31 @@ class PatTermInfo
 
  public:
   PatTermInfo(TermDbEager& tde);
-  /** Initialize */
+  /** 
+   * Initialize the pattern term for n whose parent is tr. This pattern will
+   * be processed in a context where fvs are already bound.
+   */
   void initialize(TriggerInfo* tr,
                   const Node& t,
                   std::unordered_set<Node>& fvs);
-  /** Do matching */
+  /**
+   * Do matching against ground term t. Returns true if successful, in which
+   * case we bind all free variables in this pattern term in ie. Otherwise,
+   * ie is unmodified.
+   */
   bool doMatching(ieval::InstEvaluator* ie, TNode t);
+  /**
+   * Initialize this class to match terms in eq class r. Return false if
+   * we can quickly determine it is not possible to do so.
+   */
   bool initMatchingEqc(ieval::InstEvaluator* ie, TNode r);
+  /** 
+   * Initialize this class to match the next term in the equivalence class
+   * we are considering. Returns true if successful, in which case we bind all
+   * free variables in this pattern term in ie. Otherwise, ie is unmodified.
+   */
   bool doMatchingEqcNext(ieval::InstEvaluator* ie);
+  
   /** get ground args */
   const std::vector<size_t>& getGroundArgs() const { return d_gargs; }
   std::vector<PatTermInfo*>& getChildren() { return d_children; }

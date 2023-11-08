@@ -82,16 +82,7 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
     return false;
   }
   // add instantiation(s)
-  std::vector<Node> qinsts = d_ieval->getActiveQuants();
-  if (qinsts.size() > 1)
-  {
-    // try to filter to only the ones with conflicts
-    std::vector<Node> qinstsc = d_ieval->getActiveQuants(true);
-    if (!qinstsc.empty() && qinstsc.size() < qinsts.size())
-    {
-      qinsts = qinstsc;
-    }
-  }
+  std::vector<Node> qinsts = getQuantsForInst();
   Assert(!qinsts.empty());
   std::map<Node, Node>::iterator itq;
   for (const Node& q : qinsts)
@@ -207,7 +198,20 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
   TNode data = itt.getCurrentData();
   Assert(!data.isNull());
   Assert(data.getNumChildren() == d_pattern.getNumChildren());
-
+  std::vector<Node> qinsts = getQuantsForInst();
+  Assert(!qinsts.empty());
+  
+  
+  
+  std::map<Node, Node>::iterator itq;
+  for (const Node& q : qinsts)
+  {
+    itq = d_quantMap.find(q);
+    Assert(itq != d_quantMap.end());
+    inst[itq->second] = d_ieval->getInstantiationFor(q);
+  }
+  
+  
   return true;
 }
 
@@ -226,6 +230,21 @@ void TriggerInfo::resetMatching()
 {
   // reset the assignment completely
   d_ieval->resetAll(false);
+}
+
+std::vector<Node> TriggerInfo::getQuantsForInst() const
+{
+  std::vector<Node> qinsts = d_ieval->getActiveQuants();
+  if (qinsts.size() > 1)
+  {
+    // try to filter to only the ones with conflicts
+    std::vector<Node> qinstsc = d_ieval->getActiveQuants(true);
+    if (!qinstsc.empty() && qinstsc.size() < qinsts.size())
+    {
+      return qinstsc;
+    }
+  }
+  return qinsts;
 }
 
 }  // namespace eager

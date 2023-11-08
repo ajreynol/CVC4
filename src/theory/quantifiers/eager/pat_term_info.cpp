@@ -38,7 +38,12 @@ void PatTermInfo::initialize(TriggerInfo* tr,
   d_pattern = t;
   d_op = d_tde.getTermDb().getMatchOperator(d_pattern);
   size_t nvarInit = fvs.size();
-  // classify each child of the pattern as either variable, compound or ground.
+  // Classify each child of the pattern as either variable, compound, ground
+  // or ground post-bind.
+  // For the latter classification, we pre-compute the arguments that are
+  // expected to already be bound after binding variables. This catches cases
+  // like f(x, a, x) or f(x, a, g(b, x)) where the 3rd argument in each case
+  // is ground post-bind.
   for (size_t i = 0, nargs = t.getNumChildren(); i < nargs; i++)
   {
     if (expr::hasBoundVar(t[i]))
@@ -67,12 +72,15 @@ void PatTermInfo::initialize(TriggerInfo* tr,
           processed = true;
           d_oargs.emplace_back(i);
           d_children.emplace_back(tr->getPatTermInfo(t[i]));
-          // initialize and add to the free variables
+          // Initialize the child trigger now. We know this is a new trigger
+          // since t[i] contains new variables we haven't seen before, and thus
+          // it is safe to initialize it here.
           d_children.back()->initialize(tr, t, fvs);
           Assert(fvs.size() == fvsTmp.size());
           d_bindings.emplace_back(newFvSize);
         }
       }
+      // if does not have a new variable, it is ground post-bind.
       if (!processed)
       {
         d_gpargs.emplace_back(i);
@@ -88,9 +96,6 @@ void PatTermInfo::initialize(TriggerInfo* tr,
     }
   }
   d_nbind = fvs.size() - nvarInit;
-  // TODO: as an optimization, could pre-compute the arguments that are expected
-  // to already be bound after binding variables. this would catch cases like
-  // f(x, a, x) or f(x, g(b, x)).
 }
 
 bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
@@ -109,10 +114,12 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
   for (size_t i = 0, nvars = d_vargs.size(); i < nvars; i++)
   {
     size_t v = d_vargs[i];
+    // should not have assigned it yet
     Assert(ie->get(d_pattern[v]).isNull());
     // if infeasible to assign, we are done
     if (!ie->push(d_pattern[v], t[v]))
     {
+      // clean up
       ie->pop(i);
       return false;
     }
@@ -125,6 +132,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
     // note that gv may be none or some, areEqual should be robust
     if (!qs.areEqual(d_pattern[g], gv))
     {
+      // clean up
       ie->pop(d_vargs.size());
       return false;
     }
@@ -136,30 +144,34 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
     TNode tor = qs.getRepresentative(t[o]);
     if (!d_children[o]->initMatchingEqc(ie, tor))
     {
+      // clean up
       ie->pop(d_vargs.size());
       return false;
     }
   }
   size_t noargs = d_oargs.size();
   size_t i = 0;
+  size_t o = d_oargs[i];
   while (i < noargs)
   {
-    size_t o = d_oargs[i];
     if (!d_children[o]->doMatchingEqcNext(ie))
     {
       if (i == 0)
       {
-        // failed
+        // failed, clean up
+        ie->pop(d_vargs.size());
         return false;
       }
       // pop the variables assigned last
       i--;
-      ie->pop(d_children[d_oargs[i]]->getNumBindings());
+      o = d_oargs[i];
+      ie->pop(d_children[o]->getNumBindings());
     }
     else
     {
       // successfully matched
       i++;
+      o = d_oargs[i];
     }
   }
   return true;
