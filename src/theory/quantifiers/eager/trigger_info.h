@@ -20,8 +20,8 @@
 
 #include "context/cdo.h"
 #include "expr/node.h"
-#include "theory/quantifiers/eager/util.h"
 #include "theory/quantifiers/eager/pat_term_info.h"
+#include "theory/quantifiers/eager/util.h"
 #include "theory/quantifiers/ieval/inst_evaluator.h"
 #include "theory/uf/equality_engine.h"
 
@@ -48,6 +48,7 @@ class TriggerInfo
 
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);
+
  private:
   /** Reference to the eager term database */
   TermDbEager& d_tde;

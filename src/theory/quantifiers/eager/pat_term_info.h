@@ -27,7 +27,7 @@ namespace theory {
 namespace quantifiers {
 
 namespace ieval {
-  class InstEvaluator;
+class InstEvaluator;
 }
 
 class TermDbEager;
@@ -49,6 +49,7 @@ class PatTermInfo
   /** get ground args */
   const std::vector<size_t>& getGroundArgs() const { return d_gargs; }
   std::vector<PatTermInfo*>& getChildren() { return d_children; }
+
  private:
   bool isLegalCandidate(TNode n) const;
   /** Reference to the eager term database */

@@ -134,7 +134,6 @@ class InstEvaluator : protected EnvObj
   /** Get the value of v, if assigned, or null otherwise */
   TNode getValue(TNode n) const;
 
-
  private:
   /** Set evaluator mode. */
   void setEvaluatorMode(TermEvaluatorMode tev, bool isEager);

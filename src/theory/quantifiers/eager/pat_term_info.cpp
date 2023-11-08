@@ -17,21 +17,18 @@
 
 #include "expr/node_algorithm.h"
 #include "expr/subs.h"
+#include "theory/quantifiers/eager/trigger_info.h"
 #include "theory/quantifiers/ieval/inst_evaluator.h"
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_database_eager.h"
-#include "theory/quantifiers/eager/trigger_info.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 namespace eager {
 
-PatTermInfo::PatTermInfo(TermDbEager& tde)
-    : d_tde(tde)
-{
-}
+PatTermInfo::PatTermInfo(TermDbEager& tde) : d_tde(tde) {}
 
 void PatTermInfo::initialize(TriggerInfo* tr, const Node& t)
 {
@@ -61,9 +58,7 @@ void PatTermInfo::initialize(TriggerInfo* tr, const Node& t)
   }
 }
 
-bool PatTermInfo::doMatching(ieval::InstEvaluator* ie,
-                                     TNode t,
-                                     size_t& npush)
+bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t, size_t& npush)
 {
   QuantifiersState& qs = d_tde.getState();
   // ground arguments must match
@@ -199,7 +194,6 @@ bool PatTermInfo::doMatchingEqcNext(ieval::InstEvaluator* ie, size_t& npush)
   d_eqc = Node::null();
   return false;
 }
-
 
 }  // namespace eager
 }  // namespace quantifiers

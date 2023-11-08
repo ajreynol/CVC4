@@ -116,8 +116,7 @@ bool TriggerInfo::doMatchingAll()
     {
       TNode next = itt.pushNextChild();
       bool isActive = false;
-      if (next.isNull()
-          || children[level - 1]->initMatchingEqc(next, isActive))
+      if (next.isNull() || children[level - 1]->initMatchingEqc(next, isActive))
       {
         itt.pop();
       }

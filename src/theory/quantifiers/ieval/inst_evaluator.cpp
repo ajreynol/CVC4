@@ -204,10 +204,7 @@ TNode InstEvaluator::get(TNode v) const
   return d_null;
 }
 
-TNode InstEvaluator::getValue(TNode n) const
-{
-  return d_state.getValue(n);
-}
+TNode InstEvaluator::getValue(TNode n) const { return d_state.getValue(n); }
 
 void InstEvaluator::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
 {
