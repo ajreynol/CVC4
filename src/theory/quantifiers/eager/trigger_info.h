@@ -59,13 +59,12 @@ class TriggerInfo
   bool doMatching(TNode t, std::map<Node, std::vector<Node>>& inst);
 
   bool doMatchingAll(std::map<Node, std::vector<Node>>& inst);
-
-  /** Status */
-  context::CDO<TriggerStatus> d_status;
   
   /** Notify new ground term */
   void eqNotifyNewClass(TNode t);
 
+  /** Status */
+  context::CDO<TriggerStatus> d_status;
  private:
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);
@@ -77,6 +76,8 @@ class TriggerInfo
   TermDbEager& d_tde;
   /** Instantiation evaluator */
   std::unique_ptr<ieval::InstEvaluator> d_ieval;
+  /** Quant info */
+  std::vector<QuantInfo*> d_qinfos;
   /** Matching quantified formulas registered to the ieval to their original */
   std::map<Node, Node> d_quantMap;
   /** The pattern */
