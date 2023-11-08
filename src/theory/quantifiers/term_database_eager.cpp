@@ -185,17 +185,17 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
   return &it->second;
 }
 
-bool TermDbEager::addInstantiation(Node q,
-                                   std::vector<Node>& terms)
+bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
 {
-  bool ret = d_qim->getInstantiate()->addInstantiation(q, terms, InferenceId::QUANTIFIERS_INST_EAGER);   
+  bool ret = d_qim->getInstantiate()->addInstantiation(
+      q, terms, InferenceId::QUANTIFIERS_INST_EAGER);
   if (!ret)
-    {
-      Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
-    }
-    return ret;
+  {
+    Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
+  }
+  return ret;
 }
-// 
+//
 
 }  // namespace quantifiers
 }  // namespace theory

@@ -222,7 +222,7 @@ bool TriggerInfo::doMatchingAll()
     Assert(v < d_pattern.getNumChildren());
     varToTerm[d_pattern[v]] = data[v];
   }
-  
+
   std::map<Node, Node>::iterator it;
   for (const Node& q : qinsts)
   {
@@ -232,7 +232,7 @@ bool TriggerInfo::doMatchingAll()
     for (const Node& v : q[0])
     {
       it = varToTerm.find(v);
-      if (it!=varToTerm.end())
+      if (it != varToTerm.end())
       {
         inst.emplace_back(it->second);
       }
@@ -320,7 +320,7 @@ bool TriggerInfo::setStatus(TriggerStatus s)
     for (QuantInfo* qi : d_qinfos)
     {
       qi->notifyTriggerStatus(this, s);
-    }     
+    }
     // if we became active, then match all terms seen thus far
     if (s == TriggerStatus::ACTIVE)
     {

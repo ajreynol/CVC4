@@ -72,7 +72,7 @@ class FunInfo
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Relevant domain for the arguments of this function */
-  //std::vector<std::unique_ptr<RelDomInfo>> d_rinfo;
+  // std::vector<std::unique_ptr<RelDomInfo>> d_rinfo;
   /** All terms */
   CDTNodeTrie d_trie;
   /** Number of terms for this function */
