@@ -37,6 +37,7 @@ class QuantInfo;
 
 enum class TriggerStatus
 {
+  NONE,
   INACTIVE,
   WAIT,
   ACTIVE
@@ -63,9 +64,8 @@ class TriggerInfo
   /** Notify new ground term */
   void eqNotifyNewClass(TNode t);
 
-  /** Status */
-  context::CDO<TriggerStatus> d_status;
-
+  TriggerStatus getStatus() const { return d_status.get(); }
+  void setStatus(TriggerStatus s);
  private:
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t);
@@ -91,6 +91,8 @@ class TriggerInfo
   std::map<TNode, PatTermInfo> d_pinfo;
   /** The root pattern term */
   PatTermInfo* d_root;
+  /** Status */
+  context::CDO<TriggerStatus> d_status;
   /** Active? */
   // context::CDO<bool> d_active;
   /** Wait list */

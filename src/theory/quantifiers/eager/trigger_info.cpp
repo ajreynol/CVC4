@@ -29,10 +29,10 @@ namespace quantifiers {
 namespace eager {
 
 TriggerInfo::TriggerInfo(TermDbEager& tde)
-    : d_status(tde.getSatContext(), TriggerStatus::INACTIVE),
-      d_tde(tde),
+    : d_tde(tde),
       d_arity(0),
-      d_root(nullptr)
+      d_root(nullptr),
+      d_status(tde.getSatContext(), TriggerStatus::INACTIVE)
 {
 }
 
@@ -252,13 +252,24 @@ void TriggerInfo::eqNotifyNewClass(TNode t)
 {
   if (d_status.get() == TriggerStatus::INACTIVE)
   {
-    d_status = TriggerStatus::WAIT;
-    for (QuantInfo* qi : d_qinfos)
-    {
-      qi->notifyTriggerStatus(this, TriggerStatus::WAIT);
-    }
+    setStatus(TriggerStatus::WAIT);
   }
 }
+
+void TriggerInfo::setStatus(TriggerStatus s)
+{
+  if (d_status.get()==s)
+  {
+    return;
+  }
+  d_status = s;
+  // notify that we've changed status
+  for (QuantInfo* qi : d_qinfos)
+  {
+    qi->notifyTriggerStatus(this, s);
+  }
+}
+
 
 }  // namespace eager
 }  // namespace quantifiers

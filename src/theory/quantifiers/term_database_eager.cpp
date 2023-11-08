@@ -124,7 +124,7 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     // ground terms
     if (finfo->getNumTerms() > 0)
     {
-      it->second.d_status = eager::TriggerStatus::WAIT;
+      it->second.setStatus(eager::TriggerStatus::WAIT);
     }
   }
   return &it->second;
