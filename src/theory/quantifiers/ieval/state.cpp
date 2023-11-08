@@ -493,6 +493,13 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
   // variables assigned.
 }
 
+void State::deactivate(TNode q)
+{
+  std::map<Node, QuantInfo>::iterator it = d_quantInfo.find(q);
+  Assert(it != d_quantInfo.end());
+  setQuantInactive(it->second);
+}
+
 void State::setQuantInactive(QuantInfo& qi)
 {
   if (qi.isActive())

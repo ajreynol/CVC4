@@ -286,12 +286,22 @@ void TriggerInfo::setStatus(TriggerStatus s)
   {
     return;
   }
-  d_status = s;
-  // notify that we've changed status
-  for (QuantInfo* qi : d_qinfos)
+  TriggerStatus sreq = s;
+  do
   {
-    qi->notifyTriggerStatus(this, s);
-  }
+    d_status = sreq;
+    sreq = TriggerStatus::NONE;
+    // notify that we've changed status
+    for (QuantInfo* qi : d_qinfos)
+    {
+      TriggerStatus qsreq = qi->notifyTriggerStatus(this, s);
+      if (qsreq!=TriggerStatus::NONE)
+      {
+        Assert (sreq==TriggerStatus::NONE || sreq==qsreq);
+        sreq = qsreq;
+      }
+    }
+  }while (sreq!=TriggerStatus::NONE);
 }
 
 }  // namespace eager

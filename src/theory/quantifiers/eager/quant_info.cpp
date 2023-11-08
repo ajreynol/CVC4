@@ -126,9 +126,10 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
 
 void QuantInfo::notifyAsserted() { d_asserted = true; }
 
-void QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status) 
+TriggerStatus QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status) 
 {
   
+  return TriggerStatus::NONE;
 }
 
 }  // namespace eager

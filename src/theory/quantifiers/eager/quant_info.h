@@ -44,7 +44,7 @@ class QuantInfo
   /** Is the quantified formula asserted? */
   bool isAsserted() const { return d_asserted.get(); }
   /** Notify that a trigger has been assigned a status */
-  void notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
+  TriggerStatus notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
 
  private:
   /** The quantified formula */
