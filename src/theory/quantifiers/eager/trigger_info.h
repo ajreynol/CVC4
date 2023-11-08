@@ -57,18 +57,19 @@ class TriggerInfo
    */
   void watch(QuantInfo* qi, const std::vector<Node>& vlist);
 
-  bool doMatching(TNode t, std::map<Node, std::vector<Node>>& inst);
+  bool doMatching(TNode t);
 
-  bool doMatchingAll(std::map<Node, std::vector<Node>>& inst);
+  bool doMatchingAll();
 
   /**
    * Notify new ground term. Add instantiations to inst as needed.
    * Return true if we are in conflict.
    */
-  bool eqNotifyNewClass(TNode t, std::map<Node, std::vector<Node>>& inst);
-
+  bool eqNotifyNewClass(TNode t);
+  /** Get status */
   TriggerStatus getStatus() const { return d_status.get(); }
-  void setStatus(TriggerStatus s);
+  /** Set status to s, return true if a conflict is discovered */
+  bool setStatus(TriggerStatus s);
 
   Node getPattern() const { return d_pattern; }
   Node getOperator() const { return d_op; }

@@ -67,6 +67,9 @@ class TermDbEager : protected EnvObj
   /** Get fun info */
   eager::FunInfo* getFunInfo(TNode f);
 
+  /** Add instantiation */
+  bool addInstantiation(Node q, std::vector<Node>& terms);
+
   //==========
   Env& getEnv() { return d_env; }
   TermDb& getTermDb() { return d_tdb; }
@@ -102,12 +105,6 @@ class TermDbEager : protected EnvObj
   expr::TermCanonize d_tcanon;
   /** Stats */
   eager::Stats d_stats;
-  /** Waiting instantiations */
-  std::map<Node, std::vector<Node>> d_winst;
-  /** Add instantiation */
-  bool addInstantiation(Node q, std::vector<Node>& terms, InferenceId id);
-  /** Flush instantiations */
-  void flushInstantiations();
 };
 
 }  // namespace quantifiers

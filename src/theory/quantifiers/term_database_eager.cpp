@@ -43,6 +43,11 @@ void TermDbEager::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
 
 void TermDbEager::assertQuantifier(TNode q)
 {
+  if (d_conflict.get())
+  {
+    // already in conflict
+    return;
+  }
   eager::QuantInfo* qinfo = getQuantInfo(q);
   qinfo->notifyAsserted();
 }
@@ -69,13 +74,12 @@ void TermDbEager::eqNotifyNewClass(TNode t)
       // notify the triggers with the same top symbol
       for (eager::TriggerInfo* tr : ts)
       {
-        if (tr->eqNotifyNewClass(t, d_winst))
+        if (tr->eqNotifyNewClass(t))
         {
           d_conflict = true;
           break;
         }
       }
-      flushInstantiations();
     }
   }
 }
@@ -182,26 +186,16 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
 }
 
 bool TermDbEager::addInstantiation(Node q,
-                                   std::vector<Node>& terms,
-                                   InferenceId id)
+                                   std::vector<Node>& terms)
 {
-  return d_qim->getInstantiate()->addInstantiation(q, terms, id);
-}
-
-void TermDbEager::flushInstantiations()
-{
-  for (std::pair<const Node, std::vector<Node>>& wi : d_winst)
-  {
-    Node q = wi.first;
-    bool ret =
-        addInstantiation(q, wi.second, InferenceId::QUANTIFIERS_INST_EAGER);
-    if (!ret)
+  bool ret = d_qim->getInstantiate()->addInstantiation(q, terms, InferenceId::QUANTIFIERS_INST_EAGER);   
+  if (!ret)
     {
       Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
     }
-  }
-  d_winst.clear();
+    return ret;
 }
+// 
 
 }  // namespace quantifiers
 }  // namespace theory

@@ -412,6 +412,8 @@ TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
 TNode TermEvaluatorEntailedEager::partialEvaluateChildMatch(
     const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
 {
+  return d_null;
+#if 0
   // same as non-eager case, but with eager term database
   Assert(!p.d_mop.isNull());
   if (!d_checkRelDom)
@@ -429,6 +431,7 @@ TNode TermEvaluatorEntailedEager::partialEvaluateChildMatch(
     }
   }
   return d_null;
+#endif
 }
 
 TNode TermEvaluatorEntailedEager::evaluateMatch(

@@ -76,7 +76,7 @@ void TriggerInfo::initialize(const Node& t)
   d_root = getPatTermInfo(t);
 }
 
-bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
+bool TriggerInfo::doMatching(TNode t)
 {
   Assert(d_ieval != nullptr);
   Assert(t.getNumChildren() == d_pattern.getNumChildren());
@@ -98,12 +98,13 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
   {
     itq = d_quantMap.find(q);
     Assert(itq != d_quantMap.end());
-    inst[itq->second] = d_ieval->getInstantiationFor(q);
+    std::vector<Node> inst = d_ieval->getInstantiationFor(q);
+    d_tde.addInstantiation(q, inst);
   }
   return isConflict;
 }
 
-bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
+bool TriggerInfo::doMatchingAll()
 {
   Assert(d_ieval != nullptr);
   if (!resetMatching())
@@ -221,7 +222,27 @@ bool TriggerInfo::doMatchingAll(std::map<Node, std::vector<Node>>& inst)
     Assert(v < d_pattern.getNumChildren());
     varToTerm[d_pattern[v]] = data[v];
   }
-
+  
+  std::map<Node, Node>::iterator it;
+  for (const Node& q : qinsts)
+  {
+    it = d_quantMap.find(q);
+    Assert(it != d_quantMap.end());
+    std::vector<Node> inst;
+    for (const Node& v : q[0])
+    {
+      it = varToTerm.find(v);
+      if (it!=varToTerm.end())
+      {
+        inst.emplace_back(it->second);
+      }
+      else
+      {
+        inst.emplace_back(d_ieval->get(v));
+      }
+    }
+    d_tde.addInstantiation(q, inst);
+  }
   return isConflict;
 }
 
@@ -259,36 +280,30 @@ bool TriggerInfo::resetMatching()
   return success;
 }
 
-bool TriggerInfo::eqNotifyNewClass(TNode t,
-                                   std::map<Node, std::vector<Node>>& inst)
+bool TriggerInfo::eqNotifyNewClass(TNode t)
 {
   switch (d_status.get())
   {
     case TriggerStatus::ACTIVE:
       // do the matching against term t
-      return doMatching(t, inst);
+      return doMatching(t);
       break;
     case TriggerStatus::INACTIVE:
-      setStatus(TriggerStatus::WAIT);
-      // if we became active, then match all terms seen thus far
-      if (d_status.get() == TriggerStatus::ACTIVE)
-      {
-        return doMatchingAll(inst);
-      }
-      break;
+      // we are now waiting to be activated
+      return setStatus(TriggerStatus::WAIT);
     default: break;
   }
   return false;
 }
 
-void TriggerInfo::setStatus(TriggerStatus s)
+bool TriggerInfo::setStatus(TriggerStatus s)
 {
   bool isEmpty = d_statusToProc.empty();
   d_statusToProc.emplace_back(s);
   // avoid reentry
   if (!isEmpty)
   {
-    return;
+    return false;
   }
   size_t i = 0;
   while (i < d_statusToProc.size())
@@ -305,8 +320,16 @@ void TriggerInfo::setStatus(TriggerStatus s)
     for (QuantInfo* qi : d_qinfos)
     {
       qi->notifyTriggerStatus(this, s);
+    }     
+    // if we became active, then match all terms seen thus far
+    if (s == TriggerStatus::ACTIVE)
+    {
+      d_statusToProc.clear();
+      return doMatchingAll();
     }
   }
+  d_statusToProc.clear();
+  return false;
 }
 
 }  // namespace eager
