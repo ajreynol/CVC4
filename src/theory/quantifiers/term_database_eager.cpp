@@ -15,10 +15,10 @@
 
 #include "theory/quantifiers/term_database_eager.h"
 
-#include "theory/quantifiers/quantifiers_state.h"
-#include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
+#include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_database.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -38,10 +38,7 @@ TermDbEager::TermDbEager(Env& env,
 {
 }
 
-void TermDbEager::finishInit(QuantifiersInferenceManager* qim)
-{
-  d_qim = qim;
-}
+void TermDbEager::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
 
 void TermDbEager::assertQuantifier(TNode q)
 {
@@ -167,7 +164,9 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
   return &it->second;
 }
 
-bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms, InferenceId id)
+bool TermDbEager::addInstantiation(Node q,
+                                   std::vector<Node>& terms,
+                                   InferenceId id)
 {
   return d_qim->getInstantiate()->addInstantiation(q, terms, id);
 }

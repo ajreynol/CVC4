@@ -23,11 +23,11 @@
 #include "expr/node.h"
 #include "expr/term_canonize.h"
 #include "smt/env_obj.h"
+#include "theory/inference_id.h"
 #include "theory/quantifiers/eager/fun_info.h"
 #include "theory/quantifiers/eager/quant_info.h"
 #include "theory/quantifiers/eager/stats.h"
 #include "theory/quantifiers/eager/trigger_info.h"
-#include "theory/inference_id.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -75,6 +75,7 @@ class TermDbEager : protected EnvObj
   QuantifiersState& getState() { return d_qs; }
   CDTNodeTrieAllocator* getCdtAlloc() { return &d_cdalloc; }
   context::Context* getSatContext() { return context(); }
+
  private:
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   /** The null node */

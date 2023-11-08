@@ -80,12 +80,12 @@ bool TriggerInfo::doMatching(TNode t, std::map<Node, std::vector<Node>>& inst)
   }
   // add instantiation(s)
   std::vector<Node> qinsts = d_ieval->getActiveQuants();
-  Assert (!qinsts.empty());
+  Assert(!qinsts.empty());
   std::map<Node, Node>::iterator itq;
   for (const Node& q : qinsts)
   {
     itq = d_quantMap.find(q);
-    Assert (itq!=d_quantMap.end());
+    Assert(itq != d_quantMap.end());
     inst[itq->second] = d_ieval->getInstantiationFor(q);
   }
   // cleanup the assignment

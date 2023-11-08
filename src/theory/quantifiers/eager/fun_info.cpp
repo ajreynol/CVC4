@@ -93,7 +93,7 @@ void FunInfo::addRelevantDomain(size_t i, TNode r)
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
   Assert(i < d_rinfo.size());
-  Assert (d_tde.getState().getRepresentative(r)==r);
+  Assert(d_tde.getState().getRepresentative(r) == r);
   return d_rinfo[i]->hasTerm(d_tde.getState(), r);
 }
 
@@ -116,10 +116,7 @@ void FunInfo::setActive(bool active)
   }
 }
 
-CDTNodeTrie* FunInfo::getTrie()
-{
-  return &d_trie;
-}
+CDTNodeTrie* FunInfo::getTrie() { return &d_trie; }
 
 }  // namespace eager
 }  // namespace quantifiers
