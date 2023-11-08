@@ -46,6 +46,10 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
                                            d_tde.getTermDb(),
                                            ieval::TermEvaluatorMode::PROP));
   }
+  else
+  {
+    d_ieval->resetAll(false);
+  }
   Node q = qi->getQuant();
   Assert(q.getKind() == Kind::FORALL);
   Assert(vlist.size() == q[0].getNumChildren());
@@ -64,6 +68,8 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
     d_quantMap[qs] = q;
     d_quantRMap[q] = qs;
   }
+  // a quantified formula may be signed up to watch the same term from
+  // different vars, e.g. P(v1,v2) for forall xy. P(x,y) V P(y,x) V Q(x,y).
   if (std::find(d_qinfos.begin(), d_qinfos.end(), qi) == d_qinfos.end())
   {
     d_qinfos.emplace_back(qi);
@@ -76,6 +82,8 @@ void TriggerInfo::initialize(const Node& t)
   d_op = d_tde.getTermDb().getMatchOperator(t);
   d_arity = t.getNumChildren();
   d_root = getPatTermInfo(t);
+  std::unordered_set<Node> fvs;
+  d_root->initialize(this, d_pattern, fvs);
 }
 
 bool TriggerInfo::doMatching(TNode t)
@@ -126,19 +134,20 @@ bool TriggerInfo::doMatchingAll()
   // now traverse the term index
   FunInfo* finfo = d_tde.getFunInfo(d_op);
   CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), d_arity);
-  size_t level = 1;
+  size_t level = 0;
   std::vector<bool> iterAllChild;
   std::vector<PatTermInfo*>& children = d_root->d_children;
+  Assert (children.size()==d_pattern.getNumChildren()) << "child mismatch " << children.size() << " " << d_pattern.getNumChildren();
   std::vector<size_t>& nbindings = d_root->d_bindings;
   PatTermInfo* pti;
   bool success;
   TNode pc, r;
   do
   {
-    Assert(level <= children.size());
-    pti = children[level - 1];
+    Assert(level < children.size());
+    pti = children[level];
     success = true;
-    pc = d_pattern[level - 1];
+    pc = d_pattern[level];
     Assert(level <= iterAllChild.size());
     if (level == iterAllChild.size())
     {
@@ -156,6 +165,7 @@ bool TriggerInfo::doMatchingAll()
         // if a ground term, use the representative method directly
         r = qs.getRepresentative(pc);
       }
+      Trace("eager-inst-matching-debug") << "[level " << level << "] traverse " << r << std::endl;
       // if r is null
       iterAllChild.push_back(r.isNull());
     }
@@ -176,11 +186,13 @@ bool TriggerInfo::doMatchingAll()
       {
         // if we are traversing a specific child
         success = itt.push(r);
+        Trace("eager-inst-matching-debug") << "[level " << level << "] got " << success << std::endl;
       }
       else
       {
         // we are traversing all children
         r = itt.pushNextChild();
+        Trace("eager-inst-matching-debug") << "[level " << level << "] next child " << r << std::endl;
         if (r.isNull())
         {
           // if no more children to push, go back a level
@@ -202,21 +214,24 @@ bool TriggerInfo::doMatchingAll()
           }
         }
       }
+      if (success)
+      {
+        level++;
+      }
     }
     if (!success)
     {
       // go back a level
       iterAllChild.pop_back();
       itt.pop();
+      if (level==0)
+      {
+        Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
+        return false;
+      }
+      level--;
     }
-    // processing a new level
-    level = itt.getLevel();
-    if (level == 0)
-    {
-      Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
-      return false;
-    }
-  } while (level <= d_arity);
+  } while (level < d_arity);
 
   // found an instantiation, we will sanitize it based on the actual term,
   // to ensure the match post-instantiation is syntactic.
@@ -238,12 +253,13 @@ bool TriggerInfo::doMatchingAll()
     varToTerm[d_pattern[v]] = data[v];
   }
   std::map<Node, Node>::iterator it;
-  for (const Node& q : qinsts)
+  for (const Node& qi : qinsts)
   {
-    it = d_quantMap.find(q);
+    it = d_quantMap.find(qi);
     Assert(it != d_quantMap.end());
+    Node q = it->second;
     std::vector<Node> inst;
-    for (const Node& v : q[0])
+    for (const Node& v : qi[0])
     {
       it = varToTerm.find(v);
       if (it != varToTerm.end())
@@ -340,14 +356,6 @@ bool TriggerInfo::setStatus(TriggerStatus s)
         d_statusToProc.clear();
         return true;
       }
-    }
-    // if we became active, then match all terms seen thus far
-    if (s == TriggerStatus::ACTIVE)
-    {
-      Trace("eager-inst-debug")
-          << "Activate trigger: " << d_pattern << std::endl;
-      d_statusToProc.clear();
-      return doMatchingAll();
     }
   }
   d_statusToProc.clear();

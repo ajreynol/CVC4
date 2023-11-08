@@ -792,9 +792,9 @@ name   = "Quantifiers"
   help = "Use instantiation evaluation, and generalize learning."
 
 [[option]]
-  name       = "cbqiEager"
+  name       = "eagerInst"
   category   = "regular"
-  long       = "cbqi-eager"
+  long       = "eager-inst"
   type       = "bool"
   default    = "false"
   help       = "Enable eager instantiation"

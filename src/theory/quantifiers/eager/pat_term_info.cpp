@@ -44,6 +44,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
   // expected to already be bound after binding variables. This catches cases
   // like f(x, a, x) or f(x, a, g(b, x)) where the 3rd argument in each case
   // is ground post-bind.
+  std::unordered_set<Node> fvsTmp = fvs;
   for (size_t i = 0, nargs = t.getNumChildren(); i < nargs; i++)
   {
     if (expr::hasBoundVar(t[i]))
@@ -56,6 +57,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
         {
           processed = true;
           fvs.insert(t[i]);
+          fvsTmp.insert(t[i]);
           d_vargs.emplace_back(i);
           d_children.emplace_back(nullptr);
           d_bindings.emplace_back(1);
@@ -63,10 +65,10 @@ void PatTermInfo::initialize(TriggerInfo* tr,
       }
       else
       {
-        std::unordered_set<Node> fvsTmp = fvs;
+        size_t prevSize = fvsTmp.size();
         expr::getFreeVariables(t[i], fvsTmp);
         // check if this will bind new variables
-        size_t newFvSize = fvsTmp.size() - fvs.size();
+        size_t newFvSize = fvsTmp.size() - prevSize;
         if (newFvSize > 0)
         {
           processed = true;
@@ -75,7 +77,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
           // Initialize the child trigger now. We know this is a new trigger
           // since t[i] contains new variables we haven't seen before, and thus
           // it is safe to initialize it here.
-          d_children.back()->initialize(tr, t, fvs);
+          d_children.back()->initialize(tr, t[i], fvs);
           Assert(fvs.size() == fvsTmp.size());
           d_bindings.emplace_back(newFvSize);
         }
@@ -100,6 +102,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
 
 bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
 {
+  Trace("eager-inst-matching-debug") << "[pat match] " << d_pattern << " " << t << std::endl;
   QuantifiersState& qs = d_tde.getState();
   // ground arguments must match
   for (size_t g : d_gargs)
@@ -107,6 +110,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
     if (!qs.areEqual(d_pattern[g], t[g]))
     {
       // infeasible
+      Trace("eager-inst-matching-debug") << "...failed garg " << d_pattern[g] << " = " << t[g] << std::endl;
       return false;
     }
   }
@@ -119,6 +123,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
     // if infeasible to assign, we are done
     if (!ie->push(d_pattern[v], t[v]))
     {
+      Trace("eager-inst-matching-debug") << "...failed assign " << d_pattern[v] << " = " << t[v] << std::endl;
       // clean up
       ie->pop(i);
       return false;
@@ -132,6 +137,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
     // note that gv may be none or some, areEqual should be robust
     if (!qs.areEqual(d_pattern[g], gv))
     {
+      Trace("eager-inst-matching-debug") << "...failed ground post-bind " << d_pattern[g] << " = " << gv << std::endl;
       // clean up
       ie->pop(d_vargs.size());
       return false;
@@ -144,6 +150,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
     TNode tor = qs.getRepresentative(t[o]);
     if (!d_children[o]->initMatchingEqc(ie, tor))
     {
+      Trace("eager-inst-matching-debug") << "...failed init eqc " << d_pattern[o] << " = " << tor << std::endl;
       // clean up
       ie->pop(d_vargs.size());
       return false;

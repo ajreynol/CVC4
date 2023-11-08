@@ -64,7 +64,7 @@ TermRegistry::TermRegistry(Env& env,
     // must be constructed here since it is required for datatypes finistInit
     d_sygusTdb.reset(new TermDbSygus(env, qs, d_ochecker.get()));
   }
-  if (options().quantifiers.cbqiEager)
+  if (options().quantifiers.eagerInst)
   {
     d_termDbEager.reset(new TermDbEager(env, qs, qr, *d_termDb.get()));
   }

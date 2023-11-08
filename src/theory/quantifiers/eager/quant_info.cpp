@@ -87,16 +87,19 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
     tinfo[upc].init(q, upc);
     patTerms.emplace_back(upc);
   }
+  Trace("eager-inst-trigger") << "Triggers for " << q << ":" << std::endl;
   size_t nvars = q[0].getNumChildren();
   std::unordered_set<Node> processed;
   for (const Node& p : patTerms)
   {
+    Trace("eager-inst-trigger") << "  " << p << std::endl;
     inst::TriggerTermInfo& tip = tinfo[p];
     // must be a single trigger
     if (tip.d_fv.size() != nvars)
     {
       continue;
     }
+    // TODO: could use the polarity information in tip to initialize the trigger
     if (processed.find(p) != processed.end())
     {
       // in rare cases there may be a repeated pattern??
@@ -121,6 +124,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
     d_triggerWatching.emplace_back(false);
     ++(s.d_ntriggers);
   }
+  Trace("eager-inst-trigger") << "#triggers=" << d_triggers.size() << std::endl;
   if (d_triggers.empty())
   {
     ++(s.d_nquantNoTrigger);
@@ -206,11 +210,17 @@ bool QuantInfo::updateStatus()
   // ensure we are signed up to watch
   if (!d_triggerWatching[bestIndex])
   {
+    Trace("eager-inst-debug") << "Add to watch " << bestTrigger->getPattern() << std::endl;
     d_triggerWatching[bestIndex] = true;
     bestTrigger->watch(this, d_vlists[bestIndex]);
   }
   // activate the best trigger
-  return bestTrigger->setStatus(TriggerStatus::ACTIVE);
+  if (bestTrigger->setStatus(TriggerStatus::ACTIVE))
+  {
+    return true;
+  }
+  // match all
+  return bestTrigger->doMatchingAll();
 }
 
 }  // namespace eager

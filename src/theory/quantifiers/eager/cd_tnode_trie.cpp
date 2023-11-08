@@ -217,12 +217,14 @@ bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
   // determine if the children are leafs, which impacts how we merge nodes
   bool isChildLeaf = (d_stack.size() + 1 == d_depth);
   d_stack.emplace_back(d_alloc, d_qs, cdtnt, isChildLeaf);
+  /*
   // in the rare case we already finished (no children), we are done
   if (d_stack.back().isFinished())
   {
     d_stack.pop_back();
     return false;
   }
+  */
   return true;
 }
 

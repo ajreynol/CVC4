@@ -96,7 +96,10 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   Trace("eager-inst") << "...finished" << std::endl;
 }
 
-void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {}
+void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {
+  Trace("eager-inst") << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
+  
+}
 
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
 {
@@ -142,7 +145,7 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
   std::map<TNode, eager::TriggerInfo>::iterator it = d_tinfo.find(t);
   if (it == d_tinfo.end())
   {
-    Trace("eager-inst-debug") << "mkTriggerInfo: " << t << std::endl;
+    Trace("eager-inst-db") << "mkTriggerInfo: " << t << std::endl;
     d_tinfo.emplace(t, *this);
     it = d_tinfo.find(t);
     it->second.initialize(t);
@@ -179,7 +182,7 @@ eager::FunInfo* TermDbEager::getOrMkFunInfo(TNode f, size_t nchild)
   std::map<TNode, eager::FunInfo>::iterator it = d_finfo.find(f);
   if (it == d_finfo.end())
   {
-    Trace("eager-inst-debug") << "mkFunInfo: " << f << std::endl;
+    Trace("eager-inst-db") << "mkFunInfo: " << f << std::endl;
     d_finfo.emplace(f, *this);
     it = d_finfo.find(f);
     it->second.initialize(f, nchild);
@@ -192,7 +195,7 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
   std::map<TNode, eager::QuantInfo>::iterator it = d_qinfo.find(q);
   if (it == d_qinfo.end())
   {
-    Trace("eager-inst-debug") << "mkQuantInfo: " << q << std::endl;
+    Trace("eager-inst-db") << "mkQuantInfo: " << q << std::endl;
     d_qinfo.emplace(q, *this);
     it = d_qinfo.find(q);
     it->second.initialize(d_qreg, q);
@@ -202,10 +205,11 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
 
 bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
 {
-  Trace("eager-inst-debug")
+  Trace("eager-inst")
       << "addInstantiation: " << q << ", " << terms << std::endl;
   bool ret = d_qim->getInstantiate()->addInstantiation(
       q, terms, InferenceId::QUANTIFIERS_INST_EAGER);
+  d_qim->doPending();
   if (!ret)
   {
     Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
