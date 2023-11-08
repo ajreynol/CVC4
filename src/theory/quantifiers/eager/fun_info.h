@@ -35,6 +35,7 @@ namespace eager {
 
 class TriggerInfo;
 
+#if 0
 class RelDomInfo
 {
  public:
@@ -44,6 +45,7 @@ class RelDomInfo
   /** Has term? */
   bool hasTerm(QuantifiersState& qs, TNode r);
 };
+#endif
 
 class FunInfo
 {
@@ -65,10 +67,12 @@ class FunInfo
  private:
   /** Activate */
   void setActive(bool active);
+  /** Refresh */
+  void refresh();
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Relevant domain for the arguments of this function */
-  std::vector<std::unique_ptr<RelDomInfo>> d_rinfo;
+  //std::vector<std::unique_ptr<RelDomInfo>> d_rinfo;
   /** All terms */
   CDTNodeTrie d_trie;
   /** Number of terms for this function */

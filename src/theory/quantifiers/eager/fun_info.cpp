@@ -24,6 +24,7 @@ namespace theory {
 namespace quantifiers {
 namespace eager {
 
+#if 0
 RelDomInfo::RelDomInfo(context::Context* c) : d_dom(c) {}
 
 bool RelDomInfo::hasTerm(QuantifiersState& qs, TNode r)
@@ -35,6 +36,7 @@ bool RelDomInfo::hasTerm(QuantifiersState& qs, TNode r)
   // TODO: check if any have become equal?
   return false;
 }
+#endif
 
 FunInfo::FunInfo(TermDbEager& tde)
     : d_tde(tde),
@@ -47,11 +49,13 @@ FunInfo::FunInfo(TermDbEager& tde)
 
 void FunInfo::initialize(TNode f, size_t nchild)
 {
+#if 0
   // initialize the relevant domain
   for (size_t i = 0; i < nchild; i++)
   {
     d_rinfo.emplace_back(new RelDomInfo(d_tde.getSatContext()));
   }
+#endif
 }
 
 bool FunInfo::addTerm(TNode t)
@@ -76,21 +80,26 @@ bool FunInfo::addTerm(TNode t)
     return false;
   }
   d_count = d_count + 1;
+#if 0
   for (size_t i = 0, nchildren = reps.size(); i < nchildren; i++)
   {
     // add relevant domains
     d_rinfo[i]->d_dom.insert(reps[i]);
   }
+#endif
   return true;
 }
 
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
+#if 0
   Assert(i < d_rinfo.size());
   Assert(d_tde.getState().getRepresentative(r) == r);
   // must be active
   setActive(true);
   return d_rinfo[i]->hasTerm(d_tde.getState(), r);
+#endif
+  return true;
 }
 
 void FunInfo::setActive(bool active)
@@ -103,18 +112,24 @@ void FunInfo::setActive(bool active)
   if (active)
   {
     // if activated, add terms now
-    std::vector<TNode> next;
-    d_terms.get(next);
-    for (TNode n : next)
-    {
-      addTerm(n);
-    }
+    refresh();
+  }
+}
+
+void FunInfo::refresh()
+{
+  // get and add all terms from the wait list
+  std::vector<TNode> next;
+  d_terms.get(next);
+  for (TNode n : next)
+  {
+    addTerm(n);
   }
 }
 
 CDTNodeTrie* FunInfo::getTrie()
 {
-  // must be active
+  // if someone asks for the trie, we are active
   setActive(true);
   return &d_trie;
 }

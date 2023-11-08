@@ -84,12 +84,16 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {}
 
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
 {
+  return true;
+  // relevant domain is likely not worthwhile?
+#if 0
   eager::FunInfo* finfo = getFunInfo(f);
   if (finfo == nullptr)
   {
     return false;
   }
   return finfo->inRelevantDomain(i, r);
+#endif
 }
 
 TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
