@@ -79,21 +79,17 @@ bool FunInfo::addTerm(TNode t)
   for (size_t i = 0, nchildren = reps.size(); i < nchildren; i++)
   {
     // add relevant domains
-    addRelevantDomain(i, reps[i]);
+    d_rinfo[i]->d_dom.insert(reps[i]);
   }
   return true;
-}
-
-void FunInfo::addRelevantDomain(size_t i, TNode r)
-{
-  Assert(i < d_rinfo.size());
-  d_rinfo[i]->d_dom.insert(r);
 }
 
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
   Assert(i < d_rinfo.size());
   Assert(d_tde.getState().getRepresentative(r) == r);
+  // must be active
+  setActive(true);
   return d_rinfo[i]->hasTerm(d_tde.getState(), r);
 }
 
@@ -116,7 +112,12 @@ void FunInfo::setActive(bool active)
   }
 }
 
-CDTNodeTrie* FunInfo::getTrie() { return &d_trie; }
+CDTNodeTrie* FunInfo::getTrie() 
+{
+  // must be active
+  setActive(true);
+  return &d_trie; 
+}
 
 size_t FunInfo::getNumTerms() const
 {
