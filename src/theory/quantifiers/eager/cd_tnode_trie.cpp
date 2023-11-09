@@ -270,10 +270,9 @@ bool CDTNodeTrieIterator::setData(TNode n)
 CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
                                             QuantifiersState& qs,
                                             CDTNodeTrie* active,
-                                            bool isChildLeaf)
+                                            bool isChildLeaf) : d_active(active), d_index(0)
 {
   Assert(active != nullptr);
-  d_active = active;
   std::map<TNode, CDTNodeTrie*>::iterator it;
   context::CDHashMap<TNode, size_t>::iterator itr;
   // process and merge the children

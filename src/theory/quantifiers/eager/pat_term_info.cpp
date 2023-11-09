@@ -113,27 +113,39 @@ void PatTermInfo::initialize(TriggerInfo* tr,
   if (!useBindOrder)
   {
     // if not binding in order, we go back and compute the compound children now
+    std::unordered_set<Node> fvso = fvs;
     for (size_t o : compoundChildren)
     {
-      std::unordered_set<Node> fvsTmp = fvs;
-      expr::getFreeVariables(t[o], fvsTmp);
+      std::unordered_set<Node> fvsCur;
+      expr::getFreeVariables(t[o], fvsCur);
       // check if this will bind new variables
-      size_t newFvSize = fvsTmp.size() - fvs.size();
+      size_t newFvSize = 0;
+      bool gpbind = true;
+      for (const Node& v : fvsCur)
+      {
+        if (gpbind && fvso.find(v)==fvso.end())
+        {
+          gpbind = false;
+        }
+        if (fvs.find(v)==fvs.end())
+        {
+          newFvSize++;
+        }
+      }
       d_bindings[o] = newFvSize;
       if (newFvSize > 0)
       {
         d_oargs.emplace_back(o);
         PatTermInfo * pi = tr->getPatTermInfo(t[o], bindOrder);
         // We will never use this for doMatchingAll, so we set bindOrder to false
-        pi->initialize(tr, t[o], fvs, bindOrder, false);
         // Initialize the child trigger now. We know this is a new trigger
         // since t[i] contains new variables we haven't seen before, and thus
         // it is safe to initialize it here.
-        Assert(fvs.size() == fvsTmp.size());
+        pi->initialize(tr, t[o], fvs, bindOrder, false);
         // go back and set the child
         d_children[o] = pi;
       }
-      else
+      else if (gpbind)
       {
         // add to ground post-bind list
         d_gpargs.emplace_back(o);
@@ -171,12 +183,13 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
       ie->pop(i);
       return false;
     }
+    Trace("eager-inst-matching-debug") << "   " << d_pattern[v] << " := " << t[v] << std::endl;
   }
   // now, check the terms that are now bound
   for (size_t g : d_gpargs)
   {
     TNode gv = ie->getValue(d_pattern[g]);
-    Assert(!gv.isNull());
+    Assert(!gv.isNull()) << "Subterm " << d_pattern[g] << " expected to be bound at this point";
     // note that gv may be none or some, areEqual should be robust
     if (!qs.areEqual(d_pattern[g], gv))
     {

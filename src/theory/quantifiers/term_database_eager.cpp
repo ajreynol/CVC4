@@ -210,20 +210,27 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
 
 bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
 {
-  Trace("eager-inst")
+  Trace("eager-inst-debug")
       << "addInstantiation: " << q << ", " << terms << std::endl;
+      /*
   Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
   if (!isPropagatingInstance(inst))
   {
     AlwaysAssert(false);
   }
+  */
   bool ret = d_qim->getInstantiate()->addInstantiation(
       q, terms, InferenceId::QUANTIFIERS_INST_EAGER);
   d_qim->doPending();
   if (!ret)
   {
-    Trace("eager-inst") << "...failed!" << std::endl;
+    Trace("eager-inst-debug") << "...failed!" << std::endl;
     Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
+  }
+  else
+  {
+    Trace("eager-inst-debug") << "...success!" << std::endl;
+    Trace("eager-inst") << "EagerInst: added instantiation " << q << " " << terms << std::endl;
   }
   return ret;
 }

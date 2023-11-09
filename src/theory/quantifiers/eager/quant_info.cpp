@@ -92,7 +92,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   std::unordered_set<Node> processed;
   for (const Node& p : patTerms)
   {
-    Trace("eager-inst-trigger") << "  " << p << std::endl;
+    Trace("eager-inst-trigger") << "  * " << p << std::endl;
     inst::TriggerTermInfo& tip = tinfo[p];
     // must be a single trigger
     if (tip.d_fv.size() != nvars)

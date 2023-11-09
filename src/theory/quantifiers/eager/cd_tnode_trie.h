@@ -146,14 +146,14 @@ class CDTNodeTrieIterator
                bool isChildLeaf);
     /** The trie whose children we are iterating */
     CDTNodeTrie* d_active;
-    /** The children of d_active we computed TODO: not necessary? */
+    /** The children of d_active we computed, used for direct child lookups */
     std::map<TNode, CDTNodeTrie*> d_curChildren;
-    /** Domain */
+    /** Domain, used for full iterations */
     std::vector<std::pair<TNode, CDTNodeTrie*>> d_dom;
-    /** Index */
+    /** The current index in the domain we are considering */
     size_t d_index;
     /** Is the iteration finished */
-    bool isFinished() const { return d_index==d_dom.size(); }//d_cit == d_curChildren.end(); }
+    bool isFinished() const { return d_index==d_dom.size(); }
   };
   /** The iteration stack */
   std::vector<StackFrame> d_stack;

@@ -104,6 +104,10 @@ bool PatternTermSelector::isUsable(Node n, Node q) const
 Node PatternTermSelector::getIsUsableEq(Node q, Node n) const
 {
   Assert(TriggerTermInfo::isRelationalTrigger(n));
+  if (!d_relTriggers && n.getKind()!=Kind::EQUAL)
+  {
+    return Node::null();
+  }
   for (size_t i = 0; i < 2; i++)
   {
     if (isUsableEqTerms(q, n[i], n[1 - i]))

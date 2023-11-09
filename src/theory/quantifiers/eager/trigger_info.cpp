@@ -88,7 +88,7 @@ void TriggerInfo::initialize(const Node& t)
     std::unordered_set<Node> fvs;
     pi->initialize(this, d_pattern, fvs, bindOrder, true);
     d_root[i] = pi;
-    if (i==0 && pi->d_oargs.empty())
+    if (i==0 && pi->d_oargs.empty() && pi->d_gpargs.empty())
     {
       // if simple trigger, doesn't make a difference
       d_root[1] = pi;
@@ -185,6 +185,7 @@ bool TriggerInfo::doMatchingAll()
     {
       // otherwise, if we are iterating on children, pop the previous
       // binding(s).
+      Trace("ajr-temp")  << "...pop " << nbindings[level] << " bindings since we are moving to next child" << std::endl;
       d_ieval->pop(nbindings[level]);
       r = null;
     }
@@ -192,41 +193,24 @@ bool TriggerInfo::doMatchingAll()
     {
       // we are not iterating on all children, and thus are done
       success = false;
-      iterAllChild.pop_back();
     }
     if (success)
     {
       if (!r.isNull())
       {
         // if we are traversing a specific child
-        if (!itt.push(r))
-        {
-          // fail, go back a level
-          success = false;
-          iterAllChild.pop_back();
-        }
-        else
-        {
-          level++;
-        }
+        success = itt.push(r);
         Trace("eager-inst-matching-debug") << "...success=" << success << std::endl;
-        Trace("ajr-temp") << "push now " << itt.getLevel() << std::endl;
       }
       else
       {
-        // we are traversing all children
+        // we are traversing all children, we iterate until we find one that
+        // we can successfully match.
         r = itt.pushNextChild();
-        Trace("eager-inst-matching-debug") << "[level " << level << "] next child " << r << std::endl;
-        Trace("ajr-temp") << "push now " << itt.getLevel() << std::endl;
-        if (r.isNull())
+        success = false;
+        while (!r.isNull() && !success)
         {
-          // if no more children to push, go back a level
-          success = false;
-          iterAllChild.pop_back();
-        }
-        else
-        {
-          level++;
+          Trace("eager-inst-matching-debug") << "[level " << level << "] next child " << r << std::endl;
           if (pc.getKind() == Kind::BOUND_VARIABLE)
           {
             // if we are a bound variable, we try to bind
@@ -243,20 +227,32 @@ bool TriggerInfo::doMatchingAll()
               success = pti->doMatchingEqcNext(d_ieval.get());
             }
           }
+          // failed, try the next child
+          if (!success)
+          {
+            itt.pop();
+            r = itt.pushNextChild();
+          }
         }
         Trace("eager-inst-matching-debug") << "...success=" << success << std::endl;
       }
     }
-    if (!success)
+    if (success)
     {
-      // go back a level
-      itt.pop();
-      Trace("ajr-temp") << "pop now " << itt.getLevel() << std::endl;
+      // successfully pushed a child to itt and matched
+      level++;
+    }
+    else
+    {      
       if (level==0)
       {
         Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
         return false;
       }
+      // finished with this level, go back
+      itt.pop();
+      iterAllChild.pop_back();
+      Trace("ajr-temp") << "pop now " << itt.getLevel() << std::endl;
       level--;
     }
   } while (level < d_arity);
