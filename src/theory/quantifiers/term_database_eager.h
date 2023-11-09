@@ -69,7 +69,8 @@ class TermDbEager : protected EnvObj
 
   /** Add instantiation */
   bool addInstantiation(Node q, std::vector<Node>& terms, bool isConflict);
-
+  /** In conflict? */
+  bool inConflict() const { return d_conflict.get(); }
   //==========
   Env& getEnv() { return d_env; }
   TermDb& getTermDb() { return d_tdb; }
