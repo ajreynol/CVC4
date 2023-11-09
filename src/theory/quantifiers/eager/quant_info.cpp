@@ -31,7 +31,8 @@ QuantInfo::QuantInfo(TermDbEager& tde)
     : d_tde(tde),
       d_asserted(tde.getSatContext()),
       d_tinactiveIndex(tde.getSatContext(), 0),
-      d_tstatus(tde.getSatContext(), TriggerStatus::NONE), d_hasActivated(false)
+      d_tstatus(tde.getSatContext(), TriggerStatus::NONE),
+      d_hasActivated(false)
 {
 }
 
@@ -224,14 +225,15 @@ bool QuantInfo::updateStatus()
   {
     return true;
   }
-  
+
   // if enabling all
-  if (d_tde.getEnv().getOptions().quantifiers.eagerInstTrigger==options::EagerInstTriggerMode::ALL)
+  if (d_tde.getEnv().getOptions().quantifiers.eagerInstTrigger
+      == options::EagerInstTriggerMode::ALL)
   {
     // actually watch all
-    for (size_t i=0, ntriggers = d_triggers.size(); i<ntriggers; i++)
+    for (size_t i = 0, ntriggers = d_triggers.size(); i < ntriggers; i++)
     {
-      if (i!=bestIndex)
+      if (i != bestIndex)
       {
         watchAndActivateTrigger(i);
       }
@@ -251,7 +253,7 @@ bool QuantInfo::watchAndActivateTrigger(size_t i)
     d_triggerWatching[i] = true;
     t->watch(this, d_vlists[i]);
   }
-  // activate the trigger, which if it is not already active will 
+  // activate the trigger, which if it is not already active will
   if (t->setStatus(TriggerStatus::ACTIVE))
   {
     return true;

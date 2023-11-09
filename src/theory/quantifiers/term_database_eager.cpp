@@ -89,18 +89,18 @@ void TermDbEager::eqNotifyNewClass(TNode t)
     if (finfo->addTerm(t))
     {
       std::vector<eager::TriggerInfo*>& ts = finfo->d_triggers;
-      // take stats on whether the 
+      // take stats on whether the
       if (d_statsEnabled)
       {
         size_t nmatches = 0;
         for (eager::TriggerInfo* tr : ts)
         {
-          if (tr->getStatus()==eager::TriggerStatus::ACTIVE)
+          if (tr->getStatus() == eager::TriggerStatus::ACTIVE)
           {
             nmatches++;
           }
         }
-        if (nmatches>0)
+        if (nmatches > 0)
         {
           ++(d_stats.d_ntermsMatched);
         }
@@ -254,7 +254,7 @@ bool TermDbEager::addInstantiation(Node q,
   bool ret = d_qim->getInstantiate()->addInstantiation(q, terms, iid);
   if (!ret)
   {
-    Assert (!isConflict);
+    Assert(!isConflict);
     Trace("eager-inst-debug") << "...failed!" << std::endl;
     Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
   }

@@ -292,7 +292,7 @@ bool TriggerInfo::doMatchingAll()
   std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
   if (qinsts.empty())
   {
-    Assert (false);
+    Assert(false);
     return false;
   }
   ++(stats.d_matchesSuccess);
