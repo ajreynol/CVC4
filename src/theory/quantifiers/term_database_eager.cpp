@@ -213,16 +213,15 @@ bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
 {
   Trace("eager-inst-debug")
       << "addInstantiation: " << q << ", " << terms << std::endl;
-  /*
-Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
-if (!isPropagatingInstance(inst))
-{
-AlwaysAssert(false);
-}
-*/
+#if 0
+  Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
+  if (!isPropagatingInstance(inst))
+  {
+    AlwaysAssert(false);
+  }
+#endif
   bool ret = d_qim->getInstantiate()->addInstantiation(
       q, terms, InferenceId::QUANTIFIERS_INST_EAGER);
-  d_qim->doPending();
   if (!ret)
   {
     Trace("eager-inst-debug") << "...failed!" << std::endl;
@@ -233,17 +232,17 @@ AlwaysAssert(false);
     Trace("eager-inst-debug") << "...success!" << std::endl;
     Trace("eager-inst") << "EagerInst: added instantiation " << q << " "
                         << terms << std::endl;
+    d_qim->doPending();
   }
   return ret;
 }
 
-bool TermDbEager::isPropagatingInstance(Node n) const
+bool TermDbEager::isPropagatingInstance(Node n)
 {
   std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(n);
-  eq::EqualityEngine* ee = d_qs.getEqualityEngine();
   do
   {
     cur = visit.back();
@@ -263,12 +262,65 @@ bool TermDbEager::isPropagatingInstance(Node n) const
           visit.push_back(cc);
         }
       }
-      else if (!ee->hasTerm(cur))
+      else if (!isPropagatingTerm(cur))
       {
         Trace("eager-inst-warn") << "Not prop due to " << cur << std::endl;
         return false;
       }
     }
+  } while (!visit.empty());
+  return true;
+}
+
+bool TermDbEager::isPropagatingTerm(Node n)
+{
+  std::unordered_map<TNode, TNode> visited;
+  std::unordered_map<TNode, TNode>::iterator it;
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(n);
+  eq::EqualityEngine* ee = d_qs.getEqualityEngine();
+  do {
+    cur = visit.back();
+    it = visited.find(cur);
+    if (it == visited.end()) {
+      visited[cur] = Node::null();
+      Node op = d_tdb.getMatchOperator(cur);
+      if (op.isNull())
+      {
+        if (!ee->hasTerm(cur))
+        {
+          return false;
+        }
+      }
+      else
+      {
+        // otherwise visit children
+        visit.insert(visit.end(), cur.begin(), cur.end());
+        continue;
+      }
+    }
+    else if (it->second.isNull()) 
+    {
+      std::vector<TNode> children;
+      for (const Node& cn : cur) {
+        it = visited.find(cn);
+        Assert(it != visited.end());
+        Assert(!it->second.isNull());
+        children.emplace_back(it->second);
+      }
+      Node op = d_tdb.getMatchOperator(cur);
+      Assert (!op.isNull());
+      Node ret = getCongruentTerm(op, children);
+      if (ret.isNull())
+      {
+        return false;
+      }
+      Assert (ee->hasTerm(ret));
+      ret = ee->getRepresentative(ret);
+      visited[cur] = ret;
+    }
+    visit.pop_back();
   } while (!visit.empty());
   return true;
 }
