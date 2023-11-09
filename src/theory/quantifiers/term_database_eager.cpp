@@ -212,6 +212,11 @@ bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
 {
   Trace("eager-inst")
       << "addInstantiation: " << q << ", " << terms << std::endl;
+  Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
+  if (!isPropagatingInstance(inst))
+  {
+    AlwaysAssert(false);
+  }
   bool ret = d_qim->getInstantiate()->addInstantiation(
       q, terms, InferenceId::QUANTIFIERS_INST_EAGER);
   d_qim->doPending();
@@ -222,7 +227,42 @@ bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
   }
   return ret;
 }
-//
+
+bool TermDbEager::isPropagatingInstance(Node n) const
+{
+  std::unordered_set<TNode> visited;
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(n);
+  eq::EqualityEngine* ee = d_qs.getEqualityEngine();
+  do
+  {
+    cur = visit.back();
+    visit.pop_back();
+    if (visited.find(cur) == visited.end())
+    {
+      visited.insert(cur);
+      Kind ck = cur.getKind();
+      if (ck == Kind::FORALL)
+      {
+        // do nothing
+      }
+      else if (TermUtil::isBoolConnective(ck))
+      {
+        for (TNode cc : cur)
+        {
+          visit.push_back(cc);
+        }
+      }
+      else if (!ee->hasTerm(cur))
+      {
+        Trace("eager-inst-warn") << "Not prop due to " << cur << std::endl;
+        return false;
+      }
+    }
+  } while (!visit.empty());
+  return true;
+}
 
 }  // namespace quantifiers
 }  // namespace theory

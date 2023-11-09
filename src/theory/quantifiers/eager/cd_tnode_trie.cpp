@@ -179,10 +179,13 @@ TNode CDTNodeTrieIterator::pushNextChild()
       // finished children at the current level
       return d_null;
     }
-    ret = sf.d_cit->first;
-    next = sf.d_cit->second;
+    Trace("ajr-temp") << "for index " << sf.d_index << " / " << sf.d_dom.size() << " | " << d_stack.size() << std::endl;
+    ret = sf.d_dom[sf.d_index].first;
+    Trace("ajr-temp") << "..return " << ret << std::endl;
+    next = sf.d_dom[sf.d_index].second;
     Assert(next->d_edge.get() == ret);
-    ++sf.d_cit;
+    //++sf.d_cit;
+    ++sf.d_index;
     if (!pushInternal(next))
     {
       // rare case where the current has no children?
@@ -243,7 +246,8 @@ void CDTNodeTrieIterator::pop()
 
 TNode CDTNodeTrieIterator::getCurrentData()
 {
-  Assert(d_curData != nullptr && d_curData->hasData());
+  Assert(d_curData != nullptr);
+  Assert(d_curData->hasData());
   return d_curData->getData();
 }
 
@@ -317,6 +321,8 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
             cc->d_repMap[r] = i;
           }
           d_curChildren[r] = cc;
+          d_dom.emplace_back(r, cc);
+          Trace("cdt-debug") << "child " << r << std::endl;
           continue;
         }
         else
@@ -326,6 +332,8 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
           // i.e. have ccn point to cc directly
           ccTgt = active->push_back(al, r);
           d_curChildren[r] = ccTgt;
+          d_dom.emplace_back(r, ccTgt);
+          Trace("cdt-debug") << "new child " << r << std::endl;
         }
       }
       else
@@ -351,7 +359,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
     }
   } while (!process.empty());
   // start the iterator
-  d_cit = d_curChildren.begin();
+  d_index = 0;
 }
 
 }  // namespace quantifiers

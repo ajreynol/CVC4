@@ -81,6 +81,7 @@ class TermDbEager : protected EnvObj
 
  private:
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
+  bool isPropagatingInstance(Node n) const;
   /** The null node */
   Node d_null;
   /** Reference to the quantifiers state */

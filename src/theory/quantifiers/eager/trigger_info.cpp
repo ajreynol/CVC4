@@ -192,51 +192,66 @@ bool TriggerInfo::doMatchingAll()
     {
       // we are not iterating on all children, and thus are done
       success = false;
+      iterAllChild.pop_back();
     }
     if (success)
     {
       if (!r.isNull())
       {
         // if we are traversing a specific child
-        success = itt.push(r);
+        if (!itt.push(r))
+        {
+          // fail, go back a level
+          success = false;
+          iterAllChild.pop_back();
+        }
+        else
+        {
+          level++;
+        }
         Trace("eager-inst-matching-debug") << "...success=" << success << std::endl;
+        Trace("ajr-temp") << "push now " << itt.getLevel() << std::endl;
       }
       else
       {
         // we are traversing all children
         r = itt.pushNextChild();
         Trace("eager-inst-matching-debug") << "[level " << level << "] next child " << r << std::endl;
+        Trace("ajr-temp") << "push now " << itt.getLevel() << std::endl;
         if (r.isNull())
         {
           // if no more children to push, go back a level
           success = false;
-        }
-        else if (pc.getKind() == Kind::BOUND_VARIABLE)
-        {
-          // if we are a bound variable, we try to bind
-          success = d_ieval->push(pc, r);
+          iterAllChild.pop_back();
         }
         else
         {
-          Assert(pti != nullptr);
-          // if we are a compound child, we try to match in the eqc
-          success = pti->initMatchingEqc(d_ieval.get(), r);
-          if (success)
+          level++;
+          if (pc.getKind() == Kind::BOUND_VARIABLE)
           {
-            success = pti->doMatchingEqcNext(d_ieval.get());
+            // if we are a bound variable, we try to bind
+            success = d_ieval->push(pc, r);
+          }
+          else
+          {
+            Assert(pti != nullptr);
+            // if we are a compound child, we try to match in the eqc
+            success = pti->initMatchingEqc(d_ieval.get(), r);
+            if (success)
+            {
+              // NOTE: only single term is matched, could iterate on this
+              success = pti->doMatchingEqcNext(d_ieval.get());
+            }
           }
         }
-      }
-      if (success)
-      {
-        level++;
+        Trace("eager-inst-matching-debug") << "...success=" << success << std::endl;
       }
     }
     if (!success)
     {
       // go back a level
-      iterAllChild.pop_back();
       itt.pop();
+      Trace("ajr-temp") << "pop now " << itt.getLevel() << std::endl;
       if (level==0)
       {
         Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
