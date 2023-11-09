@@ -30,7 +30,7 @@ namespace expr {
 TermCanonize::TermCanonize(TypeClassCallback* tcc,
                            bool applyTOrder,
                            bool doHoVar,
-               bool applyGTerms)
+                           bool applyGTerms)
     : d_tcc(tcc),
       d_applyTOrder(applyTOrder),
       d_doHoVar(doHoVar),

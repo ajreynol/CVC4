@@ -39,7 +39,8 @@ TermDbEager::TermDbEager(Env& env,
       d_cdalloc(context()),
       d_conflict(context()),
       // we canonize ground subterms if the option is set
-      d_tcanon(nullptr, false, true, options().quantifiers.eagerInstMergeTriggers),
+      d_tcanon(
+          nullptr, false, true, options().quantifiers.eagerInstMergeTriggers),
       d_stats(statisticsRegistry()),
       d_statsEnabled(options().base.statistics)
 {

@@ -124,7 +124,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
     {
       // If we are watching ground args, add to d_gargs. Otherwise, this is
       // a dummy term.
-      Assert (watchGroundArgs || d_pattern[i].getKind()==Kind::SKOLEM);
+      Assert(watchGroundArgs || d_pattern[i].getKind() == Kind::SKOLEM);
       if (watchGroundArgs)
       {
         d_gargs.emplace_back(i);
