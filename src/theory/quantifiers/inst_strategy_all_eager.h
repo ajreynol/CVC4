@@ -30,8 +30,8 @@ namespace quantifiers {
 /**
  * InstStrategyAllEager
  *
- * This instantiation strategy double checks that the eager term database
- * has no more instantiations to try.
+ * This instantiation strategy double checks the eager term database to
+ * add all instantiations it can find.
  */
 class InstStrategyAllEager : public QuantifiersModule
 {
