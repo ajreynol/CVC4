@@ -19,6 +19,7 @@
 
 // TODO #1216: move the code in this include
 #include "theory/quantifiers/term_util.h"
+#include "expr/node_algorithm.h"
 
 using namespace cvc5::internal::kind;
 
@@ -180,11 +181,7 @@ Node TermCanonize::getCanonicalTerm(
   {
     // collect children
     Trace("canon-term-debug") << "Collect children" << std::endl;
-    std::vector<Node> cchildren;
-    for (const Node& cn : n)
-    {
-      cchildren.push_back(cn);
-    }
+    std::vector<Node> cchildren(n.begin(), n.end());
     // if applicable, first sort by term order
     if (apply_torder && theory::quantifiers::TermUtil::isComm(n.getKind()))
     {
@@ -194,12 +191,15 @@ Node TermCanonize::getCanonicalTerm(
       sto.d_tu = this;
       std::sort(cchildren.begin(), cchildren.end(), sto);
     }
-    // now make canonical
-    Trace("canon-term-debug") << "Make canonical children" << std::endl;
-    for (unsigned i = 0, size = cchildren.size(); i < size; i++)
+    // make canonical if non-ground
+    if (expr::hasBoundVar(n))
     {
-      cchildren[i] = getCanonicalTerm(
-          cchildren[i], apply_torder, doHoVar, var_count, visited);
+      Trace("canon-term-debug") << "Make canonical children" << std::endl;
+      for (unsigned i = 0, size = cchildren.size(); i < size; i++)
+      {
+        cchildren[i] = getCanonicalTerm(
+            cchildren[i], apply_torder, doHoVar, var_count, visited);
+      }
     }
     if (n.getMetaKind() == metakind::PARAMETERIZED)
     {
