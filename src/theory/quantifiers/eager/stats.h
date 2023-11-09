@@ -36,6 +36,7 @@ class Stats
   Stats(StatisticsRegistry& sr);
   IntStat d_ntriggers;
   IntStat d_ntriggersUnique;
+  IntStat d_ntriggersActivated;
   IntStat d_nquant;
   IntStat d_nquantNoTrigger;
   IntStat d_nquantActivated;

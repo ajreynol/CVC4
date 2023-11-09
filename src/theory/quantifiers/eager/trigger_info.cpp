@@ -32,7 +32,8 @@ TriggerInfo::TriggerInfo(TermDbEager& tde)
     : d_tde(tde),
       d_arity(0),
       d_root{nullptr, nullptr},
-      d_status(tde.getSatContext(), TriggerStatus::INACTIVE)
+      d_status(tde.getSatContext(), TriggerStatus::INACTIVE),
+      d_hasActivated(false)
 {
 }
 
@@ -406,6 +407,11 @@ bool TriggerInfo::setStatus(TriggerStatus s)
       continue;
     }
     d_status = s;
+    if (s==TriggerStatus::ACTIVE && !d_hasActivated)
+    {
+      d_hasActivated = true;
+      ++(d_tde.getStats().d_ntriggersActivated);
+    }
     i++;
     // notify that we've changed status to s
     for (QuantInfo* qi : d_qinfos)

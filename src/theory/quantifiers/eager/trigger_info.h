@@ -103,9 +103,9 @@ class TriggerInfo
   context::CDO<TriggerStatus> d_status;
   /** Status proc */
   std::vector<TriggerStatus> d_statusToProc;
-  /** Active? */
-  // context::CDO<bool> d_active;
-  /** Wait list */
+  /** Have we ever activated this? */
+  bool d_hasActivated;
+  /** Wait list, this would be used if we could deactivate */
   // WaitList d_terms;
 };
 
