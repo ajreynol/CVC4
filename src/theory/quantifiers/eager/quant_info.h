@@ -23,6 +23,9 @@
 #include "theory/quantifiers/eager/trigger_info.h"
 
 namespace cvc5::internal {
+namespace expr {
+  class TermCanonize;
+}
 namespace theory {
 namespace quantifiers {
 
@@ -36,7 +39,7 @@ class QuantInfo
  public:
   QuantInfo(TermDbEager& tde);
   /** Initialize this for quantified formula q */
-  void initialize(QuantifiersRegistry& qr, const Node& q);
+  void initialize(QuantifiersRegistry& qr, expr::TermCanonize& canon, const Node& q);
   /** Set that the quantified formula for this class is asserted */
   bool notifyAsserted();
   /** Get quantified formula */

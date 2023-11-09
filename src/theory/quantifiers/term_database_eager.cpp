@@ -234,7 +234,7 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
     Trace("eager-inst-db") << "mkQuantInfo: " << q << std::endl;
     d_qinfo.emplace(q, *this);
     it = d_qinfo.find(q);
-    it->second.initialize(d_qreg, q);
+    it->second.initialize(d_qreg, d_tcanon, q);
   }
   return &it->second;
 }

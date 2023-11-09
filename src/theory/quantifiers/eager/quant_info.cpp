@@ -36,7 +36,7 @@ QuantInfo::QuantInfo(TermDbEager& tde)
 {
 }
 
-void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
+void QuantInfo::initialize(QuantifiersRegistry& qr, expr::TermCanonize& canon, const Node& q)
 {
   Assert(d_quant.isNull());
   Assert(q.getKind() == Kind::FORALL);
@@ -45,7 +45,6 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   Stats& s = d_tde.getStats();
   ++(s.d_nquant);
   const Options& opts = d_tde.getEnv().getOptions();
-  expr::TermCanonize& canon = d_tde.getTermCanon();
   std::map<Node, inst::TriggerTermInfo> tinfo;
   inst::PatternTermSelector pts(q, options::TriggerSelMode::MAX);
   // get the user patterns

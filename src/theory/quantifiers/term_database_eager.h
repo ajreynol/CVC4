@@ -74,7 +74,6 @@ class TermDbEager : protected EnvObj
   //==========
   Env& getEnv() { return d_env; }
   TermDb& getTermDb() { return d_tdb; }
-  expr::TermCanonize& getTermCanon() { return d_tcanon; }
   eager::Stats& getStats() { return d_stats; }
   QuantifiersState& getState() { return d_qs; }
   CDTNodeTrieAllocator* getCdtAlloc() { return &d_cdalloc; }
