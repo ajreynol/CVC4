@@ -153,7 +153,7 @@ class CDTNodeTrieIterator
     /** The current index in the domain we are considering */
     size_t d_index;
     /** Is the iteration finished */
-    bool isFinished() const { return d_index==d_dom.size(); }
+    bool isFinished() const { return d_index == d_dom.size(); }
   };
   /** The iteration stack */
   std::vector<StackFrame> d_stack;

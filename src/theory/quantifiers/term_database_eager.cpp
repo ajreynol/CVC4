@@ -101,9 +101,10 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
-void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {
-  //Trace("eager-inst-notify") << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
-  //Trace("eager-inst-notify") << "...finished" << std::endl;
+void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
+{
+  // Trace("eager-inst-notify") << "eqNotifyMerge: " << t1 << " " << t2 <<
+  // std::endl; Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
@@ -212,13 +213,13 @@ bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
 {
   Trace("eager-inst-debug")
       << "addInstantiation: " << q << ", " << terms << std::endl;
-      /*
-  Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
-  if (!isPropagatingInstance(inst))
-  {
-    AlwaysAssert(false);
-  }
-  */
+  /*
+Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
+if (!isPropagatingInstance(inst))
+{
+AlwaysAssert(false);
+}
+*/
   bool ret = d_qim->getInstantiate()->addInstantiation(
       q, terms, InferenceId::QUANTIFIERS_INST_EAGER);
   d_qim->doPending();
@@ -230,7 +231,8 @@ bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
   else
   {
     Trace("eager-inst-debug") << "...success!" << std::endl;
-    Trace("eager-inst") << "EagerInst: added instantiation " << q << " " << terms << std::endl;
+    Trace("eager-inst") << "EagerInst: added instantiation " << q << " "
+                        << terms << std::endl;
   }
   return ret;
 }

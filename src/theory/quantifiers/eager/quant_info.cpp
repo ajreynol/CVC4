@@ -210,7 +210,8 @@ bool QuantInfo::updateStatus()
   // ensure we are signed up to watch
   if (!d_triggerWatching[bestIndex])
   {
-    Trace("eager-inst-debug") << "Add to watch " << bestTrigger->getPattern() << std::endl;
+    Trace("eager-inst-debug")
+        << "Add to watch " << bestTrigger->getPattern() << std::endl;
     d_triggerWatching[bestIndex] = true;
     bestTrigger->watch(this, d_vlists[bestIndex]);
   }

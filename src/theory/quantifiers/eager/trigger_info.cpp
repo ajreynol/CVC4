@@ -44,7 +44,11 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
     d_ieval.reset(new ieval::InstEvaluator(d_tde.getEnv(),
                                            d_tde.getState(),
                                            d_tde.getTermDb(),
-                                           ieval::TermEvaluatorMode::PROP, false, false, false, true));
+                                           ieval::TermEvaluatorMode::PROP,
+                                           false,
+                                           false,
+                                           false,
+                                           true));
   }
   else
   {
@@ -81,14 +85,14 @@ void TriggerInfo::initialize(const Node& t)
   d_pattern = t;
   d_op = d_tde.getTermDb().getMatchOperator(t);
   d_arity = t.getNumChildren();
-  for (size_t i=0; i<2; i++)
+  for (size_t i = 0; i < 2; i++)
   {
-    bool bindOrder = (i==0);
+    bool bindOrder = (i == 0);
     PatTermInfo* pi = getPatTermInfo(t, bindOrder);
     std::unordered_set<Node> fvs;
     pi->initialize(this, d_pattern, fvs, bindOrder, true);
     d_root[i] = pi;
-    if (i==0 && pi->d_oargs.empty() && pi->d_gpargs.empty())
+    if (i == 0 && pi->d_oargs.empty() && pi->d_gpargs.empty())
     {
       // if simple trigger, doesn't make a difference
       d_root[1] = pi;
@@ -149,7 +153,9 @@ bool TriggerInfo::doMatchingAll()
   std::vector<bool> iterAllChild;
   PatTermInfo* root = d_root[0];
   std::vector<PatTermInfo*>& children = root->d_children;
-  Assert (children.size()==d_pattern.getNumChildren()) << "child mismatch " << children.size() << " " << d_pattern.getNumChildren();
+  Assert(children.size() == d_pattern.getNumChildren())
+      << "child mismatch " << children.size() << " "
+      << d_pattern.getNumChildren();
   std::vector<size_t>& nbindings = root->d_bindings;
   PatTermInfo* pti;
   bool success;
@@ -177,7 +183,8 @@ bool TriggerInfo::doMatchingAll()
         // if a ground term, use the representative method directly
         r = qs.getRepresentative(pc);
       }
-      Trace("eager-inst-matching-debug") << "[level " << level << "] traverse " << r << std::endl;
+      Trace("eager-inst-matching-debug")
+          << "[level " << level << "] traverse " << r << std::endl;
       // if r is null
       iterAllChild.push_back(r.isNull());
     }
@@ -185,7 +192,9 @@ bool TriggerInfo::doMatchingAll()
     {
       // otherwise, if we are iterating on children, pop the previous
       // binding(s).
-      Trace("ajr-temp")  << "...pop " << nbindings[level] << " bindings since we are moving to next child" << std::endl;
+      Trace("ajr-temp") << "...pop " << nbindings[level]
+                        << " bindings since we are moving to next child"
+                        << std::endl;
       d_ieval->pop(nbindings[level]);
       r = null;
     }
@@ -200,7 +209,8 @@ bool TriggerInfo::doMatchingAll()
       {
         // if we are traversing a specific child
         success = itt.push(r);
-        Trace("eager-inst-matching-debug") << "...success=" << success << std::endl;
+        Trace("eager-inst-matching-debug")
+            << "...success=" << success << std::endl;
       }
       else
       {
@@ -210,7 +220,8 @@ bool TriggerInfo::doMatchingAll()
         success = false;
         while (!r.isNull() && !success)
         {
-          Trace("eager-inst-matching-debug") << "[level " << level << "] next child " << r << std::endl;
+          Trace("eager-inst-matching-debug")
+              << "[level " << level << "] next child " << r << std::endl;
           if (pc.getKind() == Kind::BOUND_VARIABLE)
           {
             // if we are a bound variable, we try to bind
@@ -234,7 +245,8 @@ bool TriggerInfo::doMatchingAll()
             r = itt.pushNextChild();
           }
         }
-        Trace("eager-inst-matching-debug") << "...success=" << success << std::endl;
+        Trace("eager-inst-matching-debug")
+            << "...success=" << success << std::endl;
       }
     }
     if (success)
@@ -243,8 +255,8 @@ bool TriggerInfo::doMatchingAll()
       level++;
     }
     else
-    {      
-      if (level==0)
+    {
+      if (level == 0)
       {
         Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
         return false;

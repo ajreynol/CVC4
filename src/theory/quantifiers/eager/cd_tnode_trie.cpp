@@ -179,7 +179,8 @@ TNode CDTNodeTrieIterator::pushNextChild()
       // finished children at the current level
       return d_null;
     }
-    Trace("ajr-temp") << "for index " << sf.d_index << " / " << sf.d_dom.size() << " | " << d_stack.size() << std::endl;
+    Trace("ajr-temp") << "for index " << sf.d_index << " / " << sf.d_dom.size()
+                      << " | " << d_stack.size() << std::endl;
     ret = sf.d_dom[sf.d_index].first;
     Trace("ajr-temp") << "..return " << ret << std::endl;
     next = sf.d_dom[sf.d_index].second;
@@ -270,7 +271,8 @@ bool CDTNodeTrieIterator::setData(TNode n)
 CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
                                             QuantifiersState& qs,
                                             CDTNodeTrie* active,
-                                            bool isChildLeaf) : d_active(active), d_index(0)
+                                            bool isChildLeaf)
+    : d_active(active), d_index(0)
 {
   Assert(active != nullptr);
   std::map<TNode, CDTNodeTrie*>::iterator it;
