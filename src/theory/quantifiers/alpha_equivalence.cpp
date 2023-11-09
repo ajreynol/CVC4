@@ -80,9 +80,7 @@ Node AlphaEquivalenceTypeNode::registerNode(
 
 AlphaEquivalenceDb::AlphaEquivalenceDb(context::Context* c,
                                        expr::TermCanonize* tc)
-    : d_context(c),
-      d_ae_typ_trie(c),
-      d_tc(tc)
+    : d_context(c), d_ae_typ_trie(c), d_tc(tc)
 {
 }
 Node AlphaEquivalenceDb::addTerm(Node q)

@@ -66,8 +66,7 @@ class AlphaEquivalenceTypeNode {
 class AlphaEquivalenceDb
 {
  public:
-  AlphaEquivalenceDb(context::Context* c,
-                     expr::TermCanonize* tc);
+  AlphaEquivalenceDb(context::Context* c, expr::TermCanonize* tc);
   /** adds quantified formula q to this database
    *
    * This function returns a quantified formula q' that is alpha-equivalent to

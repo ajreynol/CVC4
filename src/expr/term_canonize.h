@@ -98,11 +98,13 @@ class TermCanonize
    * Same as above but tracks visited map, mapping subterms of n to their
    * canonical forms.
    */
-  Node getCanonicalTerm(TNode n,
-                        std::map<TNode, Node>& visited);
+  Node getCanonicalTerm(TNode n, std::map<TNode, Node>& visited);
 
  private:
-  Node getCanonicalFreeSymInternal(TypeNode tn, size_t i, uint32_t tc, size_t index);
+  Node getCanonicalFreeSymInternal(TypeNode tn,
+                                   size_t i,
+                                   uint32_t tc,
+                                   size_t index);
   /** The (optional) type class callback */
   TypeClassCallback* d_tcc;
   /** Whether we are apply term order */

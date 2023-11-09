@@ -19,8 +19,8 @@
 
 // TODO #1216: move the code in this include
 #include "expr/node_algorithm.h"
-#include "theory/quantifiers/term_util.h"
 #include "expr/skolem_manager.h"
+#include "theory/quantifiers/term_util.h"
 
 using namespace cvc5::internal::kind;
 
@@ -28,9 +28,13 @@ namespace cvc5::internal {
 namespace expr {
 
 TermCanonize::TermCanonize(TypeClassCallback* tcc,
-               bool applyTOrder,
-               bool doHoVar)
-    : d_tcc(tcc), d_applyTOrder(applyTOrder), d_doHoVar(doHoVar), d_op_id_count(0), d_typ_id_count(0)
+                           bool applyTOrder,
+                           bool doHoVar)
+    : d_tcc(tcc),
+      d_applyTOrder(applyTOrder),
+      d_doHoVar(doHoVar),
+      d_op_id_count(0),
+      d_typ_id_count(0)
 {
 }
 
@@ -111,7 +115,10 @@ Node TermCanonize::getCanonicalFreeConstant(TypeNode tn, size_t i, uint32_t tc)
   return getCanonicalFreeSymInternal(tn, i, tc, 1);
 }
 
-Node TermCanonize::getCanonicalFreeSymInternal(TypeNode tn, size_t i, uint32_t tc, size_t index)
+Node TermCanonize::getCanonicalFreeSymInternal(TypeNode tn,
+                                               size_t i,
+                                               uint32_t tc,
+                                               size_t index)
 {
   Assert(!tn.isNull());
   NodeManager* nm = NodeManager::currentNM();
@@ -136,7 +143,7 @@ Node TermCanonize::getCanonicalFreeSymInternal(TypeNode tn, size_t i, uint32_t t
       os << typ_name[0] << i;
     }
     Node x;
-    if (index==0)
+    if (index == 0)
     {
       x = nm->mkBoundVar(os.str(), tn);
     }
@@ -216,8 +223,7 @@ Node TermCanonize::getCanonicalTerm(
       Trace("canon-term-debug") << "Make canonical children" << std::endl;
       for (unsigned i = 0, size = cchildren.size(); i < size; i++)
       {
-        cchildren[i] = getCanonicalTerm(
-            cchildren[i], var_count, visited);
+        cchildren[i] = getCanonicalTerm(cchildren[i], var_count, visited);
       }
     }
     if (n.getMetaKind() == metakind::PARAMETERIZED)
@@ -249,8 +255,7 @@ Node TermCanonize::getCanonicalTerm(TNode n)
   return getCanonicalTerm(n, var_count, visited);
 }
 
-Node TermCanonize::getCanonicalTerm(TNode n,
-                                    std::map<TNode, Node>& visited)
+Node TermCanonize::getCanonicalTerm(TNode n, std::map<TNode, Node>& visited)
 {
   std::map<std::pair<TypeNode, uint32_t>, unsigned> var_count;
   return getCanonicalTerm(n, var_count, visited);
