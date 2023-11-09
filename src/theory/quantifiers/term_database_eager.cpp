@@ -66,6 +66,8 @@ void TermDbEager::assertQuantifier(TNode q)
   {
     Trace("eager-inst-notify") << "...finished" << std::endl;
   }
+  // do pending
+  d_qim->doPending();
 }
 
 void TermDbEager::eqNotifyNewClass(TNode t)
@@ -121,6 +123,8 @@ void TermDbEager::eqNotifyNewClass(TNode t)
           break;
         }
       }
+      // do pending now
+      d_qim->doPending();
     }
   }
   Trace("eager-inst-notify") << "...finished" << std::endl;
@@ -268,8 +272,8 @@ bool TermDbEager::addInstantiation(Node q,
     Trace("eager-inst-debug") << "...success!" << std::endl;
     Trace("eager-inst") << "EagerInst: added instantiation " << q << " "
                         << terms << std::endl;
-    d_qim->doPending();
   }
+  // note we don't do pending yet
   return ret;
 }
 
