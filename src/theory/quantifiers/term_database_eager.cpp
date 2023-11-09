@@ -280,10 +280,12 @@ bool TermDbEager::isPropagatingTerm(Node n)
   TNode cur;
   visit.push_back(n);
   eq::EqualityEngine* ee = d_qs.getEqualityEngine();
-  do {
+  do
+  {
     cur = visit.back();
     it = visited.find(cur);
-    if (it == visited.end()) {
+    if (it == visited.end())
+    {
       visited[cur] = Node::null();
       Node op = d_tdb.getMatchOperator(cur);
       if (op.isNull())
@@ -300,23 +302,24 @@ bool TermDbEager::isPropagatingTerm(Node n)
         continue;
       }
     }
-    else if (it->second.isNull()) 
+    else if (it->second.isNull())
     {
       std::vector<TNode> children;
-      for (const Node& cn : cur) {
+      for (const Node& cn : cur)
+      {
         it = visited.find(cn);
         Assert(it != visited.end());
         Assert(!it->second.isNull());
         children.emplace_back(it->second);
       }
       Node op = d_tdb.getMatchOperator(cur);
-      Assert (!op.isNull());
+      Assert(!op.isNull());
       Node ret = getCongruentTerm(op, children);
       if (ret.isNull())
       {
         return false;
       }
-      Assert (ee->hasTerm(ret));
+      Assert(ee->hasTerm(ret));
       ret = ee->getRepresentative(ret);
       visited[cur] = ret;
     }
