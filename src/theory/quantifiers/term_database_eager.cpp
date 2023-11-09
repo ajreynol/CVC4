@@ -132,6 +132,9 @@ void TermDbEager::eqNotifyNewClass(TNode t)
 
 void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
 {
+  // TODO: alternative strategy where you register if this is the first
+  // time seeing t1 / t2. This would indicate that terms are processed when
+  // they are asserted?
   Trace("eager-inst-notify")
       << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
   Trace("eager-inst-notify") << "...finished" << std::endl;
@@ -139,16 +142,12 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
 
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
 {
-  return true;
-  // relevant domain is likely not worthwhile?
-#if 0
   eager::FunInfo* finfo = getFunInfo(f);
   if (finfo == nullptr)
   {
     return false;
   }
   return finfo->inRelevantDomain(i, r);
-#endif
 }
 
 TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
