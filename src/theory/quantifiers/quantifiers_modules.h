@@ -25,6 +25,7 @@
 #include "theory/quantifiers/fmf/full_model_check.h"
 #include "theory/quantifiers/fmf/model_builder.h"
 #include "theory/quantifiers/fmf/model_engine.h"
+#include "theory/quantifiers/inst_strategy_all_eager.h"
 #include "theory/quantifiers/inst_strategy_enumerative.h"
 #include "theory/quantifiers/inst_strategy_mbqi.h"
 #include "theory/quantifiers/inst_strategy_pool.h"
@@ -80,6 +81,8 @@ class QuantifiersModules
   std::unique_ptr<ModelEngine> d_model_engine;
   /** bounded integers utility */
   std::unique_ptr<BoundedIntegers> d_bint;
+  /** all eager instantiation strategy */
+  std::unique_ptr<InstStrategyAllEager> d_iae;
   /** Conflict find mechanism for quantifiers */
   std::unique_ptr<QuantConflictFind> d_qcf;
   /** subgoal generator */

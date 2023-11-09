@@ -30,7 +30,7 @@ namespace eager {
 QuantInfo::QuantInfo(TermDbEager& tde)
     : d_tde(tde),
       d_asserted(tde.getSatContext()),
-      d_tinactiveIndex(tde.getSatContext(), 0),
+      d_tindex(tde.getSatContext(), 0),
       d_tstatus(tde.getSatContext(), TriggerStatus::NONE),
       d_hasActivated(false)
 {
@@ -43,7 +43,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   Assert(d_quant.isNull());
   Assert(q.getKind() == Kind::FORALL);
   d_quant = q;
-  // TODO: if we have a nested quantified, don't bother
+  // TODO: if we have a nested quantified, don't bother?
   Stats& s = d_tde.getStats();
   ++(s.d_nquant);
   const Options& opts = d_tde.getEnv().getOptions();
@@ -90,8 +90,6 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
     tinfo[upc].init(q, upc);
     patTerms.emplace_back(upc);
   }
-  // TODO: could aggressively merge triggers
-
   Trace("eager-inst-trigger") << "Triggers for " << q << ":" << std::endl;
   size_t nvars = q[0].getNumChildren();
   std::unordered_set<Node> processed;
@@ -138,6 +136,8 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   {
     d_tstatus = TriggerStatus::INACTIVE;
   }
+  // TODO: wait based on symbols in the critical path only
+  // currently we wait based on the activity of the triggers
 }
 
 bool QuantInfo::notifyAsserted()
@@ -152,8 +152,8 @@ bool QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status)
   // if we are inactive and we just updated the inactive trigger, update status
   if (d_tstatus == TriggerStatus::INACTIVE)
   {
-    Assert(d_tinactiveIndex.get() < d_triggers.size());
-    if (d_triggers[d_tinactiveIndex.get()] == tinfo)
+    Assert(d_tindex.get() < d_triggers.size());
+    if (d_triggers[d_tindex.get()] == tinfo)
     {
       return updateStatus();
     }
@@ -168,17 +168,17 @@ bool QuantInfo::updateStatus()
     // nothing to do
     return false;
   }
-  Assert(d_tinactiveIndex.get() < d_triggers.size());
+  Assert(d_tindex.get() < d_triggers.size());
   do
   {
-    TriggerInfo* tnext = d_triggers[d_tinactiveIndex.get()];
+    TriggerInfo* tnext = d_triggers[d_tindex.get()];
     if (tnext->getStatus() == TriggerStatus::INACTIVE)
     {
       // the current trigger is still inactive
       return false;
     }
-    d_tinactiveIndex = d_tinactiveIndex.get() + 1;
-  } while (d_tinactiveIndex.get() < d_triggers.size());
+    d_tindex = d_tindex.get() + 1;
+  } while (d_tindex.get() < d_triggers.size());
 
   Trace("eager-inst-debug") << "Activate quant: " << d_quant << std::endl;
   if (!d_hasActivated)
@@ -214,8 +214,10 @@ bool QuantInfo::updateStatus()
       bestIndexSet = true;
     }
   }
+  Assert (bestIndexSet);
   Assert(d_triggers.size() == d_vlists.size());
   Assert(d_triggers.size() == d_triggerWatching.size());
+  d_tindex = bestIndex;
   if (watchAndActivateTrigger(bestIndex))
   {
     return true;
@@ -260,6 +262,16 @@ bool QuantInfo::watchAndActivateTrigger(size_t i)
     return true;
   }
   return false;
+}
+
+TriggerInfo* QuantInfo::getActiveTrigger() 
+{
+  if (d_tstatus!=TriggerStatus::ACTIVE)
+  {
+    return nullptr;
+  }
+  Assert (d_tindex.get()<d_triggers.size());
+  return d_triggers[d_tindex.get()];
 }
 
 }  // namespace eager

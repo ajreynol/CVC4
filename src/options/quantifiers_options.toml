@@ -822,6 +822,14 @@ name   = "Quantifiers"
   default    = "false"
   help       = "Combine triggers that are equivalent modulo ground subterms"
 
+[[option]]
+  name       = "eagerInstAll"
+  category   = "expert"
+  long       = "eager-inst-all"
+  type       = "bool"
+  default    = "false"
+  help       = "Do a round of all eager instantiation at full effort"
+
 ### Induction options
 
 [[option]]

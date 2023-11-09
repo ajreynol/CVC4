@@ -68,9 +68,15 @@ class TermDbEager : protected EnvObj
   eager::FunInfo* getFunInfo(TNode f);
 
   /** Add instantiation */
-  bool addInstantiation(Node q, std::vector<Node>& terms, bool isConflict);
+  bool addInstantiation(const Node& q, std::vector<Node>& terms, bool isConflict);
   /** In conflict? */
   bool inConflict() const { return d_conflict.get(); }
+  /** 
+   * Is the given quantified formula inactive?
+   * This is the case if we successfully inferred triggers for q and those
+   * triggers are not active.
+   */
+  bool isInactive(const Node& q);
   //==========
   Env& getEnv() { return d_env; }
   TermDb& getTermDb() { return d_tdb; }

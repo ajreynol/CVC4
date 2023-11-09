@@ -41,13 +41,56 @@ bool InstStrategyAllEager::needsCheck(Theory::Effort e)
 
 void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
 {
+  if (quant_e != QEFFORT_CONFLICT)
+  {
+    return;
+  }
+  double clSet = 0;
+  size_t lastWaiting = 0;
+  if (TraceIsOn("all-eager-engine"))
+  {
+    lastWaiting = d_qim.numPendingLemmas();
+    clSet = double(clock()) / double(CLOCKS_PER_SEC);
+    Trace("all-eager-engine") << "---All eager Engine Round, effort = " << e
+                        << "---" << std::endl;
+  }
+  std::unordered_set<eager::TriggerInfo*> processed;
   // get all remaining instantiations from term database eager
   FirstOrderModel* fm = d_treg.getModel();
   for (size_t i = 0, nquant = fm->getNumAssertedQuantifiers(); i < nquant; i++)
   {
     Node q = fm->getAssertedQuantifier(i);
     eager::QuantInfo* qi = d_tde->getQuantInfo(q);
-    Assert(qi != nullptr);
+    if (qi == nullptr)
+    {
+      continue;
+    }
+    eager::TriggerInfo* ti = qi->getActiveTrigger();
+    if (ti==nullptr)
+    {
+      continue;
+    }
+    if (processed.find(ti)!=processed.end())
+    {
+      continue;
+    }
+    processed.insert(ti);
+    // do all matching with ti
+    if (ti->doMatchingAll())
+    {
+      Assert (d_tde->inConflict());
+      break;
+    }
+  }
+  if (TraceIsOn("all-eager-engine"))
+  {
+    double clSet2 = double(clock()) / double(CLOCKS_PER_SEC);
+    Trace("all-eager-engine") << "Added lemmas = "
+                          << (d_qim.numPendingLemmas() - lastWaiting)
+                          << std::endl;
+    Trace("all-eager-engine") << "Finished all eager engine, time = "
+                        << (clSet2 - clSet);
+    Trace("all-eager-engine") << std::endl;
   }
 }
 

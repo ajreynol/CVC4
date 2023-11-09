@@ -52,7 +52,10 @@ class QuantInfo
    * Notify that a trigger has been assigned a status, return true if conflict.
    */
   bool notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
-
+  /** Get the active trigger */
+  TriggerInfo* getActiveTrigger();
+  /** Get the status */
+  TriggerStatus getStatus() const { return d_tstatus.get(); }
  private:
   bool updateStatus();
   bool watchAndActivateTrigger(size_t i);
@@ -68,8 +71,11 @@ class QuantInfo
   std::vector<bool> d_triggerWatching;
   /** Is asserted */
   context::CDO<bool> d_asserted;
-  /** The index in d_triggers that is inactive */
-  context::CDO<size_t> d_tinactiveIndex;
+  /**
+   * The index in d_triggers that is inactive if we are inactive, 
+   * or one that we are watching if we are active.
+   */
+  context::CDO<size_t> d_tindex;
   /** The current status */
   context::CDO<TriggerStatus> d_tstatus;
   /** Have we ever activated this? */
