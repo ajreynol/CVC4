@@ -20,14 +20,17 @@
 // TODO #1216: move the code in this include
 #include "expr/node_algorithm.h"
 #include "theory/quantifiers/term_util.h"
+#include "expr/skolem_manager.h"
 
 using namespace cvc5::internal::kind;
 
 namespace cvc5::internal {
 namespace expr {
 
-TermCanonize::TermCanonize(TypeClassCallback* tcc)
-    : d_tcc(tcc), d_op_id_count(0), d_typ_id_count(0)
+TermCanonize::TermCanonize(TypeClassCallback* tcc,
+               bool applyTOrder,
+               bool doHoVar)
+    : d_tcc(tcc), d_applyTOrder(applyTOrder), d_doHoVar(doHoVar), d_op_id_count(0), d_typ_id_count(0)
 {
 }
 
@@ -100,10 +103,20 @@ bool TermCanonize::getTermOrder(Node a, Node b)
 
 Node TermCanonize::getCanonicalFreeVar(TypeNode tn, size_t i, uint32_t tc)
 {
+  return getCanonicalFreeSymInternal(tn, i, tc, 0);
+}
+
+Node TermCanonize::getCanonicalFreeConstant(TypeNode tn, size_t i, uint32_t tc)
+{
+  return getCanonicalFreeSymInternal(tn, i, tc, 1);
+}
+
+Node TermCanonize::getCanonicalFreeSymInternal(TypeNode tn, size_t i, uint32_t tc, size_t index)
+{
   Assert(!tn.isNull());
   NodeManager* nm = NodeManager::currentNM();
   std::pair<TypeNode, uint32_t> key(tn, tc);
-  std::vector<Node>& tvars = d_cn_free_var[key];
+  std::vector<Node>& tvars = d_cn_free_var[index][key];
   while (tvars.size() <= i)
   {
     std::stringstream os;
@@ -122,7 +135,15 @@ Node TermCanonize::getCanonicalFreeVar(TypeNode tn, size_t i, uint32_t tc)
       }
       os << typ_name[0] << i;
     }
-    Node x = nm->mkBoundVar(os.str().c_str(), tn);
+    Node x;
+    if (index==0)
+    {
+      x = nm->mkBoundVar(os.str(), tn);
+    }
+    else
+    {
+      x = nm->getSkolemManager()->mkDummySkolem(os.str(), tn);
+    }
     d_fvIndex[x] = tvars.size();
     tvars.push_back(x);
   }
@@ -152,8 +173,6 @@ struct sortTermOrder
 
 Node TermCanonize::getCanonicalTerm(
     TNode n,
-    bool apply_torder,
-    bool doHoVar,
     std::map<std::pair<TypeNode, uint32_t>, unsigned>& var_count,
     std::map<TNode, Node>& visited)
 {
@@ -183,7 +202,7 @@ Node TermCanonize::getCanonicalTerm(
     Trace("canon-term-debug") << "Collect children" << std::endl;
     std::vector<Node> cchildren(n.begin(), n.end());
     // if applicable, first sort by term order
-    if (apply_torder && theory::quantifiers::TermUtil::isComm(n.getKind()))
+    if (d_applyTOrder && theory::quantifiers::TermUtil::isComm(n.getKind()))
     {
       Trace("canon-term-debug")
           << "Sort based on commutative operator " << n.getKind() << std::endl;
@@ -198,15 +217,15 @@ Node TermCanonize::getCanonicalTerm(
       for (unsigned i = 0, size = cchildren.size(); i < size; i++)
       {
         cchildren[i] = getCanonicalTerm(
-            cchildren[i], apply_torder, doHoVar, var_count, visited);
+            cchildren[i], var_count, visited);
       }
     }
     if (n.getMetaKind() == metakind::PARAMETERIZED)
     {
       Node op = n.getOperator();
-      if (doHoVar)
+      if (d_doHoVar)
       {
-        op = getCanonicalTerm(op, apply_torder, doHoVar, var_count, visited);
+        op = getCanonicalTerm(op, var_count, visited);
       }
       Trace("canon-term-debug") << "Insert operator " << op << std::endl;
       cchildren.insert(cchildren.begin(), op);
@@ -223,20 +242,18 @@ Node TermCanonize::getCanonicalTerm(
   return n;
 }
 
-Node TermCanonize::getCanonicalTerm(TNode n, bool apply_torder, bool doHoVar)
+Node TermCanonize::getCanonicalTerm(TNode n)
 {
   std::map<std::pair<TypeNode, uint32_t>, unsigned> var_count;
   std::map<TNode, Node> visited;
-  return getCanonicalTerm(n, apply_torder, doHoVar, var_count, visited);
+  return getCanonicalTerm(n, var_count, visited);
 }
 
 Node TermCanonize::getCanonicalTerm(TNode n,
-                                    std::map<TNode, Node>& visited,
-                                    bool apply_torder,
-                                    bool doHoVar)
+                                    std::map<TNode, Node>& visited)
 {
   std::map<std::pair<TypeNode, uint32_t>, unsigned> var_count;
-  return getCanonicalTerm(n, apply_torder, doHoVar, var_count, visited);
+  return getCanonicalTerm(n, var_count, visited);
 }
 
 }  // namespace expr

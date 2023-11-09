@@ -67,8 +67,7 @@ class AlphaEquivalenceDb
 {
  public:
   AlphaEquivalenceDb(context::Context* c,
-                     expr::TermCanonize* tc,
-                     bool sortCommChildren);
+                     expr::TermCanonize* tc);
   /** adds quantified formula q to this database
    *
    * This function returns a quantified formula q' that is alpha-equivalent to
@@ -98,8 +97,6 @@ class AlphaEquivalenceDb
   AlphaEquivalenceTypeNode d_ae_typ_trie;
   /** pointer to the term canonize utility */
   expr::TermCanonize* d_tc;
-  /** whether to sort children of commutative operators during canonization. */
-  bool d_sortCommutativeOpChildren;
   /**
    * Maps quantified formulas to variables map, used for tracking substitutions
    * in addTermWithSubstitution. The range in d_bvmap[q] contains the mapping

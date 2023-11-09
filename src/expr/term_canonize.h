@@ -55,7 +55,9 @@ class TermCanonize
    * identifiers. Otherwise, this class will assume all variables of the
    * same type have the same type class.
    */
-  TermCanonize(TypeClassCallback* tcc = nullptr);
+  TermCanonize(TypeClassCallback* tcc = nullptr,
+               bool applyTOrder = false,
+               bool doHoVar = true);
   ~TermCanonize() {}
 
   /** Maps operators to an identifier, useful for ordering. */
@@ -72,6 +74,8 @@ class TermCanonize
   bool getTermOrder(Node a, Node b);
   /** get canonical free variable #i of type tn */
   Node getCanonicalFreeVar(TypeNode tn, size_t i, uint32_t tc = 0);
+  /** get canonical free variable #i of type tn */
+  Node getCanonicalFreeConstant(TypeNode tn, size_t i, uint32_t tc = 0);
   /**
    * Return the range of the free variable in the above map, or 0 if it does not
    * exist.
@@ -89,21 +93,22 @@ class TermCanonize
    * of a bound variable for type T is the first canonical free variable for T,
    * the second leftmost is the second, and so on, for each type T.
    */
-  Node getCanonicalTerm(TNode n,
-                        bool apply_torder = false,
-                        bool doHoVar = true);
+  Node getCanonicalTerm(TNode n);
   /**
    * Same as above but tracks visited map, mapping subterms of n to their
    * canonical forms.
    */
   Node getCanonicalTerm(TNode n,
-                        std::map<TNode, Node>& visited,
-                        bool apply_torder = false,
-                        bool doHoVar = true);
+                        std::map<TNode, Node>& visited);
 
  private:
+  Node getCanonicalFreeSymInternal(TypeNode tn, size_t i, uint32_t tc, size_t index);
   /** The (optional) type class callback */
   TypeClassCallback* d_tcc;
+  /** Whether we are apply term order */
+  bool d_applyTOrder;
+  /** Whether we are applying to HO variables */
+  bool d_doHoVar;
   /** the number of ids we have allocated for operators */
   int d_op_id_count;
   /** map from operators to id */
@@ -112,8 +117,8 @@ class TermCanonize
   int d_typ_id_count;
   /** map from type to id */
   std::map<TypeNode, int> d_typ_id;
-  /** free variables for each type / type class pair */
-  std::map<std::pair<TypeNode, uint32_t>, std::vector<Node> > d_cn_free_var;
+  /** free variables / constants for each type / type class pair */
+  std::map<std::pair<TypeNode, uint32_t>, std::vector<Node> > d_cn_free_var[2];
   /**
    * Map from each free variable above to their index in their respective vector
    */
@@ -128,8 +133,6 @@ class TermCanonize
    */
   Node getCanonicalTerm(
       TNode n,
-      bool apply_torder,
-      bool doHoVar,
       std::map<std::pair<TypeNode, uint32_t>, unsigned>& var_count,
       std::map<TNode, Node>& visited);
 };

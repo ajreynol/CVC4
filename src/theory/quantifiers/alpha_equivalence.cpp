@@ -79,12 +79,10 @@ Node AlphaEquivalenceTypeNode::registerNode(
 }
 
 AlphaEquivalenceDb::AlphaEquivalenceDb(context::Context* c,
-                                       expr::TermCanonize* tc,
-                                       bool sortCommChildren)
+                                       expr::TermCanonize* tc)
     : d_context(c),
       d_ae_typ_trie(c),
-      d_tc(tc),
-      d_sortCommutativeOpChildren(sortCommChildren)
+      d_tc(tc)
 {
 }
 Node AlphaEquivalenceDb::addTerm(Node q)
@@ -92,7 +90,7 @@ Node AlphaEquivalenceDb::addTerm(Node q)
   Assert(q.getKind() == Kind::FORALL);
   Trace("aeq") << "Alpha equivalence : register " << q << std::endl;
   //construct canonical quantified formula
-  Node t = d_tc->getCanonicalTerm(q[1], d_sortCommutativeOpChildren);
+  Node t = d_tc->getCanonicalTerm(q[1]);
   Trace("aeq") << "  canonical form: " << t << std::endl;
   return addTermToTypeTrie(t, q);
 }
@@ -104,7 +102,7 @@ Node AlphaEquivalenceDb::addTermWithSubstitution(Node q,
   Trace("aeq") << "Alpha equivalence : register " << q << std::endl;
   // construct canonical quantified formula with visited cache
   std::map<TNode, Node> visited;
-  Node t = d_tc->getCanonicalTerm(q[1], visited, d_sortCommutativeOpChildren);
+  Node t = d_tc->getCanonicalTerm(q[1], visited);
   // only need to store BOUND_VARIABLE in substitution
   std::map<Node, TNode>& bm = d_bvmap[q];
   for (const std::pair<const TNode, Node>& b : visited)
@@ -164,8 +162,8 @@ Node AlphaEquivalenceDb::addTermToTypeTrie(Node t, Node q)
 
 AlphaEquivalence::AlphaEquivalence(Env& env)
     : EnvObj(env),
-      d_termCanon(),
-      d_aedb(userContext(), &d_termCanon, true),
+      d_termCanon(nullptr, true),
+      d_aedb(userContext(), &d_termCanon),
       d_pfAlpha(env.isTheoryProofProducing() ? new EagerProofGenerator(env)
                                              : nullptr)
 {

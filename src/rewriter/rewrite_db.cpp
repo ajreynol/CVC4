@@ -29,7 +29,7 @@ uint32_t IsListTypeClassCallback::getTypeClass(TNode v)
   return expr::isListVar(v) ? 1 : 0;
 }
 
-RewriteDb::RewriteDb() : d_canonCb(), d_canon(&d_canonCb)
+RewriteDb::RewriteDb() : d_canonCb(), d_canon(&d_canonCb, false, false)
 {
   NodeManager* nm = NodeManager::currentNM();
   d_true = nm->mkConst(true);
@@ -64,8 +64,8 @@ void RewriteDb::addRule(DslProofRule id,
   Trace("rewrite-db") << "Add rule " << id << ": " << cond << " => " << a
                       << " == " << b << std::endl;
   Assert(a.getType().isComparableTo(b.getType()));
-  Node cr = d_canon.getCanonicalTerm(tmp, false, false);
-  context = d_canon.getCanonicalTerm(context, false, false);
+  Node cr = d_canon.getCanonicalTerm(tmp);
+  context = d_canon.getCanonicalTerm(context);
 
   Node condC = cr[1];
   std::vector<Node> conds;
