@@ -89,7 +89,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
     patTerms.emplace_back(upc);
   }
   // TODO: could aggressively merge triggers
-  
+
   Trace("eager-inst-trigger") << "Triggers for " << q << ":" << std::endl;
   size_t nvars = q[0].getNumChildren();
   std::unordered_set<Node> processed;
@@ -179,7 +179,7 @@ bool QuantInfo::updateStatus()
   } while (d_tinactiveIndex.get() < d_triggers.size());
 
   // TODO: activate all policy?
-  
+
   Trace("eager-inst-debug") << "Activate quant: " << d_quant << std::endl;
   // we are at the end, choose a trigger to activate
   d_tstatus = TriggerStatus::ACTIVE;

@@ -105,7 +105,8 @@ void TermDbEager::eqNotifyNewClass(TNode t)
 
 void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
 {
-  Trace("eager-inst-notify") << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
+  Trace("eager-inst-notify")
+      << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
   Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
@@ -211,7 +212,9 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
   return &it->second;
 }
 
-bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms, bool isConflict)
+bool TermDbEager::addInstantiation(Node q,
+                                   std::vector<Node>& terms,
+                                   bool isConflict)
 {
   Trace("eager-inst-debug")
       << "addInstantiation: " << q << ", " << terms << std::endl;
@@ -228,8 +231,7 @@ bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms, bool isConf
     d_conflict = true;
     iid = InferenceId::QUANTIFIERS_INST_EAGER_CONFLICT;
   }
-  bool ret = d_qim->getInstantiate()->addInstantiation(
-      q, terms, iid);
+  bool ret = d_qim->getInstantiate()->addInstantiation(q, terms, iid);
   if (!ret)
   {
     Trace("eager-inst-debug") << "...failed!" << std::endl;

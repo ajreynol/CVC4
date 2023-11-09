@@ -178,7 +178,8 @@ TNode CDTNodeTrieIterator::pushNextChild()
     return d_null;
   }
   ret = sf.d_dom[sf.d_index].first;
-  Trace("cdt-debug") << "[" << d_stack.size() << "] Push next " << ret << std::endl;
+  Trace("cdt-debug") << "[" << d_stack.size() << "] Push next " << ret
+                     << std::endl;
   next = sf.d_dom[sf.d_index].second;
   Assert(next->d_edge.get() == ret);
   //++sf.d_cit;
@@ -278,7 +279,8 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
   {
     cur = process.back();
     process.pop_back();
-    Trace("cdt-debug") << "process children of trie, size " << cur->d_repSize << std::endl;
+    Trace("cdt-debug") << "process children of trie, size " << cur->d_repSize
+                       << std::endl;
     // process all children of the trie to process
     for (size_t i = 0, nreps = cur->d_repSize; i < nreps; i++)
     {
@@ -290,7 +292,8 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
         continue;
       }
       TNode r = qs.getRepresentative(n);
-      Trace("cdt-debug") << "...process #" << i << " " << n << "..." << r << std::endl;
+      Trace("cdt-debug") << "...process #" << i << " " << n << "..." << r
+                         << std::endl;
       it = d_curChildren.find(r);
       // if we have yet to see this child edge
       if (it == d_curChildren.end())
@@ -304,7 +307,8 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
             itr = active->d_repMap.find(r);
             if (itr != active->d_repMap.end())
             {
-              Trace("cdt-debug") << "   forward merged child of active" << std::endl;
+              Trace("cdt-debug")
+                  << "   forward merged child of active" << std::endl;
               ccTgt = active->d_repChildren[itr->second];
               Assert(ccTgt->d_edge.get() == r);
               ccTgt->addToMerge(al, cc, isChildLeaf);
@@ -315,7 +319,9 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
             // n is stale and not cleaned up
             cc->d_edge = r;
             cur->d_repMap[r] = i;
-            Trace("cdt-debug") << "   unique child of active, updated representative" << std::endl;
+            Trace("cdt-debug")
+                << "   unique child of active, updated representative"
+                << std::endl;
           }
           else
           {
@@ -350,7 +356,8 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
     size_t i = cur->d_toMergeProcessed.get();
     if (i < ntomerge)
     {
-      Trace("cdt-debug") << "process " << (ntomerge-i) << " merges" << std::endl;
+      Trace("cdt-debug") << "process " << (ntomerge - i) << " merges"
+                         << std::endl;
       do
       {
         process.emplace_back(cur->d_toMerge[i]);

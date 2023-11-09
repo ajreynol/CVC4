@@ -217,7 +217,8 @@ bool Instantiate::addInstantiationInternal(
   if (options().quantifiers.instNoEntail)
   {
     // HACK
-    if (id!=InferenceId::QUANTIFIERS_INST_EAGER && id!=InferenceId::QUANTIFIERS_INST_EAGER_CONFLICT)
+    if (id != InferenceId::QUANTIFIERS_INST_EAGER
+        && id != InferenceId::QUANTIFIERS_INST_EAGER_CONFLICT)
     {
       EntailmentCheck* ec = d_treg.getEntailmentCheck();
       // should check consistency of equality engine
