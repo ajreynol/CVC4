@@ -31,7 +31,7 @@ QuantInfo::QuantInfo(TermDbEager& tde)
     : d_tde(tde),
       d_asserted(tde.getSatContext()),
       d_tinactiveIndex(tde.getSatContext(), 0),
-      d_tstatus(tde.getSatContext(), TriggerStatus::NONE)
+      d_tstatus(tde.getSatContext(), TriggerStatus::NONE), d_hasActivated(false)
 {
 }
 
@@ -178,9 +178,12 @@ bool QuantInfo::updateStatus()
     d_tinactiveIndex = d_tinactiveIndex.get() + 1;
   } while (d_tinactiveIndex.get() < d_triggers.size());
 
-  // TODO: activate all policy?
-
   Trace("eager-inst-debug") << "Activate quant: " << d_quant << std::endl;
+  if (!d_hasActivated)
+  {
+    d_hasActivated = true;
+    ++(d_tde.getStats().d_nquantActivated);
+  }
   // we are at the end, choose a trigger to activate
   d_tstatus = TriggerStatus::ACTIVE;
   size_t minTerms = 0;
@@ -211,22 +214,49 @@ bool QuantInfo::updateStatus()
   }
   Assert(d_triggers.size() == d_vlists.size());
   Assert(d_triggers.size() == d_triggerWatching.size());
-  TriggerInfo* bestTrigger = d_triggers[bestIndex];
-  // ensure we are signed up to watch
-  if (!d_triggerWatching[bestIndex])
-  {
-    Trace("eager-inst-debug")
-        << "Add to watch " << bestTrigger->getPattern() << std::endl;
-    d_triggerWatching[bestIndex] = true;
-    bestTrigger->watch(this, d_vlists[bestIndex]);
-  }
-  // activate the best trigger
-  if (bestTrigger->setStatus(TriggerStatus::ACTIVE))
+  if (watchAndActivateTrigger(bestIndex))
   {
     return true;
   }
+  TriggerInfo* bestTrigger = d_triggers[bestIndex];
   // match all
-  return bestTrigger->doMatchingAll();
+  if (bestTrigger->doMatchingAll())
+  {
+    return true;
+  }
+  
+  // if enabling all
+  if (d_tde.getEnv().getOptions().quantifiers.eagerInstTrigger==options::EagerInstTriggerMode::ALL)
+  {
+    // actually watch all
+    for (size_t i=0, ntriggers = d_triggers.size(); i<ntriggers; i++)
+    {
+      if (i!=bestIndex)
+      {
+        watchAndActivateTrigger(i);
+      }
+    }
+  }
+  return false;
+}
+
+bool QuantInfo::watchAndActivateTrigger(size_t i)
+{
+  TriggerInfo* t = d_triggers[i];
+  // ensure we are signed up to watch the best trigger
+  if (!d_triggerWatching[i])
+  {
+    Trace("eager-inst-debug")
+        << "Add to watch " << t->getPattern() << std::endl;
+    d_triggerWatching[i] = true;
+    t->watch(this, d_vlists[i]);
+  }
+  // activate the trigger, which if it is not already active will 
+  if (t->setStatus(TriggerStatus::ACTIVE))
+  {
+    return true;
+  }
+  return false;
 }
 
 }  // namespace eager

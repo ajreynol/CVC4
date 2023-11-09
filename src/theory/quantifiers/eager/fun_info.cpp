@@ -67,6 +67,7 @@ bool FunInfo::addTerm(TNode t)
     d_terms.push_back(t);
     return false;
   }
+  ++(d_tde.getStats().d_ntermsAdded);
   QuantifiersState& qs = d_tde.getState();
   std::vector<TNode> reps;
   for (TNode tc : t)
@@ -76,6 +77,7 @@ bool FunInfo::addTerm(TNode t)
   // add and refactor the trie
   if (!d_trie.add(d_tde.getCdtAlloc(), qs, reps, t))
   {
+    ++(d_tde.getStats().d_ntermsAddedCongruent);
     // congruent
     return false;
   }

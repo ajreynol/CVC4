@@ -15,6 +15,7 @@
 
 #include "theory/quantifiers/term_database_eager.h"
 
+#include "options/base_options.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_state.h"
@@ -36,7 +37,8 @@ TermDbEager::TermDbEager(Env& env,
       d_tdb(tdb),
       d_cdalloc(context()),
       d_conflict(context()),
-      d_stats(statisticsRegistry())
+      d_stats(statisticsRegistry()),
+      d_statsEnabled(options().base.statistics)
 {
 }
 
@@ -83,9 +85,26 @@ void TermDbEager::eqNotifyNewClass(TNode t)
     {
       finfo = getOrMkFunInfo(f, t.getNumChildren());
     }
+    ++(d_stats.d_nterms);
     if (finfo->addTerm(t))
     {
       std::vector<eager::TriggerInfo*>& ts = finfo->d_triggers;
+      // take stats on whether the 
+      if (d_statsEnabled)
+      {
+        size_t nmatches = 0;
+        for (eager::TriggerInfo* tr : ts)
+        {
+          if (tr->getStatus()==eager::TriggerStatus::ACTIVE)
+          {
+            nmatches++;
+          }
+        }
+        if (nmatches>0)
+        {
+          ++(d_stats.d_ntermsMatched);
+        }
+      }
       // notify the triggers with the same top symbol
       for (eager::TriggerInfo* tr : ts)
       {
@@ -225,6 +244,7 @@ bool TermDbEager::addInstantiation(Node q,
     AlwaysAssert(false);
   }
 #endif
+  ++(d_stats.d_inst);
   InferenceId iid = InferenceId::QUANTIFIERS_INST_EAGER;
   if (isConflict)
   {
@@ -234,11 +254,13 @@ bool TermDbEager::addInstantiation(Node q,
   bool ret = d_qim->getInstantiate()->addInstantiation(q, terms, iid);
   if (!ret)
   {
+    Assert (!isConflict);
     Trace("eager-inst-debug") << "...failed!" << std::endl;
     Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
   }
   else
   {
+    ++(d_stats.d_instSuccess);
     Trace("eager-inst-debug") << "...success!" << std::endl;
     Trace("eager-inst") << "EagerInst: added instantiation " << q << " "
                         << terms << std::endl;

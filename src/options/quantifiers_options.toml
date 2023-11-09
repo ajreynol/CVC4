@@ -793,11 +793,34 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "eagerInst"
-  category   = "regular"
+  category   = "expert"
   long       = "eager-inst"
   type       = "bool"
   default    = "false"
   help       = "Enable eager instantiation"
+
+[[option]]
+  name       = "eagerInstTrigger"
+  category   = "expert"
+  long       = "eager-inst-trigger=MODE"
+  type       = "EagerInstTriggerMode"
+  default    = "CONSTRAINED"
+  help       = "mode for trigger selection in eager instantiation"
+  help_mode  = "Mode for trigger selection in eager instantiation."
+[[option.mode.CONSTRAINED]]
+  name = "narrow"
+  help = "Use the most constrained trigger."
+[[option.mode.ALL]]
+  name = "all"
+  help = "Use all triggers."
+
+[[option]]
+  name       = "eagerInstMergeTriggers"
+  category   = "expert"
+  long       = "eager-inst-combine-triggers"
+  type       = "bool"
+  default    = "false"
+  help       = "Combine triggers that are equivalent modulo ground subterms"
 
 ### Induction options
 

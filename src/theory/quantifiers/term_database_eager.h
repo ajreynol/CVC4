@@ -107,6 +107,8 @@ class TermDbEager : protected EnvObj
   expr::TermCanonize d_tcanon;
   /** Stats */
   eager::Stats d_stats;
+  /** Are stats enabled? */
+  bool d_statsEnabled;
 };
 
 }  // namespace quantifiers

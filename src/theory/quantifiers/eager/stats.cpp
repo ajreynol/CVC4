@@ -21,12 +21,34 @@ namespace quantifiers {
 namespace eager {
 
 Stats::Stats(StatisticsRegistry& sr)
-    : d_ntriggers(sr.registerInt("quantifiers::eager::num_triggers")),
+    : d_ntriggers(sr.registerInt("quantifiers::eager::triggers")),
       d_ntriggersUnique(
-          sr.registerInt("quantifiers::eager::num_triggers_unique")),
-      d_nquant(sr.registerInt("quantifiers::eager::num_quant")),
+          sr.registerInt("quantifiers::eager::triggers_unique")),
+      d_nquant(sr.registerInt("quantifiers::eager::quant")),
       d_nquantNoTrigger(
-          sr.registerInt("quantifiers::eager::num_quant_no_trigger"))
+          sr.registerInt("quantifiers::eager::quant_no_trigger")),
+      d_nquantActivated(
+          sr.registerInt("quantifiers::eager::quant_activated")),
+      d_nterms(
+          sr.registerInt("quantifiers::eager::terms")),
+      d_ntermsMatched(
+          sr.registerInt("quantifiers::eager::terms_matched")),
+      d_ntermsAdded(
+          sr.registerInt("quantifiers::eager::fterms_added")),
+      d_ntermsAddedCongruent(
+          sr.registerInt("quantifiers::eager::fterms_added_congruent")),
+      d_matches(
+          sr.registerInt("quantifiers::eager::matches")),
+      d_matchesAll(
+          sr.registerInt("quantifiers::eager::match_alls")),
+      d_matchesSuccess(
+          sr.registerInt("quantifiers::eager::matches_success")),
+      d_matchesSuccessConflict(
+          sr.registerInt("quantifiers::eager::matches_success_conflict")),
+      d_inst(
+          sr.registerInt("quantifiers::eager::inst")),
+      d_instSuccess(
+          sr.registerInt("quantifiers::eager::inst_success"))
 {
 }
 

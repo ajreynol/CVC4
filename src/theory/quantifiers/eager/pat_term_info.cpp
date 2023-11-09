@@ -77,13 +77,12 @@ void PatTermInfo::initialize(TriggerInfo* tr,
           processed = true;
           d_oargs.emplace_back(i);
           // note we get the bindOrder version of the trigger, but initialize it
-          // with bindOrder false.
+          // with bindOrder false, since we will never use the subpattern for
+          // doMatchingAll.
           d_children.emplace_back(tr->getPatTermInfo(t[i], bindOrder));
           // Initialize the child trigger now. We know this is a new trigger
           // since t[i] contains new variables we haven't seen before, and thus
           // it is safe to initialize it here.
-          // We will never use this for doMatchingAll, so we set bindOrder to
-          // false
           d_children.back()->initialize(tr, t[i], fvs, bindOrder, false);
           Assert(fvs.size() == fvsTmp.size());
           d_bindings.emplace_back(newFvSize);
@@ -143,10 +142,9 @@ void PatTermInfo::initialize(TriggerInfo* tr,
       {
         d_oargs.emplace_back(o);
         PatTermInfo* pi = tr->getPatTermInfo(t[o], bindOrder);
-        // We will never use this for doMatchingAll, so we set bindOrder to
-        // false Initialize the child trigger now. We know this is a new trigger
-        // since t[i] contains new variables we haven't seen before, and thus
-        // it is safe to initialize it here.
+        // Same as above, we will never use this for doMatchingAll, so we set
+        // bindOrder to false Initialize the child trigger now, where again
+        // we know this is a new pattern term since it contains new variables.
         pi->initialize(tr, t[o], fvs, bindOrder, false);
         // go back and set the child
         d_children[o] = pi;
@@ -158,7 +156,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
       }
       // Note that if gpbind is false, we don't do anything with this child.
       // It will be the case that the instantiation evaluator will evaluate
-      // it but we don't do any special checks here.
+      // it but we don't do any special checks during matching.
     }
   }
   d_nbind = fvs.size() - nvarInit;

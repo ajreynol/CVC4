@@ -50,6 +50,7 @@ class QuantInfo
 
  private:
   bool updateStatus();
+  bool watchAndActivateTrigger(size_t i);
   /** The quantified formula */
   Node d_quant;
   /** Reference to the eager term database */
@@ -66,6 +67,8 @@ class QuantInfo
   context::CDO<size_t> d_tinactiveIndex;
   /** The current status */
   context::CDO<TriggerStatus> d_tstatus;
+  /** Have we ever activated this? */
+  bool d_hasActivated;
 };
 
 }  // namespace eager

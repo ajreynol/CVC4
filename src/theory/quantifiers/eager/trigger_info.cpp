@@ -52,6 +52,7 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
   }
   else
   {
+    // otherwise, ensure we are reset
     d_ieval->resetAll(false);
   }
   Node q = qi->getQuant();
@@ -103,6 +104,8 @@ void TriggerInfo::initialize(const Node& t)
 
 bool TriggerInfo::doMatching(TNode t)
 {
+  Stats& stats = d_tde.getStats();
+  ++(stats.d_matches);
   Trace("eager-inst-matching")
       << "doMatching " << d_pattern << " " << t << std::endl;
   Assert(d_ieval != nullptr);
@@ -124,7 +127,15 @@ bool TriggerInfo::doMatching(TNode t)
   Trace("eager-inst-matching-debug")
       << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict
       << std::endl;
-  Assert(!qinsts.empty());
+  if (qinsts.empty())
+  {
+    return false;
+  }
+  ++(stats.d_matchesSuccess);
+  if (isConflict)
+  {
+    ++(stats.d_matchesSuccessConflict);
+  }
   std::map<Node, Node>::iterator itq;
   for (const Node& q : qinsts)
   {
@@ -138,6 +149,9 @@ bool TriggerInfo::doMatching(TNode t)
 
 bool TriggerInfo::doMatchingAll()
 {
+  Stats& stats = d_tde.getStats();
+  ++(stats.d_matchesAll);
+  ++(stats.d_matches);
   Trace("eager-inst-matching") << "doMatchingAll " << d_pattern << std::endl;
   Assert(d_ieval != nullptr);
   if (!resetMatching())
@@ -276,7 +290,16 @@ bool TriggerInfo::doMatchingAll()
   Assert(data.getNumChildren() == d_pattern.getNumChildren());
   bool isConflict = false;
   std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
-  Assert(!qinsts.empty());
+  if (qinsts.empty())
+  {
+    Assert (false);
+    return false;
+  }
+  ++(stats.d_matchesSuccess);
+  if (isConflict)
+  {
+    ++(stats.d_matchesSuccessConflict);
+  }
   Trace("eager-inst-matching-debug")
       << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict
       << std::endl;

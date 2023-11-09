@@ -38,6 +38,17 @@ class Stats
   IntStat d_ntriggersUnique;
   IntStat d_nquant;
   IntStat d_nquantNoTrigger;
+  IntStat d_nquantActivated;
+  IntStat d_nterms;
+  IntStat d_ntermsMatched;
+  IntStat d_ntermsAdded;
+  IntStat d_ntermsAddedCongruent;
+  IntStat d_matches;
+  IntStat d_matchesAll;
+  IntStat d_matchesSuccess;
+  IntStat d_matchesSuccessConflict;
+  IntStat d_inst;
+  IntStat d_instSuccess;
 };
 
 }  // namespace eager
