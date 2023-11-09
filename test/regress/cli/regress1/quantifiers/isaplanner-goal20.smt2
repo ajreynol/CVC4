@@ -1,4 +1,4 @@
-; COMMAND-LINE: --quant-ind --conjecture-gen
+; COMMAND-LINE: --quant-ind --conjecture-gen --no-eager-inst
 ; EXPECT: unsat
 (set-logic UFDTLIA)
 (set-info :status unsat)
