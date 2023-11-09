@@ -214,7 +214,7 @@ bool QuantInfo::updateStatus()
       bestIndexSet = true;
     }
   }
-  Assert (bestIndexSet);
+  Assert(bestIndexSet);
   Assert(d_triggers.size() == d_vlists.size());
   Assert(d_triggers.size() == d_triggerWatching.size());
   d_tindex = bestIndex;
@@ -264,13 +264,13 @@ bool QuantInfo::watchAndActivateTrigger(size_t i)
   return false;
 }
 
-TriggerInfo* QuantInfo::getActiveTrigger() 
+TriggerInfo* QuantInfo::getActiveTrigger()
 {
-  if (d_tstatus!=TriggerStatus::ACTIVE)
+  if (d_tstatus != TriggerStatus::ACTIVE)
   {
     return nullptr;
   }
-  Assert (d_tindex.get()<d_triggers.size());
+  Assert(d_tindex.get() < d_triggers.size());
   return d_triggers[d_tindex.get()];
 }
 

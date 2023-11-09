@@ -242,8 +242,8 @@ bool TermDbEager::addInstantiation(const Node& q,
                                    std::vector<Node>& terms,
                                    bool isConflict)
 {
-  Trace("eager-inst-debug")
-      << "addInstantiation: " << q << ", " << terms << ", isConflict=" << isConflict << std::endl;
+  Trace("eager-inst-debug") << "addInstantiation: " << q << ", " << terms
+                            << ", isConflict=" << isConflict << std::endl;
 #if 0
   Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
   if (!isPropagatingInstance(inst))
@@ -269,7 +269,8 @@ bool TermDbEager::addInstantiation(const Node& q,
   {
     ++(d_stats.d_instSuccess);
     Trace("eager-inst-debug") << "...success!" << std::endl;
-    Trace("eager-inst") << "EagerInst: added instantiation " << (isConflict? "(conflict) " : "") << q << " "
+    Trace("eager-inst") << "EagerInst: added instantiation "
+                        << (isConflict ? "(conflict) " : "") << q << " "
                         << terms << std::endl;
   }
   // note we don't do pending yet
@@ -280,7 +281,7 @@ bool TermDbEager::isInactive(const Node& q)
 {
   eager::QuantInfo* qi = getQuantInfo(q);
   // only if the trigger status is inactive
-  return qi->getStatus()==eager::TriggerStatus::INACTIVE;
+  return qi->getStatus() == eager::TriggerStatus::INACTIVE;
 }
 
 bool TermDbEager::isPropagatingInstance(Node n)

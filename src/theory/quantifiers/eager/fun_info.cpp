@@ -95,7 +95,7 @@ bool FunInfo::addTerm(TNode t)
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
   // TODO: maybe use the trie?
-  
+
 #if 0
   Assert(i < d_rinfo.size());
   Assert(d_tde.getState().getRepresentative(r) == r);

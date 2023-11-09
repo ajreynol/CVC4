@@ -56,6 +56,7 @@ class QuantInfo
   TriggerInfo* getActiveTrigger();
   /** Get the status */
   TriggerStatus getStatus() const { return d_tstatus.get(); }
+
  private:
   bool updateStatus();
   bool watchAndActivateTrigger(size_t i);
@@ -72,7 +73,7 @@ class QuantInfo
   /** Is asserted */
   context::CDO<bool> d_asserted;
   /**
-   * The index in d_triggers that is inactive if we are inactive, 
+   * The index in d_triggers that is inactive if we are inactive,
    * or one that we are watching if we are active.
    */
   context::CDO<size_t> d_tindex;
