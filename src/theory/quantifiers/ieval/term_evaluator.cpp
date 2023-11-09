@@ -409,6 +409,17 @@ TermEvaluatorEntailedEager::TermEvaluatorEntailedEager(Env& env,
   Assert(d_tdbe != nullptr);
 }
 
+TNode TermEvaluatorEntailedEager::evaluateBase(const State& s, TNode n)
+{
+  if (n.getKind() == Kind::FORALL)
+  {
+    // in contrast to above, FORALL is none
+    return s.getNone();
+  }
+  // if unknown, it is none
+  return d_qs.hasTerm(n) ? d_qs.getRepresentative(n) : s.getNone();
+}
+
 TNode TermEvaluatorEntailedEager::partialEvaluateChildMatch(
     const State& s, PatTermInfo& p, TNode child, TNode val, Node& exp)
 {

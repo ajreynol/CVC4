@@ -40,6 +40,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   Assert(d_quant.isNull());
   Assert(q.getKind() == Kind::FORALL);
   d_quant = q;
+  // TODO: if we have a nested quantified, don't bother
   Stats& s = d_tde.getStats();
   ++(s.d_nquant);
   const Options& opts = d_tde.getEnv().getOptions();
@@ -87,6 +88,8 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
     tinfo[upc].init(q, upc);
     patTerms.emplace_back(upc);
   }
+  // TODO: could aggressively merge triggers
+  
   Trace("eager-inst-trigger") << "Triggers for " << q << ":" << std::endl;
   size_t nvars = q[0].getNumChildren();
   std::unordered_set<Node> processed;
@@ -175,6 +178,8 @@ bool QuantInfo::updateStatus()
     d_tinactiveIndex = d_tinactiveIndex.get() + 1;
   } while (d_tinactiveIndex.get() < d_triggers.size());
 
+  // TODO: activate all policy?
+  
   Trace("eager-inst-debug") << "Activate quant: " << d_quant << std::endl;
   // we are at the end, choose a trigger to activate
   d_tstatus = TriggerStatus::ACTIVE;

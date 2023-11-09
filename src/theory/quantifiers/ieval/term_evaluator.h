@@ -136,6 +136,8 @@ class TermEvaluatorEntailedEager : public TermEvaluatorEntailed
                              QuantifiersState& qs,
                              TermDb& tdb);
 
+  /** Evaluate base */
+  TNode evaluateBase(const State& s, TNode n) override;
  protected:
   /**  */
   TNode partialEvaluateChildMatch(const State& s,

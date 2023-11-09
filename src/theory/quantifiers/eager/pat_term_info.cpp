@@ -120,17 +120,21 @@ void PatTermInfo::initialize(TriggerInfo* tr,
     {
       std::unordered_set<Node> fvsCur;
       expr::getFreeVariables(t[o], fvsCur);
-      // check if this will bind new variables
+      // check if this will bind new variables, or if it is easy to check
+      // post-binding.
       size_t newFvSize = 0;
       bool gpbind = true;
       for (const Node& v : fvsCur)
       {
         if (gpbind && fvso.find(v) == fvso.end())
         {
+          // it is not bound after processing the bindings for variables at the
+          // current level
           gpbind = false;
         }
         if (fvs.find(v) == fvs.end())
         {
+          // it has a new variable that is not bound by any child at this point
           newFvSize++;
         }
       }
@@ -152,6 +156,9 @@ void PatTermInfo::initialize(TriggerInfo* tr,
         // add to ground post-bind list
         d_gpargs.emplace_back(o);
       }
+      // Note that if gpbind is false, we don't do anything with this child.
+      // It will be the case that the instantiation evaluator will evaluate
+      // it but we don't do any special checks here.
     }
   }
   d_nbind = fvs.size() - nvarInit;
@@ -159,6 +166,8 @@ void PatTermInfo::initialize(TriggerInfo* tr,
 
 bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
 {
+  // TODO: could set "targets" in the inst evaluator eagerly for compound
+  // children
   Trace("eager-inst-matching-debug")
       << "[pat match] " << d_pattern << " " << t << std::endl;
   QuantifiersState& qs = d_tde.getState();

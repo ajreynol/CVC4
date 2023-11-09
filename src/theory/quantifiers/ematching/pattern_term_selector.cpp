@@ -104,6 +104,8 @@ bool PatternTermSelector::isUsable(Node n, Node q) const
 Node PatternTermSelector::getIsUsableEq(Node q, Node n) const
 {
   Assert(TriggerTermInfo::isRelationalTrigger(n));
+  // if not relational triggers, we should only consider this if we are of the
+  // form f(x) = c.
   if (!d_relTriggers && n.getKind() != Kind::EQUAL)
   {
     return Node::null();
@@ -155,16 +157,17 @@ bool PatternTermSelector::isUsableEqTerms(Node q, Node n1, Node n2) const
   }
   else if (isUsableAtomicTrigger(n1, q))
   {
+    // only consider this form if we are doing relational triggers
     if (d_relTriggers && n2.getKind() == Kind::INST_CONSTANT
         && quantifiers::TermUtil::getInstConstAttr(n2) == q
         && !expr::hasSubterm(n1, n2))
     {
-      // f(x) = y
+      // f(x) ~ y
       return true;
     }
     else if (!quantifiers::TermUtil::hasInstConstAttr(n2))
     {
-      // f(x) = c
+      // f(x) ~ c
       return true;
     }
   }

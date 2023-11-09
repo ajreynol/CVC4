@@ -201,7 +201,6 @@ bool Instantiate::addInstantiationInternal(
   }
 #endif
 
-  EntailmentCheck* ec = d_treg.getEntailmentCheck();
   // Note we check for entailment before checking for term vector duplication.
   // Although checking for term vector duplication is a faster check, it is
   // included automatically with recordInstantiationInternal, hence we prefer
@@ -217,18 +216,23 @@ bool Instantiate::addInstantiationInternal(
   // check for positive entailment
   if (options().quantifiers.instNoEntail)
   {
-    // should check consistency of equality engine
-    // (if not aborting on utility's reset)
-    std::map<TNode, TNode> subs;
-    for (unsigned i = 0, size = terms.size(); i < size; i++)
+    // HACK
+    if (id!=InferenceId::QUANTIFIERS_INST_EAGER && id!=InferenceId::QUANTIFIERS_INST_EAGER_CONFLICT)
     {
-      subs[q[0][i]] = terms[i];
-    }
-    if (ec->isEntailed(q[1], subs, false, true))
-    {
-      Trace("inst-add-debug") << " --> Currently entailed." << std::endl;
-      ++(d_statistics.d_inst_duplicate_ent);
-      return false;
+      EntailmentCheck* ec = d_treg.getEntailmentCheck();
+      // should check consistency of equality engine
+      // (if not aborting on utility's reset)
+      std::map<TNode, TNode> subs;
+      for (unsigned i = 0, size = terms.size(); i < size; i++)
+      {
+        subs[q[0][i]] = terms[i];
+      }
+      if (ec->isEntailed(q[1], subs, false, true))
+      {
+        Trace("inst-add-debug") << " --> Currently entailed." << std::endl;
+        ++(d_statistics.d_inst_duplicate_ent);
+        return false;
+      }
     }
   }
 
