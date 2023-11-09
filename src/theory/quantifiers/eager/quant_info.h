@@ -24,7 +24,7 @@
 
 namespace cvc5::internal {
 namespace expr {
-  class TermCanonize;
+class TermCanonize;
 }
 namespace theory {
 namespace quantifiers {
@@ -39,7 +39,9 @@ class QuantInfo
  public:
   QuantInfo(TermDbEager& tde);
   /** Initialize this for quantified formula q */
-  void initialize(QuantifiersRegistry& qr, expr::TermCanonize& canon, const Node& q);
+  void initialize(QuantifiersRegistry& qr,
+                  expr::TermCanonize& canon,
+                  const Node& q);
   /** Set that the quantified formula for this class is asserted */
   bool notifyAsserted();
   /** Get quantified formula */

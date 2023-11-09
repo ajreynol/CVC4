@@ -36,7 +36,9 @@ QuantInfo::QuantInfo(TermDbEager& tde)
 {
 }
 
-void QuantInfo::initialize(QuantifiersRegistry& qr, expr::TermCanonize& canon, const Node& q)
+void QuantInfo::initialize(QuantifiersRegistry& qr,
+                           expr::TermCanonize& canon,
+                           const Node& q)
 {
   Assert(d_quant.isNull());
   Assert(q.getKind() == Kind::FORALL);

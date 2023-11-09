@@ -15,8 +15,8 @@
 
 #include "theory/quantifiers/inst_strategy_all_eager.h"
 
-#include "theory/quantifiers/term_database_eager.h"
 #include "theory/quantifiers/first_order_model.h"
+#include "theory/quantifiers/term_database_eager.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -47,7 +47,7 @@ void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
   {
     Node q = fm->getAssertedQuantifier(i);
     eager::QuantInfo* qi = d_tde->getQuantInfo(q);
-    Assert (qi!=nullptr);
+    Assert(qi != nullptr);
   }
 }
 
