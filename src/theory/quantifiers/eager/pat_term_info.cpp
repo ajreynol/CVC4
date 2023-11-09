@@ -39,7 +39,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
 {
   // haven't initialized this yet
   Assert(d_pattern.isNull());
-  Assert (t.hasOperator());
+  Assert(t.hasOperator());
   if (expr::hasBoundVar(t.getOperator()))
   {
     // in the rare case we have a free variable in the operator, convert to
@@ -93,9 +93,10 @@ void PatTermInfo::initialize(TriggerInfo* tr,
           // doMatchingAll.
           d_children.emplace_back(tr->getPatTermInfo(d_pattern[i], bindOrder));
           // Initialize the child trigger now. We know this is a new trigger
-          // since d_pattern[i] contains new variables we haven't seen before, and thus
-          // it is safe to initialize it here.
-          d_children.back()->initialize(tr, d_pattern[i], fvs, bindOrder, false);
+          // since d_pattern[i] contains new variables we haven't seen before,
+          // and thus it is safe to initialize it here.
+          d_children.back()->initialize(
+              tr, d_pattern[i], fvs, bindOrder, false);
           Assert(fvs.size() == fvsTmp.size());
           d_bindings.emplace_back(newFvSize);
         }
