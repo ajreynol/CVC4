@@ -22,6 +22,7 @@
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_database_eager.h"
+#include "theory/uf/theory_uf_rewriter.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -36,8 +37,19 @@ void PatTermInfo::initialize(TriggerInfo* tr,
                              bool bindOrder,
                              bool isTop)
 {
+  // haven't initialized this yet
   Assert(d_pattern.isNull());
-  d_pattern = t;
+  Assert (t.hasOperator());
+  if (expr::hasBoundVar(t.getOperator()))
+  {
+    // in the rare case we have a free variable in the operator, convert to
+    // HO_APPLY.
+    d_pattern = uf::TheoryUfRewriter::getHoApplyForApplyUf(t);
+  }
+  else
+  {
+    d_pattern = t;
+  }
   d_op = d_tde.getTermDb().getMatchOperator(d_pattern);
   size_t nvarInit = fvs.size();
   // Classify each child of the pattern as either variable, compound, ground
@@ -48,18 +60,18 @@ void PatTermInfo::initialize(TriggerInfo* tr,
   // is ground post-bind.
   std::vector<size_t> compoundChildren;
   bool useBindOrder = bindOrder && isTop;
-  for (size_t i = 0, nargs = t.getNumChildren(); i < nargs; i++)
+  for (size_t i = 0, nargs = d_pattern.getNumChildren(); i < nargs; i++)
   {
-    if (expr::hasBoundVar(t[i]))
+    if (expr::hasBoundVar(d_pattern[i]))
     {
       bool processed = false;
-      if (t[i].getKind() == Kind::BOUND_VARIABLE)
+      if (d_pattern[i].getKind() == Kind::BOUND_VARIABLE)
       {
         // if we haven't seen this variable yet
-        if (fvs.find(t[i]) == fvs.end())
+        if (fvs.find(d_pattern[i]) == fvs.end())
         {
           processed = true;
-          fvs.insert(t[i]);
+          fvs.insert(d_pattern[i]);
           d_vargs.emplace_back(i);
           d_children.emplace_back(nullptr);
           d_bindings.emplace_back(1);
@@ -69,7 +81,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
       {
         // if binding in order
         std::unordered_set<Node> fvsTmp = fvs;
-        expr::getFreeVariables(t[i], fvsTmp);
+        expr::getFreeVariables(d_pattern[i], fvsTmp);
         // check if this will bind new variables
         size_t newFvSize = fvsTmp.size() - fvs.size();
         if (newFvSize > 0)
@@ -79,11 +91,11 @@ void PatTermInfo::initialize(TriggerInfo* tr,
           // note we get the bindOrder version of the trigger, but initialize it
           // with bindOrder false, since we will never use the subpattern for
           // doMatchingAll.
-          d_children.emplace_back(tr->getPatTermInfo(t[i], bindOrder));
+          d_children.emplace_back(tr->getPatTermInfo(d_pattern[i], bindOrder));
           // Initialize the child trigger now. We know this is a new trigger
-          // since t[i] contains new variables we haven't seen before, and thus
+          // since d_pattern[i] contains new variables we haven't seen before, and thus
           // it is safe to initialize it here.
-          d_children.back()->initialize(tr, t[i], fvs, bindOrder, false);
+          d_children.back()->initialize(tr, d_pattern[i], fvs, bindOrder, false);
           Assert(fvs.size() == fvsTmp.size());
           d_bindings.emplace_back(newFvSize);
         }
@@ -118,7 +130,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
     for (size_t o : compoundChildren)
     {
       std::unordered_set<Node> fvsCur;
-      expr::getFreeVariables(t[o], fvsCur);
+      expr::getFreeVariables(d_pattern[o], fvsCur);
       // check if this will bind new variables, or if it is easy to check
       // post-binding.
       size_t newFvSize = 0;
@@ -141,11 +153,11 @@ void PatTermInfo::initialize(TriggerInfo* tr,
       if (newFvSize > 0)
       {
         d_oargs.emplace_back(o);
-        PatTermInfo* pi = tr->getPatTermInfo(t[o], bindOrder);
+        PatTermInfo* pi = tr->getPatTermInfo(d_pattern[o], bindOrder);
         // Same as above, we will never use this for doMatchingAll, so we set
         // bindOrder to false Initialize the child trigger now, where again
         // we know this is a new pattern term since it contains new variables.
-        pi->initialize(tr, t[o], fvs, bindOrder, false);
+        pi->initialize(tr, d_pattern[o], fvs, bindOrder, false);
         // go back and set the child
         d_children[o] = pi;
       }
