@@ -31,7 +31,7 @@ namespace eager {
 TriggerInfo::TriggerInfo(TermDbEager& tde)
     : d_tde(tde),
       d_arity(0),
-      d_root(nullptr),
+      d_root{nullptr, nullptr},
       d_status(tde.getSatContext(), TriggerStatus::INACTIVE)
 {
 }
@@ -44,7 +44,7 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
     d_ieval.reset(new ieval::InstEvaluator(d_tde.getEnv(),
                                            d_tde.getState(),
                                            d_tde.getTermDb(),
-                                           ieval::TermEvaluatorMode::PROP));
+                                           ieval::TermEvaluatorMode::PROP, false, false, false, true));
   }
   else
   {
@@ -81,9 +81,20 @@ void TriggerInfo::initialize(const Node& t)
   d_pattern = t;
   d_op = d_tde.getTermDb().getMatchOperator(t);
   d_arity = t.getNumChildren();
-  d_root = getPatTermInfo(t);
-  std::unordered_set<Node> fvs;
-  d_root->initialize(this, d_pattern, fvs);
+  for (size_t i=0; i<2; i++)
+  {
+    bool bindOrder = (i==0);
+    PatTermInfo* pi = getPatTermInfo(t, bindOrder);
+    std::unordered_set<Node> fvs;
+    pi->initialize(this, d_pattern, fvs, bindOrder);
+    d_root[i] = pi;
+    if (i==0 && pi->d_oargs.empty())
+    {
+      // if simple trigger, doesn't make a difference
+      d_root[1] = pi;
+      break;
+    }
+  }
 }
 
 bool TriggerInfo::doMatching(TNode t)
@@ -98,7 +109,7 @@ bool TriggerInfo::doMatching(TNode t)
     Trace("eager-inst-matching-debug") << "...failed reset" << std::endl;
     return false;
   }
-  if (!d_root->doMatching(d_ieval.get(), t))
+  if (!d_root[1]->doMatching(d_ieval.get(), t))
   {
     Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
     return false;
@@ -116,7 +127,7 @@ bool TriggerInfo::doMatching(TNode t)
     itq = d_quantMap.find(q);
     Assert(itq != d_quantMap.end());
     std::vector<Node> inst = d_ieval->getInstantiationFor(q);
-    d_tde.addInstantiation(q, inst);
+    d_tde.addInstantiation(itq->second, inst);
   }
   return isConflict;
 }
@@ -136,9 +147,10 @@ bool TriggerInfo::doMatchingAll()
   CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), d_arity);
   size_t level = 0;
   std::vector<bool> iterAllChild;
-  std::vector<PatTermInfo*>& children = d_root->d_children;
+  PatTermInfo* root = d_root[0];
+  std::vector<PatTermInfo*>& children = root->d_children;
   Assert (children.size()==d_pattern.getNumChildren()) << "child mismatch " << children.size() << " " << d_pattern.getNumChildren();
-  std::vector<size_t>& nbindings = d_root->d_bindings;
+  std::vector<size_t>& nbindings = root->d_bindings;
   PatTermInfo* pti;
   bool success;
   TNode pc, r;
@@ -246,7 +258,7 @@ bool TriggerInfo::doMatchingAll()
       << std::endl;
   // compute the backwards map
   std::map<Node, Node> varToTerm;
-  std::vector<size_t>& vargs = d_root->d_vargs;
+  std::vector<size_t>& vargs = root->d_vargs;
   for (size_t v : vargs)
   {
     Assert(v < d_pattern.getNumChildren());
@@ -276,13 +288,14 @@ bool TriggerInfo::doMatchingAll()
   return isConflict;
 }
 
-PatTermInfo* TriggerInfo::getPatTermInfo(TNode p)
+PatTermInfo* TriggerInfo::getPatTermInfo(TNode p, bool bindOrder)
 {
-  std::map<TNode, PatTermInfo>::iterator it = d_pinfo.find(p);
-  if (it == d_pinfo.end())
+  std::map<TNode, PatTermInfo>& pi = d_pinfo[bindOrder ? 1 : 0];
+  std::map<TNode, PatTermInfo>::iterator it = pi.find(p);
+  if (it == pi.end())
   {
-    d_pinfo.emplace(p, d_tde);
-    it = d_pinfo.find(p);
+    pi.emplace(p, d_tde);
+    it = pi.find(p);
   }
   return &it->second;
 }

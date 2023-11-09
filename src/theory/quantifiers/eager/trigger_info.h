@@ -76,7 +76,7 @@ class TriggerInfo
 
  private:
   /** Get patterm term info */
-  PatTermInfo* getPatTermInfo(TNode t);
+  PatTermInfo* getPatTermInfo(TNode t, bool bindOrder);
   /** Reset */
   bool resetMatching();
   /** Reference to the eager term database */
@@ -96,9 +96,9 @@ class TriggerInfo
   /** The arity */
   size_t d_arity;
   /** Mapping terms to pat term infos */
-  std::map<TNode, PatTermInfo> d_pinfo;
+  std::map<TNode, PatTermInfo> d_pinfo[2];
   /** The root pattern term */
-  PatTermInfo* d_root;
+  PatTermInfo* d_root[2];
   /** Status */
   context::CDO<TriggerStatus> d_status;
   /** Status proc */

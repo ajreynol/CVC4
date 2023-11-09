@@ -48,14 +48,14 @@ void TermDbEager::assertQuantifier(TNode q)
     // already in conflict
     return;
   }
-  Trace("eager-inst") << "assertQuantifier: " << q << std::endl;
+  Trace("eager-inst-notify") << "assertQuantifier: " << q << std::endl;
   eager::QuantInfo* qinfo = getQuantInfo(q);
   if (qinfo->notifyAsserted())
   {
     // trigger initialized which generated conflicting instantiation
     d_conflict = true;
   }
-  Trace("eager-inst") << "...finished" << std::endl;
+  Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
 void TermDbEager::eqNotifyNewClass(TNode t)
@@ -65,7 +65,7 @@ void TermDbEager::eqNotifyNewClass(TNode t)
     // already in conflict
     return;
   }
-  Trace("eager-inst") << "eqNotifyNewClass: " << t << std::endl;
+  Trace("eager-inst-notify") << "eqNotifyNewClass: " << t << std::endl;
   // add to the eager trie
   TNode f = d_tdb.getMatchOperator(t);
   if (!f.isNull())
@@ -93,12 +93,12 @@ void TermDbEager::eqNotifyNewClass(TNode t)
       }
     }
   }
-  Trace("eager-inst") << "...finished" << std::endl;
+  Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
 void TermDbEager::eqNotifyMerge(TNode t1, TNode t2) {
-  Trace("eager-inst") << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
-  
+  //Trace("eager-inst-notify") << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
+  //Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
@@ -212,6 +212,7 @@ bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
   d_qim->doPending();
   if (!ret)
   {
+    Trace("eager-inst") << "...failed!" << std::endl;
     Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
   }
   return ret;

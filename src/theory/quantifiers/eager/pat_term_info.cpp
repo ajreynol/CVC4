@@ -32,7 +32,8 @@ PatTermInfo::PatTermInfo(TermDbEager& tde) : d_tde(tde), d_nbind(0) {}
 
 void PatTermInfo::initialize(TriggerInfo* tr,
                              const Node& t,
-                             std::unordered_set<Node>& fvs)
+                             std::unordered_set<Node>& fvs,
+                             bool bindOrder)
 {
   Assert(d_pattern.isNull());
   d_pattern = t;
@@ -44,7 +45,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
   // expected to already be bound after binding variables. This catches cases
   // like f(x, a, x) or f(x, a, g(b, x)) where the 3rd argument in each case
   // is ground post-bind.
-  std::unordered_set<Node> fvsTmp = fvs;
+  std::vector<size_t> compoundChildren;
   for (size_t i = 0, nargs = t.getNumChildren(); i < nargs; i++)
   {
     if (expr::hasBoundVar(t[i]))
@@ -57,30 +58,40 @@ void PatTermInfo::initialize(TriggerInfo* tr,
         {
           processed = true;
           fvs.insert(t[i]);
-          fvsTmp.insert(t[i]);
           d_vargs.emplace_back(i);
           d_children.emplace_back(nullptr);
           d_bindings.emplace_back(1);
         }
       }
-      else
+      else if (bindOrder)
       {
-        size_t prevSize = fvsTmp.size();
+        // if binding in order
+        std::unordered_set<Node> fvsTmp = fvs;
         expr::getFreeVariables(t[i], fvsTmp);
         // check if this will bind new variables
-        size_t newFvSize = fvsTmp.size() - prevSize;
+        size_t newFvSize = fvsTmp.size() - fvs.size();
         if (newFvSize > 0)
         {
           processed = true;
           d_oargs.emplace_back(i);
-          d_children.emplace_back(tr->getPatTermInfo(t[i]));
+          // note we get the bindOrder version of the trigger, but initialize it with bindOrder false.
+          d_children.emplace_back(tr->getPatTermInfo(t[i], true));
           // Initialize the child trigger now. We know this is a new trigger
           // since t[i] contains new variables we haven't seen before, and thus
           // it is safe to initialize it here.
-          d_children.back()->initialize(tr, t[i], fvs);
+          // We will never use this for doMatchingAll, so we set bindOrder to false
+          d_children.back()->initialize(tr, t[i], fvs, false);
           Assert(fvs.size() == fvsTmp.size());
           d_bindings.emplace_back(newFvSize);
         }
+      }
+      else
+      {
+        processed = true;
+        compoundChildren.emplace_back(i);
+        // add dummy information for now
+        d_children.emplace_back(nullptr);
+        d_bindings.emplace_back(0);
       }
       // if does not have a new variable, it is ground post-bind.
       if (!processed)
@@ -95,6 +106,36 @@ void PatTermInfo::initialize(TriggerInfo* tr,
       d_gargs.emplace_back(i);
       d_children.emplace_back(nullptr);
       d_bindings.emplace_back(0);
+    }
+  }
+  if (!bindOrder)
+  {
+    // if not binding in order, we go back and compute the compound children now
+    for (size_t o : compoundChildren)
+    {
+      std::unordered_set<Node> fvsTmp = fvs;
+      expr::getFreeVariables(t[o], fvsTmp);
+      // check if this will bind new variables
+      size_t newFvSize = fvsTmp.size() - fvs.size();
+      d_bindings[o] = newFvSize;
+      if (newFvSize > 0)
+      {
+        d_oargs.emplace_back(o);
+        PatTermInfo * pi = tr->getPatTermInfo(t[o], false);
+        // We will never use this for doMatchingAll, so we set bindOrder to false
+        pi->initialize(tr, t[o], fvs, false);
+        // Initialize the child trigger now. We know this is a new trigger
+        // since t[i] contains new variables we haven't seen before, and thus
+        // it is safe to initialize it here.
+        Assert(fvs.size() == fvsTmp.size());
+        // go back and set the child
+        d_children[o] = pi;
+      }
+      else
+      {
+        // add to ground post-bind list
+        d_gpargs.emplace_back(o);
+      }
     }
   }
   d_nbind = fvs.size() - nvarInit;

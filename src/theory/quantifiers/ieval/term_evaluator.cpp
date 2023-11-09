@@ -441,6 +441,7 @@ TNode TermEvaluatorEntailedEager::evaluateMatch(
   TNode ret;
   // see if we are congruent to a term known by the eager term database
   Node eval = d_tdbe->getCongruentTerm(p.d_mop, childValues);
+  Trace("ieval-eager") << "...eager congruent term " << eval << std::endl;
   if (!eval.isNull())
   {
     ret = d_qs.getRepresentative(eval);
