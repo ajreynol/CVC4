@@ -68,7 +68,7 @@ class TermDbEager : protected EnvObj
   eager::FunInfo* getFunInfo(TNode f);
 
   /** Add instantiation */
-  bool addInstantiation(Node q, std::vector<Node>& terms);
+  bool addInstantiation(Node q, std::vector<Node>& terms, bool isConflict);
 
   //==========
   Env& getEnv() { return d_env; }

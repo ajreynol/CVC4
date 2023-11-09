@@ -171,51 +171,44 @@ TNode CDTNodeTrieIterator::pushNextChild()
   Assert(!d_stack.empty());
   CDTNodeTrie* next;
   TNode ret;
-  do
+  StackFrame& sf = d_stack.back();
+  if (sf.isFinished())
   {
-    StackFrame& sf = d_stack.back();
-    if (sf.isFinished())
-    {
-      // finished children at the current level
-      return d_null;
-    }
-    Trace("ajr-temp") << "for index " << sf.d_index << " / " << sf.d_dom.size()
-                      << " | " << d_stack.size() << std::endl;
-    ret = sf.d_dom[sf.d_index].first;
-    Trace("ajr-temp") << "..return " << ret << std::endl;
-    next = sf.d_dom[sf.d_index].second;
-    Assert(next->d_edge.get() == ret);
-    //++sf.d_cit;
-    ++sf.d_index;
-    if (!pushInternal(next))
-    {
-      // rare case where the current has no children?
-      ret = d_null;
-    }
-  } while (ret.isNull());
+    // finished children at the current level
+    return d_null;
+  }
+  ret = sf.d_dom[sf.d_index].first;
+  Trace("cdt-debug") << "[" << d_stack.size() << "] Push next " << ret << std::endl;
+  next = sf.d_dom[sf.d_index].second;
+  Assert(next->d_edge.get() == ret);
+  //++sf.d_cit;
+  ++sf.d_index;
+  pushInternal(next);
   return ret;
 }
 
 bool CDTNodeTrieIterator::push(TNode r)
 {
   Assert(!d_stack.empty());
+  Trace("cdt-debug") << "[" << d_stack.size() << "] Push " << r << std::endl;
   StackFrame& sf = d_stack.back();
   std::map<TNode, CDTNodeTrie*>::iterator it = sf.d_curChildren.find(r);
   if (it == sf.d_curChildren.end())
   {
     return false;
   }
-  return pushInternal(it->second);
+  pushInternal(it->second);
+  return true;
 }
 
-bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
+void CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
 {
   // if pushing to a leaf, set the data
   if (d_stack.size() == d_depth)
   {
     Assert(d_curData == nullptr);
     d_curData = cdtnt;
-    return true;
+    return;
   }
   // otherwise, compute the children
   // determine if the children are leafs, which impacts how we merge nodes
@@ -229,7 +222,6 @@ bool CDTNodeTrieIterator::pushInternal(CDTNodeTrie* cdtnt)
     return false;
   }
   */
-  return true;
 }
 
 void CDTNodeTrieIterator::pop()
@@ -286,6 +278,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
   {
     cur = process.back();
     process.pop_back();
+    Trace("cdt-debug") << "process children of trie, size " << cur->d_repSize << std::endl;
     // process all children of the trie to process
     for (size_t i = 0, nreps = cur->d_repSize; i < nreps; i++)
     {
@@ -297,6 +290,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
         continue;
       }
       TNode r = qs.getRepresentative(n);
+      Trace("cdt-debug") << "...process #" << i << " " << n << "..." << r << std::endl;
       it = d_curChildren.find(r);
       // if we have yet to see this child edge
       if (it == d_curChildren.end())
@@ -310,6 +304,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
             itr = active->d_repMap.find(r);
             if (itr != active->d_repMap.end())
             {
+              Trace("cdt-debug") << "   forward merged child of active" << std::endl;
               ccTgt = active->d_repChildren[itr->second];
               Assert(ccTgt->d_edge.get() == r);
               ccTgt->addToMerge(al, cc, isChildLeaf);
@@ -319,11 +314,15 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
             // keep the same but need to replace the representative, note that
             // n is stale and not cleaned up
             cc->d_edge = r;
-            cc->d_repMap[r] = i;
+            cur->d_repMap[r] = i;
+            Trace("cdt-debug") << "   unique child of active, updated representative" << std::endl;
+          }
+          else
+          {
+            Trace("cdt-debug") << "   unique child of active" << std::endl;
           }
           d_curChildren[r] = cc;
           d_dom.emplace_back(r, cc);
-          Trace("cdt-debug") << "child " << r << std::endl;
           continue;
         }
         else
@@ -334,11 +333,12 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
           ccTgt = active->push_back(al, r);
           d_curChildren[r] = ccTgt;
           d_dom.emplace_back(r, ccTgt);
-          Trace("cdt-debug") << "new child " << r << std::endl;
+          Trace("cdt-debug") << "   new child from merge" << std::endl;
         }
       }
       else
       {
+        Trace("cdt-debug") << "  merged child" << std::endl;
         // mark that it will need to be merged
         ccTgt = it->second;
       }
@@ -350,6 +350,7 @@ CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
     size_t i = cur->d_toMergeProcessed.get();
     if (i < ntomerge)
     {
+      Trace("cdt-debug") << "process " << (ntomerge-i) << " merges" << std::endl;
       do
       {
         process.emplace_back(cur->d_toMerge[i]);

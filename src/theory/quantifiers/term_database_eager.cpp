@@ -54,9 +54,12 @@ void TermDbEager::assertQuantifier(TNode q)
   if (qinfo->notifyAsserted())
   {
     // trigger initialized which generated conflicting instantiation
-    d_conflict = true;
+    Trace("eager-inst-notify") << "...conflict" << std::endl;
   }
-  Trace("eager-inst-notify") << "...finished" << std::endl;
+  else
+  {
+    Trace("eager-inst-notify") << "...finished" << std::endl;
+  }
 }
 
 void TermDbEager::eqNotifyNewClass(TNode t)
@@ -92,7 +95,6 @@ void TermDbEager::eqNotifyNewClass(TNode t)
         {
           Trace("eager-inst")
               << "......conflict " << tr->getPattern() << std::endl;
-          d_conflict = true;
           break;
         }
       }
@@ -103,8 +105,8 @@ void TermDbEager::eqNotifyNewClass(TNode t)
 
 void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
 {
-  // Trace("eager-inst-notify") << "eqNotifyMerge: " << t1 << " " << t2 <<
-  // std::endl; Trace("eager-inst-notify") << "...finished" << std::endl;
+  Trace("eager-inst-notify") << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
+  Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
@@ -209,7 +211,7 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
   return &it->second;
 }
 
-bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
+bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms, bool isConflict)
 {
   Trace("eager-inst-debug")
       << "addInstantiation: " << q << ", " << terms << std::endl;
@@ -220,8 +222,14 @@ bool TermDbEager::addInstantiation(Node q, std::vector<Node>& terms)
     AlwaysAssert(false);
   }
 #endif
+  InferenceId iid = InferenceId::QUANTIFIERS_INST_EAGER;
+  if (isConflict)
+  {
+    d_conflict = true;
+    iid = InferenceId::QUANTIFIERS_INST_EAGER_CONFLICT;
+  }
   bool ret = d_qim->getInstantiate()->addInstantiation(
-      q, terms, InferenceId::QUANTIFIERS_INST_EAGER);
+      q, terms, iid);
   if (!ret)
   {
     Trace("eager-inst-debug") << "...failed!" << std::endl;

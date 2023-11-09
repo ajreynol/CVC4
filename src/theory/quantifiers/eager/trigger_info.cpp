@@ -131,7 +131,7 @@ bool TriggerInfo::doMatching(TNode t)
     itq = d_quantMap.find(q);
     Assert(itq != d_quantMap.end());
     std::vector<Node> inst = d_ieval->getInstantiationFor(q);
-    d_tde.addInstantiation(itq->second, inst);
+    d_tde.addInstantiation(itq->second, inst, isConflict);
   }
   return isConflict;
 }
@@ -307,7 +307,7 @@ bool TriggerInfo::doMatchingAll()
         inst.emplace_back(d_ieval->get(v));
       }
     }
-    d_tde.addInstantiation(q, inst);
+    d_tde.addInstantiation(q, inst, isConflict);
   }
   return isConflict;
 }

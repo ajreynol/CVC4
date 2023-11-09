@@ -165,10 +165,9 @@ class CDTNodeTrieIterator
   Node d_null;
   /**
    * Push the iteration to the given node, which should be a child of the
-   * current active node (d_stack.back().d_active). Return true if we
-   * successfully pushed.
+   * current active node (d_stack.back().d_active).
    */
-  bool pushInternal(CDTNodeTrie* cdtnt);
+  void pushInternal(CDTNodeTrie* cdtnt);
 };
 
 }  // namespace quantifiers
