@@ -49,7 +49,8 @@ class PatTermInfo
   void initialize(TriggerInfo* tr,
                   const Node& t,
                   std::unordered_set<Node>& fvs,
-                  bool bindOrder);
+                  bool bindOrder,
+                  bool isTop);
   /**
    * Do matching against ground term t. Returns true if successful, in which
    * case we bind all free variables in this pattern term in ie. Otherwise,

@@ -33,7 +33,8 @@ PatTermInfo::PatTermInfo(TermDbEager& tde) : d_tde(tde), d_nbind(0) {}
 void PatTermInfo::initialize(TriggerInfo* tr,
                              const Node& t,
                              std::unordered_set<Node>& fvs,
-                             bool bindOrder)
+                             bool bindOrder,
+                  bool isTop)
 {
   Assert(d_pattern.isNull());
   d_pattern = t;
@@ -46,6 +47,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
   // like f(x, a, x) or f(x, a, g(b, x)) where the 3rd argument in each case
   // is ground post-bind.
   std::vector<size_t> compoundChildren;
+  bool useBindOrder = bindOrder && isTop;
   for (size_t i = 0, nargs = t.getNumChildren(); i < nargs; i++)
   {
     if (expr::hasBoundVar(t[i]))
@@ -63,7 +65,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
           d_bindings.emplace_back(1);
         }
       }
-      else if (bindOrder)
+      else if (useBindOrder)
       {
         // if binding in order
         std::unordered_set<Node> fvsTmp = fvs;
@@ -75,12 +77,12 @@ void PatTermInfo::initialize(TriggerInfo* tr,
           processed = true;
           d_oargs.emplace_back(i);
           // note we get the bindOrder version of the trigger, but initialize it with bindOrder false.
-          d_children.emplace_back(tr->getPatTermInfo(t[i], true));
+          d_children.emplace_back(tr->getPatTermInfo(t[i], bindOrder));
           // Initialize the child trigger now. We know this is a new trigger
           // since t[i] contains new variables we haven't seen before, and thus
           // it is safe to initialize it here.
           // We will never use this for doMatchingAll, so we set bindOrder to false
-          d_children.back()->initialize(tr, t[i], fvs, false);
+          d_children.back()->initialize(tr, t[i], fvs, bindOrder, false);
           Assert(fvs.size() == fvsTmp.size());
           d_bindings.emplace_back(newFvSize);
         }
@@ -108,7 +110,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
       d_bindings.emplace_back(0);
     }
   }
-  if (!bindOrder)
+  if (!useBindOrder)
   {
     // if not binding in order, we go back and compute the compound children now
     for (size_t o : compoundChildren)
@@ -121,9 +123,9 @@ void PatTermInfo::initialize(TriggerInfo* tr,
       if (newFvSize > 0)
       {
         d_oargs.emplace_back(o);
-        PatTermInfo * pi = tr->getPatTermInfo(t[o], false);
+        PatTermInfo * pi = tr->getPatTermInfo(t[o], bindOrder);
         // We will never use this for doMatchingAll, so we set bindOrder to false
-        pi->initialize(tr, t[o], fvs, false);
+        pi->initialize(tr, t[o], fvs, bindOrder, false);
         // Initialize the child trigger now. We know this is a new trigger
         // since t[i] contains new variables we haven't seen before, and thus
         // it is safe to initialize it here.
@@ -184,6 +186,10 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
       return false;
     }
   }
+  if (d_oargs.empty())
+  {
+    return true;
+  }
   // initialize the children to equivalence classes, returning false if its
   // infeasible
   for (size_t o : d_oargs)
@@ -208,6 +214,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
       {
         // failed, clean up
         ie->pop(d_vargs.size());
+        Trace("eager-inst-matching-debug") << "...failed compound child" << std::endl;
         return false;
       }
       // pop the variables assigned last
@@ -222,6 +229,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
       o = d_oargs[i];
     }
   }
+  Trace("eager-inst-matching-debug") << "...success" << std::endl;
   return true;
 }
 

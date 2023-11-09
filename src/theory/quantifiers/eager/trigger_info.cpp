@@ -86,7 +86,7 @@ void TriggerInfo::initialize(const Node& t)
     bool bindOrder = (i==0);
     PatTermInfo* pi = getPatTermInfo(t, bindOrder);
     std::unordered_set<Node> fvs;
-    pi->initialize(this, d_pattern, fvs, bindOrder);
+    pi->initialize(this, d_pattern, fvs, bindOrder, true);
     d_root[i] = pi;
     if (i==0 && pi->d_oargs.empty())
     {
@@ -153,7 +153,7 @@ bool TriggerInfo::doMatchingAll()
   std::vector<size_t>& nbindings = root->d_bindings;
   PatTermInfo* pti;
   bool success;
-  TNode pc, r;
+  TNode pc, r, null;
   do
   {
     Assert(level < children.size());
@@ -186,6 +186,7 @@ bool TriggerInfo::doMatchingAll()
       // otherwise, if we are iterating on children, pop the previous
       // binding(s).
       d_ieval->pop(nbindings[level]);
+      r = null;
     }
     else
     {
@@ -198,7 +199,7 @@ bool TriggerInfo::doMatchingAll()
       {
         // if we are traversing a specific child
         success = itt.push(r);
-        Trace("eager-inst-matching-debug") << "[level " << level << "] got " << success << std::endl;
+        Trace("eager-inst-matching-debug") << "...success=" << success << std::endl;
       }
       else
       {

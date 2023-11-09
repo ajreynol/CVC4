@@ -19,6 +19,7 @@
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
+#include "theory/quantifiers/term_util.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -63,6 +64,10 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   if (d_conflict.get())
   {
     // already in conflict
+    return;
+  }
+  if (TermUtil::hasInstConstAttr(t))
+  {
     return;
   }
   Trace("eager-inst-notify") << "eqNotifyNewClass: " << t << std::endl;
