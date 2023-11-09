@@ -22,33 +22,27 @@ namespace theory {
 namespace quantifiers {
 
 InstStrategyAllEager::InstStrategyAllEager(Env& env,
-                  QuantifiersState& qs,
-                  QuantifiersInferenceManager& qim,
-                  QuantifiersRegistry& qr,
-                  TermRegistry& tr)
+                                           QuantifiersState& qs,
+                                           QuantifiersInferenceManager& qim,
+                                           QuantifiersRegistry& qr,
+                                           TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr), d_tde(tr.getTermDatabaseEager())
 {
-  Assert (d_tde!=nullptr);
+  Assert(d_tde != nullptr);
 }
 
-void InstStrategyAllEager::reset_round(Theory::Effort e) 
-{
-  
-}
+void InstStrategyAllEager::reset_round(Theory::Effort e) {}
 
-bool InstStrategyAllEager::needsCheck(Theory::Effort e) 
+bool InstStrategyAllEager::needsCheck(Theory::Effort e)
 {
   return !d_tde->inConflict() && (e == Theory::EFFORT_FULL);
 }
 
-void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e) 
+void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
 {
   // get all remaining instantiations from term database eager
-  
 }
-
 
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
-

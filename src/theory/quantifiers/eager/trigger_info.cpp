@@ -407,7 +407,7 @@ bool TriggerInfo::setStatus(TriggerStatus s)
       continue;
     }
     d_status = s;
-    if (s==TriggerStatus::ACTIVE && !d_hasActivated)
+    if (s == TriggerStatus::ACTIVE && !d_hasActivated)
     {
       d_hasActivated = true;
       ++(d_tde.getStats().d_ntriggersActivated);

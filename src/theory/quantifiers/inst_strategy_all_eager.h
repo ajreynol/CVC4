@@ -29,7 +29,7 @@ namespace quantifiers {
 
 /**
  * InstStrategyAllEager
- * 
+ *
  * This instantiation strategy double checks that the eager term database
  * has no more instantiations to try.
  */
@@ -37,10 +37,10 @@ class InstStrategyAllEager : public QuantifiersModule
 {
  public:
   InstStrategyAllEager(Env& env,
-                   QuantifiersState& qs,
-                   QuantifiersInferenceManager& qim,
-                   QuantifiersRegistry& qr,
-                   TermRegistry& tr);
+                       QuantifiersState& qs,
+                       QuantifiersInferenceManager& qim,
+                       QuantifiersRegistry& qr,
+                       TermRegistry& tr);
   ~InstStrategyAllEager() {}
   /** reset round */
   void reset_round(Theory::Effort e) override;
@@ -50,7 +50,8 @@ class InstStrategyAllEager : public QuantifiersModule
   void check(Theory::Effort e, QEffort quant_e) override;
   /** identify */
   std::string identify() const override { return "InstStrategyAllEager"; }
-private:
+
+ private:
   /** Pointer to the term database eager class */
   TermDbEager* d_tde;
 };

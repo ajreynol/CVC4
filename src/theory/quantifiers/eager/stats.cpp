@@ -23,7 +23,8 @@ namespace eager {
 Stats::Stats(StatisticsRegistry& sr)
     : d_ntriggers(sr.registerInt("quantifiers::eager::triggers")),
       d_ntriggersUnique(sr.registerInt("quantifiers::eager::triggers_unique")),
-      d_ntriggersActivated(sr.registerInt("quantifiers::eager::triggers_activated")),
+      d_ntriggersActivated(
+          sr.registerInt("quantifiers::eager::triggers_activated")),
       d_nquant(sr.registerInt("quantifiers::eager::quant")),
       d_nquantNoTrigger(sr.registerInt("quantifiers::eager::quant_no_trigger")),
       d_nquantActivated(sr.registerInt("quantifiers::eager::quant_activated")),
