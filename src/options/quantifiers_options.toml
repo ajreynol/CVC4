@@ -817,7 +817,7 @@ name   = "Quantifiers"
 [[option]]
   name       = "eagerInstMergeTriggers"
   category   = "expert"
-  long       = "eager-inst-combine-triggers"
+  long       = "eager-inst-merge-triggers"
   type       = "bool"
   default    = "false"
   help       = "Combine triggers that are equivalent modulo ground subterms"

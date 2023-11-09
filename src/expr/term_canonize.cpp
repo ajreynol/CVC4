@@ -29,10 +29,12 @@ namespace expr {
 
 TermCanonize::TermCanonize(TypeClassCallback* tcc,
                            bool applyTOrder,
-                           bool doHoVar)
+                           bool doHoVar,
+               bool applyGTerms)
     : d_tcc(tcc),
       d_applyTOrder(applyTOrder),
       d_doHoVar(doHoVar),
+      d_applyGTerms(applyGTerms),
       d_op_id_count(0),
       d_typ_id_count(0)
 {
@@ -180,7 +182,8 @@ struct sortTermOrder
 
 Node TermCanonize::getCanonicalTerm(
     TNode n,
-    std::map<std::pair<TypeNode, uint32_t>, unsigned>& var_count,
+    std::map<std::pair<TypeNode, uint32_t>, unsigned>& vcount,
+    std::map<std::pair<TypeNode, uint32_t>, unsigned>& ccount,
     std::map<TNode, Node>& visited)
 {
   std::map<TNode, Node>::iterator it = visited.find(n);
@@ -196,8 +199,8 @@ Node TermCanonize::getCanonicalTerm(
     TypeNode tn = n.getType();
     std::pair<TypeNode, uint32_t> key(tn, tc);
     // allocate variable
-    unsigned vn = var_count[key];
-    var_count[key]++;
+    unsigned vn = vcount[key];
+    vcount[key]++;
     Node fv = getCanonicalFreeVar(tn, vn, tc);
     visited[n] = fv;
     Trace("canon-term-debug") << "...allocate variable " << fv << std::endl;
@@ -223,15 +226,28 @@ Node TermCanonize::getCanonicalTerm(
       Trace("canon-term-debug") << "Make canonical children" << std::endl;
       for (unsigned i = 0, size = cchildren.size(); i < size; i++)
       {
-        cchildren[i] = getCanonicalTerm(cchildren[i], var_count, visited);
+        cchildren[i] = getCanonicalTerm(cchildren[i], vcount, ccount, visited);
       }
+    }
+    else if (d_applyGTerms)
+    {
+      uint32_t tc = getTypeClass(n);
+      TypeNode tn = n.getType();
+      std::pair<TypeNode, uint32_t> key(tn, tc);
+      // allocate variable
+      unsigned vn = ccount[key];
+      ccount[key]++;
+      Node k = getCanonicalFreeConstant(tn, vn, tc);
+      visited[n] = k;
+      Trace("canon-term-debug") << "...allocate constant " << k << std::endl;
+      return k;
     }
     if (n.getMetaKind() == metakind::PARAMETERIZED)
     {
       Node op = n.getOperator();
       if (d_doHoVar)
       {
-        op = getCanonicalTerm(op, var_count, visited);
+        op = getCanonicalTerm(op, vcount, ccount, visited);
       }
       Trace("canon-term-debug") << "Insert operator " << op << std::endl;
       cchildren.insert(cchildren.begin(), op);
@@ -250,15 +266,17 @@ Node TermCanonize::getCanonicalTerm(
 
 Node TermCanonize::getCanonicalTerm(TNode n)
 {
-  std::map<std::pair<TypeNode, uint32_t>, unsigned> var_count;
+  std::map<std::pair<TypeNode, uint32_t>, unsigned> vcount;
+  std::map<std::pair<TypeNode, uint32_t>, unsigned> ccount;
   std::map<TNode, Node> visited;
-  return getCanonicalTerm(n, var_count, visited);
+  return getCanonicalTerm(n, vcount, ccount, visited);
 }
 
 Node TermCanonize::getCanonicalTerm(TNode n, std::map<TNode, Node>& visited)
 {
-  std::map<std::pair<TypeNode, uint32_t>, unsigned> var_count;
-  return getCanonicalTerm(n, var_count, visited);
+  std::map<std::pair<TypeNode, uint32_t>, unsigned> vcount;
+  std::map<std::pair<TypeNode, uint32_t>, unsigned> ccount;
+  return getCanonicalTerm(n, vcount, ccount, visited);
 }
 
 }  // namespace expr

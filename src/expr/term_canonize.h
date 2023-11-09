@@ -57,7 +57,8 @@ class TermCanonize
    */
   TermCanonize(TypeClassCallback* tcc = nullptr,
                bool applyTOrder = false,
-               bool doHoVar = true);
+               bool doHoVar = true,
+               bool applyGTerms = false);
   ~TermCanonize() {}
 
   /** Maps operators to an identifier, useful for ordering. */
@@ -111,6 +112,8 @@ class TermCanonize
   bool d_applyTOrder;
   /** Whether we are applying to HO variables */
   bool d_doHoVar;
+  /** Whether we are canonizing ground terms */
+  bool d_applyGTerms;
   /** the number of ids we have allocated for operators */
   int d_op_id_count;
   /** map from operators to id */
@@ -135,7 +138,8 @@ class TermCanonize
    */
   Node getCanonicalTerm(
       TNode n,
-      std::map<std::pair<TypeNode, uint32_t>, unsigned>& var_count,
+      std::map<std::pair<TypeNode, uint32_t>, unsigned>& vcount,
+      std::map<std::pair<TypeNode, uint32_t>, unsigned>& ccount,
       std::map<TNode, Node>& visited);
 };
 

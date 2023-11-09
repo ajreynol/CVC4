@@ -17,6 +17,7 @@
 
 #include "expr/node_algorithm.h"
 #include "expr/subs.h"
+#include "options/quantifiers_options.h"
 #include "theory/quantifiers/eager/trigger_info.h"
 #include "theory/quantifiers/ieval/inst_evaluator.h"
 #include "theory/quantifiers/quantifiers_state.h"
@@ -50,6 +51,8 @@ void PatTermInfo::initialize(TriggerInfo* tr,
   {
     d_pattern = t;
   }
+  const Options& opts = d_tde.getEnv().getOptions();
+  bool watchGroundArgs = !opts.quantifiers.eagerInstMergeTriggers;
   d_op = d_tde.getTermDb().getMatchOperator(d_pattern);
   size_t nvarInit = fvs.size();
   // Classify each child of the pattern as either variable, compound, ground
@@ -119,7 +122,13 @@ void PatTermInfo::initialize(TriggerInfo* tr,
     }
     else
     {
-      d_gargs.emplace_back(i);
+      // If we are watching ground args, add to d_gargs. Otherwise, this is
+      // a dummy term.
+      Assert (watchGroundArgs || d_pattern[i].getKind()==Kind::SKOLEM);
+      if (watchGroundArgs)
+      {
+        d_gargs.emplace_back(i);
+      }
       d_children.emplace_back(nullptr);
       d_bindings.emplace_back(0);
     }
