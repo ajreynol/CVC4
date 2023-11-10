@@ -271,7 +271,6 @@ bool TermDbEager::addInstantiation(const Node& q,
   InferenceId iid = InferenceId::QUANTIFIERS_INST_EAGER;
   if (isConflict)
   {
-    d_qs.notifyInConflict();
     iid = InferenceId::QUANTIFIERS_INST_EAGER_CONFLICT;
   }
   bool ret = d_qim->getInstantiate()->addInstantiation(q, terms, iid);
@@ -283,6 +282,10 @@ bool TermDbEager::addInstantiation(const Node& q,
   }
   else
   {
+    if (isConflict)
+    {
+      d_qs.notifyInConflict();
+    }
     ++(d_stats.d_instSuccess);
     Trace("eager-inst-debug") << "...success!" << std::endl;
     Trace("eager-inst") << "* EagerInst: added instantiation "
