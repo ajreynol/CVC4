@@ -68,6 +68,8 @@ class PatTermInfo
    * free variables in this pattern term in ie. Otherwise, ie is unmodified.
    */
   bool doMatchingEqcNext(ieval::InstEvaluator* ie);
+  /** */
+  TNode doMatchingAll(ieval::InstEvaluator* ie);
 
   /** get ground args */
   const std::vector<size_t>& getGroundArgs() const { return d_gargs; }
@@ -99,6 +101,8 @@ class PatTermInfo
   //======== eqc matching
   TNode d_eqc;
   eq::EqClassIterator d_eqi;
+  /** The next term (for multi-triggers) */
+  PatTermInfo* d_next;
 };
 
 }  // namespace eager

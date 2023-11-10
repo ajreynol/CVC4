@@ -160,134 +160,14 @@ bool TriggerInfo::doMatchingAll()
     Trace("eager-inst-matching-debug") << "...failed reset" << std::endl;
     return false;
   }
-  QuantifiersState& qs = d_tde.getState();
-  // now traverse the term index
-  FunInfo* finfo = d_tde.getFunInfo(d_op);
-  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), d_arity);
-  size_t level = 0;
-  std::vector<bool> iterAllChild;
   PatTermInfo* root = d_root[0];
-  std::vector<PatTermInfo*>& children = root->d_children;
-  Assert(children.size() == d_pattern.getNumChildren())
-      << "child mismatch " << children.size() << " "
-      << d_pattern.getNumChildren();
-  std::vector<size_t>& nbindings = root->d_bindings;
-  PatTermInfo* pti;
-  bool success;
-  TNode pc, r, null;
-  do
-  {
-    Assert(level < children.size());
-    pti = children[level];
-    success = true;
-    pc = d_pattern[level];
-    Assert(level <= iterAllChild.size());
-    if (level == iterAllChild.size())
-    {
-      // determine if there is a specific child we are traversing to
-      if (pti != nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
-      {
-        // if a non-ground term, we check whether we already have a value based
-        // on the evaluator utility.
-        // note this will typically be null if we are a compound child, although
-        // it may also be "none".
-        r = d_ieval->getValue(pc);
-      }
-      else
-      {
-        // if a ground term, use the representative method directly
-        r = qs.getRepresentative(pc);
-      }
-      Trace("eager-inst-matching-debug")
-          << "[level " << level << "] traverse " << r << std::endl;
-      // if r is null
-      iterAllChild.push_back(r.isNull());
-    }
-    else if (iterAllChild[level])
-    {
-      // otherwise, if we are iterating on children, pop the previous
-      // binding(s).
-      Trace("ajr-temp") << "...pop " << nbindings[level]
-                        << " bindings since we are moving to next child"
-                        << std::endl;
-      d_ieval->pop(nbindings[level]);
-      r = null;
-    }
-    else
-    {
-      // we are not iterating on all children, and thus are done
-      success = false;
-    }
-    if (success)
-    {
-      if (!r.isNull())
-      {
-        // if we are traversing a specific child
-        success = itt.push(r);
-        Trace("eager-inst-matching-debug")
-            << "...success=" << success << std::endl;
-      }
-      else
-      {
-        // we are traversing all children, we iterate until we find one that
-        // we can successfully match.
-        r = itt.pushNextChild();
-        success = false;
-        while (!r.isNull() && !success)
-        {
-          Trace("eager-inst-matching-debug")
-              << "[level " << level << "] next child " << r << std::endl;
-          if (pc.getKind() == Kind::BOUND_VARIABLE)
-          {
-            // if we are a bound variable, we try to bind
-            success = d_ieval->push(pc, r);
-          }
-          else
-          {
-            Assert(pti != nullptr);
-            // if we are a compound child, we try to match in the eqc
-            success = pti->initMatchingEqc(d_ieval.get(), r);
-            if (success)
-            {
-              // NOTE: only single term is matched, could iterate on this
-              success = pti->doMatchingEqcNext(d_ieval.get());
-            }
-          }
-          // failed, try the next child
-          if (!success)
-          {
-            itt.pop();
-            r = itt.pushNextChild();
-          }
-        }
-        Trace("eager-inst-matching-debug")
-            << "...success=" << success << std::endl;
-      }
-    }
-    if (success)
-    {
-      // successfully pushed a child to itt and matched
-      level++;
-    }
-    else
-    {
-      if (level == 0)
-      {
-        Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
-        return false;
-      }
-      // finished with this level, go back
-      itt.pop();
-      iterAllChild.pop_back();
-      Trace("ajr-temp") << "pop now " << itt.getLevel() << std::endl;
-      level--;
-    }
-  } while (level < d_arity);
-
   // found an instantiation, we will sanitize it based on the actual term,
   // to ensure the match post-instantiation is syntactic.
-  TNode data = itt.getCurrentData();
-  Assert(!data.isNull());
+  TNode data = root->doMatchingAll(d_ieval.get());
+  if (data.isNull())
+  {
+    return false;
+  }
   Assert(data.getNumChildren() == d_pattern.getNumChildren());
   bool isConflict = false;
   std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
@@ -313,6 +193,7 @@ bool TriggerInfo::doMatchingAll()
     varToTerm[d_pattern[v]] = data[v];
   }
   std::map<Node, Node>::iterator it;
+  bool addedInst = false;
   for (const Node& qi : qinsts)
   {
     it = d_quantMap.find(qi);
@@ -331,7 +212,10 @@ bool TriggerInfo::doMatchingAll()
         inst.emplace_back(d_ieval->get(v));
       }
     }
-    d_tde.addInstantiation(q, inst, isConflict);
+    if (d_tde.addInstantiation(q, inst, isConflict))
+    {
+      addedInst = true;
+    }
   }
   return isConflict;
 }

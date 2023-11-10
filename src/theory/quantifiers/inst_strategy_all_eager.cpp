@@ -61,6 +61,10 @@ void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
   for (size_t i = 0; i < nquant; i++)
   {
     Node q = fm->getAssertedQuantifier(i, true);
+    if (!d_qreg.hasOwnership(q, this))
+    {
+      return;
+    }
     eager::QuantInfo* qi = d_tde->getQuantInfo(q);
     if (qi == nullptr)
     {

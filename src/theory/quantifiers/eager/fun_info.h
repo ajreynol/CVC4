@@ -41,6 +41,8 @@ class FunInfo
   FunInfo(TermDbEager& tde);
   /** Initialize */
   void initialize(TNode f, size_t nchild);
+  /** Get arity */
+  size_t getArity() const { return d_arity; }
   /** Add term */
   bool addTerm(TNode t);
   /** Do matching with term */

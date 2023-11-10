@@ -95,9 +95,13 @@ class TriggerInfo
   Node d_op;
   /** The arity */
   size_t d_arity;
-  /** Mapping terms to pat term infos */
+  /**
+   * Mapping terms to pat term infos.
+   * Index 0 stores patterns that assume top-level arguments are bound via variables first.
+   * Index 1 stores patterns that assume top-level arguments are bound in order.
+   */
   std::map<TNode, PatTermInfo> d_pinfo[2];
-  /** The root pattern term */
+  /** The root pattern term, for each binding order */
   PatTermInfo* d_root[2];
   /** Status */
   context::CDO<TriggerStatus> d_status;

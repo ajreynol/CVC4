@@ -30,7 +30,7 @@ namespace theory {
 namespace quantifiers {
 namespace eager {
 
-PatTermInfo::PatTermInfo(TermDbEager& tde) : d_tde(tde), d_nbind(0) {}
+PatTermInfo::PatTermInfo(TermDbEager& tde) : d_tde(tde), d_nbind(0), d_next(nullptr) {}
 
 void PatTermInfo::initialize(TriggerInfo* tr,
                              const Node& t,
@@ -284,6 +284,133 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
   }
   Trace("eager-inst-matching-debug") << "...success" << std::endl;
   return true;
+}
+
+TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie)
+{
+  FunInfo* finfo = d_tde.getFunInfo(d_op);
+  QuantifiersState& qs = d_tde.getState();
+  size_t arity = finfo->getArity();
+  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), arity);
+  size_t level = 0;
+  std::vector<bool> iterAllChild;
+  Assert(d_children.size() == d_pattern.getNumChildren())
+      << "child mismatch " << d_children.size() << " "
+      << d_pattern.getNumChildren();
+  PatTermInfo* pti;
+  bool success;
+  TNode pc, r, null;
+  do
+  {
+    Assert(level < d_children.size());
+    pti = d_children[level];
+    success = true;
+    pc = d_pattern[level];
+    Assert(level <= iterAllChild.size());
+    if (level == iterAllChild.size())
+    {
+      // determine if there is a specific child we are traversing to
+      if (pti != nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
+      {
+        // if a non-ground term, we check whether we already have a value based
+        // on the evaluator utility.
+        // note this will typically be null if we are a compound child, although
+        // it may also be "none".
+        r = ie->getValue(pc);
+      }
+      else
+      {
+        // if a ground term, use the representative method directly
+        r = qs.getRepresentative(pc);
+      }
+      Trace("eager-inst-matching-debug")
+          << "[level " << level << "] traverse " << r << std::endl;
+      // if r is null
+      iterAllChild.push_back(r.isNull());
+    }
+    else if (iterAllChild[level])
+    {
+      // otherwise, if we are iterating on children, pop the previous
+      // binding(s).
+      Trace("ajr-temp") << "...pop " << d_bindings[level]
+                        << " bindings since we are moving to next child"
+                        << std::endl;
+      ie->pop(d_bindings[level]);
+      r = null;
+    }
+    else
+    {
+      // we are not iterating on all children, and thus are done
+      success = false;
+    }
+    if (success)
+    {
+      if (!r.isNull())
+      {
+        // if we are traversing a specific child
+        success = itt.push(r);
+        Trace("eager-inst-matching-debug")
+            << "...success=" << success << std::endl;
+      }
+      else
+      {
+        // we are traversing all children, we iterate until we find one that
+        // we can successfully match.
+        r = itt.pushNextChild();
+        success = false;
+        while (!r.isNull() && !success)
+        {
+          Trace("eager-inst-matching-debug")
+              << "[level " << level << "] next child " << r << std::endl;
+          if (pc.getKind() == Kind::BOUND_VARIABLE)
+          {
+            // if we are a bound variable, we try to bind
+            success = ie->push(pc, r);
+          }
+          else
+          {
+            Assert(pti != nullptr);
+            // if we are a compound child, we try to match in the eqc
+            success = pti->initMatchingEqc(ie, r);
+            if (success)
+            {
+              // NOTE: only single term is matched, could iterate on this
+              success = pti->doMatchingEqcNext(ie);
+            }
+          }
+          // failed, try the next child
+          if (!success)
+          {
+            itt.pop();
+            r = itt.pushNextChild();
+          }
+        }
+        Trace("eager-inst-matching-debug")
+            << "...success=" << success << std::endl;
+      }
+    }
+    if (success)
+    {
+      // successfully pushed a child to itt and matched
+      level++;
+    }
+    else
+    {
+      if (level == 0)
+      {
+        Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
+        return TNode::null();
+      }
+      // finished with this level, go back
+      itt.pop();
+      iterAllChild.pop_back();
+      Trace("ajr-temp") << "pop now " << itt.getLevel() << std::endl;
+      level--;
+    }
+  } while (level < arity);
+  TNode ret = itt.getCurrentData();
+  Assert (!ret.isNull());
+  return ret;
 }
 
 bool PatTermInfo::isLegalCandidate(TNode n) const

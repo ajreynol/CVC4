@@ -92,6 +92,10 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
       NodeManager* nm = NodeManager::currentNM();
       val = nm->mkConst(!val.getConst<bool>());
     }
+    else
+    {
+      val = s.getSome();
+    }
     Trace("ieval-state-debug") << "...eval negation " << val << std::endl;
     return val;
   }
