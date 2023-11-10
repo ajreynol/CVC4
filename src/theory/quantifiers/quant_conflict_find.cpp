@@ -2209,7 +2209,6 @@ QuantConflictFind::QuantConflictFind(Env& env,
                                      TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
       d_statistics(statisticsRegistry()),
-      d_conflict(context(), false),
       d_effort(EFFORT_INVALID)
 {
 }
@@ -2262,7 +2261,7 @@ void QuantConflictFind::registerQuantifier( Node q ) {
 //-------------------------------------------------- check function
 
 bool QuantConflictFind::needsCheck( Theory::Effort level ) {
-  return !d_conflict && (level == Theory::EFFORT_FULL);
+  return !d_qstate.isInConflict() && (level == Theory::EFFORT_FULL);
 }
 
 void QuantConflictFind::reset_round( Theory::Effort level ) {
@@ -2326,7 +2325,7 @@ void QuantConflictFind::check(Theory::Effort level, QEffort quant_e)
     return;
   }
   Trace("qcf-check") << "QCF : check : " << level << std::endl;
-  if (d_conflict)
+  if (d_qstate.isInConflict())
   {
     Trace("qcf-check2") << "QCF : finished check : already in conflict."
                         << std::endl;
@@ -2379,7 +2378,7 @@ void QuantConflictFind::check(Theory::Effort level, QEffort quant_e)
       {
         // check this quantified formula
         checkQuantifiedFormula(q, isConflict, addedLemmas);
-        if (d_conflict || d_qstate.isInConflict())
+        if (d_qstate.isInConflict())
         {
           break;
         }
@@ -2395,7 +2394,7 @@ void QuantConflictFind::check(Theory::Effort level, QEffort quant_e)
   }
   if (isConflict)
   {
-    d_conflict.set(true);
+    d_qstate.notifyInConflict();
   }
   if (TraceIsOn("qcf-engine"))
   {
@@ -2539,7 +2538,7 @@ void QuantConflictFind::checkQuantifiedFormula(Node q,
         }
         else
         {
-          d_conflict.set(true);
+          d_qstate.notifyInConflict();
         }
         return;
       }
@@ -2552,7 +2551,7 @@ void QuantConflictFind::checkQuantifiedFormula(Node q,
     qi->revertMatch(assigned);
     d_tempCache.clear();
   }
-  Trace("qcf-check") << "Done, conflict = " << d_conflict << std::endl;
+  Trace("qcf-check") << "Done, conflict = " << d_qstate.isInConflict() << std::endl;
 }
 
 //-------------------------------------------------- debugging

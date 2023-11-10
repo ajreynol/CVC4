@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "expr/node.h"
+#include "context/cdhashset.h"
 #include "expr/term_canonize.h"
 #include "smt/env_obj.h"
 #include "theory/inference_id.h"
@@ -71,8 +72,6 @@ class TermDbEager : protected EnvObj
   bool addInstantiation(const Node& q,
                         std::vector<Node>& terms,
                         bool isConflict);
-  /** In conflict? */
-  bool inConflict() const { return d_conflict.get(); }
   /**
    * Is the given quantified formula inactive?
    * This is the case if we successfully inferred triggers for q and those
@@ -88,6 +87,7 @@ class TermDbEager : protected EnvObj
   context::Context* getSatContext() { return context(); }
 
  private:
+  bool notifyTerm(TNode n);
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   bool isPropagatingInstance(Node n);
   bool isPropagatingTerm(Node n);
@@ -103,8 +103,8 @@ class TermDbEager : protected EnvObj
   TermDb& d_tdb;
   /** The CDTrieNode allocator */
   CDTNodeTrieAllocator d_cdalloc;
-  /** Are we in conflict? */
-  context::CDO<bool> d_conflict;
+  /** The terms we have notified if d_whenAsserted is true */
+  context::CDHashSet<Node> d_notified;
   /** */
   std::map<TNode, eager::TriggerInfo> d_tinfo;
   /** */
@@ -117,6 +117,8 @@ class TermDbEager : protected EnvObj
   eager::Stats d_stats;
   /** Are stats enabled? */
   bool d_statsEnabled;
+  /** Are we registering terms when they are asserted? */
+  bool d_whenAsserted;
 };
 
 }  // namespace quantifiers

@@ -88,7 +88,7 @@ class TheoryState : protected EnvObj
    */
   virtual void notifyInConflict();
   /** Are we currently in conflict? */
-  virtual bool isInConflict() const;
+  bool isInConflict() const { return d_conflict.get(); }
 
   /** Returns true if lit is a SAT literal. */
   virtual bool isSatLiteral(TNode lit) const;

@@ -800,6 +800,14 @@ name   = "Quantifiers"
   help       = "Enable eager instantiation"
 
 [[option]]
+  name       = "eagerInstWhenAsserted"
+  category   = "expert"
+  long       = "eager-inst-when-asserted"
+  type       = "bool"
+  default    = "false"
+  help       = "Do eager instantiation based on terms when they appear in assertions (merges)"
+
+[[option]]
   name       = "eagerInstTrigger"
   category   = "expert"
   long       = "eager-inst-trigger=MODE"

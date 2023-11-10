@@ -48,7 +48,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   ++(s.d_nquant);
   const Options& opts = d_tde.getEnv().getOptions();
   std::map<Node, inst::TriggerTermInfo> tinfo;
-  inst::PatternTermSelector pts(q, options::TriggerSelMode::MAX);
+  inst::PatternTermSelector pts(q, options::TriggerSelMode::MIN);
   // get the user patterns
   std::vector<Node> userPatTerms;
   options::UserPatMode pmode = opts.quantifiers.userPatternsQuant;
@@ -199,6 +199,7 @@ bool QuantInfo::updateStatus()
     if (s == TriggerStatus::ACTIVE)
     {
       bestIndex = i;
+      bestIndexSet = true;
       break;
     }
     else

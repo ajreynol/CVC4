@@ -36,7 +36,7 @@ void InstStrategyAllEager::reset_round(Theory::Effort e) {}
 
 bool InstStrategyAllEager::needsCheck(Theory::Effort e)
 {
-  return !d_tde->inConflict() && (e == Theory::EFFORT_FULL);
+  return !d_qstate.isInConflict() && (e == Theory::EFFORT_FULL);
 }
 
 void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
@@ -59,7 +59,7 @@ void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
   FirstOrderModel* fm = d_treg.getModel();
   for (size_t i = 0, nquant = fm->getNumAssertedQuantifiers(); i < nquant; i++)
   {
-    Node q = fm->getAssertedQuantifier(i);
+    Node q = fm->getAssertedQuantifier(i, true);
     eager::QuantInfo* qi = d_tde->getQuantInfo(q);
     if (qi == nullptr)
     {
@@ -78,18 +78,24 @@ void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
     // do all matching with ti
     if (ti->doMatchingAll())
     {
-      Assert(d_tde->inConflict());
+      Assert(d_qstate.isInConflict());
       break;
     }
   }
   if (TraceIsOn("all-eager-engine"))
   {
     double clSet2 = double(clock()) / double(CLOCKS_PER_SEC);
-    Trace("all-eager-engine")
-        << "Added lemmas = " << (d_qim.numPendingLemmas() - lastWaiting)
-        << std::endl;
+    size_t addedLemmas = (d_qim.numPendingLemmas() - lastWaiting);
     Trace("all-eager-engine")
         << "Finished all eager engine, time = " << (clSet2 - clSet);
+    if (addedLemmas>0)
+    {
+      Trace("all-eager-engine") << ", addedLemmas = " << addedLemmas;
+    }
+    if (d_qstate.isInConflict())
+    {
+      Trace("all-eager-engine") << ", conflict";
+    }
     Trace("all-eager-engine") << std::endl;
   }
 }

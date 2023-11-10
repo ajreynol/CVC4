@@ -37,12 +37,13 @@ TermDbEager::TermDbEager(Env& env,
       d_qim(nullptr),
       d_tdb(tdb),
       d_cdalloc(context()),
-      d_conflict(context()),
+      d_notified(context()),
       // we canonize ground subterms if the option is set
       d_tcanon(
           nullptr, false, true, options().quantifiers.eagerInstMergeTriggers),
       d_stats(statisticsRegistry()),
-      d_statsEnabled(options().base.statistics)
+      d_statsEnabled(options().base.statistics),
+      d_whenAsserted(options().quantifiers.eagerInstWhenAsserted)
 {
 }
 
@@ -50,7 +51,7 @@ void TermDbEager::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
 
 void TermDbEager::assertQuantifier(TNode q)
 {
-  if (d_conflict.get())
+  if (d_qs.isInConflict())
   {
     // already in conflict
     return;
@@ -72,64 +73,18 @@ void TermDbEager::assertQuantifier(TNode q)
 
 void TermDbEager::eqNotifyNewClass(TNode t)
 {
-  if (d_conflict.get())
+  if (d_qs.isInConflict())
   {
     // already in conflict
     return;
   }
-  if (TermUtil::hasInstConstAttr(t))
-  {
-    return;
-  }
   Trace("eager-inst-notify") << "eqNotifyNewClass: " << t << std::endl;
-  // add to the eager trie
-  TNode f = d_tdb.getMatchOperator(t);
-  if (!f.isNull())
+  if (!d_whenAsserted)
   {
-    eager::FunInfo* finfo = getFunInfo(f);
-    if (finfo == nullptr)
-    {
-      finfo = getOrMkFunInfo(f, t.getNumChildren());
-    }
-    ++(d_stats.d_nterms);
-    if (finfo->addTerm(t))
-    {
-      std::vector<eager::TriggerInfo*>& ts = finfo->d_triggers;
-      // take stats on whether the
-      if (d_statsEnabled)
-      {
-        size_t nmatches = 0;
-        for (eager::TriggerInfo* tr : ts)
-        {
-          if (tr->getStatus() == eager::TriggerStatus::ACTIVE)
-          {
-            nmatches++;
-          }
-        }
-        if (nmatches > 0)
-        {
-          ++(d_stats.d_ntermsMatched);
-        }
-      }
-      // notify the triggers with the same top symbol
-      for (eager::TriggerInfo* tr : ts)
-      {
-        Trace("eager-inst-debug")
-            << "...notify " << tr->getPattern() << std::endl;
-        if (tr->eqNotifyNewClass(t))
-        {
-          Trace("eager-inst")
-              << "......conflict " << tr->getPattern() << std::endl;
-          break;
-        }
-      }
-      // do pending now
-      d_qim->doPending();
-    }
+    notifyTerm(t);
   }
   Trace("eager-inst-notify") << "...finished" << std::endl;
 }
-
 void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
 {
   // TODO: alternative strategy where you register if this is the first
@@ -137,7 +92,91 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
   // they are asserted?
   Trace("eager-inst-notify")
       << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
+  if (d_whenAsserted)
+  {
+    // notify both, recursively
+    std::vector<TNode> visit{t1,t2};
+    TNode cur;
+    do
+    {
+      cur = visit.back();
+      visit.pop_back();
+      if (d_notified.find(cur)==d_notified.end())
+      {
+        d_notified.insert(cur);
+        // notice we notify top down
+        if (notifyTerm(cur))
+        {
+          // already in conflict
+          return;
+        }
+        visit.insert(visit.end(), cur.begin(), cur.end());
+      }
+      // otherwise already notified
+    }while (!visit.empty());
+  }
   Trace("eager-inst-notify") << "...finished" << std::endl;
+}
+
+bool TermDbEager::notifyTerm(TNode t)
+{
+  if (TermUtil::hasInstConstAttr(t))
+  {
+    return false;
+  }
+  Trace("eager-inst-notify") << "notifyTerm: " << t << std::endl;
+  // add to the eager trie
+  TNode f = d_tdb.getMatchOperator(t);
+  if (f.isNull())
+  {
+    return false;
+  }
+  eager::FunInfo* finfo = getFunInfo(f);
+  if (finfo == nullptr)
+  {
+    finfo = getOrMkFunInfo(f, t.getNumChildren());
+  }
+  ++(d_stats.d_nterms);
+  if (!finfo->addTerm(t))
+  {
+    return false;
+  }
+  std::vector<eager::TriggerInfo*>& ts = finfo->d_triggers;
+  if (ts.empty())
+  {
+    return false;
+  }
+  // take stats on whether the
+  if (d_statsEnabled)
+  {
+    size_t nmatches = 0;
+    for (eager::TriggerInfo* tr : ts)
+    {
+      if (tr->getStatus() == eager::TriggerStatus::ACTIVE)
+      {
+        nmatches++;
+      }
+    }
+    if (nmatches > 0)
+    {
+      ++(d_stats.d_ntermsMatched);
+    }
+  }
+  // notify the triggers with the same top symbol
+  for (eager::TriggerInfo* tr : ts)
+  {
+    Trace("eager-inst-debug")
+        << "...notify " << tr->getPattern() << std::endl;
+    if (tr->eqNotifyNewClass(t))
+    {
+      Trace("eager-inst")
+          << "......conflict " << tr->getPattern() << std::endl;
+      return true;
+    }
+  }
+  // do pending now
+  d_qim->doPending();
+  return false;
 }
 
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
@@ -255,7 +294,7 @@ bool TermDbEager::addInstantiation(const Node& q,
   InferenceId iid = InferenceId::QUANTIFIERS_INST_EAGER;
   if (isConflict)
   {
-    d_conflict = true;
+    d_qs.notifyInConflict();
     iid = InferenceId::QUANTIFIERS_INST_EAGER_CONFLICT;
   }
   bool ret = d_qim->getInstantiate()->addInstantiation(q, terms, iid);
@@ -270,8 +309,7 @@ bool TermDbEager::addInstantiation(const Node& q,
     ++(d_stats.d_instSuccess);
     Trace("eager-inst-debug") << "...success!" << std::endl;
     Trace("eager-inst") << "EagerInst: added instantiation "
-                        << (isConflict ? "(conflict) " : "") << q << " "
-                        << terms << std::endl;
+                        << (isConflict ? "(conflict) " : "") << std::endl;
   }
   // note we don't do pending yet
   return ret;
