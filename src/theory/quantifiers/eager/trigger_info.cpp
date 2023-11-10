@@ -371,13 +371,19 @@ bool TriggerInfo::resetMatching()
   return success;
 }
 
-bool TriggerInfo::eqNotifyNewClass(TNode t)
+bool TriggerInfo::notifyTerm(TNode t, bool isAsserted)
 {
   switch (d_status.get())
   {
     case TriggerStatus::ACTIVE:
-      // do the matching against term t
-      return doMatching(t);
+      // Do the matching against term t, only if it is marked as asserted.
+      // This may be notified when
+      // (1) t is a new eqc and eagerInstWhenAsserted is false.
+      // (2) t appears as a (subterm of a) term in a merge and eagerInstWhenAsserted is true.
+      if (isAsserted)
+      {
+        return doMatching(t);
+      }
       break;
     case TriggerStatus::INACTIVE:
       // we are now waiting to be activated

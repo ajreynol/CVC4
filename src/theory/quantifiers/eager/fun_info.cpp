@@ -24,22 +24,9 @@ namespace theory {
 namespace quantifiers {
 namespace eager {
 
-#if 0
-RelDomInfo::RelDomInfo(context::Context* c) : d_dom(c) {}
-
-bool RelDomInfo::hasTerm(QuantifiersState& qs, TNode r)
-{
-  if (d_dom.find(r) != d_dom.end())
-  {
-    return true;
-  }
-  // TODO: check if any have become equal?
-  return false;
-}
-#endif
-
 FunInfo::FunInfo(TermDbEager& tde)
     : d_tde(tde),
+      d_arity(0),
       d_trie(tde.getSatContext()),
       d_count(tde.getSatContext(), 0),
       d_active(tde.getSatContext(), false),
@@ -49,13 +36,8 @@ FunInfo::FunInfo(TermDbEager& tde)
 
 void FunInfo::initialize(TNode f, size_t nchild)
 {
-#if 0
-  // initialize the relevant domain
-  for (size_t i = 0; i < nchild; i++)
-  {
-    d_rinfo.emplace_back(new RelDomInfo(d_tde.getSatContext()));
-  }
-#endif
+  d_op = f;
+  d_arity = nchild;
 }
 
 bool FunInfo::addTerm(TNode t)
@@ -82,19 +64,51 @@ bool FunInfo::addTerm(TNode t)
     return false;
   }
   d_count = d_count + 1;
-#if 0
-  for (size_t i = 0, nchildren = reps.size(); i < nchildren; i++)
-  {
-    // add relevant domains
-    d_rinfo[i]->d_dom.insert(reps[i]);
-  }
-#endif
   return true;
+}
+
+bool FunInfo::notifyTriggers(TNode t, bool isAsserted)
+{
+  if (!d_active.get() || d_triggers.empty())
+  {
+    return false;
+  }
+  // take stats on whether the
+  if (isAsserted && d_tde.isStatsEnabled())
+  {
+    size_t nmatches = 0;
+    for (eager::TriggerInfo* tr : d_triggers)
+    {
+      if (tr->getStatus() == eager::TriggerStatus::ACTIVE)
+      {
+        nmatches++;
+      }
+    }
+    if (nmatches > 0)
+    {
+      ++(d_tde.getStats().d_ntermsMatched);
+    }
+  }
+  // notify the triggers with the same top symbol
+  for (eager::TriggerInfo* tr : d_triggers)
+  {
+    Trace("eager-inst-debug")
+        << "...notify " << tr->getPattern() << std::endl;
+    if (tr->notifyTerm(t, isAsserted))
+    {
+      Trace("eager-inst")
+          << "......conflict " << tr->getPattern() << std::endl;
+      return true;
+    }
+  }
+  return false;
 }
 
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
   // TODO: maybe use the trie?
+  //CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), d_tde.getState(), getTrie(), d_arity);
+
 
 #if 0
   Assert(i < d_rinfo.size());
@@ -106,29 +120,41 @@ bool FunInfo::inRelevantDomain(size_t i, TNode r)
   return true;
 }
 
-void FunInfo::setActive(bool active)
+bool FunInfo::setActive(bool active)
 {
   if (d_active.get() == active)
   {
-    return;
+    return false;
   }
+  Trace("eager-inst-debug") << "...activate function " << d_op << std::endl;
   d_active = active;
   if (active)
   {
     // if activated, add terms now
-    refresh();
+    return refresh();
   }
+  return false;
 }
 
-void FunInfo::refresh()
+bool FunInfo::refresh()
 {
   // get and add all terms from the wait list
   std::vector<TNode> next;
   d_terms.get(next);
+  Trace("eager-inst-debug") << "...lazy add " << next.size() << " terms" << std::endl;
   for (TNode n : next)
   {
-    addTerm(n);
+    if (!addTerm(n))
+    {
+      continue;
+    }
+    // now, notify the triggers, which depends on if n has been asserted in the meantime
+    if (notifyTriggers(n, d_tde.isAsserted(n)))
+    {
+      return true;
+    }
   }
+  return false;
 }
 
 CDTNodeTrie* FunInfo::getTrie()
@@ -141,6 +167,12 @@ CDTNodeTrie* FunInfo::getTrie()
 size_t FunInfo::getNumTerms() const
 {
   return d_count.get() + d_terms.getWaitSize();
+}
+
+void FunInfo::addTrigger(TriggerInfo* tinfo)
+{
+  d_triggers.emplace_back(tinfo);
+  setActive(true);
 }
 
 }  // namespace eager

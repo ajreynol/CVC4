@@ -35,18 +35,6 @@ namespace eager {
 
 class TriggerInfo;
 
-#if 0
-class RelDomInfo
-{
- public:
-  RelDomInfo(context::Context* c);
-  /** The domain */
-  context::CDHashSet<Node> d_dom;
-  /** Has term? */
-  bool hasTerm(QuantifiersState& qs, TNode r);
-};
-#endif
-
 class FunInfo
 {
  public:
@@ -55,22 +43,29 @@ class FunInfo
   void initialize(TNode f, size_t nchild);
   /** Add term */
   bool addTerm(TNode t);
+  /** Do matching with term */
+  bool notifyTriggers(TNode t, bool isAsserted);
   /** Is in relevant domain */
   bool inRelevantDomain(size_t i, TNode r);
   /** Get trie */
   CDTNodeTrie* getTrie();
   /** Number of terms */
   size_t getNumTerms() const;
+  /** Add trigger */
+  void addTrigger(TriggerInfo* tinfo);
   /** Triggers with this as top symbol */
-  std::vector<TriggerInfo*> d_triggers;
-
+  std::vector<TriggerInfo*>& getTriggers() { return d_triggers; }
  private:
   /** Activate */
-  void setActive(bool active);
+  bool setActive(bool active);
   /** Refresh */
-  void refresh();
+  bool refresh();
   /** Reference to the eager term database */
   TermDbEager& d_tde;
+  /** the operator */
+  Node d_op;
+  /** the arity */
+  size_t d_arity;
   /** Relevant domain for the arguments of this function */
   // std::vector<std::unique_ptr<RelDomInfo>> d_rinfo;
   /** All terms */
@@ -81,6 +76,8 @@ class FunInfo
   context::CDO<bool> d_active;
   /** Wait list */
   WaitList d_terms;
+  /** Triggers with this as top symbol */
+  std::vector<TriggerInfo*> d_triggers;
 };
 
 }  // namespace eager

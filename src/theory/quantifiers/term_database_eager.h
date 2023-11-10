@@ -78,6 +78,7 @@ class TermDbEager : protected EnvObj
    * triggers are not active.
    */
   bool isInactive(const Node& q);
+  bool isAsserted(TNode n);
   //==========
   Env& getEnv() { return d_env; }
   TermDb& getTermDb() { return d_tdb; }
@@ -85,9 +86,10 @@ class TermDbEager : protected EnvObj
   QuantifiersState& getState() { return d_qs; }
   CDTNodeTrieAllocator* getCdtAlloc() { return &d_cdalloc; }
   context::Context* getSatContext() { return context(); }
+  bool isStatsEnabled() const { return d_statsEnabled; }
 
  private:
-  bool notifyTerm(TNode n);
+  bool notifyTerm(TNode n, bool notifyTriggers);
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   bool isPropagatingInstance(Node n);
   bool isPropagatingTerm(Node n);

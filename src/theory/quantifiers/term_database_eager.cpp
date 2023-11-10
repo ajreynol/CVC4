@@ -79,19 +79,17 @@ void TermDbEager::eqNotifyNewClass(TNode t)
     return;
   }
   Trace("eager-inst-notify") << "eqNotifyNewClass: " << t << std::endl;
-  if (!d_whenAsserted)
-  {
-    notifyTerm(t);
-  }
+  // always notify now, indicate asserted if d_whenAsserted is false
+  notifyTerm(t, !d_whenAsserted);
   Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
 {
-  // TODO: alternative strategy where you register if this is the first
-  // time seeing t1 / t2. This would indicate that terms are processed when
-  // they are asserted?
   Trace("eager-inst-notify")
       << "eqNotifyMerge: " << t1 << " " << t2 << std::endl;
+  // alternative strategy where you notify triggers only when this is the first
+  // time seeing t1 / t2. This indicates that terms are processed when
+  // they are asserted.
   if (d_whenAsserted)
   {
     // notify both, recursively
@@ -105,7 +103,7 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
       {
         d_notified.insert(cur);
         // notice we notify top down
-        if (notifyTerm(cur))
+        if (notifyTerm(cur, true))
         {
           // already in conflict
           return;
@@ -118,7 +116,7 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
   Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
-bool TermDbEager::notifyTerm(TNode t)
+bool TermDbEager::notifyTerm(TNode t, bool isAsserted)
 {
   if (TermUtil::hasInstConstAttr(t))
   {
@@ -136,47 +134,25 @@ bool TermDbEager::notifyTerm(TNode t)
   {
     finfo = getOrMkFunInfo(f, t.getNumChildren());
   }
-  ++(d_stats.d_nterms);
-  if (!finfo->addTerm(t))
+  // only add once, which we skip if d_whenAsserted is true and isAsserted is true,
+  // since we should have already added
+  if (!d_whenAsserted || !isAsserted)
   {
+    ++(d_stats.d_nterms);
+    if (!finfo->addTerm(t))
+    {
+      return false;
+    }
+  }
+  else if (isCongruent(t))
+  {
+    // maybe was already congruent
     return false;
   }
-  std::vector<eager::TriggerInfo*>& ts = finfo->d_triggers;
-  if (ts.empty())
-  {
-    return false;
-  }
-  // take stats on whether the
-  if (d_statsEnabled)
-  {
-    size_t nmatches = 0;
-    for (eager::TriggerInfo* tr : ts)
-    {
-      if (tr->getStatus() == eager::TriggerStatus::ACTIVE)
-      {
-        nmatches++;
-      }
-    }
-    if (nmatches > 0)
-    {
-      ++(d_stats.d_ntermsMatched);
-    }
-  }
-  // notify the triggers with the same top symbol
-  for (eager::TriggerInfo* tr : ts)
-  {
-    Trace("eager-inst-debug")
-        << "...notify " << tr->getPattern() << std::endl;
-    if (tr->eqNotifyNewClass(t))
-    {
-      Trace("eager-inst")
-          << "......conflict " << tr->getPattern() << std::endl;
-      return true;
-    }
-  }
-  // do pending now
+  // if we successfully added, we do the matching now
+  bool ret = finfo->notifyTriggers(t, isAsserted);
   d_qim->doPending();
-  return false;
+  return ret;
 }
 
 bool TermDbEager::inRelevantDomain(TNode f, size_t i, TNode r)
@@ -228,7 +204,7 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     Assert(!f.isNull());
     ++(d_stats.d_ntriggersUnique);
     eager::FunInfo* finfo = getOrMkFunInfo(f, t.getNumChildren());
-    finfo->d_triggers.emplace_back(&it->second);
+    finfo->addTrigger(&it->second);
     // the initial status of the trigger is determined by whether f has
     // ground terms
     if (finfo->getNumTerms() > 0)
@@ -320,6 +296,12 @@ bool TermDbEager::isInactive(const Node& q)
   eager::QuantInfo* qi = getQuantInfo(q);
   // only if the trigger status is inactive
   return qi->getStatus() == eager::TriggerStatus::INACTIVE;
+}
+
+bool TermDbEager::isAsserted(TNode n)
+{
+  // if we are not doing eagerInstWhenAsserted, then we assume everything is asserted.
+  return !d_whenAsserted || d_notified.find(n)!=d_notified.end();
 }
 
 bool TermDbEager::isPropagatingInstance(Node n)

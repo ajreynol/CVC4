@@ -65,7 +65,7 @@ class TriggerInfo
    * Notify new ground term. Add instantiations to inst as needed.
    * Return true if we are in conflict.
    */
-  bool eqNotifyNewClass(TNode t);
+  bool notifyTerm(TNode t, bool isAsserted);
   /** Get status */
   TriggerStatus getStatus() const { return d_status.get(); }
   /** Set status to s, return true if a conflict is discovered */
