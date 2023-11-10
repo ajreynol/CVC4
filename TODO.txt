@@ -1,0 +1,4 @@
+TODO:
+- traverse trie eagerly in eager ieval
+- multi-triggers
+- phase requirements

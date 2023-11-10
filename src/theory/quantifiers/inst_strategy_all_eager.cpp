@@ -57,7 +57,8 @@ void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
   std::unordered_set<eager::TriggerInfo*> processed;
   // get all remaining instantiations from term database eager
   FirstOrderModel* fm = d_treg.getModel();
-  for (size_t i = 0, nquant = fm->getNumAssertedQuantifiers(); i < nquant; i++)
+  size_t nquant = fm->getNumAssertedQuantifiers();
+  for (size_t i = 0; i < nquant; i++)
   {
     Node q = fm->getAssertedQuantifier(i, true);
     eager::QuantInfo* qi = d_tde->getQuantInfo(q);
@@ -82,6 +83,7 @@ void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
       break;
     }
   }
+  Trace("all-eager-engine-debug") << "Processed " << processed.size() << " / " << nquant << " quantified formulas" << std::endl;
   if (TraceIsOn("all-eager-engine"))
   {
     double clSet2 = double(clock()) / double(CLOCKS_PER_SEC);

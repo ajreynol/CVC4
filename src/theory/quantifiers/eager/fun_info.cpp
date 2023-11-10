@@ -106,18 +106,26 @@ bool FunInfo::notifyTriggers(TNode t, bool isAsserted)
 
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
-  // TODO: maybe use the trie?
-  //CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), d_tde.getState(), getTrie(), d_arity);
-
-
-#if 0
-  Assert(i < d_rinfo.size());
-  Assert(d_tde.getState().getRepresentative(r) == r);
-  // must be active
-  setActive(true);
-  return d_rinfo[i]->hasTerm(d_tde.getState(), r);
-#endif
-  return true;
+  // use the trie
+  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), d_tde.getState(), getTrie(), d_arity);
+  size_t level=0;
+  while (level<i)
+  {
+    TNode rc = itt.pushNextChild();
+    if (rc.isNull())
+    {
+      if (level==0)
+      {
+        return false;
+      }
+      level--;
+    }
+    else
+    {
+      level++;
+    }
+  }
+  return itt.push(r);
 }
 
 bool FunInfo::setActive(bool active)

@@ -2517,6 +2517,14 @@ void QuantConflictFind::checkQuantifiedFormula(Node q,
         return;
       }
       Trace("qcf-check") << "   ... Added instantiation" << std::endl;
+      if (TraceIsOn("qcf-instantiate"))
+      {
+        Trace("qcf-instantiate") << "QCF instantiation: " << q << std::endl;
+        for (const Node& t : terms)
+        {
+          Trace("qcf-instantiate") << "  " << t << std::endl;
+        }
+      }
       if (TraceIsOn("qcf-inst"))
       {
         Trace("qcf-inst") << "*** Was from effort " << d_effort << " : "

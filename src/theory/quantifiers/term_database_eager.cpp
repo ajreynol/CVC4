@@ -22,6 +22,7 @@
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_util.h"
+#include "expr/node_algorithm.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -284,7 +285,7 @@ bool TermDbEager::addInstantiation(const Node& q,
   {
     ++(d_stats.d_instSuccess);
     Trace("eager-inst-debug") << "...success!" << std::endl;
-    Trace("eager-inst") << "EagerInst: added instantiation "
+    Trace("eager-inst") << "* EagerInst: added instantiation "
                         << (isConflict ? "(conflict) " : "") << std::endl;
   }
   // note we don't do pending yet
@@ -306,41 +307,12 @@ bool TermDbEager::isAsserted(TNode n)
 
 bool TermDbEager::isPropagatingInstance(Node n)
 {
-  std::unordered_set<TNode> visited;
-  std::vector<TNode> visit;
-  TNode cur;
-  visit.push_back(n);
-  do
-  {
-    cur = visit.back();
-    visit.pop_back();
-    if (visited.find(cur) == visited.end())
-    {
-      visited.insert(cur);
-      Kind ck = cur.getKind();
-      if (ck == Kind::FORALL)
-      {
-        // do nothing
-      }
-      else if (TermUtil::isBoolConnective(ck))
-      {
-        for (TNode cc : cur)
-        {
-          visit.push_back(cc);
-        }
-      }
-      else if (!isPropagatingTerm(cur))
-      {
-        Trace("eager-inst-warn") << "Not prop due to " << cur << std::endl;
-        return false;
-      }
-    }
-  } while (!visit.empty());
-  return true;
+  return isPropagatingTerm(n).isNull();
 }
 
-bool TermDbEager::isPropagatingTerm(Node n)
+Node TermDbEager::isPropagatingTerm(Node n)
 {
+  NodeManager * nm = NodeManager::currentNM();
   std::unordered_map<TNode, TNode> visited;
   std::unordered_map<TNode, TNode>::iterator it;
   std::vector<TNode> visit;
@@ -354,22 +326,24 @@ bool TermDbEager::isPropagatingTerm(Node n)
     if (it == visited.end())
     {
       visited[cur] = Node::null();
-      Node op = d_tdb.getMatchOperator(cur);
-      if (op.isNull())
+      if (!expr::hasBoundVar(cur))
       {
         if (!ee->hasTerm(cur))
         {
-          return false;
+          return Node::null();
         }
-      }
-      else
-      {
-        // otherwise visit children
-        visit.insert(visit.end(), cur.begin(), cur.end());
+        visit.pop_back();
         continue;
       }
+      else if (cur.getKind()==Kind::FORALL)
+      {
+        return Node::null();
+      }
+      // otherwise visit children
+      visit.insert(visit.end(), cur.begin(), cur.end());
+      continue;
     }
-    else if (it->second.isNull())
+    if (it->second.isNull())
     {
       std::vector<TNode> children;
       for (const Node& cn : cur)
@@ -379,20 +353,33 @@ bool TermDbEager::isPropagatingTerm(Node n)
         Assert(!it->second.isNull());
         children.emplace_back(it->second);
       }
+      Node ret;
       Node op = d_tdb.getMatchOperator(cur);
-      Assert(!op.isNull());
-      Node ret = getCongruentTerm(op, children);
-      if (ret.isNull())
+      if (!op.isNull())
       {
-        return false;
+        ret = getCongruentTerm(op, children);
+        if (ret.isNull())
+        {
+          return Node::null();
+        }
+        Assert(ee->hasTerm(ret));
       }
-      Assert(ee->hasTerm(ret));
+      else
+      {
+        ret = nm->mkNode(cur.getKind(), children);
+        ret = rewrite(ret);
+        if (!ee->hasTerm(ret))
+        {
+          return Node::null();
+        }
+      }
       ret = ee->getRepresentative(ret);
       visited[cur] = ret;
     }
     visit.pop_back();
   } while (!visit.empty());
-  return true;
+  Assert (visited.find(n)!=visited.end());
+  return visited[n];
 }
 
 }  // namespace quantifiers
