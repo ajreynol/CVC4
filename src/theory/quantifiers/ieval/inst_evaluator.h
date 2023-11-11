@@ -145,6 +145,7 @@ class InstEvaluator : protected EnvObj
 
   /** get entailed value */
   Node getEntailedValue(TNode p) const;
+
  private:
   /** Set evaluator mode. */
   void setEvaluatorMode(TermEvaluatorMode tev, bool isEager);

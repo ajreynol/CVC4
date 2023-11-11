@@ -102,6 +102,7 @@ class State : protected EnvObj
 
   /** get entailed value */
   Node getEntailedValue(TNode p) const;
+
  private:
   /** Set quantified formula inactive */
   void setQuantInactive(QuantInfo& qi);

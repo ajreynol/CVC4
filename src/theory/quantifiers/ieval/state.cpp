@@ -635,7 +635,7 @@ std::string State::toStringDebugSearch() const
 
 Node State::getEntailedValue(TNode p) const
 {
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   std::vector<TNode> toVisit;
   std::map<TNode, Node> visited;
   std::map<TNode, Node>::iterator it;
@@ -647,7 +647,7 @@ Node State::getEntailedValue(TNode p) const
   {
     cur = toVisit.back();
     it = visited.find(cur);
-    if (it==visited.end())
+    if (it == visited.end())
     {
       if (!expr::hasBoundVar(cur))
       {
@@ -656,7 +656,7 @@ Node State::getEntailedValue(TNode p) const
         continue;
       }
       itp = d_pInfo.find(cur);
-      if (itp!=d_pInfo.end())
+      if (itp != d_pInfo.end())
       {
         eq = itp->second.d_eq.get();
         if (!isSome(eq))
@@ -676,10 +676,12 @@ Node State::getEntailedValue(TNode p) const
     {
       bool childChanged = false;
       std::vector<Node> children;
-      if (cur.getMetaKind() == kind::metakind::PARAMETERIZED) {
+      if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
+      {
         children.push_back(cur.getOperator());
       }
-      for (unsigned i = 0; i < cur.getNumChildren(); i++) {
+      for (unsigned i = 0; i < cur.getNumChildren(); i++)
+      {
         it = visited.find(cur[i]);
         Assert(it != visited.end());
         Assert(!it->second.isNull());
@@ -690,7 +692,7 @@ Node State::getEntailedValue(TNode p) const
       ret = rewrite(ret);
       visited[cur] = ret;
     }
-  }while (!toVisit.empty());
+  } while (!toVisit.empty());
   return p;
 }
 

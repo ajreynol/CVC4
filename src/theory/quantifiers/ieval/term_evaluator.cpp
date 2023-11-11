@@ -351,7 +351,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
     for (TNode cvalue : childValues)
     {
       Assert(!cvalue.isNull());
-      Assert (!s.isNone(cvalue));
+      Assert(!s.isNone(cvalue));
       if (s.isSome(cvalue))
       {
         Trace("ieval-state-debug")

@@ -80,7 +80,9 @@ class TriggerInfo
   /** Reset */
   bool resetMatching();
   /** Process instantiation */
-  void processInstantiation(const Node& q, std::vector<Node>& inst, bool isConflict);
+  void processInstantiation(const Node& q,
+                            std::vector<Node>& inst,
+                            bool isConflict);
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Instantiation evaluator */

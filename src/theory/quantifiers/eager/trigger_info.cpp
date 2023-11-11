@@ -324,7 +324,9 @@ bool TriggerInfo::setStatus(TriggerStatus s)
   return false;
 }
 
-void TriggerInfo::processInstantiation(const Node& q, std::vector<Node>& inst, bool isConflict)
+void TriggerInfo::processInstantiation(const Node& q,
+                                       std::vector<Node>& inst,
+                                       bool isConflict)
 {
   Node ent = d_ieval->getEntailedValue(q[1]);
   Trace("eager-inst-ent") << "For " << q << " " << inst << std::endl;

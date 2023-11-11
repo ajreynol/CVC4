@@ -216,7 +216,10 @@ TNode InstEvaluator::get(TNode v) const
 
 TNode InstEvaluator::getValue(TNode n) const { return d_state.getValue(n); }
 
-Node InstEvaluator::getEntailedValue(TNode p) const { return d_state.getEntailedValue(p); }
+Node InstEvaluator::getEntailedValue(TNode p) const
+{
+  return d_state.getEntailedValue(p);
+}
 
 void InstEvaluator::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
 {
