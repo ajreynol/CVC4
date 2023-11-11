@@ -48,7 +48,8 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   ++(s.d_nquant);
   const Options& opts = d_tde.getEnv().getOptions();
   std::map<Node, inst::TriggerTermInfo> tinfo;
-  inst::PatternTermSelector pts(q, options::TriggerSelMode::MIN);
+  // NOTE: the trigger selection here should be configurable
+  inst::PatternTermSelector pts(q, options::TriggerSelMode::MAX);
   // get the user patterns
   std::vector<Node> userPatTerms;
   options::UserPatMode pmode = opts.quantifiers.userPatternsQuant;

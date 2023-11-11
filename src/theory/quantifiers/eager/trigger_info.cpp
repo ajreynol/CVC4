@@ -43,7 +43,7 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
   if (d_ieval == nullptr)
   {
     const Options& opts = d_tde.getEnv().getOptions();
-    ieval::TermEvaluatorMode tev = opts.quantifiers.eagerInstProp ? ieval::TermEvaluatorMode::PROP : ieval::TermEvaluatorMode::CONFLICT;
+    ieval::TermEvaluatorMode tev = opts.quantifiers.eagerInstProp ? ieval::TermEvaluatorMode::PROP_STRICT : ieval::TermEvaluatorMode::CONFLICT;
     // initialize the evaluator if not already done so
     d_ieval.reset(new ieval::InstEvaluator(d_tde.getEnv(),
                                            d_tde.getState(),

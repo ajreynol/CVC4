@@ -73,7 +73,7 @@ void State::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
 {
   d_tevMode = tev;
   // initialize the term evaluator, which is freshly allocated
-  if (tev == TermEvaluatorMode::CONFLICT || tev == TermEvaluatorMode::PROP
+  if (tev == TermEvaluatorMode::CONFLICT || tev == TermEvaluatorMode::PROP || tev==TermEvaluatorMode::PROP_STRICT
       || tev == TermEvaluatorMode::NO_ENTAIL)
   {
     // finding conflict, propagating, or non-entailed instances all
@@ -423,7 +423,8 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
     // a top-level constraint is "none", i.e. this instantiation will generate
     // a predicate over new terms.
     if (d_tevMode == TermEvaluatorMode::CONFLICT
-        || d_tevMode == TermEvaluatorMode::PROP)
+        || d_tevMode == TermEvaluatorMode::PROP
+        || d_tevMode == TermEvaluatorMode::PROP_STRICT)
     {
       // if we are looking for conflicts and propagations only, we are now
       // inactive
@@ -448,6 +449,14 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
       if (TraceIsOn("ieval"))
       {
         inactiveReason << "some, req conflict";
+      }
+      setInactive = true;
+    }
+    else if (d_tevMode == TermEvaluatorMode::PROP_STRICT && !qi.isMaybeConflict())
+    {
+      if (TraceIsOn("ieval"))
+      {
+        inactiveReason << "some, req prop_strict";
       }
       setInactive = true;
     }

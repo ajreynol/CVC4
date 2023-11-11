@@ -41,7 +41,7 @@ TermEvaluatorEntailed::TermEvaluatorEntailed(Env& env,
 {
   // check relevant domain during partial evaluation
   d_checkRelDom =
-      (tev == TermEvaluatorMode::CONFLICT || tev == TermEvaluatorMode::PROP);
+      (tev == TermEvaluatorMode::CONFLICT || tev == TermEvaluatorMode::PROP || tev==TermEvaluatorMode::PROP_STRICT);
 }
 
 TNode TermEvaluatorEntailed::evaluateBase(const State& s, TNode n)

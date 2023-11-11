@@ -42,6 +42,8 @@ enum class TermEvaluatorMode : uint32_t
   CONFLICT,
   // we are looking for propagating instances
   PROP,
+  // we are looking for strict propagating instances
+  PROP_STRICT,
   // we are looking for instances that are not entailed
   NO_ENTAIL,
   // model evaluator
