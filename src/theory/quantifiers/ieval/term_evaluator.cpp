@@ -93,6 +93,10 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
       NodeManager* nm = NodeManager::currentNM();
       val = nm->mkConst(!val.getConst<bool>());
     }
+    else if (s.isNone(val))
+    {
+      val = val;
+    }
     else
     {
       val = s.getSome();
@@ -329,20 +333,9 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
       }
       else if (!s.isNone(cval1) && !s.isNone(cval2) && !s.isNone(cval3))
       {
-        if (s.isSome(cval2) || s.isSome(cval3))
-        {
-          // (ite some t some) ---> some
-          // (ite some some t) ---> some
-          ret = s.getSome();
-          Trace("ieval-state-debug") << "...branch with some" << std::endl;
-        }
-        else
-        {
-          // (ite some t1 t2) ---> some
-          ret = s.getSome();
-          Trace("ieval-state-debug")
+        ret = s.getSome();
+        Trace("ieval-state-debug")
               << "...different known branches" << std::endl;
-        }
       }
     }
   }

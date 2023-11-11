@@ -693,7 +693,8 @@ Node State::getEntailedValue(TNode p) const
       visited[cur] = ret;
     }
   } while (!toVisit.empty());
-  return p;
+  Assert (visited.find(p)!=visited.end());
+  return visited[p];
 }
 
 }  // namespace ieval
