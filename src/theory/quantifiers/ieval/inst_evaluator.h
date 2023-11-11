@@ -143,6 +143,8 @@ class InstEvaluator : protected EnvObj
   /** Get the internal context */
   context::Context* getEvalContext() { return &d_context; }
 
+  /** get entailed value */
+  Node getEntailedValue(TNode p) const;
  private:
   /** Set evaluator mode. */
   void setEvaluatorMode(TermEvaluatorMode tev, bool isEager);

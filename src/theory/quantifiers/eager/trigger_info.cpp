@@ -145,10 +145,8 @@ bool TriggerInfo::doMatching(TNode t)
   std::map<Node, Node>::iterator itq;
   for (const Node& q : qinsts)
   {
-    itq = d_quantMap.find(q);
-    Assert(itq != d_quantMap.end());
     std::vector<Node> inst = d_ieval->getInstantiationFor(q);
-    d_tde.addInstantiation(itq->second, inst, isConflict);
+    processInstantiation(q, inst, isConflict);
   }
   return isConflict;
 }
@@ -201,9 +199,6 @@ bool TriggerInfo::doMatchingAll()
     std::map<Node, Node>::iterator it;
     for (const Node& qi : qinsts)
     {
-      it = d_quantMap.find(qi);
-      Assert(it != d_quantMap.end());
-      Node q = it->second;
       std::vector<Node> inst;
       for (const Node& v : qi[0])
       {
@@ -217,7 +212,7 @@ bool TriggerInfo::doMatchingAll()
           inst.emplace_back(d_ieval->get(v));
         }
       }
-      d_tde.addInstantiation(q, inst, isConflict);
+      processInstantiation(qi, inst, isConflict);
     }
     if (isConflict)
     {
@@ -327,6 +322,16 @@ bool TriggerInfo::setStatus(TriggerStatus s)
   }
   d_statusToProc.clear();
   return false;
+}
+
+void TriggerInfo::processInstantiation(const Node& q, std::vector<Node>& inst, bool isConflict)
+{
+  Node ent = d_ieval->getEntailedValue(q[1]);
+  Trace("eager-inst-ent") << "For " << q << " " << inst << std::endl;
+  Trace("eager-inst-ent") << "...entailed term is " << ent << std::endl;
+  std::map<Node, Node>::iterator itq = d_quantMap.find(q);
+  Assert(itq != d_quantMap.end());
+  d_tde.addInstantiation(itq->second, inst, isConflict);
 }
 
 }  // namespace eager

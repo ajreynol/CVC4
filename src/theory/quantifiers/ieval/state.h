@@ -100,6 +100,8 @@ class State : protected EnvObj
   std::string toStringSearch() const;
   std::string toStringDebugSearch() const;
 
+  /** get entailed value */
+  Node getEntailedValue(TNode p) const;
  private:
   /** Set quantified formula inactive */
   void setQuantInactive(QuantInfo& qi);

@@ -241,19 +241,13 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
     bool hasSome = false;
     for (TNode cvalue : childValues)
     {
-      if (s.isSome(cvalue))
+      if (s.isNone(cvalue))
+      {
+        return cvalue;
+      }
+      if (!cvalue.isConst())
       {
         hasSome = true;
-      }
-      else if (!cvalue.isConst())
-      {
-        // unknown (possibly none), we are done
-        Trace("ieval-state-debug") << "...unknown child of AND/OR" << std::endl;
-        return s.getNone();
-      }
-      else
-      {
-        Assert(cvalue.isConst());
       }
     }
     // if any child is some, we are some as well
@@ -357,6 +351,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
     for (TNode cvalue : childValues)
     {
       Assert(!cvalue.isNull());
+      Assert (!s.isNone(cvalue));
       if (s.isSome(cvalue))
       {
         Trace("ieval-state-debug")

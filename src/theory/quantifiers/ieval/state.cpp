@@ -633,6 +633,67 @@ std::string State::toStringDebugSearch() const
   return ss.str();
 }
 
+Node State::getEntailedValue(TNode p) const
+{
+  NodeManager * nm = NodeManager::currentNM();
+  std::vector<TNode> toVisit;
+  std::map<TNode, Node> visited;
+  std::map<TNode, Node>::iterator it;
+  std::map<Node, PatTermInfo>::const_iterator itp;
+  toVisit.emplace_back(p);
+  TNode cur;
+  TNode eq;
+  do
+  {
+    cur = toVisit.back();
+    it = visited.find(cur);
+    if (it==visited.end())
+    {
+      if (!expr::hasBoundVar(cur))
+      {
+        toVisit.pop_back();
+        visited[cur] = cur;
+        continue;
+      }
+      itp = d_pInfo.find(cur);
+      if (itp!=d_pInfo.end())
+      {
+        eq = itp->second.d_eq.get();
+        if (!isSome(eq))
+        {
+          toVisit.pop_back();
+          visited[cur] = eq;
+          continue;
+        }
+      }
+      // push
+      visited[cur] = Node::null();
+      toVisit.insert(toVisit.end(), cur.begin(), cur.end());
+      continue;
+    }
+    toVisit.pop_back();
+    if (it->second.isNull())
+    {
+      bool childChanged = false;
+      std::vector<Node> children;
+      if (cur.getMetaKind() == kind::metakind::PARAMETERIZED) {
+        children.push_back(cur.getOperator());
+      }
+      for (unsigned i = 0; i < cur.getNumChildren(); i++) {
+        it = visited.find(cur[i]);
+        Assert(it != visited.end());
+        Assert(!it->second.isNull());
+        childChanged = childChanged || cur[i] != it->second;
+        children.push_back(it->second);
+      }
+      Node ret = nm->mkNode(cur.getKind(), children);
+      ret = rewrite(ret);
+      visited[cur] = ret;
+    }
+  }while (!toVisit.empty());
+  return p;
+}
+
 }  // namespace ieval
 }  // namespace quantifiers
 }  // namespace theory
