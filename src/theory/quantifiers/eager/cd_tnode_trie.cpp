@@ -177,9 +177,9 @@ TNode CDTNodeTrieIterator::pushNextChild()
     // finished children at the current level
     return d_null;
   }
-  if (sf.d_index==0)
+  if (sf.d_index == 0)
   {
-    Assert (!sf.d_hasIter);
+    Assert(!sf.d_hasIter);
     sf.d_hasIter = true;
     sf.d_iterAllChild = true;
   }
@@ -204,7 +204,7 @@ bool CDTNodeTrieIterator::push(TNode r)
   {
     return false;
   }
-  Assert (!sf.d_hasIter);
+  Assert(!sf.d_hasIter);
   sf.d_hasIter = true;
   sf.d_iterAllChild = false;
   pushInternal(it->second);

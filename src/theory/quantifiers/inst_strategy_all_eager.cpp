@@ -87,14 +87,16 @@ void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
       break;
     }
   }
-  Trace("all-eager-engine-debug") << "Processed " << processed.size() << " / " << nquant << " quantified formulas" << std::endl;
+  Trace("all-eager-engine-debug")
+      << "Processed " << processed.size() << " / " << nquant
+      << " quantified formulas" << std::endl;
   if (TraceIsOn("all-eager-engine"))
   {
     double clSet2 = double(clock()) / double(CLOCKS_PER_SEC);
     size_t addedLemmas = (d_qim.numPendingLemmas() - lastWaiting);
     Trace("all-eager-engine")
         << "Finished all eager engine, time = " << (clSet2 - clSet);
-    if (addedLemmas>0)
+    if (addedLemmas > 0)
     {
       Trace("all-eager-engine") << ", addedLemmas = " << addedLemmas;
     }

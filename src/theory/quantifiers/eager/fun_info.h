@@ -57,6 +57,7 @@ class FunInfo
   void addTrigger(TriggerInfo* tinfo);
   /** Triggers with this as top symbol */
   std::vector<TriggerInfo*>& getTriggers() { return d_triggers; }
+
  private:
   /** Activate */
   bool setActive(bool active);

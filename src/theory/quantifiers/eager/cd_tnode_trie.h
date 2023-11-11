@@ -127,7 +127,7 @@ class CDTNodeTrieIterator
   /** Get the data at the leaf we are at */
   TNode getCurrentData();
   /** Has data? */
-  bool hasCurrentData() const { return d_curData!=nullptr; }
+  bool hasCurrentData() const { return d_curData != nullptr; }
   /** Get the leaf we are at */
   CDTNodeTrie* getCurrent();
   /** Set the data of the current leaf */
@@ -136,6 +136,7 @@ class CDTNodeTrieIterator
   size_t getLevel() const { return d_stack.size(); }
   /** Has iterated? */
   bool hasCurrentIterated(bool& allChild) const;
+
  private:
   /** Pointer to the allocator */
   CDTNodeTrieAllocator* d_alloc;

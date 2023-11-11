@@ -15,9 +15,9 @@
 
 #include "theory/quantifiers/eager/trigger_info.h"
 
-#include "options/quantifiers_options.h"
 #include "expr/node_algorithm.h"
 #include "expr/subs.h"
+#include "options/quantifiers_options.h"
 #include "theory/quantifiers/eager/quant_info.h"
 #include "theory/quantifiers/ieval/inst_evaluator.h"
 #include "theory/quantifiers/quantifiers_state.h"
@@ -43,7 +43,9 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
   if (d_ieval == nullptr)
   {
     const Options& opts = d_tde.getEnv().getOptions();
-    ieval::TermEvaluatorMode tev = opts.quantifiers.eagerInstProp ? ieval::TermEvaluatorMode::PROP_STRICT : ieval::TermEvaluatorMode::CONFLICT;
+    ieval::TermEvaluatorMode tev = opts.quantifiers.eagerInstProp
+                                       ? ieval::TermEvaluatorMode::PROP_STRICT
+                                       : ieval::TermEvaluatorMode::CONFLICT;
     // initialize the evaluator if not already done so
     d_ieval.reset(new ieval::InstEvaluator(d_tde.getEnv(),
                                            d_tde.getState(),
@@ -271,7 +273,8 @@ bool TriggerInfo::notifyTerm(TNode t, bool isAsserted)
       // Do the matching against term t, only if it is marked as asserted.
       // This may be notified when
       // (1) t is a new eqc and eagerInstWhenAsserted is false.
-      // (2) t appears as a (subterm of a) term in a merge and eagerInstWhenAsserted is true.
+      // (2) t appears as a (subterm of a) term in a merge and
+      // eagerInstWhenAsserted is true.
       if (isAsserted)
       {
         return doMatching(t);

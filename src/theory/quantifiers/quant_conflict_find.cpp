@@ -2559,7 +2559,8 @@ void QuantConflictFind::checkQuantifiedFormula(Node q,
     qi->revertMatch(assigned);
     d_tempCache.clear();
   }
-  Trace("qcf-check") << "Done, conflict = " << d_qstate.isInConflict() << std::endl;
+  Trace("qcf-check") << "Done, conflict = " << d_qstate.isInConflict()
+                     << std::endl;
 }
 
 //-------------------------------------------------- debugging

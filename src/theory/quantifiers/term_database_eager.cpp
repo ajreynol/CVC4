@@ -15,6 +15,7 @@
 
 #include "theory/quantifiers/term_database_eager.h"
 
+#include "expr/node_algorithm.h"
 #include "options/base_options.h"
 #include "options/quantifiers_options.h"
 #include "theory/quantifiers/instantiate.h"
@@ -22,7 +23,6 @@
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_util.h"
-#include "expr/node_algorithm.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -44,9 +44,12 @@ TermDbEager::TermDbEager(Env& env,
           nullptr, false, true, options().quantifiers.eagerInstMergeTriggers),
       d_stats(statisticsRegistry()),
       d_statsEnabled(options().base.statistics),
-      d_whenEqc(options().quantifiers.eagerInstWhen==options::EagerInstWhenMode::EQC),
-      d_whenEqcDelay(options().quantifiers.eagerInstWhen==options::EagerInstWhenMode::EQC_DELAY),
-      d_whenAsserted(options().quantifiers.eagerInstWhen==options::EagerInstWhenMode::ASSERTED),
+      d_whenEqc(options().quantifiers.eagerInstWhen
+                == options::EagerInstWhenMode::EQC),
+      d_whenEqcDelay(options().quantifiers.eagerInstWhen
+                     == options::EagerInstWhenMode::EQC_DELAY),
+      d_whenAsserted(options().quantifiers.eagerInstWhen
+                     == options::EagerInstWhenMode::ASSERTED),
       d_eqcDelay(context())
 {
 }
@@ -102,13 +105,13 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
   if (d_whenAsserted)
   {
     // notify both, recursively
-    std::vector<TNode> visit{t1,t2};
+    std::vector<TNode> visit{t1, t2};
     TNode cur;
     do
     {
       cur = visit.back();
       visit.pop_back();
-      if (d_notified.find(cur)==d_notified.end())
+      if (d_notified.find(cur) == d_notified.end())
       {
         d_notified.insert(cur);
         // notice we notify top down
@@ -120,7 +123,7 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
         visit.insert(visit.end(), cur.begin(), cur.end());
       }
       // otherwise already notified
-    }while (!visit.empty());
+    } while (!visit.empty());
   }
   else
   {
@@ -147,8 +150,8 @@ bool TermDbEager::notifyTerm(TNode t, bool isAsserted)
   {
     finfo = getOrMkFunInfo(f, t.getNumChildren());
   }
-  // only add once, which we skip if d_whenAsserted is true and isAsserted is true,
-  // since we should have already added
+  // only add once, which we skip if d_whenAsserted is true and isAsserted is
+  // true, since we should have already added
   if (d_whenEqc || !isAsserted)
   {
     ++(d_stats.d_nterms);
@@ -316,8 +319,9 @@ bool TermDbEager::isInactive(const Node& q)
 
 bool TermDbEager::isAsserted(TNode n)
 {
-  // if we are not doing eagerInstWhenAsserted, then we assume everything is asserted.
-  return !d_whenAsserted || d_notified.find(n)!=d_notified.end();
+  // if we are not doing eagerInstWhenAsserted, then we assume everything is
+  // asserted.
+  return !d_whenAsserted || d_notified.find(n) != d_notified.end();
 }
 
 bool TermDbEager::isPropagatingInstance(Node n)
@@ -327,7 +331,7 @@ bool TermDbEager::isPropagatingInstance(Node n)
 
 Node TermDbEager::isPropagatingTerm(Node n)
 {
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   std::unordered_map<TNode, TNode> visited;
   std::unordered_map<TNode, TNode>::iterator it;
   std::vector<TNode> visit;
@@ -350,7 +354,7 @@ Node TermDbEager::isPropagatingTerm(Node n)
         visit.pop_back();
         continue;
       }
-      else if (cur.getKind()==Kind::FORALL)
+      else if (cur.getKind() == Kind::FORALL)
       {
         return Node::null();
       }
@@ -393,7 +397,7 @@ Node TermDbEager::isPropagatingTerm(Node n)
     }
     visit.pop_back();
   } while (!visit.empty());
-  Assert (visited.find(n)!=visited.end());
+  Assert(visited.find(n) != visited.end());
   return visited[n];
 }
 

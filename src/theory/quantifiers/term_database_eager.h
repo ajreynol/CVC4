@@ -20,8 +20,8 @@
 
 #include <vector>
 
-#include "expr/node.h"
 #include "context/cdhashset.h"
+#include "expr/node.h"
 #include "expr/term_canonize.h"
 #include "smt/env_obj.h"
 #include "theory/inference_id.h"

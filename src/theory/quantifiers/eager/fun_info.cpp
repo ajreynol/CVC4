@@ -92,12 +92,10 @@ bool FunInfo::notifyTriggers(TNode t, bool isAsserted)
   // notify the triggers with the same top symbol
   for (eager::TriggerInfo* tr : d_triggers)
   {
-    Trace("eager-inst-debug")
-        << "...notify " << tr->getPattern() << std::endl;
+    Trace("eager-inst-debug") << "...notify " << tr->getPattern() << std::endl;
     if (tr->notifyTerm(t, isAsserted))
     {
-      Trace("eager-inst")
-          << "......conflict " << tr->getPattern() << std::endl;
+      Trace("eager-inst") << "......conflict " << tr->getPattern() << std::endl;
       return true;
     }
   }
@@ -107,14 +105,15 @@ bool FunInfo::notifyTriggers(TNode t, bool isAsserted)
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
   // use the trie
-  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), d_tde.getState(), getTrie(), d_arity);
-  size_t level=0;
-  while (level<i)
+  CDTNodeTrieIterator itt(
+      d_tde.getCdtAlloc(), d_tde.getState(), getTrie(), d_arity);
+  size_t level = 0;
+  while (level < i)
   {
     TNode rc = itt.pushNextChild();
     if (rc.isNull())
     {
-      if (level==0)
+      if (level == 0)
       {
         return false;
       }
@@ -149,14 +148,16 @@ bool FunInfo::refresh()
   // get and add all terms from the wait list
   std::vector<TNode> next;
   d_terms.get(next);
-  Trace("eager-inst-debug") << "...lazy add " << next.size() << " terms" << std::endl;
+  Trace("eager-inst-debug")
+      << "...lazy add " << next.size() << " terms" << std::endl;
   for (TNode n : next)
   {
     if (!addTerm(n))
     {
       continue;
     }
-    // now, notify the triggers, which depends on if n has been asserted in the meantime
+    // now, notify the triggers, which depends on if n has been asserted in the
+    // meantime
     if (notifyTriggers(n, d_tde.isAsserted(n)))
     {
       return true;

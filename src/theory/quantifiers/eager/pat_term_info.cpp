@@ -30,7 +30,10 @@ namespace theory {
 namespace quantifiers {
 namespace eager {
 
-PatTermInfo::PatTermInfo(TermDbEager& tde) : d_tde(tde), d_nbind(0), d_next(nullptr) {}
+PatTermInfo::PatTermInfo(TermDbEager& tde)
+    : d_tde(tde), d_nbind(0), d_next(nullptr)
+{
+}
 
 void PatTermInfo::initialize(TriggerInfo* tr,
                              const Node& t,
@@ -286,10 +289,11 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
   return true;
 }
 
-TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& itt)
+TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
+                                 CDTNodeTrieIterator& itt)
 {
-  Assert (itt.getLevel()>0);
-  size_t level = itt.getLevel()-1;
+  Assert(itt.getLevel() > 0);
+  size_t level = itt.getLevel() - 1;
   QuantifiersState& qs = d_tde.getState();
   PatTermInfo* pti;
   bool success;
@@ -324,9 +328,9 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& 
     {
       // otherwise, if we are iterating on children, pop the previous
       // binding(s).
-      Trace("eager-inst-matching-debug") << "...pop " << d_bindings[level]
-                        << " bindings since we are moving to next child"
-                        << std::endl;
+      Trace("eager-inst-matching-debug")
+          << "...pop " << d_bindings[level]
+          << " bindings since we are moving to next child" << std::endl;
       ie->pop(d_bindings[level]);
       r = null;
     }
@@ -366,7 +370,8 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& 
             success = pti->initMatchingEqc(ie, r);
             if (success)
             {
-              // NOTE: only single term is matched, could iterate on this if successful
+              // NOTE: only single term is matched, could iterate on this if
+              // successful
               success = pti->doMatchingEqcNext(ie);
             }
           }
@@ -400,7 +405,7 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& 
     }
   } while (!itt.hasCurrentData());
   TNode ret = itt.getCurrentData();
-  Assert (!ret.isNull());
+  Assert(!ret.isNull());
   return ret;
 }
 

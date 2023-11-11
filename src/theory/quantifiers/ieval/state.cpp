@@ -73,7 +73,8 @@ void State::setEvaluatorMode(TermEvaluatorMode tev, bool isEager)
 {
   d_tevMode = tev;
   // initialize the term evaluator, which is freshly allocated
-  if (tev == TermEvaluatorMode::CONFLICT || tev == TermEvaluatorMode::PROP || tev==TermEvaluatorMode::PROP_STRICT
+  if (tev == TermEvaluatorMode::CONFLICT || tev == TermEvaluatorMode::PROP
+      || tev == TermEvaluatorMode::PROP_STRICT
       || tev == TermEvaluatorMode::NO_ENTAIL)
   {
     // finding conflict, propagating, or non-entailed instances all
@@ -452,7 +453,8 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
       }
       setInactive = true;
     }
-    else if (d_tevMode == TermEvaluatorMode::PROP_STRICT && !qi.isMaybeConflict())
+    else if (d_tevMode == TermEvaluatorMode::PROP_STRICT
+             && !qi.isMaybeConflict())
     {
       if (TraceIsOn("ieval"))
       {
