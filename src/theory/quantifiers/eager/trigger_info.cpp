@@ -196,7 +196,6 @@ bool TriggerInfo::doMatchingAll()
     varToTerm[d_pattern[v]] = data[v];
   }
   std::map<Node, Node>::iterator it;
-  bool addedInst = false;
   for (const Node& qi : qinsts)
   {
     it = d_quantMap.find(qi);
@@ -215,10 +214,7 @@ bool TriggerInfo::doMatchingAll()
         inst.emplace_back(d_ieval->get(v));
       }
     }
-    if (d_tde.addInstantiation(q, inst, isConflict))
-    {
-      addedInst = true;
-    }
+    d_tde.addInstantiation(q, inst, isConflict);
   }
   if (isConflict)
   {

@@ -289,13 +289,13 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
 TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& itt)
 {
   size_t level = 0;
-  std::vector<bool> iterAllChild;
   Assert(d_children.size() == d_pattern.getNumChildren())
       << "child mismatch " << d_children.size() << " "
       << d_pattern.getNumChildren();
   QuantifiersState& qs = d_tde.getState();
   PatTermInfo* pti;
   bool success;
+  bool allChild;
   TNode pc, r, null;
   do
   {
@@ -303,8 +303,7 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& 
     pti = d_children[level];
     success = true;
     pc = d_pattern[level];
-    Assert(level <= iterAllChild.size());
-    if (level == iterAllChild.size())
+    if (!itt.hasCurrentIterated(allChild))
     {
       // determine if there is a specific child we are traversing to
       if (pti != nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
@@ -322,14 +321,12 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& 
       }
       Trace("eager-inst-matching-debug")
           << "[level " << level << "] traverse " << r << std::endl;
-      // if r is null
-      iterAllChild.push_back(r.isNull());
     }
-    else if (iterAllChild[level])
+    else if (allChild)
     {
       // otherwise, if we are iterating on children, pop the previous
       // binding(s).
-      Trace("ajr-temp") << "...pop " << d_bindings[level]
+      Trace("eager-inst-matching-debug") << "...pop " << d_bindings[level]
                         << " bindings since we are moving to next child"
                         << std::endl;
       ie->pop(d_bindings[level]);
@@ -400,7 +397,6 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& 
       }
       // finished with this level, go back
       itt.pop();
-      iterAllChild.pop_back();
       Trace("ajr-temp") << "pop now " << itt.getLevel() << std::endl;
       level--;
     }

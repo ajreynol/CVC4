@@ -179,6 +179,7 @@ TNode CDTNodeTrieIterator::pushNextChild()
   }
   if (sf.d_index==0)
   {
+    Assert (!sf.d_hasIter);
     sf.d_hasIter = true;
     sf.d_iterAllChild = true;
   }
@@ -203,6 +204,7 @@ bool CDTNodeTrieIterator::push(TNode r)
   {
     return false;
   }
+  Assert (!sf.d_hasIter);
   sf.d_hasIter = true;
   sf.d_iterAllChild = false;
   pushInternal(it->second);
@@ -268,7 +270,7 @@ bool CDTNodeTrieIterator::setData(TNode n)
   return d_curData->setData(d_alloc, n);
 }
 
-bool CDTNodeTrieIterator::hasIterated(bool& allChild) const
+bool CDTNodeTrieIterator::hasCurrentIterated(bool& allChild) const
 {
   Assert(!d_stack.empty());
   const StackFrame& sf = d_stack.back();

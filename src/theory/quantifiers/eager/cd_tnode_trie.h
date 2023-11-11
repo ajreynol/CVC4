@@ -135,7 +135,7 @@ class CDTNodeTrieIterator
   /** Get level */
   size_t getLevel() const { return d_stack.size(); }
   /** Has iterated? */
-  bool hasIterated(bool& allChild) const;
+  bool hasCurrentIterated(bool& allChild) const;
  private:
   /** Pointer to the allocator */
   CDTNodeTrieAllocator* d_alloc;
