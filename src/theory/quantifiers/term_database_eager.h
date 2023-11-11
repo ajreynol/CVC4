@@ -93,6 +93,7 @@ class TermDbEager : protected EnvObj
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   bool isPropagatingInstance(Node n);
   Node isPropagatingTerm(Node n);
+  void refresh();
   /** The null node */
   Node d_null;
   /** Reference to the quantifiers state */
@@ -120,7 +121,11 @@ class TermDbEager : protected EnvObj
   /** Are stats enabled? */
   bool d_statsEnabled;
   /** Are we registering terms when they are asserted? */
+  bool d_whenEqc;
+  bool d_whenEqcDelay;
   bool d_whenAsserted;
+  /** Wait list */
+  eager::WaitList d_eqcDelay;
 };
 
 }  // namespace quantifiers

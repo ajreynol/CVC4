@@ -800,12 +800,22 @@ name   = "Quantifiers"
   help       = "Enable eager instantiation"
 
 [[option]]
-  name       = "eagerInstWhenAsserted"
+  name       = "eagerInstWhen"
   category   = "expert"
-  long       = "eager-inst-when-asserted"
-  type       = "bool"
-  default    = "false"
-  help       = "Do eager instantiation based on terms when they appear in assertions (merges)"
+  long       = "eager-inst-when=MODE"
+  type       = "EagerInstWhenMode"
+  default    = "EQC"
+  help       = "mode for when to apply eager instantiation"
+  help_mode  = "Mode for when to apply eager instantiation."
+[[option.mode.EQC]]
+  name = "eqc"
+  help = "Consider terms immediately when added to equality engine."
+[[option.mode.EQC_DELAY]]
+  name = "eqc-delay"
+  help = "Consider terms when added to equality engine, upon assertions."
+[[option.mode.ASSERTED]]
+  name = "asserted"
+  help = "Consider terms when asserted."
 
 [[option]]
   name       = "eagerInstTrigger"

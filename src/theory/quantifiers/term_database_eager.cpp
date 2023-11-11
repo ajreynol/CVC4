@@ -44,7 +44,10 @@ TermDbEager::TermDbEager(Env& env,
           nullptr, false, true, options().quantifiers.eagerInstMergeTriggers),
       d_stats(statisticsRegistry()),
       d_statsEnabled(options().base.statistics),
-      d_whenAsserted(options().quantifiers.eagerInstWhenAsserted)
+      d_whenEqc(options().quantifiers.eagerInstWhen==options::EagerInstWhenMode::EQC),
+      d_whenEqcDelay(options().quantifiers.eagerInstWhen==options::EagerInstWhenMode::EQC_DELAY),
+      d_whenAsserted(options().quantifiers.eagerInstWhen==options::EagerInstWhenMode::ASSERTED),
+      d_eqcDelay(context())
 {
 }
 
@@ -57,6 +60,7 @@ void TermDbEager::assertQuantifier(TNode q)
     // already in conflict
     return;
   }
+  refresh();
   Trace("eager-inst-notify") << "assertQuantifier: " << q << std::endl;
   eager::QuantInfo* qinfo = getQuantInfo(q);
   if (qinfo->notifyAsserted())
@@ -80,8 +84,12 @@ void TermDbEager::eqNotifyNewClass(TNode t)
     return;
   }
   Trace("eager-inst-notify") << "eqNotifyNewClass: " << t << std::endl;
-  // always notify now, indicate asserted if d_whenAsserted is false
-  notifyTerm(t, !d_whenAsserted);
+  // always notify now, indicate asserted if d_whenEqc is true
+  notifyTerm(t, d_whenEqc);
+  if (d_whenEqcDelay)
+  {
+    d_eqcDelay.push_back(t);
+  }
   Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
@@ -114,6 +122,10 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
       // otherwise already notified
     }while (!visit.empty());
   }
+  else
+  {
+    refresh();
+  }
   Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
@@ -137,7 +149,7 @@ bool TermDbEager::notifyTerm(TNode t, bool isAsserted)
   }
   // only add once, which we skip if d_whenAsserted is true and isAsserted is true,
   // since we should have already added
-  if (!d_whenAsserted || !isAsserted)
+  if (d_whenEqc || !isAsserted)
   {
     ++(d_stats.d_nterms);
     if (!finfo->addTerm(t))
@@ -383,6 +395,20 @@ Node TermDbEager::isPropagatingTerm(Node n)
   } while (!visit.empty());
   Assert (visited.find(n)!=visited.end());
   return visited[n];
+}
+
+void TermDbEager::refresh()
+{
+  if (!d_whenEqcDelay)
+  {
+    return;
+  }
+  std::vector<TNode> next;
+  d_eqcDelay.get(next);
+  for (TNode n : next)
+  {
+    notifyTerm(n, true);
+  }
 }
 
 }  // namespace quantifiers

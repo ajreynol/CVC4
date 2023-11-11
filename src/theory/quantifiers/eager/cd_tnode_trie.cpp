@@ -177,6 +177,11 @@ TNode CDTNodeTrieIterator::pushNextChild()
     // finished children at the current level
     return d_null;
   }
+  if (sf.d_index==0)
+  {
+    sf.d_hasIter = true;
+    sf.d_iterAllChild = true;
+  }
   ret = sf.d_dom[sf.d_index].first;
   Trace("cdt-debug") << "[" << d_stack.size() << "] Push next " << ret
                      << std::endl;
@@ -198,6 +203,8 @@ bool CDTNodeTrieIterator::push(TNode r)
   {
     return false;
   }
+  sf.d_hasIter = true;
+  sf.d_iterAllChild = false;
   pushInternal(it->second);
   return true;
 }
@@ -261,11 +268,23 @@ bool CDTNodeTrieIterator::setData(TNode n)
   return d_curData->setData(d_alloc, n);
 }
 
+bool CDTNodeTrieIterator::hasIterated(bool& allChild) const
+{
+  Assert(!d_stack.empty());
+  const StackFrame& sf = d_stack.back();
+  if (sf.d_hasIter)
+  {
+    allChild = sf.d_iterAllChild;
+    return true;
+  }
+  return false;
+}
+
 CDTNodeTrieIterator::StackFrame::StackFrame(CDTNodeTrieAllocator* al,
                                             QuantifiersState& qs,
                                             CDTNodeTrie* active,
                                             bool isChildLeaf)
-    : d_active(active), d_index(0)
+    : d_active(active), d_index(0), d_iterAllChild(false), d_hasIter(false)
 {
   Assert(active != nullptr);
   std::map<TNode, CDTNodeTrie*>::iterator it;

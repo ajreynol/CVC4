@@ -160,10 +160,13 @@ bool TriggerInfo::doMatchingAll()
     Trace("eager-inst-matching-debug") << "...failed reset" << std::endl;
     return false;
   }
+  FunInfo* finfo = d_tde.getFunInfo(d_op);
+  QuantifiersState& qs = d_tde.getState();
+  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), d_arity);
   PatTermInfo* root = d_root[0];
   // found an instantiation, we will sanitize it based on the actual term,
   // to ensure the match post-instantiation is syntactic.
-  TNode data = root->doMatchingAll(d_ieval.get());
+  TNode data = root->doMatchingAll(d_ieval.get(), itt);
   if (data.isNull())
   {
     return false;
@@ -217,7 +220,13 @@ bool TriggerInfo::doMatchingAll()
       addedInst = true;
     }
   }
-  return isConflict;
+  if (isConflict)
+  {
+    return true;
+  }
+  // pop the leaf
+  itt.pop();
+  return false;
 }
 
 PatTermInfo* TriggerInfo::getPatTermInfo(TNode p, bool bindOrder)

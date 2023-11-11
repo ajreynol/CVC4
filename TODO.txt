@@ -1,6 +1,7 @@
 TODO:
 - traverse trie eagerly in eager ieval
 - multi-triggers
-- phase requirements
+- phase requirements?
 - relevant domain?
 - nested quantified formulas
+- delay adding

@@ -286,17 +286,14 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
   return true;
 }
 
-TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie)
+TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& itt)
 {
-  FunInfo* finfo = d_tde.getFunInfo(d_op);
-  QuantifiersState& qs = d_tde.getState();
-  size_t arity = finfo->getArity();
-  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), arity);
   size_t level = 0;
   std::vector<bool> iterAllChild;
   Assert(d_children.size() == d_pattern.getNumChildren())
       << "child mismatch " << d_children.size() << " "
       << d_pattern.getNumChildren();
+  QuantifiersState& qs = d_tde.getState();
   PatTermInfo* pti;
   bool success;
   TNode pc, r, null;
@@ -374,7 +371,7 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie)
             success = pti->initMatchingEqc(ie, r);
             if (success)
             {
-              // NOTE: only single term is matched, could iterate on this
+              // NOTE: only single term is matched, could iterate on this if successful
               success = pti->doMatchingEqcNext(ie);
             }
           }
@@ -407,7 +404,7 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie)
       Trace("ajr-temp") << "pop now " << itt.getLevel() << std::endl;
       level--;
     }
-  } while (level < arity);
+  } while (!itt.hasCurrentData());
   TNode ret = itt.getCurrentData();
   Assert (!ret.isNull());
   return ret;

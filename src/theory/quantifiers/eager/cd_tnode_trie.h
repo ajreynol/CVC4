@@ -126,13 +126,16 @@ class CDTNodeTrieIterator
   void pop();
   /** Get the data at the leaf we are at */
   TNode getCurrentData();
+  /** Has data? */
+  bool hasCurrentData() const { return d_curData!=nullptr; }
   /** Get the leaf we are at */
   CDTNodeTrie* getCurrent();
   /** Set the data of the current leaf */
   bool setData(TNode n);
   /** Get level */
   size_t getLevel() const { return d_stack.size(); }
-
+  /** Has iterated? */
+  bool hasIterated(bool& allChild) const;
  private:
   /** Pointer to the allocator */
   CDTNodeTrieAllocator* d_alloc;
@@ -154,6 +157,10 @@ class CDTNodeTrieIterator
     size_t d_index;
     /** Is the iteration finished */
     bool isFinished() const { return d_index == d_dom.size(); }
+    /** Are we iterating on all children? */
+    bool d_iterAllChild;
+    /** Have we pushed at this level yet? */
+    bool d_hasIter;
   };
   /** The iteration stack */
   std::vector<StackFrame> d_stack;
