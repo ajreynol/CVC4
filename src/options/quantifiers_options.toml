@@ -818,6 +818,14 @@ name   = "Quantifiers"
   help = "Consider terms when asserted."
 
 [[option]]
+  name       = "eagerInstProp"
+  category   = "expert"
+  long       = "eager-inst-prop"
+  type       = "bool"
+  default    = "true"
+  help       = "Also consider propagating instances"
+
+[[option]]
   name       = "eagerInstTrigger"
   category   = "expert"
   long       = "eager-inst-trigger=MODE"

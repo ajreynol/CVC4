@@ -288,10 +288,8 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
 
 TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& itt)
 {
-  size_t level = 0;
-  Assert(d_children.size() == d_pattern.getNumChildren())
-      << "child mismatch " << d_children.size() << " "
-      << d_pattern.getNumChildren();
+  Assert (itt.getLevel()>0);
+  size_t level = itt.getLevel()-1;
   QuantifiersState& qs = d_tde.getState();
   PatTermInfo* pti;
   bool success;

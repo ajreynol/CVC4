@@ -15,6 +15,7 @@
 
 #include "theory/quantifiers/eager/trigger_info.h"
 
+#include "options/quantifiers_options.h"
 #include "expr/node_algorithm.h"
 #include "expr/subs.h"
 #include "theory/quantifiers/eager/quant_info.h"
@@ -41,11 +42,13 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
 {
   if (d_ieval == nullptr)
   {
+    const Options& opts = d_tde.getEnv().getOptions();
+    ieval::TermEvaluatorMode tev = opts.quantifiers.eagerInstProp ? ieval::TermEvaluatorMode::PROP : ieval::TermEvaluatorMode::CONFLICT;
     // initialize the evaluator if not already done so
     d_ieval.reset(new ieval::InstEvaluator(d_tde.getEnv(),
                                            d_tde.getState(),
                                            d_tde.getTermDb(),
-                                           ieval::TermEvaluatorMode::PROP,
+                                           tev,
                                            false,
                                            false,
                                            false,
@@ -167,61 +170,61 @@ bool TriggerInfo::doMatchingAll()
   // found an instantiation, we will sanitize it based on the actual term,
   // to ensure the match post-instantiation is syntactic.
   TNode data = root->doMatchingAll(d_ieval.get(), itt);
-  if (data.isNull())
+  while (!data.isNull())
   {
-    return false;
-  }
-  Assert(data.getNumChildren() == d_pattern.getNumChildren());
-  bool isConflict = false;
-  std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
-  if (qinsts.empty())
-  {
-    Assert(false);
-    return false;
-  }
-  ++(stats.d_matchesSuccess);
-  if (isConflict)
-  {
-    ++(stats.d_matchesSuccessConflict);
-  }
-  Trace("eager-inst-matching-debug")
-      << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict
-      << std::endl;
-  // compute the backwards map
-  std::map<Node, Node> varToTerm;
-  std::vector<size_t>& vargs = root->d_vargs;
-  for (size_t v : vargs)
-  {
-    Assert(v < d_pattern.getNumChildren());
-    varToTerm[d_pattern[v]] = data[v];
-  }
-  std::map<Node, Node>::iterator it;
-  for (const Node& qi : qinsts)
-  {
-    it = d_quantMap.find(qi);
-    Assert(it != d_quantMap.end());
-    Node q = it->second;
-    std::vector<Node> inst;
-    for (const Node& v : qi[0])
+    Assert(data.getNumChildren() == d_pattern.getNumChildren());
+    bool isConflict = false;
+    std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
+    if (qinsts.empty())
     {
-      it = varToTerm.find(v);
-      if (it != varToTerm.end())
-      {
-        inst.emplace_back(it->second);
-      }
-      else
-      {
-        inst.emplace_back(d_ieval->get(v));
-      }
+      Assert(false);
+      return false;
     }
-    d_tde.addInstantiation(q, inst, isConflict);
+    ++(stats.d_matchesSuccess);
+    if (isConflict)
+    {
+      ++(stats.d_matchesSuccessConflict);
+    }
+    Trace("eager-inst-matching-debug")
+        << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict
+        << std::endl;
+    // compute the backwards map
+    std::map<Node, Node> varToTerm;
+    std::vector<size_t>& vargs = root->d_vargs;
+    for (size_t v : vargs)
+    {
+      Assert(v < d_pattern.getNumChildren());
+      varToTerm[d_pattern[v]] = data[v];
+    }
+    std::map<Node, Node>::iterator it;
+    for (const Node& qi : qinsts)
+    {
+      it = d_quantMap.find(qi);
+      Assert(it != d_quantMap.end());
+      Node q = it->second;
+      std::vector<Node> inst;
+      for (const Node& v : qi[0])
+      {
+        it = varToTerm.find(v);
+        if (it != varToTerm.end())
+        {
+          inst.emplace_back(it->second);
+        }
+        else
+        {
+          inst.emplace_back(d_ieval->get(v));
+        }
+      }
+      d_tde.addInstantiation(q, inst, isConflict);
+    }
+    if (isConflict)
+    {
+      return true;
+    }
+    // pop the leaf and match again
+    itt.pop();
+    data = root->doMatchingAll(d_ieval.get(), itt);
   }
-  if (isConflict)
-  {
-    return true;
-  }
-  // pop the leaf
-  itt.pop();
   return false;
 }
 
