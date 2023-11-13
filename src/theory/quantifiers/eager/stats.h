@@ -39,6 +39,7 @@ class Stats
   IntStat d_ntriggersActivated;
   IntStat d_nquant;
   IntStat d_nquantNoTrigger;
+  IntStat d_nquantMultiTrigger;
   IntStat d_nquantActivated;
   IntStat d_nterms;
   IntStat d_ntermsMatched;

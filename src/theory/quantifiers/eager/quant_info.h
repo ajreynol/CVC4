@@ -33,6 +33,8 @@ class TermDbEager;
 class QuantifiersRegistry;
 
 namespace eager {
+  
+class FunInfo;
 
 class QuantInfo
 {
@@ -40,7 +42,6 @@ class QuantInfo
   QuantInfo(TermDbEager& tde);
   /** Initialize this for quantified formula q */
   void initialize(QuantifiersRegistry& qr,
-                  expr::TermCanonize& canon,
                   const Node& q);
   /** Set that the quantified formula for this class is asserted */
   bool notifyAsserted();
@@ -49,9 +50,9 @@ class QuantInfo
   /** Is the quantified formula asserted? */
   bool isAsserted() const { return d_asserted.get(); }
   /**
-   * Notify that a trigger has been assigned a status, return true if conflict.
+   * Notify that a function has been encountered.
    */
-  bool notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status);
+  bool notifyFun(FunInfo* fi);
   /** Get the active trigger */
   TriggerInfo* getActiveTrigger();
   /** Get the status */
@@ -60,12 +61,16 @@ class QuantInfo
  private:
   bool updateStatus();
   bool watchAndActivateTrigger(size_t i);
+  void initializeTrigger(const Node& t); 
+  void collectCriticalFuns();
   /** The quantified formula */
   Node d_quant;
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** List of triggers */
   std::vector<TriggerInfo*> d_triggers;
+  /** List of critical functions */
+  std::vector<FunInfo*> d_criticalFuns;
   /** Variable list per trigger */
   std::vector<std::vector<Node>> d_vlists;
   /** Have we indicated that we want to watch */
@@ -76,11 +81,13 @@ class QuantInfo
    * The index in d_triggers that is inactive if we are inactive,
    * or one that we are watching if we are active.
    */
-  context::CDO<size_t> d_tindex;
+  context::CDO<size_t> d_cfindex;
   /** The current status */
   context::CDO<TriggerStatus> d_tstatus;
   /** Have we ever activated this? */
   bool d_hasActivated;
+  /** The multipattern */
+  Node d_mpat;
 };
 
 }  // namespace eager

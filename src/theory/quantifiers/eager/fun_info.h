@@ -34,6 +34,7 @@ class TermDbEager;
 namespace eager {
 
 class TriggerInfo;
+class QuantInfo;
 
 class FunInfo
 {
@@ -41,6 +42,8 @@ class FunInfo
   FunInfo(TermDbEager& tde);
   /** Initialize */
   void initialize(TNode f, size_t nchild);
+  /** Get operator */
+  Node getOperator() const { return d_op; }
   /** Get arity */
   size_t getArity() const { return d_arity; }
   /** Add term */
@@ -55,9 +58,10 @@ class FunInfo
   size_t getNumTerms() const;
   /** Add trigger */
   void addTrigger(TriggerInfo* tinfo);
+  /** Add quantified formula */
+  void watching(QuantInfo* qinfo);
   /** Triggers with this as top symbol */
   std::vector<TriggerInfo*>& getTriggers() { return d_triggers; }
-
  private:
   /** Activate */
   bool setActive(bool active);
@@ -81,6 +85,8 @@ class FunInfo
   WaitList d_terms;
   /** Triggers with this as top symbol */
   std::vector<TriggerInfo*> d_triggers;
+  /** Quantified formulas waiting for a term with this top symbol */
+  std::vector<QuantInfo*> d_quants;
 };
 
 }  // namespace eager

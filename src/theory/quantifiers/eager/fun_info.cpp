@@ -42,29 +42,46 @@ void FunInfo::initialize(TNode f, size_t nchild)
 
 bool FunInfo::addTerm(TNode t)
 {
+  bool needsNotify = !d_quants.empty() && getNumTerms()==0;
   if (!d_active.get())
   {
     // If we are not active, then ignore for now.
     // This is the case if there are no non-ground terms for this function.
     d_terms.push_back(t);
-    return false;
   }
-  ++(d_tde.getStats().d_ntermsAdded);
-  QuantifiersState& qs = d_tde.getState();
-  std::vector<TNode> reps;
-  for (TNode tc : t)
+  else
   {
-    reps.emplace_back(qs.getRepresentative(tc));
+    ++(d_tde.getStats().d_ntermsAdded);
+    QuantifiersState& qs = d_tde.getState();
+    std::vector<TNode> reps;
+    for (TNode tc : t)
+    {
+      reps.emplace_back(qs.getRepresentative(tc));
+    }
+    // add and refactor the trie
+    if (!d_trie.add(d_tde.getCdtAlloc(), qs, reps, t))
+    {
+      ++(d_tde.getStats().d_ntermsAddedCongruent);
+      // congruent
+      return false;
+    }
+    d_count = d_count + 1;
   }
-  // add and refactor the trie
-  if (!d_trie.add(d_tde.getCdtAlloc(), qs, reps, t))
+  // if this is the first term, notify quantified formulas
+  if (needsNotify)
   {
-    ++(d_tde.getStats().d_ntermsAddedCongruent);
-    // congruent
-    return false;
+    Trace("eager-inst-status") << "...now non-zero terms " << d_op << ", #quants=" << d_quants.size() << std::endl;
+    // notify quantified formula
+    for (QuantInfo* q : d_quants)
+    {
+      Trace("eager-inst-status") << "......notify " << q->getQuant() << std::endl;
+      if (q->notifyFun(this))
+      {
+        return true;
+      }
+    }
   }
-  d_count = d_count + 1;
-  return true;
+  return false;
 }
 
 bool FunInfo::notifyTriggers(TNode t, bool isAsserted)
@@ -183,6 +200,11 @@ void FunInfo::addTrigger(TriggerInfo* tinfo)
 {
   d_triggers.emplace_back(tinfo);
   setActive(true);
+}
+
+void FunInfo::watching(QuantInfo* qinfo)
+{
+  d_quants.emplace_back(qinfo);
 }
 
 }  // namespace eager

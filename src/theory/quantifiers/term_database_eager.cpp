@@ -175,12 +175,12 @@ bool TermDbEager::notifyTerm(TNode t, bool isAsserted)
   if (d_whenEqc || !isAsserted)
   {
     ++(d_stats.d_nterms);
-    if (!finfo->addTerm(t))
+    if (finfo->addTerm(t))
     {
-      return false;
+      return true;
     }
   }
-  else if (isCongruent(t))
+  if (isCongruent(t))
   {
     // maybe was already congruent
     return false;
@@ -235,10 +235,10 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     d_tinfo.emplace(t, *this);
     it = d_tinfo.find(t);
     it->second.initialize(t);
+    ++(d_stats.d_ntriggersUnique);
     // add to triggers for the function
     TNode f = d_tdb.getMatchOperator(t);
     Assert(!f.isNull());
-    ++(d_stats.d_ntriggersUnique);
     eager::FunInfo* finfo = getOrMkFunInfo(f, t.getNumChildren());
     finfo->addTrigger(&it->second);
     // the initial status of the trigger is determined by whether f has
@@ -285,7 +285,7 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
     Trace("eager-inst-db") << "mkQuantInfo: " << q << std::endl;
     d_qinfo.emplace(q, *this);
     it = d_qinfo.find(q);
-    it->second.initialize(d_qreg, d_tcanon, q);
+    it->second.initialize(d_qreg, q);
   }
   return &it->second;
 }

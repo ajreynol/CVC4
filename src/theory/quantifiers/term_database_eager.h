@@ -67,6 +67,8 @@ class TermDbEager : protected EnvObj
   eager::QuantInfo* getQuantInfo(TNode q);
   /** Get fun info */
   eager::FunInfo* getFunInfo(TNode f);
+  /** Get or mk fun info */
+  eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
 
   /** Add instantiation */
   bool addInstantiation(const Node& q,
@@ -89,11 +91,11 @@ class TermDbEager : protected EnvObj
   CDTNodeTrieAllocator* getCdtAlloc() { return &d_cdalloc; }
   context::Context* getSatContext() { return context(); }
   bool isStatsEnabled() const { return d_statsEnabled; }
+  expr::TermCanonize& getTermCanon() { return d_tcanon; }
 
  private:
   bool notifyTerm(TNode n, bool notifyTriggers);
   bool notifyQuant(TNode q);
-  eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   bool isPropagatingInstance(Node n);
   Node isPropagatingTerm(Node n);
   /** The null node */

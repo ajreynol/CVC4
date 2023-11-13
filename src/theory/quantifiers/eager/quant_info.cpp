@@ -18,8 +18,10 @@
 #include "options/quantifiers_options.h"
 #include "smt/env.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
+#include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/quantifiers_registry.h"
 #include "theory/quantifiers/term_database_eager.h"
+#include "expr/node_algorithm.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -30,14 +32,13 @@ namespace eager {
 QuantInfo::QuantInfo(TermDbEager& tde)
     : d_tde(tde),
       d_asserted(tde.getSatContext()),
-      d_tindex(tde.getSatContext(), 0),
+      d_cfindex(tde.getSatContext(), 0),
       d_tstatus(tde.getSatContext(), TriggerStatus::NONE),
       d_hasActivated(false)
 {
 }
 
 void QuantInfo::initialize(QuantifiersRegistry& qr,
-                           expr::TermCanonize& canon,
                            const Node& q)
 {
   Assert(d_quant.isNull());
@@ -97,7 +98,6 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   std::vector<Node> multiPatPool;
   for (const Node& p : patTerms)
   {
-    Trace("eager-inst-trigger") << "  * " << p << std::endl;
     inst::TriggerTermInfo& tip = tinfo[p];
     // must be a single trigger
     if (tip.d_fv.size() != nvars)
@@ -112,37 +112,104 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
       continue;
     }
     processed.insert(p);
+    Trace("eager-inst-trigger") << "  * " << p << std::endl;
     // convert back to bound variables
     Node t = qr.substituteInstConstantsToBoundVariables(p, q);
-    // now, canonize
-    std::map<TNode, Node> visited;
-    Node tc = canon.getCanonicalTerm(t, visited);
-    eager::TriggerInfo* ti = d_tde.getTriggerInfo(tc);
-    // get the variable list that we canonized to
-    d_vlists.emplace_back();
-    std::vector<Node>& vlist = d_vlists.back();
-    for (const Node& v : q[0])
-    {
-      Assert(visited.find(v) != visited.end());
-      vlist.emplace_back(visited[v]);
-    }
-    d_triggers.emplace_back(ti);
-    d_triggerWatching.emplace_back(false);
-    ti->watching(this);
-    ++(s.d_ntriggers);
+    initializeTrigger(t);
   }
-  Trace("eager-inst-trigger") << "#triggers=" << d_triggers.size() << std::endl;
   if (d_triggers.empty())
   {
+    // construct a multi-trigger
+    std::vector<Node> fvs;
+    std::vector<Node> mpSel;
+    for (const Node& mp : multiPatPool)
+    {
+      bool newFv = false;
+      inst::TriggerTermInfo& tip = tinfo[mp];
+      for (const Node& v : tip.d_fv)
+      {
+        if (std::find(fvs.begin(), fvs.end(), v)==fvs.end())
+        {
+          newFv = true;
+          fvs.push_back(v);
+        }
+      }
+      if (newFv)
+      {
+        Node mt = qr.substituteInstConstantsToBoundVariables(mp, q);
+        mpSel.emplace_back(mt);
+        if (fvs.size()==nvars)
+        {
+          d_mpat = NodeManager::currentNM()->mkNode(Kind::INST_PATTERN, mpSel);
+          break;
+        }
+      }
+    }
+    if (!d_mpat.isNull())
+    {
+      Trace("eager-inst-trigger") << "  * (multi) " << d_mpat << std::endl;
+    }
+  }
+  Trace("eager-inst-trigger") << "#triggers=" << d_triggers.size() << std::endl;
+  if (!d_mpat.isNull())
+  {
+    ++(s.d_nquantMultiTrigger);
+  }
+  else if (d_triggers.empty())// && d_mpat.isNull())
+  {
+    // nothing to do
     ++(s.d_nquantNoTrigger);
   }
   else
   {
+    collectCriticalFuns();
     d_tstatus = TriggerStatus::INACTIVE;
     updateStatus();
   }
-  // TODO: wait based on symbols in the critical path only
-  // currently we wait based on the activity of the triggers
+}
+
+void QuantInfo::collectCriticalFuns()
+{
+  Trace("eager-inst-trigger") << "Critical functions of " << d_quant << std::endl;
+  TermDb& tdb = d_tde.getTermDb();
+  std::unordered_set<TNode> visited;
+  std::vector<TNode> toVisit;
+  TNode body = d_quant[1];
+  if (body.getKind()==Kind::OR)
+  {
+    toVisit.insert(toVisit.begin(), body.begin(), body.end());
+  }
+  else
+  {
+    toVisit.emplace_back(body);
+  }
+  TNode cur;
+  do
+  {
+    cur = toVisit.back();
+    toVisit.pop_back();
+    if (visited.find(cur)!=visited.end())
+    {
+      continue;
+    }
+    visited.insert(cur);
+    if (cur.getKind()==Kind::NOT || !expr::isBooleanConnective(cur))
+    {
+      Node op = tdb.getMatchOperator(cur);
+      if (!op.isNull())
+      {
+        FunInfo * finfo = d_tde.getOrMkFunInfo(op, cur.getNumChildren());
+        Assert (finfo!=nullptr);
+        if (std::find(d_criticalFuns.begin(), d_criticalFuns.end(), finfo)==d_criticalFuns.end())
+        {
+          d_criticalFuns.push_back(finfo);
+          finfo->watching(this);
+          Trace("eager-inst-trigger") << "* " << op << std::endl;
+        }
+      }
+      toVisit.insert(toVisit.begin(), cur.begin(), cur.end());
+    }
+  }while (!toVisit.empty());
 }
 
 bool QuantInfo::notifyAsserted()
@@ -152,14 +219,15 @@ bool QuantInfo::notifyAsserted()
   return updateStatus();
 }
 
-bool QuantInfo::notifyTriggerStatus(TriggerInfo* tinfo, TriggerStatus status)
+bool QuantInfo::notifyFun(FunInfo* fi)
 {
   // if we are inactive and we just updated the inactive trigger, update status
   if (d_tstatus == TriggerStatus::INACTIVE)
   {
-    Assert(d_tindex.get() < d_triggers.size());
-    if (d_triggers[d_tindex.get()] == tinfo)
+    Assert(d_cfindex.get() < d_criticalFuns.size());
+    if (d_criticalFuns[d_cfindex.get()] == fi)
     {
+      Trace("eager-inst-status") << "...update status " << d_quant << std::endl;
       return updateStatus();
     }
   }
@@ -173,17 +241,18 @@ bool QuantInfo::updateStatus()
     // nothing to do
     return false;
   }
-  Assert(d_tindex.get() < d_triggers.size());
-  do
+  Assert(d_cfindex.get() <= d_criticalFuns.size());
+  while (d_cfindex.get() < d_criticalFuns.size())
   {
-    TriggerInfo* tnext = d_triggers[d_tindex.get()];
-    if (tnext->getStatus() == TriggerStatus::INACTIVE)
+    FunInfo* fnext = d_criticalFuns[d_cfindex.get()];
+    if (fnext->getNumTerms()==0)
     {
-      // the current trigger is still inactive
+      Trace("eager-inst-status") << "..." << d_quant << " is still inactive due to " << fnext->getOperator() << std::endl;
+      // the current function is still inactive
       return false;
     }
-    d_tindex = d_tindex.get() + 1;
-  } while (d_tindex.get() < d_triggers.size());
+    d_cfindex = d_cfindex.get() + 1;
+  }
 
   Trace("eager-inst-status") << "...activate quant: " << d_quant << std::endl;
   if (!d_hasActivated)
@@ -196,20 +265,15 @@ bool QuantInfo::updateStatus()
   size_t minTerms = 0;
   size_t bestIndex = 0;
   bool bestIndexSet = false;
-  for (size_t i = 0, ntriggers = d_triggers.size(); i < ntriggers; i++)
+  if (d_triggers.empty())
   {
-    TriggerInfo* tinfo = d_triggers[i];
-    TriggerStatus s = tinfo->getStatus();
-    Assert(s != TriggerStatus::INACTIVE);
-    if (s == TriggerStatus::ACTIVE)
+    Assert (!d_mpat.isNull());
+    TermDb& tdb = d_tde.getTermDb();
+    // select best within the pattern as the head
+    for (size_t i = 0, ntriggers = d_mpat.getNumChildren(); i < ntriggers; i++)
     {
-      bestIndex = i;
-      bestIndexSet = true;
-      break;
-    }
-    else
-    {
-      Node op = tinfo->getOperator();
+      Node op = tdb.getMatchOperator(d_mpat[i]);
+      Assert (!op.isNull());
       FunInfo* finfo = d_tde.getFunInfo(op);
       size_t cterms = finfo->getNumTerms();
       if (!bestIndexSet || cterms < minTerms)
@@ -219,11 +283,42 @@ bool QuantInfo::updateStatus()
       }
       bestIndexSet = true;
     }
+    bestIndex = 0;
+    // TODO: reorder based on heuristic
+    initializeTrigger(d_mpat);
+  }
+  else
+  {
+    for (size_t i = 0, ntriggers = d_triggers.size(); i < ntriggers; i++)
+    {
+      TriggerInfo* tinfo = d_triggers[i];
+      TriggerStatus s = tinfo->getStatus();
+      Assert(s != TriggerStatus::INACTIVE);
+      if (s == TriggerStatus::ACTIVE)
+      {
+        bestIndex = i;
+        bestIndexSet = true;
+        break;
+      }
+      else
+      {
+        Node op = tinfo->getOperator();
+        Assert (!op.isNull());
+        FunInfo* finfo = d_tde.getFunInfo(op);
+        size_t cterms = finfo->getNumTerms();
+        if (!bestIndexSet || cterms < minTerms)
+        {
+          bestIndex = i;
+          minTerms = cterms;
+        }
+        bestIndexSet = true;
+      }
+    }
   }
   Assert(bestIndexSet);
   Assert(d_triggers.size() == d_vlists.size());
   Assert(d_triggers.size() == d_triggerWatching.size());
-  d_tindex = bestIndex;
+  d_cfindex = bestIndex;
   if (watchAndActivateTrigger(bestIndex))
   {
     return true;
@@ -270,14 +365,33 @@ bool QuantInfo::watchAndActivateTrigger(size_t i)
   return false;
 }
 
+void QuantInfo::initializeTrigger(const Node& t)
+{
+  expr::TermCanonize& canon = d_tde.getTermCanon();
+  std::map<TNode, Node> visited;
+  Node tc = canon.getCanonicalTerm(t, visited);
+  eager::TriggerInfo* ti = d_tde.getTriggerInfo(tc);
+  // get the variable list that we canonized to
+  d_vlists.emplace_back();
+  std::vector<Node>& vlist = d_vlists.back();
+  for (const Node& v : d_quant[0])
+  {
+    Assert(visited.find(v) != visited.end());
+    vlist.emplace_back(visited[v]);
+  }
+  d_triggers.emplace_back(ti);
+  d_triggerWatching.emplace_back(false);
+  ++(d_tde.getStats().d_ntriggers);
+}
+
 TriggerInfo* QuantInfo::getActiveTrigger()
 {
   if (d_tstatus != TriggerStatus::ACTIVE)
   {
     return nullptr;
   }
-  Assert(d_tindex.get() < d_triggers.size());
-  return d_triggers[d_tindex.get()];
+  Assert(d_cfindex.get() < d_triggers.size());
+  return d_triggers[d_cfindex.get()];
 }
 
 }  // namespace eager

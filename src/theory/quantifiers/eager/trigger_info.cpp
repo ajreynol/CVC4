@@ -50,15 +50,6 @@ TriggerInfo::TriggerInfo(TermDbEager& tde)
 {
 }
 
-void TriggerInfo::watching(QuantInfo* qi)
-{
-  if (std::find(d_qinfoWatching.begin(), d_qinfoWatching.end(), qi)
-      == d_qinfoWatching.end())
-  {
-    d_qinfoWatching.emplace_back(qi);
-  }
-}
-
 void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
 {
   if (d_ieval == nullptr)
@@ -329,16 +320,6 @@ bool TriggerInfo::setStatus(TriggerStatus s)
       ++(d_tde.getStats().d_ntriggersActivated);
     }
     i++;
-    // notify that we've changed status to s
-    for (QuantInfo* qi : d_qinfoWatching)
-    {
-      if (qi->notifyTriggerStatus(this, s))
-      {
-        // conflict discovered
-        d_statusToProc.clear();
-        return true;
-      }
-    }
   }
   d_statusToProc.clear();
   return false;
