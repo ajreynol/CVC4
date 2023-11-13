@@ -16,6 +16,7 @@
 #include "theory/quantifiers/ematching/trigger_term_info.h"
 
 #include "theory/quantifiers/term_util.h"
+#include "expr/node_algorithm.h"
 
 using namespace cvc5::internal::kind;
 
@@ -126,8 +127,13 @@ bool TriggerTermInfo::isSimpleTrigger(Node n)
   }
   for (const Node& tc : t)
   {
-    if (tc.getKind() != Kind::INST_CONSTANT
+    Kind tck = tc.getKind();
+    if (tck != Kind::INST_CONSTANT
         && quantifiers::TermUtil::hasInstConstAttr(tc))
+    {
+      return false;
+    }
+    else if (tck != Kind::BOUND_VARIABLE && expr::hasBoundVar(tc))
     {
       return false;
     }

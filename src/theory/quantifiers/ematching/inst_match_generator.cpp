@@ -16,6 +16,7 @@
 #include "theory/quantifiers/ematching/inst_match_generator.h"
 
 #include "expr/dtype_cons.h"
+#include "expr/node_algorithm.h"
 #include "options/quantifiers_options.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
 #include "theory/quantifiers/ematching/candidate_generator.h"
@@ -180,27 +181,27 @@ void InstMatchGenerator::initialize(Node q,
     {
       Node pat = d_match_pattern[i];
       Node qa = quantifiers::TermUtil::getInstConstAttr(pat);
+      InstMatchGenerator* cimg = nullptr;
       if (!qa.isNull())
       {
         if (pat.getKind() == Kind::INST_CONSTANT && qa == q)
         {
           d_children_types.push_back(pat.getAttribute(InstVarNumAttribute()));
+          continue;
         }
-        else
-        {
-          InstMatchGenerator* cimg =
-              getInstMatchGenerator(d_env, d_tparent, q, pat);
-          if (cimg)
-          {
-            d_children.push_back(cimg);
-            d_children_index.push_back(i);
-            d_children_types.push_back(-2);
-          }
-          else
-          {
-            d_children_types.push_back(-1);
-          }
-        }
+        cimg =
+            getInstMatchGenerator(d_env, d_tparent, q, pat);
+      }
+      else if (expr::hasBoundVar(pat) && pat.getKind()!=Kind::BOUND_VARIABLE)
+      {
+        cimg =
+            getInstMatchGenerator(d_env, d_tparent, q, pat);
+      }
+      if (cimg)
+      {
+        d_children.push_back(cimg);
+        d_children_index.push_back(i);
+        d_children_types.push_back(-2);
       }
       else
       {
@@ -330,7 +331,7 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
     }
     else if (ct == -1)
     {
-      if (!d_qstate.areEqual(d_match_pattern[i], t[i]))
+      if (d_match_pattern[i].getKind()!=Kind::BOUND_VARIABLE && !d_qstate.areEqual(d_match_pattern[i], t[i]))
       {
         Trace("matching-fail") << "Match fail arg: " << d_match_pattern[i]
                                << " and " << t[i] << std::endl;
