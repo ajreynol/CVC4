@@ -126,6 +126,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
     }
     d_triggers.emplace_back(ti);
     d_triggerWatching.emplace_back(false);
+    ti->watching(this);
     ++(s.d_ntriggers);
   }
   Trace("eager-inst-trigger") << "#triggers=" << d_triggers.size() << std::endl;
@@ -136,6 +137,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   else
   {
     d_tstatus = TriggerStatus::INACTIVE;
+    updateStatus();
   }
   // TODO: wait based on symbols in the critical path only
   // currently we wait based on the activity of the triggers
@@ -181,7 +183,7 @@ bool QuantInfo::updateStatus()
     d_tindex = d_tindex.get() + 1;
   } while (d_tindex.get() < d_triggers.size());
 
-  Trace("eager-inst-debug") << "Activate quant: " << d_quant << std::endl;
+  Trace("eager-inst-status") << "...activate quant: " << d_quant << std::endl;
   if (!d_hasActivated)
   {
     d_hasActivated = true;

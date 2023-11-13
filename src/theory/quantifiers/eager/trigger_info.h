@@ -42,6 +42,8 @@ enum class TriggerStatus
   WAIT,
   ACTIVE
 };
+/** Write a status to out */
+std::ostream& operator<<(std::ostream& out, TriggerStatus s);
 
 class TriggerInfo
 {
@@ -51,6 +53,7 @@ class TriggerInfo
   TriggerInfo(TermDbEager& tde);
   /** Initialize this trigger for term t */
   void initialize(const Node& t);
+  void watching(QuantInfo* qi);
   /**
    * Notify this trigger that quantified formula q is using it, where vlist
    * specifies the substitution.
@@ -87,7 +90,9 @@ class TriggerInfo
   TermDbEager& d_tde;
   /** Instantiation evaluator */
   std::unique_ptr<ieval::InstEvaluator> d_ieval;
-  /** Quant info */
+  /** Quantified formulas that are watching for this trigger to activate */
+  std::vector<QuantInfo*> d_qinfoWatching;
+  /** Quantified formulas that are actively watching instantiations for this */
   std::vector<QuantInfo*> d_qinfos;
   /** Matching quantified formulas registered to the ieval to their original */
   std::map<Node, Node> d_quantMap;

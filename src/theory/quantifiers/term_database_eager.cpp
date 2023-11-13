@@ -246,6 +246,7 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     if (finfo->getNumTerms() > 0)
     {
       it->second.setStatus(eager::TriggerStatus::WAIT);
+      Trace("eager-inst-db") << "...initial wait" << std::endl;
     }
   }
   return &it->second;

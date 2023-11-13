@@ -92,7 +92,7 @@ bool FunInfo::notifyTriggers(TNode t, bool isAsserted)
   // notify the triggers with the same top symbol
   for (eager::TriggerInfo* tr : d_triggers)
   {
-    Trace("eager-inst-debug2") << "...notify " << tr->getPattern() << std::endl;
+    Trace("eager-inst-debug2") << "...notify " << t << " / " << tr->getPattern() << std::endl;
     if (tr->notifyTerm(t, isAsserted))
     {
       Trace("eager-inst") << "......conflict " << tr->getPattern() << std::endl;
@@ -133,7 +133,7 @@ bool FunInfo::setActive(bool active)
   {
     return false;
   }
-  Trace("eager-inst-debug") << "...activate function " << d_op << std::endl;
+  Trace("eager-inst-status") << "...activate function " << d_op << std::endl;
   d_active = active;
   if (active)
   {
