@@ -283,7 +283,7 @@ bool TermDbEager::addInstantiation(const Node& q,
   Trace("eager-inst-debug") << "addInstantiation: " << q << ", " << terms
                             << ", isConflict=" << isConflict << std::endl;
   // if already propagated, skip
-  if (d_entProps.find(entv)!=d_entProps.end())
+  if (d_entProps.find(entv) != d_entProps.end())
   {
     Trace("eager-inst-debug") << "...already entailed!" << std::endl;
     return false;

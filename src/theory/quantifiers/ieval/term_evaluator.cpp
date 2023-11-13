@@ -335,7 +335,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
       {
         ret = s.getSome();
         Trace("ieval-state-debug")
-              << "...different known branches" << std::endl;
+            << "...different known branches" << std::endl;
       }
     }
   }

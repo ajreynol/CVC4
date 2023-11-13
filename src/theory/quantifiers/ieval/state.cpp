@@ -693,7 +693,7 @@ Node State::getEntailedValue(TNode p) const
       visited[cur] = ret;
     }
   } while (!toVisit.empty());
-  Assert (visited.find(p)!=visited.end());
+  Assert(visited.find(p) != visited.end());
   return visited[p];
 }
 
