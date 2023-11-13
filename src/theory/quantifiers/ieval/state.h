@@ -93,7 +93,7 @@ class State : protected EnvObj
   std::vector<Node> getActiveQuants(bool& isConflict,
                                     bool reqConflict = false) const;
   /** Set quantified formula inactive */
-  void deactivate(TNode q);
+  void setActive(TNode q, bool isActive);
 
   /** debugging */
   std::string toString() const;

@@ -63,6 +63,7 @@ bool State::initialize()
     notifyPatternEqGround(b, bev);
     if (isFinished())
     {
+      Trace("ieval") << "...finished" << std::endl;
       return false;
     }
   }
@@ -504,11 +505,23 @@ void State::notifyQuant(TNode q, TNode p, TNode val)
   // variables assigned.
 }
 
-void State::deactivate(TNode q)
+void State::setActive(TNode q, bool isActive)
 {
   std::map<Node, QuantInfo>::iterator it = d_quantInfo.find(q);
   Assert(it != d_quantInfo.end());
-  setQuantInactive(it->second);
+  if (it->second.isActive()!=isActive)
+  {
+    it->second.setActive(isActive);
+    if (isActive)
+    {
+      d_numActiveQuant = d_numActiveQuant + 1;
+    }
+    else
+    {
+      Assert(d_numActiveQuant.get() > 0);
+      d_numActiveQuant = d_numActiveQuant - 1;
+    }
+  }
 }
 
 void State::setQuantInactive(QuantInfo& qi)

@@ -266,17 +266,14 @@ bool TriggerInfo::resetMatching()
   bool success = false;
   for (QuantInfo* qi : d_qinfos)
   {
-    if (!qi->isAsserted())
-    {
-      Node q = qi->getQuant();
-      Assert(d_quantRMap.find(q) != d_quantRMap.end());
-      d_ieval->deactivate(d_quantRMap[q]);
-    }
-    else
-    {
-      success = true;
-    }
+    Node q = qi->getQuant();
+    Assert(d_quantRMap.find(q) != d_quantRMap.end());
+    bool isActive = qi->isAsserted();
+    d_ieval->setActive(d_quantRMap[q], isActive);
+    Trace("eager-inst-debug") << "deactivate " << q << std::endl;
+    success = success || isActive;
   }
+  Assert (success==d_ieval->isFeasible());
   // success if at least one is asserted
   return success;
 }

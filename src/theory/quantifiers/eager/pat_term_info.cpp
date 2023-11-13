@@ -357,7 +357,7 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
         while (!r.isNull() && !success)
         {
           Trace("eager-inst-matching-debug")
-              << "[level " << level << "] next child " << r << std::endl;
+              << "[level " << level << "] next child " << r << " for " << pc << std::endl;
           if (pc.getKind() == Kind::BOUND_VARIABLE)
           {
             // if we are a bound variable, we try to bind

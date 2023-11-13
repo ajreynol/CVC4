@@ -94,6 +94,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   Trace("eager-inst-trigger") << "Triggers for " << q << ":" << std::endl;
   size_t nvars = q[0].getNumChildren();
   std::unordered_set<Node> processed;
+  std::vector<Node> multiPatPool;
   for (const Node& p : patTerms)
   {
     Trace("eager-inst-trigger") << "  * " << p << std::endl;
@@ -101,6 +102,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
     // must be a single trigger
     if (tip.d_fv.size() != nvars)
     {
+      multiPatPool.emplace_back(p);
       continue;
     }
     // TODO: could use the polarity information in tip to initialize the trigger

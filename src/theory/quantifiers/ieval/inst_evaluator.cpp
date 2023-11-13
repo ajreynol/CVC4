@@ -81,7 +81,7 @@ void InstEvaluator::watch(Node q, Node body)
   d_state.watch(q, vars, body);
 }
 
-void InstEvaluator::deactivate(const Node& q) { d_state.deactivate(q); }
+void InstEvaluator::setActive(const Node& q, bool isActive) { d_state.setActive(q, isActive); }
 
 bool InstEvaluator::initialize()
 {
