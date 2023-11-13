@@ -190,11 +190,22 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
     }
     // inst constant from another quantified formula, treat as ground term?
   }
-  Node r = d_qstate.getRepresentative(d_match_pattern[argIndex]);
-  std::map<TNode, TNodeTrie>::iterator it = tat->d_data.find(r);
-  if (it != tat->d_data.end())
+  // rare case: bound variable from another formula, ignore
+  if (d_match_pattern[argIndex].getKind()==Kind::BOUND_VARIABLE)
   {
-    addInstantiations(m, addedLemmas, argIndex + 1, &(it->second));
+    for (std::pair<const TNode, TNodeTrie>& tt : tat->d_data)
+    {
+      addInstantiations(m, addedLemmas, argIndex + 1, &(tt.second));
+    }
+  }
+  else
+  {
+    Node r = d_qstate.getRepresentative(d_match_pattern[argIndex]);
+    std::map<TNode, TNodeTrie>::iterator it = tat->d_data.find(r);
+    if (it != tat->d_data.end())
+    {
+      addInstantiations(m, addedLemmas, argIndex + 1, &(it->second));
+    }
   }
 }
 
