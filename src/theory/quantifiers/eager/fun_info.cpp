@@ -42,7 +42,7 @@ void FunInfo::initialize(TNode f, size_t nchild)
 
 bool FunInfo::addTerm(TNode t)
 {
-  bool needsNotify = !d_quants.empty() && getNumTerms()==0;
+  bool needsNotify = !d_quants.empty() && getNumTerms() == 0;
   if (!d_active.get())
   {
     // If we are not active, then ignore for now.
@@ -70,11 +70,13 @@ bool FunInfo::addTerm(TNode t)
   // if this is the first term, notify quantified formulas
   if (needsNotify)
   {
-    Trace("eager-inst-status") << "...now non-zero terms " << d_op << ", #quants=" << d_quants.size() << std::endl;
+    Trace("eager-inst-status") << "...now non-zero terms " << d_op
+                               << ", #quants=" << d_quants.size() << std::endl;
     // notify quantified formula
     for (QuantInfo* q : d_quants)
     {
-      Trace("eager-inst-status") << "......notify " << q->getQuant() << std::endl;
+      Trace("eager-inst-status")
+          << "......notify " << q->getQuant() << std::endl;
       if (q->notifyFun(this))
       {
         return true;
@@ -202,10 +204,7 @@ void FunInfo::addTrigger(TriggerInfo* tinfo)
   setActive(true);
 }
 
-void FunInfo::watching(QuantInfo* qinfo)
-{
-  d_quants.emplace_back(qinfo);
-}
+void FunInfo::watching(QuantInfo* qinfo) { d_quants.emplace_back(qinfo); }
 
 }  // namespace eager
 }  // namespace quantifiers

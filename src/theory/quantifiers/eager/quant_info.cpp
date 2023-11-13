@@ -15,13 +15,13 @@
 
 #include "theory/quantifiers/eager/quant_info.h"
 
+#include "expr/node_algorithm.h"
 #include "options/quantifiers_options.h"
 #include "smt/env.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
-#include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/quantifiers_registry.h"
+#include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_database_eager.h"
-#include "expr/node_algorithm.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -38,8 +38,7 @@ QuantInfo::QuantInfo(TermDbEager& tde)
 {
 }
 
-void QuantInfo::initialize(QuantifiersRegistry& qr,
-                           const Node& q)
+void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
 {
   Assert(d_quant.isNull());
   Assert(q.getKind() == Kind::FORALL);
@@ -128,7 +127,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
       inst::TriggerTermInfo& tip = tinfo[mp];
       for (const Node& v : tip.d_fv)
       {
-        if (std::find(fvs.begin(), fvs.end(), v)==fvs.end())
+        if (std::find(fvs.begin(), fvs.end(), v) == fvs.end())
         {
           newFv = true;
           fvs.push_back(v);
@@ -138,7 +137,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
       {
         Node mt = qr.substituteInstConstantsToBoundVariables(mp, q);
         mpSel.emplace_back(mt);
-        if (fvs.size()==nvars)
+        if (fvs.size() == nvars)
         {
           d_mpat = NodeManager::currentNM()->mkNode(Kind::INST_PATTERN, mpSel);
           break;
@@ -155,7 +154,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
   {
     ++(s.d_nquantMultiTrigger);
   }
-  else if (d_triggers.empty())// && d_mpat.isNull())
+  else if (d_triggers.empty())  // && d_mpat.isNull())
   {
     // nothing to do
     ++(s.d_nquantNoTrigger);
@@ -170,12 +169,13 @@ void QuantInfo::initialize(QuantifiersRegistry& qr,
 
 void QuantInfo::collectCriticalFuns()
 {
-  Trace("eager-inst-trigger") << "Critical functions of " << d_quant << std::endl;
+  Trace("eager-inst-trigger")
+      << "Critical functions of " << d_quant << std::endl;
   TermDb& tdb = d_tde.getTermDb();
   std::unordered_set<TNode> visited;
   std::vector<TNode> toVisit;
   TNode body = d_quant[1];
-  if (body.getKind()==Kind::OR)
+  if (body.getKind() == Kind::OR)
   {
     toVisit.insert(toVisit.begin(), body.begin(), body.end());
   }
@@ -188,19 +188,20 @@ void QuantInfo::collectCriticalFuns()
   {
     cur = toVisit.back();
     toVisit.pop_back();
-    if (visited.find(cur)!=visited.end())
+    if (visited.find(cur) != visited.end())
     {
       continue;
     }
     visited.insert(cur);
-    if (cur.getKind()==Kind::NOT || !expr::isBooleanConnective(cur))
+    if (cur.getKind() == Kind::NOT || !expr::isBooleanConnective(cur))
     {
       Node op = tdb.getMatchOperator(cur);
       if (!op.isNull())
       {
-        FunInfo * finfo = d_tde.getOrMkFunInfo(op, cur.getNumChildren());
-        Assert (finfo!=nullptr);
-        if (std::find(d_criticalFuns.begin(), d_criticalFuns.end(), finfo)==d_criticalFuns.end())
+        FunInfo* finfo = d_tde.getOrMkFunInfo(op, cur.getNumChildren());
+        Assert(finfo != nullptr);
+        if (std::find(d_criticalFuns.begin(), d_criticalFuns.end(), finfo)
+            == d_criticalFuns.end())
         {
           d_criticalFuns.push_back(finfo);
           finfo->watching(this);
@@ -209,7 +210,7 @@ void QuantInfo::collectCriticalFuns()
       }
       toVisit.insert(toVisit.begin(), cur.begin(), cur.end());
     }
-  }while (!toVisit.empty());
+  } while (!toVisit.empty());
 }
 
 bool QuantInfo::notifyAsserted()
@@ -245,9 +246,11 @@ bool QuantInfo::updateStatus()
   while (d_cfindex.get() < d_criticalFuns.size())
   {
     FunInfo* fnext = d_criticalFuns[d_cfindex.get()];
-    if (fnext->getNumTerms()==0)
+    if (fnext->getNumTerms() == 0)
     {
-      Trace("eager-inst-status") << "..." << d_quant << " is still inactive due to " << fnext->getOperator() << std::endl;
+      Trace("eager-inst-status")
+          << "..." << d_quant << " is still inactive due to "
+          << fnext->getOperator() << std::endl;
       // the current function is still inactive
       return false;
     }
@@ -267,13 +270,13 @@ bool QuantInfo::updateStatus()
   bool bestIndexSet = false;
   if (d_triggers.empty())
   {
-    Assert (!d_mpat.isNull());
+    Assert(!d_mpat.isNull());
     TermDb& tdb = d_tde.getTermDb();
     // select best within the pattern as the head
     for (size_t i = 0, ntriggers = d_mpat.getNumChildren(); i < ntriggers; i++)
     {
       Node op = tdb.getMatchOperator(d_mpat[i]);
-      Assert (!op.isNull());
+      Assert(!op.isNull());
       FunInfo* finfo = d_tde.getFunInfo(op);
       size_t cterms = finfo->getNumTerms();
       if (!bestIndexSet || cterms < minTerms)
@@ -303,7 +306,7 @@ bool QuantInfo::updateStatus()
       else
       {
         Node op = tinfo->getOperator();
-        Assert (!op.isNull());
+        Assert(!op.isNull());
         FunInfo* finfo = d_tde.getFunInfo(op);
         size_t cterms = finfo->getNumTerms();
         if (!bestIndexSet || cterms < minTerms)

@@ -62,6 +62,7 @@ class FunInfo
   void watching(QuantInfo* qinfo);
   /** Triggers with this as top symbol */
   std::vector<TriggerInfo*>& getTriggers() { return d_triggers; }
+
  private:
   /** Activate */
   bool setActive(bool active);

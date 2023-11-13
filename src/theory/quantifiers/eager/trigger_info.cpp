@@ -264,7 +264,7 @@ bool TriggerInfo::resetMatching()
     Trace("eager-inst-debug") << "deactivate " << q << std::endl;
     success = success || isActive;
   }
-  Assert (success==d_ieval->isFeasible());
+  Assert(success == d_ieval->isFeasible());
   // success if at least one is asserted
   return success;
 }

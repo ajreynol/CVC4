@@ -213,8 +213,8 @@ bool Instantiate::addInstantiationInternal(
   // simplicity, we do not pursue this option (as it would likely only
   // lead to very small gains).
 
-  //AlwaysAssert(id != InferenceId::QUANTIFIERS_INST_CBQI_CONFLICT);
-  // check for positive entailment
+  // AlwaysAssert(id != InferenceId::QUANTIFIERS_INST_CBQI_CONFLICT);
+  //  check for positive entailment
   if (options().quantifiers.instNoEntail)
   {
     // HACK

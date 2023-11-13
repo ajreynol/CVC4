@@ -509,7 +509,7 @@ void State::setActive(TNode q, bool isActive)
 {
   std::map<Node, QuantInfo>::iterator it = d_quantInfo.find(q);
   Assert(it != d_quantInfo.end());
-  if (it->second.isActive()!=isActive)
+  if (it->second.isActive() != isActive)
   {
     it->second.setActive(isActive);
     if (isActive)

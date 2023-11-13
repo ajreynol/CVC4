@@ -27,7 +27,8 @@ Stats::Stats(StatisticsRegistry& sr)
           sr.registerInt("quantifiers::eager::triggers_activated")),
       d_nquant(sr.registerInt("quantifiers::eager::quant")),
       d_nquantNoTrigger(sr.registerInt("quantifiers::eager::quant_no_trigger")),
-      d_nquantMultiTrigger(sr.registerInt("quantifiers::eager::quant_multi_trigger")),
+      d_nquantMultiTrigger(
+          sr.registerInt("quantifiers::eager::quant_multi_trigger")),
       d_nquantActivated(sr.registerInt("quantifiers::eager::quant_activated")),
       d_nterms(sr.registerInt("quantifiers::eager::terms")),
       d_ntermsMatched(sr.registerInt("quantifiers::eager::terms_matched")),

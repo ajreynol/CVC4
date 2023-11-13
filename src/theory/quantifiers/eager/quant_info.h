@@ -33,7 +33,7 @@ class TermDbEager;
 class QuantifiersRegistry;
 
 namespace eager {
-  
+
 class FunInfo;
 
 class QuantInfo
@@ -41,8 +41,7 @@ class QuantInfo
  public:
   QuantInfo(TermDbEager& tde);
   /** Initialize this for quantified formula q */
-  void initialize(QuantifiersRegistry& qr,
-                  const Node& q);
+  void initialize(QuantifiersRegistry& qr, const Node& q);
   /** Set that the quantified formula for this class is asserted */
   bool notifyAsserted();
   /** Get quantified formula */
@@ -61,7 +60,7 @@ class QuantInfo
  private:
   bool updateStatus();
   bool watchAndActivateTrigger(size_t i);
-  void initializeTrigger(const Node& t); 
+  void initializeTrigger(const Node& t);
   void collectCriticalFuns();
   /** The quantified formula */
   Node d_quant;
