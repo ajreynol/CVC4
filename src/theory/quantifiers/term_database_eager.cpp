@@ -271,6 +271,7 @@ eager::QuantInfo* TermDbEager::getQuantInfo(TNode q)
 
 bool TermDbEager::addInstantiation(const Node& q,
                                    std::vector<Node>& terms,
+                                   const Node& entv,
                                    bool isConflict)
 {
   Trace("eager-inst-debug") << "addInstantiation: " << q << ", " << terms

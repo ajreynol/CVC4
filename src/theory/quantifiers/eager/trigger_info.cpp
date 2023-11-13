@@ -333,7 +333,7 @@ void TriggerInfo::processInstantiation(const Node& q,
   Trace("eager-inst-ent") << "...entailed term is " << ent << std::endl;
   std::map<Node, Node>::iterator itq = d_quantMap.find(q);
   Assert(itq != d_quantMap.end());
-  d_tde.addInstantiation(itq->second, inst, isConflict);
+  d_tde.addInstantiation(itq->second, inst, ent, isConflict);
 }
 
 }  // namespace eager

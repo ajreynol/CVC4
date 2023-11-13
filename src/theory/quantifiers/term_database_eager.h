@@ -71,6 +71,7 @@ class TermDbEager : protected EnvObj
   /** Add instantiation */
   bool addInstantiation(const Node& q,
                         std::vector<Node>& terms,
+                        const Node& entv,
                         bool isConflict);
   /**
    * Is the given quantified formula inactive?
