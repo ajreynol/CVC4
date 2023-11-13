@@ -45,10 +45,18 @@ void InstStrategyEagerStd::check(Theory::Effort e, QEffort quant_e)
     return;
   }
   // just refresh
+  //size_t lastWaiting = d_qim.numPendingLemmas();
   Trace("eager-std-engine")
       << "---Eager std Engine Round, effort = " << e << "---" << std::endl;
   d_tde->refresh();
-  Trace("eager-std-engine") << "...finished" << std::endl;
+  Trace("eager-std-engine") << "...finished";
+  /*
+  if (newWaiting>lastWaiting)
+  {
+    Trace("eager-std-engine") << ", #lemmas=" << (newWaiting-lastWaiting);
+  }
+  */
+  Trace("eager-std-engine") << std::endl;
 }
 
 }  // namespace quantifiers

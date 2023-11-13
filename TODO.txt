@@ -4,7 +4,8 @@ TODO:
 - phase requirements on triggers?
 - relevant domain?
 - nested quantified formulas / trigger selection
-- take into account entailed term
+- only consider entailed literals / filter disjunctive?
 
 DONE:
 - delay adding
+- take into account entailed term

@@ -53,6 +53,7 @@ TermDbEager::TermDbEager(Env& env,
       d_whenStdCheck(options().quantifiers.eagerInstWhen
                      == options::EagerInstWhenMode::STANDARD_CHECK),
       d_eqcDelay(context()),
+      d_qDelay(context()),
       d_entProps(context())
 {
 }
@@ -66,13 +67,25 @@ void TermDbEager::assertQuantifier(TNode q)
     // already in conflict
     return;
   }
+  if (d_whenStdCheck)
+  {
+    d_qDelay.push_back(q);
+    return;
+  }
   if (d_whenEqcDelay)
   {
     refresh();
   }
+  // notify now
+  notifyQuant(q);
+}
+
+bool TermDbEager::notifyQuant(TNode q)
+{
   Trace("eager-inst-notify") << "assertQuantifier: " << q << std::endl;
   eager::QuantInfo* qinfo = getQuantInfo(q);
-  if (qinfo->notifyAsserted())
+  bool ret = qinfo->notifyAsserted();
+  if (ret)
   {
     // trigger initialized which generated conflicting instantiation
     Trace("eager-inst-notify") << "...conflict" << std::endl;
@@ -83,6 +96,7 @@ void TermDbEager::assertQuantifier(TNode q)
   }
   // do pending
   d_qim->doPending();
+  return ret;
 }
 
 void TermDbEager::eqNotifyNewClass(TNode t)
@@ -418,10 +432,22 @@ Node TermDbEager::isPropagatingTerm(Node n)
 void TermDbEager::refresh()
 {
   std::vector<TNode> next;
+  d_qDelay.get(next);
+  for (TNode n : next)
+  {
+    if (notifyQuant(n))
+    {
+      return;
+    }
+  }
+  next.clear();
   d_eqcDelay.get(next);
   for (TNode n : next)
   {
-    notifyTerm(n, true);
+    if (notifyTerm(n, true))
+    {
+      return;
+    }
   }
 }
 

@@ -92,6 +92,7 @@ class TermDbEager : protected EnvObj
 
  private:
   bool notifyTerm(TNode n, bool notifyTriggers);
+  bool notifyQuant(TNode q);
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   bool isPropagatingInstance(Node n);
   Node isPropagatingTerm(Node n);
@@ -128,6 +129,8 @@ class TermDbEager : protected EnvObj
   bool d_whenStdCheck;
   /** Wait list */
   eager::WaitList d_eqcDelay;
+  /** Wait list */
+  eager::WaitList d_qDelay;
   /** Things that have been propagated */
   context::CDHashSet<Node> d_entProps;
 };
