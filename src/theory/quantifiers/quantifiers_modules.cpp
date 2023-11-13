@@ -56,6 +56,11 @@ void QuantifiersModules::initialize(Env& env,
     d_iae.reset(new InstStrategyAllEager(env, qs, qim, qr, tr));
     modules.push_back(d_iae.get());
   }
+  if (options.quantifiers.eagerInst && options.quantifiers.eagerInstWhen==options::EagerInstWhenMode::STANDARD_CHECK)
+  {
+    d_ies.reset(new InstStrategyEagerStd(env, qs, qim, qr, tr));
+    modules.push_back(d_ies.get());
+  }
   if (options.quantifiers.conflictBasedInst)
   {
     d_qcf.reset(new QuantConflictFind(env, qs, qim, qr, tr));

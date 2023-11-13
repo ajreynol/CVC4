@@ -870,6 +870,8 @@ libcvc5_add_sources(
   theory/quantifiers/inst_match_trie.h
   theory/quantifiers/inst_strategy_all_eager.cpp
   theory/quantifiers/inst_strategy_all_eager.h
+  theory/quantifiers/inst_strategy_eager_std.cpp
+  theory/quantifiers/inst_strategy_eager_std.h
   theory/quantifiers/inst_strategy_enumerative.cpp
   theory/quantifiers/inst_strategy_enumerative.h
   theory/quantifiers/inst_strategy_mbqi.cpp

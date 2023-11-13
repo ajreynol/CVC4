@@ -816,6 +816,9 @@ name   = "Quantifiers"
 [[option.mode.ASSERTED]]
   name = "asserted"
   help = "Consider terms when asserted."
+[[option.mode.STANDARD_CHECK]]
+  name = "std-check"
+  help = "Consider terms at standard check."
 
 [[option]]
   name       = "eagerInstProp"

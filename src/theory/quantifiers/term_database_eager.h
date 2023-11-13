@@ -80,6 +80,7 @@ class TermDbEager : protected EnvObj
    */
   bool isInactive(const Node& q);
   bool isAsserted(TNode n);
+  void refresh();
   //==========
   Env& getEnv() { return d_env; }
   TermDb& getTermDb() { return d_tdb; }
@@ -94,7 +95,6 @@ class TermDbEager : protected EnvObj
   eager::FunInfo* getOrMkFunInfo(TNode f, size_t nchild);
   bool isPropagatingInstance(Node n);
   Node isPropagatingTerm(Node n);
-  void refresh();
   /** The null node */
   Node d_null;
   /** Reference to the quantifiers state */
@@ -125,8 +125,11 @@ class TermDbEager : protected EnvObj
   bool d_whenEqc;
   bool d_whenEqcDelay;
   bool d_whenAsserted;
+  bool d_whenStdCheck;
   /** Wait list */
   eager::WaitList d_eqcDelay;
+  /** Things that have been propagated */
+  context::CDHashSet<Node> d_entProps;
 };
 
 }  // namespace quantifiers

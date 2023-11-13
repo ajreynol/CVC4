@@ -92,7 +92,7 @@ bool FunInfo::notifyTriggers(TNode t, bool isAsserted)
   // notify the triggers with the same top symbol
   for (eager::TriggerInfo* tr : d_triggers)
   {
-    Trace("eager-inst-debug") << "...notify " << tr->getPattern() << std::endl;
+    Trace("eager-inst-debug2") << "...notify " << tr->getPattern() << std::endl;
     if (tr->notifyTerm(t, isAsserted))
     {
       Trace("eager-inst") << "......conflict " << tr->getPattern() << std::endl;
@@ -148,7 +148,7 @@ bool FunInfo::refresh()
   // get and add all terms from the wait list
   std::vector<TNode> next;
   d_terms.get(next);
-  Trace("eager-inst-debug")
+  Trace("eager-inst-debug2")
       << "...lazy add " << next.size() << " terms" << std::endl;
   for (TNode n : next)
   {

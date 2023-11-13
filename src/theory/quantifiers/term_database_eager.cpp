@@ -50,7 +50,10 @@ TermDbEager::TermDbEager(Env& env,
                      == options::EagerInstWhenMode::EQC_DELAY),
       d_whenAsserted(options().quantifiers.eagerInstWhen
                      == options::EagerInstWhenMode::ASSERTED),
-      d_eqcDelay(context())
+      d_whenStdCheck(options().quantifiers.eagerInstWhen
+                     == options::EagerInstWhenMode::STANDARD_CHECK),
+      d_eqcDelay(context()),
+      d_entProps(context())
 {
 }
 
@@ -63,7 +66,10 @@ void TermDbEager::assertQuantifier(TNode q)
     // already in conflict
     return;
   }
-  refresh();
+  if (d_whenEqcDelay)
+  {
+    refresh();
+  }
   Trace("eager-inst-notify") << "assertQuantifier: " << q << std::endl;
   eager::QuantInfo* qinfo = getQuantInfo(q);
   if (qinfo->notifyAsserted())
@@ -89,7 +95,7 @@ void TermDbEager::eqNotifyNewClass(TNode t)
   Trace("eager-inst-notify") << "eqNotifyNewClass: " << t << std::endl;
   // always notify now, indicate asserted if d_whenEqc is true
   notifyTerm(t, d_whenEqc);
-  if (d_whenEqcDelay)
+  if (d_whenEqcDelay || d_whenStdCheck)
   {
     d_eqcDelay.push_back(t);
   }
@@ -125,7 +131,7 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
       // otherwise already notified
     } while (!visit.empty());
   }
-  else
+  else if (d_whenEqcDelay)
   {
     refresh();
   }
@@ -276,6 +282,13 @@ bool TermDbEager::addInstantiation(const Node& q,
 {
   Trace("eager-inst-debug") << "addInstantiation: " << q << ", " << terms
                             << ", isConflict=" << isConflict << std::endl;
+  // if already propagated, skip
+  if (d_entProps.find(entv)!=d_entProps.end())
+  {
+    Trace("eager-inst-debug") << "...already entailed!" << std::endl;
+    return false;
+  }
+  d_entProps.insert(entv);
 #if 0
   Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
   if (!isPropagatingInstance(inst))
@@ -404,10 +417,6 @@ Node TermDbEager::isPropagatingTerm(Node n)
 
 void TermDbEager::refresh()
 {
-  if (!d_whenEqcDelay)
-  {
-    return;
-  }
   std::vector<TNode> next;
   d_eqcDelay.get(next);
   for (TNode n : next)
