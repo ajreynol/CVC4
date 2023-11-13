@@ -34,13 +34,12 @@ std::ostream& operator<<(std::ostream& out, TriggerStatus s)
   switch (s)
   {
     case TriggerStatus::NONE: out << "NONE"; break;
-  case TriggerStatus::INACTIVE: out << "INACTIVE"; break;
-  case TriggerStatus::WAIT: out << "WAIT"; break;
-  case TriggerStatus::ACTIVE: out << "ACTIVE"; break;
+    case TriggerStatus::INACTIVE: out << "INACTIVE"; break;
+    case TriggerStatus::WAIT: out << "WAIT"; break;
+    case TriggerStatus::ACTIVE: out << "ACTIVE"; break;
   }
   return out;
 }
-
 
 TriggerInfo::TriggerInfo(TermDbEager& tde)
     : d_tde(tde),
@@ -53,12 +52,13 @@ TriggerInfo::TriggerInfo(TermDbEager& tde)
 
 void TriggerInfo::watching(QuantInfo* qi)
 {
-  if (std::find(d_qinfoWatching.begin(), d_qinfoWatching.end(), qi) == d_qinfoWatching.end())
+  if (std::find(d_qinfoWatching.begin(), d_qinfoWatching.end(), qi)
+      == d_qinfoWatching.end())
   {
     d_qinfoWatching.emplace_back(qi);
   }
 }
-  
+
 void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
 {
   if (d_ieval == nullptr)
@@ -324,7 +324,8 @@ bool TriggerInfo::setStatus(TriggerStatus s)
       continue;
     }
     d_status = s;
-    Trace("eager-inst-status") << "Set status " << d_pattern << " to " << s << std::endl;
+    Trace("eager-inst-status")
+        << "Set status " << d_pattern << " to " << s << std::endl;
     if (s == TriggerStatus::ACTIVE && !d_hasActivated)
     {
       d_hasActivated = true;
