@@ -145,7 +145,8 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
         if (fvs.size() == nvars)
         {
           // FIXME
-          //d_mpat = NodeManager::currentNM()->mkNode(Kind::INST_PATTERN, mpSel);
+          // d_mpat = NodeManager::currentNM()->mkNode(Kind::INST_PATTERN,
+          // mpSel);
           break;
         }
       }
@@ -162,7 +163,8 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   }
   else
   {
-    Trace("eager-inst-trigger") << "#triggers=" << d_triggers.size() << std::endl;
+    Trace("eager-inst-trigger")
+        << "#triggers=" << d_triggers.size() << std::endl;
   }
   if (d_triggers.empty() && d_mpat.isNull())
   {

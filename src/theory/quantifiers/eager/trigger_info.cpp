@@ -281,8 +281,8 @@ bool TriggerInfo::processInstantiations(const std::map<Node, Node>& varToTerm)
     ++(stats.d_matchesSuccessConflict);
   }
   Trace("eager-inst-matching-debug")
-      << "...success, #quant=" << qinsts.size()
-      << ", conflict=" << isConflict << std::endl;
+      << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict
+      << std::endl;
   std::map<Node, Node>::const_iterator it;
   for (const Node& qi : qinsts)
   {
