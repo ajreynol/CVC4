@@ -306,6 +306,12 @@ bool TermDbEager::addInstantiation(const Node& q,
   Trace("eager-inst-debug")
       << "addInstantiation: " << q << ", " << terms
       << ", isConflict=" << isConflict << ", ent=" << entv << std::endl;
+  // don't propagate connectives
+  Node entvAtom = entv.getKind()==Kind::NOT ? entv[0] : entv;
+  if (expr::isBooleanConnective(entvAtom))
+  {
+    return false;
+  }
   // AlwaysAssert( !isConflict || entv.isConst());
   //  if already propagated, skip
   if (d_entProps.find(entv) != d_entProps.end())
