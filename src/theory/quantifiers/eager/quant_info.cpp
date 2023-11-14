@@ -43,9 +43,14 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   Assert(d_quant.isNull());
   Assert(q.getKind() == Kind::FORALL);
   d_quant = q;
-  // TODO: if we have a nested quantified, don't bother?
   Stats& s = d_tde.getStats();
   ++(s.d_nquant);
+  // TODO: if we have a nested quantified, don't bother?
+  
+  // first, collect critical functions
+  std::unordered_set<TNode> visited;
+  collectCriticalFuns(visited);
+  
   const Options& opts = d_tde.getEnv().getOptions();
   std::map<Node, inst::TriggerTermInfo> tinfo;
   // NOTE: the trigger selection here should be configurable
@@ -161,18 +166,16 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   }
   else
   {
-    collectCriticalFuns();
     d_tstatus = TriggerStatus::INACTIVE;
     updateStatus();
   }
 }
 
-void QuantInfo::collectCriticalFuns()
+void QuantInfo::collectCriticalFuns(std::unordered_set<TNode>& visited)
 {
   Trace("eager-inst-trigger")
       << "Critical functions of " << d_quant << std::endl;
   TermDb& tdb = d_tde.getTermDb();
-  std::unordered_set<TNode> visited;
   std::vector<TNode> toVisit;
   TNode body = d_quant[1];
   if (body.getKind() == Kind::OR)
@@ -193,7 +196,10 @@ void QuantInfo::collectCriticalFuns()
       continue;
     }
     visited.insert(cur);
-    if (cur.getKind() == Kind::NOT || !expr::isBooleanConnective(cur))
+    Kind ck = cur.getKind();
+    // cur is entailed, NOT and EQUAL will make both sides relevant, regardless
+    // NOTE: also the condition of ITE should always be relevant?
+    if (ck == Kind::NOT || ck == Kind::EQUAL || !expr::isBooleanConnective(cur))
     {
       Node op = tdb.getMatchOperator(cur);
       if (!op.isNull())

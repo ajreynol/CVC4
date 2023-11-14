@@ -133,12 +133,14 @@ bool InstEvaluator::pushInternal(TNode v,
   {
     return false;
   }
+  Assert (!s.isNull());
   // push the context
   d_context.push();
   // use the canonical variable for the state
   TNode vc = lookupCanonicalTerm(v);
   // evaluate the term
   Node r = d_state.evaluate(s);
+  Assert (!r.isNull());
   // store the variable mapping
   d_varMap[vc] = r;
   // if we are generalizing failures, check if there is a learned failure

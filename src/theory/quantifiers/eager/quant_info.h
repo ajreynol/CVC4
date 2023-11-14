@@ -61,7 +61,7 @@ class QuantInfo
   bool updateStatus();
   bool watchAndActivateTrigger(size_t i);
   void initializeTrigger(const Node& t);
-  void collectCriticalFuns();
+  void collectCriticalFuns(std::unordered_set<TNode>& visited);
   /** The quantified formula */
   Node d_quant;
   /** Reference to the eager term database */

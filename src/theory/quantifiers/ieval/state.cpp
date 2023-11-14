@@ -672,7 +672,7 @@ Node State::getEntailedValue(TNode p) const
       if (itp != d_pInfo.end())
       {
         eq = itp->second.d_eq.get();
-        if (!isSome(eq))
+        if (!eq.isNull() && !isSome(eq))
         {
           toVisit.pop_back();
           visited[cur] = eq;
@@ -701,8 +701,24 @@ Node State::getEntailedValue(TNode p) const
         childChanged = childChanged || cur[i] != it->second;
         children.push_back(it->second);
       }
-      Node ret = nm->mkNode(cur.getKind(), children);
-      ret = rewrite(ret);
+      Node ret;
+      if (cur.getKind()==Kind::EQUAL)
+      {
+        if (children[0]==children[1])
+        {
+          ret = nm->mkConst(true);
+        }
+        else if (d_qstate.areDisequal(children[0], children[1]))
+        {
+          ret = nm->mkConst(false);
+        }
+      }
+      if (ret.isNull())
+      {
+        ret = nm->mkNode(cur.getKind(), children);
+        ret = rewrite(ret);
+        ret = d_qstate.getRepresentative(ret);
+      }
       visited[cur] = ret;
     }
   } while (!toVisit.empty());

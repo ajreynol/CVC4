@@ -261,7 +261,7 @@ bool TriggerInfo::resetMatching()
     Assert(d_quantRMap.find(q) != d_quantRMap.end());
     bool isActive = qi->isAsserted();
     d_ieval->setActive(d_quantRMap[q], isActive);
-    Trace("eager-inst-debug") << "deactivate " << q << std::endl;
+    Trace("eager-inst-debug") << "setActive " << q << " : " << isActive << std::endl;
     success = success || isActive;
   }
   Assert(success == d_ieval->isFeasible());

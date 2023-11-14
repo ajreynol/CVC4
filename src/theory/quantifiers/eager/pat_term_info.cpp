@@ -401,7 +401,6 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
       }
       // finished with this level, go back
       itt.pop();
-      Trace("ajr-temp") << "pop now " << itt.getLevel() << std::endl;
       level--;
     }
   } while (!itt.hasCurrentData());

@@ -86,7 +86,16 @@ void TermRegistry::finishInit(FirstOrderModel* fm,
   }
 }
 
-void TermRegistry::presolve() {}
+void TermRegistry::presolve()
+{
+  // TODO: clear?
+  /*
+  if (d_termDbEager!=nullptr)
+  {
+    d_termDbEager->presolve();
+  }
+  */
+}
 
 void TermRegistry::addTerm(TNode n, bool withinQuant)
 {
