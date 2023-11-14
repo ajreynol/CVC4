@@ -74,13 +74,13 @@ class PatTermInfo
   bool doMatchingEqcNext(ieval::InstEvaluator* ie);
   /** initialize matching all */
   void initMatchingAll(ieval::InstEvaluator* ie);
-  /** 
+  /**
    * Do the next step in matching all.
    *
    * Must call initMatchingAll before this method.
    */
   bool doMatchingAllNext(ieval::InstEvaluator* ie);
-  /** 
+  /**
    * Get match, add to varToTerm.
    * This maps any variables bound by this trigger during doMatchingAllNext
    * to the syntactic term, based on the leaf of the trie we traversed to.

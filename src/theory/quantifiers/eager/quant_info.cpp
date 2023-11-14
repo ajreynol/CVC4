@@ -254,7 +254,9 @@ bool QuantInfo::updateStatus()
     return false;
   }
   Assert(d_cfindex.get() <= d_criticalFuns.size());
-  Trace("eager-inst-status") << "Update status " << d_quant << " " << d_cfindex.get() << " / " << d_criticalFuns.size() << std::endl;
+  Trace("eager-inst-status")
+      << "Update status " << d_quant << " " << d_cfindex.get() << " / "
+      << d_criticalFuns.size() << std::endl;
   while (d_cfindex.get() < d_criticalFuns.size())
   {
     FunInfo* fnext = d_criticalFuns[d_cfindex.get()];
@@ -290,7 +292,7 @@ bool QuantInfo::updateStatus()
       Node op = tdb.getMatchOperator(d_mpat[i]);
       Assert(!op.isNull());
       FunInfo* finfo = d_tde.getOrMkFunInfo(op, d_mpat[i].getNumChildren());
-      Assert (finfo!=nullptr);
+      Assert(finfo != nullptr);
       size_t cterms = finfo->getNumTerms();
       if (!bestIndexSet || cterms < minTerms)
       {

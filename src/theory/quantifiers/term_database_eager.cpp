@@ -330,7 +330,7 @@ bool TermDbEager::addInstantiation(const Node& q,
   bool ret = d_qim->getInstantiate()->addInstantiation(q, terms, iid);
   if (!ret)
   {
-    //Assert(!isConflict);
+    // Assert(!isConflict);
     Trace("eager-inst-debug") << "...failed!" << std::endl;
     Trace("eager-inst-warn") << "Bad instantiation: " << q << std::endl;
   }

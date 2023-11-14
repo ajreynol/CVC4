@@ -137,12 +137,8 @@ const LogicInfo& QuantifiersState::getLogicInfo() const { return d_logicInfo; }
 
 QuantifiersStatistics& QuantifiersState::getStats() { return d_statistics; }
 
-void QuantifiersState::notifyConflictingInst()
-{
-  d_conflictInst = true;
-}
- 
- 
+void QuantifiersState::notifyConflictingInst() { d_conflictInst = true; }
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

@@ -54,12 +54,12 @@ std::string TriggerInfo::toString() const
 {
   std::stringstream ss;
   ss << d_pattern;
-  if (d_mroots.size()>1)
+  if (d_mroots.size() > 1)
   {
     ss << " [";
-    for (size_t i=1, npats=d_mroots.size(); i<npats; i++)
+    for (size_t i = 1, npats = d_mroots.size(); i < npats; i++)
     {
-      if (i>1)
+      if (i > 1)
       {
         ss << " ";
       }
@@ -177,7 +177,7 @@ bool TriggerInfo::doMatching(TNode t)
     return false;
   }
   // add instantiation(s), which will use no backwards map
-  if (d_mroots.size()>1)
+  if (d_mroots.size() > 1)
   {
     // complete instantiations starting with index 1
     return completeMatching(1);
@@ -208,20 +208,20 @@ bool TriggerInfo::completeMatching(size_t mindex)
   size_t i = mindex;
   size_t ii = mindex;
   size_t msize = d_mroots.size();
-  Assert (i<msize);
+  Assert(i < msize);
   // while we haven't gone to mindex.
   do
   {
     PatTermInfo* cur = d_mroots[i];
     // if we haven't initialized this level yet
-    if (i==ii)
+    if (i == ii)
     {
       cur->initMatchingAll(d_ieval.get());
       ii++;
     }
     if (cur->doMatchingAllNext(d_ieval.get()))
     {
-      if (i+1==msize)
+      if (i + 1 == msize)
       {
         // process instantiations, return true if in conflict
         if (processInstantiations(mindex))
@@ -236,15 +236,14 @@ bool TriggerInfo::completeMatching(size_t mindex)
     }
     else
     {
-      if (i==mindex)
+      if (i == mindex)
       {
         return false;
       }
       i--;
       ii--;
     }
-  }
-  while (i<msize);
+  } while (i < msize);
   return false;
 }
 
@@ -316,9 +315,9 @@ bool TriggerInfo::processInstantiations(size_t mindexStart)
   // map back to appropriate terms.
   // Variables unspecified in varToTerm will use their value in d_ieval.
   std::map<Node, Node> varToTerm;
-  for (size_t i=mindexStart, nroots = d_mroots.size(); i<nroots; i++)
+  for (size_t i = mindexStart, nroots = d_mroots.size(); i < nroots; i++)
   {
-    Assert (d_mroots[i]!=nullptr);
+    Assert(d_mroots[i] != nullptr);
     d_mroots[i]->getMatch(varToTerm);
   }
   bool isConflict = false;
@@ -348,13 +347,13 @@ bool TriggerInfo::processInstantiations(size_t mindexStart)
       it = varToTerm.find(v);
       if (it != varToTerm.end())
       {
-        Assert (!it->second.isNull());
+        Assert(!it->second.isNull());
         inst.emplace_back(it->second);
       }
       else
       {
         TNode val = d_ieval->get(v);
-        Assert (!val.isNull());
+        Assert(!val.isNull());
         inst.emplace_back(val);
       }
     }

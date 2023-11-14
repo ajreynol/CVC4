@@ -79,13 +79,14 @@ class TriggerInfo
   Node getOperator() const { return d_op; }
 
   std::string toString() const;
+
  private:
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t, bool bindOrder);
   /** Reset */
   bool resetMatching();
   /**
-   * Complete matching using doMatchingAll for all patterns in d_mroots 
+   * Complete matching using doMatchingAll for all patterns in d_mroots
    * starting at index mindex. Return true if in conflict.
    */
   bool completeMatching(size_t mindex);
@@ -124,12 +125,12 @@ class TriggerInfo
    * are bound in order.
    */
   std::map<TNode, PatTermInfo> d_pinfo[2];
-  /** 
+  /**
    * The root pattern term, for each binding order (0:bind in order, 1:bind
    * direct variables first).
    */
   PatTermInfo* d_root[2];
-  /** 
+  /**
    * The list of roots we are considering for doMatchingAll. This stores
    * additional patterns for multi-triggers (when d_mroots.size()>1).
    * It stores d_root[0] at index 0.
