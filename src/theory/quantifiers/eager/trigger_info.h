@@ -83,17 +83,18 @@ class TriggerInfo
   PatTermInfo* getPatTermInfo(TNode t, bool bindOrder);
   /** Reset */
   bool resetMatching();
-  /** Process instantiation */
+  /**
+   * Process instantiation for ieval quantified formula q.
+   * @param q the quantified formula
+   * @param inst what to instantiate it with
+   * @param isConflict whether the ieval utility indicated this is a conflicting
+   * instance.
+   */
   void processInstantiation(const Node& q,
                             std::vector<Node>& inst,
                             bool isConflict);
-  /**
-   * Process instantiations, return true if in conflict.
-   * @param varToTerm Mapping from variables to the terms we should use for
-   * them. Variables not in the domain of this map will use their value in
-   * d_ieval.
-   */
-  bool processInstantiations(const std::map<Node, Node>& varMap);
+  /** Process instantiations, return true if in conflict. */
+  bool processInstantiations();
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Instantiation evaluator */

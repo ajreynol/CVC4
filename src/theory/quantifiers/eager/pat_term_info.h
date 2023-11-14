@@ -75,7 +75,7 @@ class PatTermInfo
   /** */
   bool doMatchingAllNext(ieval::InstEvaluator* ie);
   /** */
-  void getMatchingAll(std::map<Node, Node>& varToTerm);
+  void getMatch(std::map<Node, Node>& varToTerm);
 
   /** get ground args */
   const std::vector<size_t>& getGroundArgs() const { return d_gargs; }

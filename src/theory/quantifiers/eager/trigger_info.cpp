@@ -116,6 +116,7 @@ void TriggerInfo::initialize(const Node& t, const std::vector<Node>& mts)
     d_root[i] = pi;
     if (i == 0)
     {
+      d_mroots.emplace_back(nullptr);
       // if we are a multi-trigger, initialize the additional patterns now
       for (const Node& m : mts)
       {
@@ -148,15 +149,15 @@ bool TriggerInfo::doMatching(TNode t)
     Trace("eager-inst-matching-debug") << "...failed reset" << std::endl;
     return false;
   }
+  d_mroots[0] = d_root[1];
   // use the no binding order version of root
   if (!d_root[1]->doMatching(d_ieval.get(), t))
   {
     Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
     return false;
   }
-  // add instantiation(s), with no backwards map
-  std::map<Node, Node> varToTerm;
-  return processInstantiations(varToTerm);
+  // add instantiation(s), which will use no backwards map
+  return processInstantiations();
 }
 
 bool TriggerInfo::doMatchingAll()
@@ -173,16 +174,14 @@ bool TriggerInfo::doMatchingAll()
     return false;
   }
   PatTermInfo* root = d_root[0];
+  d_mroots[0] = root;
   root->initMatchingAll(d_ieval.get());
   // found an instantiation, we will sanitize it based on the actual term,
   // to ensure the match post-instantiation is syntactic.
   while (root->doMatchingAllNext(d_ieval.get()))
   {
-    // compute the backwards map
-    std::map<Node, Node> varToTerm;
-    root->getMatchingAll(varToTerm);
     // now process the instantiations
-    if (processInstantiations(varToTerm))
+    if (processInstantiations())
     {
       // if conflict, return immediately
       return true;
@@ -254,8 +253,18 @@ void TriggerInfo::setStatus(TriggerStatus s)
   }
 }
 
-bool TriggerInfo::processInstantiations(const std::map<Node, Node>& varToTerm)
+bool TriggerInfo::processInstantiations()
 {
+  // For each active pattern term, get its explicit match.
+  // In particular, this is used to ensure that patterns which match all
+  // map back to appropriate terms.
+  // Variables unspecified in varToTerm will use their value in d_ieval.
+  std::map<Node, Node> varToTerm;
+  for (PatTermInfo* p : d_mroots)
+  {
+    Assert (p!=nullptr);
+    p->getMatch(varToTerm);
+  }
   bool isConflict = false;
   std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
   if (qinsts.empty())
@@ -290,6 +299,7 @@ bool TriggerInfo::processInstantiations(const std::map<Node, Node>& varToTerm)
         inst.emplace_back(d_ieval->get(v));
       }
     }
+    // add the instantiation
     processInstantiation(qi, inst, isConflict);
   }
   if (isConflict)

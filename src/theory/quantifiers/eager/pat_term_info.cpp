@@ -469,15 +469,18 @@ bool PatTermInfo::doMatchingAllNext(ieval::InstEvaluator* ie)
   return doMatchingAllInternal(ie);
 }
 
-void PatTermInfo::getMatchingAll(std::map<Node, Node>& varToTerm)
+void PatTermInfo::getMatch(std::map<Node, Node>& varToTerm)
 {
-  // compute the backwards map
-  TNode data = d_itt.getCurrentData();
-  Assert(data.getNumChildren() == d_pattern.getNumChildren());
-  for (size_t v : d_vargs)
+  if (d_itt.hasCurrentData())
   {
-    Assert(v < d_pattern.getNumChildren());
-    varToTerm[d_pattern[v]] = data[v];
+    // compute the backwards map
+    TNode data = d_itt.getCurrentData();
+    Assert(data.getNumChildren() == d_pattern.getNumChildren());
+    for (size_t v : d_vargs)
+    {
+      Assert(v < d_pattern.getNumChildren());
+      varToTerm[d_pattern[v]] = data[v];
+    }
   }
 }
 
