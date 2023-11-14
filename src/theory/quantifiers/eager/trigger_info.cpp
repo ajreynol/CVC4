@@ -88,15 +88,17 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
   if (d_quantMap.find(qs) == d_quantMap.end())
   {
     d_ieval->watch(qs);
-    d_quantMap[qs] = q;
-    d_quantRMap[q] = qs;
   }
+  // update it to most recent?
+  d_quantMap[qs] = q;
+  d_quantRMap[q] = qs;
   // a quantified formula may be signed up to watch the same term from
   // different vars, e.g. P(v1,v2) for forall xy. P(x,y) V P(y,x) V Q(x,y).
   if (std::find(d_qinfos.begin(), d_qinfos.end(), qi) == d_qinfos.end())
   {
     d_qinfos.emplace_back(qi);
   }
+  Trace("eager-inst-debug2") << "Add quant " << q << " to " << d_pattern << std::endl;
 }
 
 void TriggerInfo::initialize(const Node& t)
@@ -268,7 +270,7 @@ bool TriggerInfo::resetMatching()
   for (QuantInfo* qi : d_qinfos)
   {
     Node q = qi->getQuant();
-    Assert(d_quantRMap.find(q) != d_quantRMap.end());
+    Assert(d_quantRMap.find(q) != d_quantRMap.end()) << "Unknown quant " << q << " for " << d_pattern << std::endl;
     bool isActive = qi->isAsserted();
     d_ieval->setActive(d_quantRMap[q], isActive);
     Trace("eager-inst-debug")
