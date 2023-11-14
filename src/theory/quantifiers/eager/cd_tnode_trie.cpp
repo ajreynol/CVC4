@@ -44,7 +44,8 @@ bool CDTNodeTrie::add(CDTNodeTrieAllocator* al,
 {
   size_t nargs = args.size();
   // push using the iterator
-  CDTNodeTrieIterator itt(al, qs, this, nargs);
+  CDTNodeTrieIterator itt(al, qs);
+  itt.initialize(this, nargs);
   for (size_t i = 0; i < nargs; i++)
   {
     if (!itt.push(args[i]))
@@ -158,11 +159,17 @@ CDTNodeTrie* CDTNodeTrieAllocator::alloc()
 }
 
 CDTNodeTrieIterator::CDTNodeTrieIterator(CDTNodeTrieAllocator* a,
-                                         QuantifiersState& qs,
-                                         CDTNodeTrie* cdtnt,
-                                         size_t depth)
-    : d_alloc(a), d_qs(qs), d_curData(nullptr), d_depth(depth)
+                                         QuantifiersState& qs)
+    : d_alloc(a), d_qs(qs), d_curData(nullptr), d_depth(0)
 {
+}
+
+void CDTNodeTrieIterator::initialize(CDTNodeTrie* cdtnt,
+                      size_t depth)
+{
+  d_stack.clear();
+  d_curData = nullptr;
+  d_depth = depth;
   pushInternal(cdtnt);
 }
 

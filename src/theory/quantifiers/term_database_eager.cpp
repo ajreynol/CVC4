@@ -212,7 +212,8 @@ TNode TermDbEager::getCongruentTerm(TNode f, const std::vector<TNode>& args)
     return d_null;
   }
   // add using the iterator
-  CDTNodeTrieIterator itt(&d_cdalloc, d_qs, finfo->getTrie(), args.size());
+  CDTNodeTrieIterator itt(&d_cdalloc, d_qs);
+  itt.initialize(finfo->getTrie(), args.size());
   for (TNode a : args)
   {
     if (!itt.push(a))

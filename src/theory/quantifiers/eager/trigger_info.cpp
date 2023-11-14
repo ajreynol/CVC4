@@ -148,6 +148,7 @@ bool TriggerInfo::doMatching(TNode t)
     Trace("eager-inst-matching-debug") << "...failed reset" << std::endl;
     return false;
   }
+  // use the no binding order version of root
   if (!d_root[1]->doMatching(d_ieval.get(), t))
   {
     Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
@@ -171,32 +172,21 @@ bool TriggerInfo::doMatchingAll()
         << "...doMatchingAll failed reset" << std::endl;
     return false;
   }
-  FunInfo* finfo = d_tde.getFunInfo(d_op);
-  QuantifiersState& qs = d_tde.getState();
-  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), qs, finfo->getTrie(), d_arity);
   PatTermInfo* root = d_root[0];
+  root->initMatchingAll(d_ieval.get());
   // found an instantiation, we will sanitize it based on the actual term,
   // to ensure the match post-instantiation is syntactic.
-  while (root->doMatchingAll(d_ieval.get(), itt))
+  while (root->doMatchingAllNext(d_ieval.get()))
   {
     // compute the backwards map
-    TNode data = itt.getCurrentData();
-    Assert(data.getNumChildren() == d_pattern.getNumChildren());
     std::map<Node, Node> varToTerm;
-    std::vector<size_t>& vargs = root->d_vargs;
-    for (size_t v : vargs)
-    {
-      Assert(v < d_pattern.getNumChildren());
-      varToTerm[d_pattern[v]] = data[v];
-    }
+    root->getMatchingAll(varToTerm);
     // now process the instantiations
     if (processInstantiations(varToTerm))
     {
       // if conflict, return immediately
       return true;
     }
-    // pop the leaf and match again
-    itt.pop();
   }
   Trace("eager-inst-matching-debug")
       << "...doMatchingAll finished" << std::endl;

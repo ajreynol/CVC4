@@ -112,8 +112,9 @@ class CDTNodeTrieIterator
 {
  public:
   CDTNodeTrieIterator(CDTNodeTrieAllocator* al,
-                      QuantifiersState& qs,
-                      CDTNodeTrie* cdtnt,
+                      QuantifiersState& qs);
+  /** initialize */
+  void initialize(CDTNodeTrie* cdtnt,
                       size_t depth);
   /**
    * Get the next child in the iteration and push it.
@@ -134,7 +135,12 @@ class CDTNodeTrieIterator
   bool setData(TNode n);
   /** Get level */
   size_t getLevel() const { return d_stack.size(); }
-  /** Has iterated? */
+  /** 
+   * Has the current level iterated?
+   * @param allChild if this call true, allChild is set to true if we called
+   * pushNextChild at the current level; otherwise it is set to false if we
+   * called push(r).
+   */
   bool hasCurrentIterated(bool& allChild) const;
 
  private:

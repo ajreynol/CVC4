@@ -31,7 +31,7 @@ namespace quantifiers {
 namespace eager {
 
 PatTermInfo::PatTermInfo(TermDbEager& tde)
-    : d_tde(tde), d_nbind(0), d_next(nullptr)
+    : d_tde(tde), d_nbind(0), d_itt(tde.getCdtAlloc(), tde.getState())
 {
 }
 
@@ -289,11 +289,10 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
   return true;
 }
 
-bool PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
-                                CDTNodeTrieIterator& itt)
+bool PatTermInfo::doMatchingAllInternal(ieval::InstEvaluator* ie)
 {
-  Assert(itt.getLevel() > 0);
-  size_t level = itt.getLevel() - 1;
+  Assert(d_itt.getLevel() > 0);
+  size_t level = d_itt.getLevel() - 1;
   QuantifiersState& qs = d_tde.getState();
   PatTermInfo* pti;
   bool success;
@@ -305,7 +304,7 @@ bool PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
     pti = d_children[level];
     success = true;
     pc = d_pattern[level];
-    if (!itt.hasCurrentIterated(allChild))
+    if (!d_itt.hasCurrentIterated(allChild))
     {
       // determine if there is a specific child we are traversing to
       if (pti != nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
@@ -345,7 +344,7 @@ bool PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
       if (!r.isNull())
       {
         // if we are traversing a specific child
-        success = itt.push(r);
+        success = d_itt.push(r);
         Trace("eager-inst-matching-debug")
             << "...success=" << success << std::endl;
       }
@@ -353,7 +352,7 @@ bool PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
       {
         // we are traversing all children, we iterate until we find one that
         // we can successfully match.
-        r = itt.pushNextChild();
+        r = d_itt.pushNextChild();
         success = false;
         while (!r.isNull() && !success)
         {
@@ -380,8 +379,8 @@ bool PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
           // failed, try the next child
           if (!success)
           {
-            itt.pop();
-            r = itt.pushNextChild();
+            d_itt.pop();
+            r = d_itt.pushNextChild();
           }
         }
         Trace("eager-inst-matching-debug")
@@ -401,11 +400,11 @@ bool PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
         return false;
       }
       // finished with this level, go back
-      itt.pop();
+      d_itt.pop();
       level--;
     }
     // while we are not at the leaf
-  } while (!itt.hasCurrentData());
+  } while (!d_itt.hasCurrentData());
   Trace("eager-inst-matching-debug") << "...success" << std::endl;
   return true;
 }
@@ -451,6 +450,35 @@ bool PatTermInfo::doMatchingEqcNext(ieval::InstEvaluator* ie)
     }
   }
   return false;
+}
+
+bool PatTermInfo::initMatchingAll(ieval::InstEvaluator* ie)
+{  
+  FunInfo* finfo = d_tde.getFunInfo(d_op);
+  d_itt.initialize(finfo->getTrie(), d_pattern.getNumChildren());
+  return true;
+}
+
+bool PatTermInfo::doMatchingAllNext(ieval::InstEvaluator* ie)
+{
+  // pop if we already used this
+  if (d_itt.hasCurrentData())
+  {
+    d_itt.pop();
+  }
+  return doMatchingAllInternal(ie);
+}
+
+void PatTermInfo::getMatchingAll(std::map<Node, Node>& varToTerm)
+{
+  // compute the backwards map
+  TNode data = d_itt.getCurrentData();
+  Assert(data.getNumChildren() == d_pattern.getNumChildren());
+  for (size_t v : d_vargs)
+  {
+    Assert(v < d_pattern.getNumChildren());
+    varToTerm[d_pattern[v]] = data[v];
+  }
 }
 
 }  // namespace eager

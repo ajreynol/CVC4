@@ -21,6 +21,7 @@
 #include "context/cdo.h"
 #include "expr/node.h"
 #include "theory/uf/equality_engine.h"
+#include "theory/quantifiers/eager/cd_tnode_trie.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -69,8 +70,12 @@ class PatTermInfo
    * free variables in this pattern term in ie. Otherwise, ie is unmodified.
    */
   bool doMatchingEqcNext(ieval::InstEvaluator* ie);
+  /** initialize matching all */
+  bool initMatchingAll(ieval::InstEvaluator* ie);
   /** */
-  bool doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& itt);
+  bool doMatchingAllNext(ieval::InstEvaluator* ie);
+  /** */
+  void getMatchingAll(std::map<Node, Node>& varToTerm);
 
   /** get ground args */
   const std::vector<size_t>& getGroundArgs() const { return d_gargs; }
@@ -79,6 +84,7 @@ class PatTermInfo
 
  private:
   bool isLegalCandidate(TNode n) const;
+  bool doMatchingAllInternal(ieval::InstEvaluator* ie);
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** The pattern */
@@ -102,8 +108,8 @@ class PatTermInfo
   //======== eqc matching
   TNode d_eqc;
   eq::EqClassIterator d_eqi;
-  /** The next term (for multi-triggers) */
-  PatTermInfo* d_next;
+  //======== all matching
+  CDTNodeTrieIterator d_itt;
 };
 
 }  // namespace eager
