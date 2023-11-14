@@ -42,6 +42,7 @@ void FunInfo::initialize(TNode f, size_t nchild)
 
 bool FunInfo::addTerm(TNode t)
 {
+  // notify if this is the first term of this function we've seen
   bool needsNotify = !d_quants.empty() && getNumTerms() == 0;
   if (!d_active.get())
   {

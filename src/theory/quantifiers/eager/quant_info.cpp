@@ -144,7 +144,8 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
         mpSel.emplace_back(mt);
         if (fvs.size() == nvars)
         {
-          d_mpat = NodeManager::currentNM()->mkNode(Kind::INST_PATTERN, mpSel);
+          // FIXME
+          //d_mpat = NodeManager::currentNM()->mkNode(Kind::INST_PATTERN, mpSel);
           break;
         }
       }
@@ -154,12 +155,16 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
       Trace("eager-inst-trigger") << "  * (multi) " << d_mpat << std::endl;
     }
   }
-  Trace("eager-inst-trigger") << "#triggers=" << d_triggers.size() << std::endl;
   if (!d_mpat.isNull())
   {
     ++(s.d_nquantMultiTrigger);
+    Trace("eager-inst-trigger") << "#multi-trigger=1" << std::endl;
   }
-  else if (d_triggers.empty())  // && d_mpat.isNull())
+  else
+  {
+    Trace("eager-inst-trigger") << "#triggers=" << d_triggers.size() << std::endl;
+  }
+  if (d_triggers.empty() && d_mpat.isNull())
   {
     // nothing to do
     ++(s.d_nquantNoTrigger);
@@ -243,7 +248,7 @@ bool QuantInfo::notifyFun(FunInfo* fi)
 
 bool QuantInfo::updateStatus()
 {
-  if (d_tstatus != TriggerStatus::INACTIVE)
+  if (!d_asserted.get() || d_tstatus != TriggerStatus::INACTIVE)
   {
     // nothing to do
     return false;
@@ -293,7 +298,7 @@ bool QuantInfo::updateStatus()
       bestIndexSet = true;
     }
     bestIndex = 0;
-    // TODO: reorder based on heuristic
+    // TODO: reorder based on heuristic?
     initializeTrigger(d_mpat);
   }
   else
@@ -358,7 +363,7 @@ void QuantInfo::watchAndActivateTrigger(size_t i)
   if (!d_triggerWatching[i])
   {
     Trace("eager-inst-debug")
-        << "Add to watch " << t->getPattern() << std::endl;
+        << "Add watch: " << d_quant << " for " << t->getPattern() << std::endl;
     d_triggerWatching[i] = true;
     t->watch(this, d_vlists[i]);
   }

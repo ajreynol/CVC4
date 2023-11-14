@@ -87,6 +87,13 @@ class TriggerInfo
   void processInstantiation(const Node& q,
                             std::vector<Node>& inst,
                             bool isConflict);
+  /** 
+   * Process instantiations, return true if in conflict.
+   * @param varToTerm Mapping from variables to the terms we should use for
+   * them. Variables not in the domain of this map will use their value in
+   * d_ieval.
+   */
+  bool processInstantiations(const std::map<Node, Node>& varMap);
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Instantiation evaluator */
