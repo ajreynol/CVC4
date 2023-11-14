@@ -290,7 +290,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
 }
 
 bool PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
-                                 CDTNodeTrieIterator& itt)
+                                CDTNodeTrieIterator& itt)
 {
   Assert(itt.getLevel() > 0);
   size_t level = itt.getLevel() - 1;
