@@ -83,6 +83,8 @@ class TriggerInfo
   PatTermInfo* getPatTermInfo(TNode t, bool bindOrder);
   /** Reset */
   bool resetMatching();
+  /** Complete match */
+  bool completeMatching(size_t mindex);
   /**
    * Process instantiation for ieval quantified formula q.
    * @param q the quantified formula

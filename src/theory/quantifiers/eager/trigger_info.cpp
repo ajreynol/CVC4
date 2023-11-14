@@ -175,6 +175,9 @@ bool TriggerInfo::doMatchingAll()
   }
   PatTermInfo* root = d_root[0];
   d_mroots[0] = root;
+  // complete matching at index 0
+  return completeMatching(0);
+  /*
   root->initMatchingAll(d_ieval.get());
   // found an instantiation, we will sanitize it based on the actual term,
   // to ensure the match post-instantiation is syntactic.
@@ -189,6 +192,49 @@ bool TriggerInfo::doMatchingAll()
   }
   Trace("eager-inst-matching-debug")
       << "...doMatchingAll finished" << std::endl;
+  return false;
+  */
+}
+
+bool TriggerInfo::completeMatching(size_t mindex)
+{
+  size_t i = mindex;
+  size_t ii = mindex;
+  size_t msize = d_mroots.size();
+  // while we haven't gone to mindex.
+  while (i<msize)
+  {
+    PatTermInfo* cur = d_mroots[i];
+    if (i==ii)
+    {
+      cur->initMatchingAll(d_ieval.get());
+      ii++;
+    }
+    if (cur->doMatchingAllNext(d_ieval.get()))
+    {
+      if (i==msize)
+      {
+        // process instantiations, return true if in conflict
+        if (processInstantiations())
+        {
+          return true;
+        }
+      }
+      else
+      {
+        i++;
+      }
+    }
+    else
+    {
+      if (i==mindex)
+      {
+        return false;
+      }
+      i--;
+      ii--;
+    }
+  }
   return false;
 }
 
