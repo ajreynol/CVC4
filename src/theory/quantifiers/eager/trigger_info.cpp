@@ -141,9 +141,9 @@ void TriggerInfo::initialize(const Node& t, const std::vector<Node>& mts)
       for (const Node& m : mts)
       {
         // we use bindOrder = true, since we will be matching all
-        pi = getPatTermInfo(m, bindOrder);
-        pi->initialize(this, m, fvs, true, true);
-        d_mroots.emplace_back(pi);
+        PatTermInfo* pim = getPatTermInfo(m, bindOrder);
+        pim->initialize(this, m, fvs, true, true);
+        d_mroots.emplace_back(pim);
       }
       if (pi->d_oargs.empty() && pi->d_gpargs.empty())
       {
@@ -363,11 +363,14 @@ bool TriggerInfo::processInstantiations(size_t mindexStart)
       it = varToTerm.find(v);
       if (it != varToTerm.end())
       {
+        Assert (!it->second.isNull());
         inst.emplace_back(it->second);
       }
       else
       {
-        inst.emplace_back(d_ieval->get(v));
+        TNode val = d_ieval->get(v);
+        Assert (!val.isNull());
+        inst.emplace_back(val);
       }
     }
     // add the instantiation

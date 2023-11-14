@@ -192,7 +192,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
   // TODO: could set "targets" in the inst evaluator eagerly for compound
   // children
   Trace("eager-inst-matching-debug")
-      << "[pat match] " << d_pattern << " " << t << std::endl;
+      << "doMatching " << d_pattern << " " << t << std::endl;
   QuantifiersState& qs = d_tde.getState();
   // ground arguments must match
   for (size_t g : d_gargs)
@@ -301,19 +301,26 @@ bool PatTermInfo::doMatchingAllInternal(ieval::InstEvaluator* ie)
   do
   {
     Assert(level < d_children.size());
+    Assert(level+1==d_itt.getLevel());
     pti = d_children[level];
     success = true;
     pc = d_pattern[level];
     if (!d_itt.hasCurrentIterated(allChild))
     {
       // determine if there is a specific child we are traversing to
-      if (pti != nullptr || pc.getKind() == Kind::BOUND_VARIABLE)
+      if (expr::hasBoundVar(pc))
       {
+        if (pti!=nullptr)
+        {
+          // reset the equivalence class matching here
+          pti->d_eqc = TNode::null();
+        }
         // if a non-ground term, we check whether we already have a value based
         // on the evaluator utility.
         // note this will typically be null if we are a compound child, although
         // it may also be "none".
         r = ie->getValue(pc);
+        r = qs.getRepresentative(r);
       }
       else
       {
@@ -352,37 +359,58 @@ bool PatTermInfo::doMatchingAllInternal(ieval::InstEvaluator* ie)
       {
         // we are traversing all children, we iterate until we find one that
         // we can successfully match.
-        r = d_itt.pushNextChild();
-        success = false;
-        while (!r.isNull() && !success)
+        do
         {
-          Trace("eager-inst-matching-debug")
-              << "[level " << level << "] next child " << r << " for " << pc
-              << std::endl;
-          if (pc.getKind() == Kind::BOUND_VARIABLE)
+          success = true;
+          // if the current child needs to go to the next child.
+          if (pti==nullptr || pti->d_eqc.isNull())
           {
-            // if we are a bound variable, we try to bind
-            success = ie->push(pc, r);
+            r = d_itt.pushNextChild();
+            Trace("eager-inst-matching-debug")
+                << "[level " << level << "] next child " << r << " for " << pc
+                << std::endl;
+            if (r.isNull())
+            {
+              success = false;
+              break;
+            }
+            if (pti!=nullptr)
+            {
+              success = pti->initMatchingEqc(ie, r);
+            }
           }
           else
           {
-            Assert(pti != nullptr);
-            // if we are a compound child, we try to match in the eqc
-            success = pti->initMatchingEqc(ie, r);
-            if (success)
+            r = null;
+            Trace("eager-inst-matching-debug")
+                << "[level " << level << "] continue eqc " << pti->d_eqc << " for " << pc
+                << std::endl;
+          }
+          if (success)
+          {
+            if (pc.getKind() == Kind::BOUND_VARIABLE)
             {
+              Assert (!r.isNull());
+              // if we are a bound variable, we try to bind
+              success = ie->push(pc, r);
+              Trace("eager-inst-matching-debug") << "...push returns " << success << std::endl;
+            }
+            else
+            {
+              Assert(pti != nullptr);
               // NOTE: only single term is matched, could iterate on this if
               // successful
               success = pti->doMatchingEqcNext(ie);
+              Trace("eager-inst-matching-debug") << "...eqc next returns " << success << std::endl;
             }
           }
           // failed, try the next child
-          if (!success)
+          if (!r.isNull() && !success)
           {
             d_itt.pop();
-            r = d_itt.pushNextChild();
           }
         }
+        while (!success);
         Trace("eager-inst-matching-debug")
             << "...success=" << success << std::endl;
       }
@@ -416,6 +444,7 @@ bool PatTermInfo::isLegalCandidate(TNode n) const
 
 bool PatTermInfo::initMatchingEqc(ieval::InstEvaluator* ie, TNode r)
 {
+  //d_eqc = r;
   // otherwise we will match in this equivalence class
   eq::EqualityEngine* ee = d_tde.getState().getEqualityEngine();
   Assert(ee->hasTerm(r));
@@ -431,6 +460,7 @@ bool PatTermInfo::initMatchingEqc(ieval::InstEvaluator* ie, TNode r)
     }
     ++d_eqi;
   }
+  d_eqc = TNode::null();
   return false;
 }
 
@@ -440,20 +470,25 @@ bool PatTermInfo::doMatchingEqcNext(ieval::InstEvaluator* ie)
   while (!d_eqi.isFinished())
   {
     Node n = *d_eqi;
+    Trace("eager-inst-matching-debug2") << "Check in eqc " << n << std::endl;
     ++d_eqi;
     if (isLegalCandidate(n))
     {
+      Trace("eager-inst-matching-debug2")  << "...legal, try" << std::endl;
       if (doMatching(ie, n))
       {
         return true;
       }
     }
   }
+  d_eqc = TNode::null();
   return false;
 }
 
 bool PatTermInfo::initMatchingAll(ieval::InstEvaluator* ie)
 {
+  Trace("eager-inst-matching-debug")
+      << "initMatchingAll " << d_pattern << std::endl;
   FunInfo* finfo = d_tde.getFunInfo(d_op);
   d_itt.initialize(finfo->getTrie(), d_pattern.getNumChildren());
   return true;
@@ -461,6 +496,8 @@ bool PatTermInfo::initMatchingAll(ieval::InstEvaluator* ie)
 
 bool PatTermInfo::doMatchingAllNext(ieval::InstEvaluator* ie)
 {
+  Trace("eager-inst-matching-debug")
+      << "doMatchingAllNext " << d_pattern << std::endl;
   // pop if we already used this
   if (d_itt.hasCurrentData())
   {
@@ -471,6 +508,7 @@ bool PatTermInfo::doMatchingAllNext(ieval::InstEvaluator* ie)
 
 void PatTermInfo::getMatch(std::map<Node, Node>& varToTerm)
 {
+  // if we have data
   if (d_itt.hasCurrentData())
   {
     // compute the backwards map
