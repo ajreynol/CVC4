@@ -51,8 +51,10 @@ class TriggerInfo
 
  public:
   TriggerInfo(TermDbEager& tde);
-  /** Initialize this trigger for term t */
-  void initialize(const Node& t);
+  /** 
+   * Initialize this trigger for term t, or multi-trigger if mts is not empty.
+   */
+  void initialize(const Node& t, const std::vector<Node>& mts);
   /**
    * Notify this trigger that quantified formula q is using it, where vlist
    * specifies the substitution.
@@ -70,8 +72,8 @@ class TriggerInfo
   bool notifyTerm(TNode t, bool isAsserted);
   /** Get status */
   TriggerStatus getStatus() const { return d_status.get(); }
-  /** Set status to s, return true if a conflict is discovered */
-  bool setStatus(TriggerStatus s);
+  /** Set status to s */
+  void setStatus(TriggerStatus s);
 
   Node getPattern() const { return d_pattern; }
   Node getOperator() const { return d_op; }

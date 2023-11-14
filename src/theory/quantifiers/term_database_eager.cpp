@@ -237,20 +237,24 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     Trace("eager-inst-db") << "mkTriggerInfo: " << t << std::endl;
     d_tinfo.emplace(t, *this);
     it = d_tinfo.find(t);
-    it->second.initialize(t);
+    Node tu;
+    std::vector<Node> mtus;
+    if (t.getKind()==Kind::INST_PATTERN)
+    {
+      tu = t[0];
+      mtus.insert(mtus.end(), t.begin()+1, t.end());
+    }
+    else
+    {
+      tu = t;
+    }
+    it->second.initialize(tu, mtus);
     ++(d_stats.d_ntriggersUnique);
     // add to triggers for the function
-    TNode f = d_tdb.getMatchOperator(t);
+    TNode f = d_tdb.getMatchOperator(tu);
     Assert(!f.isNull());
-    eager::FunInfo* finfo = getOrMkFunInfo(f, t.getNumChildren());
+    eager::FunInfo* finfo = getOrMkFunInfo(f, tu.getNumChildren());
     finfo->addTrigger(&it->second);
-    // the initial status of the trigger is determined by whether f has
-    // ground terms
-    if (finfo->getNumTerms() > 0)
-    {
-      it->second.setStatus(eager::TriggerStatus::WAIT);
-      Trace("eager-inst-db") << "...initial wait" << std::endl;
-    }
   }
   return &it->second;
 }

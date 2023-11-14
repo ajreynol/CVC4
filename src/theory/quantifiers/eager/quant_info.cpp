@@ -327,10 +327,7 @@ bool QuantInfo::updateStatus()
   Assert(d_triggers.size() == d_vlists.size());
   Assert(d_triggers.size() == d_triggerWatching.size());
   d_cfindex = bestIndex;
-  if (watchAndActivateTrigger(bestIndex))
-  {
-    return true;
-  }
+  watchAndActivateTrigger(bestIndex);
   TriggerInfo* bestTrigger = d_triggers[bestIndex];
   // match all
   if (bestTrigger->doMatchingAll())
@@ -354,7 +351,7 @@ bool QuantInfo::updateStatus()
   return false;
 }
 
-bool QuantInfo::watchAndActivateTrigger(size_t i)
+void QuantInfo::watchAndActivateTrigger(size_t i)
 {
   TriggerInfo* t = d_triggers[i];
   // ensure we are signed up to watch the best trigger
@@ -366,11 +363,7 @@ bool QuantInfo::watchAndActivateTrigger(size_t i)
     t->watch(this, d_vlists[i]);
   }
   // activate the trigger, which if it is not already active will
-  if (t->setStatus(TriggerStatus::ACTIVE))
-  {
-    return true;
-  }
-  return false;
+  t->setStatus(TriggerStatus::ACTIVE);
 }
 
 void QuantInfo::initializeTrigger(const Node& t)

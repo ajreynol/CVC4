@@ -101,7 +101,7 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
   Trace("eager-inst-debug2") << "Add quant " << q << " to " << d_pattern << std::endl;
 }
 
-void TriggerInfo::initialize(const Node& t)
+void TriggerInfo::initialize(const Node& t, const std::vector<Node>& mts)
 {
   d_pattern = t;
   d_op = d_tde.getTermDb().getMatchOperator(t);
@@ -284,58 +284,27 @@ bool TriggerInfo::resetMatching()
 
 bool TriggerInfo::notifyTerm(TNode t, bool isAsserted)
 {
-  switch (d_status.get())
+  // Do the matching against term t, only if it is marked as asserted.
+  // This may be notified when
+  // (1) t is a new eqc and eagerInstWhenAsserted is false.
+  // (2) t appears as a (subterm of a) term in a merge and eagerInstWhenAsserted is true.
+  if (d_status.get()==TriggerStatus::ACTIVE && isAsserted)
   {
-    case TriggerStatus::ACTIVE:
-      // Do the matching against term t, only if it is marked as asserted.
-      // This may be notified when
-      // (1) t is a new eqc and eagerInstWhenAsserted is false.
-      // (2) t appears as a (subterm of a) term in a merge and
-      // eagerInstWhenAsserted is true.
-      if (isAsserted)
-      {
-        return doMatching(t);
-      }
-      break;
-    case TriggerStatus::INACTIVE:
-      // we are now waiting to be activated
-      return setStatus(TriggerStatus::WAIT);
-    default: break;
+    return doMatching(t);
   }
   return false;
 }
 
-bool TriggerInfo::setStatus(TriggerStatus s)
+void TriggerInfo::setStatus(TriggerStatus s)
 {
-  bool isEmpty = d_statusToProc.empty();
-  d_statusToProc.emplace_back(s);
-  // avoid reentry
-  if (!isEmpty)
+  d_status = s;
+  Trace("eager-inst-status")
+      << "Set status " << d_pattern << " to " << s << std::endl;
+  if (s == TriggerStatus::ACTIVE && !d_hasActivated)
   {
-    return false;
+    d_hasActivated = true;
+    ++(d_tde.getStats().d_ntriggersActivated);
   }
-  size_t i = 0;
-  while (i < d_statusToProc.size())
-  {
-    s = d_statusToProc[i];
-    i++;
-    if (d_status == s)
-    {
-      // no change in status
-      continue;
-    }
-    d_status = s;
-    Trace("eager-inst-status")
-        << "Set status " << d_pattern << " to " << s << std::endl;
-    if (s == TriggerStatus::ACTIVE && !d_hasActivated)
-    {
-      d_hasActivated = true;
-      ++(d_tde.getStats().d_ntriggersActivated);
-    }
-    i++;
-  }
-  d_statusToProc.clear();
-  return false;
 }
 
 void TriggerInfo::processInstantiation(const Node& q,

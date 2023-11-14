@@ -59,7 +59,7 @@ class QuantInfo
 
  private:
   bool updateStatus();
-  bool watchAndActivateTrigger(size_t i);
+  void watchAndActivateTrigger(size_t i);
   void initializeTrigger(const Node& t);
   void collectCriticalFuns(std::unordered_set<TNode>& visited);
   /** The quantified formula */
