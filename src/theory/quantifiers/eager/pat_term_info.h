@@ -68,18 +68,25 @@ class PatTermInfo
    * Initialize this class to match the next term in the equivalence class
    * we are considering. Returns true if successful, in which case we bind all
    * free variables in this pattern term in ie. Otherwise, ie is unmodified.
+   *
+   * Must call initMatchingEqc successfully before this method.
    */
   bool doMatchingEqcNext(ieval::InstEvaluator* ie);
   /** initialize matching all */
-  bool initMatchingAll(ieval::InstEvaluator* ie);
-  /** */
+  void initMatchingAll(ieval::InstEvaluator* ie);
+  /** 
+   * Do the next step in matching all.
+   *
+   * Must call initMatchingAll before this method.
+   */
   bool doMatchingAllNext(ieval::InstEvaluator* ie);
-  /** */
+  /** 
+   * Get match, add to varToTerm.
+   * This maps any variables bound by this trigger during doMatchingAllNext
+   * to the syntactic term, based on the leaf of the trie we traversed to.
+   */
   void getMatch(std::map<Node, Node>& varToTerm);
 
-  /** get ground args */
-  const std::vector<size_t>& getGroundArgs() const { return d_gargs; }
-  std::vector<PatTermInfo*>& getChildren() { return d_children; }
   size_t getNumBindings() const { return d_nbind; }
 
  private:

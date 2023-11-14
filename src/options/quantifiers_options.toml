@@ -859,6 +859,14 @@ name   = "Quantifiers"
   default    = "false"
   help       = "Do a round of all eager instantiation at full effort"
 
+[[option]]
+  name       = "eagerInstMultiTriggers"
+  category   = "expert"
+  long       = "eager-inst-multi-triggers"
+  type       = "bool"
+  default    = "true"
+  help       = "Enable multi-triggers in eager instantiation"
+
 ### Induction options
 
 [[option]]

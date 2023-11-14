@@ -485,13 +485,12 @@ bool PatTermInfo::doMatchingEqcNext(ieval::InstEvaluator* ie)
   return false;
 }
 
-bool PatTermInfo::initMatchingAll(ieval::InstEvaluator* ie)
+void PatTermInfo::initMatchingAll(ieval::InstEvaluator* ie)
 {
   Trace("eager-inst-matching-debug")
       << "initMatchingAll " << d_pattern << std::endl;
   FunInfo* finfo = d_tde.getFunInfo(d_op);
   d_itt.initialize(finfo->getTrie(), d_pattern.getNumChildren());
-  return true;
 }
 
 bool PatTermInfo::doMatchingAllNext(ieval::InstEvaluator* ie)

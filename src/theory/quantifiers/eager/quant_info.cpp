@@ -121,7 +121,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
     Node t = qr.substituteInstConstantsToBoundVariables(p, q);
     initializeTrigger(t);
   }
-  if (d_triggers.empty())
+  if (d_triggers.empty() && opts.quantifiers.eagerInstMultiTriggers)
   {
     // construct a multi-trigger
     std::vector<Node> fvs;

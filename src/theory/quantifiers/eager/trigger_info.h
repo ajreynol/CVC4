@@ -84,7 +84,10 @@ class TriggerInfo
   PatTermInfo* getPatTermInfo(TNode t, bool bindOrder);
   /** Reset */
   bool resetMatching();
-  /** Complete match */
+  /**
+   * Complete matching using doMatchingAll for all patterns in d_mroots 
+   * starting at index mindex. Return true if in conflict.
+   */
   bool completeMatching(size_t mindex);
   /**
    * Process instantiation for ieval quantified formula q.
@@ -121,14 +124,19 @@ class TriggerInfo
    * are bound in order.
    */
   std::map<TNode, PatTermInfo> d_pinfo[2];
-  /** The root pattern term, for each binding order */
+  /** 
+   * The root pattern term, for each binding order (0:bind in order, 1:bind
+   * direct variables first).
+   */
   PatTermInfo* d_root[2];
-  /** The additional patterns for multi-triggers */
+  /** 
+   * The list of roots we are considering for doMatchingAll. This stores
+   * additional patterns for multi-triggers (when d_mroots.size()>1).
+   * It stores d_root[0] at index 0.
+   */
   std::vector<PatTermInfo*> d_mroots;
   /** Status */
   context::CDO<TriggerStatus> d_status;
-  /** Status proc */
-  std::vector<TriggerStatus> d_statusToProc;
   /** Have we ever activated this? */
   bool d_hasActivated;
   /** Wait list, this would be used if we could deactivate */

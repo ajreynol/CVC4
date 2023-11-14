@@ -137,7 +137,8 @@ void TriggerInfo::initialize(const Node& t, const std::vector<Node>& mts)
     if (i == 0)
     {
       d_mroots.emplace_back(pi);
-      // if we are a multi-trigger, initialize the additional patterns now
+      // If we are a multi-trigger, initialize the additional patterns now.
+      // We start with the fvs that were bound above.
       for (const Node& m : mts)
       {
         // we use bindOrder = true, since we will be matching all
@@ -200,23 +201,6 @@ bool TriggerInfo::doMatchingAll()
   }
   // complete matching at index 0
   return completeMatching(0);
-  /*
-  root->initMatchingAll(d_ieval.get());
-  // found an instantiation, we will sanitize it based on the actual term,
-  // to ensure the match post-instantiation is syntactic.
-  while (root->doMatchingAllNext(d_ieval.get()))
-  {
-    // now process the instantiations
-    if (processInstantiations())
-    {
-      // if conflict, return immediately
-      return true;
-    }
-  }
-  Trace("eager-inst-matching-debug")
-      << "...doMatchingAll finished" << std::endl;
-  return false;
-  */
 }
 
 bool TriggerInfo::completeMatching(size_t mindex)
@@ -229,6 +213,7 @@ bool TriggerInfo::completeMatching(size_t mindex)
   do
   {
     PatTermInfo* cur = d_mroots[i];
+    // if we haven't initialized this level yet
     if (i==ii)
     {
       cur->initMatchingAll(d_ieval.get());
