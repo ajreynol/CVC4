@@ -239,10 +239,10 @@ eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
     it = d_tinfo.find(t);
     Node tu;
     std::vector<Node> mtus;
-    if (t.getKind()==Kind::INST_PATTERN)
+    if (t.getKind() == Kind::INST_PATTERN)
     {
       tu = t[0];
-      mtus.insert(mtus.end(), t.begin()+1, t.end());
+      mtus.insert(mtus.end(), t.begin() + 1, t.end());
     }
     else
     {

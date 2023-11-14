@@ -51,7 +51,7 @@ class TriggerInfo
 
  public:
   TriggerInfo(TermDbEager& tde);
-  /** 
+  /**
    * Initialize this trigger for term t, or multi-trigger if mts is not empty.
    */
   void initialize(const Node& t, const std::vector<Node>& mts);

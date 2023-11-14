@@ -98,7 +98,8 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
   {
     d_qinfos.emplace_back(qi);
   }
-  Trace("eager-inst-debug2") << "Add quant " << q << " to " << d_pattern << std::endl;
+  Trace("eager-inst-debug2")
+      << "Add quant " << q << " to " << d_pattern << std::endl;
 }
 
 void TriggerInfo::initialize(const Node& t, const std::vector<Node>& mts)
@@ -270,7 +271,8 @@ bool TriggerInfo::resetMatching()
   for (QuantInfo* qi : d_qinfos)
   {
     Node q = qi->getQuant();
-    Assert(d_quantRMap.find(q) != d_quantRMap.end()) << "Unknown quant " << q << " for " << d_pattern << std::endl;
+    Assert(d_quantRMap.find(q) != d_quantRMap.end())
+        << "Unknown quant " << q << " for " << d_pattern << std::endl;
     bool isActive = qi->isAsserted();
     d_ieval->setActive(d_quantRMap[q], isActive);
     Trace("eager-inst-debug")
@@ -287,8 +289,9 @@ bool TriggerInfo::notifyTerm(TNode t, bool isAsserted)
   // Do the matching against term t, only if it is marked as asserted.
   // This may be notified when
   // (1) t is a new eqc and eagerInstWhenAsserted is false.
-  // (2) t appears as a (subterm of a) term in a merge and eagerInstWhenAsserted is true.
-  if (d_status.get()==TriggerStatus::ACTIVE && isAsserted)
+  // (2) t appears as a (subterm of a) term in a merge and eagerInstWhenAsserted
+  // is true.
+  if (d_status.get() == TriggerStatus::ACTIVE && isAsserted)
   {
     return doMatching(t);
   }
