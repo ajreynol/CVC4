@@ -665,7 +665,7 @@ Node State::getEntailedValue(TNode p) const
       if (!expr::hasBoundVar(cur))
       {
         toVisit.pop_back();
-        visited[cur] = cur;
+        visited[cur] = d_qstate.getRepresentative(cur);
         continue;
       }
       itp = d_pInfo.find(cur);
@@ -678,6 +678,12 @@ Node State::getEntailedValue(TNode p) const
           visited[cur] = eq;
           continue;
         }
+      }
+      if (cur.isClosure() || cur.getKind()==Kind::BOUND_VARIABLE)
+      {
+        toVisit.pop_back();
+        visited[cur] = cur;
+        continue;
       }
       // push
       visited[cur] = Node::null();

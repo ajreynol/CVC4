@@ -64,6 +64,7 @@ class FunInfo
   std::vector<TriggerInfo*>& getTriggers() { return d_triggers; }
 
  private:
+  bool addTermInternal(TNode t);
   /** Activate */
   bool setActive(bool active);
   /** Refresh */

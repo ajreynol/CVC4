@@ -330,7 +330,7 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
       // binding(s).
       Trace("eager-inst-matching-debug")
           << "...pop " << d_bindings[level]
-          << " bindings since we are moving to next child" << std::endl;
+          << " bindings since we are moving to next child of " << pc << std::endl;
       ie->pop(d_bindings[level]);
       r = null;
     }
@@ -405,6 +405,7 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
     }
   } while (!itt.hasCurrentData());
   TNode ret = itt.getCurrentData();
+  Trace("eager-inst-matching-debug") << "...return " << ret << std::endl;
   Assert(!ret.isNull());
   return ret;
 }

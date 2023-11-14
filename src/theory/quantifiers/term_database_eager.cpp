@@ -158,13 +158,13 @@ bool TermDbEager::notifyTerm(TNode t, bool isAsserted)
   {
     return false;
   }
-  Trace("eager-inst-notify") << "notifyTerm: " << t << std::endl;
   // add to the eager trie
   TNode f = d_tdb.getMatchOperator(t);
   if (f.isNull())
   {
     return false;
   }
+  Trace("eager-inst-notify") << "notifyTerm: " << t << std::endl;
   eager::FunInfo* finfo = getFunInfo(f);
   if (finfo == nullptr)
   {
@@ -177,16 +177,19 @@ bool TermDbEager::notifyTerm(TNode t, bool isAsserted)
     ++(d_stats.d_nterms);
     if (finfo->addTerm(t))
     {
+      Trace("eager-inst-notify") << "...conflict addTerm" << std::endl;
       return true;
     }
   }
   if (isCongruent(t))
   {
+    Trace("eager-inst-notify") << "...congruent" << std::endl;
     // maybe was already congruent
     return false;
   }
   // if we successfully added, we do the matching now
   bool ret = finfo->notifyTriggers(t, isAsserted);
+  Trace("eager-inst-notify") << "...return, conflict=" << ret << std::endl;
   d_qim->doPending();
   return ret;
 }

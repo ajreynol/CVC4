@@ -172,7 +172,7 @@ bool TriggerInfo::doMatchingAll()
   Assert(d_ieval != nullptr);
   if (!resetMatching())
   {
-    Trace("eager-inst-matching-debug") << "...failed reset" << std::endl;
+    Trace("eager-inst-matching-debug") << "...doMatchingAll failed reset" << std::endl;
     return false;
   }
   FunInfo* finfo = d_tde.getFunInfo(d_op);
@@ -189,51 +189,56 @@ bool TriggerInfo::doMatchingAll()
     std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
     if (qinsts.empty())
     {
-      Assert(false);
-      return false;
+      Assert (false);
+      Trace("eager-inst-matching-debug") << "...doMatchingAll no quants" << std::endl;
     }
-    ++(stats.d_matchesSuccess);
-    if (isConflict)
+    else
     {
-      ++(stats.d_matchesSuccessConflict);
-    }
-    Trace("eager-inst-matching-debug")
-        << "...success, #quant=" << qinsts.size() << ", conflict=" << isConflict
-        << std::endl;
-    // compute the backwards map
-    std::map<Node, Node> varToTerm;
-    std::vector<size_t>& vargs = root->d_vargs;
-    for (size_t v : vargs)
-    {
-      Assert(v < d_pattern.getNumChildren());
-      varToTerm[d_pattern[v]] = data[v];
-    }
-    std::map<Node, Node>::iterator it;
-    for (const Node& qi : qinsts)
-    {
-      std::vector<Node> inst;
-      for (const Node& v : qi[0])
+      ++(stats.d_matchesSuccess);
+      if (isConflict)
       {
-        it = varToTerm.find(v);
-        if (it != varToTerm.end())
-        {
-          inst.emplace_back(it->second);
-        }
-        else
-        {
-          inst.emplace_back(d_ieval->get(v));
-        }
+        ++(stats.d_matchesSuccessConflict);
       }
-      processInstantiation(qi, inst, isConflict);
-    }
-    if (isConflict)
-    {
-      return true;
+      Trace("eager-inst-matching-debug")
+          << "...doMatchingAll success, #quant=" << qinsts.size() << ", conflict=" << isConflict
+          << std::endl;
+      // compute the backwards map
+      std::map<Node, Node> varToTerm;
+      std::vector<size_t>& vargs = root->d_vargs;
+      for (size_t v : vargs)
+      {
+        Assert(v < d_pattern.getNumChildren());
+        varToTerm[d_pattern[v]] = data[v];
+      }
+      std::map<Node, Node>::iterator it;
+      for (const Node& qi : qinsts)
+      {
+        std::vector<Node> inst;
+        for (const Node& v : qi[0])
+        {
+          it = varToTerm.find(v);
+          if (it != varToTerm.end())
+          {
+            inst.emplace_back(it->second);
+          }
+          else
+          {
+            inst.emplace_back(d_ieval->get(v));
+          }
+        }
+        processInstantiation(qi, inst, isConflict);
+      }
+      if (isConflict)
+      {
+        Trace("eager-inst-matching-debug") << "...doMatchingAll conflict" << std::endl;
+        return true;
+      }
     }
     // pop the leaf and match again
     itt.pop();
     data = root->doMatchingAll(d_ieval.get(), itt);
   }
+  Trace("eager-inst-matching-debug") << "...doMatchingAll finished" << std::endl;
   return false;
 }
 
@@ -251,6 +256,7 @@ PatTermInfo* TriggerInfo::getPatTermInfo(TNode p, bool bindOrder)
 
 bool TriggerInfo::resetMatching()
 {
+  Trace("eager-inst-debug") << "Reset matching" << std::endl;
   // reset the assignment completely
   d_ieval->resetAll(false);
   // now, ensure we don't watch quantified formulas that are no longer asserted

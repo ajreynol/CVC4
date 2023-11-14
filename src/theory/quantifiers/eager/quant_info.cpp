@@ -302,7 +302,6 @@ bool QuantInfo::updateStatus()
     {
       TriggerInfo* tinfo = d_triggers[i];
       TriggerStatus s = tinfo->getStatus();
-      Assert(s != TriggerStatus::INACTIVE);
       if (s == TriggerStatus::ACTIVE)
       {
         bestIndex = i;
