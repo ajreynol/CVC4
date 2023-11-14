@@ -62,7 +62,7 @@ void TermDbEager::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
 
 void TermDbEager::assertQuantifier(TNode q)
 {
-  if (d_qs.isInConflict())
+  if (d_qs.isConflictingInst())
   {
     // already in conflict
     return;
@@ -101,7 +101,7 @@ bool TermDbEager::notifyQuant(TNode q)
 
 void TermDbEager::eqNotifyNewClass(TNode t)
 {
-  if (d_qs.isInConflict())
+  if (d_qs.isConflictingInst())
   {
     // already in conflict
     return;
@@ -232,7 +232,7 @@ bool TermDbEager::isCongruent(TNode t) const
 
 eager::TriggerInfo* TermDbEager::getTriggerInfo(const Node& t)
 {
-  std::map<TNode, eager::TriggerInfo>::iterator it = d_tinfo.find(t);
+  std::map<Node, eager::TriggerInfo>::iterator it = d_tinfo.find(t);
   if (it == d_tinfo.end())
   {
     Trace("eager-inst-db") << "mkTriggerInfo: " << t << std::endl;
@@ -338,7 +338,7 @@ bool TermDbEager::addInstantiation(const Node& q,
   {
     if (isConflict)
     {
-      d_qs.notifyInConflict();
+      d_qs.notifyConflictingInst();
     }
     ++(d_stats.d_instSuccess);
     Trace("eager-inst-debug") << "...success!" << std::endl;

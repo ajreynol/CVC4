@@ -78,6 +78,7 @@ class TriggerInfo
   Node getPattern() const { return d_pattern; }
   Node getOperator() const { return d_op; }
 
+  std::string toString() const;
  private:
   /** Get patterm term info */
   PatTermInfo* getPatTermInfo(TNode t, bool bindOrder);
@@ -96,7 +97,7 @@ class TriggerInfo
                             std::vector<Node>& inst,
                             bool isConflict);
   /** Process instantiations, return true if in conflict. */
-  bool processInstantiations();
+  bool processInstantiations(size_t mindex);
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Instantiation evaluator */

@@ -50,6 +50,26 @@ TriggerInfo::TriggerInfo(TermDbEager& tde)
 {
 }
 
+std::string TriggerInfo::toString() const
+{
+  std::stringstream ss;
+  ss << d_pattern;
+  if (d_mroots.size()>1)
+  {
+    ss << " [";
+    for (size_t i=1, npats=d_mroots.size(); i<npats; i++)
+    {
+      if (i>1)
+      {
+        ss << " ";
+      }
+      ss << d_mroots[i]->d_pattern;
+    }
+    ss << "]";
+  }
+  return ss.str();
+}
+
 void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
 {
   if (d_ieval == nullptr)
@@ -116,7 +136,7 @@ void TriggerInfo::initialize(const Node& t, const std::vector<Node>& mts)
     d_root[i] = pi;
     if (i == 0)
     {
-      d_mroots.emplace_back(nullptr);
+      d_mroots.emplace_back(pi);
       // if we are a multi-trigger, initialize the additional patterns now
       for (const Node& m : mts)
       {
@@ -140,7 +160,7 @@ bool TriggerInfo::doMatching(TNode t)
   Stats& stats = d_tde.getStats();
   ++(stats.d_matches);
   Trace("eager-inst-matching")
-      << "doMatching " << d_pattern << " " << t << std::endl;
+      << "doMatching " << toString() << " " << t << std::endl;
   Assert(d_ieval != nullptr);
   Assert(t.getNumChildren() == d_pattern.getNumChildren());
   Assert(t.getOperator() == d_pattern.getOperator());
@@ -149,7 +169,6 @@ bool TriggerInfo::doMatching(TNode t)
     Trace("eager-inst-matching-debug") << "...failed reset" << std::endl;
     return false;
   }
-  d_mroots[0] = d_root[1];
   // use the no binding order version of root
   if (!d_root[1]->doMatching(d_ieval.get(), t))
   {
@@ -157,7 +176,13 @@ bool TriggerInfo::doMatching(TNode t)
     return false;
   }
   // add instantiation(s), which will use no backwards map
-  return processInstantiations();
+  if (d_mroots.size()>1)
+  {
+    // complete instantiations starting with index 1
+    return completeMatching(1);
+  }
+  // otherwise just process instantiations now
+  return processInstantiations(1);
 }
 
 bool TriggerInfo::doMatchingAll()
@@ -165,7 +190,7 @@ bool TriggerInfo::doMatchingAll()
   Stats& stats = d_tde.getStats();
   ++(stats.d_matchesAll);
   ++(stats.d_matches);
-  Trace("eager-inst-matching") << "doMatchingAll " << d_pattern << std::endl;
+  Trace("eager-inst-matching") << "doMatchingAll " << toString() << std::endl;
   Assert(d_ieval != nullptr);
   if (!resetMatching())
   {
@@ -173,8 +198,6 @@ bool TriggerInfo::doMatchingAll()
         << "...doMatchingAll failed reset" << std::endl;
     return false;
   }
-  PatTermInfo* root = d_root[0];
-  d_mroots[0] = root;
   // complete matching at index 0
   return completeMatching(0);
   /*
@@ -201,8 +224,9 @@ bool TriggerInfo::completeMatching(size_t mindex)
   size_t i = mindex;
   size_t ii = mindex;
   size_t msize = d_mroots.size();
+  Assert (i<msize);
   // while we haven't gone to mindex.
-  while (i<msize)
+  do
   {
     PatTermInfo* cur = d_mroots[i];
     if (i==ii)
@@ -212,10 +236,10 @@ bool TriggerInfo::completeMatching(size_t mindex)
     }
     if (cur->doMatchingAllNext(d_ieval.get()))
     {
-      if (i==msize)
+      if (i+1==msize)
       {
         // process instantiations, return true if in conflict
-        if (processInstantiations())
+        if (processInstantiations(mindex))
         {
           return true;
         }
@@ -235,6 +259,7 @@ bool TriggerInfo::completeMatching(size_t mindex)
       ii--;
     }
   }
+  while (i<msize);
   return false;
 }
 
@@ -252,7 +277,7 @@ PatTermInfo* TriggerInfo::getPatTermInfo(TNode p, bool bindOrder)
 
 bool TriggerInfo::resetMatching()
 {
-  Trace("eager-inst-debug") << "Reset matching" << std::endl;
+  Trace("eager-inst-debug2") << "Reset matching" << std::endl;
   // reset the assignment completely
   d_ieval->resetAll(false);
   // now, ensure we don't watch quantified formulas that are no longer asserted
@@ -264,8 +289,8 @@ bool TriggerInfo::resetMatching()
         << "Unknown quant " << q << " for " << d_pattern << std::endl;
     bool isActive = qi->isAsserted();
     d_ieval->setActive(d_quantRMap[q], isActive);
-    Trace("eager-inst-debug")
-        << "setActive " << q << " : " << isActive << std::endl;
+    Trace("eager-inst-debug2")
+        << "- setActive " << q << " : " << isActive << std::endl;
     success = success || isActive;
   }
   Assert(success == d_ieval->isFeasible());
@@ -299,17 +324,17 @@ void TriggerInfo::setStatus(TriggerStatus s)
   }
 }
 
-bool TriggerInfo::processInstantiations()
+bool TriggerInfo::processInstantiations(size_t mindexStart)
 {
   // For each active pattern term, get its explicit match.
   // In particular, this is used to ensure that patterns which match all
   // map back to appropriate terms.
   // Variables unspecified in varToTerm will use their value in d_ieval.
   std::map<Node, Node> varToTerm;
-  for (PatTermInfo* p : d_mroots)
+  for (size_t i=mindexStart, nroots = d_mroots.size(); i<nroots; i++)
   {
-    Assert (p!=nullptr);
-    p->getMatch(varToTerm);
+    Assert (d_mroots[i]!=nullptr);
+    d_mroots[i]->getMatch(varToTerm);
   }
   bool isConflict = false;
   std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);

@@ -144,9 +144,7 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
         mpSel.emplace_back(mt);
         if (fvs.size() == nvars)
         {
-          // FIXME
-          // d_mpat = NodeManager::currentNM()->mkNode(Kind::INST_PATTERN,
-          // mpSel);
+          d_mpat = NodeManager::currentNM()->mkNode(Kind::INST_PATTERN, mpSel);
           break;
         }
       }
@@ -236,7 +234,7 @@ bool QuantInfo::notifyAsserted()
 bool QuantInfo::notifyFun(FunInfo* fi)
 {
   // if we are inactive and we just updated the inactive trigger, update status
-  if (d_tstatus == TriggerStatus::INACTIVE)
+  if (d_asserted.get() && d_tstatus == TriggerStatus::INACTIVE)
   {
     Assert(d_cfindex.get() < d_criticalFuns.size());
     if (d_criticalFuns[d_cfindex.get()] == fi)
@@ -256,6 +254,7 @@ bool QuantInfo::updateStatus()
     return false;
   }
   Assert(d_cfindex.get() <= d_criticalFuns.size());
+  Trace("eager-inst-status") << "Update status " << d_quant << " " << d_cfindex.get() << " / " << d_criticalFuns.size() << std::endl;
   while (d_cfindex.get() < d_criticalFuns.size())
   {
     FunInfo* fnext = d_criticalFuns[d_cfindex.get()];
@@ -290,7 +289,8 @@ bool QuantInfo::updateStatus()
     {
       Node op = tdb.getMatchOperator(d_mpat[i]);
       Assert(!op.isNull());
-      FunInfo* finfo = d_tde.getFunInfo(op);
+      FunInfo* finfo = d_tde.getOrMkFunInfo(op, d_mpat[i].getNumChildren());
+      Assert (finfo!=nullptr);
       size_t cterms = finfo->getNumTerms();
       if (!bestIndexSet || cterms < minTerms)
       {

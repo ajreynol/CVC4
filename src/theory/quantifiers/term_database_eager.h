@@ -113,7 +113,7 @@ class TermDbEager : protected EnvObj
   /** The terms we have notified if d_whenAsserted is true */
   context::CDHashSet<Node> d_notified;
   /** */
-  std::map<TNode, eager::TriggerInfo> d_tinfo;
+  std::map<Node, eager::TriggerInfo> d_tinfo;
   /** */
   std::map<TNode, eager::FunInfo> d_finfo;
   /** */
