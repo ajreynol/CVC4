@@ -72,25 +72,24 @@ bool FunInfo::addTerm(TNode t)
   return false;
 }
 
-
 bool FunInfo::addTermInternal(TNode t)
 {
-    ++(d_tde.getStats().d_ntermsAdded);
-    QuantifiersState& qs = d_tde.getState();
-    std::vector<TNode> reps;
-    for (TNode tc : t)
-    {
-        reps.emplace_back(qs.getRepresentative(tc));
-    }
-    // add and refactor the trie
-    if (!d_trie.add(d_tde.getCdtAlloc(), qs, reps, t))
-    {
-        ++(d_tde.getStats().d_ntermsAddedCongruent);
-        // congruent
-        return false;
-    }
-    d_count = d_count + 1;
-    return true;
+  ++(d_tde.getStats().d_ntermsAdded);
+  QuantifiersState& qs = d_tde.getState();
+  std::vector<TNode> reps;
+  for (TNode tc : t)
+  {
+    reps.emplace_back(qs.getRepresentative(tc));
+  }
+  // add and refactor the trie
+  if (!d_trie.add(d_tde.getCdtAlloc(), qs, reps, t))
+  {
+    ++(d_tde.getStats().d_ntermsAddedCongruent);
+    // congruent
+    return false;
+  }
+  d_count = d_count + 1;
+  return true;
 }
 
 bool FunInfo::notifyTriggers(TNode t, bool isAsserted)

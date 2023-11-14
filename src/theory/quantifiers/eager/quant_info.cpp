@@ -46,11 +46,11 @@ void QuantInfo::initialize(QuantifiersRegistry& qr, const Node& q)
   Stats& s = d_tde.getStats();
   ++(s.d_nquant);
   // TODO: if we have a nested quantified, don't bother?
-  
+
   // first, collect critical functions
   std::unordered_set<TNode> visited;
   collectCriticalFuns(visited);
-  
+
   const Options& opts = d_tde.getEnv().getOptions();
   std::map<Node, inst::TriggerTermInfo> tinfo;
   // NOTE: the trigger selection here should be configurable

@@ -172,7 +172,8 @@ bool TriggerInfo::doMatchingAll()
   Assert(d_ieval != nullptr);
   if (!resetMatching())
   {
-    Trace("eager-inst-matching-debug") << "...doMatchingAll failed reset" << std::endl;
+    Trace("eager-inst-matching-debug")
+        << "...doMatchingAll failed reset" << std::endl;
     return false;
   }
   FunInfo* finfo = d_tde.getFunInfo(d_op);
@@ -189,8 +190,9 @@ bool TriggerInfo::doMatchingAll()
     std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
     if (qinsts.empty())
     {
-      Assert (false);
-      Trace("eager-inst-matching-debug") << "...doMatchingAll no quants" << std::endl;
+      Assert(false);
+      Trace("eager-inst-matching-debug")
+          << "...doMatchingAll no quants" << std::endl;
     }
     else
     {
@@ -200,8 +202,8 @@ bool TriggerInfo::doMatchingAll()
         ++(stats.d_matchesSuccessConflict);
       }
       Trace("eager-inst-matching-debug")
-          << "...doMatchingAll success, #quant=" << qinsts.size() << ", conflict=" << isConflict
-          << std::endl;
+          << "...doMatchingAll success, #quant=" << qinsts.size()
+          << ", conflict=" << isConflict << std::endl;
       // compute the backwards map
       std::map<Node, Node> varToTerm;
       std::vector<size_t>& vargs = root->d_vargs;
@@ -230,7 +232,8 @@ bool TriggerInfo::doMatchingAll()
       }
       if (isConflict)
       {
-        Trace("eager-inst-matching-debug") << "...doMatchingAll conflict" << std::endl;
+        Trace("eager-inst-matching-debug")
+            << "...doMatchingAll conflict" << std::endl;
         return true;
       }
     }
@@ -238,7 +241,8 @@ bool TriggerInfo::doMatchingAll()
     itt.pop();
     data = root->doMatchingAll(d_ieval.get(), itt);
   }
-  Trace("eager-inst-matching-debug") << "...doMatchingAll finished" << std::endl;
+  Trace("eager-inst-matching-debug")
+      << "...doMatchingAll finished" << std::endl;
   return false;
 }
 
@@ -267,7 +271,8 @@ bool TriggerInfo::resetMatching()
     Assert(d_quantRMap.find(q) != d_quantRMap.end());
     bool isActive = qi->isAsserted();
     d_ieval->setActive(d_quantRMap[q], isActive);
-    Trace("eager-inst-debug") << "setActive " << q << " : " << isActive << std::endl;
+    Trace("eager-inst-debug")
+        << "setActive " << q << " : " << isActive << std::endl;
     success = success || isActive;
   }
   Assert(success == d_ieval->isFeasible());

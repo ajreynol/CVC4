@@ -72,8 +72,8 @@ bool PatTermInfo::notifyChild(State& s,
   // ============================ decrement number of unassigned children
   Assert(d_numUnassigned.get() > 0);
   d_numUnassigned = d_numUnassigned.get() - 1;
-  Trace("ieval-state-debug")
-      << "...unassigned children " << d_pattern << " now " << d_numUnassigned << std::endl;
+  Trace("ieval-state-debug") << "...unassigned children " << d_pattern
+                             << " now " << d_numUnassigned << std::endl;
   if (d_numUnassigned > 0)
   {
     // not ready to evaluate
@@ -85,7 +85,8 @@ bool PatTermInfo::notifyChild(State& s,
   for (TNode pc : d_pattern)
   {
     TNode pcv = s.getValue(pc);
-    Assert(!pcv.isNull()) << "Unev child " << d_pattern << " " << pc << std::endl;
+    Assert(!pcv.isNull()) << "Unev child " << d_pattern << " " << pc
+                          << std::endl;
     childValues.push_back(pcv);
   }
   // call the evaluator

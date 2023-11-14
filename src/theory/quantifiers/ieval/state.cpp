@@ -679,7 +679,7 @@ Node State::getEntailedValue(TNode p) const
           continue;
         }
       }
-      if (cur.isClosure() || cur.getKind()==Kind::BOUND_VARIABLE)
+      if (cur.isClosure() || cur.getKind() == Kind::BOUND_VARIABLE)
       {
         toVisit.pop_back();
         visited[cur] = cur;
@@ -708,9 +708,9 @@ Node State::getEntailedValue(TNode p) const
         children.push_back(it->second);
       }
       Node ret;
-      if (cur.getKind()==Kind::EQUAL)
+      if (cur.getKind() == Kind::EQUAL)
       {
-        if (children[0]==children[1])
+        if (children[0] == children[1])
         {
           ret = nm->mkConst(true);
         }
