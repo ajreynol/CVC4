@@ -112,6 +112,8 @@ class TriggerInfo
   std::map<TNode, PatTermInfo> d_pinfo[2];
   /** The root pattern term, for each binding order */
   PatTermInfo* d_root[2];
+  /** The additional patterns for multi-triggers */
+  std::vector<PatTermInfo*> d_mroots;
   /** Status */
   context::CDO<TriggerStatus> d_status;
   /** Status proc */

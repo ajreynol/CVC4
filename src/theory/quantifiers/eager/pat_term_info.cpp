@@ -289,7 +289,7 @@ bool PatTermInfo::doMatching(ieval::InstEvaluator* ie, TNode t)
   return true;
 }
 
-TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
+bool PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
                                  CDTNodeTrieIterator& itt)
 {
   Assert(itt.getLevel() > 0);
@@ -398,17 +398,16 @@ TNode PatTermInfo::doMatchingAll(ieval::InstEvaluator* ie,
       if (level == 0)
       {
         Trace("eager-inst-matching-debug") << "...failed matching" << std::endl;
-        return TNode::null();
+        return false;
       }
       // finished with this level, go back
       itt.pop();
       level--;
     }
+    // while we are not at the leaf
   } while (!itt.hasCurrentData());
-  TNode ret = itt.getCurrentData();
-  Trace("eager-inst-matching-debug") << "...return " << ret << std::endl;
-  Assert(!ret.isNull());
-  return ret;
+  Trace("eager-inst-matching-debug") << "...success" << std::endl;
+  return true;
 }
 
 bool PatTermInfo::isLegalCandidate(TNode n) const

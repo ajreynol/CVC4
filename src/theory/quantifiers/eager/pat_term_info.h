@@ -70,7 +70,7 @@ class PatTermInfo
    */
   bool doMatchingEqcNext(ieval::InstEvaluator* ie);
   /** */
-  TNode doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& itt);
+  bool doMatchingAll(ieval::InstEvaluator* ie, CDTNodeTrieIterator& itt);
 
   /** get ground args */
   const std::vector<size_t>& getGroundArgs() const { return d_gargs; }

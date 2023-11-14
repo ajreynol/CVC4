@@ -112,13 +112,24 @@ void TriggerInfo::initialize(const Node& t, const std::vector<Node>& mts)
     bool bindOrder = (i == 0);
     PatTermInfo* pi = getPatTermInfo(t, bindOrder);
     std::unordered_set<Node> fvs;
-    pi->initialize(this, d_pattern, fvs, bindOrder, true);
+    pi->initialize(this, t, fvs, bindOrder, true);
     d_root[i] = pi;
-    if (i == 0 && pi->d_oargs.empty() && pi->d_gpargs.empty())
+    if (i == 0)
     {
-      // if simple trigger, doesn't make a difference
-      d_root[1] = pi;
-      break;
+      // if we are a multi-trigger, initialize the additional patterns now
+      for (const Node& m : mts)
+      {
+        // we use bindOrder = true, since we will be matching all
+        pi = getPatTermInfo(m, bindOrder);
+        pi->initialize(this, m, fvs, true, true);
+        d_mroots.emplace_back(pi);
+      }
+      if (pi->d_oargs.empty() && pi->d_gpargs.empty())
+      {
+        // if simple trigger, the binding order doesn't make a difference
+        d_root[1] = pi;
+        break;
+      }
     }
   }
 }
@@ -185,10 +196,8 @@ bool TriggerInfo::doMatchingAll()
   PatTermInfo* root = d_root[0];
   // found an instantiation, we will sanitize it based on the actual term,
   // to ensure the match post-instantiation is syntactic.
-  TNode data = root->doMatchingAll(d_ieval.get(), itt);
-  while (!data.isNull())
+  while (root->doMatchingAll(d_ieval.get(), itt))
   {
-    Assert(data.getNumChildren() == d_pattern.getNumChildren());
     bool isConflict = false;
     std::vector<Node> qinsts = d_ieval->getActiveQuants(isConflict);
     if (qinsts.empty())
@@ -208,6 +217,8 @@ bool TriggerInfo::doMatchingAll()
           << "...doMatchingAll success, #quant=" << qinsts.size()
           << ", conflict=" << isConflict << std::endl;
       // compute the backwards map
+      TNode data = itt.getCurrentData();
+      Assert(data.getNumChildren() == d_pattern.getNumChildren());
       std::map<Node, Node> varToTerm;
       std::vector<size_t>& vargs = root->d_vargs;
       for (size_t v : vargs)
@@ -242,7 +253,6 @@ bool TriggerInfo::doMatchingAll()
     }
     // pop the leaf and match again
     itt.pop();
-    data = root->doMatchingAll(d_ieval.get(), itt);
   }
   Trace("eager-inst-matching-debug")
       << "...doMatchingAll finished" << std::endl;
