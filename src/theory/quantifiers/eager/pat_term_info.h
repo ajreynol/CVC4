@@ -20,8 +20,8 @@
 
 #include "context/cdo.h"
 #include "expr/node.h"
-#include "theory/uf/equality_engine.h"
 #include "theory/quantifiers/eager/cd_tnode_trie.h"
+#include "theory/uf/equality_engine.h"
 
 namespace cvc5::internal {
 namespace theory {

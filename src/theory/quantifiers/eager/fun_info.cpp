@@ -132,8 +132,7 @@ bool FunInfo::notifyTriggers(TNode t, bool isAsserted)
 bool FunInfo::inRelevantDomain(size_t i, TNode r)
 {
   // use the trie
-  CDTNodeTrieIterator itt(
-      d_tde.getCdtAlloc(), d_tde.getState());
+  CDTNodeTrieIterator itt(d_tde.getCdtAlloc(), d_tde.getState());
   itt.initialize(getTrie(), d_arity);
   size_t level = 0;
   while (level < i)

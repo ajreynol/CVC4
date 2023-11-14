@@ -164,8 +164,7 @@ CDTNodeTrieIterator::CDTNodeTrieIterator(CDTNodeTrieAllocator* a,
 {
 }
 
-void CDTNodeTrieIterator::initialize(CDTNodeTrie* cdtnt,
-                      size_t depth)
+void CDTNodeTrieIterator::initialize(CDTNodeTrie* cdtnt, size_t depth)
 {
   d_stack.clear();
   d_curData = nullptr;

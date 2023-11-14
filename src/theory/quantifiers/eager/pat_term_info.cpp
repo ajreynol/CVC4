@@ -453,7 +453,7 @@ bool PatTermInfo::doMatchingEqcNext(ieval::InstEvaluator* ie)
 }
 
 bool PatTermInfo::initMatchingAll(ieval::InstEvaluator* ie)
-{  
+{
   FunInfo* finfo = d_tde.getFunInfo(d_op);
   d_itt.initialize(finfo->getTrie(), d_pattern.getNumChildren());
   return true;
