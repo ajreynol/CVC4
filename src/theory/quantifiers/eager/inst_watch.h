@@ -63,6 +63,8 @@ class InstWatch
   WatchQuantInfo* getWatchQuantInfo(const Node& q);
   Node mkInstantiation(const Node& q, const std::vector<Node>& terms);
   Node getInstantiation(const Node& inst, std::vector<Node>& terms);
+  /** Revisit instantiation */
+  bool revisitInstantiation(WatchTermInfo* wti, const Node& inst);
   /** Reference to the eager term database */
   TermDbEager& d_tde;
   /** Reference to quantifiers state */
@@ -71,6 +73,10 @@ class InstWatch
   std::map<Node, WatchTermInfo> d_wtInfo;
   /** Quant info */
   std::map<Node, WatchQuantInfo> d_wqInfo;
+  /** The instantiations that are no longer propagating */
+  context::CDHashSet<Node> d_processedInst;
+  /** Common constants */
+  Node d_false;
 };
 
 }  // namespace eager

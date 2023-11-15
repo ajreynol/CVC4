@@ -94,7 +94,6 @@ class TermDbEager : protected EnvObj
   bool isStatsEnabled() const { return d_statsEnabled; }
   expr::TermCanonize& getTermCanon() { return d_tcanon; }
   bool isFilteringEntailment() const { return d_filterNonUnit; }
-
  private:
   bool notifyTerm(TNode n, bool notifyTriggers);
   bool notifyQuant(TNode q);

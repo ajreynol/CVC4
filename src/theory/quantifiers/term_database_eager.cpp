@@ -156,6 +156,7 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
         if (notifyTerm(cur, true))
         {
           // already in conflict
+          Trace("eager-inst-notify") << "...conflict notifyTerm" << std::endl;
           return;
         }
         visit.insert(visit.end(), cur.begin(), cur.end());
@@ -166,6 +167,14 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
   else if (d_whenEqcDelay)
   {
     refresh();
+  }
+  if (d_instWatch!=nullptr)
+  {
+    if (d_instWatch->eqNotifyMerge(t1, t2))
+    {
+      Trace("eager-inst-notify") << "...conflict instWatch" << std::endl;
+      return;
+    }
   }
   Trace("eager-inst-notify") << "...finished" << std::endl;
 }
