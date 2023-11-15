@@ -85,7 +85,7 @@ class LinearSolver : protected EnvObj
   /** Pre-check, called before the fact queue of the theory is processed. */
   bool preCheck(Theory::Effort level, bool newFacts);
   /** Pre-notify fact. */
-  void preNotifyFact(TNode atom, bool pol, TNode fact);
+  void preNotifyFact(TNode fact);
   /**
    * Post-check, called after the fact queue of the theory is processed. Returns
    * true if a conflict or lemma was emitted.
@@ -115,6 +115,14 @@ class LinearSolver : protected EnvObj
   InferenceManager& d_im;
   /** The solver */
   TheoryArithPrivate d_internal;
+  /** Convert to internal */
+  Node toInternal(const Node& n);
+  /** Convert to external */
+  Node toExternal(const Node& n);
+  /** Convert to external */
+  TrustNode toInternalTrust(const TrustNode& tn);
+  /** Convert to external */
+  TrustNode toExternalTrust(const TrustNode& tn);
 };
 
 }  // namespace linear

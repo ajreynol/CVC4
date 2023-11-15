@@ -3098,7 +3098,7 @@ bool TheoryArithPrivate::preCheck(Theory::Effort level, bool newFacts)
   return false;
 }
 
-void TheoryArithPrivate::preNotifyFact(TNode atom, bool pol, TNode fact)
+void TheoryArithPrivate::preNotifyFact(TNode fact)
 {
   ConstraintP curr = constraintFromFactQueue(fact);
   if (curr != NullConstraint)

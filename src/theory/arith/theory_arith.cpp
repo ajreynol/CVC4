@@ -307,7 +307,7 @@ bool TheoryArith::preNotifyFact(
     ret = d_eqSolver->preNotifyFact(atom, pol, fact, isPrereg, isInternal);
   }
   // we also always also notify the internal solver
-  d_internal.preNotifyFact(atom, pol, fact);
+  d_internal.preNotifyFact(fact);
   return ret;
 }
 

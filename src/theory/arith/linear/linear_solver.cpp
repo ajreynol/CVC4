@@ -35,19 +35,30 @@ void LinearSolver::finishInit(eq::EqualityEngine* ee)
 }
 void LinearSolver::preRegisterTerm(TNode n) { d_internal.preRegisterTerm(n); }
 void LinearSolver::propagate(Theory::Effort e) { d_internal.propagate(e); }
-TrustNode LinearSolver::explain(TNode n) { return d_internal.explain(n); }
+
+TrustNode LinearSolver::explain(TNode n)
+{ 
+  Node in = toInternal(n);
+  TrustNode ret = d_internal.explain(in); 
+  return toExternalTrust(ret);
+}
+
 void LinearSolver::collectModelValues(const std::set<Node>& termSet,
                                       std::map<Node, Node>& arithModel,
                                       std::map<Node, Node>& arithModelIllTyped)
 {
   d_internal.collectModelValues(termSet, arithModel, arithModelIllTyped);
 }
+
 void LinearSolver::presolve() { d_internal.presolve(); }
+
 void LinearSolver::notifyRestart() { d_internal.notifyRestart(); }
+
 Theory::PPAssertStatus LinearSolver::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
-  return d_internal.ppAssert(tin, outSubstitutions);
+  TrustNode tini = toInternalTrust(tin);
+  return d_internal.ppAssert(tini, outSubstitutions);
 }
 void LinearSolver::ppStaticLearn(TNode in, NodeBuilder& learned)
 {
@@ -64,15 +75,17 @@ Node LinearSolver::getCandidateModelValue(TNode var)
 }
 std::pair<bool, Node> LinearSolver::entailmentCheck(TNode lit)
 {
-  return d_internal.entailmentCheck(lit);
+  Node ilit = toInternal(lit);
+  return d_internal.entailmentCheck(ilit);
 }
 bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
 {
   return d_internal.preCheck(level, newFacts);
 }
-void LinearSolver::preNotifyFact(TNode atom, bool pol, TNode fact)
+void LinearSolver::preNotifyFact(TNode fact)
 {
-  d_internal.preNotifyFact(atom, pol, fact);
+  Node ifact = toInternal(fact);
+  d_internal.preNotifyFact(ifact);
 }
 bool LinearSolver::postCheck(Theory::Effort level)
 {
@@ -89,17 +102,40 @@ ArithCongruenceManager* LinearSolver::getCongruenceManager()
 
 bool LinearSolver::outputTrustedLemma(TrustNode lemma, InferenceId id)
 {
-  return d_im.trustedLemma(lemma, id);
+  return d_im.trustedLemma(toExternalTrust(lemma), id);
 }
 
 void LinearSolver::outputTrustedConflict(TrustNode conf, InferenceId id)
 {
-  d_im.trustedConflict(conf, id);
+  d_im.trustedConflict(toExternalTrust(conf), id);
 }
 
-void LinearSolver::outputPropagate(TNode lit) { d_im.propagateLit(lit); }
+void LinearSolver::outputPropagate(TNode lit) { 
+  Node elit = toExternal(lit);
+  d_im.propagateLit(elit); 
+}
 
 void LinearSolver::spendResource(Resource r) { d_im.spendResource(r); }
+
+Node LinearSolver::toInternal(const Node& n)
+{
+  return n;
+}
+
+Node LinearSolver::toExternal(const Node& n)
+{
+  return n;
+}
+
+TrustNode LinearSolver::toInternalTrust(const TrustNode& tn)
+{
+  return tn;
+}
+
+TrustNode LinearSolver::toExternalTrust(const TrustNode& tn)
+{
+  return tn;
+}
 
 }  // namespace arith::linear
 }  // namespace theory

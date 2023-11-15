@@ -489,7 +489,7 @@ private:
   /** Pre-check, called before the fact queue of the theory is processed. */
   bool preCheck(Theory::Effort level, bool newFacts);
   /** Pre-notify fact. */
-  void preNotifyFact(TNode atom, bool pol, TNode fact);
+  void preNotifyFact(TNode fact);
   /**
    * Post-check, called after the fact queue of the theory is processed. Returns
    * true if a conflict or lemma was emitted.
