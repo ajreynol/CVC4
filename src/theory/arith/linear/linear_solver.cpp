@@ -15,6 +15,7 @@
 
 #include "theory/arith/linear/linear_solver.h"
 
+#include "theory/arith/arith_rewriter.h"
 #include "expr/attribute.h"
 
 namespace cvc5::internal {
@@ -25,7 +26,7 @@ LinearSolver::LinearSolver(Env& env,
                            TheoryState& ts,
                            InferenceManager& im,
                            BranchAndBound& bab)
-    : EnvObj(env), d_im(im), d_internal(env, *this, ts, bab)
+    : EnvObj(env), d_im(im), d_internal(env, *this, ts, bab), d_internalToExternal(userContext())
 {
 }
 
@@ -126,25 +127,60 @@ struct LinearInternalAttributeId
 };
 using LinearInternalAttribute =
     expr::Attribute<LinearInternalAttributeId, Node>;
-/**
- * External attribute
- */
-struct LinearExternalAttributeId
-{
-};
-using LinearExternalAttribute =
-    expr::Attribute<LinearExternalAttributeId, Node>;
 
-Node LinearSolver::convert(const Node& n, bool toInternal)
+Node LinearSolver::convert(Node n, bool toInternal)
 {
+  return n;
   Kind nk = n.getKind();
   switch (nk)
   {
-    case Kind::EQUAL: break;
-    case Kind::NOT: return convert(n[0], toInternal).notNode();
+    case Kind::EQUAL:
+    {
+      Node nr;
+      context::CDHashMap<Node, Node>::iterator it;
+      if (toInternal)
+      {
+        LinearInternalAttribute iattr;
+        nr = n.getAttribute(iattr);
+        if (nr.isNull())
+        {
+          // remember the attribute
+          nr = ArithRewriter::rewriteEquality(n);
+          n.setAttribute(iattr, nr);
+        }
+        if (nr.isConst())
+        {
+          // constant!
+        }
+        it = d_internalToExternal.find(nr);
+        if (it!=d_internalToExternal.end())
+        {
+          // already mapped, we have discovered equivalent atoms
+          
+        }
+        else
+        {
+          d_internalToExternal[nr] = n;
+        }
+      }
+      else
+      {
+        // should be mapped
+        it = d_internalToExternal.find(nr);
+        Assert (it!=d_internalToExternal.end());
+        return it->second;
+      }
+      return nr;
+    }
+      break;
+    case Kind::NOT:
+    {
+      return convert(n[0], toInternal).notNode();
+    }
     case Kind::OR:
     case Kind::AND:
     {
+      Assert (!toInternal);
       bool childChanged = false;
       std::vector<Node> echildren;
       for (const Node& nc : n)
@@ -166,10 +202,12 @@ Node LinearSolver::convert(const Node& n, bool toInternal)
 
 TrustNode LinearSolver::convertTrust(const TrustNode& tn, bool toInternal)
 {
-  Node nn = tn.getNode();
+  Node nn = tn.getProven();
   Node nnc = convert(nn, toInternal);
   if (nn != nnc)
   {
+    // TODO: preserve proof
+    return TrustNode::mkTrustNode(tn.getKind(), nnc);
   }
   return tn;
 }

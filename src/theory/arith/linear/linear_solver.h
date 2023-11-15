@@ -18,6 +18,7 @@
 #include "smt/env_obj.h"
 #include "theory/arith/linear/theory_arith_private.h"
 #include "theory/theory.h"
+#include "context/cdhashmap.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -119,8 +120,10 @@ class LinearSolver : protected EnvObj
   InferenceManager& d_im;
   /** The solver */
   TheoryArithPrivate d_internal;
+  /** Mapping */
+  context::CDHashMap<Node, Node> d_internalToExternal;
   /** Convert to internal */
-  Node convert(const Node& n, bool toInternal);
+  Node convert(Node n, bool toInternal);
   /** Convert to external */
   TrustNode convertTrust(const TrustNode& tn, bool toInternal);
 };
