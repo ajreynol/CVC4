@@ -145,6 +145,7 @@ using LinearInternalAttribute =
 
 Node LinearSolver::convertAssertToInternal(TNode n)
 {
+  return n;
   bool pol = n.getKind()!=Kind::NOT;
   TNode natom = pol ? n : n[0];
   if (natom.getKind()!=Kind::EQUAL)
@@ -159,7 +160,7 @@ Node LinearSolver::convertAssertToInternal(TNode n)
   }
   else
   {
-    Node nr = convert(natom, true);
+    nr = convert(natom, true);
     if (nr.isConst())
     {
       // constant!
