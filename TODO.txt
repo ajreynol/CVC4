@@ -1,11 +1,12 @@
 TODO:
 - traverse trie eagerly in eager ieval
-- multi-triggers
 - phase requirements on triggers?
 - relevant domain?
 - nested quantified formulas / trigger selection
-- only consider entailed literals / filter disjunctive?
+- prefer triggers from critical path
 
 DONE:
+- only consider entailed literals / filter disjunctive?
+- multi-triggers
 - delay adding
 - take into account entailed term
