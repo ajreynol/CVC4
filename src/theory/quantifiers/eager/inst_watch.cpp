@@ -17,9 +17,9 @@
 
 #include "context/cdo.h"
 #include "expr/node.h"
+#include "expr/node_algorithm.h"
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database_eager.h"
-#include "expr/node_algorithm.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -32,17 +32,18 @@ void collectWatchTerms(const Node& n, std::vector<Node>& watchTerms)
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(n);
-  do {
+  do
+  {
     cur = visit.back();
     visit.pop_back();
-    if (visited.find(cur) == visited.end()) 
+    if (visited.find(cur) == visited.end())
     {
       visited.insert(cur);
       if (cur.isClosure() || cur.isConst())
       {
         continue;
       }
-      if (expr::isBooleanConnective(cur) || cur.getKind()==Kind::EQUAL)
+      if (expr::isBooleanConnective(cur) || cur.getKind() == Kind::EQUAL)
       {
         // traverse Boolean connectives and equalities
         visit.insert(visit.end(), cur.begin(), cur.end());
@@ -55,7 +56,11 @@ void collectWatchTerms(const Node& n, std::vector<Node>& watchTerms)
   } while (!visit.empty());
 }
 
-InstWatch::InstWatch(TermDbEager& tde) : d_tde(tde), d_qs(tde.getState()), d_processedInst(tde.getEnv().getContext()) {
+InstWatch::InstWatch(TermDbEager& tde)
+    : d_tde(tde),
+      d_qs(tde.getState()),
+      d_processedInst(tde.getEnv().getContext())
+{
   d_false = NodeManager::currentNM()->mkConst(false);
 }
 
@@ -67,7 +72,7 @@ void InstWatch::watch(const Node& q,
   // collect watchable terms
   std::vector<Node> wterms;
   collectWatchTerms(entv, wterms);
-  Assert (!wterms.empty());
+  Assert(!wterms.empty());
   Node inst = mkInstantiation(q, terms);
   // have each watch term watch it
   for (const Node& wt : wterms)
@@ -77,19 +82,22 @@ void InstWatch::watch(const Node& q,
   }
 }
 
-bool InstWatch::eqNotifyMerge(TNode t1, TNode t2) 
+bool InstWatch::eqNotifyMerge(TNode t1, TNode t2)
 {
   std::map<Node, WatchTermInfo>::iterator it;
-  for (size_t i=0; i<2; i++)
+  for (size_t i = 0; i < 2; i++)
   {
-    TNode t = i==0 ? t1 : t2;
+    TNode t = i == 0 ? t1 : t2;
     it = d_wtInfo.find(t);
-    if (it!=d_wtInfo.end())
+    if (it != d_wtInfo.end())
     {
       WatchTermInfo* wti = &it->second;
-      Trace("eager-inst-watch") << "Revisit " << wti->d_insts.size() << " instantiations from " << t << std::endl;
+      Trace("eager-inst-watch") << "Revisit " << wti->d_insts.size()
+                                << " instantiations from " << t << std::endl;
       // revisit instantiations
-      for (context::CDHashMap<Node, bool>::iterator itw = wti->d_insts.begin(); itw != wti->d_insts.end(); ++itw)
+      for (context::CDHashMap<Node, bool>::iterator itw = wti->d_insts.begin();
+           itw != wti->d_insts.end();
+           ++itw)
       {
         if ((*itw).second)
         {
@@ -157,7 +165,7 @@ Node InstWatch::getInstantiation(const Node& inst, std::vector<Node>& terms)
 
 bool InstWatch::revisitInstantiation(WatchTermInfo* wti, const Node& inst)
 {
-  if (d_processedInst.find(inst)!=d_processedInst.end())
+  if (d_processedInst.find(inst) != d_processedInst.end())
   {
     // already processed
     wti->d_insts[inst] = false;
@@ -167,10 +175,10 @@ bool InstWatch::revisitInstantiation(WatchTermInfo* wti, const Node& inst)
   Node q = getInstantiation(inst, terms);
   Trace("eager-inst-watch") << "Revisit " << q << " " << terms << std::endl;
   WatchQuantInfo* wqi = getWatchQuantInfo(q);
-  ieval::InstEvaluator * iev = wqi->d_ieval.get();
+  ieval::InstEvaluator* iev = wqi->d_ieval.get();
   iev->resetAll(false);
-  Assert (terms.size()==q[0].getNumChildren());
-  for (size_t i=0, nvars = terms.size(); i<nvars; i++)
+  Assert(terms.size() == q[0].getNumChildren());
+  for (size_t i = 0, nvars = terms.size(); i < nvars; i++)
   {
     if (!iev->push(q[0][i], terms[i]))
     {
@@ -187,7 +195,7 @@ bool InstWatch::revisitInstantiation(WatchTermInfo* wti, const Node& inst)
   // TODO: disable from other watched terms?
   wti->d_insts[inst] = false;
   // try again
-  bool isConflict = (newEntv==d_false);
+  bool isConflict = (newEntv == d_false);
   if (d_tde.addInstantiation(q, terms, newEntv, isConflict))
   {
     Trace("eager-inst-watch") << "...success" << std::endl;

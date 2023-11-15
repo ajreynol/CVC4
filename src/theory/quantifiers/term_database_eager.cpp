@@ -168,7 +168,7 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
   {
     refresh();
   }
-  if (d_instWatch!=nullptr)
+  if (d_instWatch != nullptr)
   {
     if (d_instWatch->eqNotifyMerge(t1, t2))
     {
