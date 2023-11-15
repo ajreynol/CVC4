@@ -34,14 +34,14 @@ namespace eager {
 class WatchTermInfo
 {
  public:
-  WatchTermInfo(context::Context* c) : d_insts(c){}
+  WatchTermInfo(context::Context* c) : d_insts(c) {}
   /** instantiations */
   context::CDHashMap<Node, bool> d_insts;
 };
 
 class WatchQuantInfo
 {
-public:
+ public:
   WatchQuantInfo(context::Context* c) {}
   /** Instantiation evaluator */
   std::unique_ptr<ieval::InstEvaluator> d_ieval;
@@ -57,6 +57,7 @@ class InstWatch
   void watch(const Node& q, const std::vector<Node>& terms, const Node& entv);
   /** notification when master equality engine is updated */
   bool eqNotifyMerge(TNode t1, TNode t2);
+
  private:
   WatchTermInfo* getWatchTermInfo(const Node& t);
   WatchQuantInfo* getWatchQuantInfo(const Node& q);
