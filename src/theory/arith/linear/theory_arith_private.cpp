@@ -1782,9 +1782,18 @@ void TheoryArithPrivate::outputConflicts(){
 }
 
 bool TheoryArithPrivate::done() const { return d_containing.done(); }
-bool TheoryArithPrivate::isLeaf(TNode x) const { return d_containing.isLeaf(x); }
-TheoryId TheoryArithPrivate::theoryOf(TNode x) const { return d_containing.theoryOf(x); }
-void TheoryArithPrivate::debugPrintFacts() const { d_containing.debugPrintFacts(); }
+bool TheoryArithPrivate::isLeaf(TNode x) const
+{
+  return d_containing.isLeaf(x);
+}
+TheoryId TheoryArithPrivate::theoryOf(TNode x) const
+{
+  return d_containing.theoryOf(x);
+}
+void TheoryArithPrivate::debugPrintFacts() const
+{
+  d_containing.debugPrintFacts();
+}
 
 bool TheoryArithPrivate::outputTrustedLemma(TrustNode lemma, InferenceId id)
 {
@@ -1826,13 +1835,15 @@ void TheoryArithPrivate::outputRestart() {
       restartVar, InferenceId::ARITH_DEMAND_RESTART, LemmaProperty::REMOVABLE);
 }
 
-bool TheoryArithPrivate::isSatLiteral(TNode l) const {
+bool TheoryArithPrivate::isSatLiteral(TNode l) const
+{
   return (d_containing.d_valuation).isSatLiteral(l);
 }
-Node TheoryArithPrivate::getSatValue(TNode n) const {
+Node TheoryArithPrivate::getSatValue(TNode n) const
+{
   return (d_containing.d_valuation).getSatValue(n);
 }
-  
+
 bool TheoryArithPrivate::attemptSolveInteger(Theory::Effort effortLevel, bool emmmittedLemmaOrSplit){
   uint32_t level = context()->getLevel();
   Trace("approx")
@@ -3643,8 +3654,10 @@ TrustNode TheoryArithPrivate::explain(TNode n)
       exp = c->externalExplainForPropagation(n);
       Trace("arith::explain") << "assertions explanation" << n << ":" << exp << endl;
     }
-  }else{
-    Assert (d_cmEnabled);
+  }
+  else
+  {
+    Assert(d_cmEnabled);
     Assert(d_congruenceManager.canExplain(n));
     Trace("arith::explain") << "dm explanation" << n << endl;
     exp = d_congruenceManager.explain(n);

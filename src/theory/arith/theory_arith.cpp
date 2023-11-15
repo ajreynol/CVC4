@@ -328,9 +328,7 @@ TrustNode TheoryArith::explain(TNode n)
   return d_internal.explain(n);
 }
 
-void TheoryArith::propagate(Effort e) {
-  d_internal.propagate(e);
-}
+void TheoryArith::propagate(Effort e) { d_internal.propagate(e); }
 
 bool TheoryArith::collectModelInfo(TheoryModel* m,
                                    const std::set<Node>& termSet)
@@ -404,13 +402,9 @@ bool TheoryArith::collectModelValues(TheoryModel* m,
   return true;
 }
 
-void TheoryArith::notifyRestart(){
-  d_internal.notifyRestart();
-}
+void TheoryArith::notifyRestart() { d_internal.notifyRestart(); }
 
-void TheoryArith::presolve(){
-  d_internal.presolve();
-}
+void TheoryArith::presolve() { d_internal.presolve(); }
 
 EqualityStatus TheoryArith::getEqualityStatus(TNode a, TNode b) {
   Trace("arith-eq-status") << "TheoryArith::getEqualityStatus(" << a << ", " << b << ")" << std::endl;

@@ -15,17 +15,17 @@
 
 #pragma once
 
-#include "theory/arith/linear/theory_arith_private.h"
 #include "smt/env_obj.h"
+#include "theory/arith/linear/theory_arith_private.h"
 #include "theory/theory.h"
 
 namespace cvc5::internal {
 namespace theory {
-  
+
 class TheoryModel;
 
 namespace arith {
-  
+
 class TheoryArith;
 class BranchAndBound;
 
@@ -35,7 +35,7 @@ namespace linear {
  * A wrapper of the linear arithmetic solver.
  */
 class LinearSolver : protected EnvObj
-{ 
+{
  public:
   LinearSolver(TheoryArith& containing, Env& env, BranchAndBound& bab);
   /** finish initialize */
@@ -101,6 +101,7 @@ class LinearSolver : protected EnvObj
 
   /** get the congruence manager, if we are using one */
   ArithCongruenceManager* getCongruenceManager();
+
  private:
   /** Containing */
   TheoryArith& d_containing;
@@ -108,7 +109,7 @@ class LinearSolver : protected EnvObj
   TheoryArithPrivate d_internal;
 };
 
-}
+}  // namespace linear
 }  // namespace arith
 }  // namespace theory
 }  // namespace cvc5::internal
