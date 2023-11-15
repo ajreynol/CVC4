@@ -273,7 +273,8 @@ void Theory::notifyInConflict()
   }
 }
 
-void Theory::computeCareGraph() {
+void Theory::computeCareGraph()
+{
   Assert(d_theoryState != nullptr);
   Trace("sharing") << "Theory::computeCareGraph<" << getId() << ">()" << endl;
   const context::CDList<TNode>& sharedTerms = d_theoryState->getSharedTerms();

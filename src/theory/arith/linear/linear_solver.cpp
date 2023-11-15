@@ -25,9 +25,7 @@ LinearSolver::LinearSolver(Env& env,
                            TheoryState& ts,
                            InferenceManager& im,
                            BranchAndBound& bab)
-    : EnvObj(env),
-      d_im(im),
-      d_internal(env, *this, ts, bab)
+    : EnvObj(env), d_im(im), d_internal(env, *this, ts, bab)
 {
 }
 
