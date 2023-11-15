@@ -13,22 +13,19 @@
  * Instantiation watch
  */
 
+#include "theory/quantifiers/eager/inst_watch.h"
+
 #include "context/cdo.h"
 #include "expr/node.h"
-#include "theory/quantifiers/eager/inst_watch.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 namespace eager {
 
-
 InstWatch::InstWatch(TermDbEager& tde) : d_tde(tde) {}
-void InstWatch::watch(const Node& q,
-                                  std::vector<Node>& terms,
-                                  const Node& entv)
+void InstWatch::watch(const Node& q, std::vector<Node>& terms, const Node& entv)
 {
-  
 }
 
 }  // namespace eager

@@ -36,9 +36,8 @@ class InstWatch
 {
  public:
   InstWatch(TermDbEager& tde);
-  void watch(const Node& q,
-                                   std::vector<Node>& terms,
-                                   const Node& entv);
+  void watch(const Node& q, std::vector<Node>& terms, const Node& entv);
+
  private:
   /** Reference to the eager term database */
   TermDbEager& d_tde;

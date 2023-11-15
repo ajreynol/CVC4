@@ -64,7 +64,8 @@ TermDbEager::TermDbEager(Env& env,
                      || mode == options::EagerInstMode::CONFLICT_WATCH);
   d_filterConflict = (mode == options::EagerInstMode::CONFLICT_WATCH);
   // check if we will be watching
-  if (mode == options::EagerInstMode::UNIT_PROP_WATCH || mode==options::EagerInstMode::CONFLICT_WATCH)
+  if (mode == options::EagerInstMode::UNIT_PROP_WATCH
+      || mode == options::EagerInstMode::CONFLICT_WATCH)
   {
     d_instWatch.reset(new eager::InstWatch(*this));
   }
@@ -334,7 +335,7 @@ bool TermDbEager::addInstantiation(const Node& q,
   d_entProps.insert(entv);
   if (d_filterNonUnit)
   {
-    Assert (!entv.isNull());
+    Assert(!entv.isNull());
     bool success = false;
     if (d_filterConflict)
     {
@@ -347,12 +348,13 @@ bool TermDbEager::addInstantiation(const Node& q,
       bool entvPol = entv.getKind() != Kind::NOT;
       Node entvAtom = entvPol ? entv : entv[0];
       // don't propagate connectives or disequalities
-      if (entvAtom.getKind()==Kind::EQUAL)
+      if (entvAtom.getKind() == Kind::EQUAL)
       {
         // equality betwee known terms? exclude equality between Booleans here
         if (!entvAtom[0].getType().isBoolean())
         {
-          success = (entvPol && d_qs.hasTerm(entvAtom[0]) && d_qs.hasTerm(entvAtom[1]));
+          success = (entvPol && d_qs.hasTerm(entvAtom[0])
+                     && d_qs.hasTerm(entvAtom[1]));
         }
       }
       else
@@ -363,7 +365,7 @@ bool TermDbEager::addInstantiation(const Node& q,
     }
     if (!success)
     {
-      if (d_instWatch!=nullptr)
+      if (d_instWatch != nullptr)
       {
         d_instWatch->watch(q, terms, entv);
       }
