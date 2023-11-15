@@ -124,22 +124,23 @@ void LinearSolver::spendResource(Resource r) { d_im.spendResource(r); }
 struct LinearInternalAttributeId
 {
 };
-using LinearInternalAttribute = expr::Attribute<LinearInternalAttributeId, Node>;
+using LinearInternalAttribute =
+    expr::Attribute<LinearInternalAttributeId, Node>;
 /**
  * External attribute
  */
 struct LinearExternalAttributeId
 {
 };
-using LinearExternalAttribute = expr::Attribute<LinearExternalAttributeId, Node>;
+using LinearExternalAttribute =
+    expr::Attribute<LinearExternalAttributeId, Node>;
 
 Node LinearSolver::convert(const Node& n, bool toInternal)
 {
   Kind nk = n.getKind();
   switch (nk)
   {
-    case Kind::EQUAL:
-      break;
+    case Kind::EQUAL: break;
     case Kind::NOT: return convert(n[0], toInternal).notNode();
     case Kind::OR:
     case Kind::AND:
@@ -149,7 +150,7 @@ Node LinearSolver::convert(const Node& n, bool toInternal)
       for (const Node& nc : n)
       {
         Node nce = convert(nc, toInternal);
-        childChanged = childChanged || nce!=nc;
+        childChanged = childChanged || nce != nc;
         echildren.emplace_back(nce);
       }
       if (childChanged)
@@ -157,9 +158,8 @@ Node LinearSolver::convert(const Node& n, bool toInternal)
         return NodeManager::currentNM()->mkNode(nk, echildren);
       }
     }
-      break;
-    default:
-      break;
+    break;
+    default: break;
   }
   return n;
 }
@@ -168,11 +168,10 @@ TrustNode LinearSolver::convertTrust(const TrustNode& tn, bool toInternal)
 {
   Node nn = tn.getNode();
   Node nnc = convert(nn, toInternal);
-  if (nn!=nnc)
+  if (nn != nnc)
   {
-    
   }
-  return tn; 
+  return tn;
 }
 
 }  // namespace arith::linear

@@ -122,7 +122,7 @@ RewriteResponse ArithRewriter::preRewriteAtom(TNode atom)
 
 Node ArithRewriter::rewriteEquality(TNode eq)
 {
-  Assert (eq.getKind()==Kind::EQUAL);
+  Assert(eq.getKind() == Kind::EQUAL);
   TNode left = eq[0];
   TNode right = eq[1];
   rewriter::Sum sum;
