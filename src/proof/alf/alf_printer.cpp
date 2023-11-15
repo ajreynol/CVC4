@@ -170,12 +170,9 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     }
     break;
     case ProofRule::ANNOTATION:
-    case ProofRule::THEORY_EXPAND_DEF:
-    case ProofRule::WITNESS_AXIOM:
     case ProofRule::HO_APP_ENCODE:
     case ProofRule::BETA_REDUCE:
     case ProofRule::ARRAYS_EQ_RANGE_EXPAND:
-    case ProofRule::BV_BITBLAST:
     case ProofRule::BV_BITBLAST_STEP:
     case ProofRule::BV_EAGER_ATOM:
     case ProofRule::DT_UNIF:
@@ -184,7 +181,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DT_SPLIT:
     case ProofRule::DT_CLASH:
     case ProofRule::ALPHA_EQUIV:
-    case ProofRule::QUANTIFIERS_PREPROCESS:
     case ProofRule::CONCAT_SPLIT:
     case ProofRule::CONCAT_LPROP:
     case ProofRule::CONCAT_CPROP:

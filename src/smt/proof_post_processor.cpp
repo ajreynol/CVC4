@@ -301,7 +301,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       std::vector<Node> rargs;
       rargs.emplace_back(args[0]);
       rargs.emplace_back(mkMethodId(MethodId::RW_REWRITE));
-      Node conc = expandMacros(ProofRule::REWRITE, {}, rargs, cdp);
+      Node conc = expandMacros(ProofRule::MACRO_REWRITE, {}, rargs, cdp);
       Assert(conc.getKind() == Kind::EQUAL);
       tchildren.push_back(conc);
     }
@@ -349,7 +349,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       std::vector<Node> rargs;
       rargs.emplace_back(children[0]);
       rargs.emplace_back(mkMethodId(MethodId::RW_REWRITE));
-      conc = expandMacros(ProofRule::REWRITE, {}, rargs, cdp);
+      conc = expandMacros(ProofRule::MACRO_REWRITE, {}, rargs, cdp);
     }
     else
     {
@@ -406,7 +406,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         std::vector<Node> rargs;
         rargs.emplace_back(sargs[0]);
         rargs.emplace_back(mkMethodId(MethodId::RW_REWRITE));
-        Node eq = expandMacros(ProofRule::REWRITE, {}, rargs, cdp);
+        Node eq = expandMacros(ProofRule::MACRO_REWRITE, {}, rargs, cdp);
         Assert(eq.getKind() == Kind::EQUAL);
         addToTransChildren(eq, tchildrenr);
       }

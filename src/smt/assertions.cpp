@@ -122,9 +122,10 @@ void Assertions::addFormula(TNode n,
     {
       // add the definition substitution
       d_definitionSubs.addSubstitution(ns[0], ns[1]);
+      Node tid = mkTrustId(TrustId::PREPROCESS_LEMMA);
       // also add to top-level substitutions as a trusted rule
       d_env.getTopLevelSubstitutions().addSubstitution(
-          ns[0], ns[1], ProofRule::PREPROCESS_LEMMA, {}, {ns});
+          ns[0], ns[1], ProofRule::TRUST, {}, {tid, ns});
       return;
     }
     isFunDef = false;
