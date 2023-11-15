@@ -121,8 +121,13 @@ class LinearSolver : protected EnvObj
   /** The solver */
   TheoryArithPrivate d_internal;
   /** Mapping */
+  context::CDHashMap<Node, Node> d_externalToInternal;
+  /** Mapping */
   context::CDHashMap<Node, Node> d_internalToExternal;
+  /** Pending lemmas */
+  std::vector<Node> d_pending;
   /** Convert to internal */
+  Node convertAssertToInternal(TNode n);
   Node convert(Node n, bool toInternal);
   /** Convert to external */
   TrustNode convertTrust(const TrustNode& tn, bool toInternal);

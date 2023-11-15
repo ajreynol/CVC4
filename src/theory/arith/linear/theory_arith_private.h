@@ -760,6 +760,8 @@ private:
 
   RationalVector d_farkasBuffer;
 
+  Node rewriteAtom(TNode atom);
+
   //---------------- during check
   /** Whether there were new facts during preCheck */
   bool d_newFacts;

@@ -5086,6 +5086,16 @@ ArithCongruenceManager* TheoryArithPrivate::getCongruenceManager()
   return d_cmEnabled.get() ? &d_congruenceManager : nullptr;
 }
 
+
+Node TheoryArithPrivate::rewriteAtom(TNode atom)
+{
+  if (atom.getKind()==Kind::EQUAL)
+  {
+
+  }
+  return rewrite(atom);
+}
+
 }  // namespace arith
 }  // namespace theory
 }  // namespace cvc5::internal

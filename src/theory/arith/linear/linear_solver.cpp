@@ -26,7 +26,7 @@ LinearSolver::LinearSolver(Env& env,
                            TheoryState& ts,
                            InferenceManager& im,
                            BranchAndBound& bab)
-    : EnvObj(env), d_im(im), d_internal(env, *this, ts, bab), d_internalToExternal(userContext())
+    : EnvObj(env), d_im(im), d_internal(env, *this, ts, bab), d_externalToInternal(userContext()), d_internalToExternal(userContext())
 {
 }
 
@@ -40,6 +40,8 @@ void LinearSolver::propagate(Theory::Effort e) { d_internal.propagate(e); }
 TrustNode LinearSolver::explain(TNode n)
 {
   Node in = convert(n, true);
+  // came from external, thus should have an internal mapping
+  Assert (!in.isNull());
   TrustNode ret = d_internal.explain(in);
   return convertTrust(ret, false);
 }
@@ -85,8 +87,21 @@ bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
 }
 void LinearSolver::preNotifyFact(TNode fact)
 {
-  Node ifact = convert(fact, true);
-  d_internal.preNotifyFact(ifact);
+  Node ifact = convertAssertToInternal(fact);
+  if (ifact.isNull())
+  {
+    // add pending
+    for (const Node& lem : d_pending)
+    {
+      TrustNode tlem = TrustNode::mkTrustLemma(lem);
+      outputTrustedLemma(tlem, InferenceId::ARITH_REWRITE_EQ_NORM);
+    }
+    d_pending.clear();
+  }
+  else
+  {
+    d_internal.preNotifyFact(ifact);
+  }
 }
 bool LinearSolver::postCheck(Theory::Effort level)
 {
@@ -128,8 +143,51 @@ struct LinearInternalAttributeId
 using LinearInternalAttribute =
     expr::Attribute<LinearInternalAttributeId, Node>;
 
+Node LinearSolver::convertAssertToInternal(TNode n)
+{
+  bool pol = n.getKind()!=Kind::NOT;
+  TNode natom = pol ? n : n[0];
+  if (natom.getKind()!=Kind::EQUAL)
+  {
+    return n;
+  }
+  Node nr;
+  context::CDHashMap<Node, Node>::iterator it = d_externalToInternal.find(natom);
+  if (it != d_externalToInternal.end())
+  {
+    nr = it->second;
+  }
+  else
+  {
+    Node nr = convert(natom, true);
+    if (nr.isConst())
+    {
+      // constant!
+      d_pending.emplace_back(nr.getConst<bool>() ? Node(natom) : natom.notNode());
+      nr = Node::null();
+    }
+    else
+    {
+      it = d_internalToExternal.find(nr);
+      if (it!=d_internalToExternal.end())
+      {
+        // already mapped, we have discovered equivalent atoms
+        d_pending.emplace_back(natom.eqNode(it->second));
+        nr = Node::null();
+      }
+      else
+      {
+        d_internalToExternal[nr] = natom;
+      }
+    }
+    d_externalToInternal[natom] = nr;
+  }
+  return (pol || nr.isNull()) ? nr : nr.notNode();
+}
+
 Node LinearSolver::convert(Node n, bool toInternal)
 {
+  // FIXME
   return n;
   Kind nk = n.getKind();
   switch (nk)
@@ -137,7 +195,6 @@ Node LinearSolver::convert(Node n, bool toInternal)
     case Kind::EQUAL:
     {
       Node nr;
-      context::CDHashMap<Node, Node>::iterator it;
       if (toInternal)
       {
         LinearInternalAttribute iattr;
@@ -148,29 +205,12 @@ Node LinearSolver::convert(Node n, bool toInternal)
           nr = ArithRewriter::rewriteEquality(n);
           n.setAttribute(iattr, nr);
         }
-        if (nr.isConst())
-        {
-          // constant!
-        }
-        it = d_internalToExternal.find(nr);
-        if (it!=d_internalToExternal.end())
-        {
-          // already mapped, we have discovered equivalent atoms
-          
-        }
-        else
-        {
-          d_internalToExternal[nr] = n;
-        }
+        return nr;
       }
-      else
-      {
-        // should be mapped
-        it = d_internalToExternal.find(nr);
-        Assert (it!=d_internalToExternal.end());
-        return it->second;
-      }
-      return nr;
+      // should be mapped
+      context::CDHashMap<Node, Node>::iterator it = d_internalToExternal.find(nr);
+      Assert (it!=d_internalToExternal.end());
+      return it->second;
     }
       break;
     case Kind::NOT:
@@ -186,6 +226,7 @@ Node LinearSolver::convert(Node n, bool toInternal)
       for (const Node& nc : n)
       {
         Node nce = convert(nc, toInternal);
+        Assert (!nce.isNull());
         childChanged = childChanged || nce != nc;
         echildren.emplace_back(nce);
       }
