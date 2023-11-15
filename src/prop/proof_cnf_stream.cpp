@@ -161,7 +161,7 @@ void ProofCnfStream::convertAndAssert(TNode node,
     Node toJustify = negated ? node.notNode() : static_cast<Node>(node);
     d_proof.addLazyStep(toJustify,
                         pg,
-                        ProofRule::ASSUME,
+                        TrustId::NONE,
                         true,
                         "ProofCnfStream::convertAndAssert:cnf");
   }
@@ -646,7 +646,7 @@ void ProofCnfStream::convertPropagation(TrustNode trn)
                        << trn.identifyGenerator() << std::endl;
     d_proof.addLazyStep(proven,
                         trn.getGenerator(),
-                        ProofRule::ASSUME,
+                        TrustId::NONE,
                         true,
                         "ProofCnfStream::convertPropagation");
   }
@@ -706,10 +706,8 @@ void ProofCnfStream::convertPropagation(TrustNode trn)
   }
   else
   {
-    d_proof.addStep(d_currPropagationProcessed,
-                    ProofRule::THEORY_LEMMA,
-                    {},
-                    {d_currPropagationProcessed});
+    d_proof.addTrustedStep(
+        d_currPropagationProcessed, TrustId::THEORY_LEMMA, {}, {});
   }
 }
 

@@ -135,7 +135,8 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
       // proof. Moreover, parents will replace the reference to this proof.
       // Thus, replacing the contents of this proof is not (typically)
       // necessary, but is done anyways in case there are any other references
-      // to this proof that are not handled by this loop.
+      // to this proof that are not handled by this loop, that is, proof
+      // nodes having this as a child that are not subproofs of pf.
       if (checkMergeProof(cur, resCache, cfaMap))
       {
         visited[cur] = true;
@@ -315,7 +316,6 @@ void ProofNodeUpdater::runFinalize(
     // cache the result if we don't contain an assumption
     if (!expr::containsAssumption(cur.get(), cfaMap, cfaAllowed))
     {
-      Trace("ajr-temp") << "No a" << std::endl;
       Trace("pf-process-debug") << "No assumption pf: " << res << std::endl;
       // cache result if we are merging subproofs
       resCache[res] = cur;
@@ -361,7 +361,6 @@ void ProofNodeUpdater::runFinalize(
     const std::vector<std::shared_ptr<ProofNode>>& ccp = cur->getChildren();
     std::vector<std::shared_ptr<ProofNode>> newChildren;
     bool childChanged = false;
-    Trace("ajr-temp") << "check update proof " << *cur.get() << std::endl;
     for (const std::shared_ptr<ProofNode>& cp : ccp)
     {
       Node cpres = cp->getResult();
@@ -392,7 +391,6 @@ void ProofNodeUpdater::runFinalize(
     }
     if (childChanged)
     {
-      Trace("ajr-temp") << "Update proof " << *cur.get() << std::endl;
       ProofNodeManager* pnm = d_env.getProofNodeManager();
       pnm->updateNode(
           cur.get(), cur->getRule(), newChildren, cur->getArguments());
