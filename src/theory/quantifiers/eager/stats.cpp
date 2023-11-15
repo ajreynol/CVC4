@@ -41,6 +41,8 @@ Stats::Stats(StatisticsRegistry& sr)
       d_matchesSuccessConflict(
           sr.registerInt("quantifiers::eager::matches_success_conflict")),
       d_inst(sr.registerInt("quantifiers::eager::inst")),
+      d_instFailDuplicateProp(sr.registerInt("quantifiers::eager::inst_fail_dup_prop")),
+      d_instFailFilterProp(sr.registerInt("quantifiers::eager::inst_fail_filter_prop")),
       d_instSuccess(sr.registerInt("quantifiers::eager::inst_success"))
 {
 }

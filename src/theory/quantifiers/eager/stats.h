@@ -50,6 +50,8 @@ class Stats
   IntStat d_matchesSuccess;
   IntStat d_matchesSuccessConflict;
   IntStat d_inst;
+  IntStat d_instFailDuplicateProp;
+  IntStat d_instFailFilterProp;
   IntStat d_instSuccess;
 };
 

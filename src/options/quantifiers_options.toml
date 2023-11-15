@@ -839,7 +839,10 @@ name   = "Quantifiers"
   help = "Consider any unit propagating instances."
 [[option.mode.UNIT_PROP_WATCH]]
   name = "unit-prop-watch"
-  help = "Consider any unit propagating instances, watch propagating."
+  help = "Consider any unit propagating instances, watch."
+[[option.mode.CONFLICT_WATCH]]
+  name = "conflict-watch"
+  help = "Consider any conflicting instances, watch."
 
 [[option]]
   name       = "eagerInstTrigger"

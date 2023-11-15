@@ -26,6 +26,7 @@
 #include "smt/env_obj.h"
 #include "theory/inference_id.h"
 #include "theory/quantifiers/eager/fun_info.h"
+#include "theory/quantifiers/eager/inst_watch.h"
 #include "theory/quantifiers/eager/quant_info.h"
 #include "theory/quantifiers/eager/stats.h"
 #include "theory/quantifiers/eager/trigger_info.h"
@@ -92,7 +93,7 @@ class TermDbEager : protected EnvObj
   context::Context* getSatContext() { return context(); }
   bool isStatsEnabled() const { return d_statsEnabled; }
   expr::TermCanonize& getTermCanon() { return d_tcanon; }
-
+  bool isFilteringEntailment() const { return d_filterNonUnit; }
  private:
   bool notifyTerm(TNode n, bool notifyTriggers);
   bool notifyQuant(TNode q);
@@ -131,13 +132,15 @@ class TermDbEager : protected EnvObj
   bool d_whenStdCheck;
   /** Whether we are filtering non-unit instances */
   bool d_filterNonUnit;
-  bool d_watchNonUnit;
+  bool d_filterConflict;
   /** Wait list */
   eager::WaitList d_eqcDelay;
   /** Wait list */
   eager::WaitList d_qDelay;
   /** Things that have been propagated */
   context::CDHashSet<Node> d_entProps;
+  /** Unit watch */
+  std::unique_ptr<eager::InstWatch> d_instWatch;
 };
 
 }  // namespace quantifiers

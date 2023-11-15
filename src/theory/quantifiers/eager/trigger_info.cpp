@@ -382,9 +382,14 @@ void TriggerInfo::processInstantiation(const Node& q,
                                        std::vector<Node>& inst,
                                        bool isConflict)
 {
-  Node ent = d_ieval->getEntailedValue(q[1]);
-  Trace("eager-inst-ent") << "For " << q << " " << inst << std::endl;
-  Trace("eager-inst-ent") << "...entailed term is " << ent << std::endl;
+  Node ent;
+  // compute what is entailed, if necessary
+  if (d_tde.isFilteringEntailment())
+  {
+    ent = d_ieval->getEntailedValue(q[1]);
+    Trace("eager-inst-ent-debug") << "For " << q << " " << inst << std::endl;
+    Trace("eager-inst-ent-debug") << "...entailed term is " << ent << std::endl;
+  }
   std::map<Node, Node>::iterator itq = d_quantMap.find(q);
   Assert(itq != d_quantMap.end());
   d_tde.addInstantiation(itq->second, inst, ent, isConflict);

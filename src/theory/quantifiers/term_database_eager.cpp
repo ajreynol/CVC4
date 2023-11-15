@@ -60,8 +60,14 @@ TermDbEager::TermDbEager(Env& env,
   // determine if we will filter instances that are not unit propagating
   options::EagerInstMode mode = options().quantifiers.eagerInstMode;
   d_filterNonUnit = (mode == options::EagerInstMode::UNIT_PROP
-                     || mode == options::EagerInstMode::UNIT_PROP_WATCH);
-  d_watchNonUnit = (mode == options::EagerInstMode::UNIT_PROP_WATCH);
+                     || mode == options::EagerInstMode::UNIT_PROP_WATCH
+                     || mode == options::EagerInstMode::CONFLICT_WATCH);
+  d_filterConflict = (mode == options::EagerInstMode::CONFLICT_WATCH);
+  // check if we will be watching
+  if (mode == options::EagerInstMode::UNIT_PROP_WATCH || mode==options::EagerInstMode::CONFLICT_WATCH)
+  {
+    d_instWatch.reset(new eager::InstWatch(*this));
+  }
 }
 
 void TermDbEager::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
@@ -322,21 +328,49 @@ bool TermDbEager::addInstantiation(const Node& q,
   if (d_entProps.find(entv) != d_entProps.end())
   {
     Trace("eager-inst-debug") << "...already entailed!" << std::endl;
+    ++(d_stats.d_instFailDuplicateProp);
     return false;
   }
   d_entProps.insert(entv);
   if (d_filterNonUnit)
   {
-    // don't propagate connectives
-    Node entvAtom = entv.getKind() == Kind::NOT ? entv[0] : entv;
-    if (expr::isBooleanConnective(entvAtom))
+    Assert (!entv.isNull());
+    bool success = false;
+    if (d_filterConflict)
     {
-      if (d_watchNonUnit)
+      // must be false
+      success = (entv.isConst() && !entv.getConst<bool>());
+    }
+    else
+    {
+      // don't propagate connectives
+      bool entvPol = entv.getKind() != Kind::NOT;
+      Node entvAtom = entvPol ? entv : entv[0];
+      // don't propagate connectives or disequalities
+      if (entvAtom.getKind()==Kind::EQUAL)
       {
-        // TODO
+        // equality betwee known terms? exclude equality between Booleans here
+        if (!entvAtom[0].getType().isBoolean())
+        {
+          success = (entvPol && d_qs.hasTerm(entvAtom[0]) && d_qs.hasTerm(entvAtom[1]));
+        }
       }
+      else
+      {
+        // known predicate?
+        success = d_qs.hasTerm(entvAtom);
+      }
+    }
+    if (!success)
+    {
+      if (d_instWatch!=nullptr)
+      {
+        d_instWatch->watch(q, terms, entv);
+      }
+      ++(d_stats.d_instFailFilterProp);
       return false;
     }
+    Trace("eager-inst-ent") << "Instance entails: " << entv << std::endl;
   }
 #if 0
   Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);

@@ -718,8 +718,12 @@ Node State::getEntailedValue(TNode p) const
         {
           ret = nm->mkConst(false);
         }
+        else
+        {
+          ret = nm->mkNode(Kind::EQUAL, children);
+        }
       }
-      if (ret.isNull())
+      else
       {
         ret = nm->mkNode(cur.getKind(), children);
         ret = rewrite(ret);

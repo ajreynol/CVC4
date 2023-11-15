@@ -777,6 +777,8 @@ libcvc5_add_sources(
   theory/quantifiers/eager/cd_tnode_trie.h
   theory/quantifiers/eager/fun_info.cpp
   theory/quantifiers/eager/fun_info.h
+  theory/quantifiers/eager/inst_watch.cpp
+  theory/quantifiers/eager/inst_watch.h
   theory/quantifiers/eager/pat_term_info.cpp
   theory/quantifiers/eager/pat_term_info.h
   theory/quantifiers/eager/quant_info.cpp
