@@ -59,8 +59,9 @@ TermDbEager::TermDbEager(Env& env,
 {
   // determine if we will filter instances that are not unit propagating
   options::EagerInstMode mode = options().quantifiers.eagerInstMode;
-  d_filterNonUnit = (mode==options::EagerInstMode::UNIT_PROP || mode==options::EagerInstMode::UNIT_PROP_WATCH);
-  d_watchNonUnit =  (mode==options::EagerInstMode::UNIT_PROP_WATCH);
+  d_filterNonUnit = (mode == options::EagerInstMode::UNIT_PROP
+                     || mode == options::EagerInstMode::UNIT_PROP_WATCH);
+  d_watchNonUnit = (mode == options::EagerInstMode::UNIT_PROP_WATCH);
 }
 
 void TermDbEager::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
@@ -87,7 +88,7 @@ void TermDbEager::assertQuantifier(TNode q)
 
 bool TermDbEager::notifyQuant(TNode q)
 {
-  if (d_qreg.getOwner(q)!=nullptr)
+  if (d_qreg.getOwner(q) != nullptr)
   {
     // skip quantified formulas that have owners
     return false;
@@ -327,7 +328,7 @@ bool TermDbEager::addInstantiation(const Node& q,
   if (d_filterNonUnit)
   {
     // don't propagate connectives
-    Node entvAtom = entv.getKind()==Kind::NOT ? entv[0] : entv;
+    Node entvAtom = entv.getKind() == Kind::NOT ? entv[0] : entv;
     if (expr::isBooleanConnective(entvAtom))
     {
       if (d_watchNonUnit)
