@@ -40,6 +40,7 @@ class LinearSolver : protected EnvObj
   LinearSolver(TheoryArith& containing,
                Env& env,
                TheoryState& ts,
+               InferenceManager& im,
                BranchAndBound& bab);
   /** finish initialize */
   void finishInit();
@@ -106,10 +107,15 @@ class LinearSolver : protected EnvObj
   ArithCongruenceManager* getCongruenceManager();
 
   //======================
-
+  bool outputTrustedLemma(TrustNode lemma, InferenceId id);
+  void outputTrustedConflict(TrustNode conf, InferenceId id);
+  void outputPropagate(TNode lit);
+  void spendResource(Resource r);
  private:
   /** Containing */
   TheoryArith& d_containing;
+  /** The inference manager */
+  InferenceManager& d_im;
   /** The solver */
   TheoryArithPrivate d_internal;
 };

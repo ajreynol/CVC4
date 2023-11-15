@@ -83,8 +83,8 @@ namespace arith::linear {
 static Node toSumNode(const ArithVariables& vars, const DenseMap<Rational>& sum);
 static bool complexityBelow(const DenseMap<Rational>& row, uint32_t cap);
 
-TheoryArithPrivate::TheoryArithPrivate(TheoryArith& containing,
-                                       Env& env,
+TheoryArithPrivate::TheoryArithPrivate(Env& env,
+                                       LinearSolver& containing,
                                        TheoryState& ts,
                                        BranchAndBound& bab)
     : EnvObj(env),
@@ -994,7 +994,7 @@ Theory::PPAssertStatus TheoryArithPrivate::ppAssert(
             << minVar << ":" << elim << endl;
         Trace("simplify") << right.size() << endl;
       }
-      else if (d_containing.isLegalElimination(minVar, elim))
+      else if (d_valuation.isLegalElimination(minVar, elim))
       {
         // cannot eliminate integers here unless we know the resulting
         // substitution is integral
@@ -1550,9 +1550,6 @@ ConstraintP TheoryArithPrivate::constraintFromFactQueue(TNode assertion)
 
   if(TraceIsOn("arith::negatedassumption") && inConflict){
     ConstraintP negation = constraint->getNegation();
-    if(TraceIsOn("arith::negatedassumption") && negation->isAssumption()){
-      debugPrintFacts();
-    }
     Trace("arith::eq") << "negation has proof" << endl;
     Trace("arith::eq") << constraint << endl;
     Trace("arith::eq") << negation << endl;
@@ -1560,9 +1557,6 @@ ConstraintP TheoryArithPrivate::constraintFromFactQueue(TNode assertion)
 
   if(inConflict){
     ConstraintP negation = constraint->getNegation();
-    if(TraceIsOn("arith::negatedassumption") && negation->isAssumption()){
-      debugPrintFacts();
-    }
     Trace("arith::eq") << "negation has proof" << endl;
     Trace("arith::eq") << constraint << endl;
     Trace("arith::eq") << negation << endl;
@@ -1792,37 +1786,35 @@ TheoryId TheoryArithPrivate::theoryOf(TNode x) const
 {
   return Theory::theoryOf(x);
 }
-void TheoryArithPrivate::debugPrintFacts() const
-{
-  d_containing.debugPrintFacts();
-}
 
 bool TheoryArithPrivate::outputTrustedLemma(TrustNode lemma, InferenceId id)
 {
   Trace("arith::channel") << "Arith trusted lemma: " << lemma << std::endl;
-  return d_containing.d_im.trustedLemma(lemma, id);
+  return d_containing.outputTrustedLemma(lemma, id);
 }
 
 bool TheoryArithPrivate::outputLemma(TNode lem, InferenceId id) {
   Trace("arith::channel") << "Arith lemma: " << lem << std::endl;
-  return d_containing.d_im.lemma(lem, id);
+  TrustNode tlem = TrustNode::mkTrustLemma(lem);
+  return outputTrustedLemma(tlem, id);
 }
 
 void TheoryArithPrivate::outputTrustedConflict(TrustNode conf, InferenceId id)
 {
   Trace("arith::channel") << "Arith trusted conflict: " << conf << std::endl;
-  d_containing.d_im.trustedConflict(conf, id);
+  d_containing.outputTrustedConflict(conf, id);
 }
 
 void TheoryArithPrivate::outputConflict(TNode lit, InferenceId id) {
   Trace("arith::channel") << "Arith conflict: " << lit << std::endl;
-  d_containing.d_im.conflict(lit, id);
+  TrustNode tlit = TrustNode::mkTrustConflict(lit);
+  outputTrustedConflict(tlit, id);
 }
 
 void TheoryArithPrivate::outputPropagate(TNode lit) {
   Trace("arith::channel") << "Arith propagation: " << lit << std::endl;
   // call the propagate lit method of the
-  d_containing.d_im.propagateLit(lit);
+  d_containing.outputPropagate(lit);
 }
 
 void TheoryArithPrivate::outputRestart() {
@@ -1833,8 +1825,7 @@ void TheoryArithPrivate::outputRestart() {
       "restartVar",
       nm->booleanType(),
       "A boolean variable asserted to be true to force a restart");
-  d_containing.d_im.lemma(
-      restartVar, InferenceId::ARITH_DEMAND_RESTART, LemmaProperty::REMOVABLE);
+  outputLemma(restartVar, InferenceId::ARITH_DEMAND_RESTART);
 }
 
 bool TheoryArithPrivate::isSatLiteral(TNode l) const
@@ -3283,7 +3274,7 @@ bool TheoryArithPrivate::postCheck(Theory::Effort effortLevel)
                                          : d_dualSimplex.getPivots();
   for (std::size_t i = 0; i < nPivots; ++i)
   {
-  d_containing.d_out->spendResource(Resource::ArithPivotStep);
+    d_containing.spendResource(Resource::ArithPivotStep);
   }
 
   Trace("arith::ems") << "ems: " << emmittedConflictOrSplit
@@ -3877,8 +3868,8 @@ Rational TheoryArithPrivate::deltaValueForTotalOrder() const{
     relevantDeltaValues.insert(rhsValue);
   }
 
-  Theory::shared_terms_iterator shared_iter = d_containing.shared_terms_begin();
-  Theory::shared_terms_iterator shared_end = d_containing.shared_terms_end();
+  TheoryState::shared_terms_iterator shared_iter = d_state.shared_terms_begin();
+  TheoryState::shared_terms_iterator shared_end = d_state.shared_terms_end();
   for(; shared_iter != shared_end; ++shared_iter){
     Node sharedCurr = *shared_iter;
     sharedCurr =
@@ -3931,15 +3922,15 @@ void TheoryArithPrivate::collectModelValues(
 {
   AlwaysAssert(d_qflraStatus == Result::SAT);
 
-  if(TraceIsOn("arith::collectModelInfo")){
-    debugPrintFacts();
-  }
-
   Trace("arith::collectModelInfo") << "collectModelInfo() begin " << endl;
 
   // Delta lasts at least the duration of the function call
   const Rational& delta = d_partialModel.getDelta();
-  std::unordered_set<TNode> shared = d_containing.currentlySharedTerms();
+  std::unordered_set<TNode> shared;
+  for (TheoryState::shared_terms_iterator i = d_state.shared_terms_begin(),
+           i_end = d_state.shared_terms_end(); i != i_end; ++i) {
+    shared.insert (*i);
+  }
 
   // TODO:
   // This is not very good for user push/pop....

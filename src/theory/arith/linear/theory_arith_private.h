@@ -65,6 +65,7 @@ class TheoryModel;
 
 namespace arith::linear {
 
+class LinearSolver;
 class BranchCutInfo;
 class TreeLog;
 class ApproximateStatistics;
@@ -86,7 +87,7 @@ class TheoryArithPrivate : protected EnvObj
  private:
   static constexpr uint32_t RESET_START = 2;
 
-  TheoryArith& d_containing;
+  LinearSolver& d_containing;
 
   /**
    * Whether we encountered non-linear arithmetic at any time during solving.
@@ -429,8 +430,8 @@ private:
   DeltaRational getDeltaValue(TNode term) const
       /* throw(DeltaRationalException, ModelException) */;
  public:
-  TheoryArithPrivate(TheoryArith& containing,
-                     Env& env,
+  TheoryArithPrivate(Env& env,
+                     LinearSolver& containing,
                      TheoryState& ts,
                      BranchAndBound& bab);
   ~TheoryArithPrivate();
@@ -690,7 +691,6 @@ private:
 
   bool isLeaf(TNode x) const;
   TheoryId theoryOf(TNode x) const;
-  void debugPrintFacts() const;
   bool outputTrustedLemma(TrustNode lem, InferenceId id);
   bool outputLemma(TNode lem, InferenceId id);
   void outputTrustedConflict(TrustNode conf, InferenceId id);

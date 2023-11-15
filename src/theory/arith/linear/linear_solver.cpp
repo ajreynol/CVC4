@@ -25,10 +25,12 @@ namespace arith::linear {
 LinearSolver::LinearSolver(TheoryArith& containing,
                            Env& env,
                            TheoryState& ts,
+                           InferenceManager& im,
                            BranchAndBound& bab)
     : EnvObj(env),
       d_containing(containing),
-      d_internal(containing, env, ts, bab)
+      d_im(im),
+      d_internal(env, *this, ts, bab)
 {
 }
 
@@ -90,6 +92,26 @@ bool LinearSolver::foundNonlinear() const
 ArithCongruenceManager* LinearSolver::getCongruenceManager()
 {
   return d_internal.getCongruenceManager();
+}
+
+bool LinearSolver::outputTrustedLemma(TrustNode lemma, InferenceId id)
+{
+  return d_im.trustedLemma(lemma, id);
+}
+
+void LinearSolver::outputTrustedConflict(TrustNode conf, InferenceId id)
+{
+  d_im.trustedConflict(conf, id);
+}
+
+void LinearSolver::outputPropagate(TNode lit)
+{
+  d_im.propagateLit(lit);
+}
+
+void LinearSolver::spendResource(Resource r)
+{
+  d_im.spendResource(r);
 }
 
 }  // namespace arith::linear

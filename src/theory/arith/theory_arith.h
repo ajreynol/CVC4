@@ -38,17 +38,12 @@ class NonlinearExtension;
 
 class EqualitySolver;
 
-namespace linear {
-class TheoryArithPrivate;
-}
-
 /**
  * Implementation of linear and non-linear integer and real arithmetic.
  * The linear arithmetic solver is based upon:
  * http://research.microsoft.com/en-us/um/people/leonardo/cav06.pdf
  */
 class TheoryArith : public Theory {
-  friend class linear::TheoryArithPrivate;
  public:
   TheoryArith(Env& env, OutputChannel& out, Valuation valuation);
   virtual ~TheoryArith();

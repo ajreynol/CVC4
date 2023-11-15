@@ -46,7 +46,7 @@ TheoryArith::TheoryArith(Env& env, OutputChannel& out, Valuation valuation)
       d_ppre(d_env),
       d_bab(env, d_astate, d_im, d_ppre),
       d_eqSolver(nullptr),
-      d_internal(*this, env, d_astate, d_bab),
+      d_internal(*this, env, d_astate, d_im, d_bab),
       d_nonlinearExtension(nullptr),
       d_opElim(d_env),
       d_arithPreproc(env, d_im, d_pnm, d_opElim),
