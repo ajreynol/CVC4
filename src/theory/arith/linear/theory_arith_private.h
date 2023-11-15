@@ -483,7 +483,7 @@ private:
 
   //--------------------------------- standard check
   /** Pre-check, called before the fact queue of the theory is processed. */
-  bool preCheck(Theory::Effort level);
+  bool preCheck(Theory::Effort level, bool newFacts);
   /** Pre-notify fact. */
   void preNotifyFact(TNode atom, bool pol, TNode fact);
   /**
@@ -685,7 +685,6 @@ private:
   /** Debugging only routine. Prints the model. */
   void debugPrintModel(std::ostream& out) const;
 
-  bool done() const;
   bool isLeaf(TNode x) const;
   TheoryId theoryOf(TNode x) const;
   void debugPrintFacts() const;

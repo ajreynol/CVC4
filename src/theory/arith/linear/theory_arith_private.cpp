@@ -1783,14 +1783,14 @@ void TheoryArithPrivate::outputConflicts(){
   }
 }
 
-bool TheoryArithPrivate::done() const { return d_containing.done(); }
 bool TheoryArithPrivate::isLeaf(TNode x) const
 {
-  return d_containing.isLeaf(x);
+  return x.getNumChildren() == 0
+          || Theory::theoryOf(x, options().theory.theoryOfMode) != THEORY_ARITH;
 }
 TheoryId TheoryArithPrivate::theoryOf(TNode x) const
 {
-  return d_containing.theoryOf(x);
+  return Theory::theoryOf(x);
 }
 void TheoryArithPrivate::debugPrintFacts() const
 {
@@ -3088,14 +3088,14 @@ bool TheoryArithPrivate::hasFreshArithLiteral(Node n) const{
   }
 }
 
-bool TheoryArithPrivate::preCheck(Theory::Effort level)
+bool TheoryArithPrivate::preCheck(Theory::Effort level, bool newFacts)
 {
   Assert(d_currentPropagationList.empty());
   if(TraceIsOn("arith::consistency")){
     Assert(unenqueuedVariablesAreConsistent());
   }
 
-  d_newFacts = !done();
+  d_newFacts = newFacts;
   // If d_previousStatus == SAT, then reverts on conflicts are safe
   // Otherwise, they are not and must be committed.
   d_previousStatus = d_qflraStatus;

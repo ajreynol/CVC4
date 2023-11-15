@@ -71,7 +71,8 @@ std::pair<bool, Node> LinearSolver::entailmentCheck(TNode lit)
 }
 bool LinearSolver::preCheck(Theory::Effort level)
 {
-  return d_internal.preCheck(level);
+  bool newFacts = !d_containing.done();
+  return d_internal.preCheck(level, newFacts);
 }
 void LinearSolver::preNotifyFact(TNode atom, bool pol, TNode fact)
 {

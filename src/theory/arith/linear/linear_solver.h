@@ -103,6 +103,8 @@ class LinearSolver : protected EnvObj
   /** get the congruence manager, if we are using one */
   ArithCongruenceManager* getCongruenceManager();
 
+  //======================
+  
  private:
   /** Containing */
   TheoryArith& d_containing;
