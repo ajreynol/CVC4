@@ -293,7 +293,7 @@ bool Instantiate::addInstantiationInternal(
       // add the transformation proof, or the trusted rule if none provided
       pfTmp->addLazyStep(proven,
                          tpBody.getGenerator(),
-                         ProofRule::QUANTIFIERS_PREPROCESS,
+                         TrustId::QUANTIFIERS_PREPROCESS,
                          true,
                          "Instantiate::getInstantiation:qpreprocess");
       pfTmp->addStep(body, ProofRule::EQ_RESOLVE, {orig_body, proven}, {});
@@ -602,7 +602,7 @@ Node Instantiate::getInstantiation(Node q,
         Node proven = trn.getProven();
         pf->addLazyStep(proven,
                         trn.getGenerator(),
-                        ProofRule::THEORY_PREPROCESS,
+                        TrustId::THEORY_PREPROCESS,
                         true,
                         "Instantiate::getInstantiation:rewrite_inst");
         pf->addStep(newBody, ProofRule::EQ_RESOLVE, {body, proven}, {});
