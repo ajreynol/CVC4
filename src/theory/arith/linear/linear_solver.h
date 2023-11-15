@@ -111,6 +111,7 @@ class LinearSolver : protected EnvObj
   void outputTrustedConflict(TrustNode conf, InferenceId id);
   void outputPropagate(TNode lit);
   void spendResource(Resource r);
+
  private:
   /** Containing */
   TheoryArith& d_containing;

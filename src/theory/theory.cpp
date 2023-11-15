@@ -278,12 +278,15 @@ void Theory::computeCareGraph() {
   Trace("sharing") << "Theory::computeCareGraph<" << getId() << ">()" << endl;
   const context::CDList<TNode>& sharedTerms = d_theoryState->getSharedTerms();
   size_t ssize = sharedTerms.size();
-  for (size_t i = 0; i < ssize; ++ i) {
+  for (size_t i = 0; i < ssize; ++i)
+  {
     TNode a = sharedTerms[i];
     TypeNode aType = a.getType();
-    for (size_t j = i + 1; j < ssize; ++ j) {
+    for (size_t j = i + 1; j < ssize; ++j)
+    {
       TNode b = sharedTerms[j];
-      if (b.getType() != aType) {
+      if (b.getType() != aType)
+      {
         // We don't care about the terms of different types
         continue;
       }
@@ -356,10 +359,11 @@ void Theory::collectAssertedTerms(std::set<Node>& termSet,
 
   if (includeShared)
   {
-    Assert (d_theoryState!=nullptr);
+    Assert(d_theoryState != nullptr);
     // Add terms that are shared terms
-    context::CDList<TNode>::const_iterator shared_it = d_theoryState->shared_terms_begin(),
-                                           shared_it_end = d_theoryState->shared_terms_end();
+    context::CDList<TNode>::const_iterator
+        shared_it = d_theoryState->shared_terms_begin(),
+        shared_it_end = d_theoryState->shared_terms_end();
     for (; shared_it != shared_it_end; ++shared_it)
     {
       collectTerms(*shared_it, termSet, irrKinds);

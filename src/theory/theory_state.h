@@ -119,11 +119,11 @@ class TheoryState : protected EnvObj
 
   /** Get the underlying valuation class */
   Valuation& getValuation();
-  
+
   //------------------------------------------- access methods for shared terms
   /** Add shared term, called by Theory. */
   void addSharedTerm(TNode node);
-  
+
   using shared_terms_iterator = context::CDList<TNode>::const_iterator;
   /**
    * Provides access to the shared terms, primarily intended for theory
@@ -145,6 +145,7 @@ class TheoryState : protected EnvObj
   shared_terms_iterator shared_terms_end() const { return d_sharedTerms.end(); }
   /** Get shared terms */
   const context::CDList<TNode>& getSharedTerms() const { return d_sharedTerms; }
+
  protected:
   /**
    * The valuation proxy for the Theory to communicate back with the

@@ -3274,7 +3274,7 @@ bool TheoryArithPrivate::postCheck(Theory::Effort effortLevel)
                                          : d_dualSimplex.getPivots();
   for (std::size_t i = 0; i < nPivots; ++i)
   {
-    d_containing.spendResource(Resource::ArithPivotStep);
+  d_containing.spendResource(Resource::ArithPivotStep);
   }
 
   Trace("arith::ems") << "ems: " << emmittedConflictOrSplit
@@ -3928,8 +3928,11 @@ void TheoryArithPrivate::collectModelValues(
   const Rational& delta = d_partialModel.getDelta();
   std::unordered_set<TNode> shared;
   for (TheoryState::shared_terms_iterator i = d_state.shared_terms_begin(),
-           i_end = d_state.shared_terms_end(); i != i_end; ++i) {
-    shared.insert (*i);
+                                          i_end = d_state.shared_terms_end();
+       i != i_end;
+       ++i)
+  {
+    shared.insert(*i);
   }
 
   // TODO:

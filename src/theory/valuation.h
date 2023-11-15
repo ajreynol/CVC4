@@ -216,7 +216,7 @@ public:
    * or during LAST_CALL effort.
    */
   bool isRelevant(Node lit) const;
-  
+
   /** is legal elimination
    *
    * Returns true if x -> val is a legal elimination of variable x. This is

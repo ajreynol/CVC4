@@ -351,14 +351,15 @@ void TheoryEngine::printAssertions(const char* tag) {
         if (logicInfo().isSharingEnabled())
         {
           TheoryState* state = theory->getTheoryState();
-          if (state!=nullptr)
+          if (state != nullptr)
           {
             Trace(tag) << "Shared terms of " << theory->getId() << ": " << endl;
             context::CDList<TNode>::const_iterator
                 it = state->shared_terms_begin(),
                 it_end = state->shared_terms_end();
-            for (unsigned i = 0; it != it_end; ++ it, ++i) {
-                Trace(tag) << "[" << i << "]: " << (*it) << endl;
+            for (unsigned i = 0; it != it_end; ++it, ++i)
+            {
+              Trace(tag) << "[" << i << "]: " << (*it) << endl;
             }
           }
         }
