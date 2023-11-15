@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -100,9 +100,7 @@ ClauseId KissatSolver::addXorClause(SatClause& clause, bool rhs, bool removable)
   Unreachable() << "Kissat does not support adding XOR clauses.";
 }
 
-SatVariable KissatSolver::newVar(bool isTheoryAtom,
-                                 bool preRegister,
-                                 bool canErase)
+SatVariable KissatSolver::newVar(bool isTheoryAtom, bool canErase)
 {
   ++d_statistics.d_numVariables;
   return d_nextVarIdx++;

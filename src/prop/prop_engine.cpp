@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Haniel Barbosa, Mathias Preiner
+ *   Andrew Reynolds, Haniel Barbosa, Morgan Deters
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -27,6 +27,7 @@
 #include "options/main_options.h"
 #include "options/options.h"
 #include "options/proof_options.h"
+#include "options/prop_options.h"
 #include "options/smt_options.h"
 #include "proof/proof_node_algorithm.h"
 #include "prop/cnf_stream.h"
@@ -76,14 +77,24 @@ PropEngine::PropEngine(Env& env, TheoryEngine* te)
       d_theoryLemmaPg(d_env, d_env.getUserContext(), "PropEngine::ThLemmaPg"),
       d_ppm(nullptr),
       d_interrupted(false),
-      d_assumptions(d_env.getUserContext())
+      d_assumptions(d_env.getUserContext()),
+      d_stats(statisticsRegistry())
 {
   Trace("prop") << "Constructing the PropEngine" << std::endl;
   context::UserContext* userContext = d_env.getUserContext();
   ProofNodeManager* pnm = d_env.getProofNodeManager();
 
-  d_satSolver =
-      SatSolverFactory::createCDCLTMinisat(d_env, statisticsRegistry());
+  if (options().prop.satSolver == options::SatSolverMode::MINISAT
+      || d_env.isSatProofProducing())
+  {
+    d_satSolver =
+        SatSolverFactory::createCDCLTMinisat(d_env, statisticsRegistry());
+  }
+  else
+  {
+    d_satSolver = SatSolverFactory::createCadicalCDCLT(
+        d_env, statisticsRegistry(), env.getResourceManager());
+  }
 
   // CNF stream and theory proxy required pointers to each other, make the
   // theory proxy first
@@ -105,10 +116,8 @@ PropEngine::PropEngine(Env& env, TheoryEngine* te)
                           satProofs ? pnm : nullptr);
   if (satProofs)
   {
-    d_pfCnfStream.reset(new ProofCnfStream(
-        env,
-        *d_cnfStream,
-        static_cast<MinisatSatSolver*>(d_satSolver)->getProofManager()));
+    d_pfCnfStream.reset(
+        new ProofCnfStream(env, *d_cnfStream, d_satSolver->getProofManager()));
     d_ppm.reset(
         new PropPfManager(env, userContext, d_satSolver, d_pfCnfStream.get()));
   }
@@ -124,9 +133,11 @@ void PropEngine::finishInit()
   // issue we track it directly here
   if (isProofEnabled())
   {
-    static_cast<MinisatSatSolver*>(d_satSolver)
-        ->getProofManager()
-        ->registerSatAssumptions({nm->mkConst(true)});
+    SatProofManager* spfm = d_satSolver->getProofManager();
+    if (spfm)
+    {
+      spfm->registerSatAssumptions({nm->mkConst(true)});
+    }
   }
   d_cnfStream->convertAndAssert(nm->mkConst(false).notNode(), false, false);
 }
@@ -168,11 +179,15 @@ void PropEngine::assertInputFormulas(
 {
   Assert(!d_inCheckSat) << "Sat solver in solve()!";
   d_theoryProxy->notifyInputFormulas(assertions, skolemMap);
+  int64_t natomsPre = d_cnfStream->d_stats.d_numAtoms.get();
   for (const Node& node : assertions)
   {
     Trace("prop") << "assertFormula(" << node << ")" << std::endl;
     assertInternal(node, false, false, true);
   }
+  int64_t natomsPost = d_cnfStream->d_stats.d_numAtoms.get();
+  Assert(natomsPost >= natomsPre);
+  d_stats.d_numInputAtoms += (natomsPost - natomsPre);
 }
 
 void PropEngine::assertLemma(TrustNode tlemma, theory::LemmaProperty p)
@@ -184,7 +199,7 @@ void PropEngine::assertLemma(TrustNode tlemma, theory::LemmaProperty p)
   TrustNode tplemma = d_theoryProxy->preprocessLemma(tlemma, ppLemmas);
 
   // do final checks on the lemmas we are about to send
-  if (isProofEnabled()
+  if (d_env.isTheoryProofProducing()
       && options().proof.proofCheck == options::ProofCheckMode::EAGER)
   {
     Assert(tplemma.getGenerator() != nullptr);
@@ -235,7 +250,7 @@ void PropEngine::assertTrustedLemmaInternal(TrustNode trn, bool removable)
       && !trn.getGenerator())
   {
     Node actualNode = negated ? node.notNode() : node;
-    d_theoryLemmaPg.addStep(actualNode, PfRule::THEORY_LEMMA, {}, {actualNode});
+    d_theoryLemmaPg.addTrustedStep(actualNode, TrustId::THEORY_LEMMA, {}, {});
     trn = TrustNode::mkReplaceGenTrustNode(trn, &d_theoryLemmaPg);
   }
   assertInternal(node, negated, removable, false, trn.getGenerator());
@@ -329,12 +344,13 @@ void PropEngine::assertLemmasInternal(
   Trace("prop") << "Finish " << trn << std::endl;
 }
 
-void PropEngine::requirePhase(TNode n, bool phase) {
-  Trace("prop") << "requirePhase(" << n << ", " << phase << ")" << std::endl;
+void PropEngine::preferPhase(TNode n, bool phase)
+{
+  Trace("prop") << "preferPhase(" << n << ", " << phase << ")" << std::endl;
 
   Assert(n.getType().isBoolean());
   SatLiteral lit = d_cnfStream->getLiteral(n);
-  d_satSolver->requirePhase(phase ? lit : ~lit);
+  d_satSolver->preferPhase(phase ? lit : ~lit);
 }
 
 bool PropEngine::isDecision(Node lit) const {
@@ -358,18 +374,13 @@ std::vector<Node> PropEngine::getPropOrderHeap() const
   return d_satSolver->getOrderHeap();
 }
 
-int32_t PropEngine::getDecisionLevel(Node lit) const
+bool PropEngine::isFixed(TNode lit) const
 {
-  Assert(isSatLiteral(lit));
-  return d_satSolver->getDecisionLevel(
-      d_cnfStream->getLiteral(lit).getSatVariable());
-}
-
-int32_t PropEngine::getIntroLevel(Node lit) const
-{
-  Assert(isSatLiteral(lit));
-  return d_satSolver->getIntroLevel(
-      d_cnfStream->getLiteral(lit).getSatVariable());
+  if (isSatLiteral(lit))
+  {
+    return d_satSolver->isFixed(d_cnfStream->getLiteral(lit).getSatVariable());
+  }
+  return false;
 }
 
 void PropEngine::printSatisfyingAssignment(){
@@ -414,14 +425,14 @@ Result PropEngine::checkSat() {
   ScopedBool scopedBool(d_inCheckSat);
   d_inCheckSat = true;
 
-  // Note this currently ignores conflicts (a dangerous practice).
-  d_theoryProxy->presolve();
-
   if (options().base.preprocessOnly)
   {
     outputIncompleteReason(UnknownExplanation::REQUIRES_FULL_CHECK);
     return Result(Result::UNKNOWN, UnknownExplanation::REQUIRES_FULL_CHECK);
   }
+
+  // Note this currently ignores conflicts (a dangerous practice).
+  d_theoryProxy->presolve();
 
   // Reset the interrupted flag
   d_interrupted = false;
@@ -441,6 +452,8 @@ Result PropEngine::checkSat() {
     }
     result = d_satSolver->solve(assumptions);
   }
+
+  d_theoryProxy->postsolve(result);
 
   if( result == SAT_VALUE_UNKNOWN ) {
     ResourceManager* rm = resourceManager();
@@ -655,8 +668,8 @@ bool PropEngine::properExplanation(TNode node, TNode expl) const
 
   SatLiteral nodeLit = d_cnfStream->getLiteral(node);
 
-  for (TNode::kinded_iterator i = expl.begin(kind::AND),
-                              i_end = expl.end(kind::AND);
+  for (TNode::kinded_iterator i = expl.begin(Kind::AND),
+                              i_end = expl.end(Kind::AND);
        i != i_end;
        ++i)
   {
@@ -678,23 +691,6 @@ bool PropEngine::properExplanation(TNode node, TNode expl) const
           << "properExplanation(): Failing because the node" << std::endl
           << "properExplanation(): " << node << std::endl
           << "properExplanation(): cannot be made to explain itself!"
-          << std::endl;
-      return false;
-    }
-
-    if (!d_satSolver->properExplanation(nodeLit, iLit))
-    {
-      Trace("properExplanation")
-          << "properExplanation(): SAT solver told us that node" << std::endl
-          << "properExplanation(): " << *i << std::endl
-          << "properExplanation(): is not part of a proper explanation node for"
-          << std::endl
-          << "properExplanation(): " << node << std::endl
-          << "properExplanation(): Perhaps it one of the two isn't assigned or "
-             "the explanation"
-          << std::endl
-          << "properExplanation(): node wasn't propagated before the node "
-             "being explained"
           << std::endl;
       return false;
     }
@@ -749,10 +745,18 @@ void PropEngine::getUnsatCore(std::vector<Node>& core)
   else
   {
     Trace("unsat-core") << "PropEngine::getUnsatCore: via proof" << std::endl;
-    // otherwise, it is just the free assumptions of the proof
+    // otherwise, it is just the free assumptions of the proof. Note that we
+    // need to connect the SAT proof to the CNF proof becuase we need the
+    // preprocessed input as leaves, not the clauses derived from them.
     std::shared_ptr<ProofNode> pfn = getProof();
     expr::getFreeAssumptions(pfn.get(), core);
   }
+}
+
+std::vector<Node> PropEngine::getUnsatCoreLemmas()
+{
+  Assert(d_env.isSatProofProducing());
+  return d_ppm->getUnsatCoreLemmas();
 }
 
 std::vector<Node> PropEngine::getLearnedZeroLevelLiterals(
@@ -769,6 +773,11 @@ std::vector<Node> PropEngine::getLearnedZeroLevelLiteralsForRestart() const
 modes::LearnedLitType PropEngine::getLiteralType(const Node& lit) const
 {
   return d_theoryProxy->getLiteralType(lit);
+}
+
+PropEngine::Statistics::Statistics(StatisticsRegistry& sr)
+    : d_numInputAtoms(sr.registerInt("prop::PropEngine::numInputAtoms"))
+{
 }
 
 }  // namespace prop

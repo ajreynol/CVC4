@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -88,12 +88,15 @@ namespace theory {
 /* -------------------------------------------------------------------------- */
 
 inline void flattenAnd(Node n, std::vector<TNode>& out){
-  Assert(n.getKind() == kind::AND);
+  Assert(n.getKind() == Kind::AND);
   for(Node::iterator i=n.begin(), i_end=n.end(); i != i_end; ++i){
     Node curr = *i;
-    if(curr.getKind() == kind::AND){
+    if (curr.getKind() == Kind::AND)
+    {
       flattenAnd(curr, out);
-    }else{
+    }
+    else
+    {
       out.push_back(curr);
     }
   }
@@ -102,7 +105,7 @@ inline void flattenAnd(Node n, std::vector<TNode>& out){
 inline Node flattenAnd(Node n){
   std::vector<TNode> out;
   flattenAnd(n, out);
-  return NodeManager::currentNM()->mkNode(kind::AND, out);
+  return NodeManager::currentNM()->mkNode(Kind::AND, out);
 }
 
 /**
@@ -304,7 +307,7 @@ void TheoryEngine::preRegister(TNode preprocessed) {
         }
       }
       // should not have witness
-      Assert(!expr::hasSubtermKind(kind::WITNESS, preprocessed));
+      Assert(!expr::hasSubtermKind(Kind::WITNESS, preprocessed));
 
       // pre-register with the shared solver, which handles
       // calling prepregister on individual theories, adding shared terms,
@@ -373,16 +376,20 @@ void TheoryEngine::check(Theory::Effort effort) {
 #ifdef CVC5_FOR_EACH_THEORY_STATEMENT
 #undef CVC5_FOR_EACH_THEORY_STATEMENT
 #endif
-#define CVC5_FOR_EACH_THEORY_STATEMENT(THEORY)                      \
-  if (theory::TheoryTraits<THEORY>::hasCheck                        \
-      && isTheoryEnabled(THEORY))                       \
-  {                                                                 \
-    theoryOf(THEORY)->check(effort);                                \
-    if (d_inConflict)                                               \
-    {                                                               \
-      Trace("conflict") << THEORY << " in conflict. " << std::endl; \
-      break;                                                        \
-    }                                                               \
+#define CVC5_FOR_EACH_THEORY_STATEMENT(THEORY)                           \
+  if (theory::TheoryTraits<THEORY>::hasCheck && isTheoryEnabled(THEORY)) \
+  {                                                                      \
+    theoryOf(THEORY)->check(effort);                                     \
+    if (d_inConflict)                                                    \
+    {                                                                    \
+      Trace("conflict") << THEORY << " in conflict. " << std::endl;      \
+      break;                                                             \
+    }                                                                    \
+    if (rm->out())                                                       \
+    {                                                                    \
+      interrupt();                                                       \
+      return;                                                            \
+    }                                                                    \
   }
 
   // Do the checking
@@ -408,6 +415,8 @@ void TheoryEngine::check(Theory::Effort effort) {
     {
       tem->check(effort);
     }
+
+    auto rm = d_env.getResourceManager();
 
     // Check until done
     while (d_factsAsserted && !d_inConflict && !d_lemmasAdded) {
@@ -437,6 +446,13 @@ void TheoryEngine::check(Theory::Effort effort) {
       // We are still satisfiable, propagate as much as possible
       propagate(effort);
 
+      // Interrupt in case we reached a resource limit.
+      if (rm->out())
+      {
+        interrupt();
+        return;
+      }
+
       if (Theory::fullEffort(effort))
       {
         d_stats.d_fullEffortChecks++;
@@ -464,6 +480,13 @@ void TheoryEngine::check(Theory::Effort effort) {
         Assert(effort == Theory::EFFORT_STANDARD);
         d_stats.d_stdEffortChecks++;
       }
+
+      // Interrupt in case we reached a resource limit.
+      if (rm->out())
+      {
+        interrupt();
+        return;
+      }
     }
 
     // Must consult quantifiers theory for last call to ensure sat, or otherwise add a lemma
@@ -476,12 +499,15 @@ void TheoryEngine::check(Theory::Effort effort) {
       // reset the model in the combination engine
       d_tc->resetModel();
       //checks for theories requiring the model go at last call
-      for (TheoryId theoryId = THEORY_FIRST; theoryId < THEORY_LAST; ++theoryId) {
-        if( theoryId!=THEORY_QUANTIFIERS ){
+      for (TheoryId theoryId = THEORY_FIRST; theoryId < THEORY_LAST; ++theoryId)
+      {
+        if (theoryId != THEORY_QUANTIFIERS)
+        {
           Theory* theory = d_theoryTable[theoryId];
           if (theory && isTheoryEnabled(theoryId))
           {
-            if( theory->needsCheckLastEffort() ){
+            if (theory->needsCheckLastEffort())
+            {
               if (!d_tc->buildModel())
               {
                 break;
@@ -498,11 +524,21 @@ void TheoryEngine::check(Theory::Effort effort) {
           // quantifiers engine must check at last call effort
           d_quantEngine->check(Theory::EFFORT_LAST_CALL);
         }
-      }
-      // notify the theory modules of the model
-      for (TheoryEngineModule* tem : d_modules)
-      {
-        tem->notifyCandidateModel(getModel());
+        // notify the theory modules of the model
+        for (TheoryEngineModule* tem : d_modules)
+        {
+          if (!tem->needsCandidateModel())
+          {
+            // module does not need candidate model
+            continue;
+          }
+          if (!d_tc->buildModel())
+          {
+            // model failed to build, we are done
+            break;
+          }
+          tem->notifyCandidateModel(getModel());
+        }
       }
     }
 
@@ -558,7 +594,8 @@ Node TheoryEngine::getNextDecisionRequest()
 
 bool TheoryEngine::properConflict(TNode conflict) const {
   bool value;
-  if (conflict.getKind() == kind::AND) {
+  if (conflict.getKind() == Kind::AND)
+  {
     for (unsigned i = 0; i < conflict.getNumChildren(); ++ i) {
       if (! getPropEngine()->hasValue(conflict[i], value)) {
         Trace("properConflict") << "Bad conflict is due to unassigned atom: "
@@ -578,7 +615,9 @@ bool TheoryEngine::properConflict(TNode conflict) const {
         return false;
       }
     }
-  } else {
+  }
+  else
+  {
     if (! getPropEngine()->hasValue(conflict, value)) {
       Trace("properConflict") << "Bad conflict is due to unassigned atom: "
                               << conflict << endl;
@@ -683,7 +722,14 @@ bool TheoryEngine::presolve() {
   return false;
 }/* TheoryEngine::presolve() */
 
-void TheoryEngine::postsolve() {
+void TheoryEngine::postsolve(prop::SatValue result)
+{
+  // postsolve with the theory engine modules as well
+  for (TheoryEngineModule* tem : d_modules)
+  {
+    tem->postsolve(result);
+  }
+
   // Reset the interrupt flag
   d_interrupted = false;
 }
@@ -763,7 +809,7 @@ theory::Theory::PPAssertStatus TheoryEngine::solve(
   d_interrupted = false;
 
   TNode literal = tliteral.getNode();
-  TNode atom = literal.getKind() == kind::NOT ? literal[0] : literal;
+  TNode atom = literal.getKind() == Kind::NOT ? literal[0] : literal;
   Trace("theory::solve") << "TheoryEngine::solve(" << literal << "): solving with " << theoryOf(atom)->getId() << endl;
 
   TheoryId tid = d_env.theoryOf(atom);
@@ -799,14 +845,14 @@ TrustNode TheoryEngine::ppRewrite(TNode term,
     stringstream ss;
     ss << "The logic was specified as " << logicInfo().getLogicString()
        << ", which doesn't include " << tid
-       << ", but got a preprocessing-time term for that theory." << std::endl
+       << ", but got a term for that theory during solving." << std::endl
        << "The term:" << std::endl
        << term;
     throw LogicException(ss.str());
   }
   TrustNode trn = d_theoryTable[tid]->ppRewrite(term, lems);
   // should never introduce a skolem to eliminate an equality
-  Assert(lems.empty() || term.getKind() != kind::EQUAL);
+  Assert(lems.empty() || term.getKind() != Kind::EQUAL);
   if (!isProofEnabled())
   {
     return trn;
@@ -821,8 +867,8 @@ TrustNode TheoryEngine::ppRewrite(TNode term,
     {
       Node proven = tskl.getProven();
       Node tidn = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(tid);
-      d_lazyProof->addStep(
-          proven, PfRule::THEORY_PREPROCESS_LEMMA, {}, {proven, tidn});
+      d_lazyProof->addTrustedStep(
+          proven, TrustId::THEORY_PREPROCESS_LEMMA, {}, {tidn});
       skl.d_lemma = TrustNode::mkTrustLemma(proven, d_lazyProof.get());
     }
   }
@@ -830,6 +876,23 @@ TrustNode TheoryEngine::ppRewrite(TNode term,
   // trust node, this is the responsibility of the caller, i.e. theory
   // preprocessor.
   return trn;
+}
+
+TrustNode TheoryEngine::ppStaticRewrite(TNode term)
+{
+  TheoryId tid = d_env.theoryOf(term);
+  if (!isTheoryEnabled(tid) && tid != THEORY_SAT_SOLVER)
+  {
+    stringstream ss;
+    ss << "The logic was specified as " << logicInfo().getLogicString()
+       << ", which doesn't include " << tid
+       << ", but got a preprocessing-time term for that theory."
+       << std::endl
+       << "The term:" << std::endl
+       << term;
+    throw LogicException(ss.str());
+  }
+  return d_theoryTable[tid]->ppStaticRewrite(term);
 }
 
 void TheoryEngine::notifyPreprocessedAssertions(
@@ -930,7 +993,7 @@ void TheoryEngine::assertToTheory(TNode assertion, TNode originalAssertion, theo
             assertion, originalAssertion, toTheoryIdProp, fromTheoryId))
     {
       // assert to the shared solver
-      bool polarity = assertion.getKind() != kind::NOT;
+      bool polarity = assertion.getKind() != Kind::NOT;
       TNode atom = polarity ? assertion : assertion[0];
       d_sharedSolver->assertShared(atom, polarity, assertion);
     }
@@ -977,9 +1040,9 @@ void TheoryEngine::assertToTheory(TNode assertion, TNode originalAssertion, theo
     return;
   }
 
-  Assert(assertion.getKind() == kind::EQUAL
-         || (assertion.getKind() == kind::NOT
-             && assertion[0].getKind() == kind::EQUAL));
+  Assert(assertion.getKind() == Kind::EQUAL
+         || (assertion.getKind() == Kind::NOT
+             && assertion[0].getKind() == Kind::EQUAL));
 
   // Normalize
   Node normalizedLiteral = rewrite(assertion);
@@ -996,7 +1059,7 @@ void TheoryEngine::assertToTheory(TNode assertion, TNode originalAssertion, theo
         // special case, trust node has no proof generator
         TrustNode trnn = TrustNode::mkTrustConflict(normalizedLiteral);
         // Get the explanation (conflict will figure out where it came from)
-        conflict(trnn, toTheoryId);
+        conflict(trnn, InferenceId::CONFLICT_REWRITE_LIT, toTheoryId);
       } else {
         Unreachable();
       }
@@ -1031,7 +1094,7 @@ void TheoryEngine::assertFact(TNode literal)
   }
 
   // Get the atom
-  bool polarity = literal.getKind() != kind::NOT;
+  bool polarity = literal.getKind() != Kind::NOT;
   TNode atom = polarity ? literal : literal[0];
 
   if (logicInfo().isSharingEnabled())
@@ -1042,7 +1105,8 @@ void TheoryEngine::assertFact(TNode literal)
     // If it's an equality, assert it to the shared term manager, even though the terms are not
     // yet shared. As the terms become shared later, the shared terms manager will then add them
     // to the assert the equality to the interested theories
-    if (atom.getKind() == kind::EQUAL) {
+    if (atom.getKind() == Kind::EQUAL)
+    {
       // Assert it to the the owning theory
       assertToTheory(literal,
                      literal,
@@ -1064,8 +1128,9 @@ void TheoryEngine::assertFact(TNode literal)
             toAssert, literal, request.d_toTheory, THEORY_SAT_SOLVER);
         it.next();
       }
-
-    } else {
+    }
+    else
+    {
       // Not an equality, just assert to the appropriate theory
       assertToTheory(literal,
                      literal,
@@ -1093,10 +1158,10 @@ bool TheoryEngine::propagate(TNode literal, theory::TheoryId theory) {
   // spendResource();
 
   // Get the atom
-  bool polarity = literal.getKind() != kind::NOT;
+  bool polarity = literal.getKind() != Kind::NOT;
   TNode atom = polarity ? literal : literal[0];
 
-  if (logicInfo().isSharingEnabled() && atom.getKind() == kind::EQUAL)
+  if (logicInfo().isSharingEnabled() && atom.getKind() == Kind::EQUAL)
   {
     if (d_propEngine->isSatLiteral(literal)) {
       // We propagate SAT literals to SAT
@@ -1123,10 +1188,11 @@ theory::EqualityStatus TheoryEngine::getEqualityStatus(TNode a, TNode b)
   return d_sharedSolver->getEqualityStatus(a, b);
 }
 
-void TheoryEngine::getDifficultyMap(std::map<Node, Node>& dmap)
+void TheoryEngine::getDifficultyMap(std::map<Node, Node>& dmap,
+                                    bool includeLemmas)
 {
   Assert(d_relManager != nullptr);
-  d_relManager->getDifficultyMap(dmap);
+  d_relManager->getDifficultyMap(dmap, includeLemmas);
 }
 
 theory::IncompleteId TheoryEngine::getModelUnsoundId() const
@@ -1167,17 +1233,18 @@ TrustNode TheoryEngine::getExplanation(TNode node)
   Trace("theory::explain") << "TheoryEngine::getExplanation(" << node
                            << "): current propagation index = "
                            << d_propagationMapTimestamp << endl;
-  bool polarity = node.getKind() != kind::NOT;
+  bool polarity = node.getKind() != Kind::NOT;
   TNode atom = polarity ? node : node[0];
 
   // If we're not in shared mode, explanations are simple
+  TrustNode texplanation;
   if (!logicInfo().isSharingEnabled())
   {
     Trace("theory::explain")
         << "TheoryEngine::getExplanation: sharing is NOT enabled. "
         << " Responsible theory is: " << theoryOf(atom)->getId() << std::endl;
 
-    TrustNode texplanation = theoryOf(atom)->explain(node);
+    texplanation = theoryOf(atom)->explain(node);
     Node explanation = texplanation.getNode();
     Trace("theory::explain") << "TheoryEngine::getExplanation(" << node
                              << ") => " << explanation << endl;
@@ -1191,33 +1258,44 @@ TrustNode TheoryEngine::getExplanation(TNode node)
         Node proven = texplanation.getProven();
         TheoryId tid = theoryOf(atom)->getId();
         Node tidn = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(tid);
-        d_lazyProof->addStep(proven, PfRule::THEORY_LEMMA, {}, {proven, tidn});
+        d_lazyProof->addTrustedStep(proven, TrustId::THEORY_LEMMA, {}, {tidn});
         texplanation =
             TrustNode::mkTrustPropExp(node, explanation, d_lazyProof.get());
       }
     }
-    return texplanation;
   }
+  else
+  {
+    Trace("theory::explain")
+        << "TheoryEngine::getExplanation: sharing IS enabled" << std::endl;
 
-  Trace("theory::explain") << "TheoryEngine::getExplanation: sharing IS enabled"
-                           << std::endl;
+    // Initial thing to explain
+    NodeTheoryPair toExplain(
+        node, THEORY_SAT_SOLVER, d_propagationMapTimestamp);
+    Assert(d_propagationMap.find(toExplain) != d_propagationMap.end());
 
-  // Initial thing to explain
-  NodeTheoryPair toExplain(node, THEORY_SAT_SOLVER, d_propagationMapTimestamp);
-  Assert(d_propagationMap.find(toExplain) != d_propagationMap.end());
+    NodeTheoryPair nodeExplainerPair = d_propagationMap[toExplain];
+    Trace("theory::explain")
+        << "TheoryEngine::getExplanation: explainer for node "
+        << nodeExplainerPair.d_node
+        << " is theory: " << nodeExplainerPair.d_theory << std::endl;
 
-  NodeTheoryPair nodeExplainerPair = d_propagationMap[toExplain];
-  Trace("theory::explain")
-      << "TheoryEngine::getExplanation: explainer for node "
-      << nodeExplainerPair.d_node
-      << " is theory: " << nodeExplainerPair.d_theory << std::endl;
-
-  // Create the workplace for explanations
-  std::vector<NodeTheoryPair> vec{d_propagationMap[toExplain]};
-  // Process the explanation
-  TrustNode texplanation = getExplanation(vec);
-  Trace("theory::explain") << "TheoryEngine::getExplanation(" << node << ") => "
-                           << texplanation.getNode() << endl;
+    // Create the workplace for explanations
+    std::vector<NodeTheoryPair> vec{d_propagationMap[toExplain]};
+    // Process the explanation
+    texplanation = getExplanation(vec);
+    Trace("theory::explain") << "TheoryEngine::getExplanation(" << node
+                             << ") => " << texplanation.getNode() << endl;
+  }
+  // notify the conflict as a lemma
+  for (TheoryEngineModule* tem : d_modules)
+  {
+    tem->notifyLemma(texplanation.getProven(),
+                     InferenceId::EXPLAINED_PROPAGATION,
+                     LemmaProperty::REMOVABLE,
+                     {},
+                     {});
+  }
   return texplanation;
 }
 
@@ -1267,7 +1345,8 @@ void TheoryEngine::ensureLemmaAtoms(const std::vector<TNode>& atoms, theory::The
   for (unsigned i = 0; i < atoms.size(); ++ i) {
 
     // Non-equality atoms are either owned by theory or they don't make sense
-    if (atoms[i].getKind() != kind::EQUAL) {
+    if (atoms[i].getKind() != Kind::EQUAL)
+    {
       continue;
     }
 
@@ -1292,10 +1371,12 @@ void TheoryEngine::ensureLemmaAtoms(const std::vector<TNode>& atoms, theory::The
         assertToTheory(eq.notNode(), eqNormalized.notNode(), /** to */ atomsTo, /** Sat solver */ theory::THEORY_SAT_SOLVER);
       }
       continue;
-    }else if( eqNormalized.getKind() != kind::EQUAL){
-      Assert(eqNormalized.getKind() == kind::BOOLEAN_TERM_VARIABLE
-             || (eqNormalized.getKind() == kind::NOT
-                 && eqNormalized[0].getKind() == kind::BOOLEAN_TERM_VARIABLE));
+    }
+    else if (eqNormalized.getKind() != Kind::EQUAL)
+    {
+      Assert(eqNormalized.getKind() == Kind::SKOLEM
+             || (eqNormalized.getKind() == Kind::NOT
+                 && eqNormalized[0].getKind() == Kind::SKOLEM));
       // this happens for Boolean term equalities V = true that are rewritten to V, we should skip
       //  TODO : revisit this
       continue;
@@ -1331,8 +1412,9 @@ void TheoryEngine::ensureLemmaAtoms(const std::vector<TNode>& atoms, theory::The
 }
 
 void TheoryEngine::lemma(TrustNode tlemma,
-                         theory::LemmaProperty p,
-                         theory::TheoryId from)
+                         InferenceId id,
+                         LemmaProperty p,
+                         TheoryId from)
 {
   // For resource-limiting (also does a time check).
   // spendResource();
@@ -1356,7 +1438,7 @@ void TheoryEngine::lemma(TrustNode tlemma,
       Assert(from != THEORY_LAST);
       // add theory lemma step to proof
       Node tidn = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(from);
-      d_lazyProof->addStep(lemma, PfRule::THEORY_LEMMA, {}, {lemma, tidn});
+      d_lazyProof->addTrustedStep(lemma, TrustId::THEORY_LEMMA, {}, {tidn});
       // update the trust node
       tlemma = TrustNode::mkTrustLemma(lemma, d_lazyProof.get());
     }
@@ -1371,7 +1453,7 @@ void TheoryEngine::lemma(TrustNode tlemma,
   // If specified, we must add this lemma to the set of those that need to be
   // justified, where note we pass all auxiliary lemmas in skAsserts as well,
   // since these by extension must be justified as well.
-  if (d_relManager != nullptr)
+  if (!d_modules.empty())
   {
     std::vector<Node> skAsserts;
     std::vector<Node> sks;
@@ -1381,7 +1463,11 @@ void TheoryEngine::lemma(TrustNode tlemma,
     // notify the modules of the lemma
     for (TheoryEngineModule* tem : d_modules)
     {
-      tem->notifyLemma(retLemma, p, skAsserts, sks);
+      // don't notify theory modules of their own lemmas
+      if (tem->getId() != from)
+      {
+        tem->notifyLemma(retLemma, id, p, skAsserts, sks);
+      }
     }
   }
 
@@ -1400,13 +1486,15 @@ void TheoryEngine::markInConflict()
   d_inConflict = true;
 }
 
-void TheoryEngine::conflict(TrustNode tconflict, TheoryId theoryId)
+void TheoryEngine::conflict(TrustNode tconflict,
+                            InferenceId id,
+                            TheoryId theoryId)
 {
   Assert(tconflict.getKind() == TrustNodeKind::CONFLICT);
 
   TNode conflict = tconflict.getNode();
   Trace("theory::conflict") << "TheoryEngine::conflict(" << conflict << ", "
-                            << theoryId << ")" << endl;
+                            << id << ", " << theoryId << ")" << endl;
   Trace("te-proof-debug") << "Check closed conflict" << std::endl;
   // doesn't require proof generator, yet, since THEORY_LEMMA is added below
   tconflict.debugCheckClosed(
@@ -1452,7 +1540,7 @@ void TheoryEngine::conflict(TrustNode tconflict, TheoryId theoryId)
         // add theory lemma step
         Node tidn = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(theoryId);
         Node conf = tconflict.getProven();
-        d_lazyProof->addStep(conf, PfRule::THEORY_LEMMA, {}, {conf, tidn});
+        d_lazyProof->addTrustedStep(conf, TrustId::THEORY_LEMMA, {}, {tidn});
       }
       // store the explicit step, which should come from a different
       // generator, e.g. d_tepg.
@@ -1485,8 +1573,10 @@ void TheoryEngine::conflict(TrustNode tconflict, TheoryId theoryId)
           // ~fullConflict
           children.push_back(conflict.notNode());
           args.push_back(mkMethodId(MethodId::SB_LITERAL));
-          d_lazyProof->addStep(
-              fullConflictNeg, PfRule::MACRO_SR_PRED_TRANSFORM, children, args);
+          d_lazyProof->addStep(fullConflictNeg,
+                               ProofRule::MACRO_SR_PRED_TRANSFORM,
+                               children,
+                               args);
         }
       }
     }
@@ -1504,14 +1594,14 @@ void TheoryEngine::conflict(TrustNode tconflict, TheoryId theoryId)
       tconf.debugCheckClosed(
           options(), "te-proof-debug", "TheoryEngine::conflict:sharing");
     }
-    lemma(tconf, LemmaProperty::REMOVABLE);
+    lemma(tconf, id, LemmaProperty::REMOVABLE);
   }
   else
   {
     // When only one theory, the conflict should need no processing
     Assert(properConflict(conflict));
     // pass the trust node that was sent from the theory
-    lemma(tconflict, LemmaProperty::REMOVABLE, theoryId);
+    lemma(tconflict, id, LemmaProperty::REMOVABLE, theoryId);
   }
 }
 
@@ -1595,7 +1685,7 @@ TrustNode TheoryEngine::getExplanation(
 
     // If a true constant or a negation of a false constant we can ignore it
     if ((toExplain.d_node.isConst() && toExplain.d_node.getConst<bool>())
-        || (toExplain.d_node.getKind() == kind::NOT
+        || (toExplain.d_node.getKind() == Kind::NOT
             && toExplain.d_node[0].isConst()
             && !toExplain.d_node[0].getConst<bool>()))
     {
@@ -1611,7 +1701,7 @@ TrustNode TheoryEngine::getExplanation(
         std::vector<Node> args;
         args.push_back(toExplain.d_node);
         lcp->addStep(
-            toExplain.d_node, PfRule::MACRO_SR_PRED_INTRO, children, args);
+            toExplain.d_node, ProofRule::MACRO_SR_PRED_INTRO, children, args);
       }
       continue;
     }
@@ -1628,7 +1718,7 @@ TrustNode TheoryEngine::getExplanation(
     }
 
     // If an and, expand it
-    if (toExplain.d_node.getKind() == kind::AND)
+    if (toExplain.d_node.getKind() == Kind::AND)
     {
       Trace("theory::explain")
           << "TheoryEngine::explain(): expanding " << toExplain.d_node
@@ -1739,7 +1829,7 @@ TrustNode TheoryEngine::getExplanation(
   }
   else
   {
-    NodeBuilder conjunction(kind::AND);
+    NodeBuilder conjunction(Kind::AND);
     std::set<TNode>::const_iterator it = exp.begin();
     std::set<TNode>::const_iterator it_end = exp.end();
     while (it != it_end)
@@ -1775,7 +1865,7 @@ TrustNode TheoryEngine::getExplanation(
       TrustNode trn = it->second;
       Assert(trn.getKind() == TrustNodeKind::PROP_EXP);
       Node proven = trn.getProven();
-      Assert(proven.getKind() == kind::IMPLIES);
+      Assert(proven.getKind() == Kind::IMPLIES);
       Node tConc = proven[1];
       Trace("te-proof-exp") << "- Process " << trn << std::endl;
       if (exp.find(tConc) != exp.end())
@@ -1793,13 +1883,13 @@ TrustNode TheoryEngine::getExplanation(
         if (tConc == tExp)
         {
           // dummy trust node, do AND expansion
-          Assert(tConc.getKind() == kind::AND);
+          Assert(tConc.getKind() == Kind::AND);
           // tConc[0] ... tConc[n]
           // ---------------------- AND_INTRO
           // tConc
           std::vector<Node> pfChildren;
           pfChildren.insert(pfChildren.end(), tConc.begin(), tConc.end());
-          lcp->addStep(tConc, PfRule::AND_INTRO, pfChildren, {});
+          lcp->addStep(tConc, ProofRule::AND_INTRO, pfChildren, {});
           Trace("te-proof-exp") << "...via AND_INTRO" << std::endl;
           continue;
         }
@@ -1808,7 +1898,8 @@ TrustNode TheoryEngine::getExplanation(
         // tExp
         // ---- MACRO_SR_PRED_TRANSFORM
         // tConc
-        lcp->addStep(tConc, PfRule::MACRO_SR_PRED_TRANSFORM, {tExp}, {tConc});
+        lcp->addStep(
+            tConc, ProofRule::MACRO_SR_PRED_TRANSFORM, {tExp}, {tConc});
         Trace("te-proof-exp") << "...via MACRO_SR_PRED_TRANSFORM" << std::endl;
         continue;
       }
@@ -1832,12 +1923,12 @@ TrustNode TheoryEngine::getExplanation(
         Trace("te-proof-exp") << "...via trust THEORY_LEMMA" << std::endl;
         // otherwise, trusted theory lemma
         Node tidn = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(ttid);
-        lcp->addStep(proven, PfRule::THEORY_LEMMA, {}, {proven, tidn});
+        lcp->addTrustedStep(proven, TrustId::THEORY_LEMMA, {}, {tidn});
       }
       std::vector<Node> pfChildren;
       pfChildren.push_back(trn.getNode());
       pfChildren.push_back(proven);
-      lcp->addStep(tConc, PfRule::MODUS_PONENS, pfChildren, {});
+      lcp->addStep(tConc, ProofRule::MODUS_PONENS, pfChildren, {});
     }
     // If we don't have a step and the conclusion is not part of the
     // explanation (for unit T-conflicts), it must be by symmetry. We must do
@@ -1848,7 +1939,7 @@ TrustNode TheoryEngine::getExplanation(
       Node sconc = CDProof::getSymmFact(conclusion);
       if (!sconc.isNull())
       {
-        lcp->addStep(conclusion, PfRule::SYMM, {sconc}, {});
+        lcp->addStep(conclusion, ProofRule::SYMM, {sconc}, {});
       }
       else
       {
@@ -1945,15 +2036,18 @@ void TheoryEngine::checkTheoryAssertionsWithModel(bool hardFailure) {
 std::pair<bool, Node> TheoryEngine::entailmentCheck(options::TheoryOfMode mode,
                                                     TNode lit)
 {
-  TNode atom = (lit.getKind() == kind::NOT) ? lit[0] : lit;
-  if( atom.getKind()==kind::AND || atom.getKind()==kind::OR || atom.getKind()==kind::IMPLIES ){
+  TNode atom = (lit.getKind() == Kind::NOT) ? lit[0] : lit;
+  if (atom.getKind() == Kind::AND || atom.getKind() == Kind::OR
+      || atom.getKind() == Kind::IMPLIES)
+  {
     //Boolean connective, recurse
     std::vector< Node > children;
-    bool pol = (lit.getKind()!=kind::NOT);
-    bool is_conjunction = pol==(lit.getKind()==kind::AND);
+    bool pol = (lit.getKind() != Kind::NOT);
+    bool is_conjunction = pol == (lit.getKind() == Kind::AND);
     for( unsigned i=0; i<atom.getNumChildren(); i++ ){
       Node ch = atom[i];
-      if( pol==( lit.getKind()==kind::IMPLIES && i==0 ) ){
+      if (pol == (lit.getKind() == Kind::IMPLIES && i == 0))
+      {
         ch = atom[i].negate();
       }
       std::pair<bool, Node> chres = entailmentCheck(mode, ch);
@@ -1968,12 +2062,16 @@ std::pair<bool, Node> TheoryEngine::entailmentCheck(options::TheoryOfMode mode,
       }
     }
     if( is_conjunction ){
-      return std::pair<bool, Node>(true, NodeManager::currentNM()->mkNode(kind::AND, children));
+      return std::pair<bool, Node>(
+          true, NodeManager::currentNM()->mkNode(Kind::AND, children));
     }else{
       return std::pair<bool, Node>(false, Node::null());
     }
-  }else if( atom.getKind()==kind::ITE || ( atom.getKind()==kind::EQUAL && atom[0].getType().isBoolean() ) ){
-    bool pol = (lit.getKind()!=kind::NOT);
+  }
+  else if (atom.getKind() == Kind::ITE
+           || (atom.getKind() == Kind::EQUAL && atom[0].getType().isBoolean()))
+  {
+    bool pol = (lit.getKind() != Kind::NOT);
     for( unsigned r=0; r<2; r++ ){
       Node ch = atom[0];
       if( r==1 ){
@@ -1981,20 +2079,26 @@ std::pair<bool, Node> TheoryEngine::entailmentCheck(options::TheoryOfMode mode,
       }
       std::pair<bool, Node> chres = entailmentCheck(mode, ch);
       if( chres.first ){
-        Node ch2 = atom[ atom.getKind()==kind::ITE ? r+1 : 1 ];
-        if( pol==( atom.getKind()==kind::ITE ? true : r==1 ) ){
+        Node ch2 = atom[atom.getKind() == Kind::ITE ? r + 1 : 1];
+        if (pol == (atom.getKind() == Kind::ITE ? true : r == 1))
+        {
           ch2 = ch2.negate();
         }
         std::pair<bool, Node> chres2 = entailmentCheck(mode, ch2);
         if( chres2.first ){
-          return std::pair<bool, Node>(true, NodeManager::currentNM()->mkNode(kind::AND, chres.second, chres2.second));
+          return std::pair<bool, Node>(
+              true,
+              NodeManager::currentNM()->mkNode(
+                  Kind::AND, chres.second, chres2.second));
         }else{
           break;
         }
       }
     }
     return std::pair<bool, Node>(false, Node::null());
-  }else{
+  }
+  else
+  {
     //it is a theory atom
     theory::TheoryId tid = Theory::theoryOf(atom, mode);
     theory::Theory* th = theoryOf(tid);

@@ -176,12 +176,12 @@ name   = "SMT Layer"
   help       = "if an unsat core is produced, it is reduced to a minimal unsat core"
 
 [[option]]
-  name       = "printUnsatCoresFull"
+  name       = "printCoresFull"
   category   = "regular"
-  long       = "print-unsat-cores-full"
+  long       = "print-cores-full"
   type       = "bool"
   default    = "false"
-  help       = "when printing unsat cores, include unlabeled assertions"
+  help       = "print all formulas regardless of whether they are named, e.g. in unsat cores"
 
 [[option]]
   name       = "checkUnsatCores"
@@ -212,7 +212,7 @@ name   = "SMT Layer"
   category   = "expert"
   long       = "difficulty-mode=MODE"
   type       = "DifficultyMode"
-  default    = "LEMMA_LITERAL"
+  default    = "LEMMA_LITERAL_ALL"
   help       = "choose output mode for get-difficulty, see --difficulty-mode=help"
   help_mode  = "difficulty output modes."
 [[option.mode.LEMMA_LITERAL]]
@@ -350,7 +350,7 @@ name   = "SMT Layer"
 
 [[option]]
   name       = "solveBVAsInt"
-  category   = "expert"
+  category   = "regular"
   long       = "solve-bv-as-int=MODE"
   type       = "SolveBVAsIntMode"
   default    = "OFF"
@@ -364,7 +364,7 @@ name   = "SMT Layer"
   help = "Generate a sum expression for each bvand instance, based on the value in --solve-bv-as-int-granularity"
 [[option.mode.IAND]]
   name = "iand"
-  help = "Translate bvand to the iand operator (experimental)"
+  help = "Translate bvand to the iand operator"
 [[option.mode.BV]]
   name = "bv"
   help = "Translate bvand back to bit-vectors"
@@ -386,6 +386,7 @@ name   = "SMT Layer"
   long       = "bvand-integer-granularity=N"
   type       = "uint64_t"
   default    = "1"
+  minimum    = "1"
   maximum    = "8"
   help       = "granularity to use in --solve-bv-as-int mode and for iand operator (experimental)"
 
@@ -513,3 +514,11 @@ name   = "SMT Layer"
   minimum    = "0.0"
   maximum    = "1000.0"
   help       = "sets the threshold for average assertions per literal before a deep restart"
+
+[[option]]
+  name       = "toCoreTimeout"
+  category   = "expert"
+  long       = "timeout-core-timeout=N"
+  type       = "uint64_t"
+  default    = "10000"
+  help       = "timeout (in milliseconds) for satisfiability checks for timeout cores"

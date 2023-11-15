@@ -235,7 +235,7 @@ Solver::~Solver()
 // Creates a new SAT variable in the solver. If 'decision_var' is cleared, variable will not be
 // used as a decision variable (NOTE! This has effects on the meaning of a SATISFIABLE result).
 //
-Var Solver::newVar(bool sign, bool dvar, bool isTheoryAtom, bool preRegister, bool canErase)
+Var Solver::newVar(bool sign, bool dvar, bool isTheoryAtom, bool canErase)
 {
     int v = nVars();
 
@@ -255,15 +255,6 @@ Var Solver::newVar(bool sign, bool dvar, bool isTheoryAtom, bool preRegister, bo
 
     Trace("minisat") << "new var " << v << " with assertion level "
                      << assertionLevel << std::endl;
-
-    // If the variable is introduced at non-zero level, we need to reintroduce it on backtracks
-    if (preRegister)
-    {
-      Trace("minisat") << "  To register at level " << decisionLevel()
-                       << std::endl;
-      variables_to_register.push(VarIntroInfo(v, decisionLevel()));
-    }
-
     return v;
 }
 
@@ -689,11 +680,13 @@ bool Solver::satisfied(const Clause& c) const {
 void Solver::cancelUntil(int level) {
     Trace("minisat") << "minisat::cancelUntil(" << level << ")" << std::endl;
 
-    if (decisionLevel() > level){
-        // Pop the SMT context
-        for (int l = trail_lim.size() - level; l > 0; --l) {
-          d_context->pop();
-        }
+    if (decisionLevel() > level)
+    {
+      // Pop the SMT context
+      for (int l = trail_lim.size() - level; l > 0; --l)
+      {
+        d_context->pop();
+      }
         for (int c = trail.size()-1; c >= trail_lim[level]; c--){
             Var      x  = var(trail[c]);
             assigns [x] = l_Undef;
@@ -709,17 +702,7 @@ void Solver::cancelUntil(int level) {
         trail.shrink(trail.size() - trail_lim[level]);
         trail_lim.shrink(trail_lim.size() - level);
         flipped.shrink(flipped.size() - level);
-
-        // Register variables that have not been registered yet
-        int currentLevel = decisionLevel();
-        for (int i = variables_to_register.size() - 1;
-             i >= 0 && variables_to_register[i].d_level > currentLevel;
-             --i)
-        {
-          variables_to_register[i].d_level = currentLevel;
-          d_proxy->variableNotify(
-              MinisatSatSolver::toSatVariable(variables_to_register[i].d_var));
-        }
+        d_proxy->notifyBacktrack();
     }
 }
 
@@ -732,15 +715,30 @@ void Solver::resetTrail() { cancelUntil(0); }
 Lit Solver::pickBranchLit()
 {
     Lit nextLit;
+    bool stopSearch = false;
+    bool requirePhase = false;
 
     // Theory requests
-    nextLit =
-        MinisatSatSolver::toMinisatLit(d_proxy->getNextTheoryDecisionRequest());
-    while (nextLit != lit_Undef) {
-      if(value(var(nextLit)) == l_Undef) {
-        Trace("theoryDecision")
-            << "getNextTheoryDecisionRequest(): now deciding on " << nextLit
-            << std::endl;
+    nextLit = MinisatSatSolver::toMinisatLit(
+        d_proxy->getNextDecisionRequest(requirePhase, stopSearch));
+    if (stopSearch)
+    {
+      return lit_Undef;
+    }
+    while (nextLit != lit_Undef)
+    {
+      Var next = var(nextLit);
+      if (!requirePhase)
+      {
+        if (polarity[next] & 0x2)
+        {
+          nextLit = mkLit(next, polarity[next] & 0x1);
+        }
+      }
+      if (value(next) == l_Undef)
+      {
+        Trace("theoryDecision") << "getNextDecisionRequest(): now deciding on "
+                                << nextLit << std::endl;
         decisions++;
 
         // org-mode tracing -- theory decision
@@ -760,51 +758,19 @@ Lit Solver::pickBranchLit()
         }
 
         return nextLit;
-      } else {
+      }
+      else
+      {
         Trace("theoryDecision")
-            << "getNextTheoryDecisionRequest(): would decide on " << nextLit
+            << "getNextDecisionRequest(): would decide on " << nextLit
             << " but it already has an assignment" << std::endl;
       }
       nextLit = MinisatSatSolver::toMinisatLit(
-          d_proxy->getNextTheoryDecisionRequest());
-    }
-    Trace("theoryDecision")
-        << "getNextTheoryDecisionRequest(): decide on another literal"
-        << std::endl;
-
-    // DE requests
-    bool stopSearch = false;
-    nextLit = MinisatSatSolver::toMinisatLit(
-        d_proxy->getNextDecisionEngineRequest(stopSearch));
-    if(stopSearch) {
-      return lit_Undef;
-    }
-    if(nextLit != lit_Undef) {
-      Assert(value(var(nextLit)) == l_Undef)
-          << "literal to decide already has value";
-      decisions++;
-      Var next = var(nextLit);
-      if(polarity[next] & 0x2) {
-        nextLit = mkLit(next, polarity[next] & 0x1);
-      }
-
-      // org-mode tracing -- decision engine decision
-      if (TraceIsOn("dtview"))
+          d_proxy->getNextDecisionRequest(requirePhase, stopSearch));
+      if (stopSearch)
       {
-        dtviewDecisionHelper(
-            d_context->getLevel(),
-            d_proxy->getNode(MinisatSatSolver::toSatLiteral(nextLit)),
-            "DE",
-            options().base.incrementalSolving);
+        return lit_Undef;
       }
-
-      if (TraceIsOn("dtview::prop"))
-      {
-        dtviewPropagationHeaderHelper(d_context->getLevel(),
-                                      options().base.incrementalSolving);
-      }
-
-      return nextLit;
     }
 
     Var next = var_Undef;
@@ -824,33 +790,15 @@ Lit Solver::pickBranchLit()
             next = order_heap.removeMin();
         }
 
-        if(!decision[next]) continue;
-        // Check with decision engine about relevancy
-        if (d_proxy->isDecisionRelevant(MinisatSatSolver::toSatVariable(next))
-            == false)
-        {
-          next = var_Undef;
-        }
+        if (!decision[next]) continue;
     }
 
     if(next == var_Undef) {
       return lit_Undef;
     } else {
       decisions++;
-      // Check with decision engine if it can tell polarity
-      lbool dec_pol = MinisatSatSolver::toMinisatlbool(
-          d_proxy->getDecisionPolarity(MinisatSatSolver::toSatVariable(next)));
-      Lit decisionLit;
-      if(dec_pol != l_Undef) {
-        Assert(dec_pol == l_True || dec_pol == l_False);
-        decisionLit = mkLit(next, (dec_pol == l_True));
-      }
-      else
-      {
-        // If it can't use internal heuristic to do that
-        decisionLit = mkLit(
-            next, rnd_pol ? drand(random_seed) < 0.5 : (polarity[next] & 0x1));
-      }
+      Lit decisionLit = mkLit(
+          next, rnd_pol ? drand(random_seed) < 0.5 : (polarity[next] & 0x1));
 
       // org-mode tracing -- decision engine decision
       if (TraceIsOn("dtview"))
@@ -2026,7 +1974,6 @@ void Solver::pop()
   // Pop the created variables
   resizeVars(assigns_lim.last());
   assigns_lim.pop();
-  variables_to_register.clear();
 
   // Pop the OK
   ok = trail_ok.last();

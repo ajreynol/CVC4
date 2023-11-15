@@ -112,17 +112,6 @@ class Solver : protected EnvObj
   /** True if we are currently solving. */
   bool minisat_busy;
 
-  // Information about registration of variables
-  struct VarIntroInfo
-  {
-    Var d_var;
-    int d_level;
-    VarIntroInfo(Var var, int level) : d_var(var), d_level(level) {}
-  };
-
-  /** Variables to re-register with theory solvers on backtracks */
-  vec<VarIntroInfo> variables_to_register;
-
   /** Keep only newSize variables */
   void resizeVars(int newSize);
 
@@ -143,7 +132,6 @@ public:
  Var newVar(bool polarity = true,
             bool dvar = true,
             bool isTheoryAtom = false,
-            bool preRegister = false,
             bool canErase = true);  // Add a new variable with parameters
                                     // specifying variable mode.
  Var trueVar() const { return varTrue; }
@@ -288,8 +276,10 @@ public:
                      bool b);  // Declare if a variable should be eligible for
                                // selection in the decision heuristic.
 
- // Return the decision trail
- const vec<Lit>& getMiniSatDecisions() { return trail; }
+ // Return the trail, which is the assignment stack that stores all assigments
+ // made in the order they were made. We can use this trail to find decisions
+ // in the order in which they were made.
+ const vec<Lit>& getMiniSatAssignmentTrail() { return trail; }
 
  // Return the order_heap, which is a priority queue of variables ordered with
  // respect to the variable activity. The order heap is made available here

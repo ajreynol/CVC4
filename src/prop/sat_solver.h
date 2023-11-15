@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -32,6 +32,7 @@ namespace cvc5::internal {
 
 namespace prop {
 
+class SatProofManager;
 class TheoryProxy;
 
 class SatSolver {
@@ -53,12 +54,12 @@ public:
 
   /**
    * Create a new boolean variable in the solver.
-   * @param isTheoryAtom is this a theory atom that needs to be asserted to theory
-   * @param preRegister whether to preregister the atom with the theory
+   * @param isTheoryAtom is this a theory atom that needs to be asserted to
+   * theory
    * @param canErase whether the sat solver can safely eliminate this variable
    *
    */
-  virtual SatVariable newVar(bool isTheoryAtom, bool preRegister, bool canErase) = 0;
+  virtual SatVariable newVar(bool isTheoryAtom, bool canErase) = 0;
 
   /** Create a new (or return an existing) boolean variable representing the constant true */
   virtual SatVariable trueVar() = 0;
@@ -116,11 +117,10 @@ public:
 
 };/* class SatSolver */
 
-
-class CDCLTSatSolverInterface : public SatSolver
+class CDCLTSatSolver : public SatSolver
 {
  public:
-  virtual ~CDCLTSatSolverInterface(){};
+  virtual ~CDCLTSatSolver(){};
 
   virtual void initialize(context::Context* context,
                           prop::TheoryProxy* theoryProxy,
@@ -131,17 +131,33 @@ class CDCLTSatSolverInterface : public SatSolver
 
   virtual void pop() = 0;
 
-  /*
+  /**
    * Reset the decisions in the DPLL(T) SAT solver at the current assertion
    * level.
    */
   virtual void resetTrail() = 0;
 
-  virtual bool properExplanation(SatLiteral lit, SatLiteral expl) const = 0;
-
-  virtual void requirePhase(SatLiteral lit) = 0;
+  /**
+   * Configure the preferred phase for a decision literal.
+   *
+   * @note This phase is always enforced when the SAT solver decides to make a
+   *       decision on this variable on its own. If a decision is injected into
+   *       the SAT solver via TheoryProxy::getNextDecisionRequest(), the
+   *       preferred phase will only be considered if the decision was derived
+   *       by the decision engine. It will be ignored if the decision was
+   *       derived from a theory (the phase enforced by the theory overrides
+   *       the preferred phase).
+   *
+   * @param lit The literal.
+   */
+  virtual void preferPhase(SatLiteral lit) = 0;
 
   virtual bool isDecision(SatVariable decn) const = 0;
+
+  /**
+   * Return whether variable has a fixed assignment.
+   */
+  virtual bool isFixed(SatVariable var) const = 0;
 
   /**
    * Return the current list of decisions made by the SAT solver.
@@ -154,19 +170,12 @@ class CDCLTSatSolverInterface : public SatSolver
    */
   virtual std::vector<Node> getOrderHeap() const = 0;
 
-  /**
-   * Return the current decision level of `lit`.
-   */
-  virtual int32_t getDecisionLevel(SatVariable v) const { return -1; }
-
-  /**
-   * Return the user-context level when `lit` was introduced..
-   */
-  virtual int32_t getIntroLevel(SatVariable v) const { return -1; }
-
   virtual std::shared_ptr<ProofNode> getProof() = 0;
 
-}; /* class CDCLTSatSolverInterface */
+  /** This is temporary until SAT DRAT proofs are integrated. */
+  virtual SatProofManager* getProofManager() = 0;
+
+}; /* class CDCLTSatSolver */
 
 inline std::ostream& operator <<(std::ostream& out, prop::SatLiteral lit) {
   out << lit.toString();

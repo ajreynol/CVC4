@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -39,35 +39,35 @@ Kind joinKinds(Kind k1, Kind k2)
   }
   Assert(isRelationOperator(k1));
   Assert(isRelationOperator(k2));
-  if (k1 == EQUAL)
+  if (k1 == Kind::EQUAL)
   {
-    if (k2 == LEQ || k2 == GEQ)
+    if (k2 == Kind::LEQ || k2 == Kind::GEQ)
     {
       return k1;
     }
   }
-  else if (k1 == LT)
+  else if (k1 == Kind::LT)
   {
-    if (k2 == LEQ)
+    if (k2 == Kind::LEQ)
     {
       return k1;
     }
   }
-  else if (k1 == LEQ)
+  else if (k1 == Kind::LEQ)
   {
-    if (k2 == GEQ)
+    if (k2 == Kind::GEQ)
     {
-      return EQUAL;
+      return Kind::EQUAL;
     }
   }
-  else if (k1 == GT)
+  else if (k1 == Kind::GT)
   {
-    if (k2 == GEQ)
+    if (k2 == Kind::GEQ)
     {
       return k1;
     }
   }
-  return UNDEFINED_KIND;
+  return Kind::UNDEFINED_KIND;
 }
 
 Kind transKinds(Kind k1, Kind k2)
@@ -82,25 +82,25 @@ Kind transKinds(Kind k1, Kind k2)
   }
   Assert(isRelationOperator(k1));
   Assert(isRelationOperator(k2));
-  if (k1 == EQUAL)
+  if (k1 == Kind::EQUAL)
   {
     return k2;
   }
-  else if (k1 == LT)
+  else if (k1 == Kind::LT)
   {
-    if (k2 == LEQ)
+    if (k2 == Kind::LEQ)
     {
       return k1;
     }
   }
-  else if (k1 == GT)
+  else if (k1 == Kind::GT)
   {
-    if (k2 == GEQ)
+    if (k2 == Kind::GEQ)
     {
       return k1;
     }
   }
-  return UNDEFINED_KIND;
+  return Kind::UNDEFINED_KIND;
 }
 
 Node mkZero(const TypeNode& tn)
@@ -122,9 +122,9 @@ Node mkOne(const TypeNode& tn, bool isNeg)
 bool isTranscendentalKind(Kind k)
 {
   // many operators are eliminated during rewriting
-  Assert(k != TANGENT && k != COSINE && k != COSECANT
-         && k != SECANT && k != COTANGENT);
-  return k == EXPONENTIAL || k == SINE || k == PI;
+  Assert(k != Kind::TANGENT && k != Kind::COSINE && k != Kind::COSECANT
+         && k != Kind::SECANT && k != Kind::COTANGENT);
+  return k == Kind::EXPONENTIAL || k == Kind::SINE || k == Kind::PI;
 }
 
 Node getApproximateConstant(Node c, bool isLower, unsigned prec)
@@ -184,7 +184,7 @@ Node getApproximateConstant(Node c, bool isLower, unsigned prec)
         curr_r = Rational(curr - 1) / den;
       }
       curr_r = curr_r * pow_ten;
-      cret = nm->mkConst(CONST_RATIONAL, csign == 1 ? curr_r : -curr_r);
+      cret = nm->mkConst(Kind::CONST_RATIONAL, csign == 1 ? curr_r : -curr_r);
     }
     else
     {
@@ -226,7 +226,8 @@ void printRationalApprox(const char* c, Node cr, unsigned prec)
 Node mkBounded(Node l, Node a, Node u)
 {
   NodeManager* nm = NodeManager::currentNM();
-  return nm->mkNode(AND, nm->mkNode(GEQ, a, l), nm->mkNode(LEQ, a, u));
+  return nm->mkNode(
+      Kind::AND, nm->mkNode(Kind::GEQ, a, l), nm->mkNode(Kind::LEQ, a, u));
 }
 
 Rational leastIntGreaterThan(const Rational& q) { return q.floor() + 1; }
@@ -281,9 +282,9 @@ Node multConstants(const Node& c1, const Node& c2)
 
 Node convertToArithPrivate(TNode n)
 {
-  bool pol = n.getKind()!=kind::NOT;
+  bool pol = n.getKind()!=Kind::NOT;
   Node atom = pol ? n : n[0];
-  if (atom.getKind()==kind::EQUAL)
+  if (atom.getKind()==Kind::EQUAL)
   {
     Node ret = ArithRewriter::rewriteEquality(atom);
     ret = ArithRewriter::rewriteEquality(ret);
@@ -300,11 +301,11 @@ Node mkEquality(const Node& a, const Node& b)
   // if they have the same type, just make them equal
   if (a.getType() == b.getType())
   {
-    return nm->mkNode(EQUAL, a, b);
+    return nm->mkNode(Kind::EQUAL, a, b);
   }
   // otherwise subtract and set equal to zero
   Node diff = nm->mkNode(Kind::SUB, a, b);
-  return nm->mkNode(EQUAL, diff, mkZero(diff.getType()));
+  return nm->mkNode(Kind::EQUAL, diff, mkZero(diff.getType()));
 }
 
 std::pair<Node,Node> mkSameType(const Node& a, const Node& b)
@@ -318,10 +319,10 @@ std::pair<Node,Node> mkSameType(const Node& a, const Node& b)
   NodeManager* nm = NodeManager::currentNM();
   if (at.isInteger() && bt.isReal())
   {
-    return {nm->mkNode(kind::TO_REAL, a), b};
+    return {nm->mkNode(Kind::TO_REAL, a), b};
   }
   Assert(at.isReal() && bt.isInteger());
-  return {a, nm->mkNode(kind::TO_REAL, b)};
+  return {a, nm->mkNode(Kind::TO_REAL, b)};
 }
 
 /* ------------------------------------------------------------------------- */
@@ -338,14 +339,14 @@ Node eliminateBv2Nat(TNode node)
   for (unsigned bit = 0; bit < size; ++bit, i *= 2)
   {
     Node cond =
-        nm->mkNode(kind::EQUAL,
+        nm->mkNode(Kind::EQUAL,
                    nm->mkNode(nm->mkConst(BitVectorExtract(bit, bit)), node[0]),
                    bvone);
     children.push_back(
-        nm->mkNode(kind::ITE, cond, nm->mkConstInt(Rational(i)), z));
+        nm->mkNode(Kind::ITE, cond, nm->mkConstInt(Rational(i)), z));
   }
   // avoid plus with one child
-  return children.size() == 1 ? children[0] : nm->mkNode(kind::ADD, children);
+  return children.size() == 1 ? children[0] : nm->mkNode(Kind::ADD, children);
 }
 
 Node eliminateInt2Bv(TNode node)
@@ -360,18 +361,18 @@ Node eliminateInt2Bv(TNode node)
   while (v.size() < size)
   {
     Node cond = nm->mkNode(
-        kind::GEQ,
+        Kind::GEQ,
         nm->mkNode(
-            kind::INTS_MODULUS_TOTAL, node[0], nm->mkConstInt(Rational(i))),
+            Kind::INTS_MODULUS_TOTAL, node[0], nm->mkConstInt(Rational(i))),
         nm->mkConstInt(Rational(i, 2)));
-    v.push_back(nm->mkNode(kind::ITE, cond, bvone, bvzero));
+    v.push_back(nm->mkNode(Kind::ITE, cond, bvone, bvzero));
     i *= 2;
   }
   if (v.size() == 1)
   {
     return v[0];
   }
-  NodeBuilder result(kind::BITVECTOR_CONCAT);
+  NodeBuilder result(Kind::BITVECTOR_CONCAT);
   result.append(v.rbegin(), v.rend());
   return Node(result);
 }
