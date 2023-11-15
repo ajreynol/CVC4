@@ -46,7 +46,7 @@ TheoryArith::TheoryArith(Env& env, OutputChannel& out, Valuation valuation)
       d_ppre(d_env),
       d_bab(env, d_astate, d_im, d_ppre),
       d_eqSolver(nullptr),
-      d_internal(*this, env, d_astate, d_im, d_bab),
+      d_internal(env, d_astate, d_im, d_bab),
       d_nonlinearExtension(nullptr),
       d_opElim(d_env),
       d_arithPreproc(env, d_im, d_pnm, d_opElim),
@@ -98,7 +98,8 @@ void TheoryArith::finishInit()
   }
   d_eqSolver->finishInit();
   // finish initialize in the old linear solver
-  d_internal.finishInit();
+  eq::EqualityEngine* ee = getEqualityEngine();
+  d_internal.finishInit(ee);
 
   // Set the congruence manager on the equality solver. If the congruence
   // manager exists, it is responsible for managing the notifications from
@@ -210,7 +211,8 @@ void TheoryArith::ppStaticLearn(TNode n, NodeBuilder& learned)
 bool TheoryArith::preCheck(Effort level)
 {
   Trace("arith-check") << "TheoryArith::preCheck " << level << std::endl;
-  return d_internal.preCheck(level);
+  bool newFacts = !done();
+  return d_internal.preCheck(level, newFacts);
 }
 
 void TheoryArith::postCheck(Effort level)

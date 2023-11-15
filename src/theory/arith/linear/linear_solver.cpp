@@ -16,27 +16,23 @@
 #include "theory/arith/linear/linear_solver.h"
 
 #include "smt/env_obj.h"
-#include "theory/arith/theory_arith.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace arith::linear {
 
-LinearSolver::LinearSolver(TheoryArith& containing,
-                           Env& env,
+LinearSolver::LinearSolver(Env& env,
                            TheoryState& ts,
                            InferenceManager& im,
                            BranchAndBound& bab)
     : EnvObj(env),
-      d_containing(containing),
       d_im(im),
       d_internal(env, *this, ts, bab)
 {
 }
 
-void LinearSolver::finishInit()
+void LinearSolver::finishInit(eq::EqualityEngine* ee)
 {
-  eq::EqualityEngine* ee = d_containing.getEqualityEngine();
   d_internal.finishInit(ee);
 }
 void LinearSolver::preRegisterTerm(TNode n) { d_internal.preRegisterTerm(n); }
@@ -72,9 +68,8 @@ std::pair<bool, Node> LinearSolver::entailmentCheck(TNode lit)
 {
   return d_internal.entailmentCheck(lit);
 }
-bool LinearSolver::preCheck(Theory::Effort level)
+bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
 {
-  bool newFacts = !d_containing.done();
   return d_internal.preCheck(level, newFacts);
 }
 void LinearSolver::preNotifyFact(TNode atom, bool pol, TNode fact)

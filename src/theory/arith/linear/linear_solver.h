@@ -26,7 +26,6 @@ class TheoryModel;
 
 namespace arith {
 
-class TheoryArith;
 class BranchAndBound;
 
 namespace linear {
@@ -37,13 +36,12 @@ namespace linear {
 class LinearSolver : protected EnvObj
 {
  public:
-  LinearSolver(TheoryArith& containing,
-               Env& env,
+  LinearSolver(Env& env,
                TheoryState& ts,
                InferenceManager& im,
                BranchAndBound& bab);
   /** finish initialize */
-  void finishInit();
+  void finishInit(eq::EqualityEngine* ee);
   /**
    * Does non-context dependent setup for a node connected to a theory.
    */
@@ -85,7 +83,7 @@ class LinearSolver : protected EnvObj
 
   //--------------------------------- standard check
   /** Pre-check, called before the fact queue of the theory is processed. */
-  bool preCheck(Theory::Effort level);
+  bool preCheck(Theory::Effort level, bool newFacts);
   /** Pre-notify fact. */
   void preNotifyFact(TNode atom, bool pol, TNode fact);
   /**
@@ -113,8 +111,6 @@ class LinearSolver : protected EnvObj
   void spendResource(Resource r);
 
  private:
-  /** Containing */
-  TheoryArith& d_containing;
   /** The inference manager */
   InferenceManager& d_im;
   /** The solver */
