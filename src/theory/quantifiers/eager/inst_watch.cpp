@@ -24,8 +24,14 @@ namespace quantifiers {
 namespace eager {
 
 InstWatch::InstWatch(TermDbEager& tde) : d_tde(tde) {}
+
 void InstWatch::watch(const Node& q, std::vector<Node>& terms, const Node& entv)
 {
+}
+
+bool InstWatch::eqNotifyMerge(TNode t1, TNode t2)
+{
+  return false;
 }
 
 }  // namespace eager
