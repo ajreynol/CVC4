@@ -47,13 +47,13 @@
 #include "theory/arith/linear/normal_form.h"
 #include "theory/arith/linear/partial_model.h"
 #include "theory/arith/linear/soi_simplex.h"
-#include "theory/arith/theory_arith.h"
 #include "theory/valuation.h"
 #include "util/dense_map.h"
 #include "util/integer.h"
 #include "util/rational.h"
 #include "util/result.h"
 #include "util/statistics_stats.h"
+#include "theory/theory.h"
 
 namespace cvc5::internal {
 
@@ -443,7 +443,6 @@ private:
 
   Rational deltaValueForTotalOrder() const;
 
-  bool collectModelInfo(TheoryModel* m);
   /**
    * Collect model values. This is the main method for extracting information
    * about how to construct the model. This method relies on the caller for
@@ -461,9 +460,6 @@ private:
   void collectModelValues(const std::set<Node>& termSet,
                           std::map<Node, Node>& arithModel,
                           std::map<Node, Node>& arithModelIllTyped);
-
-  void shutdown(){ }
-
   void presolve();
   void notifyRestart();
   Theory::PPAssertStatus ppAssert(TrustNode tin,
@@ -685,24 +681,18 @@ private:
   /** Debugging only routine. Prints the model. */
   void debugPrintModel(std::ostream& out) const;
 
-  bool done() const { return d_containing.done(); }
-  bool isLeaf(TNode x) const { return d_containing.isLeaf(x); }
-  TheoryId theoryOf(TNode x) const { return d_containing.theoryOf(x); }
-  void debugPrintFacts() const { d_containing.debugPrintFacts(); }
+  bool done() const;
+  bool isLeaf(TNode x) const;
+  TheoryId theoryOf(TNode x) const;
+  void debugPrintFacts() const;
   bool outputTrustedLemma(TrustNode lem, InferenceId id);
   bool outputLemma(TNode lem, InferenceId id);
   void outputTrustedConflict(TrustNode conf, InferenceId id);
   void outputConflict(TNode lit, InferenceId id);
   void outputPropagate(TNode lit);
   void outputRestart();
-
-  inline bool isSatLiteral(TNode l) const {
-    return (d_containing.d_valuation).isSatLiteral(l);
-  }
-  inline Node getSatValue(TNode n) const {
-    return (d_containing.d_valuation).getSatValue(n);
-  }
-
+  bool isSatLiteral(TNode l) const;
+  Node getSatValue(TNode n) const;
   /** Used for replaying approximate simplex */
   context::CDQueue<TrustNode> d_approxCuts;
   /** Also used for replaying approximate simplex. "approximate cuts temporary storage" */

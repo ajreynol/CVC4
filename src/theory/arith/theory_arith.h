@@ -24,6 +24,7 @@
 #include "theory/arith/branch_and_bound.h"
 #include "theory/arith/inference_manager.h"
 #include "theory/arith/pp_rewrite_eq.h"
+#include "theory/arith/linear/linear_solver.h"
 #include "theory/arith/proof_checker.h"
 #include "theory/theory.h"
 #include "theory/theory_state.h"
@@ -169,7 +170,7 @@ class TheoryArith : public Theory {
   /** The equality solver */
   std::unique_ptr<EqualitySolver> d_eqSolver;
   /** The (old) linear arithmetic solver */
-  linear::TheoryArithPrivate* d_internal;
+  linear::LinearSolver d_internal;
 
   /**
    * The non-linear extension, responsible for all approaches for non-linear
