@@ -1786,7 +1786,7 @@ void TheoryArithPrivate::outputConflicts(){
 bool TheoryArithPrivate::isLeaf(TNode x) const
 {
   return x.getNumChildren() == 0
-          || Theory::theoryOf(x, options().theory.theoryOfMode) != THEORY_ARITH;
+         || Theory::theoryOf(x, options().theory.theoryOfMode) != THEORY_ARITH;
 }
 TheoryId TheoryArithPrivate::theoryOf(TNode x) const
 {
@@ -3283,7 +3283,7 @@ bool TheoryArithPrivate::postCheck(Theory::Effort effortLevel)
                                          : d_dualSimplex.getPivots();
   for (std::size_t i = 0; i < nPivots; ++i)
   {
-    d_containing.d_out->spendResource(Resource::ArithPivotStep);
+  d_containing.d_out->spendResource(Resource::ArithPivotStep);
   }
 
   Trace("arith::ems") << "ems: " << emmittedConflictOrSplit

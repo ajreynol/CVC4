@@ -37,8 +37,10 @@ namespace linear {
 class LinearSolver : protected EnvObj
 {
  public:
-  LinearSolver(TheoryArith& containing, Env& env, 
-                           TheoryState& ts, BranchAndBound& bab);
+  LinearSolver(TheoryArith& containing,
+               Env& env,
+               TheoryState& ts,
+               BranchAndBound& bab);
   /** finish initialize */
   void finishInit();
   /**
@@ -104,7 +106,7 @@ class LinearSolver : protected EnvObj
   ArithCongruenceManager* getCongruenceManager();
 
   //======================
-  
+
  private:
   /** Containing */
   TheoryArith& d_containing;

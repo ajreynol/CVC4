@@ -429,7 +429,10 @@ private:
   DeltaRational getDeltaValue(TNode term) const
       /* throw(DeltaRationalException, ModelException) */;
  public:
-  TheoryArithPrivate(TheoryArith& containing, Env& env, TheoryState& ts, BranchAndBound& bab);
+  TheoryArithPrivate(TheoryArith& containing,
+                     Env& env,
+                     TheoryState& ts,
+                     BranchAndBound& bab);
   ~TheoryArithPrivate();
 
   //--------------------------------- initialization
