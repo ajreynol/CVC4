@@ -110,6 +110,8 @@ class PatTermInfo
   std::vector<PatTermInfo*> d_children;
   /** the number of variables bound by each child, in order */
   std::vector<size_t> d_bindings;
+  /** Whether each child has bound variables */
+  std::vector<bool> d_childrenBv;
   /** the sum of the number of bindings */
   size_t d_nbind;
   //======== eqc matching

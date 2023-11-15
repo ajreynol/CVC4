@@ -129,6 +129,9 @@ class TermDbEager : protected EnvObj
   bool d_whenEqcDelay;
   bool d_whenAsserted;
   bool d_whenStdCheck;
+  /** Whether we are filtering non-unit instances */
+  bool d_filterNonUnit;
+  bool d_watchNonUnit;
   /** Wait list */
   eager::WaitList d_eqcDelay;
   /** Wait list */

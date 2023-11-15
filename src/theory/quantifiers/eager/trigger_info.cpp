@@ -75,9 +75,19 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
   if (d_ieval == nullptr)
   {
     const Options& opts = d_tde.getEnv().getOptions();
-    ieval::TermEvaluatorMode tev = opts.quantifiers.eagerInstProp
-                                       ? ieval::TermEvaluatorMode::PROP
-                                       : ieval::TermEvaluatorMode::CONFLICT;
+    // determine the ieval mode
+    ieval::TermEvaluatorMode tev = ieval::TermEvaluatorMode::PROP;
+    switch(opts.quantifiers.eagerInstMode)
+    {
+      case options::EagerInstMode::CONFLICT:
+        tev = ieval::TermEvaluatorMode::CONFLICT;
+        break;
+      case options::EagerInstMode::UNIT_PROP: 
+        // only ever care about reporting unit propagating instances 
+        tev = ieval::TermEvaluatorMode::PROP_STRICT;
+        break;
+      default:break;
+    }
     // initialize the evaluator if not already done so
     d_ieval.reset(new ieval::InstEvaluator(d_tde.getEnv(),
                                            d_tde.getState(),

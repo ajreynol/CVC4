@@ -794,7 +794,7 @@ bool QuantInfo::isTConstraintSpurious(const std::vector<Node>& terms)
     }
   }
   // spurious if quantifiers engine is in conflict
-  return d_parent->d_qstate.isConflictingInst();
+  return d_parent->d_qstate.isInConflict();
 }
 
 bool QuantInfo::entailmentTest(Node lit, bool chEnt)
@@ -2378,7 +2378,7 @@ void QuantConflictFind::check(Theory::Effort level, QEffort quant_e)
       {
         // check this quantified formula
         checkQuantifiedFormula(q, isConflict, addedLemmas);
-        if (d_qstate.isConflictingInst())
+        if (d_qstate.isConflictingInst() || d_qstate.isInConflict())
         {
           break;
         }
@@ -2387,7 +2387,7 @@ void QuantConflictFind::check(Theory::Effort level, QEffort quant_e)
     // We are done if we added a lemma, or discovered a conflict in another
     // way. An example of the latter case is when two disequal congruent terms
     // are discovered during term indexing.
-    if (addedLemmas > 0 || d_qstate.isConflictingInst())
+    if (addedLemmas > 0 || d_qstate.isInConflict())
     {
       break;
     }
@@ -2451,7 +2451,7 @@ void QuantConflictFind::checkQuantifiedFormula(Node q,
   Instantiate* qinst = d_qim.getInstantiate();
   while (qi->getNextMatch())
   {
-    if (d_qstate.isConflictingInst())
+    if (d_qstate.isInConflict())
     {
       Trace("qcf-check") << "   ... Quantifiers engine discovered conflict, ";
       Trace("qcf-check") << "probably related to disequal congruent terms in "

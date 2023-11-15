@@ -821,12 +821,25 @@ name   = "Quantifiers"
   help = "Consider terms at standard check."
 
 [[option]]
-  name       = "eagerInstProp"
+  name       = "eagerInstMode"
   category   = "expert"
-  long       = "eager-inst-prop"
-  type       = "bool"
-  default    = "true"
-  help       = "Also consider propagating instances"
+  long       = "eager-inst-mode=MODE"
+  type       = "EagerInstMode"
+  default    = "UNIT_PROP"
+  help       = "mode for how to apply eager instantiation"
+  help_mode  = "Mode for how to apply eager instantiation."
+[[option.mode.CONFLICT]]
+  name = "conflict"
+  help = "Consider only conflicting instances."
+[[option.mode.PROP]]
+  name = "prop"
+  help = "Consider any propagating instances."
+[[option.mode.UNIT_PROP]]
+  name = "unit-prop"
+  help = "Consider any unit propagating instances."
+[[option.mode.UNIT_PROP_WATCH]]
+  name = "unit-prop-watch"
+  help = "Consider any unit propagating instances, watch propagating."
 
 [[option]]
   name       = "eagerInstTrigger"

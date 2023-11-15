@@ -70,6 +70,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
   {
     if (expr::hasBoundVar(d_pattern[i]))
     {
+      d_childrenBv.emplace_back(true);
       bool processed = false;
       if (d_pattern[i].getKind() == Kind::BOUND_VARIABLE)
       {
@@ -125,6 +126,7 @@ void PatTermInfo::initialize(TriggerInfo* tr,
     }
     else
     {
+      d_childrenBv.emplace_back(false);
       // If we are watching ground args, add to d_gargs. Otherwise, this is
       // a dummy term.
       Assert(watchGroundArgs || d_pattern[i].getKind() == Kind::SKOLEM);
@@ -308,7 +310,7 @@ bool PatTermInfo::doMatchingAllInternal(ieval::InstEvaluator* ie)
     if (!d_itt.hasCurrentIterated(allChild))
     {
       // determine if there is a specific child we are traversing to
-      if (expr::hasBoundVar(pc))
+      if (d_childrenBv[level])
       {
         if (pti != nullptr)
         {

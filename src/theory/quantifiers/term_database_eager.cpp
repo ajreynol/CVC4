@@ -20,6 +20,7 @@
 #include "options/quantifiers_options.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
+#include "theory/quantifiers/quantifiers_registry.h"
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_util.h"
@@ -56,6 +57,10 @@ TermDbEager::TermDbEager(Env& env,
       d_qDelay(context()),
       d_entProps(context())
 {
+  // determine if we will filter instances that are not unit propagating
+  options::EagerInstMode mode = options().quantifiers.eagerInstMode;
+  d_filterNonUnit = (mode==options::EagerInstMode::UNIT_PROP || mode==options::EagerInstMode::UNIT_PROP_WATCH);
+  d_watchNonUnit =  (mode==options::EagerInstMode::UNIT_PROP_WATCH);
 }
 
 void TermDbEager::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
@@ -82,6 +87,11 @@ void TermDbEager::assertQuantifier(TNode q)
 
 bool TermDbEager::notifyQuant(TNode q)
 {
+  if (d_qreg.getOwner(q)!=nullptr)
+  {
+    // skip quantified formulas that have owners
+    return false;
+  }
   Trace("eager-inst-notify") << "assertQuantifier: " << q << std::endl;
   eager::QuantInfo* qinfo = getQuantInfo(q);
   bool ret = qinfo->notifyAsserted();
@@ -306,12 +316,6 @@ bool TermDbEager::addInstantiation(const Node& q,
   Trace("eager-inst-debug")
       << "addInstantiation: " << q << ", " << terms
       << ", isConflict=" << isConflict << ", ent=" << entv << std::endl;
-  // don't propagate connectives
-  Node entvAtom = entv.getKind()==Kind::NOT ? entv[0] : entv;
-  if (expr::isBooleanConnective(entvAtom))
-  {
-    return false;
-  }
   // AlwaysAssert( !isConflict || entv.isConst());
   //  if already propagated, skip
   if (d_entProps.find(entv) != d_entProps.end())
@@ -320,6 +324,19 @@ bool TermDbEager::addInstantiation(const Node& q,
     return false;
   }
   d_entProps.insert(entv);
+  if (d_filterNonUnit)
+  {
+    // don't propagate connectives
+    Node entvAtom = entv.getKind()==Kind::NOT ? entv[0] : entv;
+    if (expr::isBooleanConnective(entvAtom))
+    {
+      if (d_watchNonUnit)
+      {
+        // TODO
+      }
+      return false;
+    }
+  }
 #if 0
   Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
   if (!isPropagatingInstance(inst))
