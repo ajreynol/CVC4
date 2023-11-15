@@ -30,14 +30,17 @@ class TermDbEager;
 
 namespace eager {
 
-class QuantInfo;
-
+/**
+ * Instantiation watch class.
+ */
 class InstWatch
 {
  public:
   InstWatch(TermDbEager& tde);
+  /** Watch this instantiation, which entailed entv */
   void watch(const Node& q, std::vector<Node>& terms, const Node& entv);
-
+  /** notification when master equality engine is updated */
+  void eqNotifyMerge(TNode t1, TNode t2);
  private:
   /** Reference to the eager term database */
   TermDbEager& d_tde;
