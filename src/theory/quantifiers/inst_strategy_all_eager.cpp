@@ -36,7 +36,7 @@ void InstStrategyAllEager::reset_round(Theory::Effort e) {}
 
 bool InstStrategyAllEager::needsCheck(Theory::Effort e)
 {
-  return !d_qstate.isInConflict() && (e == Theory::EFFORT_FULL);
+  return !d_qstate.isConflictingInst() && (e == Theory::EFFORT_FULL);
 }
 
 void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
@@ -83,7 +83,7 @@ void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
     // do all matching with ti
     if (ti->doMatchingAll())
     {
-      Assert(d_qstate.isInConflict());
+      Assert(d_qstate.isConflictingInst());
       break;
     }
   }
@@ -100,7 +100,7 @@ void InstStrategyAllEager::check(Theory::Effort e, QEffort quant_e)
     {
       Trace("all-eager-engine") << ", addedLemmas = " << addedLemmas;
     }
-    if (d_qstate.isInConflict())
+    if (d_qstate.isConflictingInst())
     {
       Trace("all-eager-engine") << ", conflict";
     }
