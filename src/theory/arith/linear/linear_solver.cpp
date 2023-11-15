@@ -37,9 +37,9 @@ void LinearSolver::preRegisterTerm(TNode n) { d_internal.preRegisterTerm(n); }
 void LinearSolver::propagate(Theory::Effort e) { d_internal.propagate(e); }
 
 TrustNode LinearSolver::explain(TNode n)
-{ 
+{
   Node in = toInternal(n);
-  TrustNode ret = d_internal.explain(in); 
+  TrustNode ret = d_internal.explain(in);
   return toExternalTrust(ret);
 }
 
@@ -110,32 +110,21 @@ void LinearSolver::outputTrustedConflict(TrustNode conf, InferenceId id)
   d_im.trustedConflict(toExternalTrust(conf), id);
 }
 
-void LinearSolver::outputPropagate(TNode lit) { 
+void LinearSolver::outputPropagate(TNode lit)
+{
   Node elit = toExternal(lit);
-  d_im.propagateLit(elit); 
+  d_im.propagateLit(elit);
 }
 
 void LinearSolver::spendResource(Resource r) { d_im.spendResource(r); }
 
-Node LinearSolver::toInternal(const Node& n)
-{
-  return n;
-}
+Node LinearSolver::toInternal(const Node& n) { return n; }
 
-Node LinearSolver::toExternal(const Node& n)
-{
-  return n;
-}
+Node LinearSolver::toExternal(const Node& n) { return n; }
 
-TrustNode LinearSolver::toInternalTrust(const TrustNode& tn)
-{
-  return tn;
-}
+TrustNode LinearSolver::toInternalTrust(const TrustNode& tn) { return tn; }
 
-TrustNode LinearSolver::toExternalTrust(const TrustNode& tn)
-{
-  return tn;
-}
+TrustNode LinearSolver::toExternalTrust(const TrustNode& tn) { return tn; }
 
 }  // namespace arith::linear
 }  // namespace theory
