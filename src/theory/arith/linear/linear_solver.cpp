@@ -15,7 +15,7 @@
 
 #include "theory/arith/linear/linear_solver.h"
 
-#include "smt/env_obj.h"
+#include "expr/attribute.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -38,9 +38,9 @@ void LinearSolver::propagate(Theory::Effort e) { d_internal.propagate(e); }
 
 TrustNode LinearSolver::explain(TNode n)
 {
-  Node in = toInternal(n);
+  Node in = convert(n, true);
   TrustNode ret = d_internal.explain(in);
-  return toExternalTrust(ret);
+  return convertTrust(ret, false);
 }
 
 void LinearSolver::collectModelValues(const std::set<Node>& termSet,
@@ -57,7 +57,7 @@ void LinearSolver::notifyRestart() { d_internal.notifyRestart(); }
 Theory::PPAssertStatus LinearSolver::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
-  TrustNode tini = toInternalTrust(tin);
+  TrustNode tini = convertTrust(tin, true);
   return d_internal.ppAssert(tini, outSubstitutions);
 }
 void LinearSolver::ppStaticLearn(TNode in, NodeBuilder& learned)
@@ -75,7 +75,7 @@ Node LinearSolver::getCandidateModelValue(TNode var)
 }
 std::pair<bool, Node> LinearSolver::entailmentCheck(TNode lit)
 {
-  Node ilit = toInternal(lit);
+  Node ilit = convert(lit, true);
   return d_internal.entailmentCheck(ilit);
 }
 bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
@@ -84,7 +84,7 @@ bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
 }
 void LinearSolver::preNotifyFact(TNode fact)
 {
-  Node ifact = toInternal(fact);
+  Node ifact = convert(fact, true);
   d_internal.preNotifyFact(ifact);
 }
 bool LinearSolver::postCheck(Theory::Effort level)
@@ -102,29 +102,78 @@ ArithCongruenceManager* LinearSolver::getCongruenceManager()
 
 bool LinearSolver::outputTrustedLemma(TrustNode lemma, InferenceId id)
 {
-  return d_im.trustedLemma(toExternalTrust(lemma), id);
+  return d_im.trustedLemma(convertTrust(lemma, false), id);
 }
 
 void LinearSolver::outputTrustedConflict(TrustNode conf, InferenceId id)
 {
-  d_im.trustedConflict(toExternalTrust(conf), id);
+  d_im.trustedConflict(convertTrust(conf, false), id);
 }
 
 void LinearSolver::outputPropagate(TNode lit)
 {
-  Node elit = toExternal(lit);
+  Node elit = convert(lit, false);
   d_im.propagateLit(elit);
 }
 
 void LinearSolver::spendResource(Resource r) { d_im.spendResource(r); }
 
-Node LinearSolver::toInternal(const Node& n) { return n; }
+/**
+ * Internal attribute
+ */
+struct LinearInternalAttributeId
+{
+};
+using LinearInternalAttribute = expr::Attribute<LinearInternalAttributeId, Node>;
+/**
+ * External attribute
+ */
+struct LinearExternalAttributeId
+{
+};
+using LinearExternalAttribute = expr::Attribute<LinearExternalAttributeId, Node>;
 
-Node LinearSolver::toExternal(const Node& n) { return n; }
+Node LinearSolver::convert(const Node& n, bool toInternal)
+{
+  Kind nk = n.getKind();
+  switch (nk)
+  {
+    case Kind::EQUAL:
+      break;
+    case Kind::NOT: return convert(n[0], toInternal).notNode();
+    case Kind::OR:
+    case Kind::AND:
+    {
+      bool childChanged = false;
+      std::vector<Node> echildren;
+      for (const Node& nc : n)
+      {
+        Node nce = convert(nc, toInternal);
+        childChanged = childChanged || nce!=nc;
+        echildren.emplace_back(nce);
+      }
+      if (childChanged)
+      {
+        return NodeManager::currentNM()->mkNode(nk, echildren);
+      }
+    }
+      break;
+    default:
+      break;
+  }
+  return n;
+}
 
-TrustNode LinearSolver::toInternalTrust(const TrustNode& tn) { return tn; }
-
-TrustNode LinearSolver::toExternalTrust(const TrustNode& tn) { return tn; }
+TrustNode LinearSolver::convertTrust(const TrustNode& tn, bool toInternal)
+{
+  Node nn = tn.getNode();
+  Node nnc = convert(nn, toInternal);
+  if (nn!=nnc)
+  {
+    
+  }
+  return tn; 
+}
 
 }  // namespace arith::linear
 }  // namespace theory

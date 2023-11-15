@@ -46,7 +46,9 @@ class LinearSolver : protected EnvObj
    * Does non-context dependent setup for a node connected to a theory.
    */
   void preRegisterTerm(TNode n);
+  /** Propagate at the given effort level */
   void propagate(Theory::Effort e);
+  /** Explain propagated literal n */
   TrustNode explain(TNode n);
   /**
    * Collect model values. This is the main method for extracting information
@@ -65,22 +67,24 @@ class LinearSolver : protected EnvObj
   void collectModelValues(const std::set<Node>& termSet,
                           std::map<Node, Node>& arithModel,
                           std::map<Node, Node>& arithModelIllTyped);
-
+  /** Presolve */
   void presolve();
+  /** Notify restart */
   void notifyRestart();
+  /** Preprocess assert */
   Theory::PPAssertStatus ppAssert(TrustNode tin,
                                   TrustSubstitutionMap& outSubstitutions);
+  /** Preprocess static learn */
   void ppStaticLearn(TNode in, NodeBuilder& learned);
 
   EqualityStatus getEqualityStatus(TNode a, TNode b);
 
   /** Called when n is notified as being a shared term with TheoryArith. */
   void notifySharedTerm(TNode n);
-
+  /** Get candidate model value */
   Node getCandidateModelValue(TNode var);
-
+  /** Do entailment check */
   std::pair<bool, Node> entailmentCheck(TNode lit);
-
   //--------------------------------- standard check
   /** Pre-check, called before the fact queue of the theory is processed. */
   bool preCheck(Theory::Effort level, bool newFacts);
@@ -116,13 +120,9 @@ class LinearSolver : protected EnvObj
   /** The solver */
   TheoryArithPrivate d_internal;
   /** Convert to internal */
-  Node toInternal(const Node& n);
+  Node convert(const Node& n, bool toInternal);
   /** Convert to external */
-  Node toExternal(const Node& n);
-  /** Convert to external */
-  TrustNode toInternalTrust(const TrustNode& tn);
-  /** Convert to external */
-  TrustNode toExternalTrust(const TrustNode& tn);
+  TrustNode convertTrust(const TrustNode& tn, bool toInternal);
 };
 
 }  // namespace linear

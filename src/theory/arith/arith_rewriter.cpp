@@ -120,6 +120,22 @@ RewriteResponse ArithRewriter::preRewriteAtom(TNode atom)
   return RewriteResponse(REWRITE_DONE, atom);
 }
 
+Node ArithRewriter::rewriteEquality(TNode eq)
+{
+  Assert (eq.getKind()==Kind::EQUAL);
+  TNode left = eq[0];
+  TNode right = eq[1];
+  rewriter::Sum sum;
+  rewriter::addToSum(sum, left);
+  rewriter::addToSum(sum, right);
+  // Now we have (sum <kind> 0)
+  if (rewriter::isIntegral(sum))
+  {
+    return rewriter::buildIntegerEquality(std::move(sum));
+  }
+  return rewriter::buildRealEquality(std::move(sum));
+}
+
 RewriteResponse ArithRewriter::postRewriteAtom(TNode atom)
 {
   Assert(rewriter::isAtom(atom));
