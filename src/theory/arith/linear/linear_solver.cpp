@@ -15,6 +15,8 @@
 
 #include "theory/arith/linear/linear_solver.h"
 
+#include "theory/arith/theory_arith.h"
+
 #include "smt/env_obj.h"
 
 namespace cvc5::internal {
@@ -23,12 +25,17 @@ namespace arith::linear {
 
 LinearSolver::LinearSolver(TheoryArith& containing,
                            Env& env,
+                           TheoryState& ts,
                            BranchAndBound& bab)
-    : EnvObj(env), d_containing(containing), d_internal(containing, env, bab)
+    : EnvObj(env), d_containing(containing), d_internal(containing, env, ts, bab)
 {
 }
 
-void LinearSolver::finishInit() { d_internal.finishInit(); }
+void LinearSolver::finishInit() 
+{
+  eq::EqualityEngine* ee = d_containing.getEqualityEngine();
+  d_internal.finishInit(ee); 
+}
 void LinearSolver::preRegisterTerm(TNode n) { d_internal.preRegisterTerm(n); }
 void LinearSolver::propagate(Theory::Effort e) { d_internal.propagate(e); }
 TrustNode LinearSolver::explain(TNode n) { return d_internal.explain(n); }

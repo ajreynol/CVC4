@@ -85,12 +85,15 @@ static bool complexityBelow(const DenseMap<Rational>& row, uint32_t cap);
 
 TheoryArithPrivate::TheoryArithPrivate(TheoryArith& containing,
                                        Env& env,
+                                       TheoryState& ts,
                                        BranchAndBound& bab)
     : EnvObj(env),
       d_containing(containing),
       d_foundNl(false),
       d_rowTracking(),
       d_bab(bab),
+      d_state(ts),
+      d_valuation(ts.getValuation()),
       d_pnm(d_env.isTheoryProofProducing() ? d_env.getProofNodeManager()
                                            : nullptr),
       d_pfGen(new EagerProofGenerator(env, userContext())),
@@ -176,11 +179,10 @@ TheoryArithPrivate::~TheoryArithPrivate(){
   if(d_approxStats != NULL) { delete d_approxStats; }
 }
 
-void TheoryArithPrivate::finishInit()
+void TheoryArithPrivate::finishInit(eq::EqualityEngine* ee)
 {
   if (d_cmEnabled)
   {
-    eq::EqualityEngine* ee = d_containing.getEqualityEngine();
     Assert(ee != nullptr);
     d_congruenceManager.finishInit(ee);
   }
@@ -374,7 +376,7 @@ void TheoryArithPrivate::raiseConflict(ConstraintCP a, InferenceId id){
       << "Must provide an inference id in TheoryArithPrivate::raiseConflict";
   d_conflicts.push_back(std::make_pair(a, id));
   // notify we are in conflict in this SAT context
-  d_containing.getTheoryState()->notifyInConflict();
+  d_state.notifyInConflict();
 }
 
 void TheoryArithPrivate::raiseBlackBoxConflict(Node bb,
@@ -390,7 +392,7 @@ void TheoryArithPrivate::raiseBlackBoxConflict(Node bb,
     }
     d_blackBoxConflict = bb;
     // notify we are in conflict in this SAT context
-    d_containing.getTheoryState()->notifyInConflict();
+    d_state.notifyInConflict();
   }
 }
 
@@ -1837,11 +1839,11 @@ void TheoryArithPrivate::outputRestart() {
 
 bool TheoryArithPrivate::isSatLiteral(TNode l) const
 {
-  return (d_containing.d_valuation).isSatLiteral(l);
+  return d_valuation.isSatLiteral(l);
 }
 Node TheoryArithPrivate::getSatValue(TNode n) const
 {
-  return (d_containing.d_valuation).getSatValue(n);
+  return d_valuation.getSatValue(n);
 }
 
 bool TheoryArithPrivate::attemptSolveInteger(Theory::Effort effortLevel, bool emmmittedLemmaOrSplit){
@@ -3281,8 +3283,7 @@ bool TheoryArithPrivate::postCheck(Theory::Effort effortLevel)
                                          : d_dualSimplex.getPivots();
   for (std::size_t i = 0; i < nPivots; ++i)
   {
-    d_containing.d_out->spendResource(
-        Resource::ArithPivotStep);
+    d_containing.d_out->spendResource(Resource::ArithPivotStep);
   }
 
   Trace("arith::ems") << "ems: " << emmittedConflictOrSplit

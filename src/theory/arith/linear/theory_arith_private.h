@@ -96,6 +96,10 @@ class TheoryArithPrivate : protected EnvObj
   BoundInfoMap d_rowTracking;
   /** Branch and bound utility */
   BranchAndBound& d_bab;
+  /** Theory state */
+  TheoryState& d_state;
+  /** Valuation */
+  Valuation& d_valuation;
   // For proofs
   /** Manages the proof nodes of this theory. */
   ProofNodeManager* d_pnm;
@@ -425,12 +429,12 @@ private:
   DeltaRational getDeltaValue(TNode term) const
       /* throw(DeltaRationalException, ModelException) */;
  public:
-  TheoryArithPrivate(TheoryArith& containing, Env& env, BranchAndBound& bab);
+  TheoryArithPrivate(TheoryArith& containing, Env& env, TheoryState& ts, BranchAndBound& bab);
   ~TheoryArithPrivate();
 
   //--------------------------------- initialization
   /** finish initialize */
-  void finishInit();
+  void finishInit(eq::EqualityEngine* ee);
   //--------------------------------- end initialization
 
   /**

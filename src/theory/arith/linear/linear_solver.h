@@ -37,7 +37,8 @@ namespace linear {
 class LinearSolver : protected EnvObj
 {
  public:
-  LinearSolver(TheoryArith& containing, Env& env, BranchAndBound& bab);
+  LinearSolver(TheoryArith& containing, Env& env, 
+                           TheoryState& ts, BranchAndBound& bab);
   /** finish initialize */
   void finishInit();
   /**
