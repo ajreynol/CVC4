@@ -51,7 +51,10 @@ class EqualitySolver : protected EnvObj
   using NodeSet = context::CDHashSet<Node>;
 
  public:
-  EqualitySolver(Env& env, TheoryState& astate, InferenceManager& aim, linear::LinearSolver& ls);
+  EqualitySolver(Env& env,
+                 TheoryState& astate,
+                 InferenceManager& aim,
+                 linear::LinearSolver& ls);
   ~EqualitySolver() {}
   //--------------------------------- initialization
   /**

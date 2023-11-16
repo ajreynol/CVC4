@@ -76,7 +76,7 @@ TrustNode TrustNode::mkReplaceGenTrustNode(const TrustNode& orig,
 
 TrustNode TrustNode::mkTrustNode(TrustNodeKind tnk, Node p, ProofGenerator* g)
 {
-  return TrustNode(tnk,p, g);
+  return TrustNode(tnk, p, g);
 }
 
 TrustNode TrustNode::null()

@@ -5086,10 +5086,9 @@ ArithCongruenceManager* TheoryArithPrivate::getCongruenceManager()
   return d_cmEnabled.get() ? &d_congruenceManager : nullptr;
 }
 
-
 Node TheoryArithPrivate::rewriteAtom(TNode atom)
 {
-  if (atom.getKind()==Kind::EQUAL)
+  if (atom.getKind() == Kind::EQUAL)
   {
     return ArithRewriter::rewriteEquality(atom);
   }

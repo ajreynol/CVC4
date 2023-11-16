@@ -15,8 +15,8 @@
 
 #include "theory/arith/linear/linear_solver.h"
 
-#include "theory/arith/arith_rewriter.h"
 #include "expr/attribute.h"
+#include "theory/arith/arith_rewriter.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -26,19 +26,24 @@ std::string toStringNode(TNode n, TNode on)
 {
   std::stringstream ss;
   ss << n;
-  if (n!=on)
+  if (n != on)
   {
     ss << " (from " << on << ")";
   }
   return ss.str();
 }
-  
-  
+
 LinearSolver::LinearSolver(Env& env,
                            TheoryState& ts,
                            InferenceManager& im,
                            BranchAndBound& bab)
-    : EnvObj(env), d_im(im), d_internal(env, *this, ts, bab), d_acm(nullptr), d_externalToInternal(userContext()), d_internalToExternal(userContext()), d_inFlushPending(false)
+    : EnvObj(env),
+      d_im(im),
+      d_internal(env, *this, ts, bab),
+      d_acm(nullptr),
+      d_externalToInternal(userContext()),
+      d_internalToExternal(userContext()),
+      d_inFlushPending(false)
 {
 }
 
@@ -51,8 +56,8 @@ void LinearSolver::finishInit(eq::EqualityEngine* ee)
   d_acm = d_internal.getCongruenceManager();
 }
 
-void LinearSolver::preRegisterTerm(TNode n) 
-{ 
+void LinearSolver::preRegisterTerm(TNode n)
+{
   if (n.getType().isBoolean())
   {
     Node in = convertAssertToInternal(n);
@@ -62,7 +67,8 @@ void LinearSolver::preRegisterTerm(TNode n)
     }
     else
     {
-      Trace("linear-solver") << "preRegisterTerm: " << toStringNode(in, n) << std::endl;
+      Trace("linear-solver")
+          << "preRegisterTerm: " << toStringNode(in, n) << std::endl;
       d_internal.preRegisterTerm(in);
     }
     return;
@@ -78,10 +84,12 @@ TrustNode LinearSolver::explain(TNode n)
   Node in = convert(n, true);
   Trace("linear-solver") << "explain: " << toStringNode(in, n) << std::endl;
   // came from external, thus should have an internal mapping
-  Assert (!in.isNull());
+  Assert(!in.isNull());
   TrustNode ret = d_internal.explain(in);
   TrustNode eret = convertTrust(ret, false);
-  Trace("linear-solver") << "explain returns: " << toStringNode(eret.getNode(), ret.getNode()) << std::endl;
+  Trace("linear-solver") << "explain returns: "
+                         << toStringNode(eret.getNode(), ret.getNode())
+                         << std::endl;
   return eret;
 }
 
@@ -100,7 +108,9 @@ Theory::PPAssertStatus LinearSolver::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
   TrustNode tini = convertTrust(tin, true);
-  Trace("linear-solver") << "ppAssert: " << toStringNode(tini.getNode(), tin.getNode()) << std::endl;
+  Trace("linear-solver") << "ppAssert: "
+                         << toStringNode(tini.getNode(), tin.getNode())
+                         << std::endl;
   return d_internal.ppAssert(tini, outSubstitutions);
 }
 void LinearSolver::ppStaticLearn(TNode in, NodeBuilder& learned)
@@ -111,10 +121,10 @@ EqualityStatus LinearSolver::getEqualityStatus(TNode a, TNode b)
 {
   return d_internal.getEqualityStatus(a, b);
 }
-void LinearSolver::notifySharedTerm(TNode n) { 
+void LinearSolver::notifySharedTerm(TNode n)
+{
   Trace("linear-solver") << "notifySharedTerm: " << n << std::endl;
   d_internal.notifySharedTerm(n);
-  
 }
 Node LinearSolver::getCandidateModelValue(TNode var)
 {
@@ -132,7 +142,8 @@ bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
 void LinearSolver::preNotifyFact(TNode fact)
 {
   Node ifact = convertAssertToInternal(fact);
-  Trace("linear-solver") << "preNotifyFact: " << toStringNode(ifact, fact) << std::endl;
+  Trace("linear-solver") << "preNotifyFact: " << toStringNode(ifact, fact)
+                         << std::endl;
   if (ifact.isNull())
   {
     // add pending
@@ -159,21 +170,26 @@ ArithCongruenceManager* LinearSolver::getCongruenceManager()
 bool LinearSolver::outputTrustedLemma(TrustNode lemma, InferenceId id)
 {
   TrustNode elemma = convertTrust(lemma, false);
-  Trace("linear-solver") << "outputTrustedLemma: " << toStringNode(elemma.getNode(), lemma.getNode()) << std::endl;
+  Trace("linear-solver") << "outputTrustedLemma: "
+                         << toStringNode(elemma.getNode(), lemma.getNode())
+                         << std::endl;
   return d_im.trustedLemma(elemma, id);
 }
 
 void LinearSolver::outputTrustedConflict(TrustNode conf, InferenceId id)
 {
   TrustNode econf = convertTrust(conf, false);
-  Trace("linear-solver") << "outputTrustedConflict: " << toStringNode(econf.getNode(), conf.getNode()) << std::endl;
+  Trace("linear-solver") << "outputTrustedConflict: "
+                         << toStringNode(econf.getNode(), conf.getNode())
+                         << std::endl;
   d_im.trustedConflict(econf, id);
 }
 
 void LinearSolver::outputPropagate(TNode lit)
 {
   Node elit = convert(lit, false);
-  Trace("linear-solver") << "outputPropagate: " << toStringNode(elit, lit) << std::endl;
+  Trace("linear-solver") << "outputPropagate: " << toStringNode(elit, lit)
+                         << std::endl;
   d_im.propagateLit(elit);
 }
 
@@ -190,14 +206,15 @@ using LinearInternalAttribute =
 
 Node LinearSolver::convertAssertToInternal(TNode n)
 {
-  bool pol = n.getKind()!=Kind::NOT;
+  bool pol = n.getKind() != Kind::NOT;
   TNode natom = pol ? n : n[0];
-  if (natom.getKind()!=Kind::EQUAL)
+  if (natom.getKind() != Kind::EQUAL)
   {
     return n;
   }
   Node nr;
-  context::CDHashMap<Node, Node>::iterator it = d_externalToInternal.find(natom);
+  context::CDHashMap<Node, Node>::iterator it =
+      d_externalToInternal.find(natom);
   if (it != d_externalToInternal.end())
   {
     nr = it->second;
@@ -208,14 +225,15 @@ Node LinearSolver::convertAssertToInternal(TNode n)
     if (nr.isConst())
     {
       // constant!
-      d_pending.emplace_back(nr.getConst<bool>() ? Node(natom) : natom.notNode());
+      d_pending.emplace_back(nr.getConst<bool>() ? Node(natom)
+                                                 : natom.notNode());
       nr = Node::null();
       Trace("linear-solver") << "* reduce: " << natom << std::endl;
     }
     else
     {
       it = d_internalToExternal.find(nr);
-      if (it!=d_internalToExternal.end())
+      if (it != d_internalToExternal.end())
       {
         // already mapped, we have discovered equivalent atoms
         d_pending.emplace_back(natom.eqNode(it->second));
@@ -248,20 +266,23 @@ Node LinearSolver::convert(Node n, bool toInternal)
           // remember the attribute
           nr = ArithRewriter::rewriteEquality(n);
           n.setAttribute(iattr, nr);
-          Trace("linear-solver") << "Rewrite equality: " << n << " --> " << nr << std::endl;
+          Trace("linear-solver")
+              << "Rewrite equality: " << n << " --> " << nr << std::endl;
         }
         return nr;
       }
       // should be mapped
-      context::CDHashMap<Node, Node>::iterator it = d_internalToExternal.find(n);
-      if (it!=d_internalToExternal.end())
+      context::CDHashMap<Node, Node>::iterator it =
+          d_internalToExternal.find(n);
+      if (it != d_internalToExternal.end())
       {
         return it->second;
       }
-      Trace("linear-solver") << "WARN: assuming internal is external: " << n << std::endl;
+      Trace("linear-solver")
+          << "WARN: assuming internal is external: " << n << std::endl;
       return n;
     }
-      break;
+    break;
     case Kind::NOT:
     {
       return convert(n[0], toInternal).notNode();
@@ -270,13 +291,13 @@ Node LinearSolver::convert(Node n, bool toInternal)
     case Kind::OR:
     case Kind::AND:
     {
-      Assert (!toInternal);
+      Assert(!toInternal);
       bool childChanged = false;
       std::vector<Node> echildren;
       for (const Node& nc : n)
       {
         Node nce = convert(nc, toInternal);
-        Assert (!nce.isNull());
+        Assert(!nce.isNull());
         childChanged = childChanged || nce != nc;
         echildren.emplace_back(nce);
       }
@@ -327,13 +348,16 @@ TrustNode LinearSolver::eqExplain(TNode lit)
   if (d_acm != nullptr)
   {
     Node ilit = convert(lit, true);
-    Trace("linear-solver") << "eqExplain " << toStringNode(ilit,lit) << std::endl;
+    Trace("linear-solver") << "eqExplain " << toStringNode(ilit, lit)
+                           << std::endl;
     // if we are using the congruence manager, consult whether it can explain
     if (d_acm->canExplain(ilit))
     {
       TrustNode texp = d_acm->explain(ilit);
       TrustNode etexp = convertTrust(texp, false);
-      Trace("linear-solver") << "...return " << toStringNode(etexp.getNode(), texp.getNode()) << std::endl;
+      Trace("linear-solver")
+          << "...return " << toStringNode(etexp.getNode(), texp.getNode())
+          << std::endl;
       return etexp;
     }
     else
@@ -358,16 +382,17 @@ bool LinearSolver::eqPropagate(Node lit, bool& conflict)
 
 bool LinearSolver::eqConflictEqConstantMerge(TNode a, TNode b)
 {
-  if (d_acm !=nullptr)
+  if (d_acm != nullptr)
   {
     Node eq = a.eqNode(b);
-    Trace("linear-solver") << "eqConflictEqConstantMerge " << a << " " << b << std::endl;
+    Trace("linear-solver") << "eqConflictEqConstantMerge " << a << " " << b
+                           << std::endl;
     d_acm->propagate(eq);
     return true;
   }
   return false;
 }
-  
+
 }  // namespace arith::linear
 }  // namespace theory
 }  // namespace cvc5::internal

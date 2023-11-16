@@ -320,7 +320,8 @@ TrustNode TheoryArith::explain(TNode n)
   TrustNode texp = d_eqSolver->explain(n);
   if (!texp.isNull())
   {
-    Trace("theory::explain") << "eqSolver Got " << texp.getNode() << " for " << n << std::endl;
+    Trace("theory::explain")
+        << "eqSolver Got " << texp.getNode() << " for " << n << std::endl;
     return texp;
   }
   return d_internal.explain(n);

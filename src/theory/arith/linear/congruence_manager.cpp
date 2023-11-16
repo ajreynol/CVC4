@@ -21,10 +21,10 @@
 #include "proof/proof_node.h"
 #include "proof/proof_node_manager.h"
 #include "smt/env.h"
+#include "theory/arith/arith_rewriter.h"
 #include "theory/arith/arith_utilities.h"
 #include "theory/arith/linear/constraint.h"
 #include "theory/arith/linear/partial_model.h"
-#include "theory/arith/arith_rewriter.h"
 #include "theory/ee_setup_info.h"
 #include "theory/rewriter.h"
 #include "theory/uf/equality_engine.h"
@@ -308,10 +308,10 @@ bool ArithCongruenceManager::propagate(TNode x){
     return true;
   }
 
-  bool pol = x.getKind()!=Kind::NOT;
+  bool pol = x.getKind() != Kind::NOT;
   Node xatom = pol ? x : x[0];
   Node rewritten;
-  if (xatom.getKind()==Kind::EQUAL)
+  if (xatom.getKind() == Kind::EQUAL)
   {
     rewritten = ArithRewriter::rewriteEquality(xatom);
     if (!pol)

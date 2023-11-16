@@ -26,7 +26,8 @@ namespace arith {
 
 EqualitySolver::EqualitySolver(Env& env,
                                TheoryState& astate,
-                               InferenceManager& aim, linear::LinearSolver& ls)
+                               InferenceManager& aim,
+                               linear::LinearSolver& ls)
     : EnvObj(env),
       d_astate(astate),
       d_aim(aim),

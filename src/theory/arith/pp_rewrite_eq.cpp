@@ -17,9 +17,9 @@
 
 #include "options/arith_options.h"
 #include "smt/env.h"
+#include "theory/arith/arith_rewriter.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
-#include "theory/arith/arith_rewriter.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -56,7 +56,7 @@ TrustNode PreprocessRewriteEq::ppRewriteEq(TNode atom)
               TrustId::THEORY_INFERENCE, {}, {}, eq));
     }
   }
-  else if (atom==rewritten)
+  else if (atom == rewritten)
   {
     return TrustNode::null();
   }
