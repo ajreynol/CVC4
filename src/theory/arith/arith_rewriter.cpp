@@ -123,6 +123,7 @@ RewriteResponse ArithRewriter::preRewriteAtom(TNode atom)
 Node ArithRewriter::rewriteEquality(TNode eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);
+  Assert(eq[0].getType().isRealOrInt());
   TNode left = rewriter::removeToReal(eq[0]);
   TNode right = rewriter::removeToReal(eq[1]);
   rewriter::Sum sum;

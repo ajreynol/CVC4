@@ -311,7 +311,7 @@ bool ArithCongruenceManager::propagate(TNode x){
   bool pol = x.getKind() != Kind::NOT;
   Node xatom = pol ? x : x[0];
   Node rewritten;
-  if (xatom.getKind() == Kind::EQUAL)
+  if (xatom.getKind() == Kind::EQUAL && xatom[0].getType().isRealOrInt())
   {
     rewritten = ArithRewriter::rewriteEquality(xatom);
     if (!pol)
