@@ -42,23 +42,23 @@ TrustNode PreprocessRewriteEq::ppRewriteEq(TNode atom)
     Node leq = NodeBuilder(Kind::LEQ) << rewritten[0] << rewritten[1];
     Node geq = NodeBuilder(Kind::GEQ) << rewritten[0] << rewritten[1];
     rewritten = rewrite(leq.andNode(geq));
-    Trace("arith::preprocess")
-        << "arith::preprocess() : returning " << rewritten << std::endl;
-    // don't need to rewrite terms since rewritten is not a non-standard op
-    if (d_env.isTheoryProofProducing())
-    {
-      Node t = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(THEORY_ARITH);
-      Node eq = atom.eqNode(rewritten);
-      return d_ppPfGen.mkTrustedRewrite(
-          atom,
-          rewritten,
-          d_env.getProofNodeManager()->mkTrustedNode(
-              TrustId::THEORY_INFERENCE, {}, {}, eq));
-    }
   }
-  else if (atom == rewritten)
+  if (atom == rewritten)
   {
     return TrustNode::null();
+  }
+  Trace("arith::preprocess")
+      << "arith::preprocess() : returning " << rewritten << std::endl;
+  // don't need to rewrite terms since rewritten is not a non-standard op
+  if (d_env.isTheoryProofProducing())
+  {
+    Node t = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(THEORY_ARITH);
+    Node eq = atom.eqNode(rewritten);
+    return d_ppPfGen.mkTrustedRewrite(
+        atom,
+        rewritten,
+        d_env.getProofNodeManager()->mkTrustedNode(
+            TrustId::THEORY_INFERENCE, {}, {}, eq));
   }
   return TrustNode::mkTrustRewrite(atom, rewritten, nullptr);
 }
