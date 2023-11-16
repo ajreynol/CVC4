@@ -107,11 +107,10 @@ void LinearSolver::notifyRestart() { d_internal.notifyRestart(); }
 Theory::PPAssertStatus LinearSolver::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
-  TrustNode tini = convertTrust(tin, true);
   Trace("linear-solver") << "ppAssert: "
-                         << toStringNode(tini.getNode(), tin.getNode())
+                         << tin.getNode()
                          << std::endl;
-  return d_internal.ppAssert(tini, outSubstitutions);
+  return d_internal.ppAssert(tin, outSubstitutions);
 }
 void LinearSolver::ppStaticLearn(TNode in, NodeBuilder& learned)
 {
@@ -336,7 +335,7 @@ void LinearSolver::flushPending()
   {
     Trace("linear-solver") << "...lemma " << lem << std::endl;
     TrustNode tlem = TrustNode::mkTrustLemma(lem);
-    outputTrustedLemma(tlem, InferenceId::ARITH_REWRITE_EQ_NORM);
+    d_im.trustedLemma(tlem, InferenceId::ARITH_REWRITE_EQ_NORM);
   }
   d_pending.clear();
   Trace("linear-solver") << "...flushPending finished" << std::endl;

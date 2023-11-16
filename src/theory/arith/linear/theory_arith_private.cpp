@@ -957,6 +957,11 @@ Theory::PPAssertStatus TheoryArithPrivate::ppAssert(
   if (in.getKind() == Kind::EQUAL
       && Theory::theoryOf(in[0].getType()) == THEORY_ARITH)
   {
+    in = ArithRewriter::rewriteEquality(in);
+    if (in.isConst())
+    {
+      return Theory::PP_ASSERT_STATUS_UNSOLVED;
+    }
     Comparison cmp = Comparison::parseNormalForm(in);
 
     Polynomial left = cmp.getLeft();

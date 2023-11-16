@@ -167,6 +167,7 @@ bool SharedTermsDatabase::propagateSharedEquality(TheoryId theory, TNode a, TNod
   }
 
   // Propagate away
+  Assert (a<b);
   Node equality = a.eqNode(b);
   if (value) {
     d_theoryEngine->assertToTheory(equality, equality, theory, THEORY_BUILTIN);
