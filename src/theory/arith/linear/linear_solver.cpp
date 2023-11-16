@@ -344,6 +344,17 @@ TrustNode LinearSolver::eqExplain(TNode lit)
 {
   if (d_acm != nullptr)
   {
+    /*
+    if (d_acm->canExplain(lit))
+    {
+      TrustNode texp = d_acm->explain(lit);
+      TrustNode etexp = convertTrust(texp, false);
+      Trace("linear-solver")
+          << "...return " << toStringNode(etexp.getNode(), texp.getNode())
+          << std::endl;
+      return etexp;
+    }
+    */
     Node ilit = convert(lit, true);
     Trace("linear-solver") << "eqExplain " << toStringNode(ilit, lit)
                            << std::endl;
