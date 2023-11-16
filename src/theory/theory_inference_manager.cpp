@@ -577,7 +577,8 @@ bool TheoryInferenceManager::cacheLemma(TNode lem, LemmaProperty p)
   Node rewritten = rewrite(lem);
   if (d_lemmasSent.find(rewritten) != d_lemmasSent.end())
   {
-    Trace("im-debug") << "...already in cache: " << rewritten << ", from " << lem << std::endl;
+    Trace("im-debug") << "...already in cache: " << rewritten << ", from "
+                      << lem << std::endl;
     return false;
   }
   d_lemmasSent.insert(rewritten);

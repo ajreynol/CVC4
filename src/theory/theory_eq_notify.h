@@ -49,7 +49,7 @@ class TheoryEqNotifyClass : public eq::EqualityEngineNotify
                                    TNode t2,
                                    bool value) override
   {
-    Assert (t1<t2);
+    Assert(t1 < t2);
     if (value)
     {
       return d_im.propagateLit(t1.eqNode(t2));

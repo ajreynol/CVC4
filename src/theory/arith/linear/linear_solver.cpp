@@ -107,9 +107,7 @@ void LinearSolver::notifyRestart() { d_internal.notifyRestart(); }
 Theory::PPAssertStatus LinearSolver::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
-  Trace("linear-solver") << "ppAssert: "
-                         << tin.getNode()
-                         << std::endl;
+  Trace("linear-solver") << "ppAssert: " << tin.getNode() << std::endl;
   return d_internal.ppAssert(tin, outSubstitutions);
 }
 void LinearSolver::ppStaticLearn(TNode in, NodeBuilder& learned)

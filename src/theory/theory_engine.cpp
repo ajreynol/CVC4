@@ -974,7 +974,7 @@ bool TheoryEngine::markPropagation(TNode assertion, TNode originalAssertion, the
 
 void TheoryEngine::assertToTheory(TNode assertion, TNode originalAssertion, theory::TheoryId toTheoryId, theory::TheoryId fromTheoryId) {
   Trace("theory::assertToTheory") << "TheoryEngine::assertToTheory(" << assertion << ", " << originalAssertion << "," << toTheoryId << ", " << fromTheoryId << ")" << endl;
-  AlwaysAssert(rewrite(assertion)==assertion);
+  AlwaysAssert(rewrite(assertion) == assertion);
   Assert(toTheoryId != fromTheoryId);
   if (toTheoryId != THEORY_SAT_SOLVER
       && !isTheoryEnabled(toTheoryId))
