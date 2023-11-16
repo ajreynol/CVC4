@@ -109,6 +109,9 @@ class LinearSolver : protected EnvObj
   /** get the congruence manager, if we are using one */
   ArithCongruenceManager* getCongruenceManager();
 
+  TrustNode eqExplain(TNode lit);
+  bool eqPropagate(Node lit, bool& conflict);
+  bool eqConflictEqConstantMerge(TNode a, TNode b);
   //======================
   bool outputTrustedLemma(TrustNode lemma, InferenceId id);
   void outputTrustedConflict(TrustNode conf, InferenceId id);
@@ -120,17 +123,21 @@ class LinearSolver : protected EnvObj
   InferenceManager& d_im;
   /** The solver */
   TheoryArithPrivate d_internal;
+  /** Congruence manager, if using */
+  ArithCongruenceManager* d_acm;
   /** Mapping */
   context::CDHashMap<Node, Node> d_externalToInternal;
   /** Mapping */
   context::CDHashMap<Node, Node> d_internalToExternal;
   /** Pending lemmas */
   std::vector<Node> d_pending;
+  bool d_inFlushPending;
   /** Convert to internal */
   Node convertAssertToInternal(TNode n);
   Node convert(Node n, bool toInternal);
   /** Convert to external */
   TrustNode convertTrust(const TrustNode& tn, bool toInternal);
+  void flushPending();
 };
 
 }  // namespace linear

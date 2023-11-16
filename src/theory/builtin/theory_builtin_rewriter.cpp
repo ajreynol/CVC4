@@ -66,6 +66,26 @@ Node TheoryBuiltinRewriter::blastDistinct(TNode in)
 
 RewriteResponse TheoryBuiltinRewriter::postRewrite(TNode node) {
   // otherwise, do the default call
+  if (node.getKind() == Kind::EQUAL)
+  {
+    if (node[0] == node[1])
+    {
+      return RewriteResponse(REWRITE_DONE,
+                             NodeManager::currentNM()->mkConst(true));
+    }
+    else if (node[0].isConst() && node[1].isConst())
+    {
+      // uninterpreted constants are all distinct
+      return RewriteResponse(REWRITE_DONE,
+                             NodeManager::currentNM()->mkConst(false));
+    }
+    if (node[0] > node[1])
+    {
+      Node newNode =
+          NodeManager::currentNM()->mkNode(Kind::EQUAL, node[1], node[0]);
+      return RewriteResponse(REWRITE_DONE, newNode);
+    }
+  }
   return doRewrite(node);
 }
 

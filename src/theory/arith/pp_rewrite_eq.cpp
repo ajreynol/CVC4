@@ -19,6 +19,7 @@
 #include "smt/env.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
+#include "theory/arith/arith_rewriter.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -32,26 +33,32 @@ PreprocessRewriteEq::PreprocessRewriteEq(Env& env)
 TrustNode PreprocessRewriteEq::ppRewriteEq(TNode atom)
 {
   Assert(atom.getKind() == Kind::EQUAL);
-  if (!options().arith.arithRewriteEq)
+  Assert(atom[0].getType().isRealOrInt());
+  Trace("linear-solver") << "ppRewriteEq: " << atom << std::endl;
+  // always rewrite now
+  Node rewritten = ArithRewriter::rewriteEquality(atom);
+  if (options().arith.arithRewriteEq)
+  {
+    Node leq = NodeBuilder(Kind::LEQ) << rewritten[0] << rewritten[1];
+    Node geq = NodeBuilder(Kind::GEQ) << rewritten[0] << rewritten[1];
+    rewritten = rewrite(leq.andNode(geq));
+    Trace("arith::preprocess")
+        << "arith::preprocess() : returning " << rewritten << std::endl;
+    // don't need to rewrite terms since rewritten is not a non-standard op
+    if (d_env.isTheoryProofProducing())
+    {
+      Node t = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(THEORY_ARITH);
+      Node eq = atom.eqNode(rewritten);
+      return d_ppPfGen.mkTrustedRewrite(
+          atom,
+          rewritten,
+          d_env.getProofNodeManager()->mkTrustedNode(
+              TrustId::THEORY_INFERENCE, {}, {}, eq));
+    }
+  }
+  else if (atom==rewritten)
   {
     return TrustNode::null();
-  }
-  Assert(atom[0].getType().isRealOrInt());
-  Node leq = NodeBuilder(Kind::LEQ) << atom[0] << atom[1];
-  Node geq = NodeBuilder(Kind::GEQ) << atom[0] << atom[1];
-  Node rewritten = rewrite(leq.andNode(geq));
-  Trace("arith::preprocess")
-      << "arith::preprocess() : returning " << rewritten << std::endl;
-  // don't need to rewrite terms since rewritten is not a non-standard op
-  if (d_env.isTheoryProofProducing())
-  {
-    Node t = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(THEORY_ARITH);
-    Node eq = atom.eqNode(rewritten);
-    return d_ppPfGen.mkTrustedRewrite(
-        atom,
-        rewritten,
-        d_env.getProofNodeManager()->mkTrustedNode(
-            TrustId::THEORY_INFERENCE, {}, {}, eq));
   }
   return TrustNode::mkTrustRewrite(atom, rewritten, nullptr);
 }

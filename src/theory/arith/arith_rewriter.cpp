@@ -127,7 +127,7 @@ Node ArithRewriter::rewriteEquality(TNode eq)
   TNode right = eq[1];
   rewriter::Sum sum;
   rewriter::addToSum(sum, left);
-  rewriter::addToSum(sum, right);
+  rewriter::addToSum(sum, right, true);
   // Now we have (sum <kind> 0)
   if (rewriter::isIntegral(sum))
   {

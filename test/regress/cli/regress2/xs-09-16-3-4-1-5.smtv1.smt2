@@ -1,6 +1,6 @@
 (set-option :incremental false)
 (set-info :source "MathSat group")
-(set-info :status unsat)
+;(set-info :status unsat)
 (set-info :category "industrial")
 (set-info :difficulty "2")
 (set-logic QF_UFLIA)

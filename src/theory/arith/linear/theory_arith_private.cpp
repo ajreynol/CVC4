@@ -1487,7 +1487,7 @@ ConstraintP TheoryArithPrivate::constraintFromFactQueue(TNode assertion)
     bool isDistinct = simpleKind == Kind::DISTINCT;
     Node eq = (simpleKind == Kind::DISTINCT) ? assertion[0] : assertion;
     Assert(!isSetup(eq));
-    Node reEq = rewrite(eq);
+    Node reEq = rewriteAtom(eq);
     Trace("arith::distinct::const") << "Assertion: " << assertion << std::endl;
     Trace("arith::distinct::const") << "Eq       : " << eq << std::endl;
     Trace("arith::distinct::const") << "reEq     : " << reEq << std::endl;
@@ -5091,7 +5091,7 @@ Node TheoryArithPrivate::rewriteAtom(TNode atom)
 {
   if (atom.getKind()==Kind::EQUAL)
   {
-
+    return ArithRewriter::rewriteEquality(atom);
   }
   return rewrite(atom);
 }
