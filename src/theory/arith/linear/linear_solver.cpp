@@ -145,7 +145,6 @@ using LinearInternalAttribute =
 
 Node LinearSolver::convertAssertToInternal(TNode n)
 {
-  return n;
   bool pol = n.getKind()!=Kind::NOT;
   TNode natom = pol ? n : n[0];
   if (natom.getKind()!=Kind::EQUAL)
@@ -188,18 +187,15 @@ Node LinearSolver::convertAssertToInternal(TNode n)
 
 Node LinearSolver::convert(Node n, bool toInternal)
 {
-  // FIXME
-  return n;
   Kind nk = n.getKind();
   switch (nk)
   {
     case Kind::EQUAL:
     {
-      Node nr;
       if (toInternal)
       {
         LinearInternalAttribute iattr;
-        nr = n.getAttribute(iattr);
+        Node nr = n.getAttribute(iattr);
         if (nr.isNull())
         {
           // remember the attribute
@@ -209,9 +205,12 @@ Node LinearSolver::convert(Node n, bool toInternal)
         return nr;
       }
       // should be mapped
-      context::CDHashMap<Node, Node>::iterator it = d_internalToExternal.find(nr);
-      Assert (it!=d_internalToExternal.end());
-      return it->second;
+      context::CDHashMap<Node, Node>::iterator it = d_internalToExternal.find(n);
+      if (it!=d_internalToExternal.end())
+      {
+        return it->second;
+      }
+      return n;
     }
       break;
     case Kind::NOT:
