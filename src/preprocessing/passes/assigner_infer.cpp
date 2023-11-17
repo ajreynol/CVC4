@@ -78,12 +78,12 @@ Node AssignerInfer::getSymbolsHash(const Node& n)
     return symvec[0];
   }
   std::sort(symvec.begin(), symvec.end());
-  return NodeManager::currentNM()->mkNode(kind::SEXPR, symvec);
+  return NodeManager::currentNM()->mkNode(Kind::SEXPR, symvec);
 }
 
 Node AssignerInfer::inferAssigners(const Node& n, std::vector<Node>& lemmas)
 {
-  Assert(n.getKind() == kind::OR);
+  Assert(n.getKind() == Kind::OR);
   std::map<Node, std::vector<Node>> symHashToLits;
   std::vector<Node> resLits;
   for (const Node& nc : n)
@@ -136,12 +136,12 @@ Node AssignerInfer::inferAssigners(const Node& n, std::vector<Node>& lemmas)
         std::vector<Node> cdisj;
         for (const Node& cc : ca)
         {
-          Assert(cc.getKind() != kind::NOT);
+          Assert(cc.getKind() != Kind::NOT);
           cdisj.push_back(skm->mkProxyLit(cc));
         }
         conc = nm->mkOr(cdisj);
       }
-      Node lem = nm->mkNode(kind::EQUAL, lit, conc);
+      Node lem = nm->mkNode(Kind::EQUAL, lit, conc);
       lemmas.emplace_back(lem);
       */
       resLits.push_back(lit);
@@ -179,7 +179,7 @@ Node AssignerInfer::convertToAssigner(std::unordered_map<Node, Node>& visited,
         visit.push_back(cur);
         // if assigner, register to node manager, and replace by its assigner
         // variable
-        if (cur.getKind() == kind::OR
+        if (cur.getKind() == Kind::OR
             && processedInferred.find(cur) == processedInferred.end())
         {
           Node cura = inferAssigners(cur, lemmas);

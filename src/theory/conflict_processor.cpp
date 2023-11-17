@@ -101,7 +101,7 @@ TrustNode ConflictProcessor::processLemma(const TrustNode& lem)
     for (TNode tlit : tgtLitsCheck)
     {
       Node v, ss;
-      if (tlit.getKind()==NOT && Assigner::isVarElimEq(tlit[0], v, ss) && !selim.contains(v))
+      if (tlit.getKind()==Kind::NOT && Assigner::isVarElimEq(tlit[0], v, ss) && !selim.contains(v))
       {
         Node sss = selim.apply(ss);
         auxExplain.push_back(tlit);
@@ -297,7 +297,7 @@ TrustNode ConflictProcessor::processLemma(const TrustNode& lem)
     std::vector<Node> clause;
     for (std::pair<const Node, Node>& e : varToExp)
     {
-      if (e.second.getKind() == AND)
+      if (e.second.getKind() == Kind::AND)
       {
         for (const Node& ec : e.second)
         {
@@ -310,7 +310,7 @@ TrustNode ConflictProcessor::processLemma(const TrustNode& lem)
       }
     }
     clause.insert(clause.end(), auxExplain.begin(), auxExplain.end());
-    if (tgtLitFinal.getKind() == OR)
+    if (tgtLitFinal.getKind() == Kind::OR)
     {
       clause.insert(clause.end(), tgtLitFinal.begin(), tgtLitFinal.end());
     }
@@ -347,12 +347,12 @@ void ConflictProcessor::decomposeLemma(const Node& lem,
     {
       visited.insert(cur);
       k = cur.getKind();
-      if (k == OR || k == IMPLIES)
+      if (k == Kind::OR || k == Kind::IMPLIES)
       {
         // all children are entailed
         for (size_t i = 0, nargs = cur.getNumChildren(); i < nargs; i++)
         {
-          if (k == IMPLIES && i == 0)
+          if (k == Kind::IMPLIES && i == 0)
           {
             Node cc = cur[0].negate();
             keep.insert(cc);
@@ -365,10 +365,10 @@ void ConflictProcessor::decomposeLemma(const Node& lem,
         }
         continue;
       }
-      else if (k == NOT)
+      else if (k == Kind::NOT)
       {
         k = cur[0].getKind();
-        if (k == EQUAL)
+        if (k == Kind::EQUAL)
         {
           // maybe substitution?
           Node vtmp;
@@ -404,7 +404,7 @@ void ConflictProcessor::decomposeLemma(const Node& lem,
             continue;
           }
         }
-        else if (k == AND)
+        else if (k == Kind::AND)
         {
           // negations of children of AND are entailed
           for (const Node& c : cur[0])
@@ -431,7 +431,7 @@ Node ConflictProcessor::evaluateSubstitution(const Subs& s,
                                              const Node& tgtLit) const
 {
   // HACK
-  if (tgtLit.getKind() == STRING_IN_REGEXP
+  if (tgtLit.getKind() == Kind::STRING_IN_REGEXP
       && strings::RegExpEval::canEvaluate(tgtLit[1]))
   {
     Node v = evaluate(tgtLit[0], s.d_vars, s.d_subs);
@@ -450,14 +450,14 @@ bool ConflictProcessor::checkSubstitution(const Subs& s,
                                           bool expect) const
 {
   Node tgtAtom = tgtLit;
-  if (tgtAtom.getKind() == NOT)
+  if (tgtAtom.getKind() == Kind::NOT)
   {
     tgtAtom = tgtAtom[0];
     expect = !expect;
   }
   // optimize for OR, since we may have generalized a target
   Kind k = tgtAtom.getKind();
-  if (k == OR || k == AND)
+  if (k == Kind::OR || k == Kind::AND)
   {
     bool hasNonConst = false;
     for (const Node& n : tgtAtom)
@@ -466,16 +466,16 @@ bool ConflictProcessor::checkSubstitution(const Subs& s,
       if (!sn.isConst())
       {
         // failure if all children must be a given value
-        if (expect == (k == AND))
+        if (expect == (k == Kind::AND))
         {
           return false;
         }
         hasNonConst = true;
       }
-      else if (sn.getConst<bool>() == (k == OR))
+      else if (sn.getConst<bool>() == (k == Kind::OR))
       {
         // success if short circuits to desired value
-        return expect == (k == OR);
+        return expect == (k == Kind::OR);
       }
     }
     return !hasNonConst;
@@ -594,7 +594,7 @@ Node ConflictProcessor::checkSubsGeneralizes(Assigner* a,
   // we check per disjunct
   std::vector<Node> toCheck;
   bool expect = true;
-  if (tgtLit.getKind() == NOT && tgtLit[0].getKind() == OR)
+  if (tgtLit.getKind() == Kind::NOT && tgtLit[0].getKind() == Kind::OR)
   {
     toCheck.insert(toCheck.end(), tgtLit[0].begin(), tgtLit[0].end());
     expect = false;
@@ -616,7 +616,7 @@ Node ConflictProcessor::checkSubsGeneralizes(Assigner* a,
     entval.resize(nvars);
     // If we only expect one literal to be true, then we
     std::vector<Node> tcc;
-    if (!expect && tc.getKind() == AND)
+    if (!expect && tc.getKind() == Kind::AND)
     {
       tcc.insert(tcc.end(), tc.begin(), tc.end());
     }
@@ -795,11 +795,11 @@ void ConflictProcessor::getEntailedEq(const Node& tc,
 {
   std::vector<Node> toCheck;
   Kind k = tc.getKind();
-  if (k == AND)
+  if (k == Kind::AND)
   {
     toCheck.insert(toCheck.end(), tc.begin(), tc.end());
   }
-  else if (k == EQUAL)
+  else if (k == Kind::EQUAL)
   {
     toCheck.push_back(tc);
   }
@@ -829,7 +829,7 @@ bool ConflictProcessor::isAssignmentClashVec(const Node& a,
   {
     return isAssignmentClash(a, entval[0]);
   }
-  Assert(a.getKind() == SEXPR && a.getNumChildren() == entval.size());
+  Assert(a.getKind() == Kind::SEXPR && a.getNumChildren() == entval.size());
   for (size_t i = 0, nval = entval.size(); i < nval; i++)
   {
     if (isAssignmentClash(a[i], entval[i]))

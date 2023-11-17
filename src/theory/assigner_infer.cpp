@@ -55,12 +55,12 @@ Node AssignerInference::getSymbolsHash(const Node& n)
     return symvec[0];
   }
   std::sort(symvec.begin(), symvec.end());
-  return NodeManager::currentNM()->mkNode(kind::SEXPR, symvec);
+  return NodeManager::currentNM()->mkNode(Kind::SEXPR, symvec);
 }
 
 bool AssignerInference::registerAssigner(const Node& n)
 {
-  Assert(n.getKind() == kind::OR);
+  Assert(n.getKind() == Kind::OR);
   Node symHash;
   for (const Node& nc : n)
   {
@@ -112,7 +112,7 @@ void AssignerInference::registerAssigners(std::unordered_set<Node>& visited,
       if (expr::isBooleanConnective(cur))
       {
         // if assigner, register to env
-        if (cur.getKind() == kind::OR && registerAssigner(cur))
+        if (cur.getKind() == Kind::OR && registerAssigner(cur))
         {
           continue;
         }
