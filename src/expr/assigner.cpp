@@ -26,7 +26,7 @@ Node mkHash(const std::vector<Node>& vec)
 {
   Assert(!vec.empty());
   return vec.size() == 1 ? vec[0]
-                         : NodeManager::currentNM()->mkNode(SEXPR, vec);
+                         : NodeManager::currentNM()->mkNode(Kind::SEXPR, vec);
 }
 
 Assigner::Assigner(const Node& n) : d_node(n)
@@ -140,7 +140,7 @@ bool Assigner::init(const Node& n)
 bool Assigner::isLiteralCube(const Node& n, std::vector<Node>& cc)
 {
   Kind nck = n.getKind();
-  if (nck == AND)
+  if (nck == Kind::AND)
   {
     cc.insert(cc.end(), n.begin(), n.end());
   }
@@ -151,7 +151,7 @@ bool Assigner::isLiteralCube(const Node& n, std::vector<Node>& cc)
   // each cube must be conjunction of theory literals
   for (const Node& lit : cc)
   {
-    TNode atom = lit.getKind() == NOT ? lit[0] : lit;
+    TNode atom = lit.getKind() == Kind::NOT ? lit[0] : lit;
     if (!expr::isTheoryAtom(atom))
     {
       return false;
@@ -170,7 +170,7 @@ bool Assigner::initInternal(const Node& n,
                             std::map<Node, std::vector<Node>>& assignments,
                             std::vector<Node>& literals)
 {
-  if (n.getKind() != OR)
+  if (n.getKind() != Kind::OR)
   {
     return false;
   }
@@ -225,7 +225,7 @@ bool Assigner::initInternal(const Node& n,
 bool Assigner::isAssignEq(const Node& n, Node& v, Node& c)
 {
   Kind k = n.getKind();
-  if (k == EQUAL)
+  if (k == Kind::EQUAL)
   {
     for (size_t i = 0; i < 2; i++)
     {
@@ -243,7 +243,7 @@ bool Assigner::isAssignEq(const Node& n, Node& v, Node& c)
 bool Assigner::isVarElimEq(const Node& n, Node& v, Node& s)
 {
   Kind k = n.getKind();
-  if (k == EQUAL)
+  if (k == Kind::EQUAL)
   {
     for (size_t i = 0; i < 2; i++)
     {

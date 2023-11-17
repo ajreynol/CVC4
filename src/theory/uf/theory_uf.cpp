@@ -266,7 +266,7 @@ TrustNode TheoryUF::ppRewrite(TNode node, std::vector<SkolemLemma>& lems)
                                            : arith::eliminateInt2Bv(node);
     return TrustNode::mkTrustRewrite(node, ret);
   }
-  else if (k == kind::SKOLEM)
+  else if (k == Kind::SKOLEM)
   {
     Node def;
     SkolemFunId id;
@@ -275,7 +275,7 @@ TrustNode TheoryUF::ppRewrite(TNode node, std::vector<SkolemLemma>& lems)
     if (skm->isSkolemFunction(node, id, def) && id == SkolemFunId::PROXY_LIT)
     {
       // node = def where def is the literal for node
-      Node lem = nm->mkNode(kind::EQUAL, node, def);
+      Node lem = nm->mkNode(Kind::EQUAL, node, def);
       TrustNode tlem = TrustNode::mkTrustLemma(lem);
       lems.emplace_back(tlem, node);
     }
