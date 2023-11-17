@@ -30,6 +30,8 @@ class ProofGenerator;
 enum class SkolemFunId
 {
   NONE,
+  /** input variable with a given name */
+  INPUT_VARIABLE,
   /** purification skolem for a term t */
   PURIFY,
   /** array diff to witness (not (= A B)) */
@@ -59,9 +61,11 @@ enum class SkolemFunId
    * first order datatype variable for f.
    */
   QUANTIFIERS_SYNTH_FUN_EMBED,
-  //----- string skolems are cached based on two strings (a, b)
-  /** exists k. ( b occurs k times in a ) */
+  //----- string skolems are cached based on (a, b)
+  /** exists k. ( string b occurs k times in string a ) */
   STRINGS_NUM_OCCUR,
+  /** exists k. ( regular expression b can be matched k times in a ) */
+  STRINGS_NUM_OCCUR_RE,
   /** For function k: Int -> Int
    *   exists k.
    *     forall 0 <= x <= n,
@@ -69,6 +73,8 @@ enum class SkolemFunId
    *   where n is the number of occurrences of b in a, and k(0)=0.
    */
   STRINGS_OCCUR_INDEX,
+  /** Same, but where b is a regular expression */
+  STRINGS_OCCUR_INDEX_RE,
   /**
    * For function k: Int -> Int
    *   exists k.
@@ -79,6 +85,8 @@ enum class SkolemFunId
    *   in a, and k(0)=0.
    */
   STRINGS_OCCUR_LEN,
+  /** Same, but where b is a regular expression */
+  STRINGS_OCCUR_LEN_RE,
   /**
    * Diff index for disequalities a != b => substr(a,k,1) != substr(b,k,1)
    */
@@ -117,9 +125,9 @@ enum class SkolemFunId
    * is the substring of a matched by b. It is either empty or there is no
    * shorter string that matches b.
    */
-  SK_FIRST_MATCH_PRE,
-  SK_FIRST_MATCH,
-  SK_FIRST_MATCH_POST,
+  RE_FIRST_MATCH_PRE,
+  RE_FIRST_MATCH,
+  RE_FIRST_MATCH_POST,
   /**
    * Regular expression unfold component: if (str.in_re t R), where R is
    * (re.++ r0 ... rn), then the RE_UNFOLD_POS_COMPONENT{t,R,i} is a string
@@ -236,7 +244,8 @@ enum class SkolemFunId
   ASSIGNER,
   PROXY_LIT,
   /** sygus "any constant" placeholder */
-  SYGUS_ANY_CONSTANT
+  SYGUS_ANY_CONSTANT,
+  UNKNOWN
 };
 /** Converts a skolem function name to a string. */
 const char* toString(SkolemFunId id);
@@ -450,9 +459,9 @@ class SkolemManager
    * call a public method from SkolemManager for allocating a skolem in a
    * proper way, or otherwise use SkolemManager::mkDummySkolem.
    */
-  Node mkSkolemNode(const std::string& prefix,
+  Node mkSkolemNode(Kind k,
+                    const std::string& prefix,
                     const TypeNode& type,
-                    const std::string& comment = "",
                     int flags = SKOLEM_DEFAULT);
 };
 

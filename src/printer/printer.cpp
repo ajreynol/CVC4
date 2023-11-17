@@ -207,6 +207,7 @@ void Printer::toStreamCmdPop(std::ostream& out, uint32_t nscopes) const
 
 void Printer::toStreamCmdDeclareFunction(std::ostream& out,
                                          const std::string& id,
+                                         const std::vector<TypeNode>& argTypes,
                                          TypeNode type) const
 {
   printUnknownCommand(out, "declare-fun");
@@ -219,7 +220,14 @@ void Printer::toStreamCmdDeclareFunction(std::ostream& out, const Node& v) const
   // assigned names.
   std::stringstream ss;
   toStream(ss, v);
-  toStreamCmdDeclareFunction(out, ss.str(), v.getType());
+  TypeNode vt = v.getType();
+  std::vector<TypeNode> argTypes;
+  if (vt.isFunction())
+  {
+    argTypes = vt.getArgTypes();
+    vt = vt.getRangeType();
+  }
+  toStreamCmdDeclareFunction(out, ss.str(), argTypes, vt);
 }
 
 void Printer::toStreamCmdDeclarePool(std::ostream& out,
@@ -232,6 +240,7 @@ void Printer::toStreamCmdDeclarePool(std::ostream& out,
 
 void Printer::toStreamCmdDeclareOracleFun(std::ostream& out,
                                           const std::string& id,
+                                          const std::vector<TypeNode>& argTypes,
                                           TypeNode type,
                                           const std::string& binName) const
 {
@@ -280,7 +289,7 @@ void Printer::toStreamCmdDefineFunction(std::ostream& out,
   std::vector<Node> formals;
   Node body = lambda;
   TypeNode rangeType = v.getType();
-  if (body.getKind() == kind::LAMBDA)
+  if (body.getKind() == Kind::LAMBDA)
   {
     formals.insert(formals.end(), lambda[0].begin(), lambda[0].end());
     body = lambda[1];
@@ -310,7 +319,7 @@ void Printer::toStreamCmdDefineFunctionRec(
   {
     std::vector<Node> formalsVec;
     Node formula;
-    if (l.getKind() == kind::LAMBDA)
+    if (l.getKind() == Kind::LAMBDA)
     {
       formalsVec.insert(formalsVec.end(), l[0].begin(), l[0].end());
       formula = l[1];
