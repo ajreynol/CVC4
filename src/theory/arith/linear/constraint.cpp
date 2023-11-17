@@ -1564,8 +1564,7 @@ TrustNode Constraint::externalExplainForPropagation(TNode lit) const
     }
     if (getProofLiteral() != lit)
     {
-      pfFromAssumptions = d_database->d_pnm->mkNode(
-          ProofRule::MACRO_SR_PRED_TRANSFORM, {pfFromAssumptions}, {lit});
+      pfFromAssumptions = d_database->d_pnm->mkTrustedNode(TrustId::THEORY_INFERENCE, {pfFromAssumptions}, {lit}, lit);
     }
     auto pf = d_database->d_pnm->mkScope(pfFromAssumptions, assumptions);
     return d_database->d_pfGen->mkTrustedPropagation(
@@ -1716,8 +1715,7 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
       if (getWitness() != getProofLiteral())
       {
         Node plit = getProofLiteral();
-        pf = pnm->mkNode(
-            ProofRule::MACRO_SR_PRED_TRANSFORM, {pf}, {plit}, plit);
+        pf = pnm->mkTrustedNode(TrustId::THEORY_INFERENCE, {pf}, {plit}, plit);
       }
     }
   }
@@ -1729,8 +1727,7 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
     {
       std::shared_ptr<ProofNode> a = pnm->mkAssume(getLiteral());
       Node plit = getProofLiteral();
-      pf = pnm->mkNode(
-          ProofRule::MACRO_SR_PRED_TRANSFORM, {a}, {plit}, plit);
+      pf = pnm->mkTrustedNode(TrustId::THEORY_INFERENCE, {a}, {plit}, plit);
     }
     Assert(lit.getKind() != Kind::AND);
     nb << lit;
@@ -2081,31 +2078,30 @@ void ConstraintDatabase::proveOr(std::vector<TrustNode>& out,
     auto nm = NodeManager::currentNM();
     Node alit = a->getNegation()->getProofLiteral();
     TypeNode type = alit[0].getType();
-    auto pf_neg_la = d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
+    auto pf_neg_la = d_pnm->mkTrustedNode(TrustId::THEORY_INFERENCE,
                                    {d_pnm->mkAssume(la.negate())},
-                                   {alit});
+                                   {alit}, alit);
     Node blit = b->getNegation()->getProofLiteral();
     auto pf_neg_lb = d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
                                    {d_pnm->mkAssume(lb.negate())},
-                                   {blit});
+                                   {blit}, blit);
     int sndSign = negateSecond ? -1 : 1;
-    auto bot_pf = d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM,
+    Node falsen = nm->mkConst(false);
+    auto bot_pf = d_pnm->mkTrustedNode(TrustId::THEORY_INFERENCE,
         {d_pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB,
                        {pf_neg_la, pf_neg_lb},
                        {nm->mkConstRealOrInt(type, Rational(-1 * sndSign)),
                         nm->mkConstRealOrInt(type, Rational(sndSign))})},
-        {nm->mkConst(false)});
+        {falsen}, falsen);
     std::vector<Node> as;
     std::transform(orN.begin(), orN.end(), std::back_inserter(as), [](Node n) {
       return n.negate();
     });
     // No need to ensure that the expected node aggrees with `as` because we
     // are not providing an expected node.
-    auto pf = d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM,
+    auto pf = d_pnm->mkTrustedNode(TrustId::THEORY_INFERENCE,
         {d_pnm->mkNode(ProofRule::NOT_AND, {d_pnm->mkScope(bot_pf, as)}, {})},
-        {orN});
+        {orN}, orN);
     out.push_back(d_pfGen->mkTrustNode(orN, pf));
   }
   else

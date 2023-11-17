@@ -1,4 +1,4 @@
-; COMMAND-LINE: --nl-ext=full --no-new-prop
+; COMMAND-LINE: --nl-ext=full --no-new-prop -q
 ; EXPECT: sat
 (set-logic QF_NRA)
 (set-info :source |

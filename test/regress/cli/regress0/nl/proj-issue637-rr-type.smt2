@@ -1,3 +1,4 @@
+; COMMAND-LINE: -q
 (set-logic NRA)
 (set-info :status sat)
 (declare-const x21 Bool)

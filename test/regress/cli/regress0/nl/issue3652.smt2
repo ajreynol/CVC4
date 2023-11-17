@@ -1,5 +1,6 @@
-;REQUIRES: poly
-;EXPECT: sat
+; REQUIRES: poly
+; COMMAND-LINE: -q
+; EXPECT: sat
 (set-logic QF_NRA)
 (declare-fun a () Real)
 (assert (= (* a a) 2))

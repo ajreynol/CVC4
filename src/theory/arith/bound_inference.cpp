@@ -64,6 +64,10 @@ bool BoundInference::add(const Node& n, bool onlyVariables)
   if (natom.getKind() == Kind::EQUAL)
   {
     tmp = ArithRewriter::rewriteEquality(natom);
+    if (tmp.getKind() == Kind::CONST_BOOLEAN)
+    {
+      return false;
+    }
     if (!pol)
     {
       tmp = tmp.notNode();
@@ -77,6 +81,7 @@ bool BoundInference::add(const Node& n, bool onlyVariables)
   {
     return false;
   }
+  Trace("arith-bound-inference") << "Add: " << n << std::endl;
   // Parse the node as a comparison
   auto comp = linear::Comparison::parseNormalForm(tmp);
   auto dec = comp.decompose(true);

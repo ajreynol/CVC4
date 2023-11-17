@@ -93,6 +93,7 @@ std::vector<TrustNode> BranchAndBound::branchIntegerVariable(TNode var,
       Trace("integers::pf") << "eq: " << eq << std::endl;
       Trace("integers::pf") << "rawEq: " << rawEq << std::endl;
       Pf pfNotLit = pnm->mkAssume(literal.negate());
+      Assert (teq.getGenerator()!=nullptr);
       // rewrite notLiteral to notRawEq, using teq.
       Pf pfNotRawEq =
           literal == rawEq
@@ -114,7 +115,7 @@ std::vector<TrustNode> BranchAndBound::branchIntegerVariable(TNode var,
       Pf pfNotAnd = pnm->mkScope(pfBot, assumptions);
       Pf pfL = pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
                            {pnm->mkNode(ProofRule::NOT_AND, {pfNotAnd}, {})},
-                           {l});
+                           {l}, l);
       lems.push_back(d_pfGen->mkTrustNode(l, pfL));
     }
     else

@@ -1,4 +1,5 @@
 ; REQUIRES: poly
+; COMMAND-LINE: -q
 ; EXPECT: sat
 (set-logic QF_NRA)
 (declare-const r Real)

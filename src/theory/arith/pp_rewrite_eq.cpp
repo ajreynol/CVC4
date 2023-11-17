@@ -37,15 +37,18 @@ TrustNode PreprocessRewriteEq::ppRewriteEq(TNode atom)
   Trace("linear-solver") << "ppRewriteEq: " << atom << std::endl;
   // always rewrite now
   Node rewritten = ArithRewriter::rewriteEquality(atom);
-  if (options().arith.arithRewriteEq)
+  if (!rewritten.isConst())
   {
-    Node leq = NodeBuilder(Kind::LEQ) << rewritten[0] << rewritten[1];
-    Node geq = NodeBuilder(Kind::GEQ) << rewritten[0] << rewritten[1];
-    rewritten = rewrite(leq.andNode(geq));
-  }
-  if (atom == rewritten)
-  {
-    return TrustNode::null();
+    if (options().arith.arithRewriteEq)
+    {
+      Node leq = NodeBuilder(Kind::LEQ) << rewritten[0] << rewritten[1];
+      Node geq = NodeBuilder(Kind::GEQ) << rewritten[0] << rewritten[1];
+      rewritten = rewrite(leq.andNode(geq));
+    }
+    else if (atom == rewritten)
+    {
+      return TrustNode::null();
+    }
   }
   Trace("arith::preprocess")
       << "arith::preprocess() : returning " << rewritten << std::endl;
