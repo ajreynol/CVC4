@@ -56,6 +56,8 @@ class TermDbEager : protected EnvObj
   void eqNotifyNewClass(TNode t);
   /** notification when master equality engine is updated */
   void eqNotifyMerge(TNode t1, TNode t2);
+  /** */
+  void eqNotifyConstantTermMerge(TNode t1, TNode t2);
   /** Is in relevant domain? */
   bool inRelevantDomain(TNode f, size_t i, TNode r);
   /** Get congruent term */
@@ -96,12 +98,19 @@ class TermDbEager : protected EnvObj
   bool isFilteringEntailment() const { return d_filterNonUnit; }
 
  private:
+  bool addInstantiationInternal(const Node& q,
+                        std::vector<Node>& terms,
+                        bool isConflict);
   bool notifyTerm(TNode n, bool notifyTriggers);
   bool notifyQuant(TNode q);
   bool isPropagatingInstance(Node n);
   Node isPropagatingTerm(Node n);
+  Node mkExplainInst(const Node& q, const std::vector<Node>& terms);
+  Node getExplainInst(const Node& i, std::vector<Node>& terms);
   /** The null node */
   Node d_null;
+  /** Boolean type */
+  TypeNode d_boolType;
   /** Reference to the quantifiers state */
   QuantifiersState& d_qs;
   /** The quantifiers registry */
@@ -134,6 +143,7 @@ class TermDbEager : protected EnvObj
   /** Whether we are filtering non-unit instances */
   bool d_filterNonUnit;
   bool d_filterConflict;
+  bool d_filterFact;
   /** Wait list */
   eager::WaitList d_eqcDelay;
   /** Wait list */

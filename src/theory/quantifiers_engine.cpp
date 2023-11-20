@@ -686,6 +686,14 @@ void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
   }
 }
 
+void QuantifiersEngine::eqNotifyConstantTermMerge(TNode t1, TNode t2)
+{
+  if (d_tdbe != nullptr)
+  {
+    d_tdbe->eqNotifyConstantTermMerge(t1, t2);
+  }
+}
+
 void QuantifiersEngine::markRelevant( Node q ) {
   d_model->markRelevant( q );
 }

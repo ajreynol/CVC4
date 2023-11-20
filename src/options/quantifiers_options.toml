@@ -843,6 +843,9 @@ name   = "Quantifiers"
 [[option.mode.CONFLICT_WATCH]]
   name = "conflict-watch"
   help = "Consider any conflicting instances, watch."
+[[option.mode.UNIT_PROP_FACT]]
+  name = "unit-prop-fact"
+  help = "Consider any unit propagating instances as internal facts."
 
 [[option]]
   name       = "eagerInstTrigger"

@@ -16,6 +16,7 @@
 #include "theory/quantifiers/term_database_eager.h"
 
 #include "expr/node_algorithm.h"
+#include "expr/skolem_manager.h"
 #include "options/base_options.h"
 #include "options/quantifiers_options.h"
 #include "theory/quantifiers/instantiate.h"
@@ -61,14 +62,17 @@ TermDbEager::TermDbEager(Env& env,
   options::EagerInstMode mode = options().quantifiers.eagerInstMode;
   d_filterNonUnit = (mode == options::EagerInstMode::UNIT_PROP
                      || mode == options::EagerInstMode::UNIT_PROP_WATCH
+                     || mode == options::EagerInstMode::UNIT_PROP_FACT
                      || mode == options::EagerInstMode::CONFLICT_WATCH);
   d_filterConflict = (mode == options::EagerInstMode::CONFLICT_WATCH);
+  d_filterFact = (mode == options::EagerInstMode::UNIT_PROP_FACT);
   // check if we will be watching
   if (mode == options::EagerInstMode::UNIT_PROP_WATCH
       || mode == options::EagerInstMode::CONFLICT_WATCH)
   {
     d_instWatch.reset(new eager::InstWatch(*this));
   }
+  d_boolType = NodeManager::currentNM()->booleanType();
 }
 
 void TermDbEager::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
@@ -177,6 +181,33 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
     }
   }
   Trace("eager-inst-notify") << "...finished" << std::endl;
+}
+
+void TermDbEager::eqNotifyConstantTermMerge(TNode t1, TNode t2)
+{
+  if (!d_filterFact)
+  {
+    return;
+  }
+  d_qs.notifyInConflict();
+  Node lit = t1.eqNode(t2);
+  eq::EqualityEngine* mee = d_qs.getEqualityEngine();
+  Node conf = mee->mkExplainLit(lit);
+  Trace("eager-inst-fact") << "Conflict (from fact?): " << conf << std::endl;
+  for (const Node& c : conf)
+  {
+    if (c.getKind()==Kind::SKOLEM)
+    {
+      std::vector<Node> terms;
+      Node q = getExplainInst(c, terms);
+      if (!q.isNull())
+      {
+        Trace("eager-inst-fact") << "...instantiation: " << q << " " << terms << std::endl;
+        addInstantiationInternal(q, terms, false);
+      }
+    }
+  }
+  Trace("eager-inst-fact") << "...finish" << std::endl;
 }
 
 bool TermDbEager::notifyTerm(TNode t, bool isAsserted)
@@ -334,18 +365,20 @@ bool TermDbEager::addInstantiation(const Node& q,
       << "addInstantiation: " << q << ", " << terms
       << ", isConflict=" << isConflict << ", ent=" << entv << std::endl;
   // AlwaysAssert( !isConflict || entv.isConst());
-  //  if already propagated, skip
-  if (d_entProps.find(entv) != d_entProps.end())
-  {
-    Trace("eager-inst-debug") << "...already entailed!" << std::endl;
-    ++(d_stats.d_instFailDuplicateProp);
-    return false;
-  }
-  d_entProps.insert(entv);
   if (d_filterNonUnit)
   {
+    //  if already propagated, skip
+    if (d_entProps.find(entv) != d_entProps.end())
+    {
+      Trace("eager-inst-debug") << "...already entailed!" << std::endl;
+      ++(d_stats.d_instFailDuplicateProp);
+      return false;
+    }
+    d_entProps.insert(entv);
     Assert(!entv.isNull());
     bool success = false;
+    bool entvPol = entv.getKind() != Kind::NOT;
+    Node entvAtom = entvPol ? entv : entv[0];
     if (d_filterConflict)
     {
       // must be false
@@ -354,8 +387,6 @@ bool TermDbEager::addInstantiation(const Node& q,
     else
     {
       // don't propagate connectives
-      bool entvPol = entv.getKind() != Kind::NOT;
-      Node entvAtom = entvPol ? entv : entv[0];
       // don't propagate connectives or disequalities
       if (entvAtom.getKind() == Kind::EQUAL)
       {
@@ -382,6 +413,28 @@ bool TermDbEager::addInstantiation(const Node& q,
       return false;
     }
     Trace("eager-inst-ent") << "Instance entails: " << entv << std::endl;
+    if (!entv.isConst())
+    {
+      if (d_filterFact)
+      {
+        Node exp = mkExplainInst(q, terms);
+        eq::EqualityEngine* mee = d_qs.getEqualityEngine();
+        Trace("eager-inst-fact") << "Infer: " << entv << std::endl;
+        if (entvAtom.getKind()==Kind::EQUAL)
+        {
+          mee->assertEquality(entvAtom, entvPol, exp);
+        }
+        else
+        {
+          mee->assertPredicate(entvAtom, entvPol, exp);
+        }
+        return false;
+      }
+    }
+    else
+    {
+      Assert (!entv.getConst<bool>());
+    }
   }
 #if 0
   Node inst = d_qim->getInstantiate()->getInstantiation(q, terms);
@@ -390,6 +443,12 @@ bool TermDbEager::addInstantiation(const Node& q,
     AlwaysAssert(false);
   }
 #endif
+  return addInstantiationInternal(q, terms, isConflict);
+}
+bool TermDbEager::addInstantiationInternal(const Node& q,
+                      std::vector<Node>& terms,
+                      bool isConflict)
+{
   ++(d_stats.d_inst);
   InferenceId iid = InferenceId::QUANTIFIERS_INST_EAGER;
   if (isConflict)
@@ -414,7 +473,7 @@ bool TermDbEager::addInstantiation(const Node& q,
     Trace("eager-inst") << "* EagerInst: added instantiation "
                         << (isConflict ? "(conflict) " : "") << std::endl;
   }
-  // note we don't do pending yet
+  // note we don't flush pending lemmas yet
   return ret;
 }
 
@@ -529,6 +588,29 @@ void TermDbEager::refresh()
       return;
     }
   }
+}
+
+
+Node TermDbEager::mkExplainInst(const Node& q, const std::vector<Node>& terms)
+{
+  std::vector<Node> qterms;
+  qterms.push_back(q);
+  qterms.insert(qterms.end(), terms.begin(), terms.end());
+  SkolemManager * skm = NodeManager::currentNM()->getSkolemManager();
+  return skm->mkSkolemFunction(SkolemFunId::QUANTIFIERS_INST, d_boolType, {qterms});
+}
+
+Node TermDbEager::getExplainInst(const Node& i, std::vector<Node>& terms)
+{
+  Node cacheVal;
+  SkolemFunId id;
+  SkolemManager * skm = NodeManager::currentNM()->getSkolemManager();
+  if (skm->isSkolemFunction(i, id, cacheVal))
+  {
+    terms.insert(terms.end(), cacheVal.begin()+1, cacheVal.end());
+    return cacheVal[0];
+  }
+  return Node::null();
 }
 
 }  // namespace quantifiers

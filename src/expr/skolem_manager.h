@@ -61,6 +61,8 @@ enum class SkolemFunId
    * first order datatype variable for f.
    */
   QUANTIFIERS_SYNTH_FUN_EMBED,
+  /** */
+  QUANTIFIERS_INST,
   //----- string skolems are cached based on (a, b)
   /** exists k. ( string b occurs k times in string a ) */
   STRINGS_NUM_OCCUR,
