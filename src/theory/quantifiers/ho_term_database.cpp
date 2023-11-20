@@ -141,7 +141,6 @@ bool HoTermDb::resetInternal(Theory::Effort effort)
         Trace("term-db-lemma") << "Purify equality lemma: " << eq << std::endl;
         d_qim->addPendingLemma(eq, InferenceId::QUANTIFIERS_HO_PURIFY);
         d_qstate.notifyInConflict();
-        d_consistent_ee = false;
         return false;
       }
     }

@@ -185,7 +185,7 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
 
 void TermDbEager::eqNotifyConstantTermMerge(TNode t1, TNode t2)
 {
-  if (!d_filterFact)
+  if (!d_filterFact || d_qs.isInConflict())
   {
     return;
   }
@@ -208,6 +208,7 @@ void TermDbEager::eqNotifyConstantTermMerge(TNode t1, TNode t2)
     }
   }
   Trace("eager-inst-fact") << "...finish" << std::endl;
+  d_qim->doPending();
 }
 
 bool TermDbEager::notifyTerm(TNode t, bool isAsserted)
