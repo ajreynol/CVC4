@@ -86,6 +86,9 @@ void TriggerInfo::watch(QuantInfo* qi, const std::vector<Node>& vlist)
         // only ever care about reporting unit propagating instances
         tev = ieval::TermEvaluatorMode::PROP_STRICT;
         break;
+      case options::EagerInstMode::NO_ENTAIL:
+        tev = ieval::TermEvaluatorMode::NO_ENTAIL;
+        break;
       default: break;
     }
     // initialize the evaluator if not already done so

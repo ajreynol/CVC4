@@ -846,6 +846,9 @@ name   = "Quantifiers"
 [[option.mode.UNIT_PROP_FACT]]
   name = "unit-prop-fact"
   help = "Consider any unit propagating instances as internal facts."
+[[option.mode.NO_ENTAIL]]
+  name = "no-entail"
+  help = "Consider any non-entailed instance."
 
 [[option]]
   name       = "eagerInstTrigger"
