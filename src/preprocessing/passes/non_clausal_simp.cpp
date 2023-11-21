@@ -28,6 +28,7 @@
 #include "theory/theory.h"
 #include "theory/theory_engine.h"
 #include "theory/theory_model.h"
+#include "expr/node_algorithm.h"
 #include "theory/trust_substitutions.h"
 
 using namespace cvc5::internal;
@@ -209,22 +210,23 @@ PreprocessingPassResult NonClausalSimp::applyInternal(
       default:
         TNode t;
         TNode c;
-        if (learnedLiteral.getKind() == Kind::EQUAL
-            && (learnedLiteral[0].isConst() || learnedLiteral[1].isConst()))
+        bool processed = false;
+        if (learnedLiteral.getKind() == Kind::EQUAL)
         {
-          // constant propagation
-          if (learnedLiteral[0].isConst())
+          for (size_t k=0; k<2; k++)
           {
-            t = learnedLiteral[1];
-            c = learnedLiteral[0];
-          }
-          else
-          {
-            t = learnedLiteral[0];
-            c = learnedLiteral[1];
+            // constant propagation t --> c, or
+            // term simplification f(..t...) ---> t
+            if (learnedLiteral[k].getNumChildren()==0 || expr::hasSubterm(learnedLiteral[1-k], learnedLiteral[k]))
+            {
+              t = learnedLiteral[1-k];
+              c = learnedLiteral[k];
+              processed = true;
+              break;
+            }
           }
         }
-        else if (options().smt.simplificationBoolConstProp)
+        if (!processed && options().smt.simplificationBoolConstProp)
         {
           // From non-equalities, learn the Boolean equality. Notice that
           // the equality case above is strictly more powerful that this, since
