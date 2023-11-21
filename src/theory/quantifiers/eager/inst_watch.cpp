@@ -77,6 +77,7 @@ void InstWatch::watch(const Node& q,
   // have each watch term watch it
   for (const Node& wt : wterms)
   {
+    Trace("eager-inst-watch") << "...watch term " << wt << std::endl;
     WatchTermInfo* wti = getWatchTermInfo(wt);
     wti->d_insts[inst] = true;
   }
@@ -88,6 +89,15 @@ bool InstWatch::eqNotifyMerge(TNode t1, TNode t2)
   for (size_t i = 0; i < 2; i++)
   {
     TNode t = i == 0 ? t1 : t2;
+    if (t.getKind()==Kind::EQUAL)
+    {
+      if (eqNotifyMerge(t[0], t[1]))
+      {
+        return true;
+      }
+      continue;
+    }
+    Trace("eager-inst-watch-debug") << "...look at " << t << "?" << std::endl;
     it = d_wtInfo.find(t);
     if (it != d_wtInfo.end())
     {
@@ -110,6 +120,12 @@ bool InstWatch::eqNotifyMerge(TNode t1, TNode t2)
     }
   }
   return false;
+}
+
+bool InstWatch::eqNotifyDisequal(TNode t1, TNode t2)
+{
+  // TODO: different from merge
+  return eqNotifyMerge(t1, t2);
 }
 
 WatchTermInfo* InstWatch::getWatchTermInfo(const Node& t)

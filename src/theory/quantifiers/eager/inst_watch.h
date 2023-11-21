@@ -57,6 +57,7 @@ class InstWatch
   void watch(const Node& q, const std::vector<Node>& terms, const Node& entv);
   /** notification when master equality engine is updated */
   bool eqNotifyMerge(TNode t1, TNode t2);
+  bool eqNotifyDisequal(TNode t1, TNode t2);
 
  private:
   WatchTermInfo* getWatchTermInfo(const Node& t);

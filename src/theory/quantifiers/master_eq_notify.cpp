@@ -38,6 +38,11 @@ void MasterNotifyClass::eqNotifyMerge(TNode t1, TNode t2)
   d_quantEngine->eqNotifyMerge(t1, t2);
 }
 
+void MasterNotifyClass::eqNotifyDisequal(TNode t1, TNode t2, TNode reason)
+{
+  d_quantEngine->eqNotifyDisequal(t1, t2);
+}
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

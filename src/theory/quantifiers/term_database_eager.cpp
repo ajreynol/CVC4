@@ -183,6 +183,18 @@ void TermDbEager::eqNotifyMerge(TNode t1, TNode t2)
   Trace("eager-inst-notify") << "...finished" << std::endl;
 }
 
+void TermDbEager::eqNotifyDisequal(TNode t1, TNode t2)
+{
+  if (d_instWatch != nullptr)
+  {
+    if (d_instWatch->eqNotifyDisequal(t1, t2))
+    {
+      Trace("eager-inst-notify") << "...conflict instWatch" << std::endl;
+      return;
+    }
+  }
+}
+
 void TermDbEager::eqNotifyConstantTermMerge(TNode t1, TNode t2)
 {
   if (!d_filterFact || d_qs.isInConflict())
@@ -406,6 +418,7 @@ bool TermDbEager::addInstantiation(const Node& q,
     }
     if (!success)
     {
+      Trace("eager-inst-debug") << "...add to watch " << entv << std::endl;
       if (d_instWatch != nullptr)
       {
         d_instWatch->watch(q, terms, entv);

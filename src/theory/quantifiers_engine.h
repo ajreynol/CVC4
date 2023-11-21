@@ -98,6 +98,8 @@ class QuantifiersEngine : protected EnvObj
   void eqNotifyNewClass(TNode t);
   /** notification when master equality engine is updated */
   void eqNotifyMerge(TNode t1, TNode t2);
+  /**  */
+  void eqNotifyDisequal(TNode t1, TNode t2);
   /** */
   void eqNotifyConstantTermMerge(TNode t1, TNode t2);
   /** mark relevant quantified formula, this will indicate it should be checked

@@ -53,7 +53,7 @@ class MasterNotifyClass : public theory::eq::EqualityEngineNotify
   }
   void eqNotifyConstantTermMerge(TNode t1, TNode t2) override;
   void eqNotifyMerge(TNode t1, TNode t2) override;
-  void eqNotifyDisequal(TNode t1, TNode t2, TNode reason) override {}
+  void eqNotifyDisequal(TNode t1, TNode t2, TNode reason) override;
 
   private:
   /** Pointer to quantifiers engine */

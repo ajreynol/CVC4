@@ -56,6 +56,8 @@ class TermDbEager : protected EnvObj
   void eqNotifyNewClass(TNode t);
   /** notification when master equality engine is updated */
   void eqNotifyMerge(TNode t1, TNode t2);
+  /** notification when master equality engine is updated */
+  void eqNotifyDisequal(TNode t1, TNode t2);
   /** */
   void eqNotifyConstantTermMerge(TNode t1, TNode t2);
   /** Is in relevant domain? */
