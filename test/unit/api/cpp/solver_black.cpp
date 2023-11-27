@@ -13,6 +13,8 @@
  * Black box testing of the Solver class of the  C++ API.
  */
 
+#include <gtest/gtest.h>
+
 #include <algorithm>
 #include <cmath>
 
@@ -114,7 +116,7 @@ TEST_F(TestApiBlackSolver, recoverableException)
   Term x = d_solver.mkConst(d_solver.getBooleanSort(), "x");
   d_solver.assertFormula(x.eqTerm(x).notTerm());
   ASSERT_THROW(d_solver.getValue(x), CVC5ApiRecoverableException);
-  
+
   try {
     d_solver.getValue(x);
   }
@@ -1080,6 +1082,22 @@ TEST_F(TestApiBlackSolver, mkConst)
   ASSERT_NO_THROW(slv.mkConst(boolSort));
 }
 
+TEST_F(TestApiBlackSolver, declareFunFresh)
+{
+  Sort boolSort = d_solver.getBooleanSort();
+  Sort intSort = d_solver.getIntegerSort();
+  Term t1 = d_solver.declareFun(std::string("b"), {}, boolSort, true);
+  Term t2 = d_solver.declareFun(std::string("b"), {}, boolSort, false);
+  Term t3 = d_solver.declareFun(std::string("b"), {}, boolSort, false);
+  ASSERT_FALSE(t1 == t2);
+  ASSERT_FALSE(t1 == t3);
+  ASSERT_TRUE(t2 == t3);
+  Term t4 = d_solver.declareFun(std::string("c"), {}, boolSort, false);
+  ASSERT_FALSE(t2 == t4);
+  Term t5 = d_solver.declareFun(std::string("b"), {}, intSort, false);
+  ASSERT_FALSE(t2 == t5);
+}
+
 TEST_F(TestApiBlackSolver, mkConstArray)
 {
   Sort intSort = d_solver.getIntegerSort();
@@ -1156,6 +1174,20 @@ TEST_F(TestApiBlackSolver, declareSort)
   ASSERT_NO_THROW(d_solver.declareSort("s", 0));
   ASSERT_NO_THROW(d_solver.declareSort("s", 2));
   ASSERT_NO_THROW(d_solver.declareSort("", 2));
+}
+
+TEST_F(TestApiBlackSolver, declareSortFresh)
+{
+  Sort t1 = d_solver.declareSort(std::string("b"), 0, true);
+  Sort t2 = d_solver.declareSort(std::string("b"), 0, false);
+  Sort t3 = d_solver.declareSort(std::string("b"), 0, false);
+  ASSERT_FALSE(t1 == t2);
+  ASSERT_FALSE(t1 == t3);
+  ASSERT_TRUE(t2 == t3);
+  Sort t4 = d_solver.declareSort(std::string("c"), 0, false);
+  ASSERT_FALSE(t2 == t4);
+  Sort t5 = d_solver.declareSort(std::string("b"), 1, false);
+  ASSERT_FALSE(t2 == t5);
 }
 
 TEST_F(TestApiBlackSolver, defineSort)
@@ -1952,6 +1984,92 @@ TEST_F(TestApiBlackSolver, getUnsatCoreAndProof)
   ASSERT_NO_THROW(d_solver.getProof());
 }
 
+TEST_F(TestApiBlackSolver, getUnsatCoreLemmas1)
+{
+  d_solver.setOption("produce-unsat-cores", "true");
+  d_solver.setOption("unsat-cores-mode", "sat-proof");
+  // cannot ask before a check sat
+  ASSERT_THROW(d_solver.getUnsatCoreLemmas(), CVC5ApiException);
+
+  d_solver.assertFormula(d_solver.mkFalse());
+  d_solver.checkSat();
+  ASSERT_TRUE(d_solver.checkSat().isUnsat());
+  ASSERT_NO_THROW(d_solver.getUnsatCoreLemmas());
+}
+
+TEST_F(TestApiBlackSolver, getUnsatCoreLemmas2)
+{
+  d_solver.setOption("incremental", "true");
+  d_solver.setOption("produce-unsat-cores", "true");
+  d_solver.setOption("produce-proofs", "true");
+
+  Sort uSort = d_solver.mkUninterpretedSort("u");
+  Sort intSort = d_solver.getIntegerSort();
+  Sort boolSort = d_solver.getBooleanSort();
+  Sort uToIntSort = d_solver.mkFunctionSort({uSort}, intSort);
+  Sort intPredSort = d_solver.mkFunctionSort({intSort}, boolSort);
+
+  Term x = d_solver.mkConst(uSort, "x");
+  Term y = d_solver.mkConst(uSort, "y");
+  Term f = d_solver.mkConst(uToIntSort, "f");
+  Term p = d_solver.mkConst(intPredSort, "p");
+  Term zero = d_solver.mkInteger(0);
+  Term one = d_solver.mkInteger(1);
+  Term f_x = d_solver.mkTerm(Kind::APPLY_UF, {f, x});
+  Term f_y = d_solver.mkTerm(Kind::APPLY_UF, {f, y});
+  Term sum = d_solver.mkTerm(Kind::ADD, {f_x, f_y});
+  Term p_0 = d_solver.mkTerm(Kind::APPLY_UF, {p, zero});
+  Term p_f_y = d_solver.mkTerm(Kind::APPLY_UF, {p, f_y});
+  d_solver.assertFormula(d_solver.mkTerm(Kind::GT, {zero, f_x}));
+  d_solver.assertFormula(d_solver.mkTerm(Kind::GT, {zero, f_y}));
+  d_solver.assertFormula(d_solver.mkTerm(Kind::GT, {sum, one}));
+  d_solver.assertFormula(p_0);
+  d_solver.assertFormula(p_f_y.notTerm());
+  ASSERT_TRUE(d_solver.checkSat().isUnsat());
+
+  ASSERT_NO_THROW(d_solver.getUnsatCoreLemmas());
+}
+  
+TEST_F(TestApiBlackSolver, getProofAndProofToString)
+{
+  d_solver.setOption("produce-proofs", "true");
+
+  Sort uSort = d_solver.mkUninterpretedSort("u");
+  Sort intSort = d_solver.getIntegerSort();
+  Sort boolSort = d_solver.getBooleanSort();
+  Sort uToIntSort = d_solver.mkFunctionSort({uSort}, intSort);
+  Sort intPredSort = d_solver.mkFunctionSort({intSort}, boolSort);
+  std::vector<Proof> proofs;
+
+  Term x = d_solver.mkConst(uSort, "x");
+  Term y = d_solver.mkConst(uSort, "y");
+  Term f = d_solver.mkConst(uToIntSort, "f");
+  Term p = d_solver.mkConst(intPredSort, "p");
+  Term zero = d_solver.mkInteger(0);
+  Term one = d_solver.mkInteger(1);
+  Term f_x = d_solver.mkTerm(Kind::APPLY_UF, {f, x});
+  Term f_y = d_solver.mkTerm(Kind::APPLY_UF, {f, y});
+  Term sum = d_solver.mkTerm(Kind::ADD, {f_x, f_y});
+  Term p_0 = d_solver.mkTerm(Kind::APPLY_UF, {p, zero});
+  Term p_f_y = d_solver.mkTerm(Kind::APPLY_UF, {p, f_y});
+  d_solver.assertFormula(d_solver.mkTerm(Kind::GT, {zero, f_x}));
+  d_solver.assertFormula(d_solver.mkTerm(Kind::GT, {zero, f_y}));
+  d_solver.assertFormula(d_solver.mkTerm(Kind::GT, {sum, one}));
+  d_solver.assertFormula(p_0);
+  d_solver.assertFormula(p_f_y.notTerm());
+  ASSERT_TRUE(d_solver.checkSat().isUnsat());
+
+  std::string printedProof;
+  ASSERT_NO_THROW(proofs = d_solver.getProof());
+  ASSERT_FALSE(proofs.empty());
+  ASSERT_NO_THROW(printedProof = d_solver.proofToString(proofs[0]));
+  ASSERT_FALSE(printedProof.empty());
+  ASSERT_NO_THROW(printedProof = d_solver.proofToString(
+                      proofs[0], modes::ProofFormat::ALETHE));
+  ASSERT_NO_THROW(proofs = d_solver.getProof(modes::ProofComponent::SAT));
+  ASSERT_FALSE(printedProof.empty());
+}
+
 TEST_F(TestApiBlackSolver, getDifficulty)
 {
   d_solver.setOption("produce-difficulty", "true");
@@ -2050,6 +2168,25 @@ TEST_F(TestApiBlackSolver, getTimeoutCore)
   ASSERT_TRUE(res.first.isUnsat());
   ASSERT_TRUE(res.second.size() == 1);
   ASSERT_EQ(res.second[0], ff);
+}
+
+TEST_F(TestApiBlackSolver, getTimeoutCoreAssuming)
+{
+  d_solver.setOption("produce-unsat-cores", "true");
+  Term ff = d_solver.mkBoolean(false);
+  Term tt = d_solver.mkBoolean(true);
+  d_solver.assertFormula(tt);
+  std::pair<cvc5::Result, std::vector<Term>> res =
+      d_solver.getTimeoutCoreAssuming({ff, tt});
+  ASSERT_TRUE(res.first.isUnsat());
+  ASSERT_TRUE(res.second.size() == 1);
+  ASSERT_EQ(res.second[0], ff);
+}
+
+TEST_F(TestApiBlackSolver, getTimeoutCoreAssumingEmpty)
+{
+  d_solver.setOption("produce-unsat-cores", "true");
+  ASSERT_THROW(d_solver.getTimeoutCoreAssuming({}), CVC5ApiException);
 }
 
 TEST_F(TestApiBlackSolver, getValue1)
@@ -2691,6 +2828,20 @@ TEST_F(TestApiBlackSolver, setLogic)
   ASSERT_THROW(d_solver.setLogic("AF_BV"), CVC5ApiException);
   d_solver.assertFormula(d_solver.mkTrue());
   ASSERT_THROW(d_solver.setLogic("AUFLIRA"), CVC5ApiException);
+}
+
+TEST_F(TestApiBlackSolver, isLogicSet)
+{
+  ASSERT_FALSE(d_solver.isLogicSet());
+  ASSERT_NO_THROW(d_solver.setLogic("QF_BV"));
+  ASSERT_TRUE(d_solver.isLogicSet());
+}
+
+TEST_F(TestApiBlackSolver, getLogic)
+{
+  ASSERT_THROW(d_solver.getLogic(), CVC5ApiException);
+  ASSERT_NO_THROW(d_solver.setLogic("QF_BV"));
+  ASSERT_EQ(d_solver.getLogic(), "QF_BV");
 }
 
 TEST_F(TestApiBlackSolver, setOption)

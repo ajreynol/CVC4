@@ -1998,6 +1998,19 @@ enum ENUM(Kind) : int32_t
    */
   EVALUE(FINITE_FIELD_ADD),
   /**
+   * Bitsum of two or more finite field elements: x + 2y + 4z + ...
+   *
+   * - Arity: ``n > 1``
+   *
+   *   - ``1..n:`` Terms of finite field Sort (sorts must match)
+   *
+   * - Create Term of this Kind with:
+   *
+   *   - Solver::mkTerm(Kind, const std::vector<Term>&) const
+   *   - Solver::mkTerm(const Op&, const std::vector<Term>&) const
+   */
+  EVALUE(FINITE_FIELD_BITSUM),
+  /**
    * Multiplication of two or more finite field elements.
    *
    * - Arity: ``n > 1``
@@ -2252,7 +2265,8 @@ enum ENUM(Kind) : int32_t
    *
    * - Arity: ``2``
    *
-   *   - ``1..2:`` Terms of floating-point Sort (sorts must match)
+   *   - ``1:`` Term of Sort RoundingMode
+   *   - ``2:`` Term of floating-point Sort
    *
    * - Create Term of this Kind with:
    *
@@ -2580,9 +2594,10 @@ enum ENUM(Kind) : int32_t
   /**
    * Conversion to unsigned bit-vector from floating-point.
    *
-   * - Arity: ``1``
+   * - Arity: ``2``
    *
-   *   - ``1:`` Term of floating-point Sort
+   *   - ``1:`` Term of Sort RoundingMode
+   *   - ``2:`` Term of floating-point Sort
    *
    * - Indices: ``1``
    *
@@ -2600,9 +2615,10 @@ enum ENUM(Kind) : int32_t
   /**
    * Conversion to signed bit-vector from floating-point.
    *
-   * - Arity: ``1``
+   * - Arity: ``2``
    *
-   *   - ``1:`` Term of floating-point Sort
+   *   - ``1:`` Term of Sort RoundingMode
+   *   - ``2:`` Term of floating-point Sort
    *
    * - Indices: ``1``
    *
@@ -5954,7 +5970,7 @@ struct CVC5_EXPORT hash<cvc5::SortKind>
 {
   /**
    * Hashes a SortKind to a size_t.
-   * @param The kind.
+   * @param kind The kind.
    * @return The hash value.
    */
   size_t operator()(cvc5::SortKind kind) const;
