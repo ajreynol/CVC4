@@ -1066,6 +1066,7 @@ std::string Smt2Printer::smtKindString(Kind k)
 
     // ff theory
     case Kind::FINITE_FIELD_ADD: return "ff.add";
+    case Kind::FINITE_FIELD_BITSUM: return "ff.bitsum";
     case Kind::FINITE_FIELD_MULT: return "ff.mul";
     case Kind::FINITE_FIELD_NEG: return "ff.neg";
 
@@ -1099,6 +1100,7 @@ std::string Smt2Printer::smtKindString(Kind k)
     case Kind::BITVECTOR_SLE: return "bvsle";
     case Kind::BITVECTOR_SGT: return "bvsgt";
     case Kind::BITVECTOR_SGE: return "bvsge";
+    case Kind::BITVECTOR_NEGO: return "bvnego";
     case Kind::BITVECTOR_UADDO: return "bvuaddo";
     case Kind::BITVECTOR_SADDO: return "bvsaddo";
     case Kind::BITVECTOR_UMULO: return "bvumulo";
