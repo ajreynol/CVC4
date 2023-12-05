@@ -116,7 +116,7 @@ bool RegExpSolver::maybeHasModel(Theory::Effort e)
   {
     for (const Node& m : mp.second)
     {
-      bool polarity = m.getKind() != NOT;
+      bool polarity = m.getKind() != Kind::NOT;
       if (!shouldUnfold(e, polarity))
       {
         continue;

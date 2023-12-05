@@ -129,7 +129,7 @@ bool StringsMnf::checkDisequalities()
   std::map<Node, std::unordered_set<Node>> processed;
   for (const Node& deq : deqs)
   {
-    Assert(deq.getKind() == EQUAL);
+    Assert(deq.getKind() == Kind::EQUAL);
     Node a = getModelRepresentative(deq[0]);
     Node b = getModelRepresentative(deq[1]);
     if (a < b)
@@ -373,7 +373,7 @@ bool StringsMnf::normalizeEqc(Node eqc)
       Trace("strings-mnf-debug") << "...constant-like" << std::endl;
       continue;
     }
-    if (n.getKind() == STRING_CONCAT)
+    if (n.getKind() == Kind::STRING_CONCAT)
     {
       // expand the normal form of the representative of each child
       std::vector<Node> nf;
@@ -499,7 +499,7 @@ bool StringsMnf::normalizeEqc(Node eqc)
   if (!ei->d_codeTerm.get().isNull() && mei.d_length.isOne())
   {
     NodeManager* nm = NodeManager::currentNM();
-    Node ct = nm->mkNode(STRING_TO_CODE, ei->d_codeTerm.get());
+    Node ct = nm->mkNode(Kind::STRING_TO_CODE, ei->d_codeTerm.get());
     Node ctv = val.getCandidateModelValue(ct);
     unsigned cvalue = ctv.getConst<Rational>().getNumerator().toUnsignedInt();
     std::vector<unsigned> vec;
@@ -573,7 +573,7 @@ Rational StringsMnf::getLength(const Node& r)
   {
     return Word::getLength(r);
   }
-  else if (r.getKind() == STRING_UNIT || r.getKind() == SEQ_UNIT)
+  else if (r.getKind() == Kind::STRING_UNIT || r.getKind() == Kind::SEQ_UNIT)
   {
     return Rational(1);
   }

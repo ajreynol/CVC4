@@ -1348,12 +1348,12 @@ void TheoryStrings::runInferStep(InferStep s, Theory::Effort e, int effort)
     case InferStep::CHECK_EXTF_REDUCTION_EAGER:
       d_esolver.checkExtfReductionsEager();
       break;
-    case CHECK_EXTF_REDUCTION: d_esolver.checkExtfReductions(e); break;
-    case CHECK_MEMBERSHIP_INCLUSION: return d_rsolver.checkInclusions(); break;
-    case CHECK_MEMBERSHIP_EAGER: d_rsolver.checkMembershipsEager(); break;
-    case CHECK_MEMBERSHIP: d_rsolver.checkMemberships(e); break;
-    case CHECK_CARDINALITY: d_bsolver.checkCardinality(); break;
-    case RECHECK_FULL_IF_NO_MODEL:
+    case InferStep::CHECK_EXTF_REDUCTION: d_esolver.checkExtfReductions(e); break;
+    case InferStep::CHECK_MEMBERSHIP_INCLUSION: return d_rsolver.checkInclusions(); break;
+    case InferStep::CHECK_MEMBERSHIP_EAGER: d_rsolver.checkMembershipsEager(); break;
+    case InferStep::CHECK_MEMBERSHIP: d_rsolver.checkMemberships(e); break;
+    case InferStep::CHECK_CARDINALITY: d_bsolver.checkCardinality(); break;
+    case InferStep::RECHECK_FULL_IF_NO_MODEL:
       if (!maybeHasModel(Theory::EFFORT_LAST_CALL))
       {
         d_tryMnf = false;
@@ -1361,16 +1361,6 @@ void TheoryStrings::runInferStep(InferStep s, Theory::Effort e, int effort)
         runStrategy(Theory::EFFORT_FULL);
       }
       break;
-=======
-    case InferStep::CHECK_EXTF_REDUCTION:
-      d_esolver.checkExtfReductions(e);
-      break;
-    case InferStep::CHECK_MEMBERSHIP_EAGER:
-      d_rsolver.checkMembershipsEager();
-      break;
-    case InferStep::CHECK_MEMBERSHIP: d_rsolver.checkMemberships(e); break;
-    case InferStep::CHECK_CARDINALITY: d_bsolver.checkCardinality(); break;
->>>>>>> d371595adf326fe527822a699a3a80821078c69d
     default: Unreachable(); break;
   }
   Trace("strings-process") << "Done " << s

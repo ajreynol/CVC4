@@ -83,7 +83,7 @@ enum class InferStep : uint32_t
   // check sequence
   CHECK_SEQUENCES_ARRAY_EAGER,
   // recheck candidate model
-  RECHECK_FULL_IF_NO_MODEL
+  RECHECK_FULL_IF_NO_MODEL,
 
   // unknown inference step
   UNKNOWN
