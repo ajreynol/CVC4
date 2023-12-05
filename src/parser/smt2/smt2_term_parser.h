@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -18,8 +18,9 @@
 #ifndef CVC5__PARSER__SMT2__SMT2_TERM_PARSER_H
 #define CVC5__PARSER__SMT2__SMT2_TERM_PARSER_H
 
-#include "api/cpp/cvc5.h"
-#include "parser/smt2/smt2.h"
+#include <cvc5/cvc5.h>
+
+#include "parser/smt2/smt2_state.h"
 #include "parser/smt2/smt2_lexer.h"
 
 namespace cvc5 {

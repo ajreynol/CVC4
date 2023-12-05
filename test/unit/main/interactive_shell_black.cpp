@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Aina Niemetz, Andres Noetzli, Christopher L. Conway
+ *   Aina Niemetz, Andrew Reynolds, Andres Noetzli
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -13,23 +13,21 @@
  * Black box testing of cvc5::InteractiveShell.
  */
 
+#include <cvc5/cvc5.h>
+#include <cvc5/cvc5_parser.h>
+
 #include <memory>
 #include <sstream>
 #include <vector>
 
-#include "api/cpp/cvc5.h"
 #include "main/command_executor.h"
 #include "main/interactive_shell.h"
 #include "options/base_options.h"
 #include "options/language.h"
 #include "options/options.h"
-#include "parser/api/cpp/command.h"
-#include "parser/api/cpp/symbol_manager.h"
-#include "parser/parser_builder.h"
 #include "test.h"
 
 using namespace cvc5::parser;
-using namespace cvc5::internal::parser;
 
 namespace cvc5::internal {
 namespace test {
@@ -62,9 +60,9 @@ class TestMainBlackInteractiveShell : public TestInternal
    * Read up to maxIterations+1 from the shell and throw an assertion error if
    * it's fewer than minIterations and more than maxIterations.  Note that an
    * empty string followed by EOF may be returned as an empty command, and
-   * not NULL (subsequent calls to readAndExecCommands() should return NULL).
-   * E.g., "CHECKSAT;\n" may return two commands: the CHECKSAT, followed by an
-   * empty command, followed by NULL.
+   * not NULL (subsequent calls to readAndExecCommands() should return nullptr).
+   * E.g., "(check-sat)\n" may return two commands: the check-sat, followed by
+   * an empty command, followed by nullptr.
    */
   void countCommands(InteractiveShell& shell,
                      uint32_t minIterations,

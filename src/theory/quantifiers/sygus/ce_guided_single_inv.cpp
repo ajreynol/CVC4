@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -20,7 +20,6 @@
 #include "theory/arith/arith_msum.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_rewriter.h"
-#include "theory/quantifiers/sygus/sygus_grammar_cons.h"
 #include "theory/quantifiers/sygus/sygus_reconstruct.h"
 #include "theory/quantifiers/sygus/sygus_utils.h"
 #include "theory/quantifiers/sygus/term_database_sygus.h"
@@ -72,11 +71,11 @@ void CegSingleInv::initialize(Node q)
   for (const Node& sf : q[0])
   {
     // get its argument list
-    SygusUtils::getSygusArgumentListForSynthFun(sf, progVars[sf]);
+    SygusUtils::getOrMkSygusArgumentList(sf, progVars[sf]);
   }
   // compute single invocation partition
   Node qq;
-  if (q[1].getKind() == NOT && q[1][0].getKind() == FORALL)
+  if (q[1].getKind() == Kind::NOT && q[1][0].getKind() == Kind::FORALL)
   {
     qq = q[1][0][1];
   }
@@ -151,9 +150,9 @@ void CegSingleInv::finishInit(bool syntaxRestricted)
   d_sip->getFunctionVariables(func_vars);
   if (!func_vars.empty())
   {
-    Node pbvl = nm->mkNode(BOUND_VAR_LIST, func_vars);
+    Node pbvl = nm->mkNode(Kind::BOUND_VAR_LIST, func_vars);
     // make the single invocation conjecture
-    d_single_inv = nm->mkNode(FORALL, pbvl, d_single_inv);
+    d_single_inv = nm->mkNode(Kind::FORALL, pbvl, d_single_inv);
   }
   // now, introduce the skolems
   std::vector<Node> sivars;
@@ -172,7 +171,7 @@ void CegSingleInv::finishInit(bool syntaxRestricted)
                     << std::endl;
   // check whether we can handle this quantified formula
   CegHandledStatus status = CEG_HANDLED;
-  if (d_single_inv.getKind() == FORALL)
+  if (d_single_inv.getKind() == Kind::FORALL)
   {
     // if the conjecture is trivially solvable, set the solution
     if (solveTrivial(d_single_inv))
@@ -215,17 +214,18 @@ Result CegSingleInv::solve()
   // Mark the quantified formula with the quantifier elimination attribute to
   // ensure its structure is preserved in the query below.
   Node siq = d_single_inv;
-  if (siq.getKind() == FORALL)
+  Node n_attr;
+  if (siq.getKind() == Kind::FORALL)
   {
-    Node n_attr = sm->mkDummySkolem(
+    n_attr = sm->mkDummySkolem(
         "qe_si",
         nm->booleanType(),
         "Auxiliary variable for qe attr for single invocation.");
     QuantElimAttribute qea;
     n_attr.setAttribute(qea, true);
-    n_attr = nm->mkNode(INST_ATTRIBUTE, n_attr);
-    n_attr = nm->mkNode(INST_PATTERN_LIST, n_attr);
-    siq = nm->mkNode(FORALL, siq[0], siq[1], n_attr);
+    n_attr = nm->mkNode(Kind::INST_ATTRIBUTE, n_attr);
+    n_attr = nm->mkNode(Kind::INST_PATTERN_LIST, n_attr);
+    siq = nm->mkNode(Kind::FORALL, siq[0], siq[1], n_attr);
   }
   // solve the single invocation conjecture using a fresh copy of SMT engine
   std::unique_ptr<SolverEngine> siSmt;
@@ -247,21 +247,31 @@ Result CegSingleInv::solve()
           << std::endl;
     }
     // conjecture is infeasible or unknown
-    return res;
+    return r;
   }
   // now, get the instantiations
   std::vector<Node> qs;
   siSmt->getInstantiatedQuantifiedFormulas(qs);
-  Assert(qs.size() <= 1);
   // track the instantiations, as solution construction is based on this
   Trace("sygus-si") << "#instantiated quantified formulas=" << qs.size()
                     << std::endl;
   d_inst.clear();
   d_instConds.clear();
-  if (!qs.empty())
+  Node q;
+  // look for the quantified formula with the appropriate attribute that we
+  // marked above.
+  for (const Node& qss : qs)
   {
-    Node q = qs[0];
-    Assert(q.getKind() == FORALL);
+    if (qss.getNumChildren() == 3 && qss[2] == n_attr)
+    {
+      q = qss;
+      break;
+    }
+  }
+  // if the quantified formula was instantiated in the query
+  if (!q.isNull())
+  {
+    Assert(q.getKind() == Kind::FORALL);
     siSmt->getInstantiationTermVectors(q, d_inst);
     Trace("sygus-si") << "#instantiations of " << q << "=" << d_inst.size()
                       << std::endl;
@@ -325,7 +335,7 @@ Node CegSingleInv::getSolution(size_t sol_index,
   Trace("csi-sol") << "...get solution from vector" << std::endl;
 
   Node s = d_solutions[sol_index];
-  Node sol = s.getKind() == LAMBDA ? s[1] : s;
+  Node sol = s.getKind() == Kind::LAMBDA ? s[1] : s;
   // must substitute to be proper variables
   const DType& dt = stn.getDType();
   Node varList = dt.getSygusVarList();
@@ -342,8 +352,8 @@ Node CegSingleInv::getSolution(size_t sol_index,
   sol = sol.substitute(
       vars.begin(), vars.end(), sygusVars.begin(), sygusVars.end());
   sol = reconstructToSyntax(sol, stn, reconstructed, rconsSygus);
-  return !sol.isNull() && s.getKind() == LAMBDA
-             ? NodeManager::currentNM()->mkNode(LAMBDA, s[0], sol)
+  return !sol.isNull() && s.getKind() == Kind::LAMBDA
+             ? NodeManager::currentNM()->mkNode(Kind::LAMBDA, s[0], sol)
              : sol;
 }
 
@@ -403,7 +413,7 @@ Node CegSingleInv::getSolutionFromInst(size_t index)
       unsigned uindex = indices[j];
       Node cond = d_instConds[uindex];
       cond = TermUtil::simpleNegate(cond);
-      s = nm->mkNode(ITE, cond, d_inst[uindex][sol_index], s);
+      s = nm->mkNode(Kind::ITE, cond, d_inst[uindex][sol_index], s);
     }
   }
   //simplify the solution using the extended rewriter
@@ -411,7 +421,7 @@ Node CegSingleInv::getSolutionFromInst(size_t index)
   s = extendedRewrite(s);
   Trace("csi-sol") << "Solution (post-simplification): " << s << std::endl;
   // wrap into lambda, as needed
-  return SygusUtils::wrapSolutionForSynthFun(prog, s);
+  return SygusUtils::wrapSolution(prog, s);
 }
 
 void CegSingleInv::setSolution()
@@ -501,7 +511,7 @@ bool CegSingleInv::solveTrivial(Node q)
 {
   Assert(!d_isSolved);
   Assert(d_inst.empty());
-  Assert(q.getKind() == FORALL);
+  Assert(q.getKind() == Kind::FORALL);
   // If the conjecture is forall x1...xn. ~(x1 = t1 ^ ... xn = tn), it is
   // trivially solvable.
   std::vector<Node> args(q[0].begin(), q[0].end());
