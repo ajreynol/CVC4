@@ -24,6 +24,7 @@
 #include "expr/node.h"
 #include "proof/trust_node.h"
 #include "smt/env_obj.h"
+#include "proof/lazy_proof.h"
 
 namespace cvc5::internal {
 
@@ -217,6 +218,8 @@ class AssertionPipeline : protected EnvObj
   bool d_isModelUnsound;
   /** Is negated? */
   bool d_isNegated;
+  /** Eliminate */
+  std::unique_ptr<LazyCDProof> d_andElimEpg;
 }; /* class AssertionPipeline */
 
 }  // namespace preprocessing

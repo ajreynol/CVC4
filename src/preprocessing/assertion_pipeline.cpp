@@ -17,6 +17,7 @@
 #include "preprocessing/assertion_pipeline.h"
 
 #include "expr/node_manager.h"
+#include "util/rational.h"
 #include "options/smt_options.h"
 #include "proof/lazy_proof.h"
 #include "smt/logic_exception.h"
@@ -62,6 +63,27 @@ void AssertionPipeline::push_back(Node n,
   if (n == d_false)
   {
     markConflict();
+  }
+  else if (n.getKind()==Kind::AND)
+  {
+    if (isProofEnabled())
+    {
+      if (!isInput)
+      {
+        d_andElimEpg->addLazyStep(n, pgen, TrustId::PREPROCESS_LEMMA);
+      }
+      NodeManager * nm = NodeManager::currentNM();
+      for (size_t i=0, nchild=n.getNumChildren(); i<nchild; i++)
+      {
+        Node in = nm->mkConstInt(Rational(i));
+        d_andElimEpg->addStep(n[i], ProofRule::AND_ELIM, {n}, {in});
+      }
+    }
+    for (const Node& nc : n)
+    {
+      push_back(nc, false, d_andElimEpg.get());
+    }
+    return;
   }
   else
   {
@@ -132,6 +154,10 @@ void AssertionPipeline::replaceTrusted(size_t i, TrustNode trn)
 void AssertionPipeline::enableProofs(smt::PreprocessProofGenerator* pppg)
 {
   d_pppg = pppg;
+  if (d_andElimEpg==nullptr)
+  {
+    d_andElimEpg.reset(new LazyCDProof(d_env, nullptr, userContext(), "AssertionsAndElim"));
+  }
 }
 
 bool AssertionPipeline::isProofEnabled() const { return d_pppg != nullptr; }
@@ -158,6 +184,8 @@ void AssertionPipeline::addSubstitutionNode(Node n, ProofGenerator* pg)
 void AssertionPipeline::conjoin(size_t i, Node n, ProofGenerator* pg)
 {
   Assert(i < d_nodes.size());
+  push_back(n, false, pg);
+  return;
   NodeManager* nm = NodeManager::currentNM();
   Node newConj;
   if (d_nodes[i].isConst() && d_nodes[i].getConst<bool>())
