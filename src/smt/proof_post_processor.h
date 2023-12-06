@@ -171,7 +171,7 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
                           std::vector<Node>& tchildren,
                           bool isSymm = false);
   /** */
-  bool convertMinimizedRewrite(const Node& eq, MethodId idr, CDProof* cdp);
+  bool convertMinimizedRewrite(const Node& eq, CDProof* cdp);
 };
 
 /**

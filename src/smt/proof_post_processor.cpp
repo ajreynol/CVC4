@@ -806,12 +806,12 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     Node eq = args[0].eqNode(ret);
     if (idr == MethodId::RW_REWRITE || idr == MethodId::RW_REWRITE_EQ_EXT)
     {
-      if (convertMinimizedRewrite(eq, idr, cdp))
+      // rewrites from theory::Rewriter
+      bool isExtEq = (idr == MethodId::RW_REWRITE_EQ_EXT);
+      if (!isExtEq && convertMinimizedRewrite(eq, cdp))
       {
         return eq;
       }
-      // rewrites from theory::Rewriter
-      bool isExtEq = (idr == MethodId::RW_REWRITE_EQ_EXT);
       // use rewrite with proof interface
       TrustNode trn = rr->rewriteWithProof(args[0], isExtEq);
       std::shared_ptr<ProofNode> pfn = trn.toProofNode();
@@ -1154,39 +1154,114 @@ class ProofTranslationCallback : public ProofNodeUpdaterCallback
 };
 
 bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
-                                                       MethodId idr,
                                                        CDProof* cdp)
 {
-  theory::quantifiers::TermRecBuild trb;
-  Node n = eq[0];
-  Node curr, r;
-  trb.init(n);
+  Trace("proof-min-rewrite-input") << "Minimize " << eq[0] << " = " << eq[1] << std::endl;
   SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
   ProofTranslationCallback ptc(cdp);
-  for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
-  {
-    Node k = skm->mkPurifySkolem(n[i]);
-    trb.replaceChild(i, k);
-    curr = trb.build();
-    r = d_env.rewriteViaMethod(curr, idr);
-    if (r == eq[1])
+  NodeManager * nm = NodeManager::currentNM();
+  std::unordered_map<TNode, Node> visited;
+  std::unordered_map<TNode, Node>::iterator it;
+  std::map<Node, std::map<size_t, Node>> invChildren;
+  std::map<size_t, Node>::iterator iti;
+  std::vector<TNode> visit;
+  TNode cur;
+  Node ucur, r;
+  visit.push_back(eq[0]);
+  do {
+    cur = visit.back();
+    it = visited.find(cur);
+    if (it == visited.end()) 
     {
-      Trace("proof-min-rewrite") << "Rewrite: " << n << " -> " << r
-                                 << " regardless of child #" << i << std::endl;
-      ptc.d_subs.add(k, n[i]);
+      if (cur.getNumChildren()==0)
+      {
+        visited[cur] = cur;
+        visit.pop_back();
+        continue;
+      }
+      visited[cur] = Node::null();
+      theory::quantifiers::TermRecBuild trb;
+      trb.init(cur);
+      Node tgt = rewrite(cur);
+      if (tgt==cur)
+      {
+        // does not rewrite
+        visited[cur] = cur;
+        visit.pop_back();
+        continue;
+      }
+      size_t startIndex = 0;
+      if (cur.isClosure())
+      {
+        startIndex = 1;
+        visited[cur[0]] = cur[0];
+      }
+      Trace("proof-min-rewrite-debug") << "Process " << cur << std::endl;
+      for (size_t i = startIndex, nchild = cur.getNumChildren(); i < nchild; i++)
+      {
+        Node k = skm->mkPurifySkolem(cur[i]);
+        trb.replaceChild(i, k);
+        ucur = trb.build();
+        r = rewrite(ucur);
+        if (r == tgt)
+        {
+          Trace("proof-min-rewrite") << "Rewrite: " << cur << " -> " << r
+                                    << " regardless of child #" << i << std::endl;
+          ptc.d_subs.add(k, cur[i]);
+          invChildren[cur][i] = k;
+        }
+        else
+        {
+          // revert and recurse
+          trb.replaceChild(i, cur[i]);
+          visit.emplace_back(cur[i]);
+        }
+      }
+      continue;
     }
-    else
-    {
-      // revert
-      trb.replaceChild(i, n[i]);
+    visit.pop_back();
+    if (it->second.isNull()) {
+      Node ret = cur;
+      bool childChanged = false;
+      std::vector<Node> children;
+      if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
+      {
+        children.push_back(cur.getOperator());
+      }
+      std::map<size_t, Node>& iccur = invChildren[cur];
+      Node cnr;
+      for (size_t i=0, nchild = cur.getNumChildren(); i<nchild; i++)
+      {
+        iti = iccur.find(i);
+        if (iti!=iccur.end())
+        {
+          cnr = iti->second;
+        }
+        else
+        {
+          it = visited.find(cur[i]);
+          Assert(it != visited.end());
+          cnr = it->second;
+        }
+        Assert(!cnr.isNull());
+        childChanged = childChanged || cur[i] != cnr;
+        children.push_back(cnr);
+      }
+      if (childChanged) 
+      {
+        ret = nm->mkNode(cur.getKind(), children);
+      }
+      visited[cur] = ret;
     }
-  }
+  } while (!visit.empty());
+  
   if (!ptc.d_subs.empty())
   {
-    curr = trb.build();
-    Trace("proof-min-rewrite") << "Min-rewrite: " << curr << std::endl;
-    bool isExtEq = (idr == MethodId::RW_REWRITE_EQ_EXT);
-    TrustNode trn = d_env.getRewriter()->rewriteWithProof(curr, isExtEq);
+    Assert(visited.find(eq[0]) != visited.end());
+    Node cc = visited[eq[0]];
+    Assert (!cc.isNull());
+    Trace("proof-min-rewrite") << "Min-rewrite: " << cc << std::endl;
+    TrustNode trn = d_env.getRewriter()->rewriteWithProof(cc, false);
     std::shared_ptr<ProofNode> pfn = trn.toProofNode();
     // now, traverse the proof
     Trace("proof-min-rewrite") << "Proof is " << *pfn.get() << std::endl;
