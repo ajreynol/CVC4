@@ -145,8 +145,9 @@ void Smt2Printer::toStream(std::ostream& out,
     }
     cparen = cparens.str();
   }
-  // Node nc = lbind.convert(n, "_let_");
-  //  print the body, passing the lbind object
+  // Print the body, passing the lbind object. Note that we don't convert
+  // n here, and instead rely on the printing method to lookup ids in the
+  // given let binding.
   toStream(out, n, &lbind, toDepth);
   out << cparen;
   lbind.popScope();
@@ -804,6 +805,7 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
       const RealAlgebraicNumber& ran =
           n.getOperator().getConst<RealAlgebraicNumber>();
       out << "(_ real_algebraic_number " << ran << ")";
+      stillNeedToPrintParams = false;
       break;
     }
     case Kind::INDEXED_ROOT_PREDICATE_OP:
