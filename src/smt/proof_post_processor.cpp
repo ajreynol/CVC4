@@ -1190,15 +1190,27 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
         visit.pop_back();
         continue;
       }
+      else if (tgt.getKind()==cur.getKind() || cur.getKind()==Kind::MATCH)
+      {
+        // if kind is preserved, just visit children
+        // also, match is sensitive to syntax of arguments, skip it
+        visit.insert(visit.end(), cur.begin(), cur.end());
+        continue;
+      }
       size_t startIndex = 0;
       if (cur.isClosure())
       {
         startIndex = 1;
         visited[cur[0]] = cur[0];
       }
-      Trace("proof-min-rewrite-debug") << "Process " << cur << std::endl;
+      Trace("proof-min-rewrite-debug") << "Process " << cur.getKind() << " -> " << tgt.getKind() << " " << cur << std::endl;
       for (size_t i = startIndex, nchild = cur.getNumChildren(); i < nchild; i++)
-      {
+      {        
+        if (rewrite(cur[i])==cur[i])
+        {
+          // if child does not rewrite, there is no use in minimizing, skip
+          continue;
+        }
         Node k = skm->mkPurifySkolem(cur[i]);
         trb.replaceChild(i, k);
         ucur = trb.build();
@@ -1240,8 +1252,14 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
         else
         {
           it = visited.find(cur[i]);
-          Assert(it != visited.end());
-          cnr = it->second;
+          if (it != visited.end())
+          {
+            cnr = it->second;
+          }
+          else
+          {
+            cnr = cur[i];
+          }
         }
         Assert(!cnr.isNull());
         childChanged = childChanged || cur[i] != cnr;
