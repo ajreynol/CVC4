@@ -868,7 +868,29 @@ void SolverEngine::assertFormula(const Node& formula)
 {
   beginCall();
   ensureWellFormedTerm(formula, "assertFormula");
-  assertFormulaInternal(formula);
+  if (formula.getKind()==Kind::AND)
+  {
+    std::vector<Node> toProcess;
+    toProcess.emplace_back(formula);
+    size_t i=0;
+    do
+    {
+      Node p = toProcess[i];
+      i++;
+      if (p.getKind()==Kind::AND)
+      {
+        toProcess.insert(toProcess.end(), p.begin(), p.end());
+      }
+      else
+      {
+        assertFormulaInternal(p);
+      }
+    }while(i<toProcess.size());
+  }
+  else
+  {
+    assertFormulaInternal(formula);
+  }
 }
 
 void SolverEngine::assertFormulaInternal(const Node& formula)
