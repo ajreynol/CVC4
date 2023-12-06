@@ -99,12 +99,17 @@ void Subs::append(Subs& s)
 
 Node Subs::apply(const Node& n) const
 {
+  std::unordered_map<TNode, TNode> cache;
+  return apply(n, cache);
+}
+Node Subs::apply(const Node& n, std::unordered_map<TNode, TNode>& cache) const
+{
   if (d_vars.empty())
   {
     return n;
   }
   Node ns =
-      n.substitute(d_vars.begin(), d_vars.end(), d_subs.begin(), d_subs.end());
+      n.substitute(d_vars.begin(), d_vars.end(), d_subs.begin(), d_subs.end(), cache);
   return ns;
 }
 Node Subs::rapply(Node n) const

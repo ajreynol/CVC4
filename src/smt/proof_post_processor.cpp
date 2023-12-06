@@ -1130,19 +1130,19 @@ class ProofTranslationCallback : public ProofNodeUpdaterCallback
                         const std::vector<Node>& fa) override
   {
     // add converted to d_cdp
-    Node expected = d_subs.apply(pn->getResult());
+    Node expected = d_subs.apply(pn->getResult(), d_scache);
     std::vector<Node> children;
     const std::vector<std::shared_ptr<ProofNode>>& pchildren =
         pn->getChildren();
     for (const std::shared_ptr<ProofNode>& pnc : pchildren)
     {
-      children.push_back(d_subs.apply(pnc->getResult()));
+      children.push_back(d_subs.apply(pnc->getResult(), d_scache));
     }
     std::vector<Node> args;
     const std::vector<Node>& pargs = pn->getArguments();
     for (const Node& a : pargs)
     {
-      args.push_back(d_subs.apply(a));
+      args.push_back(d_subs.apply(a, d_scache));
     }
     Trace("proof-min-rewrite")
         << "-> add step " << pn->getRule() << ", " << expected << std::endl;
@@ -1151,6 +1151,7 @@ class ProofTranslationCallback : public ProofNodeUpdaterCallback
   }
   CDProof* d_cdp;
   Subs d_subs;
+  std::unordered_map<TNode, TNode> d_scache;
 };
 
 bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
@@ -1168,6 +1169,8 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
   TNode cur;
   Node ucur, r;
   visit.push_back(eq[0]);
+  size_t ichecks = 0;
+  size_t isuccess = 0;
   do {
     cur = visit.back();
     it = visited.find(cur);
@@ -1209,11 +1212,13 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
         if (rewrite(cur[i])==cur[i])
         {
           // if child does not rewrite, there is no use in minimizing, skip
+          visited[cur[i]] = cur[i];
           continue;
         }
         Node k = skm->mkPurifySkolem(cur[i]);
         trb.replaceChild(i, k);
         ucur = trb.build();
+        ichecks++;
         r = rewrite(ucur);
         if (r == tgt)
         {
@@ -1221,6 +1226,7 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
                                     << " regardless of child #" << i << std::endl;
           ptc.d_subs.add(k, cur[i]);
           invChildren[cur][i] = k;
+          isuccess++;
         }
         else
         {
@@ -1252,14 +1258,8 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
         else
         {
           it = visited.find(cur[i]);
-          if (it != visited.end())
-          {
-            cnr = it->second;
-          }
-          else
-          {
-            cnr = cur[i];
-          }
+          Assert(it != visited.end());
+          cnr = it->second;
         }
         Assert(!cnr.isNull());
         childChanged = childChanged || cur[i] != cnr;
@@ -1272,7 +1272,7 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
       visited[cur] = ret;
     }
   } while (!visit.empty());
-  
+  Trace("proof-min-rewrite-stats") << "Invariant success: " << isuccess << " / " << ichecks << std::endl;
   if (!ptc.d_subs.empty())
   {
     Assert(visited.find(eq[0]) != visited.end());

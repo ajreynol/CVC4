@@ -61,6 +61,7 @@ class Subs
   void append(Subs& s);
   /** Return the result of this substitution on n */
   Node apply(const Node& n) const;
+  Node apply(const Node& n, std::unordered_map<TNode, TNode>& cache) const;
   /** Return the result of the reverse of this substitution on n */
   Node rapply(Node n) const;
   /** Apply this substitution to all nodes in the range of s */
