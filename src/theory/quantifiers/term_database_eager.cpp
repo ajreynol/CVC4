@@ -377,6 +377,12 @@ bool TermDbEager::addInstantiation(const Node& q,
   Trace("eager-inst-debug")
       << "addInstantiation: " << q << ", " << terms
       << ", isConflict=" << isConflict << ", ent=" << entv << std::endl;
+  if (entv.isConst() && entv.getConst<bool>())
+  {
+    // entailed true, can happen in rare cases e.g. a tautological combination
+    // of equalities between known terms.
+    return false;
+  }
   // AlwaysAssert( !isConflict || entv.isConst());
   if (d_filterNonUnit)
   {
