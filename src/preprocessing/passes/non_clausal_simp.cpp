@@ -54,9 +54,6 @@ NonClausalSimp::NonClausalSimp(PreprocessingPassContext* preprocContext)
       d_llpg(options().smt.produceProofs ? new smt::PreprocessProofGenerator(
                  d_env, userContext(), "NonClausalSimp::llpg")
                                          : nullptr),
-      d_llra(options().smt.produceProofs ? new LazyCDProof(
-                 d_env, nullptr, userContext(), "NonClausalSimp::llra")
-                                         : nullptr),
       d_tsubsList(userContext())
 {
 }
@@ -411,17 +408,9 @@ PreprocessingPassResult NonClausalSimp::applyInternal(
   {
     Trace("non-clausal-simplify")
         << "non-clausal simplification, reassert: " << learnedLitsToConjoin << std::endl;
-    if (isProofEnabled())
-    {
-      // justify in d_llra
-      for (const Node& lit : learnedLitsToConjoin)
-      {
-        d_llra->addLazyStep(lit, d_llpg.get());
-      }
-    }
     for (const Node& lit : learnedLitsToConjoin)
     {
-      assertionsToPreprocess->push_back(lit, d_llpg.get());
+      assertionsToPreprocess->push_back(lit, false, d_llpg.get());
     }
   }
 
