@@ -24,8 +24,8 @@
 #include "theory/arith/arith_utilities.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/bv/bitblast/bitblast_proof_generator.h"
-#include "theory/quantifiers/sygus/sygus_explain.h"
 #include "theory/bv/bitblast/proof_bitblaster.h"
+#include "theory/quantifiers/sygus/sygus_explain.h"
 #include "theory/rewriter.h"
 #include "theory/strings/infer_proof_cons.h"
 #include "theory/theory.h"
@@ -1118,13 +1118,13 @@ bool ProofPostprocessCallback::addToTransChildren(Node eq,
 
 class ProofTranslationCallback : public ProofNodeUpdaterCallback
 {
-public:
+ public:
   ProofTranslationCallback(CDProof* cdp) : d_cdp(cdp) {}
   bool shouldUpdate(std::shared_ptr<ProofNode> pn,
-                            const std::vector<Node>& fa,
-                            bool& continueUpdate) override 
+                    const std::vector<Node>& fa,
+                    bool& continueUpdate) override
   {
-    return false; 
+    return false;
   }
   bool shouldUpdatePost(std::shared_ptr<ProofNode> pn,
                         const std::vector<Node>& fa) override
@@ -1132,7 +1132,8 @@ public:
     // add converted to d_cdp
     Node expected = d_subs.apply(pn->getResult());
     std::vector<Node> children;
-    const std::vector<std::shared_ptr<ProofNode>>& pchildren = pn->getChildren();
+    const std::vector<std::shared_ptr<ProofNode>>& pchildren =
+        pn->getChildren();
     for (const std::shared_ptr<ProofNode>& pnc : pchildren)
     {
       children.push_back(d_subs.apply(pnc->getResult()));
@@ -1143,7 +1144,8 @@ public:
     {
       args.push_back(d_subs.apply(a));
     }
-    Trace("proof-min-rewrite") << "-> add step " << pn->getRule() << ", " << expected << std::endl;
+    Trace("proof-min-rewrite")
+        << "-> add step " << pn->getRule() << ", " << expected << std::endl;
     d_cdp->addStep(expected, pn->getRule(), children, args);
     return false;
   }
@@ -1151,23 +1153,26 @@ public:
   Subs d_subs;
 };
 
-bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq, MethodId idr, CDProof* cdp)
+bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
+                                                       MethodId idr,
+                                                       CDProof* cdp)
 {
   theory::quantifiers::TermRecBuild trb;
   Node n = eq[0];
   Node curr, r;
   trb.init(n);
-  SkolemManager * skm = NodeManager::currentNM()->getSkolemManager();
+  SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
   ProofTranslationCallback ptc(cdp);
-  for (size_t i=0, nchild = n.getNumChildren(); i<nchild; i++)
+  for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)
   {
     Node k = skm->mkPurifySkolem(n[i]);
     trb.replaceChild(i, k);
     curr = trb.build();
     r = d_env.rewriteViaMethod(curr, idr);
-    if (r==eq[1])
+    if (r == eq[1])
     {
-      Trace("proof-min-rewrite") << "Rewrite: " << n << " -> " << r << " regardless of child #" << i << std::endl;
+      Trace("proof-min-rewrite") << "Rewrite: " << n << " -> " << r
+                                 << " regardless of child #" << i << std::endl;
       ptc.d_subs.add(k, n[i]);
     }
     else

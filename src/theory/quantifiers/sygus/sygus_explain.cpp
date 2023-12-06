@@ -98,7 +98,7 @@ Node TermRecBuild::build(size_t d)
   std::vector<Node> children;
   size_t o = d_has_op[d] ? 1 : 0;
   const std::vector<Node>& dc = d_children[d];
-  for (size_t i=0, ndc = dc.size(); i<ndc; i++)
+  for (size_t i = 0, ndc = dc.size(); i < ndc; i++)
   {
     Node nc;
     if (p + o == i)

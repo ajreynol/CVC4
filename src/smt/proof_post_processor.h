@@ -172,7 +172,6 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
                           bool isSymm = false);
   /** */
   bool convertMinimizedRewrite(const Node& eq, MethodId idr, CDProof* cdp);
-
 };
 
 /**
