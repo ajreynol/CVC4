@@ -30,10 +30,11 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-void TermRecBuild::addTerm(Node n)
+void TermRecBuild::addTerm(const Node& n)
 {
-  d_term.push_back(n);
-  std::vector<Node> currc;
+  d_term.emplace_back(n);
+  d_children.emplace_back();
+  std::vector<Node>& currc = d_children.back();
   d_kind.push_back(n.getKind());
   if (n.getMetaKind() == kind::metakind::PARAMETERIZED)
   {
@@ -44,28 +45,24 @@ void TermRecBuild::addTerm(Node n)
   {
     d_has_op.push_back(false);
   }
-  for (unsigned i = 0; i < n.getNumChildren(); i++)
-  {
-    currc.push_back(n[i]);
-  }
-  d_children.push_back(currc);
+  currc.insert(currc.end(), n.begin(), n.end());
 }
 
-void TermRecBuild::init(Node n)
+void TermRecBuild::init(const Node& n)
 {
   Assert(d_term.empty());
   addTerm(n);
 }
 
-void TermRecBuild::push(unsigned p)
+void TermRecBuild::push(size_t p)
 {
   Assert(!d_term.empty());
-  unsigned curr = d_term.size() - 1;
+  size_t curr = d_term.size() - 1;
   Assert(d_pos.size() == curr);
   Assert(d_pos.size() + 1 == d_children.size());
   Assert(p < d_term[curr].getNumChildren());
   addTerm(d_term[curr][p]);
-  d_pos.push_back(p);
+  d_pos.emplace_back(p);
 }
 
 void TermRecBuild::pop()
@@ -78,29 +75,30 @@ void TermRecBuild::pop()
   d_term.pop_back();
 }
 
-void TermRecBuild::replaceChild(unsigned i, Node r)
+void TermRecBuild::replaceChild(size_t i, const Node& r)
 {
   Assert(!d_term.empty());
-  unsigned curr = d_term.size() - 1;
-  unsigned o = d_has_op[curr] ? 1 : 0;
+  size_t curr = d_term.size() - 1;
+  size_t o = d_has_op[curr] ? 1 : 0;
   d_children[curr][i + o] = r;
 }
 
-Node TermRecBuild::getChild(unsigned i)
+Node TermRecBuild::getChild(size_t i)
 {
-  unsigned curr = d_term.size() - 1;
-  unsigned o = d_has_op[curr] ? 1 : 0;
+  size_t curr = d_term.size() - 1;
+  size_t o = d_has_op[curr] ? 1 : 0;
   return d_children[curr][i + o];
 }
 
-Node TermRecBuild::build(unsigned d)
+Node TermRecBuild::build(size_t d)
 {
   Assert(d_pos.size() + 1 == d_term.size());
   Assert(d < d_term.size());
   int p = d < d_pos.size() ? d_pos[d] : -2;
   std::vector<Node> children;
-  unsigned o = d_has_op[d] ? 1 : 0;
-  for (unsigned i = 0; i < d_children[d].size(); i++)
+  size_t o = d_has_op[d] ? 1 : 0;
+  const std::vector<Node>& dc = d_children[d];
+  for (size_t i=0, ndc = dc.size(); i<ndc; i++)
   {
     Node nc;
     if (p + o == i)
@@ -109,9 +107,9 @@ Node TermRecBuild::build(unsigned d)
     }
     else
     {
-      nc = d_children[d][i];
+      nc = dc[i];
     }
-    children.push_back(nc);
+    children.emplace_back(nc);
   }
   return NodeManager::currentNM()->mkNode(d_kind[d], children);
 }

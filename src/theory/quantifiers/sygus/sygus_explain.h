@@ -50,7 +50,7 @@ class TermRecBuild
    * The context initially empty, that is,
    * the active term is initially n.
    */
-  void init(Node n);
+  void init(const Node& n);
 
   /** push the context
    *
@@ -58,20 +58,20 @@ class TermRecBuild
    * active term is updated to curr[p], where
    * curr is the previously active term.
    */
-  void push(unsigned p);
+  void push(size_t p);
 
   /** pop the context */
   void pop();
   /** indicates that the i^th child of the active
    * term should be replaced by r in calls to build().
    */
-  void replaceChild(unsigned i, Node r);
+  void replaceChild(size_t i, const Node& r);
   /** get the i^th child of the active term */
-  Node getChild(unsigned i);
+  Node getChild(size_t i);
   /** build the (modified) version of the term
    * we initialized via the call to init().
    */
-  Node build(unsigned p = 0);
+  Node build(size_t p = 0);
 
  private:
   /** stack of active terms */
@@ -85,9 +85,9 @@ class TermRecBuild
   /** stack of whether the active terms had an operator */
   std::vector<bool> d_has_op;
   /** stack of positions that were pushed via calls to push(...) */
-  std::vector<unsigned> d_pos;
+  std::vector<size_t> d_pos;
   /** add term to the context stack */
-  void addTerm(Node n);
+  void addTerm(const Node& n);
 };
 
 /*The SygusExplain utility
