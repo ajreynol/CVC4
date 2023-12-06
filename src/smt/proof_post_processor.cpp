@@ -24,6 +24,7 @@
 #include "theory/arith/arith_utilities.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/bv/bitblast/bitblast_proof_generator.h"
+#include "theory/quantifiers/sygus/sygus_explain.h"
 #include "theory/bv/bitblast/proof_bitblaster.h"
 #include "theory/rewriter.h"
 #include "theory/strings/infer_proof_cons.h"
@@ -805,6 +806,10 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     Node eq = args[0].eqNode(ret);
     if (idr == MethodId::RW_REWRITE || idr == MethodId::RW_REWRITE_EQ_EXT)
     {
+      if (convertMinimizedRewrite(eq, idr, cdp))
+      {
+        return eq;
+      }
       // rewrites from theory::Rewriter
       bool isExtEq = (idr == MethodId::RW_REWRITE_EQ_EXT);
       // use rewrite with proof interface
@@ -1109,6 +1114,82 @@ bool ProofPostprocessCallback::addToTransChildren(Node eq,
              && tchildren[tchildren.size() - 1][1] == equ[0]));
   tchildren.push_back(equ);
   return true;
+}
+
+class ProofTranslationCallback : public ProofNodeUpdaterCallback
+{
+public:
+  ProofTranslationCallback(CDProof* cdp) : d_cdp(cdp) {}
+  bool shouldUpdate(std::shared_ptr<ProofNode> pn,
+                            const std::vector<Node>& fa,
+                            bool& continueUpdate) override 
+  {
+    return false; 
+  }
+  bool shouldUpdatePost(std::shared_ptr<ProofNode> pn,
+                        const std::vector<Node>& fa) override
+  {
+    // add converted to d_cdp
+    Node expected = d_subs.apply(pn->getResult());
+    std::vector<Node> children;
+    const std::vector<std::shared_ptr<ProofNode>>& pchildren = pn->getChildren();
+    for (const std::shared_ptr<ProofNode>& pnc : pchildren)
+    {
+      children.push_back(d_subs.apply(pnc->getResult()));
+    }
+    std::vector<Node> args;
+    const std::vector<Node>& pargs = pn->getArguments();
+    for (const Node& a : pargs)
+    {
+      args.push_back(d_subs.apply(a));
+    }
+    Trace("proof-min-rewrite") << "-> add step " << pn->getRule() << ", " << expected << std::endl;
+    d_cdp->addStep(expected, pn->getRule(), children, args);
+    return false;
+  }
+  CDProof* d_cdp;
+  Subs d_subs;
+};
+
+bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq, MethodId idr, CDProof* cdp)
+{
+  theory::quantifiers::TermRecBuild trb;
+  Node n = eq[0];
+  Node curr, r;
+  trb.init(n);
+  SkolemManager * skm = NodeManager::currentNM()->getSkolemManager();
+  ProofTranslationCallback ptc(cdp);
+  for (size_t i=0, nchild = n.getNumChildren(); i<nchild; i++)
+  {
+    Node k = skm->mkPurifySkolem(n[i]);
+    trb.replaceChild(i, k);
+    curr = trb.build();
+    r = d_env.rewriteViaMethod(curr, idr);
+    if (r==eq[1])
+    {
+      Trace("proof-min-rewrite") << "Rewrite: " << n << " -> " << r << " regardless of child #" << i << std::endl;
+      ptc.d_subs.add(k, n[i]);
+    }
+    else
+    {
+      // revert
+      trb.replaceChild(i, n[i]);
+    }
+  }
+  if (!ptc.d_subs.empty())
+  {
+    curr = trb.build();
+    Trace("proof-min-rewrite") << "Min-rewrite: " << curr << std::endl;
+    bool isExtEq = (idr == MethodId::RW_REWRITE_EQ_EXT);
+    TrustNode trn = d_env.getRewriter()->rewriteWithProof(curr, isExtEq);
+    std::shared_ptr<ProofNode> pfn = trn.toProofNode();
+    // now, traverse the proof
+    Trace("proof-min-rewrite") << "Proof is " << *pfn.get() << std::endl;
+    ProofNodeUpdater pnu(d_env, ptc);
+    pnu.process(pfn);
+    return true;
+  }
+  return false;
 }
 
 ProofPostprocess::ProofPostprocess(Env& env,
