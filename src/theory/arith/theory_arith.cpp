@@ -111,13 +111,13 @@ void TheoryArith::preRegisterTerm(TNode n)
 {
   // handle logic exceptions
   Kind k = n.getKind();
-  if (k==Kind::POW)
+  if (k == Kind::POW)
   {
     // Todo improve the exception thrown
     std::stringstream ss;
     ss << "The exponent of the POW(^) operator can only be a positive "
           "integral constant below "
-        << (expr::NodeValue::MAX_CHILDREN + 1) << ". ";
+       << (expr::NodeValue::MAX_CHILDREN + 1) << ". ";
     ss << "Exception occurred in:" << std::endl;
     ss << "  " << n;
     throw LogicException(ss.str());

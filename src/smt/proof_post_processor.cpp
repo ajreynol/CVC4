@@ -1157,10 +1157,11 @@ class ProofTranslationCallback : public ProofNodeUpdaterCallback
 bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
                                                        CDProof* cdp)
 {
-  Trace("proof-min-rewrite-input") << "Minimize " << eq[0] << " = " << eq[1] << std::endl;
+  Trace("proof-min-rewrite-input")
+      << "Minimize " << eq[0] << " = " << eq[1] << std::endl;
   SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
   ProofTranslationCallback ptc(cdp);
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   std::unordered_map<TNode, Node> visited;
   std::unordered_map<TNode, Node>::iterator it;
   std::map<Node, std::map<size_t, Node>> invChildren;
@@ -1171,12 +1172,13 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
   visit.push_back(eq[0]);
   size_t ichecks = 0;
   size_t isuccess = 0;
-  do {
+  do
+  {
     cur = visit.back();
     it = visited.find(cur);
-    if (it == visited.end()) 
+    if (it == visited.end())
     {
-      if (cur.getNumChildren()==0)
+      if (cur.getNumChildren() == 0)
       {
         visited[cur] = cur;
         visit.pop_back();
@@ -1186,14 +1188,14 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
       theory::quantifiers::TermRecBuild trb;
       trb.init(cur);
       Node tgt = rewrite(cur);
-      if (tgt==cur)
+      if (tgt == cur)
       {
         // does not rewrite
         visited[cur] = cur;
         visit.pop_back();
         continue;
       }
-      else if (tgt.getKind()==cur.getKind() || cur.getKind()==Kind::MATCH)
+      else if (tgt.getKind() == cur.getKind() || cur.getKind() == Kind::MATCH)
       {
         // if kind is preserved, just visit children
         // also, match is sensitive to syntax of arguments, skip it
@@ -1206,10 +1208,13 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
         startIndex = 1;
         visited[cur[0]] = cur[0];
       }
-      Trace("proof-min-rewrite-debug") << "Process " << cur.getKind() << " -> " << tgt.getKind() << " " << cur << std::endl;
-      for (size_t i = startIndex, nchild = cur.getNumChildren(); i < nchild; i++)
-      {        
-        if (rewrite(cur[i])==cur[i])
+      Trace("proof-min-rewrite-debug")
+          << "Process " << cur.getKind() << " -> " << tgt.getKind() << " "
+          << cur << std::endl;
+      for (size_t i = startIndex, nchild = cur.getNumChildren(); i < nchild;
+           i++)
+      {
+        if (rewrite(cur[i]) == cur[i])
         {
           // if child does not rewrite, there is no use in minimizing, skip
           visited[cur[i]] = cur[i];
@@ -1222,8 +1227,9 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
         r = rewrite(ucur);
         if (r == tgt)
         {
-          Trace("proof-min-rewrite") << "Rewrite: " << cur << " -> " << r
-                                    << " regardless of child #" << i << std::endl;
+          Trace("proof-min-rewrite")
+              << "Rewrite: " << cur << " -> " << r << " regardless of child #"
+              << i << std::endl;
           ptc.d_subs.add(k, cur[i]);
           invChildren[cur][i] = k;
           isuccess++;
@@ -1238,7 +1244,8 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
       continue;
     }
     visit.pop_back();
-    if (it->second.isNull()) {
+    if (it->second.isNull())
+    {
       Node ret = cur;
       bool childChanged = false;
       std::vector<Node> children;
@@ -1248,10 +1255,10 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
       }
       std::map<size_t, Node>& iccur = invChildren[cur];
       Node cnr;
-      for (size_t i=0, nchild = cur.getNumChildren(); i<nchild; i++)
+      for (size_t i = 0, nchild = cur.getNumChildren(); i < nchild; i++)
       {
         iti = iccur.find(i);
-        if (iti!=iccur.end())
+        if (iti != iccur.end())
         {
           cnr = iti->second;
         }
@@ -1265,19 +1272,20 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
         childChanged = childChanged || cur[i] != cnr;
         children.push_back(cnr);
       }
-      if (childChanged) 
+      if (childChanged)
       {
         ret = nm->mkNode(cur.getKind(), children);
       }
       visited[cur] = ret;
     }
   } while (!visit.empty());
-  Trace("proof-min-rewrite-stats") << "Invariant success: " << isuccess << " / " << ichecks << std::endl;
+  Trace("proof-min-rewrite-stats")
+      << "Invariant success: " << isuccess << " / " << ichecks << std::endl;
   if (!ptc.d_subs.empty())
   {
     Assert(visited.find(eq[0]) != visited.end());
     Node cc = visited[eq[0]];
-    Assert (!cc.isNull());
+    Assert(!cc.isNull());
     Trace("proof-min-rewrite") << "Min-rewrite: " << cc << std::endl;
     TrustNode trn = d_env.getRewriter()->rewriteWithProof(cc, false);
     std::shared_ptr<ProofNode> pfn = trn.toProofNode();
