@@ -22,9 +22,9 @@
 #include <vector>
 
 #include "expr/node.h"
+#include "proof/lazy_proof.h"
 #include "proof/trust_node.h"
 #include "smt/env_obj.h"
-#include "proof/lazy_proof.h"
 
 namespace cvc5::internal {
 
@@ -132,10 +132,7 @@ class AssertionPipeline : protected EnvObj
    *
    * @param i The index in question
    */
-  bool isSubstsIndex(size_t i)
-  {
-    return d_storeSubstsInAsserts && i == d_substsIndex;
-  }
+  bool isSubstsIndex(size_t i) const;
   /** Is in conflict? True if this pipeline contains the false assertion */
   bool isInConflict() const { return d_conflict; }
   /** Is refutation unsound? */
@@ -192,7 +189,7 @@ class AssertionPipeline : protected EnvObj
    *
    * TODO(#2473): replace by separate vector of substitution assertions.
    */
-  size_t d_substsIndex;
+  std::unordered_set<size_t> d_substsIndices;
 
   /** Index of the first assumption */
   size_t d_assumptionsStart;
@@ -208,7 +205,9 @@ class AssertionPipeline : protected EnvObj
   bool d_isModelUnsound;
   /** Is negated? */
   bool d_isNegated;
-  /** Eliminate */
+  /**
+   * Maintains proofs for eliminating top-level AND from inputs to this class.
+   */
   std::unique_ptr<LazyCDProof> d_andElimEpg;
 }; /* class AssertionPipeline */
 
