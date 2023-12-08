@@ -18,10 +18,10 @@
 using namespace cvc5;
 int main(void)
 {
-  Solver slv;                                                                                          
-  slv.setOption("produce-unsat-assumptions", "true");                                                  
-  Sort s1 = slv.getRealSort();                                                                         
-  Sort s2 = slv.getRoundingModeSort();                                                                 
+  Solver slv;
+  slv.setOption("produce-unsat-assumptions", "true");
+  Sort s1 = slv.getRealSort();
+  Sort s2 = slv.getRoundingModeSort();
   Sort _p4 = slv.mkParamSort("_p4");
   DatatypeDecl _dt1 = slv.mkDatatypeDecl("_dt1", {_p4});
   DatatypeConstructorDecl _cons20 = slv.mkDatatypeConstructorDecl("_cons20");
@@ -36,17 +36,19 @@ int main(void)
   Sort s16 = slv.getIntegerSort();
   Sort s21 = s4.instantiate({s7});
   Term t19 = slv.mkConst(s21, "_x61");
-   Term t29 = slv.mkConst(s16, "_x69");
- Term t30 = slv.mkTerm(Kind::TO_REAL, t29);
- Term t65;
+  Term t29 = slv.mkConst(s16, "_x69");
+  Term t30 = slv.mkTerm(Kind::TO_REAL, t29);
+  Term t65;
   {
-     DatatypeSelector sel = t19.getSort().getDatatype().getConstructor("_cons20").getSelector("_sel16");
-     t65 = slv.mkTerm(Kind::APPLY_UPDATER, sel.getUpdaterTerm(), t19, t30);
-   }
+    DatatypeSelector sel =
+        t19.getSort().getDatatype().getConstructor("_cons20").getSelector(
+            "_sel16");
+    t65 = slv.mkTerm(Kind::APPLY_UPDATER, sel.getUpdaterTerm(), t19, t30);
+  }
   Term t95 = slv.mkTerm(Kind::DT_SIZE, {t65});
   Term t246 = slv.mkTerm(Kind::GEQ, {t29, t95});
   slv.assertFormula({t246});
   slv.checkSat();
 
-return 0;
+  return 0;
 }

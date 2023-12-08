@@ -18,18 +18,18 @@
 using namespace cvc5;
 int main(void)
 {
-Solver solver;
-solver.setOption("incremental", "false");
-solver.setOption("fmf-fun", "true");
-solver.setOption("produce-abducts", "true");
-solver.setOption("sygus-core-connective", "true");
-Sort s0 = solver.mkUninterpretedSort("_u0");
-Sort s1 = solver.mkSetSort(s0);
-Term t2 = solver.mkConst(s1, "_x6");
-Op o3 = solver.mkOp(SET_IS_SINGLETON);
-Term t4 = solver.mkTerm(o3, {t2});
-Sort s5 = t4.getSort();
-Term t6 = solver.getAbduct(t4);
+  Solver solver;
+  solver.setOption("incremental", "false");
+  solver.setOption("fmf-fun", "true");
+  solver.setOption("produce-abducts", "true");
+  solver.setOption("sygus-core-connective", "true");
+  Sort s0 = solver.mkUninterpretedSort("_u0");
+  Sort s1 = solver.mkSetSort(s0);
+  Term t2 = solver.mkConst(s1, "_x6");
+  Op o3 = solver.mkOp(SET_IS_SINGLETON);
+  Term t4 = solver.mkTerm(o3, {t2});
+  Sort s5 = t4.getSort();
+  Term t6 = solver.getAbduct(t4);
 
-return 0;
+  return 0;
 }
