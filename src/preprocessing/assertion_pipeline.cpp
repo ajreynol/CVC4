@@ -17,12 +17,12 @@
 #include "preprocessing/assertion_pipeline.h"
 
 #include "expr/node_manager.h"
-#include "util/rational.h"
 #include "options/smt_options.h"
 #include "proof/lazy_proof.h"
 #include "smt/logic_exception.h"
 #include "smt/preprocess_proof_generator.h"
 #include "theory/builtin/proof_checker.h"
+#include "util/rational.h"
 
 namespace cvc5::internal {
 namespace preprocessing {
@@ -30,7 +30,6 @@ namespace preprocessing {
 AssertionPipeline::AssertionPipeline(Env& env)
     : EnvObj(env),
       d_storeSubstsInAsserts(false),
-      d_substsIndex(0),
       d_pppg(nullptr),
       d_conflict(false),
       d_isRefutationUnsound(false),
@@ -48,6 +47,7 @@ void AssertionPipeline::clear()
   d_isNegated = false;
   d_nodes.clear();
   d_iteSkolemMap.clear();
+  d_substsIndices.clear();
 }
 
 void AssertionPipeline::push_back(Node n,
@@ -64,22 +64,50 @@ void AssertionPipeline::push_back(Node n,
   {
     markConflict();
   }
-  else if (n.getKind()==Kind::AND)
+  else if (n.getKind() == Kind::AND)
   {
+    // Immediately miniscope top-level AND, which is important for minimizing
+    // dependencies in proofs. We add each conjunct seperately, justifying
+    // each with an AND_ELIM step.
+    std::vector<Node> conjs;
     if (isProofEnabled())
     {
       if (!isInput)
       {
         d_andElimEpg->addLazyStep(n, pgen, TrustId::PREPROCESS_LEMMA);
       }
-      NodeManager * nm = NodeManager::currentNM();
-      for (size_t i=0, nchild=n.getNumChildren(); i<nchild; i++)
-      {
-        Node in = nm->mkConstInt(Rational(i));
-        d_andElimEpg->addStep(n[i], ProofRule::AND_ELIM, {n}, {in});
-      }
     }
-    for (const Node& nc : n)
+    std::vector<Node> toProcess;
+    toProcess.emplace_back(n);
+    size_t i = 0;
+    do
+    {
+      Node nc = toProcess[i];
+      i++;
+      if (nc.getKind() == Kind::AND)
+      {
+        if (isProofEnabled())
+        {
+          NodeManager* nm = NodeManager::currentNM();
+          for (size_t j = 0, nchild = nc.getNumChildren(); j < nchild; j++)
+          {
+            Node in = nm->mkConstInt(Rational(j));
+            d_andElimEpg->addStep(nc[j], ProofRule::AND_ELIM, {nc}, {in});
+            toProcess.emplace_back(nc[j]);
+          }
+        }
+        else
+        {
+          toProcess.insert(toProcess.end(), nc.begin(), nc.end());
+        }
+      }
+      else
+      {
+        conjs.emplace_back(nc);
+      }
+    } while (i < toProcess.size());
+    // add each conjunct
+    for (const Node& nc : conjs)
     {
       push_back(nc, false, d_andElimEpg.get());
     }
@@ -154,9 +182,10 @@ void AssertionPipeline::replaceTrusted(size_t i, TrustNode trn)
 void AssertionPipeline::enableProofs(smt::PreprocessProofGenerator* pppg)
 {
   d_pppg = pppg;
-  if (d_andElimEpg==nullptr)
+  if (d_andElimEpg == nullptr)
   {
-    d_andElimEpg.reset(new LazyCDProof(d_env, nullptr, userContext(), "AssertionsAndElim"));
+    d_andElimEpg.reset(
+        new LazyCDProof(d_env, nullptr, userContext(), "AssertionsAndElim"));
   }
 }
 
@@ -165,7 +194,6 @@ bool AssertionPipeline::isProofEnabled() const { return d_pppg != nullptr; }
 void AssertionPipeline::enableStoreSubstsInAsserts()
 {
   d_storeSubstsInAsserts = true;
-  d_substsIndex = d_nodes.size();
   d_nodes.push_back(NodeManager::currentNM()->mkConst<bool>(true));
 }
 
@@ -178,7 +206,19 @@ void AssertionPipeline::addSubstitutionNode(Node n, ProofGenerator* pg)
 {
   Assert(d_storeSubstsInAsserts);
   Assert(n.getKind() == Kind::EQUAL);
+  size_t prevNodeSize = d_nodes.size();
   push_back(n, false, pg);
+  // remember this is a substitution index
+  for (size_t i = prevNodeSize, newSize = d_nodes.size(); i < newSize; i++)
+  {
+    d_substsIndices.insert(i);
+  }
+}
+
+bool AssertionPipeline::isSubstsIndex(size_t i) const
+{
+  return d_storeSubstsInAsserts
+         && d_substsIndices.find(i) != d_substsIndices.end();
 }
 
 void AssertionPipeline::markConflict()
