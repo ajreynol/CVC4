@@ -22,7 +22,7 @@ int main(void)
   solver.setOption("incremental", "false");
   solver.setOption("produce-interpolants", "true");
   solver.setOption("interpolants-mode", "all");
-  Op o0 = solver.mkOp(PI);
+  Op o0 = solver.mkOp(Kind::PI);
   Term t1 = solver.mkTerm(o0);
   Sort s2 = t1.getSort();
   Term t3 = solver.mkTerm(Kind::DISTINCT, {t1, t1});
