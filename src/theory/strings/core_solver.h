@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -221,13 +221,25 @@ class CoreSolver : protected EnvObj
 
   //--------------------------- query functions
   /**
+   * Get relevant disequalities, which is a list of disequalities that are
+   * asserted in the current context between strings whose lengths are not
+   * already disequal. This list is filtered to not contain pairs of
+   * disequalities that are congruent.
+   *
+   * This list is used, e.g., when implementing the injectivity lemma schema
+   * for str.to_code.
+   */
+  const std::vector<Node>& getRelevantDeq() const;
+  /** Has a normal form for n been computed? */
+  bool hasNormalForm(const Node& n) const;
+  /**
    * Get normal form for string term n. For details on this data structure,
    * see theory/strings/normal_form.h.
    *
    * This query is valid after a successful call to checkNormalFormsEq, e.g.
    * a call where the inference manager was not given any lemmas or inferences.
    */
-  NormalForm& getNormalForm(Node n);
+  NormalForm& getNormalForm(const Node& n);
   /** get normal string
    *
    * This method returns the node that is equivalent to the normal form of x,
@@ -256,7 +268,7 @@ class CoreSolver : protected EnvObj
    */
   static Node getConclusion(Node x,
                             Node y,
-                            PfRule rule,
+                            ProofRule rule,
                             bool isRev,
                             SkolemCache* skc,
                             std::vector<Node>& newSkolems);
@@ -399,8 +411,10 @@ class CoreSolver : protected EnvObj
    * pinfer: the set of possible inferences we add to.
    *
    * stype is the string-like type of the equivalence class we are processing.
+   *
+   * @return true if the normal forms are equal
    */
-  void processSimpleNEq(NormalForm& nfi,
+  bool processSimpleNEq(NormalForm& nfi,
                         NormalForm& nfj,
                         unsigned& index,
                         bool isRev,
@@ -522,6 +536,8 @@ class CoreSolver : protected EnvObj
    * on the ordering described in checkCycles.
    */
   std::vector<Node> d_strings_eqc;
+  /** The relevant disequalities */
+  std::vector<Node> d_rlvDeq;
   /** map from terms to their normal forms */
   std::map<Node, NormalForm> d_normal_form;
   /**

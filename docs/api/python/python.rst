@@ -41,7 +41,16 @@ The base and pythonic Python API can be installed via `pip` as follows:
 Installation (ARM64 variants of Linux and macOS)
 ------------
 
-For ARM64-based machines (including Apple computers with M1 and M2 chips), the base and the pythonic Python API can be installed from source as follows:
+For ARM64-based machines (including Apple computers with M1 and M2 chips), the base and the pythonic Python API can be installed from source.
+Before building and installing, the following dependencies should be installed, using `brew` and `pip`:
+
+.. code:: bash
+
+  brew install cmake python cython gmp java
+  pip3 install tomli scikit-build pyparsing
+
+
+Then `cvc5` can be installed from source as follows:
 
 .. code:: bash
 
@@ -49,7 +58,7 @@ For ARM64-based machines (including Apple computers with M1 and M2 chips), the b
   cd cvc5
   ./configure.sh --python-bindings --auto-download
   cd build
-  make -j cvc5_python_api
+  make cvc5_python_api              # add -jN for parallel build using N threads
   export PYTHONPATH=“<path-to-local-cvc5-repo>/build/src/api/python/:$PYTHONPATH”
 
 And to make sure that it works:

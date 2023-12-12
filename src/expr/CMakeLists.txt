@@ -1,10 +1,10 @@
 ###############################################################################
 # Top contributors (to current version):
-#   Mathias Preiner, Andrew Reynolds, Aina Niemetz
+#   Andrew Reynolds, Mathias Preiner, Aina Niemetz
 #
 # This file is part of the cvc5 project.
 #
-# Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+# Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
 # in the top-level source directory and their institutional affiliations.
 # All rights reserved.  See the file COPYING in the top-level source
 # directory for licensing information.
@@ -72,6 +72,8 @@ libcvc5_add_sources(
   node_visitor.h
   skolem_manager.cpp
   skolem_manager.h
+  sort_type_size.cpp
+  sort_type_size.h
   subtype_elim_node_converter.cpp
   subtype_elim_node_converter.h
   term_canonize.cpp
@@ -99,6 +101,8 @@ libcvc5_add_sources(
   subs.h
   sygus_datatype.cpp
   sygus_datatype.h
+  sygus_grammar.cpp
+  sygus_grammar.h
   variadic_trie.cpp
   variadic_trie.h
 )

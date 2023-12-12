@@ -1,16 +1,22 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Alex Ozdemir
+ *   Alex Ozdemir, Andrew Reynolds
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
  * ****************************************************************************
  *
- * Finite fields theory
+ * Finite fields theory.
+ *
+ * There is a subtheory for each prime p that handles the field Fp. Essentially
+ * the common theory just multiplexes the sub-theories.
+ *
+ * NB: while most of FF does not build without CoCoA, this class does. So, it
+ * has many ifdef blocks that throw errors without CoCoA.
  */
 
 #include "theory/ff/theory_ff.h"
@@ -140,7 +146,7 @@ bool TheoryFiniteFields::collectModelValues(TheoryModel* m,
 void TheoryFiniteFields::preRegisterWithEe(TNode node)
 {
   Assert(d_equalityEngine != nullptr);
-  if (node.getKind() == kind::EQUAL)
+  if (node.getKind() == Kind::EQUAL)
   {
     d_state.addEqualityEngineTriggerPredicate(node);
   }

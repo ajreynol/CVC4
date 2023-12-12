@@ -19,8 +19,13 @@
 include(deps-helper)
 
 find_path(Poly_INCLUDE_DIR NAMES poly/poly.h)
-find_library(Poly_LIBRARIES NAMES poly)
-find_library(PolyXX_LIBRARIES NAMES polyxx)
+if(BUILD_SHARED_LIBS)
+  find_library(Poly_LIBRARIES NAMES poly)
+  find_library(PolyXX_LIBRARIES NAMES polyxx)
+else()
+  find_library(Poly_LIBRARIES NAMES picpoly)
+  find_library(PolyXX_LIBRARIES NAMES picpolyxx)
+endif()
 
 set(Poly_FOUND_SYSTEM FALSE)
 if(Poly_INCLUDE_DIR
@@ -45,7 +50,7 @@ if(NOT Poly_FOUND_SYSTEM)
 
   include(ExternalProject)
 
-  set(Poly_VERSION "1383809f2aa5005ef20110fec84b66959518f697")
+  set(Poly_VERSION "0.1.13")
 
   check_if_cross_compiling(CCWIN "Windows" "")
   if(CCWIN)
@@ -56,10 +61,17 @@ if(NOT Poly_FOUND_SYSTEM)
     unset(POLY_PATCH_CMD)
   endif()
 
+  # On Windows, CMake's default install action places DLLs into the runtime
+  # path (/bin) after doing the build with 'ExternalProject_Add'
+  if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(BINARY_LIBRARY_DEST "bin")
+  else()
+    set(BINARY_LIBRARY_DEST "lib")
+  endif()
+
   get_target_property(GMP_INCLUDE_DIR GMP INTERFACE_SYSTEM_INCLUDE_DIRECTORIES)
   get_target_property(GMP_LIBRARY GMP IMPORTED_LOCATION)
   get_filename_component(GMP_LIB_PATH "${GMP_LIBRARY}" DIRECTORY)
-
 
   set(Poly_INCLUDE_DIR "${DEPS_BASE}/include/")
 
@@ -74,9 +86,9 @@ if(NOT Poly_FOUND_SYSTEM)
     if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
       set(POLY_BYPRODUCTS
         <INSTALL_DIR>/lib/libpoly.0${CMAKE_SHARED_LIBRARY_SUFFIX}
-        <INSTALL_DIR>/lib/libpoly.0.1.11${CMAKE_SHARED_LIBRARY_SUFFIX}
+        <INSTALL_DIR>/lib/libpoly.${Poly_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX}
         <INSTALL_DIR>/lib/libpolyxx.0${CMAKE_SHARED_LIBRARY_SUFFIX}
-        <INSTALL_DIR>/lib/libpolyxx.0.1.11${CMAKE_SHARED_LIBRARY_SUFFIX}
+        <INSTALL_DIR>/lib/libpolyxx.${Poly_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX}
         <INSTALL_DIR>/lib/libpoly${CMAKE_SHARED_LIBRARY_SUFFIX}
         <INSTALL_DIR>/lib/libpolyxx${CMAKE_SHARED_LIBRARY_SUFFIX}
       )
@@ -93,9 +105,9 @@ if(NOT Poly_FOUND_SYSTEM)
     else()
       set(POLY_BYPRODUCTS
         <INSTALL_DIR>/lib/libpoly${CMAKE_SHARED_LIBRARY_SUFFIX}.0
-        <INSTALL_DIR>/lib/libpoly${CMAKE_SHARED_LIBRARY_SUFFIX}.0.1.11
+        <INSTALL_DIR>/lib/libpoly${CMAKE_SHARED_LIBRARY_SUFFIX}.${Poly_VERSION}
         <INSTALL_DIR>/lib/libpolyxx${CMAKE_SHARED_LIBRARY_SUFFIX}.0
-        <INSTALL_DIR>/lib/libpolyxx${CMAKE_SHARED_LIBRARY_SUFFIX}.0.1.11
+        <INSTALL_DIR>/lib/libpolyxx${CMAKE_SHARED_LIBRARY_SUFFIX}.${Poly_VERSION}
         <INSTALL_DIR>/lib/libpoly${CMAKE_SHARED_LIBRARY_SUFFIX}
         <INSTALL_DIR>/lib/libpolyxx${CMAKE_SHARED_LIBRARY_SUFFIX}
       )
@@ -150,8 +162,8 @@ if(NOT Poly_FOUND_SYSTEM)
   ExternalProject_Add(
     Poly-EP
     ${COMMON_EP_CONFIG}
-    URL https://github.com/SRI-CSL/libpoly/archive/${Poly_VERSION}.tar.gz
-    URL_HASH SHA1=e3da80491b378a4d874073d201406eb011f47c19
+    URL https://github.com/SRI-CSL/libpoly/archive/refs/tags/v${Poly_VERSION}.tar.gz
+    URL_HASH SHA1=981ff0081bed0d1e604000a3092e7af8881b7a5e
     PATCH_COMMAND
       sed -i.orig
       "s,add_subdirectory(test/polyxx),add_subdirectory(test/polyxx EXCLUDE_FROM_ALL),g"
@@ -208,7 +220,6 @@ target_link_libraries(Poly INTERFACE GMP)
 set_target_properties(Polyxx PROPERTIES
   IMPORTED_LOCATION "${PolyXX_LIBRARIES}"
   INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Poly_INCLUDE_DIR}"
-  INTERFACE_LINK_LIBRARIES Poly
 )
 
 mark_as_advanced(Poly_FOUND)

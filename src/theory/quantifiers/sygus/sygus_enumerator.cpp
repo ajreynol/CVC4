@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -60,8 +60,7 @@ void SygusEnumerator::initialize(Node e)
   if (d_sec == nullptr
       && options().datatypes.sygusRewriter != options::SygusRewriterMode::NONE)
   {
-    d_secd = std::make_unique<SygusEnumeratorCallbackDefault>(
-        d_env, e, d_tds, d_stats);
+    d_secd = std::make_unique<SygusEnumeratorCallback>(d_env, d_tds, d_stats);
     d_sec = d_secd.get();
   }
   d_etype = d_enum.getType();
@@ -97,7 +96,7 @@ void SygusEnumerator::initialize(Node e)
       slem = rewrite(slem);
       // break into conjuncts
       std::vector<Node> sblc;
-      if (slem.getKind() == AND)
+      if (slem.getKind() == Kind::AND)
       {
         for (const Node& slemc : slem)
         {
@@ -115,7 +114,7 @@ void SygusEnumerator::initialize(Node e)
         // if its a negation of a unit top-level tester, then this specifies
         // that we should not enumerate terms whose top symbol is that
         // constructor
-        if (sblemma.getKind() == NOT)
+        if (sblemma.getKind() == Kind::NOT)
         {
           Node a;
           int tst = datatypes::utils::isTester(sblemma[0], a);
@@ -356,6 +355,7 @@ bool SygusEnumerator::TermCache::addTerm(Node n)
           << " due to callback" << std::endl;
       return false;
     }
+    Trace("sygus-enum-terms") << "tc(" << d_tn << "): term: " << n << std::endl;
   }
   if (d_stats != nullptr)
   {
@@ -676,7 +676,8 @@ Node SygusEnumerator::TermEnumMaster::getCurrent()
     // ensure all variables are unique
     childrenToShape(children);
   }
-  d_currTerm = NodeManager::currentNM()->mkNode(APPLY_CONSTRUCTOR, children);
+  d_currTerm =
+      NodeManager::currentNM()->mkNode(Kind::APPLY_CONSTRUCTOR, children);
   return d_currTerm;
 }
 

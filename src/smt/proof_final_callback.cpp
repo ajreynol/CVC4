@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Gereon Kremer, Mathias Preiner
+ *   Andrew Reynolds, Mathias Preiner, Haniel Barbosa
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -16,9 +16,11 @@
 #include "smt/proof_final_callback.h"
 
 #include "expr/skolem_manager.h"
+#include "options/base_options.h"
 #include "options/proof_options.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node_manager.h"
+#include "rewriter/rewrite_proof_rule.h"
 #include "smt/env.h"
 #include "smt/set_defaults.h"
 #include "theory/builtin/proof_checker.h"
@@ -33,13 +35,18 @@ namespace smt {
 
 ProofFinalCallback::ProofFinalCallback(Env& env)
     : EnvObj(env),
-      d_ruleCount(statisticsRegistry().registerHistogram<PfRule>(
+      d_ruleCount(statisticsRegistry().registerHistogram<ProofRule>(
           "finalProof::ruleCount")),
       d_instRuleIds(statisticsRegistry().registerHistogram<theory::InferenceId>(
           "finalProof::instRuleId")),
       d_annotationRuleIds(
           statisticsRegistry().registerHistogram<theory::InferenceId>(
               "finalProof::annotationRuleId")),
+      d_dslRuleCount(
+          statisticsRegistry().registerHistogram<rewriter::DslProofRule>(
+              "finalProof::dslRuleCount")),
+      d_trustIds(statisticsRegistry().registerHistogram<TrustId>(
+          "finalProof::trustCount")),
       d_totalRuleCount(
           statisticsRegistry().registerInt("finalProof::totalRuleCount")),
       d_minPedanticLevel(
@@ -62,7 +69,7 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
                                       const std::vector<Node>& fa,
                                       bool& continueUpdate)
 {
-  PfRule r = pn->getRule();
+  ProofRule r = pn->getRule();
   ProofNodeManager* pnm = d_env.getProofNodeManager();
   Assert(pnm != nullptr);
   // if not doing eager pedantic checking, fail if below threshold
@@ -71,7 +78,7 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
     if (!d_pedanticFailure)
     {
       Assert(d_pedanticFailureOut.str().empty());
-      if (pnm->getChecker()->isPedanticFailure(r, d_pedanticFailureOut))
+      if (pnm->getChecker()->isPedanticFailure(r, &d_pedanticFailureOut))
       {
         d_pedanticFailure = true;
       }
@@ -89,8 +96,18 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
   // record stats for the rule
   d_ruleCount << r;
   ++d_totalRuleCount;
+  // if a DSL rewrite, take DSL stat
+  if (r == ProofRule::DSL_REWRITE)
+  {
+    const std::vector<Node>& args = pn->getArguments();
+    rewriter::DslProofRule di;
+    if (rewriter::getDslProofRule(args[0], di))
+    {
+      d_dslRuleCount << di;
+    }
+  }
   // take stats on the instantiations in the proof
-  if (r == PfRule::INSTANTIATE)
+  else if (r == ProofRule::INSTANTIATE)
   {
     Node q = pn->getChildren()[0]->getResult();
     const std::vector<Node>& args = pn->getArguments();
@@ -103,7 +120,7 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
       }
     }
   }
-  else if (r == PfRule::ANNOTATION)
+  else if (r == ProofRule::ANNOTATION)
   {
     // we currently assume the annotation is a single inference id
     const std::vector<Node>& args = pn->getArguments();
@@ -122,11 +139,22 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
       }
     }
   }
+  else if (r == ProofRule::TRUST)
+  {
+    TrustId id;
+    Trace("final-pf-hole") << "hole TRUST";
+    if (getTrustId(pn->getArguments()[0], id))
+    {
+      d_trustIds << id;
+      Trace("final-pf-hole") << " " << id;
+    }
+    Trace("final-pf-hole") << ": " << pn->getResult() << std::endl;
+  }
   // print for debugging
   if (TraceIsOn("final-pf-hole"))
   {
     // currently only track theory rewrites
-    if (r == PfRule::THEORY_REWRITE)
+    if (r == ProofRule::TRUST_THEORY_REWRITE)
     {
       const std::vector<Node>& args = pn->getArguments();
       Node eq = args[0];
@@ -135,14 +163,16 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
       Trace("final-pf-hole") << "hole " << r << " " << tid << " : " << eq[0]
                              << " ---> " << eq[1] << std::endl;
     }
-    else if (r == PfRule::REWRITE)
+    else if (r == ProofRule::MACRO_REWRITE)
     {
       const std::vector<Node>& args = pn->getArguments();
       Node eq = args[0];
       Trace("final-pf-hole") << "hole " << r << " : " << eq << std::endl;
     }
   }
-  if (options().proof.checkProofSteps)
+
+  if (options().proof.checkProofSteps
+      || isOutputOn(OutputTag::TRUSTED_PROOF_STEPS))
   {
     Node conc = pn->getResult();
     ProofChecker* pc = pnm->getChecker();
@@ -159,27 +189,36 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
         premises.push_back(pncc->getResult());
       }
       NodeManager* nm = NodeManager::currentNM();
-      Node query = nm->mkNode(IMPLIES, nm->mkAnd(premises), conc);
-      // trust the rewriter here, since the subsolver will rewrite anyways
-      query = rewrite(query);
-      // We use the original form of the query, which is a logically
-      // stronger formula. This may make it possible or easier to prove.
-      query = SkolemManager::getOriginalForm(query);
-      // set up the subsolver
-      Options subOptions;
-      subOptions.copyValues(d_env.getOptions());
-      smt::SetDefaults::disableChecking(subOptions);
-      SubsolverSetupInfo ssi(d_env, subOptions);
-      Trace("check-proof-steps")
-          << "Check: " << r << " : " << query << std::endl;
-      Result res = checkWithSubsolver(query.notNode(), ssi, true, 5000);
-      Trace("check-proof-steps") << "...got " << res << std::endl;
-      if (res != Result::UNSAT)
+      Node query = nm->mkNode(Kind::IMPLIES, nm->mkAnd(premises), conc);
+      if (isOutputOn(OutputTag::TRUSTED_PROOF_STEPS))
       {
-        Warning() << "A proof step may not hold: " << r << " proving " << query;
-        Warning() << ", result from check-sat was: " << res << std::endl;
+        output(OutputTag::TRUSTED_PROOF_STEPS)
+            << "(trusted-proof-step " << query << ")" << std::endl;
+      }
+      if (options().proof.checkProofSteps)
+      {
+        // trust the rewriter here, since the subsolver will rewrite anyways
+        query = rewrite(query);
+        // We use the original form of the query, which is a logically
+        // stronger formula. This may make it possible or easier to prove.
+        query = SkolemManager::getOriginalForm(query);
+        // set up the subsolver
+        Options subOptions;
+        subOptions.copyValues(d_env.getOptions());
+        smt::SetDefaults::disableChecking(subOptions);
+        SubsolverSetupInfo ssi(d_env, subOptions);
         Trace("check-proof-steps")
-            << "Original conclusion: " << conc << std::endl;
+            << "Check: " << r << " : " << query << std::endl;
+        Result res = checkWithSubsolver(query.notNode(), ssi, true, 5000);
+        Trace("check-proof-steps") << "...got " << res << std::endl;
+        if (res != Result::UNSAT)
+        {
+          Warning() << "A proof step may not hold: " << r << " proving "
+                    << query;
+          Warning() << ", result from check-sat was: " << res << std::endl;
+          Trace("check-proof-steps")
+              << "Original conclusion: " << conc << std::endl;
+        }
       }
     }
   }
