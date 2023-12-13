@@ -32,6 +32,11 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+struct InstLevelAttributeId
+{
+};
+typedef expr::Attribute<InstLevelAttributeId, uint64_t> InstLevelAttribute;
+  
 bool QAttributes::isStandard() const
 {
   return !d_sygus && !d_quant_elim && !isFunDef() && !isOracleInterface()
@@ -438,10 +443,10 @@ void QuantAttributes::setInstantiationLevelAttr(Node n, Node qn, uint64_t level)
   // if not from the vector of terms we instantiatied
   if (qn.getKind() != Kind::BOUND_VARIABLE && n != qn)
   {
+    InstLevelAttribute ila;
     // if this is a new term, without an instantiation level
-    if (!n.hasAttribute(InstLevelAttribute()))
+    if (!n.hasAttribute(ila))
     {
-      InstLevelAttribute ila;
       n.setAttribute(ila, level);
       Trace("inst-level-debug") << "Set instantiation level " << n << " to "
                                 << level << std::endl;
@@ -456,9 +461,9 @@ void QuantAttributes::setInstantiationLevelAttr(Node n, Node qn, uint64_t level)
 
 void QuantAttributes::setInstantiationLevelAttr(Node n, uint64_t level)
 {
-  if (!n.hasAttribute(InstLevelAttribute()))
+  InstLevelAttribute ila;
+  if (!n.hasAttribute(ila))
   {
-    InstLevelAttribute ila;
     n.setAttribute(ila, level);
     Trace("inst-level-debug") << "Set instantiation level " << n << " to "
                               << level << std::endl;
@@ -467,6 +472,17 @@ void QuantAttributes::setInstantiationLevelAttr(Node n, uint64_t level)
       setInstantiationLevelAttr(n[i], level);
     }
   }
+}
+
+bool QuantAttributes::getInstantiationLevel(const Node& n, uint64_t& level)
+{
+  InstLevelAttribute ila;
+  if (n.hasAttribute(ila))
+  {
+    level = n.getAttribute(ila);
+    return true;
+  }
+  return false;
 }
 
 Node mkNamedQuant(Kind k, Node bvl, Node body, const std::string& name)

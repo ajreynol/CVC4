@@ -67,11 +67,6 @@ struct QuantNameAttributeId
 };
 typedef expr::Attribute<QuantNameAttributeId, bool> QuantNameAttribute;
 
-struct InstLevelAttributeId
-{
-};
-typedef expr::Attribute<InstLevelAttributeId, uint64_t> InstLevelAttribute;
-
 /** Attribute for setting printing information for sygus variables
  *
  * For variable d of sygus datatype type, if
@@ -233,7 +228,7 @@ class QuantAttributes
   bool isQuantElimPartial( Node q );
   /** is internal quantifier */
   bool isQuantBounded(Node q) const;
-  /** get quant name, which is used for :qid */
+  // /** get quant name, which is used for :qid */
   Node getQuantName(Node q) const;
   /** Print quantified formula q, possibly using its name, if it has one */
   std::string quantToString(Node q) const;
@@ -246,7 +241,8 @@ class QuantAttributes
   static void setInstantiationLevelAttr(Node n, uint64_t level);
   /** set instantiation level attr */
   static void setInstantiationLevelAttr(Node n, Node qn, uint64_t level);
-
+  /** get instantiation level */
+  static bool getInstantiationLevel(const Node& n, uint64_t& level);
  private:
   /** cache of attributes */
   std::map< Node, QAttributes > d_qattr;

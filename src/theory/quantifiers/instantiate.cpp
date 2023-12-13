@@ -397,12 +397,16 @@ bool Instantiate::addInstantiationInternal(
     else
     {
       uint64_t maxInstLevel = 0;
+      uint64_t clevel;
       for (const Node& tc : terms)
       {
-        if (tc.hasAttribute(InstLevelAttribute())
-            && tc.getAttribute(InstLevelAttribute()) > maxInstLevel)
+        if (!QuantAttributes::getInstantiationLevel(tc, clevel))
         {
-          maxInstLevel = tc.getAttribute(InstLevelAttribute());
+          continue;
+        }
+        if (clevel > maxInstLevel)
+        {
+          maxInstLevel = clevel;
         }
       }
       QuantAttributes::setInstantiationLevelAttr(
