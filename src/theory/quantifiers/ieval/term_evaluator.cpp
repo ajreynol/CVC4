@@ -93,10 +93,6 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
       NodeManager* nm = NodeManager::currentNM();
       val = nm->mkConst(!val.getConst<bool>());
     }
-    else if (s.isNone(val))
-    {
-      val = val;
-    }
     else
     {
       val = s.getSome();
