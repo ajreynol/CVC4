@@ -243,6 +243,7 @@ class QuantAttributes
   static void setInstantiationLevelAttr(Node n, Node qn, uint64_t level);
   /** get instantiation level */
   static bool getInstantiationLevel(const Node& n, uint64_t& level);
+
  private:
   /** cache of attributes */
   std::map< Node, QAttributes > d_qattr;

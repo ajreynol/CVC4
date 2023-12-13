@@ -208,13 +208,14 @@ void TermDbEager::eqNotifyConstantTermMerge(TNode t1, TNode t2)
   Trace("eager-inst-fact") << "Conflict (from fact?): " << conf << std::endl;
   for (const Node& c : conf)
   {
-    if (c.getKind()==Kind::SKOLEM)
+    if (c.getKind() == Kind::SKOLEM)
     {
       std::vector<Node> terms;
       Node q = getExplainInst(c, terms);
       if (!q.isNull())
       {
-        Trace("eager-inst-fact") << "...instantiation: " << q << " " << terms << std::endl;
+        Trace("eager-inst-fact")
+            << "...instantiation: " << q << " " << terms << std::endl;
         addInstantiationInternal(q, terms, false);
       }
     }
@@ -440,7 +441,7 @@ bool TermDbEager::addInstantiation(const Node& q,
         Node exp = mkExplainInst(q, terms);
         eq::EqualityEngine* mee = d_qs.getEqualityEngine();
         Trace("eager-inst-fact") << "Infer: " << entv << std::endl;
-        if (entvAtom.getKind()==Kind::EQUAL)
+        if (entvAtom.getKind() == Kind::EQUAL)
         {
           mee->assertEquality(entvAtom, entvPol, exp);
         }
@@ -453,7 +454,7 @@ bool TermDbEager::addInstantiation(const Node& q,
     }
     else
     {
-      Assert (!entv.getConst<bool>());
+      Assert(!entv.getConst<bool>());
     }
   }
 #if 0
@@ -466,8 +467,8 @@ bool TermDbEager::addInstantiation(const Node& q,
   return addInstantiationInternal(q, terms, isConflict);
 }
 bool TermDbEager::addInstantiationInternal(const Node& q,
-                      std::vector<Node>& terms,
-                      bool isConflict)
+                                           std::vector<Node>& terms,
+                                           bool isConflict)
 {
   ++(d_stats.d_inst);
   InferenceId iid = InferenceId::QUANTIFIERS_INST_EAGER;
@@ -610,24 +611,24 @@ void TermDbEager::refresh()
   }
 }
 
-
 Node TermDbEager::mkExplainInst(const Node& q, const std::vector<Node>& terms)
 {
   std::vector<Node> qterms;
   qterms.push_back(q);
   qterms.insert(qterms.end(), terms.begin(), terms.end());
-  SkolemManager * skm = NodeManager::currentNM()->getSkolemManager();
-  return skm->mkSkolemFunction(SkolemFunId::QUANTIFIERS_INST, d_boolType, {qterms});
+  SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
+  return skm->mkSkolemFunction(
+      SkolemFunId::QUANTIFIERS_INST, d_boolType, {qterms});
 }
 
 Node TermDbEager::getExplainInst(const Node& i, std::vector<Node>& terms)
 {
   Node cacheVal;
   SkolemFunId id;
-  SkolemManager * skm = NodeManager::currentNM()->getSkolemManager();
+  SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
   if (skm->isSkolemFunction(i, id, cacheVal))
   {
-    terms.insert(terms.end(), cacheVal.begin()+1, cacheVal.end());
+    terms.insert(terms.end(), cacheVal.begin() + 1, cacheVal.end());
     return cacheVal[0];
   }
   return Node::null();

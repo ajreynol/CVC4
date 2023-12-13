@@ -101,8 +101,8 @@ class TermDbEager : protected EnvObj
 
  private:
   bool addInstantiationInternal(const Node& q,
-                        std::vector<Node>& terms,
-                        bool isConflict);
+                                std::vector<Node>& terms,
+                                bool isConflict);
   bool notifyTerm(TNode n, bool notifyTriggers);
   bool notifyQuant(TNode q);
   bool isPropagatingInstance(Node n);

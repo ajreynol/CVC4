@@ -89,7 +89,7 @@ bool InstWatch::eqNotifyMerge(TNode t1, TNode t2)
   for (size_t i = 0; i < 2; i++)
   {
     TNode t = i == 0 ? t1 : t2;
-    if (t.getKind()==Kind::EQUAL)
+    if (t.getKind() == Kind::EQUAL)
     {
       if (eqNotifyMerge(t[0], t[1]))
       {

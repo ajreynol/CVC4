@@ -2003,7 +2003,10 @@ void EqualityEngine::propagate() {
 
     // If not merging internal nodes, notify the master
     if (d_masterEqualityEngine && !d_isInternal[t1classId] && !d_isInternal[t2classId]) {
-      d_masterEqualityEngine->assertEqualityInternal(d_nodes[t1classId], d_nodes[t2classId], current.d_reason, current.d_type);
+      d_masterEqualityEngine->assertEqualityInternal(d_nodes[t1classId],
+                                                     d_nodes[t2classId],
+                                                     current.d_reason,
+                                                     current.d_type);
       d_masterEqualityEngine->propagate();
     }
 
