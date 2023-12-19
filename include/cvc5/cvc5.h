@@ -3356,32 +3356,33 @@ std::ostream& operator<<(std::ostream& out,
 class CVC5_EXPORT Plugin
 {
   friend class Solver;
+
  public:
   Plugin();
   virtual ~Plugin();
   /**
    * Call to check, return vector of lemmas to add to the SAT solver.
    * This method is called periodically, roughly at every SAT decision.
-   * 
+   *
    * @return The vector of lemmas to add to the SAT solver.
    */
   virtual std::vector<Term> check();
   /**
    * Notify SAT clause, called when cl is a clause learned by the SAT solver.
-   * 
+   *
    * @param cl The learned clause.
    */
   virtual void notifySatClause(const Term& cl);
   /**
    * Notify theory lemma, called when lem is a theory lemma sent by a theory
    * solver.
-   * 
+   *
    * @param lem The theory lemma.
    */
   virtual void notifyTheoryLemma(const Term& lem);
   /**
    * Get the name of the plugin (for debugging).
-   * 
+   *
    * @return The name of the plugin.
    */
   virtual std::string getName() = 0;
@@ -3403,7 +3404,8 @@ class CVC5_EXPORT Plugin
 class CVC5_EXPORT Proof
 {
   friend class Solver;
-public:
+
+ public:
   /** @return The proof rule used by the root step of the proof. */
   ProofRule getRule() const;
 

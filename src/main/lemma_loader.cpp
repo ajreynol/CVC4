@@ -13,9 +13,10 @@
  * Lemma loader for cvc5.
  */
 
+#include "main/lemma_loader.h"
+
 #include <cvc5/cvc5_parser.h>
 #include <cvc5/cvc5_types.h>
-#include "main/lemma_loader.h"
 
 #include "base/check.h"
 #include "base/output.h"

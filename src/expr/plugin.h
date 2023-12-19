@@ -43,14 +43,14 @@ class Plugin
    * Notify SAT clause, called when lem is learned by the SAT solver.
    */
   virtual void notifySatClause(const Node& lem) = 0;
-  /** 
+  /**
    * Notify theory lemma, called when lem is added a theory lemma to the SAT
    * solver.
    */
   virtual void notifyTheoryLemma(const Node& lem) = 0;
   /** Get name of this plugin, for debugging. */
   virtual std::string getName() = 0;
-  /** 
+  /**
    * Get sharable formula. This returns an equivalent version of the given
    * lemma n that can be shared externally. In particular, we require that the
    * returned formula does not have any internally generated symbols, i.e.

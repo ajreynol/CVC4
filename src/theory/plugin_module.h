@@ -35,14 +35,14 @@ class PluginModule : public TheoryEngineModule
 {
  public:
   PluginModule(Env& env, TheoryEngine* theoryEngine, Plugin* p);
-  /** 
+  /**
    * Check at the given effort.
    *
    * This sends the lemmas provided by the plugin via a call to check on the
    * output channel of this plugin.
    */
   void check(Theory::Effort e) override;
-  /** 
+  /**
    * Notify lemma.
    *
    * This calls the notifyTheoryLemma callback of the given plugin.
