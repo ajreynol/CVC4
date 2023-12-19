@@ -27,14 +27,26 @@ namespace cvc5::internal {
 
 namespace theory {
 
+/**
+ * This module takes as input a user plugin. It sends lemmas and performs
+ * notifications based on this plugin.
+ */
 class PluginModule : public TheoryEngineModule
 {
  public:
   PluginModule(Env& env, TheoryEngine* theoryEngine, Plugin* p);
-
-  /** Check at the given effort. */
+  /** 
+   * Check at the given effort.
+   *
+   * This sends the lemmas provided by the plugin via a call to check on the
+   * output channel of this plugin.
+   */
   void check(Theory::Effort e) override;
-  /** Notify lemma */
+  /** 
+   * Notify lemma.
+   *
+   * This calls the notifyTheoryLemma callback of the given plugin.
+   */
   void notifyLemma(TNode n,
                    InferenceId id,
                    LemmaProperty p,
@@ -42,9 +54,9 @@ class PluginModule : public TheoryEngineModule
                    const std::vector<Node>& sks) override;
 
  private:
-  /** Notify lemma internal */
+  /** Notify lemma internal. */
   void notifyLemmaInternal(const Node& n);
-  /** The plugin */
+  /** The plugin. */
   Plugin* d_plugin;
 };
 }  // namespace theory

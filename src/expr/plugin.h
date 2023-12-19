@@ -25,7 +25,9 @@
 namespace cvc5::internal {
 
 /**
- * A plugin.
+ * A plugin. This is the internal interface for a user-provided plugin. The
+ * class PluginInternal in api/cvc5.cpp inherits from this class. It is used
+ * to convert to/from callbacks from the API.
  */
 class Plugin
 {
@@ -33,15 +35,28 @@ class Plugin
   /** Construct a plugin. */
   Plugin() {}
   virtual ~Plugin() {}
-  /** Check function, returns the empty vector */
+  /**
+   * Check function, returns a vector of lemmas to add to the SAT solver.
+   */
   virtual std::vector<Node> check() = 0;
-  /** Notify SAT clause */
+  /**
+   * Notify SAT clause, called when lem is learned by the SAT solver.
+   */
   virtual void notifySatClause(const Node& lem) = 0;
-  /** Notify theory lemma */
+  /** 
+   * Notify theory lemma, called when lem is added a theory lemma to the SAT
+   * solver.
+   */
   virtual void notifyTheoryLemma(const Node& lem) = 0;
-  /** Get name */
+  /** Get name of this plugin, for debugging. */
   virtual std::string getName() = 0;
-  /** Get sharable formula */
+  /** 
+   * Get sharable formula. This returns an equivalent version of the given
+   * lemma n that can be shared externally. In particular, we require that the
+   * returned formula does not have any internally generated symbols, i.e.
+   * skolems. If n cannot be converted to a suitable formula, we return the
+   * null node.
+   */
   static Node getSharableFormula(const Node& n);
 };
 

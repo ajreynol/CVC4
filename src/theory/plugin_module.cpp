@@ -51,7 +51,6 @@ void PluginModule::notifyLemma(TNode n,
                                const std::vector<Node>& skAsserts,
                                const std::vector<Node>& sks)
 {
-  Trace("ajr-temp") << "Plugin notify " << n << std::endl;
   // must take original form as a way to remove internal symbols from the lemma
   notifyLemmaInternal(n);
   // skolem lemmas are also included

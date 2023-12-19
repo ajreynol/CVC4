@@ -3360,19 +3360,30 @@ class CVC5_EXPORT Plugin
   Plugin();
   virtual ~Plugin();
   /**
-   * Call to check, return vector of lemmas
+   * Call to check, return vector of lemmas to add to the SAT solver.
+   * This method is called periodically, roughly at every SAT decision.
+   * 
+   * @return The vector of lemmas to add to the SAT solver.
    */
   virtual std::vector<Term> check();
   /**
    * Notify SAT clause, called when cl is a clause learned by the SAT solver.
+   * 
+   * @param cl The learned clause.
    */
   virtual void notifySatClause(const Term& cl);
   /**
    * Notify theory lemma, called when lem is a theory lemma sent by a theory
    * solver.
+   * 
+   * @param lem The theory lemma.
    */
   virtual void notifyTheoryLemma(const Term& lem);
-  /** Get the name of the plugin (for debugging) */
+  /**
+   * Get the name of the plugin (for debugging).
+   * 
+   * @return The name of the plugin.
+   */
   virtual std::string getName() = 0;
 
  private:
