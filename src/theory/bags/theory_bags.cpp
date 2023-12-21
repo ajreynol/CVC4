@@ -453,7 +453,10 @@ bool TheoryBags::collectModelValues(TheoryModel* m,
                             << " is: " << constructedBag << std::endl;
       }
     }
-    m->assertEquality(constructedBag, n, true);
+    if (!m->assertEquality(constructedBag, n, true))
+    {
+      return false;
+    }
     m->assertSkeleton(constructedBag);
     processedBags[r] = constructedBag;
   }
