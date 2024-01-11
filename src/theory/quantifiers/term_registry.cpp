@@ -36,8 +36,6 @@ TermRegistry::TermRegistry(Env& env,
                            QuantifiersState& qs,
                            QuantifiersRegistry& qr)
     : EnvObj(env),
-      d_presolve(userContext(), true),
-      d_presolveCache(userContext()),
       d_termEnum(new TermEnumeration),
       d_termPools(new TermPools(env, qs)),
       d_termDb(logicInfo().isHigherOrder() ? new HoTermDb(env, qs, qr)
@@ -84,17 +82,6 @@ void TermRegistry::finishInit(FirstOrderModel* fm,
   {
     d_termDbEager->finishInit(qim);
   }
-}
-
-void TermRegistry::presolve()
-{
-  // TODO: clear?
-  /*
-  if (d_termDbEager!=nullptr)
-  {
-    d_termDbEager->presolve();
-  }
-  */
 }
 
 void TermRegistry::addTerm(TNode n, bool withinQuant)

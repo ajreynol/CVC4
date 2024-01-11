@@ -642,6 +642,7 @@ std::string State::toStringDebugSearch() const
     }
   }
   ss << " ]";
+  (void) nqc;
   Assert(nqc == d_numActiveQuant.get()) << "Active quant mismatch " << ss.str();
   return ss.str();
 }

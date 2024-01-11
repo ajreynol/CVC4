@@ -165,9 +165,6 @@ void QuantifiersEngine::presolve() {
   {
     mdl->presolve();
   }
-  // presolve with term registry, which populates the term database based on
-  // terms registered before presolve when in incremental mode
-  d_treg.presolve();
 }
 
 void QuantifiersEngine::ppNotifyAssertions(

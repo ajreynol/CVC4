@@ -46,14 +46,10 @@ class TermDbEager;
  */
 class TermRegistry : protected EnvObj
 {
-  using NodeSet = context::CDHashSet<Node>;
-
  public:
   TermRegistry(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr);
   /** Finish init, which sets the inference manager on modules of this class */
   void finishInit(FirstOrderModel* fm, QuantifiersInferenceManager* qim);
-  /** Presolve */
-  void presolve();
 
   /**
    * Add term n, which notifies the term database that the ground term n
@@ -135,12 +131,8 @@ class TermRegistry : protected EnvObj
   FirstOrderModel* getModel() const;
 
  private:
-  /** has presolve been called */
-  context::CDO<bool> d_presolve;
   /** Whether we are using the fmc model */
   bool d_useFmcModel;
-  /** the set of terms we have seen before presolve */
-  NodeSet d_presolveCache;
   /** term enumeration utility */
   std::unique_ptr<TermEnumeration> d_termEnum;
   /** term enumeration utility */
