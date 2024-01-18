@@ -60,8 +60,9 @@ Node ArithSubs::applyArith(const Node& n, bool traverseNlMult) const
         if ((ctid != THEORY_ARITH && ctid != THEORY_BOOL
              && ctid != THEORY_BUILTIN)
             || isTranscendentalKind(ck)
+            || ck == Kind::IAND || ck == Kind::POW2
             || (!traverseNlMult
-                && (ck == Kind::NONLINEAR_MULT || ck == Kind::IAND)))
+                && ck == Kind::NONLINEAR_MULT))
         {
           // Do not traverse beneath applications that belong to another theory
           // besides (core) arithmetic. Notice that transcendental function
