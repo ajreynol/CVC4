@@ -111,6 +111,16 @@ void TheoryArith::preRegisterTerm(TNode n)
 {
   // handle logic exceptions
   Kind k = n.getKind();
+  if (k == Kind::POW)
+  {
+    std::stringstream ss;
+    ss << "The exponent of the POW(^) operator can only be a positive "
+          "integral constant below "
+       << (expr::NodeValue::MAX_CHILDREN + 1) << ". ";
+    ss << "Exception occurred in:" << std::endl;
+    ss << "  " << n;
+    throw LogicException(ss.str());
+  }
   bool isTransKind = isTranscendentalKind(k);
   // note that we don't throw an exception for non-linear multiplication in
   // linear logics, since this is caught in the linear solver with a more
@@ -490,9 +500,13 @@ void TheoryArith::finalizeModelCache()
   for (const auto& [node, repl] : d_arithModelCache)
   {
     Assert(repl.getType().isRealOrInt());
-    // note that node may be an application of non-linear arithmetic, which will
-    // get applied as a substitution in getEqualityStatus.
-    d_arithModelCacheSubs.add(node, repl);
+    // we only keep the domain of the substitution that is for leafs of
+    // arithmetic; otherwise we are using the value of the abstraction of
+    // non-linear term from the linear solver, which can be incorrect.
+    if (Theory::isLeafOf(node, TheoryId::THEORY_ARITH))
+    {
+      d_arithModelCacheSubs.add(node, repl);
+    }
   }
 }
 

@@ -238,19 +238,14 @@ std::string EchoCommand::getOutput() const { return d_output; }
 
 void EchoCommand::invoke(cvc5::Solver* solver, SymManager* sm)
 {
-  /* we don't have an output stream here, nothing to do */
   d_commandStatus = CommandSuccess::instance();
 }
 
-void EchoCommand::invoke(cvc5::Solver* solver,
-                         SymManager* sm,
-                         std::ostream& out)
+void EchoCommand::printResult(cvc5::Solver* solver, std::ostream& out) const
 {
-  out << cvc5::internal::quoteString(d_output) << std::endl;
   Trace("dtview::command") << "* ~COMMAND: echo |" << d_output << "|~"
                            << std::endl;
-  d_commandStatus = CommandSuccess::instance();
-  printResult(solver, out);
+  out << cvc5::internal::quoteString(d_output) << std::endl;
 }
 
 std::string EchoCommand::getCommandName() const { return "echo"; }
@@ -680,6 +675,7 @@ void CheckSynthCommand::invoke(cvc5::Solver* solver, SymManager* sm)
                                      termVectorToNodes(formals),
                                      sortToTypeNode(rangeSort),
                                      termToNode(sol));
+        d_solution << std::endl;
       }
       d_solution << ")" << std::endl;
     }
@@ -2176,8 +2172,16 @@ void GetDifficultyCommand::toStream(std::ostream& out) const
 /* -------------------------------------------------------------------------- */
 
 GetTimeoutCoreCommand::GetTimeoutCoreCommand()
-    : d_solver(nullptr), d_sm(nullptr)
+    : d_solver(nullptr), d_sm(nullptr), d_assumptions()
 {
+}
+GetTimeoutCoreCommand::GetTimeoutCoreCommand(
+    const std::vector<Term>& assumptions)
+    : d_solver(nullptr), d_sm(nullptr), d_assumptions(assumptions)
+{
+  // providing an empty list of assumptions will make us call getTimeoutCore
+  // below instead of getTimeoutCoreAssuming.
+  Assert(!d_assumptions.empty());
 }
 void GetTimeoutCoreCommand::invoke(cvc5::Solver* solver, SymManager* sm)
 {
@@ -2185,7 +2189,14 @@ void GetTimeoutCoreCommand::invoke(cvc5::Solver* solver, SymManager* sm)
   {
     d_sm = sm;
     d_solver = solver;
-    d_result = solver->getTimeoutCore();
+    if (!d_assumptions.empty())
+    {
+      d_result = solver->getTimeoutCoreAssuming(d_assumptions);
+    }
+    else
+    {
+      d_result = solver->getTimeoutCore();
+    }
     d_commandStatus = CommandSuccess::instance();
   }
   catch (cvc5::CVC5ApiRecoverableException& e)
@@ -2231,12 +2242,21 @@ const std::vector<cvc5::Term>& GetTimeoutCoreCommand::getTimeoutCore() const
 
 std::string GetTimeoutCoreCommand::getCommandName() const
 {
-  return "get-timeout-core";
+  return d_assumptions.empty() ? "get-timeout-core"
+                               : "get-timeout-core-assuming";
 }
 
 void GetTimeoutCoreCommand::toStream(std::ostream& out) const
 {
-  internal::Printer::getPrinter(out)->toStreamCmdGetTimeoutCore(out);
+  if (d_assumptions.empty())
+  {
+    internal::Printer::getPrinter(out)->toStreamCmdGetTimeoutCore(out);
+  }
+  else
+  {
+    internal::Printer::getPrinter(out)->toStreamCmdGetTimeoutCoreAssuming(
+        out, termVectorToNodes(d_assumptions));
+  }
 }
 
 /* -------------------------------------------------------------------------- */

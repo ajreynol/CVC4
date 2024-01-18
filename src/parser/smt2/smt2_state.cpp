@@ -110,6 +110,7 @@ void Smt2State::addBitvectorOperators()
   addOperator(Kind::BITVECTOR_SGE, "bvsge");
   addOperator(Kind::BITVECTOR_REDOR, "bvredor");
   addOperator(Kind::BITVECTOR_REDAND, "bvredand");
+  addOperator(Kind::BITVECTOR_NEGO, "bvnego");
   addOperator(Kind::BITVECTOR_UADDO, "bvuaddo");
   addOperator(Kind::BITVECTOR_SADDO, "bvsaddo");
   addOperator(Kind::BITVECTOR_UMULO, "bvumulo");
@@ -132,6 +133,7 @@ void Smt2State::addFiniteFieldOperators()
   addOperator(cvc5::Kind::FINITE_FIELD_ADD, "ff.add");
   addOperator(cvc5::Kind::FINITE_FIELD_MULT, "ff.mul");
   addOperator(cvc5::Kind::FINITE_FIELD_NEG, "ff.neg");
+  addOperator(cvc5::Kind::FINITE_FIELD_BITSUM, "ff.bitsum");
 }
 
 void Smt2State::addDatatypesOperators()
@@ -568,7 +570,10 @@ Term Smt2State::mkIndexedOp(Kind k,
   if (k == Kind::APPLY_TESTER || k == Kind::APPLY_UPDATER)
   {
     Assert(symbols.size() == 1);
-    Assert(!args.empty());
+    if (args.empty())
+    {
+      parseError("Expected argument to tester/updater");
+    }
     const std::string& cname = symbols[0];
     // must be declared
     checkDeclaration(cname, CHECK_DECLARED, SYM_VARIABLE);
@@ -720,6 +725,7 @@ std::unique_ptr<Cmd> Smt2State::invConstraint(
 
 void Smt2State::setLogic(std::string name)
 {
+  bool smLogicAlreadySet = getSymbolManager()->isLogicSet();
   // if logic is already set, this is an error
   if (d_logicSet)
   {
@@ -987,9 +993,17 @@ void Smt2State::setLogic(std::string name)
     addSepOperators();
   }
 
-  // builtin symbols of the logic are declared at context level zero, hence
-  // we push the outermost scope here
-  pushScope(true);
+  // Builtin symbols of the logic are declared at context level zero, hence
+  // we push the outermost scope in the symbol manager here.
+  // We only do this if the logic has not already been set, in which case we have already
+  // pushed the outermost context (and this method redeclares the symbols which does
+  // not impact the symbol manager).
+  // TODO (cvc5-projects #693): refactor this so that this method is moved to the
+  // symbol manager and only called once per symbol manager.
+  if (!smLogicAlreadySet)
+  {
+    pushScope(true);
+  }
 }
 
 Grammar* Smt2State::mkGrammar(const std::vector<Term>& boundVars,

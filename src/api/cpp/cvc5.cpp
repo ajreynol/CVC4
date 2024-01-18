@@ -211,6 +211,7 @@ const static std::unordered_map<Kind, std::pair<internal::Kind, std::string>>
         KIND_ENUM(Kind::BITVECTOR_SGE, internal::Kind::BITVECTOR_SGE),
         KIND_ENUM(Kind::BITVECTOR_ULTBV, internal::Kind::BITVECTOR_ULTBV),
         KIND_ENUM(Kind::BITVECTOR_SLTBV, internal::Kind::BITVECTOR_SLTBV),
+        KIND_ENUM(Kind::BITVECTOR_NEGO, internal::Kind::BITVECTOR_NEGO),
         KIND_ENUM(Kind::BITVECTOR_UADDO, internal::Kind::BITVECTOR_UADDO),
         KIND_ENUM(Kind::BITVECTOR_SADDO, internal::Kind::BITVECTOR_SADDO),
         KIND_ENUM(Kind::BITVECTOR_UMULO, internal::Kind::BITVECTOR_UMULO),
@@ -4678,9 +4679,6 @@ void Grammar::addRule(const Term& ntSymbol, const Term& rule)
          "predeclaration";
   CVC5_API_CHECK(rule.d_node->getType().isInstanceOf(ntSymbol.d_node->getType()))
       << "Expected ntSymbol and rule to have the same sort";
-  CVC5_API_ARG_CHECK_EXPECTED(!containsFreeVariables(rule), rule)
-      << "a term whose free variables are limited to synthFun "
-         "parameters and non-terminal symbols of the grammar";
   //////// all checks before this line
   d_sg->addRule(*ntSymbol.d_node, *rule.d_node);
   ////////
@@ -4699,13 +4697,6 @@ void Grammar::addRules(const Term& ntSymbol, const std::vector<Term>& rules)
                               ntSymbol)
       << "ntSymbol to be one of the non-terminal symbols given in the "
          "predeclaration";
-  for (size_t i = 0, n = rules.size(); i < n; ++i)
-  {
-    CVC5_API_ARG_AT_INDEX_CHECK_EXPECTED(
-        !containsFreeVariables(rules[i]), rules[i], rules, i)
-        << "a term whose free variables are limited to synthFun "
-           "parameters and non-terminal symbols of the grammar";
-  }
   //////// all checks before this line
   d_sg->addRules(*ntSymbol.d_node, Term::termVectorToNodes(rules));
   ////////
@@ -4762,21 +4753,6 @@ Sort Grammar::resolve()
   return Sort(d_nm, d_sg->resolve());
   ////////
   CVC5_API_TRY_CATCH_END;
-}
-
-bool Grammar::containsFreeVariables(const Term& rule) const
-{
-  // we allow the argument list and non-terminal symbols to be in scope
-  std::unordered_set<internal::TNode> scope;
-  for (const internal::Node& var : d_sg->getSygusVars())
-  {
-    scope.emplace(var);
-  }
-  for (const internal::Node& ntsym : d_sg->getNtSyms())
-  {
-    scope.emplace(ntsym);
-  }
-  return internal::expr::hasFreeVariablesScope(*rule.d_node, scope);
 }
 
 std::ostream& operator<<(std::ostream& out, const Grammar& grammar)
@@ -5025,17 +5001,17 @@ Proof::Proof() {}
 
 Proof::Proof(const std::shared_ptr<internal::ProofNode> p) : d_proof_node(p) {}
 
-Proof::~Proof()
-{
-  Assert(d_proof_node != nullptr);
-  d_proof_node.reset();
-}
+Proof::~Proof() {}
 
 ProofRule Proof::getRule() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
-  return this->getProofNode()->getRule();
+  if (d_proof_node != nullptr)
+  {
+    return this->getProofNode()->getRule();
+  }
+  return ProofRule::UNKNOWN;
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -5044,8 +5020,12 @@ Term Proof::getResult() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
-  internal::NodeManager* nm = internal::NodeManager::currentNM();
-  return Term(nm, this->getProofNode()->getResult());
+  if (d_proof_node != nullptr)
+  {
+    internal::NodeManager* nm = internal::NodeManager::currentNM();
+    return Term(nm, this->getProofNode()->getResult());
+  }
+  return Term();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -5054,14 +5034,18 @@ const std::vector<Proof> Proof::getChildren() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
-  std::vector<Proof> children;
-  std::vector<std::shared_ptr<internal::ProofNode>> node_children =
-      d_proof_node->getChildren();
-  for (size_t i = 0, psize = node_children.size(); i < psize; i++)
+  if (d_proof_node != nullptr)
   {
-    children.push_back(Proof(node_children[i]));
+    std::vector<Proof> children;
+    std::vector<std::shared_ptr<internal::ProofNode>> node_children =
+        d_proof_node->getChildren();
+    for (size_t i = 0, psize = node_children.size(); i < psize; i++)
+    {
+      children.push_back(Proof(node_children[i]));
+    }
+    return children;
   }
-  return children;
+  return std::vector<Proof>();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -5070,14 +5054,18 @@ const std::vector<Term> Proof::getArguments() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
-  internal::NodeManager* nm = internal::NodeManager::currentNM();
-  std::vector<Term> args;
-  const std::vector<internal::Node> node_args = d_proof_node->getArguments();
-  for (size_t i = 0, asize = node_args.size(); i < asize; i++)
+  if (d_proof_node != nullptr)
   {
-    args.push_back(Term(nm, node_args[i]));
+    internal::NodeManager* nm = internal::NodeManager::currentNM();
+    std::vector<Term> args;
+    const std::vector<internal::Node> node_args = d_proof_node->getArguments();
+    for (size_t i = 0, asize = node_args.size(); i < asize; i++)
+    {
+      args.push_back(Term(nm, node_args[i]));
+    }
+    return args;
   }
-  return args;
+  return std::vector<Term>();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -5610,11 +5598,11 @@ Sort Solver::mkBitVectorSort(uint32_t size) const
   CVC5_API_TRY_CATCH_END;
 }
 
-Sort Solver::mkFiniteFieldSort(const std::string& modulus) const
+Sort Solver::mkFiniteFieldSort(const std::string& modulus, uint32_t base) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
-  internal::Integer m(modulus, 10);
+  internal::Integer m(modulus, base);
   CVC5_API_ARG_CHECK_EXPECTED(m.isProbablePrime(), modulus) << "modulus is prime";
   return Sort(d_nm, d_nm->mkFiniteFieldType(m));
   ////////
@@ -6065,13 +6053,15 @@ Term Solver::mkBitVector(uint32_t size,
   CVC5_API_TRY_CATCH_END;
 }
 
-Term Solver::mkFiniteFieldElem(const std::string& value, const Sort& sort) const
+Term Solver::mkFiniteFieldElem(const std::string& value,
+                               const Sort& sort,
+                               uint32_t base) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_ARG_CHECK_EXPECTED(sort.isFiniteField(), sort)
       << "a finite field sort";
   //////// all checks before this line
-  internal::Integer v(value, 10);
+  internal::Integer v(value, base);
   internal::FiniteFieldValue f(v, sort.d_type->getFfSize());
 
   return mkValHelper<internal::FiniteFieldValue>(d_nm, f);
@@ -7019,25 +7009,33 @@ OptionInfo Solver::getOptionInfo(const std::string& option) const
   return std::visit(
       overloaded{
           [&info](const internal::options::OptionInfo::VoidInfo& vi) {
-            return OptionInfo{info.name,
-                              info.aliases,
-                              info.setByUser,
-                              OptionInfo::VoidInfo{}};
+            return OptionInfo{
+                info.name,
+                info.aliases,
+                info.setByUser,
+                info.category
+                    == internal::options::OptionInfo::Category::EXPERT,
+                OptionInfo::VoidInfo{}};
           },
           [&info](const internal::options::OptionInfo::ValueInfo<bool>& vi) {
             return OptionInfo{
                 info.name,
                 info.aliases,
                 info.setByUser,
+                info.category
+                    == internal::options::OptionInfo::Category::EXPERT,
                 OptionInfo::ValueInfo<bool>{vi.defaultValue, vi.currentValue}};
           },
           [&info](
               const internal::options::OptionInfo::ValueInfo<std::string>& vi) {
-            return OptionInfo{info.name,
-                              info.aliases,
-                              info.setByUser,
-                              OptionInfo::ValueInfo<std::string>{
-                                  vi.defaultValue, vi.currentValue}};
+            return OptionInfo{
+                info.name,
+                info.aliases,
+                info.setByUser,
+                info.category
+                    == internal::options::OptionInfo::Category::EXPERT,
+                OptionInfo::ValueInfo<std::string>{vi.defaultValue,
+                                                   vi.currentValue}};
           },
           [&info](
               const internal::options::OptionInfo::NumberInfo<int64_t>& vi) {
@@ -7045,6 +7043,8 @@ OptionInfo Solver::getOptionInfo(const std::string& option) const
                 info.name,
                 info.aliases,
                 info.setByUser,
+                info.category
+                    == internal::options::OptionInfo::Category::EXPERT,
                 OptionInfo::NumberInfo<int64_t>{
                     vi.defaultValue, vi.currentValue, vi.minimum, vi.maximum}};
           },
@@ -7054,6 +7054,8 @@ OptionInfo Solver::getOptionInfo(const std::string& option) const
                 info.name,
                 info.aliases,
                 info.setByUser,
+                info.category
+                    == internal::options::OptionInfo::Category::EXPERT,
                 OptionInfo::NumberInfo<uint64_t>{
                     vi.defaultValue, vi.currentValue, vi.minimum, vi.maximum}};
           },
@@ -7062,15 +7064,20 @@ OptionInfo Solver::getOptionInfo(const std::string& option) const
                 info.name,
                 info.aliases,
                 info.setByUser,
+                info.category
+                    == internal::options::OptionInfo::Category::EXPERT,
                 OptionInfo::NumberInfo<double>{
                     vi.defaultValue, vi.currentValue, vi.minimum, vi.maximum}};
           },
           [&info](const internal::options::OptionInfo::ModeInfo& vi) {
-            return OptionInfo{info.name,
-                              info.aliases,
-                              info.setByUser,
-                              OptionInfo::ModeInfo{
-                                  vi.defaultValue, vi.currentValue, vi.modes}};
+            return OptionInfo{
+                info.name,
+                info.aliases,
+                info.setByUser,
+                info.category
+                    == internal::options::OptionInfo::Category::EXPERT,
+                OptionInfo::ModeInfo{
+                    vi.defaultValue, vi.currentValue, vi.modes}};
           },
       },
       info.valueInfo);
@@ -7176,16 +7183,37 @@ std::pair<Result, std::vector<Term>> Solver::getTimeoutCore() const
       << "Cannot get timeout core unless unsat cores are enabled "
          "(try --produce-unsat-cores)";
   //////// all checks before this line
+  return getTimeoutCoreHelper({});
+  ////////
+  CVC5_API_TRY_CATCH_END;
+}
+
+std::pair<Result, std::vector<Term>> Solver::getTimeoutCoreAssuming(
+    const std::vector<Term>& assumptions) const
+{
+  CVC5_API_TRY_CATCH_BEGIN;
+  CVC5_API_CHECK(!assumptions.empty())
+      << "Cannot get timeout core assuming an empty set of assumptions";
+  CVC5_API_CHECK(d_slv->getOptions().smt.produceUnsatCores)
+      << "Cannot get timeout core unless unsat cores are enabled "
+         "(try --produce-unsat-cores)";
+  //////// all checks before this line
+  return getTimeoutCoreHelper(assumptions);
+  ////////
+  CVC5_API_TRY_CATCH_END;
+}
+
+std::pair<Result, std::vector<Term>> Solver::getTimeoutCoreHelper(
+    const std::vector<Term>& assumptions) const
+{
   std::vector<Term> res;
   std::pair<internal::Result, std::vector<internal::Node>> resi =
-      d_slv->getTimeoutCore();
+      d_slv->getTimeoutCore(Term::termVectorToNodes(assumptions));
   for (internal::Node& c : resi.second)
   {
     res.push_back(Term(d_nm, c));
   }
   return std::pair<Result, std::vector<Term>>(Result(resi.first), res);
-  ////////
-  CVC5_API_TRY_CATCH_END;
 }
 
 std::vector<Proof> Solver::getProof(modes::ProofComponent c) const
@@ -7754,7 +7782,8 @@ void Solver::setOption(const std::string& option,
         << "', solver is already fully initialized";
   }
   //////// all checks before this line
-  d_slv->setOption(option, value);
+  // mark that the option originated from the user here
+  d_slv->setOption(option, value, true);
   ////////
   CVC5_API_TRY_CATCH_END;
 }

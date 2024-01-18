@@ -105,10 +105,23 @@ class CVC5_EXPORT CVC5ApiException : public std::exception
    */
   const char* what() const noexcept override { return d_msg.c_str(); }
 
+  /**
+   * Printing: feel free to redefine toStream().  When overridden in
+   * a derived class, it's recommended that this method print the
+   * type of exception before the actual message.
+   */
+  virtual void toStream(std::ostream& os) const { os << d_msg; }
+
  private:
   /** The stored error message. */
   std::string d_msg;
 };
+
+inline std::ostream& operator<<(std::ostream& os, const CVC5ApiException& e)
+{
+  e.toStream(os);
+  return os;
+}
 
 /**
  * A recoverable API exception.
@@ -2957,14 +2970,6 @@ class CVC5_EXPORT Grammar
    */
   Sort resolve();
 
-  /**
-   * Check if \p rule contains variables that are neither parameters of
-   * the corresponding synthFun nor non-terminals.
-   * @param rule The non-terminal allowed to be any constant.
-   * @return True if \p rule contains free variables and false otherwise.
-   */
-  bool containsFreeVariables(const Term& rule) const;
-
   /** The node manager associated with this grammar. */
   internal::NodeManager* d_nm;
   /** The internal representation of this grammar. */
@@ -3098,6 +3103,8 @@ struct CVC5_EXPORT OptionInfo
   std::vector<std::string> aliases;
   /** Whether the option was explicitly set by the user */
   bool setByUser;
+  /** Whether this is an expert option */
+  bool isExpert;
   /** Possible types for ``valueInfo``. */
   using OptionInfoVariant = std::variant<VoidInfo,
                                          ValueInfo<bool>,
@@ -3488,11 +3495,14 @@ class CVC5_EXPORT Solver
   Sort mkFloatingPointSort(uint32_t exp, uint32_t sig) const;
 
   /**
-   * Create a finite-field sort.
-   * @param size the modulus of the field. Must be prime.
+   * Create a finite-field sort from a given string of
+   * base n.
+   *
+   * @param size The modulus of the field. Must be prime.
+   * @param base The base of the string representation of `size`.
    * @return The finite-field sort.
    */
-  Sort mkFiniteFieldSort(const std::string& size) const;
+  Sort mkFiniteFieldSort(const std::string& size, uint32_t base = 10) const;
 
   /**
    * Create a datatype sort.
@@ -3892,16 +3902,19 @@ class CVC5_EXPORT Solver
 
   /**
    * Create a finite field constant in a given field from a given string
-   *
-   * If size is the field size, the constant needs not be in the range [0,size).
-   * If it is outside this range, it will be reduced modulo size before being
-   * constructed.
+   * of base n.
    *
    * @param value The string representation of the constant.
-   * @param sort The field sort.
+   * @param sort  The field sort.
+   * @param base  The base of the string representation of `value`.
    *
+   * If `size` is the field size, the constant needs not be in the range
+   * [0,size). If it is outside this range, it will be reduced modulo size
+   * before being constructed.
    */
-  Term mkFiniteFieldElem(const std::string& value, const Sort& sort) const;
+  Term mkFiniteFieldElem(const std::string& value,
+                         const Sort& sort,
+                         uint32_t base = 10) const;
 
   /**
    * Create a constant array with the provided constant value stored at every
@@ -4502,6 +4515,35 @@ class CVC5_EXPORT Solver
    */
   std::pair<Result, std::vector<Term>> getTimeoutCore() const;
 
+  /**
+   * Get a timeout core, which computes a subset of the given assumptions that
+   * cause a timeout when added to the current assertions. Note it does not
+   * require being proceeded by a call to checkSat.
+   *
+   * SMT-LIB:
+   *
+   * \verbatim embed:rst:leading-asterisk
+   * .. code:: smtlib
+   *
+   *     (get-timeout-core (<assert>*))
+   * \endverbatim
+   *
+   * @warning This function is experimental and may change in future versions.
+   *
+   * @param assumptions The (non-empty) set of formulas to assume.
+   * @return The result of the timeout core computation. This is a pair
+   * containing a result and a list of formulas. If the result is unknown
+   * and the reason is timeout, then the list of formulas correspond to a
+   * subset of assumptions that cause a timeout when added to the current
+   * assertions in the specified time
+   * :ref:`timeout-core-timeout <lbl-option-timeout-core-timeout>`.
+   * If the result is unsat, then the list of formulas plus the current
+   * assertions correspond to an unsat core for the current assertions.
+   * Otherwise, the result is sat, indicating that the given assumptions plus
+   * the current assertions are satisfiable, and the list of formulas is empty.
+   */
+  std::pair<Result, std::vector<Term>> getTimeoutCoreAssuming(
+      const std::vector<Term>& assumptions) const;
   /**
    * Get a proof associated with the most recent call to checkSat.
    *
@@ -5494,6 +5536,9 @@ class CVC5_EXPORT Solver
                       const Sort& sort,
                       bool isInv = false,
                       Grammar* grammar = nullptr) const;
+  /** Helper for getting timeout cores */
+  std::pair<Result, std::vector<Term>> getTimeoutCoreHelper(
+      const std::vector<Term>& assumptions) const;
 
   /** Check whether string s is a valid decimal integer. */
   bool isValidInteger(const std::string& s) const;

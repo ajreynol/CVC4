@@ -1885,7 +1885,7 @@ class SolverTest
 
     proofs = d_solver.getProof(ProofComponent.SAT);
     assertNotEquals(0, proofs.length);
-    printedProof = d_solver.proofToString(proofs[0], ProofFormat.DEFAULT);
+    printedProof = d_solver.proofToString(proofs[0], ProofFormat.NONE);
     assertFalse(printedProof.isEmpty());
   }
 
@@ -2030,6 +2030,26 @@ class SolverTest
     assertTrue(res.first.isUnsat());
     assertTrue(res.second.length == 1);
     assertEquals(res.second[0], ff);
+  }
+
+  @Test
+  void getTimeoutCoreAssuming() throws CVC5ApiException
+  {
+    d_solver.setOption("produce-unsat-cores", "true");
+    Term ff = d_solver.mkBoolean(false);
+    Term tt = d_solver.mkBoolean(true);
+    d_solver.assertFormula(tt);
+    Pair<Result, Term[]> res = d_solver.getTimeoutCoreAssuming(new Term[] {ff, tt});
+    assertTrue(res.first.isUnsat());
+    assertTrue(res.second.length == 1);
+    assertEquals(res.second[0], ff);
+  }
+
+  @Test
+  void getTimeoutCoreAssumingEmpty() throws CVC5ApiException
+  {
+    d_solver.setOption("produce-unsat-cores", "true");
+    assertThrows(CVC5ApiException.class, () -> d_solver.getTimeoutCoreAssuming(new Term[] {}));
   }
 
   @Test

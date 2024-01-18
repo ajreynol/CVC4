@@ -98,38 +98,6 @@ TypeNode BitVectorConstantTypeRule::computeType(NodeManager* nodeManager,
   return nodeManager->mkBitVectorType(n.getConst<BitVector>().getSize());
 }
 
-TypeNode BitVectorConstantSymbolicTypeRule::preComputeType(NodeManager* nm,
-                                                           TNode n)
-{
-  return TypeNode::null();
-}
-TypeNode BitVectorConstantSymbolicTypeRule::computeType(
-    NodeManager* nodeManager, TNode n, bool check, std::ostream* errOut)
-{
-  if (check)
-  {
-    for (const Node& nc : n)
-    {
-      const TypeNode& tn = nc.getTypeOrNull();
-      if (!tn.isInteger() && !tn.isFullyAbstract())
-      {
-        (*errOut)
-            << "expecting integer argument to symbolic bitvector constant";
-        return TypeNode::null();
-      }
-    }
-  }
-  if (n[1].isConst())
-  {
-    const Rational& r = n[1].getConst<Rational>();
-    if (r.sgn() == 1 && r.getNumerator().fitsUnsignedInt())
-    {
-      return nodeManager->mkBitVectorType(r.getNumerator().toUnsignedInt());
-    }
-  }
-  return nodeManager->mkAbstractType(Kind::BITVECTOR_TYPE);
-}
-
 TypeNode BitVectorFixedWidthTypeRule::preComputeType(NodeManager* nm, TNode n)
 {
   return TypeNode::null();
@@ -187,14 +155,17 @@ TypeNode BitVectorPredicateTypeRule::computeType(NodeManager* nodeManager,
     {
       return TypeNode::null();
     }
-    TypeNode rhsType = n[1].getTypeOrNull();
-    if (!lhsType.isComparableTo(rhsType))
+    if (n.getNumChildren() > 1)
     {
-      if (errOut)
+      TypeNode rhsType = n[1].getTypeOrNull();
+      if (!lhsType.isComparableTo(rhsType))
       {
-        (*errOut) << "expecting comparable bit-vector terms";
+        if (errOut)
+        {
+          (*errOut) << "expecting comparable bit-vector terms";
+        }
+        return TypeNode::null();
       }
-      return TypeNode::null();
     }
   }
   return nodeManager->booleanType();
