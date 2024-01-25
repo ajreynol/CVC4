@@ -39,7 +39,7 @@ class AlfPrinter : protected EnvObj
 {
  public:
   AlfPrinter(Env& env,
-             AlfNodeConverter& atp,
+             BaseAlfNodeConverter& atp,
              bool flatten,
              rewriter::RewriteDb* rdb);
   ~AlfPrinter() {}
@@ -101,15 +101,12 @@ class AlfPrinter : protected EnvObj
    * Allocate (if necessary) the identifier for step
    */
   size_t allocateProofId(const ProofNode* pn, bool& wasAlloc);
-  /** Mapping from proof identifiers X to nodes named @pX which represent
-   * premises */
-  Node allocatePremise(size_t id);
   /** Print DSL rule name r to output stream out */
   void printDslRule(std::ostream& out, rewriter::DslProofRule r);
   /** Print let list to output stream out */
   void printLetList(std::ostream& out, LetBinding& lbind);
   /** Reference to the term processor */
-  AlfNodeConverter& d_tproc;
+  BaseAlfNodeConverter& d_tproc;
   /** Assume id counter */
   size_t d_pfIdCounter;
   /** Mapping scope proofs to identifiers */
@@ -132,7 +129,7 @@ class AlfPrinter : protected EnvObj
   /** The false node */
   Node d_false;
   /** List node converter */
-  AlfListNodeConverter d_ltproc;
+  //AlfListNodeConverter d_ltproc;
   /** Pointer to the rewrite database */
   rewriter::RewriteDb* d_rdb;
   /** The DSL rules we have seen */
