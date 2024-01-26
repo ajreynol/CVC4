@@ -167,6 +167,11 @@ void TheoryEngine::finishInit()
     d_relManager.reset(new RelevanceManager(d_env, this));
     d_modules.push_back(d_relManager.get());
   }
+  if (options().theory.subConflictFind)
+  {
+    d_scf.reset(new SubConflictFind(d_env, this));
+    d_modules.push_back(d_scf.get());
+  }
 
   // initialize the quantifiers engine
   if (logicInfo().isQuantified())

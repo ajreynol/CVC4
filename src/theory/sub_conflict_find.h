@@ -15,8 +15,8 @@
 
 #include "cvc5_private.h"
 
-#ifndef CVC5__THEORY__RELEVANCE_MANAGER__H
-#define CVC5__THEORY__RELEVANCE_MANAGER__H
+#ifndef CVC5__THEORY__SUB_CONFLICT_FIND__H
+#define CVC5__THEORY__SUB_CONFLICT_FIND__H
 
 #include <unordered_map>
 #include <unordered_set>

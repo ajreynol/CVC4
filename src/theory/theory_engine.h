@@ -40,6 +40,7 @@
 #include "theory/theory_engine_statistics.h"
 #include "theory/theory_preprocessor.h"
 #include "theory/trust_substitutions.h"
+#include "theory/sub_conflict_find.h"
 #include "theory/uf/equality_engine.h"
 #include "theory/valuation.h"
 #include "util/hash.h"
@@ -554,6 +555,8 @@ class TheoryEngine : protected EnvObj
   std::unique_ptr<theory::DecisionManager> d_decManager;
   /** The relevance manager */
   std::unique_ptr<theory::RelevanceManager> d_relManager;
+  /** The sub-conflict finder */
+  std::unique_ptr<theory::SubConflictFind> d_scf;
 
   /**
    * Output channels for individual theories.

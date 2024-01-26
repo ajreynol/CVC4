@@ -40,10 +40,12 @@ SubConflictFind::SubConflictFind(Env& env, TheoryEngine* engine)
     d_subOptions.writeSmt().produceProofs = true;
     // don't do simplification, which can preprocess quantifiers to those not
     // occurring in the main solver
-    d_subOptions.writeSmt().simplificationMode =
-        options::SimplificationMode::NONE;
   }
 #endif
+  // want small core so simplification = none
+  d_subOptions.writeSmt().simplificationMode =
+      options::SimplificationMode::NONE;
+  // requires cores
   d_subOptions.writeSmt().produceUnsatCores = true;
   // don't do this strategy
   d_subOptions.writeTheory().subConflictFind = false;
@@ -63,7 +65,7 @@ void SubConflictFind::check(Theory::Effort effort)
   if (TraceIsOn("scf"))
   {
     clSet = double(clock()) / double(CLOCKS_PER_SEC);
-    Trace("scf") << "---Subconflict Find Engine Round---" << std::endl;
+    Trace("scf") << "---Subconflict Find Engine Round, effort = " << effort << "---" << std::endl;
   }
   std::vector<Node> assertions;
   const LogicInfo& info = logicInfo();
