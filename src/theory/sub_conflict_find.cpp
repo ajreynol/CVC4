@@ -20,6 +20,7 @@
 #include "proof/unsat_core.h"
 #include "smt/set_defaults.h"
 #include "theory/smt_engine_subsolver.h"
+#include "theory/theory_engine.h"
 
 using namespace cvc5::internal::kind;
 
@@ -45,12 +46,13 @@ SubConflictFind::SubConflictFind(Env& env, TheoryEngine* engine)
 #endif
   d_subOptions.writeSmt().produceUnsatCores = true;
   // don't do this strategy
-  d_subOptions.writeQuantifiers().subConflictFind = false;
+  d_subOptions.writeTheory().subConflictFind = false;
 }
 
 void SubConflictFind::check(Theory::Effort effort)
 {
-  if (effort != Theory::EFFORT_FULL)
+  Theory::Effort erun = options().theory.subConflictLastCall ? Theory::EFFORT_LAST_CALL : Theory::EFFORT_FULL;
+  if (effort != erun)
   {
     return;
   }
@@ -62,17 +64,18 @@ void SubConflictFind::check(Theory::Effort effort)
     Trace("scf") << "---Subconflict Find Engine Round---" << std::endl;
   }
   std::vector<Node> assertions;
-  const LogicInfo& logicInfo = logicInfo();
+  const LogicInfo& info = logicInfo();
   for (TheoryId tid = THEORY_FIRST; tid < THEORY_LAST; ++tid)
   {
-    if (!logicInfo.isTheoryEnabled(tid))
+    if (!info.isTheoryEnabled(tid))
     {
       continue;
     }
+    Theory* t = d_engine->theoryOf(tid);
     // collect all assertions from theory
     for (context::CDList<Assertion>::const_iterator
-             it = d_qstate.factsBegin(tid),
-             itEnd = d_qstate.factsEnd(tid);
+             it = t->facts_begin(),
+             itEnd = t->facts_end();
          it != itEnd;
          ++it)
     {

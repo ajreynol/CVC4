@@ -89,6 +89,8 @@ class TheoryEngineModule : protected EnvObj
   OutputChannel d_out;
   /** The name */
   std::string d_name;
+  /** Engine */
+  TheoryEngine* d_engine;
 
  private:
   /** Static allocator of theory module identifiers */
