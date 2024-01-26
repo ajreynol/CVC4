@@ -965,6 +965,8 @@ enum class InferenceId
   //-------------------------------------- lemma from modules
   // From the partition generator
   PARTITION_GENERATOR_PARTITION,
+  // unsat core from sub-conflict find
+  SUB_CONFLICT_UC,
   //-------------------------------------- unknown
   UNKNOWN
 };

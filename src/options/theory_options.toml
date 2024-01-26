@@ -66,3 +66,35 @@ name   = "Theory Layer"
 [[option.mode.CARE_GRAPH]]
   name = "care-graph"
   help = "Use care graphs for theory combination."
+
+[[option]]
+  name       = "subConflictFind"
+  category   = "expert"
+  long       = "sub-conflict-find"
+  type       = "bool"
+  default    = "false"
+  help       = "use subsolvers to find unsat cores"
+
+[[option]]
+  name       = "subConflictTimeout"
+  category   = "regular"
+  long       = "sub-conflict-timeout=N"
+  type       = "uint64_t"
+  default    = "0"
+  help       = "timeout (in milliseconds) for subsolver calls for sub-conflict-find."
+
+[[option]]
+  name       = "subConflictLastCall"
+  category   = "regular"
+  long       = "sub-conflict-last-call"
+  type       = "bool"
+  default    = "true"
+  help       = "Enable conflict-find subsolver strategy only at last call"
+
+[[option]]
+  name       = "subConflictTheoryLem"
+  category   = "regular"
+  long       = "sub-conflict-tlem"
+  type       = "bool"
+  default    = "true"
+  help       = "Carry theory lemmas for sub-conflict find"
