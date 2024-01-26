@@ -51,7 +51,9 @@ SubConflictFind::SubConflictFind(Env& env, TheoryEngine* engine)
 
 void SubConflictFind::check(Theory::Effort effort)
 {
-  Theory::Effort erun = options().theory.subConflictLastCall ? Theory::EFFORT_LAST_CALL : Theory::EFFORT_FULL;
+  Theory::Effort erun = options().theory.subConflictLastCall
+                            ? Theory::EFFORT_LAST_CALL
+                            : Theory::EFFORT_FULL;
   if (effort != erun)
   {
     return;
@@ -73,9 +75,8 @@ void SubConflictFind::check(Theory::Effort effort)
     }
     Theory* t = d_engine->theoryOf(tid);
     // collect all assertions from theory
-    for (context::CDList<Assertion>::const_iterator
-             it = t->facts_begin(),
-             itEnd = t->facts_end();
+    for (context::CDList<Assertion>::const_iterator it = t->facts_begin(),
+                                                    itEnd = t->facts_end();
          it != itEnd;
          ++it)
     {
