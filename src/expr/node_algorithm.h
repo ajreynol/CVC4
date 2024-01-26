@@ -137,6 +137,16 @@ bool hasFreeVariablesScope(TNode n, std::unordered_set<TNode>& scope);
  * @return true iff this node contains a free variable.
  */
 bool getVariables(TNode n, std::unordered_set<TNode>& vs);
+/**
+ * Get all variables in n.
+ * @param n The node under investigation
+ * @param vs The set which free variables are added to
+ * @param visited A cache of nodes we have already visited
+ * @return true iff this node contains a free variable.
+ */
+bool getVariables(TNode n,
+                  std::unordered_set<TNode>& vs,
+                  std::unordered_set<TNode>& visited);
 
 /**
  * For term n, this function collects the symbols that occur as a subterms
@@ -243,6 +253,13 @@ bool isBooleanConnective(TNode cur);
 
 /** Is n a theory atom? */
 bool isTheoryAtom(TNode cur);
+
+/**
+ * Returns true iff the node n contains a subterm with abstract type.
+ * @param n The node under investigation
+ * @return true iff this node contains a subterm with abstract type
+ */
+bool hasAbstractSubterm(TNode n);
 
 }  // namespace expr
 }  // namespace cvc5::internal

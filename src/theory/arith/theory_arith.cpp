@@ -18,7 +18,7 @@
 #include "options/smt_options.h"
 #include "printer/smt2/smt2_printer.h"
 #include "proof/proof_checker.h"
-#include "proof/proof_rule.h"
+#include "cvc5/cvc5_proof_rule.h"
 #include "smt/logic_exception.h"
 #include "theory/arith/arith_evaluator.h"
 #include "theory/arith/arith_rewriter.h"
@@ -49,16 +49,15 @@ TheoryArith::TheoryArith(Env& env, OutputChannel& out, Valuation valuation)
       d_internal(new linear::TheoryArithPrivate(*this, env, d_bab)),
       d_nonlinearExtension(nullptr),
       d_opElim(d_env),
-      d_arithPreproc(env, d_astate, d_im, d_pnm, d_opElim),
+      d_arithPreproc(env, d_im, d_pnm, d_opElim),
       d_rewriter(d_opElim),
-      d_arithModelCacheSet(false)
+      d_arithModelCacheSet(false),
+      d_checker()
 {
 #ifdef CVC5_USE_COCOA
   // must be initialized before using CoCoA.
   initCocoaGlobalManager();
 #endif /* CVC5_USE_COCOA */
-  // currently a cyclic dependency to TheoryArithPrivate
-  d_astate.setParent(d_internal);
   // indicate we are using the theory state object and inference manager
   d_theoryState = &d_astate;
   d_inferManager = &d_im;
@@ -73,10 +72,7 @@ TheoryArith::~TheoryArith(){
 
 TheoryRewriter* TheoryArith::getTheoryRewriter() { return &d_rewriter; }
 
-ProofRuleChecker* TheoryArith::getProofChecker()
-{
-  return d_internal->getProofChecker();
-}
+ProofRuleChecker* TheoryArith::getProofChecker() { return &d_checker; }
 
 bool TheoryArith::needsEqualityEngine(EeSetupInfo& esi)
 {
@@ -90,17 +86,16 @@ void TheoryArith::finishInit()
   if (logic.isTheoryEnabled(THEORY_ARITH) && logic.areTranscendentalsUsed())
   {
     // witness is used to eliminate square root
-    d_valuation.setUnevaluatedKind(kind::WITNESS);
+    d_valuation.setUnevaluatedKind(Kind::WITNESS);
     // we only need to add the operators that are not syntax sugar
-    d_valuation.setUnevaluatedKind(kind::EXPONENTIAL);
-    d_valuation.setUnevaluatedKind(kind::SINE);
-    d_valuation.setUnevaluatedKind(kind::PI);
+    d_valuation.setUnevaluatedKind(Kind::EXPONENTIAL);
+    d_valuation.setUnevaluatedKind(Kind::SINE);
+    d_valuation.setUnevaluatedKind(Kind::PI);
   }
   // only need to create nonlinear extension if non-linear logic
   if (logic.isTheoryEnabled(THEORY_ARITH) && !logic.isLinear())
   {
-    d_nonlinearExtension.reset(
-        new nl::NonlinearExtension(d_env, *this, d_astate));
+    d_nonlinearExtension.reset(new nl::NonlinearExtension(d_env, *this));
   }
   d_eqSolver->finishInit();
   // finish initialize in the old linear solver
@@ -116,11 +111,21 @@ void TheoryArith::preRegisterTerm(TNode n)
 {
   // handle logic exceptions
   Kind k = n.getKind();
+  if (k == Kind::POW)
+  {
+    std::stringstream ss;
+    ss << "The exponent of the POW(^) operator can only be a positive "
+          "integral constant below "
+       << (expr::NodeValue::MAX_CHILDREN + 1) << ". ";
+    ss << "Exception occurred in:" << std::endl;
+    ss << "  " << n;
+    throw LogicException(ss.str());
+  }
   bool isTransKind = isTranscendentalKind(k);
   // note that we don't throw an exception for non-linear multiplication in
   // linear logics, since this is caught in the linear solver with a more
   // informative error message
-  if (isTransKind || k == IAND || k == POW2)
+  if (isTransKind || k == Kind::IAND || k == Kind::POW2)
   {
     if (d_nonlinearExtension == nullptr)
     {
@@ -161,7 +166,7 @@ void TheoryArith::preRegisterTerm(TNode n)
 
 void TheoryArith::notifySharedTerm(TNode n)
 {
-  n = n.getKind() == kind::TO_REAL ? n[0] : n;
+  n = n.getKind() == Kind::TO_REAL ? n[0] : n;
   d_internal->notifySharedTerm(n);
 }
 
@@ -183,11 +188,11 @@ TrustNode TheoryArith::ppStaticRewrite(TNode atom)
 {
   Trace("arith::preprocess") << "arith::ppStaticRewrite() : " << atom << endl;
   Kind k = atom.getKind();
-  if (k == kind::EQUAL)
+  if (k == Kind::EQUAL)
   {
     return d_ppre.ppRewriteEq(atom);
   }
-  else if (k == kind::GEQ)
+  else if (k == Kind::GEQ)
   {
     // try to eliminate bv2nat from inequalities
     Node atomr = ArithRewriter::rewriteIneqToBv(atom);
@@ -390,7 +395,7 @@ bool TheoryArith::collectModelValues(TheoryModel* m,
       continue;
     }
     Assert(false) << "A model equality could not be asserted: " << p.first
-                        << " == " << p.second << std::endl;
+                  << " == " << p.second << std::endl;
     // If we failed to assert an equality, it is likely due to theory
     // combination, namely the repaired model for non-linear changed
     // an equality status that was agreed upon by both (linear) arithmetic
@@ -401,7 +406,7 @@ bool TheoryArith::collectModelValues(TheoryModel* m,
     if (d_nonlinearExtension != nullptr)
     {
       Node eq = p.first.eqNode(p.second);
-      Node lem = NodeManager::currentNM()->mkNode(kind::OR, eq, eq.negate());
+      Node lem = NodeManager::currentNM()->mkNode(Kind::OR, eq, eq.negate());
       bool added = d_im.lemma(lem, InferenceId::ARITH_SPLIT_FOR_NL_MODEL);
       AlwaysAssert(added) << "The lemma was already in cache. Probably there is something wrong with theory combination...";
     }
@@ -434,8 +439,11 @@ EqualityStatus TheoryArith::getEqualityStatus(TNode a, TNode b) {
   Trace("arith-eq-status") << "Evaluate under " << d_arithModelCacheSubs.d_vars << " / "
                  << d_arithModelCacheSubs.d_subs << std::endl;
   Node diff = NodeManager::currentNM()->mkNode(Kind::SUB, a, b);
+  // do not traverse non-linear multiplication here, since the value of
+  // multiplication in this method should consider the value of the
+  // non-linear multiplication term, and not its evaluation.
   std::optional<bool> isZero =
-      isExpressionZero(d_env, diff, d_arithModelCacheSubs);
+      isExpressionZero(d_env, diff, d_arithModelCacheSubs, false);
   if (isZero)
   {
     EqualityStatus es =
@@ -449,7 +457,7 @@ EqualityStatus TheoryArith::getEqualityStatus(TNode a, TNode b) {
 
 Node TheoryArith::getCandidateModelValue(TNode var)
 {
-  var = var.getKind() == kind::TO_REAL ? var[0] : var;
+  var = var.getKind() == Kind::TO_REAL ? var[0] : var;
   std::map<Node, Node>::iterator it = d_arithModelCache.find(var);
   if (it != d_arithModelCache.end())
   {

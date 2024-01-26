@@ -199,7 +199,7 @@ Node EnumValueManager::getEnumeratedValue(bool& activeIncomplete)
     {
       Assert(false);
     }
-    Node lem = exp.size() == 1 ? exp[0] : nm->mkNode(OR, exp);
+    Node lem = exp.size() == 1 ? exp[0] : nm->mkNode(Kind::OR, exp);
     Trace("cegqi-lemma") << "Cegqi::Lemma : actively-generated enumerator "
                             "exclude current solution : "
                          << lem << std::endl;
@@ -209,7 +209,7 @@ Node EnumValueManager::getEnumeratedValue(bool& activeIncomplete)
       TermDbSygus::toStreamSygus("sygus-active-gen-debug", absE);
       Trace("sygus-active-gen-debug") << std::endl;
     }
-    d_qim.lemma(lem, InferenceId::QUANTIFIERS_SYGUS_EXCLUDE_CURRENT);
+    d_qim.lemma(lem, InferenceId::QUANTIFIERS_SYGUS_ACTIVE_GEN_EXCLUDE_CURRENT);
   }
   else
   {

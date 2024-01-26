@@ -25,13 +25,14 @@ set(EXAMPLES_API_PYTHON
   helloworld
   id
   linear_arith
+  parser
+  parser_sym_manager
   quickstart
   relations
   sequences
   sets
   strings
   sygus-fun
-  sygus-grammar
   sygus-inv
   transcendentals
 )
@@ -64,6 +65,6 @@ foreach(example ${EXAMPLES_API_PYTHON})
   create_python_example(${example})
 endforeach()
 
-if(USE_COCOA)
+if(CVC5_USE_COCOA)
   create_python_example("finite_field")
 endif()
