@@ -967,6 +967,8 @@ enum class InferenceId
   PARTITION_GENERATOR_PARTITION,
   // unsat core from sub-conflict find
   SUB_CONFLICT_UC,
+  // unsat core lemma from sub-conflict find
+  SUB_CONFLICT_UC_LEMMA,
   //-------------------------------------- unknown
   UNKNOWN
 };

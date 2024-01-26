@@ -33,16 +33,12 @@ SubConflictFind::SubConflictFind(Env& env, TheoryEngine* engine)
   // determine the options to use for the verification subsolvers we spawn
   // we start with the provided options
   d_subOptions.copyValues(options());
-  // TODO: if we are getting theory lemmas
-#if 0
-  if (options().quantifiers.quantSubCbqiinst)
+  // if we are getting theory lemmas, we need proofs
+  if (options().theory.subConflictTheoryLem)
   {
     d_subOptions.writeSmt().produceProofs = true;
-    // don't do simplification, which can preprocess quantifiers to those not
-    // occurring in the main solver
   }
-#endif
-  // want small core so simplification = none
+  // want small core so set simplification to none
   d_subOptions.writeSmt().simplificationMode =
       options::SimplificationMode::NONE;
   // requires cores
@@ -102,12 +98,25 @@ void SubConflictFind::check(Theory::Effort effort)
   size_t addedLemmas = 0;
   if (r.getStatus() == Result::UNSAT)
   {
+    addedLemmas = 1;
     // Add the computed unsat core as a conflict, which will cause a backtrack.
     UnsatCore uc = findConflict->getUnsatCore();
     Node ucc = NodeManager::currentNM()->mkAnd(uc.getCore());
     Trace("scf-debug") << "Unsat core is " << ucc << std::endl;
     Trace("scf") << "Core size = " << uc.getCore().size() << std::endl;
     d_out.lemma(ucc.notNode(), InferenceId::SUB_CONFLICT_UC);
+    if (options().theory.subConflictTheoryLem)
+    {
+      // get unsat core theory lemmas
+      std::vector<Node> ucl = findConflict->getUnsatCoreLemmas();
+      Trace("scf") << "Lemma size = " << ucl.size() << std::endl;
+      for (const Node& l : ucl)
+      {
+        // TODO: ensure only over atoms we've seen???
+        d_out.lemma(ucc.notNode(), InferenceId::SUB_CONFLICT_UC_LEMMA);
+      }
+      addedLemmas += ucl.size();
+    }
   }
 
   if (TraceIsOn("scf"))

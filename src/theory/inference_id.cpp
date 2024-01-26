@@ -552,6 +552,7 @@ const char* toString(InferenceId i)
     case InferenceId::PARTITION_GENERATOR_PARTITION:
       return "PARTITION_GENERATOR_PARTITION";
     case InferenceId::SUB_CONFLICT_UC: return "SUB_CONFLICT_UC";
+    case InferenceId::SUB_CONFLICT_UC_LEMMA: return "SUB_CONFLICT_UC_LEMMA";
     case InferenceId::UNKNOWN: return "?";
 
     default:
