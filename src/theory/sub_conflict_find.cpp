@@ -15,11 +15,11 @@
 
 #include "theory/sub_conflict_find.h"
 
-#include "options/theory_options.h"
 #include "options/smt_options.h"
-#include "theory/smt_engine_subsolver.h"
+#include "options/theory_options.h"
 #include "proof/unsat_core.h"
 #include "smt/set_defaults.h"
+#include "theory/smt_engine_subsolver.h"
 
 using namespace cvc5::internal::kind;
 
@@ -29,7 +29,6 @@ namespace theory {
 SubConflictFind::SubConflictFind(Env& env, TheoryEngine* engine)
     : TheoryEngineModule(env, engine, "SubConflictFind")
 {
-
   // determine the options to use for the verification subsolvers we spawn
   // we start with the provided options
   d_subOptions.copyValues(options());
@@ -49,14 +48,13 @@ SubConflictFind::SubConflictFind(Env& env, TheoryEngine* engine)
   d_subOptions.writeQuantifiers().subConflictFind = false;
 }
 
-
 void SubConflictFind::check(Theory::Effort effort)
 {
-  if (effort!=Theory::EFFORT_FULL)
+  if (effort != Theory::EFFORT_FULL)
   {
     return;
   }
-  
+
   double clSet = 0;
   if (TraceIsOn("scf"))
   {
@@ -110,7 +108,7 @@ void SubConflictFind::check(Theory::Effort effort)
   {
     double clSet2 = double(clock()) / double(CLOCKS_PER_SEC);
     Trace("scf") << "Finished subconflict find engine, time = "
-                         << (clSet2 - clSet);
+                 << (clSet2 - clSet);
     Trace("scf") << ", result = " << r;
     if (addedLemmas > 0)
     {

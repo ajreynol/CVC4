@@ -88,6 +88,7 @@ class SubConflictFind : public TheoryEngineModule
    * TheoryEngine.
    */
   void check(Theory::Effort effort) override;
+
  private:
   /** The options for subsolver calls */
   Options d_subOptions;
