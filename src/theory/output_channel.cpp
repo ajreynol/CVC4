@@ -149,5 +149,11 @@ void OutputChannel::trustedLemma(TrustNode plem,
 
 TheoryId OutputChannel::getId() const { return d_theory; }
 
+void OutputChannel::setSubsolverResult(SolverEngine* s)
+{
+  d_engine->setSubsolverResult(s);
+}
+
+
 }  // namespace theory
 }  // namespace cvc5::internal

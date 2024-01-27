@@ -518,6 +518,10 @@ class TheoryEngine : protected EnvObj
              theory::InferenceId id,
              theory::LemmaProperty p,
              theory::TheoryId from = theory::THEORY_LAST);
+  /** */
+  void setSubsolverResult(SolverEngine* m);
+  /** */
+  SolverEngine * getSubsolverResult(SolverEngine * m);
 
   /** Ensure atoms from the given node are sent to the given theory */
   void ensureLemmaAtoms(TNode n, theory::TheoryId atomsTo);
@@ -611,6 +615,9 @@ class TheoryEngine : protected EnvObj
    * A variable to mark if we added any lemmas.
    */
   bool d_lemmasAdded;
+
+  /** A subsolver that has the result of the current query */
+  SolverEngine * d_sresult;
 
   /**
    * A variable to mark if the OutputChannel was "used" by any theory

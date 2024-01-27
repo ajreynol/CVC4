@@ -248,6 +248,7 @@ TheoryEngine::TheoryEngine(Env& env)
       d_propagationMapTimestamp(context(), 0),
       d_propagatedLiterals(context()),
       d_propagatedLiteralsIndex(context(), 0),
+      d_sresult(nullptr),
       d_atomRequests(context()),
       d_stats(statisticsRegistry()),
       d_true(),
@@ -419,6 +420,11 @@ void TheoryEngine::check(Theory::Effort effort) {
     for (TheoryEngineModule* tem : d_modules)
     {
       tem->check(effort);
+      // TODO: better place for this?
+      if (d_sresult!=nullptr)
+      {
+        return;
+      }
     }
 
     auto rm = d_env.getResourceManager();
@@ -706,7 +712,9 @@ theory::TheoryId TheoryEngine::theoryExpPropagation(theory::TheoryId tid) const
   return tid;
 }
 
-bool TheoryEngine::presolve() {
+bool TheoryEngine::presolve()
+{
+  d_sresult = nullptr;
   // Reset the interrupt flag
   d_interrupted = false;
 
@@ -1495,6 +1503,11 @@ void TheoryEngine::lemma(TrustNode tlemma,
 
   // Mark that we added some lemmas
   d_lemmasAdded = true;
+}
+
+void TheoryEngine::setResult(SolverEngine* s)
+{
+  d_sresult = m;
 }
 
 void TheoryEngine::markInConflict()

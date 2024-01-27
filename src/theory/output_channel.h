@@ -29,6 +29,7 @@
 
 namespace cvc5::internal {
 
+class SolverEngine;
 class TheoryEngine;
 
 namespace theory {
@@ -156,6 +157,8 @@ class OutputChannel
    */
   TheoryId getId() const;
 
+  /** Set subsolver result */
+  void setSubsolverResult(SolverEngine* s);
  protected:
   /**
    * Statistics for a particular theory.
