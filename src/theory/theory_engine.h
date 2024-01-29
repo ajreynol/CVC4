@@ -521,7 +521,7 @@ class TheoryEngine : protected EnvObj
   /** */
   void setSubsolverResult(SolverEngine* m);
   /** */
-  SolverEngine * getSubsolverResult(SolverEngine * m);
+  SolverEngine * getSubsolverResult();
 
   /** Ensure atoms from the given node are sent to the given theory */
   void ensureLemmaAtoms(TNode n, theory::TheoryId atomsTo);

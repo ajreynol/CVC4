@@ -19,7 +19,6 @@
 #include "options/theory_options.h"
 #include "proof/unsat_core.h"
 #include "smt/set_defaults.h"
-#include "theory/smt_engine_subsolver.h"
 #include "theory/theory_engine.h"
 
 using namespace cvc5::internal::kind;
@@ -84,23 +83,22 @@ void SubConflictFind::check(Theory::Effort effort)
   }
   // do subsolver check
   SubsolverSetupInfo ssi(d_env, d_subOptions);
-  std::unique_ptr<SolverEngine> findConflict;
   uint64_t timeout = options().theory.subConflictTimeout;
-  initializeSubsolver(findConflict, ssi, timeout != 0, timeout);
+  initializeSubsolver(d_findConflict, ssi, timeout != 0, timeout);
   // assert and check-sat
   for (const Node& a : assertions)
   {
-    findConflict->assertFormula(a);
+    d_findConflict->assertFormula(a);
   }
   Trace("scf") << ">>> Check subsolver..." << std::endl;
-  Result r = findConflict->checkSat();
+  Result r = d_findConflict->checkSat();
   Trace("scf") << "<<< ...result is " << r << std::endl;
   size_t addedLemmas = 0;
   if (r.getStatus() == Result::UNSAT)
   {
     addedLemmas = 1;
     // Add the computed unsat core as a conflict, which will cause a backtrack.
-    UnsatCore uc = findConflict->getUnsatCore();
+    UnsatCore uc = d_findConflict->getUnsatCore();
     Node ucc = NodeManager::currentNM()->mkAnd(uc.getCore());
     Trace("scf-debug") << "Unsat core is " << ucc << std::endl;
     Trace("scf") << "Core size = " << uc.getCore().size() << std::endl;
@@ -108,15 +106,19 @@ void SubConflictFind::check(Theory::Effort effort)
     if (options().theory.subConflictTheoryLem)
     {
       // get unsat core theory lemmas
-      std::vector<Node> ucl = findConflict->getUnsatCoreLemmas();
+      std::vector<Node> ucl = d_findConflict->getUnsatCoreLemmas();
       Trace("scf") << "Lemma size = " << ucl.size() << std::endl;
       for (const Node& l : ucl)
       {
         // TODO: ensure only over atoms we've seen???
-        d_out.lemma(ucc.notNode(), InferenceId::SUB_CONFLICT_UC_LEMMA);
+        d_out.lemma(l, InferenceId::SUB_CONFLICT_UC_LEMMA);
       }
       addedLemmas += ucl.size();
     }
+  }
+  else if (r.getStatus() == Result::SAT)
+  {
+    d_out.setSubsolverResult(d_findConflict.get());
   }
 
   if (TraceIsOn("scf"))

@@ -1505,9 +1505,14 @@ void TheoryEngine::lemma(TrustNode tlemma,
   d_lemmasAdded = true;
 }
 
-void TheoryEngine::setResult(SolverEngine* s)
+void TheoryEngine::setSubsolverResult(SolverEngine* s)
 {
-  d_sresult = m;
+  d_sresult = s;
+}
+  
+SolverEngine * TheoryEngine::getSubsolverResult()
+{
+  return d_sresult;
 }
 
 void TheoryEngine::markInConflict()

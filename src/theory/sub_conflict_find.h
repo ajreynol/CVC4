@@ -29,8 +29,12 @@
 #include "theory/difficulty_manager.h"
 #include "theory/theory_engine_module.h"
 #include "theory/valuation.h"
+#include "theory/smt_engine_subsolver.h"
 
 namespace cvc5::internal {
+
+class SolverEngine;
+
 namespace theory {
 
 class TheoryModel;
@@ -92,6 +96,8 @@ class SubConflictFind : public TheoryEngineModule
  private:
   /** The options for subsolver calls */
   Options d_subOptions;
+  /** */
+  std::unique_ptr<SolverEngine> d_findConflict;
 };
 
 }  // namespace theory
