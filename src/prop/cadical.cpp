@@ -1183,7 +1183,7 @@ CadicalSolver::Statistics::Statistics(StatisticsRegistry& registry,
 void CadicalSolver::initialize(context::Context* context,
                                prop::TheoryProxy* theoryProxy,
                                context::UserContext* userContext,
-                               ProofNodeManager* pnm)
+                               PropPfManager* ppm)
 {
   d_context = context;
   d_proxy = theoryProxy;
@@ -1275,12 +1275,6 @@ std::shared_ptr<ProofNode> CadicalSolver::getProof(
     cdp.addStep(falsen, ProofRule::DRAT_REFUTATION, clauses, args);
   }
   return cdp.getProofFor(falsen);
-}
-
-SatProofManager* CadicalSolver::getProofManager()
-{
-  // TODO
-  return nullptr;
 }
 
 bool CadicalSolver::needsMinimizeClausesForGetProof() const { return true; }

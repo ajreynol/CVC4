@@ -24,7 +24,7 @@
 #include "context/context.h"
 #include "expr/node.h"
 #include "proof/clause_id.h"
-#include "proof/proof_node_manager.h"
+#include "prop/prop_proof_manager.h"
 #include "prop/sat_solver_types.h"
 #include "util/statistics_stats.h"
 
@@ -125,7 +125,7 @@ class CDCLTSatSolver : public SatSolver
   virtual void initialize(context::Context* context,
                           prop::TheoryProxy* theoryProxy,
                           context::UserContext* userContext,
-                          ProofNodeManager* pnm) = 0;
+                          PropPfManager* ppm) = 0;
 
   virtual void push() = 0;
 
@@ -174,13 +174,11 @@ class CDCLTSatSolver : public SatSolver
   virtual std::shared_ptr<ProofNode> getProof(
       const std::vector<Node>& clauses) = 0;
 
-  /** This is temporary until SAT DRAT proofs are integrated. */
-  virtual SatProofManager* getProofManager() = 0;
-
   /** Is `true` if the set of clauses handed to `getProof` must be
    * minimized to the unsat core.
    */
   virtual bool needsMinimizeClausesForGetProof() const = 0;
+
 }; /* class CDCLTSatSolver */
 
 inline std::ostream& operator <<(std::ostream& out, prop::SatLiteral lit) {

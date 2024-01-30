@@ -71,7 +71,7 @@ class CadicalSolver : public CDCLTSatSolver, protected EnvObj
   void initialize(context::Context* context,
                   prop::TheoryProxy* theoryProxy,
                   context::UserContext* userContext,
-                  ProofNodeManager* pnm) override;
+                  PropPfManager* ppm) override;
   void push() override;
 
   void pop() override;
@@ -90,8 +90,6 @@ class CadicalSolver : public CDCLTSatSolver, protected EnvObj
 
   std::shared_ptr<ProofNode> getProof(
       const std::vector<Node>& clauses) override;
-
-  SatProofManager* getProofManager() override;
 
   bool needsMinimizeClausesForGetProof() const override;
 
