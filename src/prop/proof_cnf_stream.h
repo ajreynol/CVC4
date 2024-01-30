@@ -76,12 +76,6 @@ class ProofCnfStream : protected EnvObj
   TNode getNode(const SatLiteral& literal);
 
   /**
-   * Clausifies the given propagation lemma *without* registering the resoluting
-   * clause in the SAT solver, as this is handled internally by the SAT
-   * solver. The clausification steps and the generator within the trust node
-   * are saved in d_proof if we are producing proofs in the theory engine. */
-  void convertPropagation(TrustNode ttn);
-  /**
    * Ensure that the given node will have a designated SAT literal that is
    * definitionally equal to it.  The result of this function is that the Node
    * can be queried via getSatValue(). Essentially, this is like a "convert-but-
