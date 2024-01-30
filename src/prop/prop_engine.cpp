@@ -259,7 +259,7 @@ void PropEngine::assertInternal(
            && options().smt.unsatCoresMode
                   == options::UnsatCoresMode::ASSUMPTIONS)
   {
-    d_ppm->convertAndAssert(node, negated, removable, input, pg);
+    d_cnfStream->ensureLiteral(node);
     addAssumption = true;
   }
   else
