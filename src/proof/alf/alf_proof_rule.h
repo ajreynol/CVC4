@@ -42,8 +42,6 @@ enum class AlfRule : uint32_t
   PROCESS_SCOPE,
   // concat conflict disequality
   CONCAT_CONFLICT_DEQ,
-  // skolem witness intro
-  SKOLEM_WITNESS_INTRO,
   // Used in case that a step in the proof rule could not be translated.
   UNDEFINED
 };
