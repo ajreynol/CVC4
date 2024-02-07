@@ -54,7 +54,7 @@ TheoryUF::TheoryUF(Env& env,
       d_symb(env, instanceName),
       d_rewriter(),
       d_state(env, valuation),
-      d_im(env, *this, d_state, "theory::uf::" + instanceName, false),
+      d_im(env, *this, d_state, "theory::uf::" + instanceName),
       d_notify(d_im, *this),
       d_cpacb(*this)
 {
