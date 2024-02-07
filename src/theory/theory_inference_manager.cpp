@@ -36,8 +36,7 @@ namespace theory {
 TheoryInferenceManager::TheoryInferenceManager(Env& env,
                                                Theory& t,
                                                TheoryState& state,
-                                               const std::string& statsName,
-                                               bool cacheLemmas)
+                                               const std::string& statsName)
     : EnvObj(env),
       d_theory(t),
       d_theoryState(state),
@@ -45,7 +44,6 @@ TheoryInferenceManager::TheoryInferenceManager(Env& env,
       d_ee(nullptr),
       d_decManager(nullptr),
       d_pfee(nullptr),
-      d_cacheLemmas(cacheLemmas),
       d_keep(context()),
       d_lemmasSent(userContext()),
       d_numConflicts(0),
@@ -272,14 +270,10 @@ bool TheoryInferenceManager::trustedLemma(const TrustNode& tlem,
                                           InferenceId id,
                                           LemmaProperty p)
 {
-  // if the policy says to cache lemmas, check the cache and return false if
-  // we are a duplicate
-  if (d_cacheLemmas)
+  //  check the cache and return false if we are a duplicate
+  if (!cacheLemma(tlem.getNode(), p))
   {
-    if (!cacheLemma(tlem.getNode(), p))
-    {
-      return false;
-    }
+    return false;
   }
   Assert(id != InferenceId::UNKNOWN)
       << "Must provide an inference id for lemma";

@@ -92,8 +92,7 @@ class TheoryInferenceManager : protected EnvObj
   TheoryInferenceManager(Env& env,
                          Theory& t,
                          TheoryState& state,
-                         const std::string& statsName,
-                         bool cacheLemmas = true);
+                         const std::string& statsName);
   virtual ~TheoryInferenceManager();
   //--------------------------------------- initialization
   /**
@@ -472,8 +471,6 @@ class TheoryInferenceManager : protected EnvObj
   std::unique_ptr<InferenceIdProofAnnotator> d_iipa;
   /** The annotation proof generator */
   std::unique_ptr<AnnotationProofGenerator> d_apg;
-  /** Whether this manager caches lemmas */
-  bool d_cacheLemmas;
   /**
    * The keep set of this class. This set is maintained to ensure that
    * facts and their explanations are ref-counted. Since facts and their

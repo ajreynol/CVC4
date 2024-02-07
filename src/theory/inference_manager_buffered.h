@@ -35,8 +35,7 @@ class InferenceManagerBuffered : public TheoryInferenceManager
   InferenceManagerBuffered(Env& env,
                            Theory& t,
                            TheoryState& state,
-                           const std::string& statsName,
-                           bool cacheLemmas = true);
+                           const std::string& statsName);
   virtual ~InferenceManagerBuffered() {}
   /**
    * Do we have a pending fact or lemma?

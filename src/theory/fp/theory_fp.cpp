@@ -68,7 +68,7 @@ TheoryFp::TheoryFp(Env& env, OutputChannel& out, Valuation valuation)
       d_abstractionMap(userContext()),
       d_rewriter(userContext()),
       d_state(env, valuation),
-      d_im(env, *this, d_state, "theory::fp::", true),
+      d_im(env, *this, d_state, "theory::fp::"),
       d_notify(d_im),
       d_wbFactsCache(userContext()),
       d_invalidateModelCache(context(), true),
