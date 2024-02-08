@@ -1293,13 +1293,15 @@ enum ENUM(ProofRule) : uint32_t
    *
    * .. math::
    *
-   *   \inferrule{\forall x_1\dots x_n.\> F\mid t_1,\dots,t_n, (id\, (t)?)?}
+   *   \inferrule{\forall x_1\dots x_n.\> F\mid (t_1 \dots t_n), (id\, (t)?)?}
    *   {F\{x_1\mapsto t_1,\dots,x_n\mapsto t_n\}}
    *
-   * The optional argument :math:`id` indicates the inference id that caused the
-   * instantiation. The term :math:`t` indicates an additional term (e.g. the trigger)
-   * associated with the instantiation, which depends on the id. If the id
-   * has prefix ``QUANTIFIERS_INST_E_MATCHING``, then :math:`t` is the trigger that
+   * The list of terms to instantiate :math:`(t_1 \dots t_n)` is provided as
+   * an s-expression as the first argument. The optional argument :math:`id`
+   * indicates the inference id that caused the instantiation. The term
+   * :math:`t` indicates an additional term (e.g. the trigger) associated with
+   * the instantiation, which depends on the id. If the id has prefix
+   * ``QUANTIFIERS_INST_E_MATCHING``, then :math:`t` is the trigger that
    * generated the instantiation.
    * \endverbatim
    */
@@ -1310,7 +1312,7 @@ enum ENUM(ProofRule) : uint32_t
    *
    * .. math::
    *
-   *   \inferruleSC{-\mid F, y_1=z_1,\dots, y_n=z_n}
+   *   \inferruleSC{-\mid F, (y_1 \ldots y_n), (z_1,\dots, z_n)}
    *   {F = F\{y_1\mapsto z_1,\dots,y_n\mapsto z_n\}}
    *   {if $y_1,\dots,y_n, z_1,\dots,z_n$ are unique bound variables}
    *
@@ -1371,21 +1373,29 @@ enum ENUM(ProofRule) : uint32_t
    * \mathit{index},b)` is null, in other words, neither is a prefix of the
    * other. Note it may be the case that one side of the equality denotes the
    * empty string.
+   * 
+   * This rule is used exclusively for strings.
    *
-   * Alternatively, if the equality is between sequences, this rule has the
-   * form:
+   * \endverbatim
+   */
+  EVALUE(CONCAT_CONFLICT),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Core rules -- Concatenation conflict for disequal characters**
    *
    * .. math::
    *
    *   \inferrule{(t_1\cdot t) = (s_1 \cdot s), t_1 \deq s_1 \mid b}{\bot}
    *
-   * where t_1 and s_1 are constants of length one, or otherwise one side
-   * of the equality is the empty sequence and t_1 or s_1 corresponding to
+   * where $t_1$ and $s_1$ are constants of length one, or otherwise one side
+   * of the equality is the empty sequence and $t_1$ or $s_1$ corresponding to
    * that side is the empty sequence.
+   * 
+   * This rule is used exclusively for sequences.
    *
    * \endverbatim
    */
-  EVALUE(CONCAT_CONFLICT),
+  EVALUE(CONCAT_CONFLICT_DEQ),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Core rules -- Concatenation split**
@@ -1744,7 +1754,7 @@ enum ENUM(ProofRule) : uint32_t
    * **Arithmetic -- Trichotomy of the reals**
    *
    * .. math::
-   *   \inferrule{A, B \mid C}{C}
+   *   \inferrule{A, B \mid -}{C}
    *
    * where :math:`\neg A, \neg B, C` are :math:`x < c, x = c, x > c` in some order.
    * Note that :math:`\neg` here denotes arithmetic negation, i.e., flipping :math:`\geq` to :math:`<` etc.
