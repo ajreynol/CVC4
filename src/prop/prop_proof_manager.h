@@ -47,7 +47,16 @@ class PropPfManager : protected EnvObj
   friend class SatProofManager;
 
  public:
-  PropPfManager(Env& env, CDCLTSatSolver* satSolver, CnfStream& cnfProof);
+  /**
+   * @param env The environment
+   * @param satSolver Pointer to the SAT solver
+   * @param cnfProof Pointer to the CNF stream
+   * @param assumptions Reference to assumptions of parent prop engine
+   */
+  PropPfManager(Env& env,
+                CDCLTSatSolver* satSolver,
+                CnfStream& cnfProof,
+                const context::CDList<Node>& assumptions);
   /**
    * Ensure that the given node will have a designated SAT literal that is
    * definitionally equal to it.  The result of this function is that the Node
@@ -89,8 +98,7 @@ class PropPfManager : protected EnvObj
    * assertion and theory lemmas are free assumptions in the returned proof
    * instead of being connected to their proofs.
    */
-  std::shared_ptr<ProofNode> getProof(const context::CDList<Node>& assumptions,
-                                      bool connectCnf);
+  std::shared_ptr<ProofNode> getProof(bool connectCnf);
 
   /** Return the vector of proofs for the respective proof component requested.
    *
@@ -99,11 +107,10 @@ class PropPfManager : protected EnvObj
    * assertion assumptions to the added clauses to the SAT solver).
    */
   std::vector<std::shared_ptr<ProofNode>> getProofLeaves(
-      const context::CDList<Node>& assumptions, modes::ProofComponent pc);
+      modes::ProofComponent pc);
 
   /** Return lemmas used in the SAT proof. */
-  std::vector<Node> getUnsatCoreLemmas(
-      const context::CDList<Node>& assumptions);
+  std::vector<Node> getUnsatCoreLemmas();
 
   /**
    * Checks that the prop engine proof is closed w.r.t. the given assertions and
@@ -116,8 +123,7 @@ class PropPfManager : protected EnvObj
    * engine's proof with the preprocessing proof) and these changes survive for
    * a next check-sat call.
    */
-  void checkProof(const context::CDList<Node>& assumptions,
-                  const context::CDList<Node>& assertions);
+  void checkProof(const context::CDList<Node>& assertions);
 
   /** Normalizes a clause node and registers it in the SAT proof manager.
    *
@@ -166,6 +172,14 @@ class PropPfManager : protected EnvObj
   std::vector<Node> getInputClauses();
   /** Retrieve the clauses derived from lemmas */
   std::vector<Node> getLemmaClauses();
+  /**
+   * Return a subset of input clauses + lemma clauses that is unsat.
+   * If minimal is true, we spawn a copy of CaDiCaL to (re)minimize this set.
+   * If outDimacs is non-null, we output to it a DIMACS representation of the
+   * returned set of clauses.
+   */
+  std::vector<Node> getUnsatCoreClauses(bool minimal,
+                                        std::ostream* outDimacs = nullptr);
   /** The proofs of this proof manager, which are saved once requested (note the
    * cache is for both the request of the full proof (true) or not (false)).
    *
@@ -191,6 +205,8 @@ class PropPfManager : protected EnvObj
   context::CDList<Node> d_assertions;
   /** The cnf stream proof generator */
   CnfStream& d_cnfStream;
+  /** Reference to the assumptions of the parent prop engine */
+  const context::CDList<Node>& d_assumptions;
   /** Asserted clauses derived from the input */
   context::CDHashSet<Node> d_inputClauses;
   /** Asserted clauses derived from lemmas */

@@ -63,17 +63,8 @@ class ProofCnfStream : protected EnvObj
    * @param input whether the node is from the input
    * @param pg a proof generator for node
    */
-  void convertAndAssert(TNode node,
-                        bool negated,
-                        bool removable,
-                        bool input,
-                        ProofGenerator* pg);
-  /**
-   * Get the node that is represented by the given SatLiteral.
-   * @param literal the literal from the sat solver
-   * @return the actual node
-   */
-  TNode getNode(const SatLiteral& literal);
+  void convertAndAssert(
+      TNode node, bool negated, bool removable, bool input, ProofGenerator* pg);
 
   /**
    * Ensure that the given node will have a designated SAT literal that is
@@ -101,7 +92,9 @@ class ProofCnfStream : protected EnvObj
   void getBooleanVariables(std::vector<TNode>& outputVariables) const;
 
   /**
-   * Dump dimacs of the given clauses to the given file.
+   * Dump dimacs of the given clauses to the given output stream.
+   * We use the identifiers for literals computed by this class. All literals
+   * in clauses should be assigned by this class already.
    */
   void dumpDimacs(std::ostream& out, const std::vector<Node>& clauses);
 

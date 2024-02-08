@@ -182,7 +182,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DT_COLLAPSE:
     case ProofRule::DT_SPLIT:
     case ProofRule::DT_CLASH:
-    case ProofRule::ALPHA_EQUIV:
     case ProofRule::CONCAT_SPLIT:
     case ProofRule::CONCAT_LPROP:
     case ProofRule::CONCAT_CPROP:

@@ -88,23 +88,26 @@ class CadicalSolver : public CDCLTSatSolver, protected EnvObj
 
   std::vector<Node> getOrderHeap() const override;
 
-  std::shared_ptr<ProofNode> getProof(
-      const std::vector<Node>& clauses) override;
+  /** Get proof, not used */
+  std::shared_ptr<ProofNode> getProof() override;
 
-  bool needsMinimizeClausesForGetProof() const override;
+  /** Get proof sketch */
+  std::pair<ProofRule, std::vector<Node>> getProofSketch() override;
 
  private:
   /**
    * Constructor.
    * Private to disallow creation outside of SatSolverFactory.
    * Function init() must be called after creation.
-   * @param env      The associated environment.
-   * @param registry The associated statistics registry.
-   * @param name     The name of the SAT solver.
+   * @param env       The associated environment.
+   * @param registry  The associated statistics registry.
+   * @param name      The name of the SAT solver.
+   * @param logProofs Whether to log proofs
    */
   CadicalSolver(Env& env,
                 StatisticsRegistry& registry,
-                const std::string& name = "");
+                const std::string& name = "",
+                bool logProofs = false);
 
   /**
    * Initialize SAT solver instance.
@@ -138,10 +141,12 @@ class CadicalSolver : public CDCLTSatSolver, protected EnvObj
    */
   std::vector<SatLiteral> d_assumptions;
 
+  unsigned d_nextVarIdx;
+  /** Whether we are logging proofs */
+  bool d_logProofs;
   /** The proof file */
   std::string d_pfFile;
-
-  unsigned d_nextVarIdx;
+  /** Whether we are in SAT mode */
   bool d_inSatMode;
   /** The variable representing true. */
   SatVariable d_true;

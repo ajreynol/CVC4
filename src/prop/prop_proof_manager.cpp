@@ -33,7 +33,8 @@ namespace prop {
 
 PropPfManager::PropPfManager(Env& env,
                              CDCLTSatSolver* satSolver,
-                             CnfStream& cnf)
+                             CnfStream& cnf,
+                             const context::CDList<Node>& assumptions)
     : EnvObj(env),
       d_propProofs(userContext()),
       // Since the ProofCnfStream performs no equality reasoning, there is no
@@ -58,6 +59,7 @@ PropPfManager::PropPfManager(Env& env,
       d_satSolver(satSolver),
       d_assertions(userContext()),
       d_cnfStream(cnf),
+      d_assumptions(assumptions),
       d_inputClauses(userContext()),
       d_lemmaClauses(userContext()),
       d_satPm(nullptr)
@@ -89,12 +91,11 @@ void PropPfManager::registerAssertion(Node assertion)
   d_assertions.push_back(assertion);
 }
 
-void PropPfManager::checkProof(const context::CDList<Node>& assumptions,
-                               const context::CDList<Node>& assertions)
+void PropPfManager::checkProof(const context::CDList<Node>& assertions)
 {
   Trace("sat-proof") << "PropPfManager::checkProof: Checking if resolution "
                         "proof of false is closed\n";
-  std::shared_ptr<ProofNode> conflictProof = getProof(assumptions, false);
+  std::shared_ptr<ProofNode> conflictProof = getProof(false);
   Assert(conflictProof);
   // connect it with CNF proof
   d_pfpp->process(conflictProof);
@@ -111,12 +112,11 @@ void PropPfManager::checkProof(const context::CDList<Node>& assumptions,
                      "PropPfManager::checkProof");
 }
 
-std::vector<Node> PropPfManager::getUnsatCoreLemmas(
-    const context::CDList<Node>& assumptions)
+std::vector<Node> PropPfManager::getUnsatCoreLemmas()
 {
   std::vector<Node> usedLemmas;
   std::vector<Node> allLemmas = getLemmaClauses();
-  std::shared_ptr<ProofNode> satPf = getProof(assumptions, false);
+  std::shared_ptr<ProofNode> satPf = getProof(false);
   std::vector<Node> satLeaves;
   expr::getFreeAssumptions(satPf.get(), satLeaves);
   for (const Node& lemma : allLemmas)
@@ -130,7 +130,7 @@ std::vector<Node> PropPfManager::getUnsatCoreLemmas(
 }
 
 std::vector<std::shared_ptr<ProofNode>> PropPfManager::getProofLeaves(
-    const context::CDList<Node>& assumptions, modes::ProofComponent pc)
+    modes::ProofComponent pc)
 {
   Trace("sat-proof") << "PropPfManager::getProofLeaves: Getting " << pc
                      << " component proofs\n";
@@ -138,10 +138,9 @@ std::vector<std::shared_ptr<ProofNode>> PropPfManager::getProofLeaves(
   Assert(pc == modes::ProofComponent::THEORY_LEMMAS
          || pc == modes::ProofComponent::PREPROCESS);
   std::vector<std::shared_ptr<ProofNode>> pfs =
-      pc == modes::ProofComponent::THEORY_LEMMAS
-          ? getLemmaClausesProofs()
-          : getInputClausesProofs();
-  std::shared_ptr<ProofNode> satPf = getProof(assumptions, false);
+      pc == modes::ProofComponent::THEORY_LEMMAS ? getLemmaClausesProofs()
+                                                 : getInputClausesProofs();
+  std::shared_ptr<ProofNode> satPf = getProof(false);
   std::vector<Node> satLeaves;
   expr::getFreeAssumptions(satPf.get(), satLeaves);
   std::vector<std::shared_ptr<ProofNode>> usedPfs;
@@ -156,8 +155,7 @@ std::vector<std::shared_ptr<ProofNode>> PropPfManager::getProofLeaves(
   return usedPfs;
 }
 
-std::shared_ptr<ProofNode> PropPfManager::getProof(
-    const context::CDList<Node>& assumptions, bool connectCnf)
+std::shared_ptr<ProofNode> PropPfManager::getProof(bool connectCnf)
 {
   auto it = d_propProofs.find(connectCnf);
   if (it != d_propProofs.end())
@@ -166,68 +164,229 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   }
   // retrieve the SAT solver's refutation proof
   Trace("sat-proof") << "PropPfManager::getProof: Getting proof of false\n";
-  std::unordered_set<Node> cset(assumptions.begin(), assumptions.end());
-  Trace("cnf-input") << "#assumptions=" << cset.size() << std::endl;
 
-  bool hasFalseAssert = false;
-  bool computeClauses = d_satSolver->needsMinimizeClausesForGetProof();
-  if (computeClauses)
+  // get the proof based on the proof mode
+  options::PropProofMode pmode = options().proof.propProofMode;
+  std::shared_ptr<ProofNode> conflictProof;
+  if (pmode == options::PropProofMode::PROOF)
   {
-    std::vector<Node> minAssumptions;
-    std::vector<SatLiteral> unsatAssumptions;
-    d_satSolver->getUnsatAssumptions(unsatAssumptions);
-    for (const Node& nc : cset)
-    {
-      if (nc.isConst())
-      {
-        if (nc.getConst<bool>())
-        {
-          // never include true
-          continue;
-        }
-        else
-        {
-          hasFalseAssert = true;
-          Trace("cnf-input") << "...found false assumption" << std::endl;
-          // if false exists, take it only
-          minAssumptions.clear();
-          minAssumptions.push_back(nc);
-          break;
-        }
-      }
-      else if (d_pfCnfStream.hasLiteral(nc))
-      {
-        SatLiteral il = d_pfCnfStream.getLiteral(nc);
-        if (std::find(unsatAssumptions.begin(), unsatAssumptions.end(), il)
-            == unsatAssumptions.end())
-        {
-          continue;
-        }
-      }
-      minAssumptions.push_back(nc);
-    }
-    cset.clear();
-    cset.insert(minAssumptions.begin(), minAssumptions.end());
-    Trace("cnf-input") << "#assumptions (min)=" << cset.size() << std::endl;
+    // take proof from SAT solver as is
+    conflictProof = d_satSolver->getProof();
   }
+  else
+  {
+    // otherwise, we compute the unsat core clauses
+    // the stream which stores the DIMACS of the computed clauses
+    std::stringstream dumpDimacs;
+    // minimize only if SAT_EXTERNAL_PROVE and satProofMinDimacs is true.
+    bool minimal = (pmode == options::PropProofMode::SAT_EXTERNAL_PROVE
+                    && options().proof.satProofMinDimacs);
+    std::vector<Node> clauses = getUnsatCoreClauses(minimal, &dumpDimacs);
+    NodeManager* nm = NodeManager::currentNM();
+    Node falsen = nm->mkConst(false);
+    if (clauses.size() == 1 && clauses[0] == falsen)
+    {
+      // if we had a false assert, it is trivial, just use the false assumption
+      conflictProof = d_env.getProofNodeManager()->mkAssume(falsen);
+    }
+    else
+    {
+      // dump the DIMACS to a file
+      std::stringstream dinputFile;
+      dinputFile << options().driver.filename << ".drat_input.cnf";
+      std::fstream dout(dinputFile.str(), std::ios::out);
+      dout << dumpDimacs.str();
+      dout.close();
+      // construct the proof
+      CDProof cdp(d_env);
+      std::vector<Node> args;
+      Node dfile = nm->mkConst(String(dinputFile.str()));
+      args.push_back(dfile);
+      ProofRule r = ProofRule::UNKNOWN;
+      if (pmode == options::PropProofMode::SKETCH)
+      {
+        // if sketch, get the rule and arguments from the SAT solver.
+        std::pair<ProofRule, std::vector<Node>> sk =
+            d_satSolver->getProofSketch();
+        r = sk.first;
+        args.insert(args.end(), sk.second.begin(), sk.second.end());
+      }
+      else if (pmode == options::PropProofMode::SAT_EXTERNAL_PROVE)
+      {
+        // if SAT_EXTERNAL_PROVE, the rule is fixed and there are no additional
+        // arguments.
+        r = ProofRule::SAT_EXTERNAL_PROVE;
+      }
+      else
+      {
+        Assert(false) << "Unknown proof mode " << pmode;
+      }
+      // use the rule, clauses and arguments we computed above
+      cdp.addStep(falsen, r, clauses, args);
+      conflictProof = cdp.getProofFor(falsen);
+    }
+  }
+
+  Assert(conflictProof);
+  if (TraceIsOn("sat-proof"))
+  {
+    std::vector<Node> fassumps;
+    expr::getFreeAssumptions(conflictProof.get(), fassumps);
+    Trace("sat-proof")
+        << "PropPfManager::getProof: initial free assumptions are:\n";
+    for (const Node& a : fassumps)
+    {
+      Trace("sat-proof") << "- " << a << "\n";
+    }
+    Trace("sat-proof-debug")
+        << "PropPfManager::getProof: proof is " << *conflictProof.get() << "\n";
+    Trace("sat-proof")
+        << "PropPfManager::getProof: Connecting with CNF proof\n";
+  }
+  if (!connectCnf)
+  {
+    // if the sat proof was previously connected to the cnf, then the
+    // assumptions will have been updated and we'll not have the expected
+    // behavior here (i.e., the sat proof with the clauses given to the SAT
+    // solver as leaves). In this case we will build a new proof node in which
+    // we will erase the connected proofs (via overwriting them with
+    // assumptions). This will be done in a cloned proof node so we do not alter
+    // what is stored in d_propProofs.
+    if (d_propProofs.find(true) != d_propProofs.end())
+    {
+      CDProof cdp(d_env);
+      std::vector<Node> inputs = getInputClauses();
+      std::vector<Node> lemmas = getLemmaClauses();
+      // get the clauses added to the SAT solver and add them as assumptions
+      std::vector<Node> allAssumptions{inputs.begin(), inputs.end()};
+      allAssumptions.insert(allAssumptions.end(), lemmas.begin(), lemmas.end());
+      for (const Node& a : allAssumptions)
+      {
+        cdp.addStep(a, ProofRule::ASSUME, {}, {a});
+      }
+      // add the sat proof copying the proof nodes but not overwriting the
+      // assumption clauses
+      cdp.addProof(conflictProof, CDPOverwrite::NEVER, true);
+      conflictProof = cdp.getProof(NodeManager::currentNM()->mkConst(false));
+    }
+    d_propProofs[connectCnf] = conflictProof;
+    return conflictProof;
+  }
+  // connect it with CNF proof
+  d_pfpp->process(conflictProof);
+  if (TraceIsOn("sat-proof"))
+  {
+    std::vector<Node> fassumps;
+    expr::getFreeAssumptions(conflictProof.get(), fassumps);
+    Trace("sat-proof")
+        << "PropPfManager::getProof: new free assumptions are:\n";
+    for (const Node& a : fassumps)
+    {
+      Trace("sat-proof") << "- " << a << "\n";
+    }
+    Trace("sat-proof") << "PropPfManager::getProof: assertions are:\n";
+    for (const Node& a : d_assertions)
+    {
+      Trace("sat-proof") << "- " << a << "\n";
+    }
+    Trace("sat-proof-debug")
+        << "PropPfManager::getProof: proof is " << *conflictProof.get() << "\n";
+  }
+  d_propProofs[connectCnf] = conflictProof;
+  return conflictProof;
+}
+
+Node PropPfManager::normalizeAndRegister(TNode clauseNode,
+                                         bool input,
+                                         bool doNormalize)
+{
+  Node normClauseNode = clauseNode;
+  if (doNormalize)
+  {
+    TheoryProofStepBuffer psb;
+    normClauseNode = psb.factorReorderElimDoubleNeg(clauseNode);
+    const std::vector<std::pair<Node, ProofStep>>& steps = psb.getSteps();
+    for (const std::pair<Node, ProofStep>& step : steps)
+    {
+      d_proof.addStep(step.first, step.second);
+    }
+  }
+  if (TraceIsOn("cnf") && normClauseNode != clauseNode)
+  {
+    Trace("cnf") << push
+                 << "ProofCnfStream::normalizeAndRegister: steps to normalized "
+                 << normClauseNode << "\n"
+                 << pop;
+  }
+  Trace("cnf-input") << "New clause: " << normClauseNode << " " << input
+                     << std::endl;
+  if (input)
+  {
+    d_inputClauses.insert(normClauseNode);
+  }
+  else
+  {
+    d_lemmaClauses.insert(normClauseNode);
+  }
+  if (d_satPm)
+  {
+    d_satPm->registerSatAssumptions({normClauseNode});
+  }
+  return normClauseNode;
+}
+
+LazyCDProof* PropPfManager::getCnfProof() { return &d_proof; }
+
+std::vector<Node> PropPfManager::getUnsatCoreClauses(bool minimal,
+                                                     std::ostream* outDimacs)
+{
+  std::vector<Node> clauses;
+  // deduplicate assumptions
+  std::unordered_set<Node> cset(d_assumptions.begin(), d_assumptions.end());
+  Trace("cnf-input") << "#assumptions=" << cset.size() << std::endl;
+  std::vector<Node> minAssumptions;
+  std::vector<SatLiteral> unsatAssumptions;
+  d_satSolver->getUnsatAssumptions(unsatAssumptions);
+  for (const Node& nc : d_assumptions)
+  {
+    if (nc.isConst())
+    {
+      if (nc.getConst<bool>())
+      {
+        // never include true
+        continue;
+      }
+      else
+      {
+        Trace("cnf-input") << "...found false assumption" << std::endl;
+        // if false exists, take it only
+        clauses.push_back(nc);
+        return clauses;
+      }
+    }
+    else if (d_pfCnfStream.hasLiteral(nc))
+    {
+      SatLiteral il = d_pfCnfStream.getLiteral(nc);
+      if (std::find(unsatAssumptions.begin(), unsatAssumptions.end(), il)
+          == unsatAssumptions.end())
+      {
+        continue;
+      }
+    }
+    minAssumptions.push_back(nc);
+  }
+  cset.clear();
+  cset.insert(minAssumptions.begin(), minAssumptions.end());
+  Trace("cnf-input") << "#assumptions (min)=" << cset.size() << std::endl;
   std::vector<Node> inputs = getInputClauses();
   Trace("cnf-input") << "#input=" << inputs.size() << std::endl;
   std::vector<Node> lemmas = getLemmaClauses();
   Trace("cnf-input") << "#lemmas=" << lemmas.size() << std::endl;
-  if (!hasFalseAssert)
-  {
-    cset.insert(inputs.begin(), inputs.end());
-    cset.insert(lemmas.begin(), lemmas.end());
-  }
+  cset.insert(inputs.begin(), inputs.end());
+  cset.insert(lemmas.begin(), lemmas.end());
 
-  // the set of clauses to pass to SAT solver for getProof
-  std::vector<Node> clauses;
-  // output for dimacs file
-  std::stringstream dumpDimacs;
-  bool alreadyDumpDimacs = false;
-  // go back and minimize assumptions if option is set and SAT solver uses it.
-  // we don't do this if we found false as a (preprocessed) input formula
-  if (computeClauses && !hasFalseAssert && options().proof.satProofMinDimacs)
+  // go back and minimize assumptions if minimal is true
+  if (minimal)
   {
     Trace("cnf-input-min") << "Make cadical..." << std::endl;
     CDCLTSatSolver* csm = SatSolverFactory::createCadical(
@@ -312,8 +471,10 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
         clauses.emplace_back(litToNode[lit]);
         aclauses.emplace_back(litToNodeAbs[lit]);
       }
-      alreadyDumpDimacs = true;
-      csms.dumpDimacs(dumpDimacs, aclauses);
+      if (outDimacs)
+      {
+        csms.dumpDimacs(*outDimacs, aclauses);
+      }
     }
     else
     {
@@ -321,6 +482,10 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
       Trace("cnf-input-min") << "...got sat" << std::endl;
       Assert(false) << "Failed to minimize DIMACS";
       clauses.insert(clauses.end(), cset.begin(), cset.end());
+      if (outDimacs)
+      {
+        d_pfCnfStream.dumpDimacs(*outDimacs, clauses);
+      }
     }
     delete csm;
   }
@@ -328,144 +493,8 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(
   {
     clauses.insert(clauses.end(), cset.begin(), cset.end());
   }
-
-  std::shared_ptr<ProofNode> conflictProof;
-  if (hasFalseAssert)
-  {
-    Assert(clauses.size() == 1 && clauses[0].isConst()
-           && !clauses[0].getConst<bool>());
-    conflictProof = d_env.getProofNodeManager()->mkAssume(clauses[0]);
-  }
-  else
-  {
-    conflictProof = d_satSolver->getProof(clauses);
-  }
-  // if DRAT, must dump dimacs
-  ProofRule r = conflictProof->getRule();
-  if (r == ProofRule::DRAT_REFUTATION || r == ProofRule::SAT_EXTERNAL_PROVE)
-  {
-    std::stringstream dinputFile;
-    dinputFile
-        << conflictProof->getArguments()[0].getConst<String>().toString();
-    std::fstream dout(dinputFile.str(), std::ios::out);
-    if (alreadyDumpDimacs)
-    {
-      dout << dumpDimacs.str();
-    }
-    else
-    {
-      d_pfCnfStream.dumpDimacs(dout, clauses);
-    }
-    dout.close();
-  }
-
-  Assert(conflictProof);
-  if (TraceIsOn("sat-proof"))
-  {
-    std::vector<Node> fassumps;
-    expr::getFreeAssumptions(conflictProof.get(), fassumps);
-    Trace("sat-proof")
-        << "PropPfManager::getProof: initial free assumptions are:\n";
-    for (const Node& a : fassumps)
-    {
-      Trace("sat-proof") << "- " << a << "\n";
-    }
-    Trace("sat-proof-debug")
-        << "PropPfManager::getProof: proof is " << *conflictProof.get() << "\n";
-    Trace("sat-proof")
-        << "PropPfManager::getProof: Connecting with CNF proof\n";
-  }
-  if (!connectCnf)
-  {
-    // if the sat proof was previously connected to the cnf, then the
-    // assumptions will have been updated and we'll not have the expected
-    // behavior here (i.e., the sat proof with the clauses given to the SAT
-    // solver as leaves). In this case we will build a new proof node in which
-    // we will erase the connected proofs (via overwriting them with
-    // assumptions). This will be done in a cloned proof node so we do not alter
-    // what is stored in d_propProofs.
-    if (d_propProofs.find(true) != d_propProofs.end())
-    {
-      CDProof cdp(d_env);
-      // get the clauses added to the SAT solver and add them as assumptions
-      std::vector<Node> allAssumptions{inputs.begin(), inputs.end()};
-      allAssumptions.insert(allAssumptions.end(), lemmas.begin(), lemmas.end());
-      for (const Node& a : allAssumptions)
-      {
-        cdp.addStep(a, ProofRule::ASSUME, {}, {a});
-      }
-      // add the sat proof copying the proof nodes but not overwriting the
-      // assumption clauses
-      cdp.addProof(conflictProof, CDPOverwrite::NEVER, true);
-      conflictProof = cdp.getProof(NodeManager::currentNM()->mkConst(false));
-    }
-    d_propProofs[connectCnf] = conflictProof;
-    return conflictProof;
-  }
-  // connect it with CNF proof
-  d_pfpp->process(conflictProof);
-  if (TraceIsOn("sat-proof"))
-  {
-    std::vector<Node> fassumps;
-    expr::getFreeAssumptions(conflictProof.get(), fassumps);
-    Trace("sat-proof")
-        << "PropPfManager::getProof: new free assumptions are:\n";
-    for (const Node& a : fassumps)
-    {
-      Trace("sat-proof") << "- " << a << "\n";
-    }
-    Trace("sat-proof") << "PropPfManager::getProof: assertions are:\n";
-    for (const Node& a : d_assertions)
-    {
-      Trace("sat-proof") << "- " << a << "\n";
-    }
-    Trace("sat-proof-debug")
-        << "PropPfManager::getProof: proof is " << *conflictProof.get() << "\n";
-  }
-  d_propProofs[connectCnf] = conflictProof;
-  return conflictProof;
+  return clauses;
 }
-
-Node PropPfManager::normalizeAndRegister(TNode clauseNode,
-                                         bool input,
-                                         bool doNormalize)
-{
-  Node normClauseNode = clauseNode;
-  if (doNormalize)
-  {
-    TheoryProofStepBuffer psb;
-    normClauseNode = psb.factorReorderElimDoubleNeg(clauseNode);
-    const std::vector<std::pair<Node, ProofStep>>& steps = psb.getSteps();
-    for (const std::pair<Node, ProofStep>& step : steps)
-    {
-      d_proof.addStep(step.first, step.second);
-    }
-  }
-  if (TraceIsOn("cnf") && normClauseNode != clauseNode)
-  {
-    Trace("cnf") << push
-                 << "ProofCnfStream::normalizeAndRegister: steps to normalized "
-                 << normClauseNode << "\n"
-                 << pop;
-  }
-  Trace("cnf-input") << "New clause: " << normClauseNode << " " << input
-                     << std::endl;
-  if (input)
-  {
-    d_inputClauses.insert(normClauseNode);
-  }
-  else
-  {
-    d_lemmaClauses.insert(normClauseNode);
-  }
-  if (d_satPm)
-  {
-    d_satPm->registerSatAssumptions({normClauseNode});
-  }
-  return normClauseNode;
-}
-
-LazyCDProof* PropPfManager::getCnfProof() { return &d_proof; }
 
 std::vector<Node> PropPfManager::getInputClauses()
 {
