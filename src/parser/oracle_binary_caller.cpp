@@ -62,12 +62,12 @@ std::vector<Term> OracleBinaryCaller::runOracle(const std::vector<Term>& input)
   // initialize a new parser for the given solver and symbol manager
   parser::SymbolManager sm(d_slv, d_sm);
   parser::InputParser iparser(d_slv, &sm);
-  iparser.setStreamInput(d_slv->getOption("input-language"),
+  iparser.setStreamInput(modes::InputLanguage::SMT_LIB_2_6,
                          oracle_response_istream,
                          d_parseStreamName);
   // currently assumes a single output
   std::vector<Term> output;
-  Term t = iparser.nextExpression();
+  Term t = iparser.nextTerm();
   output.push_back(t);
   return output;
 }
