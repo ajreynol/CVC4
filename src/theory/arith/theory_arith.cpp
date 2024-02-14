@@ -430,7 +430,10 @@ EqualityStatus TheoryArith::getEqualityStatus(TNode a, TNode b) {
     Trace("arith-eq-status") << "...return (trivial) true" << std::endl;
     return EQUALITY_TRUE_IN_MODEL;
   }
-  if (d_arithModelCache.empty())
+  // If we are linear, just rely on the linear solver. We also call it if
+  // model values have yet to be computed, which is the case prior to FULL
+  // effort.
+  if (d_nonlinearExtension == nullptr || d_arithModelCache.empty())
   {
     EqualityStatus es = d_internal->getEqualityStatus(a, b);
     Trace("arith-eq-status") << "...return (from linear) " << es << std::endl;
