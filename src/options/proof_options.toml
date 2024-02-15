@@ -264,4 +264,7 @@ name   = "Proof"
 [[option.mode.SKETCH]]
   name = "sketch"
   help = "A sketch given by the SAT solver."
+[[option.mode.SKETCH_RECONS]]
+  name = "sketch-rcons"
+  help = "A sketch given by the SAT solver during reconstruction."
 

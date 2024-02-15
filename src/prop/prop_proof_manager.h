@@ -178,7 +178,7 @@ class PropPfManager : protected EnvObj
    * If outDimacs is non-null, we output to it a DIMACS representation of the
    * returned set of clauses.
    */
-  std::vector<Node> getUnsatCoreClauses(bool minimal,
+  std::vector<Node> getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
                                         std::ostream* outDimacs = nullptr);
   /** The proofs of this proof manager, which are saved once requested (note the
    * cache is for both the request of the full proof (true) or not (false)).

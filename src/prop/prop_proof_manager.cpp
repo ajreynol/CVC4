@@ -178,10 +178,8 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(bool connectCnf)
     // otherwise, we compute the unsat core clauses
     // the stream which stores the DIMACS of the computed clauses
     std::stringstream dumpDimacs;
-    // minimize only if SAT_EXTERNAL_PROVE and satProofMinDimacs is true.
-    bool minimal = (pmode == options::PropProofMode::SAT_EXTERNAL_PROVE
-                    && options().proof.satProofMinDimacs);
-    std::vector<Node> clauses = getUnsatCoreClauses(minimal, &dumpDimacs);
+    CDCLTSatSolver* pfsolver = nullptr;
+    std::vector<Node> clauses = getUnsatCoreClauses(pfsolver, &dumpDimacs);
     NodeManager* nm = NodeManager::currentNM();
     Node falsen = nm->mkConst(false);
     if (clauses.size() == 1 && clauses[0] == falsen)
@@ -210,6 +208,22 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(bool connectCnf)
             d_satSolver->getProofSketch();
         r = sk.first;
         args.insert(args.end(), sk.second.begin(), sk.second.end());
+      }
+      else if (pmode == options::PropProofMode::SKETCH_RECONS)
+      {
+        if (pfsolver!=nullptr)
+        {
+          std::pair<ProofRule, std::vector<Node>> sk =
+              pfsolver->getProofSketch();
+          r = sk.first;
+          args.insert(args.end(), sk.second.begin(), sk.second.end());
+          delete pfsolver;
+        }
+        else
+        {
+          // failed to reconstruct, use SAT_EXTERNAL_PROVE.
+          r = ProofRule::SAT_EXTERNAL_PROVE;
+        }
       }
       else if (pmode == options::PropProofMode::SAT_EXTERNAL_PROVE)
       {
@@ -337,9 +351,13 @@ Node PropPfManager::normalizeAndRegister(TNode clauseNode,
 
 LazyCDProof* PropPfManager::getCnfProof() { return &d_proof; }
 
-std::vector<Node> PropPfManager::getUnsatCoreClauses(bool minimal,
+std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
                                                      std::ostream* outDimacs)
 {
+  options::PropProofMode pmode = options().proof.propProofMode;
+  // minimize only if SAT_EXTERNAL_PROVE and satProofMinDimacs is true.
+  bool minimal = ((pmode == options::PropProofMode::SAT_EXTERNAL_PROVE || pmode == options::PropProofMode::SKETCH_RECONS)
+                  && options().proof.satProofMinDimacs);
   std::vector<Node> clauses;
   // deduplicate assumptions
   std::unordered_set<Node> cset(d_assumptions.begin(), d_assumptions.end());
@@ -389,9 +407,10 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(bool minimal,
   bool computedClauses = false;
   if (minimal)
   {
+    bool minProofGen = (pmode == options::PropProofMode::SKETCH_RECONS);
     Trace("cnf-input-min") << "Make cadical..." << std::endl;
     CDCLTSatSolver* csm = SatSolverFactory::createCadical(
-        d_env, statisticsRegistry(), d_env.getResourceManager());
+        d_env, statisticsRegistry(), d_env.getResourceManager(), "", minProofGen);
     NullRegistrar nreg;
     context::Context nctx;
     CnfStream csms(d_env, csm, &nreg, &nctx);
@@ -477,14 +496,15 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(bool minimal,
       {
         csms.dumpDimacs(*outDimacs, aclauses);
       }
+      pfsolver = csm;
     }
     else
     {
       // should never happen, if it does, we revert to the entire input
       Trace("cnf-input-min") << "...got sat" << std::endl;
       Assert(false) << "Failed to minimize DIMACS";
+      delete csm;
     }
-    delete csm;
   }
   if (!computedClauses)
   {
