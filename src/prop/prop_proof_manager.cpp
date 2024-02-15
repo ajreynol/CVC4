@@ -492,6 +492,10 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(bool minimal,
   else
   {
     clauses.insert(clauses.end(), cset.begin(), cset.end());
+    if (outDimacs)
+    {
+      d_pfCnfStream.dumpDimacs(*outDimacs, clauses);
+    }
   }
   return clauses;
 }

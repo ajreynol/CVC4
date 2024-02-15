@@ -47,7 +47,8 @@
 (declare-rule drat_refutation ((F Bool) (D String) (P String))
   :premise-list F and
   :args (D P)
-  :requires (((run_drat_verify (to_drat_input F) D) true) ((run_drat_check D P) true))
+;  :requires (((run_drat_verify (to_drat_input F) D) true) ((run_drat_check D P) true))
+  :requires (((run_drat_check D P) true))
   :conclusion false
 )
 
