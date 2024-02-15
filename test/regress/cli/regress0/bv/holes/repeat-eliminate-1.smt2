@@ -3,10 +3,10 @@
 (set-logic QF_BV)
 (set-info :status unsat)
 
-(declare-const x (_ BitVec 4))
+(declare-const x (_ BitVec 10))
 (assert (not (=
-	((_ repeat 3) x)
-	(concat x ((_ repeat 2) x))
+	((_ repeat 5) x)
+	(concat x ((_ repeat 4) x))
 	)))
 (check-sat)
 (exit)
