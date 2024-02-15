@@ -408,7 +408,7 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
   if (minimal)
   {
     bool minProofGen = (pmode == options::PropProofMode::SKETCH_RECONS);
-    Trace("cnf-input-min") << "Make cadical..." << std::endl;
+    Trace("cnf-input-min") << "Make cadical, proof gen = " << minProofGen << "..." << std::endl;
     CDCLTSatSolver* csm = SatSolverFactory::createCadical(
         d_env, statisticsRegistry(), d_env.getResourceManager(), "", minProofGen);
     NullRegistrar nreg;
