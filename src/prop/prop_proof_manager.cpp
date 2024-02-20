@@ -407,6 +407,17 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
   bool computedClauses = false;
   if (minimal)
   {
+    // if we have a proof, just use it
+    std::shared_ptr<ProofNode> pf = d_satSolver->getProof();
+    if (pf!=nullptr)
+    {
+      expr::getFreeAssumptions(pf.get(), clauses);
+      if (outDimacs)
+      {
+        d_pfCnfStream.dumpDimacs(*outDimacs, clauses);
+      }
+      return clauses;
+    }
     bool minProofGen = (pmode == options::PropProofMode::SKETCH_RECONS);
     Trace("cnf-input-min") << "Make cadical, proof gen = " << minProofGen << "..." << std::endl;
     CDCLTSatSolver* csm = SatSolverFactory::createCadical(
