@@ -1,0 +1,17 @@
+; COMMAND-LINE: --sygus-out=status
+; EXPECT: feasible
+(set-logic ALL)
+(synth-fun f ((x Int) (y Int)) Int
+  ((Start Int) (Start2 Int) (Start3 Int) (Start4 Int) (Start5 Int) (Start6 Int) (A Int) (B Int))
+  (
+  (Start Int ((+ Start2 A)))
+  (Start2 Int ((+ Start3 Start3) (- Start3 Start3)))
+  (Start3 Int ((+ Start4 Start4) (- Start4 Start4)))
+  (Start4 Int ((+ Start5 Start5) (- Start5 Start5)))
+  (Start5 Int ((+ Start6 Start6) (- Start6 Start6)))
+  (Start6 Int (0 1))
+  (A Int ((+ B B B B B B B B B B B B B B B B B B)))
+  (B Int (x y))
+  )
+)
+(check-synth)
