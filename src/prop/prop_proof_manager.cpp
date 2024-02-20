@@ -407,7 +407,8 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
   bool computedClauses = false;
   if (minimal)
   {
-    // if we have a proof, just use it
+    // if we have a proof, just use it for getting the unsat core of
+    // inputs+lemmas.
     std::shared_ptr<ProofNode> pf = d_satSolver->getProof();
     if (pf!=nullptr)
     {
@@ -505,6 +506,7 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
       computedClauses = true;
       if (outDimacs)
       {
+        // dump using the CNF stream we created above
         csms.dumpDimacs(*outDimacs, aclauses);
       }
       pfsolver = csm;
