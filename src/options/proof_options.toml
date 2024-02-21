@@ -15,9 +15,6 @@ name   = "Proof"
 [[option.mode.DOT]]
   name       = "dot"
   help       = "Output DOT proof"
-[[option.mode.LEAN]]
-  name       = "lean"
-  help       = "Output Lean proof"
 [[option.mode.LFSC]]
   name       = "lfsc"
   help       = "Output LFSC proof"
@@ -83,22 +80,6 @@ name   = "Proof"
   help       = "do not check rule applications"
 
 [[option]]
-  name       = "checkProofsFail"
-  category   = "regular"
-  long       = "check-proofs-fail"
-  type       = "bool"
-  default    = "false"
-  help       = "always fail when the checkProof method is invoked (dummy option)"
-
-[[option]]
-  name       = "proofUpdateDebug"
-  category   = "regular"
-  long       = "proof-update-debug"
-  type       = "bool"
-  default    = "false"
-  help       = "debug proof node updater"
-
-[[option]]
   name       = "proofPpMerge"
   category   = "expert"
   long       = "proof-pp-merge"
@@ -131,7 +112,7 @@ name   = "Proof"
   name       = "proofRewriteRconsRecLimit"
   category   = "regular"
   long       = "proof-rewrite-rcons-rec-limit=N"
-  type       = "int64_t"
+  type       = "uint64_t"
   default    = "15"
   help       = "the matching recursion limit for reconstructing proofs of theory rewrites"
 
@@ -139,7 +120,7 @@ name   = "Proof"
   name       = "proofRewriteRconsStepLimit"
   category   = "regular"
   long       = "proof-rewrite-rcons-step-limit=N"
-  type       = "int64_t"
+  type       = "uint64_t"
   default    = "200"
   help       = "the limit of steps considered for reconstructing proofs of theory rewrites"
 
@@ -184,14 +165,6 @@ name   = "Proof"
   help       = "Indicates if the dot proof will be printed as a DAG or as a tree"
 
 [[option]]
-  name       = "produceFinalProof"
-  category   = "regular"
-  long       = "produce-final-proof"
-  type       = "bool"
-  default    = "false"
-  help       = "produce final proof regardless of printing or checking it"
-
-[[option]]
   name       = "printDotClusters"
   category   = "regular"
   long       = "print-dot-clusters"
@@ -216,20 +189,12 @@ name   = "Proof"
   help       = "Print the children of trusted proof steps"
 
 [[option]]
-  name       = "proofFlatten"
+  name       = "lfscFlatten"
   category   = "expert"
-  long       = "proof-flatten"
+  long       = "lfsc-flatten"
   type       = "bool"
   default    = "false"
-  help       = "Flatten steps in the proof (for LFSC or ALF)"
-
-[[option]]
-  name       = "proofElimDefs"
-  category   = "expert"
-  long       = "proof-elim-defs"
-  type       = "bool"
-  default    = "false"
-  help       = "Eliminate definitions from proofs"
+  help       = "Flatten steps in the LFSC proof"
 
 [[option]]
   name       = "alfPrintReference"
@@ -238,41 +203,3 @@ name   = "Proof"
   type       = "bool"
   default    = "false"
   help       = "Print reference to original file instead of redeclaring"
-
-[[option]]
-  name       = "dratBinaryFormat"
-  category   = "expert"
-  long       = "drat-binary-format"
-  type       = "bool"
-  default    = "false"
-  help       = "Print the DRAT proof in binary format"
-
-[[option]]
-  name       = "satProofMinDimacs"
-  category   = "expert"
-  long       = "sat-proof-min-dimacs"
-  type       = "bool"
-  default    = "true"
-  help       = "Minimize the DIMACs emitted as the preamble"
-
-[[option]]
-  name       = "propProofMode"
-  category   = "regular"
-  long       = "prop-proof-mode=MODE"
-  type       = "PropProofMode"
-  default    = "PROOF"
-  help       = "modes for proof granularity"
-  help_mode  = "Modes for proof granularity."
-[[option.mode.PROOF]]
-  name = "proof"
-  help = "A proof computed by the SAT solver."
-[[option.mode.SAT_EXTERNAL_PROVE]]
-  name = "sat-external-prove"
-  help = "A proof containing a step that will be proven externally."
-[[option.mode.SKETCH]]
-  name = "sketch"
-  help = "A sketch given by the SAT solver."
-[[option.mode.SKETCH_RECONS]]
-  name = "sketch-rcons"
-  help = "A sketch given by the SAT solver during reconstruction."
-
