@@ -778,11 +778,12 @@ CnfStream::Statistics::Statistics(StatisticsRegistry& sr,
 {
 }
 
-void CnfStream::dumpDimacs(std::ostream& out, const std::vector<Node>& clauses)
+void CnfStream::dumpDimacs(std::ostream& out, const std::vector<Node>& clauses, std::vector<Node>& auxUnits)
 {
   std::stringstream dclauses;
   SatVariable maxVar = 0;
   // get the unsat core from cadical
+  std::stringstream auclauses;
   for (const Node& i : clauses)
   {
     std::vector<Node> lits;
@@ -797,15 +798,26 @@ void CnfStream::dumpDimacs(std::ostream& out, const std::vector<Node>& clauses)
     Trace("dimacs-debug") << "Print " << i << std::endl;
     for (const Node& l : lits)
     {
-      SatLiteral lit = getLiteral(l);
+      bool negated = l.getKind()==Kind::NOT;
+      const Node& atom = negated ? l[0] : l;
+      SatLiteral lit = getLiteral(atom);
       SatVariable v = lit.getSatVariable();
       maxVar = v > maxVar ? v : maxVar;
-      dclauses << (lit.isNegated() ? "-" : "") << v << " ";
+      dclauses << (negated ? "-" : "") << v << " ";
+      Trace("dimacs-debug") << "DIMACS " << v << " " << atom << std::endl;
+      // print the literal as an auxilary unit if applicable
+      if (atom.getKind()==Kind::OR && std::find(clauses.begin(), clauses.end(), atom)!=clauses.end() && std::find(auxUnits.begin(),auxUnits.end(),atom)==auxUnits.end())
+      {
+        auxUnits.push_back(atom);
+        auclauses << v << " 0" << std::endl;
+      }
     }
     dclauses << "0" << std::endl;
   }
-  out << "p cnf " << maxVar << " " << clauses.size() << std::endl;
+  
+  out << "p cnf " << maxVar << " " << (clauses.size()+auxUnits.size()) << std::endl;
   out << dclauses.str();
+  out << auclauses.str();
 }
 
 }  // namespace prop

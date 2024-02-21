@@ -27,6 +27,8 @@
 #include "prop/sat_solver_factory.h"
 #include "smt/env.h"
 #include "util/string.h"
+#include "smt/print_benchmark.h"
+#include "printer/printer.h"
 
 namespace cvc5::internal {
 namespace prop {
@@ -415,8 +417,23 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
       expr::getFreeAssumptions(pf.get(), clauses);
       if (outDimacs)
       {
-        d_pfCnfStream.dumpDimacs(*outDimacs, clauses);
+        std::vector<Node> auxUnits;
+        d_pfCnfStream.dumpDimacs(*outDimacs, clauses, auxUnits);
+        clauses.insert(clauses.end(), auxUnits.begin(), auxUnits.end());
       }
+      /*
+      Trace("cnf-input-sep") << "=== Unsat:" << std::endl;
+      for (const Node& c : clauses)
+      {
+        Trace("cnf-input-sep") << c << std::endl;
+      }
+      Trace("cnf-input-sep") << "===" << std::endl;
+      std::stringstream ss;
+      smt::PrintBenchmark pb(Printer::getPrinter(ss));
+      pb.printAssertions(ss, clauses);
+      std::cout << ss.str();
+      exit(1);
+      */
       return clauses;
     }
     bool minProofGen = (pmode == options::PropProofMode::SKETCH_RECONS);
@@ -506,8 +523,10 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
       computedClauses = true;
       if (outDimacs)
       {
+        std::vector<Node> auxUnits;
         // dump using the CNF stream we created above
-        csms.dumpDimacs(*outDimacs, aclauses);
+        csms.dumpDimacs(*outDimacs, aclauses, auxUnits);
+        Assert (auxUnits.empty());
       }
       pfsolver = csm;
     }
@@ -524,7 +543,9 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
     clauses.insert(clauses.end(), cset.begin(), cset.end());
     if (outDimacs)
     {
-      d_pfCnfStream.dumpDimacs(*outDimacs, clauses);
+      std::vector<Node> auxUnits;
+      d_pfCnfStream.dumpDimacs(*outDimacs, clauses, auxUnits);
+      clauses.insert(clauses.end(), auxUnits.begin(), auxUnits.end());
     }
   }
   return clauses;
