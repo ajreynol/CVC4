@@ -42,7 +42,7 @@ AlfPrinter::AlfPrinter(Env& env,
       d_tproc(atp),
       d_termLetPrefix("@t"),
       d_proofFlatten(flatten),
-      //d_ltproc(atp),
+      // d_ltproc(atp),
       d_rdb(rdb)
 {
   d_pfType = NodeManager::currentNM()->mkSort("proofType");
@@ -275,7 +275,7 @@ bool AlfPrinter::canEvaluate(Node n) const
 std::string AlfPrinter::getRuleName(const ProofNode* pfn)
 {
   ProofRule r = pfn->getRule();
-  if (r==ProofRule::DSL_REWRITE)
+  if (r == ProofRule::DSL_REWRITE)
   {
     rewriter::DslProofRule dr;
     rewriter::getDslProofRule(pfn->getArguments()[0], dr);

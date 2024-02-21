@@ -1252,10 +1252,7 @@ std::vector<SatLiteral> CadicalSolver::getDecisions() const
 
 std::vector<Node> CadicalSolver::getOrderHeap() const { return {}; }
 
-std::shared_ptr<ProofNode> CadicalSolver::getProof()
-{
-  return nullptr;
-}
+std::shared_ptr<ProofNode> CadicalSolver::getProof() { return nullptr; }
 
 std::pair<ProofRule, std::vector<Node>> CadicalSolver::getProofSketch()
 {

@@ -164,7 +164,9 @@ class CnfStream : protected EnvObj
    * We use the identifiers for literals computed by this class. All literals
    * in clauses should be assigned by this class already.
    */
-  void dumpDimacs(std::ostream& out, const std::vector<Node>& clauses, std::vector<Node>& auxUnits);
+  void dumpDimacs(std::ostream& out,
+                  const std::vector<Node>& clauses,
+                  std::vector<Node>& auxUnits);
 
  protected:
   /**

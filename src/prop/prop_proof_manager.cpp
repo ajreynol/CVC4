@@ -17,18 +17,18 @@
 
 #include "expr/skolem_manager.h"
 #include "options/main_options.h"
+#include "printer/printer.h"
 #include "proof/proof_ensure_closed.h"
 #include "proof/proof_node_algorithm.h"
 #include "proof/theory_proof_step_buffer.h"
 #include "prop/cnf_stream.h"
-#include "prop/prop_proof_manager.h"
 #include "prop/minisat/sat_proof_manager.h"
+#include "prop/prop_proof_manager.h"
 #include "prop/sat_solver.h"
 #include "prop/sat_solver_factory.h"
 #include "smt/env.h"
-#include "util/string.h"
 #include "smt/print_benchmark.h"
-#include "printer/printer.h"
+#include "util/string.h"
 
 namespace cvc5::internal {
 namespace prop {
@@ -213,7 +213,7 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(bool connectCnf)
       }
       else if (pmode == options::PropProofMode::SKETCH_RECONS)
       {
-        if (pfsolver!=nullptr)
+        if (pfsolver != nullptr)
         {
           std::pair<ProofRule, std::vector<Node>> sk =
               pfsolver->getProofSketch();
@@ -358,7 +358,8 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
 {
   options::PropProofMode pmode = options().proof.propProofMode;
   // minimize only if SAT_EXTERNAL_PROVE and satProofMinDimacs is true.
-  bool minimal = ((pmode == options::PropProofMode::SAT_EXTERNAL_PROVE || pmode == options::PropProofMode::SKETCH_RECONS)
+  bool minimal = ((pmode == options::PropProofMode::SAT_EXTERNAL_PROVE
+                   || pmode == options::PropProofMode::SKETCH_RECONS)
                   && options().proof.satProofMinDimacs);
   std::vector<Node> clauses;
   // deduplicate assumptions
@@ -412,7 +413,7 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
     // if we have a proof, just use it for getting the unsat core of
     // inputs+lemmas.
     std::shared_ptr<ProofNode> pf = d_satSolver->getProof();
-    if (pf!=nullptr)
+    if (pf != nullptr)
     {
       expr::getFreeAssumptions(pf.get(), clauses);
       if (outDimacs)
@@ -437,9 +438,14 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
       return clauses;
     }
     bool minProofGen = (pmode == options::PropProofMode::SKETCH_RECONS);
-    Trace("cnf-input-min") << "Make cadical, proof gen = " << minProofGen << "..." << std::endl;
-    CDCLTSatSolver* csm = SatSolverFactory::createCadical(
-        d_env, statisticsRegistry(), d_env.getResourceManager(), "", minProofGen);
+    Trace("cnf-input-min") << "Make cadical, proof gen = " << minProofGen
+                           << "..." << std::endl;
+    CDCLTSatSolver* csm =
+        SatSolverFactory::createCadical(d_env,
+                                        statisticsRegistry(),
+                                        d_env.getResourceManager(),
+                                        "",
+                                        minProofGen);
     NullRegistrar nreg;
     context::Context nctx;
     CnfStream csms(d_env, csm, &nreg, &nctx);
@@ -526,7 +532,7 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
         std::vector<Node> auxUnits;
         // dump using the CNF stream we created above
         csms.dumpDimacs(*outDimacs, aclauses, auxUnits);
-        Assert (auxUnits.empty());
+        Assert(auxUnits.empty());
       }
       pfsolver = csm;
     }

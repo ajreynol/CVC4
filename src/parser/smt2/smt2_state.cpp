@@ -986,14 +986,17 @@ void Smt2State::setLogic(std::string name)
     defineType("?Array", d_solver->mkAbstractSort(SortKind::ARRAY_SORT), true);
     defineType("?Bag", d_solver->mkAbstractSort(SortKind::BAG_SORT), true);
     defineType("?Tuple", d_solver->mkAbstractSort(SortKind::TUPLE_SORT), true);
-    defineType(
-        "?FiniteField", d_solver->mkAbstractSort(SortKind::FINITE_FIELD_SORT), true);
+    defineType("?FiniteField",
+               d_solver->mkAbstractSort(SortKind::FINITE_FIELD_SORT),
+               true);
     defineType("?->", d_solver->mkAbstractSort(SortKind::FUNCTION_SORT), true);
     defineType("?Seq", d_solver->mkAbstractSort(SortKind::SEQUENCE_SORT), true);
     defineType("?Set", d_solver->mkAbstractSort(SortKind::SET_SORT), true);
-    defineType("?BitVec", d_solver->mkAbstractSort(SortKind::BITVECTOR_SORT), true);
     defineType(
-        "?FloatingPoint", d_solver->mkAbstractSort(SortKind::FLOATINGPOINT_SORT), true);
+        "?BitVec", d_solver->mkAbstractSort(SortKind::BITVECTOR_SORT), true);
+    defineType("?FloatingPoint",
+               d_solver->mkAbstractSort(SortKind::FLOATINGPOINT_SORT),
+               true);
   }
 
   if (d_logic.isTheoryEnabled(internal::theory::THEORY_FF))
