@@ -47,13 +47,24 @@ if(NOT CaDiCaL_FOUND_SYSTEM)
   include(CheckSymbolExists)
   include(ExternalProject)
 
-  set(CaDiCaL_VERSION "rel-1.7.4")
-  set(CaDiCaL_CHECKSUM "9cc70c65c80f40c0c13b57cb43ea2a6804cae4eb")
+  #set(CaDiCaL_VERSION "rel-1.7.4")
+  #set(CaDiCaL_CHECKSUM "9cc70c65c80f40c0c13b57cb43ea2a6804cae4eb")
+  #set(CaDiCaL_VERSION "3d346f7")
+  #set(CaDiCaL_CHECKSUM "829f2d0ccde977f397971481dad6c3e8b4a51cd6")
+  #set(CaDiCaL_VERSION "rel-1.9.4")
+  #set(CaDiCaL_CHECKSUM "0b4304829e2d9c8b93831f15433a2529cf26b973")
+  #set(CaDiCaL_VERSION "0364d94")
+  #set(CaDiCaL_CHECKSUM "64ac19fe09bae699f671e3ce8343576fa610d4b8")
+  #set(CaDiCaL_VERSION "c675a01")
+  #set(CaDiCaL_CHECKSUM "be33b3ae3459dd562b116c3a575a03e10b528e66")
+  set(CaDiCaL_VERSION "73873e3")
+  set(CaDiCaL_CHECKSUM "1f8150ef7a4c4fdd1a9d77c6fd498a4435b87ddd")
 
   # avoid configure script and instantiate the makefile manually the configure
   # scripts unnecessarily fails for cross compilation thus we do the bare
   # minimum from the configure script here
   set(CXXFLAGS "-fPIC -O3 -DNDEBUG -DQUIET -std=c++11")
+  #set(CXXFLAGS "-fPIC -O3 -std=c++11")
   if(CMAKE_CROSSCOMPILING_MACOS)
     set(CXXFLAGS "${CXXFLAGS} -arch ${CMAKE_OSX_ARCHITECTURES}")
   endif()
@@ -63,6 +74,7 @@ if(NOT CaDiCaL_FOUND_SYSTEM)
   if(NOT HAVE_UNLOCKED_IO)
     string(APPEND CXXFLAGS " -DNUNLOCKED")
   endif()
+  #string(APPEND CXXFLAGS " -DLOGGING")
 
   # On macOS, we have to set `-isysroot` to make sure that include headers are
   # found because they are not necessarily installed at /usr/include anymore.
