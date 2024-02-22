@@ -312,7 +312,6 @@ void ProofNodeUpdater::runFinalize(
   {
     bool isScope = cur->getRule() == ProofRule::SCOPE;
     Node res = cur->getResult();
-    Trace("ajr-temp") << "Process " << *cur.get() << std::endl;
     // cache the result if we don't contain an assumption
     if (!expr::containsAssumption(cur.get(), cfaMap, cfaAllowed))
     {
@@ -339,13 +338,10 @@ void ProofNodeUpdater::runFinalize(
       if (itc == resCachec.end())
       {
         resCachec[res] = cur;
-        Trace("ajr-temp") << "Set to res" << std::endl;
       }
       else
       {
         ProofNodeManager* pnm = d_env.getProofNodeManager();
-        Trace("ajr-temp") << "Update ctx " << res << " " << *cur.get()
-                          << " with " << *itc->second.get() << std::endl;
         pnm->updateNode(cur.get(), itc->second.get());
       }
       Trace("pf-process-debug") << "Assumption pf: " << res << ", with "
@@ -367,7 +363,6 @@ void ProofNodeUpdater::runFinalize(
       itr = resCache.find(cpres);
       if (itr != resCache.end() && itr->second != cp)
       {
-        Trace("ajr-temp") << "...child changed " << cpres << std::endl;
         newChildren.emplace_back(itr->second);
         childChanged = true;
         continue;
@@ -380,13 +375,11 @@ void ProofNodeUpdater::runFinalize(
         if (itr != resCachec.end() && itr->second != cp)
         {
           newChildren.emplace_back(itr->second);
-          Trace("ajr-temp") << "...child changed ctx " << cpres << std::endl;
           childChanged = true;
           AlwaysAssert(itr->second != cur);
           continue;
         }
       }
-      Trace("ajr-temp") << "...child no change" << std::endl;
       newChildren.emplace_back(cp);
     }
     if (childChanged)
@@ -421,8 +414,6 @@ bool ProofNodeUpdater::checkMergeProof(
     {
       ProofNodeManager* pnm = d_env.getProofNodeManager();
       Assert(pnm != nullptr);
-      Trace("ajr-temp") << "Update " << res << " " << *cur.get() << " with "
-                        << *itc->second.get() << std::endl;
       // already have a proof, merge it into this one
       pnm->updateNode(cur.get(), itc->second.get());
       // does not contain free assumptions since the range of resCache does
