@@ -113,7 +113,6 @@ void TheoryArith::preRegisterTerm(TNode n)
   Kind k = n.getKind();
   if (k == Kind::POW)
   {
-    // Todo improve the exception thrown
     std::stringstream ss;
     ss << "The exponent of the POW(^) operator can only be a positive "
           "integral constant below "

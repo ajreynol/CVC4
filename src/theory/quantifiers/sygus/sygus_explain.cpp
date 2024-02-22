@@ -184,7 +184,7 @@ void SygusExplain::getExplanationFor(TermRecBuild& trb,
                                      Node n,
                                      Node vn,
                                      std::vector<Node>& exp,
-                                     std::map<TypeNode, int>& var_count,
+                                     std::map<TypeNode, size_t>& var_count,
                                      SygusInvarianceTest& et,
                                      Node vnr,
                                      Node& vnr_exp,
@@ -293,7 +293,7 @@ void SygusExplain::getExplanationFor(Node n,
                                      Node vnr,
                                      unsigned& sz)
 {
-  std::map<TypeNode, int> var_count;
+  std::map<TypeNode, size_t> var_count;
   return getExplanationFor(n, vn, exp, et, vnr, var_count, sz);
 }
 
@@ -302,7 +302,7 @@ void SygusExplain::getExplanationFor(Node n,
                                      std::vector<Node>& exp,
                                      SygusInvarianceTest& et,
                                      Node vnr,
-                                     std::map<TypeNode, int>& var_count,
+                                     std::map<TypeNode, size_t>& var_count,
                                      unsigned& sz)
 {
   // naive :
@@ -329,7 +329,7 @@ void SygusExplain::getExplanationFor(Node n,
                                      SygusInvarianceTest& et,
                                      bool strict)
 {
-  std::map<TypeNode, int> var_count;
+  std::map<TypeNode, size_t> var_count;
   getExplanationFor(n, vn, exp, et, var_count, strict);
 }
 
@@ -337,7 +337,7 @@ void SygusExplain::getExplanationFor(Node n,
                                      Node vn,
                                      std::vector<Node>& exp,
                                      SygusInvarianceTest& et,
-                                     std::map<TypeNode, int>& var_count,
+                                     std::map<TypeNode, size_t>& var_count,
                                      bool strict)
 {
   if (!strict)
