@@ -140,10 +140,10 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DRAT_REFUTATION:
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
-    case ProofRule::ENCODE_PRED_TRANSFORM:return true;
-    case ProofRule::ARITH_POLY_NORM: 
+    case ProofRule::ENCODE_PRED_TRANSFORM: return true;
+    case ProofRule::ARITH_POLY_NORM:
     {
-      Assert (pargs[0].getKind()==Kind::EQUAL);
+      Assert(pargs[0].getKind() == Kind::EQUAL);
       if (pargs[0][0].getType().isBoolean())
       {
         return pargs[0][0][0].getType().isRealOrInt();
