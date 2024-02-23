@@ -72,8 +72,8 @@
   (X Y) Z
   (
     ((mvar_mul_mvar (* a1 a2) (* b1 b2))  (alf.ite (poly_compare_var a1 b1)
-                                            (* a1 (mvar_mul_mvar a2 (* b1 b2)))
-                                            (* b1 (mvar_mul_mvar (* a1 a2) b2))))
+                                            (alf.cons * a1 (mvar_mul_mvar a2 (* b1 b2)))
+                                            (alf.cons * b1 (mvar_mul_mvar (* a1 a2) b2))))
     ((mvar_mul_mvar (* a1 a2) 1)          (* a1 a2))
     ((mvar_mul_mvar 1 (* b1 b2))          (* b1 b2))
     ((mvar_mul_mvar 1 1)                  1)
