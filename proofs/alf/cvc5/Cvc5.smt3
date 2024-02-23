@@ -80,11 +80,11 @@
       ((run_evaluate (xor x y))          (alf.xor (run_evaluate x) (run_evaluate y)))
   
       ; arithmetic
-      ((run_evaluate (< x z))            (alf.is_neg (arith_eval_qsub x z)))
-      ((run_evaluate (<= x z))           (let ((d (arith_eval_qsub x z)))
+      ((run_evaluate (< x z))            (alf.is_neg (arith_eval_qsub (run_evaluate x) (run_evaluate z))))
+      ((run_evaluate (<= x z))           (let ((d (arith_eval_qsub (run_evaluate x) (run_evaluate z))))
                                            (alf.or (alf.is_neg d) (alf.is_eq d 0/1))))
-      ((run_evaluate (> x z))            (alf.is_neg (arith_eval_qsub z x)))
-      ((run_evaluate (>= x z))           (let ((d (arith_eval_qsub z x)))
+      ((run_evaluate (> x z))            (alf.is_neg (arith_eval_qsub (run_evaluate z) (run_evaluate x))))
+      ((run_evaluate (>= x z))           (let ((d (arith_eval_qsub (run_evaluate z) (run_evaluate x))))
                                            (alf.or (alf.is_neg d) (alf.is_eq d 0/1))))
       ((run_evaluate (+ x ys))           (arith_eval_add (run_evaluate x) (run_evaluate ys)))
       ((run_evaluate (- x z))            (arith_eval_sub (run_evaluate x) (run_evaluate z)))
