@@ -140,8 +140,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DRAT_REFUTATION:
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
-    case ProofRule::ENCODE_PRED_TRANSFORM:
-    case ProofRule::DSL_REWRITE: return true;
+    case ProofRule::ENCODE_PRED_TRANSFORM: return true;
     case ProofRule::STRING_REDUCTION:
     {
       // depends on the operator
@@ -169,6 +168,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
       }
     }
     break;
+    case ProofRule::DSL_REWRITE:
     case ProofRule::ANNOTATION:
     case ProofRule::HO_APP_ENCODE:
     case ProofRule::BETA_REDUCE:
