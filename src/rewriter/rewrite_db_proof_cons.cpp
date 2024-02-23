@@ -22,6 +22,7 @@
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
+#include "proof/proof_node_algorithm.h"
 
 using namespace cvc5::internal::kind;
 
@@ -786,7 +787,10 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
       }
       else if (pcur.d_id == DslProofRule::CONG)
       {
-        cdp->addStep(cur, ProofRule::CONG, ps, pfArgs[cur]);
+        // get the appropriate CONG rule
+        std::vector<Node> cargs;
+        ProofRule cr = expr::getCongRule(cur[0], cargs);
+        cdp->addStep(cur, cr, ps, cargs);
       }
       else if (pcur.d_id == DslProofRule::CONG_EVAL)
       {
