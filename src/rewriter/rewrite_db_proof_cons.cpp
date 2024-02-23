@@ -17,12 +17,12 @@
 
 #include "expr/node_algorithm.h"
 #include "options/proof_options.h"
+#include "proof/proof_node_algorithm.h"
 #include "rewriter/rewrite_db_term_process.h"
 #include "smt/env.h"
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
-#include "proof/proof_node_algorithm.h"
 
 using namespace cvc5::internal::kind;
 
