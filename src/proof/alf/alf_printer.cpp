@@ -140,7 +140,8 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DRAT_REFUTATION:
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
-    case ProofRule::ENCODE_PRED_TRANSFORM: return true;
+    case ProofRule::ENCODE_PRED_TRANSFORM:
+    case ProofRule::ARITH_POLY_NORM: return true;
     case ProofRule::STRING_REDUCTION:
     {
       // depends on the operator
@@ -192,7 +193,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::ARITH_MULT_SIGN:
     case ProofRule::ARITH_MULT_TANGENT:
     case ProofRule::ARITH_OP_ELIM_AXIOM:
-    case ProofRule::ARITH_POLY_NORM:
     case ProofRule::ARITH_TRANS_PI:
     case ProofRule::ARITH_TRANS_EXP_NEG:
     case ProofRule::ARITH_TRANS_EXP_POSITIVITY:
