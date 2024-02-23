@@ -26,26 +26,29 @@ using namespace cvc5::internal::kind;
 namespace cvc5::internal {
 namespace rewriter {
 
-// clang-format off
-${decl_individual_rewrites}$
-// clang-format on
-
 void addRules(RewriteDb& db)
 {
-  // Calls to individual rewrites
+  NodeManager* nm = NodeManager::currentNM();
+
+  // Variables
   // clang-format off
-  ${call_individual_rewrites}$
+${decls}$
+
+  // Definitions
+${defns}$
+
+  // Rules
+${rules}$
   // clang-format on
 }
 
 bool isInternalDslProofRule(DslProofRule drule)
 {
-  return drule == DslProofRule::FAIL || drule == DslProofRule::REFL
-         || drule == DslProofRule::EVAL || drule == DslProofRule::TRANS
-         || drule == DslProofRule::CONG || drule == DslProofRule::CONG_EVAL
-         || drule == DslProofRule::TRUE_ELIM
-         || drule == DslProofRule::TRUE_INTRO
-         || drule == DslProofRule::ARITH_POLY_NORM;
+return drule == DslProofRule::FAIL || drule == DslProofRule::REFL
+       || drule == DslProofRule::EVAL || drule == DslProofRule::TRANS
+       || drule == DslProofRule::CONG || drule == DslProofRule::CONG_EVAL
+       || drule == DslProofRule::TRUE_ELIM || drule == DslProofRule::TRUE_INTRO
+       || drule == DslProofRule::ARITH_POLY_NORM;
 }
 
 const char* toString(DslProofRule drule)
