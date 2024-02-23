@@ -119,7 +119,7 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r,
                                         TNode n,
                                         size_t i,
                                         const std::vector<size_t>& premises,
-                      const std::vector<Node>& args,
+                                        const std::vector<Node>& args,
                                         TNode nc)
 {
   Assert(!nc.isNull());
@@ -129,7 +129,7 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r,
     d_warnedRules.insert(r);
   }
   d_out << "; trust " << r;
-  if (r==ProofRule::DSL_REWRITE)
+  if (r == ProofRule::DSL_REWRITE)
   {
     rewriter::DslProofRule di;
     if (rewriter::getDslProofRule(args[0], di))
@@ -199,7 +199,7 @@ void AlfPrintChannelPre::printTrustStep(ProofRule r,
                                         TNode n,
                                         size_t i,
                                         const std::vector<size_t>& premises,
-                      const std::vector<Node>& args,
+                                        const std::vector<Node>& args,
                                         TNode nc)
 {
   Assert(!nc.isNull());
