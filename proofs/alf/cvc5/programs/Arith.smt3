@@ -102,7 +102,7 @@
   )
 )
 
-(program get_poly_norm ((T Type) (U Type) (V Type) (a T) (a1 U) (a2 V))
+(program get_poly_norm ((T Type) (U Type) (V Type) (a T) (a1 U) (a2 V :list))
   (T) @Polynomial
   (
     ((get_poly_norm (- a1))       (poly_neg (get_poly_norm a1)))

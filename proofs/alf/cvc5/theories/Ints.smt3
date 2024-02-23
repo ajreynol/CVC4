@@ -13,6 +13,8 @@
 (declare-const iand (-> Int Int Int Int))
 ; The "integer power of 2" operator.
 (declare-const int.pow2 (-> Int Int))
+; The "integer log 2" operator
+(declare-const int.log2 (-> Int Int))
 
 ; Internally generated terms.
 (declare-const div_total (-> Int Int Int) :left-assoc)
