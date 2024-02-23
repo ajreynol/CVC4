@@ -143,6 +143,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::ENCODE_PRED_TRANSFORM: return true;
     case ProofRule::ARITH_POLY_NORM:
     {
+      // we don't support bitvectors yet
       Assert(pargs[0].getKind() == Kind::EQUAL);
       if (pargs[0][0].getType().isBoolean())
       {
@@ -790,7 +791,7 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
   if (!handled)
   {
     out->printTrustStep(
-        pn->getRule(), conclusionPrint, id, premises, conclusion);
+        pn->getRule(), conclusionPrint, id, premises, pn->getArguments(), conclusion);
     return;
   }
   std::string rname = getRuleName(pn);
