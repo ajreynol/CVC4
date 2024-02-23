@@ -25,7 +25,7 @@ namespace arith {
 
 void PolyNorm::addMonomial(TNode x, const Rational& c, bool isNeg)
 {
-  // if zero, ignore
+  // if zero, ignore since adding zero is a no-op.
   if (c.sgn() == 0)
   {
     return;
@@ -73,17 +73,26 @@ void PolyNorm::multiplyMonomial(TNode x, const Rational& c)
   }
 }
 
-void PolyNorm::mod(const Rational& c)
+void PolyNorm::modCoeffs(const Rational& c)
 {
   Assert(c.sgn() != 0);
   Assert(c.isIntegral());
   const Integer& ci = c.getNumerator();
-  // multiply by constant
+  // mod the coefficient by constant
+  std::vector<Node> zeroes;
   for (std::pair<const Node, Rational>& m : d_polyNorm)
   {
-    // c1*x*c2 = (c1*c2)*x
     Assert(m.second.isIntegral());
     m.second = Rational(m.second.getNumerator().euclidianDivideRemainder(ci));
+    if (m.second.sgn()==0)
+    {
+      zeroes.push_back(m.first);
+    }
+  }
+  // go back and erase monomials that became zero
+  for (const Node& z : zeroes)
+  {
+    d_polyNorm.erase(z);
   }
 }
 
@@ -246,25 +255,12 @@ PolyNorm PolyNorm::mkPolyNorm(TNode n)
       }
       else if (k == Kind::CONST_BITVECTOR)
       {
+        // The bitwidth does not matter here, since the logic for normalizing
+        // polynomials considers the semantics of overflow.
         BitVector bv = cur.getConst<BitVector>();
         visited[cur].addMonomial(null, Rational(bv.getValue()));
         visit.pop_back();
         continue;
-      }
-      else if (k == Kind::CONST_BITVECTOR_SYMBOLIC)
-      {
-        // handle symbolic bv constants here as well
-        if (cur[0].isConst() && cur[1].isConst()
-            && cur[1].getConst<Rational>().sgn() == 1
-            && cur[1].getConst<Rational>().getNumerator().fitsUnsignedInt())
-        {
-          Integer value = cur[0].getConst<Rational>().getNumerator();
-          Integer size = cur[1].getConst<Rational>().getNumerator();
-          BitVector bv(size.toUnsignedInt(), value);
-          visited[cur].addMonomial(null, Rational(bv.getValue()));
-          visit.pop_back();
-          continue;
-        }
       }
       else if (k == Kind::ADD || k == Kind::SUB || k == Kind::NEG
                || k == Kind::MULT || k == Kind::NONLINEAR_MULT
@@ -304,8 +300,8 @@ PolyNorm PolyNorm::mkPolyNorm(TNode n)
           {
             it = visited.find(cur[i]);
             Assert(it != visited.end());
-            if (((k == Kind::SUB || k == Kind::BITVECTOR_SUB) && i == 1)
-                || k == Kind::NEG || k == Kind::BITVECTOR_NEG)
+            if (((k == Kind::SUB || k == Kind::BITVECTOR_SUB) && i == 1) || k == Kind::NEG
+                || k == Kind::BITVECTOR_NEG)
             {
               ret.subtract(it->second);
             }
@@ -324,7 +320,6 @@ PolyNorm PolyNorm::mkPolyNorm(TNode n)
         case Kind::CONST_RATIONAL:
         case Kind::CONST_INTEGER:
         case Kind::CONST_BITVECTOR:
-        case Kind::CONST_BITVECTOR_SYMBOLIC:
           // ignore, this is the case of a repeated zero, since we check for
           // empty of the polynomial above.
           break;
@@ -363,7 +358,8 @@ bool PolyNorm::isArithPolyNormAtom(TNode a, TNode b)
   {
     return false;
   }
-  // the type of nodes are considering
+  // Compute the type of nodes are considering. We must ensure that a and b
+  // have comparable type, or else we fail here.
   TypeNode eqtn;
   if (k == Kind::EQUAL)
   {
@@ -402,8 +398,8 @@ bool PolyNorm::isArithPolyNormAtom(TNode a, TNode b)
     {
       // for bitvectors, take modulo 2^w on coefficients
       Rational w = Rational(Integer(2).pow(eqtn.getBitVectorSize()));
-      pa.mod(w);
-      pb.mod(w);
+      pa.modCoeffs(w);
+      pb.modCoeffs(w);
     }
     // Check for equality. notice that we don't insist on any type here.
     return pa.isEqual(pb);
