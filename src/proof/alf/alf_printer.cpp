@@ -140,8 +140,17 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DRAT_REFUTATION:
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
-    case ProofRule::ENCODE_PRED_TRANSFORM:
-    case ProofRule::ARITH_POLY_NORM: return true;
+    case ProofRule::ENCODE_PRED_TRANSFORM:return true;
+    case ProofRule::ARITH_POLY_NORM: 
+    {
+      Assert (pargs[0].getKind()==Kind::EQUAL);
+      if (pargs[0][0].getType().isBoolean())
+      {
+        return pargs[0][0][0].getType().isRealOrInt();
+      }
+      return pargs[0][0].getType().isRealOrInt();
+    }
+    break;
     case ProofRule::STRING_REDUCTION:
     {
       // depends on the operator
