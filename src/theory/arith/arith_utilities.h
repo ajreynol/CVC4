@@ -345,6 +345,7 @@ std::pair<Node,Node> mkSameType(const Node& a, const Node& b);
  * where n is the bitwidth of x.
  */
 Node eliminateBv2Nat(TNode node);
+Node reduceBv2Nat(TNode node, std::vector<Node>& lemmas);
 /**
  * Returns the rewritten form of node, which is a term of the form int2bv(x).
  * The return value of this method is the concatenation term:
@@ -354,6 +355,7 @@ Node eliminateBv2Nat(TNode node);
  * where n is the bit-width of x.
  */
 Node eliminateInt2Bv(TNode node);
+Node reduceInt2Bv(TNode node);
 
 }  // namespace arith
 }  // namespace theory

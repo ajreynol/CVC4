@@ -79,15 +79,19 @@ void ConversionsSolver::checkReduction(Node n)
 
   Node lem;
   Kind k = n.getKind();
+  std::vector<Node> lemmas;
   if (k == Kind::BITVECTOR_TO_NAT)
   {
-    lem = arith::eliminateBv2Nat(n);
+    //lem = arith::eliminateBv2Nat(n);
+    lem = arith::reduceBv2Nat(n, lemmas);
   }
   else if (k == Kind::INT_TO_BITVECTOR)
   {
     lem = arith::eliminateInt2Bv(n);
   }
   lem = n.eqNode(lem);
+  lemmas.push_back(lem);
+  Node lem = nm->mkAnd(lemmas);
   d_im.lemma(lem, InferenceId::UF_ARITH_BV_CONV_REDUCTION);
   d_reduced.insert(n);
   Trace("bv-convs") << "...do reduction" << std::endl;

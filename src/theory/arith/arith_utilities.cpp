@@ -335,6 +335,43 @@ Node eliminateBv2Nat(TNode node)
   return children.size() == 1 ? children[0] : nm->mkNode(Kind::ADD, children);
 }
 
+Node reduceBv2Nat(TNode node, std::vector<Node>& lemmas)
+{
+  const unsigned size = bv::utils::getSize(node[0]);
+  NodeManager* const nm = NodeManager::currentNM();
+  const Node z = nm->mkConstInt(Rational(0));
+  const Node bvone = bv::utils::mkOne(1);
+
+  Integer i = 1;
+  std::vector<Node> children;
+  Node prevAssign;
+  for (unsigned bit = 0; bit < size; ++bit, i *= 2)
+  {
+    Node cond =
+        nm->mkNode(Kind::EQUAL,
+                   nm->mkNode(nm->mkConst(BitVectorExtract(bit, bit)), node[0]),
+                   bvone);
+    Node value = nm->mkConstInt(Rational(i));
+    Node iteTerm = nm->mkNode(Kind::ITE, cond, value, z);
+    Node k = sm->mkPurifySkolem(iteTerm);
+    // add range lemma
+    Node krange = nm->mkNode(Kind::AND, nm->mkNode(Kind::LEQ, z, k), nm->mkNode(Kind::LEQ, k, value));
+    lemmas.push_back(krange);
+    Node prevDisj = disj;
+    // only assign if previous is assigned
+    disj = nm->mkNode(Kind::ITE, cond, nm->mkNode(Kind::EQUAL, k, value), nm->mkNode(Kind::EQUAL, k, z));
+    if (!prevDisj.isNull())
+    {
+      Node newAssign = nm->mkNode(Kind::IMPLIES, prevDisj, disj);
+      lemmas.push_back(newAssign);
+    }
+    children.push_back(k);
+  }
+  // avoid plus with one child
+  return children.size() == 1 ? children[0] : nm->mkNode(Kind::ADD, children);
+}
+
+
 Node eliminateInt2Bv(TNode node)
 {
   const uint32_t size = node.getOperator().getConst<IntToBitVector>().d_size;
