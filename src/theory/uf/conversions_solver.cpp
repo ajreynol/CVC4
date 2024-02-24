@@ -91,7 +91,7 @@ void ConversionsSolver::checkReduction(Node n)
   }
   lem = n.eqNode(lem);
   lemmas.push_back(lem);
-  Node lem = nm->mkAnd(lemmas);
+  lem = NodeManager::currentNM()->mkAnd(lemmas);
   d_im.lemma(lem, InferenceId::UF_ARITH_BV_CONV_REDUCTION);
   d_reduced.insert(n);
   Trace("bv-convs") << "...do reduction" << std::endl;

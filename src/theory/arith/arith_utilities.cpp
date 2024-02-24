@@ -19,6 +19,7 @@
 
 #include "theory/bv/theory_bv_utils.h"
 #include "util/bitvector.h"
+#include "expr/skolem_manager.h"
 
 using namespace cvc5::internal::kind;
 
@@ -345,6 +346,7 @@ Node reduceBv2Nat(TNode node, std::vector<Node>& lemmas)
   Integer i = 1;
   std::vector<Node> children;
   Node prevAssign;
+  SkolemManager * sm = nm->getSkolemManager();
   for (unsigned bit = 0; bit < size; ++bit, i *= 2)
   {
     Node cond =
@@ -357,14 +359,10 @@ Node reduceBv2Nat(TNode node, std::vector<Node>& lemmas)
     // add range lemma
     Node krange = nm->mkNode(Kind::AND, nm->mkNode(Kind::LEQ, z, k), nm->mkNode(Kind::LEQ, k, value));
     lemmas.push_back(krange);
-    Node prevDisj = disj;
     // only assign if previous is assigned
-    disj = nm->mkNode(Kind::ITE, cond, nm->mkNode(Kind::EQUAL, k, value), nm->mkNode(Kind::EQUAL, k, z));
-    if (!prevDisj.isNull())
-    {
-      Node newAssign = nm->mkNode(Kind::IMPLIES, prevDisj, disj);
-      lemmas.push_back(newAssign);
-    }
+    Node disj = nm->mkNode(Kind::ITE, cond, nm->mkNode(Kind::EQUAL, k, value), nm->mkNode(Kind::EQUAL, k, z));
+    Node newAssign = nm->mkNode(Kind::IMPLIES, krange, disj);
+    lemmas.push_back(newAssign);
     children.push_back(k);
   }
   // avoid plus with one child
