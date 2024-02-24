@@ -34,6 +34,8 @@
 #include "preprocessing/passes/bv_to_bool.h"
 #include "preprocessing/passes/bv_to_int.h"
 #include "preprocessing/passes/extended_rewriter_pass.h"
+#include "preprocessing/passes/ff_bitsum.h"
+#include "preprocessing/passes/ff_disjunctive_bit.h"
 #include "preprocessing/passes/foreign_theory_rewrite.h"
 #include "preprocessing/passes/fun_def_fmf.h"
 #include "preprocessing/passes/global_negate.h"
@@ -82,6 +84,7 @@ void PreprocessingPassRegistry::registerPassInfo(
 PreprocessingPass* PreprocessingPassRegistry::createPass(
     PreprocessingPassContext* ppCtx, const std::string& name)
 {
+  Assert(d_ppInfo.count(name));
   return d_ppInfo[name](ppCtx);
 }
 
@@ -127,6 +130,8 @@ PreprocessingPassRegistry::PreprocessingPassRegistry()
   registerPassInfo("global-negate", callCtor<GlobalNegate>);
   registerPassInfo("int-to-bv", callCtor<IntToBV>);
   registerPassInfo("bv-to-int", callCtor<BVToInt>);
+  registerPassInfo("ff-bitsum", callCtor<FfBitsum>);
+  registerPassInfo("ff-disjunctive-bit", callCtor<FfDisjunctiveBit>);
   registerPassInfo("learned-rewrite", callCtor<LearnedRewrite>);
   registerPassInfo("foreign-theory-rewrite", callCtor<ForeignTheoryRewrite>);
   registerPassInfo("synth-rr", callCtor<SynthRewRulesPass>);
