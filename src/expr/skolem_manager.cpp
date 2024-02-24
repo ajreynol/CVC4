@@ -344,7 +344,7 @@ Node SkolemManager::mkProxyLit(const Node& lit)
   Assert(lit.getType().isBoolean());
   NodeManager* nm = NodeManager::currentNM();
   return mkInternalSkolemFunction(
-      InternalSkolemFunId::PROXY_LIT, nm->booleanType(), lit);
+      InternalSkolemFunId::PROXY_LIT, nm->booleanType(), {lit});
 }
 
 Node SkolemManager::getOriginalForm(Node n)

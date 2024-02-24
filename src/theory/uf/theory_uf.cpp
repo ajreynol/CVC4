@@ -278,12 +278,15 @@ TrustNode TheoryUF::ppRewrite(TNode node, std::vector<SkolemLemma>& lems)
     SkolemFunId id;
     NodeManager* nm = NodeManager::currentNM();
     SkolemManager* skm = nm->getSkolemManager();
-    if (skm->isSkolemFunction(node, id, def) && id == SkolemFunId::PROXY_LIT)
+    if (skm->isSkolemFunction(node, id, def) && id == SkolemFunId::INTERNAL)
     {
-      // node = def where def is the literal for node
-      Node lem = nm->mkNode(Kind::EQUAL, node, def);
-      TrustNode tlem = TrustNode::mkTrustLemma(lem);
-      lems.emplace_back(tlem, node);
+      if (skm->getInternalId(node)==InternalSkolemFunId::PROXY_LIT)
+      {
+        // node = def where def is the literal for node
+        Node lem = nm->mkNode(Kind::EQUAL, node, def);
+        TrustNode tlem = TrustNode::mkTrustLemma(lem);
+        lems.emplace_back(tlem, node);
+      }
     }
   }
   if (isHol)
