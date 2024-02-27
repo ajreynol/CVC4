@@ -359,11 +359,7 @@ Node reduceBv2Nat(TNode node, std::vector<Node>& lemmas)
     // add range lemma
     Node krange = nm->mkNode(Kind::AND, nm->mkNode(Kind::LEQ, z, k), nm->mkNode(Kind::LEQ, k, value));
     lemmas.push_back(krange);
-    // only assign if previous is assigned
-    Node disj = nm->mkNode(Kind::ITE, cond, nm->mkNode(Kind::EQUAL, k, value), nm->mkNode(Kind::EQUAL, k, z));
-    Node newAssign = nm->mkNode(Kind::IMPLIES, krange, disj);
-    lemmas.push_back(newAssign);
-    children.push_back(k);
+    children.push_back(iteTerm);
   }
   // avoid plus with one child
   return children.size() == 1 ? children[0] : nm->mkNode(Kind::ADD, children);
