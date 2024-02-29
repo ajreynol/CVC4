@@ -177,6 +177,7 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(std::ostream* outDimacs)
   if (satPf!=nullptr)
   {
     // then, get the proof *without* connecting the CNF
+    // FIXME is this cyclic???
     satPf = getProof(false);
     expr::getFreeAssumptions(satPf.get(), uc);
     if (outDimacs!=nullptr)
