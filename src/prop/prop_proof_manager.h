@@ -172,14 +172,19 @@ class PropPfManager : protected EnvObj
   std::vector<Node> getInputClauses();
   /** Retrieve the clauses derived from lemmas */
   std::vector<Node> getLemmaClauses();
+  /** Return lemmas used in the SAT proof. */
+  std::vector<Node> getUnsatCoreClauses(std::ostream* outDimacs = nullptr);
+  /** Get minimized assumptions */
+  std::vector<Node> getMinimizedAssumptions();
+  /** */
+  bool reproveUnsatCore(const std::unordered_set<Node>& cset, std::vector<Node>& uc, std::ostream* outDimacs = nullptr, CDProof* cdp = nullptr);
   /**
    * Return a subset of input clauses + lemma clauses that is unsat.
    * If minimal is true, we spawn a copy of CaDiCaL to (re)minimize this set.
    * If outDimacs is non-null, we output to it a DIMACS representation of the
    * returned set of clauses.
    */
-  std::vector<Node> getUnsatCoreClauses(CDCLTSatSolver*& pfsolver,
-                                        std::ostream* outDimacs = nullptr);
+  void getProofInternal(CDProof* cdp);
   /** The proofs of this proof manager, which are saved once requested (note the
    * cache is for both the request of the full proof (true) or not (false)).
    *
