@@ -172,9 +172,11 @@ std::vector<Node> PropPfManager::getMinimizedAssumptions()
 std::vector<Node> PropPfManager::getUnsatCoreClauses(std::ostream* outDimacs)
 {
   std::vector<Node> uc;
+  // if it has a proof
   std::shared_ptr<ProofNode> satPf = d_satSolver->getProof();
   if (satPf!=nullptr)
   {
+    // then, get the proof *without* connecting the CNF
     satPf = getProof(false);
     expr::getFreeAssumptions(satPf.get(), uc);
     if (outDimacs!=nullptr)
