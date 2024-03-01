@@ -778,9 +778,23 @@ CnfStream::Statistics::Statistics(StatisticsRegistry& sr,
 {
 }
 
+void CnfStream::dumpDimacs(std::ostream& out, const std::vector<Node>& clauses)
+{
+  std::vector<Node> auxUnits;
+  dumpDimacsInternal(out, clauses, auxUnits, false);
+}
+
 void CnfStream::dumpDimacs(std::ostream& out,
                            const std::vector<Node>& clauses,
                            std::vector<Node>& auxUnits)
+{
+  dumpDimacsInternal(out, clauses, auxUnits, true);
+}
+
+void CnfStream::dumpDimacsInternal(std::ostream& out,
+                                   const std::vector<Node>& clauses,
+                                   std::vector<Node>& auxUnits,
+                                   bool printAuxUnits)
 {
   std::stringstream dclauses;
   SatVariable maxVar = 0;
@@ -808,7 +822,7 @@ void CnfStream::dumpDimacs(std::ostream& out,
       dclauses << (negated ? "-" : "") << v << " ";
       Trace("dimacs-debug") << "DIMACS " << v << " " << atom << std::endl;
       // print the literal as an auxilary unit if applicable
-      if (atom.getKind() == Kind::OR
+      if (printAuxUnits && atom.getKind() == Kind::OR
           && std::find(clauses.begin(), clauses.end(), atom) != clauses.end()
           && std::find(auxUnits.begin(), auxUnits.end(), atom)
                  == auxUnits.end())
