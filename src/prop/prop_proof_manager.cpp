@@ -177,8 +177,6 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(std::ostream* outDimacs)
   if (satPf!=nullptr)
   {
     // then, get the proof *without* connecting the CNF
-    // FIXME is this cyclic???
-    satPf = getProof(false);
     expr::getFreeAssumptions(satPf.get(), uc);
     if (outDimacs!=nullptr)
     {
@@ -391,32 +389,14 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(bool connectCnf)
   }
   if (!connectCnf)
   {
-    // if the sat proof was previously connected to the cnf, then the
-    // assumptions will have been updated and we'll not have the expected
-    // behavior here (i.e., the sat proof with the clauses given to the SAT
-    // solver as leaves). In this case we will build a new proof node in which
-    // we will erase the connected proofs (via overwriting them with
-    // assumptions). This will be done in a cloned proof node so we do not alter
-    // what is stored in d_propProofs.
-    if (d_propProofs.find(true) != d_propProofs.end())
-    {
-      CDProof cdp(d_env);
-      std::vector<Node> inputs = getInputClauses();
-      std::vector<Node> lemmas = getLemmaClauses();
-      // get the clauses added to the SAT solver and add them as assumptions
-      std::vector<Node> allAssumptions{inputs.begin(), inputs.end()};
-      allAssumptions.insert(allAssumptions.end(), lemmas.begin(), lemmas.end());
-      for (const Node& a : allAssumptions)
-      {
-        cdp.addStep(a, ProofRule::ASSUME, {}, {a});
-      }
-      // add the sat proof copying the proof nodes but not overwriting the
-      // assumption clauses
-      cdp.addProof(conflictProof, CDPOverwrite::NEVER, true);
-      conflictProof = cdp.getProof(NodeManager::currentNM()->mkConst(false));
-    }
     d_propProofs[connectCnf] = conflictProof;
     return conflictProof;
+  }
+  // Must clone if we are using the original proof, since we don't want to
+  // modify the original SAT proof.
+  if (pmode == options::PropProofMode::PROOF)
+  {
+    conflictProof = conflictProof->clone();
   }
   // connect it with CNF proof
   d_pfpp->process(conflictProof);
