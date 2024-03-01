@@ -167,11 +167,11 @@ class CnfStream : protected EnvObj
    * @param out The output stream.
    * @param clauses The clauses to print.
    */
-  void dumpDimacs(std::ostream& out,
-                  const std::vector<Node>& clauses);
+  void dumpDimacs(std::ostream& out, const std::vector<Node>& clauses);
   /**
-   * Same as above, but additionally prints top-level formulas in clauses that also occur as literals which we call "auxiliary units".
-   * In particular, say we pass the following clauses to this method:
+   * Same as above, but additionally prints top-level formulas in clauses that
+   * also occur as literals which we call "auxiliary units". In particular, say
+   * we pass the following clauses to this method:
    *
    * (or ~(or A B) ~C)
    * (or A B)
@@ -187,13 +187,16 @@ class CnfStream : protected EnvObj
    *
    * and add (or A B) to auxUnits.
    *
-   * Note that in the above example, it is ambiguous whether to interpret (or A B) as a unit clause or as a clause with literals A and B.
-   * To ensure that we print an unsatisfiable DIMACS, we include both in the output. In particular,
-   * Any OR-term that occurs as a literal of another clause is adding to auxUnits and is printed at the end of the DIMACS.
+   * Note that in the above example, it is ambiguous whether to interpret (or A
+   * B) as a unit clause or as a clause with literals A and B. To ensure that we
+   * print an unsatisfiable DIMACS, we include both in the output. In
+   * particular, Any OR-term that occurs as a literal of another clause is
+   * adding to auxUnits and is printed at the end of the DIMACS.
    *
    * @param out The output stream.
    * @param clauses The clauses to print.
-   * @param clauses The auxiliary units that were appended to the end of the DIMACS, after clauses were printed.
+   * @param clauses The auxiliary units that were appended to the end of the
+   * DIMACS, after clauses were printed.
    */
   void dumpDimacs(std::ostream& out,
                   const std::vector<Node>& clauses,
@@ -202,8 +205,8 @@ class CnfStream : protected EnvObj
  protected:
   /** Helper function */
   void dumpDimacsInternal(std::ostream& out,
-                  const std::vector<Node>& clauses,
-                  std::vector<Node>& auxUnits,
+                          const std::vector<Node>& clauses,
+                          std::vector<Node>& auxUnits,
                           bool printAuxUnits);
   /**
    * Same as above, except that uses the saved d_removable flag. It calls the

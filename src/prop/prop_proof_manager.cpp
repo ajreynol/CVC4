@@ -120,7 +120,9 @@ std::vector<Node> PropPfManager::getUnsatCoreLemmas()
   std::vector<Node> allLemmas = getLemmaClauses();
   // compute the unsat core clauses, as below
   std::vector<Node> ucc = getUnsatCoreClauses();
-  Trace("prop-pf") << "Compute unsat core lemmas from " << ucc.size() << " clauses (of " << allLemmas.size() << " lemmas)" << std::endl;
+  Trace("prop-pf") << "Compute unsat core lemmas from " << ucc.size()
+                   << " clauses (of " << allLemmas.size() << " lemmas)"
+                   << std::endl;
   Trace("prop-pf") << "lemmas: " << allLemmas << std::endl;
   Trace("prop-pf") << "uc: " << ucc << std::endl;
   // filter to only those corresponding to lemmas
@@ -174,11 +176,11 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(std::ostream* outDimacs)
   std::vector<Node> uc;
   // if it has a proof
   std::shared_ptr<ProofNode> satPf = d_satSolver->getProof();
-  if (satPf!=nullptr)
+  if (satPf != nullptr)
   {
     // then, get the proof *without* connecting the CNF
     expr::getFreeAssumptions(satPf.get(), uc);
-    if (outDimacs!=nullptr)
+    if (outDimacs != nullptr)
     {
       std::vector<Node> auxUnits;
       d_pfCnfStream.dumpDimacs(*outDimacs, uc, auxUnits);
@@ -203,17 +205,16 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(std::ostream* outDimacs)
   return uc;
 }
 
-bool PropPfManager::reproveUnsatCore(const std::unordered_set<Node>& cset, std::vector<Node>& uc, std::ostream* outDimacs, CDProof* cdp)
+bool PropPfManager::reproveUnsatCore(const std::unordered_set<Node>& cset,
+                                     std::vector<Node>& uc,
+                                     std::ostream* outDimacs,
+                                     CDProof* cdp)
 {
   bool minProofGen = (cdp != nullptr);
-  Trace("cnf-input-min") << "Make cadical, proof gen = " << minProofGen
-                          << "..." << std::endl;
-  CDCLTSatSolver* csm =
-      SatSolverFactory::createCadical(d_env,
-                                      statisticsRegistry(),
-                                      d_env.getResourceManager(),
-                                      "",
-                                      minProofGen);
+  Trace("cnf-input-min") << "Make cadical, proof gen = " << minProofGen << "..."
+                         << std::endl;
+  CDCLTSatSolver* csm = SatSolverFactory::createCadical(
+      d_env, statisticsRegistry(), d_env.getResourceManager(), "", minProofGen);
   NullRegistrar nreg;
   context::Context nctx;
   CnfStream csms(d_env, csm, &nreg, &nctx);
@@ -275,7 +276,7 @@ bool PropPfManager::reproveUnsatCore(const std::unordered_set<Node>& cset, std::
     litToNodeAbs[lit] = ca;
   }
   Trace("cnf-input-min") << "Solve under " << csma.size() << " assumptions..."
-                          << std::endl;
+                         << std::endl;
   SatValue res = csm->solve(csma);
   if (res == SAT_VALUE_FALSE)
   {
@@ -283,8 +284,8 @@ bool PropPfManager::reproveUnsatCore(const std::unordered_set<Node>& cset, std::
     Trace("cnf-input-min") << "...got unsat" << std::endl;
     std::vector<SatLiteral> uassumptions;
     csm->getUnsatAssumptions(uassumptions);
-    Trace("cnf-input-min")
-        << "...#unsat assumptions=" << uassumptions.size() << std::endl;
+    Trace("cnf-input-min") << "...#unsat assumptions=" << uassumptions.size()
+                           << std::endl;
     std::vector<Node> aclauses;
     for (const SatLiteral& lit : uassumptions)
     {
@@ -475,7 +476,7 @@ void PropPfManager::getProofInternal(CDProof* cdp)
   // deduplicate assumptions
   Trace("cnf-input") << "#assumptions=" << d_assumptions.size() << std::endl;
   std::vector<Node> minAssumptions = getMinimizedAssumptions();
-  if (minAssumptions.size()==1 && minAssumptions[0]==falsen)
+  if (minAssumptions.size() == 1 && minAssumptions[0] == falsen)
   {
     // if false exists, no proof is necessary
     return;
@@ -506,7 +507,7 @@ void PropPfManager::getProofInternal(CDProof* cdp)
   {
     // get the unsat core clauses
     std::shared_ptr<ProofNode> satPf = d_satSolver->getProof();
-    if (satPf!=nullptr)
+    if (satPf != nullptr)
     {
       clauses = getUnsatCoreClauses(&dout);
       computedClauses = true;
@@ -524,7 +525,7 @@ void PropPfManager::getProofInternal(CDProof* cdp)
   if (!computedClauses)
   {
     // if no minimization is necessary, just include all
-    clauses.insert(clauses.end(), cset.begin(), cset.end());    
+    clauses.insert(clauses.end(), cset.begin(), cset.end());
     std::vector<Node> auxUnits;
     d_pfCnfStream.dumpDimacs(dout, clauses, auxUnits);
     // include the auxiliary units if necessary
@@ -538,8 +539,7 @@ void PropPfManager::getProofInternal(CDProof* cdp)
   if (pmode == options::PropProofMode::SKETCH)
   {
     // if sketch, get the rule and arguments from the SAT solver.
-    std::pair<ProofRule, std::vector<Node>> sk =
-        d_satSolver->getProofSketch();
+    std::pair<ProofRule, std::vector<Node>> sk = d_satSolver->getProofSketch();
     r = sk.first;
     args.insert(args.end(), sk.second.begin(), sk.second.end());
   }

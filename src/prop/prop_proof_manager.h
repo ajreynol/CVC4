@@ -187,12 +187,16 @@ class PropPfManager : protected EnvObj
    *
    * @param cset The set of formulas to compute an unsat core for
    * @param uc The set of formulas returned as the unsat core
-   * @param outDimacs If provided, we write the DIMACS output of uc to this stream
+   * @param outDimacs If provided, we write the DIMACS output of uc to this
+   * stream
    */
-  bool reproveUnsatCore(const std::unordered_set<Node>& cset, std::vector<Node>& uc, std::ostream* outDimacs = nullptr, CDProof* cdp = nullptr);
+  bool reproveUnsatCore(const std::unordered_set<Node>& cset,
+                        std::vector<Node>& uc,
+                        std::ostream* outDimacs = nullptr,
+                        CDProof* cdp = nullptr);
   /**
-   * Add a proof of false to cdp whose free assumptions are a subset of the clauses
-   * (after CNF conversion), which is a union of:
+   * Add a proof of false to cdp whose free assumptions are a subset of the
+   * clauses (after CNF conversion), which is a union of:
    * (1) assumptions (d_assumptions),
    * (2) input clauses (d_inputClauses),
    * (3) lemma clauses (d_lemmaClauses).

@@ -778,8 +778,7 @@ CnfStream::Statistics::Statistics(StatisticsRegistry& sr,
 {
 }
 
-void CnfStream::dumpDimacs(std::ostream& out,
-                const std::vector<Node>& clauses)
+void CnfStream::dumpDimacs(std::ostream& out, const std::vector<Node>& clauses)
 {
   std::vector<Node> auxUnits;
   dumpDimacsInternal(out, clauses, auxUnits, false);
@@ -795,7 +794,7 @@ void CnfStream::dumpDimacs(std::ostream& out,
 void CnfStream::dumpDimacs(std::ostream& out,
                            const std::vector<Node>& clauses,
                            std::vector<Node>& auxUnits,
-                          bool printAuxUnits)
+                           bool printAuxUnits)
 {
   std::stringstream dclauses;
   SatVariable maxVar = 0;
