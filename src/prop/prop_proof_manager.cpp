@@ -27,7 +27,6 @@
 #include "prop/sat_solver.h"
 #include "prop/sat_solver_factory.h"
 #include "smt/env.h"
-#include "smt/print_benchmark.h"
 #include "util/string.h"
 
 namespace cvc5::internal {

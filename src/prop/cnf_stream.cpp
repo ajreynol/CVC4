@@ -791,10 +791,10 @@ void CnfStream::dumpDimacs(std::ostream& out,
   dumpDimacsInternal(out, clauses, auxUnits, true);
 }
 
-void CnfStream::dumpDimacs(std::ostream& out,
-                           const std::vector<Node>& clauses,
-                           std::vector<Node>& auxUnits,
-                           bool printAuxUnits)
+void CnfStream::dumpDimacsInternal(std::ostream& out,
+                                   const std::vector<Node>& clauses,
+                                   std::vector<Node>& auxUnits,
+                                   bool printAuxUnits)
 {
   std::stringstream dclauses;
   SatVariable maxVar = 0;
