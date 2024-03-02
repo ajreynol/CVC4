@@ -173,20 +173,10 @@ void SetDefaults::setDefaultsPre(Options& opts)
     if (opts.smt.unsatCoresMode != options::UnsatCoresMode::SAT_PROOF)
     {
       SET_AND_NOTIFY(Smt, produceUnsatCores, true, "enabling proofs");
-      if (options().prop.satSolver == options::SatSolverMode::MINISAT)
-      {
-        SET_AND_NOTIFY(Smt,
-                       unsatCoresMode,
-                       options::UnsatCoresMode::SAT_PROOF,
-                       "enabling proofs, minisat");
-      }
-      else
-      {
-        SET_AND_NOTIFY(Smt,
-                       unsatCoresMode,
-                       options::UnsatCoresMode::ASSUMPTIONS,
-                       "enabling proofs, non-minisat");
-      }
+      SET_AND_NOTIFY(Smt,
+                     unsatCoresMode,
+                     options::UnsatCoresMode::SAT_PROOF,
+                     "enabling proofs");
     }
     // note that this test assumes that granularity modes are ordered and
     // THEORY_REWRITE is gonna be, in the enum, after the lower granularity
@@ -236,22 +226,6 @@ void SetDefaults::setDefaultsPre(Options& opts)
         // otherwise, we always produce preprocessing proofs
         SET_AND_NOTIFY(
             Smt, proofMode, options::ProofMode::PP_ONLY, "unsat cores");
-      }
-    }
-  }
-  //
-  if (opts.smt.produceProofs)
-  {
-    // determine the prop proof mode, based on which SAT solver we are using
-    if (!opts.proof.propProofModeWasSetByUser)
-    {
-      if (opts.prop.satSolver == options::SatSolverMode::CADICAL)
-      {
-        // use SAT_EXTERNAL_PROVE for cadical by default
-        SET_AND_NOTIFY(Proof,
-                       propProofMode,
-                       options::PropProofMode::SAT_EXTERNAL_PROVE,
-                       "cadical");
       }
     }
   }
@@ -603,9 +577,6 @@ void SetDefaults::setDefaultsPost(const LogicInfo& logic, Options& opts) const
   // by default, symmetry breaker is on only for non-incremental QF_UF
   if (!opts.uf.ufSymmetryBreakerWasSetByUser)
   {
-    // we disable this technique for *any* unsat core production, since it
-    // uses a non-standard implementation that sends (unsound) lemmas during
-    // presolve.
     bool qf_uf_noinc = logic.isPure(THEORY_UF) && !logic.isQuantified()
                        && !opts.base.incrementalSolving
                        && !safeUnsatCores(opts);
