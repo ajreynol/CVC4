@@ -26,8 +26,8 @@
 #include "rewriter/rewrite_db_proof_cons.h"
 #include "rewriter/rewrites.h"
 #include "smt/env_obj.h"
-#include "util/statistics_stats.h"
 #include "theory/smt_engine_subsolver.h"
+#include "util/statistics_stats.h"
 
 namespace cvc5::internal {
 namespace smt {

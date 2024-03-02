@@ -58,14 +58,15 @@ class EmbeddingOpConverter : public NodeConverter
  public:
   EmbeddingOpConverter(const TypeNode& usort) : d_usort(usort) {}
   Node postConvertUntyped(Node orig,
-                                  const std::vector<Node>& terms,
-                                  bool termsChanged) override
+                          const std::vector<Node>& terms,
+                          bool termsChanged) override
   {
     NodeManager* nm = NodeManager::currentNM();
     if (orig.isVar())
     {
       // replace by new var
-      return nm->getSkolemManager()->mkInternalSkolemFunction(InternalSkolemFunId::EMBEDDING_VAR, d_usort, {orig});
+      return nm->getSkolemManager()->mkInternalSkolemFunction(
+          InternalSkolemFunId::EMBEDDING_VAR, d_usort, {orig});
     }
     // TODO: what if terms are empty???
     // parametric???
@@ -75,7 +76,8 @@ class EmbeddingOpConverter : public NodeConverter
     args.insert(args.end(), terms.begin(), terms.end());
     return nm->mkNode(Kind::APPLY_EMBEDDING, args);
   }
-private:
+
+ private:
   TypeNode d_usort;
 };
 
@@ -96,12 +98,11 @@ Node EmbeddingOp::convertToConcrete(const Node& app)
   return ret;
 }
 
-
 std::vector<Node> EmbeddingOp::simplifyApplyEmbedding(const Node& node)
 {
   Assert(node.getKind() == Kind::APPLY_EMBEDDING);
   std::vector<Node> lemmas;
-  if (node.getNumChildren()>0)
+  if (node.getNumChildren() > 0)
   {
     bool allConst = true;
     // if all arguments are constant, we return the non-symbolic version
@@ -115,7 +116,8 @@ std::vector<Node> EmbeddingOp::simplifyApplyEmbedding(const Node& node)
     }
     if (allConst)
     {
-      Trace("builtin-rewrite") << "rewriteApplyEmbedding: " << node << std::endl;
+      Trace("builtin-rewrite")
+          << "rewriteApplyEmbedding: " << node << std::endl;
       // use the utility
       Node n = EmbeddingOp::convertToConcrete(node);
       theory::Evaluator ev(nullptr);

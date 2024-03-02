@@ -337,13 +337,13 @@ void TheoryUF::preRegisterTerm(TNode node)
     break;
     case Kind::APPLY_EMBEDDING:
     {
-      if (d_embedTerms.find(node)!=d_embedTerms.end())
+      if (d_embedTerms.find(node) != d_embedTerms.end())
       {
         // TODO: simplify?
       }
       d_equalityEngine->addTerm(node);
     }
-      break;
+    break;
     default:
       // Variables etc
       d_equalityEngine->addTerm(node);

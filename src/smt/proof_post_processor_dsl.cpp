@@ -25,17 +25,20 @@ namespace smt {
 ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     : EnvObj(env), d_rdbPc(env, rdb)
 {
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   d_embedUsort = nm->mkSort();
   d_true = nm->mkConst(true);
   // initialize the axioms
-  const std::map<rewriter::DslProofRule, rewriter::RewriteProofRule>& rules = rdb->getAllRules();
-  for (const std::pair<const rewriter::DslProofRule, rewriter::RewriteProofRule>& rr : rules)
+  const std::map<rewriter::DslProofRule, rewriter::RewriteProofRule>& rules =
+      rdb->getAllRules();
+  for (const std::pair<const rewriter::DslProofRule,
+                       rewriter::RewriteProofRule>& rr : rules)
   {
     const rewriter::RewriteProofRule& rpr = rr.second;
     Node conc = rpr.getConclusion(true);
     const std::vector<Node>& conds = rpr.getConditions();
-    Node ax = conds.empty() ? conc : nm->mkNode(Kind::IMPLIES, nm->mkAnd(conds), conc);
+    Node ax = conds.empty() ? conc
+                            : nm->mkNode(Kind::IMPLIES, nm->mkAnd(conds), conc);
     const std::vector<Node>& vars = rpr.getVarList();
     if (!vars.empty())
     {
@@ -123,7 +126,8 @@ bool ProofPostprocessDsl::update(Node res,
 
 bool ProofPostprocessDsl::isProvable(
     std::unique_ptr<SolverEngine>& se,
-    const Node& n, std::unordered_set<rewriter::DslProofRule>& ucRules)
+    const Node& n,
+    std::unordered_set<rewriter::DslProofRule>& ucRules)
 {
   se->push();
   Node nembed = EmbeddingOp::convertToEmbedding(n, d_embedUsort);
@@ -135,8 +139,8 @@ bool ProofPostprocessDsl::isProvable(
   std::map<Node, rewriter::DslProofRule>::iterator it;
   for (const Node& u : uc)
   {
-    it =  d_axRule.find(u);
-    if (it !=d_axRule.end())
+    it = d_axRule.find(u);
+    if (it != d_axRule.end())
     {
       ucRules.insert(it->second);
     }

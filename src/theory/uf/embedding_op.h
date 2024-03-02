@@ -55,6 +55,7 @@ class EmbeddingOp
    * Main entry point for rewriting APPLY_EMBEDDING terms.
    */
   static std::vector<Node> simplifyApplyEmbedding(const Node& node);
+
  private:
   EmbeddingOp();
   /** The type */

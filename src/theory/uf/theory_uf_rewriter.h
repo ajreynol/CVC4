@@ -69,6 +69,7 @@ class TheoryUfRewriter : public TheoryRewriter
    * Then, f and g can be used as APPLY_UF operators, but (ite C f g), (lambda x1. (f x1)) as well as the variable x above are not.
    */
   static bool canUseAsApplyUfOperator(TNode n);
+
  private:
   /** Entry point for rewriting lambdas */
   static Node rewriteLambda(Node node);
