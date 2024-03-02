@@ -183,6 +183,20 @@ TypeNode ApplyIndexedSymbolicTypeRule::computeType(NodeManager* nodeManager,
   // if we can make concrete, return its type
   return cn.getType();
 }
+
+TypeNode ApplyEmbeddingTypeRule::preComputeType(NodeManager* nm, TNode n)
+{
+  return TypeNode::null();
+}
+TypeNode ApplyEmbeddingTypeRule::computeType(NodeManager* nodeManager,
+                                                   TNode n,
+                                                   bool check,
+                                                   std::ostream* errOut)
+{
+  // TODO
+  TypeNode tn = n.getOperator().getConst<EmbeddingOp>().getType();
+  return tn;
+}
 /**
  * Attribute for caching the ground term for each type. Maps TypeNode to the
  * skolem to return for mkGroundTerm.

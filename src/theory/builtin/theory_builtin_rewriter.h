@@ -48,6 +48,10 @@ class TheoryBuiltinRewriter : public TheoryRewriter
    * Main entry point for rewriting APPLY_INDEXED_SYMBOLIC terms.
    */
   static Node rewriteApplyIndexedSymbolic(TNode node);
+  /**
+   * Main entry point for rewriting APPLY_EMBEDDING terms.
+   */
+  static Node rewriteApplyEmbedding(TNode node);
 }; /* class TheoryBuiltinRewriter */
 
 }  // namespace builtin
