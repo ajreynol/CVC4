@@ -305,7 +305,7 @@
 (declare-const BITVECTOR_EAGER_ATOM (-> Bool Bool))
 
 ; symbolic constant
-;(declare-const bv (-> Int (! Int :var w) (BitVec w)))
+(declare-const bv (-> Int (! Int :var w) (BitVec w)))
 
 ; bvsize
 ; should be a define

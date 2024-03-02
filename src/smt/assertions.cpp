@@ -18,6 +18,7 @@
 #include <sstream>
 
 #include "base/modal_exception.h"
+#include "expr/beta_reduce_converter.h"
 #include "expr/node_algorithm.h"
 #include "options/base_options.h"
 #include "options/expr_options.h"
@@ -37,7 +38,8 @@ Assertions::Assertions(Env& env)
     : EnvObj(env),
       d_assertionList(userContext()),
       d_assertionListDefs(userContext()),
-      d_globalDefineFunLemmasIndex(userContext(), 0)
+      d_globalDefineFunLemmasIndex(userContext(), 0),
+      d_definitionSubs(userContext())
 {
 }
 
@@ -104,28 +106,52 @@ void Assertions::addFormula(TNode n,
                             bool isFunDef,
                             bool maybeHasFv)
 {
+  Node ns = n;
+  // if we are eagerly eliminating definitions
+  if (options().smt.eagerElimDefs)
+  {
+    // must apply the definition substitution first
+    ns = d_definitionSubs.apply(n);
+    if (ns != n)
+    {
+      // do beta-reductions
+      BetaReduceNodeConverter brnc;
+      ns = brnc.convert(ns);
+    }
+    if (isFunDef && ns.getKind() == Kind::EQUAL && ns[0].isVar())
+    {
+      // add the definition substitution
+      d_definitionSubs.addSubstitution(ns[0], ns[1]);
+      Node tid = mkTrustId(TrustId::PREPROCESS_LEMMA);
+      // also add to top-level substitutions as a trusted rule
+      d_env.getTopLevelSubstitutions().addSubstitution(
+          ns[0], ns[1], ProofRule::TRUST, {}, {tid, ns});
+      return;
+    }
+    isFunDef = false;
+  }
   // add to assertion list
-  d_assertionList.push_back(n);
+  d_assertionList.push_back(ns);
   if (isFunDef)
   {
-    d_assertionListDefs.push_back(n);
+    d_assertionListDefs.push_back(ns);
   }
-  if (n.isConst() && n.getConst<bool>())
+  if (ns.isConst() && ns.getConst<bool>())
   {
     // true, nothing to do
     return;
   }
-  Trace("smt") << "Assertions::addFormula(" << n
-               << ", isFunDef = " << isFunDef << std::endl;
+  Trace("smt") << "Assertions::addFormula(" << ns << ", isFunDef = " << isFunDef
+               << std::endl;
   if (isFunDef)
   {
     // if a non-recursive define-fun, just add as a top-level substitution
-    if (n.getKind() == Kind::EQUAL && n[0].isVar())
+    if (n.getKind() == Kind::EQUAL && ns[0].isVar())
     {
       // A define-fun is an assumption in the overall proof, thus
       // we justify the substitution with ASSUME here.
       d_env.getTopLevelSubstitutions().addSubstitution(
-          n[0], n[1], ProofRule::ASSUME, {}, {n});
+          ns[0], ns[1], ProofRule::ASSUME, {}, {ns});
       return;
     }
   }
@@ -134,7 +160,7 @@ void Assertions::addFormula(TNode n,
   if (maybeHasFv)
   {
     bool wasShadow = false;
-    if (expr::hasFreeOrShadowedVar(n, wasShadow))
+    if (expr::hasFreeOrShadowedVar(ns, wasShadow))
     {
       std::string varType(wasShadow ? "shadowed" : "free");
       std::stringstream se;

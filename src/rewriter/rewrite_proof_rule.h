@@ -91,7 +91,7 @@ class RewriteProofRule
    */
   void getMatches(Node h, expr::NotifyMatch* ntm) const;
   /** Get conclusion of the rule */
-  Node getConclusion() const;
+  Node getConclusion(bool includeContext = false) const;
   /** Get conclusion of the rule for the substituted terms ss */
   Node getConclusionFor(const std::vector<Node>& ss) const;
 

@@ -25,7 +25,7 @@
 #include <unordered_set>
 
 #include "proof/proof_node_updater.h"
-#include "rewriter/rewrite_db_proof_cons.h"
+#include "smt/proof_post_processor_dsl.h"
 #include "rewriter/rewrites.h"
 #include "smt/env_obj.h"
 #include "smt/proof_final_callback.h"
@@ -45,7 +45,6 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
 {
  public:
   ProofPostprocessCallback(Env& env,
-                           rewriter::RewriteDb* rdb,
                            bool updateScopedAssumptions);
   ~ProofPostprocessCallback() {}
   /**
@@ -65,6 +64,8 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
   void setEliminateRule(ProofRule rule);
   /** set eliminate all trusted rules via DSL */
   void setEliminateAllTrustedRules();
+  /** get proofs to eliminate */
+  std::unordered_set<std::shared_ptr<ProofNode>>& getEliminateProofs();
   /** Should proof pn be updated? */
   bool shouldUpdate(std::shared_ptr<ProofNode> pn,
                     const std::vector<Node>& fa,
@@ -84,8 +85,6 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
   ProofChecker* d_pc;
   /** The preprocessing proof generator */
   ProofGenerator* d_pppg;
-  /** The rewrite database proof generator */
-  rewriter::RewriteDbProofCons d_rdbPc;
   /** The witness form proof generator */
   WitnessFormGenerator d_wfpm;
   /** The witness form assumptions used in the proof */
@@ -94,6 +93,8 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
   std::unordered_set<ProofRule, std::hash<ProofRule>> d_elimRules;
   /** Whether we are trying to eliminate any trusted rule via the DSL */
   bool d_elimAllTrusted;
+  /** Set of all proofs to attempt to reconstruct */
+  std::unordered_set<std::shared_ptr<ProofNode>> d_rconsPf;
   /** Whether we post-process assumptions in scope. */
   bool d_updateScopedAssumptions;
   //---------------------------------reset at the begining of each update
@@ -216,6 +217,8 @@ class ProofPostprocess : protected EnvObj
  private:
   /** The post process callback */
   ProofPostprocessCallback d_cb;
+  /** The DSL post processor */
+  std::unique_ptr<ProofPostprocessDsl> d_ppdsl;
   /**
    * The updater, which is responsible for expanding macros in the final proof
    * and connecting preprocessed assumptions to input assumptions.

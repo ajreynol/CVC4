@@ -19,6 +19,7 @@
 
 #include "expr/term_context.h"
 #include "expr/term_context_stack.h"
+#include "printer/let_binding.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node.h"
 #include "proof/proof_node_algorithm.h"

@@ -18,6 +18,7 @@
 
 #include "proof/proof_checker.h"
 #include "smt/env.h"
+#include "theory/bv/theory_bv_rewrite_rules.h"
 
 using namespace cvc5::internal::kind;
 
@@ -62,12 +63,19 @@ bool BasicRewriteRCons::prove(
   Trace("trewrite-rcons") << "...(fail)" << std::endl;
   return false;
 }
+bool BasicRewriteRCons::postProve(
+    CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid)
+{
+  Trace("trewrite-rcons") << "...(fail)" << std::endl;
+  return false;
+}
 
 bool BasicRewriteRCons::tryRule(CDProof* cdp,
                                 Node eq,
                                 ProofRule r,
                                 const std::vector<Node>& args)
 {
+  Trace("trewrite-rcons-debug") << "Try " << r << std::endl;
   ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
   // do not provide expected, as this will always succeed if proof checking
   // is disabled

@@ -127,20 +127,24 @@ void RewriteProofRule::getMatches(Node h, expr::NotifyMatch* ntm) const
   d_mt.getMatches(h, ntm);
 }
 
-Node RewriteProofRule::getConclusion() const { return d_conc; }
-
-Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss) const
+Node RewriteProofRule::getConclusion(bool includeContext) const
 {
-  Assert(d_fvs.size() == ss.size());
   Node conc = d_conc;
   // if the rule has conclusion s, and term context (lambda x. t[x]), then the
   // conclusion is t[s], which we compute in the block below.
-  if (isFixedPoint())
+  if (includeContext && isFixedPoint())
   {
     Node context = d_context;
     Node rhs = context[1].substitute(TNode(context[0][0]), TNode(conc[1]));
     conc = conc[0].eqNode(rhs);
   }
+  return conc;
+}
+
+Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss) const
+{
+  Assert(d_fvs.size() == ss.size());
+  Node conc = getConclusion(true);
   return expr::narySubstitute(conc, d_fvs, ss);
 }
 bool RewriteProofRule::isFixedPoint() const

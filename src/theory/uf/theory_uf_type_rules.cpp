@@ -21,6 +21,7 @@
 #include "expr/cardinality_constraint.h"
 #include "expr/function_array_const.h"
 #include "theory/uf/function_const.h"
+#include "theory/uf/embedding_op.h"
 #include "util/bitvector.h"
 #include "util/cardinality.h"
 #include "util/rational.h"

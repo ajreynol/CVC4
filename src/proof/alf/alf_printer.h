@@ -23,10 +23,12 @@
 #include <iostream>
 
 #include "expr/node_algorithm.h"
+#include "proof/alf/alf_list_node_converter.h"
 #include "proof/alf/alf_node_converter.h"
 #include "proof/alf/alf_print_channel.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node.h"
+#include "rewriter/rewrite_proof_rule.h"
 #include "smt/env_obj.h"
 
 namespace cvc5::internal {
@@ -36,7 +38,10 @@ namespace proof {
 class AlfPrinter : protected EnvObj
 {
  public:
-  AlfPrinter(Env& env, BaseAlfNodeConverter& atp);
+  AlfPrinter(Env& env,
+             BaseAlfNodeConverter& atp,
+             bool flatten,
+             rewriter::RewriteDb* rdb);
   ~AlfPrinter() {}
 
   /**
@@ -100,6 +105,8 @@ class AlfPrinter : protected EnvObj
    * Allocate (if necessary) the identifier for step
    */
   size_t allocateProofId(const ProofNode* pn, bool& wasAlloc);
+  /** Print DSL rule name r to output stream out */
+  void printDslRule(std::ostream& out, rewriter::DslProofRule r);
   /** Print let list to output stream out */
   void printLetList(std::ostream& out, LetBinding& lbind);
   /** Reference to the term processor */
@@ -110,16 +117,27 @@ class AlfPrinter : protected EnvObj
   std::map<std::pair<const ProofNode*, Node>, size_t> d_ppushMap;
   /** Mapping proofs to identifiers */
   std::map<const ProofNode*, size_t> d_pletMap;
+  std::map<Node, std::vector<const ProofNode*>> d_tmp;
   /** Mapping assumed formulas to identifiers */
   std::map<Node, size_t> d_passumeMap;
+  /** Mapping proof nodes to nodes (non-flatten) */
+  std::map<const ProofNode*, Node> d_pnodeMap;
   /** Maps proof identifiers to nodes */
   std::map<size_t, Node> d_passumeNodeMap;
   /** The (dummy) type used for proof terms */
   TypeNode d_pfType;
   /** term prefix */
   std::string d_termLetPrefix;
+  /** Flatten */
+  bool d_proofFlatten;
   /** The false node */
   Node d_false;
+  /** List node converter */
+  // AlfListNodeConverter d_ltproc;
+  /** Pointer to the rewrite database */
+  rewriter::RewriteDb* d_rdb;
+  /** The DSL rules we have seen */
+  std::unordered_set<rewriter::DslProofRule> d_dprs;
 };
 
 }  // namespace proof

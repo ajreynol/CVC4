@@ -81,8 +81,7 @@ enum RewriteRuleId
   UsuboEliminate,
   SsuboEliminate,
   SdivoEliminate,
-  BVToNatEliminate,
-  IntToBVEliminate,
+  SizeEliminate,
 
   /// ground term evaluation
   EvalEquals,
@@ -111,6 +110,7 @@ enum RewriteRuleId
   EvalSle,
   EvalITEBv,
   EvalComp,
+  EvalConstBvSym,
   EvalEagerAtom,
 
   /// simplification rules
@@ -237,9 +237,7 @@ inline std::ostream& operator << (std::ostream& out, RewriteRuleId ruleId) {
   case RedandEliminate:     out << "RedandEliminate";     return out;
   case RepeatEliminate:     out << "RepeatEliminate";     return out;
   case RotateLeftEliminate: out << "RotateLeftEliminate"; return out;
-  case RotateRightEliminate:out << "RotateRightEliminate";return out;
-  case BVToNatEliminate:    out << "BVToNatEliminate";    return out;
-  case IntToBVEliminate:    out << "IntToBVEliminate";    return out;
+  case RotateRightEliminate: out << "RotateRightEliminate"; return out;
   case NandEliminate:       out << "NandEliminate";       return out;
   case NorEliminate :       out << "NorEliminate";        return out;
   case SdivEliminate :      out << "SdivEliminate";       return out;
@@ -275,6 +273,7 @@ inline std::ostream& operator << (std::ostream& out, RewriteRuleId ruleId) {
   case EvalSltBv:           out << "EvalSltBv";           return out;
   case EvalITEBv:           out << "EvalITEBv";           return out;
   case EvalComp:            out << "EvalComp";            return out;
+  case EvalConstBvSym: out << "EvalConstBvSym"; return out;
   case EvalEagerAtom: out << "EvalEagerAtom"; return out;
   case EvalExtract :        out << "EvalExtract";         return out;
   case EvalSignExtend :     out << "EvalSignExtend";      return out;
@@ -588,9 +587,7 @@ struct AllRewriteRules {
   RewriteRule<SolveEq>                        rule112;
   RewriteRule<BitwiseEq>                      rule113;
   RewriteRule<UltOne>                         rule114;
-  RewriteRule<SltZero>                        rule115;
-  RewriteRule<BVToNatEliminate>               rule116;
-  RewriteRule<IntToBVEliminate>               rule117;
+  RewriteRule<SltZero> rule115;
   RewriteRule<MultDistrib>                    rule118;
   RewriteRule<UltAddOne> rule119;
   RewriteRule<ConcatToMult>                   rule120;

@@ -37,7 +37,7 @@ Node Word::mkEmptyWord(TypeNode tn)
     return NodeManager::currentNM()->mkConst(
         Sequence(tn.getSequenceElementType(), seq));
   }
-  Unimplemented();
+  Unimplemented() << "Cannot make empty word " << tn;
   return Node::null();
 }
 
