@@ -60,6 +60,10 @@ class ProofPostprocessDsl : protected EnvObj, public ProofNodeUpdaterCallback
   Node d_true;
   /** The rewrite database proof generator */
   rewriter::RewriteDbProofCons d_rdbPc;
+  /** Is provable? */
+  bool isProvable(const Node& n, std::unordered_set<rewriter::DslProofRule>& ucRules);
+  /** The embedded axioms */
+  std::vector<Node> d_embedAxioms;
 };
 
 }  // namespace smt

@@ -29,6 +29,12 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env,
 
 void ProofPostprocessDsl::reconstruct(std::unordered_set<std::shared_ptr<ProofNode>>& pfs)
 {
+  // run an updated for this
+  ProofNodeUpdater pnu(d_env, *this, false);
+  for (std::shared_ptr<ProofNode> p : pfs)
+  {
+    pnu.process(p);
+  }
 }
 
 bool ProofPostprocessDsl::reconstruct(std::shared_ptr<ProofNode>& pf)
@@ -51,6 +57,7 @@ bool ProofPostprocessDsl::update(Node res,
             CDProof* cdp,
             bool& continueUpdate)
 {
+  continueUpdate = false;
   Assert (id==ProofRule::TRUST || id==ProofRule::TRUST_THEORY_REWRITE);
   // don't try if children are non-empty
   if (!children.empty())
@@ -88,6 +95,13 @@ bool ProofPostprocessDsl::update(Node res,
     return true;
   }
   // otherwise no update
+  return false;
+}
+
+
+bool ProofPostprocessDsl::isProvable(const Node& n, std::unordered_set<rewriter::DslProofRule>& ucRules)
+{
+
   return false;
 }
 
