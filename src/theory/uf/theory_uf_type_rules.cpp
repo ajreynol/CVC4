@@ -346,6 +346,21 @@ TypeNode BitVectorConversionTypeRule::computeType(NodeManager* nodeManager,
   return nodeManager->mkBitVectorType(bvSize);
 }
 
+
+TypeNode ApplyEmbeddingTypeRule::preComputeType(NodeManager* nm, TNode n)
+{
+  return TypeNode::null();
+}
+TypeNode ApplyEmbeddingTypeRule::computeType(NodeManager* nodeManager,
+                                                   TNode n,
+                                                   bool check,
+                                                   std::ostream* errOut)
+{
+  // TODO
+  TypeNode tn = n.getOperator().getConst<EmbeddingOp>().getType();
+  return tn;
+}
+
 }  // namespace uf
 }  // namespace theory
 }  // namespace cvc5::internal
