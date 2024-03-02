@@ -189,9 +189,9 @@ name   = "Proof"
   help       = "Print the children of trusted proof steps"
 
 [[option]]
-  name       = "lfscFlatten"
+  name       = "proofFlatten"
   category   = "expert"
-  long       = "lfsc-flatten"
+  long       = "proof-flatten"
   type       = "bool"
   default    = "false"
   help       = "Flatten steps in the LFSC proof"

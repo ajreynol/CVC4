@@ -1280,20 +1280,6 @@ std::pair<ProofRule, std::vector<Node>> CadicalSolver::getProofSketch()
                                                  args);
 }
 
-std::pair<ProofRule, std::vector<Node>> CadicalSolver::getProofSketch()
-{
-  Assert(d_logProofs);
-  d_solver->flush_proof_trace();
-  std::vector<Node> args;
-  NodeManager* nm = NodeManager::currentNM();
-  Node pfile = nm->mkConst(String(d_pfFile));
-  args.push_back(pfile);
-  // The proof is DRAT_REFUTATION whose premises is all inputs + theory lemmas.
-  // The DRAT file is an argument to the file proof.
-  return std::pair<ProofRule, std::vector<Node>>(ProofRule::DRAT_REFUTATION,
-                                                 args);
-}
-
 /* -------------------------------------------------------------------------- */
 }  // namespace prop
 }  // namespace cvc5::internal
