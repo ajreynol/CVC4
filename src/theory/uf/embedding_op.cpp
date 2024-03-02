@@ -18,6 +18,8 @@
 #include <iostream>
 
 #include "expr/node_converter.h"
+#include "expr/skolem_manager.h"
+#include "theory/evaluator.h"
 
 using namespace cvc5::internal::kind;
 
@@ -57,16 +59,17 @@ class EmbeddingOpConverter : public NodeConverter
   EmbeddingOpConverter(const TypeNode& usort) : d_usort(usort) {}
   Node postConvertUntyped(Node orig,
                                   const std::vector<Node>& terms,
-                                  bool termsChanged)
+                                  bool termsChanged) override
   {
     NodeManager* nm = NodeManager::currentNM();
-    if (n.isVar())
+    if (orig.isVar())
     {
       // replace by new var
-      return nm->getSkolemManager()->mkInternalSkolemFunction(InternalSkolemFunId::EMBED_VAR, d_usort, {n});
+      return nm->getSkolemManager()->mkInternalSkolemFunction(InternalSkolemFunId::EMBEDDING_VAR, d_usort, {orig});
     }
     // TODO: what if terms are empty???
-    Kind k = n.getKind();
+    // parametric???
+    Kind k = orig.getKind();
     std::vector<Node> args;
     args.push_back(nm->mkConst(EmbeddingOp(d_usort, k)));
     args.insert(args.end(), terms.begin(), terms.end());
@@ -91,6 +94,43 @@ Node EmbeddingOp::convertToConcrete(const Node& app)
   args.insert(args.end(), app.begin(), app.end());
   Node ret = NodeManager::currentNM()->mkNode(okind, args);
   return ret;
+}
+
+
+std::vector<Node> EmbeddingOp::simplifyApplyEmbedding(const Node& node)
+{
+  Assert(node.getKind() == Kind::APPLY_EMBEDDING);
+  std::vector<Node> lemmas;
+  if (node.getNumChildren()>0)
+  {
+    bool allConst = true;
+    // if all arguments are constant, we return the non-symbolic version
+    for (const Node& nc : node)
+    {
+      if (!nc.isConst())
+      {
+        allConst = false;
+        break;
+      }
+    }
+    if (allConst)
+    {
+      Trace("builtin-rewrite") << "rewriteApplyEmbedding: " << node << std::endl;
+      // use the utility
+      Node n = EmbeddingOp::convertToConcrete(node);
+      theory::Evaluator ev(nullptr);
+      Node nev = ev.eval(n, {}, {});
+      if (!nev.isNull() && nev.isConst())
+      {
+        // convert?
+        Node nevc = convertToEmbedding(nev, node.getType());
+        Node lem = nev.eqNode(nevc);
+        lemmas.push_back(lem);
+      }
+    }
+  }
+  // TODO: more, arith poly norm???
+  return lemmas;
 }
 
 }  // namespace cvc5::internal

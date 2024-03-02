@@ -26,6 +26,7 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     : EnvObj(env), d_rdbPc(env, rdb)
 {
   NodeManager * nm = NodeManager::currentNM();
+  d_embedUsort = nm->mkSort();
   d_true = nm->mkConst(true);
   // initialize the axioms
   const std::map<rewriter::DslProofRule, rewriter::RewriteProofRule>& rules = rdb->getAllRules();
@@ -42,7 +43,7 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     }
     Trace("pp-dsl") << "Embedding of " << rr.first << " is " << ax << std::endl;
     // convert to embedding
-    ax = EmbeddingOp::convertToEmbedding(ax);
+    ax = EmbeddingOp::convertToEmbedding(ax, d_embedUsort);
     d_embedAxioms.push_back(ax);
     d_axRule[ax] = rr.first;
   }
@@ -125,7 +126,7 @@ bool ProofPostprocessDsl::isProvable(
     const Node& n, std::unordered_set<rewriter::DslProofRule>& ucRules)
 {
   se->push();
-  Node nembed = EmbeddingOp::convertToEmbedding(n);
+  Node nembed = EmbeddingOp::convertToEmbedding(n, d_embedUsort);
   se->assertFormula(nembed.negate());
   Result r = se->checkSat();
   se->pop();

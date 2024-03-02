@@ -66,6 +66,8 @@ class ProofPostprocessDsl : protected EnvObj, public ProofNodeUpdaterCallback
   std::vector<Node> d_embedAxioms;
   /** The associated rules */
   std::map<Node, rewriter::DslProofRule> d_axRule;
+  /** */
+  TypeNode d_embedUsort;
 };
 
 }  // namespace smt

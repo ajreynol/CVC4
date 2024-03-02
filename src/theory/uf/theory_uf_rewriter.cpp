@@ -137,14 +137,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
   {
     return rewriteIntToBV(node);
   }
-  else if (k == Kind::APPLY_EMBEDDING)
-  {
-    Node rnode = rewriteApplyEmbedding(node);
-    if (rnode != node)
-    {
-      return RewriteResponse(REWRITE_AGAIN_FULL, rnode);
-    }
-  }
+  // APPLY_EMBEDDING never rewrites
   return RewriteResponse(REWRITE_DONE, node);
 }
 
@@ -328,31 +321,6 @@ RewriteResponse TheoryUfRewriter::rewriteIntToBV(TNode node)
     }
   }
   return RewriteResponse(REWRITE_DONE, node);
-}
-
-Node TheoryUfRewriter::simplifyApplyEmbedding(TNode node)
-{
-  Assert(node.getKind() == Kind::APPLY_EMBEDDING);
-  Assert(node.getNumChildren() > 1);
-  // if all arguments are constant, we return the non-symbolic version
-  for (const Node& nc : node)
-  {
-    if (!nc.isConst())
-    {
-      return node;
-    }
-  }
-  // TODO: more, arith poly norm???
-  Trace("builtin-rewrite") << "rewriteApplyEmbedding: " << node << std::endl;
-  // use the utility
-  Node n = EmbeddingOp::convertToConcrete(node);
-  Evaluator ev(nullptr);
-  Node nev = ev.evaluate(n);
-  if (!nev.isNull() && nev.isConst())
-  {
-    std::vector<Node> args;
-  }
-  return node;
 }
 
 }  // namespace uf

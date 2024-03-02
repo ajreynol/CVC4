@@ -56,7 +56,8 @@ TheoryUF::TheoryUF(Env& env,
       d_state(env, valuation),
       d_im(env, *this, d_state, "theory::uf::" + instanceName, false),
       d_notify(d_im, *this),
-      d_cpacb(*this)
+      d_cpacb(*this),
+      d_embedTerms(userContext())
 {
   d_true = NodeManager::currentNM()->mkConst( true );
   // indicate we are using the default theory state and inference managers
@@ -334,6 +335,15 @@ void TheoryUF::preRegisterTerm(TNode node)
           "An uninterpreted constant was preregistered to the UF theory.");
     }
     break;
+    case Kind::APPLY_EMBEDDING:
+    {
+      if (d_embedTerms.find(node)!=d_embedTerms.end())
+      {
+        // TODO: simplify?
+      }
+      d_equalityEngine->addTerm(node);
+    }
+      break;
     default:
       // Variables etc
       d_equalityEngine->addTerm(node);
