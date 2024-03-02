@@ -15,8 +15,8 @@
 
 #include "smt/proof_post_processor_dsl.h"
 
-#include "theory/uf/embedding_op.h"
 #include "expr/subs.h"
+#include "theory/uf/embedding_op.h"
 
 using namespace cvc5::internal::theory;
 
@@ -43,7 +43,8 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     std::vector<Node> cconds;
     for (const Node& c : conds)
     {
-      cconds.push_back(EmbeddingOp::convertToEmbedding(c, d_embedUsort, naryKinds));
+      cconds.push_back(
+          EmbeddingOp::convertToEmbedding(c, d_embedUsort, naryKinds));
     }
     const std::vector<Node>& vars = rpr.getVarList();
     Subs vsubs;
@@ -55,11 +56,13 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
       vsubs.add(cv, cvv);
       cvars.push_back(cvv);
     }
-    Node ax = cconds.empty() ? cconc : nm->mkNode(Kind::IMPLIES, nm->mkAnd(cconds), cconc);
+    Node ax = cconds.empty()
+                  ? cconc
+                  : nm->mkNode(Kind::IMPLIES, nm->mkAnd(cconds), cconc);
     ax = vsubs.apply(ax);
     // TODO: pattern?
     ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, cvars), ax);
-    Assert (!expr::hasFreeVar(ax));
+    Assert(!expr::hasFreeVar(ax));
     Trace("pp-dsl") << "Embedding of " << rr.first << " is " << ax << std::endl;
     d_embedAxioms.push_back(ax);
     d_axRule[ax] = rr.first;
@@ -120,11 +123,13 @@ bool ProofPostprocessDsl::update(Node res,
     getMethodId(args[2], mid);
   }
   int64_t recLimit = options().proof.proofRewriteRconsRecLimit;
-  int64_t startRecLimit = options().proof.proofRewriteRconsStratifyRec ? 0 : recLimit;
+  int64_t startRecLimit =
+      options().proof.proofRewriteRconsStratifyRec ? 0 : recLimit;
   int64_t stepLimit = options().proof.proofRewriteRconsStepLimit;
   // attempt to reconstruct the proof of the equality into cdp using the
   // rewrite database proof reconstructor
-  if (d_rdbPc.prove(cdp, res[0], res[1], tid, mid, startRecLimit, recLimit, stepLimit))
+  if (d_rdbPc.prove(
+          cdp, res[0], res[1], tid, mid, startRecLimit, recLimit, stepLimit))
   {
     // If we made (= res true) above, conclude the original res.
     if (reqTrueElim)

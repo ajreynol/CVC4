@@ -31,10 +31,10 @@
 #include "theory/type_enumerator.h"
 #include "theory/uf/cardinality_extension.h"
 #include "theory/uf/conversions_solver.h"
+#include "theory/uf/embedding_op.h"
 #include "theory/uf/ho_extension.h"
 #include "theory/uf/lambda_lift.h"
 #include "theory/uf/theory_uf_rewriter.h"
-#include "theory/uf/embedding_op.h"
 
 using namespace std;
 

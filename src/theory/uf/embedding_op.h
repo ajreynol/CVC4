@@ -51,8 +51,9 @@ class EmbeddingOp
   static Node convertToConcrete(const Node& app);
 
   /** */
-  static Node convertToEmbedding(const Node& n, const TypeNode& tn,
-  std::unordered_set<Kind>& naryKinds);
+  static Node convertToEmbedding(const Node& n,
+                                 const TypeNode& tn,
+                                 std::unordered_set<Kind>& naryKinds);
   static Node convertToEmbedding(const Node& n, const TypeNode& tn);
 
   /**
