@@ -16,6 +16,7 @@
 #include "theory/uf/embedding_op.h"
 
 #include <iostream>
+
 #include "expr/node_converter.h"
 
 using namespace cvc5::internal::kind;
@@ -32,28 +33,34 @@ size_t EmbeddingOpHashFunction::operator()(const EmbeddingOp& op) const
   return kind::KindHashFunction()(op.getKind());
 }
 
-EmbeddingOp::EmbeddingOp(const TypeNode& ftype, Kind k) : d_ftype(new TypeNode(ftype)), d_kind(k) {}
+EmbeddingOp::EmbeddingOp(const TypeNode& ftype, Kind k)
+    : d_ftype(new TypeNode(ftype)), d_kind(k)
+{
+}
 
-EmbeddingOp::EmbeddingOp(const EmbeddingOp& op) : d_ftype(new TypeNode(op.getType())), d_kind(op.getKind()) {}
+EmbeddingOp::EmbeddingOp(const EmbeddingOp& op)
+    : d_ftype(new TypeNode(op.getType())), d_kind(op.getKind())
+{
+}
 
 const TypeNode& EmbeddingOp::getType() const { return *d_ftype.get(); }
 Kind EmbeddingOp::getKind() const { return d_kind; }
 
 bool EmbeddingOp::operator==(const EmbeddingOp& op) const
 {
-  return getType()==op.getType() && getKind() == op.getKind();
+  return getType() == op.getType() && getKind() == op.getKind();
 }
 
 class EmbeddingOpConverter : public NodeConverter
 {
-public:
+ public:
   Node postConvert(Node n) override
   {
-    if (n.getNumChildren()==0)
+    if (n.getNumChildren() == 0)
     {
       return n;
     }
-    NodeManager * nm = NodeManager::currentNM();
+    NodeManager* nm = NodeManager::currentNM();
     TypeNode tn = n.getType();
     Kind k = n.getKind();
     std::vector<Node> args;

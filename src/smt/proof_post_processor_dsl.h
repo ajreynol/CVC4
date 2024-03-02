@@ -24,12 +24,11 @@
 
 #include "proof/proof_node_updater.h"
 #include "proof/trust_id.h"
+#include "rewriter/rewrite_db_proof_cons.h"
 #include "rewriter/rewrites.h"
 #include "smt/env_obj.h"
 #include "theory/inference_id.h"
 #include "util/statistics_stats.h"
-#include "rewriter/rewrite_db_proof_cons.h"
-#include "proof/proof_node_updater.h"
 
 namespace cvc5::internal {
 namespace smt {
@@ -38,8 +37,7 @@ namespace smt {
 class ProofPostprocessDsl : protected EnvObj, public ProofNodeUpdaterCallback
 {
  public:
-  ProofPostprocessDsl(Env& env,
-                           rewriter::RewriteDb* rdb);
+  ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb);
 
   void reconstruct(std::unordered_set<std::shared_ptr<ProofNode>>& pfs);
 
@@ -56,12 +54,14 @@ class ProofPostprocessDsl : protected EnvObj, public ProofNodeUpdaterCallback
               const std::vector<Node>& args,
               CDProof* cdp,
               bool& continueUpdate) override;
+
  private:
   Node d_true;
   /** The rewrite database proof generator */
   rewriter::RewriteDbProofCons d_rdbPc;
   /** Is provable? */
-  bool isProvable(const Node& n, std::unordered_set<rewriter::DslProofRule>& ucRules);
+  bool isProvable(const Node& n,
+                  std::unordered_set<rewriter::DslProofRule>& ucRules);
   /** The embedded axioms */
   std::vector<Node> d_embedAxioms;
 };

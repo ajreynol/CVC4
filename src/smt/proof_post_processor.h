@@ -25,10 +25,10 @@
 #include <unordered_set>
 
 #include "proof/proof_node_updater.h"
-#include "smt/proof_post_processor_dsl.h"
 #include "rewriter/rewrites.h"
 #include "smt/env_obj.h"
 #include "smt/proof_final_callback.h"
+#include "smt/proof_post_processor_dsl.h"
 #include "smt/witness_form.h"
 #include "theory/inference_id.h"
 #include "util/statistics_stats.h"
@@ -44,8 +44,7 @@ namespace smt {
 class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvObj
 {
  public:
-  ProofPostprocessCallback(Env& env,
-                           bool updateScopedAssumptions);
+  ProofPostprocessCallback(Env& env, bool updateScopedAssumptions);
   ~ProofPostprocessCallback() {}
   /**
    * Initialize, called once for each new ProofNode to process. This initializes

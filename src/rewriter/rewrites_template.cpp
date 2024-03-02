@@ -28,9 +28,10 @@ namespace rewriter {
 
 // clang-format off
 ${decl_individual_rewrites}$
-// clang-format on
+    // clang-format on
 
-void addRules(RewriteDb& db)
+    void
+    addRules(RewriteDb& db)
 {
   // Calls to individual rewrites
   // clang-format off

@@ -20,8 +20,8 @@
 
 #include "expr/cardinality_constraint.h"
 #include "expr/function_array_const.h"
-#include "theory/uf/function_const.h"
 #include "theory/uf/embedding_op.h"
+#include "theory/uf/function_const.h"
 #include "util/bitvector.h"
 #include "util/cardinality.h"
 #include "util/rational.h"
@@ -347,15 +347,14 @@ TypeNode BitVectorConversionTypeRule::computeType(NodeManager* nodeManager,
   return nodeManager->mkBitVectorType(bvSize);
 }
 
-
 TypeNode ApplyEmbeddingTypeRule::preComputeType(NodeManager* nm, TNode n)
 {
   return TypeNode::null();
 }
 TypeNode ApplyEmbeddingTypeRule::computeType(NodeManager* nodeManager,
-                                                   TNode n,
-                                                   bool check,
-                                                   std::ostream* errOut)
+                                             TNode n,
+                                             bool check,
+                                             std::ostream* errOut)
 {
   // TODO
   TypeNode tn = n.getOperator().getConst<EmbeddingOp>().getType();

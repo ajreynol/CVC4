@@ -50,6 +50,7 @@ class EmbeddingOp
 
   /** */
   static Node convertToEmbedding(const Node& n);
+
  private:
   EmbeddingOp();
   /** The type */

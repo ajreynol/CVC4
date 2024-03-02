@@ -166,7 +166,6 @@ class BitVectorConversionTypeRule
                               std::ostream* errOut);
 };
 
-
 class ApplyEmbeddingTypeRule
 {
  public:

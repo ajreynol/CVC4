@@ -20,14 +20,14 @@ using namespace cvc5::internal::theory;
 namespace cvc5::internal {
 namespace smt {
 
-ProofPostprocessDsl::ProofPostprocessDsl(Env& env,
-                          rewriter::RewriteDb* rdb) : EnvObj(env),
-      d_rdbPc(env, rdb)
+ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
+    : EnvObj(env), d_rdbPc(env, rdb)
 {
   d_true = NodeManager::currentNM()->mkConst(true);
 }
 
-void ProofPostprocessDsl::reconstruct(std::unordered_set<std::shared_ptr<ProofNode>>& pfs)
+void ProofPostprocessDsl::reconstruct(
+    std::unordered_set<std::shared_ptr<ProofNode>>& pfs)
 {
   // run an updated for this
   ProofNodeUpdater pnu(d_env, *this, false);
@@ -43,22 +43,22 @@ bool ProofPostprocessDsl::reconstruct(std::shared_ptr<ProofNode>& pf)
 }
 
 bool ProofPostprocessDsl::shouldUpdate(std::shared_ptr<ProofNode> pn,
-                  const std::vector<Node>& fa,
-                  bool& continueUpdate)
+                                       const std::vector<Node>& fa,
+                                       bool& continueUpdate)
 {
   ProofRule id = pn->getRule();
-  return id==ProofRule::TRUST || id==ProofRule::TRUST_THEORY_REWRITE;
+  return id == ProofRule::TRUST || id == ProofRule::TRUST_THEORY_REWRITE;
 }
 
 bool ProofPostprocessDsl::update(Node res,
-            ProofRule id,
-            const std::vector<Node>& children,
-            const std::vector<Node>& args,
-            CDProof* cdp,
-            bool& continueUpdate)
+                                 ProofRule id,
+                                 const std::vector<Node>& children,
+                                 const std::vector<Node>& args,
+                                 CDProof* cdp,
+                                 bool& continueUpdate)
 {
   continueUpdate = false;
-  Assert (id==ProofRule::TRUST || id==ProofRule::TRUST_THEORY_REWRITE);
+  Assert(id == ProofRule::TRUST || id == ProofRule::TRUST_THEORY_REWRITE);
   // don't try if children are non-empty
   if (!children.empty())
   {
@@ -98,10 +98,9 @@ bool ProofPostprocessDsl::update(Node res,
   return false;
 }
 
-
-bool ProofPostprocessDsl::isProvable(const Node& n, std::unordered_set<rewriter::DslProofRule>& ucRules)
+bool ProofPostprocessDsl::isProvable(
+    const Node& n, std::unordered_set<rewriter::DslProofRule>& ucRules)
 {
-
   return false;
 }
 
