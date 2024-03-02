@@ -91,7 +91,6 @@ class EmbeddingOpConverter : public NodeConverter
       return nm->getSkolemManager()->mkInternalSkolemFunction(
           InternalSkolemFunId::EMBEDDING_VAR, d_usort, {orig});
     }
-    // TODO: what if terms are empty???
     // parametric???
     Kind k = orig.getKind();
     if (k == Kind::EQUAL)
@@ -114,7 +113,7 @@ class EmbeddingOpConverter : public NodeConverter
     if (isNaryKind(k))
     {
       d_naryKinds.insert(k);
-      Assert(terms.size() >= 2);
+      Assert(terms.size() >= 2) << "Expecting at least 2 terms for " << k;
       Node curr = nm->mkNode(Kind::APPLY_EMBEDDING, op, terms[0], terms[1]);
       for (size_t i = 2, tsize = terms.size(); i < tsize; i++)
       {
@@ -133,6 +132,60 @@ class EmbeddingOpConverter : public NodeConverter
   std::unordered_set<Kind>& d_naryKinds;
 };
 
+
+class EmbeddingOpReverter : public NodeConverter
+{
+ public:
+  EmbeddingOpReverter()
+  {
+  }
+  Node postConvertUntyped(Node orig,
+                          const std::vector<Node>& terms,
+                          bool termsChanged) override
+  {
+    NodeManager* nm = NodeManager::currentNM();
+    if (orig.isVar())
+    {
+      SkolemFunId id;
+      Node cacheVal;
+      SkolemManager * sm = nm->getSkolemManager();
+      if (sm->isSkolemFunction(orig, id, cacheVal))
+      {
+        InternalSkolemFunId iid = sm->getInternalId(orig);
+        if (iid==InternalSkolemFunId::EMBEDDING_VAR)
+        {
+          Assert (cacheVal.getKind()==Kind::SEXPR && cacheVal.getNumChildren()==2);
+          return cacheVal[1];
+        }
+      }
+    }
+    Kind k = orig.getKind();
+    if (k == Kind::EQUAL)
+    {
+      // equality is preserved
+      return terms[0].eqNode(terms[1]);
+    }
+    else if (k==Kind::APPLY_EMBEDDING)
+    {
+      const EmbeddingOp& eop = orig.getOperator().getConst<EmbeddingOp>();
+      if (terms.empty())
+      {
+        Assert(!eop.getOp().isNull());
+        return eop.getOp();
+      }
+      std::vector<Node> args;
+      if (!eop.getOp().isNull())
+      {
+        args.push_back(eop.getOp());
+      }
+      args.insert(args.end(), terms.begin(), terms.end());
+      return nm->mkNode(eop.getKind(), args);
+    }
+    Assert (false) << "Unexpected kind " << k;
+    return orig;
+  }
+};
+
 Node EmbeddingOp::convertToEmbedding(const Node& n,
                                      const TypeNode& tn,
                                      std::unordered_set<Kind>& naryKinds)
@@ -140,6 +193,7 @@ Node EmbeddingOp::convertToEmbedding(const Node& n,
   EmbeddingOpConverter eoc(tn, naryKinds);
   return eoc.convert(n, false);
 }
+
 Node EmbeddingOp::convertToEmbedding(const Node& n, const TypeNode& tn)
 {
   std::unordered_set<Kind> naryKinds;
@@ -149,12 +203,8 @@ Node EmbeddingOp::convertToEmbedding(const Node& n, const TypeNode& tn)
 Node EmbeddingOp::convertToConcrete(const Node& app)
 {
   Trace("generic-op") << "getConcreteApp " << app << std::endl;
-  Assert(app.getKind() == Kind::APPLY_INDEXED_SYMBOLIC);
-  Kind okind = app.getOperator().getConst<EmbeddingOp>().getKind();
-  std::vector<Node> args;
-  args.insert(args.end(), app.begin(), app.end());
-  Node ret = NodeManager::currentNM()->mkNode(okind, args);
-  return ret;
+  EmbeddingOpReverter eor;
+  return eor.convert(app);
 }
 
 std::vector<Node> EmbeddingOp::simplifyApplyEmbedding(const Node& node)

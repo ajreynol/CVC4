@@ -59,8 +59,7 @@ class ProofPostprocessDsl : protected EnvObj, public ProofNodeUpdaterCallback
   /** The rewrite database proof generator */
   rewriter::RewriteDbProofCons d_rdbPc;
   /** Is provable? */
-  bool isProvable(std::unique_ptr<SolverEngine>& se,
-                  const Node& n,
+  bool isProvable(const Node& n,
                   std::unordered_set<rewriter::DslProofRule>& ucRules);
   /** The embedded axioms */
   std::vector<Node> d_embedAxioms;
@@ -68,6 +67,10 @@ class ProofPostprocessDsl : protected EnvObj, public ProofNodeUpdaterCallback
   std::map<Node, rewriter::DslProofRule> d_axRule;
   /** */
   TypeNode d_embedUsort;
+  /** The options for subsolver calls */
+  Options d_subOptions;
+  /** Subsolver */
+  std::unique_ptr<SolverEngine> d_prover;
 };
 
 }  // namespace smt

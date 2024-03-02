@@ -16,7 +16,10 @@
 #include "smt/proof_post_processor_dsl.h"
 
 #include "expr/subs.h"
+#include "options/smt_options.h"
+#include "options/quantifiers_options.h"
 #include "theory/uf/embedding_op.h"
+#include "expr/node_algorithm.h"
 
 using namespace cvc5::internal::theory;
 
@@ -52,7 +55,8 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     for (const Node& v : vars)
     {
       Node cv = EmbeddingOp::convertToEmbedding(v, d_embedUsort, naryKinds);
-      Node cvv = nm->mkBoundVar(cv.getType());
+      Assert (cv.getType()==d_embedUsort);
+      Node cvv = nm->mkBoundVar(d_embedUsort);
       vsubs.add(cv, cvv);
       cvars.push_back(cvv);
     }
@@ -64,9 +68,36 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, cvars), ax);
     Assert(!expr::hasFreeVar(ax));
     Trace("pp-dsl") << "Embedding of " << rr.first << " is " << ax << std::endl;
+    Trace("pp-dsl") << "...from " << conds << " => " << conc << std::endl;
     d_embedAxioms.push_back(ax);
     d_axRule[ax] = rr.first;
   }
+  // for each nary kind, add associativity and cancelling axiom
+  Node nullNode;
+  for (Kind k : naryKinds)
+  {
+    Node op = nm->mkConst(EmbeddingOp(d_embedUsort, nullNode, k));
+    Node v1 = nm->mkBoundVar(d_embedUsort);
+    Node v2 = nm->mkBoundVar(d_embedUsort);
+    Node v3 = nm->mkBoundVar(d_embedUsort);
+    Node t1 = nm->mkNode(Kind::APPLY_EMBEDDING, op, nm->mkNode(Kind::APPLY_EMBEDDING, op, v1, v2), v3);
+    Node t2 = nm->mkNode(Kind::APPLY_EMBEDDING, op, v1, nm->mkNode(Kind::APPLY_EMBEDDING, op, v2, v3));
+    Node ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, v1, v2, v3), t1.eqNode(t2));
+    Trace("pp-dsl") << "Associative axiom " << k << ": " << ax << std::endl;
+    d_embedAxioms.push_back(ax);
+    // left and right identities
+  }
+
+  d_subOptions.copyValues(options());
+  d_subOptions.writeSmt().produceProofs = false;
+  d_subOptions.writeSmt().simplificationMode =
+      options::SimplificationMode::NONE;
+  d_subOptions.writeSmt().produceUnsatCores = true;
+  d_subOptions.writeQuantifiers().enumInst = true;
+  LogicInfo lall("ALL");
+  SubsolverSetupInfo ssi(d_subOptions, lall);
+  uint64_t timeout = 100;//options().quantifiers.quantSubCbqiTimeout;
+  initializeSubsolver(d_prover, ssi, timeout != 0, timeout);
 }
 
 void ProofPostprocessDsl::reconstruct(
@@ -145,17 +176,16 @@ bool ProofPostprocessDsl::update(Node res,
 }
 
 bool ProofPostprocessDsl::isProvable(
-    std::unique_ptr<SolverEngine>& se,
     const Node& n,
     std::unordered_set<rewriter::DslProofRule>& ucRules)
 {
-  se->push();
+  d_prover->push();
   Node nembed = EmbeddingOp::convertToEmbedding(n, d_embedUsort);
-  se->assertFormula(nembed.negate());
-  Result r = se->checkSat();
-  se->pop();
+  d_prover->assertFormula(nembed.negate());
+  Result r = d_prover->checkSat();
+  d_prover->pop();
   std::vector<Node> uc;
-  getUnsatCoreFromSubsolver(*se.get(), uc);
+  getUnsatCoreFromSubsolver(*d_prover.get(), uc);
   std::map<Node, rewriter::DslProofRule>::iterator it;
   for (const Node& u : uc)
   {

@@ -425,6 +425,12 @@ PolyNorm PolyNorm::mkDiff(TNode a, TNode b)
   return pa;
 }
 
+Node PolyNorm::toNode() const
+{
+  // TODO
+  return Node::null();
+}
+
 }  // namespace arith
 }  // namespace theory
 }  // namespace cvc5::internal
