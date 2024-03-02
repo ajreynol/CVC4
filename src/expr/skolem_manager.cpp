@@ -123,6 +123,7 @@ const char* toString(InternalSkolemFunId id)
     case InternalSkolemFunId::QUANTIFIERS_SYNTH_FUN_EMBED:
       return "QUANTIFIERS_SYNTH_FUN_EMBED";
     case InternalSkolemFunId::HO_TYPE_MATCH_PRED: return "HO_TYPE_MATCH_PRED";
+    case InternalSkolemFunId::EMBEDDING_VAR: return "EMBEDDING_VAR";
     default: return "?";
   }
 }

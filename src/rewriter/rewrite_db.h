@@ -76,6 +76,8 @@ class RewriteDb
    * ntm for all rules that match eq.
    */
   void getMatches(const Node& eq, expr::NotifyMatch* ntm);
+  /** Get all rules */
+  const std::map<DslProofRule, RewriteProofRule>& getAllRules() const;
   /** Get the rule definition for id */
   const RewriteProofRule& getRule(DslProofRule id) const;
   /**

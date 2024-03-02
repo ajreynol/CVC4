@@ -23,12 +23,11 @@
 #include <unordered_set>
 
 #include "proof/proof_node_updater.h"
-#include "proof/trust_id.h"
 #include "rewriter/rewrite_db_proof_cons.h"
 #include "rewriter/rewrites.h"
 #include "smt/env_obj.h"
-#include "theory/inference_id.h"
 #include "util/statistics_stats.h"
+#include "theory/smt_engine_subsolver.h"
 
 namespace cvc5::internal {
 namespace smt {
@@ -60,10 +59,13 @@ class ProofPostprocessDsl : protected EnvObj, public ProofNodeUpdaterCallback
   /** The rewrite database proof generator */
   rewriter::RewriteDbProofCons d_rdbPc;
   /** Is provable? */
-  bool isProvable(const Node& n,
+  bool isProvable(std::unique_ptr<SolverEngine>& se,
+                  const Node& n,
                   std::unordered_set<rewriter::DslProofRule>& ucRules);
   /** The embedded axioms */
   std::vector<Node> d_embedAxioms;
+  /** The associated rules */
+  std::map<Node, rewriter::DslProofRule> d_axRule;
 };
 
 }  // namespace smt

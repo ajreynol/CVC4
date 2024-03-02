@@ -49,7 +49,7 @@ class EmbeddingOp
   static Node convertToConcrete(const Node& app);
 
   /** */
-  static Node convertToEmbedding(const Node& n);
+  static Node convertToEmbedding(const Node& n, const TypeNode& tn);
 
  private:
   EmbeddingOp();

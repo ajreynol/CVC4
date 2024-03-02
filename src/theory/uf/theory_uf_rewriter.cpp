@@ -330,7 +330,7 @@ RewriteResponse TheoryUfRewriter::rewriteIntToBV(TNode node)
   return RewriteResponse(REWRITE_DONE, node);
 }
 
-Node TheoryUfRewriter::rewriteApplyEmbedding(TNode node)
+Node TheoryUfRewriter::simplifyApplyEmbedding(TNode node)
 {
   Assert(node.getKind() == Kind::APPLY_EMBEDDING);
   Assert(node.getNumChildren() > 1);
@@ -345,7 +345,14 @@ Node TheoryUfRewriter::rewriteApplyEmbedding(TNode node)
   // TODO: more, arith poly norm???
   Trace("builtin-rewrite") << "rewriteApplyEmbedding: " << node << std::endl;
   // use the utility
-  return EmbeddingOp::convertToConcrete(node);
+  Node n = EmbeddingOp::convertToConcrete(node);
+  Evaluator ev(nullptr);
+  Node nev = ev.evaluate(n);
+  if (!nev.isNull() && nev.isConst())
+  {
+    std::vector<Node> args;
+  }
+  return node;
 }
 
 }  // namespace uf

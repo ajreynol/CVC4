@@ -151,6 +151,11 @@ void RewriteDb::getMatches(const Node& eq, expr::NotifyMatch* ntm)
   d_mt.getMatches(eq, ntm);
 }
 
+const std::map<DslProofRule, RewriteProofRule>& RewriteDb::getAllRules() const
+{
+  return d_rewDbRule;
+}
+
 const RewriteProofRule& RewriteDb::getRule(DslProofRule id) const
 {
   std::map<DslProofRule, RewriteProofRule>::const_iterator it =

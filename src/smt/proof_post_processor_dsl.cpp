@@ -15,6 +15,8 @@
 
 #include "smt/proof_post_processor_dsl.h"
 
+#include "theory/uf/embedding_op.h"
+
 using namespace cvc5::internal::theory;
 
 namespace cvc5::internal {
@@ -23,7 +25,27 @@ namespace smt {
 ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     : EnvObj(env), d_rdbPc(env, rdb)
 {
-  d_true = NodeManager::currentNM()->mkConst(true);
+  NodeManager * nm = NodeManager::currentNM();
+  d_true = nm->mkConst(true);
+  // initialize the axioms
+  const std::map<rewriter::DslProofRule, rewriter::RewriteProofRule>& rules = rdb->getAllRules();
+  for (const std::pair<const rewriter::DslProofRule, rewriter::RewriteProofRule>& rr : rules)
+  {
+    const rewriter::RewriteProofRule& rpr = rr.second;
+    Node conc = rpr.getConclusion(true);
+    const std::vector<Node>& conds = rpr.getConditions();
+    Node ax = conds.empty() ? conc : nm->mkNode(Kind::IMPLIES, nm->mkAnd(conds), conc);
+    const std::vector<Node>& vars = rpr.getVarList();
+    if (!vars.empty())
+    {
+      ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, vars), ax);
+    }
+    Trace("pp-dsl") << "Embedding of " << rr.first << " is " << ax << std::endl;
+    // convert to embedding
+    ax = EmbeddingOp::convertToEmbedding(ax);
+    d_embedAxioms.push_back(ax);
+    d_axRule[ax] = rr.first;
+  }
 }
 
 void ProofPostprocessDsl::reconstruct(
@@ -99,8 +121,26 @@ bool ProofPostprocessDsl::update(Node res,
 }
 
 bool ProofPostprocessDsl::isProvable(
+    std::unique_ptr<SolverEngine>& se,
     const Node& n, std::unordered_set<rewriter::DslProofRule>& ucRules)
 {
+  se->push();
+  Node nembed = EmbeddingOp::convertToEmbedding(n);
+  se->assertFormula(nembed.negate());
+  Result r = se->checkSat();
+  se->pop();
+  std::vector<Node> uc;
+  getUnsatCoreFromSubsolver(*se.get(), uc);
+  std::map<Node, rewriter::DslProofRule>::iterator it;
+  for (const Node& u : uc)
+  {
+    it =  d_axRule.find(u);
+    if (it !=d_axRule.end())
+    {
+      ucRules.insert(it->second);
+    }
+  }
+
   return false;
 }
 

@@ -54,26 +54,32 @@ bool EmbeddingOp::operator==(const EmbeddingOp& op) const
 class EmbeddingOpConverter : public NodeConverter
 {
  public:
-  Node postConvert(Node n) override
+  EmbeddingOpConverter(const TypeNode& usort) : d_usort(usort) {}
+  Node postConvertUntyped(Node orig,
+                                  const std::vector<Node>& terms,
+                                  bool termsChanged)
   {
-    if (n.getNumChildren() == 0)
-    {
-      return n;
-    }
     NodeManager* nm = NodeManager::currentNM();
-    TypeNode tn = n.getType();
+    if (n.isVar())
+    {
+      // replace by new var
+      return nm->getSkolemManager()->mkInternalSkolemFunction(InternalSkolemFunId::EMBED_VAR, d_usort, {n});
+    }
+    // TODO: what if terms are empty???
     Kind k = n.getKind();
     std::vector<Node> args;
-    args.push_back(nm->mkConst(EmbeddingOp(tn, k)));
-    args.insert(args.end(), n.begin(), n.end());
+    args.push_back(nm->mkConst(EmbeddingOp(d_usort, k)));
+    args.insert(args.end(), terms.begin(), terms.end());
     return nm->mkNode(Kind::APPLY_EMBEDDING, args);
   }
+private:
+  TypeNode d_usort;
 };
 
-Node EmbeddingOp::convertToEmbedding(const Node& n)
+Node EmbeddingOp::convertToEmbedding(const Node& n, const TypeNode& tn)
 {
-  EmbeddingOpConverter eoc;
-  return eoc.convert(n);
+  EmbeddingOpConverter eoc(tn);
+  return eoc.convert(n, false);
 }
 
 Node EmbeddingOp::convertToConcrete(const Node& app)

@@ -70,6 +70,10 @@ class TheoryUfRewriter : public TheoryRewriter
    */
   static bool canUseAsApplyUfOperator(TNode n);
 
+  /**
+   * Main entry point for rewriting APPLY_EMBEDDING terms.
+   */
+  static Node simplifyApplyEmbedding(TNode node);
  private:
   /** Entry point for rewriting lambdas */
   static Node rewriteLambda(Node node);
@@ -77,10 +81,6 @@ class TheoryUfRewriter : public TheoryRewriter
   static RewriteResponse rewriteBVToNat(TNode node);
   /** rewrite int2bv */
   static RewriteResponse rewriteIntToBV(TNode node);
-  /**
-   * Main entry point for rewriting APPLY_EMBEDDING terms.
-   */
-  static Node rewriteApplyEmbedding(TNode node);
 }; /* class TheoryUfRewriter */
 
 }  // namespace uf
