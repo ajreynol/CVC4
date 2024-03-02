@@ -24,6 +24,7 @@
 #include "theory/substitutions.h"
 #include "theory/uf/function_const.h"
 #include "util/bitvector.h"
+#include "theory/uf/embedding_op.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -135,6 +136,14 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
   else if (k == Kind::INT_TO_BITVECTOR)
   {
     return rewriteIntToBV(node);
+  }
+  else if (k==Kind::APPLY_EMBEDDING)
+  {
+    Node rnode = rewriteApplyEmbedding(node);
+    if (rnode != node)
+    {
+      return RewriteResponse(REWRITE_AGAIN_FULL, rnode);
+    }
   }
   return RewriteResponse(REWRITE_DONE, node);
 }
@@ -320,6 +329,26 @@ RewriteResponse TheoryUfRewriter::rewriteIntToBV(TNode node)
   }
   return RewriteResponse(REWRITE_DONE, node);
 }
+
+Node TheoryUfRewriter::rewriteApplyEmbedding(TNode node)
+{
+  Assert(node.getKind() == Kind::APPLY_EMBEDDING);
+  Assert(node.getNumChildren() > 1);
+  // if all arguments are constant, we return the non-symbolic version
+  for (const Node& nc : node)
+  {
+    if (!nc.isConst())
+    {
+      return node;
+    }
+  }
+  // TODO: more, arith poly norm???
+  Trace("builtin-rewrite") << "rewriteApplyEmbedding: " << node
+                           << std::endl;
+  // use the utility
+  return EmbeddingOp::convertToConcrete(node);
+}
+
 }  // namespace uf
 }  // namespace theory
 }  // namespace cvc5::internal

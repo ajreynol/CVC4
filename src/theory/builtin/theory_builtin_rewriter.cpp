@@ -93,15 +93,6 @@ RewriteResponse TheoryBuiltinRewriter::doRewrite(TNode node)
       }
     }
     break;
-    case Kind::APPLY_EMBEDDING:
-    {
-      Node rnode = rewriteApplyEmbedding(node);
-      if (rnode != node)
-      {
-        return RewriteResponse(REWRITE_AGAIN_FULL, rnode);
-      }
-    }
-    break;
     default: break;
   }
   return RewriteResponse(REWRITE_DONE, node);
@@ -161,25 +152,6 @@ Node TheoryBuiltinRewriter::rewriteApplyIndexedSymbolic(TNode node)
                            << std::endl;
   // use the utility
   return GenericOp::getConcreteApp(node);
-}
-
-Node TheoryBuiltinRewriter::rewriteApplyEmbedding(TNode node)
-{
-  Assert(node.getKind() == Kind::APPLY_EMBEDDING);
-  Assert(node.getNumChildren() > 1);
-  // if all arguments are constant, we return the non-symbolic version
-  for (const Node& nc : node)
-  {
-    if (!nc.isConst())
-    {
-      return node;
-    }
-  }
-  // TODO: more, arith poly norm???
-  Trace("builtin-rewrite") << "rewriteApplyEmbedding: " << node
-                           << std::endl;
-  // use the utility
-  return EmbeddingOp::getConcreteApp(node);
 }
 
 }  // namespace builtin

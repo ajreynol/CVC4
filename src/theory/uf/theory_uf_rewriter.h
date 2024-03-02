@@ -77,6 +77,10 @@ class TheoryUfRewriter : public TheoryRewriter
   static RewriteResponse rewriteBVToNat(TNode node);
   /** rewrite int2bv */
   static RewriteResponse rewriteIntToBV(TNode node);
+  /**
+   * Main entry point for rewriting APPLY_EMBEDDING terms.
+   */
+  static Node rewriteApplyEmbedding(TNode node);
 }; /* class TheoryUfRewriter */
 
 }  // namespace uf

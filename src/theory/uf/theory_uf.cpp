@@ -106,6 +106,7 @@ void TheoryUF::finishInit() {
     d_equalityEngine->addFunctionKind(Kind::HO_APPLY);
     d_ho.reset(new HoExtension(d_env, d_state, d_im, *d_lambdaLift.get()));
   }
+  d_equalityEngine->addFunctionKind(Kind::APPLY_EMBEDDING, true);
   // conversion kinds
   d_equalityEngine->addFunctionKind(Kind::INT_TO_BITVECTOR, true);
   d_equalityEngine->addFunctionKind(Kind::BITVECTOR_TO_NAT, true);

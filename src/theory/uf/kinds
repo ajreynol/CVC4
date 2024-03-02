@@ -82,4 +82,15 @@ typerule BITVECTOR_TO_NAT ::cvc5::internal::theory::uf::BitVectorConversionTypeR
 typerule INT_TO_BITVECTOR_OP ::cvc5::internal::theory::uf::IntToBitVectorOpTypeRule
 typerule INT_TO_BITVECTOR ::cvc5::internal::theory::uf::BitVectorConversionTypeRule
 
+constant APPLY_EMBEDDING_OP \
+  class \
+  EmbeddingOp \
+  ::cvc5::internal::EmbeddingOpHashFunction \
+  "theory/uf/embedding_op.h" \
+  "operator for the bit-vector extract; payload is an instance of the cvc5::internal::EmbeddingOp class"
+parameterized APPLY_EMBEDDING APPLY_EMBEDDING_OP 1: "generic indexed operator, whose arguments are the list of terms corresponding to (symbolic) indices to the operator followed by its normal arguments"
+
+typerule APPLY_EMBEDDING_OP "SimpleTypeRule<RBuiltinOperator>"
+typerule APPLY_EMBEDDING ::cvc5::internal::theory::uf::ApplyEmbeddingTypeRule
+
 endtheory

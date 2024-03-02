@@ -57,7 +57,7 @@ bool TriggerTermInfo::isAtomicTriggerKind(Kind k)
          || k == Kind::SET_SINGLETON || k == Kind::SEP_PTO
          || k == Kind::BITVECTOR_TO_NAT || k == Kind::INT_TO_BITVECTOR
          || k == Kind::HO_APPLY || k == Kind::STRING_LENGTH
-         || k == Kind::SEQ_NTH;
+         || k == Kind::SEQ_NTH || k == Kind::APPLY_EMBEDDING;
 }
 
 bool TriggerTermInfo::isRelationalTrigger(Node n)
