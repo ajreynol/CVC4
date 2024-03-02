@@ -65,7 +65,7 @@ bool EmbeddingOp::operator==(const EmbeddingOp& op) const
          && getOp() == op.getOp();
 }
 
-bool isNaryKind(Kind k)
+bool EmbeddingOp::isNaryKind(Kind k)
 {
   // NOTE: this may not be precise
   return NodeManager::isNAryKind(k) && k != Kind::APPLY_UF
@@ -75,9 +75,8 @@ bool isNaryKind(Kind k)
 class EmbeddingOpConverter : public NodeConverter
 {
  public:
-  EmbeddingOpConverter(const TypeNode& usort,
-                       std::unordered_set<Kind>& naryKinds)
-      : d_usort(usort), d_naryKinds(naryKinds)
+  EmbeddingOpConverter(const TypeNode& usort)
+      : d_usort(usort)
   {
   }
   Node postConvertUntyped(Node orig,
@@ -112,7 +111,6 @@ class EmbeddingOpConverter : public NodeConverter
     // make binary
     if (isNaryKind(k))
     {
-      d_naryKinds.insert(k);
       Assert(terms.size() >= 2) << "Expecting at least 2 terms for " << k;
       Node curr = nm->mkNode(Kind::APPLY_EMBEDDING, op, terms[0], terms[1]);
       for (size_t i = 2, tsize = terms.size(); i < tsize; i++)
@@ -129,7 +127,6 @@ class EmbeddingOpConverter : public NodeConverter
 
  private:
   TypeNode d_usort;
-  std::unordered_set<Kind>& d_naryKinds;
 };
 
 
@@ -211,36 +208,25 @@ std::vector<Node> EmbeddingOp::simplifyApplyEmbedding(const Node& node)
 {
   Assert(node.getKind() == Kind::APPLY_EMBEDDING);
   std::vector<Node> lemmas;
+  // handle EVALUATE
+  Node origNode = EmbeddingOp::convertToConcrete(node);
   if (node.getNumChildren() > 0)
   {
-    bool allConst = true;
-    // if all arguments are constant, we return the non-symbolic version
-    for (const Node& nc : node)
+    // use the utility
+    theory::Evaluator ev(nullptr);
+    Node nev = ev.eval(origNode, {}, {});
+    if (!nev.isNull() && nev!=origNode)
     {
-      if (!nc.isConst())
-      {
-        allConst = false;
-        break;
-      }
-    }
-    if (allConst)
-    {
-      Trace("builtin-rewrite")
-          << "rewriteApplyEmbedding: " << node << std::endl;
-      // use the utility
-      Node n = EmbeddingOp::convertToConcrete(node);
-      theory::Evaluator ev(nullptr);
-      Node nev = ev.eval(n, {}, {});
-      if (!nev.isNull() && nev.isConst())
-      {
-        // convert?
-        Node nevc = convertToEmbedding(nev, node.getType());
-        Node lem = nev.eqNode(nevc);
-        lemmas.push_back(lem);
-      }
+      // convert?
+      Node nevc = convertToEmbedding(nev, node.getType());
+      Node lem = nev.eqNode(nevc);
+      lemmas.push_back(lem);
     }
   }
   // TODO: more, arith poly norm???
+  if (isNaryKind(origNode.getKind()))
+  {
+  }
   return lemmas;
 }
 

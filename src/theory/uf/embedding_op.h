@@ -44,6 +44,7 @@ class EmbeddingOp
 
   bool operator==(const EmbeddingOp& op) const;
 
+  static bool isNaryKind(Kind k);
   /**
    * Get the concrete term corresponding to the application of
    * APPLY_INDEXED_SYMBOLIC. Requires all indices to be constant.
@@ -51,15 +52,13 @@ class EmbeddingOp
   static Node convertToConcrete(const Node& app);
 
   /** */
-  static Node convertToEmbedding(const Node& n,
-                                 const TypeNode& tn,
-                                 std::unordered_set<Kind>& naryKinds);
   static Node convertToEmbedding(const Node& n, const TypeNode& tn);
 
   /**
    * Main entry point for rewriting APPLY_EMBEDDING terms.
    */
-  static std::vector<Node> simplifyApplyEmbedding(const Node& node);
+  static std::vector<Node> simplifyApplyEmbedding(const Node& node,
+                                 std::unordered_set<Node>& naryOpsRed);
 
  private:
   EmbeddingOp();

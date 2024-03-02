@@ -33,7 +33,6 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
   d_embedUsort = nm->mkSort("U");
   d_true = nm->mkConst(true);
   // initialize the axioms
-  std::unordered_set<Kind> naryKinds;
   const std::map<rewriter::DslProofRule, rewriter::RewriteProofRule>& rules =
       rdb->getAllRules();
   for (const std::pair<const rewriter::DslProofRule,
@@ -41,20 +40,20 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
   {
     const rewriter::RewriteProofRule& rpr = rr.second;
     Node conc = rpr.getConclusion(true);
-    Node cconc = EmbeddingOp::convertToEmbedding(conc, d_embedUsort, naryKinds);
+    Node cconc = EmbeddingOp::convertToEmbedding(conc, d_embedUsort);
     const std::vector<Node>& conds = rpr.getConditions();
     std::vector<Node> cconds;
     for (const Node& c : conds)
     {
       cconds.push_back(
-          EmbeddingOp::convertToEmbedding(c, d_embedUsort, naryKinds));
+          EmbeddingOp::convertToEmbedding(c, d_embedUsort));
     }
     const std::vector<Node>& vars = rpr.getVarList();
     Subs vsubs;
     std::vector<Node> cvars;
     for (const Node& v : vars)
     {
-      Node cv = EmbeddingOp::convertToEmbedding(v, d_embedUsort, naryKinds);
+      Node cv = EmbeddingOp::convertToEmbedding(v, d_embedUsort);
       Assert (cv.getType()==d_embedUsort);
       Node cvv = nm->mkBoundVar(d_embedUsort);
       vsubs.add(cv, cvv);
@@ -73,6 +72,7 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     d_axRule[ax] = rr.first;
   }
   // for each nary kind, add associativity and cancelling axiom
+  /*
   Node nullNode;
   for (Kind k : naryKinds)
   {
@@ -87,6 +87,7 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     d_embedAxioms.push_back(ax);
     // left and right identities
   }
+  */
 
   d_subOptions.copyValues(options());
   d_subOptions.writeSmt().produceProofs = false;
