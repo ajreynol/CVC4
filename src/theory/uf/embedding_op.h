@@ -54,12 +54,6 @@ class EmbeddingOp
   /** */
   static Node convertToEmbedding(const Node& n, const TypeNode& tn);
 
-  /**
-   * Main entry point for rewriting APPLY_EMBEDDING terms.
-   */
-  static std::vector<Node> simplifyApplyEmbedding(const Node& node,
-                                 std::unordered_set<Node>& naryOpsRed);
-
  private:
   EmbeddingOp();
   /** The type */

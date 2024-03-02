@@ -19,7 +19,6 @@
 
 #include "expr/node_converter.h"
 #include "expr/skolem_manager.h"
-#include "theory/evaluator.h"
 
 using namespace cvc5::internal::kind;
 
@@ -109,7 +108,7 @@ class EmbeddingOpConverter : public NodeConverter
     }
     Node op = nm->mkConst(EmbeddingOp(d_usort, eop, k));
     // make binary
-    if (isNaryKind(k))
+    if (EmbeddingOp::isNaryKind(k))
     {
       Assert(terms.size() >= 2) << "Expecting at least 2 terms for " << k;
       Node curr = nm->mkNode(Kind::APPLY_EMBEDDING, op, terms[0], terms[1]);
@@ -184,17 +183,10 @@ class EmbeddingOpReverter : public NodeConverter
 };
 
 Node EmbeddingOp::convertToEmbedding(const Node& n,
-                                     const TypeNode& tn,
-                                     std::unordered_set<Kind>& naryKinds)
+                                     const TypeNode& tn)
 {
-  EmbeddingOpConverter eoc(tn, naryKinds);
+  EmbeddingOpConverter eoc(tn);
   return eoc.convert(n, false);
-}
-
-Node EmbeddingOp::convertToEmbedding(const Node& n, const TypeNode& tn)
-{
-  std::unordered_set<Kind> naryKinds;
-  return convertToEmbedding(n, tn, naryKinds);
 }
 
 Node EmbeddingOp::convertToConcrete(const Node& app)
@@ -202,32 +194,6 @@ Node EmbeddingOp::convertToConcrete(const Node& app)
   Trace("generic-op") << "getConcreteApp " << app << std::endl;
   EmbeddingOpReverter eor;
   return eor.convert(app);
-}
-
-std::vector<Node> EmbeddingOp::simplifyApplyEmbedding(const Node& node)
-{
-  Assert(node.getKind() == Kind::APPLY_EMBEDDING);
-  std::vector<Node> lemmas;
-  // handle EVALUATE
-  Node origNode = EmbeddingOp::convertToConcrete(node);
-  if (node.getNumChildren() > 0)
-  {
-    // use the utility
-    theory::Evaluator ev(nullptr);
-    Node nev = ev.eval(origNode, {}, {});
-    if (!nev.isNull() && nev!=origNode)
-    {
-      // convert?
-      Node nevc = convertToEmbedding(nev, node.getType());
-      Node lem = nev.eqNode(nevc);
-      lemmas.push_back(lem);
-    }
-  }
-  // TODO: more, arith poly norm???
-  if (isNaryKind(origNode.getKind()))
-  {
-  }
-  return lemmas;
 }
 
 }  // namespace cvc5::internal

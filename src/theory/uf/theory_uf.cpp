@@ -35,6 +35,7 @@
 #include "theory/uf/ho_extension.h"
 #include "theory/uf/lambda_lift.h"
 #include "theory/uf/theory_uf_rewriter.h"
+#include "theory/evaluator.h"
 
 using namespace std;
 
@@ -340,20 +341,33 @@ void TheoryUF::preRegisterTerm(TNode node)
     {
       if (d_embedTerms.find(node) != d_embedTerms.end())
       {
-        std::vector<Node> lemmas = EmbeddingOp::simplifyApplyEmbedding(node);
-        for (const Node& lem : lemmas)
+        d_embedTerms.insert(node);
+        NodeManager * nm = NodeManager::currentNM();
+        Node origNode = EmbeddingOp::convertToConcrete(node);
+        // EVALUATE
+        if (node.getNumChildren() > 0)
         {
-          d_im.lemma(lem, InferenceId::UF_EMBEDDING_SIMPLIFY);
+          // use the utility
+          theory::Evaluator ev(nullptr);
+          Node nev = ev.eval(origNode, {}, {});
+          if (!nev.isNull() && nev!=origNode)
+          {
+            // convert?
+            Node nevc = EmbeddingOp::convertToEmbedding(nev, node.getType());
+            Node lem = nev.eqNode(nevc);
+            d_im.lemma(lem, InferenceId::UF_EMBEDDING_SIMPLIFY);
+          }
         }
+        // ARITH_POLY_NORM
         // TODO: simplify?
         Node nop = node.getOperator();
-        EmbeddingOp& eop = nop.getConst<EmbeddingOp>();
-        if (EmbeddingOp::isNaryKind(eop.getKind()))
+        if (d_embedTerms.find(nop)==d_embedTerms.end())
         {
-          if (d_embedTerms.find(nop)==d_embedTerms.end())
+          d_embedTerms.insert(nop);
+          const EmbeddingOp& eop = nop.getConst<EmbeddingOp>();
+          if (EmbeddingOp::isNaryKind(eop.getKind()))
           {
             TypeNode u = eop.getType();
-            Node op = nm->mkConst(EmbeddingOp(u, nullNode, k));
             Node v1 = nm->mkBoundVar(u);
             Node v2 = nm->mkBoundVar(u);
             Node v3 = nm->mkBoundVar(u);
