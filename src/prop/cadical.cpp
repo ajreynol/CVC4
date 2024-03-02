@@ -994,6 +994,17 @@ void CadicalSolver::init()
   d_solver->add(0);
   d_solver->add(-toCadicalVar(d_false));
   d_solver->add(0);
+
+  if (d_logProofs)
+  {
+    d_pfFile = options().driver.filename + ".drat_proof.txt";
+    if (!options().proof.dratBinaryFormat)
+    {
+      d_solver->set("binary", 0);
+    }
+    d_solver->set("inprocessing", 0);
+    d_solver->trace_proof(d_pfFile.c_str());
+  }
 }
 
 CadicalSolver::~CadicalSolver() {}
@@ -1252,7 +1263,22 @@ std::vector<SatLiteral> CadicalSolver::getDecisions() const
 
 std::vector<Node> CadicalSolver::getOrderHeap() const { return {}; }
 
-std::shared_ptr<ProofNode> CadicalSolver::getProof() { return nullptr; }
+std::shared_ptr<ProofNode> CadicalSolver::getProof()
+{
+  Unimplemented() << "getProof for CaDiCaL not supported";
+  return nullptr;
+}
+
+std::pair<ProofRule, std::vector<Node>> CadicalSolver::getProofSketch()
+{
+  Assert(d_logProofs);
+  d_solver->flush_proof_trace();
+  std::vector<Node> args = {NodeManager::currentNM()->mkConst(String(d_pfFile))};
+  // The proof is DRAT_REFUTATION whose premises is all inputs + theory lemmas.
+  // The DRAT file is an argument to the file proof.
+  return std::pair<ProofRule, std::vector<Node>>(ProofRule::DRAT_REFUTATION,
+                                                 args);
+}
 
 std::pair<ProofRule, std::vector<Node>> CadicalSolver::getProofSketch()
 {
