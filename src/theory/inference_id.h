@@ -900,6 +900,8 @@ enum class InferenceId
   //-------------------------------------- uf theory
   // Clause from the uf symmetry breaker
   UF_BREAK_SYMMETRY,
+  // Clause from apply embedding simplification
+  UF_EMBEDDING_SIMPLIFY,
   //-------------------- cardinality extension to UF
   // The inferences below are described in Reynolds' thesis 2013.
   // conflict of the form (card_T n) => (not (distinct t1 ... tn))

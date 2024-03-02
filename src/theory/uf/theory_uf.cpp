@@ -34,6 +34,7 @@
 #include "theory/uf/ho_extension.h"
 #include "theory/uf/lambda_lift.h"
 #include "theory/uf/theory_uf_rewriter.h"
+#include "theory/uf/embedding_op.h"
 
 using namespace std;
 
@@ -339,6 +340,11 @@ void TheoryUF::preRegisterTerm(TNode node)
     {
       if (d_embedTerms.find(node) != d_embedTerms.end())
       {
+        std::vector<Node> lemmas = EmbeddingOp::simplifyApplyEmbedding(node);
+        for (const Node& lem : lemmas)
+        {
+          d_im.lemma(lem, InferenceId::UF_EMBEDDING_SIMPLIFY);
+        }
         // TODO: simplify?
       }
       d_equalityEngine->addTerm(node);

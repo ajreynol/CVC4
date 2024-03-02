@@ -27,36 +27,52 @@ namespace cvc5::internal {
 
 std::ostream& operator<<(std::ostream& out, const EmbeddingOp& op)
 {
-  return out << "(EmbeddingOp " << op.getKind() << ')';
+  out << "e_" << op.getType().getId();
+  /*
+  if (!op.getOp().isNull())
+  {
+    out << "_" << op.getOp().getId();
+  }
+  */
+  return out;
 }
 
 size_t EmbeddingOpHashFunction::operator()(const EmbeddingOp& op) const
 {
-  return kind::KindHashFunction()(op.getKind());
+  return kind::KindHashFunction()(op.getKind()) * std::hash<TypeNode>()(op.getType())
+         * std::hash<Node>()(op.getOp());
 }
 
-EmbeddingOp::EmbeddingOp(const TypeNode& ftype, Kind k)
-    : d_ftype(new TypeNode(ftype)), d_kind(k)
+EmbeddingOp::EmbeddingOp(const TypeNode& ftype, const Node& op, Kind k)
+    : d_ftype(new TypeNode(ftype)), d_kind(k), d_op(new Node(op))
 {
 }
 
 EmbeddingOp::EmbeddingOp(const EmbeddingOp& op)
-    : d_ftype(new TypeNode(op.getType())), d_kind(op.getKind())
+    : d_ftype(new TypeNode(op.getType())), d_kind(op.getKind()), d_op(new Node(op.getOp()))
 {
 }
 
 const TypeNode& EmbeddingOp::getType() const { return *d_ftype.get(); }
 Kind EmbeddingOp::getKind() const { return d_kind; }
+const Node& EmbeddingOp::getOp() const { return *d_op.get(); }
 
 bool EmbeddingOp::operator==(const EmbeddingOp& op) const
 {
-  return getType() == op.getType() && getKind() == op.getKind();
+  return getType() == op.getType() && getKind() == op.getKind() && getOp()==op.getOp();
+}
+
+bool isNaryKind(Kind k)
+{
+  // NOTE: this may not be precise
+  return NodeManager::isNAryKind(k) && k!=Kind::APPLY_UF && k!=Kind::APPLY_CONSTRUCTOR;
 }
 
 class EmbeddingOpConverter : public NodeConverter
 {
  public:
-  EmbeddingOpConverter(const TypeNode& usort) : d_usort(usort) {}
+  EmbeddingOpConverter(const TypeNode& usort,
+  std::unordered_set<Kind>& naryKinds) : d_usort(usort), d_naryKinds(naryKinds) {}
   Node postConvertUntyped(Node orig,
                           const std::vector<Node>& terms,
                           bool termsChanged) override
@@ -71,20 +87,55 @@ class EmbeddingOpConverter : public NodeConverter
     // TODO: what if terms are empty???
     // parametric???
     Kind k = orig.getKind();
+    if (k==Kind::EQUAL)
+    {
+      // equality is preserved
+      return terms[0].eqNode(terms[1]);
+    }
+    Node eop;
+    if (orig.getMetaKind() == metakind::PARAMETERIZED)
+    {
+      eop = orig.getOperator();
+    }
+    else if (orig.getNumChildren()==0)
+    {
+      // constants are stored as the operator
+      eop = orig;
+    }
+    Node op = nm->mkConst(EmbeddingOp(d_usort, eop, k));
+    // make binary
+    if (isNaryKind(k))
+    {
+      d_naryKinds.insert(k);
+      Assert (terms.size()>=2);
+      Node curr = nm->mkNode(Kind::APPLY_EMBEDDING, op, terms[0], terms[1]);
+      for (size_t i=2, tsize=terms.size(); i<tsize; i++)
+      {
+        curr = nm->mkNode(Kind::APPLY_EMBEDDING, op, curr, terms[i]);
+      }
+      return curr;
+    }
     std::vector<Node> args;
-    args.push_back(nm->mkConst(EmbeddingOp(d_usort, k)));
+    args.push_back(op);
     args.insert(args.end(), terms.begin(), terms.end());
     return nm->mkNode(Kind::APPLY_EMBEDDING, args);
   }
 
  private:
   TypeNode d_usort;
+  std::unordered_set<Kind>& d_naryKinds;
 };
 
+Node EmbeddingOp::convertToEmbedding(const Node& n, const TypeNode& tn,
+  std::unordered_set<Kind>& naryKinds)
+{
+  EmbeddingOpConverter eoc(tn, naryKinds);
+  return eoc.convert(n, false);
+}
 Node EmbeddingOp::convertToEmbedding(const Node& n, const TypeNode& tn)
 {
-  EmbeddingOpConverter eoc(tn);
-  return eoc.convert(n, false);
+  std::unordered_set<Kind> naryKinds;
+  return convertToEmbedding(n, tn, naryKinds);
 }
 
 Node EmbeddingOp::convertToConcrete(const Node& app)

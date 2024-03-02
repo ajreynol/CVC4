@@ -117,6 +117,14 @@ name   = "Proof"
   help       = "the matching recursion limit for reconstructing proofs of theory rewrites"
 
 [[option]]
+  name       = "proofRewriteRconsStratifyRec"
+  category   = "expert"
+  long       = "proof-rewrite-rcons-stratify-rec"
+  type       = "bool"
+  default    = "true"
+  help       = "stratify the recursion for reconstructing proofs of theory rewrites"
+
+[[option]]
   name       = "proofRewriteRconsStepLimit"
   category   = "regular"
   long       = "proof-rewrite-rcons-step-limit=N"

@@ -32,13 +32,15 @@ namespace cvc5::internal {
 class EmbeddingOp
 {
  public:
-  EmbeddingOp(const TypeNode& ftype, Kind k);
+  EmbeddingOp(const TypeNode& ftype, const Node& op, Kind k);
   EmbeddingOp(const EmbeddingOp& op);
 
   /** */
   const TypeNode& getType() const;
   /** Return the kind of indexed operator this operator represents */
   Kind getKind() const;
+  /** */
+  const Node& getOp() const;
 
   bool operator==(const EmbeddingOp& op) const;
 
@@ -49,6 +51,8 @@ class EmbeddingOp
   static Node convertToConcrete(const Node& app);
 
   /** */
+  static Node convertToEmbedding(const Node& n, const TypeNode& tn,
+  std::unordered_set<Kind>& naryKinds);
   static Node convertToEmbedding(const Node& n, const TypeNode& tn);
 
   /**
@@ -62,6 +66,8 @@ class EmbeddingOp
   std::unique_ptr<TypeNode> d_ftype;
   /** The kind of indexed operator this operator represents */
   Kind d_kind;
+  /** */
+  std::unique_ptr<Node> d_op;
 };
 
 std::ostream& operator<<(std::ostream& out, const EmbeddingOp& op);

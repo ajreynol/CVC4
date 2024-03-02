@@ -16,6 +16,7 @@
 #include "smt/proof_post_processor_dsl.h"
 
 #include "theory/uf/embedding_op.h"
+#include "expr/subs.h"
 
 using namespace cvc5::internal::theory;
 
@@ -26,9 +27,10 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     : EnvObj(env), d_rdbPc(env, rdb)
 {
   NodeManager* nm = NodeManager::currentNM();
-  d_embedUsort = nm->mkSort();
+  d_embedUsort = nm->mkSort("U");
   d_true = nm->mkConst(true);
   // initialize the axioms
+  std::unordered_set<Kind> naryKinds;
   const std::map<rewriter::DslProofRule, rewriter::RewriteProofRule>& rules =
       rdb->getAllRules();
   for (const std::pair<const rewriter::DslProofRule,
@@ -36,17 +38,29 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
   {
     const rewriter::RewriteProofRule& rpr = rr.second;
     Node conc = rpr.getConclusion(true);
+    Node cconc = EmbeddingOp::convertToEmbedding(conc, d_embedUsort, naryKinds);
     const std::vector<Node>& conds = rpr.getConditions();
-    Node ax = conds.empty() ? conc
-                            : nm->mkNode(Kind::IMPLIES, nm->mkAnd(conds), conc);
-    const std::vector<Node>& vars = rpr.getVarList();
-    if (!vars.empty())
+    std::vector<Node> cconds;
+    for (const Node& c : conds)
     {
-      ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, vars), ax);
+      cconds.push_back(EmbeddingOp::convertToEmbedding(c, d_embedUsort, naryKinds));
     }
+    const std::vector<Node>& vars = rpr.getVarList();
+    Subs vsubs;
+    std::vector<Node> cvars;
+    for (const Node& v : vars)
+    {
+      Node cv = EmbeddingOp::convertToEmbedding(v, d_embedUsort, naryKinds);
+      Node cvv = nm->mkBoundVar(cv.getType());
+      vsubs.add(cv, cvv);
+      cvars.push_back(cvv);
+    }
+    Node ax = cconds.empty() ? cconc : nm->mkNode(Kind::IMPLIES, nm->mkAnd(cconds), cconc);
+    ax = vsubs.apply(ax);
+    // TODO: pattern?
+    ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, cvars), ax);
+    Assert (!expr::hasFreeVar(ax));
     Trace("pp-dsl") << "Embedding of " << rr.first << " is " << ax << std::endl;
-    // convert to embedding
-    ax = EmbeddingOp::convertToEmbedding(ax, d_embedUsort);
     d_embedAxioms.push_back(ax);
     d_axRule[ax] = rr.first;
   }
@@ -106,10 +120,11 @@ bool ProofPostprocessDsl::update(Node res,
     getMethodId(args[2], mid);
   }
   int64_t recLimit = options().proof.proofRewriteRconsRecLimit;
+  int64_t startRecLimit = options().proof.proofRewriteRconsStratifyRec ? 0 : recLimit;
   int64_t stepLimit = options().proof.proofRewriteRconsStepLimit;
   // attempt to reconstruct the proof of the equality into cdp using the
   // rewrite database proof reconstructor
-  if (d_rdbPc.prove(cdp, res[0], res[1], tid, mid, recLimit, stepLimit))
+  if (d_rdbPc.prove(cdp, res[0], res[1], tid, mid, startRecLimit, recLimit, stepLimit))
   {
     // If we made (= res true) above, conclude the original res.
     if (reqTrueElim)
