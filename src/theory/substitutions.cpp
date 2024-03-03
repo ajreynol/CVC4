@@ -64,10 +64,8 @@ Node SubstitutionMap::internalSubstitute(TNode t,
   vector<substitution_stack_element> toVisit;
   toVisit.push_back((TNode) t);
 
-  size_t count = 0;
   while (!toVisit.empty())
   {
-    count++;
     // The current node we are processing
     substitution_stack_element& stackHead = toVisit.back();
     TNode current = stackHead.d_node;
