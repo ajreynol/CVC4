@@ -26,7 +26,7 @@ namespace cvc5::internal {
 
 std::ostream& operator<<(std::ostream& out, const EmbeddingOp& op)
 {
-  out << "e_" << op.getType().getId();
+  out << "e_" << op.getType().getId() << "_" << op.getKind();
   /*
   if (!op.getOp().isNull())
   {
@@ -89,13 +89,7 @@ class EmbeddingOpConverter : public NodeConverter
       return nm->getSkolemManager()->mkInternalSkolemFunction(
           InternalSkolemFunId::EMBEDDING_VAR, d_usort, {orig});
     }
-    // parametric???
     Kind k = orig.getKind();
-    if (k == Kind::EQUAL)
-    {
-      // equality is preserved
-      return terms[0].eqNode(terms[1]);
-    }
     Node eop;
     if (orig.getMetaKind() == metakind::PARAMETERIZED)
     {
@@ -156,15 +150,10 @@ class EmbeddingOpReverter : public NodeConverter
       }
     }
     Kind k = orig.getKind();
-    if (k == Kind::EQUAL)
-    {
-      // equality is preserved
-      return terms[0].eqNode(terms[1]);
-    }
-    else if (k==Kind::APPLY_EMBEDDING)
+    if (k==Kind::APPLY_EMBEDDING)
     {
       const EmbeddingOp& eop = orig.getOperator().getConst<EmbeddingOp>();
-      if (terms.empty())
+      if (terms.size()==1)
       {
         Assert(!eop.getOp().isNull());
         return eop.getOp();
@@ -174,8 +163,12 @@ class EmbeddingOpReverter : public NodeConverter
       {
         args.push_back(eop.getOp());
       }
-      args.insert(args.end(), terms.begin(), terms.end());
+      args.insert(args.end(), terms.begin()+1, terms.end());
       return nm->mkNode(eop.getKind(), args);
+    }
+    else if (k==Kind::APPLY_EMBEDDING_OP)
+    {
+      return orig;
     }
     Assert (false) << "Unexpected kind " << k;
     return orig;
@@ -193,7 +186,7 @@ Node EmbeddingOp::convertToConcrete(const Node& app)
 {
   Trace("generic-op") << "getConcreteApp " << app << std::endl;
   EmbeddingOpReverter eor;
-  return eor.convert(app);
+  return eor.convert(app, false);
 }
 
 }  // namespace cvc5::internal

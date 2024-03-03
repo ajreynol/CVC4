@@ -578,14 +578,7 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
     }
     else
     {
-      if (k == Kind::VARIABLE)
-      {
-        out << "var_";
-      }
-      else
-      {
-        out << k << '_';
-      }
+      out << "v_";
       out << n.getId();
     }
     return true;

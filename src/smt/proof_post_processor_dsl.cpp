@@ -16,6 +16,7 @@
 #include "smt/proof_post_processor_dsl.h"
 
 #include "expr/subs.h"
+#include "options/base_options.h"
 #include "options/smt_options.h"
 #include "options/quantifiers_options.h"
 #include "theory/uf/embedding_op.h"
@@ -29,9 +30,16 @@ namespace smt {
 ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
     : EnvObj(env), d_rdbPc(env, rdb)
 {
+  d_true = NodeManager::currentNM()->mkConst(true);
+  if (options().proof.proofRewriteProver)
+  {
+    initializeAxioms(rdb);
+  }
+}
+void ProofPostprocessDsl::initializeAxioms(rewriter::RewriteDb* rdb)
+{
   NodeManager* nm = NodeManager::currentNM();
   d_embedUsort = nm->mkSort("U");
-  d_true = nm->mkConst(true);
   // initialize the axioms
   const std::map<rewriter::DslProofRule, rewriter::RewriteProofRule>& rules =
       rdb->getAllRules();
@@ -40,13 +48,18 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
   {
     const rewriter::RewriteProofRule& rpr = rr.second;
     Node conc = rpr.getConclusion(true);
-    Node cconc = EmbeddingOp::convertToEmbedding(conc, d_embedUsort);
+    Assert (conc.getKind()==Kind::EQUAL);
+    Node cc1 = EmbeddingOp::convertToEmbedding(conc[0], d_embedUsort);
+    Node cc2 = EmbeddingOp::convertToEmbedding(conc[1], d_embedUsort);
+    Node cconc = cc1.eqNode(cc2);
     const std::vector<Node>& conds = rpr.getConditions();
     std::vector<Node> cconds;
     for (const Node& c : conds)
     {
-      cconds.push_back(
-          EmbeddingOp::convertToEmbedding(c, d_embedUsort));
+      Assert (c.getKind()==Kind::EQUAL);
+      Node c1 = EmbeddingOp::convertToEmbedding(c[0], d_embedUsort);
+      Node c2 = EmbeddingOp::convertToEmbedding(c[1], d_embedUsort);
+      cconds.push_back(c1.eqNode(c2));
     }
     const std::vector<Node>& vars = rpr.getVarList();
     Subs vsubs;
@@ -64,33 +77,21 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
                   : nm->mkNode(Kind::IMPLIES, nm->mkAnd(cconds), cconc);
     ax = vsubs.apply(ax);
     // TODO: pattern?
-    ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, cvars), ax);
+    if (!cvars.empty())
+    {
+      ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, cvars), ax);
+    }
     Assert(!expr::hasFreeVar(ax));
     Trace("pp-dsl") << "Embedding of " << rr.first << " is " << ax << std::endl;
     Trace("pp-dsl") << "...from " << conds << " => " << conc << std::endl;
     d_embedAxioms.push_back(ax);
     d_axRule[ax] = rr.first;
   }
-  // for each nary kind, add associativity and cancelling axiom
-  /*
-  Node nullNode;
-  for (Kind k : naryKinds)
-  {
-    Node op = nm->mkConst(EmbeddingOp(d_embedUsort, nullNode, k));
-    Node v1 = nm->mkBoundVar(d_embedUsort);
-    Node v2 = nm->mkBoundVar(d_embedUsort);
-    Node v3 = nm->mkBoundVar(d_embedUsort);
-    Node t1 = nm->mkNode(Kind::APPLY_EMBEDDING, op, nm->mkNode(Kind::APPLY_EMBEDDING, op, v1, v2), v3);
-    Node t2 = nm->mkNode(Kind::APPLY_EMBEDDING, op, v1, nm->mkNode(Kind::APPLY_EMBEDDING, op, v2, v3));
-    Node ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, v1, v2, v3), t1.eqNode(t2));
-    Trace("pp-dsl") << "Associative axiom " << k << ": " << ax << std::endl;
-    d_embedAxioms.push_back(ax);
-    // left and right identities
-  }
-  */
 
   d_subOptions.copyValues(options());
+  d_subOptions.writeBase().incrementalSolving = true;
   d_subOptions.writeSmt().produceProofs = false;
+  d_subOptions.writeProof().proofGranularityMode = options::ProofGranularityMode::MACRO;
   d_subOptions.writeSmt().simplificationMode =
       options::SimplificationMode::NONE;
   d_subOptions.writeSmt().produceUnsatCores = true;
@@ -99,6 +100,10 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
   SubsolverSetupInfo ssi(d_subOptions, lall);
   uint64_t timeout = 100;//options().quantifiers.quantSubCbqiTimeout;
   initializeSubsolver(d_prover, ssi, timeout != 0, timeout);
+  for (const Node& ax : d_embedAxioms)
+  {
+    d_prover->assertFormula(ax);
+  }
 }
 
 void ProofPostprocessDsl::reconstruct(
@@ -139,6 +144,7 @@ bool ProofPostprocessDsl::update(Node res,
   {
     return false;
   }
+  Assert (!res.isNull());
   bool reqTrueElim = false;
   // if not an equality, make (= res true).
   if (res.getKind() != Kind::EQUAL)
@@ -153,6 +159,27 @@ bool ProofPostprocessDsl::update(Node res,
   {
     builtin::BuiltinProofRuleChecker::getTheoryId(args[1], tid);
     getMethodId(args[2], mid);
+  }
+  if (options().proof.proofRewriteProver)
+  {
+    Trace("ajr-temp") << "Provable? " << res << std::endl;
+    std::unordered_set<rewriter::DslProofRule> rules;
+    if (isProvable(res, rules))
+    {
+      if (TraceIsOn("ajr-temp"))
+      {
+        Trace("ajr-temp") << "...provable by";
+        for (rewriter::DslProofRule r : rules)
+        {
+          Trace("ajr-temp") << " " << r;
+        }
+        Trace("ajr-temp") << std::endl;
+      }
+    }
+    else
+    {
+      Trace("ajr-temp") << "...unprovable" << std::endl;
+    }
   }
   int64_t recLimit = options().proof.proofRewriteRconsRecLimit;
   int64_t startRecLimit =
@@ -180,11 +207,19 @@ bool ProofPostprocessDsl::isProvable(
     const Node& n,
     std::unordered_set<rewriter::DslProofRule>& ucRules)
 {
+  Assert (n.getKind()==Kind::EQUAL);
   d_prover->push();
-  Node nembed = EmbeddingOp::convertToEmbedding(n, d_embedUsort);
+  Node n1 = EmbeddingOp::convertToEmbedding(n[0], d_embedUsort);
+  Node n2 = EmbeddingOp::convertToEmbedding(n[1], d_embedUsort);
+  Node nembed = n1.eqNode(n2);
   d_prover->assertFormula(nembed.negate());
   Result r = d_prover->checkSat();
-  d_prover->pop();
+  Trace("ajr-temp") << "...result " << r << std::endl;
+  if (r.getStatus()!=Result::UNSAT)
+  {
+    d_prover->pop();
+    return false;
+  }
   std::vector<Node> uc;
   getUnsatCoreFromSubsolver(*d_prover.get(), uc);
   std::map<Node, rewriter::DslProofRule>::iterator it;
@@ -196,8 +231,8 @@ bool ProofPostprocessDsl::isProvable(
       ucRules.insert(it->second);
     }
   }
-
-  return false;
+  d_prover->pop();
+  return true;
 }
 
 }  // namespace smt

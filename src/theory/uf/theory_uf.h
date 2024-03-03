@@ -182,6 +182,8 @@ private:
   CarePairArgumentCallback d_cpacb;
   /** */
   context::CDHashSet<Node> d_embedTerms;
+  /** */
+  context::CDHashMap<TypeNode, std::unordered_set<Node>> d_embedConsts;
 };/* class TheoryUF */
 
 }  // namespace uf

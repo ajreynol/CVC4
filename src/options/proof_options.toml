@@ -125,6 +125,14 @@ name   = "Proof"
   help       = "stratify the recursion for reconstructing proofs of theory rewrites"
 
 [[option]]
+  name       = "proofRewriteProver"
+  category   = "expert"
+  long       = "proof-rewrite-prover"
+  type       = "bool"
+  default    = "false"
+  help       = "use the prover"
+
+[[option]]
   name       = "proofRewriteRconsStepLimit"
   category   = "regular"
   long       = "proof-rewrite-rcons-step-limit=N"

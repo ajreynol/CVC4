@@ -356,8 +356,10 @@ TypeNode ApplyEmbeddingTypeRule::computeType(NodeManager* nodeManager,
                                              bool check,
                                              std::ostream* errOut)
 {
-  // TODO
+  Assert (n.getKind()==Kind::APPLY_EMBEDDING);
+  // TODO: check?
   TypeNode tn = n.getOperator().getConst<EmbeddingOp>().getType();
+  Assert (!tn.isNull());
   return tn;
 }
 
