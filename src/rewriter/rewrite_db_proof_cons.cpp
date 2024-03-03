@@ -76,7 +76,7 @@ bool RewriteDbProofCons::prove(CDProof* cdp,
     return true;
   }
   // if there are quantifiers, fail immediately
-  if (expr::hasBoundVar(a) || expr::hasBoundVar(b))
+  if (a.isClosure())
   {
     Trace("rpc") << "...fail (out of scope)" << std::endl;
     return false;
