@@ -121,7 +121,7 @@ name   = "Proof"
   category   = "expert"
   long       = "proof-rewrite-rcons-stratify-rec"
   type       = "bool"
-  default    = "true"
+  default    = "false"
   help       = "stratify the recursion for reconstructing proofs of theory rewrites"
 
 [[option]]
