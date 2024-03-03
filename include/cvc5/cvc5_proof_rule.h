@@ -169,6 +169,19 @@ enum ENUM(ProofRule) : uint32_t
   EVALUE(EVALUATE),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Builtin theory -- normalization**
+   *
+   * .. math::
+   *   \inferrule{- \mid t = s}{t = s}
+   *
+   * where :math:`\texttt{expr::isNorm(t, s)} = \top`. This
+   * method normalizes based on associativity, commutativity, idempotency, and
+   * neutral elements.
+   * \endverbatim
+   */
+  EVALUE(NORM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Builtin theory -- Substitution + Rewriting equality introduction**
    *
    * In this rule, we provide a term :math:`t` and conclude that it is equal to

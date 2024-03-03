@@ -184,6 +184,12 @@ DslProofRule RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
     Trace("rpc-debug2") << "...proved via congruence + evaluation" << std::endl;
     return DslProofRule::CONG_EVAL;
   }
+  // standard normalization
+  if (proveWithRule(
+          DslProofRule::NORM, eqi, {}, {}, false, false, true))
+  {
+    return DslProofRule::NORM;
+  }
   // if arithmetic, maybe holds by arithmetic normalization?
   if (proveWithRule(
           DslProofRule::ARITH_POLY_NORM, eqi, {}, {}, false, false, true))
@@ -395,6 +401,14 @@ bool RewriteDbProofCons::proveWithRule(DslProofRule id,
     Node eq = target[0];
     vcs.push_back(eq);
     pic.d_vars.push_back(eq);
+  }
+  else if (id == DslProofRule::NORM)
+  {
+    if (!expr::isNorm(target[0], target[1]))
+    {
+      return false;
+    }
+    pic.d_id = id;
   }
   else if (id == DslProofRule::ARITH_POLY_NORM)
   {
@@ -858,6 +872,10 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
       {
         conc = ps[0].eqNode(d_true);
         cdp->addStep(conc, ProofRule::TRUE_INTRO, ps, {});
+      }
+      else if (pcur.d_id == DslProofRule::NORM)
+      {
+        cdp->addStep(cur, ProofRule::NORM, {}, {cur});
       }
       else if (pcur.d_id == DslProofRule::ARITH_POLY_NORM)
       {

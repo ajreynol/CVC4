@@ -61,6 +61,15 @@ Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
                     const std::vector<Node>& subs);
 
+/** */
+bool isAssocComm(Kind k);
+/** */
+bool isAssoc(Kind k);
+/** */
+Node getNormalForm(Node a);
+/** */
+bool isNorm(Node a, Node b);
+
 }  // namespace expr
 }  // namespace cvc5::internal
 
