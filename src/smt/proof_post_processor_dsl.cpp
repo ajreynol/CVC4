@@ -159,6 +159,19 @@ bool ProofPostprocessDsl::update(Node res,
   {
     builtin::BuiltinProofRuleChecker::getTheoryId(args[1], tid);
     getMethodId(args[2], mid);
+    Trace("ajr-temp") << "Prove rewrite " << tid << " " << mid << std::endl;
+  }
+  else
+  {
+    TrustId trid;
+    if (id==ProofRule::TRUST && getTrustId(args[0], trid))
+    {
+      Trace("ajr-temp") << "Prove rule " << id << " " << trid << std::endl;
+    }
+    else
+    {
+      Trace("ajr-temp") << "Prove rule " << id << std::endl;
+    }
   }
   if (options().proof.proofRewriteProver)
   {
