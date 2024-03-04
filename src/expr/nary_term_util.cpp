@@ -342,12 +342,14 @@ Node getNormalForm(Node a)
   Node an = a.getAttribute(nfa);
   if (!an.isNull())
   {
+    // already computed
     return an;
   }
   Kind k = a.getKind();
   bool ac = isAssocComm(k);
   if (!ac && !isAssoc(k))
   {
+    // not associative, return self
     a.setAttribute(nfa, a);
     return a;
   }
@@ -355,7 +357,7 @@ Node getNormalForm(Node a)
   Node nt = getNullTerminator(k, atn);
   if (nt.isNull())
   {
-    // no null terminator, likely abstract type
+    // no null terminator, likely abstract type, return self
     a.setAttribute(nfa, a);
     return a;
   }
@@ -369,20 +371,24 @@ Node getNormalForm(Node a)
     toProcess.pop_back();
     if (cur==nt)
     {
+      // ignore null terminator (which is the neutral element)
       continue;
     }
     else if (cur.getKind()==k)
     {
+      // flatten
       toProcess.insert(toProcess.end(), cur.rbegin(), cur.rend());
     }
     else if (!ac || std::find(children.begin(), children.end(), cur)==children.end())
     {
+      // add to final children if not commutative or if not a duplicate
       children.push_back(cur);
     }
   }
   while (!toProcess.empty());
   if (ac)
   {
+    // sort if commutative
     std::sort(children.begin(), children.end());
   }
   an = children.empty() ? nt : (children.size()==1 ? children[0] : NodeManager::currentNM()->mkNode(k, children));
@@ -394,6 +400,13 @@ bool isNorm(Node a, Node b)
 {
   Node an = getNormalForm(a);
   Node bn = getNormalForm(b);
+  // note we compare three possibilities, to handle cases like
+  // (or (and b true) false) == (and b true),
+  // where N((or (and b true) false)) = (and b true),
+  //       N((and b true)) = b.
+  // In other words, one of the terms may be an element of the
+  // normalization of the other, which itself normalizes. Comparing
+  // all three ensures we are robust
   return (an==bn) || (a==bn) || (an==b);
 }
 
