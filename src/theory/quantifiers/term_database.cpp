@@ -189,7 +189,7 @@ Node TermDb::getMatchOperator(TNode n)
       || k == Kind::STRING_LENGTH || k == Kind::BITVECTOR_TO_NAT
       || k == Kind::INT_TO_BITVECTOR || k == Kind::APPLY_EMBEDDING)
   {
-    if (n.getNumChildren()==0)
+    if (n.getNumChildren() == 0)
     {
       return Node::null();
     }

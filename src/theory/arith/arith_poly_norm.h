@@ -91,6 +91,7 @@ class PolyNorm
 
   /** to node */
   Node toNode() const;
+
  private:
   /**
    * Make the difference of two nodes a and b, independent of their type.

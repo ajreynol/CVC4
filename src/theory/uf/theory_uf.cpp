@@ -27,6 +27,7 @@
 #include "proof/proof_node_manager.h"
 #include "smt/logic_exception.h"
 #include "theory/arith/arith_utilities.h"
+#include "theory/evaluator.h"
 #include "theory/theory_model.h"
 #include "theory/type_enumerator.h"
 #include "theory/uf/cardinality_extension.h"
@@ -35,7 +36,6 @@
 #include "theory/uf/ho_extension.h"
 #include "theory/uf/lambda_lift.h"
 #include "theory/uf/theory_uf_rewriter.h"
-#include "theory/evaluator.h"
 
 using namespace std;
 
@@ -343,7 +343,7 @@ void TheoryUF::preRegisterTerm(TNode node)
       if (d_embedTerms.find(node) == d_embedTerms.end())
       {
         d_embedTerms.insert(node);
-        NodeManager * nm = NodeManager::currentNM();
+        NodeManager* nm = NodeManager::currentNM();
         Node origNode = EmbeddingOp::convertToConcrete(node);
         Trace("uf-embed") << "Embedding: register " << origNode << std::endl;
         Trace("uf-embed") << "...from " << node << std::endl;
@@ -354,7 +354,7 @@ void TheoryUF::preRegisterTerm(TNode node)
           theory::Evaluator ev(nullptr);
           Node nev = ev.eval(origNode, {}, {});
           Trace("uf-embed") << "...check eval to " << nev << std::endl;
-          if (!nev.isNull() && nev!=origNode)
+          if (!nev.isNull() && nev != origNode)
           {
             // convert?
             Node nevc = EmbeddingOp::convertToEmbedding(nev, node.getType());
@@ -385,7 +385,7 @@ void TheoryUF::preRegisterTerm(TNode node)
         if (node.hasOperator())
         {
           Node nop = node.getOperator();
-          if (d_embedTerms.find(nop)==d_embedTerms.end())
+          if (d_embedTerms.find(nop) == d_embedTerms.end())
           {
             d_embedTerms.insert(nop);
             const EmbeddingOp& eop = nop.getConst<EmbeddingOp>();
@@ -395,10 +395,21 @@ void TheoryUF::preRegisterTerm(TNode node)
               Node v1 = nm->mkBoundVar(u);
               Node v2 = nm->mkBoundVar(u);
               Node v3 = nm->mkBoundVar(u);
-              Node t1 = nm->mkNode(Kind::APPLY_EMBEDDING, nop, nm->mkNode(Kind::APPLY_EMBEDDING, nop, v1, v2), v3);
-              Node t2 = nm->mkNode(Kind::APPLY_EMBEDDING, nop, v1, nm->mkNode(Kind::APPLY_EMBEDDING, nop, v2, v3));
-              Node ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, v1, v2, v3), t1.eqNode(t2));
-              Trace("pp-dsl") << "Associative axiom " << k << ": " << ax << std::endl;
+              Node t1 =
+                  nm->mkNode(Kind::APPLY_EMBEDDING,
+                             nop,
+                             nm->mkNode(Kind::APPLY_EMBEDDING, nop, v1, v2),
+                             v3);
+              Node t2 =
+                  nm->mkNode(Kind::APPLY_EMBEDDING,
+                             nop,
+                             v1,
+                             nm->mkNode(Kind::APPLY_EMBEDDING, nop, v2, v3));
+              Node ax = nm->mkNode(Kind::FORALL,
+                                   nm->mkNode(Kind::BOUND_VAR_LIST, v1, v2, v3),
+                                   t1.eqNode(t2));
+              Trace("pp-dsl")
+                  << "Associative axiom " << k << ": " << ax << std::endl;
               // TODO: left and right identities
               d_im.lemma(ax, InferenceId::UF_EMBEDDING_SIMPLIFY);
             }

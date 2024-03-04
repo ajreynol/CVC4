@@ -74,10 +74,7 @@ bool EmbeddingOp::isNaryKind(Kind k)
 class EmbeddingOpConverter : public NodeConverter
 {
  public:
-  EmbeddingOpConverter(const TypeNode& usort)
-      : d_usort(usort)
-  {
-  }
+  EmbeddingOpConverter(const TypeNode& usort) : d_usort(usort) {}
   Node postConvertUntyped(Node orig,
                           const std::vector<Node>& terms,
                           bool termsChanged) override
@@ -122,13 +119,10 @@ class EmbeddingOpConverter : public NodeConverter
   TypeNode d_usort;
 };
 
-
 class EmbeddingOpReverter : public NodeConverter
 {
  public:
-  EmbeddingOpReverter()
-  {
-  }
+  EmbeddingOpReverter() {}
   Node postConvertUntyped(Node orig,
                           const std::vector<Node>& terms,
                           bool termsChanged) override
@@ -138,22 +132,23 @@ class EmbeddingOpReverter : public NodeConverter
     {
       SkolemFunId id;
       Node cacheVal;
-      SkolemManager * sm = nm->getSkolemManager();
+      SkolemManager* sm = nm->getSkolemManager();
       if (sm->isSkolemFunction(orig, id, cacheVal))
       {
         InternalSkolemFunId iid = sm->getInternalId(orig);
-        if (iid==InternalSkolemFunId::EMBEDDING_VAR)
+        if (iid == InternalSkolemFunId::EMBEDDING_VAR)
         {
-          Assert (cacheVal.getKind()==Kind::SEXPR && cacheVal.getNumChildren()==2);
+          Assert(cacheVal.getKind() == Kind::SEXPR
+                 && cacheVal.getNumChildren() == 2);
           return cacheVal[1];
         }
       }
     }
     Kind k = orig.getKind();
-    if (k==Kind::APPLY_EMBEDDING)
+    if (k == Kind::APPLY_EMBEDDING)
     {
       const EmbeddingOp& eop = orig.getOperator().getConst<EmbeddingOp>();
-      if (terms.size()==1)
+      if (terms.size() == 1)
       {
         Assert(!eop.getOp().isNull());
         return eop.getOp();
@@ -163,20 +158,19 @@ class EmbeddingOpReverter : public NodeConverter
       {
         args.push_back(eop.getOp());
       }
-      args.insert(args.end(), terms.begin()+1, terms.end());
+      args.insert(args.end(), terms.begin() + 1, terms.end());
       return nm->mkNode(eop.getKind(), args);
     }
-    else if (k==Kind::APPLY_EMBEDDING_OP)
+    else if (k == Kind::APPLY_EMBEDDING_OP)
     {
       return orig;
     }
-    Assert (false) << "Unexpected kind " << k;
+    Assert(false) << "Unexpected kind " << k;
     return orig;
   }
 };
 
-Node EmbeddingOp::convertToEmbedding(const Node& n,
-                                     const TypeNode& tn)
+Node EmbeddingOp::convertToEmbedding(const Node& n, const TypeNode& tn)
 {
   EmbeddingOpConverter eoc(tn);
   return eoc.convert(n, false);

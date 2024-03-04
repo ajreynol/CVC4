@@ -15,8 +15,8 @@
 
 #include "theory/builtin/proof_checker.h"
 
-#include "expr/skolem_manager.h"
 #include "expr/nary_term_util.h"
+#include "expr/skolem_manager.h"
 #include "rewriter/rewrite_db.h"
 #include "rewriter/rewrite_db_term_process.h"
 #include "rewriter/rewrite_proof_rule.h"

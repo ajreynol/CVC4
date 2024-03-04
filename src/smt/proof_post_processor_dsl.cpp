@@ -15,12 +15,12 @@
 
 #include "smt/proof_post_processor_dsl.h"
 
+#include "expr/node_algorithm.h"
 #include "expr/subs.h"
 #include "options/base_options.h"
-#include "options/smt_options.h"
 #include "options/quantifiers_options.h"
+#include "options/smt_options.h"
 #include "theory/uf/embedding_op.h"
-#include "expr/node_algorithm.h"
 
 using namespace cvc5::internal::theory;
 
@@ -48,7 +48,7 @@ void ProofPostprocessDsl::initializeAxioms(rewriter::RewriteDb* rdb)
   {
     const rewriter::RewriteProofRule& rpr = rr.second;
     Node conc = rpr.getConclusion(true);
-    Assert (conc.getKind()==Kind::EQUAL);
+    Assert(conc.getKind() == Kind::EQUAL);
     Node cc1 = EmbeddingOp::convertToEmbedding(conc[0], d_embedUsort);
     Node cc2 = EmbeddingOp::convertToEmbedding(conc[1], d_embedUsort);
     Node cconc = cc1.eqNode(cc2);
@@ -56,7 +56,7 @@ void ProofPostprocessDsl::initializeAxioms(rewriter::RewriteDb* rdb)
     std::vector<Node> cconds;
     for (const Node& c : conds)
     {
-      Assert (c.getKind()==Kind::EQUAL);
+      Assert(c.getKind() == Kind::EQUAL);
       Node c1 = EmbeddingOp::convertToEmbedding(c[0], d_embedUsort);
       Node c2 = EmbeddingOp::convertToEmbedding(c[1], d_embedUsort);
       cconds.push_back(c1.eqNode(c2));
@@ -67,7 +67,7 @@ void ProofPostprocessDsl::initializeAxioms(rewriter::RewriteDb* rdb)
     for (const Node& v : vars)
     {
       Node cv = EmbeddingOp::convertToEmbedding(v, d_embedUsort);
-      Assert (cv.getType()==d_embedUsort);
+      Assert(cv.getType() == d_embedUsort);
       Node cvv = nm->mkBoundVar(d_embedUsort);
       vsubs.add(cv, cvv);
       cvars.push_back(cvv);
@@ -79,7 +79,8 @@ void ProofPostprocessDsl::initializeAxioms(rewriter::RewriteDb* rdb)
     // TODO: pattern?
     if (!cvars.empty())
     {
-      ax = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, cvars), ax);
+      ax =
+          nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, cvars), ax);
     }
     Assert(!expr::hasFreeVar(ax));
     Trace("pp-dsl") << "Embedding of " << rr.first << " is " << ax << std::endl;
@@ -91,14 +92,15 @@ void ProofPostprocessDsl::initializeAxioms(rewriter::RewriteDb* rdb)
   d_subOptions.copyValues(options());
   d_subOptions.writeBase().incrementalSolving = true;
   d_subOptions.writeSmt().produceProofs = false;
-  d_subOptions.writeProof().proofGranularityMode = options::ProofGranularityMode::MACRO;
+  d_subOptions.writeProof().proofGranularityMode =
+      options::ProofGranularityMode::MACRO;
   d_subOptions.writeSmt().simplificationMode =
       options::SimplificationMode::NONE;
   d_subOptions.writeSmt().produceUnsatCores = true;
   d_subOptions.writeQuantifiers().enumInst = true;
   LogicInfo lall("ALL");
   SubsolverSetupInfo ssi(d_subOptions, lall);
-  uint64_t timeout = 100;//options().quantifiers.quantSubCbqiTimeout;
+  uint64_t timeout = 100;  // options().quantifiers.quantSubCbqiTimeout;
   initializeSubsolver(d_prover, ssi, timeout != 0, timeout);
   for (const Node& ax : d_embedAxioms)
   {
@@ -144,7 +146,7 @@ bool ProofPostprocessDsl::update(Node res,
   {
     return false;
   }
-  Assert (!res.isNull());
+  Assert(!res.isNull());
   bool reqTrueElim = false;
   // if not an equality, make (= res true).
   if (res.getKind() != Kind::EQUAL)
@@ -164,7 +166,7 @@ bool ProofPostprocessDsl::update(Node res,
   else
   {
     TrustId trid;
-    if (id==ProofRule::TRUST && getTrustId(args[0], trid))
+    if (id == ProofRule::TRUST && getTrustId(args[0], trid))
     {
       Trace("ajr-temp") << "Prove rule " << id << " " << trid << std::endl;
     }
@@ -217,10 +219,9 @@ bool ProofPostprocessDsl::update(Node res,
 }
 
 bool ProofPostprocessDsl::isProvable(
-    const Node& n,
-    std::unordered_set<rewriter::DslProofRule>& ucRules)
+    const Node& n, std::unordered_set<rewriter::DslProofRule>& ucRules)
 {
-  Assert (n.getKind()==Kind::EQUAL);
+  Assert(n.getKind() == Kind::EQUAL);
   d_prover->push();
   Node n1 = EmbeddingOp::convertToEmbedding(n[0], d_embedUsort);
   Node n2 = EmbeddingOp::convertToEmbedding(n[1], d_embedUsort);
@@ -228,7 +229,7 @@ bool ProofPostprocessDsl::isProvable(
   d_prover->assertFormula(nembed.negate());
   Result r = d_prover->checkSat();
   Trace("ajr-temp") << "...result " << r << std::endl;
-  if (r.getStatus()!=Result::UNSAT)
+  if (r.getStatus() != Result::UNSAT)
   {
     d_prover->pop();
     return false;

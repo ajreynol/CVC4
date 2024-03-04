@@ -86,7 +86,7 @@ bool RewriteDbProofCons::prove(CDProof* cdp,
   // prove the equality
   Node eq = a.eqNode(b);
   bool success = false;
-  for (int64_t i=startRecLimit; i<=recLimit; i++)
+  for (int64_t i = startRecLimit; i <= recLimit; i++)
   {
     Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
     if (proveEq(cdp, eq, eq, i, stepLimit))
@@ -101,7 +101,7 @@ bool RewriteDbProofCons::prove(CDProof* cdp,
     // if converter didn't make a difference, don't try to prove again
     if (eqi != eq)
     {
-      for (int64_t i=startRecLimit; i<=recLimit; i++)
+      for (int64_t i = startRecLimit; i <= recLimit; i++)
       {
         Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
         if (proveEq(cdp, eq, eqi, i, stepLimit))
@@ -185,8 +185,7 @@ DslProofRule RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
     return DslProofRule::CONG_EVAL;
   }
   // standard normalization
-  if (proveWithRule(
-          DslProofRule::NORM, eqi, {}, {}, false, false, true))
+  if (proveWithRule(DslProofRule::NORM, eqi, {}, {}, false, false, true))
   {
     return DslProofRule::NORM;
   }
@@ -208,8 +207,8 @@ DslProofRule RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
   std::unordered_map<Node, ProvenInfo>::iterator it = d_pcache.find(eqi);
   if (it != d_pcache.end())
   {
-    if (it->second.d_id!=DslProofRule::FAIL||
-        d_currRecLimit <= it->second.d_failMaxDepth)
+    if (it->second.d_id != DslProofRule::FAIL
+        || d_currRecLimit <= it->second.d_failMaxDepth)
     {
       return it->second.d_id;
     }

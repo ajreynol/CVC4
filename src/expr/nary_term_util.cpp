@@ -312,8 +312,7 @@ bool isAssocComm(Kind k)
     case Kind::FINITE_FIELD_MULT:
       // known to have null terminator independent of type
       return true;
-    default:
-      break;
+    default: break;
   }
   return false;
 }
@@ -323,10 +322,8 @@ bool isAssoc(Kind k)
   switch (k)
   {
     case Kind::STRING_CONCAT:
-    case Kind::REGEXP_CONCAT:
-      return true;
-    default:
-      break;
+    case Kind::REGEXP_CONCAT: return true;
+    default: break;
   }
   return false;
 }
@@ -369,29 +366,33 @@ Node getNormalForm(Node a)
   {
     cur = toProcess.back();
     toProcess.pop_back();
-    if (cur==nt)
+    if (cur == nt)
     {
       // ignore null terminator (which is the neutral element)
       continue;
     }
-    else if (cur.getKind()==k)
+    else if (cur.getKind() == k)
     {
       // flatten
       toProcess.insert(toProcess.end(), cur.rbegin(), cur.rend());
     }
-    else if (!ac || std::find(children.begin(), children.end(), cur)==children.end())
+    else if (!ac
+             || std::find(children.begin(), children.end(), cur)
+                    == children.end())
     {
       // add to final children if not commutative or if not a duplicate
       children.push_back(cur);
     }
-  }
-  while (!toProcess.empty());
+  } while (!toProcess.empty());
   if (ac)
   {
     // sort if commutative
     std::sort(children.begin(), children.end());
   }
-  an = children.empty() ? nt : (children.size()==1 ? children[0] : NodeManager::currentNM()->mkNode(k, children));
+  an = children.empty() ? nt
+                        : (children.size() == 1
+                               ? children[0]
+                               : NodeManager::currentNM()->mkNode(k, children));
   a.setAttribute(nfa, an);
   return an;
 }
@@ -407,7 +408,7 @@ bool isNorm(Node a, Node b)
   // In other words, one of the terms may be an element of the
   // normalization of the other, which itself normalizes. Comparing
   // all three ensures we are robust
-  return (an==bn) || (a==bn) || (an==b);
+  return (an == bn) || (a == bn) || (an == b);
 }
 
 }  // namespace expr
