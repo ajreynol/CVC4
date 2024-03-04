@@ -179,7 +179,7 @@ enum ENUM(ProofRule) : uint32_t
    * neutral elements.
    * \endverbatim
    */
-  EVALUE(NORM),
+  EVALUE(AC_NORM),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Builtin theory -- Substitution + Rewriting equality introduction**

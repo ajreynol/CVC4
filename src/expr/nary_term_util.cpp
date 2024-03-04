@@ -310,7 +310,6 @@ bool isAssocComm(Kind k)
     case Kind::BITVECTOR_OR:
     case Kind::FINITE_FIELD_ADD:
     case Kind::FINITE_FIELD_MULT:
-      // known to have null terminator independent of type
       return true;
     default: break;
   }
@@ -397,7 +396,7 @@ Node getNormalForm(Node a)
   return an;
 }
 
-bool isNorm(Node a, Node b)
+bool isACNorm(Node a, Node b)
 {
   Node an = getNormalForm(a);
   Node bn = getNormalForm(b);

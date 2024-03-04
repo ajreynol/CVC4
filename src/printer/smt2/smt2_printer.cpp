@@ -578,7 +578,14 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
     }
     else
     {
-      out << "v_";
+      if (k == Kind::VARIABLE)
+      {
+        out << "var_";
+      }
+      else
+      {
+        out << k << '_';
+      }
       out << n.getId();
     }
     return true;
@@ -1157,6 +1164,7 @@ std::string Smt2Printer::smtKindString(Kind k)
     case Kind::BITVECTOR_ITE: return "bvite";
     case Kind::BITVECTOR_ULTBV: return "bvultbv";
     case Kind::BITVECTOR_SLTBV: return "bvsltbv";
+
     case Kind::BITVECTOR_SIZE: return "bvsize";
     case Kind::CONST_BITVECTOR_SYMBOLIC: return "bv";
 
