@@ -1689,6 +1689,19 @@ enum ENUM(ProofRule) : uint32_t
   EVALUE(RE_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Regular expressions -- Membership evaluation**
+   *
+   * .. math::
+   *
+   *   \inferrule{-\mid \mathit{str.++}(c1 \ldots cn),R}{c1 \ldots cn \in R}
+   *
+   * where strings::RegExpMemberEval(c1 \ldots cn, R) returns (true,
+   * \mathit{str.++}(c1 \ldots cn)).
+   * \endverbatim
+   */
+  EVALUE(RE_MEMBER_EVAL),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Strings -- Code points**
    *
    * .. math::

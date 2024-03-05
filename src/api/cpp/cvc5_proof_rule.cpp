@@ -150,6 +150,7 @@ const char* toString(ProofRule id)
     case ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED:
       return "RE_UNFOLD_NEG_CONCAT_FIXED";
     case ProofRule::RE_ELIM: return "RE_ELIM";
+    case ProofRule::RE_MEMBER_EVAL: return "RE_MEMBER_EVAL";
     case ProofRule::STRING_CODE_INJ: return "STRING_CODE_INJ";
     case ProofRule::STRING_SEQ_UNIT_INJ: return "STRING_SEQ_UNIT_INJ";
     case ProofRule::MACRO_STRING_INFERENCE: return "MACRO_STRING_INFERENCE";
