@@ -1,4 +1,5 @@
 (include "../theories/Arith.smt3")
+(include "../programs/Utils.smt3")
 
 ; Evaluation function for mixed addition
 (define arith_eval_add ((T Type :implicit) (U Type :implicit) (x T) (y U))
@@ -33,7 +34,6 @@
   (alf.add (alf.to_q x) (alf.neg (alf.to_q y)))
 )
 
-
 (declare-sort @Monomial 0)
 (declare-const @mon (-> (! Type :var T :implicit) T Real @Monomial))
 
@@ -48,9 +48,6 @@
     ((poly_neg (@poly (@mon a c) p)) (alf.cons @poly (@mon a (alf.neg c)) (poly_neg p)))
   )
 )
-; TODO: improve
-(define poly_compare_var ((T Type :implicit) (U Type :implicit) (a T) (b U))
-  (alf.is_neg (alf.add (alf.hash a) (alf.neg (alf.hash b)))))
 
 (program poly_add ((T Type) (U Type) (c1 Real) (a1 T) (c2 Real) (a2 U) (p @Polynomial) (p1 @Polynomial :list) (p2 @Polynomial :list))
   (@Polynomial @Polynomial) @Polynomial
@@ -59,7 +56,7 @@
                                                                   (let ((ca (alf.add c1 c2)) (pa (poly_add p1 p2)))
                                                                   ; check if cancels
                                                                   (alf.ite (alf.is_eq ca 0.0) pa (alf.cons @poly (@mon a1 ca) pa)))
-                                                                (alf.ite (poly_compare_var a1 a2)
+                                                                (alf.ite (compare_var a1 a2)
                                                                   (alf.cons @poly (@mon a1 c1) (poly_add p1 (@poly (@mon a2 c2) p2)))
                                                                   (alf.cons @poly (@mon a2 c2) (poly_add (@poly (@mon a1 c1) p1) p2)))))
     ((poly_add @poly.zero p)                                    p)
@@ -71,7 +68,7 @@
 (program mvar_mul_mvar ((T Type) (U Type) (V Type) (W Type) (X Type) (Y Type) (Z Type) (a1 T) (a2 U :list) (b1 V) (b2 W :list))
   (X Y) Z
   (
-    ((mvar_mul_mvar (* a1 a2) (* b1 b2))  (alf.ite (poly_compare_var a1 b1)
+    ((mvar_mul_mvar (* a1 a2) (* b1 b2))  (alf.ite (compare_var a1 b1)
                                             (alf.cons * a1 (mvar_mul_mvar a2 (* b1 b2)))
                                             (alf.cons * b1 (mvar_mul_mvar (* a1 a2) b2))))
     ((mvar_mul_mvar (* a1 a2) 1)          (* a1 a2))

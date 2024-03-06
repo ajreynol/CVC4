@@ -152,6 +152,10 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
       return pargs[0][0].getType().isRealOrInt();
     }
     break;
+    case ProofRule::AC_NORM:
+    {
+      return false;
+    }
     case ProofRule::STRING_REDUCTION:
     {
       // depends on the operator

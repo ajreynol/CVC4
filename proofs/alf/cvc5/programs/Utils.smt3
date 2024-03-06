@@ -7,3 +7,22 @@
 (declare-const @list.nil @List)
 (declare-const @list (-> (! Type :var T :implicit) T @List @List) :right-assoc-nil @list.nil)
 
+; TODO: improve
+(define compare_var ((T Type :implicit) (U Type :implicit) (a T) (b U))
+  (alf.is_neg (alf.add (alf.hash a) (alf.neg (alf.hash b)))))
+
+(program get_ac_norm ((T Type) (S Type) (U Type) (f (-> T U S)) (null S) (x1 T) (x2 U :list))
+  (S S) S
+  (
+    ((get_ac_norm (f x1 x2) null) null)
+    ((get_ac_norm null null) null)
+  )
+)
+
+(program get_a_norm ((T Type) (S Type) (U Type) (f (-> T U S)) (null S) (x1 T) (x2 U :list))
+  (S S) S
+  (
+    ((get_a_norm (f x1 x2) null) null)
+    ((get_a_norm null null) null)
+  )
+)

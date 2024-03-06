@@ -159,3 +159,43 @@
   :conclusion (= a b)
 )
 
+
+(program is_assoc_comm ((T Type) (x T))
+  (T) Bool
+  (
+    ((is_assoc_comm or) true)
+    ((is_assoc_comm and) true)
+    ((is_assoc_comm sep) true)
+    ((is_assoc_comm re.union) true)
+    ((is_assoc_comm re.inter) true)
+    ((is_assoc_comm bvor) true)
+    ((is_assoc_comm bvand) true)
+    ((is_assoc_comm ff.add) true)
+    ((is_assoc_comm ff.mul) true)
+  )
+)
+
+(program is_assoc ((T Type) (x T))
+  (T) Bool
+  (
+    ((is_assoc str.++) true)
+    ((is_assoc re.++) true)
+  )
+)
+
+(program get_ac_normal_form ((T Type) (S Type) (f (-> T S)) (x1 T) (x2 S :list))
+  (S) Bool
+  (
+    ((get_ac_normal_form (f x1 x2)) (alf.ite (is_assoc_comm f) (get_ac_norm (f x1 x2) (alf.emptylist f))
+                                    (alf.ite (is_assoc f) (get_a_norm (f x1 x2) (alf.emptylist f))
+                                        (f x1 x2))))
+  )
+)
+
+; ProofRule::AC_NORM
+(declare-rule ac_norm ((U Type) (a U) (b U))
+  :args ((= a b))
+  :requires (((let ((an (get_ac_normal_form a)) (bn (get_ac_normal_form b))) 
+               (alf.or (alf.is_eq an bn) (alf.is_eq an b) (alf.is_eq a bn))) true))
+  :conclusion (= a b)
+)
