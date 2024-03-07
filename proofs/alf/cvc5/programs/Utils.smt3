@@ -47,8 +47,9 @@
 
 ; AC_NORM associative
 
-(define get_ac_norm ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (null S) (x S))
-  (singleton_elim f null (get_ac_norm_rec f null x)))
+(define get_ac_norm ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (x S))
+  (let ((null (alf.emptylist f)))
+    (singleton_elim f null (get_ac_norm_rec f null x))))
 
 (program get_a_norm_rec ((T Type) (S Type) (U Type) (f (-> T U S)) (null S) (x S) (x1 T) (x2 U :list))
   ((-> T U S) S S) S
@@ -60,5 +61,6 @@
   )
 )
 
-(define get_a_norm ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (null S) (x S))
-  (singleton_elim f null (get_a_norm_rec f null x)))
+(define get_a_norm ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (x S))
+  (let ((null (alf.emptylist f)))
+    (singleton_elim f null (get_a_norm_rec f null x))))
