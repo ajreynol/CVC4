@@ -172,6 +172,7 @@
     ((is_assoc_comm bvand) true)
     ((is_assoc_comm ff.add) true)
     ((is_assoc_comm ff.mul) true)
+    ((is_assoc_comm x) false)
   )
 )
 
@@ -180,14 +181,15 @@
   (
     ((is_assoc str.++) true)
     ((is_assoc re.++) true)
+    ((is_assoc x) false)
   )
 )
 
 (program get_ac_normal_form ((T Type) (S Type) (f (-> T S)) (x1 T) (x2 S :list))
   (S) Bool
   (
-    ((get_ac_normal_form (f x1 x2)) (alf.ite (is_assoc_comm f) (get_ac_norm (f x1 x2) (alf.emptylist f))
-                                    (alf.ite (is_assoc f) (get_a_norm (f x1 x2) (alf.emptylist f))
+    ((get_ac_normal_form (f x1 x2)) (alf.ite (is_assoc_comm f) (get_ac_norm (alf.emptylist f) (f x1 x2))
+                                    (alf.ite (is_assoc f) (get_a_norm (alf.emptylist f) (f x1 x2))
                                         (f x1 x2))))
   )
 )

@@ -11,18 +11,34 @@
 (define compare_var ((T Type :implicit) (U Type :implicit) (a T) (b U))
   (alf.is_neg (alf.add (alf.hash a) (alf.neg (alf.hash b)))))
 
-(program get_ac_norm ((T Type) (S Type) (U Type) (f (-> T U S)) (null S) (x1 T) (x2 U :list))
-  (S S) S
+(program ac_append ((T Type) (S Type) (U Type) (f (-> T U S)) (null S) (x1 T) (x2 U :list) (y1 T) (y2 U :list))
+  ((-> T U S) S S S) S
   (
-    ((get_ac_norm (f x1 x2) null) null)
-    ((get_ac_norm null null) null)
+    ((ac_append f null (f x1 x2) (f y1 y2)) (alf.ite (alf.is_eq x1 y1) 
+                                              (ac_append f null (f x1 x2) y2)
+                                            (alf.ite (compare_var x1 y1) 
+                                              (f x1 (ac_append f null x2 (f y1 y2)))
+                                              (f y1 (ac_append f null (f x1 x2) y2)))))
+    ((ac_append f null (f x1 x2) null) (f x1 x2))
+    ((ac_append f null null (f y1 y2)) (f y1 y2))
+    ((ac_append f null null null) null)
+  )
+)
+
+(program get_ac_norm ((T Type) (S Type) (U Type) (f (-> T U S)) (null S) (x1 T) (x2 U :list))
+  ((-> T U S) S S) S
+  (
+    ((get_ac_norm f null (f null x2)) (get_ac_norm f null x2))
+    ((get_ac_norm f null (f x1 x2))   (ac_append f null (get_ac_norm f x1 null) (get_ac_norm f x2 null)))
+    ((get_ac_norm f null null) null)
   )
 )
 
 (program get_a_norm ((T Type) (S Type) (U Type) (f (-> T U S)) (null S) (x1 T) (x2 U :list))
-  (S S) S
+  ((-> T U S) S S) S
   (
-    ((get_a_norm (f x1 x2) null) null)
-    ((get_a_norm null null) null)
+    ((get_a_norm f null (f null x2))  (get_a_norm f null x2))
+    ((get_a_norm f null (f x1 x2))    (alf.concat f (get_a_norm f null x1) (get_a_norm f null x2)))
+    ((get_a_norm f null null) null)
   )
 )

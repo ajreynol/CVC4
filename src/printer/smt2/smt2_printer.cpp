@@ -1167,9 +1167,6 @@ std::string Smt2Printer::smtKindString(Kind k)
     case Kind::BITVECTOR_SIZE: return "bvsize";
     case Kind::CONST_BITVECTOR_SYMBOLIC: return "bv";
 
-    case Kind::BITVECTOR_SIZE: return "bvsize";
-    case Kind::CONST_BITVECTOR_SYMBOLIC: return "bv";
-
     // datatypes theory
     case Kind::APPLY_TESTER: return "is";
     case Kind::APPLY_UPDATER: return "update";
