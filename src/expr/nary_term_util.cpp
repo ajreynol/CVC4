@@ -309,8 +309,7 @@ bool isAssocComm(Kind k)
     case Kind::BITVECTOR_AND:
     case Kind::BITVECTOR_OR:
     case Kind::FINITE_FIELD_ADD:
-    case Kind::FINITE_FIELD_MULT:
-      return true;
+    case Kind::FINITE_FIELD_MULT: return true;
     default: break;
   }
   return false;
@@ -399,9 +398,9 @@ Node getNormalForm(Node a)
 bool isACNorm(Node a, Node b)
 {
   Node nf[2];
-  for (size_t i=0; i<2; i++)
+  for (size_t i = 0; i < 2; i++)
   {
-    Node c = i==0 ? a : b;
+    Node c = i == 0 ? a : b;
     Node cn = getNormalForm(c);
     Node cnprev;
     // run to fixed point, to handle cases like
@@ -412,11 +411,10 @@ bool isACNorm(Node a, Node b)
     {
       cnprev = cn;
       cn = getNormalForm(cn);
-    }
-    while (cnprev!=cn);
+    } while (cnprev != cn);
     nf[i] = cn;
   }
-  return nf[0]==nf[1];
+  return nf[0] == nf[1];
 }
 
 }  // namespace expr

@@ -210,9 +210,7 @@ TypeNode SetofTypeRule::computeType(NodeManager* nodeManager,
     {
       if (errOut)
       {
-        (*errOut)
-            << "Applying BAG_SETOF on a non-bag argument in term "
-            << n;
+        (*errOut) << "Applying BAG_SETOF on a non-bag argument in term " << n;
       }
       return TypeNode::null();
     }
