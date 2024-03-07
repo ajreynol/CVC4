@@ -312,8 +312,7 @@
 (declare-const BITVECTOR_EAGER_ATOM (-> Bool Bool))
 
 ; bvsize
-; should be a define
-(declare-const bvsize (-> (! Int :var m :implicit) (BitVec m) Int))
+(define bvsize ((m Int :implicit) (x (BitVec m))) (get_bitwidth (alf.typeof x)))
 
 ; symbolic constant
 (declare-const @bv (-> Int (! Int :var w) (BitVec w)))
