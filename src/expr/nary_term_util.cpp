@@ -309,7 +309,8 @@ bool isAssocComm(Kind k)
     case Kind::BITVECTOR_AND:
     case Kind::BITVECTOR_OR:
     case Kind::FINITE_FIELD_ADD:
-    case Kind::FINITE_FIELD_MULT: return true;
+    case Kind::FINITE_FIELD_MULT:
+      return true;
     default: break;
   }
   return false;
@@ -397,24 +398,22 @@ Node getNormalForm(Node a)
 
 bool isACNorm(Node a, Node b)
 {
-  Node nf[2];
-  for (size_t i = 0; i < 2; i++)
-  {
-    Node c = i == 0 ? a : b;
-    Node cn = getNormalForm(c);
-    Node cnprev;
-    // run to fixed point, to handle cases like
-    //   (or (and b true a) false) == (and a b).
-    // where the left hand side has normal form that is computed via:
-    //   (or (and b true a) false) --> (and b true a) ----> (and a b)
-    do
-    {
-      cnprev = cn;
-      cn = getNormalForm(cn);
-    } while (cnprev != cn);
-    nf[i] = cn;
-  }
-  return nf[0] == nf[1];
+  Node an = getNormalForm(a);
+  Node bn = getNormalForm(b);
+  // note we compare three possibilities, to handle cases like
+  //   (or (and b true) false) == (and b true),
+  // where N((or (and b true) false)) = (and b true),
+  //       N((and b true)) = b.
+  // In other words, one of the terms may be an element of the
+  // normalization of the other, which itself normalizes. Comparing
+  // all three ensures we are robust to this.
+  // However, note that we are intentionally incomplete for cases like:
+  //   (or (and b a) false) == (and a b),
+  // where this can be shown recursively via 2 normalization steps:
+  //   (or (and b a) false) ---> (and b a) ---> (and a b).
+  // We do this for simplicity; proof rules should be given that do these
+  // two steps separately.
+  return (an == bn) || (a == bn) || (an == b);
 }
 
 }  // namespace expr

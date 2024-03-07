@@ -189,10 +189,9 @@
   (S) Bool
   (
     ((get_ac_normal_form (f x1 x2)) (let ((t (f x1 x2)))
-                                    (let ((tn (alf.ite (is_assoc_comm f) (get_ac_norm f t)
-                                              (alf.ite (is_assoc f) (get_a_norm f t)
-                                                  t))))
-                                      (alf.ite (alf.is_eq t tn) t (get_ac_normal_form tn)))))
+                                    (alf.ite (is_assoc_comm f) (get_ac_norm f t)
+                                    (alf.ite (is_assoc f) (get_a_norm f t)
+                                        t))))
     ((get_ac_normal_form x)         x)
   )
 )
@@ -200,7 +199,9 @@
 ; ProofRule::AC_NORM
 (declare-rule ac_norm ((U Type) (a U) (b U))
   :args ((= a b))
-  :requires (((let ((an (get_ac_normal_form a)) (bn (get_ac_normal_form b))) 
-              (alf.requires an bn true)) true)) ; use requires for better debugging
+  :requires (((let ((an (get_ac_normal_form a)) (bn (get_ac_normal_form b)))
+              (alf.ite (alf.is_eq an b) true
+              (alf.ite (alf.is_eq a bn) true
+                (alf.is_eq an bn)))) true))
   :conclusion (= a b)
 )
