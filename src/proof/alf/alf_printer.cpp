@@ -154,7 +154,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     break;
     case ProofRule::AC_NORM:
     {
-      return false;
+      return true;
     }
     case ProofRule::STRING_REDUCTION:
     {
