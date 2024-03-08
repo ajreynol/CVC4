@@ -28,10 +28,9 @@ namespace rewriter {
 
 // clang-format off
 ${decl_individual_rewrites}$
-    // clang-format on
+// clang-format on
 
-    void
-    addRules(RewriteDb& db)
+void addRules(RewriteDb& db)
 {
   // Calls to individual rewrites
   // clang-format off
@@ -46,8 +45,7 @@ bool isInternalDslProofRule(DslProofRule drule)
          || drule == DslProofRule::CONG || drule == DslProofRule::CONG_EVAL
          || drule == DslProofRule::TRUE_ELIM
          || drule == DslProofRule::TRUE_INTRO
-         || drule == DslProofRule::ARITH_POLY_NORM
-         || drule == DslProofRule::AC_NORM;
+         || drule == DslProofRule::ARITH_POLY_NORM;
 }
 
 const char* toString(DslProofRule drule)
@@ -64,7 +62,6 @@ const char* toString(DslProofRule drule)
     case DslProofRule::TRUE_INTRO: return "TRUE_INTRO";
     case DslProofRule::ARITH_POLY_NORM:
       return "ARITH_POLY_NORM";
-    case DslProofRule::AC_NORM:return "AC_NORM";
       // clang-format off
 ${printer}$
     default : Unreachable();
