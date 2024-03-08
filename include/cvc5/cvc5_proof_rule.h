@@ -355,7 +355,29 @@ enum ENUM(ProofRule) : uint32_t
    * SAT solver. \endverbatim
    */
   EVALUE(SAT_REFUTATION),
-
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **DRAT Refutation**
+   *
+   * .. math::
+   *   \inferrule{F_1 \dots F_n \mid D, P}{\bot}
+   *
+   * where :math:`F_1 \dots F_n` correspond to the clauses in the
+   * DIMACS file given by filename `D` and `P` is a filename of a file storing
+   * a DRAT proof. \endverbatim
+   */
+  EVALUE(DRAT_REFUTATION),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **SAT external prove Refutation**
+   *
+   * .. math::
+   *   \inferrule{F_1 \dots F_n \mid D}{\bot}
+   *
+   * where :math:`F_1 \dots F_n` correspond to the input clauses in the
+   * DIMACS file `D`. \endverbatim
+   */
+  EVALUE(SAT_EXTERNAL_PROVE),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Boolean -- Resolution**
@@ -393,7 +415,7 @@ enum ENUM(ProofRule) : uint32_t
    * **Boolean -- N-ary Resolution**
    *
    * .. math::
-   *   \inferrule{C_1 \dots C_n \mid pol_1,L_1 \dots pol_{n-1},L_{n-1}}{C}
+   *   \inferrule{C_1 \dots C_n \mid (pol_1 \dots pol_{n-1}), (L_1 \dots L_{n-1})}{C}
    *
    * where
    *
@@ -404,6 +426,8 @@ enum ENUM(ProofRule) : uint32_t
    * - let :math:`C_1' = C_1`,
    * - for each :math:`i > 1`, let :math:`C_i' = C_{i-1} \diamond{L_{i-1},
    *   \mathit{pol}_{i-1}} C_i'`
+   *
+   * Note the list of polarities and pivots are provided as s-expressions.
    *
    * The result of the chain resolution is :math:`C = C_n'`
    * \endverbatim
@@ -1802,7 +1826,8 @@ enum ENUM(ProofRule) : uint32_t
    * .. math::
    *   \inferrule{- \mid t = s}{t = s}
    *
-   * where :math:`\texttt{arith::PolyNorm::isArithPolyNorm(t, s)} = \top`.
+   * where :math:`\texttt{arith::PolyNorm::isArithPolyNorm(t, s)} = \top`. This
+   * method normalizes polynomials over arithmetic or bitvectors.
    * \endverbatim
    */
   EVALUE(ARITH_POLY_NORM),
@@ -1851,12 +1876,12 @@ enum ENUM(ProofRule) : uint32_t
    * **Arithmetic -- Multiplication tangent plane**
    *
    * .. math::
-   *   \inferruleSC{- \mid t, x, y, a, b, \sigma}{(t \leq tplane) \leftrightarrow ((x \leq a \land y \geq b) \lor (x \geq a \land y \leq b))}{if $\sigma = -1$}
+   *   \inferruleSC{- \mid x, y, a, b, \sigma}{(t \leq tplane) \leftrightarrow ((x \leq a \land y \geq b) \lor (x \geq a \land y \leq b))}{if $\sigma = -1$}
    *
-   *   \inferruleSC{- \mid t, x, y, a, b, \sigma}{(t \geq tplane) \leftrightarrow ((x \leq a \land y \leq b) \lor (x \geq a \land y \geq b))}{if $\sigma = 1$}
+   *   \inferruleSC{- \mid x, y, a, b, \sigma}{(t \geq tplane) \leftrightarrow ((x \leq a \land y \leq b) \lor (x \geq a \land y \geq b))}{if $\sigma = 1$}
    *
    * where :math:`x,y` are real terms (variables or extended terms),
-   * :math:`t = x \cdot y` (possibly under rewriting), :math:`a,b` are real
+   * :math:`t = x \cdot y`, :math:`a,b` are real
    * constants, :math:`\sigma \in \{ 1, -1\}` and :math:`tplane := b \cdot x + a \cdot y - a \cdot b` is the tangent plane of :math:`x \cdot y` at :math:`(a,b)`.
    * \endverbatim
    */

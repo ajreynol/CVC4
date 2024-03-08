@@ -70,7 +70,7 @@ const char* toString(SkolemFunId id)
     case SkolemFunId::RE_FIRST_MATCH: return "RE_FIRST_MATCH";
     case SkolemFunId::RE_FIRST_MATCH_POST: return "RE_FIRST_MATCH_POST";
     case SkolemFunId::RE_UNFOLD_POS_COMPONENT: return "RE_UNFOLD_POS_COMPONENT";
-    case SkolemFunId::BAGS_CARD_CARDINALITY: return "BAGS_CARD_CARDINALITY";
+    case SkolemFunId::BAGS_CARD_COMBINE: return "BAGS_CARD_COMBINE";
     case SkolemFunId::BAGS_CARD_ELEMENTS: return "BAGS_CARD_ELEMENTS";
     case SkolemFunId::BAGS_CARD_N: return "BAGS_CARD_N";
     case SkolemFunId::BAGS_CARD_UNION_DISJOINT:
@@ -154,6 +154,8 @@ Node SkolemManager::mkPurifySkolem(Node t,
     {
       d_gens[exists] = pg;
     }
+    UnpurifiedFormAttribute ufa;
+    k.setAttribute(ufa, t);
   }
   else
   {
@@ -161,14 +163,7 @@ Node SkolemManager::mkPurifySkolem(Node t,
     // shouldn't provide proof generators for other terms
     Assert(pg == nullptr);
   }
-  // set unpurified form attribute for k
-  UnpurifiedFormAttribute ufa;
-  k.setAttribute(ufa, t);
-  // the original form of k can be computed by calling getOriginalForm, but
-  // it is not computed here
-
-  Trace("sk-manager-skolem")
-      << "skolem: " << k << " purify " << t << std::endl;
+  Trace("sk-manager-skolem") << "skolem: " << k << " purify " << t << std::endl;
   return k;
 }
 
@@ -236,6 +231,15 @@ Node SkolemManager::mkSkolemFunctionTyped(SkolemFunId id,
       std::stringstream ss;
       ss << "@" << id;
       k = mkSkolemNode(Kind::SKOLEM, ss.str(), tn);
+    }
+    if (id == SkolemFunId::PURIFY)
+    {
+      Assert(cacheVal.getType() == tn);
+      // set unpurified form attribute for k
+      UnpurifiedFormAttribute ufa;
+      k.setAttribute(ufa, cacheVal);
+      // the original form of k can be computed by calling getOriginalForm, but
+      // it is not computed here
     }
     d_skolemFuns[key] = k;
     d_skolemFunMap[k] = key;
@@ -498,7 +502,7 @@ TypeNode SkolemManager::getTypeFor(SkolemFunId id,
     case SkolemFunId::STRINGS_STOI_RESULT:
     case SkolemFunId::STRINGS_ITOS_RESULT:
     case SkolemFunId::BAGS_MAP_SUM:
-    case SkolemFunId::BAGS_CARD_CARDINALITY:
+    case SkolemFunId::BAGS_CARD_COMBINE:
     {
       TypeNode itype = nm->integerType();
       return nm->mkFunctionType(itype, itype);

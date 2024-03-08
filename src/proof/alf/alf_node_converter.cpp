@@ -25,7 +25,6 @@
 #include "expr/dtype_cons.h"
 #include "expr/nary_term_util.h"
 #include "expr/sequence.h"
-#include "expr/skolem_manager.h"
 #include "printer/smt2/smt2_printer.h"
 #include "theory/builtin/generic_op.h"
 #include "theory/bv/theory_bv_utils.h"
@@ -350,7 +349,7 @@ Node AlfNodeConverter::maybeMkSkolemFun(Node k)
       // special case: just use self
       app = convert(cacheVal);
     }
-    else
+    else if (isHandledSkolemId(sfi))
     {
       // convert every skolem function to its name applied to arguments
       std::stringstream ss;
@@ -387,8 +386,11 @@ Node AlfNodeConverter::maybeMkSkolemFun(Node k)
       // must convert all arguments
       app = mkInternalApp(ss.str(), args, k.getType());
     }
-    // wrap in "skolem" operator
-    return mkInternalApp("skolem", {app}, k.getType());
+    if (!app.isNull())
+    {
+      // wrap in "skolem" operator
+      return mkInternalApp("skolem", {app}, k.getType());
+    }
   }
   return Node::null();
 }
@@ -507,7 +509,7 @@ Node AlfNodeConverter::mkInternalApp(const std::string& name,
   return mkInternalSymbol(name, ret, useRawSym);
 }
 
-Node AlfNodeConverter::getOperatorOfTerm(Node n)
+Node AlfNodeConverter::getOperatorOfTerm(Node n, bool reqCast)
 {
   Assert(n.hasOperator());
   NodeManager* nm = NodeManager::currentNM();
@@ -541,6 +543,17 @@ Node AlfNodeConverter::getOperatorOfTerm(Node n)
         if (dt.isTuple())
         {
           opName << "is-tuple";
+        }
+        else if (dt.isNullable())
+        {
+          if (cindex == 0)
+          {
+            opName << "nullable.is_null";
+          }
+          else
+          {
+            opName << "nullable.is_some";
+          }
         }
         else
         {
@@ -624,10 +637,6 @@ Node AlfNodeConverter::getOperatorOfTerm(Node n)
   }
   else
   {
-    if (k == Kind::NEG)
-    {
-      opName << "u";
-    }
     opName << printer::smt2::Smt2Printer::smtKindString(k);
     if (k == Kind::DIVISION_TOTAL || k == Kind::INTS_DIVISION_TOTAL
         || k == Kind::INTS_MODULUS_TOTAL)
@@ -655,6 +664,17 @@ Node AlfNodeConverter::getOperatorOfTerm(Node n)
   {
     ret = args.empty() ? app : app.getOperator();
   }
+  if (reqCast)
+  {
+    // - prints as e.g. (alf.as - (-> Int Int)).
+    if (k == Kind::NEG || k == Kind::SUB)
+    {
+      std::vector<Node> asChildren;
+      asChildren.push_back(ret);
+      asChildren.push_back(typeAsNode(ret.getType()));
+      ret = mkInternalApp("alf.as", asChildren, n.getType());
+    }
+  }
   Trace("alf-term-process-debug2") << "...return " << ret << std::endl;
   return ret;
 }
@@ -670,6 +690,45 @@ size_t AlfNodeConverter::getOrAssignIndexForConst(Node v)
   size_t id = d_constIndex.size();
   d_constIndex[v] = id;
   return id;
+}
+
+bool AlfNodeConverter::isHandledSkolemId(SkolemFunId id)
+{
+  switch (id)
+  {
+    case SkolemFunId::PURIFY:
+    case SkolemFunId::ARRAY_DEQ_DIFF:
+    case SkolemFunId::DIV_BY_ZERO:
+    case SkolemFunId::INT_DIV_BY_ZERO:
+    case SkolemFunId::MOD_BY_ZERO:
+    case SkolemFunId::SQRT:
+    case SkolemFunId::TRANSCENDENTAL_PURIFY_ARG:
+    case SkolemFunId::QUANTIFIERS_SKOLEMIZE:
+    case SkolemFunId::STRINGS_NUM_OCCUR:
+    case SkolemFunId::STRINGS_NUM_OCCUR_RE:
+    case SkolemFunId::STRINGS_OCCUR_INDEX:
+    case SkolemFunId::STRINGS_OCCUR_INDEX_RE:
+    case SkolemFunId::STRINGS_OCCUR_LEN:
+    case SkolemFunId::STRINGS_OCCUR_LEN_RE:
+    case SkolemFunId::STRINGS_DEQ_DIFF:
+    case SkolemFunId::STRINGS_REPLACE_ALL_RESULT:
+    case SkolemFunId::STRINGS_ITOS_RESULT:
+    case SkolemFunId::STRINGS_STOI_RESULT:
+    case SkolemFunId::STRINGS_STOI_NON_DIGIT:
+    case SkolemFunId::RE_FIRST_MATCH_PRE:
+    case SkolemFunId::RE_FIRST_MATCH:
+    case SkolemFunId::RE_FIRST_MATCH_POST:
+    case SkolemFunId::RE_UNFOLD_POS_COMPONENT:
+    case SkolemFunId::BAGS_DEQ_DIFF:
+    case SkolemFunId::BAGS_MAP_PREIMAGE:
+    case SkolemFunId::BAGS_MAP_PREIMAGE_INJECTIVE:
+    case SkolemFunId::BAGS_MAP_PREIMAGE_SIZE:
+    case SkolemFunId::BAGS_MAP_SUM:
+    case SkolemFunId::TABLES_GROUP_PART:
+    case SkolemFunId::TABLES_GROUP_PART_ELEMENT: return true;
+    default: break;
+  }
+  return false;
 }
 
 }  // namespace proof
