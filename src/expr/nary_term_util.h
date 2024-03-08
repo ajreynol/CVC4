@@ -69,25 +69,24 @@ bool isAssocComm(Kind k);
 /**
  * @param k A kind
  * @return true if k is associative.
- */
+*/
 bool isAssoc(Kind k);
 /**
- * Get the normal form of a that takes into account associativity and
- * commutativity, if applicable. This is used by ProofRule::NORM.
+ * Get the normal form of a that takes into account associativity and commutativity, if applicable.
+ * This is used by ProofRule::NORM.
  *
  * @param a The term.
  * @return its normal form.
  */
 Node getNormalForm(Node a);
 /**
- * Return true if a and b can be shown equivalent by computing normal forms as
- * above.
+ * Return true if a and b can be shown equivalent by computing normal forms as above.
  *
  * @param a The first term
  * @param b The second term
  * @return true if a and b were successfully shown to be equal.
  */
-bool isACNorm(Node a, Node b);
+bool isACINorm(Node a, Node b);
 
 }  // namespace expr
 }  // namespace cvc5::internal
