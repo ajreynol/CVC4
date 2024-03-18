@@ -181,7 +181,7 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(std::ostream* outDimacs)
     expr::getFreeAssumptions(satPf.get(), uc);
     if (outDimacs != nullptr)
     {
-      std::vector<Node> auxUnits;
+      std::vector<Node> auxUnits = computeAuxiliaryUnits(uc);
       d_pfCnfStream.dumpDimacs(*outDimacs, uc, auxUnits);
       // include the auxiliary units if necessary
       uc.insert(uc.end(), auxUnits.begin(), auxUnits.end());
@@ -296,10 +296,8 @@ bool PropPfManager::reproveUnsatCore(const std::unordered_set<Node>& cset,
     }
     if (outDimacs)
     {
-      std::vector<Node> auxUnits;
       // dump using the CNF stream we created above
-      csms.dumpDimacs(*outDimacs, aclauses, auxUnits);
-      Assert(auxUnits.empty());
+      csms.dumpDimacs(*outDimacs, aclauses);
     }
     /*
     if (cdp!=nullptr)
@@ -524,7 +522,7 @@ void PropPfManager::getProofInternal(CDProof* cdp)
   {
     // if no minimization is necessary, just include all
     clauses.insert(clauses.end(), cset.begin(), cset.end());
-    std::vector<Node> auxUnits;
+    std::vector<Node> auxUnits = computeAuxiliaryUnits(clauses);
     d_pfCnfStream.dumpDimacs(dout, clauses, auxUnits);
     // include the auxiliary units if necessary
     clauses.insert(clauses.end(), auxUnits.begin(), auxUnits.end());
@@ -553,6 +551,32 @@ void PropPfManager::getProofInternal(CDProof* cdp)
   }
   // use the rule, clauses and arguments we computed above
   cdp->addStep(falsen, r, clauses, args);
+}
+
+std::vector<Node> PropPfManager::computeAuxiliaryUnits(const std::vector<Node>& clauses)
+{
+  std::vector<Node> auxUnits;
+  for (const Node& c : clauses)
+  {
+    if (c.getKind() != Kind::OR)
+    {
+      continue;
+    }
+    // Determine if any OR child occurs as a top level clause. If so, it may
+    // be relevant to include this as a unit clause.
+    for (const Node& l : c)
+    {
+      const Node& atom = l.getKind() == Kind::NOT ? l[0] : l;
+      if (atom.getKind() == Kind::OR
+          && std::find(clauses.begin(), clauses.end(), atom) != clauses.end()
+          && std::find(auxUnits.begin(), auxUnits.end(), atom)
+                 == auxUnits.end())
+      {
+        auxUnits.push_back(atom);
+      }
+    }
+  }
+  return auxUnits;
 }
 
 std::vector<Node> PropPfManager::getInputClauses()
