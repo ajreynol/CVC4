@@ -963,18 +963,6 @@ CadicalSolver::CadicalSolver(Env& env,
       d_inSatMode(false),
       d_statistics(registry, name)
 {
-  if (logProofs)
-  {
-    std::stringstream ssp;
-    ssp << options().driver.filename << ".drat_proof.txt";
-    d_pfFile = ssp.str();
-    if (!options().proof.dratBinaryFormat)
-    {
-      d_solver->set("binary", 0);
-    }
-    d_solver->set("inprocessing", 0);
-    d_solver->trace_proof(d_pfFile.c_str());
-  }
 }
 
 void CadicalSolver::init()
