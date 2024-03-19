@@ -65,6 +65,15 @@ Node RewriteDbNodeConverter::postConvert(Node n)
     children.push_back(nm->mkConstInt(Rational(theory::bv::utils::getSize(n))));
     return nm->mkNode(Kind::CONST_BITVECTOR_SYMBOLIC, children);
   }
+  else if (k == Kind::FORALL)
+  {
+    // ignore annotation
+    if (n.getNumChildren()==3)
+    {
+      NodeManager* nm = NodeManager::currentNM();
+      return nm->mkNode(Kind::FORALL, n[0], n[1]);
+    }
+  }
   // convert indexed operators to symbolic
   if (GenericOp::isIndexedOperatorKind(k))
   {
@@ -81,12 +90,7 @@ Node RewriteDbNodeConverter::postConvert(Node n)
 
 bool RewriteDbNodeConverter::shouldTraverse(Node n)
 {
-  Kind k = n.getKind();
-  if (k == Kind::INST_PATTERN_LIST)
-  {
-    return false;
-  }
-  return true;
+  return n.getKind()!=Kind::INST_PATTERN_LIST;
 }
 
 }  // namespace rewriter
