@@ -24,7 +24,8 @@
 (declare-const extract (->
   (! Int :var n :implicit)
   (! Int :var h)
-  (! Int :var l :requires ((alf.is_neg l) false))
+  ;(! Int :var l :requires ((alf.is_neg l) false))
+  (! Int :var l)
   (BitVec n)
   (BitVec (alf.add h (alf.neg l) 1)))
 )
@@ -312,7 +313,7 @@
 (declare-const BITVECTOR_EAGER_ATOM (-> Bool Bool))
 
 ; bvsize
-(define bvsize ((m Int :implicit) (x (BitVec m))) (get_bitwidth (alf.typeof x)))
+(define @bvsize ((m Int :implicit) (x (BitVec m))) (get_bitwidth (alf.typeof x)))
 
 ; symbolic constant
 (declare-const @bv (-> Int (! Int :var w) (BitVec w)))
