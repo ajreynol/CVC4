@@ -255,7 +255,8 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         rargs.push_back(args[3]);
       }
     }
-    Node tr = d_env.rewriteViaMethod(ts, idr);
+    theory::Rewriter * rr = d_env.getRewriter();
+    Node tr = Env::rewriteViaMethod(rr, ts, idr);
     Trace("smt-proof-pp-debug")
         << "...eq intro rewrite equality is " << ts << " == " << tr << ", from "
         << idr << std::endl;
@@ -814,7 +815,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       getMethodId(args[1], idr);
     }
     Rewriter* rr = d_env.getRewriter();
-    Node ret = d_env.rewriteViaMethod(args[0], idr);
+    Node ret = Env::rewriteViaMethod(rr, args[0], idr);
     Node eq = args[0].eqNode(ret);
     if (idr == MethodId::RW_REWRITE || idr == MethodId::RW_REWRITE_EQ_EXT)
     {
@@ -871,7 +872,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         }
         MethodId midi =
             i == 0 ? MethodId::RW_REWRITE : MethodId::RW_REWRITE_EQ_EXT;
-        Node retDef = d_env.rewriteViaMethod(retCurr, midi);
+        Node retDef = Env::rewriteViaMethod(rr, retCurr, midi);
         if (retDef != retCurr)
         {
           // will expand this as a default rewrite if needed

@@ -206,12 +206,13 @@ class Env
    * Apply rewrite on n via the rewrite method identifier idr (see method_id.h).
    * This encapsulates the exact behavior of a REWRITE step in a proof.
    *
+   * @param rr The rewriter
    * @param n The node to rewrite,
    * @param idr The method identifier of the rewriter, by default RW_REWRITE
    * specifying a call to rewrite.
    * @return The rewritten form of n.
    */
-  Node rewriteViaMethod(TNode n, MethodId idr = MethodId::RW_REWRITE);
+  static Node rewriteViaMethod(theory::Rewriter* rr, TNode n, MethodId idr = MethodId::RW_REWRITE);
 
   //---------------------- information about cardinality of types
   /**

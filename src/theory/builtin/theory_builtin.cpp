@@ -28,7 +28,7 @@ namespace builtin {
 TheoryBuiltin::TheoryBuiltin(Env& env, OutputChannel& out, Valuation valuation)
     : Theory(THEORY_BUILTIN, env, out, valuation),
       d_rewriter(env.getNodeManager()),
-      d_checker(env.getNodeManager(), env.getRewriter(), env),
+      d_checker(env.getNodeManager(), env.getRewriter()),
       d_state(env, valuation),
       d_im(env, *this, d_state, "theory::builtin::")
 {

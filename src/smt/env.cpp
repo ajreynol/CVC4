@@ -203,23 +203,28 @@ Node Env::evaluate(TNode n,
   return d_eval->eval(n, args, vals, visited);
 }
 
-Node Env::rewriteViaMethod(TNode n, MethodId idr)
+Node Env::rewriteViaMethod(theory::Rewriter* rr, TNode n, MethodId idr)
 {
   if (idr == MethodId::RW_REWRITE)
   {
-    return d_rewriter->rewrite(n);
+    Assert (rr!=nullptr);
+    return rr->rewrite(n);
   }
   if (idr == MethodId::RW_EXT_REWRITE)
   {
-    return d_rewriter->extendedRewrite(n);
+    Assert (rr!=nullptr);
+    return rr->extendedRewrite(n);
   }
   if (idr == MethodId::RW_REWRITE_EQ_EXT)
   {
-    return d_rewriter->rewriteEqualityExt(n);
+    Assert (rr!=nullptr);
+    return rr->rewriteEqualityExt(n);
   }
   if (idr == MethodId::RW_EVALUATE)
   {
-    return evaluate(n, {}, {}, false);
+    // note that rr may be null here, if it is
+    theory::Evaluator eval(rr);
+    return eval.eval(n, {}, {});
   }
   if (idr == MethodId::RW_IDENTITY)
   {

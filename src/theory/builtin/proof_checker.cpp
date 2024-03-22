@@ -36,9 +36,8 @@ namespace theory {
 namespace builtin {
 
 BuiltinProofRuleChecker::BuiltinProofRuleChecker(NodeManager* nm,
-                                                 Rewriter* r,
-                                                 Env& env)
-    : ProofRuleChecker(nm), d_rewriter(r), d_env(env), d_rdb(nullptr)
+                                                 Rewriter* r)
+    : ProofRuleChecker(nm), d_rewriter(r), d_rdb(nullptr)
 {
 }
 
@@ -77,7 +76,7 @@ Node BuiltinProofRuleChecker::applySubstitutionRewrite(
     MethodId idr)
 {
   Node nks = applySubstitution(n, exp, ids, ida);
-  return d_env.rewriteViaMethod(nks, idr);
+  return Env::rewriteViaMethod(d_rewriter, nks, idr);
 }
 
 bool BuiltinProofRuleChecker::getSubstitutionForLit(Node exp,
@@ -264,7 +263,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     {
       return Node::null();
     }
-    Node res = d_env.rewriteViaMethod(args[0], idr);
+    Node res = Env::rewriteViaMethod(d_rewriter, args[0], idr);
     if (res.isNull())
     {
       return Node::null();
@@ -275,7 +274,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
   {
     Assert(children.empty());
     Assert(args.size() == 1);
-    Node res = d_env.rewriteViaMethod(args[0], MethodId::RW_EVALUATE);
+    Node res = Env::rewriteViaMethod(nullptr, args[0], MethodId::RW_EVALUATE);
     if (res.isNull())
     {
       return Node::null();
