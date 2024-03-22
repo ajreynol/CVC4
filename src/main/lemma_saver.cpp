@@ -21,8 +21,8 @@
 namespace cvc5 {
 namespace main {
 
-LemmaSaver::LemmaSaver(std::string& filename, Solver* s)
-    : d_filename(filename), d_solver(s)
+LemmaSaver::LemmaSaver(TermManager& tm, std::string& filename, Solver* s)
+    : Plugin(tm), d_filename(filename), d_solver(s)
 {
   d_fs.open(filename, std::fstream::out);
 }

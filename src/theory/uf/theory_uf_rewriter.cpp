@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Liana Hadarean, Haniel Barbosa
+ *   Andrew Reynolds, Aina Niemetz, Liana Hadarean
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -29,7 +29,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace uf {
 
-TheoryUfRewriter::TheoryUfRewriter() {}
+TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm) : TheoryRewriter(nm) {}
 
 RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
 {
@@ -235,6 +235,27 @@ Node TheoryUfRewriter::rewriteLambda(Node node)
   if (retElimShadow != node)
   {
     return retElimShadow;
+  }
+  // see if it can be eliminated, (lambda ((x T)) (f x)) ---> f
+  if (node[1].getKind() == Kind::APPLY_UF)
+  {
+    size_t nvar = node[0].getNumChildren();
+    if (node[1].getNumChildren() == nvar)
+    {
+      bool matchesList = true;
+      for (size_t i = 0; i < nvar; i++)
+      {
+        if (node[0][i] != node[1][i])
+        {
+          matchesList = false;
+          break;
+        }
+      }
+      if (matchesList)
+      {
+        return node[1].getOperator();
+      }
+    }
   }
   return node;
 }

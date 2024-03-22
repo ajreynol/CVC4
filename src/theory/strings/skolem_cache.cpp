@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -298,7 +298,17 @@ Node SkolemCache::mkLengthVar(Node t)
   return bvm->mkBoundVar<LengthVarAttribute>(t, intType);
 }
 
-Node SkolemCache::mkSkolemFun(SkolemFunId id, TypeNode tn, Node a, Node b)
+Node SkolemCache::mkSkolemFun(SkolemFunId id, Node a, Node b)
+{
+  std::vector<Node> cacheVals = getSkolemCacheVals(a, b);
+  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+  Node k = sm->mkSkolemFunction(id, cacheVals);
+  d_allSkolems.insert(k);
+  return k;
+}
+
+std::vector<Node> SkolemCache::getSkolemCacheVals(const Node& a,
+                                                  const Node& b) const
 {
   std::vector<Node> cacheVals;
   for (size_t i = 0; i < 2; i++)
@@ -310,11 +320,7 @@ Node SkolemCache::mkSkolemFun(SkolemFunId id, TypeNode tn, Node a, Node b)
       cacheVals.push_back(n);
     }
   }
-  NodeManager* nm = NodeManager::currentNM();
-  SkolemManager* sm = nm->getSkolemManager();
-  Node k = sm->mkSkolemFunction(id, tn, cacheVals);
-  d_allSkolems.insert(k);
-  return k;
+  return cacheVals;
 }
 
 }  // namespace strings

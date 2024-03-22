@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -169,7 +169,6 @@ class SkolemCache
    * finding.
    */
   Node mkSkolemFun(SkolemFunId id,
-                   TypeNode tn,
                    Node a = Node::null(),
                    Node b = Node::null());
 
@@ -201,6 +200,11 @@ class SkolemCache
   std::map<Node, std::map<Node, std::map<SkolemId, Node> > > d_skolemCache;
   /** the set of all skolems we have generated */
   std::unordered_set<Node> d_allSkolems;
+  /**
+   * Get cache vals, which returns the vector of terms from (possibly null)
+   * a and b that should be passed to the skolem manager.
+   */
+  std::vector<Node> getSkolemCacheVals(const Node& a, const Node& b) const;
 };
 
 }  // namespace strings

@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Mathias Preiner, Mudathir Mohamed
+ *   Andrew Reynolds, Mudathir Mohamed, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -36,8 +36,10 @@ namespace cvc5::internal {
 namespace theory {
 namespace datatypes {
 
-DatatypesRewriter::DatatypesRewriter(Evaluator* sygusEval, const Options& opts)
-    : d_sygusEval(sygusEval), d_opts(opts)
+DatatypesRewriter::DatatypesRewriter(NodeManager* nm,
+                                     Evaluator* sygusEval,
+                                     const Options& opts)
+    : TheoryRewriter(nm), d_sygusEval(sygusEval), d_opts(opts)
 {
 }
 
@@ -61,6 +63,10 @@ RewriteResponse DatatypesRewriter::postRewrite(TNode in)
   else if (kind == Kind::APPLY_UPDATER)
   {
     return rewriteUpdater(in);
+  }
+  else if (kind == Kind::NULLABLE_LIFT)
+  {
+    return rewriteNullableLift(in);
   }
   else if (kind == Kind::DT_SIZE)
   {
@@ -469,6 +475,41 @@ RewriteResponse DatatypesRewriter::rewriteUpdater(TNode in)
   return RewriteResponse(REWRITE_DONE, in);
 }
 
+RewriteResponse DatatypesRewriter::rewriteNullableLift(TNode n)
+{
+  Assert(n.getKind() == Kind::NULLABLE_LIFT);
+  NodeManager* nm = NodeManager::currentNM();
+  std::vector<Node> someArgs;
+  TypeNode type = n.getType();
+  const DType& dt = n.getType().getDType();
+  someArgs.push_back(n[0]);
+  for (size_t i = 1; i < n.getNumChildren(); i++)
+  {
+    if (n[i].isConst())
+    {
+      if (n[i].getNumChildren() == 0)
+      {
+        // null constructor
+        Node null = nm->mkNode(Kind::APPLY_CONSTRUCTOR, dt[0].getConstructor());
+        return RewriteResponse(REWRITE_DONE, null);
+      }
+      else
+      {
+        // some constructor
+        someArgs.push_back(n[i][0]);
+      }
+    }
+  }
+  if (someArgs.size() == n.getNumChildren())
+  {
+    Node some = nm->mkNode(Kind::APPLY_CONSTRUCTOR,
+                           dt[1].getConstructor(),
+                           nm->mkNode(Kind::APPLY_UF, someArgs));
+    return RewriteResponse(REWRITE_AGAIN_FULL, some);
+  }
+  return RewriteResponse(REWRITE_DONE, n);
+}
+
 Node DatatypesRewriter::normalizeCodatatypeConstant(Node n)
 {
   Trace("dt-nconst") << "Normalize " << n << std::endl;
@@ -868,8 +909,13 @@ TrustNode DatatypesRewriter::expandDefinition(Node n)
         ret = nm->mkNode(Kind::ITE, tester, ret, n[0]);
       }
       Trace("dt-expand") << "return " << ret << std::endl;
+      break;
     }
-    break;
+    case Kind::NULLABLE_LIFT:
+    {
+      ret = expandNullableLift(n);
+      break;
+    }
     default: break;
   }
   if (!ret.isNull() && n != ret)
@@ -877,6 +923,33 @@ TrustNode DatatypesRewriter::expandDefinition(Node n)
     return TrustNode::mkTrustRewrite(n, ret, nullptr);
   }
   return TrustNode::null();
+}
+
+Node DatatypesRewriter::expandNullableLift(Node n)
+{
+  NodeManager* nm = NodeManager::currentNM();
+  std::vector<Node> eqs;
+  std::vector<Node> someArgs;
+  someArgs.push_back(n[0]);
+  TypeNode type = n.getType();
+  for (size_t i = 1; i < n.getNumChildren(); i++)
+  {
+    TypeNode t = n[i].getType();
+    const DType& dt = t.getDType();
+    Node null = nm->mkNode(Kind::APPLY_CONSTRUCTOR, dt[0].getConstructor());
+    eqs.push_back(n[i].eqNode(null));
+    Node sel = dt[1][0].getSelector();
+    Node applySel = nm->mkNode(Kind::APPLY_SELECTOR, sel, n[i]);
+    someArgs.push_back(applySel);
+  }
+  Node condition = nm->mkOr(eqs);
+  const DType& dt = type.getDType();
+  Node thenNode = nm->mkNode(Kind::APPLY_CONSTRUCTOR, dt[0].getConstructor());
+  Node elseNode = nm->mkNode(Kind::APPLY_CONSTRUCTOR,
+                             dt[1].getConstructor(),
+                             nm->mkNode(Kind::APPLY_UF, someArgs));
+  Node ret = nm->mkNode(Kind::ITE, condition, thenNode, elseNode);
+  return ret;
 }
 
 Node DatatypesRewriter::sygusToBuiltinEval(Node n,

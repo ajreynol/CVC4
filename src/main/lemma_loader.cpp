@@ -25,10 +25,11 @@
 namespace cvc5 {
 namespace main {
 
-LemmaLoader::LemmaLoader(std::string& filename,
+LemmaLoader::LemmaLoader(TermManager& tm, 
+                         std::string& filename,
                          Solver* s,
                          parser::SymbolManager* sm)
-    : d_filename(filename), d_solver(s), d_symman(sm)
+    : Plugin(tm), d_filename(filename), d_solver(s), d_symman(sm)
 {
 }
 LemmaLoader::~LemmaLoader() {}

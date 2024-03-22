@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -26,6 +26,7 @@
 #include "expr/plugin.h"
 #include "expr/skolem_manager.h"
 #include "expr/subtype_elim_node_converter.h"
+#include "expr/sygus_term_enumerator.h"
 #include "options/base_options.h"
 #include "options/expr_options.h"
 #include "options/language.h"
@@ -101,7 +102,7 @@ using namespace cvc5::internal::theory;
 namespace cvc5::internal {
 
 SolverEngine::SolverEngine(const Options* optr)
-    : d_env(new Env(optr)),
+    : d_env(new Env(NodeManager::currentNM(), optr)),
       d_state(new SolverEngineState(*d_env.get())),
       d_ctxManager(nullptr),
       d_routListener(new ResourceOutListener(*this)),
@@ -115,6 +116,7 @@ SolverEngine::SolverEngine(const Options* optr)
       d_interpolSolver(nullptr),
       d_quantElimSolver(nullptr),
       d_userLogicSet(false),
+      d_safeOptsSetRegularOption(false),
       d_isInternalSubsolver(false),
       d_stats(nullptr)
 {
@@ -1178,8 +1180,7 @@ Node SolverEngine::getValue(const Node& t) const
     {
       // construct the skolem function
       SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
-      Node a =
-          skm->mkSkolemFunction(SkolemFunId::ABSTRACT_VALUE, rtn, resultNode);
+      Node a = skm->mkSkolemFunction(SkolemFunId::ABSTRACT_VALUE, resultNode);
       // add to top-level substitutions if applicable
       theory::TrustSubstitutionMap& tsm = d_env->getTopLevelSubstitutions();
       if (!tsm.get().hasSubstitution(resultNode))
@@ -1400,7 +1401,8 @@ std::vector<Node> SolverEngine::convertPreprocessedToInput(
 
 void SolverEngine::printProof(std::ostream& out,
                               std::shared_ptr<ProofNode> fp,
-                              modes::ProofFormat proofFormat)
+                              modes::ProofFormat proofFormat,
+                              const std::map<Node, std::string>& assertionNames)
 {
   // we print in the format based on the proof mode
   options::ProofFormatMode mode = options::ProofFormatMode::NONE;
@@ -1414,10 +1416,11 @@ void SolverEngine::printProof(std::ostream& out,
     case modes::ProofFormat::ALETHE:
       mode = options::ProofFormatMode::ALETHE;
       break;
+    case modes::ProofFormat::ALF: mode = options::ProofFormatMode::ALF; break;
     case modes::ProofFormat::LFSC: mode = options::ProofFormatMode::LFSC; break;
   }
 
-  d_pfManager->printProof(out, fp, mode);
+  d_pfManager->printProof(out, fp, mode, assertionNames);
   out << std::endl;
 }
 
@@ -1665,6 +1668,8 @@ void SolverEngine::getRelevantQuantTermVectors(
     bool getDebugInfo)
 {
   Assert(d_state->getMode() == SmtMode::UNSAT);
+  Assert(d_env->getOptions().smt.produceProofs
+         && d_env->getOptions().smt.proofMode == options::ProofMode::FULL);
   // generate with new proofs
   PropEngine* pe = d_smtSolver->getPropEngine();
   Assert(pe != nullptr);
@@ -1679,7 +1684,8 @@ std::vector<std::shared_ptr<ProofNode>> SolverEngine::getProof(
     modes::ProofComponent c)
 {
   Trace("smt") << "SMT getProof()\n";
-  if (!d_env->getOptions().smt.produceProofs)
+  const Options& opts = d_env->getOptions();
+  if (!opts.smt.produceProofs || opts.smt.proofMode != options::ProofMode::FULL)
   {
     throw ModalException("Cannot get a proof when proof option is off.");
   }
@@ -2117,6 +2123,22 @@ void SolverEngine::setOption(const std::string& key,
       ss << "expert option " << key
          << " cannot be set when safeOptions is true";
       throw OptionException(ss.str());
+    }
+    else if (oinfo.category == options::OptionInfo::Category::REGULAR)
+    {
+      if (!d_safeOptsSetRegularOption)
+      {
+        d_safeOptsSetRegularOption = true;
+        d_safeOptsRegularOption = key;
+      }
+      else
+      {
+        // option exception
+        std::stringstream ss;
+        ss << "cannot set two regular options (" << key << " and "
+           << d_safeOptsRegularOption << ") when safeOptions is true";
+        throw OptionException(ss.str());
+      }
     }
   }
   Trace("smt") << "SMT setOption(" << key << ", " << value << ")" << endl;

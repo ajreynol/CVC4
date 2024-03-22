@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -70,13 +70,13 @@ void CommandExecutor::storeOptionsAsOriginal()
   if (llfile != "")
   {
     d_lemmaLoader.reset(
-        new LemmaLoader(llfile, d_solver.get(), d_symman.get()));
+        new LemmaLoader(d_solver->getTermManager(), llfile, d_solver.get(), d_symman.get()));
     d_solver->addPlugin(*d_lemmaLoader.get());
   }
   std::string lsfile = d_solver->getOptionInfo("lemma-saver").stringValue();
   if (lsfile != "")
   {
-    d_lemmaSaver.reset(new LemmaSaver(lsfile, d_solver.get()));
+    d_lemmaSaver.reset(new LemmaSaver(d_solver->getTermManager(), lsfile, d_solver.get()));
     d_solver->addPlugin(*d_lemmaSaver.get());
   }
   // save the original options
@@ -188,6 +188,12 @@ bool CommandExecutor::doCommandSingleton(Cmd* cmd)
       getterCommands.emplace_back(new GetUnsatCoreCommand());
     }
 
+    if (d_solver->getOptionInfo("dump-unsat-cores-lemmas").boolValue()
+        && isResultUnsat)
+    {
+      getterCommands.emplace_back(new GetUnsatCoreLemmasCommand());
+    }
+
     if (d_solver->getOptionInfo("dump-difficulty").boolValue()
         && (isResultUnsat || isResultSat || res.isUnknown()))
     {
@@ -220,7 +226,7 @@ bool CommandExecutor::solverInvoke(cvc5::Solver* solver,
   // print output for -o raw-benchmark
   if (solver->isOutputOn("raw-benchmark"))
   {
-    solver->getOutput("raw-benchmark") << cmd->toString();
+    solver->getOutput("raw-benchmark") << cmd->toString() << std::endl;
   }
 
   // In parse-only mode, we do not invoke any of the commands except define-*
@@ -229,7 +235,8 @@ bool CommandExecutor::solverInvoke(cvc5::Solver* solver,
   if (d_parseOnly && dynamic_cast<SetBenchmarkLogicCommand*>(cmd) == nullptr
       && dynamic_cast<ResetCommand*>(cmd) == nullptr
       && dynamic_cast<DeclarationDefinitionCommand*>(cmd) == nullptr
-      && dynamic_cast<DatatypeDeclarationCommand*>(cmd) == nullptr)
+      && dynamic_cast<DatatypeDeclarationCommand*>(cmd) == nullptr
+      && dynamic_cast<DefineFunctionRecCommand*>(cmd) == nullptr)
   {
     return true;
   }

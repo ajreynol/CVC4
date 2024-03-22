@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -63,8 +63,9 @@ void PrintBenchmark::printDeclarationsFrom(std::ostream& outDecl,
           ctnp = d_converter->convertType(ctnp);
         }
         d_printer->toStreamCmdDeclareType(outDecl, ctn);
+        outDecl << std::endl;
       }
-      else if (ctn.isDatatype() && !ctn.isTuple())
+      else if (ctn.isDatatype() && !ctn.isTuple() && !ctn.isNullable())
       {
         datatypeBlock.push_back(ctn);
       }
@@ -73,6 +74,7 @@ void PrintBenchmark::printDeclarationsFrom(std::ostream& outDecl,
     if (!datatypeBlock.empty())
     {
       d_printer->toStreamCmdDatatypeDeclaration(outDecl, datatypeBlock);
+      outDecl << std::endl;
     }
   }
 
@@ -126,6 +128,7 @@ void PrintBenchmark::printDeclarationsFrom(std::ostream& outDecl,
         def = d_converter->convert(def);
       }
       d_printer->toStreamCmdDefineFunction(outDef, f, def);
+      outDef << std::endl;
       // a definition is also a declaration
       alreadyPrintedDecl.insert(f);
     }
@@ -145,6 +148,7 @@ void PrintBenchmark::printDeclarationsFrom(std::ostream& outDecl,
         alreadyPrintedDecl.insert(f);
       }
       d_printer->toStreamCmdDefineFunctionRec(outDef, recDefs, lambdas);
+      outDef << std::endl;
     }
   }
 
@@ -170,6 +174,7 @@ void PrintBenchmark::printAssertions(std::ostream& out,
       ap = d_converter->convert(ap);
     }
     d_printer->toStreamCmdAssert(out, ap);
+    out << std::endl;
   }
 }
 
@@ -195,6 +200,7 @@ void PrintBenchmark::printDeclaredFuns(std::ostream& out,
     if (alreadyPrinted.find(f) == alreadyPrinted.end())
     {
       d_printer->toStreamCmdDeclareFunction(out, f);
+      out << std::endl;
     }
   }
   alreadyPrinted.insert(funs.begin(), funs.end());
@@ -318,8 +324,10 @@ void PrintBenchmark::printBenchmark(std::ostream& out,
                                     const std::vector<Node>& assertions)
 {
   d_printer->toStreamCmdSetBenchmarkLogic(out, logic);
+  out << std::endl;
   printAssertions(out, defs, assertions);
   d_printer->toStreamCmdCheckSat(out);
+  out << std::endl;
 }
 
 }  // namespace smt

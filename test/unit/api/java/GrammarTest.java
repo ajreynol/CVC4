@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -69,7 +69,6 @@ class GrammarTest
     assertThrows(CVC5ApiException.class, () -> g.addRule(start, nullTerm));
     assertThrows(CVC5ApiException.class, () -> g.addRule(nts, d_solver.mkBoolean(false)));
     assertThrows(CVC5ApiException.class, () -> g.addRule(start, d_solver.mkInteger(0)));
-    assertThrows(CVC5ApiException.class, () -> g.addRule(start, nts));
 
     d_solver.synthFun("f", new Term[] {}, bool, g);
 
@@ -98,7 +97,6 @@ class GrammarTest
         CVC5ApiException.class, () -> g.addRules(nts, new Term[] {d_solver.mkBoolean(false)}));
     assertThrows(
         CVC5ApiException.class, () -> g.addRules(start, new Term[] {d_solver.mkInteger(0)}));
-    assertThrows(CVC5ApiException.class, () -> g.addRules(start, new Term[] {nts}));
 
     d_solver.synthFun("f", new Term[] {}, bool, g);
 

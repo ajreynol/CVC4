@@ -135,7 +135,7 @@ Solver::Solver(Env& env,
                cvc5::internal::prop::TheoryProxy* proxy,
                context::Context* context,
                context::UserContext* userContext,
-               ProofNodeManager* pnm,
+               PropPfManager* ppm,
                bool enableIncremental)
     : EnvObj(env),
       d_proxy(proxy),
@@ -208,9 +208,10 @@ Solver::Solver(Env& env,
       propagation_budget(-1),
       asynch_interrupt(false)
 {
-  if (pnm)
+  if (ppm)
   {
-    d_pfManager.reset(new SatProofManager(env, this, proxy->getCnfStream()));
+    d_pfManager.reset(
+        new SatProofManager(env, this, proxy->getCnfStream(), ppm));
   }
 
   // Create the constant variables
@@ -387,7 +388,7 @@ CRef Solver::reason(Var x) {
     Trace("pf::sat") << "..user level is " << userContext()->getLevel() << "\n";
     Assert(userContext()->getLevel()
            == static_cast<uint32_t>(assertionLevel + 1));
-    d_proxy->notifyCurrPropagationInsertedAtLevel(explLevel);
+    d_pfManager->notifyCurrPropagationInsertedAtLevel(explLevel);
   }
   // Construct the reason
   CRef real_reason = ca.alloc(explLevel, explanation, true);
@@ -518,7 +519,7 @@ bool Solver::addClause_(vec<Lit>& ps, bool removable, ClauseId& id)
           }
           SatClause satClause;
           MinisatSatSolver::toSatClause(ca[cr], satClause);
-          d_proxy->notifySatClauseInsertedAtLevel(satClause, clauseLevel);
+          d_pfManager->notifyClauseInsertedAtLevel(satClause, clauseLevel);
         }
         if (options().smt.produceUnsatCores || needProof())
         {
@@ -2080,8 +2081,6 @@ CRef Solver::updateLemmas() {
       lemma_ref = ca.alloc(clauseLevel, lemma, removable);
       // notify cnf stream that this clause's proof must be saved to resist
       // context-popping
-      SatClause satClause;
-      MinisatSatSolver::toSatClause(ca[lemma_ref], satClause);
       if (needProof() && clauseLevel < assertionLevel)
       {
         if (TraceIsOn("pf::sat"))
@@ -2094,7 +2093,9 @@ CRef Solver::updateLemmas() {
           Trace("pf::sat") << " clause/assert levels " << clauseLevel << " / "
                            << assertionLevel << "\n";
         }
-        d_proxy->notifySatClauseInsertedAtLevel(satClause, clauseLevel);
+        SatClause satClause;
+        MinisatSatSolver::toSatClause(ca[lemma_ref], satClause);
+        d_pfManager->notifyClauseInsertedAtLevel(satClause, clauseLevel);
       }
       // AJR (line 2441)
       // d_proxy->notifySatClause(satClause);

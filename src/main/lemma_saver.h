@@ -29,7 +29,7 @@ namespace main {
 class LemmaSaver : public cvc5::Plugin
 {
  public:
-  LemmaSaver(std::string& filename, Solver* s);
+  LemmaSaver(TermManager& tm, std::string& filename, Solver* s);
   ~LemmaSaver();
   /** */
   void notifySatClause(const Term& t) override;

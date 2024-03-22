@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -71,7 +71,7 @@ std::ostream& operator<<(std::ostream& out, RewriteStep s);
 class QuantifiersRewriter : public TheoryRewriter
 {
  public:
-  QuantifiersRewriter(Rewriter* r, const Options& opts);
+  QuantifiersRewriter(NodeManager* nm, Rewriter* r, const Options& opts);
   /** Pre-rewrite n */
   RewriteResponse preRewrite(TNode in) override;
   /** Post-rewrite n */
@@ -217,6 +217,13 @@ class QuantifiersRewriter : public TheoryRewriter
   static bool isStandard(QAttributes& qa, const Options& opts);
 
  private:
+  /**
+   * Do trivial merging of the prenex of quantified formula q, e.g.
+   * (forall ((x Int)) (forall ((y Int)) (P x y))) --->
+   * (forall ((x Int) (y Int)) (P x y)).
+   * This is done until fixed point.
+   */
+  Node mergePrenex(const Node& q);
   /**
    * Helper method for getVarElim, called when n has polarity pol in body.
    */

@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -94,8 +94,13 @@ class LetBinding
    * @param prefix The prefix to use for introduced variables
    * @param thresh The threshold to use, that is, the number of times a term
    * must appear before being letified.
+   * @param traverseBinders Whether we should traverse binders, that is, if
+   * this flag is true, we consider terms beneath binders as targets for
+   * letificiation.
    */
-  LetBinding(const std::string& prefix, uint32_t thresh = 2);
+  LetBinding(const std::string& prefix,
+             uint32_t thresh = 2,
+             bool traverseBinders = false);
   /** Get threshold */
   uint32_t getThreshold() const;
   /**
@@ -154,6 +159,8 @@ class LetBinding
   void convertCountToLet();
   /** The dag threshold */
   uint32_t d_thresh;
+  /** Traverse binders? */
+  bool d_traverseBinders;
   /** An internal context */
   context::Context d_context;
   /** Visit list */
@@ -162,7 +169,6 @@ class LetBinding
   NodeIdMap d_count;
   /** The let list */
   NodeList d_letList;
-
  protected:
   /** The let map */
   NodeIdMap d_letMap;
