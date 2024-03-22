@@ -38,7 +38,7 @@ class BuiltinProofRuleChecker : public ProofRuleChecker
 {
  public:
   /** Constructor. */
-  BuiltinProofRuleChecker(NodeManager* nm, Rewriter* r, Env& env);
+  BuiltinProofRuleChecker(NodeManager* nm, Rewriter* r);
   /** Destructor. */
   ~BuiltinProofRuleChecker() {}
   /**
