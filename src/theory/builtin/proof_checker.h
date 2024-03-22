@@ -122,8 +122,6 @@ class BuiltinProofRuleChecker : public ProofRuleChecker
    * oracle for proof checking.
    */
   Rewriter* d_rewriter;
-  /** Reference to the environment. */
-  Env& d_env;
   /** Pointer to the rewrite database */
   rewriter::RewriteDb* d_rdb;
 };
