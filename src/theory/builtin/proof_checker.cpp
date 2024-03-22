@@ -35,8 +35,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace builtin {
 
-BuiltinProofRuleChecker::BuiltinProofRuleChecker(NodeManager* nm,
-                                                 Rewriter* r)
+BuiltinProofRuleChecker::BuiltinProofRuleChecker(NodeManager* nm, Rewriter* r)
     : ProofRuleChecker(nm), d_rewriter(r), d_rdb(nullptr)
 {
 }

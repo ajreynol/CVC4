@@ -207,17 +207,17 @@ Node Env::rewriteViaMethod(theory::Rewriter* rr, TNode n, MethodId idr)
 {
   if (idr == MethodId::RW_REWRITE)
   {
-    Assert (rr!=nullptr);
+    Assert(rr != nullptr);
     return rr->rewrite(n);
   }
   if (idr == MethodId::RW_EXT_REWRITE)
   {
-    Assert (rr!=nullptr);
+    Assert(rr != nullptr);
     return rr->extendedRewrite(n);
   }
   if (idr == MethodId::RW_REWRITE_EQ_EXT)
   {
-    Assert (rr!=nullptr);
+    Assert(rr != nullptr);
     return rr->rewriteEqualityExt(n);
   }
   if (idr == MethodId::RW_EVALUATE)

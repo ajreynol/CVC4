@@ -212,7 +212,9 @@ class Env
    * specifying a call to rewrite.
    * @return The rewritten form of n.
    */
-  static Node rewriteViaMethod(theory::Rewriter* rr, TNode n, MethodId idr = MethodId::RW_REWRITE);
+  static Node rewriteViaMethod(theory::Rewriter* rr,
+                               TNode n,
+                               MethodId idr = MethodId::RW_REWRITE);
 
   //---------------------- information about cardinality of types
   /**

@@ -255,7 +255,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         rargs.push_back(args[3]);
       }
     }
-    theory::Rewriter * rr = d_env.getRewriter();
+    theory::Rewriter* rr = d_env.getRewriter();
     Node tr = Env::rewriteViaMethod(rr, ts, idr);
     Trace("smt-proof-pp-debug")
         << "...eq intro rewrite equality is " << ts << " == " << tr << ", from "
