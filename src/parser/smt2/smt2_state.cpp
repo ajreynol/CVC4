@@ -1074,6 +1074,21 @@ bool Smt2State::isAbstractValue(const std::string& name)
          && name.find_first_not_of("0123456789", 1) == std::string::npos;
 }
 
+Term Smt2State::mkRealOrIntFromNumeral(const std::string& str)
+{
+  // only do this if strict mode is enabled
+  if (strictModeEnabled())
+  {
+    // if arithmetic is enabled, and integers are disabled
+    if (d_logic.isTheoryEnabled(internal::theory::THEORY_ARITH)
+        && !d_logic.areIntegersUsed())
+    {
+      return d_tm.mkReal(str);
+    }
+  }
+  return d_tm.mkInteger(str);
+}
+
 void Smt2State::parseOpApplyTypeAscription(ParseOp& p, Sort type)
 {
   Trace("parser") << "parseOpApplyTypeAscription : " << p << " " << type

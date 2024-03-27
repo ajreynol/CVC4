@@ -290,6 +290,14 @@ class Smt2State : public ParserState
   bool isAbstractValue(const std::string& name);
 
   /**
+   * Make real or int from numeral string.
+   *
+   * In particular, if arithmetic is enabled, but integers are disabled, then
+   * we construct a real. Otherwise, we construct an integer.
+   */
+  Term mkRealOrIntFromNumeral(const std::string& str);
+
+  /**
    * Smt2 parser provides its own checkDeclaration, which does the
    * same as the base, but with some more helpful errors.
    */
