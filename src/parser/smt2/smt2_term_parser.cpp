@@ -271,7 +271,7 @@ Term Smt2TermParser::parseTerm()
         break;
       case Token::INTEGER_LITERAL:
       {
-        ret = d_state.mkRealOrIntFromNumeral(d_lex.tokenStr());
+        ret = tm.mkInteger(d_lex.tokenStr());
       }
       break;
       case Token::DECIMAL_LITERAL:
