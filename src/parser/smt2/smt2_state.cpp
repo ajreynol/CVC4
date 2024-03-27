@@ -795,7 +795,7 @@ void Smt2State::setLogic(std::string name)
       }
     }
 
-    if (d_logic.areIntegersUsed() && d_logic.areRealsUsed())
+    if ((d_logic.areIntegersUsed() && d_logic.areRealsUsed()) || !strictModeEnabled())
     {
       addOperator(Kind::TO_INTEGER, "to_int");
       addOperator(Kind::IS_INTEGER, "is_int");
