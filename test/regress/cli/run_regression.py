@@ -280,6 +280,8 @@ class AlfTester(Tester):
             )
             alf_sig_dir = os.path.abspath(g_args.alf_sig_dir)
             tmpf.write(("(include \"" + alf_sig_dir + "/cvc5/Cvc5.smt3\")").encode())
+            #if ("--alf-print-reference" in benchmark_info.command_line_args):
+            #    tmpf.write(("(reference \"" + benchmark_info.benchmark_basename + "\")").encode())
             tmpf.write(output.strip("unsat\n".encode()))
             tmpf.flush()
             output, error = output.decode(), error.decode()
