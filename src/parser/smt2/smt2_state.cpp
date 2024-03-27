@@ -795,6 +795,7 @@ void Smt2State::setLogic(std::string name)
       }
     }
 
+    // If strict mode is disabled, these operators are always defined.
     if ((d_logic.areIntegersUsed() && d_logic.areRealsUsed())
         || !strictModeEnabled())
     {
