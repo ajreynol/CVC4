@@ -553,7 +553,8 @@ void PropPfManager::getProofInternal(CDProof* cdp)
   cdp->addStep(falsen, r, clauses, args);
 }
 
-std::vector<Node> PropPfManager::computeAuxiliaryUnits(const std::vector<Node>& clauses)
+std::vector<Node> PropPfManager::computeAuxiliaryUnits(
+    const std::vector<Node>& clauses)
 {
   std::vector<Node> auxUnits;
   for (const Node& c : clauses)
