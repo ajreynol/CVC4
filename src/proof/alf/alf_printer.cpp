@@ -456,12 +456,10 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
       */
       if (options().proof.alfPrintReference)
       {
-        // [1] print the reference
-        // we currently do not need to provide a normalization routine.
-        out << "(reference \"" << options().driver.filename << "\")"
-            << std::endl;
-        // [2] print the universal variables
+        // [1] print only the universal variables
         out << outVars.str();
+        // we do not print the reference command here, since we don't know
+        // where the proof is stored.
       }
       else
       {
