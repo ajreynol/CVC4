@@ -60,7 +60,7 @@ class AlfPrinter : protected EnvObj
    */
   bool canEvaluate(Node n) const;
   /* Returns the normalized name of the proof rule of pfn */
-  static std::string getRuleName(const ProofNode* pfn);
+  std::string getRuleName(const ProofNode* pfn) const;
 
   //-------------
   /**

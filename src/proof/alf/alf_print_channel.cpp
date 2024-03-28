@@ -124,6 +124,7 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r,
                                         TNode nc)
 {
   Assert(!nc.isNull());
+  std::string trname;
   if (d_warnedRules.find(r) == d_warnedRules.end())
   {
     d_out << "; WARNING: add trust step for " << r << std::endl;
@@ -137,10 +138,15 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r,
     {
       d_out << " " << di;
     }
+    trname = "trust_dsl_rewrite";
+  }
+  else
+  {
+    trname = "trust";
   }
   d_out << std::endl;
   // trust takes a premise-list which must be specified even if empty
-  printStepInternal("trust", n, i, premises, {nc}, false, true);
+  printStepInternal(trname, n, i, premises, {nc}, false, true);
 }
 
 void AlfPrintChannelOut::printNodeInternal(std::ostream& out, Node n)

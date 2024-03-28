@@ -57,6 +57,12 @@
     :args (F)
     :conclusion F
 )
+(declare-rule trust_dsl_rewrite ((P Bool) (F Bool))
+    :premise-list P and
+    :args (F)
+    :conclusion F
+)
+
 
 (declare-rule identity ((F Bool))
     :premises (F)

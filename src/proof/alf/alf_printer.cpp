@@ -141,7 +141,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
     case ProofRule::ENCODE_PRED_TRANSFORM:return true;
-    case ProofRule::DSL_REWRITE: return true;
+    case ProofRule::DSL_REWRITE: return options().proof.alfDslMode==options::AlfDslMode::ON;
     case ProofRule::ARITH_POLY_NORM:
     {
       // we don't support bitvectors yet
@@ -289,11 +289,15 @@ bool AlfPrinter::canEvaluate(Node n) const
   return true;
 }
 
-std::string AlfPrinter::getRuleName(const ProofNode* pfn)
+std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
 {
   ProofRule r = pfn->getRule();
   if (r == ProofRule::DSL_REWRITE)
   {
+    if (options().proof.alfDslMode==options::AlfDslMode::TRUST)
+    {
+      return "trust_dsl_rewrite";
+    }
     rewriter::DslProofRule dr;
     rewriter::getDslProofRule(pfn->getArguments()[0], dr);
     std::stringstream ss;
@@ -447,9 +451,12 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
         }
       }
       // [1] print DSL rules
-      for (rewriter::DslProofRule r : d_dprs)
+      if (options().proof.alfDslMode==options::AlfDslMode::ON)
       {
-        printDslRule(out, r);
+        for (rewriter::DslProofRule r : d_dprs)
+        {
+          printDslRule(out, r);
+        }
       }
       if (options().proof.alfPrintReference)
       {
@@ -639,6 +646,12 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
     }
     case ProofRule::DSL_REWRITE:
     {
+      if (options().proof.alfDslMode==options::AlfDslMode::TRUST)
+      {
+        // trusted rule
+        args.push_back(d_tproc.convert(res));
+        return;
+      }
       rewriter::DslProofRule dr;
       if (!rewriter::getDslProofRule(pargs[0], dr))
       {
@@ -660,6 +673,7 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
           // "true" nil terminator.
           Node t = children.empty() ? d_tproc.getNullTerminator(k, v.getType())
                                     : nm->mkNode(k, children);
+          AlwaysAssert(!t.isNull()) << "Failed to get nil terminator for " << k << " " << v.getType();
           args.push_back(t);
         }
         else

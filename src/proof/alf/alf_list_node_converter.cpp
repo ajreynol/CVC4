@@ -37,6 +37,7 @@ Node AlfListNodeConverter::postConvert(Node n)
     TypeNode tn = n.getType();
     alfNullt = d_tproc.getNullTerminator(k, tn);
     nullt = expr::getNullTerminator(k, tn);
+    AlwaysAssert(!nullt.isNull()) << "list convert: failed to get nil terminator for " << k << " " << tn;
   }
   if (!alfNullt.isNull())
   {

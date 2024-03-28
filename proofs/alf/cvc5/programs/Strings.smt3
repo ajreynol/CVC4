@@ -107,7 +107,7 @@
       (let ((k2 (skolem (skolem_first_ctn_post xn y))))
       (ite
         (or (not (str.contains xn y)) (> n (str.len x)) (> 0 n))
-        (= k (alf.neg 1))
+        (= k -1)
         (ite
           (= y (mk_emptystr (alf.typeof x)))
           (= k n)
@@ -163,7 +163,7 @@
   (ite
     (= (str.len s) 1)
     (and (>= t 0) (< t 196608))
-    (= t (alf.neg 1))))
+    (= t -1)))
 )
 
 ; Compute the eager reduction predicate for (str.indexof x y n)
@@ -172,7 +172,7 @@
   (
     ((string_eager_reduction_indexof x y n)
         (let ((t (str.indexof x y n)))
-        (and (or (= t (alf.neg 1)) (>= t n))
+        (and (or (= t -1) (>= t n))
              (<= t (str.len x)))))
   )
 )
