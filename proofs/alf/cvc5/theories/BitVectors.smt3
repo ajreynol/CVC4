@@ -11,14 +11,15 @@
 )
 
 ; used as the nil terminator for concat
-(declare-const bvempty (BitVec 0))
+;(declare-const bvempty (BitVec 0))
+(define @bvempty () (alf.to_bin 0 0))
 
 (declare-const concat (->
   (! Int :var n :implicit)
   (! Int :var m :implicit)
   (BitVec n)
   (BitVec m)
-  (BitVec (alf.add n m))) :right-assoc-nil bvempty
+  (BitVec (alf.add n m))) :right-assoc-nil @bvempty
 )
 
 (declare-const extract (->
@@ -316,6 +317,6 @@
 (define @bvsize ((m Int :implicit) (x (BitVec m))) (get_bitwidth (alf.typeof x)))
 
 ; symbolic constant
-;(declare-const @bv (-> Int (! Int :var w) (BitVec w)))
-(define @bv ((n Int) (w Int)) (alf.to_bin n w))
+(declare-const @bv (-> Int (! Int :var w) (BitVec w)))
+;(define @bv ((n Int) (w Int)) (alf.to_bin n w))
 

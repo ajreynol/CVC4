@@ -204,7 +204,7 @@ Node AlfNodeConverter::postConvert(Node n)
   }
   else if (k == Kind::BITVECTOR_BB_TERM)
   {
-    Node curr = mkInternalSymbol("bvempty", nm->mkBitVectorType(0));
+    Node curr = mkInternalSymbol("@bvempty", nm->mkBitVectorType(0));
     for (size_t i = 0, nchildren = n.getNumChildren(); i < nchildren; i++)
     {
       size_t ii = (nchildren - 1) - i;
@@ -433,7 +433,7 @@ Node AlfNodeConverter::getNullTerminator(Kind k, TypeNode tn)
     case Kind::NONLINEAR_MULT:
       return NodeManager::currentNM()->mkConstInt(Rational(1));
     case Kind::BITVECTOR_CONCAT:
-      return mkInternalSymbol("bvempty",
+      return mkInternalSymbol("@bvempty",
                               NodeManager::currentNM()->mkBitVectorType(0));
     default: break;
   }

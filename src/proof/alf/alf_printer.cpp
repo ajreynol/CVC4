@@ -141,7 +141,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
     case ProofRule::ENCODE_PRED_TRANSFORM:return true;
-    case ProofRule::DSL_REWRITE: return false;
+    case ProofRule::DSL_REWRITE: return true;
     case ProofRule::ARITH_POLY_NORM:
     {
       // we don't support bitvectors yet
@@ -331,7 +331,8 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
     su.add(varList[i], uvi);
     out << "(" << uv << " ";
     TypeNode uvt = uv.getType();
-    if (uvt.getKind() == Kind::ABSTRACT_TYPE)
+    // NOTE: for now just fully abstract whenever necessary
+    if (expr::hasAbstractComponentType(uvt))
     {
       out << "alf.?";
     }
@@ -655,6 +656,8 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
         {
           std::vector<Node> children(pa.begin(), pa.end());
           Kind k = rpr.getListContext(v);
+          // need know the type of the null terminator here, and get the
+          // "true" nil terminator.
           Node t = children.empty() ? d_tproc.getNullTerminator(k, v.getType())
                                     : nm->mkNode(k, children);
           args.push_back(t);
