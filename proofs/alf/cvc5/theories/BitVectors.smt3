@@ -316,5 +316,6 @@
 (define @bvsize ((m Int :implicit) (x (BitVec m))) (get_bitwidth (alf.typeof x)))
 
 ; symbolic constant
-(declare-const @bv (-> Int (! Int :var w) (BitVec w)))
+;(declare-const @bv (-> Int (! Int :var w) (BitVec w)))
+(define @bv ((n Int) (w Int)) (alf.to_bin n w))
 

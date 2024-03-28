@@ -42,7 +42,7 @@ AlfPrinter::AlfPrinter(Env& env,
       d_tproc(atp),
       d_termLetPrefix("@t"),
       d_proofFlatten(flatten),
-      // d_ltproc(atp),
+      d_ltproc(atp),
       d_rdb(rdb)
 {
   d_pfType = nodeManager()->mkSort("proofType");
@@ -140,7 +140,8 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DRAT_REFUTATION:
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
-    case ProofRule::ENCODE_PRED_TRANSFORM: return true;
+    case ProofRule::ENCODE_PRED_TRANSFORM:return true;
+    case ProofRule::DSL_REWRITE: return false;
     case ProofRule::ARITH_POLY_NORM:
     {
       // we don't support bitvectors yet
@@ -183,7 +184,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
       }
     }
     break;
-    case ProofRule::DSL_REWRITE:
     case ProofRule::ANNOTATION:
     case ProofRule::HO_APP_ENCODE:
     case ProofRule::BETA_REDUCE:
@@ -309,7 +309,6 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn)
 
 void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
 {
-  /*
   const rewriter::RewriteProofRule& rpr = d_rdb->getRule(r);
   const std::vector<Node>& varList = rpr.getVarList();
   const std::vector<Node>& uvarList = rpr.getUserVarList();
@@ -334,7 +333,7 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
     TypeNode uvt = uv.getType();
     if (uvt.getKind() == Kind::ABSTRACT_TYPE)
     {
-      out << "?";
+      out << "alf.?";
     }
     else
     {
@@ -381,7 +380,6 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
   out << "  :conclusion (= " << sconc[0] << " " << d_ltproc.convert(sconc[1])
       << ")" << std::endl;
   out << ")" << std::endl;
-  */
 }
 
 void AlfPrinter::printLetList(std::ostream& out, LetBinding& lbind)
@@ -448,12 +446,10 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
         }
       }
       // [1] print DSL rules
-      /*
       for (rewriter::DslProofRule r : d_dprs)
       {
         printDslRule(out, r);
       }
-      */
       if (options().proof.alfPrintReference)
       {
         // [1] print only the universal variables
@@ -640,7 +636,6 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
       args.push_back(ts);
       return;
     }
-    /*
     case ProofRule::DSL_REWRITE:
     {
       rewriter::DslProofRule dr;
@@ -672,7 +667,6 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
       }
       return;
     }
-    */
     default: break;
   }
   for (size_t i = 0, nargs = pargs.size(); i < nargs; i++)

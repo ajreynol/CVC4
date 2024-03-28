@@ -12,6 +12,11 @@
 (define compare_var ((T Type :implicit) (U Type :implicit) (a T) (b U))
   (alf.is_neg (alf.add (alf.hash a) (alf.neg (alf.hash b)))))
 
+; Eliminate singleton list, which takes:
+; (1) a function f
+; (2) the identity element of f
+; (3) the nil terminator of f
+; (4) the term to process
 (program singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (id S) (null S) (x S) (x1 T) (x2 U :list) (y1 T) (y2 U :list))
   ((-> T U S) S S S) S
   (

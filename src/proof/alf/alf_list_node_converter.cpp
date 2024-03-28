@@ -22,22 +22,23 @@
 namespace cvc5::internal {
 namespace proof {
 
-AlfListNodeConverter::AlfListNodeConverter(AlfNodeConverter& tproc)
+AlfListNodeConverter::AlfListNodeConverter(BaseAlfNodeConverter& tproc)
     : d_tproc(tproc)
 {
 }
 
 Node AlfListNodeConverter::postConvert(Node n)
 {
-  bool isNary = false;
   Node nullt;
+  Node alfNullt;
   Kind k = n.getKind();
   if (NodeManager::isNAryKind(k))
   {
-    nullt = d_tproc.getNullTerminator(k, n.getType());
-    isNary = !nullt.isNull();
+    TypeNode tn = n.getType();
+    alfNullt = d_tproc.getNullTerminator(k, tn);
+    nullt = expr::getNullTerminator(k, tn);
   }
-  if (isNary)
+  if (!alfNullt.isNull())
   {
     size_t nlistChildren = 0;
     for (const Node& nc : n)
@@ -54,8 +55,10 @@ Node AlfListNodeConverter::postConvert(Node n)
           printer::smt2::Smt2Printer::smtKindString(k), tn);
       std::vector<Node> children;
       children.push_back(op);
+      children.push_back(nullt);
+      children.push_back(alfNullt);
       children.push_back(n);
-      return d_tproc.mkInternalApp("alf.from_list", children, n.getType());
+      return d_tproc.mkInternalApp("singleton_elim", children, n.getType());
     }
   }
   return n;

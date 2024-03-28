@@ -61,13 +61,13 @@ namespace proof {
 class AlfListNodeConverter : public NodeConverter
 {
  public:
-  AlfListNodeConverter(AlfNodeConverter& tproc);
+  AlfListNodeConverter(BaseAlfNodeConverter& tproc);
   /** tprocert to internal */
   Node postConvert(Node n) override;
 
  private:
   /** The parent tprocerter, used for getting internal symbols and utilities */
-  AlfNodeConverter& d_tproc;
+  BaseAlfNodeConverter& d_tproc;
 };
 
 }  // namespace proof
