@@ -28,7 +28,8 @@ const char* toString(cvc5::SkolemFunId id)
     case cvc5::SkolemFunId::DIV_BY_ZERO: return "DIV_BY_ZERO";
     case cvc5::SkolemFunId::INT_DIV_BY_ZERO: return "INT_DIV_BY_ZERO";
     case cvc5::SkolemFunId::MOD_BY_ZERO: return "MOD_BY_ZERO";
-    case cvc5::SkolemFunId::SQRT: return "SQRT";
+    case cvc5::SkolemFunId::TRANSCENDENTAL_PURIFY:
+      return "TRANSCENDENTAL_PURIFY";
     case cvc5::SkolemFunId::TRANSCENDENTAL_PURIFY_ARG:
       return "TRANSCENDENTAL_PURIFY_ARG";
     case cvc5::SkolemFunId::SHARED_SELECTOR: return "SHARED_SELECTOR";
@@ -53,10 +54,8 @@ const char* toString(cvc5::SkolemFunId id)
     case cvc5::SkolemFunId::RE_UNFOLD_POS_COMPONENT:
       return "RE_UNFOLD_POS_COMPONENT";
     case cvc5::SkolemFunId::BAGS_CARD_COMBINE: return "BAGS_CARD_COMBINE";
-    case cvc5::SkolemFunId::BAGS_CARD_ELEMENTS: return "BAGS_CARD_ELEMENTS";
-    case cvc5::SkolemFunId::BAGS_CARD_N: return "BAGS_CARD_N";
-    case cvc5::SkolemFunId::BAGS_CARD_UNION_DISJOINT:
-      return "BAGS_CARD_UNION_DISJOINT";
+    case cvc5::SkolemFunId::BAGS_DISTINCT_ELEMENTS_UNION_DISJOINT:
+      return "BAGS_DISTINCT_ELEMENTS_UNION_DISJOINT";
     case cvc5::SkolemFunId::BAGS_CHOOSE: return "BAGS_CHOOSE";
     case cvc5::SkolemFunId::BAGS_FOLD_CARD: return "BAGS_FOLD_CARD";
     case cvc5::SkolemFunId::BAGS_FOLD_COMBINE: return "BAGS_FOLD_COMBINE";
