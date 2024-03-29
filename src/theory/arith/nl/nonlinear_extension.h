@@ -222,7 +222,7 @@ class NonlinearExtension : EnvObj
    * This is the subsolver responsible for running the procedure for
    * transcendental functions.
    */
-  transcendental::TranscendentalSolver d_trSlv;
+  std::unique_ptr<transcendental::TranscendentalSolver> d_trSlv;
   /**
    * Holds common lookup data for the checks implemented in the "nl-ext"
    * solvers (from Cimatti et al., TACAS 2017).

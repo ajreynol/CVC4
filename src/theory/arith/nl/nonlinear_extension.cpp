@@ -48,7 +48,7 @@ NonlinearExtension::NonlinearExtension(Env& env, TheoryArith& containing)
       d_extTheoryCb(d_astate.getEqualityEngine()),
       d_extTheory(env, d_extTheoryCb, d_im),
       d_model(env),
-      d_trSlv(d_env, d_astate, d_im, d_model),
+      d_trSlv(nullptr),
       d_extState(d_env, d_im, d_model),
       d_factoringSlv(d_env, &d_extState),
       d_monomialBoundsSlv(d_env, &d_extState),
@@ -67,6 +67,10 @@ NonlinearExtension::NonlinearExtension(Env& env, TheoryArith& containing)
   d_extTheory.addFunctionKind(Kind::IAND);
   d_extTheory.addFunctionKind(Kind::POW2);
   d_true = nodeManager()->mkConst(true);
+  if (options().arith.nratExp)
+  {
+    d_trSlv.reset(new transcendental::TranscendentalSolver(d_env, d_astate, d_im, d_model));
+  }
 }
 
 NonlinearExtension::~NonlinearExtension() {}
@@ -84,7 +88,10 @@ void NonlinearExtension::preRegisterTerm(TNode n)
 
 void NonlinearExtension::processSideEffect(const NlLemma& se)
 {
-  d_trSlv.processSideEffect(se);
+  if (d_trSlv!=nullptr)
+  {
+    d_trSlv->processSideEffect(se);
+  }
 }
 
 void NonlinearExtension::computeRelevantAssertions(
@@ -211,10 +218,13 @@ bool NonlinearExtension::checkModel(const std::vector<Node>& assertions)
   std::vector<Node> passertions = assertions;
   if (options().arith.nlExt == options::NlExtMode::FULL)
   {
-    // preprocess the assertions with the trancendental solver
-    if (!d_trSlv.preprocessAssertionsCheckModel(passertions))
+    if (d_trSlv!=nullptr)
     {
-      return false;
+      // preprocess the assertions with the trancendental solver
+      if (!d_trSlv->preprocessAssertionsCheckModel(passertions))
+      {
+        return false;
+      }
     }
   }
   if (options().arith.nlCov)
@@ -223,7 +233,11 @@ bool NonlinearExtension::checkModel(const std::vector<Node>& assertions)
   }
 
   Trace("nl-ext-cm") << "-----" << std::endl;
-  unsigned tdegree = d_trSlv.getTaylorDegree();
+  unsigned tdegree = 0;
+  if (d_trSlv!=nullptr)
+  {
+    tdegree = d_trSlv->getTaylorDegree();
+  }
   std::vector<NlLemma> lemmas;
   bool ret = d_model.checkModel(passertions, tdegree, lemmas);
   for (const auto& al: lemmas)
@@ -297,7 +311,10 @@ void NonlinearExtension::checkFullEffort(std::map<Node, Node>& arithModel,
   // must post-process model with transcendental solver, to ensure we don't
   // assign values for equivalence classes with transcendental function
   // applications
-  d_trSlv.postProcessModel(arithModel, termSet);
+  if (d_trSlv!=nullptr)
+  {
+    d_trSlv->postProcessModel(arithModel, termSet);
+  }
   if (TraceIsOn("nl-model-final"))
   {
     Trace("nl-model-final") << "MODEL OUTPUT:" << std::endl;
@@ -413,15 +430,15 @@ Result::Status NonlinearExtension::modelBasedRefinement(
       }
 
       // we are incomplete
-      if (options().arith.nlExt == options::NlExtMode::FULL
+      if (d_trSlv!=nullptr && options().arith.nlExt == options::NlExtMode::FULL
           && options().arith.nlExtIncPrecision && d_model.usedApproximate())
       {
-        d_trSlv.incrementTaylorDegree();
+        d_trSlv->incrementTaylorDegree();
         needsRecheck = true;
         // increase precision for PI?
         // Difficult since Taylor series is very slow to converge
         Trace("nl-ext") << "...increment Taylor degree to "
-                        << d_trSlv.getTaylorDegree() << std::endl;
+                        << d_trSlv->getTaylorDegree() << std::endl;
       }
       else
       {
@@ -514,16 +531,20 @@ void NonlinearExtension::runStrategy(Theory::Effort effort,
         d_tangentPlaneSlv.check(true);
         break;
       case InferStep::TRANS_INIT:
-        d_trSlv.initLastCall(xts);
+        Assert (d_trSlv!=nullptr);
+        d_trSlv->initLastCall(xts);
         break;
       case InferStep::TRANS_INITIAL:
-        d_trSlv.checkTranscendentalInitialRefine();
+        Assert (d_trSlv!=nullptr);
+        d_trSlv->checkTranscendentalInitialRefine();
         break;
       case InferStep::TRANS_MONOTONIC:
-        d_trSlv.checkTranscendentalMonotonic();
+        Assert (d_trSlv!=nullptr);
+        d_trSlv->checkTranscendentalMonotonic();
         break;
       case InferStep::TRANS_TANGENT_PLANES:
-        d_trSlv.checkTranscendentalTangentPlanes();
+        Assert (d_trSlv!=nullptr);
+        d_trSlv->checkTranscendentalTangentPlanes();
         break;
       default: break;
     }

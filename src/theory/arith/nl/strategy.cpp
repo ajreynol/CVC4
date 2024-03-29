@@ -121,12 +121,18 @@ void Strategy::initializeStrategy(const Options& options)
   }
   if (options.arith.nlExt == options::NlExtMode::FULL)
   {
-    one << InferStep::TRANS_INIT << InferStep::BREAK;
+    if (options.arith.nratExp)
+    {
+      one << InferStep::TRANS_INIT << InferStep::BREAK;
+    }
     if (options.arith.nlExtSplitZero)
     {
       one << InferStep::NL_SPLIT_ZERO << InferStep::BREAK;
     }
-    one << InferStep::TRANS_INITIAL << InferStep::BREAK;
+    if (options.arith.nratExp)
+    {
+      one << InferStep::TRANS_INITIAL << InferStep::BREAK;
+    }
   }
   one << InferStep::IAND_INIT;
   one << InferStep::IAND_INITIAL << InferStep::BREAK;
@@ -140,7 +146,10 @@ void Strategy::initializeStrategy(const Options& options)
   }
   if (options.arith.nlExt == options::NlExtMode::FULL)
   {
-    one << InferStep::TRANS_MONOTONIC << InferStep::BREAK;
+    if (options.arith.nratExp)
+    {
+      one << InferStep::TRANS_MONOTONIC << InferStep::BREAK;
+    }
     one << InferStep::NL_MONOMIAL_MAGNITUDE1 << InferStep::BREAK;
     one << InferStep::NL_MONOMIAL_MAGNITUDE2 << InferStep::BREAK;
     one << InferStep::NL_MONOMIAL_INFER_BOUNDS;
@@ -164,7 +173,7 @@ void Strategy::initializeStrategy(const Options& options)
     {
       one << InferStep::NL_TANGENT_PLANES_WAITING;
     }
-    if (options.arith.nlExtTfTangentPlanes)
+    if (options.arith.nratExp && options.arith.nlExtTfTangentPlanes)
     {
       one << InferStep::TRANS_TANGENT_PLANES;
     }
