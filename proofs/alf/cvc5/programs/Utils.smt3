@@ -20,7 +20,7 @@
 (program singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (id S) (x S) (x1 T) (x2 U :list) (y1 T) (y2 U :list))
   ((-> T U S) S S) S
   (
-    ((singleton_elim f id (f x1 x2))  (alf.ite (alf.is_eq x2 id) x1 (f x1 x2)))
+    ((singleton_elim f id (f x1 x2))  (alf.ite (alf.is_eq x2 id) x1 (alf.cons f x1 x2)))
     ((singleton_elim f id x)          x)
   )
 )
@@ -32,12 +32,12 @@
   ((-> T U S) S S S) S
   (
     ((ac_append f id (f x1 x2) (f y1 y2)) (alf.ite (alf.is_eq x1 y1)
-                                                  (ac_append f id (f x1 x2) y2)
-                                               (alf.ite (compare_var x1 y1)
-                                                  (f x1 (ac_append f id x2 (f y1 y2)))
-                                                  (f y1 (ac_append f id (f x1 x2) y2)))))
-    ((ac_append f id (f x1 x2) id)        (f x1 x2))
-    ((ac_append f id id (f y1 y2))        (f y1 y2))
+                                            (ac_append f id (f x1 x2) y2)
+                                          (alf.ite (compare_var x1 y1)
+                                            (alf.cons f x1 (ac_append f id x2 (f y1 y2)))
+                                            (alf.cons f y1 (ac_append f id (f x1 x2) y2)))))
+    ((ac_append f id (f x1 x2) id)        (alf.cons f x1 x2))
+    ((ac_append f id id (f y1 y2))        (alf.cons f y1 y2))
     ((ac_append f id id id)               id)
   )
 )
@@ -54,7 +54,7 @@
 )
 
 ; Normalize an application of an ACI operator, where the identity element is assumed to be its nil terminator.
-(define get_aci_norm ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (id S) (x S))
+(define get_aci_norm ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (x S))
   (let ((id (alf.nil f)))
     (singleton_elim f id (get_aci_norm_rec f id x))))
 
