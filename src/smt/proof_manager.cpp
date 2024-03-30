@@ -262,12 +262,7 @@ void PfManager::printProof(std::ostream& out,
   {
     Assert(fp->getRule() == ProofRule::SCOPE);
     proof::AlfNodeConverter atp;
-    bool flatten = true;
-    if (options().proof.proofFlattenWasSetByUser)
-    {
-      flatten = options().proof.proofFlatten;
-    }
-    proof::AlfPrinter alfp(d_env, atp, flatten, d_rewriteDb.get());
+    proof::AlfPrinter alfp(d_env, atp, d_rewriteDb.get());
     alfp.print(out, fp);
   }
   else if (mode == options::ProofFormatMode::ALETHE)

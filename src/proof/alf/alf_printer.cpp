@@ -36,12 +36,10 @@ namespace proof {
 
 AlfPrinter::AlfPrinter(Env& env,
                        BaseAlfNodeConverter& atp,
-                       bool flatten,
                        rewriter::RewriteDb* rdb)
     : EnvObj(env),
       d_tproc(atp),
       d_termLetPrefix("@t"),
-      d_proofFlatten(flatten),
       d_ltproc(atp),
       d_rdb(rdb)
 {
