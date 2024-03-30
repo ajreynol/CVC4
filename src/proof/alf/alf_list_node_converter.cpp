@@ -29,15 +29,12 @@ AlfListNodeConverter::AlfListNodeConverter(BaseAlfNodeConverter& tproc)
 
 Node AlfListNodeConverter::postConvert(Node n)
 {
-  Node nullt;
   Node alfNullt;
   Kind k = n.getKind();
   if (NodeManager::isNAryKind(k))
   {
     TypeNode tn = n.getType();
     alfNullt = d_tproc.getNullTerminator(k, tn);
-    nullt = expr::getNullTerminator(k, tn);
-    AlwaysAssert(!nullt.isNull()) << "list convert: failed to get nil terminator for " << k << " " << tn;
   }
   if (!alfNullt.isNull())
   {
@@ -56,7 +53,6 @@ Node AlfListNodeConverter::postConvert(Node n)
           printer::smt2::Smt2Printer::smtKindString(k), tn);
       std::vector<Node> children;
       children.push_back(op);
-      children.push_back(nullt);
       children.push_back(alfNullt);
       children.push_back(n);
       return d_tproc.mkInternalApp("singleton_elim", children, n.getType());
