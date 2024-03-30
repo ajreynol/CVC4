@@ -34,8 +34,16 @@ namespace cvc5::internal {
 
 namespace proof {
 
-AlfPrinter::AlfPrinter(Env& env, BaseAlfNodeConverter& atp)
-    : EnvObj(env), d_tproc(atp), d_termLetPrefix("@t")
+AlfPrinter::AlfPrinter(Env& env,
+                       BaseAlfNodeConverter& atp,
+                       bool flatten,
+                       rewriter::RewriteDb* rdb)
+    : EnvObj(env),
+      d_tproc(atp),
+      d_termLetPrefix("@t"),
+      d_proofFlatten(flatten),
+      d_ltproc(atp),
+      d_rdb(rdb)
 {
   d_pfType = nodeManager()->mkSort("proofType");
   d_false = nodeManager()->mkConst(false);
@@ -129,9 +137,11 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::REMOVE_TERM_FORMULA_AXIOM:
     case ProofRule::INSTANTIATE:
     case ProofRule::SKOLEMIZE:
+    case ProofRule::DRAT_REFUTATION:
+    case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
-    case ProofRule::ENCODE_PRED_TRANSFORM:
-    case ProofRule::DSL_REWRITE: return true;
+    case ProofRule::ENCODE_PRED_TRANSFORM:return true;
+    case ProofRule::DSL_REWRITE: return options().proof.alfDslMode==options::AlfDslMode::ON;
     case ProofRule::ARITH_POLY_NORM:
     {
       // we don't support bitvectors yet
@@ -143,6 +153,10 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
       return pargs[0][0].getType().isRealOrInt();
     }
     break;
+    case ProofRule::ACI_NORM:
+    {
+      return false;
+    }
     case ProofRule::STRING_REDUCTION:
     {
       // depends on the operator
@@ -170,6 +184,48 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
       }
     }
     break;
+    case ProofRule::ANNOTATION:
+    case ProofRule::HO_APP_ENCODE:
+    case ProofRule::BETA_REDUCE:
+    case ProofRule::ARRAYS_EQ_RANGE_EXPAND:
+    case ProofRule::BV_BITBLAST_STEP:
+    case ProofRule::BV_EAGER_ATOM:
+    case ProofRule::DT_UNIF:
+    case ProofRule::DT_INST:
+    case ProofRule::DT_COLLAPSE:
+    case ProofRule::DT_SPLIT:
+    case ProofRule::DT_CLASH:
+    case ProofRule::CONCAT_SPLIT:
+    case ProofRule::CONCAT_LPROP:
+    case ProofRule::CONCAT_CPROP:
+    case ProofRule::STRING_DECOMPOSE:
+    case ProofRule::RE_UNFOLD_NEG:
+    case ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED:
+    case ProofRule::RE_ELIM:
+    case ProofRule::STRING_CODE_INJ:
+    case ProofRule::STRING_SEQ_UNIT_INJ:
+    case ProofRule::ARITH_MULT_SIGN:
+    case ProofRule::ARITH_MULT_TANGENT:
+    case ProofRule::ARITH_OP_ELIM_AXIOM:
+    case ProofRule::ARITH_TRANS_PI:
+    case ProofRule::ARITH_TRANS_EXP_NEG:
+    case ProofRule::ARITH_TRANS_EXP_POSITIVITY:
+    case ProofRule::ARITH_TRANS_EXP_SUPER_LIN:
+    case ProofRule::ARITH_TRANS_EXP_ZERO:
+    case ProofRule::ARITH_TRANS_EXP_APPROX_ABOVE_NEG:
+    case ProofRule::ARITH_TRANS_EXP_APPROX_ABOVE_POS:
+    case ProofRule::ARITH_TRANS_EXP_APPROX_BELOW:
+    case ProofRule::ARITH_TRANS_SINE_BOUNDS:
+    case ProofRule::ARITH_TRANS_SINE_SHIFT:
+    case ProofRule::ARITH_TRANS_SINE_SYMMETRY:
+    case ProofRule::ARITH_TRANS_SINE_TANGENT_ZERO:
+    case ProofRule::ARITH_TRANS_SINE_TANGENT_PI:
+    case ProofRule::ARITH_TRANS_SINE_APPROX_ABOVE_NEG:
+    case ProofRule::ARITH_TRANS_SINE_APPROX_ABOVE_POS:
+    case ProofRule::ARITH_TRANS_SINE_APPROX_BELOW_NEG:
+    case ProofRule::ARITH_TRANS_SINE_APPROX_BELOW_POS:
+    case ProofRule::ARITH_NL_COVERING_DIRECT:
+    case ProofRule::ARITH_NL_COVERING_RECURSIVE:
     // otherwise not handled
     default: break;
   }
@@ -233,14 +289,102 @@ bool AlfPrinter::canEvaluate(Node n) const
   return true;
 }
 
-std::string AlfPrinter::getRuleName(const ProofNode* pfn)
+std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
 {
   ProofRule r = pfn->getRule();
+  if (r == ProofRule::DSL_REWRITE)
+  {
+    if (options().proof.alfDslMode==options::AlfDslMode::TRUST)
+    {
+      return "trust_dsl_rewrite";
+    }
+    rewriter::DslProofRule dr;
+    rewriter::getDslProofRule(pfn->getArguments()[0], dr);
+    std::stringstream ss;
+    ss << "dsl." << dr;
+    return ss.str();
+  }
   std::string name = toString(r);
   std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) {
     return std::tolower(c);
   });
   return name;
+}
+
+void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
+{
+  const rewriter::RewriteProofRule& rpr = d_rdb->getRule(r);
+  const std::vector<Node>& varList = rpr.getVarList();
+  const std::vector<Node>& uvarList = rpr.getUserVarList();
+  const std::vector<Node>& conds = rpr.getConditions();
+  Node conc = rpr.getConclusion(true);
+
+  Subs su;
+
+  out << "(declare-rule dsl." << r << " (";
+  for (size_t i = 0, nvars = uvarList.size(); i < nvars; i++)
+  {
+    if (i > 0)
+    {
+      out << " ";
+    }
+    const Node& uv = uvarList[i];
+    std::stringstream sss;
+    sss << uv;
+    Node uvi = d_tproc.mkInternalSymbol(sss.str(), uv.getType());
+    su.add(varList[i], uvi);
+    out << "(" << uv << " ";
+    TypeNode uvt = uv.getType();
+    // NOTE: for now just fully abstract whenever necessary
+    if (expr::hasAbstractComponentType(uvt))
+    {
+      out << "alf.?";
+    }
+    else
+    {
+      out << uv.getType();
+    }
+    if (expr::isListVar(uv))
+    {
+      expr::markListVar(uvi);
+      out << " :list";
+    }
+    out << ")";
+  }
+  out << ")" << std::endl;
+  if (!conds.empty())
+  {
+    out << "  :premises (";
+    bool firstTime = true;
+    for (const Node& c : conds)
+    {
+      if (firstTime)
+      {
+        firstTime = false;
+      }
+      else
+      {
+        out << " ";
+      }
+      out << d_tproc.convert(su.apply(c));
+    }
+    out << ")" << std::endl;
+  }
+  out << "  :args (";
+  for (size_t i = 0, nvars = uvarList.size(); i < nvars; i++)
+  {
+    if (i > 0)
+    {
+      out << " ";
+    }
+    out << uvarList[i];
+  }
+  out << ")" << std::endl;
+  Node sconc = d_tproc.convert(su.apply(conc));
+  Assert(sconc.getKind() == Kind::EQUAL);
+  out << "  :conclusion (= " << sconc[0] << " " << d_ltproc.convert(sconc[1])
+      << ")" << std::endl;
+  out << ")" << std::endl;
 }
 
 void AlfPrinter::printLetList(std::ostream& out, LetBinding& lbind)
@@ -306,14 +450,20 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
                   << std::endl;
         }
       }
+      // [1] print DSL rules
+      if (options().proof.alfDslMode==options::AlfDslMode::ON)
+      {
+        for (rewriter::DslProofRule r : d_dprs)
+        {
+          printDslRule(out, r);
+        }
+      }
       if (options().proof.alfPrintReference)
       {
-        // [1] print the reference
-        // we currently do not need to provide a normalization routine.
-        out << "(reference \"" << options().driver.filename << "\")"
-            << std::endl;
-        // [2] print the universal variables
+        // [1] print only the universal variables
         out << outVars.str();
+        // we do not print the reference command here, since we don't know
+        // where the proof is stored.
       }
       else
       {
@@ -481,6 +631,46 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
       args.push_back(ts);
       return;
     }
+    case ProofRule::DSL_REWRITE:
+    {
+      if (options().proof.alfDslMode==options::AlfDslMode::TRUST)
+      {
+        // trusted rule
+        args.push_back(d_tproc.convert(res));
+        return;
+      }
+      rewriter::DslProofRule dr;
+      if (!rewriter::getDslProofRule(pargs[0], dr))
+      {
+        Unhandled() << "Failed to get DSL proof rule";
+      }
+      const rewriter::RewriteProofRule& rpr = d_rdb->getRule(dr);
+      const std::vector<Node>& varList = rpr.getVarList();
+      Assert(varList.size() + 1 == pargs.size());
+      NodeManager* nm = NodeManager::currentNM();
+      for (size_t i = 0, nvars = varList.size(); i < nvars; i++)
+      {
+        Node v = varList[i];
+        Node pa = d_tproc.convert(pargs[i + 1]);
+        if (expr::isListVar(v))
+        {
+          std::vector<Node> children(pa.begin(), pa.end());
+          Kind k = rpr.getListContext(v);
+          // need know the type of the null terminator here, and get the
+          // "true" nil terminator.
+          Node t = children.empty() ? d_tproc.getNullTerminator(k, v.getType())
+                                    : nm->mkNode(k, children);
+          AlwaysAssert(!t.isNull()) << "Failed to get nil terminator for " << k << " " << v.getType();
+          args.push_back(t);
+        }
+        else
+        {
+          args.push_back(pa);
+        }
+        Assert(args.back().getType() == v.getType());
+      }
+      return;
+    }
     default: break;
   }
   for (size_t i = 0, nargs = pargs.size(); i < nargs; i++)
@@ -509,6 +699,21 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
   bool handled = isHandled(pn);
   if (handled)
   {
+    if (r == ProofRule::DSL_REWRITE)
+    {
+      const std::vector<Node> aargs = pn->getArguments();
+      // if its a DSL rule, remember it
+      Node idn = aargs[0];
+      rewriter::DslProofRule di;
+      if (rewriter::getDslProofRule(idn, di))
+      {
+        d_dprs.insert(di);
+      }
+      else
+      {
+        Unhandled();
+      }
+    }
     getArgsFromProofRule(pn, args);
   }
   size_t id = allocateProofId(pn, wasAlloc);
