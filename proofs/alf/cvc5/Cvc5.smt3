@@ -86,10 +86,10 @@
                                             (alf.extract (run_evaluate x) r (alf.add r (run_evaluate m) -1))))
       ((run_evaluate (str.contains x y)) (alf.not (alf.is_neg (alf.find (run_evaluate x) (run_evaluate y)))))
       ; bitvectors
-      ((run_evaluate (bvadd xb ybs))       (alf.add (run_evaluate xb) (run_evaluate ybs)))
-      ((run_evaluate (bvmul xb ybs))       (alf.mul (run_evaluate xb) (run_evaluate ybs)))
-      ((run_evaluate (bvand xb ybs))       (alf.and (run_evaluate xb) (run_evaluate ybs)))
-      ((run_evaluate (bvor xb ybs))        (alf.or (run_evaluate xb) (run_evaluate ybs)))
+      ((run_evaluate (bvadd xb ybs))     (alf.add (run_evaluate xb) (run_evaluate ybs)))
+      ((run_evaluate (bvmul xb ybs))     (alf.mul (run_evaluate xb) (run_evaluate ybs)))
+      ((run_evaluate (bvand xb ybs))     (alf.and (run_evaluate xb) (run_evaluate ybs)))
+      ((run_evaluate (bvor xb ybs))      (alf.or (run_evaluate xb) (run_evaluate ybs)))
       ((run_evaluate (concat x ys))      (alf.concat (run_evaluate x) (run_evaluate ys)))
       ((run_evaluate (bvsub x y))        (alf.add (run_evaluate x) (alf.neg (run_evaluate y))))
       ((run_evaluate (extract m n x))    (alf.extract (run_evaluate x) n m)) ; note swap n/m
