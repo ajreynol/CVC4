@@ -54,5 +54,15 @@ Node AlfListNodeConverter::postConvert(Node n)
   return n;
 }
 
+AlfAbstractTypeConverter::AlfAbstractTypeConverter(BaseAlfNodeConverter& tproc)
+    : d_tproc(tproc)
+{
+}
+
+TypeNode AlfAbstractTypeConverter::postConvertType(TypeNode tn)
+{
+  return tn;
+}
+
 }  // namespace proof
 }  // namespace cvc5::internal

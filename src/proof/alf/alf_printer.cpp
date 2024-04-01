@@ -153,7 +153,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     break;
     case ProofRule::ACI_NORM:
     {
-      return false;
+      return true;
     }
     case ProofRule::STRING_REDUCTION:
     {
@@ -656,7 +656,7 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
           Kind k = rpr.getListContext(v);
           // need know the type of the null terminator here, and get the
           // "true" nil terminator.
-          Node t = children.empty() ? d_tproc.getNullTerminator(k, v.getType())
+          Node t = children.empty() ? expr::getNullTerminator(k, v.getType())
                                     : nm->mkNode(k, children);
           AlwaysAssert(!t.isNull()) << "Failed to get nil terminator for " << k << " " << v.getType();
           args.push_back(t);
