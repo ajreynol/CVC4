@@ -48,14 +48,7 @@ Node AlfListNodeConverter::postConvert(Node n)
     }
     if (nlistChildren < 2)
     {
-      TypeNode tn = NodeManager::currentNM()->booleanType();
-      Node op = d_tproc.mkInternalSymbol(
-          printer::smt2::Smt2Printer::smtKindString(k), tn);
-      std::vector<Node> children;
-      children.push_back(op);
-      children.push_back(alfNullt);
-      children.push_back(n);
-      return d_tproc.mkInternalApp("singleton_elim", children, n.getType());
+      return d_tproc.mkInternalApp("$dsl.singleton_elim", {n}, n.getType());
     }
   }
   return n;

@@ -12,12 +12,21 @@
 (define compare_var ((T Type :implicit) (U Type :implicit) (a T) (b U))
   (alf.is_neg (alf.add (alf.hash a) (alf.neg (alf.hash b)))))
 
+
+; Version that does not care about f
+(program $dsl.singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (x S) (x1 T) (x2 U :list))
+  (S) S
+  (
+    (($dsl.singleton_elim (f x1 x2))  (alf.ite (alf.is_eq x2 (alf.nil f)) x1 (alf.cons f x1 x2)))
+    (($dsl.singleton_elim x)          x)
+  )
+)
+
 ; Eliminate singleton list, which takes:
 ; (1) a function f
 ; (2) the identity element of f
-; (3) the nil terminator of f
-; (4) the term to process
-(program singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (id S) (x S) (x1 T) (x2 U :list) (y1 T) (y2 U :list))
+; (3) the term to process
+(program singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (id S) (x S) (x1 T) (x2 U :list))
   ((-> T U S) S S) S
   (
     ((singleton_elim f id (f x1 x2))  (alf.ite (alf.is_eq x2 id) x1 (alf.cons f x1 x2)))
