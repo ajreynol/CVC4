@@ -237,7 +237,8 @@ inline std::ostream& operator << (std::ostream& out, RewriteRuleId ruleId) {
   case RedandEliminate:     out << "RedandEliminate";     return out;
   case RepeatEliminate:     out << "RepeatEliminate";     return out;
   case RotateLeftEliminate: out << "RotateLeftEliminate"; return out;
-  case RotateRightEliminate: out << "RotateRightEliminate"; return out;
+  case RotateRightEliminate:out << "RotateRightEliminate";return out;
+  case SizeEliminate: out << "SizeEliminate"; return out;
   case NandEliminate:       out << "NandEliminate";       return out;
   case NorEliminate :       out << "NorEliminate";        return out;
   case SdivEliminate :      out << "SdivEliminate";       return out;
@@ -587,7 +588,7 @@ struct AllRewriteRules {
   RewriteRule<SolveEq>                        rule112;
   RewriteRule<BitwiseEq>                      rule113;
   RewriteRule<UltOne>                         rule114;
-  RewriteRule<SltZero> rule115;
+  RewriteRule<SltZero>                        rule115;
   RewriteRule<MultDistrib>                    rule118;
   RewriteRule<UltAddOne> rule119;
   RewriteRule<ConcatToMult>                   rule120;
