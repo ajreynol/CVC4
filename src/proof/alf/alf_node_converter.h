@@ -59,17 +59,17 @@ class BaseAlfNodeConverter : public NodeConverter
    * returned variable is always fresh.
    */
   virtual Node mkInternalSymbol(const std::string& name,
-                        TypeNode tn,
-                        bool useRawSym = true) = 0;
+                                TypeNode tn,
+                                bool useRawSym = true) = 0;
   /**
    * Make an internal symbol with custom name. This is a BOUND_VARIABLE that
    * has a distinguished status so that it is *not* printed as (bvar ...). The
    * returned variable is always fresh.
    */
   virtual Node mkInternalApp(const std::string& name,
-                     const std::vector<Node>& args,
-                     TypeNode ret,
-                     bool useRawSym = true) = 0;
+                             const std::vector<Node>& args,
+                             TypeNode ret,
+                             bool useRawSym = true) = 0;
 };
 
 /**

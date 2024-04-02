@@ -201,7 +201,7 @@ class PropPfManager : protected EnvObj
    * (2) input clauses (d_inputClauses),
    * (3) lemma clauses (d_lemmaClauses).
    * The choice of what to add to cdp is dependent on the prop-proof-mode.
-   * 
+   *
    * @param cdp The proof object to add the refutation proof to.
    */
   void getProofInternal(CDProof* cdp);

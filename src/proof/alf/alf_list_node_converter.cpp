@@ -22,7 +22,8 @@
 namespace cvc5::internal {
 namespace proof {
 
-AlfListNodeConverter::AlfListNodeConverter(NodeManager* nm, BaseAlfNodeConverter& tproc)
+AlfListNodeConverter::AlfListNodeConverter(NodeManager* nm,
+                                           BaseAlfNodeConverter& tproc)
     : NodeConverter(nm), d_tproc(tproc)
 {
 }
@@ -37,7 +38,8 @@ Node AlfListNodeConverter::postConvert(Node n)
     TypeNode tn = n.getType();
     alfNullt = d_tproc.getNullTerminator(k, tn);
     nullt = expr::getNullTerminator(k, tn);
-    AlwaysAssert(!nullt.isNull()) << "list convert: failed to get nil terminator for " << k << " " << tn;
+    AlwaysAssert(!nullt.isNull())
+        << "list convert: failed to get nil terminator for " << k << " " << tn;
   }
   if (!alfNullt.isNull())
   {

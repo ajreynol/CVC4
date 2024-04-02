@@ -17,7 +17,10 @@
 
 namespace cvc5::internal {
 
-BetaReduceNodeConverter::BetaReduceNodeConverter(NodeManager * nm) : NodeConverter(nm){}  
+BetaReduceNodeConverter::BetaReduceNodeConverter(NodeManager* nm)
+    : NodeConverter(nm)
+{
+}
 /** convert node n as described above during post-order traversal */
 Node BetaReduceNodeConverter::postConvert(Node n)
 {

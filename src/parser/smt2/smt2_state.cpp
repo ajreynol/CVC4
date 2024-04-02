@@ -973,14 +973,12 @@ void Smt2State::setLogic(std::string name)
     defineType("?Array", d_tm.mkAbstractSort(SortKind::ARRAY_SORT), true);
     defineType("?Bag", d_tm.mkAbstractSort(SortKind::BAG_SORT), true);
     defineType("?Tuple", d_tm.mkAbstractSort(SortKind::TUPLE_SORT), true);
-    defineType("?FiniteField",
-               d_tm.mkAbstractSort(SortKind::FINITE_FIELD_SORT),
-               true);
+    defineType(
+        "?FiniteField", d_tm.mkAbstractSort(SortKind::FINITE_FIELD_SORT), true);
     defineType("?->", d_tm.mkAbstractSort(SortKind::FUNCTION_SORT), true);
     defineType("?Seq", d_tm.mkAbstractSort(SortKind::SEQUENCE_SORT), true);
     defineType("?Set", d_tm.mkAbstractSort(SortKind::SET_SORT), true);
-    defineType(
-        "?BitVec", d_tm.mkAbstractSort(SortKind::BITVECTOR_SORT), true);
+    defineType("?BitVec", d_tm.mkAbstractSort(SortKind::BITVECTOR_SORT), true);
     defineType("?FloatingPoint",
                d_tm.mkAbstractSort(SortKind::FLOATINGPOINT_SORT),
                true);

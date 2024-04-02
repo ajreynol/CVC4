@@ -32,7 +32,7 @@ namespace cvc5::internal {
 class BetaReduceNodeConverter : public NodeConverter
 {
  public:
-  BetaReduceNodeConverter(NodeManager * nm);
+  BetaReduceNodeConverter(NodeManager* nm);
   /** convert node n as described above during post-order traversal */
   Node postConvert(Node n) override;
 };
