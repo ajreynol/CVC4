@@ -114,6 +114,10 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
   }
   return d_tproc.mkInternalApp(d_kindToName[tn.getKind()], {asNode}, d_sortType);
 }
+const std::vector<Node>& AlfAbstractTypeConverter::getFreeParameters() const
+{
+  return d_params;
+}
 
 }  // namespace proof
 }  // namespace cvc5::internal

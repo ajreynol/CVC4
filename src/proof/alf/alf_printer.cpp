@@ -320,35 +320,38 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
   Subs su;
 
   out << "(declare-rule dsl." << r << " (";
+  AlfAbstractTypeConverter aatc(nodeManager(), d_tproc);
+  std::stringstream ssExplicit;
   for (size_t i = 0, nvars = uvarList.size(); i < nvars; i++)
   {
     if (i > 0)
     {
-      out << " ";
+      ssExplicit << " ";
     }
     const Node& uv = uvarList[i];
     std::stringstream sss;
     sss << uv;
     Node uvi = d_tproc.mkInternalSymbol(sss.str(), uv.getType());
     su.add(varList[i], uvi);
-    out << "(" << uv << " ";
+    ssExplicit << "(" << uv << " ";
     TypeNode uvt = uv.getType();
-    // NOTE: for now just fully abstract whenever necessary
-    if (expr::hasAbstractComponentType(uvt))
-    {
-      out << "alf.?";
-    }
-    else
-    {
-      out << uv.getType();
-    }
+    Node uvtp = aatc.process(uvt);
+    ssExplicit << uvtp;
     if (expr::isListVar(uv))
     {
       expr::markListVar(uvi);
-      out << " :list";
+      ssExplicit << " :list";
     }
-    out << ")";
+    ssExplicit << ")";
   }
+  // print implicit parameters
+  const std::vector<Node>& params = aatc.getFreeParameters();
+  for (const Node& p : params)
+  {
+    out << "(" << p << " " << p.getType() << " :implicit) ";
+  }
+  // now print explicit variables 
+  out << ssExplicit.str();
   out << ")" << std::endl;
   if (!conds.empty())
   {

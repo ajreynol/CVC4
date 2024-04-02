@@ -43,7 +43,7 @@ class AlfAbstractTypeConverter
   /** post-convert type */
   Node process(const TypeNode& tn);
   /** get free parameters */
-  std::vector<Node> getFreeParameters() const;
+  const std::vector<Node>& getFreeParameters() const;
  private:
   /** Pointer to node manager */
   NodeManager * d_nm;
