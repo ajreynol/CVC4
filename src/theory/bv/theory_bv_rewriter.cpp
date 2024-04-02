@@ -34,6 +34,10 @@ TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
 
 RewriteResponse TheoryBVRewriter::preRewrite(TNode node)
 {
+  // no prerewrite to avoid issues with abstract subterms
+  return RewriteResponse(REWRITE_DONE, node);
+// leads to 3092 unproven (instead of 3075)
+/*
   RewriteResponse res =
       d_rewriteTable[static_cast<uint32_t>(node.getKind())](node, true);
   if (res.d_node != node)
@@ -43,6 +47,7 @@ RewriteResponse TheoryBVRewriter::preRewrite(TNode node)
         << "TheoryBV::preRewrite to " << res.d_node << std::endl;
   }
   return res;
+  */
 }
 
 RewriteResponse TheoryBVRewriter::postRewrite(TNode node)
