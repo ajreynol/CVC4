@@ -261,18 +261,13 @@ void PfManager::printProof(std::ostream& out,
   else if (mode == options::ProofFormatMode::ALF)
   {
     Assert(fp->getRule() == ProofRule::SCOPE);
-    proof::AlfNodeConverter atp;
-    bool flatten = true;
-    if (options().proof.proofFlattenWasSetByUser)
-    {
-      flatten = options().proof.proofFlatten;
-    }
-    proof::AlfPrinter alfp(d_env, atp, flatten, d_rewriteDb.get());
+    proof::AlfNodeConverter atp(nodeManager());
+    proof::AlfPrinter alfp(d_env, atp, false, d_rewriteDb.get());
     alfp.print(out, fp);
   }
   else if (mode == options::ProofFormatMode::ALETHE)
   {
-    proof::AletheNodeConverter anc;
+    proof::AletheNodeConverter anc(nodeManager());
     proof::AletheProofPostprocess vpfpp(
         d_env, anc, options().proof.proofAletheResPivots);
     vpfpp.process(fp);
@@ -282,7 +277,7 @@ void PfManager::printProof(std::ostream& out,
   else if (mode == options::ProofFormatMode::LFSC)
   {
     Assert(fp->getRule() == ProofRule::SCOPE);
-    proof::LfscNodeConverter ltp;
+    proof::LfscNodeConverter ltp(nodeManager());
     proof::LfscProofPostprocess lpp(d_env, ltp);
     lpp.process(fp);
     proof::LfscPrinter lp(d_env, ltp, d_rewriteDb.get());
