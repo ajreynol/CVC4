@@ -105,6 +105,12 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
         break;
     }
   }
+  if (tn.getNumChildren()==0)
+  {
+    std::stringstream ss;
+    ss << tn;
+    return d_tproc.mkInternalSymbol(ss.str(), d_sortType);
+  }
   // get the arguments
   std::vector<Node> asNode;
   for (size_t i=0, nchild = tn.getNumChildren(); i<nchild; i++)
