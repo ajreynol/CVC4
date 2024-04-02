@@ -25,6 +25,7 @@ namespace proof {
 AlfListNodeConverter::AlfListNodeConverter(NodeManager * nm, BaseAlfNodeConverter& tproc)
     : NodeConverter(nm), d_tproc(tproc)
 {
+  d_absType = nm->mkAbstractType(Kind::ABSTRACT_TYPE);
 }
 
 Node AlfListNodeConverter::postConvert(Node n)
@@ -41,6 +42,29 @@ Node AlfListNodeConverter::postConvert(Node n)
   {
     // no nil terminator
     return n;
+  }
+  switch (n.getKind())
+  {
+    case Kind::STRING_CONCAT:
+    {
+      std::vector<Node> children;
+      std::vector<Node> ochildren;
+      ochildren.push_back(d_tproc.mkInternalSymbol(printer::smt2::Smt2Printer::smtKindString(k), d_absType));
+      ochildren.push_back(d_tproc.mkInternalApp("$char_type_of", {n[0]}, d_absType));
+      children.push_back(d_tproc.mkInternalApp("alf._", ochildren, d_absType));
+      children.insert(children.end(), n.begin(), n.end());
+      n = d_tproc.mkInternalApp("_", children, n.getType());
+    }
+      break;
+    case Kind::BITVECTOR_ADD:
+    case Kind::BITVECTOR_AND:
+    case Kind::BITVECTOR_OR:
+      break;
+    case Kind::FINITE_FIELD_ADD:
+    case Kind::FINITE_FIELD_MULT:
+      break;
+    default:
+      break;
   }
   size_t nlistChildren = 0;
   for (const Node& nc : n)
