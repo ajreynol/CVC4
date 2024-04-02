@@ -54,10 +54,6 @@ ArithRewriter::ArithRewriter(NodeManager* nm, OperatorElim& oe)
 RewriteResponse ArithRewriter::preRewrite(TNode t)
 {
   Trace("arith-rewriter") << "preRewrite(" << t << ")" << std::endl;
-  if (expr::hasAbstractSubterm(t))
-  {
-    return RewriteResponse(REWRITE_DONE, t);
-  }
   if (rewriter::isAtom(t))
   {
     auto res = preRewriteAtom(t);
@@ -73,10 +69,6 @@ RewriteResponse ArithRewriter::preRewrite(TNode t)
 RewriteResponse ArithRewriter::postRewrite(TNode t)
 {
   Trace("arith-rewriter") << "postRewrite(" << t << ")" << std::endl;
-  if (expr::hasAbstractSubterm(t))
-  {
-    return RewriteResponse(REWRITE_DONE, t);
-  }
   if (rewriter::isAtom(t))
   {
     auto res = postRewriteAtom(t);
