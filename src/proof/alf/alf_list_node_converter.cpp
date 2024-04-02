@@ -55,13 +55,64 @@ Node AlfListNodeConverter::postConvert(Node n)
 }
 
 AlfAbstractTypeConverter::AlfAbstractTypeConverter(NodeManager * nm, BaseAlfNodeConverter& tproc)
-    : NodeConverter(nm), d_tproc(tproc)
+    : d_tproc(tproc), d_typeCounter(0), d_intCounter(0)
 {
+  d_sortType = nm->mkSort("Type");
+  d_kindToName[Kind::ARRAY_TYPE] = "Array";
+  d_kindToName[Kind::BITVECTOR_TYPE] = "BitVec";
+  d_kindToName[Kind::FLOATINGPOINT_TYPE] = "FloatingPoint";
+  d_kindToName[Kind::FINITE_FIELD_TYPE] = "FiniteField";
+  d_kindToName[Kind::SET_TYPE] = "Set";
+  d_kindToName[Kind::BAG_TYPE] = "Bag";
+  d_kindToName[Kind::SEQUENCE_TYPE] = "Seq";
 }
 
-TypeNode AlfAbstractTypeConverter::postConvertType(TypeNode tn)
+Node AlfAbstractTypeConverter::process(const TypeNode& tn)
 {
-  return tn;
+  // if abstract
+  if (tn.isAbstract())
+  {
+    Kind ak = tn.getAbstractedKind();
+    switch (ak)
+    {
+      case Kind::ABSTRACT_TYPE:
+      case Kind::FUNCTION_TYPE:
+      case Kind::TUPLE_TYPE:
+      {
+        std::stringstream ss;
+        ss << "@T." << d_typeCounter;
+        d_typeCounter++;
+        Node n = d_tproc.mkInternalSymbol(ss.str(), d_sortType);
+        d_params.push_back(n);
+        return n;
+      }
+        break;
+      case Kind::BITVECTOR_TYPE:
+      case Kind::FINITE_FIELD_TYPE:
+      {
+        std::stringstream ss;
+        ss << "@n." << d_intCounter;
+        d_intCounter++;
+        Node n = d_tproc.mkInternalSymbol(ss.str(), d_nm->integerType());
+        d_params.push_back(n);
+        Node ret = d_tproc.mkInternalApp(d_kindToName[ak], {n}, d_sortType);
+        return ret;
+      }
+        break;
+      case Kind::FLOATINGPOINT_TYPE:
+      default:
+        Unhandled() << "Cannot process abstract type kind " << ak;
+        break;
+    }
+  }
+  // get the arguments
+  std::vector<Node> asNode;
+  for (size_t i=0, nchild = tn.getNumChildren(); i<nchild; i++)
+  {
+    Node pt = process(tn[i]);
+    asNode.push_back(pt);
+  }
+  return d_tproc.mkInternalApp(d_kindToName[tn.getKind()], {asNode}, d_sortType);
 }
 
 }  // namespace proof

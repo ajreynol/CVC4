@@ -29,22 +29,35 @@ class AlfListNodeConverter : public NodeConverter
 {
  public:
   AlfListNodeConverter(NodeManager * nm, BaseAlfNodeConverter& tproc);
-  /** tprocert to internal */
+  /** convert */
   Node postConvert(Node n) override;
  private:
   /** The parent tprocerter, used for getting internal symbols and utilities */
   BaseAlfNodeConverter& d_tproc;
 };
 
-class AlfAbstractTypeConverter : public NodeConverter
+class AlfAbstractTypeConverter
 {
  public:
   AlfAbstractTypeConverter(NodeManager * nm, BaseAlfNodeConverter& tproc);
-  /** tprocert to internal */
-  TypeNode postConvertType(TypeNode n) override;
+  /** post-convert type */
+  Node process(const TypeNode& tn);
+  /** get free parameters */
+  std::vector<Node> getFreeParameters() const;
  private:
+  /** Pointer to node manager */
+  NodeManager * d_nm;
   /** The parent tprocerter, used for getting internal symbols and utilities */
   BaseAlfNodeConverter& d_tproc;
+  /** Get the free parameters */
+  std::vector<Node> d_params;
+  /** Counters */
+  size_t d_typeCounter;
+  size_t d_intCounter;
+  /** The type of ALF sorts, which can appear in terms */
+  TypeNode d_sortType;
+  /** Kind to name */
+  std::map<Kind, std::string> d_kindToName;  
 };
 
 }  // namespace proof
