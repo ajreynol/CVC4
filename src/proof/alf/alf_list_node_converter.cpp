@@ -22,8 +22,8 @@
 namespace cvc5::internal {
 namespace proof {
 
-AlfListNodeConverter::AlfListNodeConverter(BaseAlfNodeConverter& tproc)
-    : d_tproc(tproc)
+AlfListNodeConverter::AlfListNodeConverter(NodeManager* nm, BaseAlfNodeConverter& tproc)
+    : NodeConverter(nm), d_tproc(tproc)
 {
 }
 

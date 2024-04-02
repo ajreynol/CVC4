@@ -115,7 +115,7 @@ void Assertions::addFormula(TNode n,
     if (ns != n)
     {
       // do beta-reductions
-      BetaReduceNodeConverter brnc;
+      BetaReduceNodeConverter brnc(nodeManager());
       ns = brnc.convert(ns);
     }
     if (isFunDef && ns.getKind() == Kind::EQUAL && ns[0].isVar())

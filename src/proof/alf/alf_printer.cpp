@@ -42,7 +42,7 @@ AlfPrinter::AlfPrinter(Env& env,
       d_tproc(atp),
       d_termLetPrefix("@t"),
       d_proofFlatten(flatten),
-      d_ltproc(atp),
+      d_ltproc(nodeManager(), atp),
       d_rdb(rdb)
 {
   d_pfType = nodeManager()->mkSort("proofType");

@@ -61,7 +61,7 @@ namespace proof {
 class AlfListNodeConverter : public NodeConverter
 {
  public:
-  AlfListNodeConverter(BaseAlfNodeConverter& tproc);
+  AlfListNodeConverter(NodeManager* nm, BaseAlfNodeConverter& tproc);
   /** tprocert to internal */
   Node postConvert(Node n) override;
 
