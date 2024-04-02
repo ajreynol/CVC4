@@ -29,27 +29,31 @@ AlfListNodeConverter::AlfListNodeConverter(NodeManager * nm, BaseAlfNodeConverte
 
 Node AlfListNodeConverter::postConvert(Node n)
 {
-  Node alfNullt;
   Kind k = n.getKind();
-  if (NodeManager::isNAryKind(k))
+  if (!NodeManager::isNAryKind(k))
   {
-    TypeNode tn = n.getType();
-    alfNullt = d_tproc.getNullTerminator(k, tn);
+    // not an n-ary kind
+    return n;
   }
-  if (!alfNullt.isNull())
+  TypeNode tn = n.getType();
+  Node alfNullt = d_tproc.getNullTerminator(k, tn);
+  if (alfNullt.isNull())
   {
-    size_t nlistChildren = 0;
-    for (const Node& nc : n)
+    // no nil terminator
+    return n;
+  }
+  size_t nlistChildren = 0;
+  for (const Node& nc : n)
+  {
+    if (!expr::isListVar(nc))
     {
-      if (!expr::isListVar(nc))
-      {
-        nlistChildren++;
-      }
+      nlistChildren++;
     }
-    if (nlistChildren < 2)
-    {
-      return d_tproc.mkInternalApp("$dsl.singleton_elim", {n}, n.getType());
-    }
+  }
+  // if less than 2 non-list children, it might collapse to a single element
+  if (nlistChildren < 2)
+  {
+    return d_tproc.mkInternalApp("$dsl.singleton_elim", {n}, n.getType());
   }
   return n;
 }
