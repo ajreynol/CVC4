@@ -32,63 +32,73 @@ AlfListNodeConverter::AlfListNodeConverter(NodeManager* nm,
 Node AlfListNodeConverter::postConvert(Node n)
 {
   Kind k = n.getKind();
-  if (!NodeManager::isNAryKind(k))
+  Node nproc = n;
+  bool applyParam = false;
+  std::string extractOpName;
+  switch (k)
   {
-    // not an n-ary kind
-    return n;
-  }
-  TypeNode tn = n.getType();
-  Node nullt = expr::getNullTerminator(k, tn);
-  if (nullt.isNull())
-  {
-    // no nil terminator
-    return n;
-  }
-  if (!expr::isListVar(n[n.getNumChildren() - 1]))
-  {
-    bool applyParam = false;
-    std::string extractOpName;
-    switch (n.getKind())
+    case Kind::STRING_CONCAT:
     {
-      case Kind::STRING_CONCAT:
+      if (!expr::isListVar(n[n.getNumChildren() - 1]))
       {
         applyParam = true;
         extractOpName = "$char_type_of";
       }
-      break;
-      case Kind::BITVECTOR_ADD:
-      case Kind::BITVECTOR_MULT:
-      case Kind::BITVECTOR_AND:
-      case Kind::BITVECTOR_OR:
-      case Kind::BITVECTOR_XOR:
+    }
+    break;
+    case Kind::BITVECTOR_ADD:
+    case Kind::BITVECTOR_MULT:
+    case Kind::BITVECTOR_AND:
+    case Kind::BITVECTOR_OR:
+    case Kind::BITVECTOR_XOR:
+    {
+      if (!expr::isListVar(n[n.getNumChildren() - 1]))
       {
         applyParam = true;
         extractOpName = "$bv_bitwidth";
-        break;
       }
-      case Kind::FINITE_FIELD_ADD:
-      case Kind::FINITE_FIELD_MULT:
+      break;
+    }
+    case Kind::FINITE_FIELD_ADD:
+    case Kind::FINITE_FIELD_MULT:
+    {
+      if (!expr::isListVar(n[n.getNumChildren() - 1]))
       {
         applyParam = true;
         extractOpName = "$ff_size";
-        break;
       }
-      default: break;
+      break;
     }
-    if (applyParam)
-    {
-      std::vector<Node> children;
-      std::vector<Node> ochildren;
-      ochildren.push_back(d_tproc.mkInternalSymbol(
-          printer::smt2::Smt2Printer::smtKindString(k), d_absType));
-      ochildren.push_back(d_tproc.mkInternalApp(
-          "$char_type_of",
-          {d_tproc.mkInternalApp("alf.typeof", {n[0]}, d_absType)},
-          d_absType));
-      children.push_back(d_tproc.mkInternalApp("alf._", ochildren, d_absType));
-      children.insert(children.end(), n.begin(), n.end());
-      n = d_tproc.mkInternalApp("_", children, n.getType());
-    }
+    case Kind::OR:
+    case Kind::AND:
+    case Kind::SEP_STAR:
+    case Kind::ADD:
+    case Kind::MULT:
+    case Kind::NONLINEAR_MULT:
+    case Kind::BITVECTOR_CONCAT:
+    case Kind::REGEXP_CONCAT:
+    case Kind::REGEXP_UNION:
+    case Kind::REGEXP_INTER:
+      // operators with a ground null terminator
+      break;
+    default: 
+      // not an n-ary kind
+      return n;
+  }
+  // if we need to disambiguate the operator
+  if (applyParam)
+  {
+    std::vector<Node> children;
+    std::vector<Node> ochildren;
+    ochildren.push_back(d_tproc.mkInternalSymbol(
+        printer::smt2::Smt2Printer::smtKindString(k), d_absType));
+    ochildren.push_back(d_tproc.mkInternalApp(
+        extractOpName,
+        {d_tproc.mkInternalApp("alf.typeof", {n[0]}, d_absType)},
+        d_absType));
+    children.push_back(d_tproc.mkInternalApp("alf._", ochildren, d_absType));
+    children.insert(children.end(), n.begin(), n.end());
+    nproc = d_tproc.mkInternalApp("_", children, n.getType());
   }
   size_t nlistChildren = 0;
   for (const Node& nc : n)
@@ -101,9 +111,9 @@ Node AlfListNodeConverter::postConvert(Node n)
   // if less than 2 non-list children, it might collapse to a single element
   if (nlistChildren < 2)
   {
-    return d_tproc.mkInternalApp("$dsl.singleton_elim", {n}, n.getType());
+    return d_tproc.mkInternalApp("$dsl.singleton_elim", {nproc}, n.getType());
   }
-  return n;
+  return nproc;
 }
 
 AlfAbstractTypeConverter::AlfAbstractTypeConverter(NodeManager* nm,
