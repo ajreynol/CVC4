@@ -54,8 +54,10 @@ Node AlfListNodeConverter::postConvert(Node n)
         std::vector<Node> ochildren;
         ochildren.push_back(d_tproc.mkInternalSymbol(
             printer::smt2::Smt2Printer::smtKindString(k), d_absType));
-        ochildren.push_back(
-            d_tproc.mkInternalApp("$char_type_of", {d_tproc.mkInternalApp("alf.typeof", {n[0]}, d_absType)}, d_absType));
+        ochildren.push_back(d_tproc.mkInternalApp(
+            "$char_type_of",
+            {d_tproc.mkInternalApp("alf.typeof", {n[0]}, d_absType)},
+            d_absType));
         children.push_back(
             d_tproc.mkInternalApp("alf._", ochildren, d_absType));
         children.insert(children.end(), n.begin(), n.end());

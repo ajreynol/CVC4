@@ -386,8 +386,7 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
   Node sconc = d_tproc.convert(su.apply(conc));
   sconc = d_ltproc.convert(sconc);
   Assert(sconc.getKind() == Kind::EQUAL);
-  out << "  :conclusion (= " << sconc[0] << " " << sconc[1]
-      << ")" << std::endl;
+  out << "  :conclusion (= " << sconc[0] << " " << sconc[1] << ")" << std::endl;
   out << ")" << std::endl;
 }
 
