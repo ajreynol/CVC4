@@ -150,7 +150,7 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss) const
 
 Node RewriteProofRule::getConclusionFor(
     const std::vector<Node>& ss,
-    std::map<Node, Node>& witnessTerms) const
+    std::vector<Node>& witnessTerms) const
 {
   Assert(d_fvs.size() == ss.size());
   NodeManager * nm = NodeManager::currentNM();
@@ -161,10 +161,11 @@ Node RewriteProofRule::getConclusionFor(
   for (size_t i = 0, nfvs = ss.size(); i < nfvs; i++)
   {
     TNode v = d_fvs[i];
+    Node w;
     if (!expr::isListVar(v))
     {
       // if not a list variable, it is the given term
-      witnessTerms[v] = ss[i];
+      w = ss[i];
     }
     else
     {
@@ -178,14 +179,15 @@ Node RewriteProofRule::getConclusionFor(
         Node subsCtx = visited[ctx];
         Assert(!subsCtx.isNull());
         Node nt = expr::getNullTerminator(ctx.getKind(), subsCtx.getType());
-        witnessTerms[v] = nt;
+        w = nt;
       }
       else
       {
         std::vector<Node> wargs(ss[i].begin(), ss[i].end());
-        witnessTerms[v] = nm->mkNode(ctx.getKind(), wargs);
+        w = nm->mkNode(ctx.getKind(), wargs);
       }
     }
+    witnessTerms.push_back(w);
   }
   return ret;
 }

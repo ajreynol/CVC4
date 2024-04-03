@@ -94,10 +94,13 @@ class RewriteProofRule
   Node getConclusion(bool includeContext = false) const;
   /** Get conclusion of the rule for the substituted terms ss */
   Node getConclusionFor(const std::vector<Node>& ss) const;
-  /** Get conclusion of the rule for the substituted terms ss */
+  /**
+   * Get conclusion of the rule for the substituted terms ss.
+   * Additionally computes the "witness term" for each variable in the
+   */
   Node getConclusionFor(
       const std::vector<Node>& ss,
-      std::map<Node, Node>& witnessTerms) const;
+      std::vector<Node>& witnessTerms) const;
 
   /**
    * Is variable explicit? An explicit variable is one that does not occur

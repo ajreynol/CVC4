@@ -647,22 +647,15 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
         Unhandled() << "Failed to get DSL proof rule";
       }
       const rewriter::RewriteProofRule& rpr = d_rdb->getRule(dr);
-      std::map<Node, Node> witnessTerms;
+      std::vector<Node> witnessTerms;
       std::vector<Node> ss;
       for (size_t i=1, npargs = pargs.size(); i<npargs; i++)
       {
         ss.push_back(d_tproc.convert(pargs[i]));
       }
       rpr.getConclusionFor(ss, witnessTerms);
-      const std::vector<Node>& varList = rpr.getVarList();
-      Assert(varList.size() + 1 == pargs.size());
-      for (size_t i = 0, nvars = varList.size(); i < nvars; i++)
-      {
-        Node v = varList[i];
-        Assert (witnessTerms.find(v)!=witnessTerms.end());
-        args.push_back(witnessTerms[v]);
-        Assert(args.back().getType() == v.getType());
-      }
+      // the arguments are the computed witness terms
+      args.insert(args.end(), witnessTerms.begin(), witnessTerms.end());
       return;
     }
     default: break;
