@@ -36,8 +36,8 @@ bool hasListVar(TNode n);
 
 /**
  * Compute list variable context
- * Get the parent kind of each list variable in n, or fail if a list
- * variable occurs in two contexts.
+ * Stores (one of the) parents for each list variable in n, or fail if a list
+ * variable occurs beneath parents that have different kinds.
  */
 bool getListVarContext(TNode n, std::map<Node, Node>& context);
 
