@@ -195,9 +195,17 @@ Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
                     const std::vector<Node>& subs)
 {
+  std::unordered_map<TNode, Node> visited;
+  return narySubstitute(src, vars, subs, visited);
+}
+
+Node narySubstitute(Node src,
+                    const std::vector<Node>& vars,
+                    const std::vector<Node>& subs,
+                    std::unordered_map<TNode, Node>& visited)
+{
   // assumes all variables are list variables
   NodeManager* nm = NodeManager::currentNM();
-  std::unordered_map<TNode, Node> visited;
   std::unordered_map<TNode, Node>::iterator it;
   std::vector<TNode> visit;
   std::vector<Node>::const_iterator itv;

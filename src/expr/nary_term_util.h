@@ -60,6 +60,13 @@ Node getNullTerminator(Kind k, TypeNode tn);
 Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
                     const std::vector<Node>& subs);
+/**
+ * Same as above, with visited cache.
+ */
+Node narySubstitute(Node src,
+                    const std::vector<Node>& vars,
+                    const std::vector<Node>& subs,
+                    std::unordered_map<TNode, Node>& visited);
 
 /**
  * @param k A kind
