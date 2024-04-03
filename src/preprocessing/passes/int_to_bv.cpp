@@ -202,7 +202,7 @@ Node IntToBV::intToBV(TNode n, NodeMap& cache)
             // sign extend
             Node signExtendOp = nm->mkConst<BitVectorSignExtend>(
                 BitVectorSignExtend(max - bvsize));
-            children[i] = nm->mkNode(signExtendOp, children[i]);
+            children[i] = nm->mkNode(Kind::BITVECTOR_SIGN_EXTEND, signExtendOp, children[i]);
           }
         }
       }

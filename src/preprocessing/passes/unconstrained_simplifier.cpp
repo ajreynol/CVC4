@@ -567,9 +567,7 @@ void UnconstrainedSimplifier::processUnconstrained()
             {
               Node extractOp =
                   nm->mkConst<BitVectorExtract>(BitVectorExtract(0, 0));
-              vector<Node> children;
-              children.push_back(child);
-              Node test = nm->mkNode(extractOp, children);
+              Node test = nm->mkNode(Kind::BITVECTOR_EXTRACT, extractOp, child);
               BitVector one(1, unsigned(1));
               test = test.eqNode(nm->mkConst<BitVector>(one));
               if (rewrite(test) != nm->mkConst<bool>(true))

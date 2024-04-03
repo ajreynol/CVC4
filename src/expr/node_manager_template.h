@@ -552,29 +552,6 @@ class NodeManager
   template <bool ref_count>
   Node mkOr(const std::vector<NodeTemplate<ref_count> >& children);
 
-  /** Create a node (with no children) by operator. */
-  Node mkNode(TNode opNode);
-
-  /** Create a node with one child by operator. */
-  Node mkNode(TNode opNode, TNode child1);
-
-  /** Create a node with two children by operator. */
-  Node mkNode(TNode opNode, TNode child1, TNode child2);
-
-  /** Create a node with three children by operator. */
-  Node mkNode(TNode opNode, TNode child1, TNode child2, TNode child3);
-
-  /** Create a node by applying an operator to the children. */
-  template <bool ref_count>
-  Node mkNode(TNode opNode, const std::vector<NodeTemplate<ref_count> >& children);
-
-  /**
-   * Create a node by applying an operator to an arbitrary number of children.
-   *
-   * Analoguous to `mkNode(Kind, std::initializer_list<TNode>)`.
-   */
-  Node mkNode(TNode opNode, std::initializer_list<TNode> children);
-
   Node mkBoundVar(const std::string& name, const TypeNode& type);
 
   Node mkBoundVar(const TypeNode& type);
@@ -1159,61 +1136,6 @@ Node NodeManager::mkOr(const std::vector<NodeTemplate<ref_count> >& children)
     return children[0];
   }
   return mkNode(Kind::OR, children);
-}
-
-// for operators
-inline Node NodeManager::mkNode(TNode opNode) {
-  NodeBuilder nb(this, operatorToKind(opNode));
-  if (opNode.getKind() != Kind::BUILTIN)
-  {
-    nb << opNode;
-  }
-  return nb.constructNode();
-}
-
-inline Node NodeManager::mkNode(TNode opNode, TNode child1) {
-  NodeBuilder nb(this, operatorToKind(opNode));
-  if (opNode.getKind() != Kind::BUILTIN)
-  {
-    nb << opNode;
-  }
-  nb << child1;
-  return nb.constructNode();
-}
-
-inline Node NodeManager::mkNode(TNode opNode, TNode child1, TNode child2) {
-  NodeBuilder nb(this, operatorToKind(opNode));
-  if (opNode.getKind() != Kind::BUILTIN)
-  {
-    nb << opNode;
-  }
-  nb << child1 << child2;
-  return nb.constructNode();
-}
-
-inline Node NodeManager::mkNode(TNode opNode, TNode child1, TNode child2,
-                                TNode child3) {
-  NodeBuilder nb(this, operatorToKind(opNode));
-  if (opNode.getKind() != Kind::BUILTIN)
-  {
-    nb << opNode;
-  }
-  nb << child1 << child2 << child3;
-  return nb.constructNode();
-}
-
-// N-ary version for operators
-template <bool ref_count>
-inline Node NodeManager::mkNode(TNode opNode,
-                                const std::vector<NodeTemplate<ref_count> >&
-                                children) {
-  NodeBuilder nb(this, operatorToKind(opNode));
-  if (opNode.getKind() != Kind::BUILTIN)
-  {
-    nb << opNode;
-  }
-  nb.append(children);
-  return nb.constructNode();
 }
 
 inline TypeNode NodeManager::mkTypeNode(Kind kind, TypeNode child1) {

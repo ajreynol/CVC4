@@ -760,10 +760,10 @@ inline Node RewriteRule<SaddoEliminate>::apply(TNode node)
   Node one = utils::mkOne(1);
   Node extOp =
       nm->mkConst<BitVectorExtract>(BitVectorExtract(size - 1, size - 1));
-  Node sign0 = nm->mkNode(extOp, node[0]);
-  Node sign1 = nm->mkNode(extOp, node[1]);
+  Node sign0 = nm->mkNode(Kind::BITVECTOR_EXTRACT, extOp, node[0]);
+  Node sign1 = nm->mkNode(Kind::BITVECTOR_EXTRACT, extOp, node[1]);
   Node add = nm->mkNode(Kind::BITVECTOR_ADD, node[0], node[1]);
-  Node signa = nm->mkNode(extOp, add);
+  Node signa = nm->mkNode(Kind::BITVECTOR_EXTRACT, extOp, add);
 
   Node both_neg = nm->mkNode(Kind::AND,
                              nm->mkNode(Kind::EQUAL, sign0, one),
@@ -855,8 +855,8 @@ inline Node RewriteRule<SmuloEliminate>::apply(TNode node)
 
   Node sextOp1 = nm->mkConst<BitVectorSignExtend>(BitVectorSignExtend(1));
   Node mul = nm->mkNode(Kind::BITVECTOR_MULT,
-                        nm->mkNode(sextOp1, node[0]),
-                        nm->mkNode(sextOp1, node[1]));
+                        nm->mkNode(Kind::BITVECTOR_SIGN_EXTEND, sextOp1, node[0]),
+                        nm->mkNode(Kind::BITVECTOR_SIGN_EXTEND, sextOp1, node[1]));
 
   if (size == 2)
   {
@@ -872,9 +872,9 @@ inline Node RewriteRule<SmuloEliminate>::apply(TNode node)
   Node sign0 = utils::mkExtract(node[0], size - 1, size - 1);
   Node sign1 = utils::mkExtract(node[1], size - 1, size - 1);
   Node xor0 =
-      nm->mkNode(Kind::BITVECTOR_XOR, node[0], nm->mkNode(sextOpN, sign0));
+      nm->mkNode(Kind::BITVECTOR_XOR, node[0], nm->mkNode(Kind::BITVECTOR_SIGN_EXTEND, sextOpN, sign0));
   Node xor1 =
-      nm->mkNode(Kind::BITVECTOR_XOR, node[1], nm->mkNode(sextOpN, sign1));
+      nm->mkNode(Kind::BITVECTOR_XOR, node[1], nm->mkNode(Kind::BITVECTOR_SIGN_EXTEND, sextOpN, sign1));
 
   Node ppc = utils::mkExtract(xor0, size - 2, size - 2);
   Node res = nm->mkNode(Kind::BITVECTOR_AND, utils::mkExtract(xor1, 1, 1), ppc);
@@ -916,13 +916,13 @@ inline Node RewriteRule<UsuboEliminate>::apply(TNode node)
 
   Node zextOp = nm->mkConst<BitVectorZeroExtend>(BitVectorZeroExtend(1));
   Node sub = nm->mkNode(Kind::BITVECTOR_SUB,
-                        nm->mkNode(zextOp, node[0]),
-                        nm->mkNode(zextOp, node[1]));
+                        nm->mkNode(Kind::BITVECTOR_ZERO_EXTEND, zextOp, node[0]),
+                        nm->mkNode(Kind::BITVECTOR_ZERO_EXTEND, zextOp, node[1]));
   uint32_t size = sub.getType().getBitVectorSize();
 
   Node extOp =
       nm->mkConst<BitVectorExtract>(BitVectorExtract(size - 1, size - 1));
-  return nm->mkNode(Kind::EQUAL, nm->mkNode(extOp, sub), one);
+  return nm->mkNode(Kind::EQUAL, nm->mkNode(Kind::BITVECTOR_EXTRACT, extOp, sub), one);
 }
 
 template <>
@@ -949,10 +949,10 @@ inline Node RewriteRule<SsuboEliminate>::apply(TNode node)
   Node extOp =
       nm->mkConst<BitVectorExtract>(BitVectorExtract(size - 1, size - 1));
 
-  Node sign0 = nm->mkNode(extOp, node[0]);
-  Node sign1 = nm->mkNode(extOp, node[1]);
+  Node sign0 = nm->mkNode(Kind::BITVECTOR_EXTRACT, extOp, node[0]);
+  Node sign1 = nm->mkNode(Kind::BITVECTOR_EXTRACT, extOp, node[1]);
   Node sub = nm->mkNode(Kind::BITVECTOR_SUB, node[0], node[1]);
-  Node signs = nm->mkNode(extOp, sub);
+  Node signs = nm->mkNode(Kind::BITVECTOR_EXTRACT, extOp, sub);
 
   Node neg_pos = nm->mkNode(Kind::AND,
                             nm->mkNode(Kind::EQUAL, sign0, one),
