@@ -148,12 +148,11 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss) const
   return expr::narySubstitute(conc, d_fvs, ss);
 }
 
-Node RewriteProofRule::getConclusionFor(
-    const std::vector<Node>& ss,
-    std::vector<Node>& witnessTerms) const
+Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
+                                        std::vector<Node>& witnessTerms) const
 {
   Assert(d_fvs.size() == ss.size());
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   Node conc = getConclusion(true);
   std::unordered_map<TNode, Node> visited;
   Node ret = expr::narySubstitute(conc, d_fvs, ss, visited);

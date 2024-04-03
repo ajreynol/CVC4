@@ -649,7 +649,7 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
       const rewriter::RewriteProofRule& rpr = d_rdb->getRule(dr);
       std::vector<Node> witnessTerms;
       std::vector<Node> ss;
-      for (size_t i=1, npargs = pargs.size(); i<npargs; i++)
+      for (size_t i = 1, npargs = pargs.size(); i < npargs; i++)
       {
         ss.push_back(d_tproc.convert(pargs[i]));
       }
