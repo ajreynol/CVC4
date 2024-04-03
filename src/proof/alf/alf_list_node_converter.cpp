@@ -85,8 +85,7 @@ Node AlfListNodeConverter::postConvert(Node n)
           "$char_type_of",
           {d_tproc.mkInternalApp("alf.typeof", {n[0]}, d_absType)},
           d_absType));
-      children.push_back(
-          d_tproc.mkInternalApp("alf._", ochildren, d_absType));
+      children.push_back(d_tproc.mkInternalApp("alf._", ochildren, d_absType));
       children.insert(children.end(), n.begin(), n.end());
       n = d_tproc.mkInternalApp("_", children, n.getType());
     }

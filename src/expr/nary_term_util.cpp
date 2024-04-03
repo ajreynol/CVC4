@@ -16,6 +16,7 @@
 #include "expr/nary_term_util.h"
 
 #include "expr/attribute.h"
+#include "expr/skolem_manager.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "theory/strings/word.h"
 #include "util/bitvector.h"
@@ -23,7 +24,6 @@
 #include "util/rational.h"
 #include "util/regexp.h"
 #include "util/string.h"
-#include "expr/skolem_manager.h"
 
 using namespace cvc5::internal::kind;
 
@@ -177,7 +177,7 @@ Node getNullTerminator(Kind k, TypeNode tn)
     {
       nullTerm = nm->getSkolemManager()->mkSkolemFunction(SkolemId::BV_EMPTY);
     }
-      break;
+    break;
     case Kind::FINITE_FIELD_ADD:
       if (tn.isFiniteField())
       {

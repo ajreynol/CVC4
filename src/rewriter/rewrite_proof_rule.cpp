@@ -179,7 +179,8 @@ Node RewriteProofRule::getConclusionFor(
         Node subsCtx = visited[ctx];
         Assert(!subsCtx.isNull());
         Node nt = expr::getNullTerminator(ctx.getKind(), subsCtx.getType());
-        AlwaysAssert (!nt.isNull()) << "Failed to get nil terminator from " << subsCtx << ", type " << subsCtx.getType();
+        AlwaysAssert(!nt.isNull()) << "Failed to get nil terminator from "
+                                   << subsCtx << ", type " << subsCtx.getType();
         wargs.push_back(nt);
       }
       else
