@@ -148,12 +148,45 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss) const
   return expr::narySubstitute(conc, d_fvs, ss);
 }
 
-Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss, std::map<Node, Node>& witnessTerms) const
+Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss, std::map<Node, std::pair<Kind, std::vector<Node>>>& witnessTerms) const
 {
+  Assert(d_fvs.size() == ss.size());
   Node conc = getConclusion(true);
   std::unordered_map<TNode, Node> visited;
   Node ret = expr::narySubstitute(conc, d_fvs, ss, visited);
-  
+  std::map<Node, Node>::const_iterator itl;
+  for (size_t i=0, nfvs = ss.size(); i<nfvs; i++)
+  {
+    Kind wk = Kind::UNDEFINED_KIND;
+    std::vector<Node> wargs;
+    TNode v = d_fvs[i];
+    if (!expr::isListVar(v))
+    {
+      // if not a list variable, it is the given term
+      wargs.push_back(ss[i]);
+    }
+    else
+    {
+      itl = d_listVarCtx.find(v);
+      Assert (itl!=d_listVarCtx.end());
+      Node ctx = itl->second;
+      if (ss[i].getNumChildren()==0)
+      {
+        // to determine the type, we get the type of the substitution of the
+        // list context of the variable.
+        Node subsCtx = visited[ctx];
+        Assert (!subsCtx.isNull());
+        Node nt = expr::getNullTerminator(ctx.getKind(), subsCtx.getType());
+        wargs.push_back(nt);
+      }
+      else
+      {
+        wk = ctx.getKind();
+        wargs.insert(wargs.end(), ss[i].begin(), ss[i].end());
+      }
+    }
+    witnessTerms[v] = std::pair<Kind,std::vector<Node>>(wk, wargs);
+  }
   return ret;
 }
 
