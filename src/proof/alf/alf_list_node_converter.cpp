@@ -81,7 +81,7 @@ Node AlfListNodeConverter::postConvert(Node n)
     case Kind::REGEXP_INTER:
       // operators with a ground null terminator
       break;
-    default: 
+    default:
       // not an n-ary kind
       return n;
   }
