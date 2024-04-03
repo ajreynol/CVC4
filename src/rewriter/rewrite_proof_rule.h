@@ -90,13 +90,40 @@ class RewriteProofRule
    * can be used for debugging matches of h against the head of this rule.
    */
   void getMatches(Node h, expr::NotifyMatch* ntm) const;
-  /** Get conclusion of the rule */
+  /** 
+   * Get (uninstantiated) conclusion of the rule.
+   * @param includeContext If we should include the context of this rule (if
+   * the RARE rule is given a "context" as described in the constructor).
+   * @return The (uninstantiated) conclusion of the rule.
+   */
   Node getConclusion(bool includeContext = false) const;
-  /** Get conclusion of the rule for the substituted terms ss */
+  /** 
+   * Get conclusion of the rule for the substituted terms ss for the variables
+   * v = getVarList() of this rule.
+   * 
+   * @param ss The terms to substitute this rule. Each ss[i] is the same sort
+   * as v[i] if v[i] is not a list variable, or is an SEXPR if v[i] is a list
+   * variable,
+   * @return the substituted conclusion of the rule.
+   */
   Node getConclusionFor(const std::vector<Node>& ss) const;
   /**
    * Get conclusion of the rule for the substituted terms ss.
-   * Additionally computes the "witness term" for each variable in the
+   * Additionally computes the "witness term" for each variable in the rule
+   * which gives the corresponding term.
+   * In particular, for each v[i] where v = getVarList(),
+   * witnessTerms[i] is either:
+   * (UNDEFINED_KIND, {t}), specifying that v -> t,
+   * (k, {t1...tn}), specifying that v -> (<k> t1 ... tn).
+   * Note that we don't construct (<k> t1 ... tn) since it may be illegal to
+   * do so if e.g. k=or, and n=1 due to restrictions on the arity of Kinds.
+   * 
+   * @param ss The terms to substitute this rule. Each ss[i] is the same sort
+   * as v[i] if v[i] is not a list variable, or is an SEXPR if v[i] is a list
+   * variable,
+   * @param witnessTerms The computed witness terms for each variable of this
+   * rule.
+   * @return the substituted conclusion of the rule.
    */
   Node getConclusionFor(
       const std::vector<Node>& ss,
