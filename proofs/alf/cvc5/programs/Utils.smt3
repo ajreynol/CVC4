@@ -67,6 +67,8 @@
   (let ((id (alf.nil f)))
     (singleton_elim f id (get_aci_norm_rec f id x))))
 
+(define get_aci_norm_id ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (id S) (x S))
+  (singleton_elim f id (get_aci_norm_rec f id x)))
 
 
 ;; =============== for ACI_NORM associative
@@ -86,3 +88,6 @@
 (define get_a_norm ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (x S))
   (let ((id (alf.nil f)))
     (singleton_elim f id (get_a_norm_rec f id x))))
+
+(define get_a_norm_id ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (id S) (x S))
+  (singleton_elim f id (get_a_norm_rec f id x)))
