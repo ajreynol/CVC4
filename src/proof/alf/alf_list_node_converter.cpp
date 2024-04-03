@@ -115,7 +115,7 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
       case Kind::TUPLE_TYPE:
       {
         std::stringstream ss;
-        ss << "@T." << d_typeCounter;
+        ss << "@T" << d_typeCounter;
         d_typeCounter++;
         Node n = d_tproc.mkInternalSymbol(ss.str(), d_sortType);
         d_params.push_back(n);
@@ -126,7 +126,7 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
       case Kind::FINITE_FIELD_TYPE:
       {
         std::stringstream ss;
-        ss << "@n." << d_intCounter;
+        ss << "@n" << d_intCounter;
         d_intCounter++;
         Node n = d_tproc.mkInternalSymbol(ss.str(), d_nm->integerType());
         d_params.push_back(n);
