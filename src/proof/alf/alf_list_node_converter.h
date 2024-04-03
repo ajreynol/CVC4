@@ -28,9 +28,10 @@ namespace proof {
 class AlfListNodeConverter : public NodeConverter
 {
  public:
-  AlfListNodeConverter(NodeManager * nm, BaseAlfNodeConverter& tproc);
+  AlfListNodeConverter(NodeManager* nm, BaseAlfNodeConverter& tproc);
   /** convert */
   Node postConvert(Node n) override;
+
  private:
   /** The parent tprocerter, used for getting internal symbols and utilities */
   BaseAlfNodeConverter& d_tproc;
@@ -41,14 +42,15 @@ class AlfListNodeConverter : public NodeConverter
 class AlfAbstractTypeConverter
 {
  public:
-  AlfAbstractTypeConverter(NodeManager * nm, BaseAlfNodeConverter& tproc);
+  AlfAbstractTypeConverter(NodeManager* nm, BaseAlfNodeConverter& tproc);
   /** post-convert type */
   Node process(const TypeNode& tn);
   /** get free parameters */
   const std::vector<Node>& getFreeParameters() const;
+
  private:
   /** Pointer to node manager */
-  NodeManager * d_nm;
+  NodeManager* d_nm;
   /** The parent tprocerter, used for getting internal symbols and utilities */
   BaseAlfNodeConverter& d_tproc;
   /** Get the free parameters */
@@ -59,7 +61,7 @@ class AlfAbstractTypeConverter
   /** The type of ALF sorts, which can appear in terms */
   TypeNode d_sortType;
   /** Kind to name */
-  std::map<Kind, std::string> d_kindToName;  
+  std::map<Kind, std::string> d_kindToName;
 };
 
 }  // namespace proof

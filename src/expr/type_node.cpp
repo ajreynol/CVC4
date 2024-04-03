@@ -370,7 +370,7 @@ TypeNode TypeNode::unifyInternal(const TypeNode& t, bool isLub) const
   Kind tk = t.getKind();
   if (k == Kind::TYPE_CONSTANT)
   {
-    if (tk==Kind::SEQUENCE_TYPE && t[0].isFullyAbstract() && isString())
+    if (tk == Kind::SEQUENCE_TYPE && t[0].isFullyAbstract() && isString())
     {
       return isLub ? *this : t;
     }
@@ -378,7 +378,8 @@ TypeNode TypeNode::unifyInternal(const TypeNode& t, bool isLub) const
   }
   if (k != tk)
   {
-    if (k==Kind::SEQUENCE_TYPE && (*this)[0].isFullyAbstract() && t.isString())
+    if (k == Kind::SEQUENCE_TYPE && (*this)[0].isFullyAbstract()
+        && t.isString())
     {
       return isLub ? t : *this;
     }

@@ -22,7 +22,8 @@
 namespace cvc5::internal {
 namespace proof {
 
-AlfListNodeConverter::AlfListNodeConverter(NodeManager * nm, BaseAlfNodeConverter& tproc)
+AlfListNodeConverter::AlfListNodeConverter(NodeManager* nm,
+                                           BaseAlfNodeConverter& tproc)
     : NodeConverter(nm), d_tproc(tproc)
 {
   d_absType = nm->mkAbstractType(Kind::ABSTRACT_TYPE);
@@ -43,7 +44,7 @@ Node AlfListNodeConverter::postConvert(Node n)
     // no nil terminator
     return n;
   }
-  if (!expr::isListVar(n[n.getNumChildren()-1]))
+  if (!expr::isListVar(n[n.getNumChildren() - 1]))
   {
     switch (n.getKind())
     {
@@ -51,22 +52,22 @@ Node AlfListNodeConverter::postConvert(Node n)
       {
         std::vector<Node> children;
         std::vector<Node> ochildren;
-        ochildren.push_back(d_tproc.mkInternalSymbol(printer::smt2::Smt2Printer::smtKindString(k), d_absType));
-        ochildren.push_back(d_tproc.mkInternalApp("$char_type_of", {n[0]}, d_absType));
-        children.push_back(d_tproc.mkInternalApp("alf._", ochildren, d_absType));
+        ochildren.push_back(d_tproc.mkInternalSymbol(
+            printer::smt2::Smt2Printer::smtKindString(k), d_absType));
+        ochildren.push_back(
+            d_tproc.mkInternalApp("$char_type_of", {n[0]}, d_absType));
+        children.push_back(
+            d_tproc.mkInternalApp("alf._", ochildren, d_absType));
         children.insert(children.end(), n.begin(), n.end());
         n = d_tproc.mkInternalApp("_", children, n.getType());
       }
-        break;
+      break;
       case Kind::BITVECTOR_ADD:
       case Kind::BITVECTOR_AND:
-      case Kind::BITVECTOR_OR:
-        break;
+      case Kind::BITVECTOR_OR: break;
       case Kind::FINITE_FIELD_ADD:
-      case Kind::FINITE_FIELD_MULT:
-        break;
-      default:
-        break;
+      case Kind::FINITE_FIELD_MULT: break;
+      default: break;
     }
   }
   size_t nlistChildren = 0;
@@ -85,7 +86,8 @@ Node AlfListNodeConverter::postConvert(Node n)
   return n;
 }
 
-AlfAbstractTypeConverter::AlfAbstractTypeConverter(NodeManager * nm, BaseAlfNodeConverter& tproc)
+AlfAbstractTypeConverter::AlfAbstractTypeConverter(NodeManager* nm,
+                                                   BaseAlfNodeConverter& tproc)
     : d_tproc(tproc), d_typeCounter(0), d_intCounter(0)
 {
   d_sortType = nm->mkSort("Type");
@@ -117,7 +119,7 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
         d_params.push_back(n);
         return n;
       }
-        break;
+      break;
       case Kind::BITVECTOR_TYPE:
       case Kind::FINITE_FIELD_TYPE:
       {
@@ -129,14 +131,12 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
         Node ret = d_tproc.mkInternalApp(d_kindToName[ak], {n}, d_sortType);
         return ret;
       }
-        break;
+      break;
       case Kind::FLOATINGPOINT_TYPE:
-      default:
-        Unhandled() << "Cannot process abstract type kind " << ak;
-        break;
+      default: Unhandled() << "Cannot process abstract type kind " << ak; break;
     }
   }
-  if (tn.getNumChildren()==0)
+  if (tn.getNumChildren() == 0)
   {
     std::stringstream ss;
     ss << tn;
@@ -144,12 +144,13 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
   }
   // get the arguments
   std::vector<Node> asNode;
-  for (size_t i=0, nchild = tn.getNumChildren(); i<nchild; i++)
+  for (size_t i = 0, nchild = tn.getNumChildren(); i < nchild; i++)
   {
     Node pt = process(tn[i]);
     asNode.push_back(pt);
   }
-  return d_tproc.mkInternalApp(d_kindToName[tn.getKind()], {asNode}, d_sortType);
+  return d_tproc.mkInternalApp(
+      d_kindToName[tn.getKind()], {asNode}, d_sortType);
 }
 const std::vector<Node>& AlfAbstractTypeConverter::getFreeParameters() const
 {
