@@ -209,7 +209,7 @@ TrustNode FpExpandDefs::expandDefinition(Node node)
     FloatingPointToUBVTotal newInfo(info);
 
     res =
-        NodeManager::currentNM()->mkNode(  // Kind::FLOATINGPOINT_TO_UBV_TOTAL,
+        NodeManager::currentNM()->mkNode(Kind::FLOATINGPOINT_TO_UBV_TOTAL,
             NodeManager::currentNM()->mkConst(newInfo),
             node[0],
             node[1],
@@ -221,7 +221,7 @@ TrustNode FpExpandDefs::expandDefinition(Node node)
     FloatingPointToSBVTotal newInfo(info);
 
     res =
-        NodeManager::currentNM()->mkNode(  // Kind::FLOATINGPOINT_TO_SBV_TOTAL,
+        NodeManager::currentNM()->mkNode(Kind::FLOATINGPOINT_TO_SBV_TOTAL,
             NodeManager::currentNM()->mkConst(newInfo),
             node[0],
             node[1],

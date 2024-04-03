@@ -188,7 +188,8 @@ Node mkSygusTerm(const Node& op,
   Node ret;
   if (ok == Kind::BUILTIN)
   {
-    ret = nm->mkNode(op, schildren);
+    // FIXME
+    //ret = nm->mkNode(op, schildren);
     Trace("dt-sygus-util") << "...return (builtin) " << ret << std::endl;
     return ret;
   }

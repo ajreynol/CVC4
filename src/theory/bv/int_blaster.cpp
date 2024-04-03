@@ -854,7 +854,7 @@ Node IntBlaster::castToType(Node n, TypeNode tn)
     Assert(tn.isBitVector());
     unsigned bvsize = tn.getBitVectorSize();
     Node intToBVOp = d_nm->mkConst<IntToBitVector>(IntToBitVector(bvsize));
-    return d_nm->mkNode(intToBVOp, n);
+    return d_nm->mkNode(Kind::INT_TO_BITVECTOR, intToBVOp, n);
   }
   // casting bit-vectors to ingers
   Assert(n.getType().isBitVector());
@@ -1040,8 +1040,8 @@ Node IntBlaster::createBVAndNode(Node x,
   {
     // translate the children back to BV
     Node intToBVOp = d_nm->mkConst<IntToBitVector>(IntToBitVector(bvsize));
-    Node bvx = d_nm->mkNode(intToBVOp, x);
-    Node bvy = d_nm->mkNode(intToBVOp, y);
+    Node bvx = d_nm->mkNode(Kind::INT_TO_BITVECTOR, intToBVOp, x);
+    Node bvy = d_nm->mkNode(Kind::INT_TO_BITVECTOR, intToBVOp, y);
     // perform bvand on the bit-vectors
     Node bvand = d_nm->mkNode(Kind::BITVECTOR_AND, bvx, bvy);
     // translate the result to integers

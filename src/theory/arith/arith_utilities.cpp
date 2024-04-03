@@ -326,7 +326,7 @@ Node eliminateBv2Nat(TNode node)
   {
     Node cond =
         nm->mkNode(Kind::EQUAL,
-                   nm->mkNode(nm->mkConst(BitVectorExtract(bit, bit)), node[0]),
+                   nm->mkNode(Kind::BITVECTOR_EXTRACT, nm->mkConst(BitVectorExtract(bit, bit)), node[0]),
                    bvone);
     children.push_back(
         nm->mkNode(Kind::ITE, cond, nm->mkConstInt(Rational(i)), z));

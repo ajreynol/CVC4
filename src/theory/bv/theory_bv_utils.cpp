@@ -341,7 +341,7 @@ Node mkSignExtend(TNode node, unsigned amount)
   NodeManager* nm = NodeManager::currentNM();
   Node signExtendOp =
       nm->mkConst<BitVectorSignExtend>(BitVectorSignExtend(amount));
-  return nm->mkNode(signExtendOp, node);
+  return nm->mkNode(Kind::BITVECTOR_SIGN_EXTEND, signExtendOp, node);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -350,14 +350,14 @@ Node mkExtract(TNode node, unsigned high, unsigned low)
 {
   NodeManager *nm = NodeManager::currentNM();
   Node extractOp = nm->mkConst<BitVectorExtract>(BitVectorExtract(high, low));
-  return nm->mkNode(extractOp, node);
+  return nm->mkNode(Kind::BITVECTOR_EXTRACT, extractOp, node);
 }
 
 Node mkBitOf(TNode node, unsigned index)
 {
   NodeManager *nm = NodeManager::currentNM();
   Node bitOfOp = nm->mkConst<BitVectorBitOf>(BitVectorBitOf(index));
-  return nm->mkNode(bitOfOp, node);
+  return nm->mkNode(Kind::BITVECTOR_BITOF, bitOfOp, node);
 }
 
 /* ------------------------------------------------------------------------- */
