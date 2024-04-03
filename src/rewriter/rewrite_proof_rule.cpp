@@ -149,10 +149,9 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss) const
 }
 
 Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
-                                        std::vector<Node>& witnessTerms) const
+                                        std::vector<std::pair<Kind, std::vector<Node>>>& witnessTerms) const
 {
   Assert(d_fvs.size() == ss.size());
-  NodeManager* nm = NodeManager::currentNM();
   Node conc = getConclusion(true);
   std::unordered_map<TNode, Node> visited;
   Node ret = expr::narySubstitute(conc, d_fvs, ss, visited);
@@ -160,11 +159,12 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
   for (size_t i = 0, nfvs = ss.size(); i < nfvs; i++)
   {
     TNode v = d_fvs[i];
-    Node w;
+    Kind wk = Kind::UNDEFINED_KIND;
+    std::vector<Node> wargs;
     if (!expr::isListVar(v))
     {
       // if not a list variable, it is the given term
-      w = ss[i];
+      wargs.push_back(ss[i]);
     }
     else
     {
@@ -178,15 +178,15 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
         Node subsCtx = visited[ctx];
         Assert(!subsCtx.isNull());
         Node nt = expr::getNullTerminator(ctx.getKind(), subsCtx.getType());
-        w = nt;
+        wargs.push_back(nt);
       }
       else
       {
-        std::vector<Node> wargs(ss[i].begin(), ss[i].end());
-        w = nm->mkNode(ctx.getKind(), wargs);
+        wk = ctx.getKind();
+        wargs.insert(wargs.end(), ss[i].begin(), ss[i].end());
       }
     }
-    witnessTerms.push_back(w);
+    witnessTerms.emplace_back(wk, wargs);
   }
   return ret;
 }

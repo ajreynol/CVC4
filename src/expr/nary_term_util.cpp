@@ -36,7 +36,7 @@ using IsListAttr = expr::Attribute<IsListTag, bool>;
 
 void markListVar(TNode fv)
 {
-  Assert(fv.getKind() == Kind::BOUND_VARIABLE);
+  Assert(fv.isVar());
   fv.setAttribute(IsListAttr(), true);
 }
 

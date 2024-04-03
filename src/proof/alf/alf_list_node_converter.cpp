@@ -63,8 +63,10 @@ Node AlfListNodeConverter::postConvert(Node n)
       }
       break;
       case Kind::BITVECTOR_ADD:
+      case Kind::BITVECTOR_MULT:
       case Kind::BITVECTOR_AND:
-      case Kind::BITVECTOR_OR: break;
+      case Kind::BITVECTOR_OR: 
+      case Kind::BITVECTOR_XOR:break;
       case Kind::FINITE_FIELD_ADD:
       case Kind::FINITE_FIELD_MULT: break;
       default: break;
@@ -88,7 +90,7 @@ Node AlfListNodeConverter::postConvert(Node n)
 
 AlfAbstractTypeConverter::AlfAbstractTypeConverter(NodeManager* nm,
                                                    BaseAlfNodeConverter& tproc)
-    : d_tproc(tproc), d_typeCounter(0), d_intCounter(0)
+    : d_nm(nm), d_tproc(tproc), d_typeCounter(0), d_intCounter(0)
 {
   d_sortType = nm->mkSort("Type");
   d_kindToName[Kind::ARRAY_TYPE] = "Array";
