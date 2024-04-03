@@ -31,10 +31,16 @@
   (
     ((encode_transform (f y)) (_ (encode_transform f) (encode_transform y)))
     ((encode_transform x)     (alf.ite (alf.is_eq (alf.to_str x) x)
+                                ; string constants
+                                ; e.g. "AB" ---> (str.++ "A" "B")
                                 (alf.ite (check_length_gt_one x)
                                   ($str_flatten_word x)
                                   x)
-                                x))
+                              (alf.ite (alf.is_eq (alf.to_bin x) x)
+                                ; bitvector constants
+                                ; e.g. #b0000 ----> (@bv 0 4)
+                                (@bv (alf.to_z x) ($bv_bitwidth x))
+                                x)))
   )
 )
 
