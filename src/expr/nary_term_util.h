@@ -39,7 +39,7 @@ bool hasListVar(TNode n);
  * Get the parent kind of each list variable in n, or fail if a list
  * variable occurs in two contexts.
  */
-bool getListVarContext(TNode n, std::map<Node, Kind>& context);
+bool getListVarContext(TNode n, std::map<Node, Node>& context);
 
 /**
  * Get the null terminator for kind k and type node tn.

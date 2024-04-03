@@ -95,10 +95,10 @@ bool RewriteProofRule::isExplicitVar(Node v) const
 }
 Kind RewriteProofRule::getListContext(Node v) const
 {
-  std::map<Node, Kind>::const_iterator it = d_listVarCtx.find(v);
+  std::map<Node, Node>::const_iterator it = d_listVarCtx.find(v);
   if (it != d_listVarCtx.end())
   {
-    return it->second;
+    return it->second.getKind();
   }
   return Kind::UNDEFINED_KIND;
 }
@@ -147,6 +147,16 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss) const
   Node conc = getConclusion(true);
   return expr::narySubstitute(conc, d_fvs, ss);
 }
+
+Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss, std::map<Node, Node>& witnessTerms) const
+{
+  Node conc = getConclusion(true);
+  std::unordered_map<TNode, Node> visited;
+  Node ret = expr::narySubstitute(conc, d_fvs, ss, visited);
+  
+  return ret;
+}
+
 bool RewriteProofRule::isFixedPoint() const
 {
   return d_context != Node::null();

@@ -68,11 +68,11 @@ bool hasListVar(TNode n)
   return false;
 }
 
-bool getListVarContext(TNode n, std::map<Node, Kind>& context)
+bool getListVarContext(TNode n, std::map<Node, Node>& context)
 {
   std::unordered_set<TNode> visited;
   std::unordered_set<TNode>::iterator it;
-  std::map<Node, Kind>::iterator itc;
+  std::map<Node, Node>::iterator itc;
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(n);
@@ -96,9 +96,9 @@ bool getListVarContext(TNode n, std::map<Node, Kind>& context)
           itc = context.find(cn);
           if (itc == context.end())
           {
-            context[cn] = cur.getKind();
+            context[cn] = cur;
           }
-          else if (itc->second != cur.getKind())
+          else if (itc->second.getKind() != cur.getKind())
           {
             return false;
           }

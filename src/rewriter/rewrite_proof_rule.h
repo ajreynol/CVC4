@@ -94,6 +94,8 @@ class RewriteProofRule
   Node getConclusion(bool includeContext = false) const;
   /** Get conclusion of the rule for the substituted terms ss */
   Node getConclusionFor(const std::vector<Node>& ss) const;
+  /** Get conclusion of the rule for the substituted terms ss */
+  Node getConclusionFor(const std::vector<Node>& ss, std::map<Node, Node>& witnessTerms) const;
 
   /**
    * Is variable explicit? An explicit variable is one that does not occur
@@ -146,7 +148,7 @@ class RewriteProofRule
    */
   std::unordered_set<Node> d_noOccVars;
   /** The context for list variables (see expr::getListVarContext). */
-  std::map<Node, Kind> d_listVarCtx;
+  std::map<Node, Node> d_listVarCtx;
   /** The match trie (for fixed point matching) */
   expr::NaryMatchTrie d_mt;
 };
