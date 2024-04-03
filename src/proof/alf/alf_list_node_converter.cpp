@@ -38,40 +38,57 @@ Node AlfListNodeConverter::postConvert(Node n)
     return n;
   }
   TypeNode tn = n.getType();
-  Node alfNullt = d_tproc.getNullTerminator(k, tn);
-  if (alfNullt.isNull())
+  Node nullt = expr::getNullTerminator(k, tn);
+  if (nullt.isNull())
   {
     // no nil terminator
     return n;
   }
   if (!expr::isListVar(n[n.getNumChildren() - 1]))
   {
+    bool applyParam = false;
+    std::string extractOpName;
     switch (n.getKind())
     {
       case Kind::STRING_CONCAT:
       {
-        std::vector<Node> children;
-        std::vector<Node> ochildren;
-        ochildren.push_back(d_tproc.mkInternalSymbol(
-            printer::smt2::Smt2Printer::smtKindString(k), d_absType));
-        ochildren.push_back(d_tproc.mkInternalApp(
-            "$char_type_of",
-            {d_tproc.mkInternalApp("alf.typeof", {n[0]}, d_absType)},
-            d_absType));
-        children.push_back(
-            d_tproc.mkInternalApp("alf._", ochildren, d_absType));
-        children.insert(children.end(), n.begin(), n.end());
-        n = d_tproc.mkInternalApp("_", children, n.getType());
+        applyParam = true;
+        extractOpName = "$char_type_of";
       }
       break;
       case Kind::BITVECTOR_ADD:
       case Kind::BITVECTOR_MULT:
       case Kind::BITVECTOR_AND:
       case Kind::BITVECTOR_OR:
-      case Kind::BITVECTOR_XOR: break;
+      case Kind::BITVECTOR_XOR:
+      {
+        applyParam = true;
+        extractOpName = "$bv_bitwidth";
+        break;
+      }
       case Kind::FINITE_FIELD_ADD:
-      case Kind::FINITE_FIELD_MULT: break;
+      case Kind::FINITE_FIELD_MULT:
+      {
+        applyParam = true;
+        extractOpName = "$ff_size";
+        break;
+      }
       default: break;
+    }
+    if (applyParam)
+    {
+      std::vector<Node> children;
+      std::vector<Node> ochildren;
+      ochildren.push_back(d_tproc.mkInternalSymbol(
+          printer::smt2::Smt2Printer::smtKindString(k), d_absType));
+      ochildren.push_back(d_tproc.mkInternalApp(
+          "$char_type_of",
+          {d_tproc.mkInternalApp("alf.typeof", {n[0]}, d_absType)},
+          d_absType));
+      children.push_back(
+          d_tproc.mkInternalApp("alf._", ochildren, d_absType));
+      children.insert(children.end(), n.begin(), n.end());
+      n = d_tproc.mkInternalApp("_", children, n.getType());
     }
   }
   size_t nlistChildren = 0;

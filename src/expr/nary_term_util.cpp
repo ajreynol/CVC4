@@ -23,6 +23,7 @@
 #include "util/rational.h"
 #include "util/regexp.h"
 #include "util/string.h"
+#include "expr/skolem_manager.h"
 
 using namespace cvc5::internal::kind;
 
@@ -171,6 +172,11 @@ Node getNullTerminator(Kind k, TypeNode tn)
       {
         nullTerm = theory::bv::utils::mkOne(tn.getBitVectorSize());
       }
+      break;
+    case Kind::BITVECTOR_CONCAT:
+    {
+      nullTerm = nm->getSkolemManager()->mkSkolemFunction(SkolemId::BV_EMPTY);
+    }
       break;
     case Kind::FINITE_FIELD_ADD:
       if (tn.isFiniteField())
