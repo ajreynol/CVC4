@@ -408,6 +408,10 @@ bool isACINorm(Node a, Node b)
 {
   Node an = getACINormalForm(a);
   Node bn = getACINormalForm(b);
+  if (a.getKind()==b.getKind())
+  {
+    return (an==bn);
+  }
   // note we compare three possibilities, to handle cases like
   //   (or (and b true) false) == (and b true),
   // where N((or (and b true) false)) = (and b true),
@@ -421,7 +425,7 @@ bool isACINorm(Node a, Node b)
   //   (or (and b a) false) ---> (and b a) ---> (and a b).
   // We do this for simplicity; proof rules should be given that do these
   // two steps separately.
-  return (an == bn) || (a == bn) || (an == b);
+  return (a == bn) || (an == b);
 }
 
 }  // namespace expr
