@@ -25,11 +25,11 @@
 #include "expr/subs.h"
 #include "options/main_options.h"
 #include "printer/printer.h"
+#include "printer/smt2/smt2_printer.h"
 #include "proof/proof_node_to_sexpr.h"
 #include "rewriter/rewrite_db.h"
 #include "smt/print_benchmark.h"
 #include "theory/strings/theory_strings_utils.h"
-#include "printer/smt2/smt2_printer.h"
 
 namespace cvc5::internal {
 
@@ -648,16 +648,16 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
         Unhandled() << "Failed to get DSL proof rule";
       }
       const rewriter::RewriteProofRule& rpr = d_rdb->getRule(dr);
-      std::vector<Node> ss(pargs.begin()+1, pargs.end());
+      std::vector<Node> ss(pargs.begin() + 1, pargs.end());
       std::vector<std::pair<Kind, std::vector<Node>>> witnessTerms;
       rpr.getConclusionFor(ss, witnessTerms);
       TypeNode absType = nodeManager()->mkAbstractType(Kind::ABSTRACT_TYPE);
       // the arguments are the computed witness terms
       for (const std::pair<Kind, std::vector<Node>>& w : witnessTerms)
       {
-        if (w.first==Kind::UNDEFINED_KIND)
+        if (w.first == Kind::UNDEFINED_KIND)
         {
-          Assert (w.second.size()==1);
+          Assert(w.second.size() == 1);
           args.push_back(d_tproc.convert(w.second[0]));
         }
         else
@@ -667,7 +667,10 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
           {
             wargs.push_back(d_tproc.convert(wc));
           }
-          args.push_back(d_tproc.mkInternalApp(printer::smt2::Smt2Printer::smtKindString(w.first), wargs, absType));
+          args.push_back(d_tproc.mkInternalApp(
+              printer::smt2::Smt2Printer::smtKindString(w.first),
+              wargs,
+              absType));
         }
       }
       return;

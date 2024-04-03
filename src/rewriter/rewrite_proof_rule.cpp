@@ -148,8 +148,9 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss) const
   return expr::narySubstitute(conc, d_fvs, ss);
 }
 
-Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
-                                        std::vector<std::pair<Kind, std::vector<Node>>>& witnessTerms) const
+Node RewriteProofRule::getConclusionFor(
+    const std::vector<Node>& ss,
+    std::vector<std::pair<Kind, std::vector<Node>>>& witnessTerms) const
 {
   Assert(d_fvs.size() == ss.size());
   Node conc = getConclusion(true);

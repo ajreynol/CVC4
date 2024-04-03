@@ -65,8 +65,8 @@ Node AlfListNodeConverter::postConvert(Node n)
       case Kind::BITVECTOR_ADD:
       case Kind::BITVECTOR_MULT:
       case Kind::BITVECTOR_AND:
-      case Kind::BITVECTOR_OR: 
-      case Kind::BITVECTOR_XOR:break;
+      case Kind::BITVECTOR_OR:
+      case Kind::BITVECTOR_XOR: break;
       case Kind::FINITE_FIELD_ADD:
       case Kind::FINITE_FIELD_MULT: break;
       default: break;
