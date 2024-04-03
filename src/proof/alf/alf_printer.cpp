@@ -647,29 +647,20 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
         Unhandled() << "Failed to get DSL proof rule";
       }
       const rewriter::RewriteProofRule& rpr = d_rdb->getRule(dr);
+      std::map<Node, Node> witnessTerms;
+      std::vector<Node> ss;
+      for (size_t i=1, npargs = pargs.size(); i<npargs; i++)
+      {
+        ss.push_back(d_tproc.convert(pargs[i]));
+      }
+      rpr.getConclusionFor(ss, witnessTerms);
       const std::vector<Node>& varList = rpr.getVarList();
       Assert(varList.size() + 1 == pargs.size());
-      NodeManager* nm = NodeManager::currentNM();
       for (size_t i = 0, nvars = varList.size(); i < nvars; i++)
       {
         Node v = varList[i];
-        Node pa = d_tproc.convert(pargs[i + 1]);
-        if (expr::isListVar(v))
-        {
-          std::vector<Node> children(pa.begin(), pa.end());
-          Kind k = rpr.getListContext(v);
-          // need know the type of the null terminator here, and get the
-          // "true" nil terminator.
-          Node t = children.empty() ? expr::getNullTerminator(k, v.getType())
-                                    : nm->mkNode(k, children);
-          AlwaysAssert(!t.isNull())
-              << "Failed to get nil terminator for " << k << " " << v.getType();
-          args.push_back(t);
-        }
-        else
-        {
-          args.push_back(pa);
-        }
+        Assert (witnessTerms.find(v)!=witnessTerms.end());
+        args.push_back(witnessTerms[v]);
         Assert(args.back().getType() == v.getType());
       }
       return;
