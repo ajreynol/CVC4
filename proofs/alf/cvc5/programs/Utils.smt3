@@ -14,11 +14,12 @@
 
 
 ; Version that does not care about f
-(program $dsl.singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (x S) (x1 T) (x2 U :list))
+(program $dsl.singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (x S) (x1 T) (x2 T) (x3 S :list))
   (S) S
   (
-    (($dsl.singleton_elim (f x1 x2))  (alf.ite (alf.is_eq x2 (alf.nil f)) x1 (alf.cons f x1 x2)))
-    (($dsl.singleton_elim x)          x)
+    (($dsl.singleton_elim (f x1 (f x2 x3))) (f x1 (f x2 x3)))
+    (($dsl.singleton_elim (f x1 x3))    x1)
+    (($dsl.singleton_elim x)            x)
   )
 )
 
