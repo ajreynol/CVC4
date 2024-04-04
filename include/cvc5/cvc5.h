@@ -3500,6 +3500,7 @@ class CVC5_EXPORT TermManager
   friend class DatatypeConstructorDecl;
   friend class DatatypeDecl;
   friend class Grammar;
+  friend class Plugin;
   friend class Solver;
 
  public:
