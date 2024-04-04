@@ -24,50 +24,44 @@ namespace cvc5::internal {
 namespace proof {
 
 /**
- * Convert list variables in side conditions. This class tprocerts nodes
- * representing LFSC side condition programs to a form that prints properly
- * in LFSC. In particular, this node tprocerter gives consideration to
- * input variables that are "list" variables in the rewrite DSL.
- *
- * For example, for DSL rule:
- *   (define-rule bool-and-flatten
- *      ((xs Bool :list) (b Bool) (ys Bool :list) (zs Bool :list))
- *      (and xs (and b ys) zs) (and xs zs b ys))
- * This is a helper class used to compute the conclusion of this rule. This
- * class is used to turn
- *   (= (and xs (and b ys) zs) (and xs zs b ys))
- * into:
- *   (=
- *      (nary_concat
- *        f_and
- *        xs
- *        (and (and b ys) zs)
- *        true)
- *      (nary_elim
- *        f_and
- *        (nary_concat f_and xs (nary_concat f_and zs (and b ys) true) true)
- *        true)))
- * Where notice that the list variables xs, ys, zs are treated as lists to
- * concatenate instead of being subterms, according to the semantics of list
- * variables in the rewrite DSL. For exact definitions of nary_elim,
- * nary_concat, see the LFSC signature nary_programs.plf.
- *
- * This runs in two modes.
- * - If isPre is true, then the input is in its original form, and we add
- * applications of nary_elim.
- * - If isPre is false, then the input is in tprocerted form, and we add
- * applications of nary_concat.
  */
 class AlfListNodeConverter : public NodeConverter
 {
  public:
   AlfListNodeConverter(NodeManager* nm, BaseAlfNodeConverter& tproc);
-  /** tprocert to internal */
+  /** convert */
   Node postConvert(Node n) override;
 
  private:
   /** The parent tprocerter, used for getting internal symbols and utilities */
   BaseAlfNodeConverter& d_tproc;
+  /** Abstract type */
+  TypeNode d_absType;
+};
+
+class AlfAbstractTypeConverter
+{
+ public:
+  AlfAbstractTypeConverter(NodeManager* nm, BaseAlfNodeConverter& tproc);
+  /** post-convert type */
+  Node process(const TypeNode& tn);
+  /** get free parameters */
+  const std::vector<Node>& getFreeParameters() const;
+
+ private:
+  /** Pointer to node manager */
+  NodeManager* d_nm;
+  /** The parent tprocerter, used for getting internal symbols and utilities */
+  BaseAlfNodeConverter& d_tproc;
+  /** Get the free parameters */
+  std::vector<Node> d_params;
+  /** Counters */
+  size_t d_typeCounter;
+  size_t d_intCounter;
+  /** The type of ALF sorts, which can appear in terms */
+  TypeNode d_sortType;
+  /** Kind to name */
+  std::map<Kind, std::string> d_kindToName;
 };
 
 }  // namespace proof

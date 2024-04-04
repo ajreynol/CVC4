@@ -1,4 +1,4 @@
-; COMMAND-LINE: --proof-flatten --lfsc-expand-trust
+; COMMAND-LINE: --lfsc-flatten --lfsc-expand-trust
 ; EXPECT: unsat
 
 (set-logic QF_UFLIRA)

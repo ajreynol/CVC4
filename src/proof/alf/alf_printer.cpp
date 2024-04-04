@@ -25,6 +25,7 @@
 #include "expr/subs.h"
 #include "options/main_options.h"
 #include "printer/printer.h"
+#include "printer/smt2/smt2_printer.h"
 #include "proof/proof_node_to_sexpr.h"
 #include "rewriter/rewrite_db.h"
 #include "smt/print_benchmark.h"
@@ -36,12 +37,10 @@ namespace proof {
 
 AlfPrinter::AlfPrinter(Env& env,
                        BaseAlfNodeConverter& atp,
-                       bool flatten,
                        rewriter::RewriteDb* rdb)
     : EnvObj(env),
       d_tproc(atp),
       d_termLetPrefix("@t"),
-      d_proofFlatten(flatten),
       d_ltproc(nodeManager(), atp),
       d_rdb(rdb)
 {
@@ -323,35 +322,38 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
   Subs su;
 
   out << "(declare-rule dsl." << r << " (";
+  AlfAbstractTypeConverter aatc(nodeManager(), d_tproc);
+  std::stringstream ssExplicit;
   for (size_t i = 0, nvars = uvarList.size(); i < nvars; i++)
   {
     if (i > 0)
     {
-      out << " ";
+      ssExplicit << " ";
     }
     const Node& uv = uvarList[i];
     std::stringstream sss;
     sss << uv;
     Node uvi = d_tproc.mkInternalSymbol(sss.str(), uv.getType());
     su.add(varList[i], uvi);
-    out << "(" << uv << " ";
+    ssExplicit << "(" << uv << " ";
     TypeNode uvt = uv.getType();
-    // NOTE: for now just fully abstract whenever necessary
-    if (expr::hasAbstractComponentType(uvt))
-    {
-      out << "alf.?";
-    }
-    else
-    {
-      out << uv.getType();
-    }
+    Node uvtp = aatc.process(uvt);
+    ssExplicit << uvtp;
     if (expr::isListVar(uv))
     {
       expr::markListVar(uvi);
-      out << " :list";
+      ssExplicit << " :list";
     }
-    out << ")";
+    ssExplicit << ")";
   }
+  // print implicit parameters
+  const std::vector<Node>& params = aatc.getFreeParameters();
+  for (const Node& p : params)
+  {
+    out << "(" << p << " " << p.getType() << " :implicit) ";
+  }
+  // now print explicit variables
+  out << ssExplicit.str();
   out << ")" << std::endl;
   if (!conds.empty())
   {
@@ -382,9 +384,9 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
   }
   out << ")" << std::endl;
   Node sconc = d_tproc.convert(su.apply(conc));
+  sconc = d_ltproc.convert(sconc);
   Assert(sconc.getKind() == Kind::EQUAL);
-  out << "  :conclusion (= " << sconc[0] << " " << d_ltproc.convert(sconc[1])
-      << ")" << std::endl;
+  out << "  :conclusion (= " << sconc[0] << " " << sconc[1] << ")" << std::endl;
   out << ")" << std::endl;
 }
 
@@ -514,19 +516,6 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
     // [6] print proof body
     printProofInternal(aout, pnBody);
   }
-  // if flattened, print the full proof as ident
-  /*
-  if (!d_proofFlatten)
-  {
-    d_pfIdCounter++;
-    std::map<const ProofNode*, Node>::iterator it = d_pnodeMap.find(pnBody);
-    if (it != d_pnodeMap.end())
-    {
-      aprint.printStep(
-          "identity", pnBody->getResult(), d_pfIdCounter, {it->second}, {});
-    }
-  }
-  */
 }
 
 void AlfPrinter::printProofInternal(AlfPrintChannel* out, const ProofNode* pn)
@@ -659,30 +648,30 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
         Unhandled() << "Failed to get DSL proof rule";
       }
       const rewriter::RewriteProofRule& rpr = d_rdb->getRule(dr);
-      const std::vector<Node>& varList = rpr.getVarList();
-      Assert(varList.size() + 1 == pargs.size());
-      NodeManager* nm = NodeManager::currentNM();
-      for (size_t i = 0, nvars = varList.size(); i < nvars; i++)
+      std::vector<Node> ss(pargs.begin() + 1, pargs.end());
+      std::vector<std::pair<Kind, std::vector<Node>>> witnessTerms;
+      rpr.getConclusionFor(ss, witnessTerms);
+      TypeNode absType = nodeManager()->mkAbstractType(Kind::ABSTRACT_TYPE);
+      // the arguments are the computed witness terms
+      for (const std::pair<Kind, std::vector<Node>>& w : witnessTerms)
       {
-        Node v = varList[i];
-        Node pa = d_tproc.convert(pargs[i + 1]);
-        if (expr::isListVar(v))
+        if (w.first == Kind::UNDEFINED_KIND)
         {
-          std::vector<Node> children(pa.begin(), pa.end());
-          Kind k = rpr.getListContext(v);
-          // need know the type of the null terminator here, and get the
-          // "true" nil terminator.
-          Node t = children.empty() ? d_tproc.getNullTerminator(k, v.getType())
-                                    : nm->mkNode(k, children);
-          AlwaysAssert(!t.isNull())
-              << "Failed to get nil terminator for " << k << " " << v.getType();
-          args.push_back(t);
+          Assert(w.second.size() == 1);
+          args.push_back(d_tproc.convert(w.second[0]));
         }
         else
         {
-          args.push_back(pa);
+          std::vector<Node> wargs;
+          for (const Node& wc : w.second)
+          {
+            wargs.push_back(d_tproc.convert(wc));
+          }
+          args.push_back(d_tproc.mkInternalApp(
+              printer::smt2::Smt2Printer::smtKindString(w.first),
+              wargs,
+              absType));
         }
-        Assert(args.back().getType() == v.getType());
       }
       return;
     }
@@ -731,60 +720,6 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
     }
     getArgsFromProofRule(pn, args);
   }
-  // if not flattening proofs
-  /*
-  if (!d_proofFlatten)
-  {
-    std::vector<Node> pargs;
-    std::string rname;
-    if (!handled)
-    {
-      rname = "trust";
-      pargs.push_back(conclusion);
-    }
-    else
-    {
-      rname = getRuleName(pn);
-      std::map<Node, size_t>::iterator ita;
-      std::map<const ProofNode*, Node>::iterator itp;
-      for (const std::shared_ptr<ProofNode>& c : children)
-      {
-        Node arg;
-        if (c->getRule() == ProofRule::ASSUME)
-        {
-          ita = d_passumeMap.find(c->getResult());
-          Assert(ita != d_passumeMap.end());
-          arg = allocatePremise(ita->second);
-        }
-        else
-        {
-          itp = d_pnodeMap.find(c.get());
-          Assert(itp != d_pnodeMap.end());
-          arg = itp->second;
-        }
-        pargs.push_back(arg);
-      }
-      if (isPop)
-      {
-        // we must manually print pops
-        size_t id = allocateProofId(pn, wasAlloc);
-        out->printStep(rname, conclusionPrint, id, pargs, args, isPop);
-        if (d_pnodeMap.find(pn) == d_pnodeMap.end())
-        {
-          d_pnodeMap[pn] = allocatePremise(id);
-        }
-        return;
-      }
-      pargs.insert(pargs.end(), args.begin(), args.end());
-    }
-    // otherwise just make the node
-    if (d_pnodeMap.find(pn) == d_pnodeMap.end())
-    {
-      d_pnodeMap[pn] = d_tproc.mkInternalApp(rname, pargs, d_pfType);
-    }
-    return;
-  }
-  */
   size_t id = allocateProofId(pn, wasAlloc);
   std::vector<size_t> premises;
   // get the premises

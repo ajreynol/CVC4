@@ -38,10 +38,7 @@ namespace proof {
 class AlfPrinter : protected EnvObj
 {
  public:
-  AlfPrinter(Env& env,
-             BaseAlfNodeConverter& atp,
-             bool flatten,
-             rewriter::RewriteDb* rdb);
+  AlfPrinter(Env& env, BaseAlfNodeConverter& atp, rewriter::RewriteDb* rdb);
   ~AlfPrinter() {}
 
   /**
@@ -128,8 +125,6 @@ class AlfPrinter : protected EnvObj
   TypeNode d_pfType;
   /** term prefix */
   std::string d_termLetPrefix;
-  /** Flatten */
-  bool d_proofFlatten;
   /** The false node */
   Node d_false;
   /** List node converter */
