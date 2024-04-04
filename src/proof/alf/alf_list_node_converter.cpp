@@ -32,43 +32,16 @@ AlfListNodeConverter::AlfListNodeConverter(NodeManager* nm,
 Node AlfListNodeConverter::postConvert(Node n)
 {
   Kind k = n.getKind();
-  Node nproc = n;
-  bool applyParam = false;
-  std::string extractOpName;
   switch (k)
   {
     case Kind::STRING_CONCAT:
-    {
-      if (!expr::isListVar(n[n.getNumChildren() - 1]))
-      {
-        applyParam = true;
-        extractOpName = "$char_type_of";
-      }
-    }
-    break;
     case Kind::BITVECTOR_ADD:
     case Kind::BITVECTOR_MULT:
     case Kind::BITVECTOR_AND:
     case Kind::BITVECTOR_OR:
     case Kind::BITVECTOR_XOR:
-    {
-      if (!expr::isListVar(n[n.getNumChildren() - 1]))
-      {
-        applyParam = true;
-        extractOpName = "$bv_bitwidth";
-      }
-      break;
-    }
     case Kind::FINITE_FIELD_ADD:
     case Kind::FINITE_FIELD_MULT:
-    {
-      if (!expr::isListVar(n[n.getNumChildren() - 1]))
-      {
-        applyParam = true;
-        extractOpName = "$ff_size";
-      }
-      break;
-    }
     case Kind::OR:
     case Kind::AND:
     case Kind::SEP_STAR:
@@ -85,21 +58,6 @@ Node AlfListNodeConverter::postConvert(Node n)
       // not an n-ary kind
       return n;
   }
-  // if we need to disambiguate the operator
-  if (applyParam)
-  {
-    std::vector<Node> children;
-    std::vector<Node> ochildren;
-    ochildren.push_back(d_tproc.mkInternalSymbol(
-        printer::smt2::Smt2Printer::smtKindString(k), d_absType));
-    ochildren.push_back(d_tproc.mkInternalApp(
-        extractOpName,
-        {d_tproc.mkInternalApp("alf.typeof", {n[0]}, d_absType)},
-        d_absType));
-    children.push_back(d_tproc.mkInternalApp("alf._", ochildren, d_absType));
-    children.insert(children.end(), n.begin(), n.end());
-    nproc = d_tproc.mkInternalApp("_", children, n.getType());
-  }
   size_t nlistChildren = 0;
   for (const Node& nc : n)
   {
@@ -111,9 +69,9 @@ Node AlfListNodeConverter::postConvert(Node n)
   // if less than 2 non-list children, it might collapse to a single element
   if (nlistChildren < 2)
   {
-    return d_tproc.mkInternalApp("$dsl.singleton_elim", {nproc}, n.getType());
+    return d_tproc.mkInternalApp("$dsl.singleton_elim", {n}, n.getType());
   }
-  return nproc;
+  return n;
 }
 
 AlfAbstractTypeConverter::AlfAbstractTypeConverter(NodeManager* nm,
