@@ -233,7 +233,7 @@ class TheoryEngine : protected EnvObj
    * Returns true if x -> val is a legal elimination of variable x. This is
    * useful for ppAssert, when x = val is an entailed equality. This function
    * determines whether indeed x can be eliminated from the problem via the
-   * substituion x -> val.
+   * substitution x -> val.
    *
    * The following criteria imply that x -> val is *not* a legal elimination:
    * (1) If x is contained in val,
@@ -675,7 +675,7 @@ class TheoryEngine : protected EnvObj
   std::unique_ptr<theory::PartitionGenerator> d_partitionGen;
   /** The list of modules */
   std::vector<theory::TheoryEngineModule*> d_modules;
-  /** User pluging modules */
+  /** User plugin modules */
   std::vector<std::unique_ptr<theory::PluginModule>> d_userPlugins;
 
 }; /* class TheoryEngine */

@@ -275,6 +275,7 @@ class Env
   void addPlugin(Plugin* p);
   /** Get plugins */
   const std::vector<Plugin*>& getPlugins() const;
+
   /** get oracle checker */
   theory::quantifiers::OracleChecker* getOracleChecker() const;
 
