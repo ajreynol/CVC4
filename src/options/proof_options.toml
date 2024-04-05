@@ -246,15 +246,12 @@ name   = "Proof"
   name = "sketch"
   help = "A sketch given by the SAT solver."
 
-
-
-
 [[option]]
   name       = "alfDslMode"
   category   = "expert"
   long       = "alf-dsl-mode=MODE"
   type       = "AlfDslMode"
-  default    = "OFF"
+  default    = "ON"
   help       = "dsl mode for alf"
   help_mode  = "DSL mode for ALF."
 [[option.mode.OFF]]
