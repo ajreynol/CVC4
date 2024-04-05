@@ -263,3 +263,11 @@ name   = "Proof"
 [[option.mode.TRUST]]
   name       = "trust"
   help       = "trust"
+
+[[option]]
+  name       = "alfAllowTrust"
+  category   = "expert"
+  long       = "alf-allow-trust"
+  type       = "bool"
+  default    = "true"
+  help       = "Whether to allow trust in the ALF printer"
