@@ -14,12 +14,11 @@
 
 
 ; Version that does not care about f
-(program $dsl.singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (x S) (x1 T) (x2 T) (x3 S :list))
+(program $dsl.singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (x S) (x1 T) (x2 T :list))
   (S) S
   (
-    (($dsl.singleton_elim (f x1 (f x2 x3))) (f x1 (f x2 x3)))
-    (($dsl.singleton_elim (f x1 x3))    x1)
-    (($dsl.singleton_elim x)            x)
+    (($dsl.singleton_elim (f x1 x2))  (alf.ite (alf.is_eq x2 (alf.nil f x1 x2)) x1 (alf.cons f x1 x2)))
+    (($dsl.singleton_elim x)          x)
   )
 )
 
@@ -30,7 +29,7 @@
 (program singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (id S) (x S) (x1 T) (x2 U :list))
   ((-> T U S) S S) S
   (
-    ((singleton_elim f id (f x1 x2))  (alf.ite (alf.is_eq x2 id) x1 (alf.cons f x1 x2)))
+    ((singleton_elim f id (f x1 x2))  (alf.ite (alf.is_eq x2 id) x1 (f x1 x2)))
     ((singleton_elim f id x)          x)
   )
 )
@@ -63,14 +62,11 @@
   )
 )
 
-; Normalize an application of an ACI operator, where the identity element is assumed to be its nil terminator.
-(define get_aci_norm ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (x S))
-  (let ((id (alf.nil f)))
-    (singleton_elim f id (get_aci_norm_rec f id x))))
-
-(define get_aci_norm_id ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (id S) (x S))
-  (singleton_elim f id (get_aci_norm_rec f id x)))
-
+; Normalize an application of an ACI operator.
+(define get_aci_norm ((T Type :implicit) (t T))
+  (alf.match ((S Type) (U Type) (f (-> S U U)) (x S) (y U :list))
+    t
+    (((f x y) (let ((id (alf.nil f x y))) (singleton_elim f id (get_aci_norm_rec f id t)))))))
 
 ;; =============== for ACI_NORM associative
 
@@ -85,10 +81,9 @@
   )
 )
 
-; Normalize an application of an associative operator, where the identity element is assumed to be its nil terminator.
-(define get_a_norm ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (x S))
-  (let ((id (alf.nil f)))
-    (singleton_elim f id (get_a_norm_rec f id x))))
+; Normalize an application of an associative operator.
+(define get_a_norm ((T Type :implicit) (t T))
+  (alf.match ((S Type) (U Type) (f (-> S U U)) (x S) (y U :list))
+    t
+    (((f x y) (let ((id (alf.nil f x y))) (singleton_elim f id (get_a_norm_rec f id t)))))))
 
-(define get_a_norm_id ((T Type :implicit) (S Type :implicit) (U Type :implicit) (f (-> T U S)) (id S) (x S))
-  (singleton_elim f id (get_a_norm_rec f id x)))
