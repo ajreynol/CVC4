@@ -217,7 +217,7 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
     return true;
   }
 
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   // constant
   if (n.getMetaKind() == kind::metakind::CONSTANT)
   {
@@ -546,7 +546,7 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
   if (k == Kind::DATATYPE_TYPE || k == Kind::TUPLE_TYPE
       || k == Kind::NULLABLE_TYPE)
   {
-    const DType& dt = nodeManager()->getDTypeFor(n);
+    const DType& dt = NodeManager::currentNM()->getDTypeFor(n);
     if (dt.isTuple())
     {
       unsigned int nargs = dt[0].getNumArgs();
@@ -2106,7 +2106,7 @@ std::string Smt2Printer::sygusGrammarString(const TypeNode& t)
     std::list<TypeNode> typesToPrint;
     grammarTypes.insert(t);
     typesToPrint.push_back(t);
-    NodeManager* nm = nodeManager();
+    NodeManager* nm = NodeManager::currentNM();
     // for each datatype in grammar
     //   name
     //   sygus type

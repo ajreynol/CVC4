@@ -277,5 +277,5 @@ Node NodeConverter::postConvertUntyped(Node orig,
 TypeNode NodeConverter::preConvertType(TypeNode tn) { return tn; }
 TypeNode NodeConverter::postConvertType(TypeNode tn) { return tn; }
 bool NodeConverter::shouldTraverse(Node n) { return true; }
-
+NodeManager * NodeConverter::nodeManager() const { return d_nm; }
 }  // namespace cvc5::internal

@@ -112,7 +112,8 @@ class NodeConverter
  protected:
   /** The underlying node manager */
   NodeManager* d_nm;
-
+  /** Get the node manager */
+  NodeManager * nodeManager() const;
  private:
   /** Add to cache */
   void addToCache(TNode cur, TNode ret);

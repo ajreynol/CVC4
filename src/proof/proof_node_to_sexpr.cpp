@@ -29,7 +29,7 @@ namespace cvc5::internal {
 
 ProofNodeToSExpr::ProofNodeToSExpr()
 {
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   // use raw symbols so that `:args` is not converted to `|:args|`
   d_conclusionMarker = nm->mkRawSymbol(":conclusion", nm->sExprType());
   d_argsMarker = nm->mkRawSymbol(":args", nm->sExprType());
@@ -37,7 +37,7 @@ ProofNodeToSExpr::ProofNodeToSExpr()
 
 Node ProofNodeToSExpr::convertToSExpr(const ProofNode* pn, bool printConclusion)
 {
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   std::map<const ProofNode*, Node>::iterator it;
   std::vector<const ProofNode*> visit;
   std::vector<const ProofNode*> traversing;
@@ -124,7 +124,7 @@ Node ProofNodeToSExpr::getOrMkProofRuleVariable(ProofRule r)
   }
   std::stringstream ss;
   ss << r;
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   Node var = nm->mkBoundVar(ss.str(), nm->sExprType());
   d_pfrMap[r] = var;
   return var;
@@ -145,7 +145,7 @@ Node ProofNodeToSExpr::getOrMkKindVariable(TNode n)
   }
   std::stringstream ss;
   ss << k;
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   Node var = nm->mkBoundVar(ss.str(), nm->sExprType());
   d_kindMap[k] = var;
   return var;
@@ -167,7 +167,7 @@ Node ProofNodeToSExpr::getOrMkTheoryIdVariable(TNode n)
   }
   std::stringstream ss;
   ss << tid;
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   Node var = nm->mkBoundVar(ss.str(), nm->sExprType());
   d_tidMap[tid] = var;
   return var;
@@ -189,7 +189,7 @@ Node ProofNodeToSExpr::getOrMkMethodIdVariable(TNode n)
   }
   std::stringstream ss;
   ss << mid;
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   Node var = nm->mkBoundVar(ss.str(), nm->sExprType());
   d_midMap[mid] = var;
   return var;
@@ -210,7 +210,7 @@ Node ProofNodeToSExpr::getOrMkTrustIdVariable(TNode n)
   }
   std::stringstream ss;
   ss << tid;
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   Node var = nm->mkBoundVar(ss.str(), nm->sExprType());
   d_tridMap[tid] = var;
   return var;
@@ -231,7 +231,7 @@ Node ProofNodeToSExpr::getOrMkInferenceIdVariable(TNode n)
   }
   std::stringstream ss;
   ss << iid;
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   Node var = nm->mkBoundVar(ss.str(), nm->sExprType());
   d_iidMap[iid] = var;
   return var;
@@ -253,7 +253,7 @@ Node ProofNodeToSExpr::getOrMkDslRewriteVariable(TNode n)
   }
   std::stringstream ss;
   ss << rid;
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   Node var = nm->mkBoundVar(ss.str(), nm->sExprType());
   d_dslrMap[rid] = var;
   return var;
@@ -268,7 +268,7 @@ Node ProofNodeToSExpr::getOrMkNodeVariable(TNode n)
   }
   std::stringstream ss;
   ss << n;
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   Node var = nm->mkBoundVar(ss.str(), nm->sExprType());
   d_nodeMap[n] = var;
   return var;

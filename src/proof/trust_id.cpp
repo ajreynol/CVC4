@@ -55,7 +55,7 @@ std::ostream& operator<<(std::ostream& out, TrustId id)
 
 Node mkTrustId(TrustId id)
 {
-  return nodeManager()->mkConstInt(
+  return NodeManager::currentNM()->mkConstInt(
       Rational(static_cast<uint32_t>(id)));
 }
 
