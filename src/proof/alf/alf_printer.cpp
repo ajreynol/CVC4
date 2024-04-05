@@ -748,7 +748,8 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
   {
     if (!options().proof.alfAllowTrust)
     {
-      Unreachable() << "An ALF proof equires a trust step for " << pn->getRule() << ", but --alf-allow-trust is false" << std::endl;
+      Unreachable() << "An ALF proof equires a trust step for " << pn->getRule()
+                    << ", but --alf-allow-trust is false" << std::endl;
     }
     out->printTrustStep(pn->getRule(),
                         conclusionPrint,
