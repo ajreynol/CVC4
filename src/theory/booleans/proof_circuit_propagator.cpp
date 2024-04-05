@@ -33,7 +33,7 @@ namespace {
 template <typename T>
 Node mkInt(T val)
 {
-  return NodeManager::currentNM()->mkConstInt(Rational(val));
+  return nodeManager()->mkConstInt(Rational(val));
 }
 
 /**
@@ -270,7 +270,7 @@ std::shared_ptr<ProofNode> ProofCircuitPropagator::mkCResolution(
     const std::vector<Node>& lits,
     const std::vector<bool>& polarity)
 {
-  auto* nm = NodeManager::currentNM();
+  auto* nm = nodeManager();
   std::vector<std::shared_ptr<ProofNode>> children = {clause};
   std::vector<Node> cpols;
   std::vector<Node> clits;
@@ -316,7 +316,7 @@ std::shared_ptr<ProofNode> ProofCircuitPropagator::mkCResolution(
 std::shared_ptr<ProofNode> ProofCircuitPropagator::mkResolution(
     const std::shared_ptr<ProofNode>& clause, const Node& lit, bool polarity)
 {
-  auto* nm = NodeManager::currentNM();
+  auto* nm = nodeManager();
   if (polarity)
   {
     if (lit.getKind() == Kind::NOT)

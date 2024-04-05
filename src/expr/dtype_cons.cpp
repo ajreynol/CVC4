@@ -54,7 +54,7 @@ void DTypeConstructor::addArg(std::string selectorName, TypeNode rangeType)
   // create the proper selector type)
   Assert(!isResolved());
   Assert(!rangeType.isNull());
-  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+  SkolemManager* sm = nodeManager()->getSkolemManager();
   Node sel = sm->mkDummySkolem("unresolved_" + selectorName,
                                rangeType,
                                "is an unresolved selector type placeholder",
@@ -92,7 +92,7 @@ Node DTypeConstructor::getConstructor() const
 Node DTypeConstructor::getInstantiatedConstructor(TypeNode returnType) const
 {
   Assert(isResolved());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(
       Kind::APPLY_TYPE_ASCRIPTION,
       nm->mkConst(AscriptionType(getInstantiatedConstructorType(returnType))),
@@ -112,7 +112,7 @@ void DTypeConstructor::setSygus(Node op)
   if (op.getKind() == Kind::SKOLEM)
   {
     // check if stands for the "any constant" constructor
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     SkolemManager* sm = nm->getSkolemManager();
     if (sm->getInternalId(op) == InternalSkolemId::SYGUS_ANY_CONSTANT)
     {
@@ -408,7 +408,7 @@ Node DTypeConstructor::computeGroundTerm(TypeNode t,
                                          std::map<TypeNode, Node>& gt,
                                          bool isValue) const
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> groundTerms;
   groundTerms.push_back(getConstructor());
   Trace("datatypes-init") << "cons " << d_constructor
@@ -538,7 +538,7 @@ bool DTypeConstructor::resolve(
   Trace("datatypes") << "DTypeConstructor::resolve, self type is " << self
                      << std::endl;
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   size_t index = 0;
   std::vector<TypeNode> argTypes;

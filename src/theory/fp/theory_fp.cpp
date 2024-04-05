@@ -41,7 +41,7 @@ namespace fp {
 namespace helper {
 Node buildConjunct(const std::vector<TNode> &assumptions) {
   if (assumptions.size() == 0) {
-    return NodeManager::currentNM()->mkConst<bool>(true);
+    return nodeManager()->mkConst<bool>(true);
 
   } else if (assumptions.size() == 1) {
     return assumptions[0];
@@ -72,7 +72,7 @@ TheoryFp::TheoryFp(Env& env, OutputChannel& out, Valuation valuation)
       d_notify(d_im),
       d_wbFactsCache(userContext()),
       d_invalidateModelCache(context(), true),
-      d_true(NodeManager::currentNM()->mkConst(true))
+      d_true(nodeManager()->mkConst(true))
 {
   // indicate we are using the default theory state and inference manager
   d_theoryState = &d_state;
@@ -187,7 +187,7 @@ bool TheoryFp::refineAbstraction(TheoryModel *m, TNode abstract, TNode concrete)
     Assert(undefValue.isConst());
 
     // Work out the actual value for those args
-    NodeManager *nm = NodeManager::currentNM();
+    NodeManager *nm = nodeManager();
 
     Node evaluate =
         nm->mkNode(Kind::FLOATINGPOINT_TO_REAL_TOTAL, floatValue, undefValue);
@@ -303,7 +303,7 @@ bool TheoryFp::refineAbstraction(TheoryModel *m, TNode abstract, TNode concrete)
     Assert(realValue.isConst());
 
     // Work out the actual value for those args
-    NodeManager *nm = NodeManager::currentNM();
+    NodeManager *nm = nodeManager();
 
     Node evaluate =
         nm->mkNode(Kind::FLOATINGPOINT_TO_FP_FROM_REAL,
@@ -423,7 +423,7 @@ void TheoryFp::wordBlastAndEquateTerm(TNode node)
         << "TheoryFp::wordBlastTerm(): additional assertion  " << addA
         << std::endl;
 
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
 
     handleLemma(
         nm->mkNode(
@@ -442,7 +442,7 @@ void TheoryFp::wordBlastAndEquateTerm(TNode node)
     {
       Assert(wordBlasted.getType().isBitVector());
 
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
 
       handleLemma(
           nm->mkNode(
@@ -465,7 +465,7 @@ void TheoryFp::wordBlastAndEquateTerm(TNode node)
       Assert(wordBlasted.getType().isBitVector());
 
       handleLemma(
-          NodeManager::currentNM()->mkNode(Kind::EQUAL, node, wordBlasted),
+          nodeManager()->mkNode(Kind::EQUAL, node, wordBlasted),
           InferenceId::FP_EQUATE_TERM);
     }
   }
@@ -506,7 +506,7 @@ void TheoryFp::registerTerm(TNode node)
   if ((k == Kind::FLOATINGPOINT_IS_NAN) || (k == Kind::FLOATINGPOINT_IS_ZERO)
       || (k == Kind::FLOATINGPOINT_IS_INF))
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     FloatingPointSize s = node[0].getType().getConst<FloatingPointSize>();
     Node equalityAlias = Node::null();
 
@@ -548,7 +548,7 @@ void TheoryFp::registerTerm(TNode node)
   else if (k == Kind::FLOATINGPOINT_TO_REAL_TOTAL)
   {
     // Purify (fp.to_real x)
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     SkolemManager* sm = nm->getSkolemManager();
     Node sk = sm->mkPurifySkolem(node);
     handleLemma(node.eqNode(sk), InferenceId::FP_REGISTER_TERM);
@@ -574,7 +574,7 @@ void TheoryFp::registerTerm(TNode node)
   else if (k == Kind::FLOATINGPOINT_TO_FP_FROM_REAL)
   {
     // Purify ((_ to_fp eb sb) rm x)
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     SkolemManager* sm = nm->getSkolemManager();
     Node sk = sm->mkPurifySkolem(node);
     handleLemma(node.eqNode(sk), InferenceId::FP_REGISTER_TERM);
@@ -940,7 +940,7 @@ bool TheoryFp::collectModelValues(TheoryModel* m,
       // components of `node` except `(sign node)` (the sign component is
       // assignable, meaning that the model builder can pick an arbitrary value
       // for it if it hasn't been assigned in the equality engine).
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       Node compNaN = nm->mkNode(Kind::FLOATINGPOINT_COMPONENT_NAN, node);
       Node compInf = nm->mkNode(Kind::FLOATINGPOINT_COMPONENT_INF, node);
       Node compZero = nm->mkNode(Kind::FLOATINGPOINT_COMPONENT_ZERO, node);

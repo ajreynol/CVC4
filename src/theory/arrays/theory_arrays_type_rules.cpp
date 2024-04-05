@@ -112,7 +112,7 @@ TypeNode ArrayStoreTypeRule::computeType(NodeManager* nodeManager,
       }
       return TypeNode::null();
     }
-    return NodeManager::currentNM()->mkArrayType(indexjoin, valuejoin);
+    return nodeManager()->mkArrayType(indexjoin, valuejoin);
   }
   else
   {
@@ -268,12 +268,12 @@ bool ArraysProperties::isWellFounded(TypeNode type)
 Node ArraysProperties::mkGroundTerm(TypeNode type)
 {
   Assert(type.getKind() == Kind::ARRAY_TYPE);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TypeNode elemType = type.getArrayConstituentType();
   Node elem = nm->mkGroundTerm(elemType);
   if (elem.isConst())
   {
-    return NodeManager::currentNM()->mkConst(ArrayStoreAll(type, elem));
+    return nodeManager()->mkConst(ArrayStoreAll(type, elem));
   }
   // Note the distinction between mkGroundTerm and mkGroundValue. While
   // an arbitrary value can be obtained by calling the type enumerator here,

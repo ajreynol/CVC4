@@ -97,20 +97,20 @@ std::ostream& operator<<(std::ostream& out, const NodeValue& nv)
 
 void NodeValue::markRefCountMaxedOut()
 {
-  Assert(NodeManager::currentNM() != nullptr)
+  Assert(nodeManager() != nullptr)
       << "No current NodeManager on incrementing of NodeValue: "
          "maybe a public cvc5 interface function is missing a "
          "NodeManagerScope ?";
-  NodeManager::currentNM()->markRefCountMaxedOut(this);
+  nodeManager()->markRefCountMaxedOut(this);
 }
 
 void NodeValue::markForDeletion()
 {
-  Assert(NodeManager::currentNM() != nullptr)
+  Assert(nodeManager() != nullptr)
       << "No current NodeManager on destruction of NodeValue: "
          "maybe a public cvc5 interface function is missing a "
          "NodeManagerScope ?";
-  NodeManager::currentNM()->markForDeletion(this);
+  nodeManager()->markForDeletion(this);
 }
 
 }  // namespace expr

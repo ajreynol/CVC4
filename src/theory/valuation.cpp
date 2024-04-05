@@ -89,7 +89,7 @@ Node Valuation::getSatValue(TNode n) const {
     Node atomRes = d_engine->getPropEngine()->getValue(n[0]);
     if (atomRes.getKind() == Kind::CONST_BOOLEAN)
     {
-      return NodeManager::currentNM()->mkConst(!atomRes.getConst<bool>());
+      return nodeManager()->mkConst(!atomRes.getConst<bool>());
     }
     else
     {

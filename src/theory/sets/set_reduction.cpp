@@ -59,7 +59,7 @@ typedef expr::Attribute<SecondIndexVarAttributeId, Node>
 Node SetReduction::reduceFoldOperator(Node node, std::vector<Node>& asserts)
 {
   Assert(node.getKind() == Kind::SET_FOLD);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   Node f = node[0];
   Node t = node[1];
@@ -115,7 +115,7 @@ Node SetReduction::reduceFoldOperator(Node node, std::vector<Node>& asserts)
 Node SetReduction::reduceAggregateOperator(Node node)
 {
   Assert(node.getKind() == Kind::RELATION_AGGREGATE);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   BoundVarManager* bvm = nm->getBoundVarManager();
   Node function = node[0];
   TypeNode elementType = function.getType().getArgTypes()[0];
@@ -139,7 +139,7 @@ Node SetReduction::reduceAggregateOperator(Node node)
 Node SetReduction::reduceProjectOperator(Node n)
 {
   Assert(n.getKind() == Kind::RELATION_PROJECT);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node A = n[0];
   TypeNode elementType = A.getType().getSetElementType();
   ProjectOp projectOp = n.getOperator().getConst<ProjectOp>();

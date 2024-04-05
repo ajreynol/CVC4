@@ -41,7 +41,7 @@ class RationalEnumerator : public TypeEnumeratorBase<RationalEnumerator> {
 
   Node operator*() override
   {
-    return NodeManager::currentNM()->mkConstReal(d_rat);
+    return nodeManager()->mkConstReal(d_rat);
   }
   RationalEnumerator& operator++() override
   {
@@ -85,7 +85,7 @@ class IntegerEnumerator : public TypeEnumeratorBase<IntegerEnumerator> {
 
   Node operator*() override
   {
-    return NodeManager::currentNM()->mkConstInt(Rational(d_int));
+    return nodeManager()->mkConstInt(Rational(d_int));
   }
 
   IntegerEnumerator& operator++() override

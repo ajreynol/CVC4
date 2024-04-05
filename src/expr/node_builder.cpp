@@ -21,7 +21,7 @@ namespace cvc5::internal {
 
 NodeBuilder::NodeBuilder()
     : d_nv(&d_inlineNv),
-      d_nm(NodeManager::currentNM()),
+      d_nm(nodeManager()),
       d_nvMaxChildren(default_nchild_thresh)
 {
   d_inlineNv.d_id = 0;
@@ -32,7 +32,7 @@ NodeBuilder::NodeBuilder()
 
 NodeBuilder::NodeBuilder(Kind k)
     : d_nv(&d_inlineNv),
-      d_nm(NodeManager::currentNM()),
+      d_nm(nodeManager()),
       d_nvMaxChildren(default_nchild_thresh)
 {
   Assert(k != Kind::NULL_EXPR && k != Kind::UNDEFINED_KIND)

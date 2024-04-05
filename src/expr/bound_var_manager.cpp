@@ -38,22 +38,22 @@ void BoundVarManager::setNameAttr(Node v, const std::string& name)
 
 Node BoundVarManager::getCacheValue(TNode cv1, TNode cv2)
 {
-  return NodeManager::currentNM()->mkNode(Kind::SEXPR, cv1, cv2);
+  return nodeManager()->mkNode(Kind::SEXPR, cv1, cv2);
 }
 Node BoundVarManager::getCacheValue(TNode cv1, TNode cv2, TNode cv3)
 {
-  return NodeManager::currentNM()->mkNode(Kind::SEXPR, cv1, cv2, cv3);
+  return nodeManager()->mkNode(Kind::SEXPR, cv1, cv2, cv3);
 }
 
 Node BoundVarManager::getCacheValue(TNode cv1, TNode cv2, size_t i)
 {
-  return NodeManager::currentNM()->mkNode(
+  return nodeManager()->mkNode(
       Kind::SEXPR, cv1, cv2, getCacheValue(i));
 }
 
 Node BoundVarManager::getCacheValue(size_t i)
 {
-  return NodeManager::currentNM()->mkConstInt(Rational(i));
+  return nodeManager()->mkConstInt(Rational(i));
 }
 
 Node BoundVarManager::getCacheValue(TNode cv, size_t i)

@@ -60,7 +60,7 @@ typedef expr::Attribute<SecondIndexVarAttributeId, Node>
 Node BagReduction::reduceFoldOperator(Node node, std::vector<Node>& asserts)
 {
   Assert(node.getKind() == Kind::BAG_FOLD);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   Node f = node[0];
   Node t = node[1];
@@ -119,7 +119,7 @@ Node BagReduction::reduceFoldOperator(Node node, std::vector<Node>& asserts)
 Node BagReduction::reduceCardOperator(Node node, std::vector<Node>& asserts)
 {
   Assert(node.getKind() == Kind::BAG_CARD);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   Node A = node[0];
   Node zero = nm->mkConstInt(Rational(0));
@@ -193,7 +193,7 @@ Node BagReduction::reduceCardOperator(Node node, std::vector<Node>& asserts)
 Node BagReduction::reduceAggregateOperator(Node node)
 {
   Assert(node.getKind() == Kind::TABLE_AGGREGATE);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   BoundVarManager* bvm = nm->getBoundVarManager();
   Node function = node[0];
   TypeNode elementType = function.getType().getArgTypes()[0];
@@ -217,7 +217,7 @@ Node BagReduction::reduceAggregateOperator(Node node)
 Node BagReduction::reduceProjectOperator(Node n)
 {
   Assert(n.getKind() == Kind::TABLE_PROJECT);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node A = n[0];
   TypeNode elementType = A.getType().getBagElementType();
   ProjectOp projectOp = n.getOperator().getConst<ProjectOp>();

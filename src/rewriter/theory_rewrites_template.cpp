@@ -30,7 +30,7 @@ namespace rewriter {
 void ${rewrite_name}$(RewriteDb& db)
 // clang-format on
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   // Variables
   // clang-format off

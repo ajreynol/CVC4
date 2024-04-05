@@ -204,7 +204,7 @@ void ArithStaticLearner::iteConstant(TNode n, NodeBuilder& learned)
     CDNodeToMinMaxMap::const_iterator minFind = d_minMap.find(n);
     if (minFind == d_minMap.end() || (*minFind).second < min) {
       d_minMap.insert(n, min);
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       Node nGeqMin = nm->mkNode(
           min.getInfinitesimalPart() == 0 ? Kind::GEQ : Kind::GT,
           n,
@@ -222,7 +222,7 @@ void ArithStaticLearner::iteConstant(TNode n, NodeBuilder& learned)
     CDNodeToMinMaxMap::const_iterator maxFind = d_maxMap.find(n);
     if (maxFind == d_maxMap.end() || (*maxFind).second > max) {
       d_maxMap.insert(n, max);
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       Node nLeqMax = nm->mkNode(
           max.getInfinitesimalPart() == 0 ? Kind::LEQ : Kind::LT,
           n,

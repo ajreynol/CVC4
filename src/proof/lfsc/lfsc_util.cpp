@@ -71,7 +71,7 @@ LfscRule getLfscRule(Node n)
 
 Node mkLfscRuleNode(LfscRule r)
 {
-  return NodeManager::currentNM()->mkConstInt(
+  return nodeManager()->mkConstInt(
       Rational(static_cast<uint32_t>(r)));
 }
 

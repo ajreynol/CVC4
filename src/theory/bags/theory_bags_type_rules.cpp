@@ -373,7 +373,7 @@ TypeNode BagFilterTypeRule::computeType(NodeManager* nodeManager,
       throw TypeCheckingExceptionPrivate(n, ss.str());
     }
     std::vector<TypeNode> argTypes = functionType.getArgTypes();
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     if (!(argTypes.size() == 1 && argTypes[0] == elementType
           && functionType.getRangeType() == nm->booleanType()))
     {
@@ -455,7 +455,7 @@ TypeNode BagPartitionTypeRule::computeType(NodeManager* nodeManager,
   Assert(n.getKind() == Kind::BAG_PARTITION);
   TypeNode functionType = n[0].getType(check);
   TypeNode bagType = n[1].getType(check);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (check)
   {
     if (!bagType.isBag())
@@ -826,7 +826,7 @@ bool BagsProperties::isWellFounded(TypeNode type)
 Node BagsProperties::mkGroundTerm(TypeNode type)
 {
   Assert(type.isBag());
-  return NodeManager::currentNM()->mkConst(EmptyBag(type));
+  return nodeManager()->mkConst(EmptyBag(type));
 }
 }  // namespace bags
 }  // namespace theory

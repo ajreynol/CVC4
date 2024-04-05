@@ -109,7 +109,7 @@ Node DatatypesEnumerator::getTermEnum( TypeNode tn, unsigned i ){
    {
      if (d_child_enum)
      {
-       NodeManager* nm = NodeManager::currentNM();
+       NodeManager* nm = nodeManager();
        ret = nm->mkConst(CodatatypeBoundVariable(d_type, d_size_limit));
      }
      else

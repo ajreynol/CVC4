@@ -173,7 +173,7 @@ void Region::setDisequal( Node n1, Node n2, int type, bool valid ){
         //if they are both a part of testClique, then remove split
         if( d_testClique.find( n1 )!=d_testClique.end() && d_testClique[n1] &&
             d_testClique.find( n2 )!=d_testClique.end() && d_testClique[n2] ){
-          Node eq = NodeManager::currentNM()->mkNode(Kind::EQUAL, n1, n2);
+          Node eq = nodeManager()->mkNode(Kind::EQUAL, n1, n2);
           if( d_splits.find( eq )!=d_splits.end() && d_splits[ eq ] ){
             Trace("uf-ss-debug") << "removing split for " << n1 << " " << n2
                                  << std::endl;
@@ -344,7 +344,7 @@ bool Region::check( Theory::Effort level, int cardinality,
               Node at_j = newClique[j];
               Node at_k = newClique[k];
               Node j_eq_k =
-                  NodeManager::currentNM()->mkNode(Kind::EQUAL, at_j, at_k);
+                  nodeManager()->mkNode(Kind::EQUAL, at_j, at_k);
               d_splits[ j_eq_k ] = true;
               d_splitsSize = d_splitsSize + 1;
             }
@@ -457,7 +457,7 @@ SortModel::CardinalityDecisionStrategy::CardinalityDecisionStrategy(
 
 Node SortModel::CardinalityDecisionStrategy::mkLiteral(unsigned i)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node cco = nm->mkConst(CardinalityConstraint(d_type, Integer(i + 1)));
   return nm->mkNode(Kind::CARDINALITY_CONSTRAINT, cco);
 }
@@ -1017,8 +1017,8 @@ int SortModel::addSplit(Region* r)
     Node ss = rewrite(s);
     if (ss.getKind() != Kind::EQUAL)
     {
-      Node b_t = NodeManager::currentNM()->mkConst( true );
-      Node b_f = NodeManager::currentNM()->mkConst( false );
+      Node b_t = nodeManager()->mkConst( true );
+      Node b_f = nodeManager()->mkConst( false );
       if( ss==b_f ){
         Trace("uf-ss-lemma") << "....Assert disequal directly : "
                              << s[0] << " " << s[1] << std::endl;
@@ -1049,7 +1049,7 @@ int SortModel::addSplit(Region* r)
     //Trace("uf-ss-lemma") << d_th->getEqualityEngine()->areDisequal( s[0], s[1] ) << std::endl;
     //Trace("uf-ss-lemma") << s[0].getType() << " " << s[1].getType() << std::endl;
     //split on the equality s
-    Node lem = NodeManager::currentNM()->mkNode(Kind::OR, ss, ss.negate());
+    Node lem = nodeManager()->mkNode(Kind::OR, ss, ss.negate());
     // send lemma, with caching
     if (d_im.lemma(lem, InferenceId::UF_CARD_SPLIT))
     {
@@ -1082,7 +1082,7 @@ void SortModel::addCliqueLemma(std::vector<Node>& clique)
     }
   }
   eqs.push_back(d_cardinality_literal[d_cardinality].notNode());
-  Node lem = NodeManager::currentNM()->mkNode(Kind::OR, eqs);
+  Node lem = nodeManager()->mkNode(Kind::OR, eqs);
   // send lemma, with caching
   if (d_im.lemma(lem, InferenceId::UF_CARD_CLIQUE))
   {
@@ -1093,7 +1093,7 @@ void SortModel::addCliqueLemma(std::vector<Node>& clique)
 
 void SortModel::simpleCheckCardinality() {
   if( d_maxNegCard.get()!=0 && d_hasCard.get() && d_cardinality.get()<d_maxNegCard.get() ){
-    Node lem = NodeManager::currentNM()->mkNode(
+    Node lem = nodeManager()->mkNode(
         Kind::AND,
         getCardinalityLiteral(d_cardinality.get()),
         getCardinalityLiteral(d_maxNegCard.get()).negate());
@@ -1134,7 +1134,7 @@ void SortModel::debugPrint( const char* c ){
 
 bool SortModel::checkLastCall()
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   TheoryModel* m = d_state.getModel();
   if( TraceIsOn("uf-ss-warn") ){
@@ -1547,7 +1547,7 @@ void CardinalityExtension::check(Theory::Effort level)
                   Node b = itel->second[j];
                   if( !d_th->getEqualityEngine()->areDisequal( a, b, false ) ){
                     Node eq = rewrite(a.eqNode(b));
-                    Node lem = NodeManager::currentNM()->mkNode(
+                    Node lem = nodeManager()->mkNode(
                         Kind::OR, eq, eq.negate());
                     Trace("uf-ss-lemma") << "*** Split (no-minimal) : " << lem << std::endl;
                     d_im.lemma(lem, InferenceId::UF_CARD_SPLIT);
@@ -1591,7 +1591,7 @@ CardinalityExtension::CombinedCardinalityDecisionStrategy::
 Node CardinalityExtension::CombinedCardinalityDecisionStrategy::mkLiteral(
     unsigned i)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node cco = nm->mkConst(CombinedCardinalityConstraint(Integer(i)));
   return nm->mkNode(Kind::COMBINED_CARDINALITY_CONSTRAINT, cco);
 }
@@ -1750,7 +1750,7 @@ void CardinalityExtension::checkCombinedCardinality()
         std::vector< Node > conf;
         conf.push_back( d_rep_model[d_tn_mono_master]->getCardinalityLiteral( mc ) );
         conf.push_back( d_rep_model[maxSlaveType]->getCardinalityLiteral( maxMonoSlave ).negate() );
-        Node cf = NodeManager::currentNM()->mkNode(Kind::AND, conf);
+        Node cf = nodeManager()->mkNode(Kind::AND, conf);
         Trace("uf-ss-lemma") << "*** Combined monotone cardinality conflict"
                              << " : " << cf << std::endl;
         Trace("uf-ss-com-card") << "*** Combined monotone cardinality conflict"
@@ -1789,7 +1789,7 @@ void CardinalityExtension::checkCombinedCardinality()
           }
         }
       }
-      Node cf = NodeManager::currentNM()->mkNode(Kind::AND, conf);
+      Node cf = nodeManager()->mkNode(Kind::AND, conf);
       Trace("uf-ss-lemma") << "*** Combined cardinality conflict : " << cf
                            << std::endl;
       Trace("uf-ss-com-card") << "*** Combined cardinality conflict : " << cf

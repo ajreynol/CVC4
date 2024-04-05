@@ -39,7 +39,7 @@ namespace bags {
 InferenceGenerator::InferenceGenerator(SolverState* state, InferenceManager* im)
     : d_state(state), d_im(im)
 {
-  d_nm = NodeManager::currentNM();
+  d_nm = nodeManager();
   d_sm = d_nm->getSkolemManager();
   d_true = d_nm->mkConst(true);
   d_zero = d_nm->mkConstInt(Rational(0));

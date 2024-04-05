@@ -58,7 +58,7 @@ bool LfscProofPostprocessCallback::update(Node res,
   Trace("lfsc-pp") << "LfscProofPostprocessCallback::update: " << id
                    << std::endl;
   Trace("lfsc-pp-debug") << "...proves " << res << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Assert(id != ProofRule::LFSC_RULE);
 
   switch (id)
@@ -464,7 +464,7 @@ void LfscProofPostprocessCallback::updateCong(Node res,
   }
   Node curL = currEq[0];
   Node curR = currEq[1];
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (; i < nchildren; i++)
   {
     // CONG rules for each child
@@ -503,7 +503,7 @@ Node LfscProofPostprocessCallback::mkChain(Kind k,
                                            const std::vector<Node>& children)
 {
   Assert(!children.empty());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   size_t nchildren = children.size();
   size_t i = 0;
   // do we have a null terminator? If so, we start with it.
@@ -523,7 +523,7 @@ Node LfscProofPostprocessCallback::mkChain(Kind k,
 
 Node LfscProofPostprocessCallback::mkDummyPredicate()
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkBoundVar(nm->booleanType());
 }
 

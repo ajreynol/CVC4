@@ -41,7 +41,7 @@ namespace transcendental {
 SineSolver::SineSolver(Env& env, TranscendentalState* tstate)
     : EnvObj(env), d_data(tstate)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node zero = nm->mkConstReal(Rational(0));
   Node one = nm->mkConstReal(Rational(1));
   Node negOne = nm->mkConstReal(Rational(-1));
@@ -66,7 +66,7 @@ SineSolver::~SineSolver() {}
 
 void SineSolver::doReductions()
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::map<Kind, std::vector<Node> >::iterator it =
       d_data->d_funcMap.find(Kind::SINE);
   if (it == d_data->d_funcMap.end())
@@ -147,7 +147,7 @@ void SineSolver::doReductions()
 
 Node SineSolver::getPhaseShiftLemma(const Node& x, const Node& y, const Node& s)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node xr = (x.getType().isInteger() ? nm->mkNode(Kind::TO_REAL, x) : x);
   Node yr = (y.getType().isInteger() ? nm->mkNode(Kind::TO_REAL, y) : y);
   Node mone = nm->mkConstReal(Rational(-1));
@@ -171,7 +171,7 @@ Node SineSolver::getPhaseShiftLemma(const Node& x, const Node& y, const Node& s)
 
 void SineSolver::doPhaseShift(TNode a, TNode new_a)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   Assert(a.getKind() == Kind::SINE);
   CDProof* proof = nullptr;
@@ -211,7 +211,7 @@ void SineSolver::doPhaseShift(TNode a, TNode new_a)
 
 void SineSolver::checkInitialRefine()
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (std::pair<const Kind, std::vector<Node> >& tfl : d_data->d_funcMap)
   {
     if (tfl.first != Kind::SINE)
@@ -446,7 +446,7 @@ void SineSolver::checkMonotonic()
 
     if (!tval.isNull())
     {
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       Node mono_lem;
       if (monotonic_dir == 1
           && sval.getConst<Rational>() > tval.getConst<Rational>())
@@ -492,7 +492,7 @@ void SineSolver::checkMonotonic()
 void SineSolver::doTangentLemma(
     TNode e, TNode c, TNode poly_approx, int region, std::uint64_t d)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Assert(region != -1);
 
   Trace("nl-ext-sine") << c << " in region " << region << std::endl;

@@ -130,7 +130,7 @@ TrustNode RemoveTermFormulas::runLemma(
 Node RemoveTermFormulas::runInternal(TNode assertion,
                                      std::vector<theory::SkolemLemma>& output)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TCtxStack ctx(&d_rtfc);
   std::vector<bool> processedChildren;
   ctx.pushInitial(assertion);
@@ -270,7 +270,7 @@ Node RemoveTermFormulas::runCurrentInternal(TNode node,
                                             uint32_t cval,
                                             TConvProofGenerator* pg)
 {
-  NodeManager *nodeManager = NodeManager::currentNM();
+  NodeManager *nodeManager = nodeManager();
   SkolemManager* sm = nodeManager->getSkolemManager();
 
   TypeNode nodeType = node.getType();
@@ -485,7 +485,7 @@ Node RemoveTermFormulas::getSkolemForNode(Node k) const
 
 Node RemoveTermFormulas::getAxiomFor(Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = n.getKind();
   if (k == Kind::ITE)
   {

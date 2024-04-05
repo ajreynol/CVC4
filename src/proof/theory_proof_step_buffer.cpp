@@ -147,7 +147,7 @@ Node TheoryProofStepBuffer::factorReorderElimDoubleNeg(Node n)
   {
     return elimDoubleNegLit(n);
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> children{n.begin(), n.end()};
   std::vector<Node> childrenEqs;
   // eliminate double neg for each lit. Do it first because it may expose

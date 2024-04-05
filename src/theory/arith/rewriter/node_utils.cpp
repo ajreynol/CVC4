@@ -33,7 +33,7 @@ Node mkMultTerm(const Rational& multiplicity, TNode monomial)
   {
     return monomial;
   }
-  return NodeManager::currentNM()->mkNode(
+  return nodeManager()->mkNode(
       Kind::MULT, mkConst(multiplicity), monomial);
 }
 
@@ -59,7 +59,7 @@ Node mkMultTerm(const RealAlgebraicNumber& multiplicity, TNode monomial)
     prod.emplace_back(monomial);
   }
   Assert(prod.size() >= 2);
-  return NodeManager::currentNM()->mkNode(Kind::NONLINEAR_MULT, prod);
+  return nodeManager()->mkNode(Kind::NONLINEAR_MULT, prod);
 }
 
 Node mkMultTerm(const RealAlgebraicNumber& multiplicity,
@@ -78,7 +78,7 @@ Node mkMultTerm(const RealAlgebraicNumber& multiplicity,
   monomial.emplace_back(mterm);
   std::sort(monomial.begin(), monomial.end(), rewriter::LeafNodeComparator());
   Assert(monomial.size() >= 2);
-  return NodeManager::currentNM()->mkNode(Kind::NONLINEAR_MULT, monomial);
+  return nodeManager()->mkNode(Kind::NONLINEAR_MULT, monomial);
 }
 
 TNode removeToReal(TNode t) { return t.getKind() == Kind::TO_REAL ? t[0] : t; }
@@ -100,12 +100,12 @@ Node ensureReal(TNode t)
     if (t.isConst())
     {
       // short-circuit
-      Node ret = NodeManager::currentNM()->mkConstReal(t.getConst<Rational>());
+      Node ret = nodeManager()->mkConstReal(t.getConst<Rational>());
       Assert(ret.getType().isReal());
       return ret;
     }
     Trace("arith-rewriter-debug") << "maybeEnsureReal: " << t << std::endl;
-    return NodeManager::currentNM()->mkNode(Kind::TO_REAL, t);
+    return nodeManager()->mkNode(Kind::TO_REAL, t);
   }
   return t;
 }

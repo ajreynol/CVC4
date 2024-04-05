@@ -32,6 +32,13 @@ class SepSkolemEmp : public PreprocessingPass
  protected:
   PreprocessingPassResult applyInternal(
       AssertionPipeline* assertionsToPreprocess) override;
+ private:
+    /** Internal convert */
+    Node preSkolemEmp(TypeNode locType,
+                  TypeNode dataType,
+                  Node n,
+                  bool pol,
+                  std::map<bool, std::map<Node, Node>>& visited);
 };
 
 }  // namespace passes

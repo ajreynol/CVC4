@@ -82,7 +82,7 @@ Node mkIRP(const Node& var,
            const poly::Polynomial& poly,
            VariableMapper& vm)
 {
-  auto* nm = NodeManager::currentNM();
+  auto* nm = nodeManager();
   auto op = nm->mkConst<IndexedRootPredicate>(IndexedRootPredicate(k));
   return nm->mkNode(Kind::INDEXED_ROOT_PREDICATE,
                     op,
@@ -96,8 +96,8 @@ CoveringsProofGenerator::CoveringsProofGenerator(Env& env,
                                                  context::Context* ctx)
     : EnvObj(env), d_proofs(env, ctx), d_current(nullptr)
 {
-  d_false = NodeManager::currentNM()->mkConst(false);
-  d_zero = NodeManager::currentNM()->mkConstReal(Rational(0));
+  d_false = nodeManager()->mkConst(false);
+  d_zero = nodeManager()->mkConstReal(Rational(0));
 }
 
 void CoveringsProofGenerator::startNewProof()

@@ -51,11 +51,11 @@ CoreSolver::CoreSolver(Env& env,
       d_extDeq(userContext()),
       d_modelUnsoundId(IncompleteId::NONE)
 {
-  d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
-  d_one = NodeManager::currentNM()->mkConstInt(Rational(1));
-  d_neg_one = NodeManager::currentNM()->mkConstInt(Rational(-1));
-  d_true = NodeManager::currentNM()->mkConst( true );
-  d_false = NodeManager::currentNM()->mkConst( false );
+  d_zero = nodeManager()->mkConstInt(Rational(0));
+  d_one = nodeManager()->mkConstInt(Rational(1));
+  d_neg_one = nodeManager()->mkConstInt(Rational(-1));
+  d_true = nodeManager()->mkConst( true );
+  d_false = nodeManager()->mkConst( false );
 }
 
 CoreSolver::~CoreSolver() {
@@ -737,7 +737,7 @@ Node CoreSolver::getConclusion(Node x,
 {
   Trace("strings-csolver") << "CoreSolver::getConclusion: " << x << " " << y
                            << " " << rule << " " << isRev << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node conc;
   if (rule == ProofRule::CONCAT_SPLIT || rule == ProofRule::CONCAT_LPROP)
   {
@@ -844,7 +844,7 @@ Node CoreSolver::getDecomposeConclusion(Node x,
                                         std::vector<Node>& newSkolems)
 {
   Assert(l.getType().isInteger());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node n =
       isRev ? nm->mkNode(Kind::SUB, nm->mkNode(Kind::STRING_LENGTH, x), l) : l;
   Node sk1 = skc->mkSkolemCached(x, n, SkolemCache::SK_PREFIX, "dc_spt1");
@@ -1220,7 +1220,7 @@ bool CoreSolver::processSimpleNEq(NormalForm& nfi,
                                   std::vector<CoreInferInfo>& pinfer,
                                   TypeNode stype)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node emp = Word::mkEmptyWord(stype);
 
   const std::vector<Node>& nfiv = nfi.d_nf;
@@ -1751,7 +1751,7 @@ CoreSolver::ProcessLoopResult CoreSolver::processLoop(NormalForm& nfi,
                                                       int index,
                                                       CoreInferInfo& info)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node conc;
   const std::vector<Node>& veci = nfi.d_nf;
   const std::vector<Node>& vecoi = nfj.d_nf;
@@ -1961,7 +1961,7 @@ CoreSolver::ProcessLoopResult CoreSolver::processLoop(NormalForm& nfi,
 
 void CoreSolver::processDeq(Node ni, Node nj)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   NormalForm& nfni = getNormalForm(ni);
   NormalForm& nfnj = getNormalForm(nj);
 
@@ -2328,7 +2328,7 @@ bool CoreSolver::processSimpleDeq(std::vector<Node>& nfi,
       {
         cc.push_back(nfk[k].eqNode(emp));
       }
-      Node conc = NodeManager::currentNM()->mkAnd(cc);
+      Node conc = nodeManager()->mkAnd(cc);
       Assert(d_state.areEqual(niLenTerm, njLenTerm))
           << "Lengths not equal " << niLenTerm << " " << njLenTerm;
       d_im.sendInference(
@@ -2450,7 +2450,7 @@ void CoreSolver::processDeqExtensionality(Node n1, Node n2)
   }
   d_extDeq.insert(eq);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemCache* sc = d_termReg.getSkolemCache();
   Node k = sc->mkSkolemFun(SkolemId::STRINGS_DEQ_DIFF, n1, n2);
   Node deq = eq.negate();
@@ -2660,7 +2660,7 @@ void CoreSolver::checkLengthsEqc()
       std::vector<Node> ant;
       ant.insert(ant.end(), nfi.d_exp.begin(), nfi.d_exp.end());
       ant.push_back(llt[0].eqNode(nfi.d_base));
-      Node lc = NodeManager::currentNM()->mkNode(Kind::STRING_LENGTH, nf);
+      Node lc = nodeManager()->mkNode(Kind::STRING_LENGTH, nf);
       Node lcr = rewrite(lc);
       Trace("strings-process-debug")
           << "Rewrote length " << lc << " to " << lcr << std::endl;

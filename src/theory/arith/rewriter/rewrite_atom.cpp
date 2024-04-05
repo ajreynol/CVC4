@@ -254,9 +254,9 @@ Node buildRelation(Kind kind, Node left, Node right, bool negate)
   }
   if (negate)
   {
-    return NodeManager::currentNM()->mkNode(kind, left, right).notNode();
+    return nodeManager()->mkNode(kind, left, right).notNode();
   }
-  return NodeManager::currentNM()->mkNode(kind, left, right);
+  return nodeManager()->mkNode(kind, left, right);
 }
 
 Node buildIntegerEquality(Sum&& sum)
@@ -350,7 +350,7 @@ Node buildIntegerInequality(Sum&& sum, Kind k)
   {
     rhs = rhs.ceiling();
   }
-  auto* nm = NodeManager::currentNM();
+  auto* nm = nodeManager();
   return buildRelation(Kind::GEQ, collectSum(sum), nm->mkConstInt(rhs), negate);
 }
 

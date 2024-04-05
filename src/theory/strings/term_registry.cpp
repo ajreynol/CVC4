@@ -63,10 +63,10 @@ TermRegistry::TermRegistry(Env& env,
                                        : nullptr),
       d_inFullEffortCheck(false)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   d_zero = nm->mkConstInt(Rational(0));
   d_one = nm->mkConstInt(Rational(1));
-  d_negOne = NodeManager::currentNM()->mkConstInt(Rational(-1));
+  d_negOne = nodeManager()->mkConstInt(Rational(-1));
   Assert(options().strings.stringsAlphaCard <= String::num_codes());
   d_alphaCard = options().strings.stringsAlphaCard;
 }
@@ -79,7 +79,7 @@ void TermRegistry::finishInit(InferenceManager* im) { d_im = im; }
 
 Node TermRegistry::eagerReduce(Node t, SkolemCache* sc, uint32_t alphaCard)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node lemma;
   Kind tk = t.getKind();
   if (tk == Kind::STRING_TO_CODE)
@@ -157,7 +157,7 @@ Node TermRegistry::eagerReduce(Node t, SkolemCache* sc, uint32_t alphaCard)
 
 Node TermRegistry::lengthPositive(Node t)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node zero = nm->mkConstInt(Rational(0));
   Node emp = Word::mkEmptyWord(t.getType());
   Node tlen = nm->mkNode(Kind::STRING_LENGTH, t);
@@ -351,7 +351,7 @@ void TermRegistry::registerType(TypeNode tn)
 TrustNode TermRegistry::getRegisterTermLemma(Node n)
 {
   Assert(n.getType().isStringLike());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // register length information:
   //  for variables, split on empty vs positive length
   //  for concat/const/replace, introduce proxy var and state length relation
@@ -466,7 +466,7 @@ bool TermRegistry::isHandledUpdateOrSubstr(Node n)
 {
   Assert(n.getKind() == Kind::STRING_UPDATE
          || n.getKind() == Kind::STRING_SUBSTR);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node lenN = n[2];
   if (n.getKind() == Kind::STRING_UPDATE)
   {
@@ -496,7 +496,7 @@ TrustNode TermRegistry::getRegisterTermAtomicLemma(
     return TrustNode::null();
   }
   Assert(n.getType().isStringLike());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node n_len = nm->mkNode(Kind::STRING_LENGTH, n);
   Node emp = Word::mkEmptyWord(n.getType());
   if (s == LENGTH_GEQ_ONE)
@@ -595,7 +595,7 @@ Node TermRegistry::getSymbolicDefinition(Node n, std::vector<Node>& exp) const
       }
     }
   }
-  return NodeManager::currentNM()->mkNode(n.getKind(), children);
+  return nodeManager()->mkNode(n.getKind(), children);
 }
 
 Node TermRegistry::getProxyVariableFor(Node n) const
@@ -679,13 +679,13 @@ const std::set<Node>& TermRegistry::getRelevantTermSet() const
 
 Node TermRegistry::mkNConcat(Node n1, Node n2) const
 {
-  return rewrite(NodeManager::currentNM()->mkNode(Kind::STRING_CONCAT, n1, n2));
+  return rewrite(nodeManager()->mkNode(Kind::STRING_CONCAT, n1, n2));
 }
 
 Node TermRegistry::mkNConcat(Node n1, Node n2, Node n3) const
 {
   return rewrite(
-      NodeManager::currentNM()->mkNode(Kind::STRING_CONCAT, n1, n2, n3));
+      nodeManager()->mkNode(Kind::STRING_CONCAT, n1, n2, n3));
 }
 
 Node TermRegistry::mkNConcat(const std::vector<Node>& c, TypeNode tn) const

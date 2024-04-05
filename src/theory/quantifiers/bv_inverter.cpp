@@ -43,7 +43,7 @@ Node BvInverter::getSolveVariable(TypeNode tn)
   std::map<TypeNode, Node>::iterator its = d_solve_var.find(tn);
   if (its == d_solve_var.end())
   {
-    SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+    SkolemManager* sm = nodeManager()->getSkolemManager();
     Node k = sm->mkDummySkolem("slv", tn);
     d_solve_var[tn] = k;
     return k;
@@ -90,7 +90,7 @@ Node BvInverter::getInversionNode(Node cond, TypeNode tn, BvInverterQuery* m)
 
   if (c.isNull())
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     if (m)
     {
       Node x = m->getBoundVariable(tn);
@@ -165,7 +165,7 @@ Node BvInverter::getPathToPv(Node lit,
           {
             children.push_back(j == ii ? litc : lit[j]);
           }
-          return NodeManager::currentNM()->mkNode(lit.getKind(), children);
+          return nodeManager()->mkNode(lit.getKind(), children);
         }
       }
     }
@@ -232,7 +232,7 @@ Node BvInverter::solveBvLit(Node sv,
 
   bool pol = true;
   unsigned index;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k, litk;
 
   Assert(!path.empty());

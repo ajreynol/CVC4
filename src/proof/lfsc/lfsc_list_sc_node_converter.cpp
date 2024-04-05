@@ -29,7 +29,7 @@ LfscListScNodeConverter::LfscListScNodeConverter(
 
 Node LfscListScNodeConverter::postConvert(Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = n.getKind();
   if (d_isPre)
   {
@@ -115,7 +115,7 @@ Node LfscListScNodeConverter::mkOperatorFor(const std::string& name,
                                             const std::vector<Node>& children,
                                             TypeNode retType)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<TypeNode> childTypes;
   for (const Node& c : children)
   {

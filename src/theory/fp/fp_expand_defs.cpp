@@ -31,7 +31,7 @@ Node FpExpandDefs::minMaxUF(TNode node)
   TypeNode type = node.getType();
   Assert(type.getKind() == Kind::FLOATINGPOINT_TYPE);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(Kind::APPLY_UF,
                     nm->getSkolemManager()->mkSkolemFunction(
                         kind == Kind::FLOATINGPOINT_MIN
@@ -52,7 +52,7 @@ Node FpExpandDefs::toUbvSbvUF(TNode node)
   TypeNode type = node.getType();
   Assert(type.getKind() == Kind::BITVECTOR_TYPE);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(
       Kind::APPLY_UF,
       nm->getSkolemManager()->mkSkolemFunction(
@@ -70,7 +70,7 @@ Node FpExpandDefs::toRealUF(TNode node)
   TypeNode type = node[0].getType();
   Assert(type.getKind() == Kind::FLOATINGPOINT_TYPE);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   return nm->mkNode(Kind::APPLY_UF,
                     nm->getSkolemManager()->mkSkolemFunction(
@@ -85,7 +85,7 @@ TrustNode FpExpandDefs::expandDefinition(Node node)
 
   Node res = node;
   Kind kind = node.getKind();
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   if (kind == Kind::FLOATINGPOINT_MIN)
   {

@@ -152,7 +152,7 @@ Node mkSygusTerm(const Node& op,
                  const std::vector<Node>& children,
                  bool doBetaReduction)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Assert(nm->getSkolemManager()->getInternalId(op)
          != InternalSkolemId::SYGUS_ANY_CONSTANT);
   Trace("dt-sygus-util") << "Operator is " << op << std::endl;
@@ -211,7 +211,7 @@ Node mkSygusTerm(const Node& op,
   }
   else
   {
-    ret = NodeManager::currentNM()->mkNode(tok, schildren);
+    ret = nodeManager()->mkNode(tok, schildren);
   }
   Trace("dt-sygus-util") << "...return " << ret << std::endl;
   return ret;
@@ -291,7 +291,7 @@ Node sygusToBuiltin(Node n, bool isExternal)
           ss << cur;
           const DType& dt = cur.getType().getDType();
           // make a fresh variable
-          NodeManager * nm = NodeManager::currentNM();
+          NodeManager * nm = nodeManager();
           Node var = nm->mkBoundVar(ss.str(), dt.getSygusType());
           SygusToBuiltinVarAttribute stbv;
           cur.setAttribute(stbv, var);
@@ -401,7 +401,7 @@ TypeNode substituteAndGeneralizeSygusType(TypeNode sdt,
                                           const std::vector<Node>& syms,
                                           const std::vector<Node>& vars)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   const DType& sdtd = sdt.getDType();
   // compute the new formal argument list
   std::vector<Node> formalVars;
@@ -561,7 +561,7 @@ TypeNode generalizeSygusType(TypeNode sdt)
   }
   std::vector<Node> svec;
   std::vector<Node> vars;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (const Node& s : syms)
   {
     svec.push_back(s);

@@ -113,7 +113,7 @@ bool getListVarContext(TNode n, std::map<Node, Kind>& context)
 
 Node getNullTerminator(Kind k, TypeNode tn)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node nullTerm;
   switch (k)
   {
@@ -196,7 +196,7 @@ Node narySubstitute(Node src,
                     const std::vector<Node>& subs)
 {
   // assumes all variables are list variables
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::unordered_map<TNode, Node> visited;
   std::unordered_map<TNode, Node>::iterator it;
   std::vector<TNode> visit;
@@ -391,7 +391,7 @@ Node getACINormalForm(Node a)
   an = children.empty() ? nt
                         : (children.size() == 1
                                ? children[0]
-                               : NodeManager::currentNM()->mkNode(k, children));
+                               : nodeManager()->mkNode(k, children));
   a.setAttribute(nfa, an);
   return an;
 }

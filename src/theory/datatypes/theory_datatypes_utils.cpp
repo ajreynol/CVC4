@@ -40,14 +40,14 @@ Node applySelector(const DTypeConstructor& dc,
                    const Node& n)
 {
   Node s = getSelector(n.getType(), dc, index, shareSel);
-  return NodeManager::currentNM()->mkNode(Kind::APPLY_SELECTOR, s, n);
+  return nodeManager()->mkNode(Kind::APPLY_SELECTOR, s, n);
 }
 
 Node getInstCons(Node n, const DType& dt, size_t index, bool shareSel)
 {
   Assert(index < dt.getNumConstructors());
   std::vector<Node> children;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TypeNode tn = n.getType();
   for (size_t i = 0, nargs = dt[index].getNumArgs(); i < nargs; i++)
   {
@@ -68,7 +68,7 @@ Node mkApplyCons(TypeNode tn,
   Assert(tn.isDatatype());
   Assert(index < dt.getNumConstructors());
   Assert(dt[index].getNumArgs() == children.size());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> cchildren;
   cchildren.push_back(dt[index].getConstructor());
   cchildren.insert(cchildren.end(), children.begin(), children.end());
@@ -121,7 +121,7 @@ const DType& datatypeOf(Node n)
 
 Node mkTester(Node n, int i, const DType& dt)
 {
-  return NodeManager::currentNM()->mkNode(
+  return nodeManager()->mkNode(
       Kind::APPLY_TESTER, dt[i].getTester(), n);
 }
 
@@ -133,7 +133,7 @@ Node mkSplit(Node n, const DType& dt)
     Node test = mkTester(n, i, dt);
     splits.push_back(test);
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return splits.size() == 1 ? splits[0] : nm->mkNode(Kind::OR, splits);
 }
 
@@ -195,7 +195,7 @@ bool checkClash(Node n1, Node n2, std::vector<Node>& rew)
     }
     else
     {
-      Node eq = NodeManager::currentNM()->mkNode(Kind::EQUAL, n1, n2);
+      Node eq = nodeManager()->mkNode(Kind::EQUAL, n1, n2);
       rew.push_back(eq);
     }
   }

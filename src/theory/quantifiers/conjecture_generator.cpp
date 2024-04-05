@@ -74,7 +74,7 @@ Node OpArgIndex::getGroundTerm( ConjectureGenerator * s, std::vector< TNode >& a
     args2.push_back( d_ops[0] );
   }
   args2.insert(args2.end(), args.begin(), args.end());
-  return NodeManager::currentNM()->mkNode(d_op_terms[0].getKind(), args2);
+  return nodeManager()->mkNode(d_op_terms[0].getKind(), args2);
 }
 
 void OpArgIndex::getGroundTerms( ConjectureGenerator * s, std::vector< TNode >& terms ) {
@@ -102,8 +102,8 @@ ConjectureGenerator::ConjectureGenerator(Env& env,
       d_fullEffortCount(0),
       d_hasAddedLemma(false)
 {
-  d_true = NodeManager::currentNM()->mkConst(true);
-  d_false = NodeManager::currentNM()->mkConst(false);
+  d_true = nodeManager()->mkConst(true);
+  d_false = nodeManager()->mkConst(false);
   d_uequalityEngine.addFunctionKind(Kind::APPLY_UF);
   d_uequalityEngine.addFunctionKind(Kind::APPLY_CONSTRUCTOR);
 }
@@ -943,8 +943,8 @@ unsigned ConjectureGenerator::flushWaitingConjectures( unsigned& addedLemmas, in
               Node rsg;
               if( !bvs.empty() ){
                 Node bvl =
-                    NodeManager::currentNM()->mkNode(Kind::BOUND_VAR_LIST, bvs);
-                rsg = NodeManager::currentNM()->mkNode(
+                    nodeManager()->mkNode(Kind::BOUND_VAR_LIST, bvs);
+                rsg = nodeManager()->mkNode(
                     Kind::FORALL, bvl, lhs.eqNode(rhs));
               }else{
                 rsg = lhs.eqNode( rhs );
@@ -955,7 +955,7 @@ unsigned ConjectureGenerator::flushWaitingConjectures( unsigned& addedLemmas, in
               d_eq_conjectures[rhs].push_back( lhs );
 
               Node lem =
-                  NodeManager::currentNM()->mkNode(Kind::OR, rsg.negate(), rsg);
+                  nodeManager()->mkNode(Kind::OR, rsg.negate(), rsg);
               d_qim.addPendingLemma(lem,
                                     InferenceId::QUANTIFIERS_CONJ_GEN_SPLIT);
               d_qim.addPendingPhaseRequirement(rsg, false);
@@ -1122,7 +1122,7 @@ int ConjectureGenerator::calculateGeneralizationDepth( TNode n, std::vector< TNo
 Node ConjectureGenerator::getPredicateForType( TypeNode tn ) {
   std::map< TypeNode, Node >::iterator it = d_typ_pred.find( tn );
   if( it==d_typ_pred.end() ){
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     SkolemManager* sm = nm->getSkolemManager();
     TypeNode op_tn = nm->mkFunctionType(tn, nm->booleanType());
     Node op = sm->mkDummySkolem(
@@ -1213,7 +1213,7 @@ void ConjectureGenerator::getEnumerateUfTerm( Node n, unsigned num, std::vector<
             }
             children.push_back( lc );
             Node nenum =
-                NodeManager::currentNM()->mkNode(Kind::APPLY_UF, children);
+                nodeManager()->mkNode(Kind::APPLY_UF, children);
             Trace("sg-gt-enum")
                 << "Ground term enumerate : " << nenum << std::endl;
             terms.push_back(nenum);
@@ -1249,7 +1249,7 @@ void ConjectureGenerator::getEnumeratePredUfTerm( Node n, unsigned num, std::vec
   Node p = getPredicateForType( n.getType() );
   for( unsigned i=0; i<uf_terms.size(); i++ ){
     terms.push_back(
-        NodeManager::currentNM()->mkNode(Kind::APPLY_UF, p, uf_terms[i]));
+        nodeManager()->mkNode(Kind::APPLY_UF, p, uf_terms[i]));
   }
 }
 
@@ -1835,7 +1835,7 @@ Node TermGenerator::getTerm( TermGenEnv * s ) {
           children.push_back( nc );
         }
       }
-      return NodeManager::currentNM()->mkNode( s->d_func_kind[f], children );
+      return nodeManager()->mkNode( s->d_func_kind[f], children );
     }
   }else{
     Assert(false);

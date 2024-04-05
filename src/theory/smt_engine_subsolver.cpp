@@ -139,7 +139,7 @@ Result checkWithSubsolver(Node query,
     if (r.getStatus() == Result::SAT)
     {
       // default model
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       for (const Node& v : vars)
       {
         modelVals.push_back(nm->mkGroundTerm(v.getType()));

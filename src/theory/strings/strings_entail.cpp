@@ -123,7 +123,7 @@ bool StringsEntail::stripSymbolicLength(std::vector<Node>& n1,
 {
   Assert(dir == 1 || dir == -1);
   Assert(nr.empty());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node zero = nm->mkConstInt(cvc5::internal::Rational(0));
   bool ret = false;
   bool success = true;
@@ -190,10 +190,10 @@ bool StringsEntail::stripSymbolicLength(std::vector<Node>& n1,
     }
     else
     {
-      Node next_s = NodeManager::currentNM()->mkNode(
+      Node next_s = nodeManager()->mkNode(
           Kind::SUB,
           curr,
-          NodeManager::currentNM()->mkNode(Kind::STRING_LENGTH,
+          nodeManager()->mkNode(Kind::STRING_LENGTH,
                                            n1[sindex_use]));
       next_s = d_rr->rewrite(next_s);
       if (d_arithEntail.check(next_s))
@@ -261,7 +261,7 @@ int StringsEntail::componentContains(std::vector<Node>& n1,
           }
           else if (!n1re.isNull())
           {
-            n1[i] = NodeManager::currentNM()->mkNode(
+            n1[i] = nodeManager()->mkNode(
                 Kind::STRING_CONCAT, n1[i], n1re);
           }
           if (remainderDir != 1)
@@ -275,7 +275,7 @@ int StringsEntail::componentContains(std::vector<Node>& n1,
           }
           else if (!n1rb.isNull())
           {
-            n1[i] = NodeManager::currentNM()->mkNode(
+            n1[i] = nodeManager()->mkNode(
                 Kind::STRING_CONCAT, n1rb, n1[i]);
           }
         }
@@ -369,7 +369,7 @@ bool StringsEntail::componentContainsBase(
   Assert(n1rb.isNull());
   Assert(n1re.isNull());
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   if (n1 == n2)
   {
@@ -672,7 +672,7 @@ bool StringsEntail::stripConstantEndpoints(std::vector<Node>& n1,
 
 Node StringsEntail::checkContains(Node a, Node b, bool fullRewriter)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node ctn = nm->mkNode(Kind::STRING_CONTAINS, a, b);
 
   if (fullRewriter)
@@ -699,14 +699,14 @@ Node StringsEntail::checkContains(Node a, Node b, bool fullRewriter)
 
 bool StringsEntail::checkNonEmpty(Node a)
 {
-  Node len = NodeManager::currentNM()->mkNode(Kind::STRING_LENGTH, a);
+  Node len = nodeManager()->mkNode(Kind::STRING_LENGTH, a);
   len = d_rr->rewrite(len);
   return d_arithEntail.check(len, true);
 }
 
 bool StringsEntail::checkLengthOne(Node s, bool strict)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node one = nm->mkConstInt(Rational(1));
   Node len = nm->mkNode(Kind::STRING_LENGTH, s);
   len = d_rr->rewrite(len);
@@ -836,7 +836,7 @@ Node StringsEntail::checkHomogeneousString(Node a)
 
 Node StringsEntail::getMultisetApproximation(Node a)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (a.getKind() == Kind::STRING_SUBSTR)
   {
     return a[0];
@@ -909,7 +909,7 @@ Node StringsEntail::getStringOrEmpty(Node n)
 
 Node StringsEntail::inferEqsFromContains(Node x, Node y)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node emp = Word::mkEmptyWord(x.getType());
   Assert(x.getType() == y.getType());
   TypeNode stype = x.getType();

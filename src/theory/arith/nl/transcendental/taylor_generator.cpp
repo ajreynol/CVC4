@@ -29,8 +29,8 @@ namespace nl {
 namespace transcendental {
 
 TaylorGenerator::TaylorGenerator()
-    : d_taylor_real_fv(NodeManager::currentNM()->mkBoundVar(
-        "x", NodeManager::currentNM()->realType()))
+    : d_taylor_real_fv(nodeManager()->mkBoundVar(
+        "x", nodeManager()->realType()))
 {
 }
 
@@ -46,7 +46,7 @@ std::pair<Node, Node> TaylorGenerator::getTaylor(Kind k, std::uint64_t n)
     return itt->second;
   }
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   // the current factorial `counter!`
   Integer factorial = 1;
@@ -97,7 +97,7 @@ void TaylorGenerator::getPolynomialApproximationBounds(
   auto it = d_poly_bounds[k].find(d);
   if (it == d_poly_bounds[k].end())
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     // n is the Taylor degree we are currently considering
     std::uint64_t n = 2 * d;
     // n must be even
@@ -194,7 +194,7 @@ std::pair<Node, Node> TaylorGenerator::getTfModelBounds(Node tf,
   Kind k = tf.getKind();
   if (csign == 0)
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     // at zero, its trivial
     if (k == Kind::SINE)
     {

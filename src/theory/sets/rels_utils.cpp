@@ -77,7 +77,7 @@ void RelsUtils::computeTC(Node rel,
 Node RelsUtils::constructPair(Node rel, Node a, Node b)
 {
   const DType& dt = rel.getType().getSetElementType().getDType();
-  return NodeManager::currentNM()->mkNode(
+  return nodeManager()->mkNode(
       Kind::APPLY_CONSTRUCTOR, dt[0].getConstructor(), a, b);
 }
 
@@ -85,7 +85,7 @@ Node RelsUtils::evaluateGroup(TNode n)
 {
   Assert(n.getKind() == Kind::RELATION_GROUP);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   Node A = n[0];
   TypeNode setType = A.getType();

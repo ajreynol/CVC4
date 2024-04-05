@@ -58,7 +58,7 @@ Node makeStandardModelConstant(const std::vector<unsigned>& vec,
   {
     mvec = vec;
   }
-  return NodeManager::currentNM()->mkConst(String(mvec));
+  return nodeManager()->mkConst(String(mvec));
 }
 
 WordIter::WordIter(uint32_t startLength) : d_hasEndLength(false), d_endLength(0)
@@ -130,14 +130,14 @@ bool SEnumLen::isFinished() const { return d_curr.isNull(); }
 StringEnumLen::StringEnumLen(uint32_t startLength,
                              uint32_t endLength,
                              uint32_t card)
-    : SEnumLen(NodeManager::currentNM()->stringType(), startLength, endLength),
+    : SEnumLen(nodeManager()->stringType(), startLength, endLength),
       d_cardinality(card)
 {
   mkCurr();
 }
 
 StringEnumLen::StringEnumLen(uint32_t startLength, uint32_t card)
-    : SEnumLen(NodeManager::currentNM()->stringType(), startLength),
+    : SEnumLen(nodeManager()->stringType(), startLength),
       d_cardinality(card)
 {
   mkCurr();
@@ -221,7 +221,7 @@ void SeqEnumLen::mkCurr()
     seq.push_back(d_elementDomain[i]);
   }
   // make sequence from seq
-  d_curr = NodeManager::currentNM()->mkConst(
+  d_curr = nodeManager()->mkConst(
       Sequence(d_type.getSequenceElementType(), seq));
 }
 

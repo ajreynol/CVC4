@@ -1122,7 +1122,7 @@ bool SetsProperties::isWellFounded(TypeNode type)
 Node SetsProperties::mkGroundTerm(TypeNode type)
 {
   Assert(type.isSet());
-  return NodeManager::currentNM()->mkConst(EmptySet(type));
+  return nodeManager()->mkConst(EmptySet(type));
 }
 
 }  // namespace sets

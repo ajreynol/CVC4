@@ -106,7 +106,7 @@ inline void flattenAnd(Node n, std::vector<TNode>& out){
 inline Node flattenAnd(Node n){
   std::vector<TNode> out;
   flattenAnd(n, out);
-  return NodeManager::currentNM()->mkNode(Kind::AND, out);
+  return nodeManager()->mkNode(Kind::AND, out);
 }
 
 /**
@@ -275,8 +275,8 @@ TheoryEngine::TheoryEngine(Env& env)
     d_sortInfer.reset(new SortInference(env));
   }
 
-  d_true = NodeManager::currentNM()->mkConst<bool>(true);
-  d_false = NodeManager::currentNM()->mkConst<bool>(false);
+  d_true = nodeManager()->mkConst<bool>(true);
+  d_false = nodeManager()->mkConst<bool>(false);
 }
 
 TheoryEngine::~TheoryEngine() {
@@ -1887,7 +1887,7 @@ TrustNode TheoryEngine::getExplanation(
   if (exp.size() == 0)
   {
     // Normalize to true
-    expNode = NodeManager::currentNM()->mkConst<bool>(true);
+    expNode = nodeManager()->mkConst<bool>(true);
   }
   else if (exp.size() == 1)
   {
@@ -2130,7 +2130,7 @@ std::pair<bool, Node> TheoryEngine::entailmentCheck(options::TheoryOfMode mode,
     }
     if( is_conjunction ){
       return std::pair<bool, Node>(
-          true, NodeManager::currentNM()->mkNode(Kind::AND, children));
+          true, nodeManager()->mkNode(Kind::AND, children));
     }else{
       return std::pair<bool, Node>(false, Node::null());
     }
@@ -2155,7 +2155,7 @@ std::pair<bool, Node> TheoryEngine::entailmentCheck(options::TheoryOfMode mode,
         if( chres2.first ){
           return std::pair<bool, Node>(
               true,
-              NodeManager::currentNM()->mkNode(
+              nodeManager()->mkNode(
                   Kind::AND, chres.second, chres2.second));
         }else{
           break;

@@ -74,7 +74,7 @@ Node SkolemManager::mkPurifySkolem(Node t,
   {
     // The purification skolem for (witness ((x T)) P) is the same as
     // the skolem function (QUANTIFIERS_SKOLEMIZE (exists ((x T)) P) x).
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     Node exists =
         nm->mkNode(Kind::EXISTS, std::vector<Node>(t.begin(), t.end()));
     k = mkSkolemFunction(SkolemId::QUANTIFIERS_SKOLEMIZE, {exists, t[0][0]});
@@ -127,7 +127,7 @@ Node SkolemManager::mkInternalSkolemFunction(InternalSkolemId id,
                                              TypeNode tn,
                                              const std::vector<Node>& cacheVals)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> cvals;
   cvals.push_back(nm->mkConstInt(Rational(static_cast<uint32_t>(id))));
   cvals.insert(cvals.end(), cacheVals.begin(), cacheVals.end());
@@ -191,7 +191,7 @@ Node SkolemManager::mkSkolemFunctionTyped(SkolemId id,
   {
     cacheVal = cacheVals.size() == 1
                    ? cacheVals[0]
-                   : NodeManager::currentNM()->mkNode(Kind::SEXPR, cacheVals);
+                   : nodeManager()->mkNode(Kind::SEXPR, cacheVals);
   }
   return mkSkolemFunctionTyped(id, tn, cacheVal);
 }
@@ -278,7 +278,7 @@ Node SkolemManager::getOriginalForm(Node n)
       << "SkolemManager::getOriginalForm " << n << std::endl;
   OriginalFormAttribute ofa;
   UnpurifiedFormAttribute ufa;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::unordered_map<TNode, Node> visited;
   std::unordered_map<TNode, Node>::iterator it;
   std::vector<TNode> visit;
@@ -379,7 +379,7 @@ Node SkolemManager::mkSkolemNode(Kind k,
                                  const TypeNode& type,
                                  int flags)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node n = NodeBuilder(nm, k);
   if ((flags & SKOLEM_EXACT_NAME) == 0)
   {
@@ -399,7 +399,7 @@ Node SkolemManager::mkSkolemNode(Kind k,
 TypeNode SkolemManager::getTypeFor(SkolemId id,
                                    const std::vector<Node>& cacheVals)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   switch (id)
   {
     // Type(cacheVals[0]), i.e skolems that return same type as first argument

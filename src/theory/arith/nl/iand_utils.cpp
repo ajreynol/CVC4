@@ -38,7 +38,7 @@ static Rational intpow2(uint32_t b)
 Node pow2(uint32_t k)
 {
   Assert(k >= 0);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkConstInt(Rational(intpow2(k)));
 }
 
@@ -48,7 +48,7 @@ bool oneBitAnd(bool a, bool b) { return (a && b); }
 Node intExtract(Node x, uint32_t i, uint32_t size)
 {
   Assert(size > 0);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // extract definition in integers is:
   // (mod (div a (two_to_the j)) (two_to_the (+ (- i j) 1))))
   Assert(i * size <= std::numeric_limits<int32_t>::max());
@@ -61,7 +61,7 @@ Node intExtract(Node x, uint32_t i, uint32_t size)
 
 IAndUtils::IAndUtils()
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   d_zero = nm->mkConstInt(Rational(0));
   d_one = nm->mkConstInt(Rational(1));
   d_two = nm->mkConstInt(Rational(2));
@@ -73,7 +73,7 @@ Node IAndUtils::createITEFromTable(
     uint32_t granularity,
     const std::map<std::pair<int64_t, int64_t>, uint64_t>& table)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Assert(granularity <= 8);
   uint64_t num_of_values = ((uint64_t)pow(2, granularity));
   // The table represents a function from pairs of integers to integers, where
@@ -110,7 +110,7 @@ Node IAndUtils::createSumNode(Node x,
                               uint32_t bvsize,
                               uint32_t granularity)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Assert(0 < granularity && granularity <= 8);
   // Standardize granularity.
   // If it is greater than bvsize, it is set to bvsize.
@@ -182,7 +182,7 @@ Node IAndUtils::createBitwiseIAndNode(Node x,
 
 Node IAndUtils::iextract(uint32_t i, uint32_t j, Node n) const
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   //  ((_ extract i j) n) is n / 2^j mod 2^{i-j+1}
   Node n2j = nm->mkNode(Kind::INTS_DIVISION_TOTAL, n, twoToK(j));
   return nm->mkNode(Kind::INTS_MODULUS_TOTAL, n2j, twoToK(i - j + 1));
@@ -262,14 +262,14 @@ void IAndUtils::addDefaultValue(
 Node IAndUtils::twoToK(unsigned k) const
 {
   // could be faster
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(Kind::POW, d_two, nm->mkConstInt(Rational(k)));
 }
 
 Node IAndUtils::twoToKMinusOne(unsigned k) const
 {
   // could be faster
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(Kind::SUB, twoToK(k), d_one);
 }
 

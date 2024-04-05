@@ -246,7 +246,7 @@ bool SygusSimpleSymBreak::considerArgKind(
           rt.d_children[0].d_req_kind = Kind::ADD;
           rt.d_children[0].d_children[0].d_req_type = dt[c].getArgType(1);
           rt.d_children[0].d_children[1].d_req_const =
-              NodeManager::currentNM()->mkConstInt(Rational(1));
+              nodeManager()->mkConstInt(Rational(1));
           rt.d_children[1].d_req_type = dt[c].getArgType(0);
         }
         else if (k == Kind::LT || k == Kind::GEQ)
@@ -257,7 +257,7 @@ bool SygusSimpleSymBreak::considerArgKind(
           rt.d_children[1].d_req_kind = Kind::ADD;
           rt.d_children[1].d_children[0].d_req_type = dt[c].getArgType(0);
           rt.d_children[1].d_children[1].d_req_const =
-              NodeManager::currentNM()->mkConstInt(Rational(1));
+              nodeManager()->mkConstInt(Rational(1));
         }
       }
       else if (pk == Kind::BITVECTOR_NOT)

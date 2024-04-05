@@ -47,7 +47,7 @@ Node SubtypeElimNodeConverter::postConvert(Node n)
   // note that EQUAL is strictly typed so we don't need to handle it here
   if (convertToRealChildren)
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     std::vector<Node> children;
     for (const Node& nc : n)
     {
@@ -75,7 +75,7 @@ Node SubtypeElimNodeConverter::postConvert(Node n)
   // purify skolem for (> 1.0 0.0).
   if (n.isVar())
   {
-    SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
+    SkolemManager* skm = nodeManager()->getSkolemManager();
     SkolemId id;
     Node cacheVal;
     if (skm->isSkolemFunction(n, id, cacheVal))

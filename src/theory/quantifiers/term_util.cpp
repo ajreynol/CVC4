@@ -65,7 +65,7 @@ Node TermUtil::getRemoveQuantifiers2( Node n, std::map< Node, Node >& visited ) 
         if( n.getMetaKind() == kind::metakind::PARAMETERIZED ){
           children.insert( children.begin(), n.getOperator() );
         }
-        ret = NodeManager::currentNM()->mkNode( n.getKind(), children );
+        ret = nodeManager()->mkNode( n.getKind(), children );
       }
     }
     visited[n] = ret;
@@ -275,7 +275,7 @@ bool TermUtil::containsUninterpretedConstant( Node n ) {
 Node TermUtil::simpleNegate(Node n)
 {
   Assert(n.getType().isBoolean());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (n.getKind() == Kind::OR || n.getKind() == Kind::AND)
   {
     std::vector< Node > children;
@@ -298,7 +298,7 @@ Node TermUtil::mkNegate(Kind notk, Node n)
   {
     return n[0];
   }
-  return NodeManager::currentNM()->mkNode(notk, n);
+  return nodeManager()->mkNode(notk, n);
 }
 
 bool TermUtil::isNegate(Kind k)
@@ -367,20 +367,20 @@ Node TermUtil::mkTypeValue(TypeNode tn, int32_t val)
   if (tn.isRealOrInt())
   {
     Rational c(val);
-    n = NodeManager::currentNM()->mkConstRealOrInt(tn, c);
+    n = nodeManager()->mkConstRealOrInt(tn, c);
   }
   else if (tn.isBitVector())
   {
     // cast to unsigned
     uint32_t uv = static_cast<uint32_t>(val);
     BitVector bval(tn.getConst<BitVectorSize>(), uv);
-    n = NodeManager::currentNM()->mkConst<BitVector>(bval);
+    n = nodeManager()->mkConst<BitVector>(bval);
   }
   else if (tn.isBoolean())
   {
     if (val == 0)
     {
-      n = NodeManager::currentNM()->mkConst(false);
+      n = nodeManager()->mkConst(false);
     }
   }
   else if (tn.isStringLike())
@@ -402,7 +402,7 @@ Node TermUtil::mkTypeMaxValue(TypeNode tn)
   }
   else if (tn.isBoolean())
   {
-    n = NodeManager::currentNM()->mkConst(true);
+    n = nodeManager()->mkConst(true);
   }
   return n;
 }
@@ -420,14 +420,14 @@ Node TermUtil::mkTypeValueOffset(TypeNode tn,
     Rational vval = val.getConst<Rational>();
     Rational oval(offset);
     status = 0;
-    return NodeManager::currentNM()->mkConstRealOrInt(tn, vval + oval);
+    return nodeManager()->mkConstRealOrInt(tn, vval + oval);
   }
   else if (tn.isBitVector())
   {
     BitVector vval = val.getConst<BitVector>();
     uint32_t uv = static_cast<uint32_t>(offset);
     BitVector oval(tn.getConst<BitVectorSize>(), uv);
-    return NodeManager::currentNM()->mkConst(vval + oval);
+    return nodeManager()->mkConst(vval + oval);
   }
   return val_o;
 }
@@ -564,14 +564,14 @@ Node TermUtil::isSingularArg(Node n, Kind ik, unsigned arg)
       }
       else if (arg == 2)
       {
-        return mkTypeValue(NodeManager::currentNM()->stringType(), 0);
+        return mkTypeValue(nodeManager()->stringType(), 0);
       }
     }
     else if (ik == Kind::STRING_INDEXOF)
     {
       if (arg == 0 || arg == 1)
       {
-        return mkTypeValue(NodeManager::currentNM()->integerType(), -1);
+        return mkTypeValue(nodeManager()->integerType(), -1);
       }
     }
   }
@@ -596,12 +596,12 @@ Node TermUtil::isSingularArg(Node n, Kind ik, unsigned arg)
       // negative arguments
       if (ik == Kind::STRING_SUBSTR || ik == Kind::STRING_CHARAT)
       {
-        return mkTypeValue(NodeManager::currentNM()->stringType(), 0);
+        return mkTypeValue(nodeManager()->stringType(), 0);
       }
       else if (ik == Kind::STRING_INDEXOF)
       {
         Assert(arg == 2);
-        return mkTypeValue(NodeManager::currentNM()->integerType(), -1);
+        return mkTypeValue(nodeManager()->integerType(), -1);
       }
     }
   }

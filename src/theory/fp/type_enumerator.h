@@ -44,7 +44,7 @@ class FloatingPointEnumerator
     if (d_enumerationComplete) {
       throw NoMoreValuesException(getType());
     }
-    return NodeManager::currentNM()->mkConst(createFP());
+    return nodeManager()->mkConst(createFP());
   }
 
   FloatingPointEnumerator& operator++() override {
@@ -94,7 +94,7 @@ class RoundingModeEnumerator
     if (d_enumerationComplete) {
       throw NoMoreValuesException(getType());
     }
-    return NodeManager::currentNM()->mkConst(d_rm);
+    return nodeManager()->mkConst(d_rm);
   }
 
   RoundingModeEnumerator& operator++() override {

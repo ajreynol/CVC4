@@ -102,7 +102,7 @@ void InferProofCons::packArgs(Node conc,
 {
   args.push_back(conc);
   args.push_back(mkInferenceIdNode(infer));
-  args.push_back(NodeManager::currentNM()->mkConst(isRev));
+  args.push_back(nodeManager()->mkConst(isRev));
   // The vector exp is stored as arguments; its flatten form are premises. We
   // need both since the grouping of exp is important, e.g. { (and a b), c }
   // is different from { a, b, c } in the convert routine, since positions
@@ -167,7 +167,7 @@ void InferProofCons::convert(InferenceId infer,
     Trace("strings-ipc-debug") << "Explicit add " << ec << std::endl;
     psb.addStep(ProofRule::ASSUME, {}, {ec}, ec);
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node nodeIsRev = nm->mkConst(isRev);
   switch (infer)
   {
@@ -1268,7 +1268,7 @@ Node InferProofCons::purifyPredicate(PurifyType pt,
 {
   bool pol = lit.getKind() != Kind::NOT;
   Node atom = pol ? lit : lit[0];
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node newLit;
   if (pt == PurifyType::SUBS_EQ)
   {
@@ -1344,7 +1344,7 @@ Node InferProofCons::purifyCoreTerm(Node n,
     {
       pcs.push_back(purifyCoreTerm(nc, termsToPurify));
     }
-    return NodeManager::currentNM()->mkNode(Kind::STRING_CONCAT, pcs);
+    return nodeManager()->mkNode(Kind::STRING_CONCAT, pcs);
   }
   return maybePurifyTerm(n, termsToPurify);
 }
@@ -1360,7 +1360,7 @@ Node InferProofCons::purifyApp(Node n, std::unordered_set<Node>& termsToPurify)
   {
     pcs.push_back(maybePurifyTerm(nc, termsToPurify));
   }
-  return NodeManager::currentNM()->mkNode(n.getKind(), pcs);
+  return nodeManager()->mkNode(n.getKind(), pcs);
 }
 
 Node InferProofCons::maybePurifyTerm(Node n,
@@ -1371,7 +1371,7 @@ Node InferProofCons::maybePurifyTerm(Node n,
     // did not need to purify
     return n;
   }
-  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+  SkolemManager* sm = nodeManager()->getSkolemManager();
   Node k = sm->mkPurifySkolem(n);
   return k;
 }

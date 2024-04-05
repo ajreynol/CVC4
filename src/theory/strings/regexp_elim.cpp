@@ -81,7 +81,7 @@ TrustNode RegExpElimination::eliminateTrusted(Node atom)
     {
       ProofNodeManager* pnm = d_env.getProofNodeManager();
       Node eq = atom.eqNode(eatom);
-      Node aggn = NodeManager::currentNM()->mkConst(d_isAggressive);
+      Node aggn = nodeManager()->mkConst(d_isAggressive);
       std::shared_ptr<ProofNode> pn =
           pnm->mkNode(ProofRule::RE_ELIM, {}, {atom, aggn}, eq);
       d_epg->setProofFor(eq, pn);
@@ -94,7 +94,7 @@ TrustNode RegExpElimination::eliminateTrusted(Node atom)
 
 Node RegExpElimination::eliminateConcat(Node atom, bool isAgg)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   BoundVarManager* bvm = nm->getBoundVarManager();
   Node x = atom[0];
   Node lenx = nm->mkNode(Kind::STRING_LENGTH, x);
@@ -544,7 +544,7 @@ Node RegExpElimination::eliminateStar(Node atom, bool isAgg)
   }
   // only aggressive rewrites below here
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   BoundVarManager* bvm = nm->getBoundVarManager();
   Node x = atom[0];
   Node lenx = nm->mkNode(Kind::STRING_LENGTH, x);

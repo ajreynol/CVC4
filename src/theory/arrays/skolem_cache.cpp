@@ -45,14 +45,14 @@ Node SkolemCache::getExtIndexSkolem(Node deq)
   Assert(b.getType() == a.getType());
 
   // make the skolem, which is deterministic for a,b.
-  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+  SkolemManager* sm = nodeManager()->getSkolemManager();
   return sm->mkSkolemFunction(SkolemId::ARRAY_DEQ_DIFF, {a, b});
 }
 
 Node SkolemCache::getEqRangeVar(TNode eqr)
 {
   Assert(eqr.getKind() == Kind::EQ_RANGE);
-  BoundVarManager* bvm = NodeManager::currentNM()->getBoundVarManager();
+  BoundVarManager* bvm = nodeManager()->getBoundVarManager();
   return bvm->mkBoundVar<EqRangeVarAttribute>(eqr, eqr[2].getType());
 }
 

@@ -117,7 +117,7 @@ Node PatternTermSelector::getIsUsableEq(Node q, Node n) const
       if (i == 1 && n.getKind() == Kind::EQUAL
           && !quantifiers::TermUtil::hasInstConstAttr(n[0]))
       {
-        return NodeManager::currentNM()->mkNode(Kind::EQUAL, n[1], n[0]);
+        return nodeManager()->mkNode(Kind::EQUAL, n[1], n[0]);
       }
       else
       {
@@ -183,7 +183,7 @@ Node PatternTermSelector::getIsUsableTrigger(Node n, Node q) const
     pol = !pol;
     n = n[0];
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (n.getKind() == Kind::INST_CONSTANT)
   {
     return pol ? n : nm->mkNode(Kind::EQUAL, n, nm->mkConst(true)).notNode();
@@ -698,7 +698,7 @@ Node PatternTermSelector::getInversion(Node n, Node x)
   }
   else if (nk == Kind::ADD || nk == Kind::MULT)
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     int cindex = -1;
     bool cindexSet = false;
     for (size_t i = 0, nchild = n.getNumChildren(); i < nchild; i++)

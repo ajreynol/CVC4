@@ -77,7 +77,7 @@ bool GenericOp::isIndexedOperatorKind(Kind k)
 
 std::vector<Node> GenericOp::getIndicesForOperator(Kind k, Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> indices;
   switch (k)
   {
@@ -253,7 +253,7 @@ Node GenericOp::getOperatorForIndices(Kind k, const std::vector<Node>& indices)
 {
   // all indices should be constant!
   Assert(isIndexedOperatorKind(k));
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (isNumeralIndexedOperatorKind(k))
   {
     std::vector<uint32_t> numerals;
@@ -389,7 +389,7 @@ Node GenericOp::getConcreteApp(const Node& app)
   std::vector<Node> args;
   args.push_back(op);
   args.insert(args.end(), app.end() - nargs, app.end());
-  Node ret = NodeManager::currentNM()->mkNode(okind, args);
+  Node ret = nodeManager()->mkNode(okind, args);
   // could be ill typed, in which case we don't rewrite
   if (ret.getTypeOrNull(true).isNull())
   {

@@ -81,7 +81,7 @@ Node UfModelTreeNode::getFunctionValue(const std::vector<Node>& args,
       }
     }
 
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     Node retNode = defaultValue;
     // condense function values
     for (size_t i = 0, cargs = caseArgs.size(); i < cargs; i++)
@@ -208,8 +208,8 @@ Node UfModelTree::getFunctionValue(const std::vector<Node>& args, Rewriter* r)
     body = r->rewrite(body);
   }
   Node boundVarList =
-      NodeManager::currentNM()->mkNode(Kind::BOUND_VAR_LIST, args);
-  return NodeManager::currentNM()->mkNode(Kind::LAMBDA, boundVarList, body);
+      nodeManager()->mkNode(Kind::BOUND_VAR_LIST, args);
+  return nodeManager()->mkNode(Kind::LAMBDA, boundVarList, body);
 }
 
 Node UfModelTree::getFunctionValue(const std::string& argPrefix, Rewriter* r)
@@ -219,7 +219,7 @@ Node UfModelTree::getFunctionValue(const std::string& argPrefix, Rewriter* r)
   for( size_t i=0; i<type.getNumChildren()-1; i++ ){
     std::stringstream ss;
     ss << argPrefix << (i+1);
-    vars.push_back( NodeManager::currentNM()->mkBoundVar( ss.str(), type[i] ) );
+    vars.push_back( nodeManager()->mkBoundVar( ss.str(), type[i] ) );
   }
   return getFunctionValue(vars, r);
 }

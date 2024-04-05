@@ -935,7 +935,7 @@ Node TheoryArithPrivate::getCandidateModelValue(TNode term)
     const DeltaRational drv = getDeltaValue(term);
     const Rational& delta = d_partialModel.getDelta();
     const Rational qmodel = drv.substituteDelta( delta );
-    return NodeManager::currentNM()->mkConstRealOrInt(term.getType(), qmodel);
+    return nodeManager()->mkConstRealOrInt(term.getType(), qmodel);
   } catch (DeltaRationalException& dr) {
     return Node::null();
   } catch (ModelException& me) {
@@ -985,7 +985,7 @@ Theory::PPAssertStatus TheoryArithPrivate::ppAssert(
       Assert(elim == rewrite(elim));
       if (elim.getType().isInteger() && !minVar.getType().isInteger())
       {
-        elim = NodeManager::currentNM()->mkNode(Kind::TO_REAL, elim);
+        elim = nodeManager()->mkNode(Kind::TO_REAL, elim);
       }
       if (right.size() > options().arith.ppAssertMaxSubSize)
       {
@@ -1393,7 +1393,7 @@ TrustNode TheoryArithPrivate::dioCutting()
     Assert(!gcd.divides(c.asConstant().getNumerator()));
     Comparison leq = Comparison::mkComparison(Kind::LEQ, p, c);
     Comparison geq = Comparison::mkComparison(Kind::GEQ, p, c);
-    Node lemma = NodeManager::currentNM()->mkNode(
+    Node lemma = nodeManager()->mkNode(
         Kind::OR, leq.getNode(), geq.getNode());
     Node rewrittenLemma = rewrite(lemma);
     Trace("arith::dio::ex") << "dioCutting found the plane: " << plane.getNode() << endl;
@@ -1404,7 +1404,7 @@ TrustNode TheoryArithPrivate::dioCutting()
     Trace("arith::dio") << "rewritten " << rewrittenLemma << endl;
     if (proofsEnabled())
     {
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       Node gt = nm->mkNode(Kind::GT, p.getNode(), c.getNode());
       Node lt = nm->mkNode(Kind::LT, p.getNode(), c.getNode());
       TypeNode type = gt[0].getType();
@@ -1709,7 +1709,7 @@ Node flattenAndSort(Node n){
   }
   Assert(out.size() >= 2);
   std::sort(out.begin(), out.end());
-  return NodeManager::currentNM()->mkNode(k, out);
+  return nodeManager()->mkNode(k, out);
 }
 
 
@@ -1822,7 +1822,7 @@ void TheoryArithPrivate::outputPropagate(TNode lit) {
 
 void TheoryArithPrivate::outputRestart() {
   Trace("arith::channel") << "Arith restart!" << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   Node restartVar = sm->mkDummySkolem(
       "restartVar",
@@ -1970,7 +1970,7 @@ std::pair<ConstraintP, ArithVar> TheoryArithPrivate::replayGetConstraint(const D
 
   Assert(k == Kind::LEQ || k == Kind::GEQ);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node comparison =
       nm->mkNode(k, sum, nm->mkConstRealOrInt(sum.getType(), rhs));
   Node rewritten = rewrite(comparison);
@@ -2073,7 +2073,7 @@ std::pair<ConstraintP, ArithVar> TheoryArithPrivate::replayGetConstraint(const C
 
 Node toSumNode(const ArithVariables& vars, const DenseMap<Rational>& sum){
   Trace("arith::toSumNode") << "toSumNode() begin" << endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   DenseMap<Rational>::const_iterator iter, end;
   iter = sum.begin(), end = sum.end();
   std::vector<Node> children;
@@ -2595,7 +2595,7 @@ Node TheoryArithPrivate::branchToNode(ApproximateSimplex* approx,
         return Node::null();
       }
       Rational fl(maybe_value.value().floor());
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       Node leq =
           nm->mkNode(Kind::LEQ, n, nm->mkConstRealOrInt(n.getType(), fl));
       Node norm = rewrite(leq);
@@ -2611,7 +2611,7 @@ Node TheoryArithPrivate::cutToLiteral(ApproximateSimplex* approx, const CutInfo&
   const DenseMap<Rational>& lhs = ci.getReconstruction().lhs;
   Node sum = toSumNode(d_partialModel, lhs);
   if(!sum.isNull()){
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     Kind k = ci.getKind();
     Assert(k == Kind::LEQ || k == Kind::GEQ);
     Node rhs = nm->mkConstRealOrInt(sum.getType(), ci.getReconstruction().rhs);
@@ -3708,7 +3708,7 @@ void TheoryArithPrivate::propagate(Theory::Effort e) {
     }
   }
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   while(d_congruenceManager.hasMorePropagations()){
     TNode toProp = d_congruenceManager.getNextPropagation();
 
@@ -3941,7 +3941,7 @@ void TheoryArithPrivate::collectModelValues(
   // TODO:
   // This is not very good for user push/pop....
   // Revisit when implementing push/pop
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for(var_iterator vi = var_begin(), vend = var_end(); vi != vend; ++vi){
     ArithVar v = *vi;
 
@@ -4543,7 +4543,7 @@ bool TheoryArithPrivate::rowImplicationCanBeApplied(RowIndex ridx, bool rowUp, C
         // Collect the farkas coefficients, as nodes.
         std::vector<Node> farkasCoefficients;
         farkasCoefficients.reserve(coeffs->size());
-        auto nm = NodeManager::currentNM();
+        auto nm = nodeManager();
         std::transform(
             coeffs->begin(),
             coeffs->end(),
@@ -4891,7 +4891,7 @@ bool TheoryArithPrivate::decomposeTerm(Node t,
   Polynomial poly = Polynomial::parsePolynomial(t);
   if(poly.isConstant()){
     c = poly.getHead().getConstant().getValue();
-    p = NodeManager::currentNM()->mkConstReal(Rational(0));
+    p = nodeManager()->mkConstReal(Rational(0));
     m = Rational(1);
     return true;
   }else if(poly.containsConstant()){
@@ -4961,7 +4961,7 @@ bool TheoryArithPrivate::decomposeLiteral(Node lit, Kind& k, int& dir, Rational&
   success = decomposeTerm(rewrite(right), rm, rp, rc);
   if(!success){ return false; }
 
-  Node diff = rewrite(NodeManager::currentNM()->mkNode(Kind::SUB, left, right));
+  Node diff = rewrite(nodeManager()->mkNode(Kind::SUB, left, right));
   Rational dc;
   success = decomposeTerm(diff, dm, dp, dc);
   // can occur in entailment tests involving ITE terms

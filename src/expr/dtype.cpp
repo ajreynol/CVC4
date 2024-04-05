@@ -332,7 +332,7 @@ void DType::setSygus(TypeNode st, Node bvl, bool allowConst, bool allowAll)
     if (!hasConstant)
     {
       // add an arbitrary one
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       Node op = nm->mkGroundTerm(st);
       // use same naming convention as SygusDatatype
       std::stringstream ss;
@@ -922,7 +922,7 @@ Node DType::getSharedSelector(TypeNode dtt, TypeNode t, size_t index) const
   }
   // make the shared selector
   Node s;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::stringstream ss;
   ss << "sel_" << index;
   SkolemManager* sm = nm->getSkolemManager();

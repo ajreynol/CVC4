@@ -155,7 +155,7 @@ Node LambdaLift::getAssertionFor(TNode node)
   Node lambda = FunctionConst::toLambda(node);
   if (!lambda.isNull())
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     // The new assertion
     std::vector<Node> children;
     // bound variable list
@@ -203,7 +203,7 @@ Node LambdaLift::getSkolemFor(TNode node)
       Trace("rtf-proof-debug")
           << "RemoveTermFormulas::run: make LAMBDA skolem" << std::endl;
       // Make the skolem to represent the lambda
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       SkolemManager* sm = nm->getSkolemManager();
       skolem = sm->mkPurifySkolem(node);
     }
@@ -239,7 +239,7 @@ TrustNode LambdaLift::betaReduce(TNode node) const
 Node LambdaLift::betaReduce(TNode lam, const std::vector<Node>& args) const
 {
   Assert(lam.getKind() == Kind::LAMBDA);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> betaRed;
   betaRed.push_back(lam);
   betaRed.insert(betaRed.end(), args.begin(), args.end());

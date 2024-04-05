@@ -83,7 +83,7 @@ void OracleEngine::presolve() {
       visited.insert(cur);
       if (OracleCaller::isOracleFunctionApp(cur))
       {
-        SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+        SkolemManager* sm = nodeManager()->getSkolemManager();
         Node k = sm->mkPurifySkolem(cur);
         Node eq = k.eqNode(cur);
         d_qim.lemma(eq, InferenceId::QUANTIFIERS_ORACLE_PURIFY_SUBS);
@@ -136,7 +136,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
   }
   FirstOrderModel* fm = d_treg.getModel();
   TermDb* termDatabase = d_treg.getTermDatabase();
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   unsigned nquant = fm->getNumAssertedQuantifiers();
   std::vector<Node> currInterfaces;
   for (unsigned i = 0; i < nquant; i++)
@@ -323,7 +323,7 @@ Node OracleEngine::mkOracleInterface(const std::vector<Node>& inputs,
   Assert(!assume.isNull());
   Assert(!constraint.isNull());
   Assert(oracleNode.getKind() == Kind::ORACLE);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST,
                         nm->mkNode(Kind::INST_ATTRIBUTE, oracleNode));
   std::vector<Node> vars;

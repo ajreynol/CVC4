@@ -77,7 +77,7 @@ void SygusEnumerator::initialize(Node e)
   }
   // Get the statically registered symmetry breaking clauses for e, see if they
   // can be used for speeding up the enumeration.
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> sbl;
   d_tds->getSymBreakLemmas(e, sbl);
   Node ag = d_tds->getActiveGuardForEnumerator(e);
@@ -241,7 +241,7 @@ void SygusEnumerator::TermCache::initialize(SygusStatistics* s,
       argTypes[i].push_back(type);
     }
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (std::pair<const unsigned, std::vector<unsigned>>& wp : weightsToIndices)
   {
     unsigned w = wp.first;
@@ -676,7 +676,7 @@ Node SygusEnumerator::TermEnumMaster::getCurrent()
     childrenToShape(children);
   }
   d_currTerm =
-      NodeManager::currentNM()->mkNode(Kind::APPLY_CONSTRUCTOR, children);
+      nodeManager()->mkNode(Kind::APPLY_CONSTRUCTOR, children);
   return d_currTerm;
 }
 
@@ -1087,7 +1087,7 @@ void SygusEnumerator::TermEnumMaster::childrenToShape(
 Node SygusEnumerator::TermEnumMaster::convertShape(
     Node n, std::map<TypeNode, size_t>& vcounter)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::unordered_map<TNode, Node> visited;
   std::unordered_map<TNode, Node>::iterator it;
   std::vector<TNode> visit;

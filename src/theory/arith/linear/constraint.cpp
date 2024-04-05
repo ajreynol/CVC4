@@ -531,7 +531,7 @@ TrustNode Constraint::externalExplainByAssertions() const
     }
     auto pf = d_database->d_pnm->mkScope(pfFromAssumptions, assumptions);
     return d_database->d_pfGen->mkTrustedPropagation(
-        getLiteral(), NodeManager::currentNM()->mkAnd(assumptions), pf);
+        getLiteral(), nodeManager()->mkAnd(assumptions), pf);
   }
   return TrustNode::mkTrustPropExp(getLiteral(), exp);
 }
@@ -1118,7 +1118,7 @@ TrustNode Constraint::split()
   {
     TypeNode type = lhs.getType();
     // Farkas proof that this works.
-    auto nm = NodeManager::currentNM();
+    auto nm = nodeManager();
     auto nLeqPf = d_database->d_pnm->mkAssume(leqNode.negate());
     auto gtPf = d_database->d_pnm->mkNode(
         ProofRule::MACRO_SR_PRED_TRANSFORM, {nLeqPf}, {gtNode});
@@ -1570,7 +1570,7 @@ TrustNode Constraint::externalExplainForPropagation(TNode lit) const
     }
     auto pf = d_database->d_pnm->mkScope(pfFromAssumptions, assumptions);
     return d_database->d_pfGen->mkTrustedPropagation(
-        lit, NodeManager::currentNM()->mkAnd(assumptions), pf);
+        lit, nodeManager()->mkAnd(assumptions), pf);
   }
   else
   {
@@ -1624,7 +1624,7 @@ TrustNode Constraint::externalExplainConflict() const
     }
     auto confPf = d_database->d_pnm->mkScope(bot, lits);
     return d_database->d_pfGen->mkTrustNode(
-        NodeManager::currentNM()->mkAnd(lits), confPf, true);
+        nodeManager()->mkAnd(lits), confPf, true);
   }
   else
   {
@@ -1782,7 +1782,7 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
           farkasChildren.insert(
               farkasChildren.end(), children.rbegin(), children.rend());
 
-          NodeManager* nm = NodeManager::currentNM();
+          NodeManager* nm = nodeManager();
 
           // Enumerate d_farkasCoefficients as nodes.
           std::vector<Node> farkasCoeffs;
@@ -2061,7 +2061,7 @@ Node Constraint::getProofLiteral() const
     }
     default: Unreachable() << d_type;
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node constPart = nm->mkConstRealOrInt(
       varPart.getType(), Rational(d_value.getNoninfinitesimalPart()));
   Node posLit = nm->mkNode(cmp, varPart, constPart);
@@ -2079,7 +2079,7 @@ void ConstraintDatabase::proveOr(std::vector<TrustNode>& out,
   if (isProofEnabled())
   {
     Assert(b->getNegation()->getType() != ConstraintType::Disequality);
-    auto nm = NodeManager::currentNM();
+    auto nm = nodeManager();
     Node alit = a->getNegation()->getProofLiteral();
     TypeNode type = alit[0].getType();
     auto pf_neg_la = d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,

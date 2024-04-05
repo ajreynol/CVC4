@@ -45,7 +45,7 @@ HigherOrderTrigger::HigherOrderTrigger(
     std::map<Node, std::vector<Node> >& ho_apps)
     : Trigger(env, qs, qim, qr, tr, q, nodes), d_ho_var_apps(ho_apps)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // process the higher-order variable applications
   for (std::pair<const Node, std::vector<Node> >& as : d_ho_var_apps)
   {
@@ -147,7 +147,7 @@ void HigherOrderTrigger::collectHoVarApplyTerms(
         }
         if (childChanged)
         {
-          ret = NodeManager::currentNM()->mkNode(cur.getKind(), children);
+          ret = nodeManager()->mkNode(cur.getKind(), children);
         }
         // now, convert and store the application
         if (!withinApply[cur])
@@ -427,9 +427,9 @@ bool HigherOrderTrigger::sendInstantiationArg(std::vector<Node>& m,
       Trace("ho-unif-debug2")
           << "  make lambda from children: " << d_lchildren[vnum] << std::endl;
       Node body =
-          NodeManager::currentNM()->mkNode(Kind::APPLY_UF, d_lchildren[vnum]);
+          nodeManager()->mkNode(Kind::APPLY_UF, d_lchildren[vnum]);
       Trace("ho-unif-debug2") << "  got " << body << std::endl;
-      Node lam = NodeManager::currentNM()->mkNode(Kind::LAMBDA, lbvl, body);
+      Node lam = nodeManager()->mkNode(Kind::LAMBDA, lbvl, body);
       m[vnum] = lam;
       Trace("ho-unif-debug2") << "  try " << vnum << " -> " << lam << std::endl;
     }
@@ -475,7 +475,7 @@ uint64_t HigherOrderTrigger::addHoTypeMatchPredicateLemmas()
   // this forces expansion of APPLY_UF terms to curried HO_APPLY chains
   TermDb* tdb = d_treg.getTermDatabase();
   unsigned size = tdb->getNumOperators();
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (unsigned j = 0; j < size; j++)
   {
     Node f = tdb->getOperator(j);

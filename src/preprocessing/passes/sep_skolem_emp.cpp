@@ -35,9 +35,7 @@ namespace passes {
 using namespace std;
 using namespace cvc5::internal::theory;
 
-namespace {
-
-Node preSkolemEmp(TypeNode locType,
+Node SepSkolemEmp::preSkolemEmp(TypeNode locType,
                   TypeNode dataType,
                   Node n,
                   bool pol,
@@ -46,7 +44,7 @@ Node preSkolemEmp(TypeNode locType,
   std::map<Node, Node>::iterator it = visited[pol].find(n);
   if (it == visited[pol].end())
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     SkolemManager* sm = nm->getSkolemManager();
     Trace("sep-preprocess") << "Pre-skolem emp " << n << " with pol " << pol
                             << std::endl;
@@ -99,8 +97,6 @@ Node preSkolemEmp(TypeNode locType,
     return it->second;
   }
 }
-
-}  // namespace
 
 SepSkolemEmp::SepSkolemEmp(PreprocessingPassContext* preprocContext)
     : PreprocessingPass(preprocContext, "sep-skolem-emp"){};

@@ -79,7 +79,7 @@ void ConversionsSolver::checkReduction(Node n)
   }
   if (options().uf.modelBasedArithBvConv)
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     Node argval = d_state.getModel()->getValue(n[0]);
     Trace("bv-convs-debug") << "  arg value = " << argval << std::endl;
     Node eval = rewrite(nm->mkNode(n.getOperator(), argval));

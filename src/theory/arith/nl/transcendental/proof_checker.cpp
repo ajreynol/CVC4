@@ -41,7 +41,7 @@ namespace {
  */
 Node mkBounds(TNode t, TNode lb, TNode ub)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkAnd(std::vector<Node>{nm->mkNode(Kind::GEQ, t, lb),
                                      nm->mkNode(Kind::LEQ, t, ub)});
 }
@@ -52,7 +52,7 @@ Node mkBounds(TNode t, TNode lb, TNode ub)
  */
 Node mkSecant(TNode t, TNode l, TNode u, TNode evall, TNode evalu)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(Kind::ADD,
                     evall,
                     nm->mkNode(Kind::MULT,
@@ -90,7 +90,7 @@ Node TranscendentalProofRuleChecker::checkInternal(
     const std::vector<Node>& children,
     const std::vector<Node>& args)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node zero = nm->mkConstInt(Rational(0));
   Node one = nm->mkConstInt(Rational(1));
   Node mone = nm->mkConstInt(Rational(-1));

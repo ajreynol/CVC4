@@ -20,7 +20,7 @@ namespace cvc5::internal {
 
 TNode FreeVarCache::getFreeVar(const TypeNode& tn, size_t i)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   while (i >= d_fv[tn].size())
   {
     Node v = nm->mkBoundVar(tn);

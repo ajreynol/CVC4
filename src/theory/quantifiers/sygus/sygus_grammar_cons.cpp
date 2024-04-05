@@ -72,7 +72,7 @@ SygusGrammar SygusGrammarCons::mkDefaultGrammar(const Env& env,
                                                 const Node& bvl,
                                                 const std::vector<Node>& trules)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::map<TypeNode, std::vector<Node>>::iterator it;
   SygusGrammar g = mkEmptyGrammar(env, range, bvl, trules);
   std::map<TypeNode, std::vector<Node>> typeToNtSym = getTypeToNtSymMap(g);
@@ -173,7 +173,7 @@ SygusGrammar SygusGrammarCons::mkEmptyGrammar(const Env& env,
                                               const Node& bvl,
                                               const std::vector<Node>& trules)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // get the variables
   std::vector<Node> vars;
   if (!bvl.isNull())
@@ -266,7 +266,7 @@ void SygusGrammarCons::addDefaultRulesTo(
 {
   TypeNode tn = ntSym.getType();
   std::vector<Node> prevRules = g.getRulesFor(ntSym);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   options::SygusGrammarConsMode tsgcm =
       env.getOptions().quantifiers.sygusGrammarConsMode;
   // add constants
@@ -722,7 +722,7 @@ void SygusGrammarCons::addDefaultRulesTo(
 void SygusGrammarCons::collectTypes(const TypeNode& range,
                                     std::unordered_set<TypeNode>& types)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (types.find(range) != types.end())
   {
     return;
@@ -779,7 +779,7 @@ void SygusGrammarCons::addDefaultPredicateRulesTo(
     const Node& ntSymBool,
     const std::map<TypeNode, std::vector<Node>>& typeToNtSym)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Assert(!ntSym.getType().isBoolean());
   Assert(ntSymBool.getType().isBoolean());
   TypeNode tn = ntSym.getType();
@@ -889,7 +889,7 @@ void SygusGrammarCons::addDefaultPredicateRulesTo(
 void SygusGrammarCons::mkSygusConstantsForType(const TypeNode& type,
                                                std::vector<Node>& ops)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (type.isRealOrInt())
   {
     ops.push_back(nm->mkConstRealOrInt(type, Rational(0)));
@@ -998,7 +998,7 @@ bool SygusGrammarCons::addRuleTo(
     Assert(!it->second.empty());
     children.push_back(it->second[0]);
   }
-  Node rule = NodeManager::currentNM()->mkNode(k, children);
+  Node rule = nodeManager()->mkNode(k, children);
   TypeNode rtn = rule.getType();
   it = typeToNtSym.find(rtn);
   if (it == typeToNtSym.end())

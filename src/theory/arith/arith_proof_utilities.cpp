@@ -25,7 +25,7 @@ std::vector<Node> getMacroSumUbCoeff(const std::vector<Pf>& pfs,
                                      const std::vector<Node>& coeffs)
 {
   Assert(pfs.size() == coeffs.size());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> ret;
   TypeNode itype = nm->integerType();
   TypeNode rtype = nm->realType();

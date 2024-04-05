@@ -63,7 +63,7 @@ TrustNode Skolemize::process(Node q)
     ProofNodeManager * pnm = d_env.getProofNodeManager();
     // if using proofs and not using induction, we use the justified
     // skolemization
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     std::vector<Node> echildren(q.begin(), q.end());
     echildren[1] = echildren[1].notNode();
     Node existsq = nm->mkNode(Kind::EXISTS, echildren);
@@ -119,7 +119,7 @@ Node Skolemize::getSkolemConstant(const Node& q, size_t i)
 {
   Assert(q.getKind() == Kind::EXISTS);
   Assert(i < q[0].getNumChildren());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   std::vector<Node> cacheVals{q, q[0][i]};
   return sm->mkSkolemFunction(SkolemId::QUANTIFIERS_SKOLEMIZE, cacheVals);
@@ -141,7 +141,7 @@ void Skolemize::getSelfSel(const DType& dt,
   }
   Trace("sk-ind-debug") << "Check self sel " << dc.getName() << " "
                         << dt.getName() << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (unsigned j = 0; j < dc.getNumArgs(); j++)
   {
     if (dt.isParametric())
@@ -191,7 +191,7 @@ Node Skolemize::mkSkolemizedBodyInduction(const Options& opts,
                                           Node& sub,
                                           std::vector<unsigned>& sub_vars)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // compute the argument types from the free variables
   std::vector<TypeNode> argTypes;
   for (TNode v : fvs)

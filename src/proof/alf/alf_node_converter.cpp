@@ -70,7 +70,7 @@ Node AlfNodeConverter::preConvert(Node n)
 
 Node AlfNodeConverter::postConvert(Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = n.getKind();
   // we eliminate MATCH at preConvert above
   Assert(k != Kind::MATCH);
@@ -118,7 +118,7 @@ Node AlfNodeConverter::postConvert(Node n)
     d_varIndex[sname]++;
     std::stringstream ssn;
     ssn << "alf." << index << "." << sname;
-    return NodeManager::currentNM()->mkBoundVar(ssn.str(), tn);
+    return nodeManager()->mkBoundVar(ssn.str(), tn);
   }
   else if (k == Kind::VARIABLE)
   {
@@ -302,7 +302,7 @@ bool AlfNodeConverter::shouldTraverse(Node n)
 
 Node AlfNodeConverter::maybeMkSkolemFun(Node k)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   SkolemId sfi = SkolemId::NONE;
   Node cacheVal;
@@ -393,21 +393,21 @@ Node AlfNodeConverter::getNullTerminator(Kind k, TypeNode tn)
       // tuple constructor is n-ary with unit tuple as null terminator
       if (tn.isTuple())
       {
-        TypeNode tnu = NodeManager::currentNM()->mkTupleType({});
-        return NodeManager::currentNM()->mkGroundValue(tnu);
+        TypeNode tnu = nodeManager()->mkTupleType({});
+        return nodeManager()->mkGroundValue(tnu);
       }
       return Node::null();
       break;
-    case Kind::OR: return NodeManager::currentNM()->mkConst(false);
+    case Kind::OR: return nodeManager()->mkConst(false);
     case Kind::SEP_STAR:
-    case Kind::AND: return NodeManager::currentNM()->mkConst(true);
-    case Kind::ADD: return NodeManager::currentNM()->mkConstInt(Rational(0));
+    case Kind::AND: return nodeManager()->mkConst(true);
+    case Kind::ADD: return nodeManager()->mkConstInt(Rational(0));
     case Kind::MULT:
     case Kind::NONLINEAR_MULT:
-      return NodeManager::currentNM()->mkConstInt(Rational(1));
+      return nodeManager()->mkConstInt(Rational(1));
     case Kind::BITVECTOR_CONCAT:
       return mkInternalSymbol("@bvempty",
-                              NodeManager::currentNM()->mkBitVectorType(0));
+                              nodeManager()->mkBitVectorType(0));
     default: break;
   }
   return mkNil(tn);
@@ -415,7 +415,7 @@ Node AlfNodeConverter::getNullTerminator(Kind k, TypeNode tn)
 
 Node AlfNodeConverter::mkList(const std::vector<Node>& args)
 {
-  TypeNode tn = NodeManager::currentNM()->booleanType();
+  TypeNode tn = nodeManager()->booleanType();
   if (args.empty())
   {
     return mkNil(tn);
@@ -429,7 +429,7 @@ Node AlfNodeConverter::mkInternalSymbol(const std::string& name,
                                         bool useRawSym)
 {
   // use raw symbol so that it is never quoted
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node sym = useRawSym ? nm->mkRawSymbol(name, tn) : nm->mkBoundVar(name, tn);
   d_symbols.insert(sym);
   return sym;
@@ -448,7 +448,7 @@ Node AlfNodeConverter::mkInternalApp(const std::string& name,
       Assert(!a.isNull());
       argTypes.push_back(a.getType());
     }
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     TypeNode atype = nm->mkFunctionType(argTypes, ret);
     Node op = mkInternalSymbol(name, atype, useRawSym);
     std::vector<Node> aargs;
@@ -462,7 +462,7 @@ Node AlfNodeConverter::mkInternalApp(const std::string& name,
 Node AlfNodeConverter::getOperatorOfTerm(Node n, bool reqCast)
 {
   Assert(n.hasOperator());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = n.getKind();
   std::stringstream opName;
   Trace("alf-term-process-debug2")

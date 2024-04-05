@@ -85,7 +85,7 @@ Trigger::Trigger(Env& env,
     Node ns = d_qreg.substituteInstConstantsToBoundVariables(nt, q);
     extNodes.push_back(ns);
   }
-  d_trNode = NodeManager::currentNM()->mkNode(Kind::SEXPR, extNodes);
+  d_trNode = nodeManager()->mkNode(Kind::SEXPR, extNodes);
   if (isOutputOn(OutputTag::TRIGGER))
   {
     QuantAttributes& qa = d_qreg.getQuantAttributes();
@@ -138,7 +138,7 @@ bool Trigger::isMultiTrigger() const { return d_nodes.size() > 1; }
 
 Node Trigger::getInstPattern() const
 {
-  return NodeManager::currentNM()->mkNode(Kind::INST_PATTERN, d_nodes);
+  return nodeManager()->mkNode(Kind::INST_PATTERN, d_nodes);
 }
 
 uint64_t Trigger::addInstantiations()
@@ -153,7 +153,7 @@ uint64_t Trigger::addInstantiations()
     {
       if (!ee->hasTerm(gt))
       {
-        SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+        SkolemManager* sm = nodeManager()->getSkolemManager();
         Node k = sm->mkPurifySkolem(gt);
         Node eq = k.eqNode(gt);
         Trace("trigger-gt-lemma")
@@ -186,7 +186,7 @@ Node Trigger::ensureGroundTermPreprocessed(Valuation& val,
                                            Node n,
                                            std::vector<Node>& gts)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::unordered_map<TNode, Node> visited;
   std::unordered_map<TNode, Node>::iterator it;
   std::vector<TNode> visit;

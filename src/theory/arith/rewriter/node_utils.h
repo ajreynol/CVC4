@@ -84,24 +84,24 @@ std::optional<TNode> getZeroChild(const Iterable& parent)
 /** Create a Boolean constant node */
 inline Node mkConst(bool value)
 {
-  return NodeManager::currentNM()->mkConst(value);
+  return nodeManager()->mkConst(value);
 }
 /** Create an integer constant node */
 inline Node mkConst(const Integer& value)
 {
-  return NodeManager::currentNM()->mkConstInt(value);
+  return nodeManager()->mkConstInt(value);
 }
 
 /** Create a real algebraic number node */
 inline Node mkConst(const RealAlgebraicNumber& value)
 {
-  return NodeManager::currentNM()->mkRealAlgebraicNumber(value);
+  return nodeManager()->mkRealAlgebraicNumber(value);
 }
 
 /** Make a nonlinear multiplication from the given factors */
 inline Node mkNonlinearMult(const std::vector<Node>& factors)
 {
-  auto* nm = NodeManager::currentNM();
+  auto* nm = nodeManager();
   switch (factors.size())
   {
     case 0: return nm->mkConstInt(Rational(1));

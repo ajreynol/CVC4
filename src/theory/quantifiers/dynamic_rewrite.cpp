@@ -127,7 +127,7 @@ Node DynamicRewriter::toInternal(Node a)
       }
       else
       {
-        ret = NodeManager::currentNM()->mkNode(Kind::APPLY_UF, children);
+        ret = nodeManager()->mkNode(Kind::APPLY_UF, children);
       }
     }
   }
@@ -148,7 +148,7 @@ Node DynamicRewriter::toExternal(Node ai)
 
 Node DynamicRewriter::OpInternalSymTrie::getSymbol(Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   std::vector<TypeNode> ctypes;
   for (const Node& cn : n)

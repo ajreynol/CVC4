@@ -33,7 +33,7 @@ ProofNodeManager::ProofNodeManager(const Options& opts,
                                    ProofChecker* pc)
     : d_opts(opts), d_rewriter(rr), d_checker(pc)
 {
-  d_true = NodeManager::currentNM()->mkConst(true);
+  d_true = nodeManager()->mkConst(true);
   // we always allocate a proof checker, regardless of the proof checking mode
   Assert(d_checker != nullptr);
 }
@@ -273,7 +273,7 @@ std::shared_ptr<ProofNode> ProofNodeManager::mkScope(
     assumps.insert(assumps.end(), ac.begin(), ac.end());
   }
   Node minExpected;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node exp;
   if (assumps.empty())
   {

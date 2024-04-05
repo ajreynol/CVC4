@@ -76,7 +76,7 @@ Node eliminateCrowdingLits(bool reorderPremises,
   Trace("crowding-lits") << "Clause lits: " << clauseLits << "\n";
   Trace("crowding-lits") << "Target lits: " << targetClauseLits << "\n\n";
   std::vector<Node> newChildren{children}, newArgs{args};
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node trueNode = nm->mkConst(true);
   // get crowding lits and the position of the last clause that includes
   // them. The factoring step must be added after the last inclusion and before
@@ -586,7 +586,7 @@ bool isSingletonClause(TNode res,
     return true;
   }
   size_t i;
-  Node trueNode = NodeManager::currentNM()->mkConst(true);
+  Node trueNode = nodeManager()->mkConst(true);
   // Find out the last child to introduced res, if any. We only need to
   // look at the last one because any previous introduction would have
   // been eliminated.

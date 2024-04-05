@@ -29,12 +29,12 @@ Node Word::mkEmptyWord(TypeNode tn)
   if (tn.isString())
   {
     std::vector<unsigned> vec;
-    return NodeManager::currentNM()->mkConst(String(vec));
+    return nodeManager()->mkConst(String(vec));
   }
   else if (tn.isSequence())
   {
     std::vector<Node> seq;
-    return NodeManager::currentNM()->mkConst(
+    return nodeManager()->mkConst(
         Sequence(tn.getSequenceElementType(), seq));
   }
   Unimplemented();
@@ -44,7 +44,7 @@ Node Word::mkEmptyWord(TypeNode tn)
 Node Word::mkWordFlatten(const std::vector<Node>& xs)
 {
   Assert(!xs.empty());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = xs[0].getKind();
   if (k == Kind::CONST_STRING)
   {
@@ -69,7 +69,7 @@ Node Word::mkWordFlatten(const std::vector<Node>& xs)
       const std::vector<Node>& vecc = sx.getVec();
       seq.insert(seq.end(), vecc.begin(), vecc.end());
     }
-    return NodeManager::currentNM()->mkConst(
+    return nodeManager()->mkConst(
         Sequence(tn.getSequenceElementType(), seq));
   }
   Unimplemented();
@@ -95,7 +95,7 @@ std::vector<Node> Word::getChars(TNode x)
 {
   Kind k = x.getKind();
   std::vector<Node> ret;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (k == Kind::CONST_STRING)
   {
     std::vector<unsigned> ccVec;
@@ -131,7 +131,7 @@ Node Word::getNth(TNode x, size_t n)
   {
     const std::vector<unsigned>& vec = x.getConst<String>().getVec();
     Assert(n < vec.size());
-    return NodeManager::currentNM()->mkConstInt(vec[n]);
+    return nodeManager()->mkConstInt(vec[n]);
   }
   else if (k == Kind::CONST_SEQUENCE)
   {
@@ -273,7 +273,7 @@ bool Word::hasSuffix(TNode x, TNode y)
 
 Node Word::update(TNode x, std::size_t i, TNode t)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = x.getKind();
   if (k == Kind::CONST_STRING)
   {
@@ -295,7 +295,7 @@ Node Word::update(TNode x, std::size_t i, TNode t)
 }
 Node Word::replace(TNode x, TNode y, TNode t)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = x.getKind();
   if (k == Kind::CONST_STRING)
   {
@@ -321,7 +321,7 @@ Node Word::replace(TNode x, TNode y, TNode t)
 }
 Node Word::substr(TNode x, std::size_t i)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = x.getKind();
   if (k == Kind::CONST_STRING)
   {
@@ -339,7 +339,7 @@ Node Word::substr(TNode x, std::size_t i)
 }
 Node Word::substr(TNode x, std::size_t i, std::size_t j)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = x.getKind();
   if (k == Kind::CONST_STRING)
   {
@@ -360,7 +360,7 @@ Node Word::prefix(TNode x, std::size_t i) { return substr(x, 0, i); }
 
 Node Word::suffix(TNode x, std::size_t i)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = x.getKind();
   if (k == Kind::CONST_STRING)
   {
@@ -482,7 +482,7 @@ Node Word::splitConstant(TNode x, TNode y, size_t& index, bool isRev)
 
 Node Word::reverse(TNode x)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = x.getKind();
   if (k == Kind::CONST_STRING)
   {

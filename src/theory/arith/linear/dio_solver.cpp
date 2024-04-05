@@ -31,7 +31,7 @@ namespace theory {
 namespace arith::linear {
 
 inline Node makeIntegerVariable(){
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   return sm->mkDummySkolem("intvar",
                            nm->integerType(),
@@ -108,7 +108,7 @@ Node DioSolver::nextPureSubstitution(){
   Polynomial p = sp.getPolynomial();
   Constant c = -sp.getConstant();
   Polynomial cancelV = p + Polynomial::mkPolynomial(v);
-  Node eq = NodeManager::currentNM()->mkNode(
+  Node eq = nodeManager()->mkNode(
       Kind::EQUAL, v.getNode(), cancelV.getNode());
   return eq;
 }
@@ -821,7 +821,7 @@ Node DioSolver::trailIndexToEquality(TrailIndex i) const {
   const SumPair& sp = d_trail[i].d_eq;
   Node n = sp.getNode();
   Node zero =
-      NodeManager::currentNM()->mkConstRealOrInt(n.getType(), Rational(0));
+      nodeManager()->mkConstRealOrInt(n.getType(), Rational(0));
   Node eq = n.eqNode(zero);
   return eq;
 }

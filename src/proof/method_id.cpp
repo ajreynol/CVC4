@@ -51,7 +51,7 @@ std::ostream& operator<<(std::ostream& out, MethodId id)
 
 Node mkMethodId(MethodId id)
 {
-  return NodeManager::currentNM()->mkConstInt(
+  return nodeManager()->mkConstInt(
       Rational(static_cast<uint32_t>(id)));
 }
 

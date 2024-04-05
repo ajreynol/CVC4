@@ -278,7 +278,7 @@ bool FunctionProperties::isWellFounded(TypeNode type)
 
 Node FunctionProperties::mkGroundTerm(TypeNode type)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node bvl = nm->getBoundVarListForFunctionType(type);
   Node ret = nm->mkGroundTerm(type.getRangeType());
   return nm->mkNode(Kind::LAMBDA, bvl, ret);

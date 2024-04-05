@@ -31,8 +31,8 @@ namespace strings {
 
 RegExpEntail::RegExpEntail(Rewriter* r) : d_aent(r)
 {
-  d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
-  d_one = NodeManager::currentNM()->mkConstInt(Rational(1));
+  d_zero = nodeManager()->mkConstInt(Rational(0));
+  d_one = nodeManager()->mkConstInt(Rational(1));
 }
 
 Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,
@@ -44,7 +44,7 @@ Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,
   Trace("regexp-ext-rewrite-debug")
       << "  mchildren : " << mchildren << std::endl;
   Trace("regexp-ext-rewrite-debug") << "  children : " << children << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   unsigned tmin = dir < 0 ? 0 : dir;
   unsigned tmax = dir < 0 ? 1 : dir;
   // try to remove off front and back
@@ -572,7 +572,7 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
     }
     case Kind::REGEXP_LOOP:
     {
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       uint32_t l = r[1].getConst<Rational>().getNumerator().toUnsignedInt();
       if (s.size() == index_start)
       {
@@ -672,7 +672,7 @@ bool RegExpEntail::hasEpsilonNode(TNode node)
 
 Node RegExpEntail::getFixedLengthForRegexp(TNode n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = n.getKind();
   if (k == Kind::STRING_TO_REGEXP)
   {
@@ -730,7 +730,7 @@ Node RegExpEntail::getConstantBoundLengthForRegexp(TNode n, bool isLower) const
     return ret;
   }
   Kind k = n.getKind();
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (k == Kind::STRING_TO_REGEXP)
   {
     ret = d_aent.getConstantBoundLength(n[0], isLower);
@@ -897,7 +897,7 @@ bool RegExpEntail::regExpIncludes(Node r1,
   }
   // avoid infinite loop
   cache[key] = false;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node sigma = nm->mkNode(Kind::REGEXP_ALLCHAR, std::vector<Node>{});
   Node sigmaStar = nm->mkNode(Kind::REGEXP_STAR, sigma);
 

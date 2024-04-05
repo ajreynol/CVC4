@@ -47,9 +47,9 @@ typedef expr::Attribute<ExtRewriteAggAttributeId, Node> ExtRewriteAggAttribute;
 ExtendedRewriter::ExtendedRewriter(NodeManager* nm, Rewriter& rew, bool aggr)
     : d_nm(nm), d_rew(rew), d_aggr(aggr)
 {
-  d_true = NodeManager::currentNM()->mkConst(true);
-  d_false = NodeManager::currentNM()->mkConst(false);
-  d_intZero = NodeManager::currentNM()->mkConstInt(Rational(0));
+  d_true = nodeManager()->mkConst(true);
+  d_false = nodeManager()->mkConst(false);
+  d_intZero = nodeManager()->mkConstInt(Rational(0));
 }
 
 void ExtendedRewriter::setCache(Node n, Node ret) const
@@ -111,7 +111,7 @@ Node ExtendedRewriter::extendedRewrite(Node n) const
   }
 
   Node ret = n;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   //--------------------pre-rewrite
   if (d_aggr)
@@ -353,7 +353,7 @@ Node ExtendedRewriter::extendedRewriteIte(Kind itek, Node n, bool full) const
   Assert(n.getKind() == itek);
   Assert(n[1] != n[2]);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   Trace("ext-rew-ite") << "Rewrite ITE : " << n << std::endl;
 
@@ -606,7 +606,7 @@ Node ExtendedRewriter::extendedRewritePullIte(Kind itek, Node n) const
     // don't pull ITE out of quantifiers
     return n;
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TypeNode tn = n.getType();
   std::vector<Node> children;
   bool hasOp = (n.getMetaKind() == metakind::PARAMETERIZED);
@@ -762,7 +762,7 @@ Node ExtendedRewriter::extendedRewriteNnf(Node ret) const
     c = (i == 0 ? neg_ch_1 : false) != neg_ch ? c.negate() : c;
     new_children.push_back(c);
   }
-  return NodeManager::currentNM()->mkNode(nk, new_children);
+  return nodeManager()->mkNode(nk, new_children);
 }
 
 Node ExtendedRewriter::extendedRewriteBcp(Kind andk,
@@ -775,7 +775,7 @@ Node ExtendedRewriter::extendedRewriteBcp(Kind andk,
   Assert(k == andk || k == ork);
   Trace("ext-rew-bcp") << "BCP: **** INPUT: " << ret << std::endl;
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   TypeNode tn = ret.getType();
   Node truen = TermUtil::mkTypeMaxValue(tn);
@@ -936,7 +936,7 @@ Node ExtendedRewriter::extendedRewriteFactoring(Kind andk,
                                                 Node n) const
 {
   Trace("ext-rew-factoring") << "Factoring: *** INPUT: " << n << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   Kind nk = n.getKind();
   Assert(nk == andk || nk == ork);
@@ -1031,7 +1031,7 @@ Node ExtendedRewriter::extendedRewriteEqRes(Kind andk,
   Assert(n.getKind() == andk || n.getKind() == ork);
   Trace("ext-rew-eqres") << "Eq res: **** INPUT: " << n << std::endl;
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind nk = n.getKind();
   bool gpol = (nk == andk);
   for (unsigned i = 0, nchild = n.getNumChildren(); i < nchild; i++)
@@ -1185,7 +1185,7 @@ Node ExtendedRewriter::extendedRewriteEqChain(
     return Node::null();
   }
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   TypeNode tn = ret[0].getType();
 
@@ -1601,7 +1601,7 @@ Node ExtendedRewriter::partialSubstitute(
       }
       if (childChanged)
       {
-        ret = NodeManager::currentNM()->mkNode(cur.getKind(), children);
+        ret = nodeManager()->mkNode(cur.getKind(), children);
       }
       visited[cur] = ret;
     }
@@ -1691,7 +1691,7 @@ bool ExtendedRewriter::inferSubstitution(Node n, Subs& subs, bool usePred) const
   {
     bool negated = n.getKind() == Kind::NOT;
     Node var = negated ? n[0] : n;
-    Node s = NodeManager::currentNM()->mkConst(!negated);
+    Node s = nodeManager()->mkConst(!negated);
     subs.add(var, s);
     return true;
   }
@@ -1711,7 +1711,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   }
   else if (k == Kind::STRING_SUBSTR)
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     Node tot_len = d_rew.rewrite(nm->mkNode(Kind::STRING_LENGTH, node[0]));
     strings::ArithEntail aent(&d_rew);
     // (str.substr s x y) --> "" if x < len(s) |= 0 >= y
@@ -1755,7 +1755,7 @@ Node ExtendedRewriter::extendedRewriteSets(const Node& node) const
     // (setminus A B)), for instance if we are splitting the Venn regions of A
     // and (set.minus A B), then we should not transform this to an intersection
     // term. (set.minus A (set.minus A B)) = (set.inter A B)
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     Node ret = nm->mkNode(Kind::SET_INTER, node[0], node[1][1]);
     debugExtendedRewrite(node, ret, "SET_MINUS_MINUS");
     return ret;

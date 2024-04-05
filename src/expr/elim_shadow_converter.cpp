@@ -78,7 +78,7 @@ Node ElimShadowNodeConverter::getElimShadowVar(const Node& q,
                                                const Node& n,
                                                const Node& v)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   BoundVarManager* bvm = nm->getBoundVarManager();
   Node cacheVal = BoundVarManager::getCacheValue(q, n, v);
   return bvm->mkBoundVar<QElimShadowAttribute>(cacheVal, v.getType());
@@ -87,7 +87,7 @@ Node ElimShadowNodeConverter::getElimShadowVar(const Node& q,
 Node ElimShadowNodeConverter::eliminateShadow(const Node& q)
 {
   Assert(q.isClosure());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   ElimShadowNodeConverter esnc(nm, q);
   // eliminate shadowing in all children
   std::vector<Node> children;
@@ -96,7 +96,7 @@ Node ElimShadowNodeConverter::eliminateShadow(const Node& q)
   {
     children.push_back(esnc.convert(q[i]));
   }
-  return NodeManager::currentNM()->mkNode(q.getKind(), children);
+  return nodeManager()->mkNode(q.getKind(), children);
 }
 
 }  // namespace cvc5::internal

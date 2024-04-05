@@ -268,15 +268,15 @@ PolyVector requiredCoefficientsLazardModified(
 
   // construct phi := (and (= p_i 0)) with p_i the coefficients of p
   std::vector<Node> conditions;
-  auto zero = NodeManager::currentNM()->mkConstReal(Rational(0));
+  auto zero = nodeManager()->mkConstReal(Rational(0));
   for (const auto& coeff : poly::coefficients(p))
   {
-    conditions.emplace_back(NodeManager::currentNM()->mkNode(
+    conditions.emplace_back(nodeManager()->mkNode(
         Kind::EQUAL, nl::as_cvc_polynomial(coeff, vm), zero));
   }
   // if phi is false (i.e. p can not vanish)
   Node rewritten =
-      rewriter->extendedRewrite(NodeManager::currentNM()->mkAnd(conditions));
+      rewriter->extendedRewrite(nodeManager()->mkAnd(conditions));
   if (rewritten.isConst())
   {
     Assert(rewritten.getKind() == Kind::CONST_BOOLEAN);
@@ -666,7 +666,7 @@ ProofGenerator* CDCAC::closeProof(const std::vector<Node>& assertions)
 bool CDCAC::checkIntegrality(std::size_t cur_variable, const poly::Value& value)
 {
   Node var = d_constraints.varMapper()(d_variableOrdering[cur_variable]);
-  if (var.getType() != NodeManager::currentNM()->integerType())
+  if (var.getType() != nodeManager()->integerType())
   {
     // variable is not integral
     return true;

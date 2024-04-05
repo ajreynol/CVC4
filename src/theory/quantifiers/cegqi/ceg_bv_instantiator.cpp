@@ -159,7 +159,7 @@ Node BvInstantiator::hasProcessAssertion(CegInstantiator* ci,
   {
     return lit;
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node s = atom[0];
   Node t = atom[1];
 
@@ -465,7 +465,7 @@ Node BvInstantiator::rewriteAssertionForSolvePv(CegInstantiator* ci,
       {
         if (childChanged)
         {
-          ret = NodeManager::currentNM()->mkNode(cur.getKind(), children);
+          ret = nodeManager()->mkNode(cur.getKind(), children);
         }
         else
         {
@@ -539,7 +539,7 @@ Node BvInstantiator::rewriteTermForSolvePv(
     std::vector<Node>& children,
     std::unordered_map<Node, bool>& contains_pv)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   // [1] rewrite cases of non-invertible operators
 
@@ -647,7 +647,7 @@ void BvInstantiatorPreprocess::registerCounterexampleLemma(
 
   if (d_opts.quantifiers.cegqiBvRmExtract)
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     SkolemManager* sm = nm->getSkolemManager();
     Trace("cegqi-bv-pp") << "-----remove extracts..." << std::endl;
     // map from terms to bitvector extracts applied to that term

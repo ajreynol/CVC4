@@ -158,7 +158,7 @@ Node CandidateRewriteDatabase::addOrGetTerm(Node sol,
         if (r.getStatus() == Result::SAT)
         {
           Trace("rr-check") << "...rewrite does not hold for: " << std::endl;
-          NodeManager* nm = NodeManager::currentNM();
+          NodeManager* nm = nodeManager();
           is_unique_term = true;
           std::vector<Node> vars;
           d_sampler->getVariables(vars);

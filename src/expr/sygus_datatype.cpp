@@ -40,7 +40,7 @@ void SygusDatatype::addConstructor(Node op,
 
 void SygusDatatype::addAnyConstantConstructor(TypeNode tn)
 {
-  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+  SkolemManager* sm = nodeManager()->getSkolemManager();
   // add an "any constant" proxy variable
   Node av =
       sm->mkInternalSkolemFunction(InternalSkolemId::SYGUS_ANY_CONSTANT, tn);
@@ -55,7 +55,7 @@ void SygusDatatype::addConstructor(Kind k,
                                    const std::vector<TypeNode>& argTypes,
                                    int weight)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   addConstructor(nm->operatorOf(k), kindToString(k), argTypes, weight);
 }
 

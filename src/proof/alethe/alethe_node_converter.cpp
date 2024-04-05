@@ -25,7 +25,7 @@ AletheNodeConverter::AletheNodeConverter(NodeManager* nm) : NodeConverter(nm) {}
 
 Node AletheNodeConverter::postConvert(Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = n.getKind();
   switch (k)
   {
@@ -63,7 +63,7 @@ Node AletheNodeConverter::postConvert(Node n)
 
 Node AletheNodeConverter::mkInternalSymbol(const std::string& name)
 {
-  return mkInternalSymbol(name, NodeManager::currentNM()->sExprType());
+  return mkInternalSymbol(name, nodeManager()->sExprType());
 }
 
 Node AletheNodeConverter::mkInternalSymbol(const std::string& name, TypeNode tn)
@@ -75,7 +75,7 @@ Node AletheNodeConverter::mkInternalSymbol(const std::string& name, TypeNode tn)
   {
     return it->second;
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node sym = nm->mkBoundVar(name, tn);
   d_symbolsMap[key] = sym;
   return sym;

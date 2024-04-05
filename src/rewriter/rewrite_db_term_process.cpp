@@ -40,7 +40,7 @@ Node RewriteDbNodeConverter::postConvert(Node n)
   TypeNode tn = n.getType();
   if (k == Kind::CONST_STRING)
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     // "ABC" is (str.++ "A" "B" "C")
     const std::vector<unsigned>& vec = n.getConst<String>().getVec();
     if (vec.size() <= 1)
@@ -63,7 +63,7 @@ Node RewriteDbNodeConverter::postConvert(Node n)
   else if (k == Kind::CONST_BITVECTOR)
   {
     // (_ bv N M) is (bv N M)
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     std::vector<Node> children;
     children.push_back(
         nm->mkConstInt(Rational(n.getConst<BitVector>().toInteger())));
@@ -75,14 +75,14 @@ Node RewriteDbNodeConverter::postConvert(Node n)
     // ignore annotation
     if (n.getNumChildren() == 3)
     {
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       return nm->mkNode(Kind::FORALL, n[0], n[1]);
     }
   }
   // convert indexed operators to symbolic
   if (GenericOp::isIndexedOperatorKind(k))
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     std::vector<Node> indices =
         GenericOp::getIndicesForOperator(k, n.getOperator());
     indices.insert(indices.begin(), nm->mkConst(GenericOp(k)));

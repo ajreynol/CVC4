@@ -32,7 +32,7 @@ namespace ff {
 
 FieldObj::FieldObj(const FfSize& size)
     : d_size(size),
-      d_nm(NodeManager::currentNM()),
+      d_nm(nodeManager()),
       d_zero(d_nm->mkConst(FiniteFieldValue(0, d_size))),
       d_one(d_nm->mkConst(FiniteFieldValue(1, d_size)))
 #ifdef CVC5_USE_COCOA

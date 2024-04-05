@@ -113,7 +113,7 @@ Node TermRecBuild::build(unsigned d)
     }
     children.push_back(nc);
   }
-  return NodeManager::currentNM()->mkNode(d_kind[d], children);
+  return nodeManager()->mkNode(d_kind[d], children);
 }
 
 SygusExplain::SygusExplain(Env& env, TermDbSygus* tdb) : EnvObj(env), d_tdb(tdb)
@@ -177,7 +177,7 @@ Node SygusExplain::getExplanationForEquality(Node n,
   getExplanationForEquality(n, vn, exp, cexc);
   Assert(!exp.empty());
   return exp.size() == 1 ? exp[0]
-                         : NodeManager::currentNM()->mkNode(Kind::AND, exp);
+                         : nodeManager()->mkNode(Kind::AND, exp);
 }
 
 // we have ( n = vn => eval( n ) = bvr ) ^ vn != vnr , returns exp such that exp
@@ -247,7 +247,7 @@ void SygusExplain::getExplanationFor(TermRecBuild& trb,
     if (vnr.getOperator() != vn.getOperator())
     {
       vnr = Node::null();
-      vnr_exp = NodeManager::currentNM()->mkConst(true);
+      vnr_exp = nodeManager()->mkConst(true);
     }
   }
   bool shareSel = options().datatypes.dtSharedSelectors;

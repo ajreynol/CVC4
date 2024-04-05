@@ -41,7 +41,7 @@ Node SygusAbduct::mkAbductionConjecture(const std::string& name,
                                         const std::vector<Node>& axioms,
                                         TypeNode abdGType)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   std::unordered_set<Node> symset;
   for (size_t i = 0, size = asserts.size(); i < size; i++)

@@ -89,7 +89,7 @@ Node LfscNodeConverter::preConvert(Node n)
 
 Node LfscNodeConverter::postConvert(Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = n.getKind();
   // we eliminate MATCH at preConvert above
   Assert(k != Kind::MATCH);
@@ -501,7 +501,7 @@ Node LfscNodeConverter::postConvert(Node n)
 
 Node LfscNodeConverter::mkApplyUf(Node op, const std::vector<Node>& args) const
 {
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager * nm = nodeManager();
   std::vector<Node> aargs;
   if (op.isVar())
   {
@@ -535,7 +535,7 @@ TypeNode LfscNodeConverter::preConvertType(TypeNode tn)
 
 TypeNode LfscNodeConverter::postConvertType(TypeNode tn)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TypeNode cur = tn;
   Node tnn;
   Kind k = tn.getKind();
@@ -791,7 +791,7 @@ bool LfscNodeConverter::shouldTraverse(Node n)
 
 Node LfscNodeConverter::maybeMkSkolemFun(Node k, bool macroApply)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   SkolemId sfi = SkolemId::NONE;
   Node cacheVal;
@@ -832,7 +832,7 @@ Node LfscNodeConverter::mkInternalSymbol(const std::string& name,
                                          bool useRawSym)
 {
   // use raw symbol so that it is never quoted
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node sym = useRawSym ? nm->mkRawSymbol(name, tn) : nm->mkBoundVar(name, tn);
   d_symbols.insert(sym);
   return sym;
@@ -866,7 +866,7 @@ Node LfscNodeConverter::getSymbolInternal(Kind k,
 void LfscNodeConverter::getCharVectorInternal(Node c, std::vector<Node>& chars)
 {
   Assert(c.getKind() == Kind::CONST_STRING);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   const std::vector<unsigned>& vec = c.getConst<String>().getVec();
   if (vec.size() == 0)
   {
@@ -885,7 +885,7 @@ void LfscNodeConverter::getCharVectorInternal(Node c, std::vector<Node>& chars)
 
 Node LfscNodeConverter::convertBitVector(const BitVector& bv)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TypeNode btn = nm->booleanType();
   TypeNode btnv = nm->mkFunctionType({btn, btn}, btn);
   size_t w = bv.getSize();
@@ -903,7 +903,7 @@ Node LfscNodeConverter::convertBitVector(const BitVector& bv)
 
 Node LfscNodeConverter::getNullTerminator(Kind k, TypeNode tn)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node nullTerm;
   switch (k)
   {
@@ -947,7 +947,7 @@ Node LfscNodeConverter::getOperatorOfTerm(Node n, bool macroApply)
 {
   Assert(n.hasOperator());
   Assert(!n.isClosure());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind k = n.getKind();
   std::stringstream opName;
   Trace("lfsc-term-process-debug2")
@@ -1121,7 +1121,7 @@ Node LfscNodeConverter::getOperatorOfClosure(Node q,
                                              bool macroApply,
                                              bool isPartial)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TypeNode retType = isPartial ? q[1].getType() : q.getType();
   TypeNode bodyType = nm->mkFunctionType(q[1].getType(), retType);
   // We permit non-flat function types here
@@ -1140,7 +1140,7 @@ Node LfscNodeConverter::getOperatorOfClosure(Node q,
 
 Node LfscNodeConverter::getOperatorOfBoundVar(Node cop, Node v)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node x = nm->mkConstInt(Rational(getOrAssignIndexForBVar(v)));
   Node tc = typeAsNode(convertType(v.getType()));
   return mkApplyUf(cop, {x, tc});

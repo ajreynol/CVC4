@@ -45,7 +45,7 @@ bool DetTrace::DetTraceTrie::add(Node loc, const std::vector<Node>& val)
 Node DetTrace::DetTraceTrie::constructFormula(const std::vector<Node>& vars,
                                               unsigned index)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (index == vars.size())
   {
     return nm->mkConst(true);
@@ -198,7 +198,7 @@ void TransitionInference::process(Node n, Node f)
 
 void TransitionInference::process(Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   d_complete = true;
   d_trivial = true;
@@ -428,7 +428,7 @@ bool TransitionInference::processDisjunct(
       d_trivial = false;
       d_func = op;
       Trace("cegqi-inv-debug") << "Use " << op << " with args ";
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       SkolemManager* sm = nm->getSkolemManager();
       for (const Node& l : lit)
       {

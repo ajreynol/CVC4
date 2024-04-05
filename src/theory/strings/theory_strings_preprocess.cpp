@@ -54,7 +54,7 @@ Node StringsPreprocess::reduce(Node t,
   Trace("strings-preprocess-debug")
       << "StringsPreprocess::reduce: " << t << std::endl;
   Node retNode = t;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node zero = nm->mkConstInt(Rational(0));
   Node one = nm->mkConstInt(Rational(1));
   Node negOne = nm->mkConstInt(Rational(-1));
@@ -972,20 +972,20 @@ Node StringsPreprocess::reduce(Node t,
     Node x = t[0];
     Node s = t[1];
     //negative contains reduces to existential
-    Node lenx = NodeManager::currentNM()->mkNode(Kind::STRING_LENGTH, x);
-    Node lens = NodeManager::currentNM()->mkNode(Kind::STRING_LENGTH, s);
+    Node lenx = nodeManager()->mkNode(Kind::STRING_LENGTH, x);
+    Node lens = nodeManager()->mkNode(Kind::STRING_LENGTH, s);
     Node b1 = SkolemCache::mkIndexVar(t);
-    Node b1v = NodeManager::currentNM()->mkNode(Kind::BOUND_VAR_LIST, b1);
-    Node body = NodeManager::currentNM()->mkNode(
+    Node b1v = nodeManager()->mkNode(Kind::BOUND_VAR_LIST, b1);
+    Node body = nodeManager()->mkNode(
         Kind::AND,
-        NodeManager::currentNM()->mkNode(Kind::LEQ, zero, b1),
-        NodeManager::currentNM()->mkNode(
+        nodeManager()->mkNode(Kind::LEQ, zero, b1),
+        nodeManager()->mkNode(
             Kind::LEQ,
             b1,
-            NodeManager::currentNM()->mkNode(Kind::SUB, lenx, lens)),
-        NodeManager::currentNM()->mkNode(
+            nodeManager()->mkNode(Kind::SUB, lenx, lens)),
+        nodeManager()->mkNode(
             Kind::EQUAL,
-            NodeManager::currentNM()->mkNode(Kind::STRING_SUBSTR, x, b1, lens),
+            nodeManager()->mkNode(Kind::STRING_SUBSTR, x, b1, lens),
             s));
     retNode = utils::mkForallInternal(b1v, body.negate()).negate();
   }
@@ -1106,7 +1106,7 @@ Node StringsPreprocess::simplifyRec(Node t, std::vector<Node>& asserts)
       }
       Node tmp = t;
       if( changed ){
-        tmp = NodeManager::currentNM()->mkNode( t.getKind(), cc );
+        tmp = nodeManager()->mkNode( t.getKind(), cc );
       }
       // We cannot statically reduce seq.nth due to it being partial function.
       // Reducing it here would violate the functional property of seq.nth.
@@ -1124,7 +1124,7 @@ Node StringsPreprocess::mkCodePointAtIndex(Node x, Node i)
   // We use (SEQ_NTH, x, i) instead of
   // (STRING_TO_CODE, (STRING_SUBSTR, x, i, 1)) here. The former may be
   // converted to the latter during preprocessing based on our options.
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(Kind::SEQ_NTH, x, i);
 }
 

@@ -31,7 +31,7 @@ uint32_t IsListTypeClassCallback::getTypeClass(TNode v)
 
 RewriteDb::RewriteDb() : d_canonCb(), d_canon(&d_canonCb)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   d_true = nm->mkConst(true);
   d_false = nm->mkConst(false);
   rewriter::addRules(*this);
@@ -52,7 +52,7 @@ void RewriteDb::addRule(DslProofRule id,
                         Node cond,
                         Node context)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> fvsf = fvs;
   std::vector<Node> condsn;
   Node eq = a.eqNode(b);

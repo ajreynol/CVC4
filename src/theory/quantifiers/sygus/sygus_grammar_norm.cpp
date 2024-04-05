@@ -61,7 +61,7 @@ bool OpPosTrie::getOrMakeType(TypeNode tn,
         ss << "_" << std::to_string(op_pos[i]);
       }
     }
-    d_unres_tn = NodeManager::currentNM()->mkUnresolvedDatatypeSort(ss.str());
+    d_unres_tn = nodeManager()->mkUnresolvedDatatypeSort(ss.str());
     Trace("sygus-grammar-normalize-trie")
         << "\tCreating type " << d_unres_tn << "\n";
     unres_tn = d_unres_tn;
@@ -148,7 +148,7 @@ bool SygusGrammarNorm::TransfChain::isChainable(TypeNode tn, Node op)
 {
   /* Checks whether operator occurs chainable for its type */
   if (tn.isInteger()
-      && NodeManager::currentNM()->operatorToKind(op) == Kind::ADD)
+      && nodeManager()->operatorToKind(op) == Kind::ADD)
   {
     return true;
   }
@@ -161,7 +161,7 @@ bool SygusGrammarNorm::TransfChain::isChainable(TypeNode tn, Node op)
 bool SygusGrammarNorm::TransfChain::isId(TypeNode tn, Node op, Node n)
 {
   if (tn.isInteger()
-      && NodeManager::currentNM()->operatorToKind(op) == Kind::ADD
+      && nodeManager()->operatorToKind(op) == Kind::ADD
       && n == TermUtil::mkTypeValue(tn, 0))
   {
     return true;
@@ -174,7 +174,7 @@ void SygusGrammarNorm::TransfChain::buildType(SygusGrammarNorm* sygus_norm,
                                               const DType& dt,
                                               std::vector<unsigned>& op_pos)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<unsigned> claimed(d_elem_pos);
   claimed.push_back(d_chain_op_pos);
   unsigned nb_op_pos = op_pos.size();
@@ -282,7 +282,7 @@ std::map<TypeNode, Node> SygusGrammarNorm::d_tn_to_id = {};
 std::unique_ptr<SygusGrammarNorm::Transf> SygusGrammarNorm::inferTransf(
     TypeNode tn, const DType& dt, const std::vector<unsigned>& op_pos)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TypeNode sygus_tn = dt.getSygusType();
   Trace("sygus-gnorm") << "Infer transf for " << dt.getName() << "..."
                        << std::endl;
@@ -537,7 +537,7 @@ TypeNode SygusGrammarNorm::normalizeSygusType(TypeNode tn, Node sygus_vars)
   }
   Assert(d_dt_all.size() == d_unres_t_all.size());
   std::vector<TypeNode> types =
-      NodeManager::currentNM()->mkMutualDatatypeTypes(d_dt_all);
+      nodeManager()->mkMutualDatatypeTypes(d_dt_all);
   Assert(types.size() == d_dt_all.size());
   /* Clear accumulators */
   d_dt_all.clear();

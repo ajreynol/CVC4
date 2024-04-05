@@ -32,7 +32,7 @@ namespace strings {
 
 ArithEntail::ArithEntail(Rewriter* r) : d_rr(r)
 {
-  d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
+  d_zero = nodeManager()->mkConstInt(Rational(0));
 }
 
 Node ArithEntail::rewrite(Node a) { return d_rr->rewrite(a); }
@@ -54,7 +54,7 @@ bool ArithEntail::check(Node a, Node b, bool strict)
   {
     return !strict;
   }
-  Node diff = NodeManager::currentNM()->mkNode(Kind::SUB, a, b);
+  Node diff = nodeManager()->mkNode(Kind::SUB, a, b);
   return check(diff, strict);
 }
 
@@ -76,8 +76,8 @@ bool ArithEntail::check(Node a, bool strict)
     return a.getConst<Rational>().sgn() >= (strict ? 1 : 0);
   }
 
-  Node ar = strict ? NodeManager::currentNM()->mkNode(
-                Kind::SUB, a, NodeManager::currentNM()->mkConstInt(Rational(1)))
+  Node ar = strict ? nodeManager()->mkNode(
+                Kind::SUB, a, nodeManager()->mkConstInt(Rational(1)))
                    : a;
   ar = d_rr->rewrite(ar);
 
@@ -101,7 +101,7 @@ bool ArithEntail::check(Node a, bool strict)
 bool ArithEntail::checkApprox(Node ar)
 {
   Assert(d_rr->rewrite(ar) == ar);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::map<Node, Node> msum;
   Trace("strings-ent-approx-debug")
       << "Setup arithmetic approximations for " << ar << std::endl;
@@ -378,7 +378,7 @@ void ArithEntail::getArithApproximations(Node a,
                                          std::vector<Node>& approx,
                                          bool isOverApprox)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // We do not handle ADD here since this leads to exponential behavior.
   // Instead, this is managed, e.g. during checkApprox, where
   // ADD terms are expanded "on-demand" during the reasoning.
@@ -644,7 +644,7 @@ bool ArithEntail::checkWithAssumption(Node assumption,
 {
   Assert(d_rr->rewrite(assumption) == assumption);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   if (!assumption.isConst() && assumption.getKind() != Kind::EQUAL)
   {
@@ -834,7 +834,7 @@ Node ArithEntail::getConstantBound(TNode a, bool isLower)
       }
       else
       {
-        ret = NodeManager::currentNM()->mkNode(a.getKind(), children);
+        ret = nodeManager()->mkNode(a.getKind(), children);
         ret = d_rr->rewrite(ret);
       }
     }
@@ -861,7 +861,7 @@ Node ArithEntail::getConstantBoundLength(TNode s, bool isLower) const
   {
     return ret;
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Kind sk = s.getKind();
   if (s.isConst())
   {
@@ -941,7 +941,7 @@ bool ArithEntail::inferZerosInSumGeq(Node x,
 {
   Assert(zeroYs.empty());
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   // Check if we can show that y1 + ... + yn >= x
   Node sum = (ys.size() > 1) ? nm->mkNode(Kind::ADD, ys) : ys[0];

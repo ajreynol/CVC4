@@ -44,7 +44,7 @@ class NaryMatchFrame
 
 bool NaryMatchTrie::getMatches(Node n, NotifyMatch* ntm) const
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> vars;
   std::vector<Node> subs;
   std::map<Node, Node> smap;

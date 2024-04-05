@@ -27,7 +27,7 @@ Node getICBvUltUgt(bool pol, Kind k, Node x, Node t)
 {
   Assert(k == Kind::BITVECTOR_ULT || k == Kind::BITVECTOR_UGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   unsigned w = bv::utils::getSize(t);
   Node ic;
 
@@ -82,7 +82,7 @@ Node getICBvSltSgt(bool pol, Kind k, Node x, Node t)
 {
   Assert(k == Kind::BITVECTOR_SLT || k == Kind::BITVECTOR_SGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   unsigned w = bv::utils::getSize(t);
   Node ic;
 
@@ -143,7 +143,7 @@ Node getICBvMult(
          || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_UGT
          || litk == Kind::BITVECTOR_SGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node scl;
   unsigned w = bv::utils::getSize(s);
   Assert(w == bv::utils::getSize(t));
@@ -293,7 +293,7 @@ Node getICBvUrem(
          || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_UGT
          || litk == Kind::BITVECTOR_SGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node scl;
   unsigned w = bv::utils::getSize(s);
   Assert(w == bv::utils::getSize(t));
@@ -613,7 +613,7 @@ Node getICBvUdiv(
          || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_UGT
          || litk == Kind::BITVECTOR_SGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   unsigned w = bv::utils::getSize(s);
   Assert(w == bv::utils::getSize(t));
   Node scl;
@@ -999,7 +999,7 @@ Node getICBvAndOr(
          || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_UGT
          || litk == Kind::BITVECTOR_SGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   unsigned w = bv::utils::getSize(s);
   Assert(w == bv::utils::getSize(t));
   Node scl;
@@ -1226,7 +1226,7 @@ Node defaultShiftIC(Kind litk, Kind shk, Node s, Node t)
   NodeBuilder nb(Kind::OR);
   NodeManager* nm;
 
-  nm = NodeManager::currentNM();
+  nm = nodeManager();
 
   w = bv::utils::getSize(s);
   Assert(w == bv::utils::getSize(t));
@@ -1250,7 +1250,7 @@ Node getICBvLshr(
          || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_UGT
          || litk == Kind::BITVECTOR_SGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node scl;
   unsigned w = bv::utils::getSize(s);
   Assert(w == bv::utils::getSize(t));
@@ -1519,7 +1519,7 @@ Node getICBvAshr(
          || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_UGT
          || litk == Kind::BITVECTOR_SGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node scl;
   unsigned w = bv::utils::getSize(s);
   Assert(w == bv::utils::getSize(t));
@@ -1803,7 +1803,7 @@ Node getICBvShl(
          || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_UGT
          || litk == Kind::BITVECTOR_SGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node scl;
   unsigned w = bv::utils::getSize(s);
   Assert(w == bv::utils::getSize(t));
@@ -2060,7 +2060,7 @@ Node getICBvConcat(bool pol, Kind litk, unsigned idx, Node x, Node sv_t, Node t)
 
   Kind k = sv_t.getKind();
   Assert(k == Kind::BITVECTOR_CONCAT);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   unsigned nchildren = sv_t.getNumChildren();
   unsigned w1 = 0, w2 = 0;
   unsigned w = bv::utils::getSize(t), wx = bv::utils::getSize(x);
@@ -2522,7 +2522,7 @@ Node getICBvSext(bool pol, Kind litk, unsigned idx, Node x, Node sv_t, Node t)
          || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_UGT
          || litk == Kind::BITVECTOR_SGT);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node scl;
   Assert(idx == 0);
   (void)idx;

@@ -62,7 +62,7 @@ Node SygusUtils::mkSygusConjecture(const std::vector<Node>& fs,
                                    const std::vector<Node>& iattrs)
 {
   Assert(!fs.empty());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   SygusAttribute ca;
   Node sygusVar = sm->mkDummySkolem("sygus", nm->booleanType());
@@ -86,7 +86,7 @@ Node SygusUtils::mkSygusConjecture(const std::vector<Node>& fs,
                                    const Subs& solvedf)
 {
   Assert(!fs.empty());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   std::vector<Node> iattrs;
   // take existing properties, without the previous solves
@@ -163,7 +163,7 @@ Node SygusUtils::getOrMkSygusArgumentList(Node f)
   Node sfvl = f.getAttribute(SygusSynthFunVarListAttribute());
   if (sfvl.isNull() && f.getType().isFunction())
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     std::vector<TypeNode> argTypes = f.getType().getArgTypes();
     // make default variable list if none was specified by input
     std::vector<Node> bvs;
@@ -193,7 +193,7 @@ Node SygusUtils::wrapSolution(Node f, Node sol)
   Node al = getOrMkSygusArgumentList(f);
   if (!al.isNull())
   {
-    sol = NodeManager::currentNM()->mkNode(Kind::LAMBDA, al, sol);
+    sol = nodeManager()->mkNode(Kind::LAMBDA, al, sol);
   }
   Assert(!expr::hasFreeVar(sol));
   return sol;
@@ -203,7 +203,7 @@ void SygusUtils::setSygusType(Node f, const TypeNode& tn)
 {
   Assert(!tn.isNull());
   Assert(getSygusType(f).isNull());
-  Node sym = NodeManager::currentNM()->mkBoundVar("sfproxy", tn);
+  Node sym = nodeManager()->mkBoundVar("sfproxy", tn);
   // use an attribute to mark its grammar
   SygusSynthGrammarAttribute ssfga;
   f.setAttribute(ssfga, sym);

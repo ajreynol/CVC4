@@ -156,10 +156,10 @@ class SygusGrammarNorm : protected EnvObj
     auto it = d_tn_to_id.find(tn);
     if (it == d_tn_to_id.end())
     {
-      std::vector<Node> vars = {NodeManager::currentNM()->mkBoundVar(tn)};
-      Node n = NodeManager::currentNM()->mkNode(
+      std::vector<Node> vars = {nodeManager()->mkBoundVar(tn)};
+      Node n = nodeManager()->mkNode(
           Kind::LAMBDA,
-          NodeManager::currentNM()->mkNode(Kind::BOUND_VAR_LIST, vars),
+          nodeManager()->mkNode(Kind::BOUND_VAR_LIST, vars),
           vars.back());
       d_tn_to_id[tn] = n;
       return n;

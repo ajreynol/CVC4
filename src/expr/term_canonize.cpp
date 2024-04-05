@@ -100,7 +100,7 @@ bool TermCanonize::getTermOrder(Node a, Node b)
 Node TermCanonize::getCanonicalFreeVar(TypeNode tn, size_t i, uint32_t tc)
 {
   Assert(!tn.isNull());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::pair<TypeNode, uint32_t> key(tn, tc);
   std::vector<Node>& tvars = d_cn_free_var[key];
   while (tvars.size() <= i)
@@ -213,7 +213,7 @@ Node TermCanonize::getCanonicalTerm(
     }
     Trace("canon-term-debug")
         << "...constructing for " << n << "." << std::endl;
-    Node ret = NodeManager::currentNM()->mkNode(n.getKind(), cchildren);
+    Node ret = nodeManager()->mkNode(n.getKind(), cchildren);
     Trace("canon-term-debug")
         << "...constructed " << ret << " for " << n << "." << std::endl;
     visited[n] = ret;

@@ -560,7 +560,7 @@ Node SequenceProperties::mkGroundTerm(TypeNode type)
   Assert(type.isSequence());
   // empty sequence
   std::vector<Node> seq;
-  return NodeManager::currentNM()->mkConst(
+  return nodeManager()->mkConst(
       Sequence(type.getSequenceElementType(), seq));
 }
 }  // namespace strings

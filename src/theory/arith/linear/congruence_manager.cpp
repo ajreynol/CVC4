@@ -38,7 +38,7 @@ namespace arith::linear {
 
 std::vector<Node> andComponents(TNode an)
 {
-  auto nm = NodeManager::currentNM();
+  auto nm = nodeManager();
   if (an == nm->mkConst(true))
   {
     return {};
@@ -277,7 +277,7 @@ void ArithCongruenceManager::watchedVariableCannotBeZero(ConstraintCP c){
       TNode isZero = d_watchedEqualities[s];
       TypeNode type = isZero[0].getType();
       const auto isZeroPf = d_pnm->mkAssume(isZero);
-      const auto nm = NodeManager::currentNM();
+      const auto nm = nodeManager();
       std::vector<std::shared_ptr<ProofNode>> pfs{isZeroPf, pf};
       // Trick for getting correct, opposing signs.
       std::vector<Node> coeff{nm->mkConstInt(Rational(-1 * cSign)),
@@ -559,7 +559,7 @@ void ArithCongruenceManager::equalsConstant(ConstraintCP c){
 
   ArithVar x = c->getVariable();
   Node xAsNode = d_avariables.asNode(x);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node asRational = nm->mkConstRealOrInt(
       xAsNode.getType(), c->getValue().getNoninfinitesimalPart());
 
@@ -593,7 +593,7 @@ void ArithCongruenceManager::equalsConstant(ConstraintCP lb, ConstraintCP ub){
   Node reason = mkAndFromBuilder(nb);
 
   Node xAsNode = d_avariables.asNode(x);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node asRational = nm->mkConstRealOrInt(
       xAsNode.getType(), lb->getValue().getNoninfinitesimalPart());
 

@@ -52,7 +52,7 @@ typedef expr::Attribute<LengthVarAttributeId, Node> LengthVarAttribute;
 
 SkolemCache::SkolemCache(Rewriter* rr) : d_rr(rr)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   d_strType = nm->stringType();
   d_zero = nm->mkConstInt(Rational(0));
 }
@@ -102,7 +102,7 @@ Node SkolemCache::mkTypedSkolemCached(
     return it->second;
   }
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   Node sk;
   switch (id)
@@ -154,7 +154,7 @@ Node SkolemCache::mkTypedSkolemCached(TypeNode tn,
 Node SkolemCache::mkSkolem(const char* c)
 {
   // TODO: eliminate this
-  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+  SkolemManager* sm = nodeManager()->getSkolemManager();
   Node n = sm->mkDummySkolem(c, d_strType, "string skolem");
   d_allSkolems.insert(n);
   return n;
@@ -169,7 +169,7 @@ std::tuple<SkolemCache::StringSkolemId, Node, Node>
 SkolemCache::normalizeStringSkolem(StringSkolemId id, Node a, Node b)
 {
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   // eliminate in terms of prefix/suffix_rem
   if (id == SK_FIRST_CTN_POST)
@@ -287,7 +287,7 @@ SkolemCache::normalizeStringSkolem(StringSkolemId id, Node a, Node b)
 
 Node SkolemCache::mkIndexVar(Node t)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TypeNode intType = nm->integerType();
   BoundVarManager* bvm = nm->getBoundVarManager();
   return bvm->mkBoundVar<IndexVarAttribute>(t, intType);
@@ -295,7 +295,7 @@ Node SkolemCache::mkIndexVar(Node t)
 
 Node SkolemCache::mkLengthVar(Node t)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   TypeNode intType = nm->integerType();
   BoundVarManager* bvm = nm->getBoundVarManager();
   return bvm->mkBoundVar<LengthVarAttribute>(t, intType);
@@ -304,7 +304,7 @@ Node SkolemCache::mkLengthVar(Node t)
 Node SkolemCache::mkSkolemFun(SkolemId id, Node a, Node b)
 {
   std::vector<Node> cacheVals = getSkolemCacheVals(a, b);
-  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+  SkolemManager* sm = nodeManager()->getSkolemManager();
   Node k = sm->mkSkolemFunction(id, cacheVals);
   d_allSkolems.insert(k);
   return k;

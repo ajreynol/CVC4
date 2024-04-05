@@ -58,13 +58,13 @@ Node mkAnd(const std::vector<Node>& a)
   }
   if (au.empty())
   {
-    return NodeManager::currentNM()->mkConst(true);
+    return nodeManager()->mkConst(true);
   }
   else if (au.size() == 1)
   {
     return au[0];
   }
-  return NodeManager::currentNM()->mkNode(Kind::AND, au);
+  return nodeManager()->mkNode(Kind::AND, au);
 }
 
 void flattenOp(Kind k, Node n, std::vector<Node>& conj)
@@ -139,18 +139,18 @@ Node mkConcat(const std::vector<Node>& c, TypeNode tn)
     return c[0];
   }
   Kind k = tn.isStringLike() ? Kind::STRING_CONCAT : Kind::REGEXP_CONCAT;
-  return NodeManager::currentNM()->mkNode(k, c);
+  return nodeManager()->mkNode(k, c);
 }
 
 Node mkPrefix(Node t, Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(Kind::STRING_SUBSTR, t, nm->mkConstInt(Rational(0)), n);
 }
 
 Node mkSuffix(Node t, Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(
       Kind::STRING_SUBSTR,
       t,
@@ -160,7 +160,7 @@ Node mkSuffix(Node t, Node n)
 
 Node mkUnit(TypeNode tn, Node n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (tn.isString())
   {
     return nm->mkNode(Kind::STRING_UNIT, n);
@@ -212,7 +212,7 @@ Node mkSubstrChain(Node base,
                    const std::vector<Node>& ss,
                    const std::vector<Node>& ls)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (unsigned i = 0, size = ss.size(); i < size; i++)
   {
     base = nm->mkNode(Kind::STRING_SUBSTR, base, ss[i], ls[i]);
@@ -225,7 +225,7 @@ Node mkConcatForConstSequence(const Node& c)
   Assert(c.getKind() == Kind::CONST_SEQUENCE);
   const std::vector<Node>& charVec = c.getConst<Sequence>().getVec();
   std::vector<Node> vec;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (const Node& cc : charVec)
   {
     vec.push_back(nm->mkNode(Kind::SEQ_UNIT, cc));
@@ -352,7 +352,7 @@ void getRegexpComponents(Node r, std::vector<Node>& result)
 {
   Assert(r.getType().isRegExp());
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (r.getKind() == Kind::REGEXP_CONCAT)
   {
     for (const Node& n : r)
@@ -427,7 +427,7 @@ TypeNode getOwnerStringType(Node n)
   }
   else if (isStringKind(k))
   {
-    tn = NodeManager::currentNM()->stringType();
+    tn = nodeManager()->stringType();
   }
   else
   {
@@ -473,7 +473,7 @@ typedef expr::Attribute<StringValueForLengthVarAttributeId, Node>
 
 Node mkAbstractStringValueForLength(Node n, Node len, size_t id)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   BoundVarManager* bvm = nm->getBoundVarManager();
   Node cacheVal = BoundVarManager::getCacheValue(n, len);
   Node v = bvm->mkBoundVar<StringValueForLengthVarAttribute>(
@@ -488,7 +488,7 @@ Node mkAbstractStringValueForLength(Node n, Node len, size_t id)
 
 Node mkCodeRange(Node t, uint32_t alphaCard)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   return nm->mkNode(
       Kind::AND,
       nm->mkNode(Kind::GEQ, t, nm->mkConstInt(Rational(0))),

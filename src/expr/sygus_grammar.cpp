@@ -45,7 +45,7 @@ SygusGrammar::SygusGrammar(const std::vector<Node>& sygusVars,
   // ensure that sdt is first
   tnlist.push_back(sdt);
   std::map<TypeNode, Node> ntsyms;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (size_t i = 0; i < tnlist.size(); i++)
   {
     TypeNode tn = tnlist[i];
@@ -124,7 +124,7 @@ void SygusGrammar::addAnyConstant(const Node& ntSym, const TypeNode& tn)
 {
   Assert(d_rules.find(ntSym) != d_rules.cend());
   Assert(tn.isInstanceOf(ntSym.getType()));
-  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
+  SkolemManager* sm = nodeManager()->getSkolemManager();
   Node anyConst =
       sm->mkInternalSkolemFunction(InternalSkolemId::SYGUS_ANY_CONSTANT, tn);
   addRule(ntSym, anyConst);
@@ -178,7 +178,7 @@ Node purifySygusGNode(const Node& n,
                       std::map<Node, Node>& ntSymMap,
                       const std::vector<Node>& nts)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // if n is non-terminal
   if (std::find(nts.begin(), nts.end(), n) != nts.end())
   {
@@ -233,7 +233,7 @@ void addSygusConstructor(DType& dt,
                          const std::vector<Node>& nts,
                          const std::unordered_map<Node, TypeNode>& ntsToUnres)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   std::stringstream ss;
   if (rule.getKind() == Kind::SKOLEM
@@ -275,7 +275,7 @@ Node SygusGrammar::getLambdaForRule(const Node& r,
   Node rp = purifySygusGNode(r, args, ntSymMap, d_ntSyms);
   if (!args.empty())
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     return nm->mkNode(Kind::LAMBDA, nm->mkNode(Kind::BOUND_VAR_LIST, args), rp);
   }
   return r;
@@ -285,7 +285,7 @@ TypeNode SygusGrammar::resolve(bool allowAny)
 {
   if (!isResolved())
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     SkolemManager* sm = nm->getSkolemManager();
     Node bvl;
     if (!d_sygusVars.empty())
