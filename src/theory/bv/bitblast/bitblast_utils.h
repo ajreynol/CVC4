@@ -62,58 +62,58 @@ template <class T> T mkIte(T cond, T a, T b);
 
 template <> inline
 Node mkTrue<Node>() {
-  return nodeManager()->mkConst<bool>(true);
+  return NodeManager::currentNM()->mkConst<bool>(true);
 }
 
 template <> inline
 Node mkFalse<Node>() {
-  return nodeManager()->mkConst<bool>(false);
+  return NodeManager::currentNM()->mkConst<bool>(false);
 }
 
 template <> inline
 Node mkNot<Node>(Node a) {
-  return nodeManager()->mkNode(Kind::NOT, a);
+  return NodeManager::currentNM()->mkNode(Kind::NOT, a);
 }
 
 template <> inline
 Node mkOr<Node>(Node a, Node b) {
-  return nodeManager()->mkNode(Kind::OR, a, b);
+  return NodeManager::currentNM()->mkNode(Kind::OR, a, b);
 }
 
 template <> inline
 Node mkOr<Node>(const std::vector<Node>& children) {
   Assert(children.size());
   if (children.size() == 1) return children[0];
-  return nodeManager()->mkNode(Kind::OR, children);
+  return NodeManager::currentNM()->mkNode(Kind::OR, children);
 }
 
 
 template <> inline
 Node mkAnd<Node>(Node a, Node b) {
-  return nodeManager()->mkNode(Kind::AND, a, b);
+  return NodeManager::currentNM()->mkNode(Kind::AND, a, b);
 }
 
 template <> inline
 Node mkAnd<Node>(const std::vector<Node>& children) {
   Assert(children.size());
   if (children.size() == 1) return children[0];
-  return nodeManager()->mkNode(Kind::AND, children);
+  return NodeManager::currentNM()->mkNode(Kind::AND, children);
 }
 
 
 template <> inline
 Node mkXor<Node>(Node a, Node b) {
-  return nodeManager()->mkNode(Kind::XOR, a, b);
+  return NodeManager::currentNM()->mkNode(Kind::XOR, a, b);
 }
 
 template <> inline
 Node mkIff<Node>(Node a, Node b) {
-  return nodeManager()->mkNode(Kind::EQUAL, a, b);
+  return NodeManager::currentNM()->mkNode(Kind::EQUAL, a, b);
 }
 
 template <> inline
 Node mkIte<Node>(Node cond, Node a, Node b) {
-  return nodeManager()->mkNode(Kind::ITE, cond, a, b);
+  return NodeManager::currentNM()->mkNode(Kind::ITE, cond, a, b);
 }
 
 /*

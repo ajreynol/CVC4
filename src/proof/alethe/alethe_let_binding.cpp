@@ -31,7 +31,7 @@ Node AletheLetBinding::convert(Node n, const std::string& prefix)
   {
     return n;
   }
-  NodeManager* nm = nodeManager();
+  NodeManager* nm = NodeManager::currentNM();
   // terms with a child that is being declared
   std::unordered_set<TNode> hasDeclaredChild;
   // For a term being declared, its position relative to the list of children

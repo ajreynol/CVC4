@@ -308,7 +308,7 @@ bool PrintBenchmark::decomposeDefinition(Node a,
   {
     isRecDef = true;
     sym = a[1][0].getOperator();
-    body = nodeManager()->mkNode(Kind::LAMBDA, a[0], a[1][1]);
+    body = NodeManager::currentNM()->mkNode(Kind::LAMBDA, a[0], a[1][1]);
     return true;
   }
   else
