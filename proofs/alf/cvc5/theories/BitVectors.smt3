@@ -304,8 +304,22 @@
   (BitVec (alf.add 1 n))) :right-assoc-nil @bv_empty
 )
 
-; symbolic constant
-(declare-const @bv (-> Int (! Int :var w) (BitVec w)))
 
 ; bvsize
+;(define @bvsize ((m Int :implicit) (x (BitVec m))) ($bv_bitwidth (alf.typeof x)))
 (declare-const @bvsize (-> (! Int :var m :implicit) (BitVec m) Int))
+
+
+
+(program $eval_bv_sym ((S Type) (T Type) (f (-> T S)) (x S) (y T) (m Int) (xb (BitVec m)))
+    (S) S
+    (
+    (($eval_bv_sym (@bvsize xb)) ($bv_bitwidth (alf.typeof xb)))
+    (($eval_bv_sym (f y))        (_ ($eval_bv_sym f) ($eval_bv_sym y)))
+    (($eval_bv_sym x)            x)
+    )
+)
+
+; symbolic constant
+;(define @bv ((m Int) (n Int)) (alf.to_bin n m))
+(declare-const @bv (-> Int (! Int :var w) (BitVec ($eval_bv_sym w))))

@@ -338,8 +338,15 @@ Node AlfNodeConverter::maybeMkSkolemFun(Node k)
     }
     if (!app.isNull())
     {
-      // wrap in "skolem" operator
-      return mkInternalApp("skolem", {app}, k.getType());
+      // If it has no children, then we don't wrap in `(skolem ...)`, since it
+      // makes no difference for substitution. Moreover, it is important not
+      // to do this since bitvector concat uses @bv_empty as its nil terminator.
+      if (sfi == SkolemId::PURIFY || app.getNumChildren()>0)
+      {
+        // wrap in "skolem" operator
+        return mkInternalApp("skolem", {app}, k.getType());
+      }
+      return app;
     }
   }
   return Node::null();
@@ -662,6 +669,7 @@ bool AlfNodeConverter::isHandledSkolemId(SkolemId id)
   {
     case SkolemId::PURIFY:
     case SkolemId::ARRAY_DEQ_DIFF:
+    case SkolemId::BV_EMPTY:
     case SkolemId::DIV_BY_ZERO:
     case SkolemId::INT_DIV_BY_ZERO:
     case SkolemId::MOD_BY_ZERO:

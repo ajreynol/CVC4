@@ -37,10 +37,10 @@
                                 (alf.ite (check_length_gt_one x)
                                   ($str_flatten_word x)
                                   x)
-                              (alf.ite (alf.is_eq (alf.to_bin x) x)
+                              (alf.ite (alf.is_eq (alf.to_bin (alf.len x) x) x)
                                 ; bitvector constants
                                 ; e.g. #b0000 ----> (@bv 0 4)
-                                (@bv (alf.to_z x) ($bv_bitwidth x))
+                                (@bv (alf.to_z x) (alf.len x))
                                 x)))
   )
 )
@@ -104,7 +104,7 @@
       ((run_evaluate (bvule x y))        (run_evaluate (<= (alf.to_z x) (alf.to_z y))))
       ((run_evaluate (bvugt x y))        (run_evaluate (> (alf.to_z x) (alf.to_z y))))
       ((run_evaluate (bvuge x y))        (run_evaluate (>= (alf.to_z x) (alf.to_z y))))
-      ((run_evaluate (@bv n m))          (alf.to_bin n m))
+      ((run_evaluate (@bv n m))          (alf.to_bin (run_evaluate m) (run_evaluate n)))
       ((run_evaluate (@bvsize x))        ($bv_bitwidth (alf.typeof x)))
   
       ((run_evaluate z)                  z)
