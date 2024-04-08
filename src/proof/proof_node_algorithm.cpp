@@ -287,6 +287,11 @@ ProofRule getCongRule(const Node& n, std::vector<Node>& args)
   {
     args.push_back(n.getOperator());
   }
+  else if (n.isClosure())
+  {
+    // bound variable list is an argument for closure over congruence
+    args.push_back(n[0]);
+  }
   return r;
 }
 
