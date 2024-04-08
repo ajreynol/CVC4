@@ -260,6 +260,18 @@ Node AlfNodeConverter::postConvert(Node n)
     args.insert(args.end(), n.begin(), n.end());
     return mkInternalApp("@list", args, tn);
   }
+  else if (k==Kind::APPLY_INDEXED_SYMBOLIC)
+  {
+    Kind okind = n.getOperator().getConst<GenericOp>().getKind();
+    if (okind==Kind::FLOATINGPOINT_TO_FP_FROM_IEEE_BV)
+    {
+      // This does not take a rounding mode, we change the smt2 syntax
+      // to distinguish this case, similar to the case in getOperatorOfTerm
+      // where it is processed as an indexed operator.
+      std::vector<Node> children(n.begin(), n.end());
+      return mkInternalApp("to_fp_bv", children, tn);
+    }
+  }
   else if (GenericOp::isIndexedOperatorKind(k))
   {
     // return app of?
