@@ -308,4 +308,4 @@
 (declare-const @bv (-> Int (! Int :var w) (BitVec w)))
 
 ; bvsize
-(define @bvsize ((m Int :implicit) (x (BitVec m))) ($bv_bitwidth (alf.typeof x)))
+(declare-const @bvsize (-> (! Int :var m :implicit) (BitVec m) Int))

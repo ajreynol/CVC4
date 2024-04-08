@@ -274,7 +274,11 @@ bool AlfPrinter::canEvaluate(Node n) const
         case Kind::BITVECTOR_NEG:
         case Kind::BITVECTOR_MULT:
         case Kind::BITVECTOR_AND:
-        case Kind::BITVECTOR_OR: break;
+        case Kind::BITVECTOR_OR:
+        case Kind::CONST_BITVECTOR_SYMBOLIC:break;
+        case Kind::BITVECTOR_SIZE:
+          // special case, evaluates no matter what is inside
+          continue;
         default:
           Trace("alf-printer-debug")
               << "Cannot evaluate " << cur.getKind() << std::endl;
