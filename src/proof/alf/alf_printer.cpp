@@ -265,6 +265,9 @@ bool AlfPrinter::canEvaluate(Node n) const
         case Kind::LEQ:
         case Kind::MULT:
         case Kind::NONLINEAR_MULT:
+        case Kind::TO_REAL:
+        case Kind::TO_INTEGER:
+        case Kind::IS_INTEGER:
         case Kind::STRING_CONCAT:
         case Kind::STRING_SUBSTR:
         case Kind::STRING_LENGTH:
