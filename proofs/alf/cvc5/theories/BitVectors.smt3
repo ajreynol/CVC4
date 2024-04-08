@@ -17,6 +17,9 @@
     (($eval_bv_sym (+ x ys))     (arith_eval_add ($eval_bv_sym x) ($eval_bv_sym ys)))
     (($eval_bv_sym (- x z))      (arith_eval_sub ($eval_bv_sym x) ($eval_bv_sym z)))
     (($eval_bv_sym (@bvsize xb)) ($bv_bitwidth (alf.typeof xb)))
+    (($eval_bv_sym (int.log2 x)) (arith_eval_int_log_2 ($eval_bv_sym x)))
+    (($eval_bv_sym (mod x z))    (alf.zmod ($eval_bv_sym x) ($eval_bv_sym z)))
+    ; otherwise recurse
     (($eval_bv_sym (f y))        (_ ($eval_bv_sym f) ($eval_bv_sym y)))
     (($eval_bv_sym x)            x)
     )
@@ -193,13 +196,13 @@
 (declare-const zero_extend
     (-> (! Int :var m :implicit)
         (! Int :var i)
-        (BitVec m) (BitVec (alf.add m i)))
+        (BitVec m) (BitVec (alf.add m ($eval_bv_sym i))))
 )
 
 (declare-const sign_extend
     (-> (! Int :var m :implicit)
         (! Int :var i)
-        (BitVec m) (BitVec (alf.add m i)))
+        (BitVec m) (BitVec (alf.add m ($eval_bv_sym i))))
 )
 
 (declare-const rotate_left
