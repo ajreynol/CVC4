@@ -1,3 +1,4 @@
+(include "../theories/Ints.smt3")
 (include "../theories/Arith.smt3")
 (include "../programs/Utils.smt3")
 
@@ -33,6 +34,16 @@
 (define arith_eval_qsub ((U Type :implicit) (T Type :implicit) (x U) (y T))
   (alf.add (alf.to_q x) (alf.neg (alf.to_q y)))
 )
+
+(program arith_eval_int_log_2_rec ((x Int))
+  (Int) Int
+  (
+  ((arith_eval_int_log_2_rec 1) 0)
+  ((arith_eval_int_log_2_rec x) (+ 1 (arith_eval_int_log_2_rec (alf.zdiv x 2))))
+  )
+)
+(define arith_eval_int_log_2 ((x Int))
+  (alf.ite (alf.or (alf.is_eq x 0) (alf.is_neg x)) (int.log2 x) (arith_eval_int_log_2_rec x))) 
 
 ;; =============== for ARITH_POLY_NORM
 

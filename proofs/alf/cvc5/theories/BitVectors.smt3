@@ -7,6 +7,21 @@
 (define $bv_bitwidth ((T Type))
   (alf.match ((n Int)) T (((BitVec n) n))))
 
+; bvsize
+(declare-const @bvsize (-> (! Int :var m :implicit) (BitVec m) Int))
+
+; evaluator for terms that may impact the type of nodes
+(program $eval_bv_sym ((S Type) (T Type) (f (-> T S)) (x S) (ys S :list) (z S) (y T) (m Int) (xb (BitVec m)))
+    (S) S
+    (
+    (($eval_bv_sym (+ x ys))     (arith_eval_add ($eval_bv_sym x) ($eval_bv_sym ys)))
+    (($eval_bv_sym (- x z))      (arith_eval_sub ($eval_bv_sym x) ($eval_bv_sym z)))
+    (($eval_bv_sym (@bvsize xb)) ($bv_bitwidth (alf.typeof xb)))
+    (($eval_bv_sym (f y))        (_ ($eval_bv_sym f) ($eval_bv_sym y)))
+    (($eval_bv_sym x)            x)
+    )
+)
+
 ; used as the nil terminator for concat
 (define @bv_empty () (alf.to_bin 0 0))
 
@@ -21,16 +36,16 @@
 (declare-const extract (->
   (! Int :var n :implicit)
   (! Int :var h)
-  (! Int :var l :requires ((alf.is_neg l) false))
+  (! Int :var l)
   (BitVec n)
-  (BitVec (alf.add h (alf.neg l) 1)))
+  (BitVec (alf.add ($eval_bv_sym h) (alf.neg ($eval_bv_sym l)) 1)))
 )
 
 (declare-const repeat 
     (-> (! Int :var n :implicit)
         (! Int :var i)
         (BitVec n)
-        (BitVec (alf.mul i n))
+        (BitVec (alf.mul ($eval_bv_sym i) n))
     ) 
 )
 
@@ -302,22 +317,6 @@
   Bool
   (BitVec n)
   (BitVec (alf.add 1 n))) :right-assoc-nil @bv_empty
-)
-
-
-; bvsize
-;(define @bvsize ((m Int :implicit) (x (BitVec m))) ($bv_bitwidth (alf.typeof x)))
-(declare-const @bvsize (-> (! Int :var m :implicit) (BitVec m) Int))
-
-
-
-(program $eval_bv_sym ((S Type) (T Type) (f (-> T S)) (x S) (y T) (m Int) (xb (BitVec m)))
-    (S) S
-    (
-    (($eval_bv_sym (@bvsize xb)) ($bv_bitwidth (alf.typeof xb)))
-    (($eval_bv_sym (f y))        (_ ($eval_bv_sym f) ($eval_bv_sym y)))
-    (($eval_bv_sym x)            x)
-    )
 )
 
 ; symbolic constant
