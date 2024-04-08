@@ -19,6 +19,7 @@
 
 #include "expr/dtype.h"
 #include "expr/dtype_cons.h"
+#include "theory/evaluator.h"
 #include "theory/datatypes/project_op.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
 #include "util/bitvector.h"
@@ -235,11 +236,18 @@ bool convertToNumeralList(const std::vector<Node>& indices,
 {
   for (const Node& i : indices)
   {
-    if (i.getKind() != Kind::CONST_INTEGER)
+    Node in = i;
+    if (in.getKind() != Kind::CONST_INTEGER)
     {
-      return false;
+      // if trivially evaluatable, take that as the numeral
+      theory::Evaluator e(nullptr);
+      in = e.eval(in, {}, {});
+      if (in.isNull() || in.getKind() != Kind::CONST_INTEGER)
+      {
+        return false;
+      }
     }
-    const Integer& ii = i.getConst<Rational>().getNumerator();
+    const Integer& ii = in.getConst<Rational>().getNumerator();
     if (!ii.fitsUnsignedInt())
     {
       return false;
