@@ -5,7 +5,8 @@
 
 ; Returns the (integer value) bitwidth for a given bit-vector type.
 (define $bv_bitwidth ((T Type))
-  (alf.match ((n Int)) T (((BitVec n) n))))
+  (alf.match ((n Int)) T (((BitVec n) n)))
+)
 
 ; bvsize
 (declare-const @bvsize (-> (! Int :var m :implicit) (BitVec m) Int))
@@ -321,5 +322,4 @@
 )
 
 ; symbolic constant
-;(define @bv ((m Int) (n Int)) (alf.to_bin n m))
 (declare-const @bv (-> Int (! Int :var w) (BitVec ($eval_bv_sym w))))
