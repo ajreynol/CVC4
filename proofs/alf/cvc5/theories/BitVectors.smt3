@@ -19,8 +19,6 @@
     (($eval_bv_sym (@bvsize xb)) ($bv_bitwidth (alf.typeof xb)))
     (($eval_bv_sym (int.log2 x)) (arith_eval_int_log_2 ($eval_bv_sym x)))
     (($eval_bv_sym (mod x z))    (alf.zmod ($eval_bv_sym x) ($eval_bv_sym z)))
-    ; otherwise recurse
-    (($eval_bv_sym (f y))        (_ ($eval_bv_sym f) ($eval_bv_sym y)))
     (($eval_bv_sym x)            x)
     )
 )
