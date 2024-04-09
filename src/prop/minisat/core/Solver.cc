@@ -395,7 +395,6 @@ CRef Solver::reason(Var x) {
   vardata[x] = VarData(
       real_reason, level(x), user_level(x), intro_level(x), trail_index(x));
   clauses_removable.push(real_reason);
-  // AJR: here (line 467)? commented
   attachClause(real_reason);
 
   return real_reason;
@@ -558,8 +557,8 @@ bool Solver::addClause_(vec<Lit>& ps, bool removable, ClauseId& id)
           {
             d_pfManager->registerSatLitAssumption(ps[0]);
           }
-          // AJR (line 647)
-          // handles unit clauses not learned in the standard way
+          // Call notifySatClause. This call site handles unit clauses not
+          // learned in the standard way.
           SatClause satClause;
           satClause.push_back(MinisatSatSolver::toSatLiteral(ps[0]));
           d_proxy->notifySatClause(satClause);
@@ -1533,7 +1532,7 @@ lbool Solver::search(int nof_conflicts)
         {
           d_pfManager->endResChain(learnt_clause[0]);
         }
-        // AJR (line 647)
+        // Call notifySatClause here.
         SatClause satClause;
         satClause.push_back(MinisatSatSolver::toSatLiteral(learnt_clause[0]));
         d_proxy->notifySatClause(satClause);
@@ -1543,7 +1542,7 @@ lbool Solver::search(int nof_conflicts)
         CRef cr = ca.alloc(assertionLevelOnly() ? assertionLevel : max_level,
                            learnt_clause,
                            true);
-        // AJR: (line 1850)
+        // Call notifySatClause here.
         SatClause satClause;
         MinisatSatSolver::toSatClause(ca[cr], satClause);
         d_proxy->notifySatClause(satClause);
@@ -2097,8 +2096,6 @@ CRef Solver::updateLemmas() {
         MinisatSatSolver::toSatClause(ca[lemma_ref], satClause);
         d_pfManager->notifyClauseInsertedAtLevel(satClause, clauseLevel);
       }
-      // AJR (line 2441)
-      // d_proxy->notifySatClause(satClause);
       if (removable) {
         clauses_removable.push(lemma_ref);
       } else {
