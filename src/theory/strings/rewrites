@@ -1,8 +1,9 @@
 ; =============== String rules
 
 ; Note that ?Seq is used for rules that can be used where Seq/String are
-; interchangable. This is because Seq and String are not comparable in our
-; type system.
+; interchangable, where note that String is assumed to be a macro for (Seq Char)
+; according to RARE. Note however that Char is not accessible as a standalone
+; type.
 
 ; ---
 
