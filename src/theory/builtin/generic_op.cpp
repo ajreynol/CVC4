@@ -239,7 +239,12 @@ bool convertToNumeralList(const std::vector<Node>& indices,
     Node in = i;
     if (in.getKind() != Kind::CONST_INTEGER)
     {
-      // if trivially evaluatable, take that as the numeral
+      // If trivially evaluatable, take that as the numeral.
+      // This implies that we can concretize applications of
+      // APPLY_INDEXED_SYMBOLIC whose indices can evaluate. This in turn
+      // implies that e.g. (extract (+ 2 2) 2 x) concretizes via getConcreteApp
+      // to ((_ extract 4 2) x), which implies it has type (BitVec 3) based
+      // on the type rule for APPLY_INDEXED_SYMBOLIC.
       theory::Evaluator e(nullptr);
       in = e.eval(in, {}, {});
       if (in.isNull() || in.getKind() != Kind::CONST_INTEGER)
