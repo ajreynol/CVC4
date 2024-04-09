@@ -370,6 +370,12 @@ TypeNode TypeNode::unifyInternal(const TypeNode& t, bool isLub) const
   Kind tk = t.getKind();
   if (k == Kind::TYPE_CONSTANT)
   {
+    // Special case: String is comparable to (Seq ?). This must be a special
+    // case since String is defined in RARE/ALF to be (Seq Char), but String
+    // is a base type in cvc5's internals. This special case could be removed
+    // if `String` was a macro for `(Seq Char)`, however this would lead to
+    // complications, since `Char` is intentionally a sort we do not export
+    // in our API.
     if (tk == Kind::SEQUENCE_TYPE && t[0].isFullyAbstract() && isString())
     {
       return isLub ? *this : t;
@@ -378,6 +384,7 @@ TypeNode TypeNode::unifyInternal(const TypeNode& t, bool isLub) const
   }
   if (k != tk)
   {
+    // Symmetric special case as above for comparing String and (Seq ?).
     if (k == Kind::SEQUENCE_TYPE && (*this)[0].isFullyAbstract()
         && t.isString())
     {
