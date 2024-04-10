@@ -203,6 +203,10 @@
   (str.in_re s (re.range c1 c2))
   (and (<= (str.to_code c1) (str.to_code s)) (<= (str.to_code s) (str.to_code c2))))
 
+(define-rule str-in-re-contains ((t String) (s String))
+  (str.in_re t (re.++ (re.* re.allchar) (str.to_re s) (re.* re.allchar)))
+  (str.contains t s))
+
 ; =============== Sequences-specific rules
 
 (define-rule seq-len-unit ((x ?)) (str.len (seq.unit x)) 1)
