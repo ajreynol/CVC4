@@ -74,8 +74,6 @@ class AlfListNodeConverter : public NodeConverter
  private:
   /** The parent converter, used for getting internal symbols and utilities */
   BaseAlfNodeConverter& d_tproc;
-  /** Abstract type */
-  TypeNode d_absType;
 };
 
 class AlfAbstractTypeConverter

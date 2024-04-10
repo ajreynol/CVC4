@@ -22,58 +22,7 @@
 namespace cvc5::internal {
 namespace proof {
 
-AlfListNodeConverter::AlfListNodeConverter(NodeManager* nm,
-                                           BaseAlfNodeConverter& tproc)
-    : NodeConverter(nm), d_tproc(tproc)
-{
-}
-
-Node AlfListNodeConverter::postConvert(Node n)
-{
-  Kind k = n.getKind();
-  switch (k)
-  {
-    case Kind::STRING_CONCAT:
-    case Kind::BITVECTOR_ADD:
-    case Kind::BITVECTOR_MULT:
-    case Kind::BITVECTOR_AND:
-    case Kind::BITVECTOR_OR:
-    case Kind::BITVECTOR_XOR:
-    case Kind::FINITE_FIELD_ADD:
-    case Kind::FINITE_FIELD_MULT:
-    case Kind::OR:
-    case Kind::AND:
-    case Kind::SEP_STAR:
-    case Kind::ADD:
-    case Kind::MULT:
-    case Kind::NONLINEAR_MULT:
-    case Kind::BITVECTOR_CONCAT:
-    case Kind::REGEXP_CONCAT:
-    case Kind::REGEXP_UNION:
-    case Kind::REGEXP_INTER:
-      // operators with a ground null terminator
-      break;
-    default:
-      // not an n-ary kind
-      return n;
-  }
-  size_t nlistChildren = 0;
-  for (const Node& nc : n)
-  {
-    if (!expr::isListVar(nc))
-    {
-      nlistChildren++;
-    }
-  }
-  // if less than 2 non-list children, it might collapse to a single element
-  if (nlistChildren < 2)
-  {
-    return d_tproc.mkInternalApp("$dsl.singleton_elim", {n}, n.getType());
-  }
-  return n;
-}
-
-AlfAbstractTypeConverter::AlfAbstractTypeConverter(NodeManager* nm,
+AlfDependentTypeConverter::AlfDependentTypeConverter(NodeManager* nm,
                                                    BaseAlfNodeConverter& tproc)
     : d_nm(nm), d_tproc(tproc), d_typeCounter(0), d_intCounter(0)
 {
@@ -87,7 +36,7 @@ AlfAbstractTypeConverter::AlfAbstractTypeConverter(NodeManager* nm,
   d_kindToName[Kind::SEQUENCE_TYPE] = "Seq";
 }
 
-Node AlfAbstractTypeConverter::process(const TypeNode& tn)
+Node AlfDependentTypeConverter::process(const TypeNode& tn)
 {
   // if abstract
   if (tn.isAbstract())
@@ -99,6 +48,9 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
       case Kind::FUNCTION_TYPE:
       case Kind::TUPLE_TYPE:
       {
+        // Note that we don't have a way to convert function or tuples here,
+        // since they don't have a fixed arity. Hence, they are approximated
+        // by a type variable.
         std::stringstream ss;
         ss << "@T" << d_typeCounter;
         d_typeCounter++;
@@ -109,17 +61,23 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
       break;
       case Kind::BITVECTOR_TYPE:
       case Kind::FINITE_FIELD_TYPE:
+      case Kind::FLOATINGPOINT_TYPE:
       {
-        std::stringstream ss;
-        ss << "@n" << d_intCounter;
-        d_intCounter++;
-        Node n = d_tproc.mkInternalSymbol(ss.str(), d_nm->integerType());
-        d_params.push_back(n);
-        Node ret = d_tproc.mkInternalApp(d_kindToName[ak], {n}, d_sortType);
+        size_t nindices = (ak==Kind::FLOATINGPOINT_TYPE ? 2 : 1);
+        std::vector<Node> indices;
+        for (size_t i=0; i<nindices; i++)
+        {
+          std::stringstream ss;
+          ss << "@n" << d_intCounter;
+          d_intCounter++;
+          Node n = d_tproc.mkInternalSymbol(ss.str(), d_nm->integerType());
+          d_params.push_back(n);
+          indices.push_back(n);
+        }
+        Node ret = d_tproc.mkInternalApp(d_kindToName[ak], indices, d_sortType);
         return ret;
       }
       break;
-      case Kind::FLOATINGPOINT_TYPE:
       default: Unhandled() << "Cannot process abstract type kind " << ak; break;
     }
   }
@@ -139,7 +97,7 @@ Node AlfAbstractTypeConverter::process(const TypeNode& tn)
   return d_tproc.mkInternalApp(
       d_kindToName[tn.getKind()], {asNode}, d_sortType);
 }
-const std::vector<Node>& AlfAbstractTypeConverter::getFreeParameters() const
+const std::vector<Node>& AlfDependentTypeConverter::getFreeParameters() const
 {
   return d_params;
 }
