@@ -620,8 +620,7 @@ void SetDefaults::setDefaultsPost(const LogicInfo& logic, Options& opts) const
     // uses a non-standard implementation that sends (unsound) lemmas during
     // presolve.
     bool qf_uf_noinc = logic.isPure(THEORY_UF) && !logic.isQuantified()
-                       && !opts.base.incrementalSolving
-                       && !safeUnsatCores(opts)
+                       && !opts.base.incrementalSolving && !safeUnsatCores(opts)
                        && !opts.smt.produceProofs;
     SET_AND_NOTIFY_VAL_SYM(
         Uf, ufSymmetryBreaker, qf_uf_noinc, "logic and options");

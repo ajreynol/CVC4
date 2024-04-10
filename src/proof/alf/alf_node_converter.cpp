@@ -260,10 +260,10 @@ Node AlfNodeConverter::postConvert(Node n)
     args.insert(args.end(), n.begin(), n.end());
     return mkInternalApp("@list", args, tn);
   }
-  else if (k==Kind::APPLY_INDEXED_SYMBOLIC)
+  else if (k == Kind::APPLY_INDEXED_SYMBOLIC)
   {
     Kind okind = n.getOperator().getConst<GenericOp>().getKind();
-    if (okind==Kind::FLOATINGPOINT_TO_FP_FROM_IEEE_BV)
+    if (okind == Kind::FLOATINGPOINT_TO_FP_FROM_IEEE_BV)
     {
       // This does not take a rounding mode, we change the smt2 syntax
       // to distinguish this case, similar to the case in getOperatorOfTerm
@@ -353,7 +353,7 @@ Node AlfNodeConverter::maybeMkSkolemFun(Node k)
       // If it has no children, then we don't wrap in `(skolem ...)`, since it
       // makes no difference for substitution. Moreover, it is important not
       // to do this since bitvector concat uses @bv_empty as its nil terminator.
-      if (sfi == SkolemId::PURIFY || app.getNumChildren()>0)
+      if (sfi == SkolemId::PURIFY || app.getNumChildren() > 0)
       {
         // wrap in "skolem" operator
         return mkInternalApp("skolem", {app}, k.getType());
