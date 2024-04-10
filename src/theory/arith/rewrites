@@ -33,6 +33,9 @@
 (define-rule arith-refl-geq ((t ?)) (>= t t) true)
 (define-rule arith-refl-gt ((t ?)) (> t t) false)
 
+(define-rule arith-real-eq-elim ((t Real) (s Real)) (= t s) (and (>= t s) (<= t s)))
+(define-rule arith-int-eq-elim ((t Int) (s Int)) (= t s) (and (>= t s) (<= t s)))
+
 ;(define-cond-rule arith-geq-contra ((t ?) (s ?)) (not (>= (- t s) 0)) (>= t s) false)
 ;(define-cond-rule arith-eq-contra ((t ?) (s ?)) (not (= (- t s) 0)) (= t s) false)
 
