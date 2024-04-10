@@ -10,7 +10,7 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Implementation of ALF node tprocersion for list variables in DSL rules
+ * Implementation of ALF node conversion for list variables in DSL rules
  */
 #include "cvc5_private.h"
 

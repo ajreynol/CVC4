@@ -10,12 +10,11 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Implementation of ALF node conversion for list variables in DSL rules
+ * Implementation of conversion between approximate and dependent types.
  */
 
-#include "proof/alf/alf_list_node_converter.h"
+#include "proof/alf/alf_dependent_type_converter.h"
 
-#include "expr/nary_term_util.h"
 #include "printer/printer.h"
 #include "printer/smt2/smt2_printer.h"
 

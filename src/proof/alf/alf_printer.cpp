@@ -30,6 +30,7 @@
 #include "rewriter/rewrite_db.h"
 #include "smt/print_benchmark.h"
 #include "theory/strings/theory_strings_utils.h"
+#include "proof/alf/alf_dependent_type_converter.h"
 
 namespace cvc5::internal {
 
@@ -329,7 +330,7 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
   Subs su;
 
   out << "(declare-rule dsl." << r << " (";
-  AlfAbstractTypeConverter aatc(nodeManager(), d_tproc);
+  AlfDependentTypeConverter adtc(nodeManager(), d_tproc);
   std::stringstream ssExplicit;
   for (size_t i = 0, nvars = uvarList.size(); i < nvars; i++)
   {
@@ -344,7 +345,7 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
     su.add(varList[i], uvi);
     ssExplicit << "(" << uv << " ";
     TypeNode uvt = uv.getType();
-    Node uvtp = aatc.process(uvt);
+    Node uvtp = adtc.process(uvt);
     ssExplicit << uvtp;
     if (expr::isListVar(uv))
     {
@@ -354,10 +355,10 @@ void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
     ssExplicit << ")";
   }
   // print implicit parameters
-  const std::vector<Node>& params = aatc.getFreeParameters();
+  const std::vector<Node>& params = adtc.getFreeParameters();
   for (const Node& p : params)
   {
-    out << "(" << p << " " << p.getType() << " :implicit) ";
+    out << "(" << p << " " << p.getType() << ") ";
   }
   // now print explicit variables
   out << ssExplicit.str();
