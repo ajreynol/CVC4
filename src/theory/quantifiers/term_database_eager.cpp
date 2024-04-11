@@ -617,19 +617,19 @@ Node TermDbEager::mkExplainInst(const Node& q, const std::vector<Node>& terms)
   qterms.push_back(q);
   qterms.insert(qterms.end(), terms.begin(), terms.end());
   SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
-  return skm->mkSkolemFunction(
-      SkolemFunId::QUANTIFIERS_INST, d_boolType, {qterms});
+  return skm->mkInternalSkolemFunction(
+      InternalSkolemId::QUANTIFIERS_INST, d_boolType, {qterms});
 }
 
 Node TermDbEager::getExplainInst(const Node& i, std::vector<Node>& terms)
 {
   Node cacheVal;
-  SkolemFunId id;
+  SkolemId id;
   SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
   if (skm->isSkolemFunction(i, id, cacheVal))
   {
-    terms.insert(terms.end(), cacheVal.begin() + 1, cacheVal.end());
-    return cacheVal[0];
+    terms.insert(terms.end(), cacheVal.begin() + 2, cacheVal.end());
+    return cacheVal[1];
   }
   return Node::null();
 }

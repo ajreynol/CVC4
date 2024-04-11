@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds
+ *   Andrew Reynolds, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -90,7 +90,7 @@ TNode TermEvaluatorEntailed::partialEvaluateChild(
   {
     if (val.isConst())
     {
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       val = nm->mkConst(!val.getConst<bool>());
     }
     else
@@ -234,7 +234,7 @@ TNode TermEvaluatorEntailed::evaluate(const State& s,
   // set to unknown, handle cases
   TNode ret;
   Kind k = n.getKind();
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Assert(k != Kind::NOT);
   if (k == Kind::AND || k == Kind::OR)
   {
