@@ -14,8 +14,8 @@
  */
 #include "cvc5_private.h"
 
-#ifndef CVC4__PROOF__ALF__ALF_NODE_CONVERTER_H
-#define CVC4__PROOF__ALF__ALF_NODE_CONVERTER_H
+#ifndef CVC5__PROOF__ALF__ALF_NODE_CONVERTER_H
+#define CVC5__PROOF__ALF__ALF_NODE_CONVERTER_H
 
 #include <iostream>
 #include <map>
@@ -51,6 +51,10 @@ class BaseAlfNodeConverter : public NodeConverter
    * passed as arguments to terms and proof rules.
    */
   virtual Node typeAsNode(TypeNode tni) = 0;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7015861a63eec955a8b3bd3a6f80b99f389440bf
   /**
    * Make an internal symbol with custom name. This is a BOUND_VARIABLE that
    * has a distinguished status so that it is *not* printed as (bvar ...). The

@@ -24,31 +24,30 @@ namespace cvc5::internal {
 namespace proof {
 
 /**
- * Converts an (approximate) type into a dependent one.
- * 
+ * Converts an (approximate) type into a dependent one
+ *
  * This is used for printing RARE rules in ALF. For example, the RARE rule:
- * 
+ *
  * (define-cond-rule bv-extract-concat-1
  *   ((x ?BitVec) (xs ?BitVec :list) (y ?BitVec) (i Int) (j Int))
  *   (<= j (@bvsize x))
  *   (extract j i (concat xs y x))
  *   (extract j i x))
- * 
+ *
  * becomes the ALF rule:
- * 
+ *
  * (declare-rule dsl.bv-extract-concat-1
- *   ((@n0 Int) (@n1 Int) (@n2 Int) (x (BitVec @n0)) (xs (BitVec @n1) :list) (y (BitVec @n2)) (i Int) (j Int))
- *   :premises ((= (<= j (@bvsize x)) true))
- *   :args (x xs y i j)
- *   :conclusion (= (extract j i (concat xs y x)) (extract j i x))
+ *   ((@n0 Int) (@n1 Int) (@n2 Int) (x (BitVec @n0)) (xs (BitVec @n1) :list) (y
+ * (BitVec @n2)) (i Int) (j Int)) :premises ((= (<= j (@bvsize x)) true)) :args
+ * (x xs y i j) :conclusion (= (extract j i (concat xs y x)) (extract j i x))
  * )
- * 
+ *
  * This converter is responsible for converting an approximate type into a Node
  * that is printed as the equivalent dependent type. For example, given
  * ?BitVec as input, it returns a node that prints as (BitVec @n0) where @n0
  * is a free parameter introduced in the conversion. Each free parameter
  * introduced in this way is unique.
- * 
+ *
  * Examples:
  *    ?BitVec --> (BitVec @n0) where @n0 is an integer variable.
  *    (Array ? ?) ---> (Array @T0 @T1) where @T0, @T1 are type variables
@@ -56,6 +55,9 @@ namespace proof {
  *    ?FloatingPoint ---> (FloatingPoint @n0 @n1)
  *    ?Tuple --> @T0, where note tuples do not have fixed arity so they are
  *               approximated as a type variable.
+ *
+ * Note that approximate functions and approximate tuples are the only two types
+ * that are not converted precisely in this translation.
  */
 class AlfDependentTypeConverter
 {
@@ -72,6 +74,7 @@ class AlfDependentTypeConverter
    * @return The free parameters introduced by calls to the above.
    */
   const std::vector<Node>& getFreeParameters() const;
+
  private:
   /** Pointer to node manager */
   NodeManager* d_nm;
