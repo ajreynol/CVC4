@@ -240,7 +240,13 @@ modes::LearnedLitType ZeroLevelLearner::computeLearnedLiteralType(
 {
   // literal was learned, determine its type
   // apply substitutions first
-  Node lit = d_tsmap.apply(input, d_env.getRewriter());
+  Node lit = input;
+  Node prev;
+  do
+  {
+    prev = lit;
+    lit = d_tsmap.apply(lit, d_env.getRewriter());
+  }while (prev!=lit);  
   TNode aatom = lit.getKind() == Kind::NOT ? lit[0] : lit;
   bool internal = d_ppnAtoms.find(aatom) == d_ppnAtoms.end();
   modes::LearnedLitType ltype =
