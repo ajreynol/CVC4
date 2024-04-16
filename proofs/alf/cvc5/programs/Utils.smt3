@@ -12,6 +12,7 @@
 (define compare_var ((T Type :implicit) (U Type :implicit) (a T) (b U))
   (alf.is_neg (alf.add (alf.hash a) (alf.neg (alf.hash b)))))
 
+<<<<<<< HEAD
 ; Version that does not care about f
 (program $dsl.singleton_elim ((T Type) (S Type) (U Type) (f (-> T U S)) (x S) (x1 T) (x2 T :list))
   (S) S
@@ -21,6 +22,8 @@
   )
 )
 
+=======
+>>>>>>> 472872d588ceadb96802069796cb518597cc1ee4
 ; Eliminate singleton list, which takes:
 ; (1) a function f
 ; (2) the identity element of f
@@ -38,9 +41,15 @@
 ; Append the children of two applications of an ACI operator, which takes:
 ; (1) a function f
 ; (2) the identity element of f
+<<<<<<< HEAD
 ; (3) the first term to append
 ; (4) the second term to append
 (program ac_append ((T Type) (S Type) (U Type) (f (-> T U S)) (id S) (x S) (x1 T) (x2 U :list) (y S) (y1 T) (y2 U :list))
+=======
+; (3) the first f :list term to append
+; (4) the second f :list term to append
+(program ac_append ((T Type) (S Type) (U Type) (f (-> T U S)) (id S) (x S) (x1 T) (x2 U :list) (y1 T) (y2 U :list))
+>>>>>>> 472872d588ceadb96802069796cb518597cc1ee4
   ((-> T U S) S S S) S
   (
     ((ac_append f id (f x1 x2) (f y1 y2)) (alf.ite (alf.is_eq x1 y1)
@@ -70,7 +79,11 @@
 
 ; Normalize an application of an ACI operator.
 (define get_aci_norm ((T Type :implicit) (t T))
+<<<<<<< HEAD
   (alf.match ((S Type) (U Type) (f (-> S U U)) (x S) (y U :list))
+=======
+  (alf.match ((S Type) (U Type) (V Type) (f (-> S U V)) (x S) (y U :list))
+>>>>>>> 472872d588ceadb96802069796cb518597cc1ee4
     t
     (((f x y) (let ((id (alf.nil f x y))) (singleton_elim f id (get_aci_norm_rec f id t))))))
 )
@@ -93,7 +106,11 @@
 
 ; Normalize an application of an associative operator.
 (define get_a_norm ((T Type :implicit) (t T))
+<<<<<<< HEAD
   (alf.match ((S Type) (U Type) (f (-> S U U)) (x S) (y U :list))
+=======
+  (alf.match ((S Type) (U Type) (V Type) (f (-> S U V)) (x S) (y U :list))
+>>>>>>> 472872d588ceadb96802069796cb518597cc1ee4
     t
     (((f x y) (let ((id (alf.nil f x y))) (singleton_elim f id (get_a_norm_rec f id t))))))
 )

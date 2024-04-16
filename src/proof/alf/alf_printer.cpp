@@ -141,7 +141,8 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DRAT_REFUTATION:
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
-    case ProofRule::ENCODE_PRED_TRANSFORM: return true;
+    case ProofRule::ENCODE_PRED_TRANSFORM:
+    case ProofRule::ACI_NORM:
     case ProofRule::DSL_REWRITE:
       return options().proof.alfDslMode == options::AlfDslMode::ON;
     case ProofRule::ARITH_POLY_NORM:

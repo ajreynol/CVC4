@@ -150,8 +150,8 @@
 )
 
 (define get_aci_normal_form ((S Type :implicit) (t S))
-  (alf.match ((T Type) (U Type) (V Type) (x V) (x1 T) (x2 U :list) (m Int) 
-              (xb1 (BitVec m)) (xb2 (BitVec m) :list) 
+  (alf.match ((T Type) (U Type) (V Type) (x V) (x1 T) (x2 U :list) (m Int)
+              (xb1 (BitVec m)) (xb2 (BitVec m) :list)
               (xf1 (FiniteField m)) (xf2 (FiniteField m) :list)
               (xs1 (Seq U)) (xs2 (Seq U) :list))
     t
@@ -181,6 +181,6 @@
   :requires (((let ((an (get_aci_normal_form a)) (bn (get_aci_normal_form b)))
               (alf.ite (alf.is_eq an b) true
               (alf.ite (alf.is_eq a bn) true
-                (alf.requires an bn true)))) true))
+                (alf.is_eq an bn)))) true))
   :conclusion (= a b)
 )
