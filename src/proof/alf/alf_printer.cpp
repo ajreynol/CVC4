@@ -270,6 +270,8 @@ bool AlfPrinter::canEvaluate(Node n) const
         case Kind::STRING_SUBSTR:
         case Kind::STRING_LENGTH:
         case Kind::STRING_CONTAINS:
+        case Kind::STRING_REPLACE:
+        case Kind::STRING_INDEXOF:
         case Kind::BITVECTOR_ADD:
         case Kind::BITVECTOR_SUB:
         case Kind::BITVECTOR_NEG:
