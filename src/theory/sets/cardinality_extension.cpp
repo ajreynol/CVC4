@@ -512,7 +512,7 @@ void CardinalityExtension::checkCardCyclesRec(Node eqc,
         }
         Trace("sets-debug")
             << "...derived " << conc.size() << " conclusions" << std::endl;
-        d_im.assertInference(conc, InferenceId::SETS_CARD_GRAPH_EQ_PARENT, n.eqNode(p));
+        d_im.assertInference(conc, InferenceId::SETS_CARD_GRAPH_EQ_PARENT, n.eqNode(p), 1);
         d_im.doPendingLemmas();
         if (d_im.hasSent())
         {
@@ -626,7 +626,7 @@ void CardinalityExtension::checkCardCyclesRec(Node eqc,
           Node cpnlb = d_cardParent[n][l].second;
           d_im.assertInference(conc,
                                InferenceId::SETS_CARD_GRAPH_EQ_PARENT_2,
-                               cpk.eqNode(cpnlb));
+                               cpk.eqNode(cpnlb), 1);
           d_im.doPendingLemmas();
           if (d_im.hasSent())
           {

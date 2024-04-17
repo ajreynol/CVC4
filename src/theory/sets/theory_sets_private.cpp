@@ -805,7 +805,7 @@ void TheorySetsPrivate::checkMapUp()
       Node f_x = nm->mkNode(Kind::APPLY_UF, f, x);
       Node skolem = d_treg.getProxy(term);
       Node memberMap = nm->mkNode(Kind::SET_MEMBER, f_x, skolem);
-      d_im.assertInference(memberMap, InferenceId::SETS_MAP_UP, exp);
+      d_im.assertInference(memberMap, InferenceId::SETS_MAP_UP, exp, 1);
       if (d_state.isInConflict())
       {
         return;
@@ -850,7 +850,7 @@ void TheorySetsPrivate::checkMapDown()
       Node f_x = nm->mkNode(Kind::APPLY_UF, f, x);
       Node equal = f_x.eqNode(y);
       Node fact = memberA.andNode(equal);
-      d_im.assertInference(fact, InferenceId::SETS_MAP_DOWN_POSITIVE, exp);
+      d_im.assertInference(fact, InferenceId::SETS_MAP_DOWN_POSITIVE, exp, 1);
       if (d_state.isInConflict())
       {
         return;
