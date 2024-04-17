@@ -115,7 +115,7 @@ void TheorySetsPrivate::eqNotifyMerge(TNode t1, TNode t2)
             // infer equality between elements of singleton
             Node exp = s1.eqNode(s2);
             Node eq = s1[0].eqNode(s2[0]);
-            d_im.assertSetsFact(eq, true, InferenceId::SETS_SINGLETON_EQ, exp);
+            d_im.assertInference(eq, InferenceId::SETS_SINGLETON_EQ, exp, 1);
           }
           else
           {
@@ -218,12 +218,14 @@ void TheorySetsPrivate::fullEffortCheck()
   Trace("sets") << "----- Full effort check ------" << std::endl;
   // get the asserted terms
   std::set<Kind> irrKinds;
-  std::set<Node> rlvTerms;
-  d_external.collectAssertedTerms(rlvTerms, true, irrKinds);
-  d_external.computeRelevantTerms(rlvTerms);
+  std::set<Node> rlvTermsExt;
+  d_external.collectAssertedTerms(rlvTermsExt, true, irrKinds);
+  d_external.computeRelevantTerms(rlvTermsExt);
   do
   {
     Assert(!d_im.hasPendingLemma() || d_im.hasSent());
+    std::set<Node> rlvTerms = rlvTermsExt;
+    d_im.getInternalRelevantTerms(rlvTerms);
 
     Trace("sets") << "...iterate full effort check..." << std::endl;
     fullEffortReset();
@@ -249,6 +251,7 @@ void TheorySetsPrivate::fullEffortCheck()
         // if it is not relevant, don't register it
         if (rlvTerms.find(n)==rlvTerms.end())
         {
+          Trace("sets-eqc") << "Irrelevant: " << n << std::endl;
           continue;
         }
         TypeNode tnn = n.getType();

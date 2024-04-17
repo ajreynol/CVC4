@@ -83,6 +83,11 @@ class InferenceManager : public InferenceManagerBuffered
    */
   void split(Node n, InferenceId id, int reqPol = 0);
 
+  /**
+   * Get the set of terms that are relevant due to appearing in internal
+   * facts in this SAT context.
+   */
+  void getInternalRelevantTerms(std::set<Node>& rlvTerms);
  private:
   /** constants */
   Node d_true;
@@ -95,6 +100,8 @@ class InferenceManager : public InferenceManagerBuffered
    * class.
    */
   SolverState& d_state;
+  /** The set of terms that have appeared in facts in this user context */
+  NodeSet d_rlvInternalTerms;
   /** Assert fact recursive
    *
    * This is a helper function for assertInference, which calls assertFact

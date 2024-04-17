@@ -28,7 +28,7 @@ namespace theory {
 namespace sets {
 
 InferenceManager::InferenceManager(Env& env, Theory& t, SolverState& s)
-    : InferenceManagerBuffered(env, t, s, "theory::sets::"), d_state(s)
+    : InferenceManagerBuffered(env, t, s, "theory::sets::"), d_state(s), d_rlvInternalTerms(context())
 {
   d_true = nodeManager()->mkConst(true);
   d_false = nodeManager()->mkConst(false);
@@ -119,6 +119,8 @@ bool InferenceManager::assertSetsFact(Node atom,
                                       InferenceId id,
                                       Node exp)
 {
+  Trace("ajr-temp") << "mark relevant " << atom << std::endl;
+  d_rlvInternalTerms.insert(atom);
   Node conc = polarity ? atom : atom.notNode();
   return assertInternalFact(
       atom, polarity, id, ProofRule::TRUST, {exp}, {d_tid, conc, d_tsid});
@@ -186,6 +188,14 @@ void InferenceManager::split(Node n, InferenceId id, int reqPol)
     Trace("sets-lemma") << "Sets::Require phase " << n << " " << (reqPol > 0)
                         << std::endl;
     preferPhase(n, reqPol > 0);
+  }
+}
+
+void InferenceManager::getInternalRelevantTerms(std::set<Node>& rlvTerms)
+{
+  for (const Node& t : d_rlvInternalTerms)
+  {
+    rlvTerms.insert(t);
   }
 }
 
