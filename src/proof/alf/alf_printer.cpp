@@ -26,11 +26,11 @@
 #include "options/main_options.h"
 #include "printer/printer.h"
 #include "printer/smt2/smt2_printer.h"
+#include "proof/alf/alf_dependent_type_converter.h"
 #include "proof/proof_node_to_sexpr.h"
 #include "rewriter/rewrite_db.h"
 #include "smt/print_benchmark.h"
 #include "theory/strings/theory_strings_utils.h"
-#include "proof/alf/alf_dependent_type_converter.h"
 
 namespace cvc5::internal {
 
