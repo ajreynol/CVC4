@@ -457,6 +457,10 @@ class PropEngine : protected EnvObj
   };
   /** Statistics */
   Statistics d_stats;
+  /** Whether we are tracking inference ids */
+  bool d_trackLemmaIds;
+  /** Map from lemmas to inference ids */
+  context::CDHashMap<Node, theory::InferenceId> d_lemmaSrcId;
 };
 
 }  // namespace prop

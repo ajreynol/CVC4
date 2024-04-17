@@ -108,3 +108,11 @@ name   = "SAT Layer"
 [[option.mode.LAZY]]
   name = "lazy"
   help = "Preregister literals when they are asserted by the SAT solver."
+
+[[option]]
+  name       = "trackLemmaInferenceIds"
+  category   = "expert"
+  long       = "track-lemma-inference-ids"
+  type       = "bool"
+  default    = "false"
+  help       = "track the inference ids of lemmas"

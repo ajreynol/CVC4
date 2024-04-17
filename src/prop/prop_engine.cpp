@@ -70,15 +70,17 @@ PropEngine::PropEngine(Env& env, TheoryEngine* te)
     : EnvObj(env),
       d_inCheckSat(false),
       d_theoryEngine(te),
-      d_skdm(new SkolemDefManager(d_env.getContext(), d_env.getUserContext())),
+      d_skdm(new SkolemDefManager(context(), userContext())),
       d_theoryProxy(nullptr),
       d_satSolver(nullptr),
       d_cnfStream(nullptr),
-      d_theoryLemmaPg(d_env, d_env.getUserContext(), "PropEngine::ThLemmaPg"),
+      d_theoryLemmaPg(d_env, userContext(), "PropEngine::ThLemmaPg"),
       d_ppm(nullptr),
       d_interrupted(false),
-      d_assumptions(d_env.getUserContext()),
-      d_stats(statisticsRegistry())
+      d_assumptions(userContext()),
+      d_stats(statisticsRegistry()),
+      d_trackLemmaIds(options().prop.trackLemmaInferenceIds),
+      d_lemmaSrcId(userContext())
 {
   Trace("prop") << "Constructing the PropEngine" << std::endl;
   context::UserContext* userContext = d_env.getUserContext();
@@ -228,6 +230,11 @@ void PropEngine::assertTrustedLemmaInternal(theory::InferenceId id,
     output(OutputTag::LEMMAS) << SkolemManager::getOriginalForm(node);
     output(OutputTag::LEMMAS) << " :source " << id;
     output(OutputTag::LEMMAS) << ")" << std::endl;
+  }
+  // remember the inference id if the option is set
+  if (d_trackLemmaIds)
+  {
+    d_lemmaSrcId[node] = id;
   }
   bool negated = trn.getKind() == TrustNodeKind::CONFLICT;
   // should have a proof generator if the theory engine is proof producing
