@@ -963,8 +963,9 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
     Assert(d_currFixedPointId == DslProofRule::NONE);
     Assert(d_currFixedPointConc.isNull());
     d_currFixedPointId = rpr.getId();
-    Node ctx = rpr.getContext();
-    Trace("rpc-ctx") << "Context is " << ctx << std::endl;
+    Node context = rpr.getContext();
+    Assert (!context.isNull());
+    Trace("rpc-ctx") << "Context is " << context << std::endl;
     // check if stgt also rewrites with the same rule?
     bool continueFixedPoint;
     std::vector<Node> steps;
@@ -990,15 +991,19 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
         stepsSubs.emplace_back(d_currFixedPointSubs.begin(),
                                d_currFixedPointSubs.end());
         stgt = d_currFixedPointConc[1];
-        if (!ctx.isNull())
-        {
-          std::unordered_map<Node, Node> msubs;
-          expr::match(ctx[1], stgt, msubs);
-          Trace("rpc-ctx") << "Matching context " << ctx << " with " << stgt
-                           << " gives " << msubs[ctx[0][0]] << std::endl;
-          stgt = msubs[ctx[0][0]];
-          Assert(!stgt.isNull());
-        }
+        // For example, we have now computed
+        //   (str.len (str.++ x y z)) --> (+ (str.len x) (str.len (str.++ y z)))
+        // where stgt is the RHS. We now want to continue to process, where
+        // to find the next term, we match the context of the rule to the RHS.
+        // In particular, given a context (+ (str.len S0) ?0), we would match
+        // ?0 to (str.len (str.++ y z)). We update stgt to this term to
+        // proceed with the loop.
+        std::unordered_map<Node, Node> msubs;
+        expr::match(context[1], stgt, msubs);
+        Trace("rpc-ctx") << "Matching context " << context << " with " << stgt
+                          << " gives " << msubs[context[0][0]] << std::endl;
+        stgt = msubs[context[0][0]];
+        Assert(!stgt.isNull());
         steps.push_back(stgt);
       }
       d_currFixedPointConc = Node::null();
@@ -1006,7 +1011,6 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
 
     std::vector<Node> transEq;
     Node prev = ssrc;
-    Node context = rpr.getContext();
     Node placeholder = context[0][0];
     Node body = context[1];
     Node currConc = body;
