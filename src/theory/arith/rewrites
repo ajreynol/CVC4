@@ -28,6 +28,8 @@
 
 (define-rule arith-geq-norm ((t ?) (s ?)) (>= t s) (>= (- t s) 0))
 
+(define-rule arith-geq-norm2 ((t ?) (s ?)) (>= t s) (<= (- t) (- s)))
+
 (define-rule arith-refl-leq ((t ?)) (<= t t) true)
 (define-rule arith-refl-lt ((t ?)) (< t t) false)
 (define-rule arith-refl-geq ((t ?)) (>= t t) true)
