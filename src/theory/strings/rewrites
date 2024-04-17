@@ -158,6 +158,16 @@
   (str.contains x y)
   (= x y))
 
+(define-cond-rule str-contains-emp ((x String) (y String))
+  (= (str.len y) 0)
+  (str.contains x y)
+  true)
+
+(define-cond-rule str-contains-is-emp ((x String) (y String))
+  (= (str.len x) 0)
+  (str.contains x y)
+  (= x y))
+
 (define-rule str-concat-emp ((xs String :list) (ys String :list)) 
   (str.++ xs "" ys) 
   (str.++ xs ys))
@@ -169,6 +179,11 @@
 ;  (>= (str.len s) (str.len t))
 ;  (str.replace t s t)
 ;  t)
+
+(define-cond-rule str-replace-no-contains ((t ?Seq) (s ?Seq) (r ?Seq)) 
+  (not (str.contains t s))
+  (str.replace t s r)
+  t)
 
 ; =============== Regular expression rules
 
@@ -206,6 +221,10 @@
 (define-rule str-in-re-contains ((t String) (s String))
   (str.in_re t (re.++ (re.* re.allchar) (str.to_re s) (re.* re.allchar)))
   (str.contains t s))
+
+(define-rule str-nth-elim-code ((s String) (n Int))
+  (seq.nth s n)
+  (str.to_code (str.substr s n 1)))
 
 ; =============== Sequences-specific rules
 
