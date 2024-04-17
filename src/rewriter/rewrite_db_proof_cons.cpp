@@ -258,7 +258,7 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
                         << std::endl;
     const RewriteProofRule& rpr = d_db->getRule(d_currFixedPointId);
     // get the conclusion
-    Node target = rpr.getConclusion();
+    Node target = rpr.getConclusion(true);
     // apply substitution, which may notice vars may be out of order wrt rule
     // var list
     target = expr::narySubstitute(target, vars, subs);
@@ -323,7 +323,7 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
                                        DslProofRule r)
 {
   Assert(!target.isNull() && target.getKind() == Kind::EQUAL);
-  Trace("rpc-debug2") << "Check rule " << id << std::endl;
+  Trace("rpc-debug2") << "Check rule " << (id==RewriteProofStatus::DSL ? toString(r) : toString(id)) << std::endl;
   std::vector<Node> vcs;
   Node transEq;
   ProvenInfo pic;
@@ -950,13 +950,17 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
 {
   pi.d_id = RewriteProofStatus::DSL;
   pi.d_dslId = rpr.getId();
-  Node conc = rpr.getConclusion();
+  Node conc = rpr.getConclusion(true);
+  Node concRhs = conc[1];
+  Trace("rpc-ctx") << "***GET CONCLUSION " << pi.d_dslId << " for " << vars << " -> " << subs << std::endl;
   // if fixed point, we continue applying
   if (doFixedPoint && rpr.isFixedPoint())
   {
     Assert(d_currFixedPointId == DslProofRule::NONE);
     Assert(d_currFixedPointConc.isNull());
     d_currFixedPointId = rpr.getId();
+    Node ctx = rpr.getContext();
+    Trace("rpc-ctx") << "Context is " << ctx << std::endl;
     // check if stgt also rewrites with the same rule?
     bool continueFixedPoint;
     std::vector<Node> steps;
@@ -968,17 +972,28 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
     Node stgt = ssrc;
     do
     {
+      Trace("rpc-ctx") << "Get matches " << stgt << std::endl;
+      Trace("rpc-ctx") << "Conclusion is " << concRhs << std::endl;
       continueFixedPoint = false;
       rpr.getMatches(stgt, &d_notify);
+      Trace("rpc-ctx") << "...conclusion is " << d_currFixedPointConc << std::endl;
       if (!d_currFixedPointConc.isNull())
       {
         // currently avoid accidental loops: arbitrarily bound to 1000
         continueFixedPoint = steps.size() <= s_fixedPointLimit;
         Assert(d_currFixedPointConc.getKind() == Kind::EQUAL);
-        steps.push_back(d_currFixedPointConc[1]);
         stepsSubs.emplace_back(d_currFixedPointSubs.begin(),
                                d_currFixedPointSubs.end());
         stgt = d_currFixedPointConc[1];
+        if (!ctx.isNull())
+        {
+          std::unordered_map<Node, Node> msubs;
+          expr::match(ctx[1], stgt, msubs);
+          Trace("rpc-ctx") << "Matching context " << ctx << " with " << stgt << " gives " << msubs[ctx[0][0]] << std::endl;
+          stgt = msubs[ctx[0][0]];
+          Assert(!stgt.isNull());
+        }
+        steps.push_back(stgt);
       }
       d_currFixedPointConc = Node::null();
     } while (continueFixedPoint);
@@ -998,6 +1013,7 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
       Node target = expr::narySubstitute(body, vars, stepSubs);
       target = target.substitute(TNode(placeholder), TNode(step));
       cacheProofSubPlaceholder(currContext, placeholder, source, target);
+      Trace("rpc-ctx")  << "Step " << source << " == " << target << " from " << body << " " << vars << " -> " << stepSubs << ", " << placeholder << " -> " << step << std::endl;
 
       ProvenInfo& dpi = d_pcache[source.eqNode(target)];
       dpi.d_id = pi.d_id;
@@ -1023,19 +1039,16 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
       pi.d_id = RewriteProofStatus::TRANS;
       // store transEq in d_vars
       pi.d_vars = transEq;
+      Trace("rpc-ctx") << "***RETURN trans " << transEq.back()[1] << std::endl;
       // return the end of the chain, which will be used for constrained
       // matching
       return transEq.back()[1];
     }
   }
 
-  Node res = conc[1];
-  if (rpr.isFixedPoint())
-  {
-    Node context = rpr.getContext();
-    res = context[1].substitute(TNode(context[0][0]), TNode(conc[1]));
-  }
-  return expr::narySubstitute(res, vars, subs);
+  Node ret = expr::narySubstitute(concRhs, vars, subs);
+  Trace("rpc-ctx") << "***RETURN " << ret << std::endl;
+  return ret;
 }
 
 void RewriteDbProofCons::cacheProofSubPlaceholder(TNode context,
@@ -1079,6 +1092,7 @@ void RewriteDbProofCons::cacheProofSubPlaceholder(TNode context,
   {
     ProvenInfo& cpi = d_pcache[cong];
     cpi.d_id = RewriteProofStatus::CONG;
+    cpi.d_vars.clear();
     for (size_t i = 0, size = cong[0].getNumChildren(); i < size; i++)
     {
       TNode lhs = cong[0][i];
