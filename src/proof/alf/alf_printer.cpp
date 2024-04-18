@@ -253,10 +253,10 @@ bool AlfPrinter::canEvaluate(Node n) const
         case Kind::CONST_INTEGER:
         case Kind::CONST_RATIONAL:
         case Kind::CONST_STRING:
+        case Kind::CONST_BITVECTOR:
         case Kind::ADD:
         case Kind::SUB:
         case Kind::NEG:
-        case Kind::EQUAL:
         case Kind::LT:
         case Kind::GT:
         case Kind::GEQ:
@@ -281,10 +281,17 @@ bool AlfPrinter::canEvaluate(Node n) const
         case Kind::BITVECTOR_ADD:
         case Kind::BITVECTOR_SUB:
         case Kind::BITVECTOR_NEG:
+        case Kind::BITVECTOR_NOT:
         case Kind::BITVECTOR_MULT:
         case Kind::BITVECTOR_AND:
         case Kind::BITVECTOR_OR:
         case Kind::CONST_BITVECTOR_SYMBOLIC: break;
+        case Kind::EQUAL:
+        {
+          TypeNode tn = cur[0].getType();
+          return tn.isReal() || tn.isInteger() || tn.isString() || tn.isBitVector();
+        }
+          break;
         case Kind::STRING_IN_REGEXP:
           if (!canEvaluateRegExp(cur[1]))
           {
