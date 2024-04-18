@@ -22,6 +22,30 @@
 (declare-sort @ho-elim-sort 1)
 (declare-const @fmf-fun-sort (-> (! Type :var T :implicit) T Type))
 
+
+(define get_aci_normal_form ((S Type :implicit) (t S))
+  (alf.match ((T Type) (U Type) (V Type) (x V) (x1 T) (x2 U :list) (m Int)
+              (xb1 (BitVec m)) (xb2 (BitVec m) :list)
+              (xf1 (FiniteField m)) (xf2 (FiniteField m) :list)
+              (xs1 (Seq U)) (xs2 (Seq U) :list))
+    t
+    (
+      ((or x1 x2)        (get_aci_norm t))
+      ((and x1 x2)       (get_aci_norm t))
+      ((sep x1 x2)       (get_aci_norm t))
+      ((re.union x1 x2)  (get_aci_norm t))
+      ((re.inter x1 x2)  (get_aci_norm t))
+      ((bvor xb1 xb2)    (get_aci_norm t))
+      ((bvand xb1 xb2)   (get_aci_norm t))
+      ((ff.add xf1 xf2)  (get_aci_norm t))
+      ((ff.mul xf1 xf2)  (get_aci_norm t))
+      ((str.++ xs1 xs2)  (get_a_norm t))
+      ((re.++ x1 x2)     (get_a_norm t))
+      (x                 x)
+    )
+  )
+)
+
 ; Converts x to an equivalent form, for ProofRule::ENCODE_TRANSFORM.
 ; This side condition is used to convert between the native
 ; representation in cvc5 to the form expected by DSL rewrite rules.
@@ -30,7 +54,7 @@
 (program encode_transform ((T Type) (S Type) (f (-> S T)) (x T) (y S))
   (T) T
   (
-    ((encode_transform (f y)) (_ (encode_transform f) (encode_transform y)))
+    ((encode_transform (f y)) (get_aci_normal_form (_ (encode_transform f) (encode_transform y))))
     ((encode_transform x)     (alf.ite ($is_str_literal x)
                                 ; string constants
                                 ; e.g. "AB" ---> (str.++ "A" "B")
@@ -176,29 +200,6 @@
   :args ((= a b))
   :requires (((is_poly_norm a b) true))
   :conclusion (= a b)
-)
-
-(define get_aci_normal_form ((S Type :implicit) (t S))
-  (alf.match ((T Type) (U Type) (V Type) (x V) (x1 T) (x2 U :list) (m Int)
-              (xb1 (BitVec m)) (xb2 (BitVec m) :list)
-              (xf1 (FiniteField m)) (xf2 (FiniteField m) :list)
-              (xs1 (Seq U)) (xs2 (Seq U) :list))
-    t
-    (
-      ((or x1 x2)        (get_aci_norm t))
-      ((and x1 x2)       (get_aci_norm t))
-      ((sep x1 x2)       (get_aci_norm t))
-      ((re.union x1 x2)  (get_aci_norm t))
-      ((re.inter x1 x2)  (get_aci_norm t))
-      ((bvor xb1 xb2)    (get_aci_norm t))
-      ((bvand xb1 xb2)   (get_aci_norm t))
-      ((ff.add xf1 xf2)  (get_aci_norm t))
-      ((ff.mul xf1 xf2)  (get_aci_norm t))
-      ((str.++ xs1 xs2)  (get_a_norm t))
-      ((re.++ x1 x2)     (get_a_norm t))
-      (x                 x)
-    )
-  )
 )
 
 ; ProofRule::ACI_NORM

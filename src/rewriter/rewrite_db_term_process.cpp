@@ -90,7 +90,7 @@ Node RewriteDbNodeConverter::postConvert(Node n)
     return nm->mkNode(Kind::APPLY_INDEXED_SYMBOLIC, indices);
   }
 
-  return n;
+  return expr::getACINormalForm(n);
 }
 
 bool RewriteDbNodeConverter::shouldTraverse(Node n)
