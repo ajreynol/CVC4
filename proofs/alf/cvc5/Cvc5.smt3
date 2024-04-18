@@ -57,7 +57,8 @@
                        (x T) (y T) (z S) (ys S :list)
                        (b Bool) (n Int) (m Int)
                        (xb (BitVec m)) (ybs (BitVec m) :list)
-                       (xs (Seq T)) (yss (Seq T) :list))
+                       (xs (Seq T)) (yss (Seq T) :list)
+                       (xr RegLan))
     (S) S
     (
       ; core
@@ -112,6 +113,8 @@
                                           (let ((ey (run_evaluate y)))
                                           (let ((r (alf.find (alf.to_str ex) (alf.to_str ey))))
                                               (alf.ite (alf.is_neg r) r (alf.add n r))))))
+      ((run_evaluate (str.in_re x xr))    ($str_eval_str_in_re x xr))
+
       ; bitvectors
       ((run_evaluate (bvadd xb ybs))      (alf.add (run_evaluate xb) (run_evaluate ybs)))
       ((run_evaluate (bvmul xb ybs))      (alf.mul (run_evaluate xb) (run_evaluate ybs)))
