@@ -2890,14 +2890,24 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_NTH_ELIM_CODE),
   /** Auto-generated from RARE rule str-in-re-strip-prefix */
   EVALUE(STR_IN_RE_STRIP_PREFIX),
+  /** Auto-generated from RARE rule str-in-re-strip-prefix-neg */
+  EVALUE(STR_IN_RE_STRIP_PREFIX_NEG),
   /** Auto-generated from RARE rule str-in-re-strip-prefix-sr-single */
   EVALUE(STR_IN_RE_STRIP_PREFIX_SR_SINGLE),
+  /** Auto-generated from RARE rule str-in-re-strip-prefix-sr-single-neg */
+  EVALUE(STR_IN_RE_STRIP_PREFIX_SR_SINGLE_NEG),
   /** Auto-generated from RARE rule str-in-re-strip-prefix-s-single */
   EVALUE(STR_IN_RE_STRIP_PREFIX_S_SINGLE),
+  /** Auto-generated from RARE rule str-in-re-strip-prefix-s-single-neg */
+  EVALUE(STR_IN_RE_STRIP_PREFIX_S_SINGLE_NEG),
   /** Auto-generated from RARE rule str-in-re-strip-prefix-base */
   EVALUE(STR_IN_RE_STRIP_PREFIX_BASE),
+  /** Auto-generated from RARE rule str-in-re-strip-prefix-base-neg */
+  EVALUE(STR_IN_RE_STRIP_PREFIX_BASE_NEG),
   /** Auto-generated from RARE rule str-in-re-strip-prefix-base-s-single */
   EVALUE(STR_IN_RE_STRIP_PREFIX_BASE_S_SINGLE),
+  /** Auto-generated from RARE rule str-in-re-strip-prefix-base-s-single-neg */
+  EVALUE(STR_IN_RE_STRIP_PREFIX_BASE_S_SINGLE_NEG),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */

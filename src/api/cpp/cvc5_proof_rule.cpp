@@ -962,14 +962,24 @@ const char *toString(cvc5::ProofRewriteRule rule) {
     return "str-nth-elim-code";
   case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX:
     return "str-in-re-strip-prefix";
+  case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_NEG:
+    return "str-in-re-strip-prefix-neg";
   case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_SR_SINGLE:
     return "str-in-re-strip-prefix-sr-single";
+  case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_SR_SINGLE_NEG:
+    return "str-in-re-strip-prefix-sr-single-neg";
   case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_S_SINGLE:
     return "str-in-re-strip-prefix-s-single";
+  case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_S_SINGLE_NEG:
+    return "str-in-re-strip-prefix-s-single-neg";
   case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_BASE:
     return "str-in-re-strip-prefix-base";
+  case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_BASE_NEG:
+    return "str-in-re-strip-prefix-base-neg";
   case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_BASE_S_SINGLE:
     return "str-in-re-strip-prefix-base-s-single";
+  case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_BASE_S_SINGLE_NEG:
+    return "str-in-re-strip-prefix-base-s-single-neg";
   case ProofRewriteRule::SEQ_LEN_UNIT:
     return "seq-len-unit";
   case ProofRewriteRule::SEQ_NTH_UNIT:
