@@ -129,7 +129,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::CONCAT_EQ:
     case ProofRule::CONCAT_UNIFY:
     case ProofRule::CONCAT_CSPLIT:
-    case ProofRule::CONCAT_SPLIT:
     case ProofRule::CONCAT_CONFLICT:
     case ProofRule::CONCAT_SPLIT: 
     case ProofRule::STRING_LENGTH_POS:
@@ -264,6 +263,12 @@ bool AlfPrinter::canEvaluate(Node n) const
         case Kind::LEQ:
         case Kind::MULT:
         case Kind::NONLINEAR_MULT:
+        case Kind::INTS_MODULUS:
+        case Kind::INTS_MODULUS_TOTAL:
+        case Kind::DIVISION:
+        case Kind::DIVISION_TOTAL:
+        case Kind::INTS_DIVISION:
+        case Kind::INTS_DIVISION_TOTAL:
         case Kind::TO_REAL:
         case Kind::TO_INTEGER:
         case Kind::IS_INTEGER:
