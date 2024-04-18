@@ -324,12 +324,12 @@ bool AlfPrinter::canEvaluateRegExp(Node r) const
       visited.insert(cur);
       switch (cur.getKind())
       {
-        case Kind::REGEXP_ALL: 
+        case Kind::REGEXP_ALL:
         case Kind::REGEXP_ALLCHAR:
-        case Kind::REGEXP_NONE:  
-        case Kind::REGEXP_UNION: 
-        case Kind::REGEXP_INTER:  
-        case Kind::REGEXP_CONCAT:  
+        case Kind::REGEXP_NONE:
+        case Kind::REGEXP_UNION:
+        case Kind::REGEXP_INTER:
+        case Kind::REGEXP_CONCAT:
         case Kind::REGEXP_STAR: break;
         case Kind::STRING_TO_REGEXP:
           if (!canEvaluate(cur[0]))
@@ -338,8 +338,8 @@ bool AlfPrinter::canEvaluateRegExp(Node r) const
           }
           continue;
         default:
-          Trace("alf-printer-debug")
-              << "Cannot evaluate " << cur.getKind() << " in regular expressions" << std::endl;
+          Trace("alf-printer-debug") << "Cannot evaluate " << cur.getKind()
+                                     << " in regular expressions" << std::endl;
           return false;
       }
       for (const Node& cn : cur)
