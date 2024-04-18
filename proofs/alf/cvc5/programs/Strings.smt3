@@ -61,6 +61,7 @@
                                                               ($str_eval_str_in_re_rec s 0 rr @re.null)))
   (($str_eval_str_in_re_rec s 0 (re.* r1) @re.null)         (alf.ite (alf.is_eq s "")
                                                               true
+                                                              ; to make progress, first component must be non-empty
                                                               ($str_eval_str_in_re_rec s 1 r1 (re.* r1))))
   (($str_eval_str_in_re_rec s 0 (str.to_re sr) @re.null)    (alf.is_eq s sr))
   (($str_eval_str_in_re_rec s 0 re.allchar @re.null)        (alf.is_eq (alf.len s) 1))
@@ -79,6 +80,7 @@
   )
 )
 
+; Returns true if s is in regular expression r.
 (define $str_eval_str_in_re ((s String) (r RegLan))
   ($str_eval_str_in_re_rec s 0 r @re.null))
 
