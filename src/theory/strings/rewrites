@@ -240,6 +240,27 @@
   (seq.nth s n)
   (str.to_code (str.substr s n 1)))
 
+(define-rule str-in-re-strip-prefix ((s String) (s1 String) (s2 String :list) (sr1 String) (sr2 String :list) (r RegLan :list))
+  (str.in_re (str.++ s s1 s2) (re.++ (str.to_re (str.++ s sr1 sr2)) r))  
+  (str.in_re (str.++ s1 s2) (re.++ (str.to_re (str.++ sr1 sr2)) r)))
+
+(define-rule str-in-re-strip-prefix-sr-single ((s String) (s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list))
+  (str.in_re (str.++ s s1 s2) (re.++ (str.to_re s) r1 r2))  
+  (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
+
+(define-rule str-in-re-strip-prefix-s-single ((s String) (sr1 String) (sr2 String :list) (r RegLan :list))
+  (str.in_re s (re.++ (str.to_re (str.++ s sr1 sr2)) r))  
+  (str.in_re "" (re.++ (str.to_re (str.++ sr1 sr2)) r)))
+
+(define-rule str-in-re-strip-prefix-base ((s String) (s1 String) (s2 String :list) (sr1 String) (sr2 String :list))
+  (str.in_re (str.++ s s1 s2) (str.to_re (str.++ s sr1 sr2)))
+  (str.in_re (str.++ s1 s2) (str.to_re (str.++ sr1 sr2))))
+
+(define-rule str-in-re-strip-prefix-base-s-single ((s String) (sr1 String) (sr2 String :list))
+  (str.in_re s (str.to_re (str.++ s sr1 sr2)))
+  (str.in_re "" (str.to_re (str.++ sr1 sr2))))
+
+
 ; =============== Sequences-specific rules
 
 (define-rule seq-len-unit ((x ?)) (str.len (seq.unit x)) 1)
