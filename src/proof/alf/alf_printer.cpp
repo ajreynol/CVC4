@@ -360,8 +360,8 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
     {
       return "trust_dsl_rewrite";
     }
-    rewriter::DslProofRule dr;
-    rewriter::getDslProofRule(pfn->getArguments()[0], dr);
+    ProofRewriteRule dr;
+    rewriter::getRewriteRule(pfn->getArguments()[0], dr);
     std::stringstream ss;
     ss << "dsl." << dr;
     return ss.str();
@@ -373,7 +373,7 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
   return name;
 }
 
-void AlfPrinter::printDslRule(std::ostream& out, rewriter::DslProofRule r)
+void AlfPrinter::printDslRule(std::ostream& out, ProofRewriteRule r)
 {
   const rewriter::RewriteProofRule& rpr = d_rdb->getRule(r);
   const std::vector<Node>& varList = rpr.getVarList();
@@ -527,7 +527,7 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
       // [1] print DSL rules
       if (options().proof.alfDslMode == options::AlfDslMode::ON)
       {
-        for (rewriter::DslProofRule r : d_dprs)
+        for (ProofRewriteRule r : d_dprs)
         {
           printDslRule(out, r);
         }
@@ -713,8 +713,8 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
         args.push_back(d_tproc.convert(res));
         return;
       }
-      rewriter::DslProofRule dr;
-      if (!rewriter::getDslProofRule(pargs[0], dr))
+      ProofRewriteRule dr;
+      if (!rewriter::getRewriteRule(pargs[0], dr))
       {
         Unhandled() << "Failed to get DSL proof rule";
       }
@@ -779,8 +779,8 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
       const std::vector<Node> aargs = pn->getArguments();
       // if its a DSL rule, remember it
       Node idn = aargs[0];
-      rewriter::DslProofRule di;
-      if (rewriter::getDslProofRule(idn, di))
+      ProofRewriteRule di;
+      if (rewriter::getRewriteRule(idn, di))
       {
         d_dprs.insert(di);
       }

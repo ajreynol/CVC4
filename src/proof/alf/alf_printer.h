@@ -107,7 +107,7 @@ class AlfPrinter : protected EnvObj
    */
   size_t allocateProofId(const ProofNode* pn, bool& wasAlloc);
   /** Print DSL rule name r to output stream out */
-  void printDslRule(std::ostream& out, rewriter::DslProofRule r);
+  void printDslRule(std::ostream& out, ProofRewriteRule r);
   /** Print let list to output stream out */
   void printLetList(std::ostream& out, LetBinding& lbind);
   /** Reference to the term processor */
@@ -136,7 +136,7 @@ class AlfPrinter : protected EnvObj
   /** Pointer to the rewrite database */
   rewriter::RewriteDb* d_rdb;
   /** The DSL rules we have seen */
-  std::unordered_set<rewriter::DslProofRule> d_dprs;
+  std::unordered_set<ProofRewriteRule> d_dprs;
 };
 
 }  // namespace proof
