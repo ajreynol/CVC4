@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Should be run in same directory as make regress is run. Outputs final rule
+# counts, final DSL rule counts, and unproven theory rewrites. Unproven theory
+# rewrites are additionally stored in unproven.txt.
+# Furthermore requires that tracing is enabled.
+
+echo "Make regress-dsl-proof with stats, regression arguments=\"--tlimit=60000 $@\" ..."
+make regress-dsl-proof -j8 CVC5_REGRESSION_ARGS="--stats-internal $@" | tee temp.txt
+#make regress-dsl-proof -j8 CVC5_REGRESSION_ARGS="--stats-internal -t final-pf-hole --expr-depth=3 $@" | tee temp.txt
+echo "=== Final rule counts:"
+getaggrhistogram temp.txt finalProof::ruleCount > temp2.txt
+cat temp2.txt
+echo "=== DSL rule counts:"
+getaggrhistogram temp.txt finalProof::dslRuleCount
+
+# Also look at unproven rules
+
+echo -n "=== Final proof size: "
+getaggrstat temp.txt finalProof::totalRuleCount | sed 's/finalProof::totalRuleCount, //g'
+
+echo -n "=== Number of trust rewrite rules: "
+cat temp2.txt | grep TRUST_THEORY_REWRITE, | sed 's/TRUST_THEORY_REWRITE, //g'
+getaggrhistogram temp.txt finalProof::trustTheoryIdCount
+
+echo -n "=== Number of trust: "
+cat temp2.txt | grep TRUST, | sed 's/TRUST, //g'
+getaggrhistogram temp.txt finalProof::trustCount
+
+echo -n "=== Timeouts: "
+cat temp.txt | grep "cvc5 interrupted by timeout" | wc -l
+
+rm temp2.txt
+rm temp.txt
