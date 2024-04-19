@@ -17,11 +17,11 @@
 
 #include <math.h>
 
+#include "theory/builtin/theory_builtin_rewriter.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "theory/rewriter.h"
 #include "theory/strings/regexp_eval.h"
 #include "theory/strings/theory_strings_utils.h"
-#include "theory/builtin/theory_builtin_rewriter.h"
 #include "theory/theory.h"
 #include "theory/uf/function_const.h"
 #include "util/integer.h"

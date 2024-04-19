@@ -956,7 +956,8 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
   Node conc = rpr.getConclusion(true);
   Node concRhs = conc[1];
   Trace("rpc-ctx") << "***GET CONCLUSION " << pi.d_dslId << " for " << vars
-                   << " -> " << subs << ", doFixedPoint=" << doFixedPoint << ", isFixedPoint=" << rpr.isFixedPoint() << std::endl;
+                   << " -> " << subs << ", doFixedPoint=" << doFixedPoint
+                   << ", isFixedPoint=" << rpr.isFixedPoint() << std::endl;
   // if fixed point, we continue applying
   if (doFixedPoint && rpr.isFixedPoint())
   {
