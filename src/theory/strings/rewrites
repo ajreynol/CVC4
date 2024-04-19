@@ -300,6 +300,65 @@
   (str.in_re s (re.++ re.allchar r1 r2))
   (str.in_re "" (re.++ r1 r2)))
 
+(define-rule* str-in-re-strip-prefix-rev ((s String) (s1 String) (s2 String :list) (sr1 String) (sr2 String :list) (r RegLan :list))
+  (str.in_re (str.++ s1 s2 s) (re.++ r (str.to_re (str.++ sr1 sr2 s))))
+  (str.in_re (str.++ s1 s2) (re.++ r (str.to_re (str.++ sr1 sr2))))
+  _)
+
+(define-cond-rule str-in-re-strip-prefix-neg-rev ((s String) (t String) (s1 String) (s2 String :list) (sr1 String) (sr2 String :list) (r RegLan :list))
+  (and (= (str.len s) (str.len t)) (not (= s t)))
+  (str.in_re (str.++ s1 s2 s) (re.++ r (str.to_re (str.++ sr1 sr2 t))))
+  false)
+
+(define-rule* str-in-re-strip-prefix-sr-single-rev ((s String) (s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list))
+  (str.in_re (str.++ s1 s2 s) (re.++ r1 r2 (str.to_re s)))
+  (str.in_re (str.++ s1 s2) (re.++ r1 r2))
+  _)
+
+(define-cond-rule str-in-re-strip-prefix-sr-single-neg-rev ((s String) (t String) (s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list))
+  (and (= (str.len s) (str.len t)) (not (= s t)))
+  (str.in_re (str.++ s1 s2 s) (re.++ r1 r2 (str.to_re t)))
+  false)
+
+(define-rule str-in-re-strip-prefix-s-single-rev ((s String) (sr1 String) (sr2 String :list) (r RegLan :list))
+  (str.in_re s (re.++ r (str.to_re (str.++ sr1 sr2 s))))  
+  (str.in_re "" (re.++ r (str.to_re (str.++ sr1 sr2)))))
+
+(define-cond-rule str-in-re-strip-prefix-s-single-neg-rev ((s String) (t String) (sr1 String) (sr2 String :list) (r RegLan :list))
+  (and (= (str.len s) (str.len t)) (not (= s t)))
+  (str.in_re s (re.++ r (str.to_re (str.++ sr1 sr2 t))))
+  false)
+
+(define-rule* str-in-re-strip-prefix-base-rev ((s String) (s1 String) (s2 String :list) (sr1 String) (sr2 String :list))
+  (str.in_re (str.++ s1 s2 s) (str.to_re (str.++ sr1 sr2 s)))
+  (str.in_re (str.++ s1 s2) (str.to_re (str.++ sr1 sr2)))
+  _)
+
+(define-cond-rule str-in-re-strip-prefix-base-neg-rev ((s String) (t String) (s1 String) (s2 String :list) (sr1 String) (sr2 String :list))
+  (and (= (str.len s) (str.len t)) (not (= s t)))
+  (str.in_re (str.++ s1 s2 s) (str.to_re (str.++ sr1 sr2 t)))
+  false)
+
+(define-rule str-in-re-strip-prefix-base-s-single-rev ((s String) (sr1 String) (sr2 String :list))
+  (str.in_re s (str.to_re (str.++ sr1 sr2 s)))
+  (str.in_re "" (str.to_re (str.++ sr1 sr2))))
+
+(define-cond-rule str-in-re-strip-prefix-base-s-single-neg-rev ((s String) (t String) (sr1 String) (sr2 String :list))
+  (and (= (str.len s) (str.len t)) (not (= s t)))
+  (str.in_re s (str.to_re (str.++ sr1 sr2 t)))
+  false)
+
+(define-cond-rule str-in-re-strip-char-rev ((s String) (s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list))
+  (= (str.len s) 1)
+  (str.in_re (str.++ s1 s2 s) (re.++ r1 r2 re.allchar))
+  (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
+
+(define-cond-rule str-in-re-strip-char-s-single-rev ((s String) (r1 RegLan) (r2 RegLan :list))
+  (= (str.len s) 1)
+  (str.in_re s (re.++ r1 r2 re.allchar))
+  (str.in_re "" (re.++ r1 r2)))
+
+
 ; =============== Sequences-specific rules
 
 (define-rule seq-len-unit ((x ?)) (str.len (seq.unit x)) 1)
