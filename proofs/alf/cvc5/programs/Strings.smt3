@@ -51,11 +51,11 @@
   (($str_fixed_len_re (re.union r r1))  (let ((n ($str_fixed_len_re r)))
                                           (alf.ite (alf.is_eq r1 re.none)
                                             n
-                                            (alf.requires ($str_fixed_len_re r) n n))))
+                                            (alf.requires ($str_fixed_len_re r1) n n))))
   (($str_fixed_len_re (re.inter r r1))  (let ((n ($str_fixed_len_re r)))
                                           (alf.ite (alf.is_eq r1 re.all)
                                             n
-                                            (alf.requires ($str_fixed_len_re r) n n))))
+                                            (alf.requires ($str_fixed_len_re r1) n n))))
   )
 )
 
