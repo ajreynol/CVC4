@@ -170,7 +170,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
       Assert(!pargs.empty());
       Kind k = pargs[0].getKind();
       return k == Kind::STRING_CONTAINS || k == Kind::STRING_TO_CODE
-             || k == Kind::STRING_INDEXOF;
+             || k == Kind::STRING_INDEXOF || k == Kind::STRING_IN_REGEXP;
     }
     break;
     //
