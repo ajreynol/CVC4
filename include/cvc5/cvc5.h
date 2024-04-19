@@ -2031,6 +2031,7 @@ class CVC5_EXPORT DatatypeConstructorDecl
   friend class DatatypeDecl;
   friend class TermManager;
   friend class Solver;
+  friend struct std::hash<DatatypeConstructorDecl>;
 
  public:
   /** Constructor.  */
@@ -2040,6 +2041,14 @@ class CVC5_EXPORT DatatypeConstructorDecl
    * Destructor.
    */
   ~DatatypeConstructorDecl();
+
+  /**
+   * Equality operator.
+   * @param decl The datatype constructor declaration to compare to for
+   *             equality.
+   * @return True if the datatype constructor declarations are equal.
+   */
+  bool operator==(const DatatypeConstructorDecl& decl) const;
 
   /**
    * Add datatype selector declaration.
@@ -2110,6 +2119,21 @@ class CVC5_EXPORT DatatypeConstructorDecl
   std::shared_ptr<internal::DTypeConstructor> d_ctor;
 };
 
+}  // namespace cvc5
+
+namespace std {
+/**
+ * Hash function for datatype constructor declarations.
+ */
+template <>
+struct CVC5_EXPORT hash<cvc5::DatatypeConstructorDecl>
+{
+  size_t operator()(const cvc5::DatatypeConstructorDecl& decl) const;
+};
+}  // namespace std
+
+namespace cvc5 {
+
 class Solver;
 
 /**
@@ -2129,6 +2153,7 @@ class CVC5_EXPORT DatatypeDecl
   friend class DatatypeConstructorArg;
   friend class TermManager;
   friend class Solver;
+  friend struct std::hash<DatatypeDecl>;
 
  public:
   /** Constructor.  */
@@ -2138,6 +2163,13 @@ class CVC5_EXPORT DatatypeDecl
    * Destructor.
    */
   ~DatatypeDecl();
+
+  /**
+   * Equality operator.
+   * @param decl The datatype declaration to compare to for equality.
+   * @return True if the datatype declarations are equal.
+   */
+  bool operator==(const DatatypeDecl& decll) const;
 
   /**
    * Add datatype constructor declaration.
@@ -2231,6 +2263,21 @@ class CVC5_EXPORT DatatypeDecl
   std::shared_ptr<internal::DType> d_dtype;
 };
 
+}  // namespace cvc5
+
+namespace std {
+/**
+ * Hash function for datatype declarations.
+ */
+template <>
+struct CVC5_EXPORT hash<cvc5::DatatypeDecl>
+{
+  size_t operator()(const cvc5::DatatypeDecl& decl) const;
+};
+}  // namespace std
+
+namespace cvc5 {
+
 /**
  * A cvc5 datatype selector.
  */
@@ -2239,6 +2286,7 @@ class CVC5_EXPORT DatatypeSelector
   friend class Datatype;
   friend class DatatypeConstructor;
   friend class TermManager;
+  friend struct std::hash<DatatypeSelector>;
 
  public:
   /**
@@ -2250,6 +2298,13 @@ class CVC5_EXPORT DatatypeSelector
    * Destructor.
    */
   ~DatatypeSelector();
+
+  /**
+   * Equality operator.
+   * @param sel The datatype selector to compare to for equality.
+   * @return True if the datatype selectors are equal.
+   */
+  bool operator==(const DatatypeSelector& sel) const;
 
   /**
    * Get the name of this datatype selector.
@@ -2324,6 +2379,21 @@ class CVC5_EXPORT DatatypeSelector
   std::shared_ptr<internal::DTypeSelector> d_stor;
 };
 
+}  // namespace cvc5
+
+namespace std {
+/**
+ * Hash function for datatype Selectors.
+ */
+template <>
+struct CVC5_EXPORT hash<cvc5::DatatypeSelector>
+{
+  size_t operator()(const cvc5::DatatypeSelector& sel) const;
+};
+}  // namespace std
+
+namespace cvc5 {
+
 /**
  * A cvc5 datatype constructor.
  */
@@ -2331,6 +2401,7 @@ class CVC5_EXPORT DatatypeConstructor
 {
   friend class Datatype;
   friend class TermManager;
+  friend struct std::hash<DatatypeConstructor>;
 
  public:
   /**
@@ -2342,6 +2413,13 @@ class CVC5_EXPORT DatatypeConstructor
    * Destructor.
    */
   ~DatatypeConstructor();
+
+  /**
+   * Equality operator.
+   * @param cons The datatype constructor to compare to for equality.
+   * @return True if the datatype constructors are equal.
+   */
+  bool operator==(const DatatypeConstructor& cons) const;
 
   /**
    * Get the name of this datatype constructor.
@@ -2605,6 +2683,21 @@ class CVC5_EXPORT DatatypeConstructor
   std::shared_ptr<internal::DTypeConstructor> d_ctor;
 };
 
+}  // namespace cvc5
+
+namespace std {
+/**
+ * Hash function for datatype constructors.
+ */
+template <>
+struct CVC5_EXPORT hash<cvc5::DatatypeConstructor>
+{
+  size_t operator()(const cvc5::DatatypeConstructor& cons) const;
+};
+}  // namespace std
+
+namespace cvc5 {
+
 /**
  * A cvc5 datatype.
  */
@@ -2612,6 +2705,7 @@ class CVC5_EXPORT Datatype
 {
   friend class TermManager;
   friend class Sort;
+  friend struct std::hash<Datatype>;
 
  public:
   /** Constructor. */
@@ -2621,6 +2715,13 @@ class CVC5_EXPORT Datatype
    * Destructor.
    */
   ~Datatype();
+
+  /**
+   * Equality operator.
+   * @param dt The datatype to compare to for equality.
+   * @return True if the datatypes are equal.
+   */
+  bool operator==(const Datatype& dt) const;
 
   /**
    * Get the datatype constructor at a given index.
@@ -2934,6 +3035,21 @@ std::ostream& operator<<(std::ostream& out, const DatatypeConstructor& ctor);
  */
 CVC5_EXPORT
 std::ostream& operator<<(std::ostream& out, const DatatypeSelector& stor);
+
+}  // namespace cvc5
+
+namespace std {
+/**
+ * Hash function for datatypes.
+ */
+template <>
+struct CVC5_EXPORT hash<cvc5::Datatype>
+{
+  size_t operator()(const cvc5::Datatype& dt) const;
+};
+}  // namespace std
+
+namespace cvc5 {
 
 /* -------------------------------------------------------------------------- */
 /* Grammar                                                                    */
@@ -3458,6 +3574,14 @@ class CVC5_EXPORT Proof
 
   /** @return The proof rule used by the root step of the proof. */
   ProofRule getRule() const;
+
+  /**
+   * @return The proof rewrite rule used by the root step of the proof.
+   *
+   * @exception raises an exception if `getRule()` does not return
+   * `DSL_REWRITE`.
+   */
+  ProofRewriteRule getRewriteRule() const;
 
   /** @return The conclusion of the root step of the proof. */
   Term getResult() const;
