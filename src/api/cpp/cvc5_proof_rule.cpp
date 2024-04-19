@@ -980,6 +980,10 @@ const char *toString(cvc5::ProofRewriteRule rule) {
     return "str-in-re-strip-prefix-base-s-single";
   case ProofRewriteRule::STR_IN_RE_STRIP_PREFIX_BASE_S_SINGLE_NEG:
     return "str-in-re-strip-prefix-base-s-single-neg";
+  case ProofRewriteRule::STR_IN_RE_STRIP_CHAR:
+    return "str-in-re-strip-char";
+  case ProofRewriteRule::STR_IN_RE_STRIP_CHAR_S_SINGLE:
+    return "str-in-re-strip-char-s-single";
   case ProofRewriteRule::SEQ_LEN_UNIT:
     return "seq-len-unit";
   case ProofRewriteRule::SEQ_NTH_UNIT:

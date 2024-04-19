@@ -93,7 +93,8 @@
                                           (alf.ite (alf.and ($is_z_literal ex) ($is_z_literal ey)) res
                                           (alf.ite (alf.and ($is_bin_literal ex) ($is_bin_literal ey)) res
                                           (alf.ite (alf.and ($is_str_literal ex) ($is_str_literal ey)) res
-                                            (= ex ey)))))))))
+                                          (alf.ite (alf.and ($is_bool_literal ex) ($is_bool_literal ey)) res
+                                            (= ex ey))))))))))
       ((run_evaluate (not b))             (alf.not (run_evaluate b)))
       ((run_evaluate (ite b x y))         (alf.ite (run_evaluate b) (run_evaluate x) (run_evaluate y)))
       ((run_evaluate (or x ys))           (alf.or (run_evaluate x) (run_evaluate ys)))

@@ -1,4 +1,8 @@
 
+; Returns true if x is a Boolean literal.
+(define $is_bool_literal ((T Type :implicit) (x T))
+  (alf.ite (alf.is_eq x true) true (alf.is_eq x false)))
+
 ; Returns true if x is a rational literal.
 (define $is_q_literal ((T Type :implicit) (x T))
   (alf.is_eq (alf.to_q x) x))

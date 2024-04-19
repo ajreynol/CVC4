@@ -285,6 +285,15 @@
   (str.in_re s (str.to_re (str.++ t sr1 sr2)))
   false)
 
+(define-cond-rule str-in-re-strip-char ((s String) (s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list))
+  (= (str.len s) 1)
+  (str.in_re (str.++ s s1 s2) (re.++ re.allchar r1 r2))
+  (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
+
+(define-cond-rule str-in-re-strip-char-s-single ((s String) (r1 RegLan) (r2 RegLan :list))
+  (= (str.len s) 1)
+  (str.in_re s (re.++ re.allchar r1 r2))
+  (str.in_re "" (re.++ r1 r2)))
 
 ; =============== Sequences-specific rules
 
