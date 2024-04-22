@@ -99,6 +99,13 @@
   (= (str.++ s2 s3) (str.++ t2 t3))
   _)
 
+(define-rule str-concat-unify-base ((s String) (t1 String) (t2 String :list))
+  (= s (str.++ s t1 t2))
+  (= "" (str.++ t1 t2)))
+(define-rule str-concat-unify-base-rev ((s String) (t1 String) (t2 String :list))
+  (= s (str.++ t1 t2 s))
+  (= "" (str.++ t1 t2)))
+
 (define-cond-rule str-concat-clash-char ((s1 String) (s2 String :list) (s3 String :list) (t1 String) (t2 String :list) (t3 String :list))
   (and (not (= s1 t1)) (= (str.len s1) (str.len t1)))
   (= (str.++ (str.++ s1 s2) s3) (str.++ (str.++ t1 t2) t3))

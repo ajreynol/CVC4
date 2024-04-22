@@ -2818,6 +2818,10 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_CONCAT_UNIFY),
   /** Auto-generated from RARE rule str-concat-unify-rev */
   EVALUE(STR_CONCAT_UNIFY_REV),
+  /** Auto-generated from RARE rule str-concat-unify-base */
+  EVALUE(STR_CONCAT_UNIFY_BASE),
+  /** Auto-generated from RARE rule str-concat-unify-base-rev */
+  EVALUE(STR_CONCAT_UNIFY_BASE_REV),
   /** Auto-generated from RARE rule str-concat-clash-char */
   EVALUE(STR_CONCAT_CLASH_CHAR),
   /** Auto-generated from RARE rule str-concat-clash-char-rev */
