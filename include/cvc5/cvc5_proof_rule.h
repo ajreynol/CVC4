@@ -2856,6 +2856,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_AT_ELIM),
   /** Auto-generated from RARE rule str-replace-no-contains */
   EVALUE(STR_REPLACE_NO_CONTAINS),
+  /** Auto-generated from RARE rule str-len-concat-rec */
+  EVALUE(STR_LEN_CONCAT_REC),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
@@ -2878,6 +2880,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(RE_UNION_FLATTEN),
   /** Auto-generated from RARE rule re-union-dup */
   EVALUE(RE_UNION_DUP),
+  /** Auto-generated from RARE rule str-in-re-union-elim */
+  EVALUE(STR_IN_RE_UNION_ELIM),
   /** Auto-generated from RARE rule re-inter-all */
   EVALUE(RE_INTER_ALL),
   /** Auto-generated from RARE rule re-inter-none */
@@ -2890,8 +2894,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(RE_INTER_CSTRING),
   /** Auto-generated from RARE rule re-inter-cstring-neg */
   EVALUE(RE_INTER_CSTRING_NEG),
-  /** Auto-generated from RARE rule str-len-concat-rec */
-  EVALUE(STR_LEN_CONCAT_REC),
+  /** Auto-generated from RARE rule str-in-re-inter-elim */
+  EVALUE(STR_IN_RE_INTER_ELIM),
   /** Auto-generated from RARE rule str-in-re-range-elim */
   EVALUE(STR_IN_RE_RANGE_ELIM),
   /** Auto-generated from RARE rule str-in-re-contains */
@@ -2957,6 +2961,10 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_LEN_SUBSTR_GEQ),
   /** Auto-generated from RARE rule str-len-substr-eq */
   EVALUE(STR_LEN_SUBSTR_EQ),
+  /** Auto-generated from RARE rule re-loop-elim */
+  EVALUE(RE_LOOP_ELIM),
+  /** Auto-generated from RARE rule re-loop-elim-base */
+  EVALUE(RE_LOOP_ELIM_BASE),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */

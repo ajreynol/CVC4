@@ -187,6 +187,7 @@ class Op(Enum):
     REGEXP_OPT = ('re.opt', 'REGEXP_OPT')
     REGEXP_RANGE = ('re.range', 'REGEXP_RANGE')
     REGEXP_COMPLEMENT = ('re.comp', 'REGEXP_COMPLEMENT')
+    REGEXP_LOOP = ('re.loop', 'REGEXP_LOOP')
 
     REGEXP_NONE = (None, 'REGEXP_NONE')  # Handled as constants
     REGEXP_ALL = (None, 'REGEXP_ALL')
