@@ -931,7 +931,7 @@ void InferProofCons::convert(InferenceId infer,
                                      subs,
                                      MethodId::SB_DEFAULT,
                                      MethodId::SBA_SEQUENTIAL,
-                                     MethodId::RW_REWRITE_EQ_EXT);
+                                     MethodId::RW_EXT_REWRITE);
       Trace("strings-ipc-prefix")
           << "- After pred elim: " << concE << std::endl;
       if (concE == conc)
