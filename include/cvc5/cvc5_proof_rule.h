@@ -1532,7 +1532,7 @@ enum ENUM(ProofRule) : uint32_t
    * where :math:`r` is the purification Skolem for
    * :math:`\mathit{skolem}(\mathit{ite}(
    * \mathit{len}(t_1) >= \mathit{len}(s_1),
-   * \mathit{suf}(t_1,\mathit{len}(s_1)), 
+   * \mathit{suf}(t_1,\mathit{len}(s_1)),
    * \mathit{suf}(s_1,\mathit{len}(t_1))))`.
    *
    * Alternatively for the reverse:
