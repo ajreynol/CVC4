@@ -2886,6 +2886,10 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(RE_INTER_FLATTEN),
   /** Auto-generated from RARE rule re-inter-dup */
   EVALUE(RE_INTER_DUP),
+  /** Auto-generated from RARE rule re-inter-cstring */
+  EVALUE(RE_INTER_CSTRING),
+  /** Auto-generated from RARE rule re-inter-cstring-neg */
+  EVALUE(RE_INTER_CSTRING_NEG),
   /** Auto-generated from RARE rule str-len-concat-rec */
   EVALUE(STR_LEN_CONCAT_REC),
   /** Auto-generated from RARE rule str-in-re-range-elim */
