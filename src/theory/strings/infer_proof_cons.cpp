@@ -900,13 +900,16 @@ void InferProofCons::convert(InferenceId infer,
       }
       // connect via transitivity
       Node curr = eqs[0];
+      std::vector<Node> subs;
       for (size_t i = 1, esize = eqs.size(); i < esize; i++)
       {
         Node prev = curr;
-        curr = convertTrans(curr, eqs[1], psb);
+        curr = convertTrans(curr, eqs[i], psb);
         if (curr.isNull())
         {
-          break;
+          curr = prev;
+          subs.push_back(eqs[i]);
+          continue;
         }
         Trace("strings-ipc-prefix") << "- Via trans: " << curr << std::endl;
       }
@@ -916,9 +919,8 @@ void InferProofCons::convert(InferenceId infer,
       }
       Trace("strings-ipc-prefix")
           << "- Possible conflicting equality : " << curr << std::endl;
-      std::vector<Node> emp;
       Node concE = psb.applyPredElim(curr,
-                                     emp,
+                                     subs,
                                      MethodId::SB_DEFAULT,
                                      MethodId::SBA_SEQUENTIAL,
                                      MethodId::RW_REWRITE_EQ_EXT);
