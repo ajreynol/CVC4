@@ -2502,7 +2502,7 @@ TEST_F(TestApiBlackSolver, declareOracleFunSat2)
 }
 
 class PluginUnsat : public Plugin
-
+{
  public:
   PluginUnsat(TermManager& tm) : Plugin(tm) {}
   virtual ~Plugin();
