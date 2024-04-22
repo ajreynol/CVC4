@@ -924,6 +924,7 @@ void InferProofCons::convert(InferenceId infer,
       {
         break;
       }
+      std::reverse(subs.begin(), subs.end());
       Trace("strings-ipc-prefix")
           << "- Possible conflicting equality : " << curr << std::endl;
       Node concE = psb.applyPredElim(curr,
