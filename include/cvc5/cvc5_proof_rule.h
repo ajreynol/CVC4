@@ -2977,6 +2977,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(RE_LOOP_ELIM),
   /** Auto-generated from RARE rule re-loop-elim-base */
   EVALUE(RE_LOOP_ELIM_BASE),
+  /** Auto-generated from RARE rule re-loop-elim-base-emp */
+  EVALUE(RE_LOOP_ELIM_BASE_EMP),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */

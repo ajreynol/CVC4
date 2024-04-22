@@ -438,8 +438,14 @@
   (re.loop n n r)
   (re.++ r (re.loop (- n 1) (- n 1) r)))
 
-(define-rule re-loop-elim-base ((r RegLan))
-  (re.loop 0 0 r)
+(define-cond-rule re-loop-elim-base ((r RegLan) (n Int))
+  (= n 1)
+  (re.loop n n r)
+  r)
+
+(define-cond-rule re-loop-elim-base-emp ((r RegLan) (n Int))
+  (= n 0)
+  (re.loop n n r)
   (str.to_re ""))
 
 ; =============== Sequences-specific rules
