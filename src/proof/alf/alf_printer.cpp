@@ -726,6 +726,7 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
       {
         Unhandled() << "Failed to get DSL proof rule";
       }
+      Trace("alf-printer-debug") << "Get args for " << dr << std::endl;
       const rewriter::RewriteProofRule& rpr = d_rdb->getRule(dr);
       std::vector<Node> ss(pargs.begin() + 1, pargs.end());
       std::vector<std::pair<Kind, std::vector<Node>>> witnessTerms;
