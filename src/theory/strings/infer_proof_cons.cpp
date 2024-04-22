@@ -908,7 +908,14 @@ void InferProofCons::convert(InferenceId infer,
         if (curr.isNull())
         {
           curr = prev;
-          subs.push_back(eqs[i]);
+          if (!eqs[i][1].isConst() && eqs[i][1].getKind()!=Kind::STRING_CONCAT)
+          {
+            subs.push_back(eqs[i][1].eqNode(eqs[i][0]));
+          }
+          else
+          {
+            subs.push_back(eqs[i]);
+          }
           continue;
         }
         Trace("strings-ipc-prefix") << "- Via trans: " << curr << std::endl;
