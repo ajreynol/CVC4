@@ -439,7 +439,9 @@ void AlfPrinter::printDslRule(std::ostream& out, ProofRewriteRule r)
       {
         out << " ";
       }
-      out << d_tproc.convert(su.apply(c));
+      Node cc = d_tproc.convert(su.apply(c));
+      cc = d_ltproc.convert(cc);
+      out << cc;
     }
     out << ")" << std::endl;
   }
