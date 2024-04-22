@@ -290,6 +290,15 @@
   (str.in_re (str.++ s s1 s2) (re.++ (str.to_re t) r1 r2))  
   false)
 
+(define-rule str-in-re-strip-prefix-srs-single ((s String) (r1 RegLan) (r2 RegLan :list))
+  (str.in_re s (re.++ (str.to_re s) r1 r2))  
+  (str.in_re "" (re.++ r1 r2)))
+
+(define-cond-rule str-in-re-strip-prefix-srs-single-neg ((s String) (t String) (r1 RegLan) (r2 RegLan :list))
+  (and (= (str.len s) (str.len t)) (not (= s t)))
+  (str.in_re s (re.++ (str.to_re t) r1 r2))  
+  false)
+
 (define-rule str-in-re-strip-prefix-s-single ((s String) (sr1 String) (sr2 String :list) (r RegLan :list))
   (str.in_re s (re.++ (str.to_re (str.++ s sr1 sr2)) r))  
   (str.in_re "" (re.++ (str.to_re (str.++ sr1 sr2)) r)))

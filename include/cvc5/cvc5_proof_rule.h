@@ -2914,6 +2914,10 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_IN_RE_STRIP_PREFIX_SR_SINGLE),
   /** Auto-generated from RARE rule str-in-re-strip-prefix-sr-single-neg */
   EVALUE(STR_IN_RE_STRIP_PREFIX_SR_SINGLE_NEG),
+  /** Auto-generated from RARE rule str-in-re-strip-prefix-srs-single */
+  EVALUE(STR_IN_RE_STRIP_PREFIX_SRS_SINGLE),
+  /** Auto-generated from RARE rule str-in-re-strip-prefix-srs-single-neg */
+  EVALUE(STR_IN_RE_STRIP_PREFIX_SRS_SINGLE_NEG),
   /** Auto-generated from RARE rule str-in-re-strip-prefix-s-single */
   EVALUE(STR_IN_RE_STRIP_PREFIX_S_SINGLE),
   /** Auto-generated from RARE rule str-in-re-strip-prefix-s-single-neg */
