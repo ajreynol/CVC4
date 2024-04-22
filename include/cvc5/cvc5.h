@@ -6215,7 +6215,10 @@ class CVC5_EXPORT Solver
                         const Sort& sort,
                         std::function<Term(const std::vector<Term>&)> fn) const;
   /**
-   * Add plugin.
+   * Add plugin to this solver. Its callbacks will be called throughout the
+   * lifetime of this solver.
+   *
+   * @param p The plugin to add to this solver.
    */
   void addPlugin(Plugin& p);
   /**
