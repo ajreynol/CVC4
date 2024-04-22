@@ -156,6 +156,11 @@ Node RewriteProofRule::getConclusionFor(
   Node conc = getConclusion(true);
   std::unordered_map<TNode, Node> visited;
   Node ret = expr::narySubstitute(conc, d_fvs, ss, visited);
+  // also compute for the condition
+  for (const Node& c : d_cond)
+  {
+    expr::narySubstitute(c, d_fvs, ss, visited);
+  }
   std::map<Node, Node>::const_iterator itl;
   for (size_t i = 0, nfvs = ss.size(); i < nfvs; i++)
   {
