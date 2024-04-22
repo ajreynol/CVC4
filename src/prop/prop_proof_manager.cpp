@@ -153,12 +153,9 @@ std::vector<Node> PropPfManager::getMinimizedAssumptions()
         // never include true
         continue;
       }
-      else
-      {
-        minAssumptions.clear();
-        minAssumptions.push_back(nc);
-        return minAssumptions;
-      }
+      minAssumptions.clear();
+      minAssumptions.push_back(nc);
+      return minAssumptions;
     }
     else if (d_pfCnfStream.hasLiteral(nc))
     {
@@ -168,6 +165,10 @@ std::vector<Node> PropPfManager::getMinimizedAssumptions()
       {
         continue;
       }
+    }
+    else
+    {
+      Assert(false) << "Missing literal for assumption " << nc;
     }
     minAssumptions.push_back(nc);
   }
@@ -187,7 +188,7 @@ std::vector<Node> PropPfManager::getUnsatCoreClauses(std::ostream* outDimacs)
     {
       std::vector<Node> auxUnits = computeAuxiliaryUnits(uc);
       d_pfCnfStream.dumpDimacs(*outDimacs, uc, auxUnits);
-      // include the auxiliary units if necessary
+      // include the auxiliary units if any
       uc.insert(uc.end(), auxUnits.begin(), auxUnits.end());
     }
     return uc;
@@ -467,8 +468,8 @@ LazyCDProof* PropPfManager::getCnfProof() { return &d_proof; }
 
 void PropPfManager::getProofInternal(CDProof* cdp)
 {
-  // This method is called when the SAT solver does not that a fully self
-  // contained ProofNode proving false. This involves adding a step to cdp
+  // This method is called when the SAT solver did not generate a fully self
+  // contained ProofNode proving false. This method adds a step to cdp
   // based on a set of computed assumptions, possibly relying on the internal
   // proof.
   NodeManager* nm = NodeManager::currentNM();
@@ -528,7 +529,7 @@ void PropPfManager::getProofInternal(CDProof* cdp)
     clauses.insert(clauses.end(), cset.begin(), cset.end());
     std::vector<Node> auxUnits = computeAuxiliaryUnits(clauses);
     d_pfCnfStream.dumpDimacs(dout, clauses, auxUnits);
-    // include the auxiliary units if necessary
+    // include the auxiliary units if any
     clauses.insert(clauses.end(), auxUnits.begin(), auxUnits.end());
   }
   // construct the proof

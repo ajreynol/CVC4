@@ -212,6 +212,46 @@ class PropPfManager : protected EnvObj
    */
   void getProofInternal(CDProof* cdp);
   /**
+   * Return theory lemmas used for showing unsat. If the SAT solver has a proof,
+   * we examine its leaves. Otherwise, we recompute the unsat core lemmas
+   * using the method reproveUnsatCore.
+   *
+   * @param outDimacs If provided, we write the DIMACS output of uc to this
+   * stream
+   * @return the unsat core of lemmas.
+   */
+  std::vector<Node> getUnsatCoreClauses(std::ostream* outDimacs = nullptr);
+  /**
+   * Get minimized assumptions. Returns a vector of nodes which is a
+   * subset of the assumptions (d_assumptions) that appear in the unsat
+   * core. This should be called only when the unsat core is available (after
+   * an unsatisfiable check-sat).
+   */
+  std::vector<Node> getMinimizedAssumptions();
+  /**
+   * Calculate a subset of cset that is propositionally unsatisfiable.
+   * If sucessful, return true and store this in uc.
+   *
+   * @param cset The set of formulas to compute an unsat core for
+   * @param uc The set of formulas returned as the unsat core
+   * @param outDimacs If provided, we write a DIMACS representation of uc to
+   * this stream
+   */
+  bool reproveUnsatCore(const std::unordered_set<Node>& cset,
+                        std::vector<Node>& uc,
+                        std::ostream* outDimacs = nullptr);
+  /**
+   * Add a proof of false to cdp whose free assumptions are a subset of the
+   * clauses (after CNF conversion), which is a union of:
+   * (1) assumptions (d_assumptions),
+   * (2) input clauses (d_inputClauses),
+   * (3) lemma clauses (d_lemmaClauses).
+   * The choice of what to add to cdp is dependent on the prop-proof-mode.
+   *
+   * @param cdp The proof object to add the refutation proof to.
+   */
+  void getProofInternal(CDProof* cdp);
+  /**
    * Get auxilary units. Computes top-level formulas in clauses that
    * also occur as literals which we call "auxiliary units". In particular,
    * consider the set of propositionally unsatisfiable clauses:
