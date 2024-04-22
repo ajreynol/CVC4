@@ -837,6 +837,7 @@ void InferProofCons::convert(InferenceId infer,
     break;
     // ========================== prefix conflict
     case InferenceId::STRINGS_PREFIX_CONFLICT:
+    case InferenceId::STRINGS_PREFIX_CONFLICT_MIN:
     {
       Trace("strings-ipc-prefix") << "Prefix conflict..." << std::endl;
       std::vector<Node> eqs;
