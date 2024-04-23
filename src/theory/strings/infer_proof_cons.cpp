@@ -216,6 +216,7 @@ void InferProofCons::convert(InferenceId infer,
     case InferenceId::STRINGS_EXTF_D_N:
     case InferenceId::STRINGS_I_CONST_CONFLICT:
     case InferenceId::STRINGS_UNIT_CONST_CONFLICT:
+    case InferenceId::STRINGS_ARITH_BOUND_CONFLICT:
     {
       if (!ps.d_children.empty())
       {
@@ -226,6 +227,18 @@ void InferProofCons::convert(InferenceId infer,
         if (psb.applyPredTransform(psrc, conc, exps))
         {
           useBuffer = true;
+        }
+        else
+        {
+          // more aggressive
+          Node psrco = SkolemManager::getOriginalForm(psrc);
+          if (psb.applyPredTransform(psrc, psrco, {}) && psb.applyPredTransform(psrco, conc, exps, 
+                          MethodId::SB_DEFAULT,
+                          MethodId::SBA_SEQUENTIAL,
+                          MethodId::RW_EXT_REWRITE))
+          {
+            useBuffer = true;
+          }
         }
       }
       else

@@ -890,6 +890,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     {
       getMethodId(args[1], idr);
     }
+    Trace("smt-proof-pp-debug") << "Process MACRO_REWRITE " << idr << std::endl;
     Rewriter* rr = d_env.getRewriter();
     Node ret = d_env.rewriteViaMethod(args[0], idr);
     Node eq = args[0].eqNode(ret);
@@ -987,6 +988,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         if (eqpp.isNull())
         {
           // don't know how to eliminate
+          Trace("smt-proof-pp-debug") << "...failed!" << std::endl;
           return Node::null();
         }
       }
