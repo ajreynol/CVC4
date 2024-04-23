@@ -24,7 +24,7 @@ namespace cvc5::internal {
 namespace proof {
 
 /**
- * Converts an (approximate) type into a dependent one
+ * Converts an (approximate) type into a dependent one.
  *
  * This is used for printing RARE rules in ALF. For example, the RARE rule:
  *
