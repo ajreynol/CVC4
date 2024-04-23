@@ -207,3 +207,13 @@
   :args (s)
   :conclusion (mk_string_eager_reduction s)
 )
+
+;;-------------------- Instances of THEORY_REWRITE
+
+(declare-rule re-loop-elim ((l Int) (u Int) (r RegLan))
+  :args ((re.loop l u r))
+  :conclusion (let ((diff (alf.add (alf.neg l) u)))
+              (alf.requires ($is_z_literal diff) true
+              (alf.requires (alf.is_neg diff) false
+                 (= (re.loop l u r) ($str.mk_re_loop_elim l diff r)))))
+)
