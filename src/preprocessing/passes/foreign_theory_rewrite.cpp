@@ -101,7 +101,7 @@ Node ForeignTheoryRewriter::foreignRewrite(Node n)
   {
     return rewriteStringsGeq(n);
   }
-  else if (n.getKind()==Kind::EQUAL)
+  else if (n.getKind() == Kind::EQUAL)
   {
     if (n[0].getType().isInteger())
     {

@@ -782,7 +782,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     for (unsigned j = 0, nvars = vvec.size(); j < nvars; j++)
     {
       // substitutions are pre-rewrites
-      tcpg.addRewriteStep(vvec[j], svec[j], pgs[j], true);           
+      tcpg.addRewriteStep(vvec[j], svec[j], pgs[j], true);
       if (ida == MethodId::SBA_FIXPOINT)
       {
         // fixed point substitutions are also post-rewrites

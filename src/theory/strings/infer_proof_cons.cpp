@@ -232,10 +232,13 @@ void InferProofCons::convert(InferenceId infer,
         {
           // more aggressive
           Node psrco = SkolemManager::getOriginalForm(psrc);
-          if (psb.applyPredTransform(psrc, psrco, {}) && psb.applyPredTransform(psrco, conc, exps, 
-                          MethodId::SB_DEFAULT,
-                          MethodId::SBA_SEQUENTIAL,
-                          MethodId::RW_EXT_REWRITE))
+          if (psb.applyPredTransform(psrc, psrco, {})
+              && psb.applyPredTransform(psrco,
+                                        conc,
+                                        exps,
+                                        MethodId::SB_DEFAULT,
+                                        MethodId::SBA_SEQUENTIAL,
+                                        MethodId::RW_EXT_REWRITE))
           {
             useBuffer = true;
           }
@@ -921,7 +924,8 @@ void InferProofCons::convert(InferenceId infer,
         if (curr.isNull())
         {
           curr = prev;
-          if (!eqs[i][1].isConst() && eqs[i][1].getKind()!=Kind::STRING_CONCAT)
+          if (!eqs[i][1].isConst()
+              && eqs[i][1].getKind() != Kind::STRING_CONCAT)
           {
             subs.push_back(eqs[i][1].eqNode(eqs[i][0]));
           }
