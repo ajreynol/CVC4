@@ -17,9 +17,10 @@
 
 #pragma once
 
+#include <cvc5/cvc5_proof_rule.h>
+
 #include "expr/node.h"
 #include "theory/theory_rewriter.h"
-#include <cvc5/cvc5_proof_rule.h>
 
 namespace cvc5::internal {
 
@@ -105,10 +106,10 @@ class Rewriter {
    * @param pr The rewrite rule.
    * @param n The node to rewrite.
    * @return The rewritten version of n based on pr, or Node::null() if n
-   * cannot be rewritten. 
+   * cannot be rewritten.
    */
   Node rewriteViaRule(ProofRewriteRule pr, const Node& n);
-  
+
  private:
 
   /** Returns the appropriate cache for a node */

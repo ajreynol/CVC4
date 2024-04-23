@@ -99,7 +99,6 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
 {
 }
 
-
 Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
 {
   switch (id)

@@ -38,10 +38,7 @@ namespace builtin {
 BuiltinProofRuleChecker::BuiltinProofRuleChecker(NodeManager* nm,
                                                  Rewriter* r,
                                                  Env& env)
-    : ProofRuleChecker(nm),
-      d_rewriter(r),
-      d_env(env),
-      d_rdb(nullptr)
+    : ProofRuleChecker(nm), d_rewriter(r), d_env(env), d_rdb(nullptr)
 {
 }
 

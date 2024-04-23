@@ -50,7 +50,7 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
   d_true = nm->mkConst(true);
   d_false = nm->mkConst(false);
 }
- 
+
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
 {
   switch (id)
@@ -58,8 +58,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::RE_LOOP_ELIM:
       return rewriteViaRuleReLoopElim(n);
       break;
-    default:
-      break;
+    default: break;
   }
   return Node::null();
 }
@@ -1240,10 +1239,10 @@ Node SequencesRewriter::rewriteLoopRegExp(TNode node)
     return returnRewrite(node, r, Rewrite::RE_LOOP_STAR);
   }
   retNode = rewriteViaRuleReLoopElim(node);
-  Assert (!retNode.isNull() && retNode != node);
+  Assert(!retNode.isNull() && retNode != node);
   return returnRewrite(node, retNode, Rewrite::RE_LOOP);
 }
-  
+
 Node SequencesRewriter::rewriteViaRuleReLoopElim(const Node& node)
 {
   if (node.getKind() != Kind::REGEXP_LOOP)
@@ -1252,7 +1251,7 @@ Node SequencesRewriter::rewriteViaRuleReLoopElim(const Node& node)
   }
   uint32_t l = utils::getLoopMinOccurrences(node);
   uint32_t u = utils::getLoopMaxOccurrences(node);
-  if (u<l)
+  if (u < l)
   {
     return Node::null();
   }
@@ -1267,7 +1266,7 @@ Node SequencesRewriter::rewriteViaRuleReLoopElim(const Node& node)
                ? nm->mkNode(Kind::STRING_TO_REGEXP, nm->mkConst(String("")))
            : vec_nodes.size() == 1 ? r
                                    : nm->mkNode(Kind::REGEXP_CONCAT, vec_nodes);
-                                   Node retNode;
+  Node retNode;
   if (u == l)
   {
     retNode = n;
@@ -1287,7 +1286,7 @@ Node SequencesRewriter::rewriteViaRuleReLoopElim(const Node& node)
   }
   Trace("strings-lp") << "Strings::lp " << node << " => " << retNode
                       << std::endl;
-  Assert (retNode != node);
+  Assert(retNode != node);
   return retNode;
 }
 

@@ -2325,7 +2325,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *
    * .. math::
    *   ((_ re.loop l u) R) = (re.union R^l ... R^u)
-   * 
+   *
    * where `u` :math:`\geq` `l`.
    *
    * \endverbatim

@@ -154,7 +154,7 @@ Node Rewriter::rewriteViaRule(ProofRewriteRule pr, const Node& n)
   // dispatches to the appropriate theory
   TheoryId tid = theoryOf(n);
   TheoryRewriter* tr = getTheoryRewriter(tid);
-  if (tr!=nullptr)
+  if (tr != nullptr)
   {
     return tr->rewriteViaRule(pr, n);
   }

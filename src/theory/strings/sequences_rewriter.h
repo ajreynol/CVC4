@@ -46,9 +46,10 @@ class SequencesRewriter : public TheoryRewriter
    * @param id The rewrite rule.
    * @param n The node to rewrite.
    * @return The rewritten version of n based on id, or Node::null() if n
-   * cannot be rewritten. 
+   * cannot be rewritten.
    */
   Node rewriteViaRule(ProofRewriteRule id, const Node& n) override;
+
  protected:
   /** rewrite regular expression all
    *
@@ -141,6 +142,7 @@ class SequencesRewriter : public TheoryRewriter
   //-------------------- ProofRewriteRule
   /** Rewrite based on RE_LOOP_ELIM */
   Node rewriteViaRuleReLoopElim(const Node& n);
+
  public:
   RewriteResponse postRewrite(TNode node) override;
   RewriteResponse preRewrite(TNode node) override;

@@ -82,10 +82,10 @@ class QuantifiersRewriter : public TheoryRewriter
    * @param id The rewrite rule.
    * @param n The node to rewrite.
    * @return The rewritten version of n based on id, or Node::null() if n
-   * cannot be rewritten. 
+   * cannot be rewritten.
    */
   Node rewriteViaRule(ProofRewriteRule id, const Node& n) override;
-  
+
   static bool isLiteral( Node n );
   //-------------------------------------variable elimination utilities
   /** is variable elimination
