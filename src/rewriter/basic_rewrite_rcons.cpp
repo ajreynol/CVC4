@@ -64,12 +64,6 @@ bool BasicRewriteRCons::prove(
   Trace("trewrite-rcons") << "...(fail)" << std::endl;
   return false;
 }
-bool BasicRewriteRCons::postProve(
-    CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid)
-{
-  Trace("trewrite-rcons") << "...(fail)" << std::endl;
-  return false;
-}
 
 bool BasicRewriteRCons::postProve(
     CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid)
