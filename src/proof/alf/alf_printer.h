@@ -118,11 +118,8 @@ class AlfPrinter : protected EnvObj
   std::map<std::pair<const ProofNode*, Node>, size_t> d_ppushMap;
   /** Mapping proofs to identifiers */
   std::map<const ProofNode*, size_t> d_pletMap;
-  std::map<Node, std::vector<const ProofNode*>> d_tmp;
   /** Mapping assumed formulas to identifiers */
   std::map<Node, size_t> d_passumeMap;
-  /** Mapping proof nodes to nodes (non-flatten) */
-  std::map<const ProofNode*, Node> d_pnodeMap;
   /** Maps proof identifiers to nodes */
   std::map<size_t, Node> d_passumeNodeMap;
   /** The (dummy) type used for proof terms */

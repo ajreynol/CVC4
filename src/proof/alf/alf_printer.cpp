@@ -144,6 +144,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::ALPHA_EQUIV:
     case ProofRule::ENCODE_PRED_TRANSFORM:
     case ProofRule::ACI_NORM:
+      return true;
     case ProofRule::DSL_REWRITE:
       return options().proof.alfDslMode == options::AlfDslMode::ON;
     case ProofRule::ARITH_POLY_NORM:

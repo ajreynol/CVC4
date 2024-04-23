@@ -206,7 +206,8 @@ class PropPfManager : protected EnvObj
    */
   bool reproveUnsatCore(const std::unordered_set<Node>& cset,
                         std::vector<Node>& uc,
-                        std::ostream* outDimacs = nullptr);
+                        std::ostream* outDimacs = nullptr,
+                        CDProof* cdp = nullptr);
   /**
    * Add a proof of false to cdp whose free assumptions are a subset of the
    * clauses (after CNF conversion), which is a union of:
