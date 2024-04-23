@@ -22,6 +22,7 @@
 
 #include "expr/node.h"
 #include "proof/trust_node.h"
+#include <cvc5/cvc5_proof_rule.h>
 
 namespace cvc5::internal {
 namespace theory {
@@ -171,6 +172,14 @@ class TheoryRewriter
    */
   virtual TrustNode expandDefinition(Node node);
 
+  /**
+   * Rewrite n based on the proof rewrite rule pr.
+   * @param pr The rewrite rule.
+   * @param n The node to rewrite.
+   * @return The rewritten version of n based on pr, or Node::null() if n
+   * cannot be rewritten. 
+   */
+  virtual Node rewriteViaRule(ProofRewriteRule pr, const Node& n);
  protected:
   /** The underlying node manager */
   NodeManager* d_nm;

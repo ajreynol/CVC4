@@ -41,6 +41,14 @@ class SequencesRewriter : public TheoryRewriter
   ArithEntail& getArithEntail();
   StringsEntail& getStringsEntail();
 
+  /**
+   * Rewrite n based on the proof rewrite rule id.
+   * @param id The rewrite rule.
+   * @param n The node to rewrite.
+   * @return The rewritten version of n based on id, or Node::null() if n
+   * cannot be rewritten. 
+   */
+  Node rewriteViaRule(ProofRewriteRule id, const Node& n) override;
  protected:
   /** rewrite regular expression all
    *
@@ -130,7 +138,9 @@ class SequencesRewriter : public TheoryRewriter
    * by this function for debugging.
    */
   Node returnRewrite(Node node, Node ret, Rewrite r);
-
+  //-------------------- ProofRewriteRule
+  /** Rewrite based on RE_LOOP_ELIM */
+  Node rewriteViaRuleReLoopElim(const Node& n);
  public:
   RewriteResponse postRewrite(TNode node) override;
   RewriteResponse preRewrite(TNode node) override;

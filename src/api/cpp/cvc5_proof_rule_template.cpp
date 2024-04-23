@@ -224,6 +224,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     //================================================= ad-hoc rules
     case ProofRewriteRule::EXISTS_ELIM:
       return "exists_elim";
+    case ProofRewriteRule::RE_LOOP_ELIM:
+      return "re_loop_elim";
       //================================================= RARE rules
       // clang-format off
       ${printer}$

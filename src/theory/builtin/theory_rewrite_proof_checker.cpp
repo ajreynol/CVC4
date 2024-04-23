@@ -27,27 +27,8 @@ Node TheoryRewriteProofChecker::checkRewrite(ProofRewriteRule id,
                                              const Node& lhs)
 {
   Trace("theory-rewrite-pc") << "Check " << id << " " << lhs << std::endl;
-  switch (id)
-  {
-    case ProofRewriteRule::EXISTS_ELIM:
-    {
-      if (lhs.getKind() != Kind::EXISTS)
-      {
-        return Node::null();
-      }
-      std::vector<Node> fchildren;
-      fchildren.push_back(lhs[0]);
-      fchildren.push_back(lhs[1].negate());
-      if (lhs.getNumChildren() == 3)
-      {
-        fchildren.push_back(lhs[2]);
-      }
-      return d_nm->mkNode(Kind::NOT, d_nm->mkNode(Kind::FORALL, fchildren));
-    }
-    break;
-    default: break;
-  }
-  return Node::null();
+  Node ret = d_rew->rewriteViaRule(id, lhs);
+  return ret;
 }
 
 }  // namespace builtin

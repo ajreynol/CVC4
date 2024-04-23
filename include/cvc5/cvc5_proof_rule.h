@@ -2319,6 +2319,18 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \endverbatim
    */
   EVALUE(EXISTS_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings - regular expression loop elimination**
+   *
+   * .. math::
+   *   ((_ re.loop l u) R) = (re.union R^l ... R^u)
+   * 
+   * where `u` :math:`\geq` `l`.
+   *
+   * \endverbatim
+   */
+  EVALUE(RE_LOOP_ELIM),
   // RARE rules
   // ${rules}$
   /** Auto-generated from RARE rule arith-plus-zero */
@@ -3004,12 +3016,6 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(STR_LEN_SUBSTR_GEQ),
   /** Auto-generated from RARE rule str-len-substr-eq */
   EVALUE(STR_LEN_SUBSTR_EQ),
-  /** Auto-generated from RARE rule re-loop-elim */
-  EVALUE(RE_LOOP_ELIM),
-  /** Auto-generated from RARE rule re-loop-elim-base */
-  EVALUE(RE_LOOP_ELIM_BASE),
-  /** Auto-generated from RARE rule re-loop-elim-base-emp */
-  EVALUE(RE_LOOP_ELIM_BASE_EMP),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */

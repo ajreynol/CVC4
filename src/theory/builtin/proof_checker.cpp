@@ -41,8 +41,7 @@ BuiltinProofRuleChecker::BuiltinProofRuleChecker(NodeManager* nm,
     : ProofRuleChecker(nm),
       d_rewriter(r),
       d_env(env),
-      d_rdb(nullptr),
-      d_trpc(nm)
+      d_rdb(nullptr)
 {
 }
 
@@ -481,7 +480,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     {
       return Node::null();
     }
-    Node rhs = d_trpc.checkRewrite(di, args[1]);
+    Node rhs = d_rewriter->rewriteViaRule(di, args[1]);
     if (rhs.isNull())
     {
       return Node::null();
