@@ -68,7 +68,7 @@
 ; - s1 in r1
 ; - s2 in r2
 ; - s1 contains at least n characters.
-(program $str_eval_str_in_re_rec ((s String) (n Int) (r1 RegLan) (rr RegLan :list) (r2 RegLan) (sr String))
+(program $str_eval_str_in_re_rec ((s String) (s1 String) (s2 String) (n Int) (r1 RegLan) (rr RegLan :list) (r2 RegLan) (sr String))
   (String Int RegLan RegLan) Bool
   (
   (($str_eval_str_in_re_rec s 0 (re.++ r1 rr) @re.null)     ($str_eval_str_in_re_rec s 0 r1 rr))
@@ -83,14 +83,21 @@
                                                               ; to make progress, first component must be non-empty
                                                               ($str_eval_str_in_re_rec s 1 r1 (re.* r1))))
   (($str_eval_str_in_re_rec s 0 (str.to_re sr) @re.null)    (alf.is_eq s sr))
+  (($str_eval_str_in_re_rec s 0 (re.range s1 s2) @re.null)  (let ((cs (alf.to_z s)))
+                                                            (alf.requires (alf.len s1) 1
+                                                            (alf.requires (alf.len s2) 1
+                                                            (alf.ite (alf.is_eq (alf.len s) 1)
+                                                                (alf.and ($compare_geq cs (alf.to_z s1))
+                                                                         ($compare_geq (alf.to_z s2) cs))
+                                                                false)))))
   (($str_eval_str_in_re_rec s 0 re.allchar @re.null)        (alf.is_eq (alf.len s) 1))
   (($str_eval_str_in_re_rec s 0 re.all @re.null)            true)
   (($str_eval_str_in_re_rec s 0 re.none @re.null)           false)
   (($str_eval_str_in_re_rec s n r1 r2)                      (let ((ls (alf.len s)))
-                                                            (let ((s1 (alf.extract s 0 (alf.add n -1))))
-                                                            (let ((s2 (alf.extract s n ls)))
-                                                            (let ((res (alf.ite ($str_eval_str_in_re_rec s1 0 r1 @re.null)
-                                                                       (alf.ite ($str_eval_str_in_re_rec s2 0 r2 @re.null)
+                                                            (let ((ss1 (alf.extract s 0 (alf.add n -1))))
+                                                            (let ((ss2 (alf.extract s n ls)))
+                                                            (let ((res (alf.ite ($str_eval_str_in_re_rec ss1 0 r1 @re.null)
+                                                                       (alf.ite ($str_eval_str_in_re_rec ss2 0 r2 @re.null)
                                                                          true false)
                                                                        false)))
                                                             (alf.ite res true

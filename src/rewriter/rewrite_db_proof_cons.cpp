@@ -76,36 +76,32 @@ bool RewriteDbProofCons::prove(CDProof* cdp,
     return true;
   }
   bool success = false;
-  // if there are quantifiers, skip immediately
-  if (a.getKind()!=Kind::DISTINCT)
+  ++d_statTotalInputs;
+  Trace("rpc-debug") << "- convert to internal" << std::endl;
+  // prove the equality
+  Node eq = a.eqNode(b);
+  for (int64_t i = 0; i <= recLimit; i++)
   {
-    ++d_statTotalInputs;
-    Trace("rpc-debug") << "- convert to internal" << std::endl;
-    // prove the equality
-    Node eq = a.eqNode(b);
-    for (int64_t i = 0; i <= recLimit; i++)
+    Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
+    if (proveEq(cdp, eq, eq, i, stepLimit))
     {
-      Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
-      if (proveEq(cdp, eq, eq, i, stepLimit))
-      {
-        success = true;
-        break;
-      }
+      success = true;
+      break;
     }
-    if (!success)
+  }
+  if (!success)
+  {
+    Node eqi = d_rdnc.convert(eq);
+    // if converter didn't make a difference, don't try to prove again
+    if (eqi != eq)
     {
-      Node eqi = d_rdnc.convert(eq);
-      // if converter didn't make a difference, don't try to prove again
-      if (eqi != eq)
+      for (int64_t i = 0; i <= recLimit; i++)
       {
-        for (int64_t i = 0; i <= recLimit; i++)
+        Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
+        if (proveEq(cdp, eq, eqi, i, stepLimit))
         {
-          Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
-          if (proveEq(cdp, eq, eqi, i, stepLimit))
-          {
-            success = true;
-            break;
-          }
+          success = true;
+          break;
         }
       }
     }
