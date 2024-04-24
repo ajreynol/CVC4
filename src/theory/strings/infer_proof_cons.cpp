@@ -222,49 +222,10 @@ void InferProofCons::convert(InferenceId infer,
       {
         std::vector<Node> exps(ps.d_children.begin(), ps.d_children.end() - 1);
         Node psrc = ps.d_children[ps.d_children.size() - 1];
-        // we apply the substitution on the purified form to get the
-        // original conclusion
-        if (psb.applyPredTransform(psrc, conc, exps))
+        // use the extended inference method
+        if (psb.applyExtendedPredInfer(psrc, conc, exps))
         {
           useBuffer = true;
-        }
-        else
-        {
-          // more aggressive
-          Node psrco = SkolemManager::getOriginalForm(psrc);
-          Node conco = SkolemManager::getOriginalForm(conc);
-          Node ppsrco = psb.applyPredElim(psrco, 
-                                        exps,
-                                        MethodId::SB_DEFAULT,
-                                        MethodId::SBA_SEQUENTIAL,
-                                        MethodId::RW_EXT_REWRITE);
-          Node pconc = psb.applyPredElim(conco, 
-                                        exps,
-                                        MethodId::SB_DEFAULT,
-                                        MethodId::SBA_SEQUENTIAL,
-                                        MethodId::RW_EXT_REWRITE);
-          if (ppsrco==pconc)
-          {
-            useBuffer = true;
-          }
-          else if (ppsrco.getKind()==Kind::AND)
-          {
-            for (size_t i=0, nchild = ppsrco.getNumChildren(); i<nchild; i++)
-            {
-              if (ppsrco[i]==pconc)
-              {
-                useBuffer = true;
-                Node ni = nm->mkConstInt(Rational(i));
-                psb.addStep(ProofRule::AND_ELIM, {ppsrco}, {ni}, pconc);
-                break;
-              }
-            }
-          }
-          if (useBuffer)
-          {
-            psb.applyPredTransform(psrc, psrco, {});
-            psb.applyPredTransform(conc, conco, {});
-          }
         }
       }
       else
