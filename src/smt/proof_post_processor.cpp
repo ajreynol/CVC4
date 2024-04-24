@@ -993,6 +993,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         // form, treated as a stand alone (theory) rewrite
         Node eqp = retCurr.eqNode(ret);
         cdp->addTrustedStep(eqp, TrustId::EXT_THEORY_REWRITE, {}, {});
+        transEq.push_back(eqp);
       }
       if (transEq.size() > 1)
       {
