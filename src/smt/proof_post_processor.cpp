@@ -198,6 +198,12 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   Trace("smt-proof-pp-debug") << "Expand macro " << id << std::endl;
   if (id == ProofRule::TRUST)
   {
+    TrustId id;
+    getTrustId(args[0], id);
+    if (id==TrustId::EXT_THEORY_REWRITE)
+    {
+      return Node::null();
+    }
     // maybe we can show it rewrites to true based on (extended) rewriting
     // modulo original forms (MACRO_SR_PRED_INTRO).
     TheoryProofStepBuffer psb(d_pc);
