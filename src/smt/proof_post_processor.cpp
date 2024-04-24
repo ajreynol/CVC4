@@ -200,6 +200,8 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   {
     TrustId tid;
     getTrustId(args[0], tid);
+    // we don't do this for steps that are already extended theory rewrite
+    // steps, or we would get an infinite loop in reconstruction.
     if (tid==TrustId::EXT_THEORY_REWRITE)
     {
       return Node::null();
@@ -995,8 +997,9 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       }
       if (retCurr != ret)
       {
-        // try to prove the rewritten form is equal to the extended rewritten
-        // form, treated as a stand alone (theory) rewrite
+        // We were unable to show it via ordinary rewriting, so we insert
+        // a trusted step. This cannot be TRUST_THEORY_REWRITE since it is
+        // not an ordinary theory rewrite.
         Node eqp = retCurr.eqNode(ret);
         cdp->addTrustedStep(eqp, TrustId::EXT_THEORY_REWRITE, {}, {});
         transEq.push_back(eqp);
