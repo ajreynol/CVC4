@@ -1076,7 +1076,7 @@ Node RegExpOpr::reduceRegExpNegConcatFixed(Node mem, Node reLen, size_t index)
   Node conc = nm->mkNode(Kind::OR, s1r1, s2r2);
   if (!b1v.isNull())
   {
-    conc = nm->mkNode(Kind::OR, guard1n, guard2n, conc);
+    conc = nm->mkNode(Kind::OR, guard1n, guard2n, s1r1, s1r2);
     // must mark as an internal quantifier
     conc = utils::mkForallInternal(b1v, conc);
   }
