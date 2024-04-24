@@ -296,6 +296,20 @@ EvalResult Evaluator::evalInternal(
           // Don't need to rewrite since range of substitution should already
           // be normalized.
         }
+        else if (currNode.getKind() == Kind::STRING_IN_REGEXP)
+        {
+          EvalResult& er = results[currNode[0]];
+          if (er.d_tag == EvalResult::STRING
+              && strings::RegExpEval::canEvaluate(currNode[1]))
+          {
+            String res = er.d_str;
+            Trace("evaluator") << "Evaluator: evaluate regexp membership "
+                               << res << " in " << currNode[1] << std::endl;
+            bool resReEv = strings::RegExpEval::evaluate(res, currNode[1]);
+            currNodeVal = NodeManager::currentNM()->mkConst(resReEv);
+            needsReconstruct = false;
+          }
+        }
         if (needsReconstruct)
         {
           // Reconstruct the node with a combination of the children that
