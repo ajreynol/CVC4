@@ -83,7 +83,6 @@ bool ProofPostprocessCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
       && (id == ProofRule::TRUST_THEORY_REWRITE || id == ProofRule::TRUST))
   {
     d_trustedPfs.insert(pn);
-    return false;
   }
   if (shouldExpand(id))
   {
@@ -197,6 +196,22 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     return Node::null();
   }
   Trace("smt-proof-pp-debug") << "Expand macro " << id << std::endl;
+  if (id == ProofRule::TRUST)
+  {
+    // maybe we can show it rewrites to true based on (extended) rewriting
+    // modulo original forms (MACRO_SR_PRED_INTRO).
+    TheoryProofStepBuffer psb(d_pc);
+    if (psb.applyPredIntro(res,
+                           {},
+                           MethodId::SB_DEFAULT,
+                           MethodId::SBA_SEQUENTIAL,
+                           MethodId::RW_EXT_REWRITE))
+    {
+      cdp->addSteps(psb);
+      return res;
+    }
+    return Node::null();
+  }
   // macro elimination
   if (id == ProofRule::MACRO_SR_EQ_INTRO)
   {
