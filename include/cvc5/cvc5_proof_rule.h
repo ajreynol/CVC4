@@ -2434,8 +2434,10 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(ARRAY_STORE_SELF),
   /** Auto-generated from RARE rule bool-double-not-elim */
   EVALUE(BOOL_DOUBLE_NOT_ELIM),
-  /** Auto-generated from RARE rule bool-not-rev */
-  EVALUE(BOOL_NOT_REV),
+  /** Auto-generated from RARE rule bool-not-true */
+  EVALUE(BOOL_NOT_TRUE),
+  /** Auto-generated from RARE rule bool-not-false */
+  EVALUE(BOOL_NOT_FALSE),
   /** Auto-generated from RARE rule bool-eq-true */
   EVALUE(BOOL_EQ_TRUE),
   /** Auto-generated from RARE rule bool-eq-false */
