@@ -232,15 +232,38 @@ void InferProofCons::convert(InferenceId infer,
         {
           // more aggressive
           Node psrco = SkolemManager::getOriginalForm(psrc);
-          if (psb.applyPredTransform(psrc, psrco, {})
-              && psb.applyPredTransform(psrco,
-                                        conc,
+          Node conco = SkolemManager::getOriginalForm(conc);
+          Node ppsrco = psb.applyPredElim(psrco, 
                                         exps,
                                         MethodId::SB_DEFAULT,
                                         MethodId::SBA_SEQUENTIAL,
-                                        MethodId::RW_EXT_REWRITE))
+                                        MethodId::RW_EXT_REWRITE);
+          Node pconc = psb.applyPredElim(conco, 
+                                        exps,
+                                        MethodId::SB_DEFAULT,
+                                        MethodId::SBA_SEQUENTIAL,
+                                        MethodId::RW_EXT_REWRITE);
+          if (ppsrco==pconc)
           {
             useBuffer = true;
+          }
+          else if (ppsrco.getKind()==Kind::AND)
+          {
+            for (size_t i=0, nchild = ppsrco.getNumChildren(); i<nchild; i++)
+            {
+              if (ppsrco[i]==pconc)
+              {
+                useBuffer = true;
+                Node ni = nm->mkConstInt(Rational(i));
+                psb.addStep(ProofRule::AND_ELIM, {ppsrco}, {ni}, pconc);
+                break;
+              }
+            }
+          }
+          if (useBuffer)
+          {
+            psb.applyPredTransform(psrc, psrco, {});
+            psb.applyPredTransform(conc, conco, {});
           }
         }
       }
