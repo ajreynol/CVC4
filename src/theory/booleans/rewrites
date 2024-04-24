@@ -23,6 +23,15 @@
 (define-rule bool-and-conf ((xs Bool :list) (w Bool) (ys Bool :list) (zs Bool :list)) (and xs w ys (not w) zs) false)
 (define-rule bool-or-taut ((xs Bool :list) (w Bool) (ys Bool :list) (zs Bool :list)) (or xs w ys (not w) zs) true)
 
+(define-rule* bool-or-de-morgan ((x Bool) (y Bool) (zs Bool :list)) 
+  (not (or x y zs))
+  (not (or y zs))
+  (and (not x) _))
+(define-rule* bool-and-de-morgan ((x Bool) (y Bool) (zs Bool :list)) 
+  (not (and x y zs))
+  (not (and y zs))
+  (or (not x) _))
+
 (define-rule bool-xor-refl ((x Bool)) (xor x x) false)
 (define-rule bool-xor-nrefl ((x Bool)) (xor x (not x)) true)
 (define-rule bool-xor-false ((x Bool)) (xor x false) x)
