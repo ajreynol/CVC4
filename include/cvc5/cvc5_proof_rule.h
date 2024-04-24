@@ -2331,6 +2331,19 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(EXISTS_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Strings - regular expression membership evaluation**
+   *
+   * .. math::
+   *   (str.in_re s R) = c
+   *
+   * where `s` is a constant string, `R` is a constant regular expression and
+   * `c` is true or false.
+   *
+   * \endverbatim
+   */
+  EVALUE(STR_IN_RE_EVAL),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Strings - regular expression loop elimination**
    *
    * .. math::
@@ -2341,6 +2354,25 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \endverbatim
    */
   EVALUE(RE_LOOP_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings - regular expression intersection/union inclusion**
+   *
+   * .. math::
+   *   (re.inter R1 (re.comp R2)) = re.none
+   *
+   * where `R2` is a superset of `R1`.
+   * 
+   * or alternatively:
+   *
+   * .. math::
+   *   (re.union R1 (re.comp R2)) = (re.* re.allchar)
+   *
+   * where `R1` is a superset of `R2`.
+   *
+   * \endverbatim
+   */
+  EVALUE(RE_INTER_UNION_INCLUSION),
   // RARE rules
   // ${rules}$
   /** Auto-generated from RARE rule arith-plus-zero */

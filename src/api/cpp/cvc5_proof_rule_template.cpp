@@ -226,8 +226,12 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "distinct-elim";
     case ProofRewriteRule::EXISTS_ELIM:
       return "exists-elim";
+    case ProofRewriteRule::STR_IN_RE_EVAL:
+      return "str-in-re-eval";
     case ProofRewriteRule::RE_LOOP_ELIM:
       return "re-loop-elim";
+    case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
+      return "re-inter-union-inclusion";
       //================================================= RARE rules
       // clang-format off
       ${printer}$

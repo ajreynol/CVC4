@@ -241,6 +241,7 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id) const
 {
   switch (id)
   {
+    case ProofRewriteRule::STR_IN_RE_EVAL:
     case ProofRewriteRule::RE_LOOP_ELIM:
       return true;
     default:

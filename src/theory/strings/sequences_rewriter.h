@@ -140,9 +140,12 @@ class SequencesRewriter : public TheoryRewriter
    */
   Node returnRewrite(Node node, Node ret, Rewrite r);
   //-------------------- ProofRewriteRule
+  /** Rewrite based on STR_IN_RE_EVAL */
+  Node rewriteViaRuleStrInReEval(const Node& n);
   /** Rewrite based on RE_LOOP_ELIM */
   Node rewriteViaRuleReLoopElim(const Node& n);
-
+  /** Rewrite based on RE_INTER_UNION_INCLUSION */
+  Node rewriteViaRuleReInterUnionInclusion(const Node& n);
  public:
   RewriteResponse postRewrite(TNode node) override;
   RewriteResponse preRewrite(TNode node) override;
