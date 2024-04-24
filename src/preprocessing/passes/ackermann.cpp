@@ -108,7 +108,11 @@ void storeFunctionAndAddLemmas(TNode func,
   {
     TypeNode tn = term.getType();
     SkolemManager* sm = nm->getSkolemManager();
-    Node skolem = sm->mkPurifySkolem(term);
+    Node skolem =
+        sm->mkDummySkolem("SKOLEM$$",
+                          tn,
+                          "is a variable created by the ackermannization "
+                          "preprocessing pass");
     for (const auto& t : set)
     {
       addLemmaForPair(t, term, func, assertions, nm);
