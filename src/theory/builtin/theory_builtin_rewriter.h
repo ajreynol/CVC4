@@ -41,6 +41,7 @@ class TheoryBuiltinRewriter : public TheoryRewriter
    * cannot be rewritten.
    */
   Node rewriteViaRule(ProofRewriteRule id, const Node& n) override;
+
  public:
   /**
    * The default rewriter for rewrites that occur at both pre and post rewrite.

@@ -44,8 +44,9 @@ ProofFinalCallback::ProofFinalCallback(Env& env)
               "finalProof::annotationRuleId")),
       d_dslRuleCount(statisticsRegistry().registerHistogram<ProofRewriteRule>(
           "finalProof::dslRuleCount")),
-      d_theoryRewriteRuleCount(statisticsRegistry().registerHistogram<ProofRewriteRule>(
-          "finalProof::theoryRewriteRuleCount")),
+      d_theoryRewriteRuleCount(
+          statisticsRegistry().registerHistogram<ProofRewriteRule>(
+              "finalProof::theoryRewriteRuleCount")),
       d_trustIds(statisticsRegistry().registerHistogram<TrustId>(
           "finalProof::trustCount")),
       d_trustTheoryIdCount(

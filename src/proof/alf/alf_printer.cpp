@@ -151,7 +151,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
       ProofRewriteRule id;
       rewriter::getRewriteRule(pfn->getArguments()[0], id);
       return isHandledTheoryRewrite(id);
-    } 
+    }
     break;
     case ProofRule::ARITH_POLY_NORM:
     {
@@ -242,10 +242,8 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id) const
   switch (id)
   {
     case ProofRewriteRule::STR_IN_RE_EVAL:
-    case ProofRewriteRule::RE_LOOP_ELIM:
-      return true;
-    default:
-      break;
+    case ProofRewriteRule::RE_LOOP_ELIM: return true;
+    default: break;
   }
   return false;
 }
@@ -794,7 +792,7 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
     case ProofRule::THEORY_REWRITE:
     {
       // ignore the identifier
-      Assert (pargs.size()==2);
+      Assert(pargs.size() == 2);
       args.push_back(d_tproc.convert(pargs[1]));
       return;
     }

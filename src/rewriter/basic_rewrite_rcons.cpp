@@ -37,7 +37,7 @@ namespace rewriter {
     return true;                                                        \
   }                                                                     \
   /* end of macro */
-  
+
 BasicRewriteRCons::BasicRewriteRCons(Env& env) : EnvObj(env) {}
 
 bool BasicRewriteRCons::prove(
@@ -61,13 +61,13 @@ bool BasicRewriteRCons::prove(
     Trace("trewrite-rcons") << "...EVALUATE" << std::endl;
     return true;
   }
-  
+
   // ad-hoc rewrites that should be applied prior to proof reconstruction
   // should be listed here
   TRY_THEORY_REWRITE(DISTINCT_ELIM)
   TRY_THEORY_REWRITE(EXISTS_ELIM)
   TRY_THEORY_REWRITE(RE_LOOP_ELIM)
-  
+
   if (eq[0].getKind() == Kind::APPLY_UF
       && eq[0].getOperator().getKind() == Kind::LAMBDA)
   {
@@ -88,7 +88,7 @@ bool BasicRewriteRCons::postProve(
     CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid)
 {
   Node eq = a.eqNode(b);
-  
+
   // ad-hoc rewrites that should be applied after proof reconstruction
   // should be listed here
   TRY_THEORY_REWRITE(STR_IN_RE_EVAL)

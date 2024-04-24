@@ -36,13 +36,12 @@ Node TheoryBuiltinRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   switch (id)
   {
     case ProofRewriteRule::DISTINCT_ELIM:
-      if (n.getKind()==Kind::DISTINCT)
+      if (n.getKind() == Kind::DISTINCT)
       {
         return blastDistinct(n);
       }
       break;
-    default:
-      break;
+    default: break;
   }
   return Node::null();
 }

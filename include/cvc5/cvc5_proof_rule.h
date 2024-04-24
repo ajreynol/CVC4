@@ -2362,7 +2362,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *   (re.inter R1 (re.comp R2)) = re.none
    *
    * where `R2` is a superset of `R1`.
-   * 
+   *
    * or alternatively:
    *
    * .. math::

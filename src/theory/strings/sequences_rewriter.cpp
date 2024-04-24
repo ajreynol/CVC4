@@ -56,8 +56,9 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   switch (id)
   {
     case ProofRewriteRule::STR_IN_RE_EVAL: return rewriteViaRuleStrInReEval(n);
-    case ProofRewriteRule::RE_LOOP_ELIM:return rewriteViaRuleReLoopElim(n);
-    case ProofRewriteRule::RE_INTER_UNION_INCLUSION:return rewriteViaRuleReInterUnionInclusion(n);
+    case ProofRewriteRule::RE_LOOP_ELIM: return rewriteViaRuleReLoopElim(n);
+    case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
+      return rewriteViaRuleReInterUnionInclusion(n);
     default: break;
   }
   return Node::null();
@@ -1387,7 +1388,8 @@ Node SequencesRewriter::rewriteRangeRegExp(TNode node)
 
 Node SequencesRewriter::rewriteViaRuleStrInReEval(const Node& node)
 {
-  if (node.getKind()!=Kind::STRING_IN_REGEXP || !node[0].isConst() || !RegExpEntail::isConstRegExp(node[1]))
+  if (node.getKind() != Kind::STRING_IN_REGEXP || !node[0].isConst()
+      || !RegExpEntail::isConstRegExp(node[1]))
   {
     return Node::null();
   }
@@ -1399,7 +1401,7 @@ Node SequencesRewriter::rewriteViaRuleStrInReEval(const Node& node)
 
 Node SequencesRewriter::rewriteMembership(TNode node)
 {
-  Assert (node.getKind()==Kind::STRING_IN_REGEXP);
+  Assert(node.getKind() == Kind::STRING_IN_REGEXP);
   NodeManager* nm = nodeManager();
   Node x = node[0];
   Node r = node[1];
