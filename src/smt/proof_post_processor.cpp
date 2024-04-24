@@ -198,9 +198,9 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   Trace("smt-proof-pp-debug") << "Expand macro " << id << std::endl;
   if (id == ProofRule::TRUST)
   {
-    TrustId id;
-    getTrustId(args[0], id);
-    if (id==TrustId::EXT_THEORY_REWRITE)
+    TrustId tid;
+    getTrustId(args[0], tid);
+    if (tid==TrustId::EXT_THEORY_REWRITE)
     {
       return Node::null();
     }
