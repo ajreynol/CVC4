@@ -1041,7 +1041,8 @@ Node RegExpOpr::reduceRegExpNegConcatFixed(Node mem, Node reLen, size_t index)
     b1 = SkolemCache::mkIndexVar(mem);
     b1v = nm->mkNode(Kind::BOUND_VAR_LIST, b1);
     guard1n = nm->mkNode(Kind::GEQ, b1, zero).notNode();
-    guard2n = nm->mkNode(Kind::GEQ, nm->mkNode(Kind::STRING_LENGTH, s), b1).notNode();
+    guard2n =
+        nm->mkNode(Kind::GEQ, nm->mkNode(Kind::STRING_LENGTH, s), b1).notNode();
   }
   else
   {

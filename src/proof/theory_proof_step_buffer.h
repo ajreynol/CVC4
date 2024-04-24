@@ -113,16 +113,14 @@ class TheoryProofStepBuffer : public ProofStepBuffer
    * It also explicitly converts to original form so that extended rewriting
    * is applied to the original form (which is not done with
    * MACRO_SR_PRED_TRANSFORM).
-   * 
+   *
    * @param src The source predicate.
    * @param tgt The target predicate.
    * @param exp A list of equalities corresponding to a substitution.
    * @return true if we can successfully add proof steps to this buffer that
    * conclude tgt from src and exp.
    */
-  bool applyExtendedPredInfer(Node src,
-                          Node tgt,
-                          const std::vector<Node>& exp);
+  bool applyExtendedPredInfer(Node src, Node tgt, const std::vector<Node>& exp);
   //---------------------------- utility methods for normalizing clauses
   /**
    * Normalizes a non-unit clause (an OR node) according to factoring and

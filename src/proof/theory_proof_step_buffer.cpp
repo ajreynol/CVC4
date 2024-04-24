@@ -15,8 +15,8 @@
 
 #include "proof/theory_proof_step_buffer.h"
 
-#include "proof/proof.h"
 #include "expr/skolem_manager.h"
+#include "proof/proof.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -76,7 +76,7 @@ bool TheoryProofStepBuffer::applyPredTransform(Node src,
                                                bool useExpected)
 {
   // symmetric equalities
-  if (src==tgt || (d_autoSym && CDProof::isSame(src, tgt)))
+  if (src == tgt || (d_autoSym && CDProof::isSame(src, tgt)))
   {
     return true;
   }
@@ -144,8 +144,8 @@ Node TheoryProofStepBuffer::applyPredElim(Node src,
 }
 
 bool TheoryProofStepBuffer::applyExtendedPredInfer(Node src,
-                        Node tgt,
-                        const std::vector<Node>& exp)
+                                                   Node tgt,
+                                                   const std::vector<Node>& exp)
 {
   if (applyPredTransform(src, tgt, exp))
   {
@@ -154,26 +154,26 @@ bool TheoryProofStepBuffer::applyExtendedPredInfer(Node src,
   bool success = false;
   // more aggressive
   Node srco = SkolemManager::getOriginalForm(src);
-  Node psrco = applyPredElim(srco, 
-                                exp,
-                                MethodId::SB_DEFAULT,
-                                MethodId::SBA_SEQUENTIAL,
-                                MethodId::RW_EXT_REWRITE);
+  Node psrco = applyPredElim(srco,
+                             exp,
+                             MethodId::SB_DEFAULT,
+                             MethodId::SBA_SEQUENTIAL,
+                             MethodId::RW_EXT_REWRITE);
   Node tgto = SkolemManager::getOriginalForm(tgt);
-  Node ptgto = applyPredElim(tgto, 
-                                exp,
-                                MethodId::SB_DEFAULT,
-                                MethodId::SBA_SEQUENTIAL,
-                                MethodId::RW_EXT_REWRITE);
-  if (psrco==ptgto)
+  Node ptgto = applyPredElim(tgto,
+                             exp,
+                             MethodId::SB_DEFAULT,
+                             MethodId::SBA_SEQUENTIAL,
+                             MethodId::RW_EXT_REWRITE);
+  if (psrco == ptgto)
   {
     success = true;
   }
-  else if (psrco.getKind()==Kind::AND)
+  else if (psrco.getKind() == Kind::AND)
   {
-    for (size_t i=0, nchild = psrco.getNumChildren(); i<nchild; i++)
+    for (size_t i = 0, nchild = psrco.getNumChildren(); i < nchild; i++)
     {
-      if (psrco[i]==ptgto)
+      if (psrco[i] == ptgto)
       {
         success = true;
         NodeManager* nm = NodeManager::currentNM();
