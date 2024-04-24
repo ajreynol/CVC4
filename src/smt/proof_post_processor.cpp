@@ -208,6 +208,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
                            MethodId::RW_EXT_REWRITE))
     {
       cdp->addSteps(psb);
+      Trace("smt-proof-pp-debug") << "...success via PRED_INTRO" << std::endl;
       return res;
     }
     return Node::null();
@@ -283,8 +284,9 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       // apply REWRITE proof rule
       if (!updateInternal(eq, ProofRule::MACRO_REWRITE, {}, rargs, cdp))
       {
-        // if not elimianted, add as step
+        // if not eliminated, add as step
         cdp->addStep(eq, ProofRule::MACRO_REWRITE, {}, rargs);
+        
       }
       tchildren.push_back(eq);
     }
@@ -990,22 +992,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         // try to prove the rewritten form is equal to the extended rewritten
         // form, treated as a stand alone (theory) rewrite
         Node eqp = retCurr.eqNode(ret);
-        std::vector<Node> targs;
-        targs.push_back(eqp);
-        targs.push_back(
-            builtin::BuiltinProofRuleChecker::mkTheoryIdNode(theoryId));
-        // in this case, must be a non-standard rewrite kind
-        Assert(args.size() >= 2);
-        targs.push_back(args[1]);
-        Node eqpp =
-            expandMacros(ProofRule::TRUST_THEORY_REWRITE, {}, targs, cdp);
-        transEq.push_back(eqp);
-        if (eqpp.isNull())
-        {
-          // don't know how to eliminate
-          Trace("smt-proof-pp-debug") << "...failed!" << std::endl;
-          return Node::null();
-        }
+        cdp->addTrustedStep(eqp, TrustId::EXT_THEORY_REWRITE, {}, {});
       }
       if (transEq.size() > 1)
       {
