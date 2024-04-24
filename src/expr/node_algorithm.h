@@ -270,15 +270,6 @@ bool isTheoryAtom(TNode cur);
  */
 bool hasAbstractSubterm(TNode n);
 
-/**
- * Returns true iff the type tn contains a type in its AST that is an abstract
- * type.
- * @param tn The type node under investigation
- * @return true iff this node contains a component type that is an abstract
- * type.
- */
-bool hasAbstractComponentType(const TypeNode& tn);
-
 }  // namespace expr
 }  // namespace cvc5::internal
 

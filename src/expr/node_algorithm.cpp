@@ -818,19 +818,5 @@ bool hasAbstractSubterm(TNode n)
   return n.getAttribute(AbstractSubtermVarAttr());
 }
 
-bool hasAbstractComponentType(const TypeNode& tn)
-{
-  std::unordered_set<TypeNode> types;
-  getComponentTypes(tn, types);
-  for (const TypeNode& t : types)
-  {
-    if (t.isAbstract())
-    {
-      return true;
-    }
-  }
-  return false;
-}
-
 }  // namespace expr
 }  // namespace cvc5::internal
