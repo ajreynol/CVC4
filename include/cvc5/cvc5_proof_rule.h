@@ -2311,6 +2311,16 @@ enum ENUM(ProofRewriteRule) : uint32_t
   // Custom theory rewrites.
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Builtin -- Distinct elimination**
+   *
+   * .. math::
+   *   \texttt{distinct}(t_1, \ldots tn) = \bigwedge_{i \neq j) t_i \neq t_j
+   *
+   * \endverbatim
+   */
+  EVALUE(DISTINCT_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Quantifiers -- Exists elimination**
    *
    * .. math::

@@ -913,6 +913,15 @@ EvalResult Evaluator::evalInternal(
           break;
         }
 
+        case Kind::STRING_REV:
+        {
+          const String& s = results[currNode[0]].d_str;
+          std::vector<unsigned> nvec = s.getVec();
+          std::reverse(nvec.begin(), nvec.end());
+          results[currNode] = EvalResult(String(nvec));
+          break;
+        }
+
         case Kind::CONST_BITVECTOR:
           results[currNode] = EvalResult(currNodeVal.getConst<BitVector>());
           break;

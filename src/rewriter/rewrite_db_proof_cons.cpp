@@ -77,7 +77,7 @@ bool RewriteDbProofCons::prove(CDProof* cdp,
   }
   bool success = false;
   // if there are quantifiers, skip immediately
-  if (!a.isClosure())
+  if (!a.isClosure() && a.getKind()!=Kind::DISTINCT)
   {
     ++d_statTotalInputs;
     Trace("rpc-debug") << "- convert to internal" << std::endl;

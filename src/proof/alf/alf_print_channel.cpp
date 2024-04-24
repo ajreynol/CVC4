@@ -140,6 +140,15 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r,
     }
     trname = "trust_dsl_rewrite";
   }
+  else if (r==ProofRule::THEORY_REWRITE)
+  {
+    ProofRewriteRule di;
+    if (rewriter::getRewriteRule(args[0], di))
+    {
+      d_out << " " << di;
+    }
+    trname = "trust";
+  }
   else
   {
     trname = "trust";

@@ -83,6 +83,7 @@ bool BasicRewriteRCons::postProve(
   /* end of macro */
 
   // ad-hoc rewrites should be listed here
+  TRY_THEORY_REWRITE(DISTINCT_ELIM)
   TRY_THEORY_REWRITE(EXISTS_ELIM)
   TRY_THEORY_REWRITE(RE_LOOP_ELIM)
 

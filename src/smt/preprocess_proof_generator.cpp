@@ -178,12 +178,12 @@ std::shared_ptr<ProofNode> PreprocessProofGenerator::getProofFor(Node f)
         if (!proofStepProcessed)
         {
           // maybe its just an (extended) rewrite?
-          Node pr = extendedRewrite(proven[0]);
-          if (proven[1] == pr)
+          ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
+          Node ppp = pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, {}, {proven});
+          if (ppp==proven)
           {
-            Node idr = mkMethodId(MethodId::RW_EXT_REWRITE);
             Trace("smt-pppg-debug") << "...add simple rewrite" << std::endl;
-            cdp.addStep(proven, ProofRule::MACRO_REWRITE, {}, {proven[0], idr});
+            cdp.addStep(proven, ProofRule::MACRO_SR_PRED_INTRO, {}, {proven});
             proofStepProcessed = true;
           }
         }
