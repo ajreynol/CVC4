@@ -993,9 +993,8 @@ Node RegExpOpr::reduceRegExpNeg(Node mem)
     Node sne = s.eqNode(emp).negate();
     Node b1 = nm->mkBoundVar(nm->integerType());
     Node b1v = nm->mkNode(Kind::BOUND_VAR_LIST, b1);
-    Node g1 = nm->mkNode(Kind::AND,
-                         nm->mkNode(Kind::GT, b1, zero),
-                         nm->mkNode(Kind::GEQ, lens, b1));
+    Node g11n = nm->mkNode(Kind::GT, b1, zero).notNode();
+    Node g12n = nm->mkNode(Kind::GEQ, lens, b1).notNode();
     // internal
     Node s1 = nm->mkNode(Kind::STRING_SUBSTR, s, zero, b1);
     Node s2 =
@@ -1003,8 +1002,7 @@ Node RegExpOpr::reduceRegExpNeg(Node mem)
     Node s1r1 = nm->mkNode(Kind::STRING_IN_REGEXP, s1, r[0]).negate();
     Node s2r2 = nm->mkNode(Kind::STRING_IN_REGEXP, s2, r).negate();
 
-    conc = nm->mkNode(Kind::OR, s1r1, s2r2);
-    conc = nm->mkNode(Kind::IMPLIES, g1, conc);
+    conc = nm->mkNode(Kind::OR, {g11n, g12n, s1r1, s2r2});
     // must mark as an internal quantifier
     conc = utils::mkForallInternal(b1v, conc);
     conc = nm->mkNode(Kind::AND, sne, conc);
@@ -1037,15 +1035,13 @@ Node RegExpOpr::reduceRegExpNegConcatFixed(Node mem, Node reLen, size_t index)
   Node lens = nm->mkNode(Kind::STRING_LENGTH, s);
   Node b1;
   Node b1v;
-  Node guard;
+  Node guard1n, guard2n;
   if (reLen.isNull())
   {
     b1 = SkolemCache::mkIndexVar(mem);
     b1v = nm->mkNode(Kind::BOUND_VAR_LIST, b1);
-    guard = nm->mkNode(
-        Kind::AND,
-        nm->mkNode(Kind::GEQ, b1, zero),
-        nm->mkNode(Kind::GEQ, nm->mkNode(Kind::STRING_LENGTH, s), b1));
+    guard1n = nm->mkNode(Kind::GEQ, b1, zero).notNode();
+    guard2n = nm->mkNode(Kind::GEQ, nm->mkNode(Kind::STRING_LENGTH, s), b1).notNode();
   }
   else
   {
@@ -1080,7 +1076,7 @@ Node RegExpOpr::reduceRegExpNegConcatFixed(Node mem, Node reLen, size_t index)
   Node conc = nm->mkNode(Kind::OR, s1r1, s2r2);
   if (!b1v.isNull())
   {
-    conc = nm->mkNode(Kind::OR, guard.negate(), conc);
+    conc = nm->mkNode(Kind::OR, guard1n, guard2n, conc);
     // must mark as an internal quantifier
     conc = utils::mkForallInternal(b1v, conc);
   }
