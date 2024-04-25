@@ -2515,7 +2515,8 @@ class PluginUnsat : public Plugin
     return lemmas;
   }
   std::string getName() { return "PluginUnsat"; }
-private:
+
+ private:
   TermManager& d_tm;
 };
 
