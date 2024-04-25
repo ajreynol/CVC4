@@ -204,6 +204,10 @@
   (str.replace t s r)
   t)
 
+(define-rule str-replace-empty ((t ?Seq) (s ?Seq))
+  (str.replace t "" s)
+  (str.++ s t))
+
 (define-rule* str-len-concat-rec ((s1 String) (s2 String) (s3 String :list))
   (str.len (str.++ s1 s2 s3))
   (str.len (str.++ s2 s3))
@@ -214,6 +218,8 @@
 (define-rule re-all-elim () re.all (re.* re.allchar))
 
 (define-rule re-opt-elim ((x RegLan)) (re.opt x) (re.union (str.to_re "") x))
+
+(define-rule re-diff-elim ((x RegLan) (y RegLan)) (re.diff x y) (re.inter x (re.comp y)))
 
 (define-rule re-concat-emp ((xs RegLan :list) (ys RegLan :list)) (re.++ xs (str.to_re "") ys) (re.++ xs ys))
 (define-rule re-concat-none ((xs RegLan :list) (ys RegLan :list)) (re.++ xs re.none ys) re.none)

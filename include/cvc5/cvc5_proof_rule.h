@@ -2318,6 +2318,17 @@ enum ENUM(ProofRewriteRule) : uint32_t {
    * \endverbatim
    */
   EVALUE(DISTINCT_ELIM),
+  // Custom theory rewrites.
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Arith -- Division by constant elimination**
+   *
+   * .. math::
+   *   t / c = t * 1/c
+   *
+   * \endverbatim
+   */
+  EVALUE(ARITH_DIV_BY_CONST_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Quantifiers -- Exists elimination**
@@ -2424,6 +2435,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(ARITH_PLUS_CANCEL1),
   /** Auto-generated from RARE rule arith-plus-cancel2 */
   EVALUE(ARITH_PLUS_CANCEL2),
+  /** Auto-generated from RARE rule arith-abs-elim */
+  EVALUE(ARITH_ABS_ELIM),
   /** Auto-generated from RARE rule array-read-over-write */
   EVALUE(ARRAY_READ_OVER_WRITE),
   /** Auto-generated from RARE rule array-read-over-write2 */
@@ -2952,12 +2965,16 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_AT_ELIM),
   /** Auto-generated from RARE rule str-replace-no-contains */
   EVALUE(STR_REPLACE_NO_CONTAINS),
+  /** Auto-generated from RARE rule str-replace-empty */
+  EVALUE(STR_REPLACE_EMPTY),
   /** Auto-generated from RARE rule str-len-concat-rec */
   EVALUE(STR_LEN_CONCAT_REC),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
   EVALUE(RE_OPT_ELIM),
+  /** Auto-generated from RARE rule re-diff-elim */
+  EVALUE(RE_DIFF_ELIM),
   /** Auto-generated from RARE rule re-concat-emp */
   EVALUE(RE_CONCAT_EMP),
   /** Auto-generated from RARE rule re-concat-none */

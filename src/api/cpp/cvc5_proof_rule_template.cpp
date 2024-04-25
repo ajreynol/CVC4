@@ -223,6 +223,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::NONE: return "NONE";
     //================================================= ad-hoc rules
     case ProofRewriteRule::DISTINCT_ELIM: return "distinct-elim";
+    case ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM: return "arith-div-by-const-elim";
     case ProofRewriteRule::EXISTS_ELIM: return "exists-elim";
     case ProofRewriteRule::STR_IN_RE_EVAL: return "str-in-re-eval";
     case ProofRewriteRule::RE_LOOP_ELIM: return "re-loop-elim";
