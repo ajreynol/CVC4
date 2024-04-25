@@ -2504,8 +2504,8 @@ TEST_F(TestApiBlackSolver, declareOracleFunSat2)
 class PluginUnsat : public Plugin
 {
  public:
-  PluginUnsat(TermManager& tm) : Plugin(tm) {}
-  virtual ~Plugin();
+  PluginUnsat(TermManager& tm) : Plugin(tm), d_tm(tm) {}
+  virtual ~PluginUnsat();
   std::vector<Term> check()
   {
     std::vector<Term> lemmas;
@@ -2515,6 +2515,8 @@ class PluginUnsat : public Plugin
     return lemmas;
   }
   std::string getName() { return "PluginUnsat"; }
+private:
+  TermManager& d_tm;
 };
 
 TEST_F(TestApiBlackSolver, pluginUnsat)
