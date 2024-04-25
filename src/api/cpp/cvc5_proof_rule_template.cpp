@@ -156,6 +156,8 @@ const char* toString(ProofRule rule)
     case ProofRule::RE_ELIM: return "RE_ELIM";
     case ProofRule::STRING_CODE_INJ: return "STRING_CODE_INJ";
     case ProofRule::STRING_SEQ_UNIT_INJ: return "STRING_SEQ_UNIT_INJ";
+    case ProofRule::STRING_ARITH_PRED_ENTAIL:
+      return "string-arith-pred-entail";
     case ProofRule::MACRO_STRING_INFERENCE: return "MACRO_STRING_INFERENCE";
     //================================================= Arith rules
     case ProofRule::MACRO_ARITH_SCALE_SUM_UB: return "MACRO_ARITH_SCALE_SUM_UB";

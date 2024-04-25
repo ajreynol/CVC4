@@ -19,6 +19,7 @@
 #include "options/strings_options.h"
 #include "theory/rewriter.h"
 #include "theory/strings/core_solver.h"
+#include "theory/strings/arith_entail.h"
 #include "theory/strings/regexp_elim.h"
 #include "theory/strings/regexp_operation.h"
 #include "theory/strings/term_registry.h"
@@ -60,6 +61,7 @@ void StringProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::RE_ELIM, this);
   pc->registerChecker(ProofRule::STRING_CODE_INJ, this);
   pc->registerChecker(ProofRule::STRING_SEQ_UNIT_INJ, this);
+  pc->registerChecker(ProofRule::STRING_ARITH_PRED_ENTAIL, this);
   // trusted rule
   pc->registerTrustedChecker(ProofRule::MACRO_STRING_INFERENCE, this, 2);
 }
@@ -533,6 +535,38 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
         << " == " << t[1] << std::endl;
     AlwaysAssert(t[0].getType() == t[1].getType());
     return t[0].eqNode(t[1]);
+  }
+  else if (id == ProofRule::STRING_ARITH_PRED_ENTAIL)
+  {
+    Assert(children.empty());
+    Assert(args.size()==1);
+    Node t = args[0];
+    Node res;
+    theory::strings::ArithEntail ae(nullptr); // FIXME
+    if (t.getKind()==Kind::EQUAL && t[0].getType().isInteger())
+    {
+      // check if the node can be simplified to false
+      if (ae.check(t[0], t[1], true) || ae.check(t[1], t[0], true))
+      {
+        res = nodeManager()->mkConst(false);
+      }
+    }
+    else if (t.getKind()==Kind::GEQ)
+    {
+      if (ae.check(t[0], t[1], false))
+      {
+        res = nodeManager()->mkConst(true);
+      }
+      else if (ae.check(t[1], t[0], true))
+      {
+        res = nodeManager()->mkConst(false);
+      }
+    }
+    if (res.isNull())
+    {
+      return Node::null();
+    }
+    return args[0].eqNode(res);
   }
   else if (id == ProofRule::MACRO_STRING_INFERENCE)
   {
