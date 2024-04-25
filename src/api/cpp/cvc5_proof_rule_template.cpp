@@ -226,6 +226,10 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM:
       return "arith-div-by-const-elim";
     case ProofRewriteRule::EXISTS_ELIM: return "exists-elim";
+    case ProofRewriteRule::QUANT_UNUSED_VARS: return "quant-unused-vars";
+    case ProofRewriteRule::DT_COLLAPSE_SELECTOR: return "dt-collapse-selector";
+    case ProofRewriteRule::DT_COLLAPSE_TESTER: return "dt-collapse-tester";
+    case ProofRewriteRule::DT_CONS_EQ: return "dt-cons-eq";
     case ProofRewriteRule::STR_IN_RE_EVAL: return "str-in-re-eval";
     case ProofRewriteRule::RE_LOOP_ELIM: return "re-loop-elim";
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:

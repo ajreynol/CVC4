@@ -2342,6 +2342,34 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(EXISTS_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Unused variables**
+   *
+   * \endverbatim
+   */
+  EVALUE(QUANT_UNUSED_VARS),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Datatypes - collapse selector**
+   *
+   * \endverbatim
+   */
+  EVALUE(DT_COLLAPSE_SELECTOR),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Datatypes - collapse tester**
+   *
+   * \endverbatim
+   */
+  EVALUE(DT_COLLAPSE_TESTER),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Datatypes - constructor equality**
+   *
+   * \endverbatim
+   */
+  EVALUE(DT_CONS_EQ),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Strings - regular expression membership evaluation**
    *
    * .. math::

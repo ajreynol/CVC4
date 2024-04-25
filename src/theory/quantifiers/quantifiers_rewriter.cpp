@@ -98,6 +98,7 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
     : TheoryRewriter(nm), d_rewriter(r), d_opts(opts)
 {
   registerProofRewriteRule(ProofRewriteRule::EXISTS_ELIM);
+  registerProofRewriteRule(ProofRewriteRule::QUANT_UNUSED_VARS);
 }
 
 Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -119,6 +120,11 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
       return d_nm->mkNode(Kind::NOT, d_nm->mkNode(Kind::FORALL, fchildren));
     }
+    case ProofRewriteRule::QUANT_UNUSED_VARS:
+    {
+      
+    }
+    break;
     break;
     default: break;
   }
