@@ -148,6 +148,8 @@ libcvc5_add_sources(
   printer/smt2/smt2_printer.h
   proof/alf/alf_dependent_type_converter.cpp
   proof/alf/alf_dependent_type_converter.h
+  proof/alf/alf_list_node_converter.cpp
+  proof/alf/alf_list_node_converter.h
   proof/alf/alf_node_converter.cpp
   proof/alf/alf_node_converter.h
   proof/alf/alf_print_channel.cpp
@@ -622,6 +624,8 @@ libcvc5_add_sources(
   theory/builtin/theory_builtin_rewriter.h
   theory/builtin/theory_builtin_type_rules.cpp
   theory/builtin/theory_builtin_type_rules.h
+  theory/builtin/theory_rewrite_proof_checker.cpp
+  theory/builtin/theory_rewrite_proof_checker.h
   theory/builtin/type_enumerator.cpp
   theory/builtin/type_enumerator.h
   theory/bv/bitblast/bitblast_proof_generator.cpp
@@ -1454,10 +1458,9 @@ target_include_directories(cvc5
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-install(TARGETS cvc5
-  EXPORT cvc5-targets
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+# On Windows, CMake's default install action places
+# DLLs into the runtime path (by default "bin")
+install(TARGETS cvc5 EXPORT cvc5-targets)
 
 if(BUILD_SHARED_LIBS)
   set_target_properties(cvc5 PROPERTIES SOVERSION ${CVC5_SOVERSION})
