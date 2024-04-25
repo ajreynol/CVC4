@@ -129,13 +129,14 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       std::vector<Node> vars(n[0].begin(), n[0].end());
       std::vector<Node> activeVars;
       computeArgVec(vars, activeVars, n[1]);
-      if (activeVars.size()<vars.size())
+      if (activeVars.size() < vars.size())
       {
         if (activeVars.empty())
         {
           return n[1];
         }
-        return d_nm->mkNode(n.getKind(), d_nm->mkNode(Kind::BOUND_VAR_LIST, activeVars), n[1]);
+        return d_nm->mkNode(
+            n.getKind(), d_nm->mkNode(Kind::BOUND_VAR_LIST, activeVars), n[1]);
       }
     }
     break;
