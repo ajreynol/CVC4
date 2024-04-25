@@ -83,12 +83,15 @@ Node TheoryRewriter::rewriteViaRule(ProofRewriteRule pr, const Node& n)
   return n;
 }
 
-ProofRewriteRule TheoryRewriter::findRule(const Node& a, const Node& b, bool isPost)
+ProofRewriteRule TheoryRewriter::findRule(const Node& a,
+                                          const Node& b,
+                                          bool isPost)
 {
-  std::unordered_set<ProofRewriteRule>& rules = isPost ? d_pfTheoryRewritesPost : d_pfTheoryRewrites;
+  std::unordered_set<ProofRewriteRule>& rules =
+      isPost ? d_pfTheoryRewritesPost : d_pfTheoryRewrites;
   for (ProofRewriteRule r : rules)
   {
-    if (rewriteViaRule(r, a)==b)
+    if (rewriteViaRule(r, a) == b)
     {
       return r;
     }
@@ -98,7 +101,8 @@ ProofRewriteRule TheoryRewriter::findRule(const Node& a, const Node& b, bool isP
 
 void TheoryRewriter::registerProofRewriteRule(ProofRewriteRule id, bool isPost)
 {
-  std::unordered_set<ProofRewriteRule>& rules = isPost ? d_pfTheoryRewritesPost : d_pfTheoryRewrites;
+  std::unordered_set<ProofRewriteRule>& rules =
+      isPost ? d_pfTheoryRewritesPost : d_pfTheoryRewrites;
   rules.insert(id);
 }
 

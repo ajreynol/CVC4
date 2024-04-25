@@ -58,20 +58,19 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   {
     case ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM:
     {
-      if (n.getKind()==Kind::DIVISION && n[1].isConst())
+      if (n.getKind() == Kind::DIVISION && n[1].isConst())
       {
         Rational r = n[1].getConst<Rational>();
-        if (r.sgn()!=0)
+        if (r.sgn() != 0)
         {
-          Rational rinv = Rational(1)/r;
-          NodeManager * nm = nodeManager();
+          Rational rinv = Rational(1) / r;
+          NodeManager* nm = nodeManager();
           return nm->mkNode(Kind::MULT, n[0], nm->mkConstReal(rinv));
         }
       }
     }
-      break;
-    default:
-      break;
+    break;
+    default: break;
   }
   return Node::null();
 }

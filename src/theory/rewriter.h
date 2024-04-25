@@ -121,6 +121,7 @@ class Rewriter {
    * that rewriteViaRule(id, a) returns b.
    */
   ProofRewriteRule findRule(const Node& a, const Node& b, bool isPost = false);
+
  private:
 
   /** Returns the appropriate cache for a node */

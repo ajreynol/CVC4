@@ -50,19 +50,18 @@ bool BasicRewriteRCons::prove(
     Trace("trewrite-rcons") << "...EVALUATE" << std::endl;
     return true;
   }
-  
+
   // try theory rewrite (pre-rare)
   ProofRewriteRule prid = d_env.getRewriter()->findRule(a, b, false);
-  if (prid!=ProofRewriteRule::NONE)
+  if (prid != ProofRewriteRule::NONE)
   {
-    if (tryRule(cdp,                                                      
-            eq,                                                       
-            ProofRule::THEORY_REWRITE,                                
-            {mkRewriteRuleNode(prid), a}))            
-    {                                                                     
-      Trace("trewrite-rcons") << "Reconstruct " << eq << " (from " << prid << ", " << mid << ")" << std::endl;         
-      return true;                                                        
-    }  
+    if (tryRule(
+            cdp, eq, ProofRule::THEORY_REWRITE, {mkRewriteRuleNode(prid), a}))
+    {
+      Trace("trewrite-rcons") << "Reconstruct " << eq << " (from " << prid
+                              << ", " << mid << ")" << std::endl;
+      return true;
+    }
   }
 
   if (eq[0].getKind() == Kind::APPLY_UF
@@ -88,16 +87,15 @@ bool BasicRewriteRCons::postProve(
 
   // try theory rewrite (post-rare)
   ProofRewriteRule prid = d_env.getRewriter()->findRule(a, b, true);
-  if (prid!=ProofRewriteRule::NONE)
+  if (prid != ProofRewriteRule::NONE)
   {
-    if (tryRule(cdp,                                                      
-            eq,                                                       
-            ProofRule::THEORY_REWRITE,                                
-            {mkRewriteRuleNode(prid), a}))            
-    {                                                                     
-      Trace("trewrite-rcons") << "Reconstruct (post) " << eq << " (from " << prid << ", " << mid << ")" << std::endl;         
-      return true;                                                        
-    }  
+    if (tryRule(
+            cdp, eq, ProofRule::THEORY_REWRITE, {mkRewriteRuleNode(prid), a}))
+    {
+      Trace("trewrite-rcons") << "Reconstruct (post) " << eq << " (from "
+                              << prid << ", " << mid << ")" << std::endl;
+      return true;
+    }
   }
 
   Trace("trewrite-rcons") << "...(fail)" << std::endl;

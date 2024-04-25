@@ -193,6 +193,7 @@ class TheoryRewriter
    * that rewriteViaRule(id, a) returns b.
    */
   ProofRewriteRule findRule(const Node& a, const Node& b, bool isPost = false);
+
  protected:
   /** Register proof rewrite rule */
   void registerProofRewriteRule(ProofRewriteRule id, bool isPost = false);
