@@ -122,10 +122,9 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     }
     case ProofRewriteRule::QUANT_UNUSED_VARS:
     {
-      
     }
     break;
-    break;
+      break;
     default: break;
   }
   return Node::null();

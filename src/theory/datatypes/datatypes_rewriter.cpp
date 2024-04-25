@@ -41,9 +41,9 @@ DatatypesRewriter::DatatypesRewriter(NodeManager* nm,
                                      const Options& opts)
     : TheoryRewriter(nm), d_sygusEval(sygusEval), d_opts(opts)
 {
-    registerProofRewriteRule(ProofRewriteRule::DT_COLLAPSE_SELECTOR);
-    registerProofRewriteRule(ProofRewriteRule::DT_COLLAPSE_TESTER);
-    registerProofRewriteRule(ProofRewriteRule::DT_CONS_EQ);
+  registerProofRewriteRule(ProofRewriteRule::DT_COLLAPSE_SELECTOR);
+  registerProofRewriteRule(ProofRewriteRule::DT_COLLAPSE_TESTER);
+  registerProofRewriteRule(ProofRewriteRule::DT_CONS_EQ);
 }
 
 Node DatatypesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -52,7 +52,8 @@ Node DatatypesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   {
     case ProofRewriteRule::DT_COLLAPSE_SELECTOR:
     {
-      if (n.getKind()!=Kind::APPLY_SELECTOR || n[0].getKind()!=Kind::APPLY_CONSTRUCTOR)
+      if (n.getKind() != Kind::APPLY_SELECTOR
+          || n[0].getKind() != Kind::APPLY_CONSTRUCTOR)
       {
         return Node::null();
       }
@@ -67,25 +68,26 @@ Node DatatypesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         return n[0][selectorIndex];
       }
     }
-      break;
+    break;
     case ProofRewriteRule::DT_COLLAPSE_TESTER:
     {
-      if (n.getKind()!=Kind::APPLY_TESTER || n[0].getKind()!=Kind::APPLY_CONSTRUCTOR)
+      if (n.getKind() != Kind::APPLY_TESTER
+          || n[0].getKind() != Kind::APPLY_CONSTRUCTOR)
       {
         return Node::null();
       }
       bool result =
           utils::indexOf(n.getOperator()) == utils::indexOf(n[0].getOperator());
-      NodeManager * nm = nodeManager();
+      NodeManager* nm = nodeManager();
       return nm->mkConst(result);
     }
-      break;
+    break;
     case ProofRewriteRule::DT_CONS_EQ:
     {
-      if (n.getKind()==Kind::EQUAL)
+      if (n.getKind() == Kind::EQUAL)
       {
         Node nn;
-        std::vector< Node > rew;
+        std::vector<Node> rew;
         if (utils::checkClash(n[0], n[1], rew))
         {
           nn = nodeManager()->mkConst(false);
@@ -94,14 +96,14 @@ Node DatatypesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         {
           nn = nodeManager()->mkAnd(rew);
         }
-        if (nn!=n)
+        if (nn != n)
         {
           return nn;
         }
       }
     }
-      break;
-    default:break;
+    break;
+    default: break;
   }
   return Node::null();
 }
