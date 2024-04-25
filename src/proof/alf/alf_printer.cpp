@@ -420,9 +420,11 @@ void AlfPrinter::printDslRule(std::ostream& out, ProofRewriteRule r)
   const std::vector<Node>& uvarList = rpr.getUserVarList();
   const std::vector<Node>& conds = rpr.getConditions();
   Node conc = rpr.getConclusion(true);
-
+  // We must map variables of the rule to internal symbols (via
+  // mkInternalSymbol) so that the ALF node converter will not treat the
+  // BOUND_VARIABLE of this rule as user provided variables. The substitution
+  // su stores this mapping.
   Subs su;
-
   out << "(declare-rule dsl." << r << " (";
   AlfDependentTypeConverter adtc(nodeManager(), d_tproc);
   std::stringstream ssExplicit;
@@ -443,18 +445,19 @@ void AlfPrinter::printDslRule(std::ostream& out, ProofRewriteRule r)
     ssExplicit << uvtp;
     if (expr::isListVar(uv))
     {
+      // carry over whether it is a list variable
       expr::markListVar(uvi);
       ssExplicit << " :list";
     }
     ssExplicit << ")";
   }
-  // print implicit parameters
+  // print implicit parameters introduced in dependent type conversion
   const std::vector<Node>& params = adtc.getFreeParameters();
   for (const Node& p : params)
   {
     out << "(" << p << " " << p.getType() << ") ";
   }
-  // now print explicit variables
+  // now print variables of the proof rule
   out << ssExplicit.str();
   out << ")" << std::endl;
   if (!conds.empty())
@@ -471,6 +474,7 @@ void AlfPrinter::printDslRule(std::ostream& out, ProofRewriteRule r)
       {
         out << " ";
       }
+      // note we apply list conversion to premises as well.
       Node cc = d_tproc.convert(su.apply(c));
       cc = d_ltproc.convert(cc);
       out << cc;
@@ -567,6 +571,8 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
         }
       }
       // [1] print DSL rules
+      // Note that RARE rules used in this proof are printed in the preamble of
+      // the proof here, on demand.
       if (options().proof.alfDslMode == options::AlfDslMode::ON)
       {
         for (ProofRewriteRule r : d_dprs)
@@ -576,26 +582,26 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
       }
       if (options().proof.alfPrintReference)
       {
-        // [1] print only the universal variables
+        // [2] print only the universal variables
         out << outVars.str();
         // we do not print the reference command here, since we don't know
         // where the proof is stored.
       }
       else
       {
-        // [1] print the types
+        // [2] print the types
         smt::PrintBenchmark pb(Printer::getPrinter(out), &d_tproc);
         std::stringstream outFuns;
         pb.printDeclarationsFrom(out, outFuns, definitions, assertions);
-        // [2] print the universal variables
+        // [3] print the universal variables
         out << outVars.str();
-        // [3] print the declared functions
+        // [4] print the declared functions
         out << outFuns.str();
       }
-      // [4] print proof-level term bindings
+      // [5] print proof-level term bindings
       printLetList(out, lbind);
     }
-    // [5] print (unique) assumptions
+    // [6] print (unique) assumptions
     std::unordered_set<Node> processed;
     for (const Node& n : assertions)
     {
@@ -626,7 +632,7 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
       Node lam = d_tproc.convert(n[1]);
       aout->printStep("refl", f.eqNode(lam), id, {}, {lam});
     }
-    // [6] print proof body
+    // [7] print proof body
     printProofInternal(aout, pnBody);
   }
 }
@@ -871,7 +877,8 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
     if (!options().proof.alfAllowTrust)
     {
       Unreachable() << "An ALF proof equires a trust step for " << pn->getRule()
-                    << ", but --alf-allow-trust is false" << std::endl;
+                    << ", but --" << options::proof::longName::alfAllowTrust
+                    << " is false" << std::endl;
     }
     out->printTrustStep(pn->getRule(),
                         conclusionPrint,
