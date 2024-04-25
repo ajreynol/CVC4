@@ -68,6 +68,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         }
       }
     }
+      break;
     default:
       break;
   }
