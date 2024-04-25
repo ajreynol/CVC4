@@ -31,6 +31,12 @@ namespace cvc5::internal {
 namespace theory {
 namespace builtin {
 
+TheoryBuiltinRewriter::TheoryBuiltinRewriter(NodeManager* nm)
+    : TheoryRewriter(nm)
+{
+  registerProofRewriteRule(ProofRewriteRule::DISTINCT_ELIM);
+}
+
 Node TheoryBuiltinRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
 {
   switch (id)
@@ -77,11 +83,6 @@ Node TheoryBuiltinRewriter::blastDistinct(TNode in)
     }
   }
   return nm->mkNode(Kind::AND, diseqs);
-}
-
-TheoryBuiltinRewriter::TheoryBuiltinRewriter(NodeManager* nm)
-    : TheoryRewriter(nm)
-{
 }
 
 RewriteResponse TheoryBuiltinRewriter::preRewrite(TNode node)

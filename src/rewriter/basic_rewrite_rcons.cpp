@@ -20,23 +20,12 @@
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
 #include "theory/bv/theory_bv_rewrite_rules.h"
+#include "theory/rewriter.h"
 
 using namespace cvc5::internal::kind;
 
 namespace cvc5::internal {
 namespace rewriter {
-
-#define TRY_THEORY_REWRITE(id)                                          \
-  if (tryRule(cdp,                                                      \
-              eq,                                                       \
-              ProofRule::THEORY_REWRITE,                                \
-              {mkRewriteRuleNode(ProofRewriteRule::id), a}))            \
-  {                                                                     \
-    Trace("trewrite-rcons") << "Reconstruct " << eq << " (from " << tid \
-                            << ", " << mid << ")" << std::endl;         \
-    return true;                                                        \
-  }                                                                     \
-  /* end of macro */
 
 BasicRewriteRCons::BasicRewriteRCons(Env& env) : EnvObj(env) {}
 
@@ -61,12 +50,20 @@ bool BasicRewriteRCons::prove(
     Trace("trewrite-rcons") << "...EVALUATE" << std::endl;
     return true;
   }
-
-  // ad-hoc rewrites that should be applied prior to proof reconstruction
-  // should be listed here
-  TRY_THEORY_REWRITE(DISTINCT_ELIM)
-  TRY_THEORY_REWRITE(EXISTS_ELIM)
-  TRY_THEORY_REWRITE(RE_LOOP_ELIM)
+  
+  // try theory rewrite (pre-rare)
+  ProofRewriteRule prid = d_env.getRewriter()->findRule(a, b, false);
+  if (prid!=ProofRewriteRule::NONE)
+  {
+    if (tryRule(cdp,                                                      
+            eq,                                                       
+            ProofRule::THEORY_REWRITE,                                
+            {mkRewriteRuleNode(prid), a}))            
+    {                                                                     
+      Trace("trewrite-rcons") << "Reconstruct " << eq << " (from " << prid << ", " << mid << ")" << std::endl;         
+      return true;                                                        
+    }  
+  }
 
   if (eq[0].getKind() == Kind::APPLY_UF
       && eq[0].getOperator().getKind() == Kind::LAMBDA)
@@ -89,11 +86,19 @@ bool BasicRewriteRCons::postProve(
 {
   Node eq = a.eqNode(b);
 
-  // ad-hoc rewrites that should be applied after proof reconstruction
-  // should be listed here
-  TRY_THEORY_REWRITE(ARITH_DIV_BY_CONST_ELIM)
-  TRY_THEORY_REWRITE(STR_IN_RE_EVAL)
-  TRY_THEORY_REWRITE(RE_INTER_UNION_INCLUSION)
+  // try theory rewrite (post-rare)
+  ProofRewriteRule prid = d_env.getRewriter()->findRule(a, b, true);
+  if (prid!=ProofRewriteRule::NONE)
+  {
+    if (tryRule(cdp,                                                      
+            eq,                                                       
+            ProofRule::THEORY_REWRITE,                                
+            {mkRewriteRuleNode(prid), a}))            
+    {                                                                     
+      Trace("trewrite-rcons") << "Reconstruct (post) " << eq << " (from " << prid << ", " << mid << ")" << std::endl;         
+      return true;                                                        
+    }  
+  }
 
   Trace("trewrite-rcons") << "...(fail)" << std::endl;
   return false;
