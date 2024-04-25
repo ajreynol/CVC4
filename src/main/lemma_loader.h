@@ -32,7 +32,10 @@ namespace main {
 class LemmaLoader : public cvc5::Plugin
 {
  public:
-  LemmaLoader(TermManager& tm, std::string& filename, Solver* s, parser::SymbolManager* sm);
+  LemmaLoader(TermManager& tm,
+              std::string& filename,
+              Solver* s,
+              parser::SymbolManager* sm);
   ~LemmaLoader();
   /** Returns a list of formulas to be sent as lemmas to the internal solver */
   std::vector<Term> check() override;

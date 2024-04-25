@@ -69,14 +69,15 @@ void CommandExecutor::storeOptionsAsOriginal()
   std::string llfile = d_solver->getOptionInfo("lemma-loader").stringValue();
   if (llfile != "")
   {
-    d_lemmaLoader.reset(
-        new LemmaLoader(d_solver->getTermManager(), llfile, d_solver.get(), d_symman.get()));
+    d_lemmaLoader.reset(new LemmaLoader(
+        d_solver->getTermManager(), llfile, d_solver.get(), d_symman.get()));
     d_solver->addPlugin(*d_lemmaLoader.get());
   }
   std::string lsfile = d_solver->getOptionInfo("lemma-saver").stringValue();
   if (lsfile != "")
   {
-    d_lemmaSaver.reset(new LemmaSaver(d_solver->getTermManager(), lsfile, d_solver.get()));
+    d_lemmaSaver.reset(
+        new LemmaSaver(d_solver->getTermManager(), lsfile, d_solver.get()));
     d_solver->addPlugin(*d_lemmaSaver.get());
   }
   // save the original options
