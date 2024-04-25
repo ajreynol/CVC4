@@ -91,6 +91,7 @@ bool BasicRewriteRCons::postProve(
 
   // ad-hoc rewrites that should be applied after proof reconstruction
   // should be listed here
+  TRY_THEORY_REWRITE(ARITH_DIV_BY_CONST_ELIM)
   TRY_THEORY_REWRITE(STR_IN_RE_EVAL)
   TRY_THEORY_REWRITE(RE_INTER_UNION_INCLUSION)
 

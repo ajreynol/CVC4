@@ -51,6 +51,29 @@ ArithRewriter::ArithRewriter(NodeManager* nm, OperatorElim& oe)
 {
 }
 
+Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
+{
+  switch (id)
+  {
+    case ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM:
+    {
+      if (n.getKind()==Kind::DIVISION && n[1].isConst())
+      {
+        Rational r = n[1].getConst<Rational>();
+        if (r.sgn()!=0)
+        {
+          Rational rinv = Rational(1)/r;
+          NodeManager * nm = nodeManager();
+          return nm->mkNode(Kind::MULT, n[0], nm->mkConstReal(rinv));
+        }
+      }
+    }
+    default:
+      break;
+  }
+  return Node::null();
+}
+
 RewriteResponse ArithRewriter::preRewrite(TNode t)
 {
   Trace("arith-rewriter") << "preRewrite(" << t << ")" << std::endl;

@@ -43,6 +43,11 @@ DatatypesRewriter::DatatypesRewriter(NodeManager* nm,
 {
 }
 
+Node DatatypesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
+{
+  return Node::null();
+}
+
 RewriteResponse DatatypesRewriter::postRewrite(TNode in)
 {
   Trace("datatypes-rewrite-debug") << "post-rewriting " << in << std::endl;
