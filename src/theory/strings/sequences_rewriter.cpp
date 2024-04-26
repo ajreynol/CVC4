@@ -61,10 +61,10 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
 {
   switch (id)
   {
-    case ProofRewriteRule::STR_IN_RE_EVAL: return rewriteViaRuleStrInReEval(n);
-    case ProofRewriteRule::RE_LOOP_ELIM: return rewriteViaRuleReLoopElim(n);
+    case ProofRewriteRule::STR_IN_RE_EVAL: return rewriteViaStrInReEval(n);
+    case ProofRewriteRule::RE_LOOP_ELIM: return rewriteViaReLoopElim(n);
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
-      return rewriteViaRuleReInterUnionInclusion(n);
+      return rewriteViaReInterUnionInclusion(n);
     default: break;
   }
   return Node::null();
@@ -1027,7 +1027,7 @@ Node SequencesRewriter::rewriteStarRegExp(TNode node)
   return node;
 }
 
-Node SequencesRewriter::rewriteViaRuleReInterUnionInclusion(const Node& node)
+Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node)
 {
   Kind nk = node.getKind();
   if (nk != Kind::REGEXP_UNION && nk != Kind::REGEXP_INTER)
@@ -1215,7 +1215,7 @@ Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
     }
   }
   // use inclusion tests
-  Node retNode = rewriteViaRuleReInterUnionInclusion(node);
+  Node retNode = rewriteViaReInterUnionInclusion(node);
   if (!retNode.isNull())
   {
     return returnRewrite(node, retNode, Rewrite::RE_ANDOR_INC_CONFLICT);
@@ -1268,12 +1268,12 @@ Node SequencesRewriter::rewriteLoopRegExp(TNode node)
   {
     return returnRewrite(node, r, Rewrite::RE_LOOP_STAR);
   }
-  retNode = rewriteViaRuleReLoopElim(node);
+  retNode = rewriteViaReLoopElim(node);
   Assert(!retNode.isNull() && retNode != node);
   return returnRewrite(node, retNode, Rewrite::RE_LOOP);
 }
 
-Node SequencesRewriter::rewriteViaRuleReLoopElim(const Node& node)
+Node SequencesRewriter::rewriteViaReLoopElim(const Node& node)
 {
   if (node.getKind() != Kind::REGEXP_LOOP)
   {
@@ -1392,7 +1392,7 @@ Node SequencesRewriter::rewriteRangeRegExp(TNode node)
   return node;
 }
 
-Node SequencesRewriter::rewriteViaRuleStrInReEval(const Node& node)
+Node SequencesRewriter::rewriteViaStrInReEval(const Node& node)
 {
   if (node.getKind() != Kind::STRING_IN_REGEXP || !node[0].isConst()
       || !RegExpEntail::isConstRegExp(node[1]))
@@ -1421,7 +1421,7 @@ Node SequencesRewriter::rewriteMembership(TNode node)
     return returnRewrite(node, retNode, Rewrite::RE_IN_EMPTY);
   }
   // test for constant evaluation
-  Node eval = rewriteViaRuleStrInReEval(node);
+  Node eval = rewriteViaStrInReEval(node);
   if (!eval.isNull())
   {
     return returnRewrite(node, eval, Rewrite::RE_IN_EVAL);
