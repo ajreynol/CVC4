@@ -33,7 +33,7 @@ TheoryBoolRewriter::TheoryBoolRewriter(NodeManager* nm) : TheoryRewriter(nm)
 {
   d_true = nm->mkConst(true);
   d_false = nm->mkConst(false);
-  registerProofRewriteRule(ProofRewriteRule::BOOL_NNF_NORM, true);
+  registerProofRewriteRule(ProofRewriteRule::BOOL_NNF_NORM, TheoryRewriteCtx::DSL_SUBCALL);
 }
 
 Node TheoryBoolRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)

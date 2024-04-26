@@ -31,6 +31,21 @@ namespace theory {
 class Rewriter;
 
 /**
+ * A context for when to try theory rewrites.
+ */
+enum class TheoryRewriteCtx
+{
+  // Attempt to use the theory rewrite prior to DSL rewrite reconstruction.
+  PRE_DSL,
+  // Attempt to use the theory rewrite during subcalls in DSL rewrite
+  // reconstruction.
+  DSL_SUBCALL,
+  // Attempt to use the theory rewrite only after DSL rewrite reconstruction
+  // fails.
+  POST_DSL,
+};
+
+/**
  * Theory rewriters signal whether more rewriting is needed (or not)
  * by using a member of this enumeration.  See RewriteResponse, below.
  */
@@ -186,23 +201,20 @@ class TheoryRewriter
    * If none can be found, return ProofRewriteRule::NONE.
    * @param a The left hand side of the rewrite.
    * @param b The right hand side of the rewrite.
-   * @param isPost If false, then this will not return any ProofRewriteRule
-   * where a RARE rule should take presendence.
+   * @param ctx The context under which we are finding the rewrites.
    * @return An identifier, if one exists, that rewrites a to b. In particular,
    * the returned rule is either ProofRewriteRule::NONE or is a rule id such
    * that rewriteViaRule(id, a) returns b.
    */
-  ProofRewriteRule findRule(const Node& a, const Node& b, bool isPost = false);
+  ProofRewriteRule findRule(const Node& a, const Node& b, TheoryRewriteCtx ctx);
 
  protected:
   /** Register proof rewrite rule */
-  void registerProofRewriteRule(ProofRewriteRule id, bool isPost = false);
+  void registerProofRewriteRule(ProofRewriteRule id, TheoryRewriteCtx ctx);
   /** The underlying node manager */
   NodeManager* d_nm;
   /** The rewrite rules implemented by this rewriter */
-  std::unordered_set<ProofRewriteRule> d_pfTheoryRewrites;
-  /** The rewrite rules implemented by this rewriter */
-  std::unordered_set<ProofRewriteRule> d_pfTheoryRewritesPost;
+  std::map<TheoryRewriteCtx, std::unordered_set<ProofRewriteRule>> d_pfTheoryRewrites;
   /** Get a pointer to the node manager */
   NodeManager* nodeManager() const;
 };
