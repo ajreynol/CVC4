@@ -304,6 +304,15 @@ TrustNode TheoryBV::ppStaticRewrite(TNode atom)
         return TrustNode::mkTrustRewrite(atom, res);
       }
     }
+    if (RewriteRule<IneqElimConversion>::applies(atom))
+    {
+      Node res = RewriteRule<IneqElimConversion>::run<false>(atom);
+      if (res != atom)
+      {
+        res = d_env.getRewriter()->rewrite(res);
+        return TrustNode::mkTrustRewrite(atom, res);
+      }
+    }
   }
   return TrustNode::null();
 }

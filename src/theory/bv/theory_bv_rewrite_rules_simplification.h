@@ -2013,7 +2013,7 @@ template <>
 inline bool RewriteRule<IneqElimConversion>::applies(TNode node)
 {
   Kind k = node.getKind();
-  if (k == Kind::BITVECTOR_ULT || k == Kind::BITVECTOR_ULE
+  if (k == Kind::EQUAL || k == Kind::BITVECTOR_ULT || k == Kind::BITVECTOR_ULE
       || k == Kind::BITVECTOR_UGT || k == Kind::BITVECTOR_UGE)
   {
     for (const Node& nc : node)
@@ -2055,6 +2055,7 @@ inline Node RewriteRule<IneqElimConversion>::apply(TNode node)
   Kind arithKind;
   switch (node.getKind())
   {
+    case Kind::EQUAL: arithKind = Kind::EQUAL; break;
     case Kind::BITVECTOR_ULT: arithKind = Kind::LT; break;
     case Kind::BITVECTOR_ULE: arithKind = Kind::LEQ; break;
     case Kind::BITVECTOR_UGT: arithKind = Kind::GT; break;
