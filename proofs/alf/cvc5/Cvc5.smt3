@@ -147,7 +147,7 @@
                                           (let ((ey (run_evaluate y)))
                                           (let ((r (alf.find (alf.to_str ex) (alf.to_str ey))))
                                               (alf.ite (alf.is_neg r) r (alf.add n r))))))
-      ((run_evaluate (str.in_re x xr))    ($str_eval_str_in_re x xr))
+      ((run_evaluate (str.in_re x xr))    ($str_eval_str_in_re (run_evaluate x) xr))
 
       ; bitvectors
       ((run_evaluate (bvnot xb))          (alf.not (run_evaluate xb)))
