@@ -41,9 +41,12 @@ DatatypesRewriter::DatatypesRewriter(NodeManager* nm,
                                      const Options& opts)
     : TheoryRewriter(nm), d_sygusEval(sygusEval), d_opts(opts)
 {
-  registerProofRewriteRule(ProofRewriteRule::DT_COLLAPSE_SELECTOR, TheoryRewriteCtx::PRE_DSL);
-  registerProofRewriteRule(ProofRewriteRule::DT_COLLAPSE_TESTER, TheoryRewriteCtx::PRE_DSL);
-  registerProofRewriteRule(ProofRewriteRule::DT_CONS_EQ, TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::DT_COLLAPSE_SELECTOR,
+                           TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::DT_COLLAPSE_TESTER,
+                           TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::DT_CONS_EQ,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node DatatypesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)

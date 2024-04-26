@@ -34,7 +34,8 @@ namespace builtin {
 TheoryBuiltinRewriter::TheoryBuiltinRewriter(NodeManager* nm)
     : TheoryRewriter(nm)
 {
-  registerProofRewriteRule(ProofRewriteRule::DISTINCT_ELIM, TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::DISTINCT_ELIM,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node TheoryBuiltinRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)

@@ -49,7 +49,8 @@ namespace arith {
 ArithRewriter::ArithRewriter(NodeManager* nm, OperatorElim& oe)
     : TheoryRewriter(nm), d_opElim(oe)
 {
-  registerProofRewriteRule(ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM, TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)

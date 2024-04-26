@@ -214,7 +214,8 @@ class TheoryRewriter
   /** The underlying node manager */
   NodeManager* d_nm;
   /** The rewrite rules implemented by this rewriter */
-  std::map<TheoryRewriteCtx, std::unordered_set<ProofRewriteRule>> d_pfTheoryRewrites;
+  std::map<TheoryRewriteCtx, std::unordered_set<ProofRewriteRule>>
+      d_pfTheoryRewrites;
   /** Get a pointer to the node manager */
   NodeManager* nodeManager() const;
 };

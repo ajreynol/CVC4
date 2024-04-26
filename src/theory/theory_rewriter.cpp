@@ -98,11 +98,12 @@ ProofRewriteRule TheoryRewriter::findRule(const Node& a,
   return ProofRewriteRule::NONE;
 }
 
-void TheoryRewriter::registerProofRewriteRule(ProofRewriteRule id, TheoryRewriteCtx ctx)
+void TheoryRewriter::registerProofRewriteRule(ProofRewriteRule id,
+                                              TheoryRewriteCtx ctx)
 {
   std::unordered_set<ProofRewriteRule>& rules = d_pfTheoryRewrites[ctx];
   rules.insert(id);
-  if (ctx==TheoryRewriteCtx::DSL_SUBCALL)
+  if (ctx == TheoryRewriteCtx::DSL_SUBCALL)
   {
     d_pfTheoryRewrites[TheoryRewriteCtx::PRE_DSL].insert(id);
   }

@@ -161,7 +161,9 @@ Node Rewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   return Node::null();
 }
 
-ProofRewriteRule Rewriter::findRule(const Node& a, const Node& b, TheoryRewriteCtx ctx)
+ProofRewriteRule Rewriter::findRule(const Node& a,
+                                    const Node& b,
+                                    TheoryRewriteCtx ctx)
 {
   // dispatches to the appropriate theory
   TheoryId tid = theoryOf(a);
