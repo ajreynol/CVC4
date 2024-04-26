@@ -142,7 +142,7 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
             n.getKind(), d_nm->mkNode(Kind::BOUND_VAR_LIST, activeVars), n[1]);
       }
     }
-      break;
+    break;
     default: break;
   }
   return Node::null();

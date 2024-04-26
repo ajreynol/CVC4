@@ -478,10 +478,11 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
     }
     pic.d_id = id;
   }
-  else if (id==RewriteProofStatus::THEORY_REWRITE)
+  else if (id == RewriteProofStatus::THEORY_REWRITE)
   {
-    ProofRewriteRule prid = d_env.getRewriter()->findRule(target[0], target[1], theory::TheoryRewriteCtx::DSL_SUBCALL);
-    if (prid==ProofRewriteRule::NONE)
+    ProofRewriteRule prid = d_env.getRewriter()->findRule(
+        target[0], target[1], theory::TheoryRewriteCtx::DSL_SUBCALL);
+    if (prid == ProofRewriteRule::NONE)
     {
       return false;
     }
@@ -490,7 +491,7 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
   }
   else
   {
-    Assert (id==RewriteProofStatus::DSL);
+    Assert(id == RewriteProofStatus::DSL);
     const RewriteProofRule& rpr = d_db->getRule(r);
     // does it conclusion match what we are trying to show?
     Node conc = rpr.getConclusion();
@@ -851,7 +852,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
           }
           else
           {
-            Assert (cur.getKind()==Kind::EQUAL);
+            Assert(cur.getKind() == Kind::EQUAL);
             Assert(pcur.d_dslId != ProofRewriteRule::NONE);
             // add the DSL proof rule we used
             pfac.push_back(
@@ -882,7 +883,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
             }
             else
             {
-              Assert (pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
+              Assert(pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
               pfac.push_back(cur[0]);
             }
           }
@@ -968,7 +969,8 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
       {
         cdp->addStep(cur, ProofRule::ARITH_POLY_NORM, {}, {cur});
       }
-      else if (pcur.d_id == RewriteProofStatus::DSL || pcur.d_id == RewriteProofStatus::THEORY_REWRITE)
+      else if (pcur.d_id == RewriteProofStatus::DSL
+               || pcur.d_id == RewriteProofStatus::THEORY_REWRITE)
       {
         Assert(pfArgs.find(cur) != pfArgs.end());
         Assert(pcur.d_dslId != ProofRewriteRule::NONE);
@@ -986,11 +988,11 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
         }
         else
         {
-          Assert (pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
+          Assert(pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
           Node lhs = args[0];
           Node rhs = d_env.getRewriter()->rewriteViaRule(pcur.d_dslId, lhs);
           conc = lhs.eqNode(rhs);
-          Assert (ps.empty());
+          Assert(ps.empty());
           pfr = ProofRule::THEORY_REWRITE;
         }
         cdp->addStep(conc, pfr, ps, args);
