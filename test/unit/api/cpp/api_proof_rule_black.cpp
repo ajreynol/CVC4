@@ -54,7 +54,7 @@ class TestApiProofRewriteRule : public ::testing::Test
 TEST_F(TestApiProofRewriteRule, ProofRewriteRuleToString)
 {
   for (int32_t r = static_cast<int32_t>(ProofRewriteRule::NONE);
-       r <= static_cast<int32_t>(ProofRewriteRule::DISTINCT_BINARY_ELIM);
+       r <= static_cast<int32_t>(ProofRewriteRule::EQ_SYMM);
        ++r)
   {
     auto rulestr = std::to_string(static_cast<ProofRewriteRule>(r));
