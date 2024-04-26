@@ -209,11 +209,24 @@ class TheoryRewriter
   ProofRewriteRule findRule(const Node& a, const Node& b, TheoryRewriteCtx ctx);
 
  protected:
-  /** Register proof rewrite rule */
+  /** 
+   * Register proof rewrite rule. This method is called to notify the RARE
+   * DSL rewrite rule reconstruction algorithm that the rewrite rule id
+   * should be tried during proof reconstruction. This method should be
+   * called in the constructor of the theory rewriter.
+   * 
+   * @param id The rewrite rule this theory rewriter implements via
+   * rewriteViaRule.
+   * @param ctx The context for the rewrite, which indicates when the RARE
+   * proof reconstruction should attempt this rule.
+   */
   void registerProofRewriteRule(ProofRewriteRule id, TheoryRewriteCtx ctx);
   /** The underlying node manager */
   NodeManager* d_nm;
-  /** The rewrite rules implemented by this rewriter */
+  /**
+   * The proof rewrite rules implemented by this rewriter, for each context.
+   * This caches the calls to registerProofRewriteRule.
+   */
   std::map<TheoryRewriteCtx, std::unordered_set<ProofRewriteRule>>
       d_pfTheoryRewrites;
   /** Get a pointer to the node manager */
