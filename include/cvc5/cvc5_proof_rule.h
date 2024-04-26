@@ -2382,30 +2382,30 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *
    * .. math::
    *   is-c(c(t_1, \ldots, t_n)) = true
-   * 
+   *
    * or alternatively
-   * 
+   *
    * .. math::
    *   is-c(d(t_1, \ldots, t_n)) = true
    *
    * where `c` and `d` are distinct constructors.
-   * 
+   *
    * \endverbatim
    */
   EVALUE(DT_COLLAPSE_TESTER),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Datatypes - constructor equality**
-   * 
+   *
    * .. math::
    *   (c(t_1, \ldots, t_n) = c(s_1, \ldots, s_n)) =
    *   (t_1 = s_1 \wedge \ldots \wedge t_n = s_n)
-   * 
+   *
    * or alternatively
    *
    * .. math::
    *   (c(t_1, \ldots, t_n) = d(s_1, \ldots, s_m)) = false
-   * 
+   *
    * where `c` and `d` are distinct constructors.
    *
    * \endverbatim
