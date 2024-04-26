@@ -2329,6 +2329,13 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \endverbatim
    */
   EVALUE(DISTINCT_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Booleans -- Negation Normal Form with normalization**
+   *
+   * \endverbatim
+   */
+  EVALUE(BOOL_NNF_NORM),
   // Custom theory rewrites.
   /**
    * \verbatim embed:rst:leading-asterisk
