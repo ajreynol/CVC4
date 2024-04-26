@@ -275,11 +275,11 @@ bool CDProof::addTrustedStep(Node expected,
 }
 
 bool CDProof::addTheoryRewriteStep(Node expected,
-                    ProofRewriteRule id,
-                    bool ensureChildren,
-                    CDPOverwrite opolicy)
+                                   ProofRewriteRule id,
+                                   bool ensureChildren,
+                                   CDPOverwrite opolicy)
 {
-  if (expected.getKind()!=Kind::EQUAL)
+  if (expected.getKind() != Kind::EQUAL)
   {
     return false;
   }

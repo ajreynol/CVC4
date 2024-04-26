@@ -215,9 +215,9 @@ class CDProof : protected EnvObj, public ProofGenerator
    * expected arguments.
    */
   bool addTheoryRewriteStep(Node expected,
-                      ProofRewriteRule id,
-                      bool ensureChildren = false,
-                      CDPOverwrite opolicy = CDPOverwrite::ASSUME_ONLY);
+                            ProofRewriteRule id,
+                            bool ensureChildren = false,
+                            CDPOverwrite opolicy = CDPOverwrite::ASSUME_ONLY);
   /** Version with ProofStep */
   bool addStep(Node expected,
                const ProofStep& step,
