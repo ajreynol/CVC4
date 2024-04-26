@@ -43,47 +43,50 @@ Node TheoryBoolRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::BOOL_NNF_NORM:
     {
       Node nn = computeNnfNorm(nodeManager(), n);
-      if (nn!=n)
+      if (nn != n)
       {
         return nn;
       }
     }
     break;
-    default:
-      break;
+    default: break;
   }
   return Node::null();
 }
 
 bool TheoryBoolRewriter::addNnfNormChild(std::vector<Node>& children,
-                                            Node c,
-                                            Kind k,
-                                            std::map<Node, bool>& lit_pol,
-                                            bool& childrenChanged)
+                                         Node c,
+                                         Kind k,
+                                         std::map<Node, bool>& lit_pol,
+                                         bool& childrenChanged)
 {
   if (k == Kind::OR || k == Kind::AND)
   {
     Node lit = c.getKind() == Kind::NOT ? c[0] : c;
     bool pol = c.getKind() != Kind::NOT;
-    std::map< Node, bool >::iterator it = lit_pol.find( lit );
-    if( it==lit_pol.end() ){
+    std::map<Node, bool>::iterator it = lit_pol.find(lit);
+    if (it == lit_pol.end())
+    {
       lit_pol[lit] = pol;
-      children.push_back( c );
-    }else{
+      children.push_back(c);
+    }
+    else
+    {
       childrenChanged = true;
-      if( it->second!=pol ){
+      if (it->second != pol)
+      {
         return false;
       }
     }
   }
   else
   {
-    children.push_back( c );
+    children.push_back(c);
   }
   return true;
 }
 
-Node TheoryBoolRewriter::computeNnfNorm(NodeManager * nm, const Node& n)
+Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm, const Node& n)
 {
   // at pre-order traversal, we store preKind and preChildren, which
   // determine the Kind and the children for the node to reconstruct.

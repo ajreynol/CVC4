@@ -18,8 +18,8 @@
 #include "expr/sequence.h"
 #include "options/strings_options.h"
 #include "theory/rewriter.h"
-#include "theory/strings/core_solver.h"
 #include "theory/strings/arith_entail.h"
+#include "theory/strings/core_solver.h"
 #include "theory/strings/regexp_elim.h"
 #include "theory/strings/regexp_operation.h"
 #include "theory/strings/term_registry.h"
@@ -539,11 +539,11 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
   else if (id == ProofRule::STRING_ARITH_PRED_ENTAIL)
   {
     Assert(children.empty());
-    Assert(args.size()==1);
+    Assert(args.size() == 1);
     Node t = args[0];
     Node res;
-    theory::strings::ArithEntail ae(nullptr); // FIXME
-    if (t.getKind()==Kind::EQUAL && t[0].getType().isInteger())
+    theory::strings::ArithEntail ae(nullptr);  // FIXME
+    if (t.getKind() == Kind::EQUAL && t[0].getType().isInteger())
     {
       // check if the node can be simplified to false
       if (ae.check(t[0], t[1], true) || ae.check(t[1], t[0], true))
@@ -551,7 +551,7 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
         res = nodeManager()->mkConst(false);
       }
     }
-    else if (t.getKind()==Kind::GEQ)
+    else if (t.getKind() == Kind::GEQ)
     {
       if (ae.check(t[0], t[1], false))
       {

@@ -46,16 +46,17 @@ class TheoryBoolRewriter : public TheoryRewriter
    * Eliminates IMPLIES/XOR, removes duplicates/infers tautologies of AND/OR,
    * and computes NNF.
    */
-  static Node computeNnfNorm(NodeManager * nm, const Node& n);
+  static Node computeNnfNorm(NodeManager* nm, const Node& n);
+
  protected:
   /**
    * Helper method for computeNnfNorm.
    */
   static bool addNnfNormChild(std::vector<Node>& children,
-                         Node c,
-                         Kind k,
-                         std::map<Node, bool>& lit_pol,
-                         bool& childrenChanged);
+                              Node c,
+                              Kind k,
+                              std::map<Node, bool>& lit_pol,
+                              bool& childrenChanged);
   /**
    * Helper method which performs flattening.
    *

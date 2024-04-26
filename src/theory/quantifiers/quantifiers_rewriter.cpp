@@ -24,12 +24,12 @@
 #include "expr/skolem_manager.h"
 #include "options/quantifiers_options.h"
 #include "theory/arith/arith_msum.h"
+#include "theory/booleans/theory_bool_rewriter.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
 #include "theory/quantifiers/bv_inverter.h"
 #include "theory/quantifiers/ematching/trigger.h"
 #include "theory/quantifiers/extended_rewrite.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
-#include "theory/booleans/theory_bool_rewriter.h"
 #include "theory/quantifiers/skolemize.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_util.h"
@@ -1979,7 +1979,7 @@ Node QuantifiersRewriter::computeOperation(Node f,
     // relies on external utility
     n = booleans::TheoryBoolRewriter::computeNnfNorm(nodeManager(), n);
   }
-  else if (computeOption==COMPUTE_AGGRESSIVE_MINISCOPING)
+  else if (computeOption == COMPUTE_AGGRESSIVE_MINISCOPING)
   {
     return computeAggressiveMiniscoping( args, n );
   }
