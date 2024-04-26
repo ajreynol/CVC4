@@ -209,12 +209,12 @@ class TheoryRewriter
   ProofRewriteRule findRule(const Node& a, const Node& b, TheoryRewriteCtx ctx);
 
  protected:
-  /** 
+  /**
    * Register proof rewrite rule. This method is called to notify the RARE
    * DSL rewrite rule reconstruction algorithm that the rewrite rule id
    * should be tried during proof reconstruction. This method should be
    * called in the constructor of the theory rewriter.
-   * 
+   *
    * @param id The rewrite rule this theory rewriter implements via
    * rewriteViaRule.
    * @param ctx The context for the rewrite, which indicates when the RARE
