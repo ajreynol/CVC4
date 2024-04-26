@@ -1296,23 +1296,6 @@ enum ENUM(ProofRule) : uint32_t
   EVALUE(DT_INST),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Datatypes -- Collapse**
-   *
-   * .. math::
-   *
-   *   \inferrule{-\mid \mathit{sel}_i(C_j(t_1,\dots,t_n))}{
-   *   \mathit{sel}_i(C_j(t_1,\dots,t_n)) = r}
-   *
-   * where :math:`C_j` is a constructor, :math:`r` is :math:`t_i` if
-   * :math:`\mathit{sel}_i` is a correctly applied selector, or
-   * ``TypeNode::mkGroundTerm()`` of the proper type otherwise. Notice that the
-   * use of ``mkGroundTerm`` differs from the rewriter which uses
-   * ``mkGroundValue`` in this case.
-   * \endverbatim
-   */
-  EVALUE(DT_COLLAPSE),
-  /**
-   * \verbatim embed:rst:leading-asterisk
    * **Datatypes -- Split**
    *
    * .. math::
@@ -2386,7 +2369,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * or alternatively
    *
    * .. math::
-   *   is-c(d(t_1, \ldots, t_n)) = true
+   *   is-c(d(t_1, \ldots, t_n)) = false
    *
    * where `c` and `d` are distinct constructors.
    *

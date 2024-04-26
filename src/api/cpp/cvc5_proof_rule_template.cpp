@@ -126,7 +126,6 @@ const char* toString(ProofRule rule)
     //================================================= Datatype rules
     case ProofRule::DT_UNIF: return "DT_UNIF";
     case ProofRule::DT_INST: return "DT_INST";
-    case ProofRule::DT_COLLAPSE: return "DT_COLLAPSE";
     case ProofRule::DT_SPLIT: return "DT_SPLIT";
     case ProofRule::DT_CLASH: return "DT_CLASH";
     //================================================= Quantifiers rules
