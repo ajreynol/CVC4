@@ -150,7 +150,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     {
       ProofRewriteRule id;
       rewriter::getRewriteRule(pfn->getArguments()[0], id);
-      return isHandledTheoryRewrite(id);
+      return isHandledTheoryRewrite(id, pfn->getArguments()[1]);
     }
     break;
     case ProofRule::ARITH_POLY_NORM:
@@ -236,13 +236,15 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
   return false;
 }
 
-bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id) const
+bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n) const
 {
   switch (id)
   {
     case ProofRewriteRule::DISTINCT_ELIM:
-    case ProofRewriteRule::STR_IN_RE_EVAL:
     case ProofRewriteRule::RE_LOOP_ELIM: return true;
+    case ProofRewriteRule::STR_IN_RE_EVAL:
+      Assert (n.getKind()==Kind::STRING_IN_REGEXP && n[0].isConst());
+      return canEvaluateRegExp(n[1]);
     default: break;
   }
   return false;
@@ -352,6 +354,7 @@ bool AlfPrinter::canEvaluateRegExp(Node r) const
       {
         case Kind::REGEXP_ALL:
         case Kind::REGEXP_ALLCHAR:
+        case Kind::REGEXP_COMPLEMENT:
         case Kind::REGEXP_NONE:
         case Kind::REGEXP_UNION:
         case Kind::REGEXP_INTER:
