@@ -175,6 +175,15 @@
     (let ((U ($char_type_of (alf.typeof t)))) ($str_rev_rec t (mk_emptystr (Seq U)) U)) 
     t))
 
+(define $str_subsequence ((U Type :implicit) (u Int) (l Int) (t (Seq U)))
+  (alf.match ((T Type))
+    (alf.typeof t)
+    (
+    (String   (alf.extract t u l))
+    ((Seq T)  (nary.subsequence str.++ (mk_emptystr (alf.typeof t)) u l t))
+    ))
+)
+
 ; Nary-intro, which ensures that the input t is a str.++ application.
 ; In particular, if it is not a str.++ and not the empty string, then we return
 ; (str.++ t empty) where empty is the empty string for the type of t.
@@ -525,6 +534,18 @@
     (($str.mk_re_loop_elim_rec n d r rr) ($str.mk_re_loop_elim_rec (alf.add n -1) d r (re.++ r rr)))
   )
 )
+
+(program $str.overlap_rec ((U Type) (s (Seq U)) (s1 (Seq U) :list) (t (Seq U)) (nil (Seq U)))
+  ((Seq U) (Seq U) (Seq U)) Int
+  (
+  (($str.overlap_rec nil (str.++ s s1) t) (alf.ite (nary.is_compatible str.++ nil (str.++ s s1) t)
+                                            0
+                                            (alf.add 1 ($str.overlap_rec nil s1 t))))
+  (($str.overlap_rec nil s t)             0)
+  )
+)
+(define $str.overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)))
+  ($str.overlap_rec (mk_emptystr (alf.typeof s)) s t))
 
 (define $str.mk_re_loop_elim ((n Int) (diff Int) (r RegLan))
   ($singleton_elim ($str.mk_re_loop_elim_rec n diff r (str.to_re ""))))

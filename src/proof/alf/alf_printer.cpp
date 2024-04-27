@@ -191,6 +191,10 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
       }
     }
     break;
+    case ProofRule::CONCAT_CPROP:
+      return true;
+      AlwaysAssert(false);
+      break;
     case ProofRule::ANNOTATION:
     case ProofRule::HO_APP_ENCODE:
     case ProofRule::BETA_REDUCE:
@@ -201,7 +205,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DT_INST:
     case ProofRule::DT_SPLIT:
     case ProofRule::DT_CLASH:
-    case ProofRule::CONCAT_CPROP:
     case ProofRule::STRING_DECOMPOSE:
     case ProofRule::RE_UNFOLD_NEG:
     case ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED:

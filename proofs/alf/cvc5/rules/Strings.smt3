@@ -118,6 +118,30 @@
                 )))))))))
 )
 
+
+; ProofRule::CONCAT_CPROP
+(declare-rule concat_cprop ((U Type) (t (Seq U)) (tc (Seq U)) (s (Seq U)) (rev Bool))
+  :premises ((= t s) (not (= (str.len tc) 0)))
+  :args (rev)
+  :conclusion
+    (alf.match ((t1 (Seq U)) (t2 (Seq U)) (t3 (Seq U) :list))
+      ($str_rev rev t)
+      (((str.++ t1 t2 t3)
+        (alf.requires t1 tc
+          (alf.match ((s1 (Seq U)) (s2 (Seq U) :list))
+            ($str_rev rev s)
+            (((str.++ s1 s2)
+                (let ((sc (string_to_flat_form s1 rev)))
+                (let ((v (alf.add 1 ($str.overlap (string_to_flat_form t2 rev) ($tail sc)))))
+                  (= tc
+                    (alf.ite rev
+                      (let ((oc ($str_subsequence v (alf.len s1) s1)))
+                      ($str_rev true (str.++ oc (skolem (skolem_prefix tc (- (str.len tc) (str.len oc)))))))
+                      (let ((oc ($str_subsequence 0 v s1)))
+                      (str.++ oc (skolem (skolem_suffix_rem tc (str.len oc)))))
+                )))))))))))
+)
+
 ; ProofRule::CONCAT_CONFLICT, for strings only
 (declare-rule concat_conflict ((s String) (t String) (rev Bool))
   :premises ((= s t))
