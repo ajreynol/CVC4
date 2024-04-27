@@ -34,6 +34,13 @@
   (alf.cons str.++ x y)
 )
 
+(define $str_is_code_point ((n Int))
+  (alf.ite ($is_z_literal n)
+  (alf.ite ($compare_geq 196608 n)
+    (alf.not (alf.is_neg n))
+    false)
+  false))
+
 ; Return t if it corresponds to the empty string, otherwise evaluates
 ; to an unevaluated alf.requires term.
 (define $str_self_if_empty ((T Type :implicit) (t T))
@@ -175,13 +182,16 @@
     (let ((U ($char_type_of (alf.typeof t)))) ($str_rev_rec t (mk_emptystr (Seq U)) U)) 
     t))
 
-(define $str_subsequence ((U Type :implicit) (u Int) (l Int) (t (Seq U)))
-  (alf.match ((T Type))
-    (alf.typeof t)
-    (
-    (String   (alf.extract t u l))
-    ((Seq T)  (nary.subsequence str.++ (mk_emptystr (alf.typeof t)) u l t))
-    ))
+(program $str_subsequence ((U Type :implicit) (u Int) (l Int) (t (Seq U)))
+  (Int Int (Seq U)) (Seq U)
+  (
+  (($str_subsequence u l t) (alf.match ((T Type))
+                            (alf.typeof t)
+                            (
+                            (String   (alf.extract t u l))
+                            ((Seq T)  (nary.subsequence str.++ (mk_emptystr (Seq T)) u l t))
+                            )))
+  )
 )
 
 ; Nary-intro, which ensures that the input t is a str.++ application.

@@ -135,11 +135,11 @@
                 (let ((v (alf.add 1 ($str.overlap (string_to_flat_form t2 rev) ($tail sc)))))
                   (= tc
                     (alf.ite rev
-                      (let ((oc ($str_subsequence v (alf.len s1) s1)))
-                      ($str_rev true (str.++ oc (skolem (skolem_prefix tc (- (str.len tc) (str.len oc)))))))
-                      (let ((oc ($str_subsequence 0 v s1)))
-                      (str.++ oc (skolem (skolem_suffix_rem tc (str.len oc)))))
-                )))))))))))
+                      (let ((oc (skolem_suffix_rem s1 v)))
+                      (str.++ (skolem (skolem_prefix tc (- (str.len tc) (str.len oc)))) oc))
+                      (let ((oc (skolem_prefix s1 v)))
+                      (str.++ oc (skolem (skolem_suffix_rem tc (str.len oc)))))))
+                )))))))))
 )
 
 ; ProofRule::CONCAT_CONFLICT, for strings only

@@ -131,6 +131,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::CONCAT_CSPLIT:
     case ProofRule::CONCAT_CONFLICT:
     case ProofRule::CONCAT_SPLIT:
+    case ProofRule::CONCAT_CPROP:
     case ProofRule::CONCAT_LPROP:
     case ProofRule::STRING_LENGTH_POS:
     case ProofRule::STRING_LENGTH_NON_EMPTY:
@@ -191,10 +192,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
       }
     }
     break;
-    case ProofRule::CONCAT_CPROP:
-      return true;
-      AlwaysAssert(false);
-      break;
     case ProofRule::ANNOTATION:
     case ProofRule::HO_APP_ENCODE:
     case ProofRule::BETA_REDUCE:
@@ -301,6 +298,8 @@ bool AlfPrinter::canEvaluate(Node n) const
         case Kind::STRING_CONTAINS:
         case Kind::STRING_REPLACE:
         case Kind::STRING_INDEXOF:
+        case Kind::STRING_TO_CODE:
+        case Kind::STRING_FROM_CODE:
         case Kind::BITVECTOR_ADD:
         case Kind::BITVECTOR_SUB:
         case Kind::BITVECTOR_NEG:
