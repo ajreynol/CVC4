@@ -135,7 +135,7 @@
                 (let ((v (alf.add 1 ($str.overlap (string_to_flat_form t2 rev) ($tail sc)))))
                   (= tc
                     (alf.ite rev
-                      (let ((oc (skolem_suffix_rem s1 v)))
+                      (let ((oc ($str_suffix_len s1 v)))
                       (str.++ (skolem (skolem_prefix tc (- (str.len tc) (str.len oc)))) oc))
                       (let ((oc (skolem_prefix s1 v)))
                       (str.++ oc (skolem (skolem_suffix_rem tc (str.len oc)))))))
