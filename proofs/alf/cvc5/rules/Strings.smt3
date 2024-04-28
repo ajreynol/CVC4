@@ -129,7 +129,7 @@
       (((str.++ t1 t2 t3)
         (alf.requires t1 tc
           (alf.match ((s1 (Seq U)) (s2 (Seq U) :list))
-            ($str_rev rev s)
+            ($str_rev rev ($str_nary_intro s))  ; must do nary intro when s is just a constant
             (((str.++ s1 s2)
                 (let ((sc (string_to_flat_form s1 rev)))
                 (let ((v (alf.add 1 ($str.overlap ($tail sc) (string_to_flat_form t2 rev)))))
