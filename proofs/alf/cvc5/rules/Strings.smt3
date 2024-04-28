@@ -132,7 +132,7 @@
             ($str_rev rev s)
             (((str.++ s1 s2)
                 (let ((sc (string_to_flat_form s1 rev)))
-                (let ((v (alf.add 1 ($str.overlap (string_to_flat_form t2 rev) ($tail sc)))))
+                (let ((v (alf.add 1 ($str.overlap ($tail sc) (string_to_flat_form t2 rev)))))
                   (= tc
                     (alf.ite rev
                       (let ((oc ($str_suffix_len s1 v)))
