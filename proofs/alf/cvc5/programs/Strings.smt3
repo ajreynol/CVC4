@@ -170,21 +170,11 @@
 
 ;;-------------------- Utilities
 
-; Helper for reversing a concatenation term
-(program $str_rev_rec
-    ((T Type) (t (Seq T)) (ss (Seq T) :list) (acc (Seq T)))
-    ((Seq T) (Seq T) Type) (Seq T)
-    (
-        (($str_rev_rec (str.++ t ss) acc T) ($str_rev_rec ss ($str_cons t acc) T))
-        (($str_rev_rec t acc T)             (alf.requires t (mk_emptystr (Seq T)) acc))
-    )
-)
-
 ; Return reverse of t if rev = true, return t unchanged otherwise.
-(define $str_rev ((U Type :implicit) (rev Bool) (t (Seq U))) 
-  (alf.ite rev 
-    (let ((U ($char_type_of (alf.typeof t)))) ($str_rev_rec t (mk_emptystr (Seq U)) U)) 
-    t))
+(define $str_rev ((U Type :implicit) (rev Bool) (t U)) 
+  (alf.ite rev
+    (nary.reverse t)
+     t))
 
 (program $str_subsequence ((U Type :implicit) (u Int) (l Int) (t (Seq U)))
   (Int Int (Seq U)) (Seq U)
