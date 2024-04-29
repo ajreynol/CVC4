@@ -162,10 +162,7 @@ Node mkSuffixOfLen(Node t, Node n)
   NodeManager* nm = NodeManager::currentNM();
   Node lent = nm->mkNode(Kind::STRING_LENGTH, t);
   return nm->mkNode(
-      Kind::STRING_SUBSTR,
-      t,
-      nm->mkNode(Kind::SUB, lent, n),
-      lent);
+      Kind::STRING_SUBSTR, t, nm->mkNode(Kind::SUB, lent, n), lent);
 }
 
 Node mkUnit(TypeNode tn, Node n)

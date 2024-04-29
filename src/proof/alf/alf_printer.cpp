@@ -236,14 +236,15 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
   return false;
 }
 
-bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n) const
+bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id,
+                                        const Node& n) const
 {
   switch (id)
   {
     case ProofRewriteRule::DISTINCT_ELIM:
     case ProofRewriteRule::RE_LOOP_ELIM: return true;
     case ProofRewriteRule::STR_IN_RE_EVAL:
-      Assert (n.getKind()==Kind::STRING_IN_REGEXP && n[0].isConst());
+      Assert(n.getKind() == Kind::STRING_IN_REGEXP && n[0].isConst());
       return canEvaluateRegExp(n[1]);
     default: break;
   }

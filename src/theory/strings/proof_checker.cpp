@@ -453,19 +453,19 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
     }
     else if (id == ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED)
     {
-      Assert(args.size()==1);
+      Assert(args.size() == 1);
       bool isRev;
       if (!getBool(args[0], isRev))
       {
         return Node::null();
       }
-      Node r =skChild[0][1];
+      Node r = skChild[0][1];
       if (r.getKind() != Kind::REGEXP_CONCAT)
       {
         Trace("strings-pfcheck") << "...fail, no concat regexp" << std::endl;
         return Node::null();
       }
-      size_t index = isRev ? skChild[0][1].getNumChildren()-1 : 0;
+      size_t index = isRev ? skChild[0][1].getNumChildren() - 1 : 0;
       Node reLen = r[index];
       if (reLen.isNull())
       {
