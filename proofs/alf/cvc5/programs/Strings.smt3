@@ -134,10 +134,12 @@
   (str.substr s 0 n)
 )
 
-; Get the term corresponding to the suffix of term s of fixed length n.
+; Get the term corresponding to the suffix of term s starting from position n.
 (define skolem_suffix_rem ((U Type :implicit) (s (Seq U)) (n Int))
   (str.substr s n (- (str.len s) n))
 )
+
+; Get the term corresponding to the suffix of term s of length n.
 (define $str_suffix_len ((U Type :implicit) (s (Seq U)) (n Int))
   (str.substr s (- (str.len s) n) n)
 )
@@ -539,18 +541,27 @@
 (define $str.mk_re_loop_elim ((n Int) (diff Int) (r RegLan))
   ($singleton_elim ($str.mk_re_loop_elim_rec n diff r (str.to_re ""))))
 
-(program $str.overlap_rec ((U Type) (s (Seq U)) (s1 (Seq U) :list) (t (Seq U)) (nil (Seq U)))
+; Helper for $str_overlap.
+(program $str_overlap_rec ((U Type) (s (Seq U)) (s1 (Seq U) :list) (t (Seq U)) (nil (Seq U)))
   ((Seq U) (Seq U) (Seq U)) Int
   (
-  (($str.overlap_rec nil (str.++ s s1) t) (alf.ite (nary.is_compatible str.++ nil (str.++ s s1) t)
+  (($str_overlap_rec nil (str.++ s s1) t) (alf.ite (nary.is_compatible str.++ nil (str.++ s s1) t)
                                             0
-                                            (alf.add 1 ($str.overlap_rec nil s1 t))))
-  (($str.overlap_rec nil s t)             0)
+                                            (alf.add 1 ($str_overlap_rec nil s1 t))))
+  (($str_overlap_rec nil s t)             0)
   )
 )
 
-(define $str.overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)))
-  ($str.overlap_rec (mk_emptystr (alf.typeof s)) s t))
+; Returns the minimum number of characters that must be skipped in s before
+; string t can be compatible with it. For example:
+;   $str_overlap (str.++ "A" "B" "C" "") (str.++ "B" "C" "D" "") = 1
+;   $str_overlap (str.++ "A" "B" "C" "") (str.++ "B" "") = 1
+;   $str_overlap (str.++ "A" "B" "C" "") (str.++ "E" "") = 3
+;   $str_overlap (str.++ "A" "B" "C" "") (str.++ "A" "A" "") = 3
+;   $str_overlap (str.++ "A" "B" "C" "") (str.++ "A" "") = 0
+; Expects s and t to be in nary (flattened) form.
+(define $str_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)))
+  ($str_overlap_rec (mk_emptystr (alf.typeof s)) s t))
 
 ; Converts a str.++ application into "flat form" so that we are ready to
 ; process its prefix. This consists of the following steps:
