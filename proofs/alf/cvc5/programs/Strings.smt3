@@ -139,8 +139,7 @@
   (str.substr s n (- (str.len s) n))
 )
 (define $str_suffix_len ((U Type :implicit) (s (Seq U)) (n Int))
-  (let ((ls (str.len s)))
-  (str.substr s (- ls n) ls))
+  (str.substr s (- (str.len s) n) n)
 )
 
 ; The unified splitting term for t and s, which is the term that denotes the

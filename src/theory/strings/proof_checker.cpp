@@ -22,6 +22,7 @@
 #include "theory/strings/core_solver.h"
 #include "theory/strings/regexp_elim.h"
 #include "theory/strings/regexp_operation.h"
+#include "theory/strings/regexp_entail.h"
 #include "theory/strings/term_registry.h"
 #include "theory/strings/theory_strings_preprocess.h"
 #include "theory/strings/theory_strings_utils.h"
@@ -465,8 +466,8 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
         Trace("strings-pfcheck") << "...fail, no concat regexp" << std::endl;
         return Node::null();
       }
-      size_t index = isRev ? skChild[0][1].getNumChildren() - 1 : 0;
-      Node reLen = r[index];
+      size_t index = isRev ? r.getNumChildren() - 1 : 0;
+      Node reLen = RegExpEntail::getFixedLengthForRegexp(r[index]);
       if (reLen.isNull())
       {
         Trace("strings-pfcheck") << "...fail, non-fixed lengths" << std::endl;

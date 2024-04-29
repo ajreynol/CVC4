@@ -1050,16 +1050,13 @@ Node RegExpOpr::reduceRegExpNegConcatFixed(Node mem, Node reLen, bool isRev)
   Node s2;
   if (!isRev)
   {
-    s1 = nm->mkNode(Kind::STRING_SUBSTR, s, zero, b1);
-    s2 =
-        nm->mkNode(Kind::STRING_SUBSTR, s, b1, nm->mkNode(Kind::SUB, lens, b1));
+    s1 = utils::mkPrefix(s, b1);
+    s2 = utils::mkSuffix(s, b1);
   }
   else
   {
-    s1 =
-        nm->mkNode(Kind::STRING_SUBSTR, s, nm->mkNode(Kind::SUB, lens, b1), b1);
-    s2 = nm->mkNode(
-        Kind::STRING_SUBSTR, s, zero, nm->mkNode(Kind::SUB, lens, b1));
+    s1 = utils::mkSuffixOfLen(s, b1);
+    s2 = utils::mkPrefix(s, nm->mkNode(Kind::SUB, lens, b1));
   }
   size_t index = isRev ? r.getNumChildren() - 1 : 0;
   Node s1r1 = nm->mkNode(Kind::STRING_IN_REGEXP, s1, r[index]).negate();
