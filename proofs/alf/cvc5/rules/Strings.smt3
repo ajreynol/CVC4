@@ -259,5 +259,12 @@
   :args ((re.loop l u r))
   :conclusion (let ((diff (alf.add (alf.neg l) u)))
               (alf.requires (alf.is_neg diff) false
-                 (= (re.loop l u r) ($str.mk_re_loop_elim l diff r))))
+                 (= (re.loop l u r) ($str_mk_re_loop_elim l diff r))))
+)
+
+(declare-rule str-in-re-concat-star-char ((s1 String) (s2 String :list) (r RegLan))
+  :args ((str.in_re (str.++ s1 s2) (re.* r)))
+  :conclusion (alf.requires ($str_fixed_len_re r) 1
+                (= (str.in_re (str.++ s1 s2) (re.* r))
+                   ($str_mk_str_in_re_concat_star_char (str.++ s1 s2) (re.* r))))
 )

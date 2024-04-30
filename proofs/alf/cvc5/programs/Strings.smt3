@@ -530,17 +530,27 @@
   )
 )
 
-(program $str.mk_re_loop_elim_rec ((n Int) (d Int) (r RegLan) (rr RegLan :list))
+(program $str_mk_re_loop_elim_rec ((n Int) (d Int) (r RegLan) (rr RegLan :list))
   (Int Int RegLan RegLan) RegLan
   (
-    (($str.mk_re_loop_elim_rec 0 0 r rr) (alf.cons re.union ($singleton_elim rr) re.none))
-    (($str.mk_re_loop_elim_rec 0 d r rr) (alf.cons re.union ($singleton_elim rr) ($str.mk_re_loop_elim_rec 0 (alf.add d -1) r (re.++ r rr))))
-    (($str.mk_re_loop_elim_rec n d r rr) ($str.mk_re_loop_elim_rec (alf.add n -1) d r (re.++ r rr)))
+    (($str_mk_re_loop_elim_rec 0 0 r rr) (alf.cons re.union ($singleton_elim rr) re.none))
+    (($str_mk_re_loop_elim_rec 0 d r rr) (alf.cons re.union ($singleton_elim rr) ($str_mk_re_loop_elim_rec 0 (alf.add d -1) r (re.++ r rr))))
+    (($str_mk_re_loop_elim_rec n d r rr) ($str_mk_re_loop_elim_rec (alf.add n -1) d r (re.++ r rr)))
   )
 )
 
-(define $str.mk_re_loop_elim ((n Int) (diff Int) (r RegLan))
-  ($singleton_elim ($str.mk_re_loop_elim_rec n diff r (str.to_re ""))))
+(define $str_mk_re_loop_elim ((n Int) (diff Int) (r RegLan))
+  ($singleton_elim ($str_mk_re_loop_elim_rec n diff r (str.to_re ""))))
+
+; Helper for ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR.
+; Note that we do not require a singleton elimination step since the original input should be a concatenation term.
+(program $str_mk_str_in_re_concat_star_char ((s1 String) (s2 String :list) (r RegLan))
+  (String RegLan) Bool
+  (
+    (($str_mk_str_in_re_concat_star_char (str.++ s1 s2) r) (alf.cons and (str.in_re s1 r) ($str_mk_str_in_re_concat_star_char s2 r)))
+    (($str_mk_str_in_re_concat_star_char "" r)             true)
+  )
+)
 
 ; Helper for $str_overlap.
 (program $str_overlap_rec ((U Type) (s (Seq U)) (s1 (Seq U) :list) (t (Seq U)) (nil (Seq U)))
