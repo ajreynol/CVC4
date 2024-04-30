@@ -1077,7 +1077,9 @@ Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node)
 
 Node SequencesRewriter::rewriteViaStrInReConcatStarChar(const Node& n)
 {
-  if (n.getKind()!=Kind::STRING_IN_REGEXP || n[0].getKind()!=Kind::STRING_CONCAT || n[1].getKind()!=Kind::REGEXP_STAR)
+  if (n.getKind() != Kind::STRING_IN_REGEXP
+      || n[0].getKind() != Kind::STRING_CONCAT
+      || n[1].getKind() != Kind::REGEXP_STAR)
   {
     return Node::null();
   }
@@ -1086,11 +1088,11 @@ Node SequencesRewriter::rewriteViaStrInReConcatStarChar(const Node& n)
   {
     return Node::null();
   }
-  if (!len.isConst() || len.getConst<Rational>()!=Rational(1))
+  if (!len.isConst() || len.getConst<Rational>() != Rational(1))
   {
     return Node::null();
   }
-  NodeManager * nm = nodeManager();
+  NodeManager* nm = nodeManager();
   std::vector<Node> cc;
   utils::getConcat(n[0], cc);
   std::vector<Node> conj;

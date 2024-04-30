@@ -15,6 +15,7 @@
 
 #include "rewriter/rewrite_db_proof_cons.h"
 
+#include "expr/algorithm/flatten.h"
 #include "expr/node_algorithm.h"
 #include "options/proof_options.h"
 #include "proof/proof_node_algorithm.h"
@@ -23,7 +24,6 @@
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
-#include "expr/algorithm/flatten.h"
 
 using namespace cvc5::internal::kind;
 
@@ -204,7 +204,8 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
     Trace("rpc-debug2") << "...proved via congruence" << std::endl;
     return RewriteProofStatus::CONG;
   }
-  if (proveWithRule(RewriteProofStatus::CONG_FLATTEN, eqi, {}, {}, false, false, true))
+  if (proveWithRule(
+          RewriteProofStatus::CONG_FLATTEN, eqi, {}, {}, false, false, true))
   {
     Trace("rpc-debug2") << "...proved via congruence + flattening" << std::endl;
     return RewriteProofStatus::CONG_FLATTEN;
@@ -373,10 +374,10 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
   std::vector<Node> vcs;
   Node transEq;
   ProvenInfo pic;
-  if (id == RewriteProofStatus::CONG || id==RewriteProofStatus::CONG_FLATTEN)
+  if (id == RewriteProofStatus::CONG || id == RewriteProofStatus::CONG_FLATTEN)
   {
     size_t nchild = target[0].getNumChildren();
-    if (nchild == 0 || target[0].getKind()!=target[1].getKind()
+    if (nchild == 0 || target[0].getKind() != target[1].getKind()
         || target[0].getOperator() != target[1].getOperator())
     {
       // cannot show congruence between different operators
@@ -386,7 +387,7 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
     Node b = target[1];
     if (nchild != b.getNumChildren())
     {
-      if (id!=RewriteProofStatus::CONG_FLATTEN)
+      if (id != RewriteProofStatus::CONG_FLATTEN)
       {
         // not allowed to flatten if in CONG
         return false;
@@ -400,7 +401,7 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
         return false;
       }
     }
-    else if (id==RewriteProofStatus::CONG_FLATTEN)
+    else if (id == RewriteProofStatus::CONG_FLATTEN)
     {
       // must flatten if in CONG_FLATTEN
       return false;
@@ -945,21 +946,21 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
         Node c2 = doFlatten(cur[1]);
         Node flatEq = c1.eqNode(c2);
         std::vector<Node> transEq;
-        for (size_t i=0; i<2; i++)
+        for (size_t i = 0; i < 2; i++)
         {
-          Node cEq = i==0 ? cur[0].eqNode(c1) : c2.eqNode(cur[1]);
-          if (cEq[0]!=cEq[1])
+          Node cEq = i == 0 ? cur[0].eqNode(c1) : c2.eqNode(cur[1]);
+          if (cEq[0] != cEq[1])
           {
             ProofRule pr = ProofRule::ACI_NORM;
             Kind k = cur[0].getKind();
-            if (k==Kind::ADD || k==Kind::MULT)
+            if (k == Kind::ADD || k == Kind::MULT)
             {
               pr = ProofRule::ARITH_POLY_NORM;
             }
             cdp->addStep(cEq, pr, {}, {cEq});
             transEq.push_back(cEq);
           }
-          if (i==0)
+          if (i == 0)
           {
             // get the appropriate CONG rule
             std::vector<Node> cargs;
@@ -1073,7 +1074,8 @@ Node RewriteDbProofCons::doFlatten(const Node& n)
 {
   Kind k = n.getKind();
   // must be able to prove with ACI_NORM or ARITH_POLY_NORM
-  if (expr::isAssocCommIdem(k) || expr::isAssoc(k) || k==Kind::ADD || k==Kind::MULT)
+  if (expr::isAssocCommIdem(k) || expr::isAssoc(k) || k == Kind::ADD
+      || k == Kind::MULT)
   {
     return expr::algorithm::flatten(n);
   }
