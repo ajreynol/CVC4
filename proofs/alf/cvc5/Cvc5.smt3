@@ -144,14 +144,14 @@
                                             )
                                           ))))
       ((run_evaluate (str.indexof x y n)) (let ((en (run_evaluate n)))
-                                          (let ((ex (run_evaluate (str.substr x n (str.len x)))))
-                                          (let ((exl (alf.len ex)))
-                                          (alf.ite ($compare_gt en exl) -1
                                           (alf.ite (alf.is_neg en) -1
-                                            (let ((exs (alf.extract ex n exl)))
-                                            (let ((ey (run_evaluate y)))
-                                            (let ((r (alf.find (alf.to_str exs) (alf.to_str ey))))
-                                            (alf.ite (alf.is_neg r) r (alf.add n r)))))))))))
+                                            (let ((ex (run_evaluate x)))
+                                            (let ((exl (alf.len ex)))
+                                            (alf.ite ($compare_gt en exl) -1
+                                              (let ((exs (alf.extract ex n exl)))
+                                              (let ((ey (run_evaluate y)))
+                                              (let ((r (alf.find (alf.to_str exs) (alf.to_str ey))))
+                                              (alf.ite (alf.is_neg r) r (alf.add n r)))))))))))
       ((run_evaluate (str.in_re x xr))    ($str_eval_str_in_re (run_evaluate x) xr))
       ((run_evaluate (str.to_code x))     (let ((ex (run_evaluate x)))
                                           (alf.ite (alf.is_eq (alf.len ex) 1) (alf.to_z ex) -1)))
