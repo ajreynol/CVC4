@@ -312,8 +312,11 @@ bool AlfPrinter::canEvaluate(Node n) const
         case Kind::EQUAL:
         {
           TypeNode tn = cur[0].getType();
-          return tn.isBoolean() || tn.isReal() || tn.isInteger()
-                 || tn.isString() || tn.isBitVector();
+          if (!tn.isBoolean() && !tn.isReal() && !tn.isInteger()
+                 && !tn.isString() && !tn.isBitVector())
+          {
+            return false;
+          }
         }
         break;
         case Kind::STRING_IN_REGEXP:
