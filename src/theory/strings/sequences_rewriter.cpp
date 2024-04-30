@@ -55,6 +55,8 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::RE_INTER_UNION_INCLUSION,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -65,6 +67,8 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::RE_LOOP_ELIM: return rewriteViaReLoopElim(n);
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
       return rewriteViaReInterUnionInclusion(n);
+    case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
+      return rewriteViaStrInReConcatStarChar(n);
     default: break;
   }
   return Node::null();
@@ -1069,6 +1073,32 @@ Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node)
     }
   }
   return Node::null();
+}
+
+Node SequencesRewriter::rewriteViaStrInReConcatStarChar(const Node& n)
+{
+  if (n.getKind()!=Kind::STRING_IN_REGEXP || n[0].getKind()!=Kind::STRING_CONCAT || n[1].getKind()!=Kind::REGEXP_STAR)
+  {
+    return Node::null();
+  }
+  Node len = RegExpEntail::getFixedLengthForRegexp(n[1][0]);
+  if (len.isNull())
+  {
+    return Node::null();
+  }
+  if (!len.isConst() || len.getConst<Rational>()!=Rational(1))
+  {
+    return Node::null();
+  }
+  NodeManager * nm = nodeManager();
+  std::vector<Node> cc;
+  utils::getConcat(n[0], cc);
+  std::vector<Node> conj;
+  for (const Node& c : cc)
+  {
+    conj.push_back(nm->mkNode(Kind::STRING_IN_REGEXP, c, n[1]));
+  }
+  return nm->mkAnd(conj);
 }
 
 Node SequencesRewriter::rewriteAndOrRegExp(TNode node)

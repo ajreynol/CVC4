@@ -2435,6 +2435,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \endverbatim
    */
   EVALUE(RE_INTER_UNION_INCLUSION),
+  EVALUE(STR_IN_RE_CONCAT_STAR_CHAR),
   // RARE rules
   // ${rules}$
   /** Auto-generated from RARE rule arith-plus-zero */

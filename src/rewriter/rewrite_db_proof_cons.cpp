@@ -23,6 +23,7 @@
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
+#include "expr/algorithm/flatten.h"
 
 using namespace cvc5::internal::kind;
 
@@ -203,6 +204,11 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
     Trace("rpc-debug2") << "...proved via congruence" << std::endl;
     return RewriteProofStatus::CONG;
   }
+  if (proveWithRule(RewriteProofStatus::CONG_FLATTEN, eqi, {}, {}, false, false, true))
+  {
+    Trace("rpc-debug2") << "...proved via congruence + flattening" << std::endl;
+    return RewriteProofStatus::CONG_FLATTEN;
+  }
   if (proveWithRule(
           RewriteProofStatus::CONG_EVAL, eqi, {}, {}, false, false, true))
   {
@@ -229,12 +235,18 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
     return RewriteProofStatus::THEORY_REWRITE;
   }
   Trace("rpc-debug2") << "...not proved via builtin tactic" << std::endl;
-  d_currRecLimit--;
+  if (d_currFixedPointId == ProofRewriteRule::NONE)
+  {
+    d_currRecLimit--;
+  }
   Node prevTarget = d_target;
   d_target = eqi;
   d_db->getMatches(eqi[0], &d_notify);
   d_target = prevTarget;
-  d_currRecLimit++;
+  if (d_currFixedPointId == ProofRewriteRule::NONE)
+  {
+    d_currRecLimit++;
+  }
   // check if we determined the proof in the above call, which is the case
   // if we succeeded, or we are already marked as a failure at a lower depth.
   std::unordered_map<Node, ProvenInfo>::iterator it = d_pcache.find(eqi);
@@ -361,13 +373,36 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
   std::vector<Node> vcs;
   Node transEq;
   ProvenInfo pic;
-  if (id == RewriteProofStatus::CONG)
+  if (id == RewriteProofStatus::CONG || id==RewriteProofStatus::CONG_FLATTEN)
   {
     size_t nchild = target[0].getNumChildren();
-    if (nchild == 0 || nchild != target[1].getNumChildren()
+    if (nchild == 0 || target[0].getKind()!=target[1].getKind()
         || target[0].getOperator() != target[1].getOperator())
     {
       // cannot show congruence between different operators
+      return false;
+    }
+    Node a = target[0];
+    Node b = target[1];
+    if (nchild != b.getNumChildren())
+    {
+      if (id!=RewriteProofStatus::CONG_FLATTEN)
+      {
+        // not allowed to flatten if in CONG
+        return false;
+      }
+      // maybe flatten
+      a = doFlatten(target[0]);
+      b = doFlatten(target[1]);
+      nchild = a.getNumChildren();
+      if (nchild != b.getNumChildren())
+      {
+        return false;
+      }
+    }
+    else if (id==RewriteProofStatus::CONG_FLATTEN)
+    {
+      // must flatten if in CONG_FLATTEN
       return false;
     }
     pic.d_id = id;
@@ -375,20 +410,20 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
     {
       // for closures, their first argument (the bound variable list) must be
       // equivalent, and should not be given as a child proof.
-      if (i == 0 && target[0].isClosure())
+      if (i == 0 && a.isClosure())
       {
-        if (target[0][0] != target[1][0])
+        if (a[0] != b[0])
         {
           return false;
         }
         continue;
       }
-      if (!target[0][i].getType().isComparableTo(target[1][i].getType()))
+      if (!a[i].getType().isComparableTo(b[i].getType()))
       {
         // type error on children (required for certain polymorphic operators)
         return false;
       }
-      Node eq = target[0][i].eqNode(target[1][i]);
+      Node eq = a[i].eqNode(b[i]);
       vcs.push_back(eq);
       pic.d_vars.push_back(eq);
     }
@@ -840,15 +875,6 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
           {
             // premises are the steps, stored in d_vars
             ps.insert(ps.end(), pcur.d_vars.begin(), pcur.d_vars.end());
-            if (pcur.d_id == RewriteProofStatus::CONG
-                || pcur.d_id == RewriteProofStatus::CONG_EVAL)
-            {
-              pfac.push_back(ProofRuleChecker::mkKindNode(cur[0].getKind()));
-              if (cur[0].getMetaKind() == kind::metakind::PARAMETERIZED)
-              {
-                pfac.push_back(cur[0].getOperator());
-              }
-            }
           }
           else
           {
@@ -912,6 +938,37 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
         std::vector<Node> cargs;
         ProofRule cr = expr::getCongRule(cur[0], cargs);
         cdp->addStep(cur, cr, ps, cargs);
+      }
+      else if (pcur.d_id == RewriteProofStatus::CONG_FLATTEN)
+      {
+        Node c1 = doFlatten(cur[0]);
+        Node c2 = doFlatten(cur[1]);
+        Node flatEq = c1.eqNode(c2);
+        std::vector<Node> transEq;
+        for (size_t i=0; i<2; i++)
+        {
+          Node cEq = i==0 ? cur[0].eqNode(c1) : c2.eqNode(cur[1]);
+          if (cEq[0]!=cEq[1])
+          {
+            ProofRule pr = ProofRule::ACI_NORM;
+            Kind k = cur[0].getKind();
+            if (k==Kind::ADD || k==Kind::MULT)
+            {
+              pr = ProofRule::ARITH_POLY_NORM;
+            }
+            cdp->addStep(cEq, pr, {}, {cEq});
+            transEq.push_back(cEq);
+          }
+          if (i==0)
+          {
+            // get the appropriate CONG rule
+            std::vector<Node> cargs;
+            ProofRule cr = expr::getCongRule(c1, cargs);
+            cdp->addStep(flatEq, cr, ps, cargs);
+            transEq.push_back(flatEq);
+          }
+        }
+        cdp->addStep(cur, ProofRule::TRANS, transEq, {});
       }
       else if (pcur.d_id == RewriteProofStatus::CONG_EVAL)
       {
@@ -1010,6 +1067,17 @@ Node RewriteDbProofCons::doEvaluate(const Node& n)
     itv->second = d_eval.eval(n, {}, {});
   }
   return itv->second;
+}
+
+Node RewriteDbProofCons::doFlatten(const Node& n)
+{
+  Kind k = n.getKind();
+  // must be able to prove with ACI_NORM or ARITH_POLY_NORM
+  if (expr::isAssocCommIdem(k) || expr::isAssoc(k) || k==Kind::ADD || k==Kind::MULT)
+  {
+    return expr::algorithm::flatten(n);
+  }
+  return n;
 }
 
 Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,

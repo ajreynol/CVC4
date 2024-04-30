@@ -174,6 +174,8 @@ class RewriteDbProofCons : protected EnvObj
   bool ensureProofInternal(CDProof* cdp, const Node& eqi);
   /** Return the evaluation of n, which uses local caching. */
   Node doEvaluate(const Node& n);
+  /** Return the flattening of n. */
+  Node doFlatten(const Node& n);
   /**
    * A notification that s is equal to n * { vars -> subs }. In this context,
    * s is the current left hand side of a term we are trying to prove and n is
