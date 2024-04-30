@@ -138,7 +138,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::RE_INTER:
     case ProofRule::RE_UNFOLD_POS:
     case ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED:
-    case ProofRule::REMOVE_TERM_FORMULA_AXIOM:
+    case ProofRule::ITE_EQ:
     case ProofRule::INSTANTIATE:
     case ProofRule::SKOLEMIZE:
     case ProofRule::DRAT_REFUTATION:
@@ -195,8 +195,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     break;
     case ProofRule::ANNOTATION:
     case ProofRule::HO_APP_ENCODE:
-    case ProofRule::BETA_REDUCE:
-    case ProofRule::ARRAYS_EQ_RANGE_EXPAND:
     case ProofRule::BV_BITBLAST_STEP:
     case ProofRule::BV_EAGER_ATOM:
     case ProofRule::DT_UNIF:
