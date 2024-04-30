@@ -313,7 +313,7 @@ bool AlfPrinter::canEvaluate(Node n) const
         {
           TypeNode tn = cur[0].getType();
           if (!tn.isBoolean() && !tn.isReal() && !tn.isInteger()
-                 && !tn.isString() && !tn.isBitVector())
+              && !tn.isString() && !tn.isBitVector())
           {
             return false;
           }
