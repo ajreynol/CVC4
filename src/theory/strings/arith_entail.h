@@ -203,6 +203,10 @@ class ArithEntail
   Rewriter* d_rr;
   /** Constant zero */
   Node d_zero;
+  Node d_one;
+  Node d_negOne;
+  Node d_maxCodePoint;
+  Node d_maxCodePointMinusOne;
 };
 
 }  // namespace strings

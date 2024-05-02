@@ -23,6 +23,8 @@
 #include "theory/strings/word.h"
 #include "theory/theory.h"
 #include "util/rational.h"
+#include "util/string.h"
+#include "expr/skolem_manager.h"
 
 using namespace cvc5::internal::kind;
 
@@ -32,7 +34,12 @@ namespace strings {
 
 ArithEntail::ArithEntail(Rewriter* r) : d_rr(r)
 {
-  d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
+  NodeManager * nm = NodeManager::currentNM();
+  d_zero = nm->mkConstInt(Rational(0));
+  d_one = nm->mkConstInt(Rational(1));
+  d_negOne = nm->mkConstInt(Rational(-1));
+  d_maxCodePoint = nm->mkConstInt(Rational(String::num_codes()));
+  d_maxCodePointMinusOne = nm->mkConstInt(Rational(String::num_codes()-1));
 }
 
 Node ArithEntail::rewrite(Node a) { return d_rr->rewrite(a); }
@@ -513,6 +520,19 @@ void ArithEntail::getArithApproximations(Node a,
         // len( int.to.str( len( y ) + 10 ) ) >= 2
       }
     }
+    else if (ak==Kind::STRING_FROM_CODE)
+    {
+      if (isOverApprox)
+      {
+        // length at most one
+        approx.push_back(d_one);
+      }
+      else if (check(a[0][0]) && check(nm->mkNode(Kind::SUB, d_maxCodePoint, a[0][0]), true))
+      {
+        // if valid code point, it is length one
+        approx.push_back(d_one);
+      }
+    }
   }
   else if (ak == Kind::STRING_INDEXOF)
   {
@@ -556,7 +576,18 @@ void ArithEntail::getArithApproximations(Node a,
     else
     {
       // -1 <= str.to.int( x )
-      approx.push_back(nm->mkConstInt(Rational(-1)));
+      approx.push_back(d_negOne);
+    }
+  }
+  else if (ak==Kind::STRING_TO_CODE)
+  {
+    if (isOverApprox)
+    {
+      approx.push_back(d_maxCodePointMinusOne);
+    }
+    else
+    {
+      approx.push_back(d_negOne);
     }
   }
   Trace("strings-ent-approx-debug") << "Return " << approx.size() << std::endl;
