@@ -193,6 +193,10 @@
 ;  (str.replace t s t)
 ;  t)
 
+(define-rule str-replace-self ((t ?Seq) (s ?Seq))
+  (str.replace t t s)
+  s)
+
 (define-cond-rule str-replace-no-contains ((t ?Seq) (s ?Seq) (r ?Seq)) 
   (not (str.contains t s))
   (str.replace t s r)
@@ -206,6 +210,15 @@
   (str.len (str.++ s1 s2 s3))
   (str.len (str.++ s2 s3))
   (+ (str.len s1) _))
+
+(define-rule str-indexof-self ((t String) (n Int))
+  (str.indexof t t n)
+  (str.indexof "" "" n))
+
+(define-cond-rule str-indexof-no-contains ((t String) (s String) (n Int))
+  (not (str.contains (str.substr t n (str.len t)) s))
+  (str.indexof t s n)
+  (- 1))
 
 ; =============== Regular expression rules
 

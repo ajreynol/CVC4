@@ -3008,12 +3008,18 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_CONCAT_EMP),
   /** Auto-generated from RARE rule str-at-elim */
   EVALUE(STR_AT_ELIM),
+  /** Auto-generated from RARE rule str-replace-self */
+  EVALUE(STR_REPLACE_SELF),
   /** Auto-generated from RARE rule str-replace-no-contains */
   EVALUE(STR_REPLACE_NO_CONTAINS),
   /** Auto-generated from RARE rule str-replace-empty */
   EVALUE(STR_REPLACE_EMPTY),
   /** Auto-generated from RARE rule str-len-concat-rec */
   EVALUE(STR_LEN_CONCAT_REC),
+  /** Auto-generated from RARE rule str-indexof-self */
+  EVALUE(STR_INDEXOF_SELF),
+  /** Auto-generated from RARE rule str-indexof-no-contains */
+  EVALUE(STR_INDEXOF_NO_CONTAINS),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
