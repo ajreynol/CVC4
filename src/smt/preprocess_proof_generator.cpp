@@ -175,19 +175,6 @@ std::shared_ptr<ProofNode> PreprocessProofGenerator::getProofFor(Node f)
         Trace("smt-pppg-debug")
             << "...rewritten from " << proven[0] << std::endl;
         Assert(proven.getKind() == Kind::EQUAL);
-        if (!proofStepProcessed)
-        {
-          // maybe its just an (extended) rewrite?
-          ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
-          Node ppp =
-              pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, {}, {proven});
-          if (ppp == proven)
-          {
-            Trace("smt-pppg-debug") << "...add simple rewrite" << std::endl;
-            cdp.addStep(proven, ProofRule::MACRO_SR_PRED_INTRO, {}, {proven});
-            proofStepProcessed = true;
-          }
-        }
         transChildren.push_back(proven);
         // continue with source
         curr = proven[0];

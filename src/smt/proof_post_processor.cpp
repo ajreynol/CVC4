@@ -78,12 +78,6 @@ bool ProofPostprocessCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
                                             bool& continueUpdate)
 {
   ProofRule id = pn->getRule();
-  // if we eliminate all trusted rules, remember this for later
-  if (d_collectAllTrusted
-      && (id == ProofRule::TRUST_THEORY_REWRITE || id == ProofRule::TRUST))
-  {
-    d_trustedPfs.insert(pn);
-  }
   if (shouldExpand(id))
   {
     return true;
@@ -103,6 +97,18 @@ bool ProofPostprocessCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
     return false;
   }
   return true;
+}
+bool ProofPostprocessCallback::shouldUpdatePost(std::shared_ptr<ProofNode> pn,
+                                                const std::vector<Node>& fa)
+{
+  ProofRule id = pn->getRule();
+  // if we eliminate all trusted rules, remember this for later
+  if (d_collectAllTrusted
+      && (id == ProofRule::TRUST_THEORY_REWRITE || id == ProofRule::TRUST))
+  {
+    d_trustedPfs.insert(pn);
+  }
+  return false;
 }
 
 bool ProofPostprocessCallback::update(Node res,
