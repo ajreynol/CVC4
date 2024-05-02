@@ -23,6 +23,7 @@
 #include "smt/env.h"
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
+#include "expr/skolem_manager.h"
 
 namespace cvc5::internal {
 namespace preprocessing {
@@ -91,6 +92,7 @@ Node ForeignTheoryRewriter::simplify(Node n)
 
 Node ForeignTheoryRewriter::foreignRewrite(Node n)
 {
+  Trace("ajr-temp") << "foreignRewrite: " << n << std::endl;
   // n is a rewritten node, and so GT, LT, LEQ
   // should have been eliminated
   Assert(n.getKind() != Kind::GT);
@@ -99,13 +101,15 @@ Node ForeignTheoryRewriter::foreignRewrite(Node n)
   // apply rewrites according to the structure of n
   if (n.getKind() == Kind::GEQ)
   {
-    return rewriteStringsGeq(n);
+    Node no = SkolemManager::getOriginalForm(n);
+    return rewriteStringsGeq(no);
   }
   else if (n.getKind() == Kind::EQUAL)
   {
     if (n[0].getType().isInteger())
     {
-      return rewriteStringsEq(n);
+      Node no = SkolemManager::getOriginalForm(n);
+      return rewriteStringsEq(no);
     }
   }
   return n;
@@ -113,6 +117,7 @@ Node ForeignTheoryRewriter::foreignRewrite(Node n)
 
 Node ForeignTheoryRewriter::rewriteStringsGeq(Node n)
 {
+  Trace("ajr-temp") << "rewriteStringsGeq: " << n << std::endl;
   theory::strings::ArithEntail ae(d_env.getRewriter());
   // check if the node can be simplified to true or false
   if (ae.check(n[0], n[1], false))
