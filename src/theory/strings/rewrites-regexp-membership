@@ -183,3 +183,13 @@
   (str.in_re s (re.++ re.allchar re.allchar))
   (= (str.len s) 2)
 )
+
+(define-cond-rule str-in-re-req-unfold ((s String) (r1 RegLan) (r2 RegLan) (r3 RegLan :list))
+  (not (str.in_re s (re.++ r2 r3)))
+  (str.in_re s (re.++ (re.* r1) r2 r3))
+  (str.in_re s (re.++ r1 (re.* r1) r2 r3)))
+
+(define-cond-rule str-in-re-req-unfold-rev ((s String) (r1 RegLan) (r2 RegLan :list) (r3 RegLan))
+  (not (str.in_re s (re.++ r1 r2)))
+  (str.in_re s (re.++ r1 r2 (re.* r3)))
+  (str.in_re s (re.++ r1 r2 (re.* r3) r3)))
