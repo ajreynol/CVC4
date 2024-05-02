@@ -264,6 +264,7 @@ class ExtfSolver : public InferSideEffectProcess, protected EnvObj
   /** Common constants */
   Node d_true;
   Node d_false;
+  Node d_zero;
   /** Empty vector */
   std::vector<Node> d_emptyVec;
   /** map extended functions to the above information */

@@ -21,6 +21,7 @@
 #include "theory/strings/theory_strings_preprocess.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "util/statistics_registry.h"
+#include "util/rational.h"
 
 using namespace std;
 using namespace cvc5::context;
@@ -76,6 +77,7 @@ ExtfSolver::ExtfSolver(Env& env,
 
   d_true = nodeManager()->mkConst(true);
   d_false = nodeManager()->mkConst(false);
+  d_zero = nodeManager()->mkConstInt(Rational(0));
 }
 
 ExtfSolver::~ExtfSolver() {}
@@ -199,45 +201,72 @@ void ExtfSolver::doReduction(Node n, int pol)
     // reduced positively
     Assert(nn == n);
     d_reduced.insert(nn);
+    return;
+  }
+  NodeManager* nm = nodeManager();
+  if (k==Kind::STRING_SUBSTR)
+  {
+    // maybe do length entailment tests
+    Node lens = nm->mkNode(Kind::STRING_LENGTH, n[0]);
+    std::vector<Node> tests;
+    tests.push_back(nm->mkNode(Kind::GEQ, n[1], d_zero));
+    tests.push_back(nm->mkNode(Kind::GT, lens, n[1]));
+    tests.push_back(nm->mkNode(Kind::GT, n[2], d_zero));
+    Trace("strings-substr-ent") << "Entailment tests for " << n << std::endl;
+    for (size_t p=0; p<2; p++)
+    {
+      for (size_t i=0, ntests=tests.size(); i<ntests; i++)
+      {
+        Node lit = p==0 ? tests[i].notNode() : tests[i];
+        std::pair<bool, Node> et = d_state.entailmentCheck(
+            options::TheoryOfMode::THEORY_OF_TYPE_BASED, lit);
+        if (et.first)
+        {
+          Trace("strings-substr-ent") << "...entailed " << lit << std::endl;
+          if (p==0)
+          {
+            
+          }
+        }
+      }
+    }
+    Trace("strings-substr-ent") << "...finished" << std::endl;
+  }
+  Assert(k == Kind::STRING_SUBSTR || k == Kind::STRING_UPDATE
+          || k == Kind::STRING_CONTAINS || k == Kind::STRING_INDEXOF
+          || k == Kind::STRING_INDEXOF_RE || k == Kind::STRING_ITOS
+          || k == Kind::STRING_STOI || k == Kind::STRING_REPLACE
+          || k == Kind::STRING_REPLACE_ALL || k == Kind::SEQ_NTH
+          || k == Kind::STRING_REPLACE_RE || k == Kind::STRING_REPLACE_RE_ALL
+          || k == Kind::STRING_LEQ || k == Kind::STRING_TO_LOWER
+          || k == Kind::STRING_TO_UPPER || k == Kind::STRING_REV)
+      << "Unknown reduction: " << k;
+  std::vector<Node> new_nodes;
+  Node res = d_preproc.simplify(n, new_nodes);
+  Assert(res != n);
+  new_nodes.push_back(n.eqNode(res));
+  Node nnlem =
+      new_nodes.size() == 1 ? new_nodes[0] : nm->mkNode(Kind::AND, new_nodes);
+  // in rare case where it rewrites to true, just record it is reduced
+  if (rewrite(nnlem) == d_true)
+  {
+    Trace("strings-extf-debug")
+        << "  resolve extf : " << n << " based on (trivial) reduction."
+        << std::endl;
+    d_reduced.insert(nn);
   }
   else
   {
-    NodeManager* nm = nodeManager();
-    Assert(k == Kind::STRING_SUBSTR || k == Kind::STRING_UPDATE
-           || k == Kind::STRING_CONTAINS || k == Kind::STRING_INDEXOF
-           || k == Kind::STRING_INDEXOF_RE || k == Kind::STRING_ITOS
-           || k == Kind::STRING_STOI || k == Kind::STRING_REPLACE
-           || k == Kind::STRING_REPLACE_ALL || k == Kind::SEQ_NTH
-           || k == Kind::STRING_REPLACE_RE || k == Kind::STRING_REPLACE_RE_ALL
-           || k == Kind::STRING_LEQ || k == Kind::STRING_TO_LOWER
-           || k == Kind::STRING_TO_UPPER || k == Kind::STRING_REV)
-        << "Unknown reduction: " << k;
-    std::vector<Node> new_nodes;
-    Node res = d_preproc.simplify(n, new_nodes);
-    Assert(res != n);
-    new_nodes.push_back(n.eqNode(res));
-    Node nnlem =
-        new_nodes.size() == 1 ? new_nodes[0] : nm->mkNode(Kind::AND, new_nodes);
-    // in rare case where it rewrites to true, just record it is reduced
-    if (rewrite(nnlem) == d_true)
-    {
-      Trace("strings-extf-debug")
-          << "  resolve extf : " << n << " based on (trivial) reduction."
-          << std::endl;
-      d_reduced.insert(nn);
-    }
-    else
-    {
-      InferInfo ii(InferenceId::STRINGS_REDUCTION);
-      // ensure that we are called to process the side effects
-      ii.d_sim = this;
-      ii.d_conc = nnlem;
-      d_im.sendInference(ii, true);
-      Trace("strings-extf-debug")
-          << "  resolve extf : " << n << " based on reduction." << std::endl;
-      d_reductionWaitingMap[nnlem] = nn;
-    }
+    InferInfo ii(InferenceId::STRINGS_REDUCTION);
+    // ensure that we are called to process the side effects
+    ii.d_sim = this;
+    ii.d_conc = nnlem;
+    d_im.sendInference(ii, true);
+    Trace("strings-extf-debug")
+        << "  resolve extf : " << n << " based on reduction." << std::endl;
+    d_reductionWaitingMap[nnlem] = nn;
   }
+
 }
 
 void ExtfSolver::checkExtfReductionsEager()

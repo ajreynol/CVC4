@@ -82,6 +82,8 @@ enum class ExtReducedId
   STRINGS_REGEXP_PDERIVATIVE,
   // reduction for seq.nth over seq.rev
   STRINGS_NTH_REV,
+  // reduction based on substr entailment
+  STRINGS_SUBSTR_ENTAIL,
   // the reason for the reduction is unknown
   UNKNOWN,
 };

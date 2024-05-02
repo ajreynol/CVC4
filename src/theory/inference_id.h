@@ -881,6 +881,8 @@ enum class InferenceId
   //   str.contains( x, y ) => x = w1 ++ y ++ w2
   // where w1 and w2 are skolem variables.
   STRINGS_CTN_POS,
+  // substring entailment
+  STRINGS_SUBSTR_ENTAIL,
   // All reduction inferences of the form:
   //   f(x1, .., xn) = y ^ P(x1, ..., xn, y)
   // where f is an extended function, y is the purification variable for

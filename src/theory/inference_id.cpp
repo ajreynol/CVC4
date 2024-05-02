@@ -527,6 +527,7 @@ const char* toString(InferenceId i)
     case InferenceId::STRINGS_CTN_DECOMPOSE: return "STRINGS_CTN_DECOMPOSE";
     case InferenceId::STRINGS_CTN_NEG_EQUAL: return "STRINGS_CTN_NEG_EQUAL";
     case InferenceId::STRINGS_CTN_POS: return "STRINGS_CTN_POS";
+    case InferenceId::STRINGS_SUBSTR_ENTAIL: return "STRINGS_SUBSTR_ENTAIL";
     case InferenceId::STRINGS_REDUCTION: return "STRINGS_REDUCTION";
     case InferenceId::STRINGS_PREFIX_CONFLICT: return "STRINGS_PREFIX_CONFLICT";
     case InferenceId::STRINGS_PREFIX_CONFLICT_MIN:
