@@ -57,3 +57,5 @@
 (define-rule* arith-plus-cancel2 ((t ? :list) (x ?) (s ? :list) (r ? :list)) (+ t (* (- 1) x) s x r) (+ t s r))
 
 (define-rule arith-abs-elim ((x ?)) (abs x) (ite (< x 0) (- x) x))
+
+;(define-rule arith-to-int-to-real ((x ?)) (to_int (to_real x)) (to_int x))

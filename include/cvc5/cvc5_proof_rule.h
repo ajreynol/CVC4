@@ -13,10 +13,10 @@
  * Proof rule enumeration.
  */
 
-#if (!defined(CVC5_API_USE_C_ENUMS) &&                                         \
-     !defined(CVC5__API__CVC5_CPP_PROOF_RULE_H)) ||                            \
-    (defined(CVC5_API_USE_C_ENUMS) &&                                          \
-     !defined(CVC5__API__CVC5_C_PROOF_RULE_H))
+#if (!defined(CVC5_API_USE_C_ENUMS)                 \
+     && !defined(CVC5__API__CVC5_CPP_PROOF_RULE_H)) \
+    || (defined(CVC5_API_USE_C_ENUMS)               \
+        && !defined(CVC5__API__CVC5_C_PROOF_RULE_H))
 
 #include <cstdint>
 
@@ -2274,7 +2274,8 @@ enum ENUM(ProofRule) : uint32_t
  * proof rule.
  * \endverbatim
  */
-enum ENUM(ProofRewriteRule) : uint32_t {
+enum ENUM(ProofRewriteRule) : uint32_t
+{
   EVALUE(NONE),
   // Custom theory rewrites.
   /**
@@ -2310,8 +2311,7 @@ enum ENUM(ProofRewriteRule) : uint32_t {
    * **Equality -- Beta reduction**
    *
    * .. math::
-   *   ((\lambda x_1 \dots x_n.\> t) t_1 \ldots t_n) = t\{x_1 \mapsto t_1,
-   * \dots, x_n \mapsto t_n\}
+   *   ((\lambda x_1 \dots x_n.\> t) t_1 \ldots t_n) = t\{x_1 \mapsto t_1, \dots, x_n \mapsto t_n\}
    *
    * The right hand side of the equality in the conclusion is computed using
    * standard substitution via ``Node::substitute``.
@@ -2346,6 +2346,13 @@ enum ENUM(ProofRewriteRule) : uint32_t {
    * \endverbatim
    */
   EVALUE(QUANT_UNUSED_VARS),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Unused variables**
+   *
+   * \endverbatim
+   */
+  EVALUE(QUANT_MERGE_PRENEX),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Datatypes - collapse selector**
@@ -2437,6 +2444,18 @@ enum ENUM(ProofRewriteRule) : uint32_t {
    * \endverbatim
    */
   EVALUE(RE_INTER_UNION_INCLUSION),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings - regular expression loop elimination**
+   *
+   * .. math::
+   *   (str.in_re (str.++ s1 \ldots sn) (re.* R)) = 
+   *   (and (str.in_re s1 (re.* R)) \ldots (str.in_re sn (re.* R)))
+   *
+   * where all strings in :math:`R` have length one.
+   *
+   * \endverbatim
+   */
   EVALUE(STR_IN_RE_CONCAT_STAR_CHAR),
   // RARE rules
   // ${rules}$
@@ -2956,6 +2975,16 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_LEN_SUBSTR_UB1),
   /** Auto-generated from RARE rule str-len-substr-ub2 */
   EVALUE(STR_LEN_SUBSTR_UB2),
+  /** Auto-generated from RARE rule re-in-empty */
+  EVALUE(RE_IN_EMPTY),
+  /** Auto-generated from RARE rule re-in-sigma */
+  EVALUE(RE_IN_SIGMA),
+  /** Auto-generated from RARE rule re-in-sigma-star */
+  EVALUE(RE_IN_SIGMA_STAR),
+  /** Auto-generated from RARE rule re-in-cstring */
+  EVALUE(RE_IN_CSTRING),
+  /** Auto-generated from RARE rule re-in-comp */
+  EVALUE(RE_IN_COMP),
   /** Auto-generated from RARE rule str-concat-clash */
   EVALUE(STR_CONCAT_CLASH),
   /** Auto-generated from RARE rule str-concat-clash-rev */
@@ -3008,18 +3037,12 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_CONCAT_EMP),
   /** Auto-generated from RARE rule str-at-elim */
   EVALUE(STR_AT_ELIM),
-  /** Auto-generated from RARE rule str-replace-self */
-  EVALUE(STR_REPLACE_SELF),
   /** Auto-generated from RARE rule str-replace-no-contains */
   EVALUE(STR_REPLACE_NO_CONTAINS),
   /** Auto-generated from RARE rule str-replace-empty */
   EVALUE(STR_REPLACE_EMPTY),
   /** Auto-generated from RARE rule str-len-concat-rec */
   EVALUE(STR_LEN_CONCAT_REC),
-  /** Auto-generated from RARE rule str-indexof-self */
-  EVALUE(STR_INDEXOF_SELF),
-  /** Auto-generated from RARE rule str-indexof-no-contains */
-  EVALUE(STR_INDEXOF_NO_CONTAINS),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
@@ -3044,6 +3067,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(RE_UNION_FLATTEN),
   /** Auto-generated from RARE rule re-union-dup */
   EVALUE(RE_UNION_DUP),
+  /** Auto-generated from RARE rule str-in-re-union-elim */
+  EVALUE(STR_IN_RE_UNION_ELIM),
   /** Auto-generated from RARE rule re-inter-all */
   EVALUE(RE_INTER_ALL),
   /** Auto-generated from RARE rule re-inter-none */
@@ -3056,36 +3081,14 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(RE_INTER_CSTRING),
   /** Auto-generated from RARE rule re-inter-cstring-neg */
   EVALUE(RE_INTER_CSTRING_NEG),
-  /** Auto-generated from RARE rule str-nth-elim-code */
-  EVALUE(STR_NTH_ELIM_CODE),
-  /** Auto-generated from RARE rule str-len-substr-geq */
-  EVALUE(STR_LEN_SUBSTR_GEQ),
-  /** Auto-generated from RARE rule str-len-substr-eq */
-  EVALUE(STR_LEN_SUBSTR_EQ),
-  /** Auto-generated from RARE rule seq-len-unit */
-  EVALUE(SEQ_LEN_UNIT),
-  /** Auto-generated from RARE rule seq-nth-unit */
-  EVALUE(SEQ_NTH_UNIT),
-  /** Auto-generated from RARE rule seq-rev-unit */
-  EVALUE(SEQ_REV_UNIT),
-  /** Auto-generated from RARE rule re-in-empty */
-  EVALUE(RE_IN_EMPTY),
-  /** Auto-generated from RARE rule re-in-sigma */
-  EVALUE(RE_IN_SIGMA),
-  /** Auto-generated from RARE rule re-in-sigma-star */
-  EVALUE(RE_IN_SIGMA_STAR),
-  /** Auto-generated from RARE rule re-in-cstring */
-  EVALUE(RE_IN_CSTRING),
-  /** Auto-generated from RARE rule re-in-comp */
-  EVALUE(RE_IN_COMP),
-  /** Auto-generated from RARE rule str-in-re-union-elim */
-  EVALUE(STR_IN_RE_UNION_ELIM),
   /** Auto-generated from RARE rule str-in-re-inter-elim */
   EVALUE(STR_IN_RE_INTER_ELIM),
   /** Auto-generated from RARE rule str-in-re-range-elim */
   EVALUE(STR_IN_RE_RANGE_ELIM),
   /** Auto-generated from RARE rule str-in-re-contains */
   EVALUE(STR_IN_RE_CONTAINS),
+  /** Auto-generated from RARE rule str-nth-elim-code */
+  EVALUE(STR_NTH_ELIM_CODE),
   /** Auto-generated from RARE rule str-in-re-strip-prefix */
   EVALUE(STR_IN_RE_STRIP_PREFIX),
   /** Auto-generated from RARE rule str-in-re-strip-prefix-neg */
@@ -3153,10 +3156,16 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_IN_RE_CONCAT_ALLCHAR_BASE_GEQ),
   /** Auto-generated from RARE rule str-in-re-concat-allchar-base-eq */
   EVALUE(STR_IN_RE_CONCAT_ALLCHAR_BASE_EQ),
-  /** Auto-generated from RARE rule str-in-re-req-unfold */
-  EVALUE(STR_IN_RE_REQ_UNFOLD),
-  /** Auto-generated from RARE rule str-in-re-req-unfold-rev */
-  EVALUE(STR_IN_RE_REQ_UNFOLD_REV),
+  /** Auto-generated from RARE rule str-len-substr-geq */
+  EVALUE(STR_LEN_SUBSTR_GEQ),
+  /** Auto-generated from RARE rule str-len-substr-eq */
+  EVALUE(STR_LEN_SUBSTR_EQ),
+  /** Auto-generated from RARE rule seq-len-unit */
+  EVALUE(SEQ_LEN_UNIT),
+  /** Auto-generated from RARE rule seq-nth-unit */
+  EVALUE(SEQ_NTH_UNIT),
+  /** Auto-generated from RARE rule seq-rev-unit */
+  EVALUE(SEQ_REV_UNIT),
   /** Auto-generated from RARE rule eq-refl */
   EVALUE(EQ_REFL),
   /** Auto-generated from RARE rule eq-symm */
@@ -3182,7 +3191,7 @@ typedef enum ENUM(ProofRewriteRule) ENUM(ProofRewriteRule);
  * @param rule The proof rule.
  * @return The string representation.
  */
-const char *cvc5_proof_rule_to_string(Cvc5ProofRule rule);
+const char* cvc5_proof_rule_to_string(Cvc5ProofRule rule);
 
 /**
  * Hash function for Cvc5ProofRule.
@@ -3196,7 +3205,7 @@ size_t cvc5_proof_rule_hash(Cvc5ProofRule rule);
  * @param rule The proof rewrite rule.
  * @return The string representation.
  */
-const char *cvc5_proof_rewrite_rule_to_string(Cvc5ProofRewriteRule rule);
+const char* cvc5_proof_rewrite_rule_to_string(Cvc5ProofRewriteRule rule);
 
 /**
  * Hash function for Cvc5ProofRewriteRule.
@@ -3216,7 +3225,7 @@ size_t cvc5_proof_rewrite_rule_hash(Cvc5ProofRewriteRule rule);
  * @param rule The proof rule
  * @return The name of the proof rule
  */
-const char *toString(ProofRule rule);
+const char* toString(ProofRule rule);
 
 /**
  * Writes a proof rule name to a stream.
@@ -3225,7 +3234,7 @@ const char *toString(ProofRule rule);
  * @param rule The proof rule to write to the stream
  * @return The stream
  */
-CVC5_EXPORT std::ostream &operator<<(std::ostream &out, ProofRule rule);
+CVC5_EXPORT std::ostream& operator<<(std::ostream& out, ProofRule rule);
 
 /**
  * Converts a proof rewrite rule to a string. Note: This function is also
@@ -3236,7 +3245,7 @@ CVC5_EXPORT std::ostream &operator<<(std::ostream &out, ProofRule rule);
  * @param rule The proof rewrite rule
  * @return The name of the proof rewrite rule
  */
-const char *toString(ProofRewriteRule rule);
+const char* toString(ProofRewriteRule rule);
 
 /**
  * Writes a proof rewrite rule name to a stream.
@@ -3245,16 +3254,18 @@ const char *toString(ProofRewriteRule rule);
  * @param rule The proof rewrite rule to write to the stream
  * @return The stream
  */
-CVC5_EXPORT std::ostream &operator<<(std::ostream &out, ProofRewriteRule rule);
+CVC5_EXPORT std::ostream& operator<<(std::ostream& out, ProofRewriteRule rule);
 
-} // namespace cvc5
+}  // namespace cvc5
 
 namespace std {
 
 /**
  * Hash function for ProofRules.
  */
-template <> struct CVC5_EXPORT hash<cvc5::ProofRule> {
+template <>
+struct CVC5_EXPORT hash<cvc5::ProofRule>
+{
   /**
    * Hashes a ProofRule to a size_t.
    * @param rule The proof rule.
@@ -3274,7 +3285,9 @@ std::string to_string(cvc5::ProofRule rule);
 /**
  * Hash function for ProofRewriteRules.
  */
-template <> struct CVC5_EXPORT hash<cvc5::ProofRewriteRule> {
+template <>
+struct CVC5_EXPORT hash<cvc5::ProofRewriteRule>
+{
   /**
    * Hashes a ProofRewriteRule to a size_t.
    * @param rule The proof rewrite rule.
@@ -3291,7 +3304,7 @@ template <> struct CVC5_EXPORT hash<cvc5::ProofRewriteRule> {
  */
 std::string to_string(cvc5::ProofRewriteRule rule);
 
-} // namespace std
+}  // namespace std
 
 #endif
 #endif

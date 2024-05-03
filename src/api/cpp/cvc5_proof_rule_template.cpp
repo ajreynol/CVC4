@@ -228,6 +228,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "arrays-eq-range-expand";
     case ProofRewriteRule::EXISTS_ELIM: return "exists-elim";
     case ProofRewriteRule::QUANT_UNUSED_VARS: return "quant-unused-vars";
+    case ProofRewriteRule::QUANT_MERGE_PRENEX: return "quant-merge-prenex";
     case ProofRewriteRule::DT_COLLAPSE_SELECTOR: return "dt-collapse-selector";
     case ProofRewriteRule::DT_COLLAPSE_TESTER: return "dt-collapse-tester";
     case ProofRewriteRule::DT_CONS_EQ: return "dt-cons-eq";

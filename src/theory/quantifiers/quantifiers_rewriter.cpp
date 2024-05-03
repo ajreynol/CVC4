@@ -102,6 +102,8 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::QUANT_UNUSED_VARS,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::QUANT_MERGE_PRENEX,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -140,6 +142,19 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         }
         return d_nm->mkNode(
             n.getKind(), d_nm->mkNode(Kind::BOUND_VAR_LIST, activeVars), n[1]);
+      }
+    }
+    break;
+    case ProofRewriteRule::QUANT_MERGE_PRENEX:
+    {
+      if (!n.isClosure())
+      {
+        return Node::null();
+      }
+      Node q = mergePrenex(n);
+      if (q!=n)
+      {
+        return q;
       }
     }
     break;
