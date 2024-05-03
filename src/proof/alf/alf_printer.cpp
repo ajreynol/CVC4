@@ -318,13 +318,6 @@ bool AlfPrinter::canEvaluate(Node n) const
           }
         }
         break;
-        case Kind::STRING_IN_REGEXP:
-          if (!canEvaluateRegExp(cur[1]))
-          {
-            return false;
-          }
-          visit.push_back(cur[0]);
-          continue;
         case Kind::BITVECTOR_SIZE:
           // special case, evaluates no matter what is inside
           continue;
