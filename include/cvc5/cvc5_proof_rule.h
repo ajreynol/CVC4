@@ -3007,6 +3007,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_SUBSTR_COMBINE1),
   /** Auto-generated from RARE rule str-substr-combine2 */
   EVALUE(STR_SUBSTR_COMBINE2),
+  /** Auto-generated from RARE rule str-substr-combine3 */
+  EVALUE(STR_SUBSTR_COMBINE3),
   /** Auto-generated from RARE rule str-substr-concat1 */
   EVALUE(STR_SUBSTR_CONCAT1),
   /** Auto-generated from RARE rule str-substr-full */
