@@ -71,6 +71,8 @@
 
 (declare-const @re.null RegLan)
 
+; *** NOTE: This method has an exponential runtime. It is a placeholder for a
+; more efficient algorithm (via NFAs) to be written later.
 ; The call ($str_eval_str_in_re_rec s 0 r1 @re.null) returns true if s is in r1.
 ; The call ($str_eval_str_in_re_rec s n r1 r2) returns true if s = s1 ++ s2 for some s1, s2 such that:
 ; - s1 in r1
@@ -116,6 +118,7 @@
 )
 
 ; Returns true if s is in regular expression r.
+; Does not evaluate if s is not a string literal.
 (define $str_eval_str_in_re ((s String) (r RegLan))
   (alf.ite ($is_str_literal s)
     ($str_eval_str_in_re_rec s 0 r @re.null)
@@ -585,6 +588,7 @@
 ; Expects s and t to be in nary (flattened) form.
 (define $str_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)))
   ($str_overlap_rec (mk_emptystr (alf.typeof s)) s t))
+
 
 ; Converts a str.++ application into "flat form" so that we are ready to
 ; process its prefix. This consists of the following steps:

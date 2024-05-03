@@ -268,3 +268,4 @@
                 (= (str.in_re (str.++ s1 s2) (re.* r))
                    ($str_mk_str_in_re_concat_star_char (str.++ s1 s2) (re.* r))))
 )
+
