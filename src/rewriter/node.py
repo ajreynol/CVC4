@@ -208,6 +208,9 @@ class Op(Enum):
     SET_SUBSET = ('set.subset', 'SET_SUBSET')
     SET_MEMBER = ('set.member', 'SET_MEMBER')
     SET_SINGLETON = ('set.singleton', 'SET_SINGLETON')
+    SET_CHOOSE = ('set.choose', 'SET_CHOOSE')
+    SET_CARD = ('set.card', 'SET_CARD')
+
 
 class BaseSort(Enum):
     Bool = auto()
