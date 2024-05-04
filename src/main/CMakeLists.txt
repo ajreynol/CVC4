@@ -26,6 +26,8 @@ set(libmain_src_files
   signal_handlers.h
   time_limit.cpp
   time_limit.h
+  oracle_csv_checker.cpp
+  oracle_csv_checker.h
 )
 set(libmain_gen_src_files
   ${CMAKE_CURRENT_BINARY_DIR}/options.cpp

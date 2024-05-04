@@ -124,6 +124,8 @@ class CommandExecutor
                     parser::SymManager* sm,
                     parser::Cmd* cmd,
                     std::ostream& out);
+  /** CSV checker oracle */
+  std::unique_ptr<OracleCsvChecker> d_csvChecker;
 }; /* class CommandExecutor */
 
 

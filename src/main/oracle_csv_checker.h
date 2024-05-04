@@ -37,6 +37,7 @@ class OracleCsvChecker
               Solver* s,
               parser::SymbolManager* sm);
   ~OracleCsvChecker();
+  Term getOracle() const;
   /** */
   std::vector<Sort> getArgTypes() const;
  private:

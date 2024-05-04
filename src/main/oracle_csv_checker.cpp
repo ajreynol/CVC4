@@ -40,8 +40,13 @@ OracleCsvChecker::~OracleCsvChecker()
 {
 }
 
+Term OracleCsvChecker::getOracle() const
+{
+  return d_oracle;
+}
 Term OracleCsvChecker::evaluate(const std::vector<Term>& evaluate)
 {
+  // TODO
   return d_true;
 }
 
