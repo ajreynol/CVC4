@@ -3023,6 +3023,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_SUBSTR_COMBINE3),
   /** Auto-generated from RARE rule str-substr-concat1 */
   EVALUE(STR_SUBSTR_CONCAT1),
+  /** Auto-generated from RARE rule str-substr-concat2 */
+  EVALUE(STR_SUBSTR_CONCAT2),
   /** Auto-generated from RARE rule str-substr-full */
   EVALUE(STR_SUBSTR_FULL),
   /** Auto-generated from RARE rule str-contains-refl */
@@ -3095,6 +3097,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_LEN_SUBSTR_GEQ),
   /** Auto-generated from RARE rule str-len-substr-eq */
   EVALUE(STR_LEN_SUBSTR_EQ),
+  /** Auto-generated from RARE rule seq-rev-concat */
+  EVALUE(SEQ_REV_CONCAT),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */
