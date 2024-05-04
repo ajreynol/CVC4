@@ -28,8 +28,8 @@ namespace main {
 OracleCsvChecker::OracleCsvChecker(TermManager& tm,
                                    std::string& filename,
                                    Solver* s,
-                                   parser::SymbolManager* sm) :
-                                   d_filename(filename), d_tm(tm), d_solver(s), d_symman(sm)
+                                   parser::SymbolManager* sm)
+    : d_filename(filename), d_tm(tm), d_solver(s), d_symman(sm)
 {
   d_true = tm.mkTrue();
   d_false = tm.mkFalse();
@@ -55,16 +55,16 @@ void OracleCsvChecker::initialize()
       return;
     }
     d_vars.push_back(t);
-  }while (t.getKind()==Kind::CONSTANT);
+  } while (t.getKind() == Kind::CONSTANT);
 
   size_t nvars = d_vars.size();
 
   std::vector<Term> row;
   row.push_back(t);
-  size_t i=1;
+  size_t i = 1;
   do
   {
-    while (i<nvars)
+    while (i < nvars)
     {
       t = ip.nextTerm();
       if (t.isNull())
@@ -82,7 +82,7 @@ void OracleCsvChecker::initialize()
     addRow(row);
     i = 0;
     row.clear();
-  }while(true);
+  } while (true);
 
   std::vector<Sort> argTypes = getArgTypes();
   Sort boolSort = d_tm.getBooleanSort();
