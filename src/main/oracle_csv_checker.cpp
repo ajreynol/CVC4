@@ -55,11 +55,14 @@ void OracleCsvChecker::initialize()
     d_header.push_back(t);
   } while (t.getKind() == Kind::CONSTANT);
 
+  d_header.pop_back();
   size_t nvars = d_header.size();
+  std::cout << "Header size is " << nvars << std::endl;
 
   std::vector<Term> row;
   row.push_back(t);
   size_t i = 1;
+  bool finished = false;
   do
   {
     while (i < nvars)
@@ -67,6 +70,7 @@ void OracleCsvChecker::initialize()
       t = ip.nextTerm();
       if (t.isNull())
       {
+        finished = true;
         if (row.empty())
         {
           break;
@@ -77,10 +81,14 @@ void OracleCsvChecker::initialize()
       row.push_back(t);
       i++;
     }
-    addRow(row);
-    i = 0;
-    row.clear();
-  } while (true);
+    if (!finished)
+    {
+      addRow(row);
+      i = 0;
+      row.clear();
+    }
+  } while (!finished);
+  std::cout << "Finished reading csv" << std::endl;
 
   std::vector<Sort> argTypes = getArgTypes();
   Sort boolSort = d_tm.getBooleanSort();
