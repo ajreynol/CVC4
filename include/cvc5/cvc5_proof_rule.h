@@ -2465,8 +2465,6 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(ARITH_MUL_ONE),
   /** Auto-generated from RARE rule arith-mul-zero */
   EVALUE(ARITH_MUL_ZERO),
-  /** Auto-generated from RARE rule arith-int-div-one */
-  EVALUE(ARITH_INT_DIV_ONE),
   /** Auto-generated from RARE rule arith-int-div-total */
   EVALUE(ARITH_INT_DIV_TOTAL),
   /** Auto-generated from RARE rule arith-int-div-total-one */
@@ -2475,6 +2473,8 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(ARITH_INT_DIV_TOTAL_ZERO),
   /** Auto-generated from RARE rule arith-int-mod-total */
   EVALUE(ARITH_INT_MOD_TOTAL),
+  /** Auto-generated from RARE rule arith-int-mod-total-one */
+  EVALUE(ARITH_INT_MOD_TOTAL_ONE),
   /** Auto-generated from RARE rule arith-int-mod-total-zero */
   EVALUE(ARITH_INT_MOD_TOTAL_ZERO),
   /** Auto-generated from RARE rule arith-neg-neg-one */
