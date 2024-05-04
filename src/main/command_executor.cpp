@@ -70,13 +70,13 @@ void CommandExecutor::storeOptionsAsOriginal()
   if (csvfile != "")
   {
     TermManager& tm = d_solver->getTermManager();
-    d_csvChecker.reset(new OracleCsvChecker(
-        tm, csvfile, d_solver.get(), d_symman.get()));
+    d_csvChecker.reset(
+        new OracleCsvChecker(tm, csvfile, d_solver.get(), d_symman.get()));
     std::vector<Sort> argTypes;
     // argTypes = d_csvChecker->getArgTypes();
-    //Sort boolSort = tm.getBooleanSort();
-    //DefineFunctionCommand dcmd("oracle.in_csv", argTypes, boolSort);
-    //doCommandSingleton(&dcmd);
+    // Sort boolSort = tm.getBooleanSort();
+    // DefineFunctionCommand dcmd("oracle.in_csv", argTypes, boolSort);
+    // doCommandSingleton(&dcmd);
   }
   d_solver->d_originalOptions->copyValues(d_solver->d_slv->getOptions());
   // cache the value of parse-only, which is set by the command line only

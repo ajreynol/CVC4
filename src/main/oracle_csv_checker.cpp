@@ -19,9 +19,9 @@ namespace cvc5 {
 namespace main {
 
 OracleCsvChecker::OracleCsvChecker(TermManager& tm,
-            std::string& filename,
-            Solver* s,
-            parser::SymbolManager* sm)
+                                   std::string& filename,
+                                   Solver* s,
+                                   parser::SymbolManager* sm)
 {
   d_true = tm.mkTrue();
   d_false = tm.mkFalse();
@@ -30,20 +30,14 @@ OracleCsvChecker::OracleCsvChecker(TermManager& tm,
   std::vector<Sort> argTypes = getArgTypes();
   Sort boolSort = tm.getBooleanSort();
   d_oracle = d_solver->declareOracleFun(
-      "oracle.in_csv",
-      argTypes,
-      boolSort,
-      [&](const std::vector<Term>& input) { return this->evaluate(input); });
+      "oracle.in_csv", argTypes, boolSort, [&](const std::vector<Term>& input) {
+        return this->evaluate(input);
+      });
 }
 
-OracleCsvChecker::~OracleCsvChecker()
-{
-}
+OracleCsvChecker::~OracleCsvChecker() {}
 
-Term OracleCsvChecker::getOracle() const
-{
-  return d_oracle;
-}
+Term OracleCsvChecker::getOracle() const { return d_oracle; }
 Term OracleCsvChecker::evaluate(const std::vector<Term>& evaluate)
 {
   // TODO
@@ -53,7 +47,7 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& evaluate)
 std::vector<Sort> OracleCsvChecker::getArgTypes() const
 {
   std::vector<Sort> sorts;
-  for (const Term& t :d_vars)
+  for (const Term& t : d_vars)
   {
     sorts.push_back(t.getSort());
   }
@@ -62,4 +56,3 @@ std::vector<Sort> OracleCsvChecker::getArgTypes() const
 
 }  // namespace main
 }  // namespace cvc5
-

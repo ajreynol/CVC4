@@ -33,13 +33,14 @@ class OracleCsvChecker
 {
  public:
   OracleCsvChecker(TermManager& tm,
-              std::string& filename,
-              Solver* s,
-              parser::SymbolManager* sm);
+                   std::string& filename,
+                   Solver* s,
+                   parser::SymbolManager* sm);
   ~OracleCsvChecker();
   Term getOracle() const;
   /** */
   std::vector<Sort> getArgTypes() const;
+
  private:
   /** Evaluate */
   Term evaluate(const std::vector<Term>& evaluate);
