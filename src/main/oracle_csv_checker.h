@@ -42,6 +42,10 @@ class OracleCsvChecker
   std::vector<Sort> getArgTypes() const;
 
  private:
+  /** Initialize */
+  void initialize();
+  /** */
+  void addRow(const std::vector<Term>& row);
   /** Evaluate */
   Term evaluate(const std::vector<Term>& evaluate);
   /** The oracle we have declared */
@@ -53,6 +57,8 @@ class OracleCsvChecker
   std::vector<Term> d_vars;
   /** The filename to read from */
   std::string d_filename;
+  /** The term manager we are associated with */
+  TermManager& d_tm;
   /** The solver we are associated with */
   Solver* d_solver;
   /** The symbol manager (for parsing) */
