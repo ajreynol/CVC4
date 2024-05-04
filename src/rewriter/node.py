@@ -116,14 +116,19 @@ class Op(Enum):
     SUB = ('-', 'SUB')
     MULT = ('*', 'MULT')
     INT_DIV = ('div', 'INTS_DIVISION')
+    INT_DIV_TOTAL = ('div_total', 'INTS_DIVISION_TOTAL')
     DIV = ('/', 'DIVISION')
+    DIV_TOTAL = ('/_total', 'DIVISION_TOTAL')
     MOD = ('mod', 'INTS_MODULUS')
+    MOD_TOTAL = ('mod_total', 'INTS_MODULUS_TOTAL')
     ABS = ('abs', 'ABS')
     LT = ('<', 'LT')
     GT = ('>', 'GT')
     LEQ = ('<=', 'LEQ')
     GEQ = ('>=', 'GEQ')
     POW2 = ('int.pow2', 'POW2')
+    TO_INT = ('to_int', 'TO_INTEGER')
+    TO_REAL = ('to_real', 'TO_REAL')
 
     INT_ISPOW2 = ('int.ispow2', 'INTS_ISPOW2')  # Backdoor for some bv rewrites
     INT_LENGTH = ('int.log2', 'INTS_LOG2')  # Backdoor for some bv rewrites
