@@ -37,24 +37,37 @@ class OracleCsvChecker
                    Solver* s,
                    parser::SymbolManager* sm);
   ~OracleCsvChecker();
+  /** Get the oracle defined by this class */
   Term getOracle() const;
+  /** Get the oracle constraint */
+  Term getOracleConstraint() const;
   /** */
   std::vector<Sort> getArgTypes() const;
-
- private:
-  /** Initialize */
+  /**
+   * Initialize. To be called only when parsing is ready and prior to solving.
+   */
   void initialize();
+ private:
   /** */
   void addRow(const std::vector<Term>& row);
   /** Evaluate */
   Term evaluate(const std::vector<Term>& evaluate);
+  class Trie
+  {
+  public:
+    std::map<Term, Trie> d_children;
+    void add(const std::vector<Term>& row);
+    bool contains(const std::vector<Term>& row) const;
+  };
+  Trie d_data;
   /** The oracle we have declared */
   Term d_oracle;
+  Term d_oracleConstraint;
   /** True and false */
   Term d_true;
   Term d_false;
   /** The variables in the header row of the csv */
-  std::vector<Term> d_vars;
+  std::vector<Term> d_header;
   /** The filename to read from */
   std::string d_filename;
   /** The term manager we are associated with */

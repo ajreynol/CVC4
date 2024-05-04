@@ -72,11 +72,6 @@ void CommandExecutor::storeOptionsAsOriginal()
     TermManager& tm = d_solver->getTermManager();
     d_csvChecker.reset(
         new OracleCsvChecker(tm, csvfile, d_solver.get(), d_symman.get()));
-    std::vector<Sort> argTypes;
-    // argTypes = d_csvChecker->getArgTypes();
-    // Sort boolSort = tm.getBooleanSort();
-    // DefineFunctionCommand dcmd("oracle.in_csv", argTypes, boolSort);
-    // doCommandSingleton(&dcmd);
   }
   d_solver->d_originalOptions->copyValues(d_solver->d_slv->getOptions());
   // cache the value of parse-only, which is set by the command line only
@@ -142,6 +137,17 @@ void CommandExecutor::reset()
 
 bool CommandExecutor::doCommandSingleton(Cmd* cmd)
 {
+  const CheckSatCommand* cs = dynamic_cast<const CheckSatCommand*>(cmd);
+  const CheckSatAssumingCommand* csa =
+      dynamic_cast<const CheckSatAssumingCommand*>(cmd);
+  if (cs!=nullptr || csa!=nullptr)
+  {
+    if (d_csvChecker!=nullptr)
+    {
+      // initialize and assert formula
+      d_csvChecker->initialize();
+    }
+  }
   bool status = solverInvoke(d_solver.get(),
                              d_symman->toSymManager(),
                              cmd,
@@ -149,14 +155,11 @@ bool CommandExecutor::doCommandSingleton(Cmd* cmd)
 
   cvc5::Result res;
   bool hasResult = false;
-  const CheckSatCommand* cs = dynamic_cast<const CheckSatCommand*>(cmd);
   if (cs != nullptr)
   {
     d_result = res = cs->getResult();
     hasResult = true;
   }
-  const CheckSatAssumingCommand* csa =
-      dynamic_cast<const CheckSatAssumingCommand*>(cmd);
   if (csa != nullptr)
   {
     d_result = res = csa->getResult();

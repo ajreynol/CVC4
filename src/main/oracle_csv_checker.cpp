@@ -33,8 +33,6 @@ OracleCsvChecker::OracleCsvChecker(TermManager& tm,
 {
   d_true = tm.mkTrue();
   d_false = tm.mkFalse();
-
-  initialize();
 }
 
 OracleCsvChecker::~OracleCsvChecker() {}
@@ -54,10 +52,10 @@ void OracleCsvChecker::initialize()
       std::cout << "ERROR: NO DATA" << std::endl;
       return;
     }
-    d_vars.push_back(t);
+    d_header.push_back(t);
   } while (t.getKind() == Kind::CONSTANT);
 
-  size_t nvars = d_vars.size();
+  size_t nvars = d_header.size();
 
   std::vector<Term> row;
   row.push_back(t);
@@ -90,25 +88,55 @@ void OracleCsvChecker::initialize()
       "oracle.in_csv", argTypes, boolSort, [&](const std::vector<Term>& input) {
         return this->evaluate(input);
       });
+  std::vector<Term> cc;
+  cc.push_back(d_oracle);
+  cc.insert(cc.end(), d_header.begin(), d_header.end());
+  d_oracleConstraint = d_tm.mkTerm(Kind::APPLY_UF, cc);
+  d_solver->assertFormula(d_oracleConstraint);
 }
 
 Term OracleCsvChecker::getOracle() const { return d_oracle; }
+Term OracleCsvChecker::getOracleConstraint() const { return d_oracleConstraint; }
 
-Term OracleCsvChecker::evaluate(const std::vector<Term>& evaluate)
+void OracleCsvChecker::Trie::add(const std::vector<Term>& row)
 {
-  // TODO
-  return d_true;
+  Trie * curr = this;
+  for (const Term& t : row)
+  {
+    curr = &curr->d_children[t];
+  }
+}
+
+bool OracleCsvChecker::Trie::contains(const std::vector<Term>& row) const
+{
+  const Trie * curr = this;
+  std::map<Term, Trie>::const_iterator it;
+  for (const Term& t : row)
+  {
+    it = curr->d_children.find(t);
+    if (it==curr->d_children.end())
+    {
+      return false;
+    }
+    curr = &it->second;
+  }
+  return true;
+}
+
+Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
+{
+  return d_data.contains(row) ? d_true : d_false;
 }
 
 void OracleCsvChecker::addRow(const std::vector<Term>& row)
 {
-  // TODO
+  d_data.add(row);
 }
 
 std::vector<Sort> OracleCsvChecker::getArgTypes() const
 {
   std::vector<Sort> sorts;
-  for (const Term& t : d_vars)
+  for (const Term& t : d_header)
   {
     sorts.push_back(t.getSort());
   }
