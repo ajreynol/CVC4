@@ -65,6 +65,19 @@ CommandExecutor::~CommandExecutor()
 
 void CommandExecutor::storeOptionsAsOriginal()
 {
+  // if applicable, add the lemma loader plugin
+  std::string csvfile = d_solver->getOptionInfo("csv-constraint").stringValue();
+  if (csvfile != "")
+  {
+    TermManager& tm = d_solver->getTermManager();
+    d_csvChecker.reset(new CsvChecker(
+        tm, csvfile, d_solver.get(), d_symman.get()));
+    std::vector<Sort> argTypes;
+    // argTypes = d_csvChecker->getArgTypes();
+    Sort boolSort = tm.getBooleanSort();
+    DeclareOracleFunCommand dcmd("oracle.in_csv", argTypes, boolSort);
+    doCommandSingleton(&dcmd);
+  }
   d_solver->d_originalOptions->copyValues(d_solver->d_slv->getOptions());
   // cache the value of parse-only, which is set by the command line only
   // and thus will not change in a run.

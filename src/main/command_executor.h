@@ -22,6 +22,8 @@
 #include <iosfwd>
 #include <string>
 
+#include "main/oracle_csv_checker.h"
+
 namespace cvc5 {
 
 namespace parser {
