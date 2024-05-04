@@ -10,7 +10,7 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Lemma loader for cvc5.
+ * Oracle CSV checker for cvc5.
  */
 
 #include "main/oracle_csv_checker.h"
@@ -21,10 +21,28 @@ namespace main {
 OracleCsvChecker::OracleCsvChecker(TermManager& tm,
             std::string& filename,
             Solver* s,
-            parser::SymbolManager* sm);
+            parser::SymbolManager* sm)
+{
+  d_true = tm.mkTrue();
+  d_false = tm.mkFalse();
+  // TODO: set up variables
+
+  std::vector<Sort> argTypes = getArgTypes();
+  Sort boolSort = tm.getBooleanSort();
+  d_oracle = d_solver->declareOracleFun(
+      "oracle.in_csv",
+      argTypes,
+      boolSort,
+      [&](const std::vector<Term>& input) { return this->evaluate(input); });
+}
 
 OracleCsvChecker::~OracleCsvChecker()
 {
+}
+
+Term OracleCsvChecker::evaluate(const std::vector<Term>& evaluate)
+{
+  return d_true;
 }
 
 std::vector<Sort> OracleCsvChecker::getArgTypes() const

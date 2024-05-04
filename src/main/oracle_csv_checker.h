@@ -10,7 +10,7 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Lemma loader for cvc5.
+ * Oracle CSV checker for cvc5.
  */
 
 #ifndef CVC5__MAIN__ORACLE_CSV_CHECKER_H
@@ -40,6 +40,13 @@ class OracleCsvChecker
   /** */
   std::vector<Sort> getArgTypes() const;
  private:
+  /** Evaluate */
+  Term evaluate(const std::vector<Term>& evaluate);
+  /** The oracle we have declared */
+  Term d_oracle;
+  /** True and false */
+  Term d_true;
+  Term d_false;
   /** The variables in the header row of the csv */
   std::vector<Term> d_vars;
   /** The filename to read from */
