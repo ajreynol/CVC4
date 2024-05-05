@@ -57,7 +57,7 @@ void OracleCsvChecker::initialize()
 
   d_header.pop_back();
   size_t nvars = d_header.size();
-  std::cout << "Header size is " << nvars << std::endl;
+  Trace("oracle-csv-parse") << "Header size is " << nvars << std::endl;
 
   std::vector<Term> row;
   row.push_back(t);
@@ -88,7 +88,7 @@ void OracleCsvChecker::initialize()
       row.clear();
     }
   } while (!finished);
-  std::cout << "Finished reading csv" << std::endl;
+  Trace("oracle-csv-parse") << "Finished reading csv" << std::endl;
 
   std::vector<Sort> argTypes = getArgTypes();
   Sort boolSort = d_tm.getBooleanSort();
