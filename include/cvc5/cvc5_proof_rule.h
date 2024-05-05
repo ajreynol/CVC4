@@ -3107,6 +3107,12 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_LEN_SUBSTR_EQ),
   /** Auto-generated from RARE rule seq-rev-concat */
   EVALUE(SEQ_REV_CONCAT),
+  /** Auto-generated from RARE rule str-len-eq-neg */
+  EVALUE(STR_LEN_EQ_NEG),
+  /** Auto-generated from RARE rule str-len-geq-pos */
+  EVALUE(STR_LEN_GEQ_POS),
+  /** Auto-generated from RARE rule str-len-geq-pos2 */
+  EVALUE(STR_LEN_GEQ_POS2),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */

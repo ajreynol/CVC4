@@ -291,6 +291,20 @@
   (str.rev (str.++ x y))
   (str.++ (str.rev z) _))
 
+
+(define-cond-rule str-len-eq-neg ((s String) (n Int))
+  (< n 0)
+  (= (str.len s) n)
+  false)
+
+(define-rule str-len-geq-pos ((s String))
+  (>= (str.len s) 0)
+  true)
+
+(define-cond-rule str-len-geq-pos2 ((s String) (n Int))
+  (< n 0)
+  (>= n (str.len s))
+  false)
 ; =============== Sequences-specific rules
 
 (define-rule seq-len-unit ((x ?)) (str.len (seq.unit x)) 1)
