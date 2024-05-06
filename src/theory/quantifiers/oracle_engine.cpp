@@ -194,7 +194,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         {
           marg = nm->mkNode(Kind::APPLY_ANNOTATION, {marg, d_srcKeyword, arg});
         }
-        arguments.push_back(arg);
+        arguments.push_back(marg);
       }
       // call oracle
       Node fappWithValues = nm->mkNode(Kind::APPLY_UF, arguments);
