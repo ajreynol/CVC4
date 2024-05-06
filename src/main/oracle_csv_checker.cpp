@@ -156,7 +156,7 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
     if (t.getKind() == Kind::APPLY_ANNOTATION)
     {
       // add it to mask if was marked with ":source"
-      mask.push_back(t[1] == d_srcKeyword);
+      mask.push_back(true);//t[1] == d_srcKeyword);
       rowValues.push_back(t[0]);
       Assert(t[0].getKind() != Kind::APPLY_ANNOTATION);
     }
