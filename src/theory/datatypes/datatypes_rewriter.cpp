@@ -506,7 +506,7 @@ RewriteResponse DatatypesRewriter::rewriteTester(TNode in)
   }
   TypeNode tn = in[0].getType();
   const DType& dt = tn.getDType();
-  if (dt[i].getNumArgs()==0 && !dt.isSygus())
+  if (dt[i].getNumArgs() == 0 && !dt.isSygus())
   {
     Node cc = utils::mkApplyCons(tn, dt, i, {});
     Node eq = nodeManager()->mkNode(Kind::EQUAL, in[0], cc);

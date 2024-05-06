@@ -140,9 +140,9 @@ bool CommandExecutor::doCommandSingleton(Cmd* cmd)
   const CheckSatCommand* cs = dynamic_cast<const CheckSatCommand*>(cmd);
   const CheckSatAssumingCommand* csa =
       dynamic_cast<const CheckSatAssumingCommand*>(cmd);
-  if (cs!=nullptr || csa!=nullptr)
+  if (cs != nullptr || csa != nullptr)
   {
-    if (d_csvChecker!=nullptr)
+    if (d_csvChecker != nullptr)
     {
       // initialize and assert formula
       d_csvChecker->initialize();

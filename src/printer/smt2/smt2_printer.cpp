@@ -1017,9 +1017,7 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
       out << smtKindStringOf(n);
       break;
     case Kind::APPLY_ANNOTATION:
-      toStream(out, n[0], 
-                 lbind,
-                 toDepth < 0 ? toDepth : toDepth - 1);
+      toStream(out, n[0], lbind, toDepth < 0 ? toDepth : toDepth - 1);
       stillNeedToPrintParams = false;
       break;
     default:

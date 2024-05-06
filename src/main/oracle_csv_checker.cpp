@@ -106,33 +106,37 @@ void OracleCsvChecker::initialize()
 }
 
 Term OracleCsvChecker::getOracle() const { return d_oracle; }
-Term OracleCsvChecker::getOracleConstraint() const { return d_oracleConstraint; }
+Term OracleCsvChecker::getOracleConstraint() const
+{
+  return d_oracleConstraint;
+}
 
 void OracleCsvChecker::Trie::add(const std::vector<Term>& row)
 {
-  Trie * curr = this;
+  Trie* curr = this;
   for (const Term& t : row)
   {
     curr = &curr->d_children[t];
   }
 }
 
-bool OracleCsvChecker::Trie::contains(const std::vector<Term>& row, std::vector<bool>& mask) const
+bool OracleCsvChecker::Trie::contains(const std::vector<Term>& row,
+                                      std::vector<bool>& mask) const
 {
-  Assert (mask.size()==row.size());
-  const Trie * curr = this;
+  Assert(mask.size() == row.size());
+  const Trie* curr = this;
   std::map<Term, Trie>::const_iterator it;
-  for (size_t i=0, nterms=row.size(); i<nterms; i++)
+  for (size_t i = 0, nterms = row.size(); i < nterms; i++)
   {
     it = curr->d_children.find(row[i]);
-    if (it!=curr->d_children.end())
+    if (it != curr->d_children.end())
     {
       // found, continue
       curr = &it->second;
       continue;
     }
     // values past this don't matter
-    for (size_t j=(i+1); j<nterms; j++)
+    for (size_t j = (i + 1); j < nterms; j++)
     {
       mask[j] = false;
     }
@@ -149,12 +153,12 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
   std::vector<Term> rowValues;
   for (const Term& t : row)
   {
-    if (t.getKind()==Kind::APPLY_ANNOTATION)
+    if (t.getKind() == Kind::APPLY_ANNOTATION)
     {
       // add it to mask if was marked with ":source"
-      mask.push_back(t[1]==d_srcKeyword);
+      mask.push_back(t[1] == d_srcKeyword);
       rowValues.push_back(t[0]);
-      Assert (t[0].getKind()!=Kind::APPLY_ANNOTATION);
+      Assert(t[0].getKind() != Kind::APPLY_ANNOTATION);
     }
     else
     {
@@ -162,7 +166,7 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
       rowValues.push_back(t);
     }
   }
-  if( d_data.contains(rowValues, mask))
+  if (d_data.contains(rowValues, mask))
   {
     return d_true;
   }
@@ -175,10 +179,7 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
   return d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_maskKeyword, mterm});
 }
 
-void OracleCsvChecker::addRow(const std::vector<Term>& row)
-{
-  d_data.add(row);
-}
+void OracleCsvChecker::addRow(const std::vector<Term>& row) { d_data.add(row); }
 
 std::vector<Sort> OracleCsvChecker::getArgTypes() const
 {

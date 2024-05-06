@@ -190,7 +190,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       {
         Node marg = fm->getValue(arg);
         // use annotation if value changed
-        if (marg!=arg)
+        if (marg != arg)
         {
           marg = nm->mkNode(Kind::APPLY_ANNOTATION, {marg, d_srcKeyword, arg});
         }
@@ -202,14 +202,14 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       Node result =
           d_ochecker->checkConsistent(fappWithValues, predictedResponse);
       std::vector<bool> mask;
-      if (result.getKind()==Kind::APPLY_ANNOTATION)
+      if (result.getKind() == Kind::APPLY_ANNOTATION)
       {
-        if (result[1]==d_maskKeyword)
+        if (result[1] == d_maskKeyword)
         {
-          Assert (result[2].getKind()==Kind::SEXPR);
+          Assert(result[2].getKind() == Kind::SEXPR);
           for (const Node& v : result[2])
           {
-            mask.push_back(v!=d_false);
+            mask.push_back(v != d_false);
           }
         }
       }
@@ -225,7 +225,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         for (size_t i = 0, nchild = fapp.getNumChildren(); i < nchild; i++)
         {
           // evaluation did not depend on this value
-          if (i<mask.size() && !mask[i])
+          if (i < mask.size() && !mask[i])
           {
             continue;
           }

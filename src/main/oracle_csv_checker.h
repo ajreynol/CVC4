@@ -47,6 +47,7 @@ class OracleCsvChecker
    * Initialize. To be called only when parsing is ready and prior to solving.
    */
   void initialize();
+
  private:
   /** */
   void addRow(const std::vector<Term>& row);
@@ -54,7 +55,7 @@ class OracleCsvChecker
   Term evaluate(const std::vector<Term>& evaluate);
   class Trie
   {
-  public:
+   public:
     std::map<Term, Trie> d_children;
     void add(const std::vector<Term>& row);
     bool contains(const std::vector<Term>& row, std::vector<bool>& mask) const;
