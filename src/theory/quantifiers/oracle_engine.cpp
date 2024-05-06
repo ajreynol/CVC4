@@ -212,6 +212,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
             mask.push_back(v != d_false);
           }
         }
+        result = result[0];
       }
       if (!result.isNull())
       {
