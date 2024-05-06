@@ -31,7 +31,7 @@ OracleCsvChecker::OracleCsvChecker(TermManager& tm,
                                    parser::SymbolManager* sm)
     : d_filename(filename), d_tm(tm), d_solver(s), d_symman(sm)
 {
-  d_srcKeyword = tm.mkString("src");
+  d_srcKeyword = tm.mkString("source");
   d_maskKeyword = tm.mkString("mask");
   d_true = tm.mkTrue();
   d_false = tm.mkFalse();
