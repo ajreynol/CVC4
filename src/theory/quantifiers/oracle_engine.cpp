@@ -184,11 +184,13 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
     for (const auto& fapp : apps)
     {
       std::vector<Node> arguments;
+      std::vector<Node> argumentsVals;
       arguments.push_back(f);
       // evaluate arguments
       for (const auto& arg : fapp)
       {
         Node marg = fm->getValue(arg);
+        argumentsVals.push_back(marg);
         // use annotation if value changed
         if (marg != arg)
         {
@@ -230,7 +232,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
           {
             continue;
           }
-          Node eqa = fapp[i].eqNode(arguments[i + 1]);
+          Node eqa = fapp[i].eqNode(argumentsVals[i + 1]);
           eqa = rewrite(eqa);
           // Insist that the decision strategy tries to make (= args values)
           // true first. This is to ensure that the value of the oracle can be
