@@ -64,4 +64,10 @@ typerule INST_POOL ::cvc5::internal::theory::quantifiers::QuantifierAnnotationTy
 typerule INST_ADD_TO_POOL ::cvc5::internal::theory::quantifiers::QuantifierAnnotationTypeRule
 typerule SKOLEM_ADD_TO_POOL ::cvc5::internal::theory::quantifiers::QuantifierAnnotationTypeRule
 
+
+operator APPLY_ANNOTATION 3 "annotated term"
+
+typerule APPLY_ANNOTATION ::cvc5::internal::theory::quantifiers::QuantifierApplyAnnotationRule
+
+
 endtheory

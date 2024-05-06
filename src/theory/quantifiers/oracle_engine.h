@@ -122,6 +122,10 @@ class OracleEngine : public QuantifiersModule
    * again until we are sure that (= a 5) cannot be made true.
    */
   DecisionStrategyVector d_dstrat;
+  /** */
+  Node d_srcKeyword;
+  Node d_maskKeyword;
+  Node d_false;
 };
 
 }  // namespace quantifiers

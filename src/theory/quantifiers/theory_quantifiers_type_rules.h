@@ -92,6 +92,16 @@ struct QuantifierAnnotationTypeRule
                               std::ostream* errOut);
 };
 
+struct QuantifierApplyAnnotationRule
+{
+  static TypeNode preComputeType(NodeManager* nm, TNode n);
+
+  static TypeNode computeType(NodeManager* nodeManager,
+                              TNode n,
+                              bool check,
+                              std::ostream* errOut);
+};
+
 /**
  * Type rule for instantiation pattern lists. Ensures its children are either
  * instantiation patterns, instantiation attributes, or other allowed

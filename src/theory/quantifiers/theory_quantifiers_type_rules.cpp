@@ -199,6 +199,19 @@ TypeNode QuantifierAnnotationTypeRule::computeType(NodeManager* nodeManager,
   return nodeManager->instPatternType();
 }
 
+TypeNode QuantifierApplyAnnotationRule::preComputeType(NodeManager* nm, TNode n)
+{
+  return TypeNode::null();
+}
+
+TypeNode QuantifierApplyAnnotationRule::computeType(NodeManager* nodeManager,
+                              TNode n,
+                              bool check,
+                              std::ostream* errOut)
+{
+  return n[0].getTypeOrNull();
+}
+
 TypeNode QuantifierInstPatternListTypeRule::preComputeType(NodeManager* nm,
                                                            TNode n)
 {

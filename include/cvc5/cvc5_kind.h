@@ -5692,6 +5692,8 @@ enum ENUM(Kind) : int32_t
    * \endrst
    */
   EVALUE(INST_ATTRIBUTE),
+  /** */
+  EVALUE(APPLY_ANNOTATION),
   /**
    * A list of instantiation patterns, attributes or annotations.
    *

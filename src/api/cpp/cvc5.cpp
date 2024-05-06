@@ -447,6 +447,7 @@ const static std::unordered_map<Kind, std::pair<internal::Kind, std::string>>
         KIND_ENUM(Kind::SKOLEM_ADD_TO_POOL, internal::Kind::SKOLEM_ADD_TO_POOL),
         KIND_ENUM(Kind::INST_ATTRIBUTE, internal::Kind::INST_ATTRIBUTE),
         KIND_ENUM(Kind::INST_PATTERN_LIST, internal::Kind::INST_PATTERN_LIST),
+        KIND_ENUM(Kind::APPLY_ANNOTATION, internal::Kind::APPLY_ANNOTATION),
         KIND_ENUM(Kind::LAST_KIND, internal::Kind::LAST_KIND),
     };
 
@@ -836,6 +837,7 @@ const static std::unordered_map<internal::Kind,
         {internal::Kind::SKOLEM_ADD_TO_POOL, Kind::SKOLEM_ADD_TO_POOL},
         {internal::Kind::INST_ATTRIBUTE, Kind::INST_ATTRIBUTE},
         {internal::Kind::INST_PATTERN_LIST, Kind::INST_PATTERN_LIST},
+        {internal::Kind::APPLY_ANNOTATION, Kind::APPLY_ANNOTATION},
         /* ----------------------------------------------------------------- */
         {internal::Kind::LAST_KIND, Kind::LAST_KIND},
     };

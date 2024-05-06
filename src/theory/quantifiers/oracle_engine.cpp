@@ -26,6 +26,7 @@
 #include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_tuple_enumerator.h"
 #include "theory/trust_substitutions.h"
+#include "util/string.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::context;
@@ -59,6 +60,9 @@ OracleEngine::OracleEngine(Env& env,
       d_dstrat(env, "OracleArgValue", qs.getValuation())
 {
   Assert(d_ochecker != nullptr);
+  d_srcKeyword = nodeManager()->mkConst(String("source"));
+  d_maskKeyword = nodeManager()->mkConst(String("mask"));
+  d_false = nodeManager()->mkConst(false);
 }
 
 void OracleEngine::presolve() {
@@ -184,13 +188,31 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       // evaluate arguments
       for (const auto& arg : fapp)
       {
-        arguments.push_back(fm->getValue(arg));
+        Node marg = fm->getValue(arg);
+        // use annotation if value changed
+        if (marg!=arg)
+        {
+          marg = nm->mkNode(Kind::APPLY_ANNOTATION, {marg, d_srcKeyword, arg});
+        }
+        arguments.push_back(arg);
       }
       // call oracle
       Node fappWithValues = nm->mkNode(Kind::APPLY_UF, arguments);
       Node predictedResponse = fm->getValue(fapp);
       Node result =
           d_ochecker->checkConsistent(fappWithValues, predictedResponse);
+      std::vector<bool> mask;
+      if (result.getKind()==Kind::APPLY_ANNOTATION)
+      {
+        if (result[1]==d_maskKeyword)
+        {
+          Assert (result[2].getKind()==Kind::SEXPR);
+          for (const Node& v : result[2])
+          {
+            mask.push_back(v!=d_false);
+          }
+        }
+      }
       if (!result.isNull())
       {
         // Note that we add (=> (= args values) (= (f args) result))
@@ -202,6 +224,11 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         disj.push_back(conc);
         for (size_t i = 0, nchild = fapp.getNumChildren(); i < nchild; i++)
         {
+          // evaluation did not depend on this value
+          if (i<mask.size() && !mask[i])
+          {
+            continue;
+          }
           Node eqa = fapp[i].eqNode(arguments[i + 1]);
           eqa = rewrite(eqa);
           // Insist that the decision strategy tries to make (= args values)
