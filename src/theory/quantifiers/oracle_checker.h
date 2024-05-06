@@ -61,14 +61,14 @@ class OracleChecker : protected EnvObj, public NodeConverter
    * @return The lemma corresponding to the equality above, or null if the
    * oracle already is known to generate the correct value.
    */
-  Node checkConsistent(Node app, Node val);
+  Node checkConsistent(const Node& app, const Node& appv, const Node& val);
   /**
    * Evaluate an oracle application. Given input f(c), where f is an oracle
    * function symbol, this returns the result of invoking the oracle associated
    * with f. This may either correspond to a cached value, or otherwise will
    * invoke the oracle.
    */
-  Node evaluateApp(Node app);
+  Node evaluateApp(const Node& app, const Node& appv);
 
   /**
    * Evaluate all oracle function applications (recursively) in n. This is an

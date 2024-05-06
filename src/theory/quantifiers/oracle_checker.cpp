@@ -30,9 +30,9 @@ OracleChecker::OracleChecker(Env& env)
 {
 }
 
-Node OracleChecker::checkConsistent(Node app, Node val)
+Node OracleChecker::checkConsistent(const Node& app, const Node& appv, const Node& val)
 {
-  Node result = evaluateApp(app);
+  Node result = evaluateApp(app, appv);
   Node resVal = result.getKind()==Kind::APPLY_ANNOTATION ? result[0] : result;
   Trace("oracle-calls") << "checkConsistent " << app << " == " << resVal
                         << " vs " << val << std::endl;
@@ -43,7 +43,7 @@ Node OracleChecker::checkConsistent(Node app, Node val)
   return Node::null();
 }
 
-Node OracleChecker::evaluateApp(Node app)
+Node OracleChecker::evaluateApp(const Node& app, const Node& appv)
 {
   Assert(app.getKind() == Kind::APPLY_UF);
   Node f = app.getOperator();
@@ -57,12 +57,12 @@ Node OracleChecker::evaluateApp(Node app)
 
   // get oracle result
   std::vector<Node> retv;
-  bool ranOracle = caller.callOracle(app, retv);
+  bool ranOracle = caller.callOracle(app, appv, retv);
   if (retv.size() != 1)
   {
     Assert(false) << "Failed to evaluate " << app
                   << " to a single return value, got: " << retv << std::endl;
-    return app;
+    return appv;
   }
   Node ret = retv[0];
   ret = rewrite(ret);
@@ -128,7 +128,7 @@ Node OracleChecker::postConvert(Node n)
     if (allConst)
     {
       // evaluate the application
-      return evaluateApp(n);
+      return evaluateApp(n, n);
     }
   }
   // otherwise, always rewrite

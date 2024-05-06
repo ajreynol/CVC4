@@ -199,10 +199,11 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         arguments.push_back(marg);
       }
       // call oracle
-      Node fappWithValues = nm->mkNode(Kind::APPLY_UF, arguments);
+      Node fappWithArgs = nm->mkNode(Kind::APPLY_UF, arguments);
+      Node fappWithValues = nm->mkNode(Kind::APPLY_UF, argumentsVals);
       Node predictedResponse = fm->getValue(fapp);
       Node result =
-          d_ochecker->checkConsistent(fappWithValues, predictedResponse);
+          d_ochecker->checkConsistent(fappWithArgs, fappWithValues, predictedResponse);
       std::vector<bool> mask;
       if (result.getKind() == Kind::APPLY_ANNOTATION)
       {

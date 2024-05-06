@@ -43,7 +43,7 @@ class OracleCaller
    *
    * Return true if the call was made, and false if it was already cached.
    */
-  bool callOracle(const Node& fapp, std::vector<Node>& res);
+  bool callOracle(const Node& fapp, const Node& fappv, std::vector<Node>& res);
 
   /** Get cached results for this oracle caller */
   const std::map<Node, std::vector<Node>>& getCachedResults() const;
