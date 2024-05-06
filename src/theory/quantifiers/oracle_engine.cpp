@@ -186,6 +186,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       std::vector<Node> arguments;
       std::vector<Node> argumentsVals;
       arguments.push_back(f);
+      argumentsVals.push_back(f);
       // evaluate arguments
       for (const auto& arg : fapp)
       {
