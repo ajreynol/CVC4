@@ -33,6 +33,7 @@ OracleCsvChecker::OracleCsvChecker(TermManager& tm,
 {
   d_srcKeyword = tm.mkString("source");
   d_maskKeyword = tm.mkString("mask");
+  d_propKeyword = tm.mkString("propagate");
   d_true = tm.mkTrue();
   d_false = tm.mkFalse();
   d_unknown = tm.mkConst(tm.getBooleanSort());
@@ -121,8 +122,11 @@ void OracleCsvChecker::Trie::add(const std::vector<Term>& row)
   }
 }
 
-int OracleCsvChecker::Trie::contains(const std::vector<Term>& row,
-                                      std::vector<bool>& mask) const
+int OracleCsvChecker::Trie::contains(TermManager& tm, 
+                                     const std::vector<Term>& row,
+                                     const std::vector<Term>& sources,
+                                     std::vector<bool>& mask,
+                                     std::vector<Term>& prop) const
 {
   Assert(mask.size() == row.size());
   const Trie* curr = this;
@@ -147,7 +151,14 @@ int OracleCsvChecker::Trie::contains(const std::vector<Term>& row,
       curr = &it->second;
       continue;
     }
-    // Forced values won't impact
+    // construct a propagating predicate
+    std::vector<Term> disj;
+    const std::map<Term, Trie>& cmap = curr->d_children;
+    for (const std::pair<const Term, Trie>& c : cmap)
+    {
+      disj.push_back(tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
+    }
+    // Forced values won't impact the result
     for (size_t j : forced)
     {
       mask[j] = false;
@@ -167,12 +178,22 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
   // process the mask
   std::vector<bool> mask;
   std::vector<Term> rowValues;
+  std::vector<Term> sources;
   for (const Term& t : row)
   {
     if (t.getKind() == Kind::APPLY_ANNOTATION)
     {
       // add it to mask if was marked with ":source"
-      mask.push_back(true);//t[1] == d_srcKeyword);
+      if (t[1]==d_srcKeyword)
+      {
+        mask.push_back(true);
+        sources.push_back(t[1]);
+      }
+      else
+      {
+        mask.push_back(false);
+        sources.push_back(t[0]);
+      }
       rowValues.push_back(t[0]);
       Assert(t[0].getKind() != Kind::APPLY_ANNOTATION);
     }
@@ -180,9 +201,11 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
     {
       mask.push_back(false);
       rowValues.push_back(t);
+      sources.push_back(t);
     }
   }
-  int result = d_data.contains(rowValues, mask);
+  std::vector<Term> prop;
+  int result = d_data.contains(d_tm, rowValues, sources, mask, prop);
   if (result==1)
   {
     return d_true;
