@@ -35,6 +35,7 @@ OracleCsvChecker::OracleCsvChecker(TermManager& tm,
   d_maskKeyword = tm.mkString("mask");
   d_true = tm.mkTrue();
   d_false = tm.mkFalse();
+  d_unknown = tm.mkConst(tm.getBooleanSort());
 }
 
 OracleCsvChecker::~OracleCsvChecker() {}
@@ -120,30 +121,45 @@ void OracleCsvChecker::Trie::add(const std::vector<Term>& row)
   }
 }
 
-bool OracleCsvChecker::Trie::contains(const std::vector<Term>& row,
+int OracleCsvChecker::Trie::contains(const std::vector<Term>& row,
                                       std::vector<bool>& mask) const
 {
   Assert(mask.size() == row.size());
   const Trie* curr = this;
   std::map<Term, Trie>::const_iterator it;
+  std::vector<size_t> forced;
   for (size_t i = 0, nterms = row.size(); i < nterms; i++)
   {
-    it = curr->d_children.find(row[i]);
+    Term v = row[i];
+    if (v.getKind()==Kind::CONSTANT)
+    {
+      // propagate?
+      return 0;
+    }
+    it = curr->d_children.find(v);
     if (it != curr->d_children.end())
     {
+      if (curr->d_children.size()==1)
+      {
+        forced.push_back(i);
+      }
       // found, continue
       curr = &it->second;
       continue;
+    }
+    // Forced values won't impact
+    for (size_t j : forced)
+    {
+      mask[j] = false;
     }
     // values past this don't matter
     for (size_t j = (i + 1); j < nterms; j++)
     {
       mask[j] = false;
     }
-    // TODO: more generalization?
-    return false;
+    return -1;
   }
-  return true;
+  return 1;
 }
 
 Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
@@ -166,17 +182,22 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
       rowValues.push_back(t);
     }
   }
-  if (d_data.contains(rowValues, mask))
+  int result = d_data.contains(rowValues, mask);
+  if (result==1)
   {
     return d_true;
   }
-  std::vector<Term> maskTerms;
-  for (bool b : mask)
+  if (result==-1)
   {
-    maskTerms.push_back(b ? d_true : d_false);
+    std::vector<Term> maskTerms;
+    for (bool b : mask)
+    {
+      maskTerms.push_back(b ? d_true : d_false);
+    }
+    Term mterm = d_tm.mkTerm(Kind::SEXPR, maskTerms);
+    return d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_maskKeyword, mterm});
   }
-  Term mterm = d_tm.mkTerm(Kind::SEXPR, maskTerms);
-  return d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_maskKeyword, mterm});
+  return d_unknown;
 }
 
 void OracleCsvChecker::addRow(const std::vector<Term>& row) { d_data.add(row); }

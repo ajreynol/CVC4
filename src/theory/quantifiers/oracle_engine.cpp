@@ -218,7 +218,8 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         }
         result = result[0];
       }
-      if (!result.isNull())
+      // if not constant, we don't infer anything
+      if (!result.isNull() && result.isConst())
       {
         // Note that we add (=> (= args values) (= (f args) result))
         // instead of (= (f values) result) here. The latter may be more

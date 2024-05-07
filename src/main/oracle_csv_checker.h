@@ -58,7 +58,7 @@ class OracleCsvChecker
    public:
     std::map<Term, Trie> d_children;
     void add(const std::vector<Term>& row);
-    bool contains(const std::vector<Term>& row, std::vector<bool>& mask) const;
+    int contains(const std::vector<Term>& row, std::vector<bool>& mask) const;
   };
   Trie d_data;
   /** The oracle we have declared */
@@ -69,6 +69,7 @@ class OracleCsvChecker
   Term d_maskKeyword;
   Term d_true;
   Term d_false;
+  Term d_unknown;
   /** The variables in the header row of the csv */
   std::vector<Term> d_header;
   /** The filename to read from */
