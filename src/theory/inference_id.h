@@ -396,6 +396,8 @@ enum class InferenceId
   // For example, (= (f c) d) where (c, d) is an I/O pair obtained from calling
   // the oracle associated with oracle function f.
   QUANTIFIERS_ORACLE_INTERFACE,
+  // A propagation from an oracle.
+  QUANTIFIERS_ORACLE_INTERFACE_PROP,
   // purification lemma to ensure oracle functions in substitutions are taken
   // into account
   QUANTIFIERS_ORACLE_PURIFY_SUBS,

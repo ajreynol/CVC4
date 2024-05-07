@@ -33,7 +33,11 @@ OracleChecker::OracleChecker(Env& env)
 Node OracleChecker::checkConsistent(const Node& app, const Node& appv, const Node& val)
 {
   Node result = evaluateApp(app, appv);
-  Node resVal = result.getKind()==Kind::APPLY_ANNOTATION ? result[0] : result;
+  Node resVal = result;
+  while (resVal.getKind()==Kind::APPLY_ANNOTATION)
+  {
+    resVal = resVal[0];
+  }
   Trace("oracle-calls") << "checkConsistent " << app << " == " << resVal
                         << " vs " << val << std::endl;
   if (resVal != val)

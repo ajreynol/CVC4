@@ -37,6 +37,8 @@ OracleCsvChecker::OracleCsvChecker(TermManager& tm,
   d_true = tm.mkTrue();
   d_false = tm.mkFalse();
   d_unknown = tm.mkConst(tm.getBooleanSort());
+  // TODO: make option
+  d_optionProp = true;
 }
 
 OracleCsvChecker::~OracleCsvChecker() {}
@@ -118,18 +120,30 @@ void OracleCsvChecker::Trie::add(const std::vector<Term>& row)
   Trie* curr = this;
   for (const Term& t : row)
   {
+    curr->d_count++;
     curr = &curr->d_children[t];
   }
 }
 
-int OracleCsvChecker::Trie::contains(TermManager& tm, 
+Term mkOr(TermManager& tm, const std::vector<Term>& children)
+{
+  Assert (!children.empty());
+  return children.size()==1 ? children[0] : tm.mkTerm(Kind::OR, children);
+}
+
+Term mkAnd(TermManager& tm, const std::vector<Term>& children)
+{
+  Assert (!children.empty());
+  return children.size()==1 ? children[0] : tm.mkTerm(Kind::AND, children);
+}
+
+int OracleCsvChecker::contains(const Trie* curr,
                                      const std::vector<Term>& row,
                                      const std::vector<Term>& sources,
                                      std::vector<bool>& mask,
                                      std::vector<Term>& prop) const
 {
   Assert(mask.size() == row.size());
-  const Trie* curr = this;
   std::map<Term, Trie>::const_iterator it;
   std::vector<size_t> forced;
   for (size_t i = 0, nterms = row.size(); i < nterms; i++)
@@ -151,12 +165,25 @@ int OracleCsvChecker::Trie::contains(TermManager& tm,
       curr = &it->second;
       continue;
     }
+    size_t startMask;
     // construct a propagating predicate
-    std::vector<Term> disj;
-    const std::map<Term, Trie>& cmap = curr->d_children;
-    for (const std::pair<const Term, Trie>& c : cmap)
+    if (d_optionProp)
     {
-      disj.push_back(tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
+      do
+      {
+        std::vector<Term> disj;
+        const std::map<Term, Trie>& cmap = curr->d_children;
+        for (const std::pair<const Term, Trie>& c : cmap)
+        {
+          disj.push_back(d_tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
+        }
+        prop.push_back(mkOr(d_tm, disj));
+      }while (curr->d_children.size()==1);
+      startMask = i;
+    }
+    else
+    {
+      startMask = (i+1);
     }
     // Forced values won't impact the result
     for (size_t j : forced)
@@ -164,7 +191,7 @@ int OracleCsvChecker::Trie::contains(TermManager& tm,
       mask[j] = false;
     }
     // values past this don't matter
-    for (size_t j = (i + 1); j < nterms; j++)
+    for (size_t j = startMask; j < nterms; j++)
     {
       mask[j] = false;
     }
@@ -205,7 +232,7 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
     }
   }
   std::vector<Term> prop;
-  int result = d_data.contains(d_tm, rowValues, sources, mask, prop);
+  int result = contains(&d_data, rowValues, sources, mask, prop);
   if (result==1)
   {
     return d_true;
@@ -218,7 +245,13 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
       maskTerms.push_back(b ? d_true : d_false);
     }
     Term mterm = d_tm.mkTerm(Kind::SEXPR, maskTerms);
-    return d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_maskKeyword, mterm});
+    Term ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_maskKeyword, mterm});
+    if (!prop.empty())
+    {
+      Term pterm = mkAnd(d_tm, prop);
+      ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {ret, d_propKeyword, pterm});
+    }
+    return ret;
   }
   return d_unknown;
 }

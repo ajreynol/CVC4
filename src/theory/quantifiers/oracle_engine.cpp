@@ -62,6 +62,7 @@ OracleEngine::OracleEngine(Env& env,
   Assert(d_ochecker != nullptr);
   d_srcKeyword = nodeManager()->mkConst(String("source"));
   d_maskKeyword = nodeManager()->mkConst(String("mask"));
+  d_propKeyword = nodeManager()->mkConst(String("prop"));
   d_false = nodeManager()->mkConst(false);
 }
 
@@ -206,7 +207,8 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       Node result =
           d_ochecker->checkConsistent(fappWithArgs, fappWithValues, predictedResponse);
       std::vector<bool> mask;
-      if (result.getKind() == Kind::APPLY_ANNOTATION)
+      Node prop;
+      while (result.getKind() == Kind::APPLY_ANNOTATION)
       {
         if (result[1] == d_maskKeyword)
         {
@@ -215,6 +217,11 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
           {
             mask.push_back(v != d_false);
           }
+        }
+        else if (result[1] == d_propKeyword)
+        {
+          // remember the propagating predicate
+          prop = result[2];
         }
         result = result[0];
       }
@@ -227,6 +234,18 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         // so that they can be preferred by the decision strategy.
         std::vector<Node> disj;
         Node conc = nm->mkNode(Kind::EQUAL, fapp, result);
+        // include the propagation
+        if (!prop.isNull())
+        {
+          if (prop.getKind()==Kind::AND)
+          {
+            disj.insert(disj.end(), prop.begin(), prop.end());
+          }
+          else
+          {
+            disj.push_back(prop);
+          }
+        }
         disj.push_back(conc);
         for (size_t i = 0, nchild = fapp.getNumChildren(); i < nchild; i++)
         {

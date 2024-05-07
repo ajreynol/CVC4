@@ -56,11 +56,20 @@ class OracleCsvChecker
   class Trie
   {
    public:
+    Trie() : d_count(0) {}
+    size_t d_count;
     std::map<Term, Trie> d_children;
     void add(const std::vector<Term>& row);
-    int contains(TermManager& tm, const std::vector<Term>& row, const std::vector<Term>& sources, std::vector<bool>& mask, std::vector<Term>& prop) const;
   };
   Trie d_data;
+  /** Contains */
+  int contains(const Trie* curr,
+                const std::vector<Term>& row,
+                const std::vector<Term>& sources,
+                std::vector<bool>& mask,
+                std::vector<Term>& prop) const;
+  /** */
+  bool d_optionProp;
   /** The oracle we have declared */
   Term d_oracle;
   Term d_oracleConstraint;
