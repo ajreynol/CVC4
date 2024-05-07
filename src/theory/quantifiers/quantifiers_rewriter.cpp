@@ -151,7 +151,9 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      Node q = mergePrenex(n);
+      // Don't check standard here, which can't be replicated in a proof checker
+      // without modelling the patterns.
+      Node q = mergePrenex(n, false);
       if (q!=n)
       {
         return q;
@@ -278,7 +280,7 @@ RewriteResponse QuantifiersRewriter::preRewrite(TNode q)
     // eagerly here, where after we would drop y to obtain:
     //   (forall ((x Int)) (! (P x) :pattern ((f x))))
     // See issue #10303.
-    Node qm = mergePrenex(q);
+    Node qm = mergePrenex(q, true);
     if (q != qm)
     {
       return RewriteResponse(REWRITE_AGAIN_FULL, qm);
@@ -310,7 +312,7 @@ RewriteResponse QuantifiersRewriter::postRewrite(TNode in)
   else if (in.getKind() == Kind::FORALL)
   {
     // do prenex merging
-    ret = mergePrenex(in);
+    ret = mergePrenex(in, true);
     if (ret != in)
     {
       status = REWRITE_AGAIN_FULL;
@@ -347,7 +349,7 @@ RewriteResponse QuantifiersRewriter::postRewrite(TNode in)
   return RewriteResponse( status, ret );
 }
 
-Node QuantifiersRewriter::mergePrenex(const Node& q)
+Node QuantifiersRewriter::mergePrenex(const Node& q, bool checkStd)
 {
   Assert(q.getKind() == Kind::FORALL || q.getKind() == Kind::EXISTS);
   Kind k = q.getKind();
@@ -372,17 +374,22 @@ Node QuantifiersRewriter::mergePrenex(const Node& q)
     continueCombine = false;
     if (body.getNumChildren() == 2 && body[1].getKind() == k)
     {
-      QAttributes qa;
-      QuantAttributes::computeQuantAttributes(body[1], qa);
-      // Should never combine a quantified formula with a pool or
-      // non-standard quantified formula here.
-      // Note that we technically should check
-      // doOperation(body[1], COMPUTE_PRENEX, qa) here, although this
-      // is too restrictive, as sometimes nested patterns should just be
-      // applied to the top level, for example:
-      // (forall ((x Int)) (forall ((y Int)) (! P :pattern ((f x y)))))
-      // should be a pattern for the top-level quantifier here.
-      if (qa.isStandard() && !qa.d_hasPool)
+      bool process = true;
+      if (checkStd)
+      {
+        // Should never combine a quantified formula with a pool or
+        // non-standard quantified formula here.
+        // Note that we technically should check
+        // doOperation(body[1], COMPUTE_PRENEX, qa) here, although this
+        // is too restrictive, as sometimes nested patterns should just be
+        // applied to the top level, for example:
+        // (forall ((x Int)) (forall ((y Int)) (! P :pattern ((f x y)))))
+        // should be a pattern for the top-level quantifier here.
+        QAttributes qa;
+        QuantAttributes::computeQuantAttributes(body[1], qa);
+        process = qa.isStandard();
+      }
+      if (process)
       {
         body = body[1];
         continueCombine = true;
