@@ -169,17 +169,28 @@ int OracleCsvChecker::contains(const Trie* curr,
     // construct a propagating predicate
     if (d_optionProp)
     {
+      startMask = i;
+      bool doContinue;
       do
       {
         std::vector<Term> disj;
         const std::map<Term, Trie>& cmap = curr->d_children;
+        if (cmap.empty())
+        {
+          break;
+        }
         for (const std::pair<const Term, Trie>& c : cmap)
         {
           disj.push_back(d_tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
         }
         prop.push_back(mkOr(d_tm, disj));
-      } while (curr->d_children.size() == 1);
-      startMask = i;
+        doContinue = (cmap.size()==1);
+        if (doContinue)
+        {
+          curr = &cmap.begin()->second;
+          i++;
+        }
+      } while (doContinue);
     }
     else
     {
@@ -214,7 +225,7 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
       if (t[1] == d_srcKeyword)
       {
         mask.push_back(true);
-        sources.push_back(t[1]);
+        sources.push_back(t[2]);
       }
       else
       {

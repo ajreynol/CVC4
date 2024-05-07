@@ -31,10 +31,10 @@ bool OracleCaller::callOracle(const Node& fapp,
                               std::vector<Node>& res)
 {
   Assert(fapp.getOperator() == fappv.getOperator());
-  std::map<Node, std::vector<Node>>::iterator it = d_cachedResults.find(fappv);
+  std::map<Node, std::vector<Node>>::iterator it = d_cachedResults.find(fapp);
   if (it != d_cachedResults.end())
   {
-    Trace("oracle-calls") << "Using cached oracle result for " << fappv
+    Trace("oracle-calls") << "Using cached oracle result for " << fapp
                           << std::endl;
     res = it->second;
     // don't bother setting runResult
@@ -50,7 +50,7 @@ bool OracleCaller::callOracle(const Node& fapp,
   std::vector<Node> response = d_oracle.run(args);
   Trace("oracle-calls") << "response node " << response << std::endl;
   // cache the response
-  d_cachedResults[fappv] = response;
+  d_cachedResults[fapp] = response;
   res = response;
   return true;
 }

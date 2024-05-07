@@ -62,7 +62,7 @@ OracleEngine::OracleEngine(Env& env,
   Assert(d_ochecker != nullptr);
   d_srcKeyword = nodeManager()->mkConst(String("source"));
   d_maskKeyword = nodeManager()->mkConst(String("mask"));
-  d_propKeyword = nodeManager()->mkConst(String("prop"));
+  d_propKeyword = nodeManager()->mkConst(String("propagate"));
   d_false = nodeManager()->mkConst(false);
 }
 
@@ -223,6 +223,10 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
           // remember the propagating predicate
           prop = result[2];
         }
+        else
+        {
+          Warning() << "Unhandled keyword " << result[1] << std::endl;
+        }
         result = result[0];
       }
       // if not constant, we don't infer anything
@@ -237,14 +241,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         // include the propagation
         if (!prop.isNull())
         {
-          if (prop.getKind() == Kind::AND)
-          {
-            disj.insert(disj.end(), prop.begin(), prop.end());
-          }
-          else
-          {
-            disj.push_back(prop);
-          }
+          disj.push_back(prop);
         }
         disj.push_back(conc);
         for (size_t i = 0, nchild = fapp.getNumChildren(); i < nchild; i++)
