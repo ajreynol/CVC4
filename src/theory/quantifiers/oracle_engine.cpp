@@ -241,7 +241,9 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         // include the propagation
         if (!prop.isNull())
         {
-          disj.push_back(prop);
+          Node propr = rewrite(prop);
+          disj.push_back(propr);
+          d_dstrat.addLiteral(propr);
         }
         disj.push_back(conc);
         for (size_t i = 0, nchild = fapp.getNumChildren(); i < nchild; i++)
