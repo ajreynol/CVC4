@@ -30,11 +30,13 @@ OracleChecker::OracleChecker(Env& env)
 {
 }
 
-Node OracleChecker::checkConsistent(const Node& app, const Node& appv, const Node& val)
+Node OracleChecker::checkConsistent(const Node& app,
+                                    const Node& appv,
+                                    const Node& val)
 {
   Node result = evaluateApp(app, appv);
   Node resVal = result;
-  while (resVal.getKind()==Kind::APPLY_ANNOTATION)
+  while (resVal.getKind() == Kind::APPLY_ANNOTATION)
   {
     resVal = resVal[0];
   }

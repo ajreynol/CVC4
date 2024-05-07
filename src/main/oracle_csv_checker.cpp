@@ -127,21 +127,21 @@ void OracleCsvChecker::Trie::add(const std::vector<Term>& row)
 
 Term mkOr(TermManager& tm, const std::vector<Term>& children)
 {
-  Assert (!children.empty());
-  return children.size()==1 ? children[0] : tm.mkTerm(Kind::OR, children);
+  Assert(!children.empty());
+  return children.size() == 1 ? children[0] : tm.mkTerm(Kind::OR, children);
 }
 
 Term mkAnd(TermManager& tm, const std::vector<Term>& children)
 {
-  Assert (!children.empty());
-  return children.size()==1 ? children[0] : tm.mkTerm(Kind::AND, children);
+  Assert(!children.empty());
+  return children.size() == 1 ? children[0] : tm.mkTerm(Kind::AND, children);
 }
 
 int OracleCsvChecker::contains(const Trie* curr,
-                                     const std::vector<Term>& row,
-                                     const std::vector<Term>& sources,
-                                     std::vector<bool>& mask,
-                                     std::vector<Term>& prop) const
+                               const std::vector<Term>& row,
+                               const std::vector<Term>& sources,
+                               std::vector<bool>& mask,
+                               std::vector<Term>& prop) const
 {
   Assert(mask.size() == row.size());
   std::map<Term, Trie>::const_iterator it;
@@ -149,7 +149,7 @@ int OracleCsvChecker::contains(const Trie* curr,
   for (size_t i = 0, nterms = row.size(); i < nterms; i++)
   {
     Term v = row[i];
-    if (v.getKind()==Kind::CONSTANT)
+    if (v.getKind() == Kind::CONSTANT)
     {
       // propagate?
       return 0;
@@ -157,7 +157,7 @@ int OracleCsvChecker::contains(const Trie* curr,
     it = curr->d_children.find(v);
     if (it != curr->d_children.end())
     {
-      if (curr->d_children.size()==1)
+      if (curr->d_children.size() == 1)
       {
         forced.push_back(i);
       }
@@ -178,12 +178,12 @@ int OracleCsvChecker::contains(const Trie* curr,
           disj.push_back(d_tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
         }
         prop.push_back(mkOr(d_tm, disj));
-      }while (curr->d_children.size()==1);
+      } while (curr->d_children.size() == 1);
       startMask = i;
     }
     else
     {
-      startMask = (i+1);
+      startMask = (i + 1);
     }
     // Forced values won't impact the result
     for (size_t j : forced)
@@ -211,7 +211,7 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
     if (t.getKind() == Kind::APPLY_ANNOTATION)
     {
       // add it to mask if was marked with ":source"
-      if (t[1]==d_srcKeyword)
+      if (t[1] == d_srcKeyword)
       {
         mask.push_back(true);
         sources.push_back(t[1]);
@@ -233,11 +233,11 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
   }
   std::vector<Term> prop;
   int result = contains(&d_data, rowValues, sources, mask, prop);
-  if (result==1)
+  if (result == 1)
   {
     return d_true;
   }
-  if (result==-1)
+  if (result == -1)
   {
     std::vector<Term> maskTerms;
     for (bool b : mask)
@@ -245,7 +245,8 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
       maskTerms.push_back(b ? d_true : d_false);
     }
     Term mterm = d_tm.mkTerm(Kind::SEXPR, maskTerms);
-    Term ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_maskKeyword, mterm});
+    Term ret =
+        d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_maskKeyword, mterm});
     if (!prop.empty())
     {
       Term pterm = mkAnd(d_tm, prop);

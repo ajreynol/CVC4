@@ -64,10 +64,10 @@ class OracleCsvChecker
   Trie d_data;
   /** Contains */
   int contains(const Trie* curr,
-                const std::vector<Term>& row,
-                const std::vector<Term>& sources,
-                std::vector<bool>& mask,
-                std::vector<Term>& prop) const;
+               const std::vector<Term>& row,
+               const std::vector<Term>& sources,
+               std::vector<bool>& mask,
+               std::vector<Term>& prop) const;
   /** */
   bool d_optionProp;
   /** The oracle we have declared */

@@ -2515,6 +2515,7 @@ class PluginUnsat : public Plugin
     return lemmas;
   }
   std::string getName() override { return "PluginUnsat"; }
+
  private:
   /** Reference to the term manager */
   TermManager& d_tm;

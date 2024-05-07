@@ -204,8 +204,8 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       Node fappWithArgs = nm->mkNode(Kind::APPLY_UF, arguments);
       Node fappWithValues = nm->mkNode(Kind::APPLY_UF, argumentsVals);
       Node predictedResponse = fm->getValue(fapp);
-      Node result =
-          d_ochecker->checkConsistent(fappWithArgs, fappWithValues, predictedResponse);
+      Node result = d_ochecker->checkConsistent(
+          fappWithArgs, fappWithValues, predictedResponse);
       std::vector<bool> mask;
       Node prop;
       while (result.getKind() == Kind::APPLY_ANNOTATION)
@@ -237,7 +237,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         // include the propagation
         if (!prop.isNull())
         {
-          if (prop.getKind()==Kind::AND)
+          if (prop.getKind() == Kind::AND)
           {
             disj.insert(disj.end(), prop.begin(), prop.end());
           }
