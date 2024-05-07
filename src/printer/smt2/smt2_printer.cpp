@@ -1016,6 +1016,13 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
       // maybe print seq. instead of str.
       out << smtKindStringOf(n);
       break;
+    case Kind::APPLY_ANNOTATION:
+      out << "! ";
+      toStream(out, n[0], lbind, toDepth < 0 ? toDepth : toDepth - 1);
+      out << " :" << n[1].getConst<String>();
+      toStream(out, n[1], lbind, toDepth < 0 ? toDepth : toDepth - 1);
+      out << ")";
+      return true;
     default:
       // by default, print the kind using the smtKindString utility
       if (n.getMetaKind() != kind::metakind::PARAMETERIZED)
