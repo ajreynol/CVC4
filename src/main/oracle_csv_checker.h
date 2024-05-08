@@ -66,14 +66,11 @@ class OracleTableImpl
                const std::vector<Term>& sources,
                std::vector<bool>& mask,
                std::vector<Term>& prop) const;
-  int containsExp(const Trie* curr,
-                  const std::vector<Term>& row,
-                  const std::vector<Term>& sources,
-                  std::vector<Term>& exp) const;
   Term mkOr(const std::vector<Term>& children) const;
   Term mkAnd(const std::vector<Term>& children) const;
   /** */
   bool d_optionProp;
+  bool d_optionExp;
   /** The oracle we have declared */
   Term d_oracle;
   /** Commonly used terms */
