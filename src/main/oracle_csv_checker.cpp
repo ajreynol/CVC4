@@ -26,9 +26,9 @@ namespace cvc5 {
 namespace main {
 
 OracleTableImpl::OracleTableImpl(TermManager& tm,
-                                   std::string& filename,
-                                   Solver* s,
-                                   parser::SymbolManager* sm)
+                                 std::string& filename,
+                                 Solver* s,
+                                 parser::SymbolManager* sm)
     : d_filename(filename), d_tm(tm), d_solver(s), d_symman(sm)
 {
   d_srcKeyword = tm.mkString("source");
@@ -43,7 +43,8 @@ OracleTableImpl::OracleTableImpl(TermManager& tm,
 
 OracleTableImpl::~OracleTableImpl() {}
 
-void OracleTableImpl::initialize(const std::string& id, const std::vector<Sort>& argSorts)
+void OracleTableImpl::initialize(const std::string& id,
+                                 const std::vector<Sort>& argSorts)
 {
   // set up variables
   parser::InputParser ip(d_solver, d_symman);
@@ -64,7 +65,7 @@ void OracleTableImpl::initialize(const std::string& id, const std::vector<Sort>&
   d_header.pop_back();
   size_t nvars = d_header.size();
   Trace("oracle-csv-parse") << "Header size is " << nvars << std::endl;
-  if (nvars!=argSorts.size())
+  if (nvars != argSorts.size())
   {
     std::cout << "ERROR: Arity mismatch" << std::endl;
     return;
@@ -134,10 +135,10 @@ Term mkAnd(TermManager& tm, const std::vector<Term>& children)
 }
 
 int OracleTableImpl::contains(const Trie* curr,
-                               const std::vector<Term>& row,
-                               const std::vector<Term>& sources,
-                               std::vector<bool>& mask,
-                               std::vector<Term>& prop) const
+                              const std::vector<Term>& row,
+                              const std::vector<Term>& sources,
+                              std::vector<bool>& mask,
+                              std::vector<Term>& prop) const
 {
   Assert(mask.size() == row.size());
   std::map<Term, Trie>::const_iterator it;

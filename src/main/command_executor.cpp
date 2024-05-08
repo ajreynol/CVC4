@@ -134,18 +134,19 @@ bool CommandExecutor::doCommandSingleton(Cmd* cmd)
 {
   if (d_oracles)
   {
-    const DeclareOracleFunCommand* cof = dynamic_cast<const DeclareOracleFunCommand*>(cmd);
-    if (cof!=nullptr)
+    const DeclareOracleFunCommand* cof =
+        dynamic_cast<const DeclareOracleFunCommand*>(cmd);
+    if (cof != nullptr)
     {
-      if (cof->getOracleType()==modes::OracleType::TABLE)
+      if (cof->getOracleType() == modes::OracleType::TABLE)
       {
         std::string tableFile = cof->getImplName();
         TermManager& tm = d_solver->getTermManager();
         d_oracleTables.emplace_back(
             new OracleTableImpl(tm, tableFile, d_solver.get(), d_symman.get()));
-        OracleTableImpl * oracle = d_oracleTables.back().get();
+        OracleTableImpl* oracle = d_oracleTables.back().get();
         const std::vector<Sort>& argSorts = cof->getArgSorts();
-        const std::string& id = cof->getIdentifier(); 
+        const std::string& id = cof->getIdentifier();
         oracle->initialize(id, argSorts);
         // Get the oracle function declared by the class and bind it in the
         // symbol table.

@@ -33,9 +33,9 @@ class OracleTableImpl
 {
  public:
   OracleTableImpl(TermManager& tm,
-                   std::string& filename,
-                   Solver* s,
-                   parser::SymbolManager* sm);
+                  std::string& filename,
+                  Solver* s,
+                  parser::SymbolManager* sm);
   ~OracleTableImpl();
   /** Get the oracle defined by this class */
   Term getOracleFun() const;

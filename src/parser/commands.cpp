@@ -1007,7 +1007,11 @@ void DeclarePoolCommand::toStream(std::ostream& out) const
 
 DeclareOracleFunCommand::DeclareOracleFunCommand(
     const std::string& id, const std::vector<Sort>& argSorts, Sort sort)
-    : d_id(id), d_argSorts(argSorts), d_sort(sort), d_implName(""), d_otype(modes::OracleType::NO_IMPLEMENTATION)
+    : d_id(id),
+      d_argSorts(argSorts),
+      d_sort(sort),
+      d_implName(""),
+      d_otype(modes::OracleType::NO_IMPLEMENTATION)
 {
 }
 

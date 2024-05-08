@@ -323,7 +323,7 @@ std::unique_ptr<Cmd> Smt2CmdParser::parseNextCommand()
         {
           std::string key = d_tparser.parseKeyword();
           otype = d_state.getOracleType(key);
-          if (otype==modes::OracleType::TABLE)
+          if (otype == modes::OracleType::TABLE)
           {
             // range must be Boolean
             if (!t.isBoolean())
@@ -338,14 +338,16 @@ std::unique_ptr<Cmd> Smt2CmdParser::parseNextCommand()
           otype = modes::OracleType::BINARY;
         }
       }
-      if (otype==modes::OracleType::TABLE)
+      if (otype == modes::OracleType::TABLE)
       {
         cmd.reset(new DeclareOracleFunCommand(name, sorts, t, implName, otype));
       }
       else
       {
         // not supported
-        d_state.warning("Oracles referencing binaries are not supported via the text interface in this version");
+        d_state.warning(
+            "Oracles referencing binaries are not supported via the text "
+            "interface in this version");
         cmd.reset(new EmptyCommand());
       }
     }
