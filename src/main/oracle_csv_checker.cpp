@@ -187,12 +187,12 @@ int OracleTableImpl::contains(const Trie* curr,
         bool isIdent = false;
         for (const std::pair<const Term, Trie>& c : cmap)
         {
-          if (sources[i]==c.first)
+          if (sources[i] == c.first)
           {
             isIdent = true;
             break;
           }
-          else if (row[i]==sources[i])
+          else if (row[i] == sources[i])
           {
             // If row[i] == sources[i], then sources[i] is a value that is
             // distinct from c.first. The equality below simplifies to false.
@@ -306,12 +306,12 @@ int OracleTableImpl::containsExp(const Trie* curr,
         bool isIdent = false;
         for (const std::pair<const Term, Trie>& c : cmap)
         {
-          if (sources[i]==c.first)
+          if (sources[i] == c.first)
           {
             isIdent = true;
             break;
           }
-          else if (row[i]==sources[i])
+          else if (row[i] == sources[i])
           {
             // If row[i] == sources[i], then sources[i] is a value that is
             // distinct from c.first. The equality below simplifies to false.
