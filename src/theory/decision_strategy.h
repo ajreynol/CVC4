@@ -69,7 +69,9 @@ class DecisionStrategy : protected EnvObj
 class DecisionStrategyFmf : public DecisionStrategy
 {
  public:
-  DecisionStrategyFmf(Env& env, Valuation valuation, context::Context * litCtx = nullptr);
+  DecisionStrategyFmf(Env& env,
+                      Valuation valuation,
+                      context::Context* litCtx = nullptr);
   virtual ~DecisionStrategyFmf() {}
   /** initialize */
   void initialize() override;
@@ -152,7 +154,10 @@ class DecisionStrategySingleton : public DecisionStrategyFmf
 class DecisionStrategyVector : public DecisionStrategyFmf
 {
  public:
-  DecisionStrategyVector(Env& env, const char* name, Valuation valuation, context::Context * litCtx = nullptr);
+  DecisionStrategyVector(Env& env,
+                         const char* name,
+                         Valuation valuation,
+                         context::Context* litCtx = nullptr);
   /**
    * Make the n^th literal of this strategy. This method returns d_literal if
    * n=0, null otherwise.
@@ -165,7 +170,7 @@ class DecisionStrategyVector : public DecisionStrategyFmf
 
  private:
   /** the name of this strategy */
-  std::string d_name; 
+  std::string d_name;
 };
 
 }  // namespace theory

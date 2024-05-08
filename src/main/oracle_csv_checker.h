@@ -67,9 +67,9 @@ class OracleTableImpl
                std::vector<bool>& mask,
                std::vector<Term>& prop) const;
   int containsExp(const Trie* curr,
-               const std::vector<Term>& row,
-               const std::vector<Term>& sources,
-               std::vector<Term>& exp) const;
+                  const std::vector<Term>& row,
+                  const std::vector<Term>& sources,
+                  std::vector<Term>& exp) const;
   Term mkOr(const std::vector<Term>& children) const;
   Term mkAnd(const std::vector<Term>& children) const;
   /** */

@@ -23,17 +23,19 @@ using namespace cvc5::internal::kind;
 namespace cvc5::internal {
 namespace theory {
 
-DecisionStrategyFmf::DecisionStrategyFmf(Env& env, Valuation valuation, context::Context * litCtx)
+DecisionStrategyFmf::DecisionStrategyFmf(Env& env,
+                                         Valuation valuation,
+                                         context::Context* litCtx)
     : DecisionStrategy(env),
       d_valuation(valuation),
       d_has_curr_literal(context(), false),
       d_curr_literal(context(), 0),
-      d_usedContext(litCtx==nullptr ? &d_context : litCtx),
+      d_usedContext(litCtx == nullptr ? &d_context : litCtx),
       d_literals(d_usedContext)
 {
 }
 
-void DecisionStrategyFmf::initialize() { }
+void DecisionStrategyFmf::initialize() {}
 
 Node DecisionStrategyFmf::getNextDecisionRequest()
 {
@@ -150,7 +152,8 @@ Node DecisionStrategySingleton::getSingleLiteral() { return d_literal; }
 
 DecisionStrategyVector::DecisionStrategyVector(Env& env,
                                                const char* name,
-                                               Valuation valuation, context::Context * litCtx)
+                                               Valuation valuation,
+                                               context::Context* litCtx)
     : DecisionStrategyFmf(env, valuation, litCtx), d_name(name)
 {
 }

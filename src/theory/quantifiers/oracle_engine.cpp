@@ -249,7 +249,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         // include the explanation
         if (!exp.isNull())
         {
-          if (exp.getKind()==Kind::AND)
+          if (exp.getKind() == Kind::AND)
           {
             expLits.insert(expLits.end(), exp.begin(), exp.end());
           }

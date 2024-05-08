@@ -215,11 +215,10 @@ int OracleTableImpl::contains(const Trie* curr,
   return 1;
 }
 
-
 int OracleTableImpl::containsExp(const Trie* curr,
-                              const std::vector<Term>& row,
-                              const std::vector<Term>& sources,
-                              std::vector<Term>& exp) const
+                                 const std::vector<Term>& row,
+                                 const std::vector<Term>& sources,
+                                 std::vector<Term>& exp) const
 {
   Assert(mask.size() == row.size());
   std::map<Term, Trie>::const_iterator it;
@@ -283,10 +282,10 @@ int OracleTableImpl::containsExp(const Trie* curr,
       startMask = (i + 1);
     }
     // values past this don't matter
-    for (size_t j=0; j<startMask; j++)
+    for (size_t j = 0; j < startMask; j++)
     {
       // Forced values won't impact the result
-      if (forced.find(j)==forced.end() && sources[j]!=row[j])
+      if (forced.find(j) == forced.end() && sources[j] != row[j])
       {
         Term eq = d_tm.mkTerm(Kind::EQUAL, {sources[j], row[j]});
         exp.push_back(eq);
@@ -363,11 +362,11 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
   }
   if (result == -1)
   {
-    Assert (!exp.empty());
+    Assert(!exp.empty());
     Term expTerm = mkAnd(exp);
-    Trace("oracle-table-debug")
-        << "Explanation " << expTerm << std::endl;
-    Term ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_expKeyword, expTerm});
+    Trace("oracle-table-debug") << "Explanation " << expTerm << std::endl;
+    Term ret =
+        d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_expKeyword, expTerm});
     return ret;
   }
 #endif
