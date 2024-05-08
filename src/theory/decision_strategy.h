@@ -69,7 +69,7 @@ class DecisionStrategy : protected EnvObj
 class DecisionStrategyFmf : public DecisionStrategy
 {
  public:
-  DecisionStrategyFmf(Env& env, Valuation valuation);
+  DecisionStrategyFmf(Env& env, Valuation valuation, context::Context * litCtx = nullptr);
   virtual ~DecisionStrategyFmf() {}
   /** initialize */
   void initialize() override;
@@ -110,8 +110,12 @@ class DecisionStrategyFmf : public DecisionStrategy
    * current context, according to d_valuation.
    */
   context::CDO<unsigned> d_curr_literal;
+  /** A dummy context used by this class if none is provided */
+  context::Context d_context;
+  /** The context we are using */
+  context::Context* d_usedContext;
   /** the list of literals of this strategy */
-  std::vector<Node> d_literals;
+  context::CDList<Node> d_literals;
 };
 
 /**
@@ -148,7 +152,7 @@ class DecisionStrategySingleton : public DecisionStrategyFmf
 class DecisionStrategyVector : public DecisionStrategyFmf
 {
  public:
-  DecisionStrategyVector(Env& env, const char* name, Valuation valuation);
+  DecisionStrategyVector(Env& env, const char* name, Valuation valuation, context::Context * litCtx = nullptr);
   /**
    * Make the n^th literal of this strategy. This method returns d_literal if
    * n=0, null otherwise.
@@ -161,9 +165,7 @@ class DecisionStrategyVector : public DecisionStrategyFmf
 
  private:
   /** the name of this strategy */
-  std::string d_name;
-  /** the literal to decide on */
-  std::vector<Node> d_literals;
+  std::string d_name; 
 };
 
 }  // namespace theory
