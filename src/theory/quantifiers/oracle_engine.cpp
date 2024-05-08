@@ -62,7 +62,7 @@ OracleEngine::OracleEngine(Env& env,
   Assert(d_ochecker != nullptr);
   d_srcKeyword = nodeManager()->mkConst(String("source"));
   d_maskKeyword = nodeManager()->mkConst(String("mask"));
-  d_propKeyword = nodeManager()->mkConst(String("propagate"));
+  d_pexpKeyword = nodeManager()->mkConst(String("partial-exp"));
   d_expKeyword = nodeManager()->mkConst(String("exp"));
   d_false = nodeManager()->mkConst(false);
 }
@@ -209,7 +209,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
           d_ochecker->checkConsistent(fappWithArgs, predictedResponse);
       std::vector<bool> mask;
       Node exp;
-      Node prop;
+      Node pexp;
       while (result.getKind() == Kind::APPLY_ANNOTATION)
       {
         if (result[1] == d_maskKeyword)
@@ -225,9 +225,9 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
           // remember the explanation
           exp = result[2];
         }
-        else if (result[1] == d_propKeyword)
+        else if (result[1] == d_pexpKeyword)
         {
-          prop = result[2];
+          pexp = result[2];
         }
         else
         {
@@ -235,6 +235,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         }
         result = result[0];
       }
+      Assert (pexp.isNull() || exp.isNull());
       // if not constant, we don't infer anything
       if (!result.isNull() && result.isConst())
       {
@@ -260,9 +261,10 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         }
         else
         {
-          if (!prop.isNull())
+          // if we have a partial explanation
+          if (!pexp.isNull())
           {
-            expLits.push_back(prop.negate());
+            expLits.push_back(pexp.negate());
           }
           // otherwise the explanation is concrete equalities for each argument
           for (size_t i = 0, nchild = fapp.getNumChildren(); i < nchild; i++)

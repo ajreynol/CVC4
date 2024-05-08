@@ -76,7 +76,7 @@ class OracleTableImpl
   /** Commonly used terms */
   Term d_srcKeyword;
   Term d_maskKeyword;
-  Term d_propKeyword;
+  Term d_pexpKeyword;
   Term d_expKeyword;
   Term d_true;
   Term d_false;

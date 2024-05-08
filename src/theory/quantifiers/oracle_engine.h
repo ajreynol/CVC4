@@ -125,7 +125,7 @@ class OracleEngine : public QuantifiersModule
   /** */
   Node d_srcKeyword;
   Node d_maskKeyword;
-  Node d_propKeyword;
+  Node d_pexpKeyword;
   Node d_expKeyword;
   Node d_false;
 };

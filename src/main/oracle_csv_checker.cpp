@@ -33,7 +33,7 @@ OracleTableImpl::OracleTableImpl(TermManager& tm,
 {
   d_srcKeyword = tm.mkString("source");
   d_maskKeyword = tm.mkString("mask");
-  d_propKeyword = tm.mkString("propagate");
+  d_pexpKeyword = tm.mkString("partial-exp");
   d_expKeyword = tm.mkString("exp");
   d_true = tm.mkTrue();
   d_false = tm.mkFalse();
@@ -242,6 +242,8 @@ int OracleTableImpl::contains(const Trie* curr,
           prop.push_back(eq);
         }
       }
+      // explanation is fully contained in prop
+      // not using mask
     }
     else
     {
@@ -255,109 +257,7 @@ int OracleTableImpl::contains(const Trie* curr,
       {
         mask[j] = false;
       }
-    }
-    return -1;
-  }
-  return 1;
-}
-
-int OracleTableImpl::containsExp(const Trie* curr,
-                                 const std::vector<Term>& row,
-                                 const std::vector<Term>& sources,
-                                 std::vector<Term>& exp) const
-{
-  Assert(mask.size() == row.size());
-  std::map<Term, Trie>::const_iterator it;
-  std::set<size_t> forced;
-  for (size_t i = 0, nterms = row.size(); i < nterms; i++)
-  {
-    Term v = row[i];
-    if (v.getKind() == Kind::CONSTANT)
-    {
-      // propagate?
-      return 0;
-    }
-    it = curr->d_children.find(v);
-    if (it != curr->d_children.end())
-    {
-      if (curr->d_children.size() == 1)
-      {
-        forced.insert(i);
-      }
-      // found, continue
-      curr = &it->second;
-      continue;
-    }
-    size_t startMask;
-    // construct an explanation
-    if (d_optionProp)
-    {
-      startMask = i;
-      bool doContinue;
-      std::vector<Term> prop;
-      do
-      {
-        std::vector<Term> disj;
-        const std::map<Term, Trie>& cmap = curr->d_children;
-        if (cmap.empty())
-        {
-          break;
-        }
-        bool isIdent = false;
-        for (const std::pair<const Term, Trie>& c : cmap)
-        {
-          if (sources[i] == c.first)
-          {
-            isIdent = true;
-            break;
-          }
-          else if (row[i] == sources[i])
-          {
-            // If row[i] == sources[i], then sources[i] is a value that is
-            // distinct from c.first. The equality below simplifies to false.
-            continue;
-          }
-          disj.push_back(d_tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
-        }
-        if (!isIdent)
-        {
-          // If disj is empty, then the entire propagation predicate is false.
-          // We don't provide it and simply clear the vector.
-          if (disj.empty())
-          {
-            prop.clear();
-            break;
-          }
-          prop.push_back(mkOr(disj));
-        }
-        doContinue = (cmap.size() == 1);
-        if (doContinue)
-        {
-          curr = &cmap.begin()->second;
-          i++;
-        }
-      } while (doContinue);
-      // prop is empty if we encountered a conflict, in this case it does
-      // not contribute to the explanation.
-      if (!prop.empty())
-      {
-        Term pterm = mkAnd(prop);
-        exp.push_back(d_tm.mkTerm(Kind::NOT, {pterm}));
-      }
-    }
-    else
-    {
-      startMask = (i + 1);
-    }
-    // values past this don't matter
-    for (size_t j = 0; j < startMask; j++)
-    {
-      // Forced values won't impact the result
-      if (forced.find(j) == forced.end() && sources[j] != row[j])
-      {
-        Term eq = d_tm.mkTerm(Kind::EQUAL, {sources[j], row[j]});
-        exp.push_back(eq);
-      }
+      // prop is a partial explanation, assuming the mask
     }
     return -1;
   }
@@ -427,7 +327,7 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
         Term pterm = mkAnd(prop);
         Trace("oracle-table-debug")
             << "Propation predicate " << pterm << std::endl;
-        ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {ret, d_propKeyword, pterm});
+        ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {ret, d_pexpKeyword, pterm});
       }
     }
     return ret;
