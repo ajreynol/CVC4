@@ -1718,9 +1718,9 @@ void Smt2Printer::toStreamCmdDeclareOracleFun(
 {
   out << "(declare-oracle-fun " << cvc5::internal::quoteSymbol(id) << " ";
   toStreamDeclareType(out, argTypes, type);
-  if (otype!=modes::OracleType::NO_IMPLEMENTATION)
+  if (otype != modes::OracleType::NO_IMPLEMENTATION)
   {
-    if (otype!=modes::OracleType::BINARY)
+    if (otype != modes::OracleType::BINARY)
     {
       out << ":" << otype << " ";
     }

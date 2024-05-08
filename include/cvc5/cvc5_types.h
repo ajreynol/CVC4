@@ -655,8 +655,7 @@ typedef enum ENUM(OracleType) ENUM(OracleType);
  * @param type The oracle type.
  * @return The string representation.
  */
-const char* cvc5_modes_oracle_type_to_string(
-    Cvc5OracleType type);
+const char* cvc5_modes_oracle_type_to_string(Cvc5OracleType type);
 #else
 /**
  * Serialize a OracleType to given stream.
@@ -673,7 +672,7 @@ std::string to_string(cvc5::modes::OracleType type);
 
 namespace cvc5::modes {
 #endif
-  
+
 /* -------------------------------------------------------------------------- */
 /* InputLanguage                                                              */
 /* -------------------------------------------------------------------------- */

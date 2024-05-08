@@ -184,7 +184,7 @@ int OracleCsvChecker::contains(const Trie* curr,
           disj.push_back(d_tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
         }
         prop.push_back(mkOr(d_tm, disj));
-        doContinue = (cmap.size()==1);
+        doContinue = (cmap.size() == 1);
         if (doContinue)
         {
           curr = &cmap.begin()->second;

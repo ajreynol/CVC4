@@ -1015,8 +1015,12 @@ DeclareOracleFunCommand::DeclareOracleFunCommand(
     const std::vector<Sort>& argSorts,
     Sort sort,
     const std::string& implName,
-                          modes::OracleType type)
-    : d_id(id), d_argSorts(argSorts), d_sort(sort), d_implName(implName), d_otype(type)
+    modes::OracleType type)
+    : d_id(id),
+      d_argSorts(argSorts),
+      d_sort(sort),
+      d_implName(implName),
+      d_otype(type)
 {
 }
 
@@ -1067,7 +1071,7 @@ void DeclareOracleFunCommand::toStream(std::ostream& out) const
       sortVectorToTypeNodes(d_argSorts),
       sortToTypeNode(d_sort),
       d_implName,
-                                                                  d_otype);
+      d_otype);
 }
 
 /* -------------------------------------------------------------------------- */
