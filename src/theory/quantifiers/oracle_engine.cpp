@@ -63,6 +63,7 @@ OracleEngine::OracleEngine(Env& env,
   d_srcKeyword = nodeManager()->mkConst(String("source"));
   d_maskKeyword = nodeManager()->mkConst(String("mask"));
   d_propKeyword = nodeManager()->mkConst(String("propagate"));
+  d_expKeyword = nodeManager()->mkConst(String("exp"));
   d_false = nodeManager()->mkConst(false);
 }
 
@@ -207,6 +208,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       Node result =
           d_ochecker->checkConsistent(fappWithArgs, predictedResponse);
       std::vector<bool> mask;
+      Node exp;
       Node prop;
       while (result.getKind() == Kind::APPLY_ANNOTATION)
       {
@@ -218,9 +220,13 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
             mask.push_back(v != d_false);
           }
         }
+        else if (result[1] == d_expKeyword)
+        {
+          // remember the explanation
+          exp = result[2];
+        }
         else if (result[1] == d_propKeyword)
         {
-          // remember the propagating predicate
           prop = result[2];
         }
         else
@@ -238,28 +244,46 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         // so that they can be preferred by the decision strategy.
         std::vector<Node> disj;
         Node conc = nm->mkNode(Kind::EQUAL, fapp, result);
-        // include the propagation
-        if (!prop.isNull())
-        {
-          Node propr = rewrite(prop);
-          disj.push_back(propr);
-          d_dstrat.addLiteral(propr);
-        }
         disj.push_back(conc);
-        for (size_t i = 0, nchild = fapp.getNumChildren(); i < nchild; i++)
+        std::vector<Node> expLits;
+        // include the explanation
+        if (!exp.isNull())
         {
-          // evaluation did not depend on this value
-          if (i < mask.size() && !mask[i])
+          if (exp.getKind()==Kind::AND)
           {
-            continue;
+            expLits.insert(expLits.end(), exp.begin(), exp.end());
           }
-          Node eqa = fapp[i].eqNode(argumentsVals[i + 1]);
-          eqa = rewrite(eqa);
+          else
+          {
+            expLits.push_back(exp);
+          }
+        }
+        else
+        {
+          if (!prop.isNull())
+          {
+            expLits.push_back(prop.negate());
+          }
+          // otherwise the explanation is concrete equalities for each argument
+          for (size_t i = 0, nchild = fapp.getNumChildren(); i < nchild; i++)
+          {
+            // evaluation did not depend on this value
+            if (i < mask.size() && !mask[i])
+            {
+              continue;
+            }
+            Node eqa = fapp[i].eqNode(argumentsVals[i + 1]);
+            expLits.push_back(eqa);
+          }
+        }
+        for (const Node& l : expLits)
+        {
+          Node lr = rewrite(l);
           // Insist that the decision strategy tries to make (= args values)
           // true first. This is to ensure that the value of the oracle can be
           // used.
-          d_dstrat.addLiteral(eqa);
-          disj.push_back(eqa.notNode());
+          d_dstrat.addLiteral(lr);
+          disj.push_back(lr.negate());
         }
         Node lem = nm->mkOr(disj);
         learnedLemmas.push_back(lem);

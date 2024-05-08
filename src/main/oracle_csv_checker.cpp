@@ -34,6 +34,7 @@ OracleTableImpl::OracleTableImpl(TermManager& tm,
   d_srcKeyword = tm.mkString("source");
   d_maskKeyword = tm.mkString("mask");
   d_propKeyword = tm.mkString("propagate");
+  d_expKeyword = tm.mkString("exp");
   d_true = tm.mkTrue();
   d_false = tm.mkFalse();
   d_unknown = tm.mkConst(tm.getBooleanSort());
@@ -122,16 +123,22 @@ void OracleTableImpl::Trie::add(const std::vector<Term>& row)
   }
 }
 
-Term mkOr(TermManager& tm, const std::vector<Term>& children)
+Term OracleTableImpl::mkOr(const std::vector<Term>& children) const
 {
-  Assert(!children.empty());
-  return children.size() == 1 ? children[0] : tm.mkTerm(Kind::OR, children);
+  if (children.empty())
+  {
+    return d_false;
+  }
+  return children.size() == 1 ? children[0] : d_tm.mkTerm(Kind::OR, children);
 }
 
-Term mkAnd(TermManager& tm, const std::vector<Term>& children)
+Term OracleTableImpl::mkAnd(const std::vector<Term>& children) const
 {
-  Assert(!children.empty());
-  return children.size() == 1 ? children[0] : tm.mkTerm(Kind::AND, children);
+  if (children.empty())
+  {
+    return d_true;
+  }
+  return children.size() == 1 ? children[0] : d_tm.mkTerm(Kind::AND, children);
 }
 
 int OracleTableImpl::contains(const Trie* curr,
@@ -180,7 +187,7 @@ int OracleTableImpl::contains(const Trie* curr,
         {
           disj.push_back(d_tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
         }
-        prop.push_back(mkOr(d_tm, disj));
+        prop.push_back(mkOr(disj));
         doContinue = (cmap.size() == 1);
         if (doContinue)
         {
@@ -202,6 +209,88 @@ int OracleTableImpl::contains(const Trie* curr,
     for (size_t j = startMask; j < nterms; j++)
     {
       mask[j] = false;
+    }
+    return -1;
+  }
+  return 1;
+}
+
+
+int OracleTableImpl::containsExp(const Trie* curr,
+                              const std::vector<Term>& row,
+                              const std::vector<Term>& sources,
+                              std::vector<Term>& exp) const
+{
+  Assert(mask.size() == row.size());
+  std::map<Term, Trie>::const_iterator it;
+  std::set<size_t> forced;
+  for (size_t i = 0, nterms = row.size(); i < nterms; i++)
+  {
+    Term v = row[i];
+    if (v.getKind() == Kind::CONSTANT)
+    {
+      // propagate?
+      return 0;
+    }
+    it = curr->d_children.find(v);
+    if (it != curr->d_children.end())
+    {
+      if (curr->d_children.size() == 1)
+      {
+        forced.insert(i);
+      }
+      // found, continue
+      curr = &it->second;
+      continue;
+    }
+    size_t startMask;
+    // construct an explanation
+    if (d_optionProp)
+    {
+      startMask = i;
+      bool doContinue;
+      std::vector<Term> prop;
+      bool isConflict = false;
+      do
+      {
+        std::vector<Term> disj;
+        const std::map<Term, Trie>& cmap = curr->d_children;
+        if (cmap.empty())
+        {
+          break;
+        }
+        for (const std::pair<const Term, Trie>& c : cmap)
+        {
+          disj.push_back(d_tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
+        }
+        prop.push_back(mkOr(disj));
+        doContinue = (cmap.size() == 1);
+        if (doContinue)
+        {
+          curr = &cmap.begin()->second;
+          i++;
+        }
+      } while (doContinue);
+      // if we did not encounter a conflict
+      if (!isConflict)
+      {
+        Term pterm = mkAnd(prop);
+        exp.push_back(d_tm.mkTerm(Kind::NOT, {pterm}));
+      }
+    }
+    else
+    {
+      startMask = (i + 1);
+    }
+    // values past this don't matter
+    for (size_t j=0; j<startMask; j++)
+    {
+      // Forced values won't impact the result
+      if (forced.find(j)==forced.end() && sources[j]!=row[j])
+      {
+        Term eq = d_tm.mkTerm(Kind::EQUAL, {sources[j], row[j]});
+        exp.push_back(eq);
+      }
     }
     return -1;
   }
@@ -239,6 +328,7 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
       sources.push_back(t);
     }
   }
+#if 1
   std::vector<Term> prop;
   int result = contains(&d_data, rowValues, sources, mask, prop);
   if (result == 1)
@@ -257,13 +347,30 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
         d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_maskKeyword, mterm});
     if (!prop.empty())
     {
-      Term pterm = mkAnd(d_tm, prop);
+      Term pterm = mkAnd(prop);
       Trace("oracle-table-debug")
           << "Propation predicate " << pterm << std::endl;
       ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {ret, d_propKeyword, pterm});
     }
     return ret;
   }
+#else
+  std::vector<Term> exp;
+  int result = containsExp(&d_data, rowValues, sources, exp);
+  if (result == 1)
+  {
+    return d_true;
+  }
+  if (result == -1)
+  {
+    Assert (!exp.empty());
+    Term expTerm = mkAnd(exp);
+    Trace("oracle-table-debug")
+        << "Explanation " << expTerm << std::endl;
+    Term ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_expKeyword, expTerm});
+    return ret;
+  }
+#endif
   return d_unknown;
 }
 
