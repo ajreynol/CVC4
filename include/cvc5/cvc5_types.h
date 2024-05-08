@@ -614,6 +614,67 @@ namespace cvc5::modes {
 #endif
 
 /* -------------------------------------------------------------------------- */
+/* OracleType                                                            */
+/* -------------------------------------------------------------------------- */
+
+#ifdef CVC5_API_USE_C_ENUMS
+#undef EVALUE
+#define EVALUE(name) CVC5_ORACLE_TYPE_##name
+#endif
+
+/**
+ * Find synthesis targets, used as an argument to Solver::findSynth. These
+ * specify various kinds of terms that can be found by this method.
+ */
+enum ENUM(OracleType)
+{
+  /**
+   */
+  EVALUE(NO_IMPLEMENTATION) = 0,
+  /**
+   */
+  EVALUE(BINARY),
+  /**
+   */
+  EVALUE(TABLE),
+#ifdef CVC5_API_USE_C_ENUMS
+  // must be last entry
+  EVALUE(LAST),
+#endif
+};
+
+#ifdef CVC5_API_USE_C_ENUMS
+#ifndef DOXYGEN_SKIP
+typedef enum ENUM(OracleType) ENUM(OracleType);
+#endif
+#endif
+
+#ifdef CVC5_API_USE_C_ENUMS
+/**
+ * Get a string representation of a Cvc5OracleType.
+ * @param type The oracle type.
+ * @return The string representation.
+ */
+const char* cvc5_modes_oracle_type_to_string(
+    Cvc5OracleType type);
+#else
+/**
+ * Serialize a OracleType to given stream.
+ * @param out    The output stream
+ * @param type The oracle type.
+ * @return The output stream
+ */
+CVC5_EXPORT std::ostream& operator<<(std::ostream& out, OracleType type);
+}
+
+namespace std {
+std::string to_string(cvc5::modes::OracleType type);
+}
+
+namespace cvc5::modes {
+#endif
+  
+/* -------------------------------------------------------------------------- */
 /* InputLanguage                                                              */
 /* -------------------------------------------------------------------------- */
 

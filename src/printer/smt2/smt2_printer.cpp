@@ -1713,11 +1713,20 @@ void Smt2Printer::toStreamCmdDeclareOracleFun(
     const std::string& id,
     const std::vector<TypeNode>& argTypes,
     TypeNode type,
-    const std::string& binName) const
+    const std::string& implName,
+    modes::OracleType otype) const
 {
   out << "(declare-oracle-fun " << cvc5::internal::quoteSymbol(id) << " ";
   toStreamDeclareType(out, argTypes, type);
-  out << " " << binName << ")";
+  if (otype!=modes::OracleType::NO_IMPLEMENTATION)
+  {
+    if (otype!=modes::OracleType::BINARY)
+    {
+      out << ":" << otype << " ";
+    }
+    out << " " << implName;
+  }
+  out << ")";
 }
 
 void Smt2Printer::toStreamCmdDeclarePool(

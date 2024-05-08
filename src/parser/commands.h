@@ -295,11 +295,13 @@ class CVC5_EXPORT DeclareOracleFunCommand : public Cmd
   DeclareOracleFunCommand(const std::string& id,
                           const std::vector<Sort>& argSorts,
                           Sort sort,
-                          const std::string& binName);
+                          const std::string& implName,
+                          modes::OracleType type);
   const std::string& getIdentifier() const;
   std::vector<Sort> getArgSorts() const;
   Sort getSort() const;
-  const std::string& getBinaryName() const;
+  const std::string& getImplName() const;
+  modes::OracleType getOracleType() const;
 
   void invoke(Solver* solver, parser::SymManager* sm) override;
   std::string getCommandName() const override;
@@ -313,7 +315,9 @@ class CVC5_EXPORT DeclareOracleFunCommand : public Cmd
   /** The return sort */
   Sort d_sort;
   /** The binary name, or "" if none is provided */
-  std::string d_binName;
+  std::string d_implName;
+  /** The oracle type */
+  modes::OracleType d_otype;
 };
 
 class CVC5_EXPORT DeclareSortCommand : public DeclarationDefinitionCommand

@@ -137,7 +137,8 @@ class CVC5_EXPORT Printer
       const std::string& id,
       const std::vector<TypeNode>& argTypes,
       TypeNode type,
-      const std::string& binName) const;
+      const std::string& implName,
+  modes::OracleType otype) const;
 
   /** Print declare-sort command */
   virtual void toStreamCmdDeclareType(std::ostream& out,

@@ -259,7 +259,8 @@ void Printer::toStreamCmdDeclareOracleFun(std::ostream& out,
                                           const std::string& id,
                                           const std::vector<TypeNode>& argTypes,
                                           TypeNode type,
-                                          const std::string& binName) const
+                                          const std::string& implName,
+  modes::OracleType otype) const
 {
   printUnknownCommand(out, "declare-oracle-fun");
 }

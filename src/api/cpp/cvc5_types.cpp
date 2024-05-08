@@ -214,6 +214,29 @@ std::string to_string(cvc5::modes::FindSynthTarget target)
 }  // namespace std
 
 namespace cvc5::modes {
+std::ostream& operator<<(std::ostream& out, OracleType type)
+{
+  switch (type)
+  {
+    case OracleType::NO_IMPLEMENTATION: out << "no_implementation"; break;
+    case OracleType::BINARY: out << "binary"; break;
+    case OracleType::TABLE: out << "table"; break;
+    default: out << "?";
+  }
+  return out;
+}
+}  // namespace cvc5::modes
+
+namespace std {
+std::string to_string(cvc5::modes::OracleType type)
+{
+  std::stringstream ss;
+  ss << type;
+  return ss.str();
+}
+}  // namespace std
+
+namespace cvc5::modes {
 std::ostream& operator<<(std::ostream& out, InputLanguage lang)
 {
   switch (lang)

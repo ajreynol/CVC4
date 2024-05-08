@@ -90,7 +90,8 @@ class Smt2Printer : public cvc5::internal::Printer
                                    const std::string& id,
                                    const std::vector<TypeNode>& argTypes,
                                    TypeNode type,
-                                   const std::string& binName) const override;
+                                   const std::string& implName,
+  modes::OracleType otype) const override;
 
   /** Print declare-pool command */
   void toStreamCmdDeclarePool(std::ostream& out,

@@ -1007,15 +1007,16 @@ void DeclarePoolCommand::toStream(std::ostream& out) const
 
 DeclareOracleFunCommand::DeclareOracleFunCommand(
     const std::string& id, const std::vector<Sort>& argSorts, Sort sort)
-    : d_id(id), d_argSorts(argSorts), d_sort(sort), d_binName("")
+    : d_id(id), d_argSorts(argSorts), d_sort(sort), d_implName("")
 {
 }
 DeclareOracleFunCommand::DeclareOracleFunCommand(
     const std::string& id,
     const std::vector<Sort>& argSorts,
     Sort sort,
-    const std::string& binName)
-    : d_id(id), d_argSorts(argSorts), d_sort(sort), d_binName(binName)
+    const std::string& implName,
+                          modes::OracleType type)
+    : d_id(id), d_argSorts(argSorts), d_sort(sort), d_implName(implName), d_otype(type)
 {
 }
 
@@ -1026,9 +1027,14 @@ const std::string& DeclareOracleFunCommand::getIdentifier() const
 
 Sort DeclareOracleFunCommand::getSort() const { return d_sort; }
 
-const std::string& DeclareOracleFunCommand::getBinaryName() const
+const std::string& DeclareOracleFunCommand::getImplName() const
 {
-  return d_binName;
+  return d_implName;
+}
+
+modes::OracleType DeclareOracleFunCommand::getOracleType() const
+{
+  return d_otype;
 }
 
 void DeclareOracleFunCommand::invoke(Solver* solver, SymManager* sm)
@@ -1060,7 +1066,8 @@ void DeclareOracleFunCommand::toStream(std::ostream& out) const
       d_id,
       sortVectorToTypeNodes(d_argSorts),
       sortToTypeNode(d_sort),
-      d_binName);
+      d_implName,
+                                                                  d_otype);
 }
 
 /* -------------------------------------------------------------------------- */
