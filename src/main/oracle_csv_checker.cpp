@@ -258,7 +258,8 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
     if (!prop.empty())
     {
       Term pterm = mkAnd(d_tm, prop);
-      Trace("oracle-table-debug") << "Propation predicate " << pterm << std::endl;
+      Trace("oracle-table-debug")
+          << "Propation predicate " << pterm << std::endl;
       ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {ret, d_propKeyword, pterm});
     }
     return ret;

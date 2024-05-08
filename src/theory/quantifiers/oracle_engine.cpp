@@ -204,8 +204,8 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       // call oracle
       Node fappWithArgs = nm->mkNode(Kind::APPLY_UF, arguments);
       Node predictedResponse = fm->getValue(fapp);
-      Node result = d_ochecker->checkConsistent(
-          fappWithArgs, predictedResponse);
+      Node result =
+          d_ochecker->checkConsistent(fappWithArgs, predictedResponse);
       std::vector<bool> mask;
       Node prop;
       while (result.getKind() == Kind::APPLY_ANNOTATION)

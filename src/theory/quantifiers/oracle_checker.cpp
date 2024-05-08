@@ -30,8 +30,7 @@ OracleChecker::OracleChecker(Env& env)
 {
 }
 
-Node OracleChecker::checkConsistent(const Node& app,
-                                    const Node& val)
+Node OracleChecker::checkConsistent(const Node& app, const Node& val)
 {
   Node result = evaluateApp(app);
   Node resVal = result;
