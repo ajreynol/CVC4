@@ -161,16 +161,16 @@ bool CommandExecutor::doCommandSingleton(Cmd* cmd)
                              d_symman->toSymManager(),
                              cmd,
                              d_solver->getDriverOptions().out());
-  const CheckSatCommand* cs = dynamic_cast<const CheckSatCommand*>(cmd);
-  const CheckSatAssumingCommand* csa =
-      dynamic_cast<const CheckSatAssumingCommand*>(cmd);
   cvc5::Result res;
   bool hasResult = false;
+  const CheckSatCommand* cs = dynamic_cast<const CheckSatCommand*>(cmd);
   if (cs != nullptr)
   {
     d_result = res = cs->getResult();
     hasResult = true;
   }
+  const CheckSatAssumingCommand* csa =
+      dynamic_cast<const CheckSatAssumingCommand*>(cmd);
   if (csa != nullptr)
   {
     d_result = res = csa->getResult();

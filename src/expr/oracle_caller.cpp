@@ -27,10 +27,8 @@ OracleCaller::OracleCaller(const Node& n)
 }
 
 bool OracleCaller::callOracle(const Node& fapp,
-                              const Node& fappv,
                               std::vector<Node>& res)
 {
-  Assert(fapp.getOperator() == fappv.getOperator());
   std::map<Node, std::vector<Node>>::iterator it = d_cachedResults.find(fapp);
   if (it != d_cachedResults.end())
   {
