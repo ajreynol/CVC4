@@ -25,7 +25,7 @@
 namespace cvc5 {
 namespace main {
 
-OracleCsvChecker::OracleCsvChecker(TermManager& tm,
+OracleTableImpl::OracleTableImpl(TermManager& tm,
                                    std::string& filename,
                                    Solver* s,
                                    parser::SymbolManager* sm)
@@ -41,9 +41,9 @@ OracleCsvChecker::OracleCsvChecker(TermManager& tm,
   d_optionProp = true;
 }
 
-OracleCsvChecker::~OracleCsvChecker() {}
+OracleTableImpl::~OracleTableImpl() {}
 
-void OracleCsvChecker::initialize()
+void OracleTableImpl::initialize(const std::string& id, const std::vector<Sort>& argSorts)
 {
   // set up variables
   parser::InputParser ip(d_solver, d_symman);
@@ -64,6 +64,11 @@ void OracleCsvChecker::initialize()
   d_header.pop_back();
   size_t nvars = d_header.size();
   Trace("oracle-csv-parse") << "Header size is " << nvars << std::endl;
+  if (nvars!=argSorts.size())
+  {
+    std::cout << "ERROR: Arity mismatch" << std::endl;
+    return;
+  }
 
   std::vector<Term> row;
   row.push_back(t);
@@ -96,26 +101,17 @@ void OracleCsvChecker::initialize()
   } while (!finished);
   Trace("oracle-csv-parse") << "Finished reading csv" << std::endl;
 
-  std::vector<Sort> argTypes = getArgTypes();
   Sort boolSort = d_tm.getBooleanSort();
+  // declare it
   d_oracle = d_solver->declareOracleFun(
-      "oracle.in_csv", argTypes, boolSort, [&](const std::vector<Term>& input) {
+      id, argSorts, boolSort, [&](const std::vector<Term>& input) {
         return this->evaluate(input);
       });
-  std::vector<Term> cc;
-  cc.push_back(d_oracle);
-  cc.insert(cc.end(), d_header.begin(), d_header.end());
-  d_oracleConstraint = d_tm.mkTerm(Kind::APPLY_UF, cc);
-  d_solver->assertFormula(d_oracleConstraint);
 }
 
-Term OracleCsvChecker::getOracle() const { return d_oracle; }
-Term OracleCsvChecker::getOracleConstraint() const
-{
-  return d_oracleConstraint;
-}
+Term OracleTableImpl::getOracleFun() const { return d_oracle; }
 
-void OracleCsvChecker::Trie::add(const std::vector<Term>& row)
+void OracleTableImpl::Trie::add(const std::vector<Term>& row)
 {
   Trie* curr = this;
   for (const Term& t : row)
@@ -137,7 +133,7 @@ Term mkAnd(TermManager& tm, const std::vector<Term>& children)
   return children.size() == 1 ? children[0] : tm.mkTerm(Kind::AND, children);
 }
 
-int OracleCsvChecker::contains(const Trie* curr,
+int OracleTableImpl::contains(const Trie* curr,
                                const std::vector<Term>& row,
                                const std::vector<Term>& sources,
                                std::vector<bool>& mask,
@@ -211,7 +207,7 @@ int OracleCsvChecker::contains(const Trie* curr,
   return 1;
 }
 
-Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
+Term OracleTableImpl::evaluate(const std::vector<Term>& row)
 {
   // process the mask
   std::vector<bool> mask;
@@ -268,9 +264,9 @@ Term OracleCsvChecker::evaluate(const std::vector<Term>& row)
   return d_unknown;
 }
 
-void OracleCsvChecker::addRow(const std::vector<Term>& row) { d_data.add(row); }
+void OracleTableImpl::addRow(const std::vector<Term>& row) { d_data.add(row); }
 
-std::vector<Sort> OracleCsvChecker::getArgTypes() const
+std::vector<Sort> OracleTableImpl::getArgTypes() const
 {
   std::vector<Sort> sorts;
   for (const Term& t : d_header)

@@ -30,6 +30,7 @@
 #include "base/output.h"
 #include "main/main.h"
 #include "parser/commands.h"
+#include "parser/sym_manager.h"
 #include "smt/solver_engine.h"
 
 using namespace cvc5::parser;
@@ -56,7 +57,8 @@ CommandExecutor::CommandExecutor(std::unique_ptr<cvc5::Solver>& solver)
     : d_solver(solver),
       d_symman(new SymbolManager(d_solver.get())),
       d_result(),
-      d_parseOnly(false)
+      d_parseOnly(false),
+      d_oracles(false)
 {
 }
 CommandExecutor::~CommandExecutor()
@@ -65,18 +67,11 @@ CommandExecutor::~CommandExecutor()
 
 void CommandExecutor::storeOptionsAsOriginal()
 {
-  // if applicable, add the lemma loader plugin
-  std::string csvfile = d_solver->getOptionInfo("csv-constraint").stringValue();
-  if (csvfile != "")
-  {
-    TermManager& tm = d_solver->getTermManager();
-    d_csvChecker.reset(
-        new OracleCsvChecker(tm, csvfile, d_solver.get(), d_symman.get()));
-  }
   d_solver->d_originalOptions->copyValues(d_solver->d_slv->getOptions());
   // cache the value of parse-only, which is set by the command line only
   // and thus will not change in a run.
   d_parseOnly = d_solver->getOptionInfo("parse-only").boolValue();
+  d_oracles = d_solver->getOptionInfo("oracles").boolValue();
 }
 
 void CommandExecutor::setOptionInternal(const std::string& key,
@@ -137,22 +132,37 @@ void CommandExecutor::reset()
 
 bool CommandExecutor::doCommandSingleton(Cmd* cmd)
 {
-  const CheckSatCommand* cs = dynamic_cast<const CheckSatCommand*>(cmd);
-  const CheckSatAssumingCommand* csa =
-      dynamic_cast<const CheckSatAssumingCommand*>(cmd);
-  if (cs != nullptr || csa != nullptr)
+  if (d_oracles)
   {
-    if (d_csvChecker != nullptr)
+    const DeclareOracleFunCommand* cof = dynamic_cast<const DeclareOracleFunCommand*>(cmd);
+    if (cof!=nullptr)
     {
-      // initialize and assert formula
-      d_csvChecker->initialize();
+      if (cof->getOracleType()==modes::OracleType::TABLE)
+      {
+        std::string tableFile = cof->getImplName();
+        TermManager& tm = d_solver->getTermManager();
+        d_oracleTables.emplace_back(
+            new OracleTableImpl(tm, tableFile, d_solver.get(), d_symman.get()));
+        OracleTableImpl * oracle = d_oracleTables.back().get();
+        const std::vector<Sort>& argSorts = cof->getArgSorts();
+        const std::string& id = cof->getIdentifier(); 
+        oracle->initialize(id, argSorts);
+        // Get the oracle function declared by the class and bind it in the
+        // symbol table.
+        Term of = oracle->getOracleFun();
+        SymManager* sm = d_symman->toSymManager();
+        sm->bind(id, of);
+        return true;
+      }
     }
   }
   bool status = solverInvoke(d_solver.get(),
                              d_symman->toSymManager(),
                              cmd,
                              d_solver->getDriverOptions().out());
-
+  const CheckSatCommand* cs = dynamic_cast<const CheckSatCommand*>(cmd);
+  const CheckSatAssumingCommand* csa =
+      dynamic_cast<const CheckSatAssumingCommand*>(cmd);
   cvc5::Result res;
   bool hasResult = false;
   if (cs != nullptr)

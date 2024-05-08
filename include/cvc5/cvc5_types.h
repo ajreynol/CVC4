@@ -630,7 +630,10 @@ enum ENUM(OracleType)
 {
   /**
    */
-  EVALUE(NO_IMPLEMENTATION) = 0,
+  EVALUE(UNKNOWN) = 0,
+  /**
+   */
+  EVALUE(NO_IMPLEMENTATION),
   /**
    */
   EVALUE(BINARY),

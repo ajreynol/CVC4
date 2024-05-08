@@ -91,6 +91,8 @@ class Smt2State : public ParserState
   modes::BlockModelsMode getBlockModelsMode(const std::string& mode);
   /** Parse learned literal type */
   modes::LearnedLitType getLearnedLitType(const std::string& mode);
+  /** Parse oracle type */
+  modes::OracleType getOracleType(const std::string& mode);
   /** Parse proof component */
   modes::ProofComponent getProofComponent(const std::string& pc);
   /** Parse find synth target */

@@ -311,19 +311,43 @@ std::unique_ptr<Cmd> Smt2CmdParser::parseNextCommand()
       std::vector<Sort> sorts;
       sorts = d_tparser.parseSortList();
       Sort t = d_tparser.parseSort();
-      if (!sorts.empty())
-      {
-        t = d_state.flattenFunctionType(sorts, t);
-      }
       tok = d_lex.peekToken();
-      std::string binName;
+      std::string implName;
+      modes::OracleType otype = modes::OracleType::NO_IMPLEMENTATION;
       if (tok != Token::RPAREN_TOK)
       {
-        binName = d_tparser.parseSymbol(CHECK_NONE, SYM_VARIABLE);
+        implName = d_tparser.parseSymbol(CHECK_NONE, SYM_VARIABLE);
+        // maybe a keyword
+        tok = d_lex.peekToken();
+        if (tok == Token::KEYWORD)
+        {
+          std::string key = d_tparser.parseKeyword();
+          otype = d_state.getOracleType(key);
+          if (otype==modes::OracleType::TABLE)
+          {
+            // range must be Boolean
+            if (!t.isBoolean())
+            {
+              d_lex.parseError("Expected Boolean return type for table oracle");
+            }
+          }
+        }
+        else
+        {
+          // binary is the default
+          otype = modes::OracleType::BINARY;
+        }
       }
-      // not supported
-      d_state.warning("Oracles not supported via the text interface in this version");
-      cmd.reset(new EmptyCommand());
+      if (otype==modes::OracleType::TABLE)
+      {
+        cmd.reset(new DeclareOracleFunCommand(name, sorts, t, implName, otype));
+      }
+      else
+      {
+        // not supported
+        d_state.warning("Oracles referencing binaries are not supported via the text interface in this version");
+        cmd.reset(new EmptyCommand());
+      }
     }
     break;
     // (declare-pool <symbol> <sort> (<term>∗))

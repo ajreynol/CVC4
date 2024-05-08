@@ -56,6 +56,8 @@ class CommandExecutor
 
   /** Cache option value of parse-only option. */
   bool d_parseOnly;
+  /** Cache option value of oracles option */
+  bool d_oracles;
 
  public:
   CommandExecutor(std::unique_ptr<cvc5::Solver>& solver);
@@ -124,8 +126,8 @@ class CommandExecutor
                     parser::SymManager* sm,
                     parser::Cmd* cmd,
                     std::ostream& out);
-  /** CSV checker oracle */
-  std::unique_ptr<OracleCsvChecker> d_csvChecker;
+  /** Implementation of table oracles */
+  std::vector<std::unique_ptr<OracleTableImpl>> d_oracleTables;
 }; /* class CommandExecutor */
 
 

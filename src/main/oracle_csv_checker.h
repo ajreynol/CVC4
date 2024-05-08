@@ -29,24 +29,22 @@ namespace main {
 /**
  * A class to setup an oracle for reading a CSV from disk.
  */
-class OracleCsvChecker
+class OracleTableImpl
 {
  public:
-  OracleCsvChecker(TermManager& tm,
+  OracleTableImpl(TermManager& tm,
                    std::string& filename,
                    Solver* s,
                    parser::SymbolManager* sm);
-  ~OracleCsvChecker();
+  ~OracleTableImpl();
   /** Get the oracle defined by this class */
-  Term getOracle() const;
-  /** Get the oracle constraint */
-  Term getOracleConstraint() const;
+  Term getOracleFun() const;
   /** */
   std::vector<Sort> getArgTypes() const;
   /**
    * Initialize. To be called only when parsing is ready and prior to solving.
    */
-  void initialize();
+  void initialize(const std::string& id, const std::vector<Sort>& argSorts);
 
  private:
   /** */
@@ -72,7 +70,6 @@ class OracleCsvChecker
   bool d_optionProp;
   /** The oracle we have declared */
   Term d_oracle;
-  Term d_oracleConstraint;
   /** Commonly used terms */
   Term d_srcKeyword;
   Term d_maskKeyword;

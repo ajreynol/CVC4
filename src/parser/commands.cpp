@@ -1007,9 +1007,10 @@ void DeclarePoolCommand::toStream(std::ostream& out) const
 
 DeclareOracleFunCommand::DeclareOracleFunCommand(
     const std::string& id, const std::vector<Sort>& argSorts, Sort sort)
-    : d_id(id), d_argSorts(argSorts), d_sort(sort), d_implName("")
+    : d_id(id), d_argSorts(argSorts), d_sort(sort), d_implName(""), d_otype(modes::OracleType::NO_IMPLEMENTATION)
 {
 }
+
 DeclareOracleFunCommand::DeclareOracleFunCommand(
     const std::string& id,
     const std::vector<Sort>& argSorts,
@@ -1029,6 +1030,11 @@ const std::string& DeclareOracleFunCommand::getIdentifier() const
   return d_id;
 }
 
+std::vector<Sort> DeclareOracleFunCommand::getArgSorts() const
+{
+  return d_argSorts;
+}
+
 Sort DeclareOracleFunCommand::getSort() const { return d_sort; }
 
 const std::string& DeclareOracleFunCommand::getImplName() const
@@ -1043,17 +1049,7 @@ modes::OracleType DeclareOracleFunCommand::getOracleType() const
 
 void DeclareOracleFunCommand::invoke(Solver* solver, SymManager* sm)
 {
-  std::vector<Sort> args;
-  Sort ret;
-  if (d_sort.isFunction())
-  {
-    args = d_sort.getFunctionDomainSorts();
-    ret = d_sort.getFunctionCodomainSort();
-  }
-  else
-  {
-    ret = d_sort;
-  }
+  Unimplemented() << "DeclareOracleFunCommand not implemented";
   // will call solver declare oracle function when available in API
   d_commandStatus = CommandSuccess::instance();
 }

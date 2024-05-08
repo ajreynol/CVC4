@@ -1720,11 +1720,11 @@ void Smt2Printer::toStreamCmdDeclareOracleFun(
   toStreamDeclareType(out, argTypes, type);
   if (otype != modes::OracleType::NO_IMPLEMENTATION)
   {
+    out << " " << implName;
     if (otype != modes::OracleType::BINARY)
     {
-      out << ":" << otype << " ";
+      out << " :" << otype;
     }
-    out << " " << implName;
   }
   out << ")";
 }

@@ -394,6 +394,20 @@ modes::LearnedLitType Smt2State::getLearnedLitType(const std::string& mode)
   return modes::LearnedLitType::UNKNOWN;
 }
 
+modes::OracleType Smt2State::getOracleType(const std::string& mode)
+{
+  if (mode == "table")
+  {
+    return modes::OracleType::TABLE;
+  }
+  else if (mode == "binary")
+  {
+    return modes::OracleType::BINARY;
+  }
+  parseError(std::string("Unknown oracle type `") + mode + "'");
+  return modes::OracleType::UNKNOWN;
+}
+
 modes::ProofComponent Smt2State::getProofComponent(const std::string& pc)
 {
   if (pc == "raw_preprocess")
