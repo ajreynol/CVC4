@@ -289,12 +289,6 @@ int OracleTableImpl::contains(const Trie* curr,
         i++;
       }
     } while (doContinue);
-    // prop stores the explanation
-    if (!expContinue.empty())
-    {
-      Term continueterm = mkAnd(expContinue);
-      exp.push_back(d_tm.mkTerm(Kind::NOT, {continueterm}));
-    }
     // values past this don't matter
     for (size_t j = 0; j < i; j++)
     {
@@ -304,6 +298,13 @@ int OracleTableImpl::contains(const Trie* curr,
         Term eq = d_tm.mkTerm(Kind::EQUAL, {sources[j], row[j]});
         exp.push_back(eq);
       }
+    }
+    // expContinue contains a conjunction necessary for finding an entry
+    // past the current node.
+    if (!expContinue.empty())
+    {
+      Term continueterm = mkAnd(expContinue);
+      exp.push_back(d_tm.mkTerm(Kind::NOT, {continueterm}));
     }
     // explanation is fully contained in exp
     return -1;
