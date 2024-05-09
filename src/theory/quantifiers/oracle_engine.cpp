@@ -238,7 +238,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         }
         result = result[0];
       }
-      Assert (pexp.isNull() || exp.isNull());
+      Assert(pexp.isNull() || exp.isNull());
       // if not constant, we don't infer anything
       if (!result.isNull() && result.isConst())
       {
@@ -458,12 +458,12 @@ Node OracleEngine::getValueInternal(const Node& v, bool& wasRlv)
 {
   FirstOrderModel* fm = d_treg.getModel();
   Node c = fm->getValue(v);
-  if (c==v)
+  if (c == v)
   {
     wasRlv = true;
     return c;
   }
-  Node eq = v<c ? v.eqNode(c) : c.eqNode(v);
+  Node eq = v < c ? v.eqNode(c) : c.eqNode(v);
   wasRlv = d_qstate.getValuation().isRelevant(eq);
   return c;
 }

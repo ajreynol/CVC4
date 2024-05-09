@@ -29,7 +29,12 @@ OracleTableImpl::OracleTableImpl(TermManager& tm,
                                  std::string& filename,
                                  Solver* s,
                                  parser::SymbolManager* sm)
-    : d_dbInit(false), d_dbInitSuccess(false), d_filename(filename), d_tm(tm), d_solver(s), d_symman(sm)
+    : d_dbInit(false),
+      d_dbInitSuccess(false),
+      d_filename(filename),
+      d_tm(tm),
+      d_solver(s),
+      d_symman(sm)
 {
   d_srcKeyword = tm.mkString("source");
   d_srcRlvKeyword = tm.mkString("source-rlv");
@@ -133,12 +138,13 @@ void OracleTableImpl::Trie::add(const std::vector<Term>& row)
   }
 }
 
-bool OracleTableImpl::isNoValueConflict(const Trie* curr,
-                                        size_t depth,
-                                        const std::vector<Term>& row,
-                              const std::vector<Term>& sources,
-                              const std::map<size_t, Term>& forcedValues,
-                              std::vector<Term>& exp) const
+bool OracleTableImpl::isNoValueConflict(
+    const Trie* curr,
+    size_t depth,
+    const std::vector<Term>& row,
+    const std::vector<Term>& sources,
+    const std::map<size_t, Term>& forcedValues,
+    std::vector<Term>& exp) const
 {
   const std::map<size_t, std::set<Term>>& cmv = curr->d_noValues;
   if (cmv.empty())
@@ -148,20 +154,20 @@ bool OracleTableImpl::isNoValueConflict(const Trie* curr,
   std::map<size_t, std::set<Term>>::const_iterator itn;
   for (const std::pair<const size_t, Term>& fv : forcedValues)
   {
-    if (fv.first<=depth)
+    if (fv.first <= depth)
     {
       // optimization, will not have no-value indices less than this depth
       continue;
     }
     itn = cmv.find(fv.first);
-    if (itn==cmv.end())
+    if (itn == cmv.end())
     {
       continue;
     }
-    if (itn->second.find(fv.second)!=itn->second.end())
+    if (itn->second.find(fv.second) != itn->second.end())
     {
       // infeasible, explain why
-      if (sources[fv.first]!=row[fv.first])
+      if (sources[fv.first] != row[fv.first])
       {
         Term eq = d_tm.mkTerm(Kind::EQUAL, {sources[fv.first], row[fv.first]});
         exp.push_back(eq);
@@ -209,7 +215,7 @@ int OracleTableImpl::contains(const Trie* curr,
   {
     Term v = row[i];
     // currently should only have complete assignments
-    Assert (v.getKind() != Kind::CONSTANT);
+    Assert(v.getKind() != Kind::CONSTANT);
     /*
     if (v.getKind() == Kind::CONSTANT)
     {
@@ -227,7 +233,8 @@ int OracleTableImpl::contains(const Trie* curr,
       }
       // ...otherwise, we will include the equality (lazily).
       // We found, now check whether it is a no-value conflict
-      if (!isNoValueConflict(&it->second, i+1, row, sources, forcedValues, exp))
+      if (!isNoValueConflict(
+              &it->second, i + 1, row, sources, forcedValues, exp))
       {
         curr = &it->second;
         continue;
@@ -249,14 +256,15 @@ int OracleTableImpl::contains(const Trie* curr,
       std::vector<Term> disj;
       for (const std::pair<const Term, Trie>& c : cmap)
       {
-        if (c.first==row[i])
+        if (c.first == row[i])
         {
           // already know its infeasible
           continue;
         }
         // NOTE: could check no-value conflict here??
         std::vector<Term> expTmp;
-        if (isNoValueConflict(&c.second, i+1, row, sources, forcedValues, expTmp))
+        if (isNoValueConflict(
+                &c.second, i + 1, row, sources, forcedValues, expTmp))
         {
           // this is not a possibility due to no-value conflict, skip.
           // the explanation is added to expTmp. We negate it for below.
@@ -324,17 +332,18 @@ int OracleTableImpl::contains(const Trie* curr,
   return 1;
 }
 
-bool OracleTableImpl::Trie::computeNoValue(size_t index, const std::pair<size_t, Term>& t)
+bool OracleTableImpl::Trie::computeNoValue(size_t index,
+                                           const std::pair<size_t, Term>& t)
 {
-  if (index==0)
+  if (index == 0)
   {
-    return d_children.find(t.second)!=d_children.end();
+    return d_children.find(t.second) != d_children.end();
   }
   bool found = false;
   std::vector<Trie*> noFinds;
   for (std::pair<const Term, Trie>& c : d_children)
   {
-    if (c.second.computeNoValue(index-1, t))
+    if (c.second.computeNoValue(index - 1, t))
     {
       found = true;
     }
@@ -345,7 +354,7 @@ bool OracleTableImpl::Trie::computeNoValue(size_t index, const std::pair<size_t,
   }
   if (found)
   {
-    for (Trie * nt : noFinds)
+    for (Trie* nt : noFinds)
     {
       nt->d_noValues[t.first].insert(t.second);
     }
@@ -356,7 +365,7 @@ bool OracleTableImpl::Trie::computeNoValue(size_t index, const std::pair<size_t,
 void OracleTableImpl::computeNoValue(size_t index, const Term& t)
 {
   std::pair<size_t, Term> tp(index, t);
-  if (d_dataNoValues.find(tp)!=d_dataNoValues.end())
+  if (d_dataNoValues.find(tp) != d_dataNoValues.end())
   {
     // already computed
     return;
@@ -378,7 +387,7 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
   std::vector<Term> rowValues;
   std::vector<Term> sources;
   std::map<size_t, Term> forcedValues;
-  for (size_t i=0, nterms = row.size(); i<nterms; i++)
+  for (size_t i = 0, nterms = row.size(); i < nterms; i++)
   {
     const Term& t = row[i];
     if (t.getKind() == Kind::APPLY_ANNOTATION)
@@ -423,8 +432,7 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
     Assert(!exp.empty());
     Term expTerm = mkAnd(exp);
     Trace("oracle-table-debug") << "Explanation " << expTerm << std::endl;
-    ret =
-        d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_expKeyword, expTerm});
+    ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_expKeyword, expTerm});
     return ret;
   }
   return d_unknown;

@@ -163,7 +163,8 @@ void TheoryEngine::finishInit()
                     << options().theory.tcMode << " not supported";
   }
   // create the relevance filter if any option requires it
-  if (options().theory.relevanceFilter || options().smt.produceDifficulty || options().quantifiers.oracles)
+  if (options().theory.relevanceFilter || options().smt.produceDifficulty
+      || options().quantifiers.oracles)
   {
     d_relManager.reset(new RelevanceManager(d_env, this));
     d_modules.push_back(d_relManager.get());

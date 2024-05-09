@@ -73,10 +73,10 @@ class OracleTableImpl
                std::vector<Term>& exp) const;
   bool isNoValueConflict(const Trie* curr,
                          size_t depth,
-               const std::vector<Term>& row,
-               const std::vector<Term>& sources,
-               const std::map<size_t, Term>& forcedValues,
-               std::vector<Term>& exp) const;
+                         const std::vector<Term>& row,
+                         const std::vector<Term>& sources,
+                         const std::map<size_t, Term>& forcedValues,
+                         std::vector<Term>& exp) const;
   /** Compute no-value */
   void computeNoValue(size_t index, const Term& t);
   Term mkOr(const std::vector<Term>& children) const;
