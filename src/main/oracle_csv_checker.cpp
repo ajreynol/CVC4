@@ -422,7 +422,7 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
         sources.push_back(t[2]);
         // also forced
         forcedValues[i] = t;
-        computeNoValue(i, t);
+        computeNoValue(i, t[0]);
       }
       else
       {
