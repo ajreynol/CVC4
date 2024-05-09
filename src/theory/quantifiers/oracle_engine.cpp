@@ -57,7 +57,7 @@ OracleEngine::OracleEngine(Env& env,
       d_oracleFuns(userContext()),
       d_ochecker(env.getOracleChecker()),
       d_consistencyCheckPassed(false),
-      d_dstrat(env, "OracleArgValue", qs.getValuation())
+      d_dstrat(env, "OracleArgValue", qs.getValuation(), context())
 {
   Assert(d_ochecker != nullptr);
   d_srcKeyword = nodeManager()->mkConst(String("source"));
