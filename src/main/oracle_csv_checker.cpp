@@ -209,7 +209,9 @@ int OracleTableImpl::contains(const Trie* curr,
   // applicable) is added to exp.
   if (isNoValueConflict(curr, 0, row, sources, forcedValues, exp))
   {
-    Trace("oracle-table") << "...forced value not in table (global), explanation is " << exp << std::endl;
+    Trace("oracle-table")
+        << "...forced value not in table (global), explanation is " << exp
+        << std::endl;
     return -1;
   }
   std::map<Term, Trie>::const_iterator it;
@@ -242,7 +244,8 @@ int OracleTableImpl::contains(const Trie* curr,
         curr = &it->second;
         continue;
       }
-      Trace("oracle-table") << "...forced value not in child table for " << v << ", explanation is " << exp << std::endl;
+      Trace("oracle-table") << "...forced value not in child table for " << v
+                            << ", explanation is " << exp << std::endl;
       // explanation includes the no-value conflict, if applicable
     }
     else
@@ -275,18 +278,21 @@ int OracleTableImpl::contains(const Trie* curr,
         if (isNoValueConflict(
                 &c.second, i + 1, row, sources, forcedValues, expTmp))
         {
-          Trace("oracle-table") << "......forced value not in child table for " << c.first << ", explanation is " << expTmp << std::endl;
+          Trace("oracle-table")
+              << "......forced value not in child table for " << c.first
+              << ", explanation is " << expTmp << std::endl;
           if (expTmp.empty())
           {
             Trace("oracle-table") << ".........cannot repair" << std::endl;
             // explanation was for a fixed value, cannot repair, skip this
             continue;
           }
-          Assert (expTmp.size()==1);
+          Assert(expTmp.size() == 1);
           // this is not a possibility due to no-value conflict, skip.
           // the explanation is added to expTmp. We negate it for below.
           expTmp[0] = d_tm.mkTerm(Kind::NOT, {expTmp[0]});
-          Trace("oracle-table") << ".........could repair by " << expTmp[0] << std::endl;
+          Trace("oracle-table")
+              << ".........could repair by " << expTmp[0] << std::endl;
         }
         else
         {
@@ -317,7 +323,8 @@ int OracleTableImpl::contains(const Trie* curr,
         }
         Term expc = mkOr(disj);
         expContinue.push_back(expc);
-        Trace("oracle-table") << ".........add continue requirement " << expc << std::endl;
+        Trace("oracle-table")
+            << ".........add continue requirement " << expc << std::endl;
       }
       doContinue = (cmap.size() == 1);
       if (doContinue)
@@ -340,7 +347,9 @@ int OracleTableImpl::contains(const Trie* curr,
       }
       else
       {
-        Trace("oracle-table") << "...value #" << j << " " << row[j] << " == " << sources[j] << " was propagated, skipping" << std::endl;
+        Trace("oracle-table")
+            << "...value #" << j << " " << row[j] << " == " << sources[j]
+            << " was propagated, skipping" << std::endl;
       }
     }
     // expContinue contains a conjunction necessary for finding an entry
