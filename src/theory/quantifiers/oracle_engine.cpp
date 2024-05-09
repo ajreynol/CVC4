@@ -193,10 +193,11 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       // evaluate arguments
       for (const auto& arg : fapp)
       {
-        Node marg = fm->getValue(arg);
+        bool wasForced = false;
+        Node marg = getValueInternal(arg, wasForced);
         argumentsVals.push_back(marg);
         // use annotation if value changed
-        if (marg != arg)
+        if (marg != arg && !wasForced)
         {
           marg = nm->mkNode(Kind::APPLY_ANNOTATION, {marg, d_srcKeyword, arg});
         }
@@ -449,6 +450,20 @@ bool OracleEngine::getOracleInterface(Node q,
     return true;
   }
   return false;
+}
+
+Node OracleEngine::getValueInternal(const Node& v, bool& wasForced)
+{
+  FirstOrderModel* fm = d_treg.getModel();
+  Node c = fm->getValue(v);
+  if (c==v)
+  {
+    wasForced = true;
+    return c;
+  }
+  Node eq = v<c ? v.eqNode(c) : c.eqNode(v);
+  wasForced = d_qstate.getValuation().isRelevant(eq);
+  return c;
 }
 
 }  // namespace quantifiers

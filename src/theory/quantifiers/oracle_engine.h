@@ -103,6 +103,8 @@ class OracleEngine : public QuantifiersModule
                           Node& oracleNode) const;
 
  private:
+  /** Get value internal */
+  Node getValueInternal(const Node& v, bool& wasForced);
   /** The oracle functions (user-context dependent) */
   context::CDList<Node> d_oracleFuns;
   /** Pointer to the oracle checker */
