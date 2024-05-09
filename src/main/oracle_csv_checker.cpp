@@ -185,7 +185,8 @@ int OracleTableImpl::contains(const Trie* curr,
                               const std::map<size_t, Term>& forcedValues,
                               std::vector<Term>& exp) const
 {
-  // a no-value conflict at the top, we are already done
+  // a no-value conflict at the top, we are already done, its explanation (if
+  // applicable) is added to exp.
   if (isNoValueConflict(curr, 0, row, sources, forcedValues, exp))
   {
     return -1;
@@ -243,18 +244,32 @@ int OracleTableImpl::contains(const Trie* curr,
           continue;
         }
         // NOTE: could check no-value conflict here??
-        if (sources[i] == c.first)
+        std::vector<Term> expTmp;
+        if (isNoValueConflict(&c.second, i+1, row, sources, forcedValues, expTmp))
         {
-          isIdent = true;
-          break;
+          // this is not a possibility due to no-value conflict, skip.
+          // the explanation is added to expTmp. We negate it for below.
+          for (Term& t : expTmp)
+          {
+            t = d_tm.mkTerm(Kind::NOT, {t});
+          }
         }
-        else if (row[i] == sources[i])
+        else
         {
-          // If row[i] == sources[i], then sources[i] is a value that is
-          // distinct from c.first. The equality below simplifies to false.
-          continue;
+          if (sources[i] == c.first)
+          {
+            isIdent = true;
+            break;
+          }
+          else if (row[i] == sources[i])
+          {
+            // If row[i] == sources[i], then sources[i] is a value that is
+            // distinct from c.first. The equality below simplifies to false.
+            continue;
+          }
         }
-        disj.push_back(d_tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
+        expTmp.push_back(d_tm.mkTerm(Kind::EQUAL, {sources[i], c.first}));
+        disj.push_back(mkAnd(expTmp));
       }
       if (!isIdent)
       {
