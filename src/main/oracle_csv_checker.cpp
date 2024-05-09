@@ -202,10 +202,14 @@ int OracleTableImpl::contains(const Trie* curr,
                               const std::map<size_t, Term>& forcedValues,
                               std::vector<Term>& exp) const
 {
+  Trace("oracle-table") << "Compute contains" << std::endl;
+  Trace("oracle-table") << "- " << row << std::endl;
+  Trace("oracle-table") << "- " << sources << std::endl;
   // a no-value conflict at the top, we are already done, its explanation (if
   // applicable) is added to exp.
   if (isNoValueConflict(curr, 0, row, sources, forcedValues, exp))
   {
+    Trace("oracle-table") << "...forced value not in table (global), explanation is " << exp << std::endl;
     return -1;
   }
   Assert(mask.size() == row.size());
@@ -239,8 +243,14 @@ int OracleTableImpl::contains(const Trie* curr,
         curr = &it->second;
         continue;
       }
+      Trace("oracle-table") << "...forced value not in child table for " << v << ", explanation is " << exp << std::endl;
       // explanation includes the no-value conflict, if applicable
     }
+    else
+    {
+      Trace("oracle-table") << "...no child for " << v << std::endl;
+    }
+    Trace("oracle-table") << "[1] compute continue predicate" << std::endl;
     // construct a propagating predicate
     bool doContinue;
     std::vector<Term> expContinue;
@@ -266,6 +276,7 @@ int OracleTableImpl::contains(const Trie* curr,
         if (isNoValueConflict(
                 &c.second, i + 1, row, sources, forcedValues, expTmp))
         {
+          Trace("oracle-table") << "......forced value not in child table for " << c.first << ", explanation is " << expTmp << std::endl;
           // this is not a possibility due to no-value conflict, skip.
           // the explanation is added to expTmp. We negate it for below.
           for (Term& t : expTmp)
@@ -296,10 +307,13 @@ int OracleTableImpl::contains(const Trie* curr,
         // We don't provide it and simply clear the vector.
         if (disj.empty())
         {
+          Trace("oracle-table") << ".........no way to continue" << std::endl;
           expContinue.clear();
           break;
         }
-        expContinue.push_back(mkOr(disj));
+        Term expc = mkOr(disj);
+        expContinue.push_back(expc);
+        Trace("oracle-table") << ".........add continue requirement " << expc << std::endl;
       }
       doContinue = (cmap.size() == 1);
       if (doContinue)
@@ -310,13 +324,19 @@ int OracleTableImpl::contains(const Trie* curr,
     } while (doContinue);
     // values past this have been captured by expContinue, so we set an upper
     // bound of i here.
+    Trace("oracle-table") << "[1] compute prefix predicate" << std::endl;
     for (size_t j = 0; j < i; j++)
     {
       // Forced values won't impact the result
       if (forced.find(j) == forced.end() && sources[j] != row[j])
       {
         Term eq = d_tm.mkTerm(Kind::EQUAL, {sources[j], row[j]});
+        Trace("oracle-table") << "...requires " << eq << std::endl;
         exp.push_back(eq);
+      }
+      else
+      {
+        Trace("oracle-table") << "...value #" << j << " " << row[j] << " == " << sources[j] << " was propagated, skipping" << std::endl;
       }
     }
     // expContinue contains a conjunction necessary for finding an entry
