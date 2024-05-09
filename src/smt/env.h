@@ -22,6 +22,7 @@
 #include <memory>
 
 #include "context/cdhashset.h"
+#include "context/cdlist.h"
 #include "options/options.h"
 #include "proof/method_id.h"
 #include "theory/logic_info.h"
@@ -299,7 +300,10 @@ class Env
    * @return true if k is a Boolean term skolem.
    */
   bool isBooleanTermSkolem(const Node& k) const;
-
+  /**
+   * Add goal assertion.
+   */
+  void addGoalAssertion(const Node& g);
  private:
   /* Private initialization ------------------------------------------------- */
 
@@ -384,6 +388,8 @@ class Env
    * Boolean type.
    */
   context::CDHashSet<Node> d_boolTermSkolems;
+  /** Goal assertions */
+  context::CDList<Node> d_goalAsserts;
 }; /* class Env */
 
 }  // namespace cvc5::internal

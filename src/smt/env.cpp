@@ -51,7 +51,8 @@ Env::Env(NodeManager* nm, const Options* opts)
       d_options(),
       d_resourceManager(),
       d_uninterpretedSortOwner(theory::THEORY_UF),
-      d_boolTermSkolems(d_userContext.get())
+      d_boolTermSkolems(d_userContext.get()),
+      d_goalAsserts(d_userContext.get())
 {
   if (opts != nullptr)
   {
@@ -304,6 +305,11 @@ bool Env::isBooleanTermSkolem(const Node& k) const
     return false;
   }
   return d_boolTermSkolems.find(k) != d_boolTermSkolems.end();
+}
+
+void Env::addGoalAssertion(const Node& g)
+{
+  d_goalAsserts.push_back(g);
 }
 
 }  // namespace cvc5::internal

@@ -24,6 +24,13 @@
 
 namespace cvc5 {
 namespace main {
+  
+class Explanation
+{
+public:
+  std::unordered_set<size_t> d_valuesEq;
+  
+};
 
 OracleTableImpl::OracleTableImpl(TermManager& tm,
                                  std::string& filename,
@@ -288,7 +295,7 @@ int OracleTableImpl::contains(const Trie* curr,
             continue;
           }
           Assert(expTmp.size() == 1);
-          // this is not a possibility due to no-value conflict, skip.
+          // this is not a possibility due to no-value conflict,
           // the explanation is added to expTmp. We negate it for below.
           expTmp[0] = d_tm.mkTerm(Kind::NOT, {expTmp[0]});
           Trace("oracle-table")
