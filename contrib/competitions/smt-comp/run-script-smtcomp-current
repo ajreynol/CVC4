@@ -86,7 +86,7 @@ ALIA|AUFLIA|AUFLIRA|AUFNIRA|UF|UFBVLIA|UFIDL|UFLIA|UFLRA|UFNIA|UFDT|UFDTLIA|UFDT
   trywith 30 --multi-trigger-when-single --multi-trigger-priority --enum-inst
   trywith 30 --multi-trigger-cache --enum-inst
   trywith 30 --no-multi-trigger-linear --enum-inst
-  # other 4 min
+  # other 4 min 30 sec
   trywith 30 --pre-skolem-quant=on --enum-inst
   trywith 30 --inst-when=full --enum-inst
   trywith 30 --no-e-matching --no-cbqi --enum-inst
@@ -95,13 +95,15 @@ ALIA|AUFLIA|AUFLIRA|AUFNIRA|UF|UFBVLIA|UFIDL|UFLIA|UFLRA|UFNIA|UFDT|UFDTLIA|UFDT
   trywith 30 --decision=internal --enum-inst --enum-inst-sum
   trywith 30 --term-db-mode=relevant --enum-inst
   trywith 30 --enum-inst-interleave --enum-inst
-  # finite model find 3 min
+  trywith 30 --preregister-mode=lazy --enum-inst
+  # finite model find and mbqi 4 min
   trywith 30 --finite-model-find --fmf-mbqi=none
   trywith 30 --finite-model-find --decision=internal
   trywith 30 --finite-model-find --macros-quant --macros-quant-mode=all
   trywith 60 --finite-model-find --e-matching
+  trywith 60 --mbqi
   # long runs 4 min
-  trywith 240 --finite-model-find --decision=internal
+  trywith 180 --finite-model-find --decision=internal
   finishwith --enum-inst
   ;;
 UFBV)
