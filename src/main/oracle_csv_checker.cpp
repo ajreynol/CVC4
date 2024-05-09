@@ -289,7 +289,8 @@ int OracleTableImpl::contains(const Trie* curr,
         i++;
       }
     } while (doContinue);
-    // values past this don't matter
+    // values past this have been captured by expContinue, so we set an upper
+    // bound of i here.
     for (size_t j = 0; j < i; j++)
     {
       // Forced values won't impact the result
@@ -375,6 +376,9 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
       else if (t[1] == d_srcRlvKeyword)
       {
         sources.push_back(t[2]);
+        // also forced
+        forcedValues[i] = t;
+        computeNoValue(i, t);
       }
       else
       {
@@ -387,8 +391,8 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
     {
       rowValues.push_back(t);
       sources.push_back(t);
-      forcedValues[i] = t;
       // compute the first place (i,t) does not occur
+      forcedValues[i] = t;
       computeNoValue(i, t);
     }
   }
