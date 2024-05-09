@@ -26,6 +26,29 @@ class SymbolManager;
 
 namespace main {
 
+
+class Explanation
+{
+public:
+  Explanation() : d_continueLevel(0){}
+  /** Columns that contributed to explanation */
+  std::vector<size_t> d_valuesEq;
+  /** The column that was in conflict (not in d_valuesEq) */
+  size_t d_continueLevel;
+  /**
+   * If non-empty, this is a complete set of alternatives for the column at d_continueLevel that may lead to finding an entry in the table.
+   */
+  std::vector<Term> d_continuations;
+  /**
+   * If non-empty, d_continuationsProp[i] stores a term that sources[i] must be to equal to in order to find an entry in the table.
+   */
+  std::map<size_t, Term> d_continuationsProp;
+  /** Convert to explanation */
+  std::vector<Term> toExplanation(TermManager& tm,
+              const std::vector<Term>& row,
+              const std::vector<Term>& source);
+};
+
 /**
  * A class to setup an oracle for reading a CSV from disk.
  */
@@ -66,17 +89,17 @@ class OracleTableImpl
     bool computeNoValue(size_t index, const std::pair<size_t, Term>& t);
   };
   /** Contains */
-  int contains(const Trie* curr,
+  int lookup(const Trie* curr,
                const std::vector<Term>& row,
                const std::vector<Term>& sources,
-               const std::map<size_t, Term>& forcedValues,
-               std::vector<Term>& exp) const;
+               const std::vector<size_t>& forcedValues,
+               Explanation& e) const;
   bool isNoValueConflict(const Trie* curr,
                          size_t depth,
                          const std::vector<Term>& row,
                          const std::vector<Term>& sources,
-                         const std::map<size_t, Term>& forcedValues,
-                         std::vector<Term>& exp) const;
+                         const std::vector<size_t>& forcedValues,
+                         Explanation& e) const;
   /** Compute no-value */
   void computeNoValue(size_t index, const Term& t);
   Term mkOr(const std::vector<Term>& children) const;
