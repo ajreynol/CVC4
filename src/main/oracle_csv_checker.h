@@ -56,16 +56,30 @@ class OracleTableImpl
    public:
     Trie() : d_count(0) {}
     size_t d_count;
+    /** Set of values that do not appear in this subtrie */
+    std::map<size_t, std::set<Term>> d_noValues;
+    /** List of children */
     std::map<Term, Trie> d_children;
     void add(const std::vector<Term>& row);
+    bool computeNoValue(size_t index, const std::pair<size_t, Term>& t);
   };
   Trie d_data;
+  /** The set of values that we have added to "no values" in terms */
+  std::set<std::pair<size_t, Term>> d_dataNoValues;
   /** Contains */
   int contains(const Trie* curr,
                const std::vector<Term>& row,
                const std::vector<Term>& sources,
-               std::vector<bool>& mask,
-               std::vector<Term>& prop) const;
+               const std::map<size_t, Term>& forcedValues,
+               std::vector<Term>& exp) const;
+  bool isNoValueConflict(const Trie* curr,
+                         size_t depth,
+               const std::vector<Term>& row,
+               const std::vector<Term>& sources,
+               const std::map<size_t, Term>& forcedValues,
+               std::vector<Term>& exp) const;
+  /** Compute no-value */
+  void computeNoValue(size_t index, const Term& t);
   Term mkOr(const std::vector<Term>& children) const;
   Term mkAnd(const std::vector<Term>& children) const;
   /** */
@@ -75,6 +89,7 @@ class OracleTableImpl
   Term d_oracle;
   /** Commonly used terms */
   Term d_srcKeyword;
+  Term d_srcRlvKeyword;
   Term d_maskKeyword;
   Term d_pexpKeyword;
   Term d_expKeyword;

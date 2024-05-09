@@ -61,6 +61,7 @@ OracleEngine::OracleEngine(Env& env,
 {
   Assert(d_ochecker != nullptr);
   d_srcKeyword = nodeManager()->mkConst(String("source"));
+  d_srcRlvKeyword = nodeManager()->mkConst(String("source-rlv"));
   d_maskKeyword = nodeManager()->mkConst(String("mask"));
   d_pexpKeyword = nodeManager()->mkConst(String("partial-exp"));
   d_expKeyword = nodeManager()->mkConst(String("exp"));
@@ -193,13 +194,14 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       // evaluate arguments
       for (const auto& arg : fapp)
       {
-        bool wasForced = false;
-        Node marg = getValueInternal(arg, wasForced);
+        bool wasRlv = false;
+        Node marg = getValueInternal(arg, wasRlv);
         argumentsVals.push_back(marg);
         // use annotation if value changed
-        if (marg != arg && !wasForced)
+        if (marg != arg)
         {
-          marg = nm->mkNode(Kind::APPLY_ANNOTATION, {marg, d_srcKeyword, arg});
+          Node skey = wasRlv ? d_srcRlvKeyword : d_srcKeyword;
+          marg = nm->mkNode(Kind::APPLY_ANNOTATION, {marg, skey, arg});
         }
         arguments.push_back(marg);
       }
@@ -452,17 +454,17 @@ bool OracleEngine::getOracleInterface(Node q,
   return false;
 }
 
-Node OracleEngine::getValueInternal(const Node& v, bool& wasForced)
+Node OracleEngine::getValueInternal(const Node& v, bool& wasRlv)
 {
   FirstOrderModel* fm = d_treg.getModel();
   Node c = fm->getValue(v);
   if (c==v)
   {
-    wasForced = true;
+    wasRlv = true;
     return c;
   }
   Node eq = v<c ? v.eqNode(c) : c.eqNode(v);
-  wasForced = d_qstate.getValuation().isRelevant(eq);
+  wasRlv = d_qstate.getValuation().isRelevant(eq);
   return c;
 }
 

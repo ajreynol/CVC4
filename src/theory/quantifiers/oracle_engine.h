@@ -104,7 +104,7 @@ class OracleEngine : public QuantifiersModule
 
  private:
   /** Get value internal */
-  Node getValueInternal(const Node& v, bool& wasForced);
+  Node getValueInternal(const Node& v, bool& wasRlv);
   /** The oracle functions (user-context dependent) */
   context::CDList<Node> d_oracleFuns;
   /** Pointer to the oracle checker */
@@ -126,6 +126,7 @@ class OracleEngine : public QuantifiersModule
   DecisionStrategyVector d_dstrat;
   /** */
   Node d_srcKeyword;
+  Node d_srcRlvKeyword;
   Node d_maskKeyword;
   Node d_pexpKeyword;
   Node d_expKeyword;
