@@ -277,12 +277,17 @@ int OracleTableImpl::contains(const Trie* curr,
                 &c.second, i + 1, row, sources, forcedValues, expTmp))
         {
           Trace("oracle-table") << "......forced value not in child table for " << c.first << ", explanation is " << expTmp << std::endl;
+          if (expTmp.empty())
+          {
+            Trace("oracle-table") << ".........cannot repair" << std::endl;
+            // explanation was for a fixed value, cannot repair, skip this
+            continue;
+          }
+          Assert (expTmp.size()==1);
           // this is not a possibility due to no-value conflict, skip.
           // the explanation is added to expTmp. We negate it for below.
-          for (Term& t : expTmp)
-          {
-            t = d_tm.mkTerm(Kind::NOT, {t});
-          }
+          expTmp[0] = d_tm.mkTerm(Kind::NOT, {expTmp[0]});
+          Trace("oracle-table") << ".........could repair by " << expTmp[0] << std::endl;
         }
         else
         {
