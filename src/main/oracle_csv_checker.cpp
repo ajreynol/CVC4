@@ -29,7 +29,7 @@ OracleTableImpl::OracleTableImpl(TermManager& tm,
                                  std::string& filename,
                                  Solver* s,
                                  parser::SymbolManager* sm)
-    : d_filename(filename), d_tm(tm), d_solver(s), d_symman(sm)
+    : d_dbInit(false), d_dbInitSuccess(false), d_filename(filename), d_tm(tm), d_solver(s), d_symman(sm)
 {
   d_srcKeyword = tm.mkString("source");
   d_srcRlvKeyword = tm.mkString("source-rlv");
@@ -43,9 +43,13 @@ OracleTableImpl::OracleTableImpl(TermManager& tm,
 
 OracleTableImpl::~OracleTableImpl() {}
 
-void OracleTableImpl::initialize(const std::string& id,
-                                 const std::vector<Sort>& argSorts)
+bool OracleTableImpl::initializeDb()
 {
+  if (d_dbInit)
+  {
+    return d_dbInitSuccess;
+  }
+  d_dbInit = true;
   // set up variables
   parser::InputParser ip(d_solver, d_symman);
   ip.setFileInput(modes::InputLanguage::SMT_LIB_2_6, d_filename);
@@ -57,7 +61,7 @@ void OracleTableImpl::initialize(const std::string& id,
     if (t.isNull())
     {
       std::cout << "ERROR: NO DATA" << std::endl;
-      return;
+      return false;
     }
     d_header.push_back(t);
   } while (t.getKind() == Kind::CONSTANT);
@@ -65,10 +69,10 @@ void OracleTableImpl::initialize(const std::string& id,
   d_header.pop_back();
   size_t nvars = d_header.size();
   Trace("oracle-csv-parse") << "Header size is " << nvars << std::endl;
-  if (nvars != argSorts.size())
+  if (nvars != d_argSorts.size())
   {
     std::cout << "ERROR: Arity mismatch" << std::endl;
-    return;
+    return false;
   }
 
   std::vector<Term> row;
@@ -88,7 +92,7 @@ void OracleTableImpl::initialize(const std::string& id,
           break;
         }
         std::cout << "ERROR: incomplete row" << std::endl;
-        return;
+        return false;
       }
       row.push_back(t);
       i++;
@@ -101,7 +105,14 @@ void OracleTableImpl::initialize(const std::string& id,
     }
   } while (!finished);
   Trace("oracle-csv-parse") << "Finished reading csv" << std::endl;
+  d_dbInitSuccess = true;
+  return true;
+}
 
+void OracleTableImpl::initialize(const std::string& id,
+                                 const std::vector<Sort>& argSorts)
+{
+  d_argSorts = argSorts;
   Sort boolSort = d_tm.getBooleanSort();
   // declare it
   d_oracle = d_solver->declareOracleFun(
@@ -359,6 +370,10 @@ void OracleTableImpl::computeNoValue(size_t index, const Term& t)
 
 Term OracleTableImpl::evaluate(const std::vector<Term>& row)
 {
+  if (!initializeDb())
+  {
+    return d_unknown;
+  }
   // process the mask
   std::vector<Term> rowValues;
   std::vector<Term> sources;

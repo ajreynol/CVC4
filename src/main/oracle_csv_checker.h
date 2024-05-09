@@ -47,6 +47,8 @@ class OracleTableImpl
   void initialize(const std::string& id, const std::vector<Sort>& argSorts);
 
  private:
+  /** initialize the database */
+  bool initializeDb();
   /** */
   void addRow(const std::vector<Term>& row);
   /** Evaluate */
@@ -63,9 +65,6 @@ class OracleTableImpl
     void add(const std::vector<Term>& row);
     bool computeNoValue(size_t index, const std::pair<size_t, Term>& t);
   };
-  Trie d_data;
-  /** The set of values that we have added to "no values" in terms */
-  std::set<std::pair<size_t, Term>> d_dataNoValues;
   /** Contains */
   int contains(const Trie* curr,
                const std::vector<Term>& row,
@@ -82,11 +81,18 @@ class OracleTableImpl
   void computeNoValue(size_t index, const Term& t);
   Term mkOr(const std::vector<Term>& children) const;
   Term mkAnd(const std::vector<Term>& children) const;
-  /** */
-  bool d_optionProp;
-  bool d_optionExp;
+  /** Initialize the database */
+  bool d_dbInit;
+  /** Whether we were successful */
+  bool d_dbInitSuccess;
+  /** The data */
+  Trie d_data;
+  /** The set of values that we have added to "no values" in terms */
+  std::set<std::pair<size_t, Term>> d_dataNoValues;
   /** The oracle we have declared */
   Term d_oracle;
+  /** Argument sorts we are using */
+  std::vector<Sort> d_argSorts;
   /** Commonly used terms */
   Term d_srcKeyword;
   Term d_srcRlvKeyword;
