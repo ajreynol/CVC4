@@ -212,7 +212,6 @@ int OracleTableImpl::contains(const Trie* curr,
     Trace("oracle-table") << "...forced value not in table (global), explanation is " << exp << std::endl;
     return -1;
   }
-  Assert(mask.size() == row.size());
   std::map<Term, Trie>::const_iterator it;
   std::set<size_t> forced;
   for (size_t i = 0, nterms = row.size(); i < nterms; i++)
@@ -408,7 +407,6 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
   {
     return d_unknown;
   }
-  // process the mask
   std::vector<Term> rowValues;
   std::vector<Term> sources;
   std::map<size_t, Term> forcedValues;
@@ -417,7 +415,6 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
     const Term& t = row[i];
     if (t.getKind() == Kind::APPLY_ANNOTATION)
     {
-      // add it to mask if was marked with ":source"
       if (t[1] == d_srcKeyword)
       {
         sources.push_back(t[2]);
