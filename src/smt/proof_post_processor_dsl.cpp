@@ -94,6 +94,7 @@ bool ProofPostprocessDsl::update(Node res,
     // if successful, we update the proof
     return true;
   }
+  AlwaysAssert(cdp->getProofFor(res)->getRule()!=ProofRule::TRUST_THEORY_REWRITE);
   // otherwise no update
   return false;
 }
