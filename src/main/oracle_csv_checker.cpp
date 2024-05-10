@@ -57,6 +57,7 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
       Term deq = tm.mkTerm(Kind::NOT, {tm.mkTerm(Kind::EQUAL, {t, s})});
       if (cexp.empty())
       {
+        // flattens if continuation does not involve multiple columns
         exp.push_back(deq);
       }
       else
@@ -66,7 +67,7 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
     }
     if (!ccexp.empty())
     {
-      Term cc = ccexp.size()==1 ? tm.mkTerm(Kind::OR, ccexp);
+      Term cc = ccexp.size()==1 ? ccexp[0] : tm.mkTerm(Kind::OR, ccexp);
       cexp.push_back(cc);
     }
   }
