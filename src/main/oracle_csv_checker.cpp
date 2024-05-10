@@ -27,7 +27,7 @@ namespace main {
 
 void Explanation::addValueEq(size_t i)
 {
-  if (std::find(d_valuesEq.begin(), d_valuesEq.end(), i)==d_valuesEq.end())
+  if (std::find(d_valuesEq.begin(), d_valuesEq.end(), i) == d_valuesEq.end())
   {
     d_valuesEq.push_back(i);
   }
@@ -77,13 +77,13 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
     }
     if (!ccexp.empty())
     {
-      Term cc = ccexp.size()==1 ? ccexp[0] : tm.mkTerm(Kind::AND, ccexp);
+      Term cc = ccexp.size() == 1 ? ccexp[0] : tm.mkTerm(Kind::AND, ccexp);
       cexp.push_back(cc);
     }
   }
   if (!cexp.empty())
   {
-    Term c = cexp.size()==1 ? cexp[0] : tm.mkTerm(Kind::OR, cexp);
+    Term c = cexp.size() == 1 ? cexp[0] : tm.mkTerm(Kind::OR, cexp);
     exp.push_back(c);
   }
   return exp;
@@ -258,7 +258,7 @@ Term OracleTableImpl::mkAnd(const std::vector<Term>& children) const
 }
 
 bool OracleTableImpl::lookupSimple(const Trie* curr,
-            const std::vector<Term>& row) const
+                                   const std::vector<Term>& row) const
 {
   std::map<Term, Trie>::const_iterator it;
   for (const Term& v : row)
@@ -274,20 +274,20 @@ bool OracleTableImpl::lookupSimple(const Trie* curr,
 }
 
 bool OracleTableImpl::partialLookup(const Trie* curr,
-            const std::vector<Term>& row,
-             Explanation& e,
+                                    const std::vector<Term>& row,
+                                    Explanation& e,
                                     size_t startIndex) const
 {
   std::map<Term, Trie>::const_iterator it;
   for (size_t i = startIndex, nterms = row.size(); i < nterms; i++)
   {
     Term v = row[i];
-    if (v==d_unknown)
+    if (v == d_unknown)
     {
       const std::map<Term, Trie>& cmap = curr->d_children;
       for (const std::pair<const Term, Trie>& c : cmap)
       {
-        if (partialLookup(&c.second, row, e, i+1))
+        if (partialLookup(&c.second, row, e, i + 1))
         {
           return true;
         }
@@ -307,10 +307,10 @@ bool OracleTableImpl::partialLookup(const Trie* curr,
 }
 
 bool OracleTableImpl::explainNoLookup(const Trie* curr,
-                            const std::vector<Term>& row,
-                            const std::vector<Term>& sources,
-                            const std::vector<size_t>& forcedValues,
-                            Explanation& e) const
+                                      const std::vector<Term>& row,
+                                      const std::vector<Term>& sources,
+                                      const std::vector<size_t>& forcedValues,
+                                      Explanation& e) const
 {
   Trace("oracle-table") << "Compute lookup" << std::endl;
   Trace("oracle-table") << "- " << row << std::endl;
@@ -330,7 +330,7 @@ bool OracleTableImpl::explainNoLookup(const Trie* curr,
   for (size_t i = 0, nterms = row.size(); i < nterms; i++)
   {
     // if the value is not forced, we must iterate over the children
-    if (!hasForceIndexNext || forcedValues[forceIndexNext]!=i)
+    if (!hasForceIndexNext || forcedValues[forceIndexNext] != i)
     {
       /*
       // TODO??
@@ -344,7 +344,7 @@ bool OracleTableImpl::explainNoLookup(const Trie* curr,
     {
       // update the forced index
       forceIndexNext++;
-      hasForceIndexNext = (forceIndexNext<forcedValues.size());
+      hasForceIndexNext = (forceIndexNext < forcedValues.size());
     }
     Term v = row[i];
     // currently should only have complete assignments
@@ -409,14 +409,15 @@ bool OracleTableImpl::explainNoLookup(const Trie* curr,
         {
           // eTmp is either empty or contains an explanation from
           // forcedValuesTmp that we already know about.
-          Trace("oracle-table") << "......forced value not in possible continue child table for "
-                                << c.first << std::endl;
+          Trace("oracle-table")
+              << "......forced value not in possible continue child table for "
+              << c.first << std::endl;
           continue;
         }
         else
-        {          
-          Trace("oracle-table") << "......possible continue term "
-                                << c.first << "?" << std::endl;
+        {
+          Trace("oracle-table")
+              << "......possible continue term " << c.first << "?" << std::endl;
           if (sources[i] == c.first)
           {
             Trace("oracle-table") << "........continue is trivial" << std::endl;
@@ -426,7 +427,8 @@ bool OracleTableImpl::explainNoLookup(const Trie* curr,
           }
           else if (row[i] == sources[i])
           {
-            Trace("oracle-table") << "........continue is conflict" << std::endl;
+            Trace("oracle-table")
+                << "........continue is conflict" << std::endl;
             // If row[i] == sources[i], then sources[i] is a value that is
             // distinct from c.first. The equality below simplifies to false.
             continue;
@@ -581,17 +583,17 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
     return d_true;
   }
   // partial lookup?
-  Trace("oracle-table")  << "[2] partial lookup" << std::endl;
+  Trace("oracle-table") << "[2] partial lookup" << std::endl;
   Explanation e;
   if (partialLookup(&d_data, forceRowValues, e))
   {
-    Trace("oracle-table")  << "[3] explain no lookup" << std::endl;
+    Trace("oracle-table") << "[3] explain no lookup" << std::endl;
     // if partial lookup didn't work, we have to explain
     bool result = explainNoLookup(&d_data, rowValues, sources, forcedValues, e);
     if (!result)
     {
       std::cout << "Failed to explain no lookup" << std::endl;
-      Assert (result);
+      Assert(result);
       return d_unknown;
     }
     Trace("oracle-table") << "*** success (explain)" << std::endl;
@@ -601,9 +603,12 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
     Trace("oracle-table") << "*** success (partial)" << std::endl;
   }
   Trace("oracle-table") << "Explanation: " << std::endl;
-  Trace("oracle-table") << "  #value equalities: " << e.d_valuesEq.size() <<  std::endl;
-  Trace("oracle-table") << "  #continuations: " << e.d_continuations.size() <<  std::endl;
-  Trace("oracle-table") << "  #continuation props: " << e.d_continuationsProp.size() <<  std::endl;
+  Trace("oracle-table") << "  #value equalities: " << e.d_valuesEq.size()
+                        << std::endl;
+  Trace("oracle-table") << "  #continuations: " << e.d_continuations.size()
+                        << std::endl;
+  Trace("oracle-table") << "  #continuation props: "
+                        << e.d_continuationsProp.size() << std::endl;
   std::vector<Term> exp = e.toExplanation(d_tm, rowValues, sources);
   Assert(!exp.empty());
   Term expTerm = mkAnd(exp);
@@ -614,7 +619,6 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
 }
 
 void OracleTableImpl::addRow(const std::vector<Term>& row) { d_data.add(row); }
-
 
 }  // namespace main
 }  // namespace cvc5

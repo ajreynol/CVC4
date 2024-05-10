@@ -93,30 +93,29 @@ class OracleTableImpl
     void add(const std::vector<Term>& row);
     bool computeNoValue(size_t index, const std::pair<size_t, Term>& t);
   };
-  /** 
+  /**
    * Lookup simple, which returns true iff row is in the trie
    */
-  bool lookupSimple(const Trie* curr,
-             const std::vector<Term>& row) const;
+  bool lookupSimple(const Trie* curr, const std::vector<Term>& row) const;
   /**
    * Lookup, but possibly with unknown values.
    */
   bool partialLookup(const Trie* curr,
                      const std::vector<Term>& row,
-             Explanation& e,
+                     Explanation& e,
                      size_t startIndex = 0) const;
   /**
    * Explain which row was not in the trie.
    */
   bool explainNoLookup(const Trie* curr,
-             const std::vector<Term>& row,
-             const std::vector<Term>& sources,
-             const std::vector<size_t>& forcedValues,
-             Explanation& e) const;
+                       const std::vector<Term>& row,
+                       const std::vector<Term>& sources,
+                       const std::vector<size_t>& forcedValues,
+                       Explanation& e) const;
   /**
    * Checks whether the current trie will not contain the entry in row
    * based on forced values.
-   * 
+   *
    * If this method returns true, we add to the explanation e that explains
    * the conflict.
    */
@@ -126,7 +125,7 @@ class OracleTableImpl
                          const std::vector<Term>& sources,
                          const std::vector<size_t>& forcedValues,
                          Explanation& e) const;
-  /** 
+  /**
    * Compute no-value. This adds t to nodes in the trie that are the first
    * position where t is not contained in that subtrie.
    */

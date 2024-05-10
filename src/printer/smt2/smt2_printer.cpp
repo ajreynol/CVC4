@@ -1020,7 +1020,7 @@ bool Smt2Printer::toStreamBase(std::ostream& out,
       out << "! ";
       toStream(out, n[0], lbind, toDepth < 0 ? toDepth : toDepth - 1);
       out << " :" << n[1].getConst<String>().toString();
-      if (n.getNumChildren()==3)
+      if (n.getNumChildren() == 3)
       {
         out << " ";
         toStream(out, n[2], lbind, toDepth < 0 ? toDepth : toDepth - 1);
