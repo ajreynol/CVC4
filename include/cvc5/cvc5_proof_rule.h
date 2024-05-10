@@ -2415,6 +2415,16 @@ enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(STR_IN_RE_EVAL),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Strings - regular expression membership consume**
+   *
+   * .. math::
+   *   (str.in_re s R) = c
+   *
+   * \endverbatim
+   */
+  EVALUE(STR_IN_RE_CONSUME),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Strings - regular expression loop elimination**
    *
    * .. math::
