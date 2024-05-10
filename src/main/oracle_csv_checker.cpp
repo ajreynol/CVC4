@@ -36,6 +36,7 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
     Term eq = tm.mkTerm(Kind::EQUAL, {row[v], source[v]});
     exp.push_back(eq);
   }
+  std::vector<Term> cexp;
   if (!d_continuationsProp.empty())
   {
     for (std::pair<const size_t, Term> v : d_continuationsProp)
@@ -43,18 +44,36 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
       Assert(v.second != source[v.first]);
       Term deq = tm.mkTerm(
           Kind::NOT, {tm.mkTerm(Kind::EQUAL, {v.second, source[v.first]})});
-      exp.push_back(deq);
+      cexp.push_back(deq);
     }
   }
   if (!d_continuations.empty())
   {
     Term s = source[d_continueLevel];
+    std::vector<Term> ccexp;
     for (const Term& t : d_continuations)
     {
       Assert(s != t);
       Term deq = tm.mkTerm(Kind::NOT, {tm.mkTerm(Kind::EQUAL, {t, s})});
-      exp.push_back(deq);
+      if (cexp.empty())
+      {
+        exp.push_back(deq);
+      }
+      else
+      {
+        ccexp.push_back(deq);
+      }
     }
+    if (!ccexp.empty())
+    {
+      Term cc = ccexp.size()==1 ? tm.mkTerm(Kind::OR, ccexp);
+      cexp.push_back(cc);
+    }
+  }
+  if (!cexp.empty())
+  {
+    Term c = cexp.size()==1 ? cexp[0] : tm.mkTerm(Kind::AND, cexp);
+    exp.push_back(c);
   }
   return exp;
 }
