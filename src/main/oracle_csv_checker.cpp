@@ -25,6 +25,14 @@
 namespace cvc5 {
 namespace main {
 
+void Explanation::addValueEq(size_t i)
+{
+  if (std::find(d_valuesEq.begin(), d_valuesEq.end(), i)==d_valuesEq.end())
+  {
+    d_valuesEq.push_back(i);
+  }
+}
+
 std::vector<Term> Explanation::toExplanation(TermManager& tm,
                                              const std::vector<Term>& row,
                                              const std::vector<Term>& source)
@@ -224,7 +232,7 @@ bool OracleTableImpl::isNoValueConflict(const Trie* curr,
     {
       // infeasible, explain why, the explanation only matters if source is not
       // row
-      e.d_valuesEq.push_back(fv);
+      e.addValueEq(fv);
       return true;
     }
   }
@@ -249,7 +257,56 @@ Term OracleTableImpl::mkAnd(const std::vector<Term>& children) const
   return children.size() == 1 ? children[0] : d_tm.mkTerm(Kind::AND, children);
 }
 
-int OracleTableImpl::lookup(const Trie* curr,
+bool OracleTableImpl::lookupSimple(const Trie* curr,
+            const std::vector<Term>& row) const
+{
+  std::map<Term, Trie>::const_iterator it;
+  for (const Term& v : row)
+  {
+    it = curr->d_children.find(v);
+    if (it == curr->d_children.end())
+    {
+      return false;
+    }
+    curr = &it->second;
+  }
+  return true;
+}
+
+bool OracleTableImpl::partialLookup(const Trie* curr,
+            const std::vector<Term>& row,
+             Explanation& e,
+                                    size_t startIndex) const
+{
+  std::map<Term, Trie>::const_iterator it;
+  for (size_t i = startIndex, nterms = row.size(); i < nterms; i++)
+  {
+    Term v = row[i];
+    if (v==d_unknown)
+    {
+      const std::map<Term, Trie>& cmap = curr->d_children;
+      for (const std::pair<const Term, Trie>& c : cmap)
+      {
+        if (partialLookup(&c.second, row, e, i+1))
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+    it = curr->d_children.find(v);
+    if (it == curr->d_children.end())
+    {
+      // add to explanation
+      e.addValueEq(i);
+      return false;
+    }
+    curr = &it->second;
+  }
+  return true;
+}
+
+bool OracleTableImpl::explainNoLookup(const Trie* curr,
                             const std::vector<Term>& row,
                             const std::vector<Term>& sources,
                             const std::vector<size_t>& forcedValues,
@@ -264,23 +321,35 @@ int OracleTableImpl::lookup(const Trie* curr,
   {
     Trace("oracle-table") << "...forced value not in table (global)"
                           << std::endl;
-    return -1;
+    return true;
   }
   std::map<Term, Trie>::const_iterator it;
   std::set<size_t> forced;
+  bool hasForceIndexNext = !forcedValues.empty();
+  size_t forceIndexNext = 0;
   for (size_t i = 0, nterms = row.size(); i < nterms; i++)
   {
+    // if the value is not forced, we must iterate over the children
+    if (!hasForceIndexNext || forcedValues[forceIndexNext]!=i)
+    {
+      /*
+      // TODO??
+      const std::map<Term, Trie>& cmap = curr->d_children;
+      for (const std::pair<const Term, Trie>& c : cmap)
+      {
+      }
+      */
+    }
+    else
+    {
+      // update the forced index
+      forceIndexNext++;
+      hasForceIndexNext = (forceIndexNext<forcedValues.size());
+    }
     Term v = row[i];
     // currently should only have complete assignments
     Assert(v.getKind() != Kind::CONSTANT);
-    /*
-    if (v.getKind() == Kind::CONSTANT)
-    {
-      // propagate?
-      return 0;
-    }
-    */
-    // see if we have any forced values
+    // see if we can continue in the trie
     it = curr->d_children.find(v);
     if (it != curr->d_children.end())
     {
@@ -406,9 +475,9 @@ int OracleTableImpl::lookup(const Trie* curr,
       }
     } while (doContinue);
     // explanation is fully contained in e
-    return -1;
+    return true;
   }
-  return 1;
+  return false;
 }
 
 bool OracleTableImpl::Trie::computeNoValue(size_t index,
@@ -463,6 +532,7 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
     return d_unknown;
   }
   std::vector<Term> rowValues;
+  std::vector<Term> forceRowValues;
   std::vector<Term> sources;
   std::vector<size_t> forcedValues;
   for (size_t i = 0, nterms = row.size(); i < nterms; i++)
@@ -473,6 +543,7 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
       if (t[1] == d_srcKeyword)
       {
         sources.push_back(t[2]);
+        forceRowValues.push_back(d_unknown);
       }
       else if (t[1] == d_srcRlvKeyword)
       {
@@ -480,10 +551,14 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
         // also forced
         forcedValues.push_back(i);
         computeNoValue(i, t[0]);
+        forceRowValues.push_back(t[0]);
       }
       else
       {
+        // unknown attribute?
+        std::cout << "WARNING: unknown annotation " << t[1] << std::endl;
         sources.push_back(t[0]);
+        forceRowValues.push_back(d_unknown);
       }
       rowValues.push_back(t[0]);
       Assert(t[0].getKind() != Kind::APPLY_ANNOTATION);
@@ -492,41 +567,54 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
     {
       rowValues.push_back(t);
       sources.push_back(t);
+      forceRowValues.push_back(t);
       // compute the first place (i,t) does not occur
       forcedValues.push_back(i);
       computeNoValue(i, t);
     }
   }
-  Explanation e;
-  int result = lookup(&d_data, rowValues, sources, forcedValues, e);
-  if (result == 1)
+  Trace("oracle-table") << "[1] simple lookup" << std::endl;
+  // first, check if it exists in the trie, if so we are done
+  if (lookupSimple(&d_data, sources))
   {
+    Trace("oracle-table") << "*** success (simple)" << std::endl;
     return d_true;
   }
-  if (result == -1)
+  // partial lookup?
+  Trace("oracle-table")  << "[2] partial lookup" << std::endl;
+  Explanation e;
+  if (partialLookup(&d_data, forceRowValues, e))
   {
-    std::vector<Term> exp = e.toExplanation(d_tm, rowValues, sources);
-    Assert(!exp.empty());
-    Term expTerm = mkAnd(exp);
-    Trace("oracle-table-debug") << "Explanation " << expTerm << std::endl;
-    Term ret =
-        d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_expKeyword, expTerm});
-    return ret;
+    Trace("oracle-table")  << "[3] explain no lookup" << std::endl;
+    // if partial lookup didn't work, we have to explain
+    bool result = explainNoLookup(&d_data, rowValues, sources, forcedValues, e);
+    if (!result)
+    {
+      std::cout << "Failed to explain no lookup" << std::endl;
+      Assert (result);
+      return d_unknown;
+    }
+    Trace("oracle-table") << "*** success (explain)" << std::endl;
   }
-  return d_unknown;
+  else
+  {
+    Trace("oracle-table") << "*** success (partial)" << std::endl;
+  }
+  Trace("oracle-table") << "Explanation: " << std::endl;
+  Trace("oracle-table") << "  #value equalities: " << e.d_valuesEq.size() <<  std::endl;
+  Trace("oracle-table") << "  #continuations: " << e.d_continuations.size() <<  std::endl;
+  Trace("oracle-table") << "  #continuation props: " << e.d_continuationsProp.size() <<  std::endl;
+  std::vector<Term> exp = e.toExplanation(d_tm, rowValues, sources);
+  Assert(!exp.empty());
+  Term expTerm = mkAnd(exp);
+  Trace("oracle-table-debug") << "  term is: " << expTerm << std::endl;
+  Term ret =
+      d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_expKeyword, expTerm});
+  return ret;
 }
 
 void OracleTableImpl::addRow(const std::vector<Term>& row) { d_data.add(row); }
 
-std::vector<Sort> OracleTableImpl::getArgTypes() const
-{
-  std::vector<Sort> sorts;
-  for (const Term& t : d_header)
-  {
-    sorts.push_back(t.getSort());
-  }
-  return sorts;
-}
 
 }  // namespace main
 }  // namespace cvc5

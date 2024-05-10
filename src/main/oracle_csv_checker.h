@@ -44,6 +44,8 @@ class Explanation
    * to equal to in order to find an entry in the table.
    */
   std::map<size_t, Term> d_continuationsProp;
+  /** add value eq */
+  void addValueEq(size_t i);
   /** Convert to explanation */
   std::vector<Term> toExplanation(TermManager& tm,
                                   const std::vector<Term>& row,
@@ -63,8 +65,6 @@ class OracleTableImpl
   ~OracleTableImpl();
   /** Get the oracle defined by this class */
   Term getOracleFun() const;
-  /** */
-  std::vector<Sort> getArgTypes() const;
   /**
    * Initialize. To be called only when parsing is ready and prior to solving.
    */
@@ -75,8 +75,12 @@ class OracleTableImpl
   bool initializeDb();
   /** */
   void addRow(const std::vector<Term>& row);
-  /** Evaluate */
+  /**
+   * Evaluate, the main entry point for the oracle that is initialized by this
+   * class.
+   */
   Term evaluate(const std::vector<Term>& evaluate);
+  /** Data structure for representing the table */
   class Trie
   {
    public:
@@ -89,20 +93,45 @@ class OracleTableImpl
     void add(const std::vector<Term>& row);
     bool computeNoValue(size_t index, const std::pair<size_t, Term>& t);
   };
-  /** Contains */
-  int lookup(const Trie* curr,
+  /** 
+   * Lookup simple, which returns true iff row is in the trie
+   */
+  bool lookupSimple(const Trie* curr,
+             const std::vector<Term>& row) const;
+  /**
+   * Lookup, but possibly with unknown values.
+   */
+  bool partialLookup(const Trie* curr,
+                     const std::vector<Term>& row,
+             Explanation& e,
+                     size_t startIndex = 0) const;
+  /**
+   * Explain which row was not in the trie.
+   */
+  bool explainNoLookup(const Trie* curr,
              const std::vector<Term>& row,
              const std::vector<Term>& sources,
              const std::vector<size_t>& forcedValues,
              Explanation& e) const;
+  /**
+   * Checks whether the current trie will not contain the entry in row
+   * based on forced values.
+   * 
+   * If this method returns true, we add to the explanation e that explains
+   * the conflict.
+   */
   bool isNoValueConflict(const Trie* curr,
                          size_t depth,
                          const std::vector<Term>& row,
                          const std::vector<Term>& sources,
                          const std::vector<size_t>& forcedValues,
                          Explanation& e) const;
-  /** Compute no-value */
+  /** 
+   * Compute no-value. This adds t to nodes in the trie that are the first
+   * position where t is not contained in that subtrie.
+   */
   void computeNoValue(size_t index, const Term& t);
+  /** Utilies for making and/or nodes */
   Term mkOr(const std::vector<Term>& children) const;
   Term mkAnd(const std::vector<Term>& children) const;
   /** Initialize the database */
