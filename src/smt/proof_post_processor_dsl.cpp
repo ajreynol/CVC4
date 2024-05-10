@@ -90,6 +90,7 @@ bool ProofPostprocessDsl::update(Node res,
       cdp->addStep(res[0], ProofRule::TRUE_ELIM, {res}, {});
       res = res[0];
     }
+    AlwaysAssert(cdp->getProofFor(res)->getRule()!=ProofRule::TRUST_THEORY_REWRITE);
     // if successful, we update the proof
     return true;
   }
