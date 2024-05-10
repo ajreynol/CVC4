@@ -57,7 +57,7 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
       Term deq = tm.mkTerm(Kind::NOT, {tm.mkTerm(Kind::EQUAL, {t, s})});
       if (cexp.empty())
       {
-        // flattens if continuation does not involve multiple columns
+        // flattens into main conjunction if we don't have propagations
         exp.push_back(deq);
       }
       else
