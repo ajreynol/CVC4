@@ -119,7 +119,6 @@
                 )))))))))
 )
 
-
 ; ProofRule::CONCAT_CPROP
 (declare-rule concat_cprop ((U Type) (t (Seq U)) (tc (Seq U)) (s (Seq U)) (rev Bool))
   :premises ((= t s) (not (= (str.len tc) 0)))
