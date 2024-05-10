@@ -217,7 +217,7 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
       {
         if (result[1] == d_maskKeyword)
         {
-          Assert(result[2].getKind() == Kind::SEXPR);
+          Assert(result.getNumChildren()==3 && result[2].getKind() == Kind::SEXPR);
           for (const Node& v : result[2])
           {
             mask.push_back(v != d_false);
@@ -225,11 +225,13 @@ void OracleEngine::check(Theory::Effort e, QEffort quant_e)
         }
         else if (result[1] == d_expKeyword)
         {
+          Assert(result.getNumChildren()==3);
           // remember the explanation
           exp = result[2];
         }
         else if (result[1] == d_pexpKeyword)
         {
+          Assert(result.getNumChildren()==3);
           pexp = result[2];
         }
         else
