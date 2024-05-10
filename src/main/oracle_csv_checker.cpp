@@ -32,9 +32,11 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
   std::vector<Term> exp;
   for (size_t v : d_valuesEq)
   {
-    Assert(row[v] != source[v]);
-    Term eq = tm.mkTerm(Kind::EQUAL, {row[v], source[v]});
-    exp.push_back(eq);
+    if (row[v] != source[v])
+    {
+      Term eq = tm.mkTerm(Kind::EQUAL, {row[v], source[v]});
+      exp.push_back(eq);
+    }
   }
   std::vector<Term> cexp;
   if (!d_continuationsProp.empty())
@@ -222,10 +224,7 @@ bool OracleTableImpl::isNoValueConflict(const Trie* curr,
     {
       // infeasible, explain why, the explanation only matters if source is not
       // row
-      if (sources[fv] != fvr)
-      {
-        e.d_valuesEq.push_back(fv);
-      }
+      e.d_valuesEq.push_back(fv);
       return true;
     }
   }
