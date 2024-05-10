@@ -161,6 +161,11 @@
   (str.substr s 0 n)
   s)
   
+(define-cond-rule str-substr-full-eq ((s ?Seq) (n Int))
+  (= (str.len s) n)
+  (str.substr s 0 n)
+  s)
+
 ;(define-cond-rule str-substr-self-len ((s ?Seq) (n Int) (m Int))
 ;  (>= m (str.len s))
 ;  (str.substr s n m)
