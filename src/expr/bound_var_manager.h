@@ -24,6 +24,37 @@
 #include "expr/node.h"
 
 namespace cvc5::internal {
+  
+enum class BoundVariableId
+{
+  SHADOW_ELIM,
+  ARITH_RAN_NUMBER,
+  EQ_RANGE_ELIM,
+  QUANT_DT_EXPAND,
+  QUANT_PRENEX,
+  QUANT_MINISCOPE,
+  QUANT_SYGUS_BUILTIN,
+  SETS_FIRST_INDEX,
+  SETS_SECOND_INDEX,
+  BAGS_FIRST_INDEX,
+  BAGS_SECOND_INDEX,
+  STRINGS_RE_ELIM_CONCAT,
+  STRINGS_RE_ELIM_STAR,
+  STRINGS_INDEX,
+  STRINGS_LENGTH,
+  STRINGS_VALUE_FOR_LENGTH,
+  SEQ_MODEL_VAR,
+  UF_FUNCTION_ARG,
+};
+
+/**
+ * Writes an inference name to a stream.
+ *
+ * @param out The stream to write to
+ * @param i The inference to write to the stream
+ * @return The stream
+ */
+std::ostream& operator<<(std::ostream& out, InferenceId i);
 
 /**
  * Bound variable manager.
