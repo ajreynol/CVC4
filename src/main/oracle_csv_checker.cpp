@@ -26,13 +26,13 @@ namespace cvc5 {
 namespace main {
 
 std::vector<Term> Explanation::toExplanation(TermManager& tm,
-            const std::vector<Term>& row,
-            const std::vector<Term>& source)
+                                             const std::vector<Term>& row,
+                                             const std::vector<Term>& source)
 {
   std::vector<Term> exp;
   for (size_t v : d_valuesEq)
   {
-    Assert (row[v]!=source[v]);
+    Assert(row[v] != source[v]);
     Term eq = tm.mkTerm(Kind::EQUAL, {row[v], source[v]});
     exp.push_back(eq);
   }
@@ -40,8 +40,9 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
   {
     for (std::pair<const size_t, Term> v : d_continuationsProp)
     {
-      Assert (v.second!=source[v.first]);
-      Term deq = tm.mkTerm(Kind::NOT, {tm.mkTerm(Kind::EQUAL, {v.second, source[v.first]})});
+      Assert(v.second != source[v.first]);
+      Term deq = tm.mkTerm(
+          Kind::NOT, {tm.mkTerm(Kind::EQUAL, {v.second, source[v.first]})});
       exp.push_back(deq);
     }
   }
@@ -50,7 +51,7 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
     Term s = source[d_continueLevel];
     for (const Term& t : d_continuations)
     {
-      Assert (s!=t);
+      Assert(s != t);
       Term deq = tm.mkTerm(Kind::NOT, {tm.mkTerm(Kind::EQUAL, {t, s})});
       exp.push_back(deq);
     }
@@ -171,13 +172,12 @@ void OracleTableImpl::Trie::add(const std::vector<Term>& row)
   }
 }
 
-bool OracleTableImpl::isNoValueConflict(
-    const Trie* curr,
-    size_t depth,
-    const std::vector<Term>& row,
-    const std::vector<Term>& sources,
-    const std::vector<size_t>& forcedValues,
-    Explanation& e) const
+bool OracleTableImpl::isNoValueConflict(const Trie* curr,
+                                        size_t depth,
+                                        const std::vector<Term>& row,
+                                        const std::vector<Term>& sources,
+                                        const std::vector<size_t>& forcedValues,
+                                        Explanation& e) const
 {
   const std::map<size_t, std::set<Term>>& cmv = curr->d_noValues;
   if (cmv.empty())
@@ -200,7 +200,8 @@ bool OracleTableImpl::isNoValueConflict(
     const Term& fvr = row[fv];
     if (itn->second.find(fvr) != itn->second.end())
     {
-      // infeasible, explain why, the explanation only matters if source is not row
+      // infeasible, explain why, the explanation only matters if source is not
+      // row
       if (sources[fv] != fvr)
       {
         e.d_valuesEq.push_back(fv);
@@ -230,10 +231,10 @@ Term OracleTableImpl::mkAnd(const std::vector<Term>& children) const
 }
 
 int OracleTableImpl::lookup(const Trie* curr,
-                              const std::vector<Term>& row,
-                              const std::vector<Term>& sources,
-                              const std::vector<size_t>& forcedValues,
-                              Explanation& e) const
+                            const std::vector<Term>& row,
+                            const std::vector<Term>& sources,
+                            const std::vector<size_t>& forcedValues,
+                            Explanation& e) const
 {
   Trace("oracle-table") << "Compute lookup" << std::endl;
   Trace("oracle-table") << "- " << row << std::endl;
@@ -242,9 +243,8 @@ int OracleTableImpl::lookup(const Trie* curr,
   // applicable) is added to e.
   if (isNoValueConflict(curr, 0, row, sources, forcedValues, e))
   {
-    Trace("oracle-table")
-        << "...forced value not in table (global)"
-        << std::endl;
+    Trace("oracle-table") << "...forced value not in table (global)"
+                          << std::endl;
     return -1;
   }
   std::map<Term, Trie>::const_iterator it;
@@ -277,14 +277,13 @@ int OracleTableImpl::lookup(const Trie* curr,
       }
       // ...otherwise, we will include the equality (lazily).
       // We found, now check whether it is a no-value conflict
-      if (!isNoValueConflict(
-              &it->second, i + 1, row, sources, forcedValues, e))
+      if (!isNoValueConflict(&it->second, i + 1, row, sources, forcedValues, e))
       {
         curr = &it->second;
         continue;
       }
-      Trace("oracle-table") << "...forced value not in child table for " << v
-                            << std::endl;
+      Trace("oracle-table")
+          << "...forced value not in child table for " << v << std::endl;
       // explanation includes the no-value conflict, if applicable
     }
     else
@@ -320,11 +319,10 @@ int OracleTableImpl::lookup(const Trie* curr,
         if (isNoValueConflict(
                 &c.second, i + 1, row, sources, forcedValuesTmp, eTmp))
         {
-          // eTmp is either empty or contains an explanation from forcedValuesTmp that
-          // we already know about.
-          Trace("oracle-table")
-              << "......forced value not in child table for " << c.first
-              << std::endl;
+          // eTmp is either empty or contains an explanation from
+          // forcedValuesTmp that we already know about.
+          Trace("oracle-table") << "......forced value not in child table for "
+                                << c.first << std::endl;
           continue;
         }
         else
@@ -352,28 +350,33 @@ int OracleTableImpl::lookup(const Trie* curr,
       }
       else
       {
-        doContinue = (continueTerms.size()==1);
+        doContinue = (continueTerms.size() == 1);
         if (doContinue)
         {
           e.d_continuationsProp[i] = continueTerms[0];
-          Trace("oracle-table") << ".........propagate continuation" << std::endl;
+          Trace("oracle-table")
+              << ".........propagate continuation" << std::endl;
         }
         else if (continueTerms.empty())
         {
-        // if we have no continue terms, we are in conflict, we reject the previous propagations, if any
+          // if we have no continue terms, we are in conflict, we reject the
+          // previous propagations, if any
           e.d_continuationsProp.clear();
           Trace("oracle-table") << ".........continue conflict" << std::endl;
         }
         else
         {
           e.d_continueLevel = i;
-          e.d_continuations.insert(e.d_continuations.end(), continueTerms.begin(), continueTerms.end());
-          Trace("oracle-table") << ".........disjunctive continuation" << std::endl;
+          e.d_continuations.insert(e.d_continuations.end(),
+                                   continueTerms.begin(),
+                                   continueTerms.end());
+          Trace("oracle-table")
+              << ".........disjunctive continuation" << std::endl;
         }
       }
       if (doContinue)
       {
-        Assert (next!=nullptr);
+        Assert(next != nullptr);
         i++;
         curr = next;
       }
@@ -482,7 +485,8 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
     Assert(!exp.empty());
     Term expTerm = mkAnd(exp);
     Trace("oracle-table-debug") << "Explanation " << expTerm << std::endl;
-    Term ret = d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_expKeyword, expTerm});
+    Term ret =
+        d_tm.mkTerm(Kind::APPLY_ANNOTATION, {d_false, d_expKeyword, expTerm});
     return ret;
   }
   return d_unknown;

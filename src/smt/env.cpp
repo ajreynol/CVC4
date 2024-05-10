@@ -307,9 +307,6 @@ bool Env::isBooleanTermSkolem(const Node& k) const
   return d_boolTermSkolems.find(k) != d_boolTermSkolems.end();
 }
 
-void Env::addGoalAssertion(const Node& g)
-{
-  d_goalAsserts.push_back(g);
-}
+void Env::addGoalAssertion(const Node& g) { d_goalAsserts.push_back(g); }
 
 }  // namespace cvc5::internal

@@ -304,6 +304,7 @@ class Env
    * Add goal assertion.
    */
   void addGoalAssertion(const Node& g);
+
  private:
   /* Private initialization ------------------------------------------------- */
 
