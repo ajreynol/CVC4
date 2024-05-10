@@ -318,8 +318,9 @@ void ProofNodeUpdater::runFinalize(
   {
     bool isScope = cur->getRule() == ProofRule::SCOPE;
     Node res = cur->getResult();
+    bool curCanMerge = d_cb.canMerge(cur);
     // cache the result if we don't contain an assumption
-    if (!expr::containsAssumption(cur.get(), cfaMap, cfaAllowed) && d_cb.canMerge(cur))
+    if (!expr::containsAssumption(cur.get(), cfaMap, cfaAllowed) && curCanMerge)
     {
       Trace("pf-process-debug") << "No assumption pf: " << res << std::endl;
       // cache result if we are merging subproofs
@@ -343,7 +344,10 @@ void ProofNodeUpdater::runFinalize(
       itc = resCachec.find(res);
       if (itc == resCachec.end())
       {
-        resCachec[res] = cur;
+        if (curCanMerge)
+        {
+          resCachec[res] = cur;
+        }
       }
       else
       {
