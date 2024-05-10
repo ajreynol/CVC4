@@ -1234,6 +1234,12 @@ void ProofPostprocess::process(std::shared_ptr<ProofNode> pf,
     // now update
     d_env.getProofNodeManager()->updateNode(pf.get(), pfc.get());
   }
+  if (TraceIsOn("ajr-temp"))
+  {
+    std::stringstream ss;
+    pf->printDebug(ss, options().proof.proofPrintConclusion);
+    Trace("ajr-temp") << "Proof is " << ss.str();
+  }
 
   // take stats and check pedantic
   d_finalCb.initializeUpdate();
