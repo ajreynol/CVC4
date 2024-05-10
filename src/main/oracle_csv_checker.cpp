@@ -285,20 +285,20 @@ int OracleTableImpl::lookup(const Trie* curr,
     it = curr->d_children.find(v);
     if (it != curr->d_children.end())
     {
-      if (curr->d_children.size() > 1)
-      {
-        Trace("oracle-table") << "...requires column #" << i << std::endl;
-        // not forced, so it matters
-        e.d_valuesEq.push_back(i);
-      }
-      else
-      {
-        Trace("oracle-table") << "...skip forced column #" << i << std::endl;
-      }
       // ...otherwise, we will include the equality (lazily).
       // We found, now check whether it is a no-value conflict
       if (!isNoValueConflict(&it->second, i + 1, row, sources, forcedValues, e))
       {
+        if (curr->d_children.size() > 1)
+        {
+          Trace("oracle-table") << "...requires column #" << i << std::endl;
+          // not forced, so it matters
+          e.d_valuesEq.push_back(i);
+        }
+        else
+        {
+          Trace("oracle-table") << "...skip forced column #" << i << std::endl;
+        }
         curr = &it->second;
         continue;
       }
