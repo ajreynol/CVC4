@@ -51,6 +51,12 @@ bool ProofNodeUpdaterCallback::updatePost(Node res,
   return false;
 }
 
+bool ProofNodeUpdaterCallback::canMerge(std::shared_ptr<ProofNode> pn)
+{
+  // by default, allow all proofs
+  return true;
+}
+
 ProofNodeUpdater::ProofNodeUpdater(Env& env,
                                    ProofNodeUpdaterCallback& cb,
                                    bool mergeSubproofs,
@@ -313,7 +319,7 @@ void ProofNodeUpdater::runFinalize(
     bool isScope = cur->getRule() == ProofRule::SCOPE;
     Node res = cur->getResult();
     // cache the result if we don't contain an assumption
-    if (!expr::containsAssumption(cur.get(), cfaMap, cfaAllowed))
+    if (!expr::containsAssumption(cur.get(), cfaMap, cfaAllowed) && d_cb.canMerge(cur))
     {
       Trace("pf-process-debug") << "No assumption pf: " << res << std::endl;
       // cache result if we are merging subproofs

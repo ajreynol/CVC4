@@ -175,6 +175,17 @@ bool ProofPostprocessCallback::update(Node res,
   return !ret.isNull();
 }
 
+bool ProofPostprocessCallback::canMerge(std::shared_ptr<ProofNode> pn)
+{
+  if (d_collectAllTrusted)
+  {
+    ProofRule id = pn->getRule();
+    return (id != ProofRule::TRUST_THEORY_REWRITE && id != ProofRule::TRUST);
+  }
+  // otherwise we can merge
+  return true;
+}
+
 bool ProofPostprocessCallback::updateInternal(Node res,
                                               ProofRule id,
                                               const std::vector<Node>& children,
@@ -1233,12 +1244,6 @@ void ProofPostprocess::process(std::shared_ptr<ProofNode> pf,
     AlwaysAssert(pfc != nullptr);
     // now update
     d_env.getProofNodeManager()->updateNode(pf.get(), pfc.get());
-  }
-  if (TraceIsOn("ajr-temp"))
-  {
-    std::stringstream ss;
-    pf->printDebug(ss, options().proof.proofPrintConclusion);
-    Trace("ajr-temp") << "Proof is " << ss.str();
   }
 
   // take stats and check pedantic
