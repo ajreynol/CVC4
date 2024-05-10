@@ -67,13 +67,13 @@ std::vector<Term> Explanation::toExplanation(TermManager& tm,
     }
     if (!ccexp.empty())
     {
-      Term cc = ccexp.size()==1 ? ccexp[0] : tm.mkTerm(Kind::OR, ccexp);
+      Term cc = ccexp.size()==1 ? ccexp[0] : tm.mkTerm(Kind::AND, ccexp);
       cexp.push_back(cc);
     }
   }
   if (!cexp.empty())
   {
-    Term c = cexp.size()==1 ? cexp[0] : tm.mkTerm(Kind::AND, cexp);
+    Term c = cexp.size()==1 ? cexp[0] : tm.mkTerm(Kind::OR, cexp);
     exp.push_back(c);
   }
   return exp;
