@@ -341,25 +341,30 @@ int OracleTableImpl::lookup(const Trie* curr,
         {
           // eTmp is either empty or contains an explanation from
           // forcedValuesTmp that we already know about.
-          Trace("oracle-table") << "......forced value not in child table for "
+          Trace("oracle-table") << "......forced value not in possible continue child table for "
                                 << c.first << std::endl;
           continue;
         }
         else
-        {
+        {          
+          Trace("oracle-table") << "......possible continue term "
+                                << c.first << "?" << std::endl;
           if (sources[i] == c.first)
           {
+            Trace("oracle-table") << "........continue is trivial" << std::endl;
             isIdent = true;
             next = &c.second;
             break;
           }
           else if (row[i] == sources[i])
           {
+            Trace("oracle-table") << "........continue is conflict" << std::endl;
             // If row[i] == sources[i], then sources[i] is a value that is
             // distinct from c.first. The equality below simplifies to false.
             continue;
           }
         }
+        Trace("oracle-table") << "........continue is possible" << std::endl;
         continueTerms.push_back(c.first);
         next = &c.second;
       }
