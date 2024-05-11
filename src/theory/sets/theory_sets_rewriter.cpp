@@ -34,7 +34,28 @@ namespace cvc5::internal {
 namespace theory {
 namespace sets {
 
-TheorySetsRewriter::TheorySetsRewriter(NodeManager* nm) : TheoryRewriter(nm) {}
+TheorySetsRewriter::TheorySetsRewriter(NodeManager* nm) : TheoryRewriter(nm)
+{
+  registerProofRewriteRule(ProofRewriteRule::SETS_IS_EMPTY_EVAL,
+                           TheoryRewriteCtx::DSL_SUBCALL);
+}
+
+Node TheorySetsRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
+{
+  switch (id)
+  {
+    case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
+    {
+      if (n.getKind()==Kind::SET_IS_EMPTY && n[0].isConst())
+      {
+        return nodeManager()->mkConst(n[0].getKind()==Kind::SET_EMPTY);
+      }
+    }
+    default:
+      break;
+  }
+  return Node::null();
+}
 
 bool TheorySetsRewriter::checkConstantMembership(TNode elementTerm, TNode setTerm)
 {
