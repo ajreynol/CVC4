@@ -129,7 +129,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::CONCAT_EQ:
     case ProofRule::CONCAT_UNIFY:
     case ProofRule::CONCAT_CSPLIT:
-    case ProofRule::CONCAT_CPROP:
     case ProofRule::CONCAT_CONFLICT:
     case ProofRule::CONCAT_SPLIT:
     case ProofRule::CONCAT_CPROP:
@@ -200,7 +199,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::BV_BITBLAST_STEP:
     case ProofRule::BV_EAGER_ATOM:
     case ProofRule::DT_UNIF:
-    case ProofRule::DT_INST:
     case ProofRule::DT_SPLIT:
     case ProofRule::DT_CLASH:
     case ProofRule::STRING_DECOMPOSE:
