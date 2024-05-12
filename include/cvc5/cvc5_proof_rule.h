@@ -2372,7 +2372,7 @@ enum ENUM(ProofRewriteRule) : uint32_t {
    * t, and :math:`\mathit{is}_C` is the discriminator (tester) for :math:`C`.
    * \endverbatim
    */
-  DT_INST,
+  EVALUE(DT_INST),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Datatypes - collapse selector**
