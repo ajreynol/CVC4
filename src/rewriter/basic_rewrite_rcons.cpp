@@ -134,8 +134,7 @@ bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
         return true;
       }
       break;
-    default:
-      break;
+    default: break;
   }
   // default, just add the rewrite
   std::vector<Node> args;
@@ -148,17 +147,20 @@ bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& lhs)
+bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
+                                                    const Node& lhs)
 {
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& lhs)
+bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
+                                                              const Node& lhs)
 {
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, const Node& lhs)
+bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
+                                                              const Node& lhs)
 {
   return false;
 }
