@@ -45,7 +45,7 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n)
 
 Node ArithEntail::rewritePredViaEntailment(const Node& n, Node& exp)
 {
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger())
   {
     // check if the node can be simplified to false
@@ -117,9 +117,7 @@ bool ArithEntail::check(Node a, bool strict)
     return a.getConst<Rational>().sgn() >= (strict ? 1 : 0);
   }
 
-  Node ar = strict ? NodeManager::currentNM()->mkNode(
-                Kind::SUB, a, d_one)
-                   : a;
+  Node ar = strict ? NodeManager::currentNM()->mkNode(Kind::SUB, a, d_one) : a;
   ar = d_rr->rewrite(ar);
 
   Node ara = findApprox(ar);
