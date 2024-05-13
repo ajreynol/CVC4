@@ -626,3 +626,25 @@
   ; reverse, collect, elim
   ($str_nary_elim (string_collect ($str_rev rev s)))
 )
+
+(program $str_arith_entail_simple ((s String) (n1 Int) (n2 Int :list) (n3 Int))
+  (Int) Bool
+  (
+    (($str_arith_entail_simple (str.len s)) true)
+    (($str_arith_entail_simple (+ n1 n2))   (alf.ite ($str_arith_entail_simple n1) ($str_arith_entail_simple n2) false))
+    (($str_arith_entail_simple (* n1 n3))   (alf.ite ($str_arith_entail_simple n1) ($str_arith_entail_simple n3) false))
+    (($str_arith_entail_simple n1)          (alf.not (alf.is_neg n1)))
+  )
+)
+
+(program $str_arith_entail_is_approx ((s String) (n1 Int) (n2 Int :list) (n3 Int) (n4 Int :list) (n5 Int) (b Bool))
+  (Int Int Bool) Bool
+  (
+    (($str_arith_entail_is_approx n1 n1 b)                true)
+    (($str_arith_entail_is_approx (str.len s) n1 b)       false)
+    (($str_arith_entail_is_approx (+ n1 n2) (+ n3 n4) b)  (alf.and ($str_arith_entail_is_approx n1 n3 b) ($str_arith_entail_is_approx n2 n4 b)))
+    (($str_arith_entail_is_approx (* n1 n3) (* n1 n5) b)  (alf.ite (alf.is_neg n1)
+                                                              ($str_arith_entail_is_approx n3 n5 (alf.not b))
+                                                              ($str_arith_entail_is_approx n3 n5 b)))
+  )
+)
