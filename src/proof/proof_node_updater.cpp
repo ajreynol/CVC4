@@ -53,7 +53,7 @@ bool ProofNodeUpdaterCallback::updatePost(Node res,
 
 bool ProofNodeUpdaterCallback::canMerge(std::shared_ptr<ProofNode> pn)
 {
-  // by default, allow all proofs
+  // by default, no restriction on what proofs can merge
   return true;
 }
 
@@ -316,12 +316,13 @@ void ProofNodeUpdater::runFinalize(
   }
   if (d_mergeSubproofs)
   {
-    bool isScope = cur->getRule() == ProofRule::SCOPE;
-    Node res = cur->getResult();
+    // if we cannot merge this proof, skip it
     if (!d_cb.canMerge(cur))
     {
       return;
     }
+    bool isScope = cur->getRule() == ProofRule::SCOPE;
+    Node res = cur->getResult();
     // cache the result if we don't contain an assumption
     if (!expr::containsAssumption(cur.get(), cfaMap, cfaAllowed))
     {
