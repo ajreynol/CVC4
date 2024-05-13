@@ -550,7 +550,7 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
     return args[0];
   }
   /*
-   * 
+   *
     Assert(children.empty());
     Assert(args.size() == 1);
     Node t = args[0];

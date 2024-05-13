@@ -224,7 +224,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::BOOL_NNF_NORM: return "bool-nnf-norm";
     case ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM:
       return "arith-div-by-const-elim";
-    case ProofRewriteRule::ARITH_STRING_PRED_ENTAIL: return "arith-string-pred-entail";
+    case ProofRewriteRule::ARITH_STRING_PRED_ENTAIL:
+      return "arith-string-pred-entail";
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";
     case ProofRewriteRule::ARRAYS_EQ_RANGE_EXPAND:
       return "arrays-eq-range-expand";
@@ -244,8 +245,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "re-inter-union-inclusion";
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
       return "str-in-re-concat-star-char";
-    case ProofRewriteRule::STR_IN_RE_SIGMA:
-      return "str-in-re-sigma";
+    case ProofRewriteRule::STR_IN_RE_SIGMA: return "str-in-re-sigma";
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
       return "sets-is-empty-eval";
       //================================================= RARE rules

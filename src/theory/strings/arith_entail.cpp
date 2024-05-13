@@ -17,13 +17,13 @@
 
 #include "expr/attribute.h"
 #include "expr/node_algorithm.h"
+#include "expr/subs.h"
 #include "theory/arith/arith_msum.h"
 #include "theory/rewriter.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/strings/word.h"
 #include "theory/theory.h"
 #include "util/rational.h"
-#include "expr/subs.h"
 
 using namespace cvc5::internal::kind;
 
@@ -88,12 +88,14 @@ bool ArithEntail::check(Node a, bool strict)
   }
 
   bool ret = checkSimple(ar);
-  Trace("strings-arith-entail") << "check simple " << ar << " returns " << ret << std::endl;
+  Trace("strings-arith-entail")
+      << "check simple " << ar << " returns " << ret << std::endl;
   if (!ret)
   {
     // try with approximations
     ret = checkApprox(ar);
-    Trace("strings-arith-entail") << "check approx " << ar << " returns " << ret << std::endl;
+    Trace("strings-arith-entail")
+        << "check approx " << ar << " returns " << ret << std::endl;
   }
   // cache the result
   ar.setAttribute(StrCheckEntailArithAttr(), ret);
@@ -102,7 +104,7 @@ bool ArithEntail::check(Node a, bool strict)
 }
 
 bool ArithEntail::checkApprox(Node ar)
-{ 
+{
   Node approx = findApprox(ar);
   return !approx.isNull();
 }
@@ -381,7 +383,8 @@ Node ArithEntail::findApprox(Node ar)
         << " >= 0 using under-approximation!" << std::endl;
     Node approx = approxMap.apply(ar);
     Trace("strings-ent-approx")
-        << "*** StrArithApprox: under-approximation was " << approx << std::endl;
+        << "*** StrArithApprox: under-approximation was " << approx
+        << std::endl;
     return approx;
   }
   return Node::null();

@@ -75,8 +75,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return rewriteViaReInterUnionInclusion(n);
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
       return rewriteViaStrInReConcatStarChar(n);
-    case ProofRewriteRule::STR_IN_RE_SIGMA:
-      return rewriteViaStrInReSigma(n);
+    case ProofRewriteRule::STR_IN_RE_SIGMA: return rewriteViaStrInReSigma(n);
     default: break;
   }
   return Node::null();
@@ -1128,7 +1127,7 @@ Node SequencesRewriter::rewriteViaStrInReSigma(const Node& n)
       allSigmaMinSize++;
     }
     else if (rc.getKind() == Kind::REGEXP_STAR
-              && rc[0].getKind() == Kind::REGEXP_ALLCHAR)
+             && rc[0].getKind() == Kind::REGEXP_ALLCHAR)
     {
       allSigmaStrict = false;
     }

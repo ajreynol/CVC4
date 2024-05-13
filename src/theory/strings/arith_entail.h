@@ -174,6 +174,7 @@ class ArithEntail
    * a is in rewritten form.
    */
   static bool checkSimple(Node a);
+
  private:
   /** Get arithmetic approximations
    *
