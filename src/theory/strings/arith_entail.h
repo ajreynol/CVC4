@@ -156,7 +156,7 @@ class ArithEntail
   /**
    * Find approximation of a such that it can be shown to be greater than
    * zero.
-   * 
+   *
    * Returns a non-null node if it is always the case that a >= 0. We expect
    * that a is in rewritten form.
    *
@@ -175,7 +175,7 @@ class ArithEntail
    * checkSimple).
    */
   Node findApprox(Node a);
-  
+
  private:
   /** check entail arithmetic simple
    * Returns true if we can show a >= 0 always.
