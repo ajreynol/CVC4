@@ -2300,6 +2300,12 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \verbatim embed:rst:leading-asterisk
    * **Booleans -- Negation Normal Form with normalization**
    *
+   * .. math::
+   *   F = G
+   *
+   * where :math:`G` is the result of applying negation normal form to
+   * :math:`F`.
+   *
    * \endverbatim
    */
   EVALUE(BOOL_NNF_NORM),
