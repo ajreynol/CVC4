@@ -77,26 +77,11 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
     {
-      if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger())
+      theory::strings::ArithEntail ae(d_rr);
+      Node ret = ae.rewritePredViaEntailment(n);
+      if (!ret.isNull())
       {
-        theory::strings::ArithEntail ae(d_rr);
-        // check if the node can be simplified to false
-        if (ae.check(n[0], n[1], true) || ae.check(n[1], n[0], true))
-        {
-          return nodeManager()->mkConst(false);
-        }
-      }
-      else if (n.getKind() == Kind::GEQ)
-      {
-        theory::strings::ArithEntail ae(d_rr);
-        if (ae.check(n[0], n[1], false))
-        {
-          return nodeManager()->mkConst(true);
-        }
-        else if (ae.check(n[1], n[0], true))
-        {
-          return nodeManager()->mkConst(false);
-        }
+        return ret;
       }
     }
     break;

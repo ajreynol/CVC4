@@ -181,7 +181,11 @@ class ArithEntail
    * a is in rewritten form.
    */
   static bool checkSimple(Node a);
-
+  
+  /**
+   */
+  Node rewritePredViaEntailment(const Node& n, Node& exp);
+  Node rewritePredViaEntailment(const Node& n);
  private:
   /**
    */
@@ -215,6 +219,7 @@ class ArithEntail
   Rewriter* d_rr;
   /** Constant zero */
   Node d_zero;
+  Node d_one;
 };
 
 }  // namespace strings

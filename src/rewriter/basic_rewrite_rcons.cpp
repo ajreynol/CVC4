@@ -20,6 +20,7 @@
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
 #include "theory/bv/theory_bv_rewrite_rules.h"
+#include "theory/strings/arith_entail.h"
 #include "theory/rewriter.h"
 #include "util/rational.h"
 
@@ -156,6 +157,10 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
                                                               const Node& lhs)
 {
+  Node exp;
+  theory::strings::ArithEntail ae(d_env.getRewriter());
+  Node ret = ae.rewritePredViaEntailment(lhs, exp);
+      
   return false;
 }
 
