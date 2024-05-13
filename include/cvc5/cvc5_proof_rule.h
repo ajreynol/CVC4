@@ -2352,12 +2352,22 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \verbatim embed:rst:leading-asterisk
    * **Quantifiers -- Unused variables**
    *
+   * .. math::
+   *   \forall X.\> F = \forall X_1.\> F
+   *
+   * where :math:`X_1` is the subset of :math:`X` that appear free in :math:`F`.
+   *
    * \endverbatim
    */
   EVALUE(QUANT_UNUSED_VARS),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Quantifiers -- Unused variables**
+   * **Quantifiers -- Merge prenex**
+   *
+   * .. math::
+   *   \forall X_1.\> \ldots \forall X_n.\> F = \forall X_1 \ldots X_n.\> F
+   *
+   * where :math:`X_1 \ldots X_n` are lists of variables.
    *
    * \endverbatim
    */
