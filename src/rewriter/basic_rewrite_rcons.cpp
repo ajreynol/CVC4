@@ -114,6 +114,30 @@ bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
                                                     ProofRewriteRule id,
                                                     const Node& lhs)
 {
+  switch (id)
+  {
+    case ProofRewriteRule::MACRO_BOOL_NNF_NORM:
+      if (ensureProofMacroBoolNnfNorm(cdp, lhs))
+      {
+        return true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
+      if (ensureProofMacroArithStringPredEntail(cdp, lhs))
+      {
+        return true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_RE_INTER_UNION_INCLUSION:
+      if (ensureProofMacroReInterUnionInclusion(cdp, lhs))
+      {
+        return true;
+      }
+      break;
+    default:
+      break;
+  }
+  // default, just add the rewrite
   std::vector<Node> args;
   args.push_back(
       nodeManager()->mkConstInt(Rational(static_cast<uint32_t>(id))));
@@ -122,6 +146,21 @@ bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
   Node eq = lhs.eqNode(rhs);
   cdp->addStep(eq, ProofRule::THEORY_REWRITE, {}, args);
   return true;
+}
+
+bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& lhs)
+{
+  return false;
+}
+
+bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& lhs)
+{
+  return false;
+}
+
+bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, const Node& lhs)
+{
+  return false;
 }
 
 }  // namespace rewriter
