@@ -39,6 +39,7 @@
 #include "util/divisible.h"
 #include "util/iand.h"
 #include "util/real_algebraic_number.h"
+#include "theory/strings/arith_entail.h"
 
 using namespace cvc5::internal::kind;
 
@@ -46,11 +47,14 @@ namespace cvc5::internal {
 namespace theory {
 namespace arith {
 
-ArithRewriter::ArithRewriter(NodeManager* nm, OperatorElim& oe)
-    : TheoryRewriter(nm), d_opElim(oe)
+ArithRewriter::ArithRewriter(NodeManager* nm, Rewriter* rr, OperatorElim& oe)
+    : TheoryRewriter(nm), d_rr(rr), d_opElim(oe)
 {
   registerProofRewriteRule(ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL,
+                           TheoryRewriteCtx::POST_DSL);
+  // we don't register ARITH_STRING_PRED_ENTAIL
 }
 
 Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -67,6 +71,42 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
           Rational rinv = Rational(1) / r;
           NodeManager* nm = nodeManager();
           return nm->mkNode(Kind::MULT, n[0], nm->mkConstReal(rinv));
+        }
+      }
+    }
+    break;
+    case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
+    {
+      if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger())
+      {
+        theory::strings::ArithEntail ae(d_rr);
+        // check if the node can be simplified to false
+        if (ae.check(n[0], n[1], true) || ae.check(n[1], n[0], true))
+        {
+          return nodeManager()->mkConst(false);
+        }
+      }
+      else if (n.getKind() == Kind::GEQ)
+      {
+        theory::strings::ArithEntail ae(d_rr);
+        if (ae.check(n[0], n[1], false))
+        {
+          return nodeManager()->mkConst(true);
+        }
+        else if (ae.check(n[1], n[0], true))
+        {
+          return nodeManager()->mkConst(false);
+        }
+      }
+    }
+    break;
+    case ProofRewriteRule::ARITH_STRING_PRED_ENTAIL:
+    {
+      if (n.getKind()==Kind::GEQ && n[1].isConst() && n[1].getConst<Rational>().sgn()==0)
+      {
+        if (theory::strings::ArithEntail::checkSimple(n[0]))
+        {
+          return nodeManager()->mkConst(true);
         }
       }
     }

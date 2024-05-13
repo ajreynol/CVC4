@@ -549,38 +549,6 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
     Assert(args.size() >= 3);
     return args[0];
   }
-  /*
-   *
-    Assert(children.empty());
-    Assert(args.size() == 1);
-    Node t = args[0];
-    Node res;
-    theory::strings::ArithEntail ae(nullptr);  // FIXME
-    if (t.getKind() == Kind::EQUAL && t[0].getType().isInteger())
-    {
-      // check if the node can be simplified to false
-      if (ae.check(t[0], t[1], true) || ae.check(t[1], t[0], true))
-      {
-        res = nodeManager()->mkConst(false);
-      }
-    }
-    else if (t.getKind() == Kind::GEQ)
-    {
-      if (ae.check(t[0], t[1], false))
-      {
-        res = nodeManager()->mkConst(true);
-      }
-      else if (ae.check(t[1], t[0], true))
-      {
-        res = nodeManager()->mkConst(false);
-      }
-    }
-    if (res.isNull())
-    {
-      return Node::null();
-    }
-    return args[0].eqNode(res);
-    */
   return Node::null();
 }
 

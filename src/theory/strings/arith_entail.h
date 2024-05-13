@@ -175,13 +175,14 @@ class ArithEntail
    * checkSimple).
    */
   Node findApprox(Node a);
-
- private:
+  
   /** check entail arithmetic simple
    * Returns true if we can show a >= 0 always.
    * a is in rewritten form.
    */
   static bool checkSimple(Node a);
+
+ private:
   /**
    */
   Node findApproxInternal(Node a);

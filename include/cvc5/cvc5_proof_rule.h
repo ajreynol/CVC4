@@ -2298,7 +2298,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *
    * \endverbatim
    */
-  EVALUE(BOOL_NNF_NORM),
+  EVALUE(MACRO_BOOL_NNF_NORM),
   // Custom theory rewrites.
   /**
    * \verbatim embed:rst:leading-asterisk
@@ -2322,6 +2322,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *
    * \endverbatim
    */
+  EVALUE(MACRO_ARITH_STRING_PRED_ENTAIL),
   EVALUE(ARITH_STRING_PRED_ENTAIL),
   /**
    * \verbatim embed:rst:leading-asterisk
@@ -2505,6 +2506,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *
    * \endverbatim
    */
+  EVALUE(MACRO_RE_INTER_UNION_INCLUSION),
   EVALUE(RE_INTER_UNION_INCLUSION),
   /**
    * \verbatim embed:rst:leading-asterisk

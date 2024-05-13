@@ -33,7 +33,7 @@ TheoryBoolRewriter::TheoryBoolRewriter(NodeManager* nm) : TheoryRewriter(nm)
 {
   d_true = nm->mkConst(true);
   d_false = nm->mkConst(false);
-  registerProofRewriteRule(ProofRewriteRule::BOOL_NNF_NORM,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BOOL_NNF_NORM,
                            TheoryRewriteCtx::POST_DSL);
 }
 
@@ -41,7 +41,7 @@ Node TheoryBoolRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
 {
   switch (id)
   {
-    case ProofRewriteRule::BOOL_NNF_NORM:
+    case ProofRewriteRule::MACRO_BOOL_NNF_NORM:
     {
       Node nn = computeNnfNorm(nodeManager(), n);
       if (nn != n)

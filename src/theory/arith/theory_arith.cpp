@@ -50,7 +50,7 @@ TheoryArith::TheoryArith(Env& env, OutputChannel& out, Valuation valuation)
       d_nonlinearExtension(nullptr),
       d_opElim(d_env),
       d_arithPreproc(env, d_im, d_pnm, d_opElim),
-      d_rewriter(nodeManager(), d_opElim),
+      d_rewriter(nodeManager(), env.getRewriter(), d_opElim),
       d_arithModelCacheSet(false),
       d_checker(nodeManager())
 {

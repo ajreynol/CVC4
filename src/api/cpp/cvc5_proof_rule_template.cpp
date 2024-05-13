@@ -221,11 +221,13 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::NONE: return "NONE";
     //================================================= ad-hoc rules
     case ProofRewriteRule::DISTINCT_ELIM: return "distinct-elim";
-    case ProofRewriteRule::BOOL_NNF_NORM: return "bool-nnf-norm";
+    case ProofRewriteRule::MACRO_BOOL_NNF_NORM: return "macro-bool-nnf-norm";
     case ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM:
       return "arith-div-by-const-elim";
     case ProofRewriteRule::ARITH_STRING_PRED_ENTAIL:
       return "arith-string-pred-entail";
+    case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
+      return "macro-arith-string-pred-entail";
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";
     case ProofRewriteRule::ARRAYS_EQ_RANGE_EXPAND:
       return "arrays-eq-range-expand";
@@ -241,6 +243,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::STR_IN_RE_EVAL: return "str-in-re-eval";
     case ProofRewriteRule::STR_IN_RE_CONSUME: return "str-in-re-consume";
     case ProofRewriteRule::RE_LOOP_ELIM: return "re-loop-elim";
+    case ProofRewriteRule::MACRO_RE_INTER_UNION_INCLUSION:
+      return "macro-re-inter-union-inclusion";
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
       return "re-inter-union-inclusion";
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
