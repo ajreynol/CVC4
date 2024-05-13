@@ -168,22 +168,6 @@
   (str.in_re (str.++ s1 s2) r)
   false)
 
-(define-rule* str-in-re-concat-allchar ((s String) (r1 RegLan) (r2 RegLan :list))
-  (str.in_re s (re.++ re.allchar r1 r2))
-  (str.in_re (str.substr s 1 (str.len s)) (re.++ r1 r2))
-  _
-)
-
-(define-rule str-in-re-concat-allchar-base-geq ((s String))
-  (str.in_re s (re.++ re.allchar (re.* re.allchar)))
-  (>= (str.len s) 1)
-)
-
-(define-rule str-in-re-concat-allchar-base-eq ((s String))
-  (str.in_re s (re.++ re.allchar re.allchar))
-  (= (str.len s) 2)
-)
-
 (define-cond-rule str-in-re-req-unfold ((s String) (r1 RegLan) (r2 RegLan) (r3 RegLan :list))
   (not (str.in_re s (re.++ r2 r3)))
   (str.in_re s (re.++ (re.* r1) r2 r3))

@@ -589,6 +589,23 @@
   )
 )
 
+; Helper for $str_mk_str_in_re_sigma.
+; Calling `$str_mk_re_loop_elim s r n b` means we have s in r, we have stripped
+; off n re.allchar from r so far. If `b` is false, then we have stripped off
+; a (re.* re.allchar).
+(program $str_mk_str_in_re_sigma_rec ((s String) (r RegLan :list) (n Int) (b Bool))
+  (String RegLan Int Bool) Bool
+  (
+    (($str_mk_str_in_re_sigma_rec s (str.to_re "") n b)              (alf.ite b (= (str.len s) n) (>= (str.len s) n)))
+    (($str_mk_str_in_re_sigma_rec s (re.++ re.allchar r) n b)        ($str_mk_str_in_re_sigma_rec s r (alf.add n 1) b))
+    (($str_mk_str_in_re_sigma_rec s (re.++ (re.* re.allchar) r) n b) ($str_mk_str_in_re_sigma_rec s r n false))
+  )
+)
+
+; Helper for ProofRewriteRule::STR_IN_RE_SIGMA.
+(define $str_mk_str_in_re_sigma ((s String) (r RegLan))
+  ($str_mk_str_in_re_sigma_rec s r 0 true))
+
 ; Converts a str.++ application into "flat form" so that we are ready to
 ; process its prefix. This consists of the following steps:
 ; (1) convert s to n-ary form if it is not already a str.++ application,

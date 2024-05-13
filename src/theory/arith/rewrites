@@ -10,7 +10,8 @@
 (define-rule arith-mul-zero ((t ? :list) (s ? :list)) (* t 0 s) 0)
 
 ;(define-rule arith-div-one ((t ?)) (/ t 1) t)
-;(define-cond-rule arith-div-total ((t ?) (s ?)) (not (= s 0)) (/ t s) (/_total t s))
+(define-cond-rule arith-div-total ((t ?) (s ?)) (not (= s 0)) (/ t s) (/_total t s))
+;(define-rule arith-div-total-zero ((t Int)) (/_total t 0.0) 0.0)
 
 ;(define-rule arith-int-div-one ((t Int)) (div t 1) t)
 (define-cond-rule arith-int-div-total ((t Int) (s Int)) (not (= s 0)) (div t s) (div_total t s))
@@ -67,6 +68,7 @@
 
 (define-rule arith-abs-elim ((x ?)) (abs x) (ite (< x 0) (- x) x))
 
+(define-rule arith-to-real-elim ((x Real)) (to_real x) x)
 (define-rule arith-to-int-elim-to-real ((x ?)) (to_int (to_real x)) (to_int x))
-;(define-rule arith-div-elim-to-real1 ((x ?) (y ?)) (/ (to_real x) y) (/ x y))
-;(define-rule arith-div-elim-to-real2 ((x ?) (y ?)) (/ x (to_real y)) (/ x y))
+(define-rule arith-div-elim-to-real1 ((x ?) (y ?)) (/ (to_real x) y) (/ x y))
+(define-rule arith-div-elim-to-real2 ((x ?) (y ?)) (/ x (to_real y)) (/ x y))

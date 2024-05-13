@@ -292,3 +292,9 @@
                    ($str_mk_str_in_re_concat_star_char (str.++ s1 s2) (re.* r))))
 )
 
+(declare-rule str-in-re-sigma ((s String) (r RegLan))
+  :args ((str.in_re s r))
+  :conclusion (= (str.in_re s r)
+                 ($str_mk_str_in_re_sigma s r))
+)
+

@@ -150,6 +150,8 @@ class SequencesRewriter : public TheoryRewriter
   Node rewriteViaReInterUnionInclusion(const Node& n);
   /** Rewrite based on STR_IN_RE_CONCAT_STAR_CHAR */
   Node rewriteViaStrInReConcatStarChar(const Node& n);
+  /** Rewrite based on STR_IN_RE_SIGMA */
+  Node rewriteViaStrInReSigma(const Node& n);
 
  public:
   RewriteResponse postRewrite(TNode node) override;

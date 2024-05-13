@@ -59,6 +59,8 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_SIGMA,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -73,6 +75,8 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return rewriteViaReInterUnionInclusion(n);
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
       return rewriteViaStrInReConcatStarChar(n);
+    case ProofRewriteRule::STR_IN_RE_SIGMA:
+      return rewriteViaStrInReSigma(n);
     default: break;
   }
   return Node::null();
@@ -1105,6 +1109,39 @@ Node SequencesRewriter::rewriteViaStrInReConcatStarChar(const Node& n)
     conj.push_back(nm->mkNode(Kind::STRING_IN_REGEXP, c, n[1]));
   }
   return nm->mkAnd(conj);
+}
+
+Node SequencesRewriter::rewriteViaStrInReSigma(const Node& n)
+{
+  if (n.getKind() != Kind::STRING_IN_REGEXP
+      || n[1].getKind() != Kind::REGEXP_CONCAT)
+  {
+    return Node::null();
+  }
+  const Node& r = n[1];
+  bool allSigmaStrict = true;
+  size_t allSigmaMinSize = 0;
+  for (const Node& rc : r)
+  {
+    if (rc.getKind() == Kind::REGEXP_ALLCHAR)
+    {
+      allSigmaMinSize++;
+    }
+    else if (rc.getKind() == Kind::REGEXP_STAR
+              && rc[0].getKind() == Kind::REGEXP_ALLCHAR)
+    {
+      allSigmaStrict = false;
+    }
+    else
+    {
+      return Node::null();
+    }
+  }
+  // x in re.++(_*, _, _) ---> str.len(x) >= 2
+  NodeManager* nm = nodeManager();
+  Node num = nm->mkConstInt(Rational(allSigmaMinSize));
+  Node lenx = nm->mkNode(Kind::STRING_LENGTH, n[0]);
+  return nm->mkNode(allSigmaStrict ? Kind::EQUAL : Kind::GEQ, lenx, num);
 }
 
 Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
