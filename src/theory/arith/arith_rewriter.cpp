@@ -34,12 +34,12 @@
 #include "theory/arith/rewriter/node_utils.h"
 #include "theory/arith/rewriter/ordering.h"
 #include "theory/arith/rewriter/rewrite_atom.h"
+#include "theory/strings/arith_entail.h"
 #include "theory/theory.h"
 #include "util/bitvector.h"
 #include "util/divisible.h"
 #include "util/iand.h"
 #include "util/real_algebraic_number.h"
-#include "theory/strings/arith_entail.h"
 
 using namespace cvc5::internal::kind;
 
@@ -102,7 +102,8 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::ARITH_STRING_PRED_ENTAIL:
     {
-      if (n.getKind()==Kind::GEQ && n[1].isConst() && n[1].getConst<Rational>().sgn()==0)
+      if (n.getKind() == Kind::GEQ && n[1].isConst()
+          && n[1].getConst<Rational>().sgn() == 0)
       {
         if (theory::strings::ArithEntail::checkSimple(n[0]))
         {

@@ -1041,7 +1041,8 @@ Node SequencesRewriter::rewriteStarRegExp(TNode node)
   return node;
 }
 
-Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node, bool isStrict)
+Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node,
+                                                        bool isStrict)
 {
   Kind nk = node.getKind();
   if (nk != Kind::REGEXP_UNION && nk != Kind::REGEXP_INTER)
@@ -1049,7 +1050,7 @@ Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node, bool i
     return Node::null();
   }
   // requires only two children if we are strict (for the proof rule)
-  if (isStrict && node.getNumChildren()!=2)
+  if (isStrict && node.getNumChildren() != 2)
   {
     return Node::null();
   }

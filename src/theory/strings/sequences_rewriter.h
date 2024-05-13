@@ -147,7 +147,7 @@ class SequencesRewriter : public TheoryRewriter
   /** Rewrite based on RE_LOOP_ELIM */
   Node rewriteViaReLoopElim(const Node& n);
   /** Rewrite based on RE_INTER_UNION_INCLUSION */
-  Node rewriteViaReInterUnionInclusion(const Node& n, bool isStrict=false);
+  Node rewriteViaReInterUnionInclusion(const Node& n, bool isStrict = false);
   /** Rewrite based on STR_IN_RE_CONCAT_STAR_CHAR */
   Node rewriteViaStrInReConcatStarChar(const Node& n);
   /** Rewrite based on STR_IN_RE_SIGMA */
