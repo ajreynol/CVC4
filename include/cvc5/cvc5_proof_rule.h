@@ -1642,16 +1642,6 @@ enum ENUM(ProofRule) : uint32_t
   EVALUE(STRING_EAGER_REDUCTION),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - arithmetic predicate entailment**
-   *
-   * .. math::
-   *   (str.in_re s R) = c
-   *
-   * \endverbatim
-   */
-  EVALUE(STRING_ARITH_PRED_ENTAIL),
-  /**
-   * \verbatim embed:rst:leading-asterisk
    * **Strings -- Regular expressions -- Intersection**
    *
    * .. math::
@@ -2319,6 +2309,19 @@ enum ENUM(ProofRewriteRule) : uint32_t {
    * \endverbatim
    */
   EVALUE(ARITH_DIV_BY_CONST_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Arithmetic - strings predicate entailment**
+   *
+   * .. math::
+   *   (= s t) = false
+   *
+   * .. math::
+   *   (>= s t) = true
+   * 
+   * \endverbatim
+   */
+  EVALUE(ARITH_STRING_PRED_ENTAIL),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Equality -- Beta reduction**

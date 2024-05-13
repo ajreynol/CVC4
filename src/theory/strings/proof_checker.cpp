@@ -62,7 +62,6 @@ void StringProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::RE_ELIM, this);
   pc->registerChecker(ProofRule::STRING_CODE_INJ, this);
   pc->registerChecker(ProofRule::STRING_SEQ_UNIT_INJ, this);
-  pc->registerChecker(ProofRule::STRING_ARITH_PRED_ENTAIL, this);
   // trusted rule
   pc->registerTrustedChecker(ProofRule::MACRO_STRING_INFERENCE, this, 2);
 }
@@ -545,8 +544,13 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
     AlwaysAssert(t[0].getType() == t[1].getType());
     return t[0].eqNode(t[1]);
   }
-  else if (id == ProofRule::STRING_ARITH_PRED_ENTAIL)
+  else if (id == ProofRule::MACRO_STRING_INFERENCE)
   {
+    Assert(args.size() >= 3);
+    return args[0];
+  }
+  /*
+   * 
     Assert(children.empty());
     Assert(args.size() == 1);
     Node t = args[0];
@@ -576,12 +580,7 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
       return Node::null();
     }
     return args[0].eqNode(res);
-  }
-  else if (id == ProofRule::MACRO_STRING_INFERENCE)
-  {
-    Assert(args.size() >= 3);
-    return args[0];
-  }
+    */
   return Node::null();
 }
 

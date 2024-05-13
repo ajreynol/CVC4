@@ -71,6 +71,7 @@ class ArithEntail
    * holds.
    */
   bool checkApprox(Node a);
+  Node findApprox(Node a);
 
   /**
    * Checks whether assumption |= a >= 0 (if strict is false) or
@@ -168,12 +169,12 @@ class ArithEntail
                           std::vector<Node>& ys,
                           std::vector<Node>& zeroYs);
 
- private:
-  /** check entail arithmetic internal
+  /** check entail arithmetic simple
    * Returns true if we can show a >= 0 always.
    * a is in rewritten form.
    */
-  bool checkInternal(Node a);
+  static bool checkSimple(Node a);
+ private:
   /** Get arithmetic approximations
    *
    * This gets the (set of) arithmetic approximations for term a and stores

@@ -23,6 +23,7 @@
 #include "theory/strings/word.h"
 #include "theory/theory.h"
 #include "util/rational.h"
+#include "expr/subs.h"
 
 using namespace cvc5::internal::kind;
 
@@ -86,11 +87,13 @@ bool ArithEntail::check(Node a, bool strict)
     return ar.getAttribute(StrCheckEntailArithAttr());
   }
 
-  bool ret = checkInternal(ar);
+  bool ret = checkSimple(ar);
+  Trace("strings-arith-entail") << "check simple " << ar << " returns " << ret << std::endl;
   if (!ret)
   {
     // try with approximations
     ret = checkApprox(ar);
+    Trace("strings-arith-entail") << "check approx " << ar << " returns " << ret << std::endl;
   }
   // cache the result
   ar.setAttribute(StrCheckEntailArithAttr(), ret);
@@ -99,6 +102,12 @@ bool ArithEntail::check(Node a, bool strict)
 }
 
 bool ArithEntail::checkApprox(Node ar)
+{ 
+  Node approx = findApprox(ar);
+  return !approx.isNull();
+}
+
+Node ArithEntail::findApprox(Node ar)
 {
   Assert(d_rr->rewrite(ar) == ar);
   NodeManager* nm = NodeManager::currentNM();
@@ -109,7 +118,7 @@ bool ArithEntail::checkApprox(Node ar)
   {
     Trace("strings-ent-approx-debug")
         << "...failed to get monomial sum!" << std::endl;
-    return false;
+    return Node::null();
   }
   // for each monomial v*c, mApprox[v] a list of
   // possibilities for how the term can be soundly approximated, that is,
@@ -123,6 +132,8 @@ bool ArithEntail::checkApprox(Node ar)
   std::map<Node, std::map<Node, Node> > approxMsums;
   // aarSum stores each monomial that does not have multiple approximations
   std::vector<Node> aarSum;
+  // stores the witness
+  Subs approxMap;
   for (std::pair<const Node, Node>& m : msum)
   {
     Node v = m.first;
@@ -196,7 +207,7 @@ bool ArithEntail::checkApprox(Node ar)
   {
     // approximations had no effect, return
     Trace("strings-ent-approx-debug") << "...no approximations" << std::endl;
-    return false;
+    return Node::null();
   }
   // get the current "fixed" sum for the abstraction of ar
   Node aar =
@@ -214,7 +225,7 @@ bool ArithEntail::checkApprox(Node ar)
     std::map<Node, Node> msumAar;
     if (!ArithMSum::getMonomialSum(aar, msumAar))
     {
-      return false;
+      return Node::null();
     }
     if (TraceIsOn("strings-ent-approx"))
     {
@@ -331,6 +342,7 @@ bool ArithEntail::checkApprox(Node ar)
       Assert(msum.find(v) != msum.end());
       Node mn = ArithMSum::mkCoeffTerm(msum[v], vapprox);
       aar = nm->mkNode(Kind::ADD, aar, mn);
+      approxMap.add(v, vapprox);
       // update the msumAar map
       aar = d_rr->rewrite(aar);
       msumAar.clear();
@@ -339,7 +351,7 @@ bool ArithEntail::checkApprox(Node ar)
         Assert(false);
         Trace("strings-ent-approx")
             << "...failed to get monomial sum!" << std::endl;
-        return false;
+        return Node::null();
       }
       // we have processed the approximation for v
       mApprox.erase(v);
@@ -352,7 +364,7 @@ bool ArithEntail::checkApprox(Node ar)
         << "...approximation had no effect" << std::endl;
     // this should never happen, but we avoid the infinite loop for sanity here
     Assert(false);
-    return false;
+    return Node::null();
   }
   // Check entailment on the approximation of ar.
   // Notice that this may trigger further reasoning by approximation. For
@@ -367,11 +379,12 @@ bool ArithEntail::checkApprox(Node ar)
     Trace("strings-ent-approx")
         << "*** StrArithApprox: showed " << ar
         << " >= 0 using under-approximation!" << std::endl;
+    Node approx = approxMap.apply(ar);
     Trace("strings-ent-approx")
-        << "*** StrArithApprox: under-approximation was " << aar << std::endl;
-    return true;
+        << "*** StrArithApprox: under-approximation was " << approx << std::endl;
+    return approx;
   }
-  return false;
+  return Node::null();
 }
 
 void ArithEntail::getArithApproximations(Node a,
@@ -906,7 +919,7 @@ Node ArithEntail::getConstantBoundLength(TNode s, bool isLower) const
   return ret;
 }
 
-bool ArithEntail::checkInternal(Node a)
+bool ArithEntail::checkSimple(Node a)
 {
   Assert(d_rr->rewrite(a) == a);
   // check whether a >= 0
@@ -923,7 +936,7 @@ bool ArithEntail::checkInternal(Node a)
   {
     for (unsigned i = 0; i < a.getNumChildren(); i++)
     {
-      if (!checkInternal(a[i]))
+      if (!checkSimple(a[i]))
       {
         return false;
       }
