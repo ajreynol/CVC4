@@ -21,6 +21,7 @@
 #include "smt/env.h"
 #include "theory/bv/theory_bv_rewrite_rules.h"
 #include "theory/rewriter.h"
+#include "util/rational.h"
 
 using namespace cvc5::internal::kind;
 
@@ -107,6 +108,18 @@ bool BasicRewriteRCons::tryRule(CDProof* cdp,
     return true;
   }
   return false;
+}
+
+bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp, ProofRewriteRule id, const Node& lhs)
+{
+  std::vector<Node> args;
+            args.push_back(
+                nodeManager()->mkConstInt(Rational(static_cast<uint32_t>(id))));
+            args.push_back(lhs);
+          Node rhs = d_env.getRewriter()->rewriteViaRule(id, lhs);
+          Node eq = lhs.eqNode(rhs);
+  cdp->addStep(eq, ProofRule::THEORY_REWRITE, {}, args);
+  return true;
 }
 
 }  // namespace rewriter

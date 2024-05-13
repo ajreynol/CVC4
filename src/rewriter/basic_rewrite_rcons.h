@@ -55,6 +55,9 @@ class BasicRewriteRCons : protected EnvObj
   bool postProve(
       CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid);
 
+  /**
+   */
+  bool ensureProofForTheoryRewrite(CDProof* cdp, ProofRewriteRule id, const Node& lhs);
  private:
   /**
    * Try rule r, return true if eq could be proven by r with arguments args.

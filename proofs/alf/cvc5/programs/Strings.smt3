@@ -648,3 +648,21 @@
                                                               ($str_arith_entail_is_approx n3 n5 b)))
   )
 )
+
+
+(program $str_re_consume_rec ((s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list))
+  (String RegLan) Bool
+  (
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ r1 r2))  false)
+    (($str_re_consume_rec "" r1)                         (str.in_re "" r1))
+  )
+)
+
+(define $str_re_consume ((s String) (r RegLan))
+  (let ((ss (string_to_flat_form s false)))     ; TODO: re_to_flat_form
+  (alf.match ((s1 String) (r1 RegLan))
+      ($str_re_consume_rec ss r)
+      (((str.in_re s1 r1) 
+        (alf.match ((s2 String) (r2 RegLan))
+            ($str_re_consume_rec ($str_rev s1) ($str_rev r1))  
+            (((str.in_re s2 r2)  (str.in_re (string_from_flat_form s2 true) ($str_rev r2))))))))))

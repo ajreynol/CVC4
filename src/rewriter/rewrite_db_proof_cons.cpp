@@ -1043,18 +1043,17 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
           Trace("rpc-debug") << "Proved: " << cur << std::endl;
           Trace("rpc-debug") << "From: " << conc << std::endl;
           pfr = ProofRule::DSL_REWRITE;
+          cdp->addStep(conc, pfr, ps, args);
         }
         else
         {
-          Assert(pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
-          Assert(args.size() == 2);
-          Node lhs = args[1];
-          Node rhs = d_env.getRewriter()->rewriteViaRule(pcur.d_dslId, lhs);
-          conc = lhs.eqNode(rhs);
-          Assert(ps.empty());
-          pfr = ProofRule::THEORY_REWRITE;
+          Assert (pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
+          if (!d_trrc.ensureProofForTheoryRewrite(cdp, pcur.d_dslId, cur[0]))
+          {
+            Trace("rpc-debug") << "...failed to add THEORY_REWRITE" << std::endl;
+            return false;
+          }
         }
-        cdp->addStep(conc, pfr, ps, args);
       }
     }
   } while (!visit.empty());
