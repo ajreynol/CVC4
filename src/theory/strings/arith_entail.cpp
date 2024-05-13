@@ -66,7 +66,7 @@ struct StrCheckEntailArithComputedTag
 {
 };
 /** Attribute true for expressions for which check returned true */
-typedef expr::Attribute<StrCheckEntailArithTag, bool> StrCheckEntailArithAttr;
+typedef expr::Attribute<StrCheckEntailArithTag, Node> StrCheckEntailArithAttr;
 typedef expr::Attribute<StrCheckEntailArithComputedTag, bool>
     StrCheckEntailArithComputedAttr;
 
@@ -82,20 +82,26 @@ bool ArithEntail::check(Node a, bool strict)
                    : a;
   ar = d_rr->rewrite(ar);
 
+  Node ara = findApprox(ar);
+  return !ara.isNull();
+}
+
+Node ArithEntail::findApprox(Node ar)
+{
+  Assert(d_rr->rewrite(ar) == ar);
   if (ar.getAttribute(StrCheckEntailArithComputedAttr()))
   {
     return ar.getAttribute(StrCheckEntailArithAttr());
   }
-
-  bool ret = checkSimple(ar);
-  Trace("strings-arith-entail")
-      << "check simple " << ar << " returns " << ret << std::endl;
-  if (!ret)
+  Node ret;
+  if (checkSimple(ar))
   {
-    // try with approximations
-    ret = checkApprox(ar);
-    Trace("strings-arith-entail")
-        << "check approx " << ar << " returns " << ret << std::endl;
+    // didn't need approximation
+    ret = ar;
+  }
+  else
+  {
+    ret = findApproxInternal(ar);
   }
   // cache the result
   ar.setAttribute(StrCheckEntailArithAttr(), ret);
@@ -103,13 +109,7 @@ bool ArithEntail::check(Node a, bool strict)
   return ret;
 }
 
-bool ArithEntail::checkApprox(Node ar)
-{
-  Node approx = findApprox(ar);
-  return !approx.isNull();
-}
-
-Node ArithEntail::findApprox(Node ar)
+Node ArithEntail::findApproxInternal(Node ar)
 {
   Assert(d_rr->rewrite(ar) == ar);
   NodeManager* nm = NodeManager::currentNM();

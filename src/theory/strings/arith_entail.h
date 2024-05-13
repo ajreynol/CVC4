@@ -56,22 +56,6 @@ class ArithEntail
    * Returns true if it is always the case that a >= 0.
    */
   bool check(Node a, bool strict = false);
-  /** check arithmetic entailment with approximations
-   *
-   * Returns true if it is always the case that a >= 0. We expect that a is in
-   * rewritten form.
-   *
-   * This function uses "approximation" techniques that under-approximate
-   * the value of a for the purposes of showing the entailment holds. For
-   * example, given:
-   *   len( x ) - len( substr( y, 0, len( x ) ) )
-   * Since we know that len( substr( y, 0, len( x ) ) ) <= len( x ), the above
-   * term can be under-approximated as len( x ) - len( x ) = 0, which is >= 0,
-   * and thus the entailment len( x ) - len( substr( y, 0, len( x ) ) ) >= 0
-   * holds.
-   */
-  bool checkApprox(Node a);
-  Node findApprox(Node a);
 
   /**
    * Checks whether assumption |= a >= 0 (if strict is false) or
@@ -169,13 +153,38 @@ class ArithEntail
                           std::vector<Node>& ys,
                           std::vector<Node>& zeroYs);
 
+  /**
+   * Find approximation of a such that it can be shown to be greater than
+   * zero.
+   * 
+   * Returns a non-null node if it is always the case that a >= 0. We expect
+   * that a is in rewritten form.
+   *
+   * This function uses "approximation" techniques that under-approximate
+   * the value of a for the purposes of showing the entailment holds. For
+   * example, given:
+   *   len( x ) - len( substr( y, 0, len( x ) ) )
+   * Since we know that len( substr( y, 0, len( x ) ) ) <= len( x ), the above
+   * term can be under-approximated as len( x ) - len( x ) = 0, which is >= 0,
+   * and thus the entailment len( x ) - len( substr( y, 0, len( x ) ) ) >= 0
+   * holds.
+   *
+   * @param a The node to find approximations for.
+   * @return The approximated form of a, call it aa, such that a >= aa is
+   * entailed by the theory, and aa can be shown to be greater than zero (using
+   * checkSimple).
+   */
+  Node findApprox(Node a);
+  
+ private:
   /** check entail arithmetic simple
    * Returns true if we can show a >= 0 always.
    * a is in rewritten form.
    */
   static bool checkSimple(Node a);
-
- private:
+  /**
+   */
+  Node findApproxInternal(Node a);
   /** Get arithmetic approximations
    *
    * This gets the (set of) arithmetic approximations for term a and stores
