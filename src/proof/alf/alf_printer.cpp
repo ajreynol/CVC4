@@ -146,9 +146,8 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
     case ProofRule::ENCODE_PRED_TRANSFORM:
-    case ProofRule::ACI_NORM: return true;
-    case ProofRule::DSL_REWRITE:
-      return options().proof.alfDslMode == options::AlfDslMode::ON;
+    case ProofRule::ACI_NORM:
+    case ProofRule::DSL_REWRITE: return true;
     case ProofRule::THEORY_REWRITE:
     {
       ProofRewriteRule id;
@@ -395,10 +394,6 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
   ProofRule r = pfn->getRule();
   if (r == ProofRule::DSL_REWRITE)
   {
-    if (options().proof.alfDslMode == options::AlfDslMode::TRUST)
-    {
-      return "trust_dsl_rewrite";
-    }
     ProofRewriteRule id;
     rewriter::getRewriteRule(pfn->getArguments()[0], id);
     std::stringstream ss;
@@ -580,12 +575,9 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
       // [1] print DSL rules
       // Note that RARE rules used in this proof are printed in the preamble of
       // the proof here, on demand.
-      if (options().proof.alfDslMode == options::AlfDslMode::ON)
+      for (ProofRewriteRule r : d_dprs)
       {
-        for (ProofRewriteRule r : d_dprs)
-        {
-          printDslRule(out, r);
-        }
+        printDslRule(out, r);
       }
       if (options().proof.alfPrintReference)
       {
@@ -762,12 +754,6 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
     }
     case ProofRule::DSL_REWRITE:
     {
-      if (options().proof.alfDslMode == options::AlfDslMode::TRUST)
-      {
-        // trusted rule
-        args.push_back(d_tproc.convert(res));
-        return;
-      }
       ProofRewriteRule dr;
       if (!rewriter::getRewriteRule(pargs[0], dr))
       {
