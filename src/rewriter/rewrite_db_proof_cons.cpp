@@ -1047,10 +1047,11 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
         }
         else
         {
-          Assert (pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
+          Assert(pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
           if (!d_trrc.ensureProofForTheoryRewrite(cdp, pcur.d_dslId, cur[0]))
           {
-            Trace("rpc-debug") << "...failed to add THEORY_REWRITE" << std::endl;
+            Trace("rpc-debug")
+                << "...failed to add THEORY_REWRITE" << std::endl;
             return false;
           }
         }

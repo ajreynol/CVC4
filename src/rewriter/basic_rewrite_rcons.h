@@ -57,7 +57,10 @@ class BasicRewriteRCons : protected EnvObj
 
   /**
    */
-  bool ensureProofForTheoryRewrite(CDProof* cdp, ProofRewriteRule id, const Node& lhs);
+  bool ensureProofForTheoryRewrite(CDProof* cdp,
+                                   ProofRewriteRule id,
+                                   const Node& lhs);
+
  private:
   /**
    * Try rule r, return true if eq could be proven by r with arguments args.
