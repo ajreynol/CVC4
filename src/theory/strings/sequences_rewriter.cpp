@@ -66,7 +66,8 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   switch (id)
   {
     case ProofRewriteRule::STR_IN_RE_EVAL: return rewriteViaStrInReEval(n);
-    case ProofRewriteRule::STR_IN_RE_CONSUME: return rewriteViaStrInReConsume(n);
+    case ProofRewriteRule::STR_IN_RE_CONSUME:
+      return rewriteViaStrInReConsume(n);
     case ProofRewriteRule::RE_LOOP_ELIM: return rewriteViaReLoopElim(n);
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
       return rewriteViaReInterUnionInclusion(n);
@@ -1463,8 +1464,9 @@ Node SequencesRewriter::rewriteViaStrInReConsume(const Node& node)
     // (str.++ xi .. xj) in (re.++ rk ... rl).
     Node xn = utils::mkConcat(mchildren, node[0].getType());
     // construct the updated regular expression
-    return nodeManager()->mkNode(
-        Kind::STRING_IN_REGEXP, xn, utils::mkConcat(children, node[1].getType()));
+    return nodeManager()->mkNode(Kind::STRING_IN_REGEXP,
+                                 xn,
+                                 utils::mkConcat(children, node[1].getType()));
   }
   return Node::null();
 }

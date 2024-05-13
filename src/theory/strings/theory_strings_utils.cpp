@@ -133,7 +133,7 @@ Node mkConcat(const std::vector<Node>& c, TypeNode tn)
   {
     return c[0];
   }
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   if (c.empty())
   {
     if (tn.isRegExp())

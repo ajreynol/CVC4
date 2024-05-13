@@ -94,6 +94,7 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
    * proofs that are not recorded in d_trustedPfs.
    */
   bool canMerge(std::shared_ptr<ProofNode> pn) override;
+
  private:
   /** Common constants */
   Node d_true;

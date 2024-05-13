@@ -960,7 +960,6 @@ EvalResult Evaluator::evalInternal(
           break;
         }
 
-
         case Kind::CONST_BITVECTOR:
           results[currNode] = EvalResult(currNodeVal.getConst<BitVector>());
           break;

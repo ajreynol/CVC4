@@ -154,7 +154,7 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       // Don't check standard here, which can't be replicated in a proof checker
       // without modelling the patterns.
       Node q = mergePrenex(n, false);
-      if (q!=n)
+      if (q != n)
       {
         return q;
       }

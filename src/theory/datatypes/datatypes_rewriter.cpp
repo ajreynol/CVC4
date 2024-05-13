@@ -59,13 +59,13 @@ Node DatatypesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   {
     case ProofRewriteRule::DT_INST:
     {
-      if (n.getKind()!=Kind::APPLY_TESTER)
+      if (n.getKind() != Kind::APPLY_TESTER)
       {
         return Node::null();
       }
       Node t = n[0];
       TypeNode tn = t.getType();
-      Assert (tn.isDatatype());
+      Assert(tn.isDatatype());
       const DType& dt = tn.getDType();
       size_t i = utils::indexOf(n.getOperator());
       bool sharedSel = d_opts.datatypes.dtSharedSelectors;

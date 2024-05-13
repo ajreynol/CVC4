@@ -217,8 +217,12 @@ bool PropPfManager::reproveUnsatCore(const std::unordered_set<Node>& cset,
   bool minProofGen = (cdp != nullptr);
   Trace("cnf-input-min") << "Make cadical, proof gen = " << minProofGen << "..."
                          << std::endl;
-  std::unique_ptr<CDCLTSatSolver> csm(SatSolverFactory::createCadical(
-      d_env, statisticsRegistry(), d_env.getResourceManager(), "", minProofGen));
+  std::unique_ptr<CDCLTSatSolver> csm(
+      SatSolverFactory::createCadical(d_env,
+                                      statisticsRegistry(),
+                                      d_env.getResourceManager(),
+                                      "",
+                                      minProofGen));
   NullRegistrar nreg;
   context::Context nctx;
   CnfStream csms(d_env, csm.get(), &nreg, &nctx);

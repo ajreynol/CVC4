@@ -234,7 +234,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::DT_INST: return "dt-inst";
     case ProofRewriteRule::DT_COLLAPSE_SELECTOR: return "dt-collapse-selector";
     case ProofRewriteRule::DT_COLLAPSE_TESTER: return "dt-collapse-tester";
-    case ProofRewriteRule::DT_COLLAPSE_TESTER_SINGLETON: return "dt-collapse-tester-singleton";
+    case ProofRewriteRule::DT_COLLAPSE_TESTER_SINGLETON:
+      return "dt-collapse-tester-singleton";
     case ProofRewriteRule::DT_CONS_EQ: return "dt-cons-eq";
     case ProofRewriteRule::STR_IN_RE_EVAL: return "str-in-re-eval";
     case ProofRewriteRule::STR_IN_RE_CONSUME: return "str-in-re-consume";
