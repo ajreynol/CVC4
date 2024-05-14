@@ -114,7 +114,7 @@ bool BasicRewriteRCons::tryRule(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
                                                     ProofRewriteRule id,
                                                     const Node& lhs,
-                                   std::vector<Node>& subgoals)
+                                                    std::vector<Node>& subgoals)
 {
   switch (id)
   {
@@ -151,14 +151,13 @@ bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
 
 bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
                                                     const Node& lhs,
-                                   std::vector<Node>& subgoals)
+                                                    std::vector<Node>& subgoals)
 {
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
-                                                              const Node& lhs,
-                                   std::vector<Node>& subgoals)
+bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
+    CDProof* cdp, const Node& lhs, std::vector<Node>& subgoals)
 {
   return false;
   theory::strings::ArithEntail ae(d_env.getRewriter());
@@ -178,11 +177,12 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   Node approxGeq = nodeManager()->mkNode(Kind::GEQ, approx, zero);
   Node teq = approxGeq.eqNode(truen);
   cdp->addTheoryRewriteStep(teq, ProofRewriteRule::ARITH_STRING_PRED_ENTAIL);
-  if (approx!=expRew)
+  if (approx != expRew)
   {
     Node aeq = geq.eqNode(approxGeq);
     // (>= expRew 0) = (>= approx 0)
-    cdp->addTheoryRewriteStep(aeq, ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX);
+    cdp->addTheoryRewriteStep(aeq,
+                              ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX);
     std::vector<Node> transEq;
     transEq.push_back(aeq);
     transEq.push_back(teq);
@@ -192,7 +192,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   // now have (>= expRew 0) = true
 
   Node eqRet = lhs.eqNode(ret);
-  if (eqRet!=teq)
+  if (eqRet != teq)
   {
     // FIXME
     // e.g. (= t -1) = false  is implied by  (>= (- (- 1 t) 1) 0) = true
@@ -204,9 +204,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
-                                                              const Node& lhs,
-                                   std::vector<Node>& subgoals)
+bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(
+    CDProof* cdp, const Node& lhs, std::vector<Node>& subgoals)
 {
   return false;
 }

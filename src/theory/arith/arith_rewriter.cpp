@@ -77,8 +77,8 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
     {
-      if ((n.getKind()!=Kind::EQUAL || !n[0].getType().isInteger()) &&
-          n.getKind()!=Kind::GEQ)
+      if ((n.getKind() != Kind::EQUAL || !n[0].getType().isInteger())
+          && n.getKind() != Kind::GEQ)
       {
         return Node::null();
       }
@@ -103,18 +103,18 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      if (id==ProofRewriteRule::ARITH_STRING_PRED_ENTAIL)
+      if (id == ProofRewriteRule::ARITH_STRING_PRED_ENTAIL)
       {
         if (theory::strings::ArithEntail::checkSimple(n[0]))
         {
           return nodeManager()->mkConst(true);
         }
       }
-      else if (id==ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX)
+      else if (id == ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX)
       {
         theory::strings::ArithEntail ae(d_rr);
         Node approx = ae.findApprox(n[0]);
-        if (approx!=n[0])
+        if (approx != n[0])
         {
           return nodeManager()->mkNode(Kind::GEQ, approx, n[1]);
         }

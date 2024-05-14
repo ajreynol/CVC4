@@ -71,12 +71,15 @@ class BasicRewriteRCons : protected EnvObj
                Node eq,
                ProofRule r,
                const std::vector<Node>& args);
-  bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& lhs,
+  bool ensureProofMacroBoolNnfNorm(CDProof* cdp,
+                                   const Node& lhs,
                                    std::vector<Node>& subgoals);
-  bool ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& lhs,
-                                   std::vector<Node>& subgoals);
-  bool ensureProofMacroReInterUnionInclusion(CDProof* cdp, const Node& lhs,
-                                   std::vector<Node>& subgoals);
+  bool ensureProofMacroArithStringPredEntail(CDProof* cdp,
+                                             const Node& lhs,
+                                             std::vector<Node>& subgoals);
+  bool ensureProofMacroReInterUnionInclusion(CDProof* cdp,
+                                             const Node& lhs,
+                                             std::vector<Node>& subgoals);
 };
 
 }  // namespace rewriter

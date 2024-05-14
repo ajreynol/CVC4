@@ -133,7 +133,7 @@ class RewriteDbProofCons : protected EnvObj
                const Node& eqi,
                int64_t recLimit,
                int64_t stepLimit,
-             std::vector<Node>& subgoals);
+               std::vector<Node>& subgoals);
   /**
    * Prove internal, which is the main entry point for proven an equality eqi.
    * Returns the proof rule that was used to prove eqi, or
@@ -174,7 +174,9 @@ class RewriteDbProofCons : protected EnvObj
    * @param eqi The proven equality
    * @param subgoals New rewrites to prove.
    */
-  bool ensureProofInternal(CDProof* cdp, const Node& eqi, std::vector<Node>& subgoals);
+  bool ensureProofInternal(CDProof* cdp,
+                           const Node& eqi,
+                           std::vector<Node>& subgoals);
   /** Return the evaluation of n, which uses local caching. */
   Node doEvaluate(const Node& n);
   /** Return the flattening of n. */
