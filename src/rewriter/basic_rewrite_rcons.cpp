@@ -108,9 +108,9 @@ bool BasicRewriteRCons::tryRule(CDProof* cdp,
   if (!res.isNull() && res == eq)
   {
     // Theory rewrites may require the expansion below
-    if (r==ProofRule::THEORY_REWRITE)
+    if (r == ProofRule::THEORY_REWRITE)
     {
-      Assert (args.size()==2);
+      Assert(args.size() == 2);
       ProofRewriteRule id;
       if (rewriter::getRewriteRule(args[0], id))
       {
