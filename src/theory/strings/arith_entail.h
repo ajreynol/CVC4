@@ -38,11 +38,6 @@ class ArithEntail
 {
  public:
   ArithEntail(Rewriter* r);
-  /**
-   * Returns the rewritten form a term, intended (although not enforced) to be
-   * an arithmetic term.
-   */
-  Node rewriteArith(Node a);
   /** check arithmetic entailment equal
    * Returns true if it is always the case that a = b.
    */
@@ -189,6 +184,11 @@ class ArithEntail
 
  private:
   /**
+   * Returns the rewritten form a term, intended (although not enforced) to be
+   * an arithmetic term.
+   */
+  Node rewriteArith(Node a);
+  /**
    */
   Node findApproxInternal(Node a);
   /** Get arithmetic approximations
@@ -221,6 +221,8 @@ class ArithEntail
   /** Constant zero */
   Node d_zero;
   Node d_one;
+  /** */
+  std::map<Node, Node> d_approxCache;
 };
 
 }  // namespace strings

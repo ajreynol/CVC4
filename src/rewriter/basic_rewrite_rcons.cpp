@@ -256,7 +256,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     Node cceq = cpred.eqNode(ret);
     cdp->addStep(cceq, ProofRule::EVALUATE, {}, {cpred});
     Node sumEqFalse = sumBound.eqNode(ret);
-    cdp->addStep(sumEqFalse, ProofRule::TRANS, {peq, sumEqFalse}, {});
+    cdp->addStep(sumEqFalse, ProofRule::TRANS, {peq, cceq}, {});
     Node notSum = sumBound.notNode();
     cdp->addStep(notSum, ProofRule::FALSE_ELIM, {sumEqFalse}, {});
     cdp->addStep(ret, ProofRule::CONTRA, {sumBound, notSum}, {});

@@ -88,7 +88,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      theory::strings::ArithEntail ae(d_rr);
+      theory::strings::ArithEntail ae(nullptr);
       Node ret = ae.rewritePredViaEntailment(n);
       if (!ret.isNull())
       {
@@ -113,7 +113,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
       else if (id == ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX)
       {
-        theory::strings::ArithEntail ae(d_rr);
+        theory::strings::ArithEntail ae(nullptr);
         Node approx = ae.findApprox(n[0]);
         if (approx != n[0])
         {
