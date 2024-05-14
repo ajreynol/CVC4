@@ -2324,6 +2324,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    */
   EVALUE(MACRO_ARITH_STRING_PRED_ENTAIL),
   EVALUE(ARITH_STRING_PRED_ENTAIL),
+  EVALUE(ARITH_STRING_PRED_SAFE_APPROX),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Equality -- Beta reduction**

@@ -226,6 +226,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "arith-div-by-const-elim";
     case ProofRewriteRule::ARITH_STRING_PRED_ENTAIL:
       return "arith-string-pred-entail";
+    case ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX:
+      return "arith-string-pred-safe-approx";
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
       return "macro-arith-string-pred-entail";
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";

@@ -48,30 +48,31 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n, Node& exp)
   NodeManager* nm = NodeManager::currentNM();
   if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger())
   {
-    // check if the node can be simplified to false
-    if (check(n[0], n[1], true))
+    exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[0], n[1]), d_one);
+    if (check(exp))
     {
-      exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[0], n[1]), d_one);
       return nm->mkConst(false);
     }
-    else if (check(n[1], n[0], true))
+    exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
+    if (check(exp))
     {
-      exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
       return nm->mkConst(false);
     }
+    exp = Node::null();
   }
   else if (n.getKind() == Kind::GEQ)
   {
-    if (check(n[0], n[1], false))
+    exp = nm->mkNode(Kind::SUB, n[0], n[1]);
+    if (check(exp))
     {
-      exp = nm->mkNode(Kind::SUB, n[0], n[1]);
       return nm->mkConst(true);
     }
-    else if (check(n[1], n[0], true))
+    exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
+    if (check(exp))
     {
-      exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
       return nm->mkConst(false);
     }
+    exp = Node::null();
   }
   return Node::null();
 }

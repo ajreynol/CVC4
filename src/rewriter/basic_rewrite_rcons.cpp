@@ -113,24 +113,25 @@ bool BasicRewriteRCons::tryRule(CDProof* cdp,
 
 bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
                                                     ProofRewriteRule id,
-                                                    const Node& lhs)
+                                                    const Node& lhs,
+                                   std::vector<Node>& subgoals)
 {
   switch (id)
   {
     case ProofRewriteRule::MACRO_BOOL_NNF_NORM:
-      if (ensureProofMacroBoolNnfNorm(cdp, lhs))
+      if (ensureProofMacroBoolNnfNorm(cdp, lhs, subgoals))
       {
         return true;
       }
       break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
-      if (ensureProofMacroArithStringPredEntail(cdp, lhs))
+      if (ensureProofMacroArithStringPredEntail(cdp, lhs, subgoals))
       {
         return true;
       }
       break;
     case ProofRewriteRule::MACRO_RE_INTER_UNION_INCLUSION:
-      if (ensureProofMacroReInterUnionInclusion(cdp, lhs))
+      if (ensureProofMacroReInterUnionInclusion(cdp, lhs, subgoals))
       {
         return true;
       }
@@ -149,23 +150,63 @@ bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
 }
 
 bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
-                                                    const Node& lhs)
+                                                    const Node& lhs,
+                                   std::vector<Node>& subgoals)
 {
   return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
-                                                              const Node& lhs)
+                                                              const Node& lhs,
+                                   std::vector<Node>& subgoals)
 {
-  Node exp;
-  theory::strings::ArithEntail ae(d_env.getRewriter());
-  Node ret = ae.rewritePredViaEntailment(lhs, exp);
-
   return false;
+  theory::strings::ArithEntail ae(d_env.getRewriter());
+  Node exp;
+  Node ret = ae.rewritePredViaEntailment(lhs, exp);
+  Node expRew = rewrite(exp);
+  Node zero = nodeManager()->mkConstInt(Rational(0));
+  Node geq = nodeManager()->mkNode(Kind::GEQ, expRew, zero);
+  Node approx = ae.findApprox(expRew);
+  if (approx.isNull())
+  {
+    Assert(false);
+    return false;
+  }
+  Node truen = nodeManager()->mkConst(true);
+  // (>= approx 0) = true
+  Node approxGeq = nodeManager()->mkNode(Kind::GEQ, approx, zero);
+  Node teq = approxGeq.eqNode(truen);
+  cdp->addTheoryRewriteStep(teq, ProofRewriteRule::ARITH_STRING_PRED_ENTAIL);
+  if (approx!=expRew)
+  {
+    Node aeq = geq.eqNode(approxGeq);
+    // (>= expRew 0) = (>= approx 0)
+    cdp->addTheoryRewriteStep(aeq, ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX);
+    std::vector<Node> transEq;
+    transEq.push_back(aeq);
+    transEq.push_back(teq);
+    teq = geq.eqNode(truen);
+    cdp->addStep(teq, ProofRule::TRANS, transEq, {});
+  }
+  // now have (>= expRew 0) = true
+
+  Node eqRet = lhs.eqNode(ret);
+  if (eqRet!=teq)
+  {
+    // FIXME
+    // e.g. (= t -1) = false  is implied by  (>= (- (- 1 t) 1) 0) = true
+    Node eeq = teq.eqNode(eqRet);
+    cdp->addTrustedStep(eeq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+    subgoals.push_back(eeq);
+    cdp->addStep(eqRet, ProofRule::EQ_RESOLVE, {teq, eeq}, {});
+  }
+  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
-                                                              const Node& lhs)
+                                                              const Node& lhs,
+                                   std::vector<Node>& subgoals)
 {
   return false;
 }
