@@ -15,8 +15,8 @@
 
 #include "theory/arith/arith_proof_utilities.h"
 
-#include "util/rational.h"
 #include "proof/proof_node_manager.h"
+#include "util/rational.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -46,9 +46,9 @@ std::vector<Node> getMacroSumUbCoeff(const std::vector<Pf>& pfs,
 }
 
 Node expandMacroSumUb(const std::vector<Node>& children,
-                                            const std::vector<Node>& args,
-                                            CDProof* cdp,
-                                            Node res)
+                      const std::vector<Node>& args,
+                      CDProof* cdp,
+                      Node res)
 {
   Trace("macro::arith") << "Expand MACRO_ARITH_SCALE_SUM_UB" << std::endl;
   if (TraceIsOn("macro::arith"))
@@ -72,11 +72,10 @@ Node expandMacroSumUb(const std::vector<Node>& children,
     bool isPos = scalar.getConst<Rational>() > 0;
     Node scalarCmp =
         nm->mkNode(isPos ? Kind::GT : Kind::LT,
-                    scalar,
-                    nm->mkConstRealOrInt(scalar.getType(), Rational(0)));
+                   scalar,
+                   nm->mkConstRealOrInt(scalar.getType(), Rational(0)));
     // (= scalarCmp true)
-    Node scalarCmpOrTrue =
-        steps.tryStep(ProofRule::EVALUATE, {}, {scalarCmp});
+    Node scalarCmpOrTrue = steps.tryStep(ProofRule::EVALUATE, {}, {scalarCmp});
     Assert(!scalarCmpOrTrue.isNull());
     // scalarCmp
     steps.addStep(ProofRule::TRUE_ELIM, {scalarCmpOrTrue}, {}, scalarCmp);
@@ -99,8 +98,7 @@ Node expandMacroSumUb(const std::vector<Node>& children,
 
   Node sumBounds = steps.tryStep(ProofRule::ARITH_SUM_UB, scaledRels, {});
   cdp->addSteps(steps);
-  Trace("macro::arith") << "Expansion done. Proved: " << sumBounds
-                        << std::endl;
+  Trace("macro::arith") << "Expansion done. Proved: " << sumBounds << std::endl;
   return sumBounds;
 }
 

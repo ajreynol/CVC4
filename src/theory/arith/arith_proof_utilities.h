@@ -23,8 +23,8 @@
 #include <vector>
 
 #include "expr/node.h"
-#include "proof/proof_node.h"
 #include "proof/proof.h"
+#include "proof/proof_node.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -48,9 +48,9 @@ std::vector<Node> getMacroSumUbCoeff(const std::vector<Pf>& pfs,
 /**
  */
 Node expandMacroSumUb(const std::vector<Node>& children,
-                                            const std::vector<Node>& args,
-                                            CDProof* cdp,
-                                            Node res);
+                      const std::vector<Node>& args,
+                      CDProof* cdp,
+                      Node res);
 
 }  // namespace arith
 }  // namespace theory
