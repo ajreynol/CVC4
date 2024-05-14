@@ -161,6 +161,24 @@ bool PolyNorm::isEqual(const PolyNorm& p) const
   return true;
 }
 
+bool PolyNorm::isConstant(Rational& c) const
+{
+  if (d_polyNorm.size()==0)
+  {
+    c = Rational(0);
+    return true;
+  }
+  if (d_polyNorm.size()==1)
+  {
+    if (d_polyNorm.begin()->first.isNull())
+    {
+      c = d_polyNorm.begin()->second;
+      return true;
+    }
+  }
+  return false;
+}
+
 bool PolyNorm::isEqualMod(const PolyNorm& p, Rational& c) const
 {
   if (d_polyNorm.size() != p.d_polyNorm.size())

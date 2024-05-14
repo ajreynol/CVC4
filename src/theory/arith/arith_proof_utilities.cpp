@@ -47,8 +47,7 @@ std::vector<Node> getMacroSumUbCoeff(const std::vector<Pf>& pfs,
 
 Node expandMacroSumUb(const std::vector<Node>& children,
                       const std::vector<Node>& args,
-                      CDProof* cdp,
-                      Node res)
+                      CDProof* cdp)
 {
   Trace("macro::arith") << "Expand MACRO_ARITH_SCALE_SUM_UB" << std::endl;
   if (TraceIsOn("macro::arith"))
@@ -65,10 +64,19 @@ Node expandMacroSumUb(const std::vector<Node>& children,
 
   // Scale all children, accumulating
   std::vector<Node> scaledRels;
+  Node one = nm->mkConstInt(Rational(1));
   for (size_t i = 0; i < children.size(); ++i)
   {
     TNode child = children[i];
     TNode scalar = args[i];
+    /*
+    if (scalar==one)
+    {
+      // if scaled by one, just take original
+      scaledRels.push_back(child);
+      continue;
+    }
+    */
     bool isPos = scalar.getConst<Rational>() > 0;
     Node scalarCmp =
         nm->mkNode(isPos ? Kind::GT : Kind::LT,

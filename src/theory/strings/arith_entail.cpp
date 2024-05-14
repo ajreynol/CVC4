@@ -963,7 +963,6 @@ Node ArithEntail::getConstantBoundLength(TNode s, bool isLower) const
 
 bool ArithEntail::checkSimple(Node a)
 {
-  Assert(d_rr->rewrite(a) == a);
   // check whether a >= 0
   if (a.isConst())
   {

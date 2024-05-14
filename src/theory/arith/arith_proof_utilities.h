@@ -49,8 +49,7 @@ std::vector<Node> getMacroSumUbCoeff(const std::vector<Pf>& pfs,
  */
 Node expandMacroSumUb(const std::vector<Node>& children,
                       const std::vector<Node>& args,
-                      CDProof* cdp,
-                      Node res);
+                      CDProof* cdp);
 
 }  // namespace arith
 }  // namespace theory

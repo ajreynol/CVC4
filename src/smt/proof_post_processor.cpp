@@ -1036,7 +1036,9 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   }
   else if (id == ProofRule::MACRO_ARITH_SCALE_SUM_UB)
   {
-    Node sumBounds = theory::arith::expandMacroSumUb(children, args, cdp, res);
+    Node sumBounds = theory::arith::expandMacroSumUb(children, args, cdp);
+    Assert (!sumBounds.isNull());
+    Assert (res.isNull() || sumBounds==res);
     return sumBounds;
   }
   else if (id == ProofRule::MACRO_STRING_INFERENCE)

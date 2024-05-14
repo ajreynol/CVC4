@@ -61,6 +61,8 @@ class PolyNorm
   bool empty() const;
   /** Is this polynomial equal to polynomial p? */
   bool isEqual(const PolyNorm& p) const;
+  /** Is this polynomial a constant? If so, store it in c */
+  bool isConstant(Rational& c) const;
   /**
    * Is this polynomial equal to polynomial p*c for some c? If so, return
    * true and store in c.

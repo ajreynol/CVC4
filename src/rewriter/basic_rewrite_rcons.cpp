@@ -23,6 +23,8 @@
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
 #include "util/rational.h"
+#include "theory/arith/arith_proof_utilities.h"
+#include "theory/arith/arith_poly_norm.h"
 
 using namespace cvc5::internal::kind;
 
@@ -163,18 +165,23 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   theory::strings::ArithEntail ae(d_env.getRewriter());
   Node exp;
   Node ret = ae.rewritePredViaEntailment(lhs, exp);
+  Trace("brc-macro") << "Expand entailment for " << lhs << " == " << ret << std::endl;
+  Trace("brc-macro") << "- explanation is " << exp << std::endl;
   Node expRew = rewrite(exp);
   Node zero = nodeManager()->mkConstInt(Rational(0));
   Node geq = nodeManager()->mkNode(Kind::GEQ, expRew, zero);
+  Trace("brc-macro") << "- rewritten predicate is " << geq << std::endl;
   Node approx = ae.findApprox(expRew);
   if (approx.isNull())
   {
+    Trace("brc-macro") << "...failed to find approximation" << std::endl;
     Assert(false);
     return false;
   }
   Node truen = nodeManager()->mkConst(true);
   // (>= approx 0) = true
   Node approxGeq = nodeManager()->mkNode(Kind::GEQ, approx, zero);
+  Trace("brc-macro") << "- approximation predicate is " << approxGeq << std::endl;
   Node teq = approxGeq.eqNode(truen);
   cdp->addTheoryRewriteStep(teq, ProofRewriteRule::ARITH_STRING_PRED_ENTAIL);
   if (approx != expRew)
@@ -189,20 +196,77 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     teq = geq.eqNode(truen);
     cdp->addStep(teq, ProofRule::TRANS, transEq, {});
   }
-  // now have (>= expRew 0) = true
+  // now have (>= expRew 0) = true, stored in teq
 
-  Node eqRet = lhs.eqNode(ret);
-  if (eqRet != teq)
+  Node retEq = lhs.eqNode(ret);
+  if (!ret.getConst<bool>())
   {
+    Trace("brc-macro") << "- false case, setting up conflict" << std::endl;
     cdp->addStep(geq, ProofRule::TRUE_ELIM, {teq}, {});
     Assert(exp.getKind() == Kind::SUB);
     Node posTerm = exp[0].getKind() == Kind::SUB ? exp[0][0] : exp[0];
     Assert(posTerm == lhs[0] || posTerm == lhs[1]);
     bool isLhs = posTerm == lhs[0];
-    ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
-
+    Trace("brc-macro") << "- isLhs is " << isLhs << std::endl;
+    std::vector<Node> children;
+    children.push_back(geq);
+    children.push_back(lhs);
+    std::vector<Node> args;
+    args.push_back(nodeManager()->mkConstInt(Rational(1)));
+    args.push_back(nodeManager()->mkConstInt(Rational(isLhs ? -1 : 1)));
+    Trace("brc-macro") << "- compute sum bound for " << children << " " << args << std::endl;
+    Node sumBound = theory::arith::expandMacroSumUb(children, args, cdp);
+    Trace("brc-macro") << "- sum bound is " << sumBound << std::endl;
+    if (sumBound.isNull())
+    {
+      Assert(false);
+      Trace("brc-macro") << "...failed to add" << std::endl;
+      return false;
+    }
+    Assert (sumBound.getNumChildren()==2);
+    Node py = nodeManager()->mkNode(Kind::SUB, sumBound[0], sumBound[1]);
+    theory::arith::PolyNorm pn = theory::arith::PolyNorm::mkPolyNorm(py);
+    Rational pyr;
+    if (!pn.isConstant(pyr))
+    {
+      Trace("brc-macro") << "...failed to prove constant after normalization" << std::endl;
+      return false;
+    }
     // e.g. (= t -1) = false  is implied by  (>= (- (- 1 t) 1) 0) = true
+    Node cpred = nodeManager()->mkNode(sumBound.getKind(), nodeManager()->mkConstInt(pyr), zero);
+    if (!theory::arith::PolyNorm::isArithPolyNormAtom(sumBound, cpred))
+    {
+      Trace("brc-macro") << "...failed to show normalization" << std::endl;
+      return false;
+    }
+    Node peq = sumBound.eqNode(cpred);
+    cdp->addStep(peq, ProofRule::ARITH_POLY_NORM, {}, {peq});
+    Node cceq = cpred.eqNode(ret);
+    cdp->addStep(cceq, ProofRule::EVALUATE, {}, {cpred});
+    Node sumEqFalse = sumBound.eqNode(ret);
+    cdp->addStep(sumEqFalse, ProofRule::TRANS, {peq, sumEqFalse}, {});
+    Node notSum = sumBound.notNode();
+    cdp->addStep(notSum, ProofRule::FALSE_ELIM, {sumEqFalse}, {});
+    cdp->addStep(ret, ProofRule::CONTRA, {sumBound, notSum}, {});
+    Node notLhs = lhs.notNode();
+    cdp->addStep(notLhs, ProofRule::SCOPE, {ret}, {lhs});
+    cdp->addStep(retEq, ProofRule::FALSE_INTRO, {notLhs}, {});
   }
+  else
+  {
+    Trace("brc-macro") << "- true case, prove equal" << std::endl;
+    Assert (lhs.getKind()==Kind::GEQ);
+    // should be able to show equivalent by polynomial normalization
+    if (!theory::arith::PolyNorm::isArithPolyNormAtom(lhs, geq))
+    {
+      Trace("brc-macro") << "...failed to show normalization (true case)" << std::endl;
+      return false;
+    }
+    Node peq = lhs.eqNode(geq);
+    cdp->addStep(peq, ProofRule::ARITH_POLY_NORM, {}, {peq});
+    cdp->addStep(retEq, ProofRule::TRANS, {peq, teq}, {});
+  }
+  Trace("brc-macro") << "...success" << std::endl;
   return true;
 }
 
