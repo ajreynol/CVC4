@@ -24,6 +24,7 @@
 
 #include "expr/node.h"
 #include "proof/proof_node.h"
+#include "proof/proof.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -43,6 +44,13 @@ namespace arith {
  */
 std::vector<Node> getMacroSumUbCoeff(const std::vector<Pf>& pfs,
                                      const std::vector<Node>& coeffs);
+
+/**
+ */
+Node expandMacroSumUb(const std::vector<Node>& children,
+                                            const std::vector<Node>& args,
+                                            CDProof* cdp,
+                                            Node res);
 
 }  // namespace arith
 }  // namespace theory

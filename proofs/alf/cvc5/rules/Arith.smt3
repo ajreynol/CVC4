@@ -50,7 +50,7 @@
   :conclusion (alf.match ((S Type) (a2 S :list) (b2 S :list) (p Bool))
                 (mk_arith_sum_ub F)
                 (
-                  ((= a2 b2) (<= a2 b2))
+                  ((= a2 b2) (<= a2 b2))    ; proof checker defaults to <=
                   (p p)
                 ))
 )
