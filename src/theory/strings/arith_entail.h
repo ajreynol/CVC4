@@ -185,6 +185,7 @@ class ArithEntail
    */
   Node rewritePredViaEntailment(const Node& n, Node& exp);
   Node rewritePredViaEntailment(const Node& n);
+
  private:
   /**
    */

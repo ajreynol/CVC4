@@ -87,7 +87,8 @@ Node ArithEntail::rewriteArith(Node a)
   }
   arith::PolyNorm pn = arith::PolyNorm::mkPolyNorm(a);
   Node an = pn.toNode(a.getType());
-  Trace("string-ent-rewrite-arith") << "Rewrite " << a << " to " << an << " based on poly-norm" << std::endl;
+  Trace("string-ent-rewrite-arith")
+      << "Rewrite " << a << " to " << an << " based on poly-norm" << std::endl;
   return an;
 }
 
@@ -621,7 +622,8 @@ void ArithEntail::getArithApproximations(Node a,
       approx.push_back(nm->mkConstInt(Rational(-1)));
     }
   }
-  Trace("strings-ent-approx-debug") << "Return " << approx.size() << " approximations" << std::endl;
+  Trace("strings-ent-approx-debug")
+      << "Return " << approx.size() << " approximations" << std::endl;
 }
 
 bool ArithEntail::checkWithEqAssumption(Node assumption, Node a, bool strict)

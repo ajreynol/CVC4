@@ -171,8 +171,7 @@ class RewriteDbProofCons : protected EnvObj
    * @param cdp The proof to add the proof of eqi to
    * @param eqi The proven equality
    */
-  bool ensureProofInternal(CDProof* cdp,
-                           const Node& eqi);
+  bool ensureProofInternal(CDProof* cdp, const Node& eqi);
   /** Return the evaluation of n, which uses local caching. */
   Node doEvaluate(const Node& n);
   /** Return the flattening of n. */

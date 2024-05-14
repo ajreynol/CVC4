@@ -156,8 +156,8 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
-    CDProof* cdp, const Node& lhs)
+bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
+                                                              const Node& lhs)
 {
   theory::strings::ArithEntail ae(nullptr);
   Node exp;
@@ -188,31 +188,31 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     Node aeq = geq.eqNode(approxGeq);
     // (>= expRew 0) = (>= approx 0)
     Trace("brc-macro") << "- prove " << aeq << " via pred-safe-approx"
-                      << std::endl;
+                       << std::endl;
     cdp->addTheoryRewriteStep(aeq,
                               ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX);
     transEq.push_back(aeq);
   }
-  if (approxRew!=approx)
+  if (approxRew != approx)
   {
     Node areq = approxGeq.eqNode(approxRewGeq);
-    Trace("brc-macro") << "- prove " << areq << " via arith-poly-norm" << std::endl;
+    Trace("brc-macro") << "- prove " << areq << " via arith-poly-norm"
+                       << std::endl;
     cdp->addStep(areq, ProofRule::ARITH_POLY_NORM, {}, {areq});
     transEq.push_back(areq);
   }
   // (>= approx 0) = true
   Node teq = approxRewGeq.eqNode(truen);
-  Trace("brc-macro") << "- prove " << teq << " via pred-entail"
-                     << std::endl;
+  Trace("brc-macro") << "- prove " << teq << " via pred-entail" << std::endl;
   cdp->addTheoryRewriteStep(teq, ProofRewriteRule::ARITH_STRING_PRED_ENTAIL);
   transEq.push_back(teq);
   // put the above three steps together with TRANS
-  if (transEq.size()>1)
+  if (transEq.size() > 1)
   {
     teq = geq.eqNode(truen);
     cdp->addStep(teq, ProofRule::TRANS, transEq, {});
   }
-    
+
   // now have (>= expRew 0) = true, stored in teq
 
   if (lhs == expRew)
@@ -299,8 +299,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(
-    CDProof* cdp, const Node& lhs)
+bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
+                                                              const Node& lhs)
 {
   return false;
 }

@@ -806,8 +806,7 @@ bool RewriteDbProofCons::proveInternalBase(const Node& eqi,
   return false;
 }
 
-bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp,
-                                             const Node& eqi)
+bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
 {
   // note we could use single internal cdp to improve subproof sharing
   NodeManager* nm = nodeManager();
@@ -1056,8 +1055,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp,
         else
         {
           Assert(pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
-          if (!d_trrc.ensureProofForTheoryRewrite(
-                  cdp, pcur.d_dslId, cur[0]))
+          if (!d_trrc.ensureProofForTheoryRewrite(cdp, pcur.d_dslId, cur[0]))
           {
             Trace("rpc-debug")
                 << "...failed to add THEORY_REWRITE" << std::endl;
