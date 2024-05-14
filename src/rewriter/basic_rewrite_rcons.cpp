@@ -107,13 +107,24 @@ bool BasicRewriteRCons::tryRule(CDProof* cdp,
   Node res = pc->checkDebug(r, {}, args, Node::null(), "trewrite-rcons");
   if (!res.isNull() && res == eq)
   {
+    // Theory rewrites may require the expansion below
+    if (r==ProofRule::THEORY_REWRITE)
+    {
+      Assert (args.size()==2);
+      ProofRewriteRule id;
+      if (rewriter::getRewriteRule(args[0], id))
+      {
+        ensureProofForTheoryRewrite(cdp, id, args[1]);
+        return true;
+      }
+    }
     cdp->addStep(eq, r, {}, args);
     return true;
   }
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
+void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
                                                     ProofRewriteRule id,
                                                     const Node& lhs)
 {
@@ -122,19 +133,19 @@ bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
     case ProofRewriteRule::MACRO_BOOL_NNF_NORM:
       if (ensureProofMacroBoolNnfNorm(cdp, lhs))
       {
-        return true;
+        return;
       }
       break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
       if (ensureProofMacroArithStringPredEntail(cdp, lhs))
       {
-        return true;
+        return;
       }
       break;
     case ProofRewriteRule::MACRO_RE_INTER_UNION_INCLUSION:
       if (ensureProofMacroReInterUnionInclusion(cdp, lhs))
       {
-        return true;
+        return;
       }
       break;
     default: break;
@@ -147,7 +158,6 @@ bool BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
   Node rhs = d_env.getRewriter()->rewriteViaRule(id, lhs);
   Node eq = lhs.eqNode(rhs);
   cdp->addStep(eq, ProofRule::THEORY_REWRITE, {}, args);
-  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
@@ -203,6 +213,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   }
   // (>= approx 0) = true
   Node teq = approxRewGeq.eqNode(truen);
+  // it might be trivial to show, use evaluate???
   Trace("brc-macro") << "- prove " << teq << " via pred-entail" << std::endl;
   cdp->addTheoryRewriteStep(teq, ProofRewriteRule::ARITH_STRING_PRED_ENTAIL);
   transEq.push_back(teq);
@@ -296,6 +307,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
     cdp->addStep(retEq, ProofRule::TRANS, {peq, teq}, {});
   }
   Trace("brc-macro") << "...success" << std::endl;
+  Trace("brc-macro") << "...proof is " << *cdp->getProofFor(retEq) << std::endl;
   return true;
 }
 

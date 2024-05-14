@@ -57,7 +57,7 @@ class BasicRewriteRCons : protected EnvObj
 
   /**
    */
-  bool ensureProofForTheoryRewrite(CDProof* cdp,
+  void ensureProofForTheoryRewrite(CDProof* cdp,
                                    ProofRewriteRule id,
                                    const Node& lhs);
 
