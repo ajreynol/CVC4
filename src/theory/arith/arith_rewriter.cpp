@@ -53,7 +53,7 @@ ArithRewriter::ArithRewriter(NodeManager* nm, Rewriter* rr, OperatorElim& oe)
   registerProofRewriteRule(ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL,
-                           TheoryRewriteCtx::POST_DSL);
+                           TheoryRewriteCtx::DSL_SUBCALL);
   // we don't register ARITH_STRING_PRED_ENTAIL
 }
 
@@ -77,6 +77,16 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
     {
+      if ((n.getKind()!=Kind::EQUAL || !n[0].getType().isInteger()) &&
+          n.getKind()!=Kind::GEQ)
+      {
+        return Node::null();
+      }
+      // only matters if contains strings
+      if (!expr::hasSubtermKinds({Kind::STRING_LENGTH}, n))
+      {
+        return Node::null();
+      }
       theory::strings::ArithEntail ae(d_rr);
       Node ret = ae.rewritePredViaEntailment(n);
       if (!ret.isNull())
@@ -106,8 +116,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         Node approx = ae.findApprox(n[0]);
         if (approx!=n[0])
         {
-          Node zero = nodeManager()->mkConstInt(Rational(0));
-          return nodeManager()->mkNode(Kind::GEQ, approx, zero);
+          return nodeManager()->mkNode(Kind::GEQ, approx, n[1]);
         }
       }
     }
