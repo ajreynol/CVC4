@@ -13,9 +13,17 @@
     ((arith_rel_sum <= <) <)
     ((arith_rel_sum <= =) <=)
     ((arith_rel_sum <= <=) <=)
+    ((arith_rel_sum > >) >)
+    ((arith_rel_sum > =) >)
+    ((arith_rel_sum > >=) >)
+    ((arith_rel_sum >= >) >)
+    ((arith_rel_sum >= =) >=)
+    ((arith_rel_sum >= >=) >=)
     ((arith_rel_sum = <) <)
-    ((arith_rel_sum = =) <=)  ; could be =, but internal proof checker does <=
     ((arith_rel_sum = <=) <=)
+    ((arith_rel_sum = >) >)
+    ((arith_rel_sum = >=) >=)
+    ((arith_rel_sum = =) =)
   )
 )
 (program arith_mk_zero ((T Type))
@@ -39,7 +47,12 @@
 
 (declare-rule arith_sum_ub ((F Bool))
   :premise-list F and
-  :conclusion (mk_arith_sum_ub F)
+  :conclusion (alf.match ((S Type) (a2 S :list) (b2 S :list) (p Bool))
+                (mk_arith_sum_ub F)
+                (
+                  ((= a2 b2) (<= a2 b2))
+                  (p p)
+                ))
 )
 
 ; Computes the conclusion of the ProofRule::ARITH_MULT_POS rule.
