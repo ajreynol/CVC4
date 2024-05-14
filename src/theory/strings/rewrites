@@ -192,10 +192,10 @@
   (str.contains x y)
   true)
 
-;(define-cond-rule str-contains-len-geq-false ((x String) (y String))
-;  (> (str.len y) (str.len x))
-;  (str.contains x y)
-;  false)
+(define-cond-rule str-contains-len-geq-false ((x String) (y String))
+  (> (str.len y) (str.len x))
+  (str.contains x y)
+  false)
 
 (define-cond-rule str-contains-is-emp ((x String) (y String))
   (= (str.len x) 0)
@@ -241,6 +241,25 @@
   (str.indexof t s n)
   (- 1))
 
+
+(define-rule* str-to-lower-concat ((s1 String) (s2 String) (s3 String :list))
+  (str.to_lower (str.++ s1 s2 s3)) 
+  (str.to_lower (str.++ s2 s3))
+  (str.++ (str.to_lower s1) _))
+
+(define-rule* str-to-upper-concat ((s1 String) (s2 String) (s3 String :list))
+  (str.to_upper (str.++ s1 s2 s3)) 
+  (str.to_upper (str.++ s2 s3))
+  (str.++ (str.to_upper s1) _))
+
+(define-rule str-to-lower-upper ((s String))
+  (str.to_lower (str.to_upper s))
+  (str.to_lower s))
+
+(define-rule str-to-upper-lower ((s String))
+  (str.to_upper (str.to_lower s))
+  (str.to_upper s))
+
 ; =============== Regular expression rules
 
 (define-rule re-all-elim () re.all (re.* re.allchar))
@@ -270,6 +289,11 @@
 (define-rule re-inter-none ((xs RegLan :list) (ys RegLan :list)) (re.inter xs re.none ys) re.none)
 (define-rule* re-inter-flatten ((xs RegLan :list) (b RegLan) (ys RegLan :list) (zs RegLan :list)) (re.inter xs (re.inter b ys) zs) (re.inter xs b ys zs))
 (define-rule* re-inter-dup ((xs RegLan :list) (b RegLan) (ys RegLan :list) (zs RegLan :list)) (re.inter xs b ys b zs) (re.inter xs b ys zs))
+
+(define-cond-rule re-loop-neg ((n Int) (m Int) (r RegLan))
+  (> n m)
+  (re.loop n m r)
+  re.none)
 
 (define-cond-rule re-inter-cstring ((xs RegLan :list) (ys RegLan :list) (s String))
   (str.in_re s (re.inter xs ys))

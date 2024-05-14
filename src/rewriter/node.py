@@ -175,8 +175,8 @@ class Op(Enum):
     STRING_STOI = ('str.to_int', 'STRING_STOI')
     STRING_TO_CODE = ('str.to_code', 'STRING_TO_CODE')
     STRING_FROM_CODE = ('str.from_code', 'STRING_FROM_CODE')
-    STRING_TOLOWER = ('str.tolower', 'STRING_TOLOWER')
-    STRING_TOUPPER = ('str.toupper', 'STRING_TOUPPER')
+    STRING_TO_LOWER = ('str.to_lower', 'STRING_TO_LOWER')
+    STRING_TO_UPPER = ('str.to_upper', 'STRING_TO_UPPER')
     STRING_REV = ('str.rev', 'STRING_REV')
 
     SEQ_UNIT = ('seq.unit', 'SEQ_UNIT')

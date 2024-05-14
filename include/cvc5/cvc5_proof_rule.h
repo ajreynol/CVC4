@@ -13,10 +13,10 @@
  * Proof rule enumeration.
  */
 
-#if (!defined(CVC5_API_USE_C_ENUMS)                 \
-     && !defined(CVC5__API__CVC5_CPP_PROOF_RULE_H)) \
-    || (defined(CVC5_API_USE_C_ENUMS)               \
-        && !defined(CVC5__API__CVC5_C_PROOF_RULE_H))
+#if (!defined(CVC5_API_USE_C_ENUMS) &&                                         \
+     !defined(CVC5__API__CVC5_CPP_PROOF_RULE_H)) ||                            \
+    (defined(CVC5_API_USE_C_ENUMS) &&                                          \
+     !defined(CVC5__API__CVC5_C_PROOF_RULE_H))
 
 #include <cstdint>
 
@@ -2272,8 +2272,7 @@ enum ENUM(ProofRule) : uint32_t
  * proof rule.
  * \endverbatim
  */
-enum ENUM(ProofRewriteRule) : uint32_t
-{
+enum ENUM(ProofRewriteRule) : uint32_t {
   EVALUE(NONE),
   // Custom theory rewrites.
   /**
@@ -3174,6 +3173,8 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(STR_CONTAINS_LEQ_LEN_EQ),
   /** Auto-generated from RARE rule str-contains-emp */
   EVALUE(STR_CONTAINS_EMP),
+  /** Auto-generated from RARE rule str-contains-len-geq-false */
+  EVALUE(STR_CONTAINS_LEN_GEQ_FALSE),
   /** Auto-generated from RARE rule str-contains-is-emp */
   EVALUE(STR_CONTAINS_IS_EMP),
   /** Auto-generated from RARE rule str-concat-emp */
@@ -3192,6 +3193,14 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(STR_INDEXOF_SELF),
   /** Auto-generated from RARE rule str-indexof-no-contains */
   EVALUE(STR_INDEXOF_NO_CONTAINS),
+  /** Auto-generated from RARE rule str-to-lower-concat */
+  EVALUE(STR_TO_LOWER_CONCAT),
+  /** Auto-generated from RARE rule str-to-upper-concat */
+  EVALUE(STR_TO_UPPER_CONCAT),
+  /** Auto-generated from RARE rule str-to-lower-upper */
+  EVALUE(STR_TO_LOWER_UPPER),
+  /** Auto-generated from RARE rule str-to-upper-lower */
+  EVALUE(STR_TO_UPPER_LOWER),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
@@ -3224,6 +3233,8 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(RE_INTER_FLATTEN),
   /** Auto-generated from RARE rule re-inter-dup */
   EVALUE(RE_INTER_DUP),
+  /** Auto-generated from RARE rule re-loop-neg */
+  EVALUE(RE_LOOP_NEG),
   /** Auto-generated from RARE rule re-inter-cstring */
   EVALUE(RE_INTER_CSTRING),
   /** Auto-generated from RARE rule re-inter-cstring-neg */
@@ -3236,12 +3247,6 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(STR_LEN_SUBSTR_EQ),
   /** Auto-generated from RARE rule seq-rev-concat */
   EVALUE(SEQ_REV_CONCAT),
-  /** Auto-generated from RARE rule str-len-eq-neg */
-  EVALUE(STR_LEN_EQ_NEG),
-  /** Auto-generated from RARE rule str-len-geq-pos */
-  EVALUE(STR_LEN_GEQ_POS),
-  /** Auto-generated from RARE rule str-len-geq-pos2 */
-  EVALUE(STR_LEN_GEQ_POS2),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */
@@ -3364,7 +3369,7 @@ typedef enum ENUM(ProofRewriteRule) ENUM(ProofRewriteRule);
  * @param rule The proof rule.
  * @return The string representation.
  */
-const char* cvc5_proof_rule_to_string(Cvc5ProofRule rule);
+const char *cvc5_proof_rule_to_string(Cvc5ProofRule rule);
 
 /**
  * Hash function for Cvc5ProofRule.
@@ -3378,7 +3383,7 @@ size_t cvc5_proof_rule_hash(Cvc5ProofRule rule);
  * @param rule The proof rewrite rule.
  * @return The string representation.
  */
-const char* cvc5_proof_rewrite_rule_to_string(Cvc5ProofRewriteRule rule);
+const char *cvc5_proof_rewrite_rule_to_string(Cvc5ProofRewriteRule rule);
 
 /**
  * Hash function for Cvc5ProofRewriteRule.
@@ -3398,7 +3403,7 @@ size_t cvc5_proof_rewrite_rule_hash(Cvc5ProofRewriteRule rule);
  * @param rule The proof rule
  * @return The name of the proof rule
  */
-const char* toString(ProofRule rule);
+const char *toString(ProofRule rule);
 
 /**
  * Writes a proof rule name to a stream.
@@ -3407,7 +3412,7 @@ const char* toString(ProofRule rule);
  * @param rule The proof rule to write to the stream
  * @return The stream
  */
-CVC5_EXPORT std::ostream& operator<<(std::ostream& out, ProofRule rule);
+CVC5_EXPORT std::ostream &operator<<(std::ostream &out, ProofRule rule);
 
 /**
  * Converts a proof rewrite rule to a string. Note: This function is also
@@ -3418,7 +3423,7 @@ CVC5_EXPORT std::ostream& operator<<(std::ostream& out, ProofRule rule);
  * @param rule The proof rewrite rule
  * @return The name of the proof rewrite rule
  */
-const char* toString(ProofRewriteRule rule);
+const char *toString(ProofRewriteRule rule);
 
 /**
  * Writes a proof rewrite rule name to a stream.
@@ -3427,18 +3432,16 @@ const char* toString(ProofRewriteRule rule);
  * @param rule The proof rewrite rule to write to the stream
  * @return The stream
  */
-CVC5_EXPORT std::ostream& operator<<(std::ostream& out, ProofRewriteRule rule);
+CVC5_EXPORT std::ostream &operator<<(std::ostream &out, ProofRewriteRule rule);
 
-}  // namespace cvc5
+} // namespace cvc5
 
 namespace std {
 
 /**
  * Hash function for ProofRules.
  */
-template <>
-struct CVC5_EXPORT hash<cvc5::ProofRule>
-{
+template <> struct CVC5_EXPORT hash<cvc5::ProofRule> {
   /**
    * Hashes a ProofRule to a size_t.
    * @param rule The proof rule.
@@ -3458,9 +3461,7 @@ std::string to_string(cvc5::ProofRule rule);
 /**
  * Hash function for ProofRewriteRules.
  */
-template <>
-struct CVC5_EXPORT hash<cvc5::ProofRewriteRule>
-{
+template <> struct CVC5_EXPORT hash<cvc5::ProofRewriteRule> {
   /**
    * Hashes a ProofRewriteRule to a size_t.
    * @param rule The proof rewrite rule.
@@ -3477,7 +3478,7 @@ struct CVC5_EXPORT hash<cvc5::ProofRewriteRule>
  */
 std::string to_string(cvc5::ProofRewriteRule rule);
 
-}  // namespace std
+} // namespace std
 
 #endif
 #endif
