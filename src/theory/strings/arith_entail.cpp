@@ -81,7 +81,7 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n, Node& exp)
 Node ArithEntail::rewriteArith(Node a)
 {
   AlwaysAssert(a.getType().isInteger());
-  if (d_rr!=nullptr)
+  if (d_rr != nullptr)
   {
     return d_rr->rewrite(a);
   }
@@ -128,7 +128,7 @@ Node ArithEntail::findApprox(Node ar)
 {
   ar = rewriteArith(ar);
   std::map<Node, Node>::iterator it = d_approxCache.find(ar);
-  if (it!=d_approxCache.end())
+  if (it != d_approxCache.end())
   {
     return it->second;
   }
@@ -723,7 +723,7 @@ bool ArithEntail::checkWithAssumption(Node assumption,
     Node rr = rewriteArith(nm->mkNode(Kind::SUB, x, sleny));
     if (rr.isConst())
     {
-      assumption = nm->mkConst(rr.getConst<Rational>().sgn()==0);
+      assumption = nm->mkConst(rr.getConst<Rational>().sgn() == 0);
     }
     else
     {
