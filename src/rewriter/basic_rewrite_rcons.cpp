@@ -195,12 +195,12 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   if (eqRet != teq)
   {
     cdp->addStep(geq, ProofRule::TRUE_ELIM, {teq}, {});
-    Assert (exp.getKind()==Kind::SUB);
-    Node posTerm = exp[0].getKind()==Kind::SUB ? exp[0][0] : exp[0];
-    Assert (posTerm==lhs[0] || posTerm==lhs[1]);
-    bool isLhs = posTerm==lhs[0];
+    Assert(exp.getKind() == Kind::SUB);
+    Node posTerm = exp[0].getKind() == Kind::SUB ? exp[0][0] : exp[0];
+    Assert(posTerm == lhs[0] || posTerm == lhs[1]);
+    bool isLhs = posTerm == lhs[0];
     ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
-    
+
     // e.g. (= t -1) = false  is implied by  (>= (- (- 1 t) 1) 0) = true
   }
   return true;

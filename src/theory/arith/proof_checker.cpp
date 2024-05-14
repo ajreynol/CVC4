@@ -142,18 +142,14 @@ Node ArithProofRuleChecker::checkInternal(ProofRule id,
             isLower = true;
             break;
           }
-          case Kind::LEQ:
-            isLower = true;
-            break;
+          case Kind::LEQ: isLower = true; break;
           case Kind::GT:
           {
             isUpper = true;
             isLower = true;
             break;
           }
-          case Kind::GEQ:
-            isUpper = true;
-            break;
+          case Kind::GEQ: isUpper = true; break;
           case Kind::EQUAL:
           {
             break;
@@ -170,15 +166,13 @@ Node ArithProofRuleChecker::checkInternal(ProofRule id,
       }
       if (isLower && isUpper)
       {
-            Trace("arith::pf::check")
-                << "Both upper and lower bounds" << std::endl;
+        Trace("arith::pf::check") << "Both upper and lower bounds" << std::endl;
         return Node::null();
       }
       // note if neither upper or lower (only equalities), we default to LEQ
-      Kind k = isUpper ? (strict ? Kind::GT : Kind::GEQ) : (strict ? Kind::LT : Kind::LEQ);
-      Node r = nm->mkNode(k,
-                          leftSum.constructNode(),
-                          rightSum.constructNode());
+      Kind k = isUpper ? (strict ? Kind::GT : Kind::GEQ)
+                       : (strict ? Kind::LT : Kind::LEQ);
+      Node r = nm->mkNode(k, leftSum.constructNode(), rightSum.constructNode());
       return r;
     }
     case ProofRule::MACRO_ARITH_SCALE_SUM_UB:
