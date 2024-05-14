@@ -68,6 +68,10 @@ class PolyNorm
    * true and store in c.
    */
   bool isEqualMod(const PolyNorm& p, Rational& c) const;
+  /** 
+   * Convert the polynomial representation to a node
+   */
+  Node toNode(const TypeNode& tn) const;
   /**
    * Make polynomial from real term n. This method normalizes applications
    * of operators ADD, SUB, NEG, MULT, NONLINEAR_MULT, bitvector equivalent

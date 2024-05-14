@@ -209,6 +209,61 @@ bool PolyNorm::isEqualMod(const PolyNorm& p, Rational& c) const
   return true;
 }
 
+Node PolyNorm::toNode(const TypeNode& tn) const
+{
+  std::vector<Node> sum;
+  NodeManager * nm = NodeManager::currentNM();
+  bool isArith = (tn.isInteger() || tn.isReal());
+  Kind multKind;
+  Node one;
+  if (isArith)
+  {
+    multKind = Kind::MULT;
+    one = nm->mkConstRealOrInt(tn, Rational(1));
+  }
+  else
+  {
+    return Node::null();
+  }
+  for (const std::pair<const Node, Rational>& m : d_polyNorm)
+  {
+    Node coeff;
+    if (isArith)
+    {
+      coeff = nm->mkConstRealOrInt(tn, m.second);
+    }
+    if (m.first.isNull())
+    {
+      sum.push_back(coeff);
+    }
+    else if (coeff==one)
+    {
+      sum.push_back(m.first);
+    }
+    else
+    {
+      Assert (m.first.getType().isComparableTo(tn));
+      sum.push_back(nm->mkNode(multKind, {coeff, m.first}));
+    }
+  }
+  if (sum.size()==1)
+  {
+    return sum[0];
+  }
+  if (sum.empty())
+  {
+    if (isArith)
+    {
+      return nm->mkConstRealOrInt(tn, Rational(0));
+    }
+  }
+  if (isArith)
+  {
+    return nm->mkNode(Kind::ADD, sum);
+  }
+  return Node::null();
+}
+
 Node PolyNorm::multMonoVar(TNode m1, TNode m2)
 {
   std::vector<TNode> vars = getMonoVars(m1);

@@ -40,6 +40,7 @@
 #include "util/divisible.h"
 #include "util/iand.h"
 #include "util/real_algebraic_number.h"
+#include "theory/rewriter.h"
 
 using namespace cvc5::internal::kind;
 

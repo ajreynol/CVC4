@@ -175,7 +175,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   if (approx.isNull())
   {
     Trace("brc-macro") << "...failed to find approximation" << std::endl;
-    Assert(false);
+    AlwaysAssert(false);
     return false;
   }
   Node truen = nodeManager()->mkConst(true);
@@ -198,6 +198,11 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   }
   // now have (>= expRew 0) = true, stored in teq
 
+  if (lhs==expRew)
+  {
+    Trace("brc-macro") << "...success (no normalization)" << std::endl;
+    return true;
+  }
   Node retEq = lhs.eqNode(ret);
   if (!ret.getConst<bool>())
   {
@@ -212,14 +217,15 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     children.push_back(geq);
     children.push_back(lhs);
     std::vector<Node> args;
-    args.push_back(nodeManager()->mkConstInt(Rational(1)));
-    args.push_back(nodeManager()->mkConstInt(Rational(isLhs ? -1 : 1)));
+    // must flip signs to ensure it is <=, as required by MACRO_ARITH_SUM_UB.
+    args.push_back(nodeManager()->mkConstInt(Rational(-1)));
+    args.push_back(nodeManager()->mkConstInt(Rational(isLhs ? 1 : -1)));
     Trace("brc-macro") << "- compute sum bound for " << children << " " << args << std::endl;
     Node sumBound = theory::arith::expandMacroSumUb(children, args, cdp);
     Trace("brc-macro") << "- sum bound is " << sumBound << std::endl;
     if (sumBound.isNull())
     {
-      Assert(false);
+      AlwaysAssert(false);
       Trace("brc-macro") << "...failed to add" << std::endl;
       return false;
     }
@@ -230,13 +236,14 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     if (!pn.isConstant(pyr))
     {
       Trace("brc-macro") << "...failed to prove constant after normalization" << std::endl;
+      AlwaysAssert(false);
       return false;
     }
-    // e.g. (= t -1) = false  is implied by  (>= (- (- 1 t) 1) 0) = true
     Node cpred = nodeManager()->mkNode(sumBound.getKind(), nodeManager()->mkConstInt(pyr), zero);
     if (!theory::arith::PolyNorm::isArithPolyNormAtom(sumBound, cpred))
     {
       Trace("brc-macro") << "...failed to show normalization" << std::endl;
+      AlwaysAssert(false);
       return false;
     }
     Node peq = sumBound.eqNode(cpred);
@@ -259,7 +266,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     // should be able to show equivalent by polynomial normalization
     if (!theory::arith::PolyNorm::isArithPolyNormAtom(lhs, geq))
     {
-      Trace("brc-macro") << "...failed to show normalization (true case)" << std::endl;
+      Trace("brc-macro") << "...failed to show normalization (true case) " << lhs << " and " << geq << std::endl;
+      AlwaysAssert(false);
       return false;
     }
     Node peq = lhs.eqNode(geq);
