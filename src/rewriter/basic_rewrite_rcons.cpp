@@ -19,12 +19,12 @@
 #include "proof/proof_checker.h"
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
+#include "theory/arith/arith_poly_norm.h"
+#include "theory/arith/arith_proof_utilities.h"
 #include "theory/bv/theory_bv_rewrite_rules.h"
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
 #include "util/rational.h"
-#include "theory/arith/arith_proof_utilities.h"
-#include "theory/arith/arith_poly_norm.h"
 
 using namespace cvc5::internal::kind;
 
@@ -165,7 +165,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   theory::strings::ArithEntail ae(d_env.getRewriter());
   Node exp;
   Node ret = ae.rewritePredViaEntailment(lhs, exp);
-  Trace("brc-macro") << "Expand entailment for " << lhs << " == " << ret << std::endl;
+  Trace("brc-macro") << "Expand entailment for " << lhs << " == " << ret
+                     << std::endl;
   Trace("brc-macro") << "- explanation is " << exp << std::endl;
   Node expRew = rewrite(exp);
   Node zero = nodeManager()->mkConstInt(Rational(0));
@@ -181,7 +182,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   Node truen = nodeManager()->mkConst(true);
   // (>= approx 0) = true
   Node approxGeq = nodeManager()->mkNode(Kind::GEQ, approx, zero);
-  Trace("brc-macro") << "- approximation predicate is " << approxGeq << std::endl;
+  Trace("brc-macro") << "- approximation predicate is " << approxGeq
+                     << std::endl;
   Node teq = approxGeq.eqNode(truen);
   cdp->addTheoryRewriteStep(teq, ProofRewriteRule::ARITH_STRING_PRED_ENTAIL);
   if (approx != expRew)
@@ -198,7 +200,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   }
   // now have (>= expRew 0) = true, stored in teq
 
-  if (lhs==expRew)
+  if (lhs == expRew)
   {
     Trace("brc-macro") << "...success (no normalization)" << std::endl;
     return true;
@@ -220,7 +222,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     // must flip signs to ensure it is <=, as required by MACRO_ARITH_SUM_UB.
     args.push_back(nodeManager()->mkConstInt(Rational(-1)));
     args.push_back(nodeManager()->mkConstInt(Rational(isLhs ? 1 : -1)));
-    Trace("brc-macro") << "- compute sum bound for " << children << " " << args << std::endl;
+    Trace("brc-macro") << "- compute sum bound for " << children << " " << args
+                       << std::endl;
     Node sumBound = theory::arith::expandMacroSumUb(children, args, cdp);
     Trace("brc-macro") << "- sum bound is " << sumBound << std::endl;
     if (sumBound.isNull())
@@ -229,17 +232,19 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
       Trace("brc-macro") << "...failed to add" << std::endl;
       return false;
     }
-    Assert (sumBound.getNumChildren()==2);
+    Assert(sumBound.getNumChildren() == 2);
     Node py = nodeManager()->mkNode(Kind::SUB, sumBound[0], sumBound[1]);
     theory::arith::PolyNorm pn = theory::arith::PolyNorm::mkPolyNorm(py);
     Rational pyr;
     if (!pn.isConstant(pyr))
     {
-      Trace("brc-macro") << "...failed to prove constant after normalization" << std::endl;
+      Trace("brc-macro") << "...failed to prove constant after normalization"
+                         << std::endl;
       AlwaysAssert(false);
       return false;
     }
-    Node cpred = nodeManager()->mkNode(sumBound.getKind(), nodeManager()->mkConstInt(pyr), zero);
+    Node cpred = nodeManager()->mkNode(
+        sumBound.getKind(), nodeManager()->mkConstInt(pyr), zero);
     if (!theory::arith::PolyNorm::isArithPolyNormAtom(sumBound, cpred))
     {
       Trace("brc-macro") << "...failed to show normalization" << std::endl;
@@ -262,11 +267,12 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   else
   {
     Trace("brc-macro") << "- true case, prove equal" << std::endl;
-    Assert (lhs.getKind()==Kind::GEQ);
+    Assert(lhs.getKind() == Kind::GEQ);
     // should be able to show equivalent by polynomial normalization
     if (!theory::arith::PolyNorm::isArithPolyNormAtom(lhs, geq))
     {
-      Trace("brc-macro") << "...failed to show normalization (true case) " << lhs << " and " << geq << std::endl;
+      Trace("brc-macro") << "...failed to show normalization (true case) "
+                         << lhs << " and " << geq << std::endl;
       AlwaysAssert(false);
       return false;
     }

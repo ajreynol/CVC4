@@ -163,12 +163,12 @@ bool PolyNorm::isEqual(const PolyNorm& p) const
 
 bool PolyNorm::isConstant(Rational& c) const
 {
-  if (d_polyNorm.size()==0)
+  if (d_polyNorm.size() == 0)
   {
     c = Rational(0);
     return true;
   }
-  if (d_polyNorm.size()==1)
+  if (d_polyNorm.size() == 1)
   {
     if (d_polyNorm.begin()->first.isNull())
     {
@@ -212,7 +212,7 @@ bool PolyNorm::isEqualMod(const PolyNorm& p, Rational& c) const
 Node PolyNorm::toNode(const TypeNode& tn) const
 {
   std::vector<Node> sum;
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   bool isArith = (tn.isInteger() || tn.isReal());
   Kind multKind;
   Node one;
@@ -236,17 +236,17 @@ Node PolyNorm::toNode(const TypeNode& tn) const
     {
       sum.push_back(coeff);
     }
-    else if (coeff==one)
+    else if (coeff == one)
     {
       sum.push_back(m.first);
     }
     else
     {
-      Assert (m.first.getType().isComparableTo(tn));
+      Assert(m.first.getType().isComparableTo(tn));
       sum.push_back(nm->mkNode(multKind, {coeff, m.first}));
     }
   }
-  if (sum.size()==1)
+  if (sum.size() == 1)
   {
     return sum[0];
   }

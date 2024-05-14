@@ -19,12 +19,12 @@
 #include "expr/node_algorithm.h"
 #include "expr/subs.h"
 #include "theory/arith/arith_msum.h"
+#include "theory/arith/arith_poly_norm.h"
 #include "theory/rewriter.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/strings/word.h"
 #include "theory/theory.h"
 #include "util/rational.h"
-#include "theory/arith/arith_poly_norm.h"
 
 using namespace cvc5::internal::kind;
 
@@ -78,7 +78,7 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n, Node& exp)
   return Node::null();
 }
 
-Node ArithEntail::rewriteArith(Node a) 
+Node ArithEntail::rewriteArith(Node a)
 {
   return d_rr->rewrite(a);
   arith::PolyNorm pn = arith::PolyNorm::mkPolyNorm(a);

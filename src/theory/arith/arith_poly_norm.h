@@ -68,7 +68,7 @@ class PolyNorm
    * true and store in c.
    */
   bool isEqualMod(const PolyNorm& p, Rational& c) const;
-  /** 
+  /**
    * Convert the polynomial representation to a node
    */
   Node toNode(const TypeNode& tn) const;

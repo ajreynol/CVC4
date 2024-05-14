@@ -2176,10 +2176,8 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     }
     else if (r == 1)
     {
-      Node tot_len =
-          d_rr->rewrite(nm->mkNode(Kind::STRING_LENGTH, node[0]));
-      Node end_pt =
-          d_rr->rewrite(nm->mkNode(Kind::ADD, node[1], node[2]));
+      Node tot_len = d_rr->rewrite(nm->mkNode(Kind::STRING_LENGTH, node[0]));
+      Node end_pt = d_rr->rewrite(nm->mkNode(Kind::ADD, node[1], node[2]));
       if (node[2] != tot_len)
       {
         if (d_arithEntail.check(node[2], tot_len))
