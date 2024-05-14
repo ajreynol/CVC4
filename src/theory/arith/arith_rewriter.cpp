@@ -48,8 +48,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace arith {
 
-ArithRewriter::ArithRewriter(NodeManager* nm, Rewriter* rr, OperatorElim& oe)
-    : TheoryRewriter(nm), d_rr(rr), d_opElim(oe)
+ArithRewriter::ArithRewriter(NodeManager* nm, OperatorElim& oe)
+    : TheoryRewriter(nm), d_opElim(oe)
 {
   registerProofRewriteRule(ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
@@ -88,6 +88,9 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
+      // Note that we do *not* pass a rewriter here, since the proof rule
+      // cannot depend on the rewriter. This makes this rule capture most
+      // but not all cases of this kind of reasoning.
       theory::strings::ArithEntail ae(nullptr);
       Node ret = ae.rewritePredViaEntailment(n);
       if (!ret.isNull())
@@ -113,6 +116,8 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
       else if (id == ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX)
       {
+        // Note that we do *not* pass a rewriter here, since the proof rule
+        // cannot depend on the rewriter.
         theory::strings::ArithEntail ae(nullptr);
         Node approx = ae.findApprox(n[0]);
         if (approx != n[0])

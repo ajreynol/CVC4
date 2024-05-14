@@ -33,7 +33,7 @@ class OperatorElim;
 class ArithRewriter : public TheoryRewriter
 {
  public:
-  ArithRewriter(NodeManager* nm, Rewriter* rr, OperatorElim& oe);
+  ArithRewriter(NodeManager* nm, OperatorElim& oe);
   RewriteResponse preRewrite(TNode n) override;
   RewriteResponse postRewrite(TNode n) override;
   /**
@@ -122,11 +122,6 @@ class ArithRewriter : public TheoryRewriter
    * inequality ineq that is equivalent to (<k> sum 0).
    */
   Node rewriteIneqToBv(Kind k, const rewriter::Sum& sum, const Node& ineq);
-  /**
-   * Pointer to the rewriter. NOTE this is a cyclic dependency, and should
-   * be removed.
-   */
-  Rewriter* d_rr;
   /** The operator elimination utility */
   OperatorElim& d_opElim;
 }; /* class ArithRewriter */

@@ -161,7 +161,6 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     CDProof* cdp, const Node& lhs, std::vector<Node>& subgoals)
 {
-  return false;
   theory::strings::ArithEntail ae(d_env.getRewriter());
   Node exp;
   Node ret = ae.rewritePredViaEntailment(lhs, exp);
