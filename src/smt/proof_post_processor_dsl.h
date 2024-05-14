@@ -62,8 +62,6 @@ class ProofPostprocessDsl : protected EnvObj, public ProofNodeUpdaterCallback
   Node d_true;
   /** The rewrite database proof generator */
   rewriter::RewriteDbProofCons d_rdbPc;
-  /** */
-  std::unordered_set<std::shared_ptr<ProofNode>> d_nextSubgoals;
 };
 
 }  // namespace smt

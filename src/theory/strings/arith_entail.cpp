@@ -87,6 +87,7 @@ Node ArithEntail::rewriteArith(Node a)
   }
   arith::PolyNorm pn = arith::PolyNorm::mkPolyNorm(a);
   Node an = pn.toNode(a.getType());
+  Trace("string-ent-rewrite-arith") << "Rewrite " << a << " to " << an << " based on poly-norm" << std::endl;
   return an;
 }
 
@@ -221,7 +222,13 @@ Node ArithEntail::findApproxInternal(Node ar)
       // if we have only one approximation, move it to final
       if (approx.size() == 1)
       {
-        changed = v != approx[0];
+        if (v != approx[0])
+        {
+          changed = true;
+          Trace("strings-ent-approx")
+              << "- Propagate " << v << " = " << approx[0] << std::endl;
+          approxMap.add(v, approx[0]);
+        }
         Node mn = ArithMSum::mkCoeffTerm(c, approx[0]);
         aarSum.push_back(mn);
         mApprox.erase(v);
@@ -418,6 +425,8 @@ Node ArithEntail::findApproxInternal(Node ar)
     Trace("strings-ent-approx")
         << "*** StrArithApprox: showed " << ar
         << " >= 0 using under-approximation!" << std::endl;
+    Trace("strings-ent-approx")
+        << "*** StrArithApprox: rewritten was " << aar << std::endl;
     Node approx = approxMap.apply(ar);
     Trace("strings-ent-approx")
         << "*** StrArithApprox: under-approximation was " << approx
@@ -612,7 +621,7 @@ void ArithEntail::getArithApproximations(Node a,
       approx.push_back(nm->mkConstInt(Rational(-1)));
     }
   }
-  Trace("strings-ent-approx-debug") << "Return " << approx.size() << std::endl;
+  Trace("strings-ent-approx-debug") << "Return " << approx.size() << " approximations" << std::endl;
 }
 
 bool ArithEntail::checkWithEqAssumption(Node assumption, Node a, bool strict)

@@ -38,7 +38,6 @@ void ProofPostprocessDsl::reconstruct(
   {
     pnu.process(p);
   }
-  // TODO: process d_nextSubgoals
 }
 
 bool ProofPostprocessDsl::shouldUpdate(std::shared_ptr<ProofNode> pn,
@@ -83,19 +82,14 @@ bool ProofPostprocessDsl::update(Node res,
   int64_t stepLimit = options().proof.proofRewriteRconsStepLimit;
   // attempt to reconstruct the proof of the equality into cdp using the
   // rewrite database proof reconstructor
-  std::vector<Node> subgoals;
   if (d_rdbPc.prove(
-          cdp, res[0], res[1], tid, mid, recLimit, stepLimit, subgoals))
+          cdp, res[0], res[1], tid, mid, recLimit, stepLimit))
   {
     // If we made (= res true) above, conclude the original res.
     if (reqTrueElim)
     {
       cdp->addStep(res[0], ProofRule::TRUE_ELIM, {res}, {});
       res = res[0];
-    }
-    for (const Node& sg : subgoals)
-    {
-      d_nextSubgoals.insert(cdp->getProofFor(sg));
     }
     // if successful, we update the proof
     return true;

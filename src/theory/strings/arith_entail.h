@@ -38,6 +38,10 @@ class ArithEntail
 {
  public:
   ArithEntail(Rewriter* r);
+  /**
+   * Returns the rewritten form a term, must be an integer term.
+   */
+  Node rewriteArith(Node a);
   /** check arithmetic entailment equal
    * Returns true if it is always the case that a = b.
    */
@@ -181,13 +185,7 @@ class ArithEntail
    */
   Node rewritePredViaEntailment(const Node& n, Node& exp);
   Node rewritePredViaEntailment(const Node& n);
-
  private:
-  /**
-   * Returns the rewritten form a term, intended (although not enforced) to be
-   * an arithmetic term.
-   */
-  Node rewriteArith(Node a);
   /**
    */
   Node findApproxInternal(Node a);

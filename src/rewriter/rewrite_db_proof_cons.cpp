@@ -61,8 +61,7 @@ bool RewriteDbProofCons::prove(CDProof* cdp,
                                theory::TheoryId tid,
                                MethodId mid,
                                int64_t recLimit,
-                               int64_t stepLimit,
-                               std::vector<Node>& subgoals)
+                               int64_t stepLimit)
 {
   // clear the proof caches
   d_pcache.clear();
@@ -106,7 +105,7 @@ bool RewriteDbProofCons::prove(CDProof* cdp,
   for (int64_t i = 0; i <= recLimit; i++)
   {
     Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
-    if (proveEq(cdp, eq, eq, i, stepLimit, subgoals))
+    if (proveEq(cdp, eq, eq, i, stepLimit))
     {
       success = true;
       break;
@@ -121,7 +120,7 @@ bool RewriteDbProofCons::prove(CDProof* cdp,
       for (int64_t i = 0; i <= recLimit; i++)
       {
         Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
-        if (proveEq(cdp, eq, eqi, i, stepLimit, subgoals))
+        if (proveEq(cdp, eq, eqi, i, stepLimit))
         {
           success = true;
           break;
@@ -153,8 +152,7 @@ bool RewriteDbProofCons::proveEq(CDProof* cdp,
                                  const Node& eq,
                                  const Node& eqi,
                                  int64_t recLimit,
-                                 int64_t stepLimit,
-                                 std::vector<Node>& subgoals)
+                                 int64_t stepLimit)
 {
   // add one to recursion limit, since it is decremented whenever we
   // initiate the getMatches routine.
@@ -179,7 +177,7 @@ bool RewriteDbProofCons::proveEq(CDProof* cdp,
     {
       cdp->addStep(eq, ProofRule::ENCODE_PRED_TRANSFORM, {eqi}, {eq});
     }
-    ensureProofInternal(cdp, eqi, subgoals);
+    ensureProofInternal(cdp, eqi);
     AlwaysAssert(cdp->hasStep(eqi)) << eqi;
     Trace("rpc-debug") << "- finish ensure proof" << std::endl;
     return true;
@@ -809,8 +807,7 @@ bool RewriteDbProofCons::proveInternalBase(const Node& eqi,
 }
 
 bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp,
-                                             const Node& eqi,
-                                             std::vector<Node>& subgoals)
+                                             const Node& eqi)
 {
   // note we could use single internal cdp to improve subproof sharing
   NodeManager* nm = nodeManager();
@@ -1060,7 +1057,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp,
         {
           Assert(pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
           if (!d_trrc.ensureProofForTheoryRewrite(
-                  cdp, pcur.d_dslId, cur[0], subgoals))
+                  cdp, pcur.d_dslId, cur[0]))
           {
             Trace("rpc-debug")
                 << "...failed to add THEORY_REWRITE" << std::endl;
