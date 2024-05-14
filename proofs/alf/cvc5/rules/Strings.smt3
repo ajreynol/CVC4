@@ -273,6 +273,12 @@
 
 ;;-------------------- Instances of THEORY_REWRITE
 
+(declare-rule arith-string-pred-entail ((n Int))
+  :args ((>= n 0))
+  :requires ((($str_arith_entail_simple n) true))
+  :conclusion (= (>= n 0) true)
+)
+
 (declare-rule str-in-re-eval ((s String) (r RegLan))
   :args ((str.in_re s r))
   :conclusion (= (str.in_re s r) ($str_eval_str_in_re s r))
