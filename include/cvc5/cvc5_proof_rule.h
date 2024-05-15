@@ -2494,20 +2494,23 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * **Strings - regular expression intersection/union inclusion**
    *
    * .. math::
-   *   (re.inter R1 (re.comp R2)) = re.none
+   *   (re.inter R) = (re.inter re.none R_0)
    *
-   * where `R2` is a superset of `R1`.
+   * where :math:`R` is a list of regular expressions containing `r_1`,
+   * `(re.comp r_2)` and the list :math:`R_0` where `r_2` is a superset of
+   * `r_1`.
    *
    * or alternatively:
    *
    * .. math::
-   *   (re.union R1 (re.comp R2)) = (re.* re.allchar)
+   *   (re.union R) = (re.union (re.* re.allchar) R_0)
    *
-   * where `R1` is a superset of `R2`.
+   * where :math:`R` is a list of regular expressions containing `r_1`,
+   * `(re.comp r_2)` and the list :math:`R_0`, where `r_1` is a superset of
+   * `r_2`.
    *
    * \endverbatim
    */
-  EVALUE(MACRO_RE_INTER_UNION_INCLUSION),
   EVALUE(RE_INTER_UNION_INCLUSION),
   /**
    * \verbatim embed:rst:leading-asterisk

@@ -16,6 +16,8 @@
 #include "theory/arith/arith_poly_norm.h"
 
 #include "util/bitvector.h"
+#include "theory/bv/theory_bv_utils.h"
+#include "expr/attribute.h"
 
 using namespace cvc5::internal::kind;
 
@@ -214,12 +216,18 @@ Node PolyNorm::toNode(const TypeNode& tn) const
   std::vector<Node> sum;
   NodeManager* nm = NodeManager::currentNM();
   bool isArith = (tn.isInteger() || tn.isReal());
+  bool isBv = tn.isBitVector();
   Kind multKind;
   Node one;
   if (isArith)
   {
     multKind = Kind::MULT;
     one = nm->mkConstRealOrInt(tn, Rational(1));
+  }
+  else if (isBv)
+  {
+    multKind = Kind::BITVECTOR_MULT;
+    one = bv::utils::mkOne(tn.getBitVectorSize());
   }
   else
   {
@@ -256,10 +264,18 @@ Node PolyNorm::toNode(const TypeNode& tn) const
     {
       return nm->mkConstRealOrInt(tn, Rational(0));
     }
+    else if (isBv)
+    {
+      return bv::utils::mkZero(tn.getBitVectorSize());
+    }
   }
   if (isArith)
   {
     return nm->mkNode(Kind::ADD, sum);
+  }
+  else if (isBv)
+  {
+    return nm->mkNode(Kind::BITVECTOR_ADD, sum);
   }
   return Node::null();
 }
@@ -496,6 +512,25 @@ PolyNorm PolyNorm::mkDiff(TNode a, TNode b)
   PolyNorm pb = PolyNorm::mkPolyNorm(b);
   pa.subtract(pb);
   return pa;
+}
+
+struct ArithPolyNormTag
+{
+};
+/** Cache for PolyNorm::getPolyNorm */
+typedef expr::Attribute<ArithPolyNormTag, Node> ArithPolyNormAttr;
+
+Node PolyNorm::getPolyNorm(Node a)
+{
+  ArithPolyNormAttr apna;
+  Node an = a.getAttribute(apna);
+  if (an.isNull())
+  {
+    PolyNorm pa = arith::PolyNorm::mkPolyNorm(a);
+    an = pa.toNode(a.getType());
+    a.setAttribute(apna, an);
+  }
+  return an;
 }
 
 }  // namespace arith

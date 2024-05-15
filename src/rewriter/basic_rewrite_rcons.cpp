@@ -142,12 +142,6 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
         return;
       }
       break;
-    case ProofRewriteRule::MACRO_RE_INTER_UNION_INCLUSION:
-      if (ensureProofMacroReInterUnionInclusion(cdp, lhs))
-      {
-        return;
-      }
-      break;
     default: break;
   }
   // default, just add the rewrite
@@ -309,12 +303,6 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   Trace("brc-macro") << "...success" << std::endl;
   Trace("brc-macro") << "...proof is " << *cdp->getProofFor(retEq) << std::endl;
   return true;
-}
-
-bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
-                                                              const Node& lhs)
-{
-  return false;
 }
 
 }  // namespace rewriter

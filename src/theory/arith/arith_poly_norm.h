@@ -95,6 +95,11 @@ class PolyNorm
    */
   static bool isArithPolyNormAtom(TNode a, TNode b);
 
+  /**
+   * Return the normalized form of (arithmetic) term a based on the techniques
+   * from this class.
+   */
+  static Node getPolyNorm(Node a);
  private:
   /**
    * Make the difference of two nodes a and b, independent of their type.

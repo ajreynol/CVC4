@@ -55,9 +55,8 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::RE_LOOP_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_RE_INTER_UNION_INCLUSION,
+  registerProofRewriteRule(ProofRewriteRule::RE_INTER_UNION_INCLUSION,
                            TheoryRewriteCtx::PRE_DSL);
-  // note we don't register RE_INTER_UNION_INCLUSION
   registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_SIGMA,
@@ -73,8 +72,6 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return rewriteViaStrInReConsume(n);
     case ProofRewriteRule::RE_LOOP_ELIM: return rewriteViaReLoopElim(n);
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
-      return rewriteViaReInterUnionInclusion(n, true);
-    case ProofRewriteRule::MACRO_RE_INTER_UNION_INCLUSION:
       return rewriteViaReInterUnionInclusion(n);
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
       return rewriteViaStrInReConcatStarChar(n);
@@ -1041,16 +1038,10 @@ Node SequencesRewriter::rewriteStarRegExp(TNode node)
   return node;
 }
 
-Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node,
-                                                        bool isStrict)
+Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node)
 {
   Kind nk = node.getKind();
   if (nk != Kind::REGEXP_UNION && nk != Kind::REGEXP_INTER)
-  {
-    return Node::null();
-  }
-  // requires only two children if we are strict (for the proof rule)
-  if (isStrict && node.getNumChildren() != 2)
   {
     return Node::null();
   }
@@ -1083,6 +1074,31 @@ Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node,
         {
           retNode =
               nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
+        }
+        std::vector<Node> newChildren;
+        newChildren.push_back(retNode);
+        // Now go back and include all the remaining children that were
+        // not involved. This simplifies proof checking, since we can isolate
+        // which children led to the conflict.
+        bool foundPos = false;
+        bool foundNeg = false;
+        for (const Node& nc : node)
+        {
+          if (!foundPos && nc==posMem)
+          {
+            foundPos = true;
+            continue;
+          }
+          if (!foundNeg && nc.getKind()==Kind::REGEXP_COMPLEMENT && nc[0]==negMem)
+          {
+            foundNeg = true;
+            continue;
+          }
+          newChildren.push_back(nc);
+        }
+        if (newChildren.size()>1)
+        {
+          retNode = nm->mkNode(nk, newChildren);
         }
         return retNode;
       }
