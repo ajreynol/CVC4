@@ -610,13 +610,14 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       Trace("crowding-lits") << "..premises: " << children << "\n";
       Trace("crowding-lits") << "..args: " << args << "\n";
       chainConclusion =
-          proof::eliminateCrowdingLits(d_env.getOptions().proof.optResReconSize,
+          proof::eliminateCrowdingLits(options().proof.optResReconSize,
                                        chainConclusionLits,
                                        conclusionLits,
                                        children,
                                        args,
                                        cdp,
-                                       pnm);
+                                       pnm,
+                                       options().proof.proofAciNormRf);
       // update vector of lits. Note that the set is no longer used, so we don't
       // need to update it
       //
@@ -648,6 +649,19 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         << "Conclusion lits: " << chainConclusionLits << "\n";
     // Placeholder for running conclusion
     Node n = chainConclusion;
+    if (options().proof.proofAciNormRf)
+    {
+      if (n!=args[0])
+      {
+        Node eq = n.eqNode(args[0]);
+        if (!cdp->addStep(eq, ProofRule::ACI_NORM, {}, {eq}))
+        {
+          AlwaysAssert(false);
+        }
+        cdp->addStep(args[0], ProofRule::EQ_RESOLVE, {n, eq}, {});
+      }
+      return args[0];
+    }
     // factoring
     if (chainConclusionLits.size() != conclusionLits.size())
     {

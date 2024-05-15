@@ -113,7 +113,8 @@ Node eliminateCrowdingLits(bool reorderPremises,
                            const std::vector<Node>& children,
                            const std::vector<Node>& args,
                            CDProof* cdp,
-                           ProofNodeManager* pnm);
+                           ProofNodeManager* pnm,
+                           bool useAciNorm);
 
 /** Whether the result of a resolution corresponds to a singleton clause
  *

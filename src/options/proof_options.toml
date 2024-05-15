@@ -253,3 +253,11 @@ name   = "Proof"
   type       = "bool"
   default    = "true"
   help       = "Whether to allow trust in the ALF printer"
+
+[[option]]
+  name       = "proofAciNormRf"
+  category   = "expert"
+  long       = "proof-aci-norm-rf"
+  type       = "bool"
+  default    = "false"
+  help       = "Whether to use ACI_NORM instead of reordering and factoring"
