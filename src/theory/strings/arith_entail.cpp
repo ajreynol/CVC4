@@ -85,11 +85,10 @@ Node ArithEntail::rewriteArith(Node a)
   {
     return d_rr->rewrite(a);
   }
-  arith::PolyNorm pn = arith::PolyNorm::mkPolyNorm(a);
-  Node an = pn.toNode(a.getType());
-  Trace("string-ent-rewrite-arith")
-      << "Rewrite " << a << " to " << an << " based on poly-norm" << std::endl;
-  return an;
+  // Otherwise, use the poly norm utility. This is important since the rewrite
+  // must be justified by ARITH_POLY_NORM when in proof mode (when d_rr is
+  // null).
+  return arith::PolyNorm::getPolyNorm(a);
 }
 
 bool ArithEntail::checkEq(Node a, Node b)
