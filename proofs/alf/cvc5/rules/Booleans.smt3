@@ -134,6 +134,7 @@
 ; This is a chain or resolution steps as described in the cvc5 proof rule
 ; documentation.
 ; `Cs` is a conjunction or the premise clauses.
+; `Cr` is the result.
 ; `pols` and `lits` are lists of the same length denoting the polarities and
 ;    the pivot literals respectively.
 (declare-rule macro_resolution ((Cs Bool) (pols @List) (lits @List) (Cr Bool))
