@@ -49,9 +49,9 @@ Node expandMacroSumUb(const std::vector<Node>& children,
                       const std::vector<Node>& args,
                       CDProof* cdp)
 {
-  Trace("macro::arith") << "Expand MACRO_ARITH_SCALE_SUM_UB" << std::endl;
   if (TraceIsOn("macro::arith"))
   {
+    Trace("macro::arith") << "Expand MACRO_ARITH_SCALE_SUM_UB" << std::endl;
     for (const auto& child : children)
     {
       Trace("macro::arith") << "  child: " << child << std::endl;
