@@ -148,9 +148,9 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
   std::vector<Node> args;
   args.push_back(
       nodeManager()->mkConstInt(Rational(static_cast<uint32_t>(id))));
-  args.push_back(lhs);
   Node rhs = d_env.getRewriter()->rewriteViaRule(id, lhs);
   Node eq = lhs.eqNode(rhs);
+  args.push_back(eq);
   cdp->addStep(eq, ProofRule::THEORY_REWRITE, {}, args);
 }
 
