@@ -61,7 +61,7 @@ bool BasicRewriteRCons::prove(
   if (prid != ProofRewriteRule::NONE)
   {
     if (tryRule(
-            cdp, eq, ProofRule::THEORY_REWRITE, {mkRewriteRuleNode(prid), a}))
+            cdp, eq, ProofRule::THEORY_REWRITE, {mkRewriteRuleNode(prid), eq}))
     {
       Trace("trewrite-rcons") << "Reconstruct " << eq << " (from " << prid
                               << ", " << mid << ")" << std::endl;
@@ -83,7 +83,7 @@ bool BasicRewriteRCons::postProve(
   if (prid != ProofRewriteRule::NONE)
   {
     if (tryRule(
-            cdp, eq, ProofRule::THEORY_REWRITE, {mkRewriteRuleNode(prid), a}))
+            cdp, eq, ProofRule::THEORY_REWRITE, {mkRewriteRuleNode(prid), eq}))
     {
       Trace("trewrite-rcons") << "Reconstruct (post) " << eq << " (from "
                               << prid << ", " << mid << ")" << std::endl;
