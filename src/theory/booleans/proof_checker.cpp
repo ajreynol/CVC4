@@ -298,42 +298,43 @@ Node BoolProofRuleChecker::checkInternal(ProofRule id,
   }
   if (id == ProofRule::MACRO_RESOLUTION)
   {
-    Assert(children.size() > 1);
-    Assert(args.size() == 2 * (children.size() - 1) + 1);
+    AlwaysAssert(children.size() > 1);
+    AlwaysAssert(args.size() == 3);
+    AlwaysAssert (args[1].getNumChildren()+1==children.size()) << "Bad " << args[1] << " " << children.size();
+    AlwaysAssert (args[2].getNumChildren()+1==children.size());
     Trace("bool-pfcheck") << "macro_res: " << args[0] << "\n" << push;
     NodeManager* nm = nodeManager();
     Node trueNode = nm->mkConst(true);
     Node falseNode = nm->mkConst(false);
     std::vector<Node> clauseNodes;
-    for (std::size_t i = 0, childrenSize = children.size(); i < childrenSize;
-         ++i)
+    Node pols = args[1];
+    Node pivots = args[2];
+    for (size_t i = 0, childrenSize = children.size(); i < childrenSize; ++i)
     {
       std::unordered_set<Node> elim;
       // literals to be removed from "first" clause
       if (i < childrenSize - 1)
       {
-        for (std::size_t j = (2 * i) + 1, argsSize = args.size(); j < argsSize;
-             j = j + 2)
+        for (size_t j = i; (j+1) < childrenSize; ++j)
         {
           // whether pivot should occur as is or negated depends on the polarity
           // of each step in the macro
-          if (args[j] == trueNode)
+          if (pols[j] == trueNode)
           {
-            elim.insert(args[j + 1]);
+            elim.insert(pivots[j]);
           }
           else
           {
-            Assert(args[j] == falseNode);
-            elim.insert(args[j + 1].notNode());
+            Assert(pols[j] == falseNode);
+            elim.insert(pivots[j].notNode());
           }
         }
       }
       // literal to be removed from "second" clause. They will be negated
       if (i > 0)
       {
-        std::size_t index = 2 * (i - 1) + 1;
-        Node pivot = args[index] == trueNode ? args[index + 1].notNode()
-                                             : args[index + 1];
+        Node pivot = pols[i-1] == trueNode ? pivots[i-1].notNode()
+                                             : pivots[i-1];
         elim.insert(pivot);
       }
       Trace("bool-pfcheck") << i << ": elimination set: " << elim << "\n";
@@ -360,7 +361,7 @@ Node BoolProofRuleChecker::checkInternal(ProofRule id,
       }
       Trace("bool-pfcheck") << i << ": clause lits: " << lits << "\n";
       std::vector<Node> added;
-      for (std::size_t j = 0, size = lits.size(); j < size; ++j)
+      for (size_t j = 0, size = lits.size(); j < size; ++j)
       {
         // only add if literal does not occur in elimination set
         if (elim.count(lits[j]) == 0)

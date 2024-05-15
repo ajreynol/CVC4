@@ -261,3 +261,11 @@ name   = "Proof"
   type       = "bool"
   default    = "false"
   help       = "Whether to use ACI_NORM instead of reordering and factoring"
+
+[[option]]
+  name       = "proofMacroRes"
+  category   = "expert"
+  long       = "proof-macro-res"
+  type       = "bool"
+  default    = "false"
+  help       = "Whether to MACRO_RESOLUTION in final proofs"

@@ -47,6 +47,15 @@
         ((nary.remove cons nil c nil)         nil)
     )
 )
+(program nary.remove_all
+    ((L Type) (cons (-> L L L)) (nil L) (c L) (y L) (xs L :list))
+    ((-> L L L) L L L) L
+    (
+        ((nary.remove_all cons nil c (cons c xs)) (nary.remove_all cons nil c xs))
+        ((nary.remove_all cons nil c (cons y xs)) (alf.cons cons y (nary.remove_all cons nil c xs)))
+        ((nary.remove_all cons nil c nil)         nil)
+    )
+)
 
 ; Helper for reverse
 (program nary.reverseRec
