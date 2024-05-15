@@ -126,18 +126,18 @@ bool BasicRewriteRCons::tryRule(CDProof* cdp,
 
 void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
                                                     ProofRewriteRule id,
-                                                    const Node& lhs)
+                                                    const Node& eq)
 {
   switch (id)
   {
     case ProofRewriteRule::MACRO_BOOL_NNF_NORM:
-      if (ensureProofMacroBoolNnfNorm(cdp, lhs))
+      if (ensureProofMacroBoolNnfNorm(cdp, eq))
       {
         return;
       }
       break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
-      if (ensureProofMacroArithStringPredEntail(cdp, lhs))
+      if (ensureProofMacroArithStringPredEntail(cdp, eq))
       {
         return;
       }
@@ -148,24 +148,25 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
   std::vector<Node> args;
   args.push_back(
       nodeManager()->mkConstInt(Rational(static_cast<uint32_t>(id))));
-  Node rhs = d_env.getRewriter()->rewriteViaRule(id, lhs);
-  Node eq = lhs.eqNode(rhs);
   args.push_back(eq);
   cdp->addStep(eq, ProofRule::THEORY_REWRITE, {}, args);
 }
 
 bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
-                                                    const Node& lhs)
+                                                    const Node& eq)
 {
   return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
-                                                              const Node& lhs)
+                                                              const Node& eq)
 {
+  Assert (eq.getKind()==Kind::EQUAL);
+  Node lhs = eq[0];
   theory::strings::ArithEntail ae(nullptr);
   Node exp;
   Node ret = ae.rewritePredViaEntailment(lhs, exp);
+  Assert (ret==eq[1]);
   Trace("brc-macro") << "Expand entailment for " << lhs << " == " << ret
                      << std::endl;
   Trace("brc-macro") << "- explanation is " << exp << std::endl;

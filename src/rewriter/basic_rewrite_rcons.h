@@ -59,7 +59,7 @@ class BasicRewriteRCons : protected EnvObj
    */
   void ensureProofForTheoryRewrite(CDProof* cdp,
                                    ProofRewriteRule id,
-                                   const Node& lhs);
+                                   const Node& eq);
 
  private:
   /**
@@ -70,8 +70,8 @@ class BasicRewriteRCons : protected EnvObj
                Node eq,
                ProofRule r,
                const std::vector<Node>& args);
-  bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& lhs);
-  bool ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& lhs);
+  bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& eq);
+  bool ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& eq);
 };
 
 }  // namespace rewriter

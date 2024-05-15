@@ -1056,7 +1056,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
         {
           Assert(pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
           // use the utility, possibly to do macro expansion
-          d_trrc.ensureProofForTheoryRewrite(cdp, pcur.d_dslId, cur[0]);
+          d_trrc.ensureProofForTheoryRewrite(cdp, pcur.d_dslId, cur);
         }
       }
     }
