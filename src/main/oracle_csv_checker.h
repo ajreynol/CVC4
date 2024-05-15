@@ -30,6 +30,8 @@ class Explanation
 {
  public:
   Explanation() : d_continueLevel(0) {}
+  /** Clear */
+  void clear();
   /** Columns that contributed to explanation */
   std::vector<size_t> d_valuesEq;
   /** The column that was in conflict (not in d_valuesEq) */
@@ -50,6 +52,8 @@ class Explanation
   std::vector<Term> toExplanation(TermManager& tm,
                                   const std::vector<Term>& row,
                                   const std::vector<Term>& source);
+  /** add explanation */
+  void addValueEqs(const std::vector<size_t>& exp);
 };
 
 /**
@@ -99,9 +103,11 @@ class OracleTableImpl
   bool lookupSimple(const Trie* curr, const std::vector<Term>& row) const;
   /**
    * Lookup, but possibly with unknown values.
+   * If returns false, adds to e the indicies that mattered.
    */
   bool partialLookup(const Trie* curr,
                      const std::vector<Term>& row,
+                     const std::vector<size_t>& forcedValues,
                      Explanation& e,
                      size_t startIndex = 0) const;
   /**
@@ -109,7 +115,7 @@ class OracleTableImpl
    */
   bool explainNoLookup(const Trie* curr,
                        const std::vector<Term>& row,
-                       const std::vector<Term>& sources,
+                       const std::vector<Term>& forceRowValues,
                        const std::vector<size_t>& forcedValues,
                        Explanation& e) const;
   /**
@@ -122,7 +128,6 @@ class OracleTableImpl
   bool isNoValueConflict(const Trie* curr,
                          size_t depth,
                          const std::vector<Term>& row,
-                         const std::vector<Term>& sources,
                          const std::vector<size_t>& forcedValues,
                          Explanation& e) const;
   /**

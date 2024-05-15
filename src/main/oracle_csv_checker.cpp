@@ -25,11 +25,27 @@
 namespace cvc5 {
 namespace main {
 
+void Explanation::clear()
+{
+  d_continueLevel = 0;
+  d_valuesEq.clear();
+  d_continuationsProp.clear();
+  d_continuations.clear();
+}
+
 void Explanation::addValueEq(size_t i)
 {
   if (std::find(d_valuesEq.begin(), d_valuesEq.end(), i) == d_valuesEq.end())
   {
     d_valuesEq.push_back(i);
+  }
+}
+
+void Explanation::addValueEqs(const std::vector<size_t>& exp)
+{
+  for (size_t e : exp)
+  {
+    addValueEq(e);
   }
 }
 
@@ -205,7 +221,6 @@ void OracleTableImpl::Trie::add(const std::vector<Term>& row)
 bool OracleTableImpl::isNoValueConflict(const Trie* curr,
                                         size_t depth,
                                         const std::vector<Term>& row,
-                                        const std::vector<Term>& sources,
                                         const std::vector<size_t>& forcedValues,
                                         Explanation& e) const
 {
@@ -275,19 +290,25 @@ bool OracleTableImpl::lookupSimple(const Trie* curr,
 
 bool OracleTableImpl::partialLookup(const Trie* curr,
                                     const std::vector<Term>& row,
+                                    const std::vector<size_t>& forcedValues,
                                     Explanation& e,
                                     size_t startIndex) const
 {
   std::map<Term, Trie>::const_iterator it;
   for (size_t i = startIndex, nterms = row.size(); i < nterms; i++)
   {
+    // check for no-value conflict eagerly
+    if (isNoValueConflict(curr, i, row, forcedValues, e))
+    {
+      return false;
+    }
     Term v = row[i];
     if (v == d_unknown)
     {
       const std::map<Term, Trie>& cmap = curr->d_children;
       for (const std::pair<const Term, Trie>& c : cmap)
       {
-        if (partialLookup(&c.second, row, e, i + 1))
+        if (partialLookup(&c.second, row, forcedValues, e, i + 1))
         {
           return true;
         }
@@ -303,49 +324,30 @@ bool OracleTableImpl::partialLookup(const Trie* curr,
     }
     curr = &it->second;
   }
+  e.clear();
   return true;
 }
 
 bool OracleTableImpl::explainNoLookup(const Trie* curr,
                                       const std::vector<Term>& row,
-                                      const std::vector<Term>& sources,
+                                      const std::vector<Term>& forceRowValues,
                                       const std::vector<size_t>& forcedValues,
                                       Explanation& e) const
 {
   Trace("oracle-table") << "Compute lookup" << std::endl;
   Trace("oracle-table") << "- " << row << std::endl;
-  Trace("oracle-table") << "- " << sources << std::endl;
+  Trace("oracle-table") << "- " << forceRowValues << std::endl;
   // a no-value conflict at the top, we are already done, its explanation (if
   // applicable) is added to e.
-  if (isNoValueConflict(curr, 0, row, sources, forcedValues, e))
+  if (isNoValueConflict(curr, 0, row, forcedValues, e))
   {
     Trace("oracle-table") << "...forced value not in table (global)"
                           << std::endl;
     return true;
   }
   std::map<Term, Trie>::const_iterator it;
-  std::set<size_t> forced;
-  bool hasForceIndexNext = !forcedValues.empty();
-  size_t forceIndexNext = 0;
   for (size_t i = 0, nterms = row.size(); i < nterms; i++)
   {
-    // if the value is not forced, we must iterate over the children
-    if (!hasForceIndexNext || forcedValues[forceIndexNext] != i)
-    {
-      /*
-      // TODO??
-      const std::map<Term, Trie>& cmap = curr->d_children;
-      for (const std::pair<const Term, Trie>& c : cmap)
-      {
-      }
-      */
-    }
-    else
-    {
-      // update the forced index
-      forceIndexNext++;
-      hasForceIndexNext = (forceIndexNext < forcedValues.size());
-    }
     Term v = row[i];
     // currently should only have complete assignments
     Assert(v.getKind() != Kind::CONSTANT);
@@ -353,9 +355,23 @@ bool OracleTableImpl::explainNoLookup(const Trie* curr,
     it = curr->d_children.find(v);
     if (it != curr->d_children.end())
     {
-      // ...otherwise, we will include the equality (lazily).
       // We found, now check whether it is a no-value conflict
-      if (!isNoValueConflict(&it->second, i + 1, row, sources, forcedValues, e))
+      bool isConflict = false;
+      if (false && forceRowValues[i]==d_unknown)  // TODO
+      {
+        // maybe partial lookup is wrong now
+        Explanation etmp;
+        isConflict = partialLookup(&it->second, row, forcedValues, etmp, i+1);
+        if (isConflict)
+        {
+          e.addValueEqs(etmp.d_valuesEq);
+        }
+      }
+      else
+      {
+        isConflict = isNoValueConflict(&it->second, i + 1, row, forcedValues, e);
+      }
+      if (!isConflict)
       {
         if (curr->d_children.size() > 1)
         {
@@ -405,7 +421,7 @@ bool OracleTableImpl::explainNoLookup(const Trie* curr,
         }
         Explanation eTmp;
         if (isNoValueConflict(
-                &c.second, i + 1, row, sources, forcedValuesTmp, eTmp))
+                &c.second, i + 1, row, forcedValuesTmp, eTmp))
         {
           // eTmp is either empty or contains an explanation from
           // forcedValuesTmp that we already know about.
@@ -418,18 +434,18 @@ bool OracleTableImpl::explainNoLookup(const Trie* curr,
         {
           Trace("oracle-table")
               << "......possible continue term " << c.first << "?" << std::endl;
-          if (sources[i] == c.first)
+          if (forceRowValues[i] == c.first)
           {
             Trace("oracle-table") << "........continue is trivial" << std::endl;
             isIdent = true;
             next = &c.second;
             break;
           }
-          else if (row[i] == sources[i])
+          else if (row[i] == forceRowValues[i])
           {
             Trace("oracle-table")
                 << "........continue is conflict" << std::endl;
-            // If row[i] == sources[i], then sources[i] is a value that is
+            // If row[i] == forceRowValues[i], then row[i] is a value that is
             // distinct from c.first. The equality below simplifies to false.
             continue;
           }
@@ -577,7 +593,7 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
   }
   Trace("oracle-table") << "[1] simple lookup" << std::endl;
   // first, check if it exists in the trie, if so we are done
-  if (lookupSimple(&d_data, sources))
+  if (lookupSimple(&d_data, rowValues))
   {
     Trace("oracle-table") << "*** success (simple)" << std::endl;
     return d_true;
@@ -585,11 +601,11 @@ Term OracleTableImpl::evaluate(const std::vector<Term>& row)
   // partial lookup?
   Trace("oracle-table") << "[2] partial lookup" << std::endl;
   Explanation e;
-  if (partialLookup(&d_data, forceRowValues, e))
+  if (partialLookup(&d_data, forceRowValues, forcedValues, e))
   {
     Trace("oracle-table") << "[3] explain no lookup" << std::endl;
     // if partial lookup didn't work, we have to explain
-    bool result = explainNoLookup(&d_data, rowValues, sources, forcedValues, e);
+    bool result = explainNoLookup(&d_data, rowValues, forceRowValues, forcedValues, e);
     if (!result)
     {
       std::cout << "Failed to explain no lookup" << std::endl;
