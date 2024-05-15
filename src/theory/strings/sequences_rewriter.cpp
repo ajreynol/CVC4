@@ -1084,19 +1084,20 @@ Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node)
         bool foundNeg = false;
         for (const Node& nc : node)
         {
-          if (!foundPos && nc==posMem)
+          if (!foundPos && nc == posMem)
           {
             foundPos = true;
             continue;
           }
-          if (!foundNeg && nc.getKind()==Kind::REGEXP_COMPLEMENT && nc[0]==negMem)
+          if (!foundNeg && nc.getKind() == Kind::REGEXP_COMPLEMENT
+              && nc[0] == negMem)
           {
             foundNeg = true;
             continue;
           }
           newChildren.push_back(nc);
         }
-        if (newChildren.size()>1)
+        if (newChildren.size() > 1)
         {
           retNode = nm->mkNode(nk, newChildren);
         }

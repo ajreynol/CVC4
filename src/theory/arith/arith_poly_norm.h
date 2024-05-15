@@ -100,6 +100,7 @@ class PolyNorm
    * from this class.
    */
   static Node getPolyNorm(Node a);
+
  private:
   /**
    * Make the difference of two nodes a and b, independent of their type.
