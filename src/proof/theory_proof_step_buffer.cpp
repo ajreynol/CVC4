@@ -272,12 +272,12 @@ Node TheoryProofStepBuffer::factorReorderElimDoubleNeg(Node n, bool useAciNorm)
   }
   if (useAciNorm)
   {
-    if (children.size()>=2)
+    if (children.size() >= 2)
     {
       std::sort(children.begin(), children.end());
     }
     Node ordered = nm->mkOr(children);
-    if (n!=ordered)
+    if (n != ordered)
     {
       Node eq = n.eqNode(ordered);
       addStep(ProofRule::ACI_NORM, {}, {eq}, eq);

@@ -518,16 +518,17 @@ Node eliminateCrowdingLits(bool reorderPremises,
     if (end < childrenSize - 1)
     {
       lastClause = pnm->getChecker()->checkDebug(
-            ProofRule::FACTORING, {resPlaceHolder}, {}, Node::null(), "");
+          ProofRule::FACTORING, {resPlaceHolder}, {}, Node::null(), "");
       if (!lastClause.isNull())
       {
         if (useAciNorm)
         {
-          if (resPlaceHolder!=lastClause)
+          if (resPlaceHolder != lastClause)
           {
             Node eq = resPlaceHolder.eqNode(lastClause);
             cdp->addStep(eq, ProofRule::ACI_NORM, {}, {eq});
-            cdp->addStep(lastClause, ProofRule::EQ_RESOLVE, {resPlaceHolder, eq}, {});
+            cdp->addStep(
+                lastClause, ProofRule::EQ_RESOLVE, {resPlaceHolder, eq}, {});
           }
         }
         else

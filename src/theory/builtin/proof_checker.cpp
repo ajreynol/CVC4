@@ -477,12 +477,12 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     {
       return Node::null();
     }
-    if (args[1].getKind()!=Kind::EQUAL)
+    if (args[1].getKind() != Kind::EQUAL)
     {
       return Node::null();
     }
     Node rhs = d_rewriter->rewriteViaRule(di, args[1][0]);
-    if (rhs.isNull() || rhs!=args[1][1])
+    if (rhs.isNull() || rhs != args[1][1])
     {
       return Node::null();
     }

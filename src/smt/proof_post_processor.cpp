@@ -651,7 +651,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     Node n = chainConclusion;
     if (options().proof.proofAciNormRf)
     {
-      if (n!=args[0])
+      if (n != args[0])
       {
         Node eq = n.eqNode(args[0]);
         if (!cdp->addStep(eq, ProofRule::ACI_NORM, {}, {eq}))
