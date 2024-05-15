@@ -52,7 +52,7 @@ std::vector<Node> getMacroSumUbCoeff(const std::vector<Pf>& pfs,
  *
  * This method assumes that children and args are valid parameters to
  * MACRO_ARITH_SCALE_SUM_UB.
- * 
+ *
  * @param children The children of MACRO_ARITH_SCALE_SUM_UB.
  * @param args The arguments of MACRO_ARITH_SCALE_SUM_UB.
  * @param cdp The proof to add steps to.
