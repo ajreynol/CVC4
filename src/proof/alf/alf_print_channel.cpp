@@ -153,6 +153,14 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r,
   {
     trname = "trust";
   }
+  else if (r == ProofRule::THEORY_REWRITE)
+  {
+    ProofRewriteRule di;
+    if (rewriter::getRewriteRule(args[0], di))
+    {
+      d_out << " " << di;
+    }
+  }
   d_out << std::endl;
   // trust takes a premise-list which must be specified even if empty
   printStepInternal(trname, n, i, premises, {nc}, false, true);
@@ -230,7 +238,7 @@ void AlfPrintChannelPre::processInternal(const Node& n)
   expr::getVariables(n, d_vars, d_varsVisited);
 }
 
-const std::unordered_set<TNode>& AlfPrintChannelPre::getVariables() const
+const std::unordered_set<Node>& AlfPrintChannelPre::getVariables() const
 {
   return d_vars;
 }

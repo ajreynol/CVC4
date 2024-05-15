@@ -410,6 +410,14 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
     ss << id;
     return ss.str();
   }
+  else if (r == ProofRule::THEORY_REWRITE)
+  {
+    ProofRewriteRule id;
+    rewriter::getRewriteRule(pfn->getArguments()[0], id);
+    std::stringstream ss;
+    ss << id;
+    return ss.str();
+  }
   std::string name = toString(r);
   std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) {
     return std::tolower(c);
@@ -556,8 +564,8 @@ void AlfPrinter::print(std::ostream& out, std::shared_ptr<ProofNode> pfn)
     if (i == 1)
     {
       std::stringstream outVars;
-      const std::unordered_set<TNode>& vars = aletify.getVariables();
-      for (TNode v : vars)
+      const std::unordered_set<Node>& vars = aletify.getVariables();
+      for (const Node& v : vars)
       {
         if (v.getKind() == Kind::BOUND_VARIABLE)
         {
