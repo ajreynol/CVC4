@@ -111,6 +111,47 @@
     :conclusion C2
 )
 
+; Extension of `nary.remove or l C`, that returns `false` if `C` is `l`
+(define $removeAllSelf ((l Bool) (C Bool))
+    (alf.ite (alf.is_eq l C) false (nary.remove_all or false l C)))
+
+; MACRO_RESOLUTION
+; Applies multiple steps of resolution but leaves the first argument in n-ary form.
+(program $macroResolveRec ((C1 Bool) (C2 Bool) (Cs Bool :list) (pol Bool) (pols @List :list) (L Bool) (lits @List :list))
+    (Bool Bool @List @List) Bool
+    (
+        (($macroResolveRec C1 true @list.nil @list.nil)         (from_clause C1))
+        (($macroResolveRec C1 (and C2 Cs) (@list pol pols) (@list L lits))
+            ($macroResolveRec
+                (let ((lp (alf.ite pol L (not L))))
+                (let ((ln (alf.ite pol (not L) L)))
+                    (alf.concat or
+                            ($removeAllSelf lp C1)
+                            ($removeAllSelf ln (to_clause C2))))) Cs pols lits))
+    )
+)
+
+; This is a chain or resolution steps as described in the cvc5 proof rule
+; documentation.
+; `Cs` is a conjunction or the premise clauses.
+; `pols` and `lits` are lists of the same length denoting the polarities and
+;    the pivot literals respectively.
+(declare-rule macro_resolution ((Cs Bool) (pols @List) (lits @List) (Cr Bool))
+    :premise-list Cs and
+    :args (Cr pols lits)
+    :conclusion
+        (let ((Crr (alf.match ((C1 Bool) (C2 Bool :list))
+                    Cs
+                    (((and C1 C2) ($macroResolveRec (to_clause C1) C2 pols lits))))))
+        (alf.requires 
+              (let ((n1 (get_aci_norm Crr)) (n2 (get_aci_norm Cr)))
+              (alf.ite (alf.is_eq Cr Crr) true 
+              (alf.ite (alf.is_eq n1 Cr) true
+              (alf.ite (alf.is_eq Crr n2) true
+                (alf.is_eq n1 n2))))) true Cr))
+)
+
+
 ; EQ_RESOLVE
 (declare-rule eq_resolve ((F1 Bool) (F2 Bool))
     :premises (F1 (= F1 F2))

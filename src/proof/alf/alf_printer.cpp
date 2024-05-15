@@ -115,6 +115,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::REORDERING:
     case ProofRule::RESOLUTION:
     case ProofRule::CHAIN_RESOLUTION:
+    case ProofRule::MACRO_RESOLUTION:
     case ProofRule::ARRAYS_READ_OVER_WRITE:
     case ProofRule::ARRAYS_READ_OVER_WRITE_CONTRA:
     case ProofRule::ARRAYS_READ_OVER_WRITE_1:
