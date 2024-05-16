@@ -279,6 +279,7 @@ Node PolyNorm::toNode(const TypeNode& tn) const
       return bv::utils::mkZero(tn.getBitVectorSize());
     }
   }
+  std::sort(sum.begin(), sum.end());
   return nm->mkNode(addKind, sum);
 }
 
@@ -531,6 +532,11 @@ Node PolyNorm::getPolyNorm(Node a)
     PolyNorm pa = arith::PolyNorm::mkPolyNorm(a);
     an = pa.toNode(a.getType());
     a.setAttribute(apna, an);
+    // as an optimization, assume idempotent
+    if (a!=an)
+    {
+      an.setAttribute(apna, an);
+    }
   }
   return an;
 }

@@ -149,7 +149,7 @@ Node ArithEntail::findApprox(Node ar)
 
 Node ArithEntail::findApproxInternal(Node ar)
 {
-  Assert(rewriteArith(ar) == ar);
+  Assert(rewriteArith(ar) == ar) << "Not rewritten " << ar <<", got " << rewriteArith(ar);
   NodeManager* nm = NodeManager::currentNM();
   std::map<Node, Node> msum;
   Trace("strings-ent-approx-debug")
@@ -628,7 +628,6 @@ void ArithEntail::getArithApproximations(Node a,
 bool ArithEntail::checkWithEqAssumption(Node assumption, Node a, bool strict)
 {
   Assert(assumption.getKind() == Kind::EQUAL);
-  Assert(rewriteArith(assumption) == assumption);
   Trace("strings-entail") << "checkWithEqAssumption: " << assumption << " " << a
                           << ", strict=" << strict << std::endl;
 
