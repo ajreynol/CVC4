@@ -259,6 +259,7 @@
                 (not (str.in_re (skolem_suffix_rem t @var.str_index) ($singleton_elim r2)))))
       )))
 )
+
 ;;-------------------- Extended functions 
 
 (declare-rule string_reduction ((U Type) (s U))

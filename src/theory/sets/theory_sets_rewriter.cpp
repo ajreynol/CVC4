@@ -36,6 +36,8 @@ namespace sets {
 
 TheorySetsRewriter::TheorySetsRewriter(NodeManager* nm) : TheoryRewriter(nm)
 {
+  // Needs to be a subcall in DSL reconstruction since set.is_empty is used
+  // as a premise to test emptiness of a set.
   registerProofRewriteRule(ProofRewriteRule::SETS_IS_EMPTY_EVAL,
                            TheoryRewriteCtx::DSL_SUBCALL);
 }

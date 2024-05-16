@@ -1680,13 +1680,22 @@ enum ENUM(ProofRule) : uint32_t
    *
    * .. math::
    *
-   *   \inferrule{t\not\in R\mid
-   *   -}{\texttt{RegExpOpr::reduceRegExpNegConcatFixed}(t\not\in R,L,i)}
+   *   \inferrule{t\not\in \mathit{re}.\text{++}(r_1, \ldots, r_n) \mid \bot}{
+   *  \mathit{pre}(t, L) \not \in r_1 \vee \mathit{suf}(t, L) \not \in \mathit{re}.\text{++}(r_2, \ldots, r_n)}
    *
-   * where :math:`\texttt{RegExpOpr::getRegExpConcatFixed}(t\not\in R, i) = L`,
-   * corresponding to the one-step unfolding of the premise, optimized for fixed
-   * length of component :math:`i` of the regular expression concatenation
-   * :math:`R`.
+   * where :math:`r_1` has fixed length :math:`L`.
+   * 
+   * or alternatively for the reverse:
+   * 
+   *
+   * .. math::
+   *
+   *   \inferrule{t \not \in \mathit{re}.\text{++}(r_1, \ldots, r_n) \mid \top}{
+   *   \mathit{suf}(t, str.len(t) - L) \not \in r_n \vee
+   *   \mathit{pre}(t, str.len(t) - L) \not \in \mathit{re}.\text{++}(r_1, \ldots, r_{n-1})}
+   * 
+   * where :math:`r_n` has fixed length :math:`L`.
+   * 
    * \endverbatim
    */
   EVALUE(RE_UNFOLD_NEG_CONCAT_FIXED),
@@ -2330,8 +2339,8 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * **Equality -- Beta reduction**
    *
    * .. math::
-   *   ((\lambda x_1 \dots x_n.\> t) t_1 \ldots t_n) = t\{x_1 \mapsto t_1,
-   * \dots, x_n \mapsto t_n\}
+   *   ((\lambda x_1 \ldots x_n.\> t) \ t_1 \ldots t_n) = t\{x_1 \mapsto t_1,
+   *   \ldots, x_n \mapsto t_n\}
    *
    * The right hand side of the equality in the conclusion is computed using
    * standard substitution via ``Node::substitute``.
@@ -2547,19 +2556,18 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * **Sets - empty tester evaluation**
    *
    * .. math::
-   *   (sets.is_empty (as set.empty (Set T))) = true
+   *   \mathit{sets.is\_empty}(as \ \mathit{set.empty} \ (\mathit{Set} \ T)) = \top
    *
    * or alternatively:
    *
    * .. math::
-   *   (sets.is_empty c) = false
+   *   \mathit{sets.is\_empty}(c) = \bot
    *
-   * where `c` is a constant set that is not the empty set.
+   * where :math:`c` is a constant set that is not the empty set.
    *
    * \endverbatim
    */
   EVALUE(SETS_IS_EMPTY_EVAL),
-
   // RARE rules
   // ${rules}$
   /** Auto-generated from RARE rule arith-plus-zero */
