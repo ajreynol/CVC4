@@ -37,9 +37,15 @@ namespace strings {
 class ArithEntail
 {
  public:
+  /**
+   * @param r The rewriter, used for rewriting arithmetic terms. If none
+   * is provided, we rely on the ArithPolyNorm utility.
+   */
   ArithEntail(Rewriter* r);
   /**
    * Returns the rewritten form a term, must be an integer term.
+   * This method either invokes the rewriter if one is provided or
+   * using the ArithPolyNorm utility (arith/arith_poly_norm.h) otherwise.
    */
   Node rewriteArith(Node a);
   /** check arithmetic entailment equal
@@ -175,19 +181,43 @@ class ArithEntail
    */
   Node findApprox(Node a);
 
-  /** check entail arithmetic simple
-   * Returns true if we can show a >= 0 always.
-   * a is in rewritten form.
+  /**
+   * Check entail arithmetic simple.
+   * Returns true if we can show a >= 0 always. This uses the fact that
+   * string length is non-negative but otherwise uses only basic properties
+   * of arithmetic.
+   * This method assumes that a is in rewritten form.
    */
   static bool checkSimple(Node a);
 
   /**
+   * Rewrite the arithmetic predicate n based on string arithmetic entailment.
+   *
+   * We require that n is either an equality or GEQ between integers.
+   *
+   * This returns the term true or false if it is that case that n can be
+   * rewritten to that constant. This method returns null otherwise.
+   *
+   * If this returns a non-null node, then exp is updated to the term that
+   * we proved was always greater than or equal to zero. For example,
+   * given input:
+   * (= (str.len x) (- 5)), we return the false term and set exp to
+   * (- (- (str.len x) (- 5)) 1), since this term is always non-negative.
+   *
+   * @param n The arithmetic predicate (EQUAL or GEQ) to rewrite.
+   * @param exp The explanation term, if we return non-null.
+   * @return the Boolean constant that n can be rewritten to, or null if none exists.
    */
   Node rewritePredViaEntailment(const Node& n, Node& exp);
+  /**
+   * Same as above, without an explanation.
+   */
   Node rewritePredViaEntailment(const Node& n);
 
  private:
   /**
+   * Helper for findApprox, called when the approximation for a is not in the
+   * cache.
    */
   Node findApproxInternal(Node a);
   /** Get arithmetic approximations
@@ -215,12 +245,12 @@ class ArithEntail
    * computed. Used for getConstantBound and getConstantBoundLength.
    */
   static bool getConstantBoundCache(TNode n, bool isLower, Node& c);
-  /** The underlying rewriter */
+  /** The underlying rewriter, if one exists */
   Rewriter* d_rr;
   /** Constant zero */
   Node d_zero;
   Node d_one;
-  /** */
+  /** A cache for findApprox above */
   std::map<Node, Node> d_approxCache;
 };
 
