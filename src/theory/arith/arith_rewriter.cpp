@@ -119,7 +119,8 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         // Note that we do *not* pass a rewriter here, since the proof rule
         // cannot depend on the rewriter.
         theory::strings::ArithEntail ae(nullptr);
-        Node approx = ae.findApprox(n[0]);
+        // must only use simple checks when computing the approximations
+        Node approx = ae.findApprox(n[0], true);
         if (approx != n[0])
         {
           return nodeManager()->mkNode(Kind::GEQ, approx, n[1]);

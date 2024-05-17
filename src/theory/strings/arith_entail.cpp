@@ -103,34 +103,40 @@ bool ArithEntail::checkEq(Node a, Node b)
   return ar == br;
 }
 
-bool ArithEntail::check(Node a, Node b, bool strict)
+bool ArithEntail::check(Node a, Node b, bool strict, bool isSimple)
 {
   if (a == b)
   {
     return !strict;
   }
   Node diff = NodeManager::currentNM()->mkNode(Kind::SUB, a, b);
-  return check(diff, strict);
+  return check(diff, strict, isSimple);
 }
 
 
-bool ArithEntail::check(Node a, bool strict)
+bool ArithEntail::check(Node a, bool strict, bool isSimple)
 {
   if (a.isConst())
   {
     return a.getConst<Rational>().sgn() >= (strict ? 1 : 0);
   }
-
   Node ar = strict ? NodeManager::currentNM()->mkNode(Kind::SUB, a, d_one) : a;
-  Node ara = findApprox(ar);
+  // if simple, just call the checkSimple routine.
+  if (isSimple)
+  {
+    ar = rewriteArith(ar);
+    return checkSimple(ar);
+  }
+  Node ara = findApprox(ar, false);
   return !ara.isNull();
 }
 
-Node ArithEntail::findApprox(Node ar)
+Node ArithEntail::findApprox(Node ar, bool isSimple)
 {
   ar = rewriteArith(ar);
-  std::map<Node, Node>::iterator it = d_approxCache.find(ar);
-  if (it != d_approxCache.end())
+  std::map<Node, Node>& cache = isSimple ? d_approxCacheSimple : d_approxCache;
+  std::map<Node, Node>::iterator it = cache.find(ar);
+  if (it != cache.end())
   {
     return it->second;
   }
@@ -142,13 +148,13 @@ Node ArithEntail::findApprox(Node ar)
   }
   else
   {
-    ret = findApproxInternal(ar);
+    ret = findApproxInternal(ar, isSimple);
   }
-  d_approxCache[ar] = ret;
+  cache[ar] = ret;
   return ret;
 }
 
-Node ArithEntail::findApproxInternal(Node ar)
+Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
 {
   Assert(rewriteArith(ar) == ar)
       << "Not rewritten " << ar << ", got " << rewriteArith(ar);
@@ -205,7 +211,7 @@ Node ArithEntail::findApproxInternal(Node ar)
         {
           visited.insert(curr);
           std::vector<Node> currApprox;
-          getArithApproximations(curr, currApprox, isOverApprox);
+          getArithApproximations(curr, currApprox, isOverApprox, isSimple);
           if (currApprox.empty())
           {
             Trace("strings-ent-approx-debug")
@@ -440,7 +446,8 @@ Node ArithEntail::findApproxInternal(Node ar)
 
 void ArithEntail::getArithApproximations(Node a,
                                          std::vector<Node>& approx,
-                                         bool isOverApprox)
+                                         bool isOverApprox,
+                                         bool isSimple)
 {
   NodeManager* nm = NodeManager::currentNM();
   // We do not handle ADD here since this leads to exponential behavior.
@@ -456,7 +463,7 @@ void ArithEntail::getArithApproximations(Node a,
     if (ArithMSum::getMonomial(a, c, v))
     {
       bool isNeg = c.getConst<Rational>().sgn() == -1;
-      getArithApproximations(v, approx, isNeg ? !isOverApprox : isOverApprox);
+      getArithApproximations(v, approx, isNeg ? !isOverApprox : isOverApprox, isSimple);
       for (unsigned i = 0, size = approx.size(); i < size; i++)
       {
         approx[i] = nm->mkNode(Kind::MULT, c, approx[i]);
@@ -474,11 +481,11 @@ void ArithEntail::getArithApproximations(Node a,
       {
         // m >= 0 implies
         //  m >= len( substr( x, n, m ) )
-        if (check(a[0][2]))
+        if (check(a[0][2], false, isSimple))
         {
           approx.push_back(a[0][2]);
         }
-        if (check(lenx, a[0][1]))
+        if (check(lenx, a[0][1], false, isSimple))
         {
           // n <= len( x ) implies
           //   len( x ) - n >= len( substr( x, n, m ) )
@@ -495,13 +502,13 @@ void ArithEntail::getArithApproximations(Node a,
         // 0 <= n and n+m <= len( x ) implies
         //   m <= len( substr( x, n, m ) )
         Node npm = nm->mkNode(Kind::ADD, a[0][1], a[0][2]);
-        if (check(a[0][1]) && check(lenx, npm))
+        if (check(a[0][1], false, isSimple) && check(lenx, npm, false, isSimple))
         {
           approx.push_back(a[0][2]);
         }
         // 0 <= n and n+m >= len( x ) implies
         //   len(x)-n <= len( substr( x, n, m ) )
-        if (check(a[0][1]) && check(npm, lenx))
+        if (check(a[0][1], false, isSimple) && check(npm, lenx, false, isSimple))
         {
           approx.push_back(nm->mkNode(Kind::SUB, lenx, a[0][1]));
         }
@@ -516,7 +523,7 @@ void ArithEntail::getArithApproximations(Node a,
       Node lenz = nm->mkNode(Kind::STRING_LENGTH, a[0][2]);
       if (isOverApprox)
       {
-        if (check(leny, lenz))
+        if (check(leny, lenz, false, isSimple))
         {
           // len( y ) >= len( z ) implies
           //   len( x ) >= len( replace( x, y, z ) )
@@ -530,7 +537,7 @@ void ArithEntail::getArithApproximations(Node a,
       }
       else
       {
-        if (check(lenz, leny) || check(lenz, lenx))
+        if (check(lenz, leny, false, isSimple) || check(lenz, lenx, false, isSimple))
         {
           // len( y ) <= len( z ) or len( x ) <= len( z ) implies
           //   len( x ) <= len( replace( x, y, z ) )
@@ -548,9 +555,9 @@ void ArithEntail::getArithApproximations(Node a,
       // over,under-approximations for len( int.to.str( x ) )
       if (isOverApprox)
       {
-        if (check(a[0][0], false))
+        if (check(a[0][0], false, isSimple))
         {
-          if (check(a[0][0], true))
+          if (check(a[0][0], true, isSimple))
           {
             // x > 0 implies
             //   x >= len( int.to.str( x ) )
@@ -567,7 +574,7 @@ void ArithEntail::getArithApproximations(Node a,
       }
       else
       {
-        if (check(a[0][0]))
+        if (check(a[0][0], false, isSimple))
         {
           // x >= 0 implies
           //   len( int.to.str( x ) ) >= 1
@@ -585,7 +592,7 @@ void ArithEntail::getArithApproximations(Node a,
     {
       Node lenx = nm->mkNode(Kind::STRING_LENGTH, a[0]);
       Node leny = nm->mkNode(Kind::STRING_LENGTH, a[1]);
-      if (check(lenx, leny))
+      if (check(lenx, leny, false, isSimple))
       {
         // len( x ) >= len( y ) implies
         //   len( x ) - len( y ) >= indexof( x, y, n )
