@@ -370,12 +370,14 @@ bool AlfPrinter::canEvaluateRegExp(Node r) const
         case Kind::REGEXP_RANGE:
           if (!theory::strings::utils::isCharacterRange(cur))
           {
+          Trace("alf-printer-debug") << "Non-char range" << std::endl;
             return false;
           }
           continue;
         case Kind::STRING_TO_REGEXP:
           if (!canEvaluate(cur[0]))
           {
+          Trace("alf-printer-debug") << "Non-evaluatable string" << std::endl;
             return false;
           }
           continue;
