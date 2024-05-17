@@ -517,15 +517,15 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   {
     if (options().proof.proofMacroRes)
     {
-      Assert (id==ProofRule::MACRO_RESOLUTION_TRUST);
+      Assert(id == ProofRule::MACRO_RESOLUTION_TRUST);
       std::vector<Node> newArgs;
       newArgs.push_back(args[0]);
       std::vector<Node> pols;
       std::vector<Node> lits;
-      for (size_t i=1, nargs = args.size(); i<nargs; i = i+2)
+      for (size_t i = 1, nargs = args.size(); i < nargs; i = i + 2)
       {
         pols.push_back(args[i]);
-        lits.push_back(args[i+1]);
+        lits.push_back(args[i + 1]);
       }
       newArgs.push_back(nodeManager()->mkNode(Kind::SEXPR, pols));
       newArgs.push_back(nodeManager()->mkNode(Kind::SEXPR, lits));

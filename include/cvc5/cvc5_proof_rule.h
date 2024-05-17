@@ -2556,7 +2556,8 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * **Sets - empty tester evaluation**
    *
    * .. math::
-   *   \mathit{sets.is\_empty}(as \ \mathit{set.empty} \ (\mathit{Set} \ T)) = \top
+   *   \mathit{sets.is\_empty}(as \ \mathit{set.empty} \ (\mathit{Set} \ T)) =
+   * \top
    *
    * or alternatively:
    *

@@ -664,7 +664,8 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
   }
   pi->d_id = pic.d_id;
   pi->d_dslId = pic.d_dslId;
-  Assert(pi->d_id!=RewriteProofStatus::DSL || pi->d_dslId!=ProofRewriteRule::NONE);
+  Assert(pi->d_id != RewriteProofStatus::DSL
+         || pi->d_dslId != ProofRewriteRule::NONE);
   if (pic.isInternalRule())
   {
     pi->d_vars = pic.d_vars;
@@ -700,7 +701,9 @@ bool RewriteDbProofCons::proveInternalBase(const Node& eqi,
     {
       // proof exists, return
       idb = it->second.d_id;
-      Trace("rpc-debug2") << "...success, already exists via " << it->second.d_id << "/" << it->second.d_dslId << std::endl;
+      Trace("rpc-debug2") << "...success, already exists via "
+                          << it->second.d_id << "/" << it->second.d_dslId
+                          << std::endl;
       return true;
     }
     if (d_currRecLimit <= it->second.d_failMaxDepth)
@@ -949,7 +952,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
       {
         conc = ps[0][0].eqNode(ps.back()[1]);
         cdp->addStep(conc, ProofRule::TRANS, ps, {});
-        Assert(conc==cur);
+        Assert(conc == cur);
       }
       else if (pcur.d_id == RewriteProofStatus::CONG)
       {
@@ -1105,7 +1108,7 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
 {
   pi.d_id = RewriteProofStatus::DSL;
   pi.d_dslId = rpr.getId();
-  Assert (pi.d_dslId!=ProofRewriteRule::NONE);
+  Assert(pi.d_dslId != ProofRewriteRule::NONE);
   Node conc = rpr.getConclusion(true);
   Node concRhs = conc[1];
   Trace("rpc-ctx") << "***GET CONCLUSION " << pi.d_dslId << " for " << vars
@@ -1177,11 +1180,12 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
       Node source = expr::narySubstitute(conc[0], vars, stepSubs);
       Node target = expr::narySubstitute(body, vars, stepSubs);
       target = target.substitute(TNode(placeholder), TNode(step));
-      Assert(std::find(vars.begin(), vars.end(), placeholder)==vars.end());
+      Assert(std::find(vars.begin(), vars.end(), placeholder) == vars.end());
       cacheProofSubPlaceholder(currContext, placeholder, source, target);
       Trace("rpc-ctx") << "Step " << source << " == " << target << " from "
-                       << conc[0] << " == " << body << " " << vars << " -> " << stepSubs << ", "
-                       << placeholder << " -> " << step << std::endl;
+                       << conc[0] << " == " << body << " " << vars << " -> "
+                       << stepSubs << ", " << placeholder << " -> " << step
+                       << std::endl;
 
       ProvenInfo& dpi = d_pcache[source.eqNode(target)];
       dpi.d_id = pi.d_id;
@@ -1197,7 +1201,7 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
         currConc = currConc.substitute(TNode(placeholder), TNode(body));
       }
       Node stepConc = prevConc.substitute(TNode(placeholder), TNode(step));
-      if (prev!=stepConc)
+      if (prev != stepConc)
       {
         transEq.push_back(prev.eqNode(stepConc));
       }

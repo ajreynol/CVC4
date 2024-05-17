@@ -161,12 +161,12 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
                                                               const Node& eq)
 {
-  Assert (eq.getKind()==Kind::EQUAL);
+  Assert(eq.getKind() == Kind::EQUAL);
   Node lhs = eq[0];
   theory::strings::ArithEntail ae(nullptr);
   Node exp;
   Node ret = ae.rewritePredViaEntailment(lhs, exp);
-  Assert (ret==eq[1]);
+  Assert(ret == eq[1]);
   Trace("brc-macro") << "Expand entailment for " << lhs << " == " << ret
                      << std::endl;
   Trace("brc-macro") << "- explanation is " << exp << std::endl;

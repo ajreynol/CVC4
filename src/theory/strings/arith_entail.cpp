@@ -80,7 +80,8 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n, Node& exp)
 
 Node ArithEntail::rewriteArith(Node a)
 {
-  AlwaysAssert(a.getType().isInteger()) << "Bad term: " << a << " " << a.getType();
+  AlwaysAssert(a.getType().isInteger())
+      << "Bad term: " << a << " " << a.getType();
   if (d_rr != nullptr)
   {
     return d_rr->rewrite(a);
@@ -149,7 +150,8 @@ Node ArithEntail::findApprox(Node ar)
 
 Node ArithEntail::findApproxInternal(Node ar)
 {
-  Assert(rewriteArith(ar) == ar) << "Not rewritten " << ar <<", got " << rewriteArith(ar);
+  Assert(rewriteArith(ar) == ar)
+      << "Not rewritten " << ar << ", got " << rewriteArith(ar);
   NodeManager* nm = NodeManager::currentNM();
   std::map<Node, Node> msum;
   Trace("strings-ent-approx-debug")

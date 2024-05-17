@@ -300,8 +300,9 @@ Node BoolProofRuleChecker::checkInternal(ProofRule id,
   {
     AlwaysAssert(children.size() > 1);
     AlwaysAssert(args.size() == 3);
-    AlwaysAssert (args[1].getNumChildren()+1==children.size()) << "Bad " << args[1] << " " << children.size();
-    AlwaysAssert (args[2].getNumChildren()+1==children.size());
+    AlwaysAssert(args[1].getNumChildren() + 1 == children.size())
+        << "Bad " << args[1] << " " << children.size();
+    AlwaysAssert(args[2].getNumChildren() + 1 == children.size());
     Trace("bool-pfcheck") << "macro_res: " << args[0] << "\n" << push;
     NodeManager* nm = nodeManager();
     Node trueNode = nm->mkConst(true);
@@ -315,7 +316,7 @@ Node BoolProofRuleChecker::checkInternal(ProofRule id,
       // literals to be removed from "first" clause
       if (i < childrenSize - 1)
       {
-        for (size_t j = i; (j+1) < childrenSize; ++j)
+        for (size_t j = i; (j + 1) < childrenSize; ++j)
         {
           // whether pivot should occur as is or negated depends on the polarity
           // of each step in the macro
@@ -333,8 +334,8 @@ Node BoolProofRuleChecker::checkInternal(ProofRule id,
       // literal to be removed from "second" clause. They will be negated
       if (i > 0)
       {
-        Node pivot = pols[i-1] == trueNode ? pivots[i-1].notNode()
-                                             : pivots[i-1];
+        Node pivot =
+            pols[i - 1] == trueNode ? pivots[i - 1].notNode() : pivots[i - 1];
         elim.insert(pivot);
       }
       Trace("bool-pfcheck") << i << ": elimination set: " << elim << "\n";

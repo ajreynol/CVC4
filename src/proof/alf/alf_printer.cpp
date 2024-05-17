@@ -346,7 +346,7 @@ bool AlfPrinter::canEvaluate(Node n) const
 
 bool AlfPrinter::canEvaluateRegExp(Node r) const
 {
-  Assert (r.getType().isRegExp());
+  Assert(r.getType().isRegExp());
   Trace("alf-printer-debug") << "canEvaluateRegExp? " << r << std::endl;
   std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
@@ -372,14 +372,14 @@ bool AlfPrinter::canEvaluateRegExp(Node r) const
         case Kind::REGEXP_RANGE:
           if (!theory::strings::utils::isCharacterRange(cur))
           {
-          Trace("alf-printer-debug") << "Non-char range" << std::endl;
+            Trace("alf-printer-debug") << "Non-char range" << std::endl;
             return false;
           }
           continue;
         case Kind::STRING_TO_REGEXP:
           if (!canEvaluate(cur[0]))
           {
-          Trace("alf-printer-debug") << "Non-evaluatable string" << std::endl;
+            Trace("alf-printer-debug") << "Non-evaluatable string" << std::endl;
             return false;
           }
           continue;
@@ -879,7 +879,7 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
     {
       std::stringstream ss;
       ss << pn->getRule();
-      if (pn->getRule()==ProofRule::THEORY_REWRITE)
+      if (pn->getRule() == ProofRule::THEORY_REWRITE)
       {
         ProofRewriteRule prid;
         rewriter::getRewriteRule(pn->getArguments()[0], prid);
