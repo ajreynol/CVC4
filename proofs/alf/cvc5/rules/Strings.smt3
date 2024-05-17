@@ -292,11 +292,23 @@
   :conclusion (= (str.in_re s r) b)
 )
 
+(declare-rule str-in-re-consume ((s1 String) (r1 RegLan) (s2 String) (r2 RegLan))
+  :args ((= (str.in_re s1 r1) (str.in_re s2 r2)))
+  :requires ((($str_re_consume s1 r1) (str.in_re s2 r2)))
+  :conclusion (= (str.in_re s1 r1) (str.in_re s2 r2))
+)
+
 (declare-rule re-loop-elim ((l Int) (u Int) (r1 RegLan) (r2 RegLan))
   :args ((= (re.loop l u r1) r2))
   :requires (((alf.is_neg (alf.add (alf.neg l) u)) false)
              (($str_mk_re_loop_elim l (alf.add (alf.neg l) u) r1) r2))
   :conclusion (= (re.loop l u r1) r2)
+)
+
+(declare-rule re-inter-union-inclusion ((r1 RegLan) (r2 RegLan))
+  :args ((= r1 r2))
+  :requires ((($str_mk_re_inter_union_inclusion r1) r2))
+  :conclusion (= r1 r2)
 )
 
 (declare-rule str-in-re-concat-star-char ((s1 String) (s2 String :list) (r RegLan) (b Bool))

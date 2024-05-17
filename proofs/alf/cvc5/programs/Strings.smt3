@@ -651,6 +651,24 @@
   )
 )
 
+(program $str_re_includes ((r1 RegLan) (r2 RegLan))
+  (RegLan RegLan) Bool
+  (
+  (($str_re_includes r1 r2) false)
+  )
+)
+
+(define $str_mk_re_inter_union_inclusion ((r RegLan))
+  (alf.match ((r1 RegLan) (r2 RegLan))
+  r
+  (
+    ((re.union (re.comp r1) r2) (alf.requires ($str_re_includes r2 r1) true (re.* re.allchar)))
+    ((re.union r1 (re.comp r2)) (alf.requires ($str_re_includes r1 r2) true (re.* re.allchar)))
+    ((re.inter (re.comp r1) r2) (alf.requires ($str_re_includes r1 r2) true re.none))
+    ((re.inter r1 (re.comp r2)) (alf.requires ($str_re_includes r2 r1) true re.none))
+  ))
+)
+
 
 (program $str_re_consume_rec ((s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list))
   (String RegLan) Bool
