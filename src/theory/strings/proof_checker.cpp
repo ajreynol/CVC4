@@ -18,7 +18,6 @@
 #include "expr/sequence.h"
 #include "options/strings_options.h"
 #include "theory/rewriter.h"
-#include "theory/strings/arith_entail.h"
 #include "theory/strings/core_solver.h"
 #include "theory/strings/regexp_elim.h"
 #include "theory/strings/regexp_entail.h"

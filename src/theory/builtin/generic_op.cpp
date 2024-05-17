@@ -19,9 +19,9 @@
 
 #include "expr/dtype.h"
 #include "expr/dtype_cons.h"
+#include "theory/evaluator.h"
 #include "theory/datatypes/project_op.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
-#include "theory/evaluator.h"
 #include "util/bitvector.h"
 #include "util/floatingpoint.h"
 #include "util/iand.h"
