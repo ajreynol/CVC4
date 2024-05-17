@@ -346,6 +346,7 @@ bool AlfPrinter::canEvaluate(Node n) const
 
 bool AlfPrinter::canEvaluateRegExp(Node r) const
 {
+  Assert (r.getType().isRegExp());
   Trace("alf-printer-debug") << "canEvaluateRegExp? " << r << std::endl;
   std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
