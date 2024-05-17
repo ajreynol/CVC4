@@ -17,6 +17,7 @@
 
 #include "options/base_options.h"
 #include "options/smt_options.h"
+#include "proof/proof_ensure_closed.h"
 
 using namespace cvc5::internal::theory;
 
@@ -90,6 +91,7 @@ bool ProofPostprocessDsl::update(Node res,
       cdp->addStep(res[0], ProofRule::TRUE_ELIM, {res}, {});
       res = res[0];
     }
+    pfgEnsureClosed(options(), res, cdp, "check-dsl", "check dsl");
     // if successful, we update the proof
     return true;
   }

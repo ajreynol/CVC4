@@ -317,7 +317,7 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
     // for approximate types, return false in this case
     if (target.isNull())
     {
-      return false;
+      return true;
     }
     // We now prove with the given rule. this should only fail if there are
     // conditions on the rule which fail. Notice we never allow recursion here.
