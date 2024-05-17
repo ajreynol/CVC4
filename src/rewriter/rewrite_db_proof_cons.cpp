@@ -662,6 +662,7 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
   }
   pi->d_id = pic.d_id;
   pi->d_dslId = pic.d_dslId;
+  Assert(pi->d_id!=RewriteProofStatus::DSL || pi->d_dslId!=ProofRewriteRule::NONE);
   if (pic.isInternalRule())
   {
     pi->d_vars = pic.d_vars;
@@ -1101,6 +1102,7 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
 {
   pi.d_id = RewriteProofStatus::DSL;
   pi.d_dslId = rpr.getId();
+  Assert (pi.d_dslId!=ProofRewriteRule::NONE);
   Node conc = rpr.getConclusion(true);
   Node concRhs = conc[1];
   Trace("rpc-ctx") << "***GET CONCLUSION " << pi.d_dslId << " for " << vars
@@ -1179,6 +1181,7 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
 
       ProvenInfo& dpi = d_pcache[source.eqNode(target)];
       dpi.d_id = pi.d_id;
+      dpi.d_dslId = pi.d_dslId;
       dpi.d_vars = vars;
       dpi.d_subs = stepSubs;
 
