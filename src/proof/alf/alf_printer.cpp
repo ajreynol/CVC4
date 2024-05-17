@@ -245,8 +245,8 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id,
     case ProofRewriteRule::STR_IN_RE_SIGMA:
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL: return true;
     case ProofRewriteRule::STR_IN_RE_EVAL:
-      Assert(n.getKind() == Kind::STRING_IN_REGEXP && n[0].isConst());
-      return canEvaluateRegExp(n[1]);
+      Assert(n[0].getKind() == Kind::STRING_IN_REGEXP && n[0][0].isConst());
+      return canEvaluateRegExp(n[0][1]);
     default: break;
   }
   return false;
@@ -406,14 +406,6 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
     rewriter::getRewriteRule(pfn->getArguments()[0], id);
     std::stringstream ss;
     ss << "dsl." << id;
-    return ss.str();
-  }
-  else if (r == ProofRule::THEORY_REWRITE)
-  {
-    ProofRewriteRule id;
-    rewriter::getRewriteRule(pfn->getArguments()[0], id);
-    std::stringstream ss;
-    ss << id;
     return ss.str();
   }
   else if (r == ProofRule::THEORY_REWRITE)
