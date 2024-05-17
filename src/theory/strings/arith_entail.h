@@ -176,7 +176,7 @@ class ArithEntail
    *
    * @param a The node to find approximations for.
    * @param isSimple If true, then we are only making recursive calls to check
-   * without approximations to determine the set of possible approximations. 
+   * without approximations to determine the set of possible approximations.
    * @return The approximated form of a, call it aa, such that a >= aa is
    * entailed by the theory, and aa can be shown to be greater than zero (using
    * checkSimple).

@@ -113,7 +113,6 @@ bool ArithEntail::check(Node a, Node b, bool strict, bool isSimple)
   return check(diff, strict, isSimple);
 }
 
-
 bool ArithEntail::check(Node a, bool strict, bool isSimple)
 {
   if (a.isConst())
@@ -463,7 +462,8 @@ void ArithEntail::getArithApproximations(Node a,
     if (ArithMSum::getMonomial(a, c, v))
     {
       bool isNeg = c.getConst<Rational>().sgn() == -1;
-      getArithApproximations(v, approx, isNeg ? !isOverApprox : isOverApprox, isSimple);
+      getArithApproximations(
+          v, approx, isNeg ? !isOverApprox : isOverApprox, isSimple);
       for (unsigned i = 0, size = approx.size(); i < size; i++)
       {
         approx[i] = nm->mkNode(Kind::MULT, c, approx[i]);
@@ -502,13 +502,15 @@ void ArithEntail::getArithApproximations(Node a,
         // 0 <= n and n+m <= len( x ) implies
         //   m <= len( substr( x, n, m ) )
         Node npm = nm->mkNode(Kind::ADD, a[0][1], a[0][2]);
-        if (check(a[0][1], false, isSimple) && check(lenx, npm, false, isSimple))
+        if (check(a[0][1], false, isSimple)
+            && check(lenx, npm, false, isSimple))
         {
           approx.push_back(a[0][2]);
         }
         // 0 <= n and n+m >= len( x ) implies
         //   len(x)-n <= len( substr( x, n, m ) )
-        if (check(a[0][1], false, isSimple) && check(npm, lenx, false, isSimple))
+        if (check(a[0][1], false, isSimple)
+            && check(npm, lenx, false, isSimple))
         {
           approx.push_back(nm->mkNode(Kind::SUB, lenx, a[0][1]));
         }
@@ -537,7 +539,8 @@ void ArithEntail::getArithApproximations(Node a,
       }
       else
       {
-        if (check(lenz, leny, false, isSimple) || check(lenz, lenx, false, isSimple))
+        if (check(lenz, leny, false, isSimple)
+            || check(lenz, lenx, false, isSimple))
         {
           // len( y ) <= len( z ) or len( x ) <= len( z ) implies
           //   len( x ) <= len( replace( x, y, z ) )
