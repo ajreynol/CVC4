@@ -379,7 +379,8 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
                                        bool doRecurse,
                                        ProofRewriteRule r)
 {
-  Assert(!target.isNull() && target.getKind() == Kind::EQUAL);
+  Assert(!target.isNull() && target.getKind() == Kind::EQUAL)
+      << "Unknown " << target << " with rule " << id << " " << r << std::endl;
   Trace("rpc-debug2") << "Check rule "
                       << (id == RewriteProofStatus::DSL ? toString(r)
                                                         : toString(id))
@@ -924,7 +925,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
             else
             {
               Assert(pcur.d_id == RewriteProofStatus::THEORY_REWRITE);
-              pfac.push_back(cur[0]);
+              pfac.push_back(cur);
             }
           }
           // recurse on premises

@@ -912,7 +912,6 @@ EvalResult Evaluator::evalInternal(
           }
           break;
         }
-
         case Kind::STRING_REV:
         {
           const String& s = results[currNode[0]].d_str;
@@ -959,7 +958,6 @@ EvalResult Evaluator::evalInternal(
           results[currNode] = EvalResult(s1.isLeq(s2));
           break;
         }
-
         case Kind::CONST_BITVECTOR:
           results[currNode] = EvalResult(currNodeVal.getConst<BitVector>());
           break;

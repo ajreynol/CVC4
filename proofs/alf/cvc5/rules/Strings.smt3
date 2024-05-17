@@ -274,16 +274,17 @@
 
 ;;-------------------- Instances of THEORY_REWRITE
 
-(declare-rule arith-string-pred-entail ((n Int))
-  :args ((= (>= n 0) true))
-  :requires ((($str_arith_entail_simple n) true))
-  :conclusion (= (>= n 0) true)
-)
-
 (declare-rule str-in-re-eval ((s String) (r RegLan) (b Bool))
   :args ((= (str.in_re s r) b))
   :requires ((($str_eval_str_in_re s r) b))
   :conclusion (= (str.in_re s r) b)
+)
+
+(declare-rule re-loop-elim ((l Int) (u Int) (r1 RegLan) (r2 RegLan))
+  :args ((= (re.loop l u r1) r2))
+  :requires (((alf.is_neg (alf.add (alf.neg l) u)) false)
+             (($str_mk_re_loop_elim l (alf.add (alf.neg l) u) r1) r2))
+  :conclusion (= (re.loop l u r1) r2)
 )
 
 (declare-rule re-loop-elim ((l Int) (u Int) (r RegLan) (r2 RegLan))
