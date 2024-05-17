@@ -51,8 +51,7 @@
 ;(define-cond-rule arith-geq-contra ((t ?) (s ?)) (not (>= (- t s) 0)) (>= t s) false)
 ;(define-cond-rule arith-eq-contra ((t ?) (s ?)) (not (= (- t s) 0)) (= t s) false)
 
-; TODO: turn back to fixed point
-(define-rule arith-plus-flatten ((xs ? :list) (w ?) (ys ? :list) (zs ? :list))
+(define-rule* arith-plus-flatten ((xs ? :list) (w ?) (ys ? :list) (zs ? :list))
   (+ xs (+ w ys) zs)
   (+ xs w ys zs))
 

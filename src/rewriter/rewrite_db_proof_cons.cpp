@@ -317,7 +317,9 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
     // for approximate types, return false in this case
     if (target.isNull())
     {
-      return true;
+      // note that we return false here, indicating that we don't want any
+      // more matches, since we have failed for the current fixed point rule.
+      return false;
     }
     // We now prove with the given rule. this should only fail if there are
     // conditions on the rule which fail. Notice we never allow recursion here.
@@ -698,7 +700,7 @@ bool RewriteDbProofCons::proveInternalBase(const Node& eqi,
     {
       // proof exists, return
       idb = it->second.d_id;
-      Trace("rpc-debug2") << "...success, already exists" << std::endl;
+      Trace("rpc-debug2") << "...success, already exists via " << it->second.d_id << "/" << it->second.d_dslId << std::endl;
       return true;
     }
     if (d_currRecLimit <= it->second.d_failMaxDepth)
@@ -947,6 +949,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
       {
         conc = ps[0][0].eqNode(ps.back()[1]);
         cdp->addStep(conc, ProofRule::TRANS, ps, {});
+        Assert(conc==cur);
       }
       else if (pcur.d_id == RewriteProofStatus::CONG)
       {
@@ -1174,9 +1177,10 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
       Node source = expr::narySubstitute(conc[0], vars, stepSubs);
       Node target = expr::narySubstitute(body, vars, stepSubs);
       target = target.substitute(TNode(placeholder), TNode(step));
+      Assert(std::find(vars.begin(), vars.end(), placeholder)==vars.end());
       cacheProofSubPlaceholder(currContext, placeholder, source, target);
       Trace("rpc-ctx") << "Step " << source << " == " << target << " from "
-                       << body << " " << vars << " -> " << stepSubs << ", "
+                       << conc[0] << " == " << body << " " << vars << " -> " << stepSubs << ", "
                        << placeholder << " -> " << step << std::endl;
 
       ProvenInfo& dpi = d_pcache[source.eqNode(target)];
@@ -1193,7 +1197,10 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
         currConc = currConc.substitute(TNode(placeholder), TNode(body));
       }
       Node stepConc = prevConc.substitute(TNode(placeholder), TNode(step));
-      transEq.push_back(prev.eqNode(stepConc));
+      if (prev!=stepConc)
+      {
+        transEq.push_back(prev.eqNode(stepConc));
+      }
       prev = stepConc;
     }
 
