@@ -638,6 +638,17 @@
   )
 )
 
+(program $str_arith_entail_simple_poly ((n Int) (m Int))
+  (Bool) Int
+  (
+    (($str_arith_entail_simple_poly (>= n m))  ($arith_poly_to_term (- n m)))
+    (($str_arith_entail_simple_poly (> n m))   ($arith_poly_to_term (- n (+ m 1))))
+  )
+)
+
+(define $str_arith_entail_simple_pred ((b Bool))
+  ($str_arith_entail_simple ($str_arith_entail_simple_poly b)))
+
 (program $str_arith_entail_is_approx_len ((s String) (t String) (r String) (n1 Int) (n2 Int) (n Int) (isUnder Bool))
   (String Int Bool) Bool
   (

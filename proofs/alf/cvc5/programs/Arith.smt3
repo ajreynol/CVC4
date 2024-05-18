@@ -154,7 +154,7 @@
   )
 )
 
-(define $arith_poly_to_term ((T Type :implict) (t T))
+(define $arith_poly_to_term ((T Type :implicit) (t T))
   ($arith_poly_to_term_rec (get_poly_norm t)))
 
 
