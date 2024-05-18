@@ -697,10 +697,29 @@
   )
 )
 
-(program $str_re_includes ((r1 RegLan) (r2 RegLan))
+; Returns true if all strings in r1 are also in r2.
+(program $str_re_includes ((s1 String) (s2 String) (s3 String) (s4 String) (r1 RegLan) (r2 RegLan :list) (r3 RegLan))
   (RegLan RegLan) Bool
   (
-  (($str_re_includes r1 r2) false)  ; TODO
+  (($str_re_includes r1 r1)                             true)
+  (($str_re_includes r1 (str.to_re s1))                 ($str_eval_str_in_re s1 r1))
+  (($str_re_includes (re.range s1 s2) (re.range s3 s4)) (let ((z1 (alf.to_z s1)))
+                                                        (let ((z2 (alf.to_z s2)))
+                                                        (let ((z3 (alf.to_z s3)))
+                                                        (let ((z4 (alf.to_z s4)))
+                                                        (alf.requires (alf.is_neg z1) false
+                                                        (alf.requires (alf.is_neg z2) false
+                                                        (alf.requires (alf.is_neg z3) false
+                                                        (alf.requires (alf.is_neg z4) false
+                                                          (alf.and ($compare_geq z2 z3) ($compare_geq z3 z1)
+                                                                   ($compare_geq z2 z4) ($compare_geq z4 z1)))))))))))
+  (($str_re_includes (re.union r1 r2) r3)               (alf.ite ($str_re_includes r1 r3) true ($str_re_includes r2 r3))) ; TODO
+  (($str_re_includes r1 (re.inter r3 r2))               (alf.ite ($str_re_includes r1 r3) true ($str_re_includes r1 r2)))
+  (($str_re_includes (re.* r1) r3)                      (alf.ite (alf.is_eq r1 re.allchar) true ($str_re_includes r1
+                                                                                            (alf.match ((r4 RegLan))
+                                                                                              r3
+                                                                                              (((re.* r4) r4) (r4 r4))))))
+
   )
 )
 
