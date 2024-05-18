@@ -240,6 +240,7 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id,
   {
     case ProofRewriteRule::DISTINCT_ELIM:
     case ProofRewriteRule::ARITH_STRING_PRED_ENTAIL:
+    case ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX:
     case ProofRewriteRule::RE_LOOP_ELIM:
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
     case ProofRewriteRule::STR_IN_RE_SIGMA:
