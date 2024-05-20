@@ -52,12 +52,12 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n,
   if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger())
   {
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[0], n[1]), d_one);
-    if (check(exp, false, isSimple))
+    if (!findApprox(exp, isSimple).isNull())
     {
       return nm->mkConst(false);
     }
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
-    if (check(exp, false, isSimple))
+    if (!findApprox(exp, isSimple).isNull())
     {
       return nm->mkConst(false);
     }
@@ -66,12 +66,12 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n,
   else if (n.getKind() == Kind::GEQ)
   {
     exp = nm->mkNode(Kind::SUB, n[0], n[1]);
-    if (check(exp, false, isSimple))
+    if (!findApprox(exp, isSimple).isNull())
     {
       return nm->mkConst(true);
     }
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
-    if (check(exp, false, isSimple))
+    if (!findApprox(exp, isSimple).isNull())
     {
       return nm->mkConst(false);
     }
@@ -133,8 +133,12 @@ bool ArithEntail::check(Node a, bool strict, bool isSimple)
 }
 
 Node ArithEntail::findApprox(Node ar, bool isSimple)
-{
+{  
   ar = rewriteArith(ar);
+  if (ar.isConst())
+  {
+    return ar.getConst<Rational>().sgn() >= 0 ? ar : Node::null();
+  }
   std::map<Node, Node>& cache = isSimple ? d_approxCacheSimple : d_approxCache;
   std::map<Node, Node>::iterator it = cache.find(ar);
   if (it != cache.end())
@@ -213,24 +217,22 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
           visited.insert(curr);
           std::vector<Node> currApprox;
           getArithApproximations(curr, currApprox, isOverApprox, isSimple);
-          if (isSimple)
+          if (currApprox.empty())
           {
+            Trace("strings-ent-approx-debug")
+                << "...approximation: " << curr << std::endl;
+            // no approximations, thus curr is a possibility
+            approx.push_back(curr);
+          }
+          else if (isSimple)
+          {
+            // don't rewrite or re-approximate
             approx = currApprox;
           }
           else
           {
-            if (currApprox.empty())
-            {
-              Trace("strings-ent-approx-debug")
-                  << "...approximation: " << curr << std::endl;
-              // no approximations, thus curr is a possibility
-              approx.push_back(curr);
-            }
-            else
-            {
-              toProcess.insert(
-                  toProcess.end(), currApprox.begin(), currApprox.end());
-            }
+            toProcess.insert(
+                toProcess.end(), currApprox.begin(), currApprox.end());
           }
         }
       } while (!toProcess.empty());
