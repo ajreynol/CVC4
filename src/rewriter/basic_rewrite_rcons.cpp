@@ -21,9 +21,11 @@
 #include "smt/env.h"
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/arith/arith_proof_utilities.h"
+#include "theory/booleans/theory_bool_rewriter.h"
 #include "theory/bv/theory_bv_rewrite_rules.h"
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
+#include "proof/conv_proof_generator.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -155,6 +157,13 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
                                                     const Node& eq)
 {
+  Trace("brc-macro") << "Expand Bool NNF norm " << eq[0] << " == " << eq[1] << std::endl;
+  TConvProofGenerator tcpg(d_env, nullptr);
+  Node nr = theory::booleans::TheoryBoolRewriter::computeNnfNorm(nodeManager(), eq[0], &tcpg);
+  std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);
+  Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
+  cdp->addProof(pfn);
+  AlwaysAssert(false);
   return false;
 }
 

@@ -251,7 +251,7 @@ Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm, const Node& n, TConvPro
         Node pcpc = nm->mkNode(k, pcc);
         if (pcpc!=ret)
         {
-          pg->addRewriteStep(pcpc, ret, nullptr, true, TrustId::MACRO_BOOL_NNF_NORM_RCONS);
+          pg->addRewriteStep(pcpc, ret, nullptr, false, TrustId::MACRO_BOOL_NNF_NORM_RCONS);
         }
       }
       visited[cur] = ret;
