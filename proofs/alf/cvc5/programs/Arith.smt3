@@ -146,6 +146,7 @@
   )
 )
 
+; Helper for $arith_poly_to_term below.
 (program $arith_poly_to_term_rec ((T Type) (p @Polynomial :list) (a1 T) (c1 Real))
   (@Polynomial) T
   (
@@ -154,6 +155,8 @@
   )
 )
 
+; Converts a term to a polynomial (normalized) and then constructs the corresponding term.
+; This can be used for normalizing terms according to arithmetic.
 (define $arith_poly_to_term ((T Type :implicit) (t T))
   ($arith_poly_to_term_rec (get_poly_norm t)))
 
