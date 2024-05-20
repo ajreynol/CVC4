@@ -48,6 +48,12 @@ class TheoryBoolRewriter : public TheoryRewriter
   /**
    * Eliminates IMPLIES/XOR, removes duplicates/infers tautologies of AND/OR,
    * and computes NNF.
+   *
+   * @param nm Pointer to node manager.
+   * @param n The node to rewrite.
+   * @param pg If non-null, this stores rewrite rules that are capable of
+   * proving that n is equal to its normalized form.
+   * @return The normalized form of n.
    */
   static Node computeNnfNorm(NodeManager* nm,
                              const Node& n,
