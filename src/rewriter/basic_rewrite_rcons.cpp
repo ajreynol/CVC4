@@ -158,13 +158,14 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
                                                     const Node& eq)
 {
   Trace("brc-macro") << "Expand Bool NNF norm " << eq[0] << " == " << eq[1] << std::endl;
+  // Call the utility again with proof tracking and construct the term
+  // conversion proof. This proof itself may have trust steps in it.
   TConvProofGenerator tcpg(d_env, nullptr);
   Node nr = theory::booleans::TheoryBoolRewriter::computeNnfNorm(nodeManager(), eq[0], &tcpg);
   std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);
   Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
   cdp->addProof(pfn);
-  AlwaysAssert(false);
-  return false;
+  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
