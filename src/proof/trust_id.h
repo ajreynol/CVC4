@@ -68,6 +68,8 @@ enum class TrustId : uint32_t
   SUBTYPE_ELIMINATION,
   /** A rewrite required for showing a macro theory rewrite */
   MACRO_THEORY_REWRITE_RCONS,
+  /** A rewrite required for the macro Bool NNF theory rewrite */
+  MACRO_BOOL_NNF_NORM_RCONS,
 };
 /** Converts a trust id to a string. */
 const char* toString(TrustId id);

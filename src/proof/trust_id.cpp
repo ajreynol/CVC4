@@ -47,6 +47,7 @@ const char* toString(TrustId id)
     case TrustId::SUBTYPE_ELIMINATION: return "SUBTYPE_ELIMINATION";
     case TrustId::MACRO_THEORY_REWRITE_RCONS:
       return "MACRO_THEORY_REWRITE_RCONS";
+    case TrustId::MACRO_BOOL_NNF_NORM_RCONS: return "MACRO_BOOL_NNF_NORM_RCONS";
     default: return "TrustId::Unknown";
   };
 }

@@ -24,6 +24,9 @@
 #include "theory/theory_rewriter.h"
 
 namespace cvc5::internal {
+  
+class TConvProofGenerator;
+
 namespace theory {
 namespace booleans {
 
@@ -46,7 +49,7 @@ class TheoryBoolRewriter : public TheoryRewriter
    * Eliminates IMPLIES/XOR, removes duplicates/infers tautologies of AND/OR,
    * and computes NNF.
    */
-  static Node computeNnfNorm(NodeManager* nm, const Node& n);
+  static Node computeNnfNorm(NodeManager* nm, const Node& n, TConvProofGenerator* pg = nullptr);
 
  protected:
   /**

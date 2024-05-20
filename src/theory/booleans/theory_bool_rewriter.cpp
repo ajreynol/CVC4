@@ -24,6 +24,7 @@
 #include "expr/algorithm/flatten.h"
 #include "expr/node_value.h"
 #include "util/cardinality.h"
+#include "proof/conv_proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -87,7 +88,7 @@ bool TheoryBoolRewriter::addNnfNormChild(std::vector<Node>& children,
   return true;
 }
 
-Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm, const Node& n)
+Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm, const Node& n, TConvProofGenerator* pg)
 {
   // at pre-order traversal, we store preKind and preChildren, which
   // determine the Kind and the children for the node to reconstruct.
@@ -173,6 +174,15 @@ Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm, const Node& n)
         pc.push_back(c);
         visit.push_back(c);
       }
+      // if proof producing, possibly add a pre-rewrite step
+      if (pg!=nullptr)
+      {
+        Node preCur = nm->mkNode(k, pc);
+        if (preCur!=cur)
+        {
+          pg->addRewriteStep(cur, preCur, nullptr, true, TrustId::MACRO_BOOL_NNF_NORM_RCONS);
+        }
+      }
     }
     else if (it->second.isNull())
     {
@@ -226,6 +236,23 @@ Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm, const Node& n)
         ret = (children.size() == 1 && k != Kind::NOT)
                   ? children[0]
                   : nm->mkNode(k, children);
+      }
+      // if proof producing, possibly add a post-rewrite step
+      if (pg!=nullptr)
+      {
+        std::vector<Node> pcc;
+        for (const Node& cn : pc)
+        {
+          it = visited.find(cn);
+          Assert(it != visited.end());
+          Assert(!it->second.isNull());
+          pcc.push_back(it->second);
+        }
+        Node pcpc = nm->mkNode(k, pcc);
+        if (pcpc!=ret)
+        {
+          pg->addRewriteStep(pcpc, ret, nullptr, true, TrustId::MACRO_BOOL_NNF_NORM_RCONS);
+        }
       }
       visited[cur] = ret;
     }
