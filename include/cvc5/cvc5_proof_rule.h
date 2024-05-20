@@ -2303,7 +2303,8 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *   F = G
    *
    * where :math:`G` is the result of applying negation normal form to
-   * :math:`F`.
+   * :math:`F` with additional normalizations, see
+   * TheoryBoolRewriter::computeNnfNorm.
    *
    * \endverbatim
    */
