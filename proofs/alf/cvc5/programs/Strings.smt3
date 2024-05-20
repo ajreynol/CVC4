@@ -691,11 +691,11 @@
 (define $str_arith_entail_is_approx_indexof ((s String) (t String) (n Int) (m Int) (isUnder Bool))
   (let ((ls (str.len s)))
   (let ((lt (str.len t)))
-  (alf.ite (alf.is_eq n -1)
+  (alf.ite (alf.is_eq m -1)
     isUnder
-  (alf.ite (alf.is_eq n ls)
+  (alf.ite (alf.is_eq m ls)
     (alf.not isUnder)
-  (alf.ite (alf.is_eq n (- ls lt))
+  (alf.ite (alf.is_eq m (- ls lt))
     (alf.and (alf.not isUnder) ($str_arith_entail_simple_pred (>= ls lt)))
     false))))))
 

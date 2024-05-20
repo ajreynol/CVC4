@@ -52,12 +52,12 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n,
   if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger())
   {
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[0], n[1]), d_one);
-    if (!findApprox(exp, isSimple).isNull())
+    if (!findApprox(rewriteArith(exp), isSimple).isNull())
     {
       return nm->mkConst(false);
     }
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
-    if (!findApprox(exp, isSimple).isNull())
+    if (!findApprox(rewriteArith(exp), isSimple).isNull())
     {
       return nm->mkConst(false);
     }
@@ -66,12 +66,12 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n,
   else if (n.getKind() == Kind::GEQ)
   {
     exp = nm->mkNode(Kind::SUB, n[0], n[1]);
-    if (!findApprox(exp, isSimple).isNull())
+    if (!findApprox(rewriteArith(exp), isSimple).isNull())
     {
       return nm->mkConst(true);
     }
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
-    if (!findApprox(exp, isSimple).isNull())
+    if (!findApprox(rewriteArith(exp), isSimple).isNull())
     {
       return nm->mkConst(false);
     }
@@ -91,7 +91,9 @@ Node ArithEntail::rewriteArith(Node a)
   // Otherwise, use the poly norm utility. This is important since the rewrite
   // must be justified by ARITH_POLY_NORM when in proof mode (when d_rr is
   // null).
-  return arith::PolyNorm::getPolyNorm(a);
+  Node an = arith::PolyNorm::getPolyNorm(a);
+  Trace("ajr-temp") << "Poly norm " << an << " for " << a << std::endl;
+  return an;
 }
 
 bool ArithEntail::checkEq(Node a, Node b)
@@ -128,17 +130,13 @@ bool ArithEntail::check(Node a, bool strict, bool isSimple)
     ar = rewriteArith(ar);
     return checkSimple(ar);
   }
+  ar = rewriteArith(ar);
   Node ara = findApprox(ar, isSimple);
   return !ara.isNull();
 }
 
 Node ArithEntail::findApprox(Node ar, bool isSimple)
-{  
-  ar = rewriteArith(ar);
-  if (ar.isConst())
-  {
-    return ar.getConst<Rational>().sgn() >= 0 ? ar : Node::null();
-  }
+{
   std::map<Node, Node>& cache = isSimple ? d_approxCacheSimple : d_approxCache;
   std::map<Node, Node>::iterator it = cache.find(ar);
   if (it != cache.end())
@@ -439,7 +437,7 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
   // len( substr( x, 0, n ) ) as len( x ). In this example, we can infer
   // that len( replace( x ++ y, substr( x, 0, n ), z ) ) >= len( y ) in two
   // steps.
-  if (check(aar))
+  if (check(aar, false, isSimple))
   {
     Trace("strings-ent-approx")
         << "*** StrArithApprox: showed " << ar

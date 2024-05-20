@@ -191,7 +191,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   Node zero = nodeManager()->mkConstInt(Rational(0));
   Node geq = nodeManager()->mkNode(Kind::GEQ, expRew, zero);
   Trace("brc-macro") << "- rewritten predicate is " << geq << std::endl;
-  Node approx = ae.findApprox(expRew);
+  Node approx = ae.findApprox(expRew, true);
   if (approx.isNull())
   {
     Trace("brc-macro") << "...failed to find approximation" << std::endl;

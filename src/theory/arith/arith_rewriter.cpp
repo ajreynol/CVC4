@@ -124,6 +124,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         Node approx = ae.findApprox(n[0], true);
         if (approx != n[0])
         {
+          Trace("arith-rewriter-proof") << n[0] << " --> " << approx << " by safe approx" << std::endl;
           return nodeManager()->mkNode(Kind::GEQ, approx, n[1]);
         }
       }
