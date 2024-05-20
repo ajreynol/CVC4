@@ -72,7 +72,7 @@ class BasicRewriteRCons : protected EnvObj
    * elaboration on these proofs.
    */
   std::vector<std::shared_ptr<ProofNode>>& getSubgoals();
-  
+
  private:
   /**
    * Try rule r, return true if eq could be proven by r with arguments args.

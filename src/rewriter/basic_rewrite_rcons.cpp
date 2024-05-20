@@ -16,8 +16,9 @@
 
 #include "rewriter/basic_rewrite_rcons.h"
 
-#include "proof/proof_node_algorithm.h"
+#include "proof/conv_proof_generator.h"
 #include "proof/proof_checker.h"
+#include "proof/proof_node_algorithm.h"
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
 #include "theory/arith/arith_poly_norm.h"
@@ -26,7 +27,6 @@
 #include "theory/bv/theory_bv_rewrite_rules.h"
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
-#include "proof/conv_proof_generator.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -160,11 +160,13 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
                                                     const Node& eq)
 {
-  Trace("brc-macro") << "Expand Bool NNF norm " << eq[0] << " == " << eq[1] << std::endl;
+  Trace("brc-macro") << "Expand Bool NNF norm " << eq[0] << " == " << eq[1]
+                     << std::endl;
   // Call the utility again with proof tracking and construct the term
   // conversion proof. This proof itself may have trust steps in it.
   TConvProofGenerator tcpg(d_env, nullptr);
-  Node nr = theory::booleans::TheoryBoolRewriter::computeNnfNorm(nodeManager(), eq[0], &tcpg);
+  Node nr = theory::booleans::TheoryBoolRewriter::computeNnfNorm(
+      nodeManager(), eq[0], &tcpg);
   std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);
   Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
   cdp->addProof(pfn);

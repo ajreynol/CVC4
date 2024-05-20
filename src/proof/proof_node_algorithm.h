@@ -63,10 +63,9 @@ void getFreeAssumptionsMap(
  * @param r The rule to find.
  * @param pfs The list of subproofs of pn that have rule r.
  */
-void getSubproofRule(
-    std::shared_ptr<ProofNode> pn,
-    ProofRule r,
-    std::vector<std::shared_ptr<ProofNode>>& pfs);
+void getSubproofRule(std::shared_ptr<ProofNode> pn,
+                     ProofRule r,
+                     std::vector<std::shared_ptr<ProofNode>>& pfs);
 
 /**
  * Return true if pn contains a subproof whose rule is ASSUME. Notice that we

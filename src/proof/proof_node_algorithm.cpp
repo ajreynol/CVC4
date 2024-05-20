@@ -87,10 +87,9 @@ void getFreeAssumptionsMap(
   } while (!visit.empty());
 }
 
-void getSubproofRule(
-    std::shared_ptr<ProofNode> pn,
-    ProofRule r,
-    std::vector<std::shared_ptr<ProofNode>>& pfs)
+void getSubproofRule(std::shared_ptr<ProofNode> pn,
+                     ProofRule r,
+                     std::vector<std::shared_ptr<ProofNode>>& pfs)
 {
   // proof should not be cyclic
   std::unordered_set<ProofNode*> visited;

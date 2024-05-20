@@ -33,7 +33,8 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
 void ProofPostprocessDsl::reconstruct(
     std::unordered_set<std::shared_ptr<ProofNode>>& pfs)
 {
-  Trace("pp-dsl") << "Reconstruct proofs for " << pfs.size() << " trusted steps..." << std::endl;
+  Trace("pp-dsl") << "Reconstruct proofs for " << pfs.size()
+                  << " trusted steps..." << std::endl;
   // run an updater for this callback
   ProofNodeUpdater pnu(d_env, *this, false);
   for (std::shared_ptr<ProofNode> p : pfs)
@@ -43,7 +44,8 @@ void ProofPostprocessDsl::reconstruct(
   if (!d_subgoals.empty())
   {
     std::vector<std::shared_ptr<ProofNode>> sgs = d_subgoals;
-    Trace("pp-dsl") << "Also reconstruct proofs for " << sgs.size() << " subgoals..." << std::endl;
+    Trace("pp-dsl") << "Also reconstruct proofs for " << sgs.size()
+                    << " subgoals..." << std::endl;
     d_subgoals.clear();
     for (std::shared_ptr<ProofNode> p : sgs)
     {
@@ -51,7 +53,7 @@ void ProofPostprocessDsl::reconstruct(
     }
   }
   // should never construct a subgoal for a step from a subgoal
-  Assert (d_subgoals.empty());
+  Assert(d_subgoals.empty());
 }
 
 bool ProofPostprocessDsl::shouldUpdate(std::shared_ptr<ProofNode> pn,
@@ -97,7 +99,8 @@ bool ProofPostprocessDsl::update(Node res,
   // Attempt to reconstruct the proof of the equality into cdp using the
   // rewrite database proof reconstructor.
   // We record the subgoals in d_subgoals.
-  if (d_rdbPc.prove(cdp, res[0], res[1], tid, mid, recLimit, stepLimit, d_subgoals))
+  if (d_rdbPc.prove(
+          cdp, res[0], res[1], tid, mid, recLimit, stepLimit, d_subgoals))
   {
     // If we made (= res true) above, conclude the original res.
     if (reqTrueElim)
