@@ -44,7 +44,9 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n, bool isSimple)
   return rewritePredViaEntailment(n, exp, isSimple);
 }
 
-Node ArithEntail::rewritePredViaEntailment(const Node& n, Node& exp, bool isSimple)
+Node ArithEntail::rewritePredViaEntailment(const Node& n,
+                                           Node& exp,
+                                           bool isSimple)
 {
   NodeManager* nm = NodeManager::currentNM();
   if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger())
@@ -155,7 +157,7 @@ Node ArithEntail::findApprox(Node ar, bool isSimple)
 
 Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
 {
-  AlwaysAssert(d_rr!=nullptr || isSimple);
+  AlwaysAssert(d_rr != nullptr || isSimple);
   Assert(rewriteArith(ar) == ar)
       << "Not rewritten " << ar << ", got " << rewriteArith(ar);
   NodeManager* nm = NodeManager::currentNM();
@@ -241,7 +243,8 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
         {
           changed = true;
           Trace("strings-ent-approx")
-              << "- Propagate (" << (d_rr==nullptr) << ", " << isSimple << ") " << v << " = " << approx[0] << std::endl;
+              << "- Propagate (" << (d_rr == nullptr) << ", " << isSimple
+              << ") " << v << " = " << approx[0] << std::endl;
           approxMap.add(v, approx[0]);
         }
         Node mn = ArithMSum::mkCoeffTerm(c, approx[0]);
@@ -395,8 +398,8 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
           break;
         }
       }
-      Trace("strings-ent-approx")
-          << "- Decide (" << (d_rr==nullptr) << ") " << v << " = " << vapprox << std::endl;
+      Trace("strings-ent-approx") << "- Decide (" << (d_rr == nullptr) << ") "
+                                  << v << " = " << vapprox << std::endl;
       // we incorporate v approximated by vapprox into the overall approximation
       // for ar
       Assert(!v.isNull() && !vapprox.isNull());

@@ -220,7 +220,9 @@ class ArithEntail
    * @return the Boolean constant that n can be rewritten to, or null if none
    * exists.
    */
-  Node rewritePredViaEntailment(const Node& n, Node& exp, bool isSimple = false);
+  Node rewritePredViaEntailment(const Node& n,
+                                Node& exp,
+                                bool isSimple = false);
   /**
    * Same as above, without an explanation.
    */
