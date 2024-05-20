@@ -16,6 +16,7 @@
 
 #include "rewriter/basic_rewrite_rcons.h"
 
+#include "proof/proof_node_algorithm.h"
 #include "proof/proof_checker.h"
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
@@ -165,6 +166,8 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
   std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);
   Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
   cdp->addProof(pfn);
+  // the small steps are trust steps, record them here
+  expr::getSubproofRule(pfn, ProofRule::TRUST, d_subgoals);
   return true;
 }
 

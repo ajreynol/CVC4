@@ -56,6 +56,12 @@ class BasicRewriteRCons : protected EnvObj
       CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid);
 
   /**
+   * Ensure we have a proof for theory rewrite id of eq in cdp. This typically
+   * adds a single THEORY_REWRITE step to cdp. However, for rules with prefix
+   * MACRO_, we perform elaboration.
+   * @param cdp The proof to add to.
+   * @param id The theory rewrite that proves eq.
+   * @param eq The conclusion of the theory rewrite.
    */
   void ensureProofForTheoryRewrite(CDProof* cdp,
                                    ProofRewriteRule id,
@@ -72,6 +78,8 @@ class BasicRewriteRCons : protected EnvObj
                const std::vector<Node>& args);
   bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& eq);
   bool ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& eq);
+  /** Subgoals */
+  std::vector<std::shared_ptr<ProofNode>> d_subgoals;
 };
 
 }  // namespace rewriter
