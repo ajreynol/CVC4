@@ -157,7 +157,6 @@ Node ArithEntail::findApprox(Node ar, bool isSimple)
 
 Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
 {
-  AlwaysAssert(d_rr != nullptr || isSimple);
   Assert(rewriteArith(ar) == ar)
       << "Not rewritten " << ar << ", got " << rewriteArith(ar);
   NodeManager* nm = NodeManager::currentNM();
