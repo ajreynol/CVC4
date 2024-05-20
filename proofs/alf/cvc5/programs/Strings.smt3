@@ -628,12 +628,12 @@
 )
 
 ; $str_arith_entail_simple n returns true if we can show n >= 0
-(program $str_arith_entail_simple ((s String) (n1 Int) (n2 Int :list) (n3 Int))
+(program $str_arith_entail_simple ((s String) (n1 Int) (n2 Int :list))
   (Int) Bool
   (
     (($str_arith_entail_simple (str.len s)) true)
     (($str_arith_entail_simple (+ n1 n2))   (alf.ite ($str_arith_entail_simple n1) ($str_arith_entail_simple n2) false))
-    (($str_arith_entail_simple (* n1 n3))   (alf.ite ($str_arith_entail_simple n1) ($str_arith_entail_simple n3) false))
+    (($str_arith_entail_simple (* n1 n2))   (alf.ite ($str_arith_entail_simple n1) ($str_arith_entail_simple n2) false))
     (($str_arith_entail_simple n1)          (alf.not (alf.is_neg n1)))
   )
 )
