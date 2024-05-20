@@ -283,7 +283,7 @@
 (declare-rule arith-string-pred-safe-approx ((n Int) (m Int))
   :args ((= (>= n 0) (>= m 0)))
   :requires ((($str_arith_entail_is_approx n m true) true))
-  :conclusion (= (>= n 0) true)
+  :conclusion (= (>= n 0) (>= m 0))
 )
 
 (declare-rule str-in-re-eval ((s String) (r RegLan) (b Bool))

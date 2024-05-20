@@ -182,7 +182,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   Node lhs = eq[0];
   theory::strings::ArithEntail ae(nullptr);
   Node exp;
-  Node ret = ae.rewritePredViaEntailment(lhs, exp);
+  Node ret = ae.rewritePredViaEntailment(lhs, exp, true);
   Assert(ret == eq[1]);
   Trace("brc-macro") << "Expand entailment for " << lhs << " == " << ret
                      << std::endl;

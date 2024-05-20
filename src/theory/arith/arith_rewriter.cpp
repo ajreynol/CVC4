@@ -92,7 +92,8 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       // cannot depend on the rewriter. This makes this rule capture most
       // but not all cases of this kind of reasoning.
       theory::strings::ArithEntail ae(nullptr);
-      Node ret = ae.rewritePredViaEntailment(n);
+      // Also must make this is a "simple" check (isSimple=true).
+      Node ret = ae.rewritePredViaEntailment(n, true);
       if (!ret.isNull())
       {
         return ret;

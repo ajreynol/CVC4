@@ -38,24 +38,24 @@ ArithEntail::ArithEntail(Rewriter* r) : d_rr(r)
   d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
 }
 
-Node ArithEntail::rewritePredViaEntailment(const Node& n)
+Node ArithEntail::rewritePredViaEntailment(const Node& n, bool isSimple)
 {
   Node exp;
-  return rewritePredViaEntailment(n, exp);
+  return rewritePredViaEntailment(n, exp, isSimple);
 }
 
-Node ArithEntail::rewritePredViaEntailment(const Node& n, Node& exp)
+Node ArithEntail::rewritePredViaEntailment(const Node& n, Node& exp, bool isSimple)
 {
   NodeManager* nm = NodeManager::currentNM();
   if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger())
   {
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[0], n[1]), d_one);
-    if (check(exp))
+    if (check(exp, false, isSimple))
     {
       return nm->mkConst(false);
     }
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
-    if (check(exp))
+    if (check(exp, false, isSimple))
     {
       return nm->mkConst(false);
     }
@@ -64,12 +64,12 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n, Node& exp)
   else if (n.getKind() == Kind::GEQ)
   {
     exp = nm->mkNode(Kind::SUB, n[0], n[1]);
-    if (check(exp))
+    if (check(exp, false, isSimple))
     {
       return nm->mkConst(true);
     }
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
-    if (check(exp))
+    if (check(exp, false, isSimple))
     {
       return nm->mkConst(false);
     }
@@ -126,7 +126,7 @@ bool ArithEntail::check(Node a, bool strict, bool isSimple)
     ar = rewriteArith(ar);
     return checkSimple(ar);
   }
-  Node ara = findApprox(ar, false);
+  Node ara = findApprox(ar, isSimple);
   return !ara.isNull();
 }
 
@@ -155,6 +155,7 @@ Node ArithEntail::findApprox(Node ar, bool isSimple)
 
 Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
 {
+  AlwaysAssert(d_rr!=nullptr || isSimple);
   Assert(rewriteArith(ar) == ar)
       << "Not rewritten " << ar << ", got " << rewriteArith(ar);
   NodeManager* nm = NodeManager::currentNM();
@@ -211,17 +212,24 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
           visited.insert(curr);
           std::vector<Node> currApprox;
           getArithApproximations(curr, currApprox, isOverApprox, isSimple);
-          if (currApprox.empty())
+          if (isSimple)
           {
-            Trace("strings-ent-approx-debug")
-                << "...approximation: " << curr << std::endl;
-            // no approximations, thus curr is a possibility
-            approx.push_back(curr);
+            approx = currApprox;
           }
           else
           {
-            toProcess.insert(
-                toProcess.end(), currApprox.begin(), currApprox.end());
+            if (currApprox.empty())
+            {
+              Trace("strings-ent-approx-debug")
+                  << "...approximation: " << curr << std::endl;
+              // no approximations, thus curr is a possibility
+              approx.push_back(curr);
+            }
+            else
+            {
+              toProcess.insert(
+                  toProcess.end(), currApprox.begin(), currApprox.end());
+            }
           }
         }
       } while (!toProcess.empty());
@@ -233,7 +241,7 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
         {
           changed = true;
           Trace("strings-ent-approx")
-              << "- Propagate " << v << " = " << approx[0] << std::endl;
+              << "- Propagate (" << (d_rr==nullptr) << ", " << isSimple << ") " << v << " = " << approx[0] << std::endl;
           approxMap.add(v, approx[0]);
         }
         Node mn = ArithMSum::mkCoeffTerm(c, approx[0]);
@@ -388,7 +396,7 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
         }
       }
       Trace("strings-ent-approx")
-          << "- Decide " << v << " = " << vapprox << std::endl;
+          << "- Decide (" << (d_rr==nullptr) << ") " << v << " = " << vapprox << std::endl;
       // we incorporate v approximated by vapprox into the overall approximation
       // for ar
       Assert(!v.isNull() && !vapprox.isNull());
