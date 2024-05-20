@@ -39,6 +39,8 @@ BasicRewriteRCons::BasicRewriteRCons(Env& env) : EnvObj(env) {}
 bool BasicRewriteRCons::prove(
     CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid)
 {
+  // clear the current subgoals
+  d_subgoals.clear();
   Node eq = a.eqNode(b);
   Trace("trewrite-rcons") << "Reconstruct " << eq << " (from " << tid << ", "
                           << mid << ")" << std::endl;
@@ -317,6 +319,11 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   Trace("brc-macro") << "...success" << std::endl;
   Trace("brc-macro") << "...proof is " << *cdp->getProofFor(retEq) << std::endl;
   return true;
+}
+
+std::vector<std::shared_ptr<ProofNode>>& BasicRewriteRCons::getSubgoals()
+{
+  return d_subgoals;
 }
 
 }  // namespace rewriter

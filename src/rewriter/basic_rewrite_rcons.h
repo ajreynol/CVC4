@@ -66,7 +66,13 @@ class BasicRewriteRCons : protected EnvObj
   void ensureProofForTheoryRewrite(CDProof* cdp,
                                    ProofRewriteRule id,
                                    const Node& eq);
-
+  /**
+   * Get subgoals. These are the proofs that were used to fill in macro
+   * steps that did not have a justification. The caller should run proof
+   * elaboration on these proofs.
+   */
+  std::vector<std::shared_ptr<ProofNode>>& getSubgoals();
+  
  private:
   /**
    * Try rule r, return true if eq could be proven by r with arguments args.

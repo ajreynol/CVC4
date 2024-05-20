@@ -65,7 +65,8 @@ class RewriteDbProofCons : protected EnvObj
              theory::TheoryId tid,
              MethodId mid,
              int64_t recLimit,
-             int64_t stepLimit);
+             int64_t stepLimit,
+             std::vector<std::shared_ptr<ProofNode>>& subgoals);
 
  private:
   /**
