@@ -179,6 +179,21 @@
 (define $str_rev ((U Type :implicit) (rev Bool) (t U)) 
   (alf.ite rev (nary.reverse t) t))
 
+; Helper for $re_rev below, used for reversing regular expressions.
+(program $re_rev_rec ((r1 RegLan) (r2 RegLan :list) (s String) (racc RegLan))
+  (RegLan RegLan) RegLan
+  (
+    (($re_rev_rec (re.++ (str.to_re s) r2) racc)  ($re_rev_rec r2 (alf.cons re.++ (str.to_re (nary.reverse s)) racc)))
+    (($re_rev_rec (re.++ r1 r2) racc)             ($re_rev_rec r2 (alf.cons re.++ r1 racc)))
+    (($re_rev_rec r1 racc)                        racc)
+  )
+)
+
+; Reverse regular expression, also reverses strings inside of str.to_re.
+(define $re_rev ((r RegLan) (rev Bool))
+  (alf.ite rev ($re_rev_rec r (str.to_re "")) r)
+)
+
 (program $str_subsequence ((U Type :implicit) (u Int) (l Int) (t (Seq U)))
   (Int Int (Seq U)) (Seq U)
   (
@@ -204,6 +219,15 @@
     )
 )
 
+(program $re_nary_intro ((t RegLan) (ss RegLan :list))
+    (RegLan) RegLan
+    (
+        (($re_nary_intro (re.++ t ss))    (re.++ t ss))
+        (($re_nary_intro (str.to_re ""))  (str.to_re ""))
+        (($re_nary_intro t)               (alf.cons re.++ t (str.to_re "")))
+    )
+)
+
 ; Nary-elimination, which ensures that the input t is not a str.++ application.
 ; In particular, if t is of the form (str.++ t empty) where empty is the empty
 ; string for the type of t, we return t.
@@ -214,6 +238,14 @@
         (($str_nary_elim (str.++ t ss)) (let ((nil (mk_emptystr (alf.typeof t))))
                                            (alf.ite (alf.is_eq ss nil) t (str.++ t ss))))
         (($str_nary_elim t)             ($str_self_if_empty t))
+    )
+)
+
+(program $re_nary_elim ((t RegLan))
+    (RegLan) RegLan
+    (
+        (($re_nary_elim (re.++ t (str.to_re ""))) t)
+        (($re_nary_elim t)                        t)
     )
 )
 
@@ -464,6 +496,15 @@
   )
 )
 
+; `$re_flatten r` flattens the strings in regular expression concatenation r.
+(program $re_flatten ((r1 RegLan) (r2 RegLan :list) (s String))
+  (RegLan) RegLan
+  (
+    (($re_flatten (re.++ (str.to_re s) r2)) (re.++ (str.to_re ($str_flatten s)) ($re_flatten r2)))
+    (($re_flatten r1)                       r1)
+  )
+)
+
 ; Helper for collecting adjacent constants. This side condition takes as input
 ; a str.++ application s. It returns a pair whose concatenation is equal to s,
 ; whose first component corresponds to a word constant, and whose second
@@ -515,6 +556,16 @@
       )
     )
     ((string_collect t)       ($str_self_if_empty t))
+  )
+)
+
+; `$re_collect r` calls the string collect method on all strings in regular
+; expression concatentation r.
+(program $re_collect ((r1 RegLan) (r2 RegLan :list) (s String))
+  (RegLan) RegLan
+  (
+    (($re_collect (re.++ (str.to_re s) r2)) (re.++ (str.to_re (string_collect s)) ($re_collect r2)))
+    (($re_collect r1)                       r1)
   )
 )
 
@@ -616,6 +667,11 @@
   ($str_rev rev ($str_flatten ($str_nary_intro s)))
 )
 
+(define $re_to_flat_form ((r RegLan) (rev Bool))
+  ; intro, flatten, reverse
+  ($re_rev rev ($re_flatten ($re_nary_intro r)))
+)
+
 ; Converts a term in "flat form" to a term that is in a form that corresponds
 ; to one in cvc5 rewritten form. This is the dual method to
 ; string_to_flat_form. This consists of the following steps:
@@ -625,6 +681,11 @@
 (define string_from_flat_form ((U Type :implicit) (s (Seq U)) (rev Bool))
   ; reverse, collect, elim
   ($str_nary_elim (string_collect ($str_rev rev s)))
+)
+
+(define $re_from_flat_form ((r RegLan) (rev Bool))
+  ; intro, flatten, reverse
+  ($re_nary_elim ($re_collect ($re_rev rev r)))
 )
 
 ; $str_arith_entail_simple n returns true if we can show n >= 0
@@ -766,10 +827,16 @@
 )
 
 (define $str_re_consume ((s String) (r RegLan))
-  (let ((ss (string_to_flat_form s false)))     ; TODO: re_to_flat_form
+  (let ((ss (string_to_flat_form s false)))  
+  (let ((rr ($re_to_flat_form r false)))
   (alf.match ((s1 String) (r1 RegLan))
-      ($str_re_consume_rec ss r)
+      ($str_re_consume_rec ss rr)
       (((str.in_re s1 r1) 
         (alf.match ((s2 String) (r2 RegLan))
-            ($str_re_consume_rec ($str_rev true s1) ($str_rev true r1))  
-            (((str.in_re s2 r2)  (str.in_re (string_from_flat_form s2 true) ($str_rev true r2))))))))))
+            ($str_re_consume_rec ($str_rev true s1) ($re_rev true rr))  
+            (
+              ((str.in_re s2 r2)  (str.in_re (string_from_flat_form s2 true) ($re_from_flat_form r2 true)))
+            )
+        )))
+  )
+)))
