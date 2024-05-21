@@ -199,7 +199,7 @@
 )
 
 ; Reverse regular expression, also reverses strings inside of str.to_re.
-(define $re_rev ((r RegLan) (rev Bool))
+(define $re_rev ((rev Bool) (r RegLan))
   (alf.ite rev ($re_rev_rec r @re.empty) r)
 )
 
