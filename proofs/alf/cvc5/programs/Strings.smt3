@@ -664,6 +664,7 @@
   ($str_nary_elim (string_collect ($str_rev rev s)))
 )
 
+; Convert the strings s occurring as direct children (str.to_re s) from their flat form.
 (program $re_str_from_flat_form ((r1 RegLan) (r2 RegLan :list) (s String) (rev Bool))
   (Bool RegLan) RegLan
   (
@@ -673,6 +674,12 @@
   )
 )
 
+; Converts a regular expression term in "flat form" to a term that is in a form
+; that corresponds to one in cvc5 rewritten form. This is the dual method to
+; $re_to_flat_form. This consists of the following steps:
+; (1) convert the strings s occurring as direct children (str.to_re s) from their flat form,
+; (2) (optionally) reverse,
+; (3) eliminate n-ary form to its element if the term is a singleton list.
 (define $re_from_flat_form ((r RegLan) (rev Bool))
   ; intro, flatten, reverse
   ($re_nary_elim ($str_rev rev ($re_str_from_flat_form rev r)))
@@ -696,7 +703,6 @@
     (($str_arith_entail_simple_pred (> n m))   ($str_arith_entail_simple ($arith_poly_to_term (- n (+ m 1)))))
   )
 )
-
 
 (program $str_arith_entail_is_approx_len ((s String) (t String) (r String) (n1 Int) (n2 Int) (n Int) (isUnder Bool))
   (String Int Bool) Bool
