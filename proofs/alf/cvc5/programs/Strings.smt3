@@ -77,7 +77,6 @@
 ;;-------------------- RE evaluation
 
 (declare-const @re.null RegLan)
-(declare-const @re.invalid RegLan)
 
 ; *** NOTE: This method has an exponential runtime. It is a placeholder for a
 ; more efficient algorithm (via NFAs) to be written later.
@@ -191,14 +190,17 @@
   (RegLan RegLan) RegLan
   (
     (($re_rev_rec (re.++ (str.to_re s) r2) racc)  ($re_rev_rec r2 (alf.cons re.++ (str.to_re (nary.reverse s)) racc)))
-    (($re_rev_rec (re.++ r1 r2) racc)             ($re_rev_rec r2 (alf.cons re.++ r1 racc)))
+    (($re_rev_rec (re.++ r1 r2) racc)             ($re_rev_rec r2 (alf.cons re.++ ($re_rev_rec r1 @re.empty) racc)))
+    ;(($re_rev_rec (re.union r1 r2) @re.empty)     (alf.cons re.union ($re_rev_rec r1 @re.empty) ($re_rev_rec r2 @re.empty)))
+    ;(($re_rev_rec (re.inter r1 r2) @re.empty)     (alf.cons re.inter ($re_rev_rec r1 @re.empty) ($re_rev_rec r2 @re.empty)))         
+    ;(($re_rev_rec (re.* r1) @re.empty)            (re.* ($re_rev_rec r1 @re.empty)))
     (($re_rev_rec r1 racc)                        racc)
   )
 )
 
 ; Reverse regular expression, also reverses strings inside of str.to_re.
 (define $re_rev ((r RegLan) (rev Bool))
-  (alf.ite rev ($re_rev_rec r (str.to_re "")) r)
+  (alf.ite rev ($re_rev_rec r @re.empty) r)
 )
 
 (program $str_subsequence ((U Type :implicit) (u Int) (l Int) (t (Seq U)))
@@ -230,8 +232,8 @@
     (RegLan) RegLan
     (
         (($re_nary_intro (re.++ t ss))    (re.++ t ss))
-        (($re_nary_intro (str.to_re ""))  (str.to_re ""))
-        (($re_nary_intro t)               (alf.cons re.++ t (str.to_re "")))
+        (($re_nary_intro @re.empty)       @re.empty)
+        (($re_nary_intro t)               (alf.cons re.++ t @re.empty))
     )
 )
 
@@ -251,8 +253,8 @@
 (program $re_nary_elim ((t RegLan))
     (RegLan) RegLan
     (
-        (($re_nary_elim (re.++ t (str.to_re ""))) t)
-        (($re_nary_elim t)                        t)
+        (($re_nary_elim (re.++ t @re.empty)) t)
+        (($re_nary_elim t)                   t)
     )
 )
 
@@ -396,7 +398,7 @@
 (program re_unfold_pos_concat_rec ((t String) (r1 RegLan) (r2 RegLan :list) (ro RegLan) (i Int))
   (String RegLan RegLan Int) (@Pair String Bool)
   (
-    ((re_unfold_pos_concat_rec t (str.to_re "") ro i)       (@pair "" true))
+    ((re_unfold_pos_concat_rec t @re.empty ro i)       (@pair "" true))
     ((re_unfold_pos_concat_rec t (re.++ r1 r2) ro i)
       ; match recursive call
       (alf.match ((c String :list) (M Bool :list))
@@ -632,9 +634,9 @@
 ; where d>0. This is the regular expression:
 ;   (re.union r^n ... r^{n+d})
 ; where r^k is (re.++ r ... r), where r is repeated k times when k>1, or
-; r if k=1 or (str.to_re "") if k=0.
+; r if k=1 or @re.empty if k=0.
 (define $str_mk_re_loop_elim ((n Int) (d Int) (r RegLan))
-  ($singleton_elim ($str_mk_re_loop_elim_rec n d r (str.to_re "")))
+  ($singleton_elim ($str_mk_re_loop_elim_rec n d r @re.empty))
 )
 
 ; Helper for ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR.
@@ -654,9 +656,9 @@
 (program $str_mk_str_in_re_sigma_rec ((s String) (r RegLan :list) (n Int) (b Bool))
   (String RegLan Int Bool) Bool
   (
-    (($str_mk_str_in_re_sigma_rec s (str.to_re "") n b)              (alf.ite b (= (str.len s) n) (>= (str.len s) n)))
-    (($str_mk_str_in_re_sigma_rec s (re.++ re.allchar r) n b)        ($str_mk_str_in_re_sigma_rec s r (alf.add n 1) b))
-    (($str_mk_str_in_re_sigma_rec s (re.++ (re.* re.allchar) r) n b) ($str_mk_str_in_re_sigma_rec s r n false))
+    (($str_mk_str_in_re_sigma_rec s @re.empty n b)                    (alf.ite b (= (str.len s) n) (>= (str.len s) n)))
+    (($str_mk_str_in_re_sigma_rec s (re.++ re.allchar r) n b)         ($str_mk_str_in_re_sigma_rec s r (alf.add n 1) b))
+    (($str_mk_str_in_re_sigma_rec s (re.++ (re.* re.allchar) r) n b)  ($str_mk_str_in_re_sigma_rec s r n false))
   )
 )
 
@@ -824,18 +826,10 @@
   ))
 )
 
-(declare-const @result.null Bool)
-(declare-const @result.invalid Bool)
-
-(program $result_combine ((b1 Bool) (b2 Bool))
-  (Bool Bool) Bool
-  (
-    (($result_combine b1 @result.null) b1)
-    (($result_combine b1 b1)           b1)
-    (($result_combine b1 b2)           @result.invalid)
-  )
-)
-
+; `$str_re_consume_rec s r b rev` returns the result of implied consumption
+; of string s in regular expression r, where b stores temporary results, and
+; rev indicates whether r was reversed (in which case its components must be
+; reversed).
 (program $str_re_consume_rec ((s1 String) (s2 String :list) (s String) (r1 RegLan) (r2 RegLan :list) (b Bool) (rev Bool))
   (String RegLan Bool Bool) Bool
   (
@@ -849,7 +843,7 @@
                                                           (string_check_length_one s3))
                                           false                                       ; conflicting characters
                                           (str.in_re (str.++ s1 s2) (re.++ r1 r2))))) ; otherwise stuck
-          ((str.to_re "")             ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev)) ; finished current component
+          (@re.empty                  ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev)) ; finished current component
           ((re.range s3 s5)           (alf.ite (alf.and (string_check_length_one s1) ($str_is_char_range s3 s5))
                                         (alf.ite ($str_eval_str_in_re s1 (re.range s3 s5))
                                           ($str_re_consume_rec s2 r2 @result.null rev)
@@ -863,22 +857,22 @@
                                         ($str_re_consume_rec (str.++ s1 s2) ($re_to_flat_form r3 rev) @result.null rev)
                                         (
                                           ; We can't unroll even once, thus we must skip it.
-                                          (false                          ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev))
+                                          (false                     ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev))
                                           ; If we fully consumed, now we go back and check if we get a conflict if we skip.
-                                          ((str.in_re sr (str.to_re ""))  (alf.match ((br Bool))
-                                                                            ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev)
-                                                                            (
-                                                                              ; Skipping would give a conflict.
-                                                                              (false (alf.ite (alf.is_eq (str.++ s1 s2) sr)
-                                                                                        ; if we did not consume anything, we are stuck.
-                                                                                        (str.in_re (str.++ s1 s2) (re.++ r1 r2))
-                                                                                        ; otherwise, we continue.
-                                                                                        ($str_re_consume_rec sr (re.++ r1 r2) @result.null rev)
-                                                                                     ))
-                                                                              ; Otherwise we are stuck.
-                                                                              (br    (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
-                                                                            )
-                                                                          ))
+                                          ((str.in_re sr @re.empty)  (alf.match ((br Bool))
+                                                                        ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev)
+                                                                        (
+                                                                          ; Skipping would give a conflict.
+                                                                          (false (alf.ite (alf.is_eq (str.++ s1 s2) sr)
+                                                                                    ; if we did not consume anything, we are stuck.
+                                                                                    (str.in_re (str.++ s1 s2) (re.++ r1 r2))
+                                                                                    ; otherwise, we continue.
+                                                                                    ($str_re_consume_rec sr (re.++ r1 r2) @result.null rev)
+                                                                                  ))
+                                                                          ; Otherwise we are stuck.
+                                                                          (br    (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
+                                                                        )
+                                                                      ))
                                           ; Otherwise we are stuck.
                                           ((str.in_re sr rr)              (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
                                         )
@@ -890,7 +884,7 @@
                                           ; conflict
                                           (false                          false)
                                           ; if all cases consumed the same, continue
-                                          ((str.in_re sr (str.to_re ""))  ($str_re_consume_rec sr r2 @result.null rev))
+                                          ((str.in_re sr @re.empty)  ($str_re_consume_rec sr r2 @result.null rev))
                                           ; otherwise we are stuck
                                           (br                             (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
                                         )
@@ -907,7 +901,7 @@
                                                             (bb     ($str_re_consume_rec s1 r2 ($result_combine bb b) rev))
                                                           )
                                                        )))
-    (($str_re_consume_rec s1 re.all @result.null rev)  (str.in_re "" (str.to_re ""))) ; only used if re.all appears in unexpected position
+    (($str_re_consume_rec s1 re.all @result.null rev)  (str.in_re "" @re.empty)) ; only used if re.all appears in unexpected position
     (($str_re_consume_rec s1 re.all b rev)             b)                             ; end of re.inter
     ; Union ignores conflicts, and otherwise combines the results. We report a conflict if all children give conflicts.
     (($str_re_consume_rec s1 (re.union r1 r2) b rev)   (let ((r1r ($re_to_flat_form r1 rev)))

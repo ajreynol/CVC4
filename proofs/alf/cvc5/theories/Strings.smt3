@@ -74,14 +74,14 @@
 (declare-const re.allchar RegLan)
 (declare-const re.none RegLan)
 (declare-const re.all RegLan)
-(declare-const re.empty RegLan)
 (declare-const str.to_re (-> String RegLan))
+(define @re.empty () (str.to_re ""))
 (declare-const re.* (-> RegLan RegLan))
 (declare-const re.+ (-> RegLan RegLan))
 (declare-const re.opt (-> RegLan RegLan))
 (declare-const re.comp (-> RegLan RegLan))
 (declare-const re.range (-> String String RegLan))
-(declare-const re.++ (-> RegLan RegLan RegLan) :right-assoc-nil (str.to_re ""))
+(declare-const re.++ (-> RegLan RegLan RegLan) :right-assoc-nil @re.empty)
 (declare-const re.inter (-> RegLan RegLan RegLan) :right-assoc-nil re.all)
 (declare-const re.union (-> RegLan RegLan RegLan) :right-assoc-nil re.none)
 (declare-const re.diff (-> RegLan RegLan RegLan))
@@ -124,5 +124,4 @@
 (declare-const @re_first_match_pre (-> String RegLan String))
 (declare-const @re_first_match (-> String RegLan String))
 (declare-const @re_first_match_post (-> String RegLan String))
-
 
