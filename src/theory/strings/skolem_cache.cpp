@@ -78,20 +78,32 @@ Node SkolemCache::mkTypedSkolemCached(
   StringSkolemId idOrig = id;
   // do not rewrite beforehand if we are not using optimizations, this is so
   // that the proof checker does not depend on the rewriter.
-  if (d_rr != nullptr)
-  {
-    a = a.isNull() ? a : d_rr->rewrite(a);
-    b = b.isNull() ? b : d_rr->rewrite(b);
-  }
-  std::tie(id, a, b) = normalizeStringSkolem(id, a, b);
-
+  Node an, bn;
+  std::tie(id, an, bn) = normalizeStringSkolem(id, a, b);
+  Node ar = d_rr!=nullptr ? d_rr->rewrite(an) : an;
+  
   // optimization: if we aren't asking for the purification skolem for constant
   // a, and the skolem is equivalent to a, then we just return a.
-  if (d_rr != nullptr && idOrig != SK_PURIFY && id == SK_PURIFY && a.isConst())
+  if (d_rr != nullptr && idOrig != SK_PURIFY && id == SK_PURIFY && ar.isConst())
   {
-    Trace("skolem-cache") << "...optimization: return constant " << a
+    Trace("skolem-cache") << "...optimization: return constant " << ar
                           << std::endl;
-    return a;
+    return ar;
+  }
+  NodeManager* nm = NodeManager::currentNM();
+  SkolemManager* sm = nm->getSkolemManager();
+  if (id==SK_PURIFY)
+  {
+    std::map<Node, Node>::iterator it = d_skRewrittenCache.find(ar);
+    if (it!=d_skRewrittenCache.end())
+    {
+      an = it->second;
+    }
+    else
+    {
+      d_skRewrittenCache[ar] = an;
+    }
+    return sm->mkPurifySkolem(an);
   }
 
   std::map<StringSkolemId, Node>::iterator it = d_skolemCache[a][b].find(id);
@@ -102,8 +114,6 @@ Node SkolemCache::mkTypedSkolemCached(
     return it->second;
   }
 
-  NodeManager* nm = NodeManager::currentNM();
-  SkolemManager* sm = nm->getSkolemManager();
   Node sk;
   switch (id)
   {
@@ -273,12 +283,6 @@ SkolemCache::normalizeStringSkolem(StringSkolemId id, Node a, Node b)
     id = SK_PURIFY;
     a = utils::mkSuffix(a, b);
     b = Node::null();
-  }
-
-  if (d_rr != nullptr)
-  {
-    a = a.isNull() ? a : d_rr->rewrite(a);
-    b = b.isNull() ? b : d_rr->rewrite(b);
   }
   Trace("skolem-cache") << "normalizeStringSkolem end: (" << id << ", " << a
                         << ", " << b << ")" << std::endl;
