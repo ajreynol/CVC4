@@ -190,10 +190,7 @@
   (RegLan RegLan) RegLan
   (
     (($re_rev_rec (re.++ (str.to_re s) r2) racc)  ($re_rev_rec r2 (alf.cons re.++ (str.to_re (nary.reverse s)) racc)))
-    (($re_rev_rec (re.++ r1 r2) racc)             ($re_rev_rec r2 (alf.cons re.++ ($re_rev_rec r1 @re.empty) racc)))
-    ;(($re_rev_rec (re.union r1 r2) @re.empty)     (alf.cons re.union ($re_rev_rec r1 @re.empty) ($re_rev_rec r2 @re.empty)))
-    ;(($re_rev_rec (re.inter r1 r2) @re.empty)     (alf.cons re.inter ($re_rev_rec r1 @re.empty) ($re_rev_rec r2 @re.empty)))         
-    ;(($re_rev_rec (re.* r1) @re.empty)            (re.* ($re_rev_rec r1 @re.empty)))
+    (($re_rev_rec (re.++ r1 r2) racc)             ($re_rev_rec r2 (alf.cons re.++ r1 racc)))
     (($re_rev_rec r1 racc)                        racc)
   )
 )
@@ -882,7 +879,7 @@
                                         ($str_re_consume_rec (str.++ s1 s2) r3 @result.null rev)
                                         (
                                           ; conflict
-                                          (false                          false)
+                                          (false                     false)
                                           ; if all cases consumed the same, continue
                                           ((str.in_re sr @re.empty)  ($str_re_consume_rec sr r2 @result.null rev))
                                           ; otherwise we are stuck
