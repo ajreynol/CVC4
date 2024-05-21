@@ -487,15 +487,6 @@
   )
 )
 
-; `$re_flatten r` flattens the strings in regular expression concatenation r.
-(program $re_flatten ((r1 RegLan) (r2 RegLan :list) (s String))
-  (RegLan) RegLan
-  (
-    (($re_flatten (re.++ (str.to_re s) r2)) (re.++ (str.to_re ($str_flatten s)) ($re_flatten r2)))
-    (($re_flatten r1)                       r1)
-  )
-)
-
 ; Helper for collecting adjacent constants. This side condition takes as input
 ; a str.++ application s. It returns a pair whose concatenation is equal to s,
 ; whose first component corresponds to a word constant, and whose second
@@ -669,7 +660,7 @@
 
 (define $re_to_flat_form ((r RegLan) (rev Bool))
   ; intro, flatten, reverse
-  ($re_str_to_flat_form rev ($str_rev rev ($re_flatten ($re_nary_intro r))))
+  ($re_str_to_flat_form rev ($str_rev rev ($re_nary_intro r)))
 )
 
 ; Converts a term in "flat form" to a term that is in a form that corresponds
@@ -886,7 +877,7 @@
                                           ; if all cases consumed the same, continue
                                           ((str.in_re sr @re.empty)  ($str_re_consume_rec sr r2 @result.null rev))
                                           ; otherwise we are stuck
-                                          (br                             (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
+                                          (br                        (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
                                         )
                                       ))
           )
@@ -925,7 +916,7 @@
       ($str_re_consume_rec ss rr @result.null false)
       (
         (false              false)
-        ((str.in_re s1 r1)  (let ((s1r ($str_rev true s1)) (r1r ($str_rev true rr)))
+        ((str.in_re s1 r1)  (let ((s1r ($str_rev true s1)) (r1r ($re_to_flat_form rr true)))
                             (alf.match ((s2 String) (r2 RegLan))
                               ($str_re_consume_rec s1r r1r @result.null true)
                               (
