@@ -824,24 +824,37 @@
 )
 
 
-(program $str_re_consume_rec ((s1 String) (s2 String :list) (s3 String) (s4 String :list) (s5 String) (r1 RegLan) (r2 RegLan :list))
-  (String RegLan) Bool
+(program $str_re_consume_rec ((s1 String) (s2 String :list) (s String) (r1 RegLan) (r2 RegLan :list) (r RegLan))
+  (String RegLan RegLan) Bool
   (
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ (str.to_re (str.++ s1 s4)) r2)) ($str_re_consume_rec s2 (re.++ (str.to_re s4) r2)))
-    (($str_re_consume_rec s1 (re.++ (str.to_re "") r2))                         ($str_re_consume_rec s1 r2))
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ (str.to_re (str.++ s3 s4)) r2)) (alf.ite (alf.and (string_check_length_one s1)
-                                                                                                  (string_check_length_one s3))
-                                                                                  false   ; conflicting chars
-                                                                                  (str.in_re (str.++ s1 s2) (re.++ (str.to_re (str.++ s3 s4)) r2))))
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ (re.range s3 s5) r2))           (alf.ite (alf.and (string_check_length_one s1) ($str_is_char_range s3 s5))
-                                                                                  (alf.ite ($str_eval_str_in_re s1 (re.range s3 s5))
-                                                                                    ($str_re_consume_rec s2 r2)
-                                                                                    false)
-                                                                                  (str.in_re (str.++ s1 s2) (re.++ (re.range s3 s5) r2))))
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ re.allchar r2))                 (alf.ite (string_check_length_one s1)
-                                                                                  ($str_re_consume_rec s2 r2)
-                                                                                  (str.in_re (str.++ s1 s2) (re.++ re.allchar r2))))
-    (($str_re_consume_rec "" r1)                                                (str.in_re "" r1))
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ r1 r2) @re.null)  
+        (alf.match ((s3 String) (s4 String :list) (s5 String) (r3 RegLan))
+          r1
+          (
+          ((str.to_re (str.++ s3 s4)) (alf.ite (alf.is_eq s1 s3)
+                                        ($str_re_consume_rec s2 (re.++ (str.to_re s4) r2) @re.null)
+                                        (alf.ite (alf.and (string_check_length_one s1)
+                                                          (string_check_length_one s3))
+                                          false
+                                          (str.in_re (str.++ s1 s2) (re.++ r1 r2)))))
+          ((str.to_re "")             ($str_re_consume_rec (str.++ s1 s2) r2 @re.null))
+          ((re.range s3 s5)           (alf.ite (alf.and (string_check_length_one s1) ($str_is_char_range s3 s5))
+                                        (alf.ite ($str_eval_str_in_re s1 (re.range s3 s5))
+                                          ($str_re_consume_rec s2 r2 @re.null)
+                                          false)
+                                        (str.in_re (str.++ s1 s2) (re.++ r1 r2))))
+          (re.allchar                 (alf.ite (string_check_length_one s1)
+                                        ($str_re_consume_rec s2 r2 @re.null)
+                                        (str.in_re (str.++ s1 s2) (re.++ r1 r2))))
+          (r3                         ($str_re_consume_rec (str.++ s1 s2) r3 r3))   ; process speculatively
+          )
+        )
+    )
+    (($str_re_consume_rec s (re.inter r1 r2) r)   (str.in_re s r))
+    (($str_re_consume_rec s (re.union r1 r2) r)   (str.in_re s r))
+    (($str_re_consume_rec s (re.* r1) r)          (str.in_re s r))
+    (($str_re_consume_rec s1 r1 @re.null)         ($str_re_consume_rec s1 r1 r1))
+    (($str_re_consume_rec s1 r1 r1)               (str.in_re s1 r1))
   )
 )
 
@@ -849,16 +862,17 @@
   (let ((ss (string_to_flat_form s false)))  
   (let ((rr ($re_to_flat_form r false)))
   (alf.match ((s1 String) (r1 RegLan))
-      ($str_re_consume_rec ss rr)
+      ($str_re_consume_rec ss rr @re.null)
       (
         (false              false)
-        ((str.in_re s1 r1)  (alf.match ((s2 String) (r2 RegLan))
-                              ($str_re_consume_rec ($str_rev true s1) ($re_rev true rr))  
+        ((str.in_re s1 r1)  (let ((s1r ($str_rev true s1)) (r1r ($re_rev true rr)))
+                            (alf.match ((s2 String) (r2 RegLan))
+                              ($str_re_consume_rec s1r r1r @re.null)  
                               (
                                 (false              false)
                                 ((str.in_re s2 r2)  (str.in_re (string_from_flat_form s2 true) ($re_from_flat_form r2 true)))
                               )
-                            )
+                            ))
         )
       )
   )))
