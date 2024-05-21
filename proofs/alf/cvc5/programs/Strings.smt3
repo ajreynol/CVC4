@@ -185,21 +185,6 @@
 (define $str_rev ((U Type :implicit) (rev Bool) (t U)) 
   (alf.ite rev (nary.reverse t) t))
 
-; Helper for $re_rev below, used for reversing regular expressions.
-(program $re_rev_rec ((r1 RegLan) (r2 RegLan :list) (s String) (racc RegLan))
-  (RegLan RegLan) RegLan
-  (
-    (($re_rev_rec (re.++ (str.to_re s) r2) racc)  ($re_rev_rec r2 (alf.cons re.++ (str.to_re (nary.reverse s)) racc)))
-    (($re_rev_rec (re.++ r1 r2) racc)             ($re_rev_rec r2 (alf.cons re.++ r1 racc)))
-    (($re_rev_rec r1 racc)                        racc)
-  )
-)
-
-; Reverse regular expression, also reverses strings inside of str.to_re.
-(define $re_rev ((rev Bool) (r RegLan))
-  (alf.ite rev ($re_rev_rec r @re.empty) r)
-)
-
 (program $str_subsequence ((U Type :implicit) (u Int) (l Int) (t (Seq U)))
   (Int Int (Seq U)) (Seq U)
   (
@@ -673,9 +658,18 @@
   ($str_rev rev ($str_flatten ($str_nary_intro s)))
 )
 
+(program $re_str_to_flat_form ((r1 RegLan) (r2 RegLan :list) (s String) (rev Bool))
+  (Bool RegLan) RegLan
+  (
+    (($re_str_to_flat_form rev (re.++ (str.to_re s) r2))  (alf.cons re.++ (str.to_re (string_to_flat_form s rev)) ($re_str_to_flat_form rev r2)))
+    (($re_str_to_flat_form rev (re.++ r1 r2))             (alf.cons re.++ r1 ($re_str_to_flat_form rev r2)))
+    (($re_str_to_flat_form rev r1)                        r1)
+  )
+)
+
 (define $re_to_flat_form ((r RegLan) (rev Bool))
   ; intro, flatten, reverse
-  ($re_rev rev ($re_flatten ($re_nary_intro r)))
+  ($re_str_to_flat_form rev ($str_rev rev ($re_flatten ($re_nary_intro r))))
 )
 
 ; Converts a term in "flat form" to a term that is in a form that corresponds
@@ -689,9 +683,18 @@
   ($str_nary_elim (string_collect ($str_rev rev s)))
 )
 
+(program $re_str_from_flat_form ((r1 RegLan) (r2 RegLan :list) (s String) (rev Bool))
+  (Bool RegLan) RegLan
+  (
+    (($re_str_from_flat_form rev (re.++ (str.to_re s) r2))  (alf.cons re.++ (str.to_re (string_from_flat_form s rev)) ($re_str_from_flat_form rev r2)))
+    (($re_str_from_flat_form rev (re.++ r1 r2))             (alf.cons re.++ r1 ($re_str_from_flat_form rev r2)))
+    (($re_str_from_flat_form rev r1)                        r1)
+  )
+)
+
 (define $re_from_flat_form ((r RegLan) (rev Bool))
   ; intro, flatten, reverse
-  ($re_nary_elim ($re_collect ($re_rev rev r)))
+  ($re_nary_elim ($re_collect ($str_rev rev ($re_str_from_flat_form rev r))))
 )
 
 ; $str_arith_entail_simple n returns true if we can show n >= 0
@@ -922,7 +925,7 @@
       ($str_re_consume_rec ss rr @result.null false)
       (
         (false              false)
-        ((str.in_re s1 r1)  (let ((s1r ($str_rev true s1)) (r1r ($re_rev true rr)))
+        ((str.in_re s1 r1)  (let ((s1r ($str_rev true s1)) (r1r ($str_rev true rr)))
                             (alf.match ((s2 String) (r2 RegLan))
                               ($str_re_consume_rec s1r r1r @result.null true)
                               (
