@@ -541,16 +541,6 @@
   )
 )
 
-; `$re_collect r` calls the string collect method on all strings in regular
-; expression concatentation r.
-(program $re_collect ((r1 RegLan) (r2 RegLan :list) (s String))
-  (RegLan) RegLan
-  (
-    (($re_collect (re.++ (str.to_re s) r2)) (re.++ (str.to_re (string_collect s)) ($re_collect r2)))
-    (($re_collect r1)                       r1)
-  )
-)
-
 ; Strip equal prefix of s and t. This returns the pair corresponding to s and
 ; t after dropping the maximal equal prefix removed. For example, for:
 ;   (str.++ x (str.++ y (str.++ z "")))
@@ -685,7 +675,7 @@
 
 (define $re_from_flat_form ((r RegLan) (rev Bool))
   ; intro, flatten, reverse
-  ($re_nary_elim ($re_collect ($str_rev rev ($re_str_from_flat_form rev r))))
+  ($re_nary_elim ($str_rev rev ($re_str_from_flat_form rev r)))
 )
 
 ; $str_arith_entail_simple n returns true if we can show n >= 0
@@ -857,7 +847,7 @@
                                                                           (false (alf.ite (alf.is_eq (str.++ s1 s2) sr)
                                                                                     ; if we did not consume anything, we are stuck.
                                                                                     (str.in_re (str.++ s1 s2) (re.++ r1 r2))
-                                                                                    ; otherwise, we continue.
+                                                                                    ; otherwise, we continue with the RE consumed once.
                                                                                     ($str_re_consume_rec sr (re.++ r1 r2) @result.null rev)
                                                                                   ))
                                                                           ; Otherwise we are stuck.
