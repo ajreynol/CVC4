@@ -826,8 +826,7 @@
           (
           ((str.to_re (str.++ s3 s4)) (alf.ite (alf.is_eq s1 s3)
                                         ($str_re_consume_rec s2 (re.++ (str.to_re s4) r2) @result.null rev)
-                                        (alf.ite (alf.and (string_check_length_one s1)
-                                                          (string_check_length_one s3))
+                                        (alf.ite (alf.and (string_check_length_one s1) (string_check_length_one s3))
                                           false                                       ; conflicting characters
                                           (str.in_re (str.++ s1 s2) (re.++ r1 r2))))) ; otherwise stuck
           (@re.empty                  ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev)) ; finished current component
@@ -889,7 +888,7 @@
                                                           )
                                                        )))
     (($str_re_consume_rec s1 re.all @result.null rev)  (str.in_re "" @re.empty)) ; only used if re.all appears in unexpected position
-    (($str_re_consume_rec s1 re.all b rev)             b)                             ; end of re.inter
+    (($str_re_consume_rec s1 re.all b rev)             b)                        ; end of re.inter
     ; Union ignores conflicts, and otherwise combines the results. We report a conflict if all children give conflicts.
     (($str_re_consume_rec s1 (re.union r1 r2) b rev)   (let ((r1r ($re_to_flat_form r1 rev)))
                                                        (alf.match ((bb Bool))

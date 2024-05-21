@@ -1737,7 +1737,7 @@ Node QuantifiersRewriter::computeMiniscoping(Node q,
           {
             TypeNode vt = v.getType();
             Node cacheVal = BoundVarManager::getCacheValue(q, v, i);
-            Node vv = bvm->mkBoundVar<QRewMiniscopeAttribute>(cacheVal, vt);
+            Node vv = bvm->mkBoundVar<QRewMiniscopeAttribute>(cacheVal, v.getName(), vt);
             argsc.push_back(vv);
           }
         }
