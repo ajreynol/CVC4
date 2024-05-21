@@ -2393,6 +2393,8 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \endverbatim
    */
   EVALUE(QUANT_MERGE_PRENEX),
+  EVALUE(QUANT_MINISCOPE),
+  EVALUE(QUANT_PARTITION_CONNECTED_FV),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Datatypes -- Instantiation**

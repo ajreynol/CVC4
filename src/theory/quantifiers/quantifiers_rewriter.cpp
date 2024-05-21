@@ -104,6 +104,10 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::QUANT_MERGE_PRENEX,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::QUANT_MINISCOPE,
+                           TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::QUANT_PARTITION_CONNECTED_FV,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -160,6 +164,40 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
+    case ProofRewriteRule::QUANT_MINISCOPE:
+    {
+      if (n.getKind()!=Kind::FORALL || n[1].getKind()!=Kind::AND)
+      {
+        return Node::null();
+      }
+      // note that qa is not needed; moreover external proofs should be agnostic
+      // to it
+      QAttributes qa;
+      QuantAttributes::computeQuantAttributes( n, qa );
+      Node nret = computeMiniscoping(n, qa, true, false);
+      Assert (nret!=n);
+      return nret;
+    }
+      break;
+    case ProofRewriteRule::QUANT_PARTITION_CONNECTED_FV:
+    {
+      if (n.getKind()!=Kind::FORALL || n[1].getKind()!=Kind::OR)
+      {
+        return Node::null();
+      }
+      // note that qa is not needed; moreover external proofs should be agnostic
+      // to it
+      QAttributes qa;
+      QuantAttributes::computeQuantAttributes( n, qa );
+      std::vector<Node> vars(n[0].begin(), n[0].end());
+      Node body = n[1];
+      Node nret = computeSplit( vars, body, qa );
+      if (nret!=n)
+      {
+        return nret;
+      }
+    }
+      break;
     default: break;
   }
   return Node::null();
@@ -1618,24 +1656,30 @@ Node QuantifiersRewriter::computeSplit(std::vector<Node>& args,
   }
   if ( eqc_active>1 || !lits.empty() || var_to_eqc.size()!=args.size() ){
     NodeManager* nm = nodeManager();
-    Trace("clause-split-debug") << "Split quantified formula with body " << body << std::endl;
-    Trace("clause-split-debug") << "   Ground literals: " << std::endl;
-    for( size_t i=0; i<lits.size(); i++) {
-      Trace("clause-split-debug") << "      " << lits[i] << std::endl;
-    }
-    Trace("clause-split-debug") << std::endl;
-    Trace("clause-split-debug") << "Equivalence classes: " << std::endl;
-    for (std::map< int, std::vector< Node > >::iterator it = eqc_to_lit.begin(); it != eqc_to_lit.end(); ++it ){
-      Trace("clause-split-debug") << "   Literals: " << std::endl;
-      for (size_t i=0; i<it->second.size(); i++) {
-        Trace("clause-split-debug") << "      " << it->second[i] << std::endl;
-      }
-      int eqc = it->first;
-      Trace("clause-split-debug") << "   Variables: " << std::endl;
-      for (size_t i=0; i<eqc_to_var[eqc].size(); i++) {
-        Trace("clause-split-debug") << "      " << eqc_to_var[eqc][i] << std::endl;
+    if (TraceIsOn("clause-split-debug"))
+    {
+      Trace("clause-split-debug") << "Split quantified formula with body " << body << std::endl;
+      Trace("clause-split-debug") << "   Ground literals: " << std::endl;
+      for( size_t i=0; i<lits.size(); i++) {
+        Trace("clause-split-debug") << "      " << lits[i] << std::endl;
       }
       Trace("clause-split-debug") << std::endl;
+      Trace("clause-split-debug") << "Equivalence classes: " << std::endl;
+    }
+    for (std::map< int, std::vector< Node > >::iterator it = eqc_to_lit.begin(); it != eqc_to_lit.end(); ++it ){
+      int eqc = it->first;
+      if (TraceIsOn("clause-split-debug"))
+      {
+        Trace("clause-split-debug") << "   Literals: " << std::endl;
+        for (size_t i=0; i<it->second.size(); i++) {
+          Trace("clause-split-debug") << "      " << it->second[i] << std::endl;
+        }
+        Trace("clause-split-debug") << "   Variables: " << std::endl;
+        for (size_t i=0; i<eqc_to_var[eqc].size(); i++) {
+          Trace("clause-split-debug") << "      " << eqc_to_var[eqc][i] << std::endl;
+        }
+        Trace("clause-split-debug") << std::endl;
+      }
       Node bvl = nodeManager()->mkNode(Kind::BOUND_VAR_LIST, eqc_to_var[eqc]);
       Node bd = it->second.size() == 1 ? it->second[0]
                                        : nm->mkNode(Kind::OR, it->second);
@@ -1647,9 +1691,8 @@ Node QuantifiersRewriter::computeSplit(std::vector<Node>& args,
         lits.size() == 1 ? lits[0] : nodeManager()->mkNode(Kind::OR, lits);
     Trace("clause-split-debug") << "Made node : " << nf << std::endl;
     return nf;
-  }else{
-    return mkForAll( args, body, qa );
   }
+  return mkForAll( args, body, qa );
 }
 
 Node QuantifiersRewriter::mkForAll(const std::vector<Node>& args,
@@ -1737,6 +1780,8 @@ Node QuantifiersRewriter::computeMiniscoping(Node q,
           {
             TypeNode vt = v.getType();
             Node cacheVal = BoundVarManager::getCacheValue(q, v, i);
+            // Use the same name as the original variable. The proof will
+            // assume the variable is the same, despite it being different here.
             Node vv = bvm->mkBoundVar<QRewMiniscopeAttribute>(cacheVal, v.getName(), vt);
             argsc.push_back(vv);
           }
