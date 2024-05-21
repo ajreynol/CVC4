@@ -865,7 +865,7 @@
                                                                         )
                                                                       ))
                                           ; Otherwise we are stuck.
-                                          ((str.in_re sr rr)              (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
+                                          ((str.in_re sr rr)          (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
                                         )
                                       ))
           (r3                         ; likely intersection or union, process cases recursively
@@ -916,7 +916,7 @@
       ($str_re_consume_rec ss rr @result.null false)
       (
         (false              false)
-        ((str.in_re s1 r1)  (let ((s1r ($str_rev true s1)) (r1r ($re_to_flat_form rr true)))
+        ((str.in_re s1 r1)  (let ((s1r ($str_rev true s1)) (r1r ($re_to_flat_form r1 true)))
                             (alf.match ((s2 String) (r2 RegLan))
                               ($str_re_consume_rec s1r r1r @result.null true)
                               (
