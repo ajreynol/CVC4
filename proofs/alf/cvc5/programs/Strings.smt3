@@ -232,11 +232,11 @@
     )
 )
 
-(program $re_nary_elim ((t RegLan))
+(program $re_nary_elim ((t RegLan) (ss RegLan :list))
     (RegLan) RegLan
     (
-        (($re_nary_elim (re.++ t @re.empty)) t)
-        (($re_nary_elim t)                   t)
+        (($re_nary_elim (re.++ t ss)) (alf.ite (alf.is_eq ss @re.empty) t (re.++ t ss)))
+        (($re_nary_elim t)            t)
     )
 )
 
