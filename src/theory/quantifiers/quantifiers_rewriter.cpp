@@ -1782,7 +1782,7 @@ Node QuantifiersRewriter::computeMiniscoping(Node q,
             Node cacheVal = BoundVarManager::getCacheValue(q, v, i);
             // Use the same name as the original variable. The proof will
             // assume the variable is the same, despite it being different here.
-            Node vv = bvm->mkBoundVar<QRewMiniscopeAttribute>(cacheVal, v.getName(), vt);
+            Node vv = bvm->mkBoundVar<QRewMiniscopeAttribute>(cacheVal, vt);
             argsc.push_back(vv);
           }
         }

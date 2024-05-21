@@ -905,8 +905,8 @@
 )
 
 (define $str_re_consume ((s String) (r RegLan))
-  (let ((ss (string_to_flat_form s false)))  
-  (let ((rr ($re_to_flat_form r false)))
+  (let ((ss (string_to_flat_form s true)))  
+  (let ((rr ($re_to_flat_form r true)))
   (alf.match ((s1 String) (r1 RegLan))
       ($str_re_consume_rec ss rr @result.null false)
       (
@@ -916,7 +916,7 @@
                               ($str_re_consume_rec s1r r1r @result.null true)
                               (
                                 (false              false)
-                                ((str.in_re s2 r2)  (str.in_re (string_from_flat_form s2 true) ($re_from_flat_form r2 true)))
+                                ((str.in_re s2 r2)  (str.in_re (string_from_flat_form s2 false) ($re_from_flat_form r2 false)))
                               )
                             ))
         )
