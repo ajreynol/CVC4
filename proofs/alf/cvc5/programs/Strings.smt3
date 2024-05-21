@@ -858,7 +858,31 @@
           (re.allchar                 (alf.ite (string_check_length_one s1)
                                         ($str_re_consume_rec s2 r2 @result.null rev)
                                         (str.in_re (str.++ s1 s2) (re.++ r1 r2))))
-          ((re.* r3)                  false) ; TODO
+          ((re.* r3)                  ; see what happens if we unroll once
+                                      (alf.match ((sr String) (rr RegLan))
+                                        ($str_re_consume_rec (str.++ s1 s2) ($re_to_flat_form r3 rev) @result.null rev)
+                                        (
+                                          ; We can't unroll even once, thus we must skip it.
+                                          (false                          ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev))
+                                          ; If we fully consumed, now we go back and check if we get a conflict if we skip.
+                                          ((str.in_re sr (str.to_re ""))  (alf.match ((br Bool))
+                                                                            ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev)
+                                                                            (
+                                                                              ; Skipping would give a conflict.
+                                                                              (false (alf.ite (alf.is_eq (str.++ s1 s2) sr)
+                                                                                        ; if we did not consume anything, we are stuck.
+                                                                                        (str.in_re (str.++ s1 s2) (re.++ r1 r2))
+                                                                                        ; otherwise, we continue.
+                                                                                        ($str_re_consume_rec sr (re.++ r1 r2) @result.null rev)
+                                                                                     ))
+                                                                              ; Otherwise we are stuck.
+                                                                              (br    (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
+                                                                            )
+                                                                          ))
+                                          ; Otherwise we are stuck.
+                                          ((str.in_re sr rr)              (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
+                                        )
+                                      ))
           (r3                         ; likely intersection or union, process cases recursively
                                       (alf.match ((sr String) (br Bool))
                                         ($str_re_consume_rec (str.++ s1 s2) r3 @result.null rev)
