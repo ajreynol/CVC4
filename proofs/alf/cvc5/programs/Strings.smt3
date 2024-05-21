@@ -827,12 +827,12 @@
 (declare-const @result.null Bool)
 (declare-const @result.invalid Bool)
 
-(program $result_maybe_set ((b1 Bool) (b2 Bool))
+(program $result_combine ((b1 Bool) (b2 Bool))
   (Bool Bool) Bool
   (
-    (($result_maybe_set b1 @result.null) b1)
-    (($result_maybe_set b1 b1)           b1)
-    (($result_maybe_set b1 b2)           @result.invalid)
+    (($result_combine b1 @result.null) b1)
+    (($result_combine b1 b1)           b1)
+    (($result_combine b1 b2)           @result.invalid)
   )
 )
 
@@ -847,9 +847,9 @@
                                         ($str_re_consume_rec s2 (re.++ (str.to_re s4) r2) @result.null rev)
                                         (alf.ite (alf.and (string_check_length_one s1)
                                                           (string_check_length_one s3))
-                                          false
-                                          (str.in_re (str.++ s1 s2) (re.++ r1 r2)))))
-          ((str.to_re "")             ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev))
+                                          false                                       ; conflicting characters
+                                          (str.in_re (str.++ s1 s2) (re.++ r1 r2))))) ; otherwise stuck
+          ((str.to_re "")             ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev)) ; finished current component
           ((re.range s3 s5)           (alf.ite (alf.and (string_check_length_one s1) ($str_is_char_range s3 s5))
                                         (alf.ite ($str_eval_str_in_re s1 (re.range s3 s5))
                                           ($str_re_consume_rec s2 r2 @result.null rev)
@@ -859,35 +859,43 @@
                                         ($str_re_consume_rec s2 r2 @result.null rev)
                                         (str.in_re (str.++ s1 s2) (re.++ r1 r2))))
           ((re.* r3)                  false) ; TODO
-          (r3                         (alf.match ((sr String) (br Bool))
-                                        ($str_re_consume_rec (str.++ s1 s2) r3 @result.null rev)   ; process cases recursively
+          (r3                         ; likely intersection or union, process cases recursively
+                                      (alf.match ((sr String) (br Bool))
+                                        ($str_re_consume_rec (str.++ s1 s2) r3 @result.null rev)
                                         (
+                                          ; conflict
                                           (false                          false)
+                                          ; if all cases consumed the same, continue
                                           ((str.in_re sr (str.to_re ""))  ($str_re_consume_rec sr r2 @result.null rev))
+                                          ; otherwise we are stuck
                                           (br                             (str.in_re (str.++ s1 s2) (re.++ r1 r2)))
                                         )
                                       ))
           )
         )
     )
+    ; Intersection reports conflicts eagerly, and otherwise combines the results
     (($str_re_consume_rec s1 (re.inter r1 r2) b rev)   (let ((r1r ($re_to_flat_form r1 rev)))
                                                        (alf.match ((bb Bool))
                                                           ($str_re_consume_rec s1 r1r @result.null rev)
                                                           (
                                                             (false  false)
-                                                            (bb     ($str_re_consume_rec s1 r2 ($result_maybe_set bb b) rev))
+                                                            (bb     ($str_re_consume_rec s1 r2 ($result_combine bb b) rev))
                                                           )
                                                        )))
-    (($str_re_consume_rec s1 re.all b rev)             b)
+    (($str_re_consume_rec s1 re.all @result.null rev)  (str.in_re "" (str.to_re ""))) ; only used if re.all appears in unexpected position
+    (($str_re_consume_rec s1 re.all b rev)             b)                             ; end of re.inter
+    ; Union ignores conflicts, and otherwise combines the results. We report a conflict if all children give conflicts.
     (($str_re_consume_rec s1 (re.union r1 r2) b rev)   (let ((r1r ($re_to_flat_form r1 rev)))
                                                        (alf.match ((bb Bool))
                                                           ($str_re_consume_rec s1 r1r @result.null rev)
                                                           (
                                                             (false  ($str_re_consume_rec s1 r2 b rev))
-                                                            (bb     ($str_re_consume_rec s1 r2 ($result_maybe_set bb b) rev))
+                                                            (bb     ($str_re_consume_rec s1 r2 ($result_combine bb b) rev))
                                                           )
                                                        )))
-    (($str_re_consume_rec s1 re.none b rev)            (alf.ite (alf.is_eq b @result.null) false b))
+    (($str_re_consume_rec s1 re.none @result.null rev) false)     ; end of re.union, conflict, also used if re.none appears in unexpected position
+    (($str_re_consume_rec s1 re.none b rev)            b)         ; end of re.union, no conflict
     (($str_re_consume_rec s1 r1 @result.null rev)      (str.in_re s1 r1))
   )
 )
