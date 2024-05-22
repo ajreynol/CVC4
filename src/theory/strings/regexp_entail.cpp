@@ -64,28 +64,41 @@ Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,
         Assert(xc.getKind() != Kind::STRING_CONCAT);
         if (rc.getKind() == Kind::STRING_TO_REGEXP)
         {
-          if (xc == rc[0])
+          std::vector<Node> childrenc;
+          utils::getConcat(rc[0], childrenc);
+          size_t cindex = t==1 ? 0 : childrenc.size()-1;
+          Node rcc = childrenc[cindex];
+          if (xc == rcc)
           {
             children.pop_back();
             mchildren.pop_back();
             do_next = true;
             Trace("regexp-ext-rewrite-debug") << "- strip equal" << std::endl;
           }
-          else if (rc[0].isConst() && Word::isEmpty(rc[0]))
+          else if (rcc.isConst() && Word::isEmpty(rcc))
           {
             Trace("regexp-ext-rewrite-debug")
                 << "- ignore empty RE" << std::endl;
             // ignore and continue
-            children.pop_back();
+            childrenc.erase(childrenc.begin()+cindex, childrenc.begin()+cindex+1);
+            if (childrenc.empty())
+            {
+              children.pop_back();
+            }
+            else
+            {
+              TypeNode stype = nm->stringType();
+              children[children.size() - 1] = utils::mkConcat(childrenc, stype);
+            }
             do_next = true;
           }
-          else if (xc.isConst() && rc[0].isConst())
+          else if (xc.isConst() && rcc.isConst())
           {
             // split the constant
             size_t index;
-            Node s = Word::splitConstant(xc, rc[0], index, t == 0);
+            Node s = Word::splitConstant(xc, rcc, index, t == 0);
             Trace("regexp-ext-rewrite-debug")
-                << "- CRE: Regexp const split : " << xc << " " << rc[0]
+                << "- CRE: Regexp const split : " << xc << " " << rcc
                 << " -> " << s << " " << index << " " << t << std::endl;
             if (s.isNull())
             {
@@ -105,7 +118,10 @@ Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,
               }
               else
               {
-                children.push_back(nm->mkNode(Kind::STRING_TO_REGEXP, s));
+                childrenc[cindex] = s;
+                TypeNode stype = nm->stringType();
+                Node ss = utils::mkConcat(childrenc, stype);
+                children.push_back(nm->mkNode(Kind::STRING_TO_REGEXP, ss));
               }
             }
             Trace("regexp-ext-rewrite-debug") << "- split const" << std::endl;
