@@ -821,12 +821,13 @@
                                   (alf.match ((r3 RegLan))
                                     r1
                                     (
-                                    ((re.* r3) (alf.ite (alf.is_eq r1 re.allchar)
+                                    ((re.* r3) (alf.ite (alf.is_eq r3 re.allchar)
                                                  true 
                                                  ($str_re_includes_base r3
                                                      (alf.match ((r4 RegLan))
                                                        r2
                                                        (((re.* r4) r4) (r4 r4))))))
+                                    (r3        false)
                                   ))))))
   )
 )
@@ -845,11 +846,11 @@
 )
 
 (define $str_re_includes_rec_skip_rhs ((r1 RegLan) (r2 RegLan))
-  ($str_re_includes_base r1 r2)
+  ($str_is_unbound_wildcard r1)
 )
 
 (define $str_re_includes_rec_skip_both ((r1 RegLan) (r2 RegLan))
-  ($str_is_unbound_wildcard r1)
+  ($str_re_includes_base r1 r2)
 )
 
 (program $str_re_includes_rec ((r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
