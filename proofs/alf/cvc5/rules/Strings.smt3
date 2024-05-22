@@ -292,10 +292,10 @@
   :conclusion (= (str.in_re s r) b)
 )
 
-(declare-rule str-in-re-consume ((s1 String) (r1 RegLan) (s2 String) (r2 RegLan))
-  :args ((= (str.in_re s1 r1) (str.in_re s2 r2)))
-  :requires ((($str_re_consume s1 r1) (str.in_re s2 r2)))
-  :conclusion (= (str.in_re s1 r1) (str.in_re s2 r2))
+(declare-rule str-in-re-consume ((s String) (r RegLan) (b Bool))
+  :args ((= (str.in_re s r) b))
+  :requires ((($str_re_consume s r) b))
+  :conclusion (= (str.in_re s r) b)
 )
 
 (declare-rule re-loop-elim ((l Int) (u Int) (r1 RegLan) (r2 RegLan))
