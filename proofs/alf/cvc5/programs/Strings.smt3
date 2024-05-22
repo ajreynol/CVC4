@@ -910,12 +910,12 @@
   (let ((ss (string_to_flat_form s true)))  
   (let ((rr ($re_to_flat_form r true)))
   (alf.match ((s1 String) (r1 RegLan))
-      ($str_re_consume_rec ss rr @result.null false)
+      ($str_re_consume_rec ss rr @result.null true)
       (
         (false              false)
         ((str.in_re s1 r1)  (let ((s1r ($str_rev true s1)) (r1r ($re_to_flat_form r1 true)))
                             (alf.match ((s2 String) (r2 RegLan))
-                              ($str_re_consume_rec s1r r1r @result.null true)
+                              ($str_re_consume_rec s1r r1r @result.null false)
                               (
                                 (false              false)
                                 ((str.in_re s2 r2)  (str.in_re (string_from_flat_form s2 false) ($re_from_flat_form r2 false)))
