@@ -639,6 +639,9 @@
   ($str_rev rev ($str_flatten ($str_nary_intro s)))
 )
 
+; `$re_str_to_flat_form rev r` convert the strings s occurring as direct
+; children (str.to_re s) of regular expression concatenation r to their flat
+; form, reversing if rev is true.
 (program $re_str_to_flat_form ((r1 RegLan) (r2 RegLan :list) (s String) (rev Bool))
   (Bool RegLan) RegLan
   (
@@ -648,8 +651,14 @@
   )
 )
 
+; Converts a regular expression term to "flat form". This consists of the
+; following steps:
+; (1) convert r to n-ary form if it not already a re.++ application,
+; (2) (optionally) reverse,
+; (3) convert the strings s occurring as direct children (str.to_re s) of the
+; result to their flat form. Note that other strings in r, i.e. those that
+; occur benath other children remain unchanged.
 (define $re_to_flat_form ((r RegLan) (rev Bool))
-  ; intro, flatten, reverse
   ($re_str_to_flat_form rev ($str_rev rev ($re_nary_intro r)))
 )
 
@@ -664,7 +673,9 @@
   ($str_nary_elim (string_collect ($str_rev rev s)))
 )
 
-; Convert the strings s occurring as direct children (str.to_re s) from their flat form.
+; `$re_str_to_flat_form rev r` convert the strings s occurring as direct
+; children (str.to_re s) of regular expression concatenation r from their flat
+; form, reversing if rev is true.
 (program $re_str_from_flat_form ((r1 RegLan) (r2 RegLan :list) (s String) (rev Bool))
   (Bool RegLan) RegLan
   (
@@ -776,7 +787,9 @@
   )
 )
 
-; Returns true if all strings in r1 are also in r2.
+; Helper for `$str_re_includes_base`.
+; `$str_re_includes_simple r1 r2` returns true if we can infer all strings in r1
+; are also in r2 using basic techniques.
 (program $str_re_includes_simple ((s1 String) (s2 String) (s3 String) (s4 String) (r1 RegLan) (r2 RegLan :list) (r3 RegLan))
   (RegLan RegLan) Bool
   (
@@ -796,6 +809,9 @@
   )
 )
 
+; Helper for `$str_re_includes_base`.
+; If `$str_re_includes_lhs_union (re.union r1 ... rn) r` returns true if
+; we can infer that r is contained in some ri.
 (program $str_re_includes_lhs_union ((r1 RegLan) (r2 RegLan :list) (r3 RegLan)) 
   (RegLan RegLan) Bool
   (
@@ -804,6 +820,9 @@
   )
 )
 
+; Helper for `$str_re_includes_base`.
+; If `$str_re_includes_rhs_inter r (re.inter r1 ... rn)` returns true if
+; we can infer that some ri is contained in r.
 (program $str_re_includes_rhs_inter ((r1 RegLan) (r2 RegLan :list) (r3 RegLan)) 
   (RegLan RegLan) Bool
   (
@@ -812,6 +831,10 @@
   )
 )
 
+; Helper for `$str_re_includes`.
+; `$str_re_includes_base r1 r2` returns true if we can infer that all strings in
+; r2 are also in r1. It uses techniques that do not involve reasoning about
+; regular expression concatenation.
 (program $str_re_includes_base ((r1 RegLan) (r2 RegLan))
   (RegLan RegLan) Bool
   (
@@ -843,6 +866,7 @@
   )
 )
 
+; Helper for `$str_re_includes`
 (program $str_re_includes_rec ((s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
   (RegLan RegLan) Bool
   (
@@ -874,10 +898,14 @@
   )
 )
 
+; `$str_re_includes r1 r2` returns true if we can infer that all strings in
+; r2 are also in r1.
 (define $str_re_includes ((r1 RegLan) (r2 RegLan))
   (alf.ite ($str_re_includes_base r1 r2) true
     ($str_re_includes_rec ($re_to_flat_form r1 false) ($re_to_flat_form r2 false))))
 
+; Checks whether r is an application of re.union with 2 children for which
+; regular expression inclusion shows r is equivalent to (re.* re.allchar).
 (define $str_check_re_union_inclusion ((r RegLan))
   (alf.match ((r1 RegLan) (r2 RegLan))
   r
@@ -886,6 +914,9 @@
     ((re.union r1 (re.comp r2)) ($str_re_includes r1 r2))
   ))
 )
+
+; Checks whether r is an application of re.inter with 2 children for which
+; regular expression inclusion shows r is equivalent to re.none.
 (define $str_check_re_inter_inclusion ((r RegLan))
   (alf.match ((r1 RegLan) (r2 RegLan))
   r
@@ -895,6 +926,11 @@
   ))
 )
 
+; Checks whether r can be written to rr via the rule
+; ProofRewriteRule::RE_INTER_UNION_INCLUSION. In particular, we first verify
+; that rr has the result of the inclusion as the first child. We then subtract
+; the remainder (rr1) to find the regular expressions that are relevant for this
+; inference.
 (define $str_decompose_and_check_re_inter_union_inclusion ((r RegLan) (rr RegLan))
   (alf.match ((rr1 RegLan :list))
   rr
@@ -908,8 +944,10 @@
 
 ; `$str_re_consume_rec s r b rev` returns the result of implied consumption
 ; of string s in regular expression r, where b stores temporary results, and
-; rev indicates whether r was reversed (in which case its components must be
-; reversed).
+; rev indicates whether s and r were reversed (in which case its components must
+; be reversed when we recurse on non-str.to_re children).
+; In particular, when r is not a concatenation term, b stores the result of
+; this method for (s, r).
 (program $str_re_consume_rec ((s1 String) (s2 String :list) (s String) (r1 RegLan) (r2 RegLan :list) (b Bool) (rev Bool))
   (String RegLan Bool Bool) Bool
   (
@@ -999,6 +1037,12 @@
   )
 )
 
+; `$str_re_consume s r` either returns false if `(str.in_re s r)` can be shown
+; to be equivalent to false, or otherwise `(str.in_re sr rr)` where sr and rr
+; are the result of "consuming" prefixes/suffixes from s and r. We consume
+; from the end of s and r first by reversing them initially and converting them
+; to flat forms. We then reverse them again and consume from the beginning of
+; the remainder. Finally, we convert back from flat form when applicable.
 (define $str_re_consume ((s String) (r RegLan))
   (let ((ss (string_to_flat_form s true)))  
   (let ((rr ($re_to_flat_form r true)))
