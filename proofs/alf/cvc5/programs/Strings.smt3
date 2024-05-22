@@ -853,25 +853,31 @@
   ($str_re_includes_base r1 r2)
 )
 
-(program $str_re_includes_rec ((r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
+(program $str_re_includes_rec ((s1 String) (s2 String) (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
   (RegLan RegLan) Bool
   (
   ; true if equal, which includes if r1 is @re.empty
-  (($str_re_includes_rec r1 r1)                       true)
+  (($str_re_includes_rec r1 r1)                                     true)
+  ; consider components one at a time
+  (($str_re_includes_rec (re.++ (str.to_re (str.++ s1 s2)) r2) r3)  ($str_re_includes_rec (re.++ (str.to_re s1) (str.to_re s2) r2) r3))
+  (($str_re_includes_rec (re.++ (str.to_re "") r2) r3)              ($str_re_includes_rec r2 r3))
+  (($str_re_includes_rec r1 (re.++ (str.to_re (str.++ s1 s2)) r4))  ($str_re_includes_rec r1 (re.++ (str.to_re s1) (str.to_re s2) r4)))
+  (($str_re_includes_rec r1 (re.++ (str.to_re "") r4))              ($str_re_includes_rec r1 r4))
   ; otherwise we recurse for three possible cases
-  (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4)) (alf.ite (alf.ite ($str_re_includes_rec_skip_both r1 r3)
-                                                                          ($str_re_includes_rec r2 r4)
-                                                                          false)
-                                                                  true
-                                                               (alf.ite (alf.ite ($str_re_includes_rec_skip_lhs r1 r3)
-                                                                          ($str_re_includes_rec r2 (re.++ r3 r4))
-                                                                          false)
-                                                                  true
-                                                               (alf.ite (alf.ite ($str_re_includes_rec_skip_rhs r1 r3)
-                                                                          ($str_re_includes_rec (re.++ r1 r2) r4)
-                                                                          false)
-                                                                  true
-                                                                  false))))
+  (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4)) 
+    (alf.ite (alf.ite ($str_re_includes_rec_skip_both r1 r3)
+              ($str_re_includes_rec r2 r4)
+              false)
+      true
+    (alf.ite (alf.ite ($str_re_includes_rec_skip_lhs r1 r3)
+              ($str_re_includes_rec r2 (re.++ r3 r4))
+              false)
+      true
+    (alf.ite (alf.ite ($str_re_includes_rec_skip_rhs r1 r3)
+              ($str_re_includes_rec (re.++ r1 r2) r4)
+              false)
+      true
+      false))))
   ; handles the case where there is a leftover (re.* re.allchar) on the LHS
   (($str_re_includes_rec (re.++ r1 r2) @re.empty)      (alf.and (alf.is_eq r1 (re.* re.allchar)) (alf.is_eq r2 @re.empty)))
   )
@@ -879,7 +885,7 @@
 
 (define $str_re_includes ((r1 RegLan) (r2 RegLan))
   (alf.ite ($str_re_includes_base r1 r2) true
-    ($str_re_includes_rec ($re_nary_intro r1) ($re_nary_intro r2))))
+    ($str_re_includes_rec ($re_to_flat_form r1 false) ($re_to_flat_form r2 false))))
 
 (define $str_mk_re_inter_union_inclusion ((r RegLan))
   (alf.match ((r1 RegLan) (r2 RegLan))
