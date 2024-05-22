@@ -52,7 +52,7 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
   registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_EVAL,
                            TheoryRewriteCtx::DSL_SUBCALL);
   registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_CONSUME,
-                           TheoryRewriteCtx::POST_DSL);
+                           TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::RE_LOOP_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::RE_INTER_UNION_INCLUSION,
@@ -1513,22 +1513,25 @@ Node SequencesRewriter::rewriteViaStrInReConsume(const Node& node)
   utils::getConcat(node[1], children);
   std::vector<Node> mchildren;
   utils::getConcat(node[0], mchildren);
-  size_t prevSize = children.size() + mchildren.size();
   Node scn = RegExpEntail::simpleRegexpConsume(mchildren, children);
   if (!scn.isNull())
   {
     return scn;
   }
-  else if ((children.size() + mchildren.size()) != prevSize)
+  else
   {
     // Given a membership (str.++ x1 ... xn) in (re.++ r1 ... rm),
     // above, we strip components to construct an equivalent membership:
     // (str.++ xi .. xj) in (re.++ rk ... rl).
     Node xn = utils::mkConcat(mchildren, node[0].getType());
     // construct the updated regular expression
-    return nodeManager()->mkNode(Kind::STRING_IN_REGEXP,
+    Node newMem = nodeManager()->mkNode(Kind::STRING_IN_REGEXP,
                                  xn,
                                  utils::mkConcat(children, node[1].getType()));
+    if (newMem!=node)
+    {
+      return newMem;
+    }
   }
   return Node::null();
 }
