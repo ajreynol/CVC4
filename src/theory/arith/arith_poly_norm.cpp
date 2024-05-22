@@ -279,6 +279,7 @@ Node PolyNorm::toNode(const TypeNode& tn) const
       return bv::utils::mkZero(tn.getBitVectorSize());
     }
   }
+  // must sort to ensure this method is idempotent
   std::sort(sum.begin(), sum.end());
   return nm->mkNode(addKind, sum);
 }
