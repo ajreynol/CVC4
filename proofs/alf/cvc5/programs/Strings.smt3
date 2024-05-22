@@ -853,7 +853,7 @@
   ($str_re_includes_base r1 r2)
 )
 
-(program $str_re_includes_rec ((s1 String) (s2 String) (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
+(program $str_re_includes_rec ((s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
   (RegLan RegLan) Bool
   (
   ; true if equal, which includes if r1 is @re.empty
