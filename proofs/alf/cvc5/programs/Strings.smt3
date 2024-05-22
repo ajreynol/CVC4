@@ -832,6 +832,8 @@
   )
 )
 
+; `$str_is_unbound_wildcard r` returns true if `r` is of the form
+; (re.++ re.allchar ... re.allchar (re.* re.allchar) ...).
 (program $str_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list))
   (RegLan) Bool
   (
@@ -876,14 +878,31 @@
   (alf.ite ($str_re_includes_base r1 r2) true
     ($str_re_includes_rec ($re_to_flat_form r1 false) ($re_to_flat_form r2 false))))
 
-(define $str_mk_re_inter_union_inclusion ((r RegLan))
+(define $str_check_re_union_inclusion ((r RegLan))
   (alf.match ((r1 RegLan) (r2 RegLan))
   r
   (
-    ((re.union (re.comp r1) r2) (alf.requires ($str_re_includes r2 r1) true (re.* re.allchar)))
-    ((re.union r1 (re.comp r2)) (alf.requires ($str_re_includes r1 r2) true (re.* re.allchar)))
-    ((re.inter (re.comp r1) r2) (alf.requires ($str_re_includes r1 r2) true re.none))
-    ((re.inter r1 (re.comp r2)) (alf.requires ($str_re_includes r2 r1) true re.none))
+    ((re.union (re.comp r1) r2) ($str_re_includes r2 r1))
+    ((re.union r1 (re.comp r2)) ($str_re_includes r1 r2))
+  ))
+)
+(define $str_check_re_inter_inclusion ((r RegLan))
+  (alf.match ((r1 RegLan) (r2 RegLan))
+  r
+  (
+    ((re.inter (re.comp r1) r2) ($str_re_includes r1 r2))
+    ((re.inter r1 (re.comp r2)) ($str_re_includes r2 r1))
+  ))
+)
+
+(define $str_decompose_and_check_re_inter_union_inclusion ((r RegLan) (rr RegLan))
+  (alf.match ((rr1 RegLan :list))
+  rr
+  (
+  ((re.union (re.* re.allchar) rr1) ($str_check_re_union_inclusion (nary.diff re.union re.none r rr1)))
+  ((re.* re.allchar)                ($str_check_re_union_inclusion r))
+  ((re.inter re.none rr1)           ($str_check_re_inter_inclusion (nary.diff re.inter re.all r rr1)))
+  (re.none                          ($str_check_re_inter_inclusion r))
   ))
 )
 
