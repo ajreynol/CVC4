@@ -878,6 +878,8 @@
           )
         )
     )
+    (($str_re_consume_rec s1 (re.++ @re.empty r2) @result.null rev)
+      ($str_re_consume_rec s1 r2 @result.null rev)) ; finished current component
     ; Intersection reports conflicts eagerly, and otherwise combines the results
     (($str_re_consume_rec s1 (re.inter r1 r2) b rev)   (let ((r1r ($re_to_flat_form r1 rev)))
                                                        (alf.match ((bb Bool))
