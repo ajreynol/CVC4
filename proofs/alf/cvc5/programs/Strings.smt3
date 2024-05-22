@@ -841,18 +841,6 @@
   )
 )
 
-(define $str_re_includes_rec_skip_lhs ((r1 RegLan) (r2 RegLan))
-  (alf.is_eq r1 (re.* re.allchar))
-)
-
-(define $str_re_includes_rec_skip_rhs ((r1 RegLan) (r2 RegLan))
-  ($str_is_unbound_wildcard r1)
-)
-
-(define $str_re_includes_rec_skip_both ((r1 RegLan) (r2 RegLan))
-  ($str_re_includes_base r1 r2)
-)
-
 (program $str_re_includes_rec ((s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
   (RegLan RegLan) Bool
   (
@@ -865,15 +853,15 @@
   (($str_re_includes_rec r1 (re.++ (str.to_re "") r4))              ($str_re_includes_rec r1 r4))
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4)) 
-    (alf.ite (alf.ite ($str_re_includes_rec_skip_both r1 r3)
+    (alf.ite (alf.ite ($str_re_includes_base r1 r3)            ; can skip both if we have a base inclusion
               ($str_re_includes_rec r2 r4)
               false)
       true
-    (alf.ite (alf.ite ($str_re_includes_rec_skip_lhs r1 r3)
+    (alf.ite (alf.ite ($str_is_unbound_wildcard (re.++ r1 r2)) ; can skip LHS if unbounded wildcard
               ($str_re_includes_rec r2 (re.++ r3 r4))
               false)
       true
-    (alf.ite (alf.ite ($str_re_includes_rec_skip_rhs r1 r3)
+    (alf.ite (alf.ite (alf.is_eq r1 (re.* re.allchar))         ; can skip RHS if it is sigma star
               ($str_re_includes_rec (re.++ r1 r2) r4)
               false)
       true
