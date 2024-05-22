@@ -49,10 +49,12 @@ Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,
   {
     if (tmin <= t && t <= tmax)
     {
-      Trace("regexp-ext-rewrite-debug") << "Run consume, direction is " << t << " with:" << std::endl;
+      Trace("regexp-ext-rewrite-debug")
+          << "Run consume, direction is " << t << " with:" << std::endl;
       Trace("regexp-ext-rewrite-debug")
           << "  mchildren : " << mchildren << std::endl;
-      Trace("regexp-ext-rewrite-debug") << "  children : " << children << std::endl;
+      Trace("regexp-ext-rewrite-debug")
+          << "  children : " << children << std::endl;
       bool do_next = true;
       while (!children.empty() && !mchildren.empty() && do_next)
       {
@@ -67,7 +69,7 @@ Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,
         {
           std::vector<Node> childrenc;
           utils::getConcat(rc[0], childrenc);
-          size_t cindex = t==1 ? 0 : childrenc.size()-1;
+          size_t cindex = t == 1 ? 0 : childrenc.size() - 1;
           Node rcc = childrenc[cindex];
           Node remStr;
           if (xc == rcc)
@@ -89,8 +91,8 @@ Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,
             size_t index;
             remStr = Word::splitConstant(xc, rcc, index, t == 0);
             Trace("regexp-ext-rewrite-debug")
-                << "- CRE: Regexp const split : " << xc << " " << rcc
-                << " -> " << remStr << " " << index << " " << t << std::endl;
+                << "- CRE: Regexp const split : " << xc << " " << rcc << " -> "
+                << remStr << " " << index << " " << t << std::endl;
             if (remStr.isNull())
             {
               Trace("regexp-ext-rewrite-debug")
@@ -119,7 +121,8 @@ Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,
             if (remStr.isNull())
             {
               // we have fully processed the component
-              childrenc.erase(childrenc.begin()+cindex, childrenc.begin()+cindex+1);
+              childrenc.erase(childrenc.begin() + cindex,
+                              childrenc.begin() + cindex + 1);
             }
             else
             {
@@ -135,7 +138,8 @@ Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,
             {
               // otherwise we reconstruct it
               TypeNode stype = nm->stringType();
-              children[children.size() - 1] = nm->mkNode(Kind::STRING_TO_REGEXP, utils::mkConcat(childrenc, stype));
+              children[children.size() - 1] = nm->mkNode(
+                  Kind::STRING_TO_REGEXP, utils::mkConcat(childrenc, stype));
             }
           }
         }

@@ -166,38 +166,38 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::QUANT_MINISCOPE:
     {
-      if (n.getKind()!=Kind::FORALL || n[1].getKind()!=Kind::AND)
+      if (n.getKind() != Kind::FORALL || n[1].getKind() != Kind::AND)
       {
         return Node::null();
       }
       // note that qa is not needed; moreover external proofs should be agnostic
       // to it
       QAttributes qa;
-      QuantAttributes::computeQuantAttributes( n, qa );
+      QuantAttributes::computeQuantAttributes(n, qa);
       Node nret = computeMiniscoping(n, qa, true, false);
-      Assert (nret!=n);
+      Assert(nret != n);
       return nret;
     }
-      break;
+    break;
     case ProofRewriteRule::QUANT_PARTITION_CONNECTED_FV:
     {
-      if (n.getKind()!=Kind::FORALL || n[1].getKind()!=Kind::OR)
+      if (n.getKind() != Kind::FORALL || n[1].getKind() != Kind::OR)
       {
         return Node::null();
       }
       // note that qa is not needed; moreover external proofs should be agnostic
       // to it
       QAttributes qa;
-      QuantAttributes::computeQuantAttributes( n, qa );
+      QuantAttributes::computeQuantAttributes(n, qa);
       std::vector<Node> vars(n[0].begin(), n[0].end());
       Node body = n[1];
-      Node nret = computeSplit( vars, body, qa );
-      if (nret!=n)
+      Node nret = computeSplit(vars, body, qa);
+      if (nret != n)
       {
         return nret;
       }
     }
-      break;
+    break;
     default: break;
   }
   return Node::null();
@@ -1658,9 +1658,11 @@ Node QuantifiersRewriter::computeSplit(std::vector<Node>& args,
     NodeManager* nm = nodeManager();
     if (TraceIsOn("clause-split-debug"))
     {
-      Trace("clause-split-debug") << "Split quantified formula with body " << body << std::endl;
+      Trace("clause-split-debug")
+          << "Split quantified formula with body " << body << std::endl;
       Trace("clause-split-debug") << "   Ground literals: " << std::endl;
-      for( size_t i=0; i<lits.size(); i++) {
+      for (size_t i = 0; i < lits.size(); i++)
+      {
         Trace("clause-split-debug") << "      " << lits[i] << std::endl;
       }
       Trace("clause-split-debug") << std::endl;
@@ -1671,12 +1673,15 @@ Node QuantifiersRewriter::computeSplit(std::vector<Node>& args,
       if (TraceIsOn("clause-split-debug"))
       {
         Trace("clause-split-debug") << "   Literals: " << std::endl;
-        for (size_t i=0; i<it->second.size(); i++) {
+        for (size_t i = 0; i < it->second.size(); i++)
+        {
           Trace("clause-split-debug") << "      " << it->second[i] << std::endl;
         }
         Trace("clause-split-debug") << "   Variables: " << std::endl;
-        for (size_t i=0; i<eqc_to_var[eqc].size(); i++) {
-          Trace("clause-split-debug") << "      " << eqc_to_var[eqc][i] << std::endl;
+        for (size_t i = 0; i < eqc_to_var[eqc].size(); i++)
+        {
+          Trace("clause-split-debug")
+              << "      " << eqc_to_var[eqc][i] << std::endl;
         }
         Trace("clause-split-debug") << std::endl;
       }
@@ -1692,7 +1697,7 @@ Node QuantifiersRewriter::computeSplit(std::vector<Node>& args,
     Trace("clause-split-debug") << "Made node : " << nf << std::endl;
     return nf;
   }
-  return mkForAll( args, body, qa );
+  return mkForAll(args, body, qa);
 }
 
 Node QuantifiersRewriter::mkForAll(const std::vector<Node>& args,

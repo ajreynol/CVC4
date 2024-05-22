@@ -1525,10 +1525,11 @@ Node SequencesRewriter::rewriteViaStrInReConsume(const Node& node)
     // (str.++ xi .. xj) in (re.++ rk ... rl).
     Node xn = utils::mkConcat(mchildren, node[0].getType());
     // construct the updated regular expression
-    Node newMem = nodeManager()->mkNode(Kind::STRING_IN_REGEXP,
-                                 xn,
-                                 utils::mkConcat(children, node[1].getType()));
-    if (newMem!=node)
+    Node newMem =
+        nodeManager()->mkNode(Kind::STRING_IN_REGEXP,
+                              xn,
+                              utils::mkConcat(children, node[1].getType()));
+    if (newMem != node)
     {
       return newMem;
     }
