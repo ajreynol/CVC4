@@ -56,6 +56,10 @@ class BasicRewriteRCons : protected EnvObj
       CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid);
 
   /**
+   * Prove eq from eqi, where eqi is the result of term conversion.
+   */
+  void ensureProofForEncodeTransform(CDProof* cdp, const Node& eq, const Node& eqi);
+  /**
    * Ensure we have a proof for theory rewrite id of eq in cdp. This typically
    * adds a single THEORY_REWRITE step to cdp. However, for rules with prefix
    * MACRO_, we perform elaboration.

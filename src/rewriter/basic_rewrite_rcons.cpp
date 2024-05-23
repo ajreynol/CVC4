@@ -129,6 +129,11 @@ bool BasicRewriteRCons::tryRule(CDProof* cdp,
   return false;
 }
 
+void BasicRewriteRCons::ensureProofForEncodeTransform(CDProof* cdp, const Node& eq, const Node& eqi)
+{
+  cdp->addStep(eq, ProofRule::ENCODE_PRED_TRANSFORM, {eqi}, {eq});
+}
+  
 void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
                                                     ProofRewriteRule id,
                                                     const Node& eq)
