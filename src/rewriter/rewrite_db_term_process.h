@@ -18,13 +18,15 @@
 #ifndef CVC5__REWRITER__REWRITE_DB_TERM_PROCESS__H
 #define CVC5__REWRITER__REWRITE_DB_TERM_PROCESS__H
 
-#include <map>
-#include <unordered_map>
+#include <cvc5/cvc5_proof_rule.h>
 
 #include "expr/node.h"
 #include "expr/node_converter.h"
 
 namespace cvc5::internal {
+
+class TConvProofGenerator;
+
 namespace rewriter {
 
 /**
@@ -45,7 +47,7 @@ namespace rewriter {
 class RewriteDbNodeConverter : public NodeConverter
 {
  public:
-  RewriteDbNodeConverter(NodeManager* nm);
+  RewriteDbNodeConverter(NodeManager* nm, TConvProofGenerator* tpg = nullptr);
   /**
    * This converts the node n to the internal shape that it should be in
    * for the DSL proof reconstruction algorithm.
@@ -53,6 +55,10 @@ class RewriteDbNodeConverter : public NodeConverter
   Node postConvert(Node n) override;
 
  protected:
+  /** A pointer to a TConvProofGenerator, if proof producing */
+  TConvProofGenerator* d_tpg;
+  /** Record trivial step */
+  void recordProofStep(const Node& n, const Node& ret, ProofRule r);
   /** Should we traverse n? */
   bool shouldTraverse(Node n) override;
 };

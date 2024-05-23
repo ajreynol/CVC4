@@ -16,6 +16,7 @@
 
 #include "rewriter/basic_rewrite_rcons.h"
 
+#include "rewriter/rewrite_db_term_process.h"
 #include "proof/conv_proof_generator.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node_algorithm.h"
@@ -133,6 +134,18 @@ void BasicRewriteRCons::ensureProofForEncodeTransform(CDProof* cdp,
                                                       const Node& eq,
                                                       const Node& eqi)
 {
+  /*
+  TConvProofGenerator tpg(d_env, nullptr);
+  RewriteDbNodeConverter rdnc(nodeManager(), &tpg);
+  Node eqr = rdnc.convert(eq);
+  Assert (eqr==eqi);
+  Node equiv = eq.eqNode(eqi);
+  std::shared_ptr<ProofNode> pfn = tpg.getProofFor(equiv);
+  cdp->addProof(pfn);
+  Node equivs = eqi.eqNode(eq);
+  cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
+  cdp->addStep(eq, ProofRule::EQ_RESOLVE, {eqi, equivs}, {});
+*/
   cdp->addStep(eq, ProofRule::ENCODE_PRED_TRANSFORM, {eqi}, {eq});
 }
 

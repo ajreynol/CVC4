@@ -23,14 +23,15 @@
 #include "util/bitvector.h"
 #include "util/rational.h"
 #include "util/string.h"
+#include "proof/conv_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
 namespace cvc5::internal {
 namespace rewriter {
 
-RewriteDbNodeConverter::RewriteDbNodeConverter(NodeManager* nm)
-    : NodeConverter(nm)
+RewriteDbNodeConverter::RewriteDbNodeConverter(NodeManager* nm, TConvProofGenerator* tpg)
+    : NodeConverter(nm), d_tpg(tpg)
 {
 }
 
@@ -54,11 +55,15 @@ Node RewriteDbNodeConverter::postConvert(Node n)
       tmp.push_back(c);
       children.push_back(nm->mkConst(String(tmp)));
     }
-    return nm->mkNode(Kind::STRING_CONCAT, children);
+    Node ret = nm->mkNode(Kind::STRING_CONCAT, children);
+    recordProofStep(n, ret, ProofRule::EVALUATE);
+    return ret;
   }
   else if (k == Kind::CONST_SEQUENCE)
   {
-    return theory::strings::utils::mkConcatForConstSequence(n);
+    Node ret = theory::strings::utils::mkConcatForConstSequence(n);
+    recordProofStep(n, ret, ProofRule::ENCODE_PRED_TRANSFORM);
+    return ret;
   }
   else if (k == Kind::CONST_BITVECTOR)
   {
@@ -68,7 +73,9 @@ Node RewriteDbNodeConverter::postConvert(Node n)
     children.push_back(
         nm->mkConstInt(Rational(n.getConst<BitVector>().toInteger())));
     children.push_back(nm->mkConstInt(Rational(theory::bv::utils::getSize(n))));
-    return nm->mkNode(Kind::CONST_BITVECTOR_SYMBOLIC, children);
+    Node ret = nm->mkNode(Kind::CONST_BITVECTOR_SYMBOLIC, children);
+    recordProofStep(n, ret, ProofRule::EVALUATE);
+    return ret;
   }
   else if (k == Kind::FORALL)
   {
@@ -76,7 +83,9 @@ Node RewriteDbNodeConverter::postConvert(Node n)
     if (n.getNumChildren() == 3)
     {
       NodeManager* nm = NodeManager::currentNM();
-      return nm->mkNode(Kind::FORALL, n[0], n[1]);
+      Node ret = nm->mkNode(Kind::FORALL, n[0], n[1]);
+      recordProofStep(n, ret, ProofRule::ENCODE_PRED_TRANSFORM);
+      return ret;
     }
   }
   /*
@@ -94,15 +103,37 @@ Node RewriteDbNodeConverter::postConvert(Node n)
         GenericOp::getIndicesForOperator(k, n.getOperator());
     indices.insert(indices.begin(), nm->mkConst(GenericOp(k)));
     indices.insert(indices.end(), n.begin(), n.end());
-    return nm->mkNode(Kind::APPLY_INDEXED_SYMBOLIC, indices);
+    Node ret = nm->mkNode(Kind::APPLY_INDEXED_SYMBOLIC, indices);
+    recordProofStep(n, ret, ProofRule::ENCODE_PRED_TRANSFORM);
+    return ret;
   }
-
-  return expr::getACINormalForm(n);
+  Node nacc = expr::getACINormalForm(n);
+  recordProofStep(n, nacc, ProofRule::ACI_NORM);
+  return nacc;
 }
 
 bool RewriteDbNodeConverter::shouldTraverse(Node n)
 {
   return n.getKind() != Kind::INST_PATTERN_LIST;
+}
+
+void RewriteDbNodeConverter::recordProofStep(const Node& n, const Node& ret, ProofRule r)
+{
+  if (d_tpg==nullptr || n==ret)
+  {
+    return;
+  }
+  switch (r)
+  {
+    case ProofRule::EVALUATE:
+      break;
+    case ProofRule::ACI_NORM:
+      break;
+    case ProofRule::ENCODE_PRED_TRANSFORM:
+      break;
+    default:
+      break;
+  }
 }
 
 }  // namespace rewriter
