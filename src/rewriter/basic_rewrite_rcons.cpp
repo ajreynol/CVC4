@@ -142,19 +142,15 @@ void BasicRewriteRCons::ensureProofForEncodeTransform(CDProof* cdp,
                                                       const Node& eq,
                                                       const Node& eqi)
 {
-  /*
-  TConvProofGenerator tpg(d_env, nullptr);
-  RewriteDbNodeConverter rdnc(d_env, &tpg);
-  Node eqr = rdnc.convert(eq);
-  Assert (eqr==eqi);
+  ProofRewriteDbNodeConverter rdnc(d_env);
+  std::shared_ptr<ProofNode> pfn = rdnc.convert(eq);
   Node equiv = eq.eqNode(eqi);
-  std::shared_ptr<ProofNode> pfn = tpg.getProofFor(equiv);
+  Assert (pfn->getResult()==equiv);
   cdp->addProof(pfn);
   Node equivs = eqi.eqNode(eq);
   cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
   cdp->addStep(eq, ProofRule::EQ_RESOLVE, {eqi, equivs}, {});
-  */
-  cdp->addStep(eq, ProofRule::ENCODE_PRED_TRANSFORM, {eqi}, {eq});
+  //cdp->addStep(eq, ProofRule::ENCODE_PRED_TRANSFORM, {eqi}, {eq});
 }
 
 void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,

@@ -69,11 +69,15 @@
   )
 )
 
-(declare-rule encode_pred_transform ((F Bool) (G Bool))
-  :premises (F)
-  :args (G)
-  :requires (((encode_transform F) (encode_transform G)))
-  :conclusion G)
+;(declare-rule encode_pred_transform ((F Bool) (G Bool))
+;  :premises (F)
+;  :args (G)
+;  :requires (((encode_transform F) (encode_transform G)))
+;  :conclusion G)
+
+(declare-rule encode_pred_transform ((T Type) (t T))
+  :args (t)
+  :conclusion (= t t))
 
 
 ; evaluate, for all theories

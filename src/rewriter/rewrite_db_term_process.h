@@ -23,11 +23,9 @@
 #include "expr/node.h"
 #include "expr/node_converter.h"
 #include "proof/proof.h"
+#include "proof/conv_proof_generator.h"
 
 namespace cvc5::internal {
-
-class TConvProofGenerator;
-
 namespace rewriter {
 
 /**
@@ -48,7 +46,11 @@ namespace rewriter {
 class RewriteDbNodeConverter : public NodeConverter
 {
  public:
-  RewriteDbNodeConverter(NodeManager* nm, TConvProofGenerator* tpg = nullptr);
+  /**
+   * The latter two arguments are used internally if we are proof producing
+   * via ProofRewriteDbNodeConverter.
+   */
+  RewriteDbNodeConverter(NodeManager* nm, TConvProofGenerator* tpg = nullptr, CDProof* p = nullptr);
   /**
    * This converts the node n to the internal shape that it should be in
    * for the DSL proof reconstruction algorithm.
@@ -58,12 +60,32 @@ class RewriteDbNodeConverter : public NodeConverter
  protected:
   /** A pointer to a TConvProofGenerator, if proof producing */
   TConvProofGenerator* d_tpg;
-  /** A CDProof */
-  std::unique_ptr<CDProof> d_proof;
+  /** A CDProof, if proof producing */
+  CDProof* d_proof;
   /** Record trivial step */
   void recordProofStep(const Node& n, const Node& ret, ProofRule r);
   /** Should we traverse n? */
   bool shouldTraverse(Node n) override;
+};
+
+/** A proof producing version of the above class */
+class ProofRewriteDbNodeConverter : protected EnvObj
+{
+ public:
+  ProofRewriteDbNodeConverter(Env& env);
+  /**
+   * Return the proof of the conversion of n based on the above class.
+   * Specifically, this returns a proof of
+   *   n = RewriteDbNodeConverter::convert(n).
+   * The returned proof is a term conversion proof whose small steps are
+   * EVALUATE, ACI_NORM and ENCODE_PRED_TRANSFORM.
+   */
+  std::shared_ptr<ProofNode> convert(const Node& n);
+ private:
+  /** A pointer to a TConvProofGenerator, if proof producing */
+  TConvProofGenerator d_tpg;
+  /** A CDProof */
+  CDProof d_proof;
 };
 
 }  // namespace rewriter

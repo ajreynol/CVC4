@@ -31,15 +31,10 @@ namespace cvc5::internal {
 namespace rewriter {
 
 RewriteDbNodeConverter::RewriteDbNodeConverter(NodeManager* nm,
-                                               TConvProofGenerator* tpg)
-    : NodeConverter(nm), d_tpg(tpg)
+                                               TConvProofGenerator* tpg,
+                                               CDProof* p)
+    : NodeConverter(nm), d_tpg(tpg), d_proof(p)
 {
-  /*
-  if (d_tpg!=nullptr)
-  {
-    d_proof.reset(new CDProof(d_env));
-  }
-  */
 }
 
 Node RewriteDbNodeConverter::postConvert(Node n)
@@ -132,6 +127,7 @@ void RewriteDbNodeConverter::recordProofStep(const Node& n,
   {
     return;
   }
+  Assert (d_proof!=nullptr);
   switch (r)
   {
     case ProofRule::ACI_NORM:
@@ -139,9 +135,10 @@ void RewriteDbNodeConverter::recordProofStep(const Node& n,
       break;
     case ProofRule::EVALUATE:
     {
+      // evaluate step in reverse, using d_proof as an intermediate step
       Node eq = ret.eqNode(n);
       d_proof->addStep(eq, ProofRule::EVALUATE, {}, {ret});
-      d_tpg->addRewriteStep(n, ret, d_proof.get());
+      d_tpg->addRewriteStep(n, ret, d_proof);
     }
       break;
     case ProofRule::ENCODE_PRED_TRANSFORM:
@@ -151,5 +148,19 @@ void RewriteDbNodeConverter::recordProofStep(const Node& n,
   }
 }
 
+ProofRewriteDbNodeConverter::ProofRewriteDbNodeConverter(Env& env) : EnvObj(env), d_tpg(env, nullptr),
+  d_proof(env)
+{
+  
+}
+
+std::shared_ptr<ProofNode> ProofRewriteDbNodeConverter::convert(const Node& n)
+{
+  RewriteDbNodeConverter rdnc(nodeManager(), &d_tpg, &d_proof);
+  Node nr = rdnc.convert(n);
+  Node equiv = n.eqNode(nr);
+  return d_tpg.getProofFor(equiv);
+}
+  
 }  // namespace rewriter
 }  // namespace cvc5::internal

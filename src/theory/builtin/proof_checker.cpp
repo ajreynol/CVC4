@@ -419,13 +419,12 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
   }
   else if (id == ProofRule::ENCODE_PRED_TRANSFORM)
   {
-    /*
     Assert (children.empty());
     Assert (args.size()==1);
     rewriter::RewriteDbNodeConverter rconv(nodeManager());
     Node ac = rconv.postConvert(args[0]);
     return args[0].eqNode(ac);
-    */
+    /*
     Assert(children.size() == 1);
     Assert(args.size() == 1);
     rewriter::RewriteDbNodeConverter rconv(nodeManager());
@@ -437,6 +436,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
       return Node::null();
     }
     return g;
+    */
   }
   else if (id == ProofRule::ANNOTATION)
   {
