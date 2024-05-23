@@ -410,7 +410,7 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
     ProofRewriteRule id;
     rewriter::getRewriteRule(pfn->getArguments()[0], id);
     std::stringstream ss;
-    ss << "dsl." << id;
+    ss << id;
     return ss.str();
   }
   else if (r == ProofRule::THEORY_REWRITE)
@@ -446,7 +446,7 @@ void AlfPrinter::printDslRule(std::ostream& out, ProofRewriteRule r)
   // BOUND_VARIABLE of this rule as user provided variables. The substitution
   // su stores this mapping.
   Subs su;
-  out << "(declare-rule dsl." << r << " (";
+  out << "(declare-rule " << r << " (";
   AlfDependentTypeConverter adtc(nodeManager(), d_tproc);
   std::stringstream ssExplicit;
   for (size_t i = 0, nvars = uvarList.size(); i < nvars; i++)
