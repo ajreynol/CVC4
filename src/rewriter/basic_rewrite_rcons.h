@@ -91,7 +91,7 @@ class BasicRewriteRCons : protected EnvObj
    * THEORY_REWRITE are tried.
    */
   bool d_isDslStrict;
-  /** Subgoals */
+  /** The list of subgoals, which are returned via getSubgoals. */
   std::vector<std::shared_ptr<ProofNode>> d_subgoals;
   /**
    * Try rule r, return true if eq could be proven by r with arguments args.
@@ -101,6 +101,14 @@ class BasicRewriteRCons : protected EnvObj
                Node eq,
                ProofRule r,
                const std::vector<Node>& args);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_BOOL_NNF_NORM.
+   * 
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by ProofRewriteRule::MACRO_BOOL_NNF_NORM.
+   * @return true if added a closed proof of eq to cdp.
+   */
   bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& eq);
   bool ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& eq);
   /**
