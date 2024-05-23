@@ -419,8 +419,8 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
   }
   else if (id == ProofRule::ENCODE_PRED_TRANSFORM)
   {
-    Assert (children.empty());
-    Assert (args.size()==1);
+    Assert(children.empty());
+    Assert(args.size() == 1);
     rewriter::RewriteDbNodeConverter rconv(nodeManager());
     // run a single (small) step conversion
     Node ac = rconv.postConvert(args[0]);

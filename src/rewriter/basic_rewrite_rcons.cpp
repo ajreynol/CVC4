@@ -145,7 +145,7 @@ void BasicRewriteRCons::ensureProofForEncodeTransform(CDProof* cdp,
   ProofRewriteDbNodeConverter rdnc(d_env);
   std::shared_ptr<ProofNode> pfn = rdnc.convert(eq);
   Node equiv = eq.eqNode(eqi);
-  Assert (pfn->getResult()==equiv);
+  Assert(pfn->getResult() == equiv);
   cdp->addProof(pfn);
   Node equivs = eqi.eqNode(eq);
   cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
