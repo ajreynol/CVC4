@@ -17,20 +17,21 @@
 
 #include "expr/attribute.h"
 #include "expr/nary_term_util.h"
+#include "proof/conv_proof_generator.h"
 #include "theory/builtin/generic_op.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "util/bitvector.h"
 #include "util/rational.h"
 #include "util/string.h"
-#include "proof/conv_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
 namespace cvc5::internal {
 namespace rewriter {
 
-RewriteDbNodeConverter::RewriteDbNodeConverter(NodeManager* nm, TConvProofGenerator* tpg)
+RewriteDbNodeConverter::RewriteDbNodeConverter(NodeManager* nm,
+                                               TConvProofGenerator* tpg)
     : NodeConverter(nm), d_tpg(tpg)
 {
 }
@@ -117,22 +118,20 @@ bool RewriteDbNodeConverter::shouldTraverse(Node n)
   return n.getKind() != Kind::INST_PATTERN_LIST;
 }
 
-void RewriteDbNodeConverter::recordProofStep(const Node& n, const Node& ret, ProofRule r)
+void RewriteDbNodeConverter::recordProofStep(const Node& n,
+                                             const Node& ret,
+                                             ProofRule r)
 {
-  if (d_tpg==nullptr || n==ret)
+  if (d_tpg == nullptr || n == ret)
   {
     return;
   }
   switch (r)
   {
-    case ProofRule::EVALUATE:
-      break;
-    case ProofRule::ACI_NORM:
-      break;
-    case ProofRule::ENCODE_PRED_TRANSFORM:
-      break;
-    default:
-      break;
+    case ProofRule::EVALUATE: break;
+    case ProofRule::ACI_NORM: break;
+    case ProofRule::ENCODE_PRED_TRANSFORM: break;
+    default: break;
   }
 }
 

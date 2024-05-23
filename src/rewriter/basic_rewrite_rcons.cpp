@@ -16,10 +16,10 @@
 
 #include "rewriter/basic_rewrite_rcons.h"
 
-#include "rewriter/rewrite_db_term_process.h"
 #include "proof/conv_proof_generator.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node_algorithm.h"
+#include "rewriter/rewrite_db_term_process.h"
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
 #include "theory/arith/arith_poly_norm.h"
