@@ -2499,6 +2499,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \endverbatim
    */
   EVALUE(DT_CONS_EQ),
+  EVALUE(BV_BITWISE_SLICING),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings - regular expression membership evaluation**

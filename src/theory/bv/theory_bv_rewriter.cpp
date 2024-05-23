@@ -30,6 +30,28 @@ using namespace cvc5::internal::theory::bv;
 TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
 {
   initializeRewrites();
+  registerProofRewriteRule(ProofRewriteRule::BV_BITWISE_SLICING,
+                           TheoryRewriteCtx::PRE_DSL);
+}
+
+Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
+{
+  switch (id)
+  {
+    case ProofRewriteRule::BV_BITWISE_SLICING:
+    {
+      if (RewriteRule<BitwiseSlicing>::applies(n))
+      {
+        return  LinearRewriteStrategy
+    < RewriteRule<EvalUltBv>
+       >::apply(n);
+      }
+    }
+      break;
+    default:
+      break;
+  }
+  return Node::null();
 }
 
 RewriteResponse TheoryBVRewriter::preRewrite(TNode node)
