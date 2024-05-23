@@ -42,9 +42,10 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     {
       if (RewriteRule<BitwiseSlicing>::applies(n))
       {
-        return  LinearRewriteStrategy
-    < RewriteRule<EvalUltBv>
+        Node ret =  LinearRewriteStrategy
+    < RewriteRule<BitwiseSlicing>
        >::apply(n);
+       return ret;
       }
     }
       break;
