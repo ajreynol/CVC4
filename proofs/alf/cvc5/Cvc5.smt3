@@ -22,11 +22,6 @@
 (declare-sort @ho-elim-sort 1)
 (declare-const @fmf-fun-sort (-> (! Type :var T :implicit) T Type))
 
-(declare-rule encode_pred_transform ((T Type) (t T))
-  :args (t)
-  :conclusion (= t t))
-
-
 ; evaluate, for all theories
 (program run_evaluate ((T Type) (S Type) 
                        (x T) (y T) (z S) (ys S :list)

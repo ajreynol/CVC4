@@ -57,7 +57,12 @@ class BasicRewriteRCons : protected EnvObj
       CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid);
 
   /**
-   * Prove eq from eqi, where eqi is the result of term conversion.
+   * Add to cdp a proof of eq from free asumption eqi, where eqi is the result
+   * of term conversion via RewriteDbNodeConverter.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The original equality.
+   * @param eqi The equality after conversion.
    */
   void ensureProofForEncodeTransform(CDProof* cdp,
                                      const Node& eq,
