@@ -22,59 +22,6 @@
 (declare-sort @ho-elim-sort 1)
 (declare-const @fmf-fun-sort (-> (! Type :var T :implicit) T Type))
 
-
-(define get_aci_normal_form ((S Type :implicit) (t S))
-  (alf.match ((T Type) (U Type) (V Type) (x V) (x1 T) (x2 U :list) (m Int)
-              (xb1 (BitVec m)) (xb2 (BitVec m) :list)
-              (xf1 (FiniteField m)) (xf2 (FiniteField m) :list)
-              (xs1 (Seq U)) (xs2 (Seq U) :list))
-    t
-    (
-      ((or x1 x2)        (get_aci_norm t))
-      ((and x1 x2)       (get_aci_norm t))
-      ((sep x1 x2)       (get_aci_norm t))
-      ((re.union x1 x2)  (get_aci_norm t))
-      ((re.inter x1 x2)  (get_aci_norm t))
-      ((bvor xb1 xb2)    (get_aci_norm t))
-      ((bvand xb1 xb2)   (get_aci_norm t))
-      ((ff.add xf1 xf2)  (get_aci_norm t))
-      ((ff.mul xf1 xf2)  (get_aci_norm t))
-      ((str.++ xs1 xs2)  (get_a_norm t))
-      ((re.++ x1 x2)     (get_a_norm t))
-      (x                 x)
-    )
-  )
-)
-
-; Converts x to an equivalent form, for ProofRule::ENCODE_TRANSFORM.
-; This side condition is used to convert between the native
-; representation in cvc5 to the form expected by DSL rewrite rules.
-; In particular, we convert:
-; - Word constants "ABC" to concatenations of chars (str.++ "A" "B" "C").
-(program encode_transform ((T Type) (S Type) (f (-> S T)) (x T) (y S))
-  (T) T
-  (
-    ((encode_transform (f y)) (get_aci_normal_form (_ (encode_transform f) (encode_transform y))))
-    ((encode_transform x)     (alf.ite ($is_str_literal x)
-                                ; string constants
-                                ; e.g. "AB" ---> (str.++ "A" "B")
-                                (alf.ite (check_length_gt_one x)
-                                  ($str_flatten_word x)
-                                  x)
-                              (alf.ite ($is_bin_literal x)
-                                ; bitvector constants
-                                ; e.g. #b0000 ----> (@bv 0 4)
-                                (@bv (alf.to_z x) (alf.len x))
-                                x)))
-  )
-)
-
-;(declare-rule encode_pred_transform ((F Bool) (G Bool))
-;  :premises (F)
-;  :args (G)
-;  :requires (((encode_transform F) (encode_transform G)))
-;  :conclusion G)
-
 (declare-rule encode_pred_transform ((T Type) (t T))
   :args (t)
   :conclusion (= t t))
@@ -186,6 +133,29 @@
 (declare-rule evaluate ((U Type) (t U))
   :args (t)
   :conclusion (= t (run_evaluate t))
+)
+
+(define get_aci_normal_form ((S Type :implicit) (t S))
+  (alf.match ((T Type) (U Type) (V Type) (x V) (x1 T) (x2 U :list) (m Int)
+              (xb1 (BitVec m)) (xb2 (BitVec m) :list)
+              (xf1 (FiniteField m)) (xf2 (FiniteField m) :list)
+              (xs1 (Seq U)) (xs2 (Seq U) :list))
+    t
+    (
+      ((or x1 x2)        (get_aci_norm t))
+      ((and x1 x2)       (get_aci_norm t))
+      ((sep x1 x2)       (get_aci_norm t))
+      ((re.union x1 x2)  (get_aci_norm t))
+      ((re.inter x1 x2)  (get_aci_norm t))
+      ((bvor xb1 xb2)    (get_aci_norm t))
+      ((bvand xb1 xb2)   (get_aci_norm t))
+      ((ff.add xf1 xf2)  (get_aci_norm t))
+      ((ff.mul xf1 xf2)  (get_aci_norm t))
+      ((str.++ xs1 xs2)  (get_a_norm t))
+      ((re.++ x1 x2)     (get_a_norm t))
+      (x                 x)
+    )
+  )
 )
 
 (program is_poly_norm ((T Type) (U Type) (a T) (b T) (a1 U) (a2 U) (b1 U) (b2 U))

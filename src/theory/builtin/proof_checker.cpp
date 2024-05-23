@@ -422,21 +422,9 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     Assert (children.empty());
     Assert (args.size()==1);
     rewriter::RewriteDbNodeConverter rconv(nodeManager());
+    // run a single (small) step conversion
     Node ac = rconv.postConvert(args[0]);
     return args[0].eqNode(ac);
-    /*
-    Assert(children.size() == 1);
-    Assert(args.size() == 1);
-    rewriter::RewriteDbNodeConverter rconv(nodeManager());
-    Node f = children[0];
-    Node g = args[0];
-    // equivalent up to conversion via utility
-    if (rconv.convert(f) != rconv.convert(g))
-    {
-      return Node::null();
-    }
-    return g;
-    */
   }
   else if (id == ProofRule::ANNOTATION)
   {

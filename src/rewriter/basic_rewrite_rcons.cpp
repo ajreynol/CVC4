@@ -150,7 +150,6 @@ void BasicRewriteRCons::ensureProofForEncodeTransform(CDProof* cdp,
   Node equivs = eqi.eqNode(eq);
   cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
   cdp->addStep(eq, ProofRule::EQ_RESOLVE, {eqi, equivs}, {});
-  //cdp->addStep(eq, ProofRule::ENCODE_PRED_TRANSFORM, {eqi}, {eq});
 }
 
 void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,

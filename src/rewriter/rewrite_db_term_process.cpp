@@ -90,13 +90,6 @@ Node RewriteDbNodeConverter::postConvert(Node n)
       return ret;
     }
   }
-  /*
-  else if (k == Kind::NONLINEAR_MULT)
-  {
-    std::vector<Node> children(n.begin(), n.end());
-    return nm->mkNode(Kind::MULT, children);
-  }
-  */
   // convert indexed operators to symbolic
   if (GenericOp::isNumeralIndexedOperatorKind(k))
   {
