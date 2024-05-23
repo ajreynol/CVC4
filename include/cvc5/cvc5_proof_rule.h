@@ -2317,7 +2317,6 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \endverbatim
    */
   EVALUE(MACRO_BOOL_NNF_NORM),
-  // Custom theory rewrites.
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Arith -- Division by constant elimination**
