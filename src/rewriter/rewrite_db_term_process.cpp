@@ -34,6 +34,12 @@ RewriteDbNodeConverter::RewriteDbNodeConverter(NodeManager* nm,
                                                TConvProofGenerator* tpg)
     : NodeConverter(nm), d_tpg(tpg)
 {
+  /*
+  if (d_tpg!=nullptr)
+  {
+    d_proof.reset(new CDProof(d_env));
+  }
+  */
 }
 
 Node RewriteDbNodeConverter::postConvert(Node n)
@@ -128,9 +134,19 @@ void RewriteDbNodeConverter::recordProofStep(const Node& n,
   }
   switch (r)
   {
-    case ProofRule::EVALUATE: break;
-    case ProofRule::ACI_NORM: break;
-    case ProofRule::ENCODE_PRED_TRANSFORM: break;
+    case ProofRule::ACI_NORM:
+      d_tpg->addRewriteStep(n, ret, r, {}, {n.eqNode(ret)});
+      break;
+    case ProofRule::EVALUATE:
+    {
+      Node eq = ret.eqNode(n);
+      d_proof->addStep(eq, ProofRule::EVALUATE, {}, {ret});
+      d_tpg->addRewriteStep(n, ret, d_proof.get());
+    }
+      break;
+    case ProofRule::ENCODE_PRED_TRANSFORM:
+      d_tpg->addRewriteStep(n, ret, r, {}, {n});
+      break;
     default: break;
   }
 }

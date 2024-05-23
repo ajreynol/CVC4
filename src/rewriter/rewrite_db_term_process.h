@@ -22,6 +22,7 @@
 
 #include "expr/node.h"
 #include "expr/node_converter.h"
+#include "proof/proof.h"
 
 namespace cvc5::internal {
 
@@ -57,6 +58,8 @@ class RewriteDbNodeConverter : public NodeConverter
  protected:
   /** A pointer to a TConvProofGenerator, if proof producing */
   TConvProofGenerator* d_tpg;
+  /** A CDProof */
+  std::unique_ptr<CDProof> d_proof;
   /** Record trivial step */
   void recordProofStep(const Node& n, const Node& ret, ProofRule r);
   /** Should we traverse n? */

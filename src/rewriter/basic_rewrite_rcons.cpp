@@ -144,7 +144,7 @@ void BasicRewriteRCons::ensureProofForEncodeTransform(CDProof* cdp,
 {
   /*
   TConvProofGenerator tpg(d_env, nullptr);
-  RewriteDbNodeConverter rdnc(nodeManager(), &tpg);
+  RewriteDbNodeConverter rdnc(d_env, &tpg);
   Node eqr = rdnc.convert(eq);
   Assert (eqr==eqi);
   Node equiv = eq.eqNode(eqi);
@@ -153,7 +153,7 @@ void BasicRewriteRCons::ensureProofForEncodeTransform(CDProof* cdp,
   Node equivs = eqi.eqNode(eq);
   cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
   cdp->addStep(eq, ProofRule::EQ_RESOLVE, {eqi, equivs}, {});
-*/
+  */
   cdp->addStep(eq, ProofRule::ENCODE_PRED_TRANSFORM, {eqi}, {eq});
 }
 
