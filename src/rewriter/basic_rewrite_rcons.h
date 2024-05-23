@@ -26,6 +26,7 @@
 #include "proof/proof_node_manager.h"
 #include "smt/env_obj.h"
 #include "theory/builtin/proof_checker.h"
+#include "theory/rewriter.h"
 
 namespace cvc5::internal {
 namespace rewriter {
@@ -81,6 +82,13 @@ class BasicRewriteRCons : protected EnvObj
 
  private:
   /**
+   * Is proof-granularity set to dsl-rewrite-strict? This impacts when
+   * THEORY_REWRITE are tried.
+   */
+  bool d_isDslStrict;
+  /** Subgoals */
+  std::vector<std::shared_ptr<ProofNode>> d_subgoals;
+  /**
    * Try rule r, return true if eq could be proven by r with arguments args.
    * If this method returns true, a proof of eq was added to cdp.
    */
@@ -90,8 +98,12 @@ class BasicRewriteRCons : protected EnvObj
                const std::vector<Node>& args);
   bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& eq);
   bool ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& eq);
-  /** Subgoals */
-  std::vector<std::shared_ptr<ProofNode>> d_subgoals;
+  /**
+   * Try THEORY_REWRITE with theory::TheoryRewriteCtx ctx.
+   */
+  bool tryTheoryRewrite(CDProof* cdp,
+                        const Node& eq,
+                        theory::TheoryRewriteCtx ctx);
 };
 
 }  // namespace rewriter
