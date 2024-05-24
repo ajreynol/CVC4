@@ -61,6 +61,8 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_SIGMA,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_SIGMA_STAR,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -76,6 +78,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
       return rewriteViaStrInReConcatStarChar(n);
     case ProofRewriteRule::STR_IN_RE_SIGMA: return rewriteViaStrInReSigma(n);
+    case ProofRewriteRule::STR_IN_RE_SIGMA_STAR: return rewriteViaStrInReSigmaStar(n);
     default: break;
   }
   return Node::null();
@@ -1167,6 +1170,28 @@ Node SequencesRewriter::rewriteViaStrInReSigma(const Node& n)
   Node num = nm->mkConstInt(Rational(allSigmaMinSize));
   Node lenx = nm->mkNode(Kind::STRING_LENGTH, n[0]);
   return nm->mkNode(allSigmaStrict ? Kind::EQUAL : Kind::GEQ, lenx, num);
+}
+Node SequencesRewriter::rewriteViaStrInReSigmaStar(const Node& n)
+{
+  if (n.getKind() != Kind::STRING_IN_REGEXP
+      || n[1].getKind() != Kind::REGEXP_STAR)
+  {
+    return Node::null();
+  }
+  const Node& r = n[1][0];
+  for (const Node& rc : r)
+  {
+    if (rc.getKind() != Kind::REGEXP_ALLCHAR)
+    {
+      return Node::null();
+    }
+  }
+  NodeManager* nm = nodeManager();
+  Node zero = nm->mkConstInt(Rational(0));
+  Node num = nm->mkConstInt(Rational(r.getNumChildren()));
+  Node lenx = nm->mkNode(Kind::STRING_LENGTH, n[0]);
+  Node t = nm->mkNode(Kind::INTS_MODULUS, lenx, num);
+  return nm->mkNode(Kind::EQUAL, t, zero);
 }
 
 Node SequencesRewriter::rewriteAndOrRegExp(TNode node)

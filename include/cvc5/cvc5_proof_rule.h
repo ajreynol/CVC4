@@ -2573,10 +2573,10 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(STR_IN_RE_CONCAT_STAR_CHAR),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - regular expression loop elimination**
+   * **Strings - string in regular expression sigma**
    *
    * .. math::
-   *   (str.in_re s (re.++ re.allchar \ldots re.allchar) = (= (str.len s) n)
+   *   (str.in_re s (re.++ re.allchar \ldots re.allchar)) = (= (str.len s) n)
    *
    * or alternatively:
    *
@@ -2587,6 +2587,17 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \endverbatim
    */
   EVALUE(STR_IN_RE_SIGMA),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings - string in regular expression sigma star**
+   *
+   * .. math::
+   *   (str.in_re s (re.* re.allchar \ldots re.allchar)) =
+   *   (= (mod (str.len s) n) 0)
+   *
+   * \endverbatim
+   */
+  EVALUE(STR_IN_RE_SIGMA_STAR),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Sets - empty tester evaluation**
