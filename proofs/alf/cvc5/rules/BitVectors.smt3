@@ -37,7 +37,7 @@
           ($bv_mk_bitwise_slicing_rec f c a b2 b start em1)
           (alf.cons concat
             ($nary_app f (extract start ep1 c) (extract start ep1 a))
-            ($bv_mk_bitwise_slicing_rec f c a b2 bn end em1)))))
+            ($bv_mk_bitwise_slicing_rec f c a b2 b end em1)))))
   )
 )
 
