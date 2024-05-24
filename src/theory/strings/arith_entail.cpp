@@ -17,9 +17,9 @@
 
 #include "expr/attribute.h"
 #include "expr/node_algorithm.h"
-#include "theory/arith/arith_subs.h"
 #include "theory/arith/arith_msum.h"
 #include "theory/arith/arith_poly_norm.h"
+#include "theory/arith/arith_subs.h"
 #include "theory/rewriter.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/strings/word.h"

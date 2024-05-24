@@ -262,16 +262,16 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id,
 
 bool AlfPrinter::isHandledBitblastStep(const Node& eq) const
 {
-  Assert (eq.getKind()==Kind::EQUAL);
+  Assert(eq.getKind() == Kind::EQUAL);
   switch (eq[0].getKind())
   {
-    //case Kind::CONST_BITVECTOR:
-    //case Kind::BITVECTOR_EXTRACT:
-    //case Kind::BITVECTOR_CONCAT:
-    //case Kind::BITVECTOR_AND:
-    //case Kind::BITVECTOR_OR:
-    //  return true;
-    default:break;
+    // case Kind::CONST_BITVECTOR:
+    // case Kind::BITVECTOR_EXTRACT:
+    // case Kind::BITVECTOR_CONCAT:
+    // case Kind::BITVECTOR_AND:
+    // case Kind::BITVECTOR_OR:
+    //   return true;
+    default: break;
   }
   return false;
 }
