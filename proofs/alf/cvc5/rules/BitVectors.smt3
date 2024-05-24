@@ -50,6 +50,8 @@
   :conclusion (= a b)
 )
 
+; ---------------- ProofRewriteRule::BV_BITBLAST_STEP
+
 (program $bv_mk_bitblast_step_eq ((T Type) (U Type) (W Type) (b1 Bool) (b2 Bool) (a1 W :list) (a2 W :list))
   (T T) Bool
   (
