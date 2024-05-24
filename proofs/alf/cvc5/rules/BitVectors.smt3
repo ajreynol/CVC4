@@ -50,11 +50,11 @@
   :conclusion (= a b)
 )
 
-(program $bv_mk_bitblast_step_eq ((T Type) (U Type) (W Type) (f (-> T T U)) (b1 Bool) (b2 Bool) (a1 W :list) (a2 W :list))
-  ((-> T T U) T T) U
+(program $bv_mk_bitblast_step_eq ((T Type) (U Type) (W Type) (b1 Bool) (b2 Bool) (a1 W :list) (a2 W :list))
+  (T T) Bool
   (
-  (($bv_mk_bitblast_step_eq @bv_empty @bv_empty)        @bv_empty)
-  (($bv_mk_bitblast_step_eq (@bbT b1 a1) (@bbT b2 a2))  (@bbT (= b1 b2) ($bv_mk_bitblast_step_eq f a1 a2)))
+  (($bv_mk_bitblast_step_eq @bv_empty @bv_empty)        true)
+  (($bv_mk_bitblast_step_eq (@bbT b1 a1) (@bbT b2 a2))  (alf.cons and (= b1 b2) ($bv_mk_bitblast_step_eq a1 a2)))
   )
 )
 
@@ -90,9 +90,9 @@
   (alf.match ((n Int) (a1 (BitVec n)) (a2 (BitVec n) :list) (u Int) (l Int) (m Int) (a3 (BitVec m) :list))
   a
   (
-  ((= a1 a2)        ($bv_mk_bitblast_step_eq a1 a2))
-  ((bvand a1 a2)    ($bv_mk_bitblast_step_bw and a1 a2))
-  ((bvor a1 a2)     ($bv_mk_bitblast_step_bw or a1 a2))
+  ((= a1 a2)        ($singleton_elim ($bv_mk_bitblast_step_eq a1 a2)))
+  ;((bvand a1 a2)    ($bv_mk_bitblast_step_bw and a1 a2))
+  ;((bvor a1 a2)     ($bv_mk_bitblast_step_bw or a1 a2))
   ((extract u l a1) ($bv_mk_bitblast_step_extract u l a1))
   ((concat a1 a3)   ($bv_mk_bitblast_step_concat a))
   (a1               (alf.ite ($is_bin_literal a) 
