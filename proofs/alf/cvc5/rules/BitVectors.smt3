@@ -75,9 +75,16 @@
 (define $bv_mk_bitblast_step_const ((n Int :implicit) (a (BitVec n)))
   (nary.reverse ($bv_const_to_bitlist a)))
 
-; TODO
+(program $bv_mk_bitblast_step_var_rec ((n Int) (a (BitVec n)) (i Int))
+  ((BitVec n) Int) (BitVec n)
+  (
+    (($bv_mk_bitblast_step_var_rec a -1)  @bv_empty)
+    (($bv_mk_bitblast_step_var_rec a i)   (alf.cons @bbT (@bitOf i a) ($bv_mk_bitblast_step_var_rec a (alf.add i -1))))
+  )
+)
+
 (define $bv_mk_bitblast_step_var ((n Int :implicit) (a (BitVec n)))
-  a)
+  (nary.reverse ($bv_mk_bitblast_step_var_rec a (alf.add ($bv_bitwidth (alf.typeof a)) -1))))
 
 (define $bv_mk_bitblast_step ((T Type :implicit) (a T))
   (alf.match ((n Int) (a1 (BitVec n)) (a2 (BitVec n)) (u Int) (l Int) (m Int) (a3 (BitVec m) :list))
@@ -90,7 +97,7 @@
   ((concat a1 a3)   ($bv_mk_bitblast_step_concat a))
   (a1               (alf.ite ($is_bin_literal a) 
                       ($bv_mk_bitblast_step_const a)
-                      ($bv_mk_bitblast_step_var a)))
+                      ($bv_mk_bitblast_step_var a)))    ; otherwise assume a variable
   ))
 )
 
@@ -100,4 +107,4 @@
   :requires ((($bv_mk_bitblast_step a) b))
   :conclusion (= a b)
 )
-  
+
