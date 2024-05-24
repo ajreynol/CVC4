@@ -276,7 +276,9 @@ bool AlfPrinter::isHandledBitblastStep(const Node& eq) const
     //case Kind::BITVECTOR_AND:
     // case Kind::BITVECTOR_OR:
        return true;
-    default: break;
+    default: 
+      Trace("alf-printer-debug") << "Cannot bitblast  " << eq[0] << std::endl;
+      break;
   }
   return false;
 }
