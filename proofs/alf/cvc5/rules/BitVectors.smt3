@@ -25,14 +25,15 @@
    (a (BitVec n)) (b Bool) (bn Bool) (b2 (BitVec m) :list) (start Int) (end Int))
   ((BitVec n) (BitVec m) Bool Int Int) (BitVec n)
   (
-  (($bv_mk_bitwise_slicing_rec a (@bbT b b2) bn start end)  (alf.ite (alf.is_eq end 0)
-                                                                (extract start end a)
-                                                                (alf.ite (alf.is_eq b bn)
-                                                                  ($bv_mk_bitwise_slicing_rec a b2 b start (alf.add end -1))
-                                                                  (alf.cons concat
-                                                                    (extract start end a)
-                                                                    (let ((em1 (alf.add end -1)))
-                                                                      ($bv_mk_bitwise_slicing_rec a b2 bn em1 em1))))))
+  (($bv_mk_bitwise_slicing_rec a (@bbT b b2) bn start end)
+      (alf.ite (alf.is_eq end 0)
+        (extract start end a)
+        (alf.ite (alf.is_eq b bn)
+          ($bv_mk_bitwise_slicing_rec a b2 b start (alf.add end -1))
+          (alf.cons concat
+            (extract start end a)
+            (let ((em1 (alf.add end -1)))
+              ($bv_mk_bitwise_slicing_rec a b2 bn em1 em1))))))
   )
 )
 
