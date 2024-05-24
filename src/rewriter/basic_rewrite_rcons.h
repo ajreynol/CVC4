@@ -57,6 +57,7 @@ class BasicRewriteRCons : protected EnvObj
       CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid);
 
   /**
+<<<<<<< HEAD
    * Add to cdp a proof of eq from free asumption eqi, where eqi is the result
    * of term conversion via RewriteDbNodeConverter.
    *
@@ -68,12 +69,15 @@ class BasicRewriteRCons : protected EnvObj
                                      const Node& eq,
                                      const Node& eqi);
   /**
+=======
+>>>>>>> bc6314c680f26911a48a33c824b88ba82731ab17
    * Ensure we have a proof for theory rewrite id of eq in cdp. This typically
    * adds a single THEORY_REWRITE step to cdp. However, for rules with prefix
    * MACRO_, we perform elaboration.
    * @param cdp The proof to add to.
    * @param id The theory rewrite that proves eq.
    * @param eq The conclusion of the theory rewrite.
+<<<<<<< HEAD
    */
   void ensureProofForTheoryRewrite(CDProof* cdp,
                                    ProofRewriteRule id,
@@ -84,6 +88,16 @@ class BasicRewriteRCons : protected EnvObj
    * elaboration on these proofs.
    */
   std::vector<std::shared_ptr<ProofNode>>& getSubgoals();
+=======
+   * @param subgoals The list of proofs introduced when proving eq that
+   * are trusted steps.
+   */
+  void ensureProofForTheoryRewrite(
+      CDProof* cdp,
+      ProofRewriteRule id,
+      const Node& eq,
+      std::vector<std::shared_ptr<ProofNode>>& subgoals);
+>>>>>>> bc6314c680f26911a48a33c824b88ba82731ab17
 
  private:
   /**
@@ -107,10 +121,22 @@ class BasicRewriteRCons : protected EnvObj
    *
    * @param cdp The proof to add to.
    * @param eq The rewrite proven by ProofRewriteRule::MACRO_BOOL_NNF_NORM.
+<<<<<<< HEAD
    * @return true if added a closed proof of eq to cdp.
    */
   bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& eq);
   bool ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& eq);
+=======
+   * @param subgoals The list of proofs introduced when proving eq that
+   * are trusted steps. These are small step rewrites corresponding to NNF
+   * flattening of operators, and other simple inferences.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroBoolNnfNorm(
+      CDProof* cdp,
+      const Node& eq,
+      std::vector<std::shared_ptr<ProofNode>>& subgoals);
+>>>>>>> bc6314c680f26911a48a33c824b88ba82731ab17
   /**
    * Try THEORY_REWRITE with theory::TheoryRewriteCtx ctx.
    */

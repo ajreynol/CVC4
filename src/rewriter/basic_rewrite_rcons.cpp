@@ -28,6 +28,8 @@
 #include "theory/bv/theory_bv_rewrite_rules.h"
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
+#include "theory/booleans/theory_bool_rewriter.h"
+#include "theory/bv/theory_bv_rewrite_rules.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -152,14 +154,16 @@ void BasicRewriteRCons::ensureProofForEncodeTransform(CDProof* cdp,
   cdp->addStep(eq, ProofRule::EQ_RESOLVE, {eqi, equivs}, {});
 }
 
-void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
-                                                    ProofRewriteRule id,
-                                                    const Node& eq)
+void BasicRewriteRCons::ensureProofForTheoryRewrite(
+    CDProof* cdp,
+    ProofRewriteRule id,
+    const Node& eq,
+    std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
   switch (id)
   {
     case ProofRewriteRule::MACRO_BOOL_NNF_NORM:
-      if (ensureProofMacroBoolNnfNorm(cdp, eq))
+      if (ensureProofMacroBoolNnfNorm(cdp, eq, subgoals))
       {
         return;
       }
@@ -180,8 +184,10 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
   cdp->addStep(eq, ProofRule::THEORY_REWRITE, {}, args);
 }
 
-bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
-                                                    const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(
+    CDProof* cdp,
+    const Node& eq,
+    std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
   Trace("brc-macro") << "Expand Bool NNF norm " << eq[0] << " == " << eq[1]
                      << std::endl;
@@ -194,7 +200,7 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
   Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
   cdp->addProof(pfn);
   // the small steps are trust steps, record them here
-  expr::getSubproofRule(pfn, ProofRule::TRUST, d_subgoals);
+  expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
   return true;
 }
 
@@ -344,11 +350,6 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   Trace("brc-macro") << "...success" << std::endl;
   Trace("brc-macro") << "...proof is " << *cdp->getProofFor(retEq) << std::endl;
   return true;
-}
-
-std::vector<std::shared_ptr<ProofNode>>& BasicRewriteRCons::getSubgoals()
-{
-  return d_subgoals;
 }
 
 bool BasicRewriteRCons::tryTheoryRewrite(CDProof* cdp,
