@@ -1,1 +1,60 @@
-(include "../theories/BitVec.smt3")
+(include "../theories/BitVectors.smt3")
+
+
+(program $bv_get_const_child ((n Int) (m Int) (k Int) (f (-> (BitVec n) (BitVec m) (BitVec k))) (a (BitVec n)) (b (BitVec m) :list))
+  ((BitVec n)) (BitVec n)
+  (
+    (($bv_get_const_child (f a b))  (alf.ite ($is_bin_literal a) a ($bv_get_const_child b)))
+    (($bv_get_const_child a)        @bv_empty)    ; indicates no child
+  )
+)
+
+(define $bv_bit_set ((n Int :implicit) (a (BitVec n)) (i Int))
+  (alf.is_eq (alf.extract a i i) #b1))
+
+(program $bv_const_to_bitlist ((n Int) (a (BitVec n)) (i Int))
+  ((BitVec n) Int) (BitVec n)
+  (
+    (($bv_const_to_bitlist a 0)   @bv_empty)
+    (($bv_const_to_bitlist a i)   (@bbT ($bv_bit_set a i) ($bv_const_to_bitlist a (alf.add i -1))))
+  )
+)
+
+(program $bv_mk_bitwise_slicing_rec
+  ((n Int) (m Int)
+   (a (BitVec n)) (b Bool) (bn Bool) (b2 (BitVec m) :list) (start Int) (end Int))
+  ((BitVec n) (BitVec m) Bool Int Int) (BitVec n)
+  (
+  (($bv_mk_bitwise_slicing_rec a (@bbT b b2) bn start end)  (alf.ite (alf.is_eq end 0)
+                                                                (extract start end a)
+                                                                (alf.ite (alf.is_eq b bn)
+                                                                  ($bv_mk_bitwise_slicing_rec a b2 b start (alf.add end -1))
+                                                                  (alf.cons concat
+                                                                    (extract start end a)
+                                                                    (let ((em1 (alf.add end -1)))
+                                                                      ($bv_mk_bitwise_slicing_rec a b2 bn em1 em1))))))
+  )
+)
+
+(define $bv_mk_bitwise_slicing ((n Int :implicit) (a (BitVec n)))
+  (let ((c ($bv_get_const_child a)))
+  (alf.ite (alf.is_eq c @bv_empty)
+    a ; no constant
+    (alf.match ((m Int) (f (-> (BitVec m) (BitVec m) (BitVec m))) (a1 (BitVec m)) (a2 (BitVec m) :list))
+      a
+      (
+      ((f a1 a2)  (let ((wm1 (- (alf.len c) 1)))
+                    ($bv_mk_bitwise_slicing_rec
+                      (let ((nil (alf.nil f a1 a2))) (nary.diff f nil (f a1 a2) (alf.cons f c nil))) ; remove the constant and recollect
+                      ($bv_const_to_bitlist c wm1)
+                      ($bv_bit_set c wm1) wm1 wm1)))
+      )
+    )
+  )))
+
+(declare-rule bv-bitwise-slicing
+  ((n Int) (a (BitVec n)) (b (BitVec n)))
+  :args ((= a b))
+  :requires ((($bv_mk_bitwise_slicing a) b))
+  :conclusion (= a b)
+)
