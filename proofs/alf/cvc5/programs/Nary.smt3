@@ -129,7 +129,7 @@
     (
         ((nary.subsequence cons nil u l nil)            nil)
         ((nary.subsequence cons nil 0 l t)              (nary.prefix cons nil l t))
-        ((nary.subsequence cons nil u l (cons c1 c2))   (nary.subsequence cons nil (alf.add u -1) c2))
+        ((nary.subsequence cons nil u l (cons c1 c2))   (nary.subsequence cons nil (alf.add u -1) l c2))
     )
 )
 

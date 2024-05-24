@@ -149,6 +149,11 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::ENCODE_PRED_TRANSFORM:
     case ProofRule::ACI_NORM:
     case ProofRule::DSL_REWRITE: return true;
+    case ProofRule::BV_BITBLAST_STEP:
+    {
+      return isHandledBitblastStep(pfn->getArguments()[0]);
+    }
+    break;
     case ProofRule::THEORY_REWRITE:
     {
       ProofRewriteRule id;
@@ -196,7 +201,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     break;
     case ProofRule::ANNOTATION:
     case ProofRule::HO_APP_ENCODE:
-    case ProofRule::BV_BITBLAST_STEP:
     case ProofRule::BV_EAGER_ATOM:
     case ProofRule::DT_UNIF:
     case ProofRule::DT_SPLIT:
@@ -252,6 +256,22 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id,
       Assert(n[0].getKind() == Kind::STRING_IN_REGEXP && n[0][0].isConst());
       return canEvaluateRegExp(n[0][1]);
     default: break;
+  }
+  return false;
+}
+
+bool AlfPrinter::isHandledBitblastStep(const Node& eq) const
+{
+  Assert (eq.getKind()==Kind::EQUAL);
+  switch (eq[0].getKind())
+  {
+    //case Kind::CONST_BITVECTOR:
+    //case Kind::BITVECTOR_EXTRACT:
+    //case Kind::BITVECTOR_CONCAT:
+    //case Kind::BITVECTOR_AND:
+    //case Kind::BITVECTOR_OR:
+    //  return true;
+    default:break;
   }
   return false;
 }
