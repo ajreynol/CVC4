@@ -87,7 +87,7 @@
   (nary.reverse ($bv_mk_bitblast_step_var_rec a (alf.add ($bv_bitwidth (alf.typeof a)) -1))))
 
 (define $bv_mk_bitblast_step ((T Type :implicit) (a T))
-  (alf.match ((n Int) (a1 (BitVec n)) (a2 (BitVec n)) (u Int) (l Int) (m Int) (a3 (BitVec m) :list))
+  (alf.match ((n Int) (a1 (BitVec n)) (a2 (BitVec n) :list) (u Int) (l Int) (m Int) (a3 (BitVec m) :list))
   a
   (
   ((= a1 a2)        ($bv_mk_bitblast_step_bw = a1 a2))

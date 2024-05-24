@@ -270,7 +270,7 @@ bool AlfPrinter::isHandledBitblastStep(const Node& eq) const
   switch (eq[0].getKind())
   {
      case Kind::CONST_BITVECTOR:
-    // case Kind::BITVECTOR_EXTRACT:
+     case Kind::BITVECTOR_EXTRACT:
      case Kind::BITVECTOR_CONCAT:
     // case Kind::EQUAL:
     //case Kind::BITVECTOR_AND:
