@@ -54,8 +54,12 @@ class BasicRewriteRCons : protected EnvObj
    * are trusted steps.
    * @return true if we successfully added a proof of (= a b) to cdp.
    */
-  bool prove(CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid,
-      std::vector<std::shared_ptr<ProofNode>>& subgoals);
+  bool prove(CDProof* cdp,
+             Node a,
+             Node b,
+             theory::TheoryId tid,
+             MethodId mid,
+             std::vector<std::shared_ptr<ProofNode>>& subgoals);
   /**
    * There are theory rewrites which cannot be expressed in RARE rules. In this
    * case we need to use proof rules which are not written in RARE. It is only
@@ -70,9 +74,12 @@ class BasicRewriteRCons : protected EnvObj
    * are trusted steps.
    * @return true if we successfully added a proof of (= a b) to cdp.
    */
-  bool postProve(
-      CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid,
-      std::vector<std::shared_ptr<ProofNode>>& subgoals);
+  bool postProve(CDProof* cdp,
+                 Node a,
+                 Node b,
+                 theory::TheoryId tid,
+                 MethodId mid,
+                 std::vector<std::shared_ptr<ProofNode>>& subgoals);
 
   /**
    * Add to cdp a proof of eq from free asumption eqi, where eqi is the result
@@ -115,7 +122,7 @@ class BasicRewriteRCons : protected EnvObj
                Node eq,
                ProofRule r,
                const std::vector<Node>& args,
-      bool addStep = true);
+               bool addStep = true);
   /**
    * Elaborate a rewrite eq that was proven by
    * ProofRewriteRule::MACRO_BOOL_NNF_NORM.
@@ -138,7 +145,7 @@ class BasicRewriteRCons : protected EnvObj
   bool tryTheoryRewrite(CDProof* cdp,
                         const Node& eq,
                         theory::TheoryRewriteCtx ctx,
-      std::vector<std::shared_ptr<ProofNode>>& subgoals);
+                        std::vector<std::shared_ptr<ProofNode>>& subgoals);
 };
 
 }  // namespace rewriter
