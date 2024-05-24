@@ -362,13 +362,15 @@ bool BasicRewriteRCons::tryTheoryRewrite(
   ProofRewriteRule prid = d_env.getRewriter()->findRule(eq[0], eq[1], ctx);
   if (prid != ProofRewriteRule::NONE)
   {
+    // Do not add the step in the call to tryStep, instead we add it via
+    // ensureProofForTheoryRewrite.
     if (tryRule(cdp,
                 eq,
                 ProofRule::THEORY_REWRITE,
                 {mkRewriteRuleNode(prid), eq},
                 false))
     {
-      // Theory rewrites may require the expansion below
+      // Theory rewrites may require macro expansion
       ensureProofForTheoryRewrite(cdp, prid, eq, subgoals);
       return true;
     }
