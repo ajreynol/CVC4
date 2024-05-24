@@ -15,14 +15,14 @@
 (program $bv_const_to_bitlist ((n Int) (a (BitVec n)) (i Int))
   ((BitVec n) Int) (BitVec n)
   (
-    (($bv_const_to_bitlist a 0)   @bv_empty)
+    (($bv_const_to_bitlist a -1)   @bv_empty)
     (($bv_const_to_bitlist a i)   (@bbT ($bv_bit_set a i) ($bv_const_to_bitlist a (alf.add i -1))))
   )
 )
 
 (program $bv_mk_bitwise_slicing_rec
   ((n Int) (m Int)
-   (a (BitVec n)) (b Bool) (bn Bool) (b2 (BitVec m) :list) (start Int) (end Int))
+   (a (BitVec n)) (b Bool) (bn Bool) (b2 (BitVec m)) (start Int) (end Int))
   ((BitVec n) (BitVec m) Bool Int Int) (BitVec n)
   (
   (($bv_mk_bitwise_slicing_rec a (@bbT b b2) bn start end)
@@ -37,21 +37,25 @@
   )
 )
 
+(define $bv_is_bitwise_slicing_op ((n Int :implicit) (f (-> (BitVec n) (BitVec n) (BitVec n))))
+  (alf.or (alf.is_eq f bvand) (alf.is_eq f bvor) (alf.is_eq f bvxor)))
+
 (define $bv_mk_bitwise_slicing ((n Int :implicit) (a (BitVec n)))
-  (let ((c ($bv_get_const_child a)))
-  (alf.ite (alf.is_eq c @bv_empty)
-    a ; no constant
-    (alf.match ((m Int) (f (-> (BitVec m) (BitVec m) (BitVec m))) (a1 (BitVec m)) (a2 (BitVec m) :list))
-      a
-      (
-      ((f a1 a2)  (let ((wm1 (- (alf.len c) 1)))
-                    ($bv_mk_bitwise_slicing_rec
-                      (let ((nil (alf.nil f a1 a2))) (nary.diff f nil (f a1 a2) (alf.cons f c nil))) ; remove the constant and recollect
-                      ($bv_const_to_bitlist c wm1)
-                      ($bv_bit_set c wm1) wm1 wm1)))
-      )
+  (alf.match ((m Int) (f (-> (BitVec m) (BitVec m) (BitVec m))) (a1 (BitVec m)) (a2 (BitVec m) :list))
+    a
+    (
+    ((f a1 a2)    (let ((c ($bv_get_const_child a)))
+                  (alf.requires ($bv_is_bitwise_slicing_op f) true
+                  (alf.requires (alf.is_eq c @bv_empty) false
+                  (let ((wm1 (- (alf.len c) 1)))
+                  ($bv_mk_bitwise_slicing_rec
+                    (let ((nil (alf.nil f a1 a2)))
+                      (nary.diff f nil a (alf.cons f c nil)))  ; remove the constant and recollect
+                    ($bv_const_to_bitlist c wm1)               ; convert the constant to a bitlist
+                    ($bv_bit_set c wm1) wm1 wm1))))))
     )
-  )))
+  )
+)
 
 (declare-rule bv-bitwise-slicing
   ((n Int) (a (BitVec n)) (b (BitVec n)))
