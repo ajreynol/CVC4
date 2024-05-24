@@ -44,10 +44,9 @@ BasicRewriteRCons::BasicRewriteRCons(Env& env) : EnvObj(env)
 }
 
 bool BasicRewriteRCons::prove(
-    CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid)
+    CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid,
+      std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
-  // clear the current subgoals
-  d_subgoals.clear();
   Node eq = a.eqNode(b);
   Trace("trewrite-rcons") << "Reconstruct " << eq << " (from " << tid << ", "
                           << mid << ")" << std::endl;
@@ -70,7 +69,7 @@ bool BasicRewriteRCons::prove(
   // try theory rewrite (pre-rare)
   if (!d_isDslStrict)
   {
-    if (tryTheoryRewrite(cdp, eq, theory::TheoryRewriteCtx::PRE_DSL))
+    if (tryTheoryRewrite(cdp, eq, theory::TheoryRewriteCtx::PRE_DSL, subgoals))
     {
       Trace("trewrite-rcons")
           << "Reconstruct (pre) " << eq << " via theory rewrite" << std::endl;
@@ -82,7 +81,8 @@ bool BasicRewriteRCons::prove(
 }
 
 bool BasicRewriteRCons::postProve(
-    CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid)
+    CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid,
+      std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
   Node eq = a.eqNode(b);
   // try theory rewrite (post-rare), which may try both pre and post if
@@ -90,12 +90,12 @@ bool BasicRewriteRCons::postProve(
   bool success = false;
   if (d_isDslStrict)
   {
-    if (tryTheoryRewrite(cdp, eq, theory::TheoryRewriteCtx::PRE_DSL))
+    if (tryTheoryRewrite(cdp, eq, theory::TheoryRewriteCtx::PRE_DSL, subgoals))
     {
       success = true;
     }
   }
-  if (!success && tryTheoryRewrite(cdp, eq, theory::TheoryRewriteCtx::POST_DSL))
+  if (!success && tryTheoryRewrite(cdp, eq, theory::TheoryRewriteCtx::POST_DSL, subgoals))
   {
     success = true;
   }
@@ -114,7 +114,8 @@ bool BasicRewriteRCons::postProve(
 bool BasicRewriteRCons::tryRule(CDProof* cdp,
                                 Node eq,
                                 ProofRule r,
-                                const std::vector<Node>& args)
+                                const std::vector<Node>& args,
+      bool addStep)
 {
   Trace("trewrite-rcons-debug") << "Try " << r << std::endl;
   ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
@@ -123,18 +124,10 @@ bool BasicRewriteRCons::tryRule(CDProof* cdp,
   Node res = pc->checkDebug(r, {}, args, Node::null(), "trewrite-rcons");
   if (!res.isNull() && res == eq)
   {
-    // Theory rewrites may require the expansion below
-    if (r == ProofRule::THEORY_REWRITE)
+    if (addStep)
     {
-      Assert(args.size() == 2);
-      ProofRewriteRule id;
-      if (rewriter::getRewriteRule(args[0], id))
-      {
-        ensureProofForTheoryRewrite(cdp, id, args[1]);
-        return true;
-      }
+      cdp->addStep(eq, r, {}, args);
     }
-    cdp->addStep(eq, r, {}, args);
     return true;
   }
   return false;
@@ -354,15 +347,18 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
 
 bool BasicRewriteRCons::tryTheoryRewrite(CDProof* cdp,
                                          const Node& eq,
-                                         theory::TheoryRewriteCtx ctx)
+                                         theory::TheoryRewriteCtx ctx,
+      std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
   Assert(eq.getKind() == Kind::EQUAL);
   ProofRewriteRule prid = d_env.getRewriter()->findRule(eq[0], eq[1], ctx);
   if (prid != ProofRewriteRule::NONE)
   {
     if (tryRule(
-            cdp, eq, ProofRule::THEORY_REWRITE, {mkRewriteRuleNode(prid), eq}))
+            cdp, eq, ProofRule::THEORY_REWRITE, {mkRewriteRuleNode(prid), eq}, false))
     {
+      // Theory rewrites may require the expansion below
+      ensureProofForTheoryRewrite(cdp, prid, eq, subgoals);
       return true;
     }
   }

@@ -45,16 +45,34 @@ class BasicRewriteRCons : protected EnvObj
    * Try to prove (= a b), where a ---> b was a theory rewrite from theory
    * tid with the given method. If this method returns true, then a proof
    * of (= a b) was added to cdp.
+   * @param cdp The proof to add to.
+   * @param a The left hand side of the equality.
+   * @param b The left hand side of the equality.
+   * @param tid The theory that was the source of the rewrite (if any).
+   * @param tid The method that was the source of the rewrite (if any).
+   * @param subgoals The list of proofs introduced when proving eq that
+   * are trusted steps.
+   * @return true if we successfully added a proof of (= a b) to cdp.
    */
-  bool prove(CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid);
+  bool prove(CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid,
+      std::vector<std::shared_ptr<ProofNode>>& subgoals);
   /**
    * There are theory rewrites which cannot be expressed in RARE rules. In this
    * case we need to use proof rules which are not written in RARE. It is only
    * used as a last resort method so this is executed only when other rules
    * fail.
+   * @param cdp The proof to add to.
+   * @param a The left hand side of the equality.
+   * @param b The left hand side of the equality.
+   * @param tid The theory that was the source of the rewrite (if any).
+   * @param tid The method that was the source of the rewrite (if any).
+   * @param subgoals The list of proofs introduced when proving eq that
+   * are trusted steps.
+   * @return true if we successfully added a proof of (= a b) to cdp.
    */
   bool postProve(
-      CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid);
+      CDProof* cdp, Node a, Node b, theory::TheoryId tid, MethodId mid,
+      std::vector<std::shared_ptr<ProofNode>>& subgoals);
 
   /**
    * Add to cdp a proof of eq from free asumption eqi, where eqi is the result
@@ -97,7 +115,7 @@ class BasicRewriteRCons : protected EnvObj
                Node eq,
                ProofRule r,
                const std::vector<Node>& args,
-      std::vector<std::shared_ptr<ProofNode>>& subgoals);
+      bool addStep = true);
   /**
    * Elaborate a rewrite eq that was proven by
    * ProofRewriteRule::MACRO_BOOL_NNF_NORM.
