@@ -117,6 +117,8 @@ class BasicRewriteRCons : protected EnvObj
   /**
    * Try rule r, return true if eq could be proven by r with arguments args.
    * If this method returns true, a proof of eq was added to cdp.
+   * If addStep is true, we add the proof to cdp. Otherwise, the caller is
+   * responsible for adding the proof.
    */
   bool tryRule(CDProof* cdp,
                Node eq,
