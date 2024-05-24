@@ -29,7 +29,7 @@
    (b Bool) (bn Bool) (b2 (BitVec m) :list) (start Int) (end Int))
   ((-> (BitVec n) (BitVec n) (BitVec n)) (BitVec n) (BitVec n) (BitVec m) Bool Int Int) (BitVec n)
   (
-  (($bv_mk_bitwise_slicing_rec f c a b2 bn start 0)
+  (($bv_mk_bitwise_slicing_rec f c a b2 bn start -1)
       (alf.cons concat ($nary_app f (extract start 0 c) (extract start 0 a)) @bv_empty))
   (($bv_mk_bitwise_slicing_rec f c a (@bbT b b2) bn start end)
         (let ((em1 (alf.add end -1)) (ep1 (alf.add end 1)))
