@@ -2760,8 +2760,8 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(BOOL_XOR_ELIM),
   /** Auto-generated from RARE rule bool-not-xor-elim */
   EVALUE(BOOL_NOT_XOR_ELIM),
-  /** Auto-generated from RARE rule bool-not-iff-elim */
-  EVALUE(BOOL_NOT_IFF_ELIM),
+  /** Auto-generated from RARE rule bool-not-eq-elim */
+  EVALUE(BOOL_NOT_EQ_ELIM),
   /** Auto-generated from RARE rule ite-neg-branch */
   EVALUE(ITE_NEG_BRANCH),
   /** Auto-generated from RARE rule ite-then-true */

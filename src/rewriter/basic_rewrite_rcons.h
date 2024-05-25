@@ -80,7 +80,6 @@ class BasicRewriteRCons : protected EnvObj
                  theory::TheoryId tid,
                  MethodId mid,
                  std::vector<std::shared_ptr<ProofNode>>& subgoals);
-
   /**
    * Add to cdp a proof of eq from free asumption eqi, where eqi is the result
    * of term conversion via RewriteDbNodeConverter.
