@@ -1,4 +1,5 @@
-
+; EXPECT: unsat
+(set-logic ALL)
 (declare-const s String)
 (assert (str.in_re s (re.inter 
 (re.* (re.++ (re.* (str.to_re "z")) (str.to_re "b")))
