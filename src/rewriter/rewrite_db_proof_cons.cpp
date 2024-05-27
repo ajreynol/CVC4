@@ -93,6 +93,7 @@ bool RewriteDbProofCons::prove(
   }
   Trace("rpc") << "RewriteDbProofCons::prove: " << eq[0] << " == " << eq[1]
                << std::endl;
+  Trace("rpc") << "- from " << tid << " " << mid << std::endl;
   Trace("rpc-debug") << "- prove basic" << std::endl;
   // first, try with the basic utility
   bool success = false;

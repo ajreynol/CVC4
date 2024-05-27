@@ -92,7 +92,6 @@ Node ArithEntail::rewriteArith(Node a)
   // must be justified by ARITH_POLY_NORM when in proof mode (when d_rr is
   // null).
   Node an = arith::PolyNorm::getPolyNorm(a);
-  Trace("ajr-temp") << "Poly norm " << an << " for " << a << std::endl;
   return an;
 }
 
