@@ -78,7 +78,8 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
       return rewriteViaStrInReConcatStarChar(n);
     case ProofRewriteRule::STR_IN_RE_SIGMA: return rewriteViaStrInReSigma(n);
-    case ProofRewriteRule::STR_IN_RE_SIGMA_STAR: return rewriteViaStrInReSigmaStar(n);
+    case ProofRewriteRule::STR_IN_RE_SIGMA_STAR:
+      return rewriteViaStrInReSigmaStar(n);
     default: break;
   }
   return Node::null();

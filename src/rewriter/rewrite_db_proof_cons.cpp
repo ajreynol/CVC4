@@ -83,7 +83,7 @@ bool RewriteDbProofCons::prove(
     // the entire quantifier body to ACI normal form.
     Node ai = d_rdnc.postConvert(a);
     std::vector<Node> transEq;
-    if (ai!=a)
+    if (ai != a)
     {
       Node aeq = a.eqNode(ai);
       cdp->addStep(aeq, ProofRule::ENCODE_PRED_TRANSFORM, {}, {a});
@@ -93,14 +93,14 @@ bool RewriteDbProofCons::prove(
     std::vector<Node> cargs;
     ProofRule cr = expr::getCongRule(ai, cargs);
     // only apply this to standard binders (those with 2 children)
-    if (ai.getNumChildren() == 2 && bi.getNumChildren()==2)
+    if (ai.getNumChildren() == 2 && bi.getNumChildren() == 2)
     {
       eq = ai[1].eqNode(bi[1]);
       Node eqConv = ai.eqNode(bi);
       cdp->addStep(eqConv, cr, {eq}, cargs);
       transEq.push_back(eqConv);
     }
-    if (bi!=b)
+    if (bi != b)
     {
       Node beq = b.eqNode(bi);
       cdp->addStep(beq, ProofRule::ENCODE_PRED_TRANSFORM, {}, {a});
@@ -108,7 +108,7 @@ bool RewriteDbProofCons::prove(
       cdp->addStep(beqs, ProofRule::SYMM, {beq}, {});
       transEq.push_back(beqs);
     }
-    if (transEq.size()>1)
+    if (transEq.size() > 1)
     {
       cdp->addStep(eqo, ProofRule::TRANS, transEq, {});
     }
