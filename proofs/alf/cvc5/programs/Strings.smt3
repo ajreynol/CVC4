@@ -635,7 +635,6 @@
 (define $str_mk_str_in_re_sigma ((s String) (r RegLan))
   ($str_mk_str_in_re_sigma_rec s r 0 true))
 
-
 ; Helper for $str_mk_str_in_re_sigma.
 ; Calling `$str_mk_str_in_re_sigma_star_rec s r n` means we have s in r, we have
 ; stripped off n re.allchar from r so far.
