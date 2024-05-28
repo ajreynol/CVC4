@@ -70,24 +70,48 @@ bool RewriteDbProofCons::prove(
   // clear the evaluate cache
   d_evalCache.clear();
   Node eq = a.eqNode(b);
-  Trace("rpc") << "RewriteDbProofCons::prove: " << eq[0] << " == " << eq[1]
+  Trace("rpc") << "RewriteDbProofCons::prove: " << a << " == " << b
                << std::endl;
   Trace("rpc") << "- from " << tid << " " << mid << std::endl;
   // As a heuristic, always apply CONG if we are an equality between two
   // binder terms with the same quantifier prefix.
   if (a.isClosure() && a.getKind() == b.getKind() && a[0] == b[0])
   {
-    Node eqo = eq;
     // Ensure patterns are removed by calling d_rdnc postConvert (single step).
     // We do not apply convert recursively here or else it would e.g. convert
     // the entire quantifier body to ACI normal form.
     Node ai = d_rdnc.postConvert(a);
-    std::vector<Node> transEq;
-    if (ai != a)
+    Node bi = d_rdnc.postConvert(b);
+    // only apply this to standard binders (those with 2 children)
+    if (ai.getNumChildren() == 2 && bi.getNumChildren()==2)
     {
-      Node aeq = a.eqNode(ai);
-      cdp->addStep(aeq, ProofRule::ENCODE_EQ_INTRO, {}, {a});
-      transEq.push_back(aeq);
+      Node eqo = eq;
+      std::vector<Node> transEq;
+      if (ai!=a)
+      {
+        Node aeq = a.eqNode(ai);
+        cdp->addStep(aeq, ProofRule::ENCODE_EQ_INTRO, {}, {a});
+        transEq.push_back(aeq);
+      }
+      std::vector<Node> cargs;
+      ProofRule cr = expr::getCongRule(ai, cargs);
+      eq = ai[1].eqNode(bi[1]);
+      Node eqConv = ai.eqNode(bi);
+      cdp->addStep(eqConv, cr, {eq}, cargs);
+      transEq.push_back(eqConv);
+      if (bi!=b)
+      {
+        Node beq = b.eqNode(bi);
+        cdp->addStep(beq, ProofRule::ENCODE_EQ_INTRO, {}, {b});
+        Node beqs = bi.eqNode(b);
+        cdp->addStep(beqs, ProofRule::SYMM, {beq}, {});
+        transEq.push_back(beqs);
+      }
+      if (transEq.size()>1)
+      {
+        cdp->addStep(eqo, ProofRule::TRANS, transEq, {});
+      }
+      Trace("rpc") << "- process to " << eq[0] << " == " << eq[1] << std::endl;
     }
     Node bi = d_rdnc.postConvert(b);
     std::vector<Node> cargs;
