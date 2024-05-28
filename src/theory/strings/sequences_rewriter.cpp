@@ -2193,6 +2193,7 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     {
       if (curr != zero && !n1.empty())
       {
+        // make the length explicitly, which helps proof reconstruction
         Node cpulled = utils::mkConcat(childrenr, stype);
         Node resultLen = nm->mkNode(
             Kind::SUB, node[2], nm->mkNode(Kind::STRING_LENGTH, cpulled));
@@ -2254,9 +2255,9 @@ Node SequencesRewriter::rewriteSubstr(Node node)
       {
         if (r == 0)
         {
-          // Node cskipped = utils::mkConcat(childrenr, stype);
-          // Node resultStart = nm->mkNode(Kind::SUB, node[1],
-          // nm->mkNode(Kind::STRING_LENGTH, cskipped));
+          // make the length explicitly, which helps proof reconstruction
+          Node cskipped = utils::mkConcat(childrenr, stype);
+          Node resultStart = nm->mkNode(Kind::SUB, node[1], nm->mkNode(Kind::STRING_LENGTH, cskipped));
           Node ret = nm->mkNode(
               Kind::STRING_SUBSTR, utils::mkConcat(n1, stype), curr, node[2]);
           return returnRewrite(node, ret, Rewrite::SS_STRIP_START_PT);
