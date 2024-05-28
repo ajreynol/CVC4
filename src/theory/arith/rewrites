@@ -14,6 +14,7 @@
 ;(define-rule arith-div-total-zero ((t Int)) (/_total t 0.0) 0.0)
 
 ;(define-rule arith-int-div-one ((t Int)) (div t 1) t)
+
 (define-cond-rule arith-int-div-total ((t Int) (s Int)) (not (= s 0)) (div t s) (div_total t s))
 (define-rule arith-int-div-total-one ((t Int)) (div_total t 1) t)
 (define-rule arith-int-div-total-zero ((t Int)) (div_total t 0) 0)
@@ -36,7 +37,9 @@
 
 (define-rule arith-geq-tighten ((t Int) (s Int)) (not (>= t s)) (>= s (+ t 1)))
 
-(define-rule arith-geq-norm ((t ?) (s ?)) (>= t s) (>= (- t s) 0))
+(define-rule arith-geq-norm1 ((t ?) (s ?)) (>= t s) (>= (- t s) 0))
+
+(define-rule arith-geq-norm2 ((t ?) (s ?)) (>= t s) (<= (- t) (- s)))
 
 (define-rule arith-geq-norm2 ((t ?) (s ?)) (>= t s) (<= (- t) (- s)))
 

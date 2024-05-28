@@ -2654,8 +2654,8 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(ARITH_LEQ_NORM),
   /** Auto-generated from RARE rule arith-geq-tighten */
   EVALUE(ARITH_GEQ_TIGHTEN),
-  /** Auto-generated from RARE rule arith-geq-norm */
-  EVALUE(ARITH_GEQ_NORM),
+  /** Auto-generated from RARE rule arith-geq-norm1 */
+  EVALUE(ARITH_GEQ_NORM1),
   /** Auto-generated from RARE rule arith-geq-norm2 */
   EVALUE(ARITH_GEQ_NORM2),
   /** Auto-generated from RARE rule arith-refl-leq */
