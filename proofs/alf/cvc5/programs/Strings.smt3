@@ -643,7 +643,7 @@
   (String RegLan Int) Bool
   (
     (($str_mk_str_in_re_sigma_star_rec s @re.empty n)                    (= (mod (str.len s) n) 0))
-    (($str_mk_str_in_re_sigma_star_rec s (re.++ re.allchar r) n)         ($str_mk_str_in_re_sigma_rec s r (alf.add n 1)))
+    (($str_mk_str_in_re_sigma_star_rec s (re.++ re.allchar r) n)         ($str_mk_str_in_re_sigma_star_rec s r (alf.add n 1)))
   )
 )
 
