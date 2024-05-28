@@ -173,8 +173,9 @@
 
 (define-rule str-contains-refl ((x ?Seq)) (str.contains x x) true)
 
-(define-rule str-contains-concat-find ((xs ?Seq :list) (y ?Seq) (zs ?Seq :list)) 
-  (str.contains (str.++ xs y zs) y) 
+(define-cond-rule str-contains-concat-find ((xs ?Seq :list) (z ?Seq) (y ?Seq) (zs ?Seq :list))
+  (str.contains z y)
+  (str.contains (str.++ xs z zs) y)
   true)
 
 ; NOTE: should be fixed point
