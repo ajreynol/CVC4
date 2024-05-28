@@ -2257,9 +2257,12 @@ Node SequencesRewriter::rewriteSubstr(Node node)
         {
           // make the length explicitly, which helps proof reconstruction
           Node cskipped = utils::mkConcat(childrenr, stype);
-          Node resultStart = nm->mkNode(Kind::SUB, node[1], nm->mkNode(Kind::STRING_LENGTH, cskipped));
-          Node ret = nm->mkNode(
-              Kind::STRING_SUBSTR, utils::mkConcat(n1, stype), resultStart, node[2]);
+          Node resultStart = nm->mkNode(
+              Kind::SUB, node[1], nm->mkNode(Kind::STRING_LENGTH, cskipped));
+          Node ret = nm->mkNode(Kind::STRING_SUBSTR,
+                                utils::mkConcat(n1, stype),
+                                resultStart,
+                                node[2]);
           return returnRewrite(node, ret, Rewrite::SS_STRIP_START_PT);
         }
         else
