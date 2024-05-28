@@ -86,7 +86,7 @@ bool RewriteDbProofCons::prove(
     if (ai != a)
     {
       Node aeq = a.eqNode(ai);
-      cdp->addStep(aeq, ProofRule::ENCODE_PRED_TRANSFORM, {}, {a});
+      cdp->addStep(aeq, ProofRule::ENCODE_EQ_INTRO, {}, {a});
       transEq.push_back(aeq);
     }
     Node bi = d_rdnc.postConvert(b);
@@ -103,7 +103,7 @@ bool RewriteDbProofCons::prove(
     if (bi != b)
     {
       Node beq = b.eqNode(bi);
-      cdp->addStep(beq, ProofRule::ENCODE_PRED_TRANSFORM, {}, {b});
+      cdp->addStep(beq, ProofRule::ENCODE_EQ_INTRO, {}, {b});
       Node beqs = bi.eqNode(b);
       cdp->addStep(beqs, ProofRule::SYMM, {beq}, {});
       transEq.push_back(beqs);

@@ -272,7 +272,7 @@ enum ENUM(ProofRule) : uint32_t
   EVALUE(MACRO_SR_PRED_TRANSFORM),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Builtin theory -- Encode predicate transformation**
+   * **Builtin theory -- Encode equality introduction**
    *
    * .. math::
    *   \inferrule{F \mid G}{G}
@@ -284,7 +284,7 @@ enum ENUM(ProofRule) : uint32_t
    * formats.
    * \endverbatim
    */
-  EVALUE(ENCODE_PRED_TRANSFORM),
+  EVALUE(ENCODE_EQ_INTRO),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Builtin theory -- DSL rewrite**

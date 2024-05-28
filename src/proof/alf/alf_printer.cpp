@@ -146,7 +146,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DRAT_REFUTATION:
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
-    case ProofRule::ENCODE_PRED_TRANSFORM:
+    case ProofRule::ENCODE_EQ_INTRO:
     case ProofRule::ACI_NORM:
     case ProofRule::DSL_REWRITE: return true;
     case ProofRule::BV_BITBLAST_STEP:
@@ -451,9 +451,9 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
     ss << id;
     return ss.str();
   }
-  else if (r == ProofRule::ENCODE_PRED_TRANSFORM)
+  else if (r == ProofRule::ENCODE_EQ_INTRO)
   {
-    // ENCODE_PRED_TRANSFORM proves (= t (convert t)) from argument t,
+    // ENCODE_EQ_INTRO proves (= t (convert t)) from argument t,
     // where (convert t) is indistinguishable from t according to the proof.
     return "refl";
   }
