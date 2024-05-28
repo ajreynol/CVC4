@@ -113,30 +113,6 @@ bool RewriteDbProofCons::prove(
       }
       Trace("rpc") << "- process to " << eq[0] << " == " << eq[1] << std::endl;
     }
-    Node bi = d_rdnc.postConvert(b);
-    std::vector<Node> cargs;
-    ProofRule cr = expr::getCongRule(ai, cargs);
-    // only apply this to standard binders (those with 2 children)
-    if (ai.getNumChildren() == 2 && bi.getNumChildren() == 2)
-    {
-      eq = ai[1].eqNode(bi[1]);
-      Node eqConv = ai.eqNode(bi);
-      cdp->addStep(eqConv, cr, {eq}, cargs);
-      transEq.push_back(eqConv);
-    }
-    if (bi != b)
-    {
-      Node beq = b.eqNode(bi);
-      cdp->addStep(beq, ProofRule::ENCODE_EQ_INTRO, {}, {b});
-      Node beqs = bi.eqNode(b);
-      cdp->addStep(beqs, ProofRule::SYMM, {beq}, {});
-      transEq.push_back(beqs);
-    }
-    if (transEq.size() > 1)
-    {
-      cdp->addStep(eqo, ProofRule::TRANS, transEq, {});
-    }
-    Trace("rpc") << "- process to " << eq[0] << " == " << eq[1] << std::endl;
   }
   Trace("rpc-debug") << "- prove basic" << std::endl;
   // first, try with the basic utility
