@@ -2455,6 +2455,8 @@ Node SequencesRewriter::rewriteContains(Node node)
       }
     }
   }
+  Node maybeRew;
+  Rewrite maybeRule = Rewrite::NONE;
   if (node[1].isConst())
   {
     size_t len = Word::getLength(node[1]);
@@ -2481,7 +2483,9 @@ Node SequencesRewriter::rewriteContains(Node node)
         Node ret = nb.constructNode();
         // str.contains( x ++ y, "A" ) --->
         //   str.contains( x, "A" ) OR str.contains( y, "A" )
-        return returnRewrite(node, ret, Rewrite::CTN_CONCAT_CHAR);
+        // Remember the rewrite, we might find a better rule in following.
+        maybeRew = ret;
+        maybeRule = Rewrite::CTN_CONCAT_CHAR;
       }
       else if (node[0].getKind() == Kind::STRING_REPLACE)
       {
@@ -2745,6 +2749,11 @@ Node SequencesRewriter::rewriteContains(Node node)
       Node ret = nm->mkNode(Kind::EQUAL, emp, node[1]);
       return returnRewrite(node, ret, Rewrite::CTN_REPL_EMPTY);
     }
+  }
+  // If we marked a rewrite but did not yet return it.
+  if (!maybeRew.isNull())
+  {
+    return returnRewrite(node, maybeRew, maybeRule);
   }
 
   return node;

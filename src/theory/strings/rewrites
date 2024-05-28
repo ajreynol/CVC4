@@ -177,6 +177,7 @@
   (str.contains (str.++ xs y zs) y) 
   true)
 
+; NOTE: should be fixed point
 (define-cond-rule str-contains-split-char ((x ?Seq) (y ?Seq) (z ?Seq :list) (w ?Seq))
   (= (str.len w) 1)
   (str.contains (str.++ x y z) w)
