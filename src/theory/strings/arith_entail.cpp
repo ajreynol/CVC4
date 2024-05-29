@@ -103,15 +103,23 @@ Node ArithEntail::normalizeGeq(const Node& n) const
   {
     case Kind::GEQ: return n;
     case Kind::LEQ: return nm->mkNode(Kind::GEQ, n[1], n[0]);
-    case Kind::LT: return nm->mkNode(Kind::GEQ, n[1], nm->mkNode(Kind::ADD, n[0], nm->mkConstInt(Rational(1))));
-    case Kind::GT: return nm->mkNode(Kind::GEQ, n[0], nm->mkNode(Kind::ADD, n[1], nm->mkConstInt(Rational(1))));
-    default:
-      break;
+    case Kind::LT:
+      return nm->mkNode(
+          Kind::GEQ,
+          n[1],
+          nm->mkNode(Kind::ADD, n[0], nm->mkConstInt(Rational(1))));
+    case Kind::GT:
+      return nm->mkNode(
+          Kind::GEQ,
+          n[0],
+          nm->mkNode(Kind::ADD, n[1], nm->mkConstInt(Rational(1))));
+    default: break;
   }
   return Node::null();
 }
 
-Node ArithEntail::rewriteLengthIntro(const Node& n, TConvProofGenerator* pg) const
+Node ArithEntail::rewriteLengthIntro(const Node& n,
+                                     TConvProofGenerator* pg) const
 {
   NodeManager* nm = NodeManager::currentNM();
   std::unordered_map<TNode, Node> visited;

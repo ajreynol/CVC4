@@ -213,12 +213,12 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   Node eqi = eq;
   std::vector<Node> ppTrans;
   // First normalize LT/GT/LEQ to GEQ.
-  if (lhs.getKind()!=Kind::EQUAL && lhs.getKind()!=Kind::GEQ)
+  if (lhs.getKind() != Kind::EQUAL && lhs.getKind() != Kind::GEQ)
   {
     Node lhsn = ae.normalizeGeq(lhs);
     eqi = lhsn.eqNode(eq[1]);
     tcpg.addRewriteStep(
-              eq, eqi, nullptr, true, TrustId::MACRO_THEORY_REWRITE_RCONS);
+        eq, eqi, nullptr, true, TrustId::MACRO_THEORY_REWRITE_RCONS);
     Trace("brc-macro") << "- GEQ normalize is " << eqi << std::endl;
   }
   // Then do basic length intro, which rewrites (str.len (str.++ x y))
@@ -278,7 +278,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   // (>= approx 0) = true
   Node teq = approxRewGeq.eqNode(truen);
   Node ev = evaluate(approxRewGeq, {}, {});
-  if (ev==truen)
+  if (ev == truen)
   {
     Trace("brc-macro") << "- prove " << teq << " via evaluate" << std::endl;
     cdp->addStep(teq, ProofRule::EVALUATE, {}, {approxRewGeq});
@@ -383,7 +383,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   size_t prevSubgoals = subgoals.size();
   std::shared_ptr<ProofNode> pfn = cdp->getProofFor(eq);
   expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
-  Trace("brc-macro") << "...has " << subgoals.size() << " subgoals (was " << prevSubgoals << ")" << std::endl;
+  Trace("brc-macro") << "...has " << subgoals.size() << " subgoals (was "
+                     << prevSubgoals << ")" << std::endl;
   return true;
 }
 

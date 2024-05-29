@@ -88,7 +88,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       // but not all cases of this kind of reasoning.
       theory::strings::ArithEntail ae(nullptr);
       Node tgt;
-      if (n.getKind()==Kind::EQUAL)
+      if (n.getKind() == Kind::EQUAL)
       {
         tgt = n;
       }

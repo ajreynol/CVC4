@@ -266,10 +266,15 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
   }
   // Maybe holds via a THEORY_REWRITE that has been marked with
   // TheoryRewriteCtx::DSL_SUBCALL.
-  if (d_tmode==TheoryRewriteMode::STANDARD)
+  if (d_tmode == TheoryRewriteMode::STANDARD)
   {
-    if (proveWithRule(
-            RewriteProofStatus::THEORY_REWRITE, eqi, {}, {}, false, false, true))
+    if (proveWithRule(RewriteProofStatus::THEORY_REWRITE,
+                      eqi,
+                      {},
+                      {},
+                      false,
+                      false,
+                      true))
     {
       return RewriteProofStatus::THEORY_REWRITE;
     }
@@ -284,9 +289,9 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
   bool success = false;
   // First try rules with only basic techniques, then try
   // conditional/fixed-point/inflection techniques.
-  for (size_t i=0; i<2; i++)
+  for (size_t i = 0; i < 2; i++)
   {
-    bool isBasic = (i==0);
+    bool isBasic = (i == 0);
     for (RdbMatch& m : matches)
     {
       if (processMatch(m.d_s, m.d_n, m.d_vars, m.d_subs, isBasic))
@@ -350,8 +355,8 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
                       << std::endl;
   Trace("rpc-debug2") << "notifyMatch: " << s << " from " << n << " via "
                       << vars << " -> " << subs << std::endl;
-  Assert (!d_mbuffer.empty());
-  d_mbuffer.back().emplace_back(s,n,vars,subs);
+  Assert(!d_mbuffer.empty());
+  d_mbuffer.back().emplace_back(s, n, vars, subs);
   return true;
 }
 
@@ -359,7 +364,7 @@ bool RewriteDbProofCons::processMatch(const Node& s,
                                       const Node& n,
                                       const std::vector<Node>& vars,
                                       const std::vector<Node>& subs,
-                    bool isBasic)
+                                      bool isBasic)
 {
   Assert(d_target[0] == s);
   bool recurse = !isBasic && d_currRecLimit > 0;
