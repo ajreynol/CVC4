@@ -318,8 +318,8 @@ class StringsEntail
   /**
    * Rewrite for MACRO_SUBSTR_STRIP_SYM_LENGTH.
    */
-  Node rewriteViaMacroSubstrStripSymLength(const Node& node,
-                                                            Rewrite& rule);
+  Node rewriteViaMacroSubstrStripSymLength(const Node& node, Rewrite& rule);
+
  private:
   /** component contains base
    *

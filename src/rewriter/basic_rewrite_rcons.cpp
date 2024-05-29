@@ -400,16 +400,14 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
     const Node& eq,
     std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
-  Assert (eq.getKind()==Kind::EQUAL);
+  Assert(eq.getKind() == Kind::EQUAL);
   Node lhs = eq[0];
-  Assert (lhs.getKind()==Kind::STRING_SUBSTR);
+  Assert(lhs.getKind() == Kind::STRING_SUBSTR);
   theory::strings::Rewrite rule;
   theory::strings::ArithEntail ae(nullptr);
   theory::strings::StringsEntail sent(nullptr, ae, nullptr);
   Node lhsr = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule);
 
-  
-  
   return false;
 }
 
