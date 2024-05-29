@@ -78,11 +78,6 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
     {
-      if ((n.getKind() != Kind::EQUAL || !n[0].getType().isInteger())
-          && n.getKind() != Kind::GEQ)
-      {
-        return Node::null();
-      }
       // only matters if contains strings
       if (!expr::hasSubtermKinds({Kind::STRING_LENGTH}, n))
       {
@@ -92,9 +87,22 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       // cannot depend on the rewriter. This makes this rule capture most
       // but not all cases of this kind of reasoning.
       theory::strings::ArithEntail ae(nullptr);
+      Node tgt;
+      if (n.getKind()==Kind::EQUAL)
+      {
+        tgt = n;
+      }
+      else
+      {
+        tgt = ae.normalizeGeq(n);
+      }
+      if (tgt.isNull() || !tgt[0].getType().isInteger())
+      {
+        return Node::null();
+      }
       // first do basic length intro, which rewrites (str.len (str.++ x y))
       // to (+ (str.len x) (str.len y))
-      Node nexp = ae.rewriteLengthIntro(n);
+      Node nexp = ae.rewriteLengthIntro(tgt);
       // Also must make this is a "simple" check (isSimple=true).
       Node ret = ae.rewritePredViaEntailment(nexp, true);
       if (!ret.isNull())

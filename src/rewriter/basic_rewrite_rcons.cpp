@@ -209,9 +209,21 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   Trace("brc-macro") << "Expand entailment for " << eq << std::endl;
   theory::strings::ArithEntail ae(nullptr);
   TConvProofGenerator tcpg(d_env, nullptr);
-  // first do basic length intro, which rewrites (str.len (str.++ x y))
-  // to (+ (str.len x) (str.len y))
-  Node eqi = ae.rewriteLengthIntro(eq, &tcpg);
+  Node lhs = eq[0];
+  Node eqi = eq;
+  std::vector<Node> ppTrans;
+  // First normalize LT/GT/LEQ to GEQ.
+  if (lhs.getKind()!=Kind::EQUAL && lhs.getKind()!=Kind::GEQ)
+  {
+    Node lhsn = ae.normalizeGeq(lhs);
+    eqi = lhsn.eqNode(eq[1]);
+    tcpg.addRewriteStep(
+              eq, eqi, nullptr, true, TrustId::MACRO_THEORY_REWRITE_RCONS);
+    Trace("brc-macro") << "- GEQ normalize is " << eqi << std::endl;
+  }
+  // Then do basic length intro, which rewrites (str.len (str.++ x y))
+  // to (+ (str.len x) (str.len y)).
+  eqi = ae.rewriteLengthIntro(eqi, &tcpg);
   if (eqi != eq)
   {
     Node equiv = eq.eqNode(eqi);
@@ -222,7 +234,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     cdp->addStep(eq, ProofRule::EQ_RESOLVE, {eqi, equivs}, {});
     Trace("brc-macro") << "- length intro is " << eqi << std::endl;
   }
-  Node lhs = eqi[0];
+  lhs = eqi[0];
   Node exp;
   Node ret = ae.rewritePredViaEntailment(lhs, exp, true);
   Assert(ret == eqi[1]);

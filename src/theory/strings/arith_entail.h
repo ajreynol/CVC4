@@ -51,10 +51,12 @@ class ArithEntail
    * using the ArithPolyNorm utility (arith/arith_poly_norm.h) otherwise.
    */
   Node rewriteArith(Node a);
+  /** Normalize the relation n to a GEQ */
+  Node normalizeGeq(const Node& n) const;
   /**
    * Do basic length intro rewrites in all subterms of n.
    */
-  Node rewriteLengthIntro(const Node& n, TConvProofGenerator* pg = nullptr);
+  Node rewriteLengthIntro(const Node& n, TConvProofGenerator* pg = nullptr) const;
   /** check arithmetic entailment equal
    * Returns true if it is always the case that a = b.
    */
