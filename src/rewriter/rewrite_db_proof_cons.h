@@ -36,6 +36,18 @@
 namespace cvc5::internal {
 namespace rewriter {
 
+class RdbMatch
+{
+public:
+  RdbMatch(const Node& s,
+                const Node& n,
+                const std::vector<Node>& vars,
+                const std::vector<Node>& subs) : d_s(s), d_n(n), d_vars(vars), d_subs(subs){}
+  Node d_s;
+  Node d_n;
+  std::vector<Node> d_vars;
+  std::vector<Node> d_subs;
+};
 /**
  * This class is used to reconstruct proofs of theory rewrites. It is described
  * in detail in the paper "Reconstructing Fine-Grained Proofs of Rewrites Using
@@ -64,24 +76,21 @@ class RewriteDbProofCons : protected EnvObj
    * @param cdp The object to add the proof of (= a b) to.
    * @param a The left hand side of the equality.
    * @param b The right hand side of the equality.
-   * @param tid The theory identifier responsible for the rewrite, if one
-   * exists.
-   * @param mid The method id (the kind of rewrite)
    * @param recLimit The recursion limit for this call.
    * @param stepLimit The step limit for this call.
    * @param subgoals The list of proofs introduced when proving (= a b) that
    * are trusted steps, and thus would require further elaboration from the
    * caller of this method.
+   * @param tmode Determines if/when to try THEORY_REWRITE.
    * @return true if we successfully added a proof of (= a b) to cdp
    */
   bool prove(CDProof* cdp,
              const Node& a,
              const Node& b,
-             theory::TheoryId tid,
-             MethodId mid,
              int64_t recLimit,
              int64_t stepLimit,
-             std::vector<std::shared_ptr<ProofNode>>& subgoals);
+             std::vector<std::shared_ptr<ProofNode>>& subgoals,
+             TheoryRewriteMode tmode);
 
  private:
   /**
@@ -221,6 +230,10 @@ class RewriteDbProofCons : protected EnvObj
                    const Node& n,
                    std::vector<Node>& vars,
                    std::vector<Node>& subs);
+  bool processMatch(const Node& s,
+                   const Node& n,
+                   std::vector<Node>& vars,
+                   std::vector<Node>& subs);
   /**
    * Prove with rule, which attempts to prove the equality target using the
    * DSL proof rule id, which may be a builtin rule or a user-provided rule.
@@ -279,6 +292,8 @@ class RewriteDbProofCons : protected EnvObj
   Node rewriteConcrete(const Node& n);
   /** Notify class for matches */
   RdpcMatchTrieNotify d_notify;
+  /** The current buffer of matches */
+  std::vector<std::vector<RdbMatch>> d_mbuffer;
   /**
    * Basic utility for (user-independent) rewrite rule reconstruction. Handles
    * cases that should always be reconstructed, e.g. EVALUATE, REFL,

@@ -59,12 +59,12 @@ bool RewriteDbProofCons::prove(
     CDProof* cdp,
     const Node& a,
     const Node& b,
-    theory::TheoryId tid,
-    MethodId mid,
     int64_t recLimit,
     int64_t stepLimit,
-    std::vector<std::shared_ptr<ProofNode>>& subgoals)
+    std::vector<std::shared_ptr<ProofNode>>& subgoals,
+             TheoryRewriteMode tmode)
 {
+  Assert (d_mbuffer.empty());
   // clear the proof caches
   d_pcache.clear();
   // clear the evaluate cache
@@ -72,7 +72,6 @@ bool RewriteDbProofCons::prove(
   Node eq = a.eqNode(b);
   Trace("rpc") << "RewriteDbProofCons::prove: " << a << " == " << b
                << std::endl;
-  Trace("rpc") << "- from " << tid << " " << mid << std::endl;
   // As a heuristic, always apply CONG if we are an equality between two
   // binder terms with the same quantifier prefix.
   if (a.isClosure() && a.getKind() == b.getKind() && a[0] == b[0])
@@ -117,7 +116,7 @@ bool RewriteDbProofCons::prove(
   Trace("rpc-debug") << "- prove basic" << std::endl;
   // first, try with the basic utility
   bool success = false;
-  if (d_trrc.prove(cdp, eq[0], eq[1], tid, mid, subgoals))
+  if (d_trrc.prove(cdp, eq[0], eq[1], subgoals, tmode))
   {
     Trace("rpc") << "...success (basic)" << std::endl;
     success = true;
@@ -157,7 +156,7 @@ bool RewriteDbProofCons::prove(
   if (!success)
   {
     // now try the "post-prove" method as a last resort
-    if (d_trrc.postProve(cdp, eq[0], eq[1], tid, mid, subgoals))
+    if (d_trrc.postProve(cdp, eq[0], eq[1], subgoals, tmode))
     {
       Trace("rpc") << "...success (post-prove basic)" << std::endl;
       success = true;
@@ -277,7 +276,17 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
   }
   Node prevTarget = d_target;
   d_target = eqi;
+  d_mbuffer.emplace_back();
   d_db->getMatches(eqi[0], &d_notify);
+  std::vector<RdbMatch>& matches = d_mbuffer.back();
+  for (RdbMatch& m : matches)
+  {
+    if (processMatch(m.d_s, m.d_n, m.d_vars, m.d_subs))
+    {
+      break;
+    }
+  }
+  d_mbuffer.pop_back();
   d_target = prevTarget;
   if (d_currFixedPointId == ProofRewriteRule::NONE)
   {
@@ -398,6 +407,58 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
   }
   // want to keep getting notify calls
   return true;
+#if 0
+  Assert(s.getType().isComparableTo(n.getType()));
+  Assert(vars.size() == subs.size());
+  // if we reach our step limit, do not continue trying
+  if (d_currStepLimit == 0)
+  {
+    return false;
+  }
+  d_currStepLimit--;
+  Trace("rpc-debug2") << "[steps remaining: " << d_currStepLimit << "]"
+                      << std::endl;
+  Trace("rpc-debug2") << "notifyMatch: " << s << " from " << n << " via "
+                      << vars << " -> " << subs << std::endl;
+  Assert (!d_mbuffer.empty());
+  d_mbuffer.back().emplace_back(s,n,vars,subs);
+  return true;
+#endif
+}
+
+bool RewriteDbProofCons::processMatch(const Node& s,
+                                     const Node& n,
+                                     std::vector<Node>& vars,
+                                     std::vector<Node>& subs)
+{
+  Assert(d_target[0] == s) << "Not equal: " << s << " " << d_target << std::endl;
+  bool recurse = d_currRecLimit > 0;
+  // get the rule identifiers for the conclusion
+  const std::vector<ProofRewriteRule>& ids = d_db->getRuleIdsForHead(n);
+  Assert(!ids.empty());
+  // check each rule instance, succeed if one proves
+  for (ProofRewriteRule id : ids)
+  {
+    // try to prove target with the current rule, using inflection matching
+    // and fixed point semantics
+    if (proveWithRule(RewriteProofStatus::DSL,
+                      d_target,
+                      vars,
+                      subs,
+                      true,
+                      true,
+                      recurse,
+                      id))
+    {
+      // if successful, we do not want to be notified of further matches
+      // and return false here.
+      return true;
+    }
+    // notice that we do not cache a failure here since we only know that the
+    // current rule was not able to prove the current target
+  }
+  // want to keep getting notify calls
+  return false;
 }
 
 bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
@@ -1167,7 +1228,40 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
       Trace("rpc-ctx") << "Get matches " << stgt << std::endl;
       Trace("rpc-ctx") << "Conclusion is " << concRhs << std::endl;
       continueFixedPoint = false;
+      d_mbuffer.emplace_back();
       rpr.getMatches(stgt, &d_notify);
+      std::vector<RdbMatch>& matches = d_mbuffer.back();
+      for (RdbMatch& m : matches)
+      {
+        // apply substitution, which may notice vars may be out of order wrt rule
+        // var list
+        Node target = expr::narySubstitute(conc, m.d_vars, m.d_subs);
+        // it may be impossible to construct the conclusion due to null terminators
+        // for approximate types, return false in this case
+        if (!target.isNull())
+        {
+          // We now prove with the given rule. this should only fail if there are
+          // conditions on the rule which fail. Notice we never allow recursion here.
+          // We also don't permit inflection matching (which regardless should not
+          // apply).
+          if (proveWithRule(RewriteProofStatus::DSL,
+                            target,
+                            m.d_vars,
+                            m.d_subs,
+                            false,
+                            false,
+                            false,
+                            d_currFixedPointId))
+          {
+            // successfully proved, store in temporary variable
+            d_currFixedPointConc = target;
+            d_currFixedPointSubs = subs;
+          }
+        }
+        // should only be one
+        break;
+      }
+      d_mbuffer.pop_back();
       Trace("rpc-ctx") << "...conclusion is " << d_currFixedPointConc
                        << std::endl;
       if (!d_currFixedPointConc.isNull())
