@@ -2228,7 +2228,8 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     return returnRewrite(node, ret, Rewrite::SS_LEN_ONE_Z_Z);
   }
 
-  Node slenRew = d_arithEntail.rewriteArith(nm->mkNode(Kind::STRING_LENGTH, node[0]));
+  Node slenRew =
+      d_arithEntail.rewriteArith(nm->mkNode(Kind::STRING_LENGTH, node[0]));
   if (node[2] != slenRew)
   {
     if (d_arithEntail.check(node[2], slenRew))
@@ -2238,7 +2239,7 @@ Node SequencesRewriter::rewriteSubstr(Node node)
       return returnRewrite(node, ret, Rewrite::SS_END_PT_NORM);
     }
   }
-      
+
   // symbolic length analysis
   for (unsigned r = 0; r < 2; r++)
   {
