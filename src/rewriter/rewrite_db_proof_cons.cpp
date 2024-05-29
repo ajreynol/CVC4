@@ -42,6 +42,7 @@ RewriteDbProofCons::RewriteDbProofCons(Env& env, RewriteDb* db)
       d_eval(nullptr),
       d_currRecLimit(0),
       d_currStepLimit(0),
+      d_tmode(TheoryRewriteMode::STANDARD),
       d_currFixedPointId(ProofRewriteRule::NONE),
       d_statTotalInputs(
           statisticsRegistry().registerInt("RewriteDbProofCons::totalInputs")),
@@ -65,6 +66,7 @@ bool RewriteDbProofCons::prove(
     TheoryRewriteMode tmode)
 {
   Assert(d_mbuffer.empty());
+  d_tmode = tmode;
   // clear the proof caches
   d_pcache.clear();
   // clear the evaluate cache
@@ -264,10 +266,13 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
   }
   // Maybe holds via a THEORY_REWRITE that has been marked with
   // TheoryRewriteCtx::DSL_SUBCALL.
-  if (proveWithRule(
-          RewriteProofStatus::THEORY_REWRITE, eqi, {}, {}, false, false, true))
+  if (d_tmode!=TheoryRewriteMode::NEVER)
   {
-    return RewriteProofStatus::THEORY_REWRITE;
+    if (proveWithRule(
+            RewriteProofStatus::THEORY_REWRITE, eqi, {}, {}, false, false, true))
+    {
+      return RewriteProofStatus::THEORY_REWRITE;
+    }
   }
   Trace("rpc-debug2") << "...not proved via builtin tactic" << std::endl;
   if (d_currFixedPointId == ProofRewriteRule::NONE)
@@ -327,6 +332,7 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
                                      std::vector<Node>& vars,
                                      std::vector<Node>& subs)
 {
+#if 1
   // if we reach our step limit, do not continue trying
   if (d_currStepLimit == 0)
   {
@@ -407,7 +413,7 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
   }
   // want to keep getting notify calls
   return true;
-#if 0
+#else
   Assert(s.getType().isComparableTo(n.getType()));
   Assert(vars.size() == subs.size());
   // if we reach our step limit, do not continue trying
@@ -942,8 +948,8 @@ bool RewriteDbProofCons::ensureProofInternal(
       // may already have a proof rule from a previous call
       if (cdp->hasStep(cur))
       {
-        it->second = true;
         Trace("rpc-debug") << "...already proven" << std::endl;
+        it->second = true;
       }
       else
       {
@@ -1256,7 +1262,7 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
           {
             // successfully proved, store in temporary variable
             d_currFixedPointConc = target;
-            d_currFixedPointSubs = subs;
+            d_currFixedPointSubs = m.d_subs;
           }
         }
         // should only be one
