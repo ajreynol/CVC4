@@ -318,7 +318,9 @@ class StringsEntail
   /**
    * Rewrite for MACRO_SUBSTR_STRIP_SYM_LENGTH.
    */
-  Node rewriteViaMacroSubstrStripSymLength(const Node& node, Rewrite& rule);
+  Node rewriteViaMacroSubstrStripSymLength(const Node& node, Rewrite& rule,
+                                           std::vector<Node>& ch1,
+                                           std::vector<Node>& ch2);
 
  private:
   /** component contains base

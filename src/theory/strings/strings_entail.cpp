@@ -1007,33 +1007,34 @@ Node StringsEntail::inferEqsFromContains(Node x, Node y)
 }
 
 Node StringsEntail::rewriteViaMacroSubstrStripSymLength(const Node& node,
-                                                        Rewrite& rule)
+                                                        Rewrite& rule,
+                                           std::vector<Node>& ch1,
+                                           std::vector<Node>& ch2)
 {
   Assert(node.getKind() == Kind::STRING_SUBSTR);
   NodeManager* nm = NodeManager::currentNM();
-  std::vector<Node> n1;
-  utils::getConcat(node[0], n1);
+  utils::getConcat(node[0], ch1);
   TypeNode stype = node[0].getType();
   Node zero = nm->mkConstInt(Rational(0));
   // definite inclusion
   if (node[1] == zero)
   {
     Node curr = node[2];
-    std::vector<Node> childrenr;
-    if (stripSymbolicLength(n1, childrenr, 1, curr))
+    if (stripSymbolicLength(ch1, ch2, 1, curr))
     {
-      if (curr != zero && !n1.empty())
+      std::vector<Node> chr = ch2;
+      if (curr != zero && !ch1.empty())
       {
         // make the length explicitly, which helps proof reconstruction
-        Node cpulled = utils::mkConcat(childrenr, stype);
+        Node cpulled = utils::mkConcat(ch2, stype);
         Node resultLen = nm->mkNode(
             Kind::SUB, node[2], nm->mkNode(Kind::STRING_LENGTH, cpulled));
-        childrenr.push_back(nm->mkNode(Kind::STRING_SUBSTR,
-                                       utils::mkConcat(n1, stype),
+        chr.push_back(nm->mkNode(Kind::STRING_SUBSTR,
+                                       utils::mkConcat(ch1, stype),
                                        node[1],
                                        resultLen));
       }
-      Node ret = utils::mkConcat(childrenr, stype);
+      Node ret = utils::mkConcat(chr, stype);
       rule = Rewrite::SS_LEN_INCLUDE;
       return ret;
     }
@@ -1065,17 +1066,17 @@ Node StringsEntail::rewriteViaMacroSubstrStripSymLength(const Node& node,
     {
       // strip off components while quantity is entailed positive
       int dir = r == 0 ? 1 : -1;
-      std::vector<Node> childrenr;
-      if (stripSymbolicLength(n1, childrenr, dir, curr))
+      ch2.clear();
+      if (stripSymbolicLength(ch1, ch2, dir, curr))
       {
         if (r == 0)
         {
           // make the length explicitly, which helps proof reconstruction
-          Node cskipped = utils::mkConcat(childrenr, stype);
+          Node cskipped = utils::mkConcat(ch2, stype);
           Node resultStart = nm->mkNode(
               Kind::SUB, node[1], nm->mkNode(Kind::STRING_LENGTH, cskipped));
           Node ret = nm->mkNode(Kind::STRING_SUBSTR,
-                                utils::mkConcat(n1, stype),
+                                utils::mkConcat(ch1, stype),
                                 resultStart,
                                 node[2]);
           rule = Rewrite::SS_STRIP_START_PT;
@@ -1084,7 +1085,7 @@ Node StringsEntail::rewriteViaMacroSubstrStripSymLength(const Node& node,
         else
         {
           Node ret = nm->mkNode(Kind::STRING_SUBSTR,
-                                utils::mkConcat(n1, stype),
+                                utils::mkConcat(ch1, stype),
                                 node[1],
                                 node[2]);
           rule = Rewrite::SS_STRIP_END_PT;

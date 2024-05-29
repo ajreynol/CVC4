@@ -406,8 +406,10 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
   theory::strings::Rewrite rule;
   theory::strings::ArithEntail ae(nullptr);
   theory::strings::StringsEntail sent(nullptr, ae, nullptr);
-  Node lhsr = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule);
-
+  std::vector<Node> ch1;
+  std::vector<Node> ch2;
+  Node lhsr = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule, ch1, ch2);
+  
   return false;
 }
 

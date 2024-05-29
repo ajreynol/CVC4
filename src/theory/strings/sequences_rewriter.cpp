@@ -1212,7 +1212,9 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
   {
     return Node::null();
   }
-  return sent.rewriteViaMacroSubstrStripSymLength(node, rule);
+  std::vector<Node> ch1;
+  std::vector<Node> ch2;
+  return sent.rewriteViaMacroSubstrStripSymLength(node, rule, ch1, ch2);
 }
 
 Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
