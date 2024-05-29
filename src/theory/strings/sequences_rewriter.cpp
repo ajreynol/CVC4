@@ -1202,7 +1202,8 @@ Node SequencesRewriter::rewriteViaStrInReSigmaStar(const Node& n)
   return nm->mkNode(Kind::EQUAL, t, zero);
 }
 
-Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node, Rewrite& rule)
+Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
+                                                            Rewrite& rule)
 {
   if (node.getKind() != Kind::STRING_SUBSTR)
   {
