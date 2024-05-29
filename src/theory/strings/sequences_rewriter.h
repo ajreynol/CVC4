@@ -155,7 +155,9 @@ class SequencesRewriter : public TheoryRewriter
   /** Rewrite based on STR_IN_RE_SIGMA_STAR */
   Node rewriteViaStrInReSigmaStar(const Node& n);
   /** Rewrite based on MACRO_SUBSTR_STRIP_SYM_LENGTH */
-  Node rewriteViaMacroSubstrStripSymLength(const Node& n, Rewrite& rule, StringsEntail& sent);
+  Node rewriteViaMacroSubstrStripSymLength(const Node& n,
+                                           Rewrite& rule,
+                                           StringsEntail& sent);
 
  public:
   RewriteResponse postRewrite(TNode node) override;

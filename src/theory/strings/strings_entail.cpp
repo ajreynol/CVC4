@@ -679,7 +679,7 @@ Node StringsEntail::checkContains(Node a, Node b, bool fullRewriter)
 
   if (fullRewriter)
   {
-    if (d_rr==nullptr)
+    if (d_rr == nullptr)
     {
       return Node::null();
     }
@@ -687,7 +687,7 @@ Node StringsEntail::checkContains(Node a, Node b, bool fullRewriter)
   }
   else
   {
-    if (d_rewriter==nullptr)
+    if (d_rewriter == nullptr)
     {
       return Node::null();
     }

@@ -399,9 +399,8 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
     const Node& eq,
     std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
-  
 }
-  
+
 bool BasicRewriteRCons::tryTheoryRewrite(
     CDProof* cdp,
     const Node& eq,

@@ -1205,7 +1205,8 @@ Node SequencesRewriter::rewriteViaStrInReSigmaStar(const Node& n)
 }
 
 Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
-                                                            Rewrite& rule, StringsEntail& sent)
+                                                            Rewrite& rule,
+                                                            StringsEntail& sent)
 {
   if (node.getKind() != Kind::STRING_SUBSTR)
   {
@@ -2306,9 +2307,10 @@ Node SequencesRewriter::rewriteSubstr(Node node)
 
   // symbolic SymLen analysis
   Rewrite ruleSymLen;
-  Node retSymLen = rewriteViaMacroSubstrStripSymLength(node, ruleSymLen, d_stringsEntail);
+  Node retSymLen =
+      rewriteViaMacroSubstrStripSymLength(node, ruleSymLen, d_stringsEntail);
   if (!retSymLen.isNull())
-  {                            
+  {
     return returnRewrite(node, retSymLen, ruleSymLen);
   }
   // combine substr
