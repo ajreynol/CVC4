@@ -83,7 +83,10 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR:
       return rewriteViaStrInReSigmaStar(n);
     case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
-      return rewriteViaMacroSubstrStripSymLength(n);
+    {
+      Rewrite rule;
+      return rewriteViaMacroSubstrStripSymLength(n, rule);
+    }
     default: break;
   }
   return Node::null();
@@ -1199,11 +1202,94 @@ Node SequencesRewriter::rewriteViaStrInReSigmaStar(const Node& n)
   return nm->mkNode(Kind::EQUAL, t, zero);
 }
 
-Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& n)
+Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node, Rewrite& rule)
 {
-  if (n.getKind() != Kind::STRING_SUBSTR)
+  if (node.getKind() != Kind::STRING_SUBSTR)
   {
     return Node::null();
+  }
+  NodeManager* nm = nodeManager();
+  std::vector<Node> n1;
+  utils::getConcat(node[0], n1);
+  TypeNode stype = node[0].getType();
+  Node zero = nm->mkConstInt(Rational(0));
+  // definite inclusion
+  if (node[1] == zero)
+  {
+    Node curr = node[2];
+    std::vector<Node> childrenr;
+    if (d_stringsEntail.stripSymbolicLength(n1, childrenr, 1, curr))
+    {
+      if (curr != zero && !n1.empty())
+      {
+        // make the length explicitly, which helps proof reconstruction
+        Node cpulled = utils::mkConcat(childrenr, stype);
+        Node resultLen = nm->mkNode(
+            Kind::SUB, node[2], nm->mkNode(Kind::STRING_LENGTH, cpulled));
+        childrenr.push_back(nm->mkNode(Kind::STRING_SUBSTR,
+                                       utils::mkConcat(n1, stype),
+                                       node[1],
+                                       resultLen));
+      }
+      Node ret = utils::mkConcat(childrenr, stype);
+      rule = Rewrite::SS_LEN_INCLUDE;
+      return ret;
+    }
+  }
+  for (unsigned r = 0; r < 2; r++)
+  {
+    // the amount of characters we can strip
+    Node curr;
+    if (r == 0)
+    {
+      if (node[1] != zero)
+      {
+        // strip up to start point off the start of the string
+        curr = node[1];
+      }
+    }
+    else if (r == 1)
+    {
+      Node tot_len = nm->mkNode(Kind::STRING_LENGTH, node[0]);
+      if (node[2] != tot_len)
+      {
+        Node end_pt = nm->mkNode(Kind::ADD, node[1], node[2]);
+        // strip up to ( str.len(node[0]) - end_pt ) off the end of the string
+        curr = nm->mkNode(Kind::SUB, tot_len, end_pt);
+        curr = d_arithEntail.rewriteArith(curr);
+      }
+    }
+    if (!curr.isNull())
+    {
+      // strip off components while quantity is entailed positive
+      int dir = r == 0 ? 1 : -1;
+      std::vector<Node> childrenr;
+      if (d_stringsEntail.stripSymbolicLength(n1, childrenr, dir, curr))
+      {
+        if (r == 0)
+        {
+          // make the length explicitly, which helps proof reconstruction
+          Node cskipped = utils::mkConcat(childrenr, stype);
+          Node resultStart = nm->mkNode(
+              Kind::SUB, node[1], nm->mkNode(Kind::STRING_LENGTH, cskipped));
+          Node ret = nm->mkNode(Kind::STRING_SUBSTR,
+                                utils::mkConcat(n1, stype),
+                                resultStart,
+                                node[2]);
+          rule = Rewrite::SS_STRIP_START_PT;
+          return ret;
+        }
+        else
+        {
+          Node ret = nm->mkNode(Kind::STRING_SUBSTR,
+                                utils::mkConcat(n1, stype),
+                                node[1],
+                                node[2]);
+          rule = Rewrite::SS_STRIP_END_PT;
+          return ret;
+        }
+      }
+    }
   }
 
   return Node::null();
@@ -2194,32 +2280,7 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     }
   }
 
-  std::vector<Node> n1;
-  utils::getConcat(node[0], n1);
   TypeNode stype = node.getType();
-
-  // definite inclusion
-  if (node[1] == zero)
-  {
-    Node curr = node[2];
-    std::vector<Node> childrenr;
-    if (d_stringsEntail.stripSymbolicLength(n1, childrenr, 1, curr))
-    {
-      if (curr != zero && !n1.empty())
-      {
-        // make the length explicitly, which helps proof reconstruction
-        Node cpulled = utils::mkConcat(childrenr, stype);
-        Node resultLen = nm->mkNode(
-            Kind::SUB, node[2], nm->mkNode(Kind::STRING_LENGTH, cpulled));
-        childrenr.push_back(nm->mkNode(Kind::STRING_SUBSTR,
-                                       utils::mkConcat(n1, stype),
-                                       node[1],
-                                       resultLen));
-      }
-      Node ret = utils::mkConcat(childrenr, stype);
-      return returnRewrite(node, ret, Rewrite::SS_LEN_INCLUDE);
-    }
-  }
 
   // (str.substr s x x) ---> "" if (str.len s) <= 1
   if (node[1] == node[2] && d_stringsEntail.checkLengthOne(node[0]))
@@ -2241,58 +2302,11 @@ Node SequencesRewriter::rewriteSubstr(Node node)
   }
 
   // symbolic length analysis
-  for (unsigned r = 0; r < 2; r++)
+  Rewrite ruleSymLen;
+  Node retSymLen = rewriteViaMacroSubstrStripSymLength(node, ruleSymLen);
+  if (!retSymLen.isNull())
   {
-    // the amount of characters we can strip
-    Node curr;
-    if (r == 0)
-    {
-      if (node[1] != zero)
-      {
-        // strip up to start point off the start of the string
-        curr = node[1];
-      }
-    }
-    else if (r == 1)
-    {
-      Node tot_len = nm->mkNode(Kind::STRING_LENGTH, node[0]);
-      if (node[2] != tot_len)
-      {
-        Node end_pt = nm->mkNode(Kind::ADD, node[1], node[2]);
-        // strip up to ( str.len(node[0]) - end_pt ) off the end of the string
-        curr = nm->mkNode(Kind::SUB, tot_len, end_pt);
-        curr = d_arithEntail.rewriteArith(curr);
-      }
-    }
-    if (!curr.isNull())
-    {
-      // strip off components while quantity is entailed positive
-      int dir = r == 0 ? 1 : -1;
-      std::vector<Node> childrenr;
-      if (d_stringsEntail.stripSymbolicLength(n1, childrenr, dir, curr))
-      {
-        if (r == 0)
-        {
-          // make the length explicitly, which helps proof reconstruction
-          Node cskipped = utils::mkConcat(childrenr, stype);
-          Node resultStart = nm->mkNode(
-              Kind::SUB, node[1], nm->mkNode(Kind::STRING_LENGTH, cskipped));
-          Node ret = nm->mkNode(Kind::STRING_SUBSTR,
-                                utils::mkConcat(n1, stype),
-                                resultStart,
-                                node[2]);
-          return returnRewrite(node, ret, Rewrite::SS_STRIP_START_PT);
-        }
-        else
-        {
-          Node ret = nm->mkNode(Kind::STRING_SUBSTR,
-                                utils::mkConcat(n1, stype),
-                                node[1],
-                                node[2]);
-          return returnRewrite(node, ret, Rewrite::SS_STRIP_END_PT);
-        }
-      }
-    }
+    return returnRewrite(node, retSymLen, ruleSymLen);
   }
   // combine substr
   if (node[0].getKind() == Kind::STRING_SUBSTR)
