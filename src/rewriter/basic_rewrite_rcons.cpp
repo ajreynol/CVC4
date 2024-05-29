@@ -401,8 +401,6 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
     const Node& eq,
     std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
-  // FIXME
-  return false;
   NodeManager* nm = NodeManager::currentNM();
   Trace("brc-macro") << "Expand substring strip for " << eq << std::endl;
   Assert(eq.getKind() == Kind::EQUAL);
