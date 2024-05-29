@@ -1008,8 +1008,8 @@ Node StringsEntail::inferEqsFromContains(Node x, Node y)
 
 Node StringsEntail::rewriteViaMacroSubstrStripSymLength(const Node& node,
                                                         Rewrite& rule,
-                                           std::vector<Node>& ch1,
-                                           std::vector<Node>& ch2)
+                                                        std::vector<Node>& ch1,
+                                                        std::vector<Node>& ch2)
 {
   Assert(node.getKind() == Kind::STRING_SUBSTR);
   NodeManager* nm = NodeManager::currentNM();
@@ -1030,9 +1030,9 @@ Node StringsEntail::rewriteViaMacroSubstrStripSymLength(const Node& node,
         Node resultLen = nm->mkNode(
             Kind::SUB, node[2], nm->mkNode(Kind::STRING_LENGTH, cpulled));
         chr.push_back(nm->mkNode(Kind::STRING_SUBSTR,
-                                       utils::mkConcat(ch1, stype),
-                                       node[1],
-                                       resultLen));
+                                 utils::mkConcat(ch1, stype),
+                                 node[1],
+                                 resultLen));
       }
       Node ret = utils::mkConcat(chr, stype);
       rule = Rewrite::SS_LEN_INCLUDE;
