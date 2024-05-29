@@ -2544,6 +2544,19 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(BV_BITWISE_SLICING),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Strings - strings substring strip symbolic length**
+   *
+   * .. math::
+   *   (str.substr s n m) = t
+   * 
+   * where :math:`t` is obtained by fully or partially stripping components of
+   * :math:`s` based on :math:`n` and :math:`m`.
+   * 
+   * \endverbatim
+   */
+  EVALUE(MACRO_SUBSTR_STRIP_SYM_LENGTH),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Strings - regular expression membership evaluation**
    *
    * .. math::

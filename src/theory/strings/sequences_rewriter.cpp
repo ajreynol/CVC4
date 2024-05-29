@@ -63,6 +63,8 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_SIGMA_STAR,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -80,6 +82,8 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::STR_IN_RE_SIGMA: return rewriteViaStrInReSigma(n);
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR:
       return rewriteViaStrInReSigmaStar(n);
+    case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
+      return rewriteViaMacroSubstrStripSymLength(n);
     default: break;
   }
   return Node::null();
@@ -1193,6 +1197,16 @@ Node SequencesRewriter::rewriteViaStrInReSigmaStar(const Node& n)
   Node lenx = nm->mkNode(Kind::STRING_LENGTH, n[0]);
   Node t = nm->mkNode(Kind::INTS_MODULUS, lenx, num);
   return nm->mkNode(Kind::EQUAL, t, zero);
+}
+
+Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& n)
+{
+  if (n.getKind() != Kind::STRING_SUBSTR)
+  {
+    return Node::null();
+  }
+  
+    return Node::null();
 }
 
 Node SequencesRewriter::rewriteAndOrRegExp(TNode node)

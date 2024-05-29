@@ -246,6 +246,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "dt-collapse-tester-singleton";
     case ProofRewriteRule::DT_CONS_EQ: return "dt-cons-eq";
     case ProofRewriteRule::BV_BITWISE_SLICING: return "bv-bitwise-slicing";
+    case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH: return "macro-substr-strip-sym-length";
     case ProofRewriteRule::STR_IN_RE_EVAL: return "str-in-re-eval";
     case ProofRewriteRule::STR_IN_RE_CONSUME: return "str-in-re-consume";
     case ProofRewriteRule::RE_LOOP_ELIM: return "re-loop-elim";
