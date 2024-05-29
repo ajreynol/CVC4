@@ -22,6 +22,7 @@
 
 #include "expr/node.h"
 #include "theory/strings/arith_entail.h"
+#include "theory/strings/rewrites.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -314,7 +315,11 @@ class StringsEntail
    * infer that any of the yi must be empty.
    */
   Node inferEqsFromContains(Node x, Node y);
-
+  /**
+   * Rewrite for MACRO_SUBSTR_STRIP_SYM_LENGTH.
+   */
+  Node rewriteViaMacroSubstrStripSymLength(const Node& node,
+                                                            Rewrite& rule);
  private:
   /** component contains base
    *
@@ -384,7 +389,6 @@ class StringsEntail
    * @return A concatenation that can be interpreted as a multiset
    */
   static Node getMultisetApproximation(Node a);
-
  private:
   /** Pointer to the full rewriter */
   Rewriter* d_rr;

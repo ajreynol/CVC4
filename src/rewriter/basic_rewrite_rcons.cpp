@@ -28,6 +28,7 @@
 #include "theory/bv/theory_bv_rewrite_rules.h"
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
+#include "theory/strings/strings_entail.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -399,6 +400,17 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
     const Node& eq,
     std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
+  Assert (eq.getKind()==Kind::EQUAL);
+  Node lhs = eq[0];
+  Assert (lhs.getKind()==Kind::STRING_SUBSTR);
+  theory::strings::Rewrite rule;
+  theory::strings::ArithEntail ae(nullptr);
+  theory::strings::StringsEntail sent(nullptr, ae, nullptr);
+  Node lhsr = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule);
+
+  
+  
+  return false;
 }
 
 bool BasicRewriteRCons::tryTheoryRewrite(
