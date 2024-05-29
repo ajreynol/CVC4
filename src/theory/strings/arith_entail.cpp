@@ -25,6 +25,7 @@
 #include "theory/strings/word.h"
 #include "theory/theory.h"
 #include "util/rational.h"
+#include "proof/conv_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
@@ -93,6 +94,86 @@ Node ArithEntail::rewriteArith(Node a)
   // null).
   Node an = arith::PolyNorm::getPolyNorm(a);
   return an;
+}
+
+Node ArithEntail::rewriteLengthIntro(const Node& n,
+                                      TConvProofGenerator* pg)
+{
+  NodeManager* nm = NodeManager::currentNM();
+  std::unordered_map<TNode, Node> visited;
+  std::unordered_map<TNode, Node>::iterator it;
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(n);
+  do
+  {
+    cur = visit.back();
+    it = visited.find(cur);
+    if (it == visited.end())
+    {
+      if (cur.getNumChildren()==0)
+      {
+        visit.pop_back();
+        visited[cur] = cur;
+        continue;
+      }
+      visited[cur] = Node::null();
+      visit.insert(visit.end(), cur.begin(), cur.end());
+      continue;
+    }
+    visit.pop_back();
+    if (it->second.isNull())
+    {
+      Kind k = cur.getKind();
+      bool childChanged = false;
+      std::vector<Node> children;
+      for (const Node& cn : cur)
+      {
+        it = visited.find(cn);
+        Assert(it != visited.end());
+        Assert(!it->second.isNull());
+        children.push_back(it->second);
+        childChanged = childChanged || it->second != cn;
+      }
+      Node ret = cur;
+      if (childChanged)
+      {
+        ret = nm->mkNode(k, children);
+      }
+      if (k==Kind::STRING_LENGTH)
+      {
+        std::vector<Node> cc;
+        for (const Node& c : children)
+        {
+          utils::getConcat(c, cc);
+        }
+        std::vector<Node> sum;
+        for (const Node& c : cc)
+        {
+          if (c.isConst() && c.getType().isString())
+          {
+            sum.push_back(nm->mkConstInt(Rational(Word::getLength(c))));
+          }
+          else
+          {
+            sum.push_back(nm->mkNode(Kind::STRING_LENGTH, c));
+          }
+        }
+        Assert(!sum.empty());
+        Node rret = sum.size()==1 ? sum[0] : nm->mkNode(Kind::ADD, sum);
+        if (pg != nullptr)
+        {
+          pg->addRewriteStep(
+              ret, rret, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS);
+        }
+        ret = rret;
+      }
+      visited[cur] = ret;
+    }
+  } while (!visit.empty());
+  Assert(visited.find(n) != visited.end());
+  Assert(!visited.find(n)->second.isNull());
+  return visited[n];
 }
 
 bool ArithEntail::checkEq(Node a, Node b)

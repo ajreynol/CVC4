@@ -169,7 +169,7 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
       }
       break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
-      if (ensureProofMacroArithStringPredEntail(cdp, eq))
+      if (ensureProofMacroArithStringPredEntail(cdp, eq, subgoals))
       {
         return;
       }
@@ -205,16 +205,30 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(
 }
 
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
-                                                              const Node& eq)
+                                                              const Node& eq,
+    std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
   Assert(eq.getKind() == Kind::EQUAL);
-  Node lhs = eq[0];
+  Trace("brc-macro") << "Expand entailment for " << eq << std::endl;
   theory::strings::ArithEntail ae(nullptr);
+  TConvProofGenerator tcpg(d_env, nullptr);
+  // first do basic length intro, which rewrites (str.len (str.++ x y))
+  // to (+ (str.len x) (str.len y))
+  Node eqi = ae.rewriteLengthIntro(eq, &tcpg);
+  if (eqi!=eq)
+  {
+    Node equiv = eq.eqNode(eqi);
+    std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(equiv);
+    cdp->addProof(pfn);
+    Node equivs = eqi.eqNode(eq);
+    cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
+    cdp->addStep(eq, ProofRule::EQ_RESOLVE, {eqi, equivs}, {});
+    Trace("brc-macro") << "- length intro is " << eqi << std::endl;
+  }
+  Node lhs = eqi[0];
   Node exp;
   Node ret = ae.rewritePredViaEntailment(lhs, exp, true);
-  Assert(ret == eq[1]);
-  Trace("brc-macro") << "Expand entailment for " << lhs << " == " << ret
-                     << std::endl;
+  Assert(ret == eqi[1]);
   Trace("brc-macro") << "- explanation is " << exp << std::endl;
   Node expRew = ae.rewriteArith(exp);
   Node zero = nodeManager()->mkConstInt(Rational(0));
@@ -348,7 +362,9 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
     cdp->addStep(retEq, ProofRule::TRANS, {peq, teq}, {});
   }
   Trace("brc-macro") << "...success" << std::endl;
-  Trace("brc-macro") << "...proof is " << *cdp->getProofFor(retEq) << std::endl;
+  Trace("brc-macro") << "...proof is " << *cdp->getProofFor(eq) << std::endl;
+  std::shared_ptr<ProofNode> pfn = cdp->getProofFor(eq);
+  expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
   return true;
 }
 

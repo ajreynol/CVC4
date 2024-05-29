@@ -92,8 +92,11 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       // cannot depend on the rewriter. This makes this rule capture most
       // but not all cases of this kind of reasoning.
       theory::strings::ArithEntail ae(nullptr);
+      // first do basic length intro, which rewrites (str.len (str.++ x y))
+      // to (+ (str.len x) (str.len y))
+      Node nexp = ae.rewriteLengthIntro(n);
       // Also must make this is a "simple" check (isSimple=true).
-      Node ret = ae.rewritePredViaEntailment(n, true);
+      Node ret = ae.rewritePredViaEntailment(nexp, true);
       if (!ret.isNull())
       {
         return ret;

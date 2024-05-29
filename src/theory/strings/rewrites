@@ -229,7 +229,7 @@
   (str.replace t "" s)
   (str.++ s t))
 
-(define-rule* str-len-concat-rec ((s1 String) (s2 String) (s3 String :list))
+(define-rule* str-len-concat-rec ((s1 ?Seq) (s2 ?Seq) (s3 ?Seq :list))
   (str.len (str.++ s1 s2 s3))
   (str.len (str.++ s2 s3))
   (+ (str.len s1) _))

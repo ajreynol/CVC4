@@ -23,6 +23,9 @@
 #include "expr/node.h"
 
 namespace cvc5::internal {
+
+class TConvProofGenerator;
+
 namespace theory {
 
 class Rewriter;
@@ -48,6 +51,11 @@ class ArithEntail
    * using the ArithPolyNorm utility (arith/arith_poly_norm.h) otherwise.
    */
   Node rewriteArith(Node a);
+  /**
+   * Do basic length intro rewrites in all subterms of n.
+   */
+  Node rewriteLengthIntro(const Node& n,
+                                        TConvProofGenerator* pg = nullptr);
   /** check arithmetic entailment equal
    * Returns true if it is always the case that a = b.
    */
