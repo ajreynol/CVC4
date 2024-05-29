@@ -29,6 +29,7 @@
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
 #include "theory/strings/strings_entail.h"
+#include "theory/strings/theory_strings_utils.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -386,9 +387,9 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     cdp->addStep(retEq, ProofRule::TRANS, {peq, teq}, {});
   }
   Trace("brc-macro") << "...success" << std::endl;
-  Trace("brc-macro") << "...proof is " << *cdp->getProofFor(eq) << std::endl;
   size_t prevSubgoals = subgoals.size();
   std::shared_ptr<ProofNode> pfn = cdp->getProofFor(eq);
+  Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
   expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
   Trace("brc-macro") << "...has " << subgoals.size() << " subgoals (was "
                      << prevSubgoals << ")" << std::endl;
@@ -400,17 +401,60 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
     const Node& eq,
     std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
+  NodeManager * nm = NodeManager::currentNM();
+  Trace("brc-macro") << "Expand substring strip for " << eq << std::endl;
   Assert(eq.getKind() == Kind::EQUAL);
   Node lhs = eq[0];
   Assert(lhs.getKind() == Kind::STRING_SUBSTR);
   theory::strings::Rewrite rule;
+  // call the same utility that proved it
   theory::strings::ArithEntail ae(nullptr);
   theory::strings::StringsEntail sent(nullptr, ae, nullptr);
   std::vector<Node> ch1;
   std::vector<Node> ch2;
-  Node lhsr = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule, ch1, ch2);
-
-  return false;
+  Node rhs = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule, ch1, ch2);
+  Trace("brc-macro") << "...was via string rewrite rule " << rule << std::endl;
+  Assert (rhs==eq[1]);
+  TypeNode stype = lhs.getType();
+  Node cm1 = theory::strings::utils::mkConcat(ch1, stype);
+  Node cm2 = theory::strings::utils::mkConcat(ch2, stype);
+  Node cm;
+  // depending on the rule, are either stripping from front or back
+  if (rule==theory::strings::Rewrite::SS_STRIP_END_PT)
+  {
+    cm = nm->mkNode(Kind::STRING_CONCAT, cm1, cm2);
+  }
+  else
+  {
+    cm = nm->mkNode(Kind::STRING_CONCAT, cm2, cm1);
+  }
+  if (cm==lhs[0])
+  {
+    return false;
+  }
+  Node eq1 = nm->mkNode(Kind::EQUAL, lhs[0], cm);
+  cdp->addStep(eq1, ProofRule::ACI_NORM, {}, {eq1});
+  Trace("brc-macro") << "- via ACI_NORM " << eq1 << std::endl;
+  std::vector<Node> cargs;
+  ProofRule cr = expr::getCongRule(lhs, cargs);
+  Node eq2 = lhs[1].eqNode(lhs[1]);
+  Node eq3 = lhs[2].eqNode(lhs[2]);
+  cdp->addStep(eq2, ProofRule::REFL, {}, {lhs[1]});
+  cdp->addStep(eq3, ProofRule::REFL, {}, {lhs[1]});
+  Node lhsm = nm->mkNode(Kind::STRING_SUBSTR,
+                         cm,
+                         lhs[1],
+                         lhs[2]);
+  Node eqLhs = lhs.eqNode(lhsm);
+  cdp->addStep(eqLhs, cr, {eq1, eq2, eq3}, cargs);
+  Node eqm = lhsm.eqNode(rhs);
+  cdp->addTrustedStep(eqm, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+  Trace("brc-macro") << "- rely on rewrite " << eqm << std::endl;
+  cdp->addStep(eq, ProofRule::TRANS, {eqLhs, eqm}, {});
+  std::shared_ptr<ProofNode> pfn = cdp->getProofFor(eq);
+  Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
+  expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
+  return true;
 }
 
 bool BasicRewriteRCons::tryTheoryRewrite(
