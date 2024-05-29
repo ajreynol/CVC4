@@ -401,7 +401,7 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
     const Node& eq,
     std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   Trace("brc-macro") << "Expand substring strip for " << eq << std::endl;
   Assert(eq.getKind() == Kind::EQUAL);
   Node lhs = eq[0];
@@ -414,13 +414,13 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
   std::vector<Node> ch2;
   Node rhs = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule, ch1, ch2);
   Trace("brc-macro") << "...was via string rewrite rule " << rule << std::endl;
-  Assert (rhs==eq[1]);
+  Assert(rhs == eq[1]);
   TypeNode stype = lhs.getType();
   Node cm1 = theory::strings::utils::mkConcat(ch1, stype);
   Node cm2 = theory::strings::utils::mkConcat(ch2, stype);
   Node cm;
   // depending on the rule, are either stripping from front or back
-  if (rule==theory::strings::Rewrite::SS_STRIP_END_PT)
+  if (rule == theory::strings::Rewrite::SS_STRIP_END_PT)
   {
     cm = nm->mkNode(Kind::STRING_CONCAT, cm1, cm2);
   }
@@ -428,7 +428,7 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
   {
     cm = nm->mkNode(Kind::STRING_CONCAT, cm2, cm1);
   }
-  if (cm==lhs[0])
+  if (cm == lhs[0])
   {
     return false;
   }
@@ -441,10 +441,7 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
   Node eq3 = lhs[2].eqNode(lhs[2]);
   cdp->addStep(eq2, ProofRule::REFL, {}, {lhs[1]});
   cdp->addStep(eq3, ProofRule::REFL, {}, {lhs[1]});
-  Node lhsm = nm->mkNode(Kind::STRING_SUBSTR,
-                         cm,
-                         lhs[1],
-                         lhs[2]);
+  Node lhsm = nm->mkNode(Kind::STRING_SUBSTR, cm, lhs[1], lhs[2]);
   Node eqLhs = lhs.eqNode(lhsm);
   cdp->addStep(eqLhs, cr, {eq1, eq2, eq3}, cargs);
   Node eqm = lhsm.eqNode(rhs);
