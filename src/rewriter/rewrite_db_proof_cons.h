@@ -232,12 +232,12 @@ class RewriteDbProofCons : protected EnvObj
    */
   bool notifyMatch(const Node& s,
                    const Node& n,
-                   std::vector<Node>& vars,
-                   std::vector<Node>& subs);
+                   const std::vector<Node>& vars,
+                   const std::vector<Node>& subs);
   bool processMatch(const Node& s,
                     const Node& n,
-                    std::vector<Node>& vars,
-                    std::vector<Node>& subs);
+                    const std::vector<Node>& vars,
+                    const std::vector<Node>& subs);
   /**
    * Prove with rule, which attempts to prove the equality target using the
    * DSL proof rule id, which may be a builtin rule or a user-provided rule.
@@ -327,12 +327,6 @@ class RewriteDbProofCons : protected EnvObj
   uint64_t d_currStepLimit;
   /** The mode for if/when to try theory rewrites */
   rewriter::TheoryRewriteMode d_tmode;
-  /** current rule we are applying to fixed point */
-  ProofRewriteRule d_currFixedPointId;
-  /** current substitution from fixed point */
-  std::vector<Node> d_currFixedPointSubs;
-  /** current conclusion from fixed point */
-  Node d_currFixedPointConc;
   /** Total number of rewrites we were asked to prove */
   IntStat d_statTotalInputs;
   /** Total number of rewrites we tried to prove internally */

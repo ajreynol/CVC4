@@ -43,7 +43,6 @@ RewriteDbProofCons::RewriteDbProofCons(Env& env, RewriteDb* db)
       d_currRecLimit(0),
       d_currStepLimit(0),
       d_tmode(TheoryRewriteMode::STANDARD),
-      d_currFixedPointId(ProofRewriteRule::NONE),
       d_statTotalInputs(
           statisticsRegistry().registerInt("RewriteDbProofCons::totalInputs")),
       d_statTotalAttempts(statisticsRegistry().registerInt(
@@ -275,15 +274,12 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
     }
   }
   Trace("rpc-debug2") << "...not proved via builtin tactic" << std::endl;
-  if (d_currFixedPointId == ProofRewriteRule::NONE)
-  {
-    d_currRecLimit--;
-  }
+  d_currRecLimit--;
   Node prevTarget = d_target;
   d_target = eqi;
   d_mbuffer.emplace_back();
   d_db->getMatches(eqi[0], &d_notify);
-  std::vector<RdbMatch>& matches = d_mbuffer.back();
+  std::vector<RdbMatch> matches = d_mbuffer.back();
   for (RdbMatch& m : matches)
   {
     if (processMatch(m.d_s, m.d_n, m.d_vars, m.d_subs))
@@ -293,10 +289,7 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
   }
   d_mbuffer.pop_back();
   d_target = prevTarget;
-  if (d_currFixedPointId == ProofRewriteRule::NONE)
-  {
-    d_currRecLimit++;
-  }
+  d_currRecLimit++;
   // check if we determined the proof in the above call, which is the case
   // if we succeeded, or we are already marked as a failure at a lower depth.
   std::unordered_map<Node, ProvenInfo>::iterator it = d_pcache.find(eqi);
@@ -329,91 +322,9 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
 
 bool RewriteDbProofCons::notifyMatch(const Node& s,
                                      const Node& n,
-                                     std::vector<Node>& vars,
-                                     std::vector<Node>& subs)
+                                     const std::vector<Node>& vars,
+                                     const std::vector<Node>& subs)
 {
-#if 1
-  // if we reach our step limit, do not continue trying
-  if (d_currStepLimit == 0)
-  {
-    return false;
-  }
-  d_currStepLimit--;
-  Trace("rpc-debug2") << "[steps remaining: " << d_currStepLimit << "]"
-                      << std::endl;
-  Trace("rpc-debug2") << "notifyMatch: " << s << " from " << n << " via "
-                      << vars << " -> " << subs << std::endl;
-  Assert(d_target.getKind() == Kind::EQUAL);
-  Assert(s.getType().isComparableTo(n.getType()));
-  Assert(vars.size() == subs.size());
-  if (d_currFixedPointId != ProofRewriteRule::NONE)
-  {
-    Trace("rpc-debug2") << "Part of fixed point for rule " << d_currFixedPointId
-                        << std::endl;
-    const RewriteProofRule& rpr = d_db->getRule(d_currFixedPointId);
-    // get the conclusion
-    Node target = rpr.getConclusion(true);
-    // apply substitution, which may notice vars may be out of order wrt rule
-    // var list
-    target = expr::narySubstitute(target, vars, subs);
-    // it may be impossible to construct the conclusion due to null terminators
-    // for approximate types, return false in this case
-    if (target.isNull())
-    {
-      // note that we return false here, indicating that we don't want any
-      // more matches, since we have failed for the current fixed point rule.
-      return false;
-    }
-    // We now prove with the given rule. this should only fail if there are
-    // conditions on the rule which fail. Notice we never allow recursion here.
-    // We also don't permit inflection matching (which regardless should not
-    // apply).
-    if (proveWithRule(RewriteProofStatus::DSL,
-                      target,
-                      vars,
-                      subs,
-                      false,
-                      false,
-                      false,
-                      d_currFixedPointId))
-    {
-      // successfully proved, store in temporary variable
-      d_currFixedPointConc = target;
-      d_currFixedPointSubs = subs;
-    }
-    // regardless, no further matches, due to semantics of fixed point which
-    // limits to first match
-    return false;
-  }
-  Assert(d_target[0] == s);
-  bool recurse = d_currRecLimit > 0;
-  // get the rule identifiers for the conclusion
-  const std::vector<ProofRewriteRule>& ids = d_db->getRuleIdsForHead(n);
-  Assert(!ids.empty());
-  // check each rule instance, succeed if one proves
-  for (ProofRewriteRule id : ids)
-  {
-    // try to prove target with the current rule, using inflection matching
-    // and fixed point semantics
-    if (proveWithRule(RewriteProofStatus::DSL,
-                      d_target,
-                      vars,
-                      subs,
-                      true,
-                      true,
-                      recurse,
-                      id))
-    {
-      // if successful, we do not want to be notified of further matches
-      // and return false here.
-      return false;
-    }
-    // notice that we do not cache a failure here since we only know that the
-    // current rule was not able to prove the current target
-  }
-  // want to keep getting notify calls
-  return true;
-#else
   Assert(s.getType().isComparableTo(n.getType()));
   Assert(vars.size() == subs.size());
   // if we reach our step limit, do not continue trying
@@ -429,13 +340,12 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
   Assert (!d_mbuffer.empty());
   d_mbuffer.back().emplace_back(s,n,vars,subs);
   return true;
-#endif
 }
 
 bool RewriteDbProofCons::processMatch(const Node& s,
                                       const Node& n,
-                                      std::vector<Node>& vars,
-                                      std::vector<Node>& subs)
+                                      const std::vector<Node>& vars,
+                                      const std::vector<Node>& subs)
 {
   Assert(d_target[0] == s) << "Not equal: " << s << " " << d_target
                            << std::endl;
@@ -1215,9 +1125,7 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
   // if fixed point, we continue applying
   if (doFixedPoint && rpr.isFixedPoint())
   {
-    Assert(d_currFixedPointId == ProofRewriteRule::NONE);
-    Assert(d_currFixedPointConc.isNull());
-    d_currFixedPointId = rpr.getId();
+    ProofRewriteRule currFixedPointId = rpr.getId();
     Node context = rpr.getContext();
     Assert(!context.isNull());
     Trace("rpc-ctx") << "Context is " << context << std::endl;
@@ -1237,7 +1145,9 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
       continueFixedPoint = false;
       d_mbuffer.emplace_back();
       rpr.getMatches(stgt, &d_notify);
-      std::vector<RdbMatch>& matches = d_mbuffer.back();
+      Node currFixedPointConc;
+      std::vector<Node> currFixedPointSubs;
+      std::vector<RdbMatch> matches = d_mbuffer.back();
       for (RdbMatch& m : matches)
       {
         // apply substitution, which may notice vars may be out of order wrt
@@ -1258,27 +1168,27 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
                             false,
                             false,
                             false,
-                            d_currFixedPointId))
+                            currFixedPointId))
           {
             // successfully proved, store in temporary variable
-            d_currFixedPointConc = target;
-            d_currFixedPointSubs = m.d_subs;
+            currFixedPointConc = target;
+            currFixedPointSubs = m.d_subs;
           }
         }
         // should only be one
         break;
       }
       d_mbuffer.pop_back();
-      Trace("rpc-ctx") << "...conclusion is " << d_currFixedPointConc
+      Trace("rpc-ctx") << "...conclusion is " << currFixedPointConc
                        << std::endl;
-      if (!d_currFixedPointConc.isNull())
+      if (!currFixedPointConc.isNull())
       {
         // currently avoid accidental loops: arbitrarily bound to 1000
         continueFixedPoint = steps.size() <= s_fixedPointLimit;
-        Assert(d_currFixedPointConc.getKind() == Kind::EQUAL);
-        stepsSubs.emplace_back(d_currFixedPointSubs.begin(),
-                               d_currFixedPointSubs.end());
-        stgt = d_currFixedPointConc[1];
+        Assert(currFixedPointConc.getKind() == Kind::EQUAL);
+        stepsSubs.emplace_back(currFixedPointSubs.begin(),
+                               currFixedPointSubs.end());
+        stgt = currFixedPointConc[1];
         // For example, we have now computed
         //   (str.len (str.++ x y z)) --> (+ (str.len x) (str.len (str.++ y z)))
         // where stgt is the RHS. We now want to continue to rewrite the right
@@ -1296,7 +1206,6 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
         Assert(!stgt.isNull());
         steps.push_back(stgt);
       }
-      d_currFixedPointConc = Node::null();
     } while (continueFixedPoint);
 
     std::vector<Node> transEq;
@@ -1339,8 +1248,6 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
       }
       prev = stepConc;
     }
-
-    d_currFixedPointId = ProofRewriteRule::NONE;
     // add the transistivity rule here if needed
     if (transEq.size() >= 2)
     {

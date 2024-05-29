@@ -103,6 +103,7 @@ void TheoryRewriter::registerProofRewriteRule(ProofRewriteRule id,
 {
   std::unordered_set<ProofRewriteRule>& rules = d_pfTheoryRewrites[ctx];
   rules.insert(id);
+  // theory rewrites marked DSL_SUBCALL are also tried at PRE_DSL effort.
   if (ctx == TheoryRewriteCtx::DSL_SUBCALL)
   {
     d_pfTheoryRewrites[TheoryRewriteCtx::PRE_DSL].insert(id);
