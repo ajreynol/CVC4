@@ -38,11 +38,14 @@ namespace rewriter {
 
 class RdbMatch
 {
-public:
+ public:
   RdbMatch(const Node& s,
-                const Node& n,
-                const std::vector<Node>& vars,
-                const std::vector<Node>& subs) : d_s(s), d_n(n), d_vars(vars), d_subs(subs){}
+           const Node& n,
+           const std::vector<Node>& vars,
+           const std::vector<Node>& subs)
+      : d_s(s), d_n(n), d_vars(vars), d_subs(subs)
+  {
+  }
   Node d_s;
   Node d_n;
   std::vector<Node> d_vars;
@@ -62,7 +65,8 @@ class RewriteDbProofCons : protected EnvObj
    * If cdp is provided, we add a proof for this fact on it.
    *
    * More specifically, the strategy used by this method is:
-   * 1. Try to prove a=b via THEORY_REWRITE in context TheoryRewriteCtx::PRE_DSL,
+   * 1. Try to prove a=b via THEORY_REWRITE in context
+   * TheoryRewriteCtx::PRE_DSL,
    * 2. Try to prove a=b via a proof involving RARE rewrites,
    * 3. Try to prove a'=b' via a proof involving RARE rewrites, where a' and b'
    * are obtained by transforming a and b via RewriteDbNodeConverter.
@@ -231,9 +235,9 @@ class RewriteDbProofCons : protected EnvObj
                    std::vector<Node>& vars,
                    std::vector<Node>& subs);
   bool processMatch(const Node& s,
-                   const Node& n,
-                   std::vector<Node>& vars,
-                   std::vector<Node>& subs);
+                    const Node& n,
+                    std::vector<Node>& vars,
+                    std::vector<Node>& subs);
   /**
    * Prove with rule, which attempts to prove the equality target using the
    * DSL proof rule id, which may be a builtin rule or a user-provided rule.

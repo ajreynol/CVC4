@@ -44,7 +44,7 @@ bool BasicRewriteRCons::prove(CDProof* cdp,
                               Node a,
                               Node b,
                               std::vector<std::shared_ptr<ProofNode>>& subgoals,
-             TheoryRewriteMode tmode)
+                              TheoryRewriteMode tmode)
 {
   Node eq = a.eqNode(b);
   Trace("trewrite-rcons") << "Reconstruct " << eq << std::endl;
@@ -65,7 +65,7 @@ bool BasicRewriteRCons::prove(CDProof* cdp,
   }
 
   // try theory rewrite (pre-rare)
-  if (tmode==TheoryRewriteMode::STANDARD)
+  if (tmode == TheoryRewriteMode::STANDARD)
   {
     if (tryTheoryRewrite(cdp, eq, theory::TheoryRewriteCtx::PRE_DSL, subgoals))
     {
@@ -83,22 +83,21 @@ bool BasicRewriteRCons::postProve(
     Node a,
     Node b,
     std::vector<std::shared_ptr<ProofNode>>& subgoals,
-             TheoryRewriteMode tmode)
+    TheoryRewriteMode tmode)
 {
   Node eq = a.eqNode(b);
   // try theory rewrite (post-rare), which may try both pre and post if
   // the proof-granularity mode is dsl-rewrite-strict.
   bool success = false;
-  if (tmode==TheoryRewriteMode::RESORT)
+  if (tmode == TheoryRewriteMode::RESORT)
   {
     if (tryTheoryRewrite(cdp, eq, theory::TheoryRewriteCtx::PRE_DSL, subgoals))
     {
       success = true;
     }
   }
-  if (!success
-      && tmode==TheoryRewriteMode::STANDARD &&
-      tryTheoryRewrite(
+  if (!success && tmode == TheoryRewriteMode::STANDARD
+      && tryTheoryRewrite(
           cdp, eq, theory::TheoryRewriteCtx::POST_DSL, subgoals))
   {
     success = true;

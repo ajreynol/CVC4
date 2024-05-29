@@ -29,8 +29,9 @@ ProofPostprocessDsl::ProofPostprocessDsl(Env& env, rewriter::RewriteDb* rdb)
 {
   d_true = NodeManager::currentNM()->mkConst(true);
   d_tmode = (options().proof.proofGranularityMode
-                   == options::ProofGranularityMode::DSL_REWRITE_STRICT) ? 
-                   rewriter::TheoryRewriteMode::RESORT : rewriter::TheoryRewriteMode::STANDARD;
+             == options::ProofGranularityMode::DSL_REWRITE_STRICT)
+                ? rewriter::TheoryRewriteMode::RESORT
+                : rewriter::TheoryRewriteMode::STANDARD;
 }
 
 void ProofPostprocessDsl::reconstruct(
@@ -111,13 +112,15 @@ bool ProofPostprocessDsl::update(Node res,
     builtin::BuiltinProofRuleChecker::getTheoryId(args[1], tid);
     getMethodId(args[2], mid);
   }
-  Trace("pp-dsl") << "Prove " << res << " from " << tid << " / " << mid << std::endl;
+  Trace("pp-dsl") << "Prove " << res << " from " << tid << " / " << mid
+                  << std::endl;
   int64_t recLimit = options().proof.proofRewriteRconsRecLimit;
   int64_t stepLimit = options().proof.proofRewriteRconsStepLimit;
   // Attempt to reconstruct the proof of the equality into cdp using the
   // rewrite database proof reconstructor.
   // We record the subgoals in d_subgoals.,
-  if (d_rdbPc.prove(cdp, res[0], res[1], recLimit, stepLimit, d_subgoals, d_tmode))
+  if (d_rdbPc.prove(
+          cdp, res[0], res[1], recLimit, stepLimit, d_subgoals, d_tmode))
   {
     // If we made (= res true) above, conclude the original res.
     if (reqTrueElim)

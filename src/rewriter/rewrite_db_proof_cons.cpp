@@ -62,9 +62,9 @@ bool RewriteDbProofCons::prove(
     int64_t recLimit,
     int64_t stepLimit,
     std::vector<std::shared_ptr<ProofNode>>& subgoals,
-             TheoryRewriteMode tmode)
+    TheoryRewriteMode tmode)
 {
-  Assert (d_mbuffer.empty());
+  Assert(d_mbuffer.empty());
   // clear the proof caches
   d_pcache.clear();
   // clear the evaluate cache
@@ -427,11 +427,12 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
 }
 
 bool RewriteDbProofCons::processMatch(const Node& s,
-                                     const Node& n,
-                                     std::vector<Node>& vars,
-                                     std::vector<Node>& subs)
+                                      const Node& n,
+                                      std::vector<Node>& vars,
+                                      std::vector<Node>& subs)
 {
-  Assert(d_target[0] == s) << "Not equal: " << s << " " << d_target << std::endl;
+  Assert(d_target[0] == s) << "Not equal: " << s << " " << d_target
+                           << std::endl;
   bool recurse = d_currRecLimit > 0;
   // get the rule identifiers for the conclusion
   const std::vector<ProofRewriteRule>& ids = d_db->getRuleIdsForHead(n);
@@ -1233,17 +1234,17 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
       std::vector<RdbMatch>& matches = d_mbuffer.back();
       for (RdbMatch& m : matches)
       {
-        // apply substitution, which may notice vars may be out of order wrt rule
-        // var list
+        // apply substitution, which may notice vars may be out of order wrt
+        // rule var list
         Node target = expr::narySubstitute(conc, m.d_vars, m.d_subs);
-        // it may be impossible to construct the conclusion due to null terminators
-        // for approximate types, return false in this case
+        // it may be impossible to construct the conclusion due to null
+        // terminators for approximate types, return false in this case
         if (!target.isNull())
         {
-          // We now prove with the given rule. this should only fail if there are
-          // conditions on the rule which fail. Notice we never allow recursion here.
-          // We also don't permit inflection matching (which regardless should not
-          // apply).
+          // We now prove with the given rule. this should only fail if there
+          // are conditions on the rule which fail. Notice we never allow
+          // recursion here. We also don't permit inflection matching (which
+          // regardless should not apply).
           if (proveWithRule(RewriteProofStatus::DSL,
                             target,
                             m.d_vars,
