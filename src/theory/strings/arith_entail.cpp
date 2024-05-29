@@ -17,6 +17,7 @@
 
 #include "expr/attribute.h"
 #include "expr/node_algorithm.h"
+#include "proof/conv_proof_generator.h"
 #include "theory/arith/arith_msum.h"
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/arith/arith_subs.h"
@@ -25,7 +26,6 @@
 #include "theory/strings/word.h"
 #include "theory/theory.h"
 #include "util/rational.h"
-#include "proof/conv_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
@@ -96,8 +96,7 @@ Node ArithEntail::rewriteArith(Node a)
   return an;
 }
 
-Node ArithEntail::rewriteLengthIntro(const Node& n,
-                                      TConvProofGenerator* pg)
+Node ArithEntail::rewriteLengthIntro(const Node& n, TConvProofGenerator* pg)
 {
   NodeManager* nm = NodeManager::currentNM();
   std::unordered_map<TNode, Node> visited;
@@ -111,7 +110,7 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
     it = visited.find(cur);
     if (it == visited.end())
     {
-      if (cur.getNumChildren()==0)
+      if (cur.getNumChildren() == 0)
       {
         visit.pop_back();
         visited[cur] = cur;
@@ -140,7 +139,7 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
       {
         ret = nm->mkNode(k, children);
       }
-      if (k==Kind::STRING_LENGTH)
+      if (k == Kind::STRING_LENGTH)
       {
         std::vector<Node> cc;
         for (const Node& c : children)
@@ -160,7 +159,7 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
           }
         }
         Assert(!sum.empty());
-        Node rret = sum.size()==1 ? sum[0] : nm->mkNode(Kind::ADD, sum);
+        Node rret = sum.size() == 1 ? sum[0] : nm->mkNode(Kind::ADD, sum);
         if (pg != nullptr)
         {
           pg->addRewriteStep(

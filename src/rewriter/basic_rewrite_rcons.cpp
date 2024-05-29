@@ -204,8 +204,9 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
-                                                              const Node& eq,
+bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
+    CDProof* cdp,
+    const Node& eq,
     std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
   Assert(eq.getKind() == Kind::EQUAL);
@@ -215,7 +216,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   // first do basic length intro, which rewrites (str.len (str.++ x y))
   // to (+ (str.len x) (str.len y))
   Node eqi = ae.rewriteLengthIntro(eq, &tcpg);
-  if (eqi!=eq)
+  if (eqi != eq)
   {
     Node equiv = eq.eqNode(eqi);
     std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(equiv);

@@ -54,8 +54,7 @@ class ArithEntail
   /**
    * Do basic length intro rewrites in all subterms of n.
    */
-  Node rewriteLengthIntro(const Node& n,
-                                        TConvProofGenerator* pg = nullptr);
+  Node rewriteLengthIntro(const Node& n, TConvProofGenerator* pg = nullptr);
   /** check arithmetic entailment equal
    * Returns true if it is always the case that a = b.
    */
