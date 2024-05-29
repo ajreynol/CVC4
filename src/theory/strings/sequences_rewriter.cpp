@@ -1205,8 +1205,8 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& n)
   {
     return Node::null();
   }
-  
-    return Node::null();
+
+  return Node::null();
 }
 
 Node SequencesRewriter::rewriteAndOrRegExp(TNode node)

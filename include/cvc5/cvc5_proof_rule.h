@@ -2343,7 +2343,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *
    * .. math::
    *   (>= s t) = true
-   * 
+   *
    * This macro is elaborated by applications of :math:`EVALUATE`,
    * :math:`ARITH_POLY_NORM`, :math:`ARITH_STRING_PRED_ENTAIL`,
    * :math:`ARITH_STRING_PRED_SAFE_APPROX`, as well as other rewrites for
@@ -2374,8 +2374,8 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *   (>= n 0) = (>= m 0)
    *
    * Where :math:`m` is a safe under-approximation of :math:`n`, namely
-   * we have that :math:`(>= n m)` and :math:`(>= m 0)`. 
-   * 
+   * we have that :math:`(>= n m)` and :math:`(>= m 0)`.
+   *
    * In detail, subterms of :math:`n` may be replaced with other terms to
    * obtain :math:`m` based on the reasoning described in the paper
    * Reynolds et al, CAV 2019, "High-Level Abstractions for Simplifying
@@ -2548,10 +2548,10 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *
    * .. math::
    *   (str.substr s n m) = t
-   * 
+   *
    * where :math:`t` is obtained by fully or partially stripping components of
    * :math:`s` based on :math:`n` and :math:`m`.
-   * 
+   *
    * \endverbatim
    */
   EVALUE(MACRO_SUBSTR_STRIP_SYM_LENGTH),

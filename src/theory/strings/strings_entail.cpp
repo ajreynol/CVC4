@@ -136,7 +136,8 @@ bool StringsEntail::stripSymbolicLength(std::vector<Node>& n1,
     if (n1[sindex_use].isConst())
     {
       // could strip part of a constant
-      Node lowerBound = d_arithEntail.getConstantBound(d_arithEntail.rewriteArith(curr));
+      Node lowerBound =
+          d_arithEntail.getConstantBound(d_arithEntail.rewriteArith(curr));
       if (!lowerBound.isNull())
       {
         Assert(lowerBound.isConst());
@@ -163,7 +164,8 @@ bool StringsEntail::stripSymbolicLength(std::vector<Node>& n1,
             // lower bound minus the length of a concrete string is negative,
             // hence lowerBound cannot be larger than long max
             Assert(lbr < Rational(String::maxSize()));
-            curr = d_arithEntail.rewriteArith(nm->mkNode(Kind::SUB, curr, lowerBound));
+            curr = d_arithEntail.rewriteArith(
+                nm->mkNode(Kind::SUB, curr, lowerBound));
             uint32_t lbsize = lbr.getNumerator().toUnsignedInt();
             Assert(lbsize < slen);
             if (dir == 1)
