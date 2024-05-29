@@ -323,9 +323,9 @@
   (= (str.len s) (+ n m))
 )
 
-(define-cond-rule str-substr-len-include ((s1 ?Seq) (s2 ?Seq :list) (s3 ?Seq) (s4 ?Seq :list) (n Int))
+(define-cond-rule str-substr-len-include ((s1 ?Seq) (s2 ?Seq :list) (s3 ?Seq :list) (n Int))
   (= n (str.len (str.++ s1 s2)))
-  (str.substr (str.++ s1 s2 s3 s4) 0 n)
+  (str.substr (str.++ s1 s2 s3) 0 n)
   (str.++ s1 s2)
 )
 

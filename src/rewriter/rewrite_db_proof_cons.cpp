@@ -127,7 +127,8 @@ bool RewriteDbProofCons::prove(
     ++d_statTotalInputs;
     Trace("rpc-debug") << "- convert to internal" << std::endl;
     // prove the equality
-    for (int64_t i = 0; i <= recLimit; i++)
+    int64_t start = options().proof.proofRewriteRconsStratify ? 0 : recLimit;
+    for (int64_t i = start; i <= recLimit; i++)
     {
       Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
       if (proveEq(cdp, eq, eq, i, stepLimit, subgoals))
@@ -142,7 +143,7 @@ bool RewriteDbProofCons::prove(
       // if converter didn't make a difference, don't try to prove again
       if (eqi != eq)
       {
-        for (int64_t i = 0; i <= recLimit; i++)
+        for (int64_t i = start; i <= recLimit; i++)
         {
           Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
           if (proveEq(cdp, eq, eqi, i, stepLimit, subgoals))

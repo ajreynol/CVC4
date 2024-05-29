@@ -136,6 +136,14 @@ name   = "Proof"
   help       = "the limit of steps considered for reconstructing proofs of theory rewrites"
 
 [[option]]
+  name       = "proofRewriteRconsStratify"
+  category   = "expert"
+  long       = "proof-rewrite-rcons-stratify"
+  type       = "bool"
+  default    = "true"
+  help       = "use bounded stratification of recursion limits when reconstructing proofs of theory rewrites"
+
+[[option]]
   name       = "proofAnnotate"
   category   = "expert"
   long       = "proof-annotate"
