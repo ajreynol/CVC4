@@ -44,7 +44,7 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
       d_statistics(statistics),
       d_rr(r),
       d_arithEntail(r),
-      d_stringsEntail(r, d_arithEntail, *this)
+      d_stringsEntail(r, d_arithEntail, this)
 {
   d_sigmaStar = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
   d_true = nm->mkConst(true);
@@ -85,7 +85,9 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
     {
       Rewrite rule;
-      return rewriteViaMacroSubstrStripSymLength(n, rule);
+      ArithEntail ae(nullptr);
+      StringsEntail sent(nullptr, ae, nullptr);
+      return rewriteViaMacroSubstrStripSymLength(n, rule, sent);
     }
     default: break;
   }
@@ -1203,7 +1205,7 @@ Node SequencesRewriter::rewriteViaStrInReSigmaStar(const Node& n)
 }
 
 Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
-                                                            Rewrite& rule)
+                                                            Rewrite& rule, StringsEntail& sent)
 {
   if (node.getKind() != Kind::STRING_SUBSTR)
   {
@@ -1219,7 +1221,7 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
   {
     Node curr = node[2];
     std::vector<Node> childrenr;
-    if (d_stringsEntail.stripSymbolicLength(n1, childrenr, 1, curr))
+    if (sent.stripSymbolicLength(n1, childrenr, 1, curr))
     {
       if (curr != zero && !n1.empty())
       {
@@ -1265,7 +1267,7 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
       // strip off components while quantity is entailed positive
       int dir = r == 0 ? 1 : -1;
       std::vector<Node> childrenr;
-      if (d_stringsEntail.stripSymbolicLength(n1, childrenr, dir, curr))
+      if (sent.stripSymbolicLength(n1, childrenr, dir, curr))
       {
         if (r == 0)
         {
@@ -2302,11 +2304,11 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     }
   }
 
-  // symbolic length analysis
+  // symbolic SymLen analysis
   Rewrite ruleSymLen;
-  Node retSymLen = rewriteViaMacroSubstrStripSymLength(node, ruleSymLen);
+  Node retSymLen = rewriteViaMacroSubstrStripSymLength(node, ruleSymLen, d_stringsEntail);
   if (!retSymLen.isNull())
-  {
+  {                            
     return returnRewrite(node, retSymLen, ruleSymLen);
   }
   // combine substr

@@ -149,6 +149,10 @@ class BasicRewriteRCons : protected EnvObj
       CDProof* cdp,
       const Node& eq,
       std::vector<std::shared_ptr<ProofNode>>& subgoals);
+  bool ensureProofMacroSubstrStripSymLength(
+      CDProof* cdp,
+      const Node& eq,
+      std::vector<std::shared_ptr<ProofNode>>& subgoals);
   /**
    * Try THEORY_REWRITE with theory::TheoryRewriteCtx ctx.
    */

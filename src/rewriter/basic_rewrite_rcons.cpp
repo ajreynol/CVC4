@@ -170,6 +170,12 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         return;
       }
       break;
+    case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
+      if (ensureProofMacroSubstrStripSymLength(cdp, eq, subgoals))
+      {
+        return;
+      }
+      break;
     default: break;
   }
   // default, just add the rewrite
@@ -388,6 +394,14 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   return true;
 }
 
+bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
+    CDProof* cdp,
+    const Node& eq,
+    std::vector<std::shared_ptr<ProofNode>>& subgoals)
+{
+  
+}
+  
 bool BasicRewriteRCons::tryTheoryRewrite(
     CDProof* cdp,
     const Node& eq,

@@ -32,7 +32,7 @@ namespace strings {
 
 StringsEntail::StringsEntail(Rewriter* r,
                              ArithEntail& aent,
-                             SequencesRewriter& rewriter)
+                             SequencesRewriter* rewriter)
     : d_rr(r), d_arithEntail(aent), d_rewriter(rewriter)
 {
 }
@@ -679,18 +679,26 @@ Node StringsEntail::checkContains(Node a, Node b, bool fullRewriter)
 
   if (fullRewriter)
   {
+    if (d_rr==nullptr)
+    {
+      return Node::null();
+    }
     ctn = d_rr->rewrite(ctn);
   }
   else
   {
+    if (d_rewriter==nullptr)
+    {
+      return Node::null();
+    }
     Node prev;
     do
     {
       prev = ctn;
-      ctn = d_rewriter.rewriteContains(ctn);
+      ctn = d_rewriter->rewriteContains(ctn);
       if (ctn != prev)
       {
-        ctn = d_rewriter.postProcessRewrite(prev, ctn);
+        ctn = d_rewriter->postProcessRewrite(prev, ctn);
       }
     } while (prev != ctn && ctn.getKind() == Kind::STRING_CONTAINS);
   }
