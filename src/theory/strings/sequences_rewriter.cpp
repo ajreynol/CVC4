@@ -2228,6 +2228,17 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     return returnRewrite(node, ret, Rewrite::SS_LEN_ONE_Z_Z);
   }
 
+  Node slenRew = d_arithEntail.rewriteArith(nm->mkNode(Kind::STRING_LENGTH, node[0]));
+  if (node[2] != slenRew)
+  {
+    if (d_arithEntail.check(node[2], slenRew))
+    {
+      // end point beyond end point of string, map to slenRew
+      Node ret = nm->mkNode(Kind::STRING_SUBSTR, node[0], node[1], slenRew);
+      return returnRewrite(node, ret, Rewrite::SS_END_PT_NORM);
+    }
+  }
+      
   // symbolic length analysis
   for (unsigned r = 0; r < 2; r++)
   {
@@ -2243,21 +2254,13 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     }
     else if (r == 1)
     {
-      Node tot_len = d_rr->rewrite(nm->mkNode(Kind::STRING_LENGTH, node[0]));
-      Node end_pt = d_rr->rewrite(nm->mkNode(Kind::ADD, node[1], node[2]));
+      Node tot_len = nm->mkNode(Kind::STRING_LENGTH, node[0]);
       if (node[2] != tot_len)
       {
-        if (d_arithEntail.check(node[2], tot_len))
-        {
-          // end point beyond end point of string, map to tot_len
-          Node ret = nm->mkNode(Kind::STRING_SUBSTR, node[0], node[1], tot_len);
-          return returnRewrite(node, ret, Rewrite::SS_END_PT_NORM);
-        }
-        else
-        {
-          // strip up to ( str.len(node[0]) - end_pt ) off the end of the string
-          curr = d_rr->rewrite(nm->mkNode(Kind::SUB, tot_len, end_pt));
-        }
+        Node end_pt = nm->mkNode(Kind::ADD, node[1], node[2]);
+        // strip up to ( str.len(node[0]) - end_pt ) off the end of the string
+        curr = nm->mkNode(Kind::SUB, tot_len, end_pt);
+        curr = d_arithEntail.rewriteArith(curr);
       }
     }
     if (!curr.isNull())
