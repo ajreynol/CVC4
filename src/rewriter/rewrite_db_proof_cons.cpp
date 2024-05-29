@@ -281,9 +281,21 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
   d_mbuffer.emplace_back();
   d_db->getMatches(eqi[0], &d_notify);
   std::vector<RdbMatch> matches = d_mbuffer.back();
-  for (RdbMatch& m : matches)
+  bool success = false;
+  // First try rules with only basic techniques, then try
+  // conditional/fixed-point/inflection techniques.
+  for (size_t i=0; i<2; i++)
   {
-    if (processMatch(m.d_s, m.d_n, m.d_vars, m.d_subs))
+    bool isBasic = (i==0);
+    for (RdbMatch& m : matches)
+    {
+      if (processMatch(m.d_s, m.d_n, m.d_vars, m.d_subs, isBasic))
+      {
+        success = true;
+        break;
+      }
+    }
+    if (success)
     {
       break;
     }
@@ -346,28 +358,29 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
 bool RewriteDbProofCons::processMatch(const Node& s,
                                       const Node& n,
                                       const std::vector<Node>& vars,
-                                      const std::vector<Node>& subs)
+                                      const std::vector<Node>& subs,
+                    bool isBasic)
 {
-  Assert(d_target[0] == s) << "Not equal: " << s << " " << d_target
-                           << std::endl;
-  bool recurse = d_currRecLimit > 0;
+  Assert(d_target[0] == s);
+  bool recurse = !isBasic && d_currRecLimit > 0;
   // get the rule identifiers for the conclusion
   const std::vector<ProofRewriteRule>& ids = d_db->getRuleIdsForHead(n);
   Assert(!ids.empty());
   // check each rule instance, succeed if one proves
   for (ProofRewriteRule id : ids)
   {
-    // try to prove target with the current rule, using inflection matching
-    // and fixed point semantics
+    // Try to prove target with the current rule, using inflection matching
+    // and fixed point semantics when isBasic is false.
     if (proveWithRule(RewriteProofStatus::DSL,
                       d_target,
                       vars,
                       subs,
-                      true,
-                      true,
+                      !isBasic,
+                      !isBasic,
                       recurse,
                       id))
     {
+      Trace("ajr-temp") << "...success" << std::endl;
       // if successful, we do not want to be notified of further matches
       // and return false here.
       return true;

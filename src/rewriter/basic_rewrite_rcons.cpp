@@ -265,9 +265,17 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   }
   // (>= approx 0) = true
   Node teq = approxRewGeq.eqNode(truen);
-  // it might be trivial to show, use evaluate???
-  Trace("brc-macro") << "- prove " << teq << " via pred-entail" << std::endl;
-  cdp->addTheoryRewriteStep(teq, ProofRewriteRule::ARITH_STRING_PRED_ENTAIL);
+  Node ev = evaluate(approxRewGeq, {}, {});
+  if (ev==truen)
+  {
+    Trace("brc-macro") << "- prove " << teq << " via evaluate" << std::endl;
+    cdp->addStep(teq, ProofRule::EVALUATE, {}, {approxRewGeq});
+  }
+  else
+  {
+    Trace("brc-macro") << "- prove " << teq << " via pred-entail" << std::endl;
+    cdp->addTheoryRewriteStep(teq, ProofRewriteRule::ARITH_STRING_PRED_ENTAIL);
+  }
   transEq.push_back(teq);
   // put the above three steps together with TRANS
   if (transEq.size() > 1)
@@ -360,8 +368,10 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   }
   Trace("brc-macro") << "...success" << std::endl;
   Trace("brc-macro") << "...proof is " << *cdp->getProofFor(eq) << std::endl;
+  size_t prevSubgoals = subgoals.size();
   std::shared_ptr<ProofNode> pfn = cdp->getProofFor(eq);
   expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
+  Trace("brc-macro") << "...has " << subgoals.size() << " subgoals (was " << prevSubgoals << ")" << std::endl;
   return true;
 }
 

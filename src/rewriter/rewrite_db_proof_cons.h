@@ -234,10 +234,13 @@ class RewriteDbProofCons : protected EnvObj
                    const Node& n,
                    const std::vector<Node>& vars,
                    const std::vector<Node>& subs);
+  /**
+   */
   bool processMatch(const Node& s,
                     const Node& n,
                     const std::vector<Node>& vars,
-                    const std::vector<Node>& subs);
+                    const std::vector<Node>& subs,
+                    bool isBasic);
   /**
    * Prove with rule, which attempts to prove the equality target using the
    * DSL proof rule id, which may be a builtin rule or a user-provided rule.
