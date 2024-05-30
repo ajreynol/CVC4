@@ -194,11 +194,6 @@
   (str.contains x y)
   true)
 
-(define-cond-rule str-contains-len-geq-false ((x String) (y String))
-  (> (str.len y) (str.len x))
-  (str.contains x y)
-  false)
-
 (define-cond-rule str-contains-is-emp ((x String) (y String))
   (= (str.len x) 0)
   (str.contains x y)
@@ -242,7 +237,6 @@
   (not (str.contains (str.substr t n (str.len t)) s))
   (str.indexof t s n)
   (- 1))
-
 
 (define-rule* str-to-lower-concat ((s1 String) (s2 String) (s3 String :list))
   (str.to_lower (str.++ s1 s2 s3)) 
@@ -310,18 +304,6 @@
 (define-rule str-nth-elim-code ((s String) (n Int))
   (seq.nth s n)
   (str.to_code (str.substr s n 1)))
-
-(define-cond-rule str-len-substr-geq ((s String) (n Int) (m Int))
-  (>= m 0)
-  (>= (str.len (str.substr s m (str.len s))) n)
-  (>= (str.len s) (+ n m))
-)
-
-(define-cond-rule str-len-substr-eq ((s String) (n Int) (m Int))
-  (>= m 0)
-  (= (str.len (str.substr s m (str.len s))) n)
-  (= (str.len s) (+ n m))
-)
 
 (define-cond-rule str-substr-len-include ((s1 ?Seq) (s2 ?Seq :list) (n Int))
   (= n (str.len s1))
