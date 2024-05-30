@@ -1289,6 +1289,8 @@ set(regress_0_tests
   regress0/proj-issue645-abs-value-subs.smt2
   regress0/proofs/alethe-res-need-or-step.smt2
   regress0/proofs/cyclic-ucp.smt2
+  regress0/proofs/big-rec-len.smt2
+  regress0/proofs/big-ss-len-include.smt2
   regress0/proofs/bvrewrite-concat-merge.smt2
   regress0/proofs/bvrewrite-extract.smt2
   regress0/proofs/bvrewrite-ite.smt2
