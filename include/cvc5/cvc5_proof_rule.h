@@ -2557,29 +2557,6 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(MACRO_SUBSTR_STRIP_SYM_LENGTH),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - regular expression membership evaluation**
-   *
-   * .. math::
-   *   (str.in_re s R) = c
-   *
-   * where `s` is a constant string, `R` is a constant regular expression and
-   * `c` is true or false.
-   *
-   * \endverbatim
-   */
-  EVALUE(STR_IN_RE_EVAL),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Strings - regular expression membership consume**
-   *
-   * .. math::
-   *   (str.in_re s R) = c
-   *
-   * \endverbatim
-   */
-  EVALUE(STR_IN_RE_CONSUME),
-  /**
-   * \verbatim embed:rst:leading-asterisk
    * **Strings - regular expression loop elimination**
    *
    * .. math::
@@ -2613,6 +2590,29 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * \endverbatim
    */
   EVALUE(RE_INTER_UNION_INCLUSION),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings - regular expression membership evaluation**
+   *
+   * .. math::
+   *   (str.in_re s R) = c
+   *
+   * where `s` is a constant string, `R` is a constant regular expression and
+   * `c` is true or false.
+   *
+   * \endverbatim
+   */
+  EVALUE(STR_IN_RE_EVAL),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings - regular expression membership consume**
+   *
+   * .. math::
+   *   (str.in_re s R) = c
+   *
+   * \endverbatim
+   */
+  EVALUE(STR_IN_RE_CONSUME),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings - regular expression loop elimination**

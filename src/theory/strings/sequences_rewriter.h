@@ -140,14 +140,14 @@ class SequencesRewriter : public TheoryRewriter
    */
   Node returnRewrite(Node node, Node ret, Rewrite r);
   //-------------------- ProofRewriteRule
-  /** Rewrite based on STR_IN_RE_EVAL */
-  Node rewriteViaStrInReEval(const Node& n);
-  /** Rewrite based on STR_IN_RE_CONSUME */
-  Node rewriteViaStrInReConsume(const Node& n);
   /** Rewrite based on RE_LOOP_ELIM */
   Node rewriteViaReLoopElim(const Node& n);
   /** Rewrite based on RE_INTER_UNION_INCLUSION */
   Node rewriteViaReInterUnionInclusion(const Node& n);
+  /** Rewrite based on STR_IN_RE_EVAL */
+  Node rewriteViaStrInReEval(const Node& n);
+  /** Rewrite based on STR_IN_RE_CONSUME */
+  Node rewriteViaStrInReConsume(const Node& n);
   /** Rewrite based on STR_IN_RE_CONCAT_STAR_CHAR */
   Node rewriteViaStrInReConcatStarChar(const Node& n);
   /** Rewrite based on STR_IN_RE_SIGMA */

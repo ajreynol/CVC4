@@ -49,13 +49,13 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
   d_sigmaStar = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
   d_true = nm->mkConst(true);
   d_false = nm->mkConst(false);
-  registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_EVAL,
-                           TheoryRewriteCtx::DSL_SUBCALL);
-  registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_CONSUME,
-                           TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::RE_LOOP_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::RE_INTER_UNION_INCLUSION,
+                           TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_EVAL,
+                           TheoryRewriteCtx::DSL_SUBCALL);
+  registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_CONSUME,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR,
                            TheoryRewriteCtx::PRE_DSL);
@@ -71,12 +71,12 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
 {
   switch (id)
   {
-    case ProofRewriteRule::STR_IN_RE_EVAL: return rewriteViaStrInReEval(n);
-    case ProofRewriteRule::STR_IN_RE_CONSUME:
-      return rewriteViaStrInReConsume(n);
     case ProofRewriteRule::RE_LOOP_ELIM: return rewriteViaReLoopElim(n);
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
       return rewriteViaReInterUnionInclusion(n);
+    case ProofRewriteRule::STR_IN_RE_EVAL: return rewriteViaStrInReEval(n);
+    case ProofRewriteRule::STR_IN_RE_CONSUME:
+      return rewriteViaStrInReConsume(n);
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
       return rewriteViaStrInReConcatStarChar(n);
     case ProofRewriteRule::STR_IN_RE_SIGMA: return rewriteViaStrInReSigma(n);
