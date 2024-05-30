@@ -42,8 +42,8 @@ std::ostream& operator<<(std::ostream& os, TheoryRewriteMode tm)
 {
   switch (tm)
   {
-    case TheoryRewriteMode::STANDARD:       return os << "STANDARD";
-    case TheoryRewriteMode::RESORT:      return os << "RESORT";
+    case TheoryRewriteMode::STANDARD: return os << "STANDARD";
+    case TheoryRewriteMode::RESORT: return os << "RESORT";
     case TheoryRewriteMode::NEVER: return os << "NEVER";
   }
   Unreachable();

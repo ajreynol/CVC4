@@ -49,7 +49,7 @@ void ProofPostprocessDsl::reconstruct(
   while (!d_subgoals.empty())
   {
     iter++;
-    if (iter>3)
+    if (iter > 3)
     {
       // prevent any accidental infinite loops
       break;

@@ -24,8 +24,8 @@ std::ostream& operator<<(std::ostream& os, TheoryRewriteCtx trc)
 {
   switch (trc)
   {
-    case TheoryRewriteCtx::PRE_DSL:       return os << "PRE_DSL";
-    case TheoryRewriteCtx::DSL_SUBCALL:      return os << "DSL_SUBCALL";
+    case TheoryRewriteCtx::PRE_DSL: return os << "PRE_DSL";
+    case TheoryRewriteCtx::DSL_SUBCALL: return os << "DSL_SUBCALL";
     case TheoryRewriteCtx::POST_DSL: return os << "POST_DSL";
   }
   Unreachable();
