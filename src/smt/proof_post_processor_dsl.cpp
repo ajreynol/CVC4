@@ -45,11 +45,18 @@ void ProofPostprocessDsl::reconstruct(
   {
     pnu.process(p);
   }
+  // We run until subgoals are empty. Note that this loop is only expected
+  // to run once, and moreover is guaranteed to run only once if the only
+  // trusted steps added have id MACRO_THEORY_REWRITE_RCONS_SIMPLE. However,
+  // in rare cases, an elaboration may require adding a trust step that itself
+  // expects to require theory rewrites to prove (MACRO_THEORY_REWRITE_RCONS)
+  // in which case this loop may run twice. We manually limit this loop to
+  // run no more than 3 times.
   size_t iter = 0;
   while (!d_subgoals.empty())
   {
     iter++;
-    if (iter > 3)
+    if (iter >= 3)
     {
       // prevent any accidental infinite loops
       break;
@@ -64,7 +71,7 @@ void ProofPostprocessDsl::reconstruct(
     TrustId tid;
     for (std::shared_ptr<ProofNode> p : sgs)
     {
-      // determine if we should disable rewrites, this is the case if the
+      // determine if we should disable theory rewrites, this is the case if the
       // trust id is MACRO_THEORY_REWRITE_RCONS_SIMPLE.
       d_tmode = mprev;
       if (p->getRule() == ProofRule::TRUST)
