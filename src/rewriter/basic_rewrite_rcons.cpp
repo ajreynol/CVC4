@@ -158,27 +158,35 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
     const Node& eq,
     std::vector<std::shared_ptr<ProofNode>>& subgoals)
 {
+  bool handledMacro = false;
   switch (id)
   {
     case ProofRewriteRule::MACRO_BOOL_NNF_NORM:
-      if (ensureProofMacroBoolNnfNorm(cdp, eq, subgoals))
+      if (ensureProofMacroBoolNnfNorm(cdp, eq))
       {
-        return;
+        handledMacro = true;
       }
       break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
-      if (ensureProofMacroArithStringPredEntail(cdp, eq, subgoals))
+      if (ensureProofMacroArithStringPredEntail(cdp, eq))
       {
-        return;
+        handledMacro = true;
       }
       break;
     case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
-      if (ensureProofMacroSubstrStripSymLength(cdp, eq, subgoals))
+      if (ensureProofMacroSubstrStripSymLength(cdp, eq))
       {
-        return;
+        handledMacro = true;
       }
       break;
     default: break;
+  }
+  if (handledMacro)
+  {
+    std::shared_ptr<ProofNode> pfn = cdp->getProofFor(eq);
+    Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
+    expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
+    return;
   }
   // default, just add the rewrite
   std::vector<Node> args;
@@ -190,8 +198,7 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
 
 bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(
     CDProof* cdp,
-    const Node& eq,
-    std::vector<std::shared_ptr<ProofNode>>& subgoals)
+    const Node& eq)
 {
   Trace("brc-macro") << "Expand Bool NNF norm " << eq[0] << " == " << eq[1]
                      << std::endl;
@@ -203,49 +210,46 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(
   std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);
   Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
   cdp->addProof(pfn);
-  // the small steps are trust steps, record them here
-  expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
   return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     CDProof* cdp,
-    const Node& eq,
-    std::vector<std::shared_ptr<ProofNode>>& subgoals)
+    const Node& eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);
   Trace("brc-macro") << "Expand entailment for " << eq << std::endl;
   theory::strings::ArithEntail ae(nullptr);
-  TConvProofGenerator tcpg(d_env, nullptr);
   Node lhs = eq[0];
   Node eqi = eq;
-  std::vector<Node> ppTrans;
   // First normalize LT/GT/LEQ to GEQ.
   if (lhs.getKind() != Kind::EQUAL && lhs.getKind() != Kind::GEQ)
   {
     Node lhsn = ae.normalizeGeq(lhs);
+    Node eqLhs = lhs.eqNode(lhsn);
+    cdp->addTrustedStep(eqLhs, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
     eqi = lhsn.eqNode(eq[1]);
-    tcpg.addRewriteStep(
-        eq, eqi, nullptr, true, TrustId::MACRO_THEORY_REWRITE_RCONS);
+    cdp->addStep(eq, ProofRule::TRANS, {eqLhs, eqi}, {});
     Trace("brc-macro") << "- GEQ normalize is " << eqi << std::endl;
   }
   // Then do basic length intro, which rewrites (str.len (str.++ x y))
   // to (+ (str.len x) (str.len y)).
-  eqi = ae.rewriteLengthIntro(eqi, &tcpg);
-  if (eqi != eq)
+  TConvProofGenerator tcpg(d_env, nullptr);
+  Node eqii = ae.rewriteLengthIntro(eqi, &tcpg);
+  if (eqii != eqi)
   {
-    Node equiv = eq.eqNode(eqi);
+    Node equiv = eqi.eqNode(eqii);
     std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(equiv);
     cdp->addProof(pfn);
-    Node equivs = eqi.eqNode(eq);
+    Node equivs = eqii.eqNode(eqi);
     cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
-    cdp->addStep(eq, ProofRule::EQ_RESOLVE, {eqi, equivs}, {});
-    Trace("brc-macro") << "- length intro is " << eqi << std::endl;
+    cdp->addStep(eqi, ProofRule::EQ_RESOLVE, {eqii, equivs}, {});
+    Trace("brc-macro") << "- length intro is " << eqii << std::endl;
   }
-  lhs = eqi[0];
+  lhs = eqii[0];
   Node exp;
   Node ret = ae.rewritePredViaEntailment(lhs, exp, true);
-  Assert(ret == eqi[1]);
+  Assert(ret == eqii[1]);
   Trace("brc-macro") << "- explanation is " << exp << std::endl;
   Node expRew = ae.rewriteArith(exp);
   Node zero = nodeManager()->mkConstInt(Rational(0));
@@ -387,19 +391,12 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     cdp->addStep(retEq, ProofRule::TRANS, {peq, teq}, {});
   }
   Trace("brc-macro") << "...success" << std::endl;
-  size_t prevSubgoals = subgoals.size();
-  std::shared_ptr<ProofNode> pfn = cdp->getProofFor(eq);
-  Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
-  expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
-  Trace("brc-macro") << "...has " << subgoals.size() << " subgoals (was "
-                     << prevSubgoals << ")" << std::endl;
   return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
     CDProof* cdp,
-    const Node& eq,
-    std::vector<std::shared_ptr<ProofNode>>& subgoals)
+    const Node& eq)
 {
   NodeManager* nm = NodeManager::currentNM();
   Trace("brc-macro") << "Expand substring strip for " << eq << std::endl;
@@ -440,7 +437,7 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
   Node eq2 = lhs[1].eqNode(lhs[1]);
   Node eq3 = lhs[2].eqNode(lhs[2]);
   cdp->addStep(eq2, ProofRule::REFL, {}, {lhs[1]});
-  cdp->addStep(eq3, ProofRule::REFL, {}, {lhs[1]});
+  cdp->addStep(eq3, ProofRule::REFL, {}, {lhs[2]});
   Node lhsm = nm->mkNode(Kind::STRING_SUBSTR, cm, lhs[1], lhs[2]);
   Node eqLhs = lhs.eqNode(lhsm);
   cdp->addStep(eqLhs, cr, {eq1, eq2, eq3}, cargs);
@@ -448,9 +445,6 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
   cdp->addTrustedStep(eqm, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
   Trace("brc-macro") << "- rely on rewrite " << eqm << std::endl;
   cdp->addStep(eq, ProofRule::TRANS, {eqLhs, eqm}, {});
-  std::shared_ptr<ProofNode> pfn = cdp->getProofFor(eq);
-  Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
-  expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);
   return true;
 }
 
