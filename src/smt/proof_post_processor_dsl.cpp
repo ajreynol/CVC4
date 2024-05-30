@@ -54,9 +54,20 @@ void ProofPostprocessDsl::reconstruct(
     // Do not use theory rewrites to fill in remaining subgoals. This prevents
     // generating subgoals in proofs of subgoals.
     rewriter::TheoryRewriteMode mprev = d_tmode;
-    d_tmode = rewriter::TheoryRewriteMode::RESORT;
+    TrustId tid;
     for (std::shared_ptr<ProofNode> p : sgs)
     {
+      // determine if we should disable rewrites, this is the case if the
+      // trust id is MACRO_THEORY_REWRITE_RCONS_SIMPLE.
+      d_tmode = mprev;
+      if (p->getRule()==ProofRule::TRUST)
+      {
+        getTrustId(p->getArguments()[0], tid);
+        if (tid == TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE)
+        {
+          d_tmode = rewriter::TheoryRewriteMode::NEVER;
+        }
+      }
       pnu.process(p);
     }
     d_tmode = mprev;

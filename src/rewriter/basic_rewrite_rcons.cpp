@@ -226,7 +226,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   {
     Node lhsn = ae.normalizeGeq(lhs);
     Node eqLhs = lhs.eqNode(lhsn);
-    cdp->addTrustedStep(eqLhs, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+    cdp->addTrustedStep(eqLhs, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     eqi = lhsn.eqNode(eq[1]);
     cdp->addStep(eq, ProofRule::TRANS, {eqLhs, eqi}, {});
     Trace("brc-macro") << "- GEQ normalize is " << eqi << std::endl;
@@ -498,6 +498,8 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
   Node eqLhs = lhs.eqNode(lhsm);
   cdp->addStep(eqLhs, cr, {eq1, eq2, eq3}, cargs);
   Node eqm = lhsm.eqNode(rhs);
+  // Note that this is not marked simple, since it may require length
+  // entailment to prove.
   cdp->addTrustedStep(eqm, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
   Trace("brc-macro") << "- rely on rewrite " << eqm << std::endl;
   cdp->addStep(eq, ProofRule::TRANS, {eqLhs, eqm}, {});

@@ -191,7 +191,7 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
         if (pg != nullptr)
         {
           pg->addRewriteStep(
-              ret, rret, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS);
+              ret, rret, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
         }
         ret = rret;
       }
