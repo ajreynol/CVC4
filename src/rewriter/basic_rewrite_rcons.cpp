@@ -16,6 +16,7 @@
 
 #include "rewriter/basic_rewrite_rcons.h"
 
+#include "expr/nary_term_util.h"
 #include "proof/conv_proof_generator.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node_algorithm.h"
@@ -458,8 +459,35 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
     return false;
   }
   Node eq1 = nm->mkNode(Kind::EQUAL, lhs[0], cm);
-  cdp->addStep(eq1, ProofRule::ACI_NORM, {}, {eq1});
-  Trace("brc-macro") << "- via ACI_NORM " << eq1 << std::endl;
+  // It is likely provable by ACI_NORM. However, if it involves splitting
+  // word constants, we require going through the rewrite term converter.
+  if (expr::isACINorm(lhs[0], cm))
+  {
+    cdp->addStep(eq1, ProofRule::ACI_NORM, {}, {eq1});
+    Trace("brc-macro") << "- via ACI_NORM " << eq1 << std::endl;
+  }
+  else
+  {
+    //             ----------------- via encode transform
+    //             (t = s) = (r = r)
+    // ----- REFL  ------------------ SYMM
+    // r = r       (r = r) = (t = s)
+    // ---------------------------------- EQ_RESOLVE
+    // t = s
+    RewriteDbNodeConverter rdnc(nodeManager());
+    Node eq1t = rdnc.convert(eq1);
+    Assert (eq1t.getKind()==Kind::EQUAL);
+    if (eq1t[0]!=eq1t[1])
+    {
+      return false;
+    }
+    Node equiv = eq1.eqNode(eq1t);
+    ensureProofForEncodeTransform(cdp, eq1, eq1t);
+    Node equivs = eq1t.eqNode(eq1);
+    cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
+    cdp->addStep(eq1t, ProofRule::REFL, {}, {eq1t[0]});
+    cdp->addStep(eq1, ProofRule::EQ_RESOLVE, {eq1t, equivs}, {});
+  }
   std::vector<Node> cargs;
   ProofRule cr = expr::getCongRule(lhs, cargs);
   Node eq2 = lhs[1].eqNode(lhs[1]);
