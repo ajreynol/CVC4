@@ -66,7 +66,8 @@ class ArithEntail
    *   (= (+ (str.len x) 1) 4)
    * @param n The term to rewrite.
    * @param pg If provided, we add small step rewrites that were performed to n
-   * such that pg can provide a proof of (= n n'), where n' is the term returned by this class.
+   * such that pg can provide a proof of (= n n'), where n' is the term returned
+   * by this class.
    * @return The result of rewriting length terms in n.
    */
   Node rewriteLengthIntro(const Node& n,

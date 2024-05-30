@@ -109,13 +109,13 @@ Node ArithEntail::normalizeGeq(const Node& n) const
     case Kind::GEQ: return n;
     case Kind::LEQ: return nm->mkNode(Kind::GEQ, n[1], n[0]);
     case Kind::LT:
-      Assert (n[0].getType().isInteger());
+      Assert(n[0].getType().isInteger());
       return nm->mkNode(
           Kind::GEQ,
           n[1],
           nm->mkNode(Kind::ADD, n[0], nm->mkConstInt(Rational(1))));
     case Kind::GT:
-      Assert (n[0].getType().isInteger());
+      Assert(n[0].getType().isInteger());
       return nm->mkNode(
           Kind::GEQ,
           n[0],

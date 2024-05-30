@@ -392,6 +392,7 @@ class StringsEntail
    * @return A concatenation that can be interpreted as a multiset
    */
   static Node getMultisetApproximation(Node a);
+
  private:
   /** Pointer to the full rewriter */
   Rewriter* d_rr;
