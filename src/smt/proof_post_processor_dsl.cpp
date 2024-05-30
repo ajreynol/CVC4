@@ -45,8 +45,15 @@ void ProofPostprocessDsl::reconstruct(
   {
     pnu.process(p);
   }
-  if (!d_subgoals.empty())
+  size_t iter = 0;
+  while (!d_subgoals.empty())
   {
+    iter++;
+    if (iter>3)
+    {
+      // prevent any accidental infinite loops
+      break;
+    }
     std::vector<std::shared_ptr<ProofNode>> sgs = d_subgoals;
     Trace("pp-dsl") << "Also reconstruct proofs for " << sgs.size()
                     << " subgoals..." << std::endl;
@@ -124,7 +131,7 @@ bool ProofPostprocessDsl::update(Node res,
     getMethodId(args[2], mid);
   }
   Trace("pp-dsl") << "Prove " << res << " from " << tid << " / " << mid
-                  << std::endl;
+                  << ", in mode " << d_tmode << std::endl;
   int64_t recLimit = options().proof.proofRewriteRconsRecLimit;
   int64_t stepLimit = options().proof.proofRewriteRconsStepLimit;
   // Attempt to reconstruct the proof of the equality into cdp using the
