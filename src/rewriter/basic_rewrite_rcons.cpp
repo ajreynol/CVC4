@@ -476,8 +476,8 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
     // t = s
     RewriteDbNodeConverter rdnc(nodeManager());
     Node eq1t = rdnc.convert(eq1);
-    Assert (eq1t.getKind()==Kind::EQUAL);
-    if (eq1t[0]!=eq1t[1])
+    Assert(eq1t.getKind() == Kind::EQUAL);
+    if (eq1t[0] != eq1t[1])
     {
       return false;
     }
