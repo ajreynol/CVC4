@@ -63,6 +63,11 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n,
       return nm->mkConst(false);
     }
     exp = Node::null();
+    if (checkEq(n[0], n[1]))
+    {
+      // explanation is null
+      return nm->mkConst(true);
+    }
   }
   else if (n.getKind() == Kind::GEQ)
   {

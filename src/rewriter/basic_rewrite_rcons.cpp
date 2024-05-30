@@ -245,12 +245,43 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
     cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
     cdp->addStep(eqi, ProofRule::EQ_RESOLVE, {eqii, equivs}, {});
     Trace("brc-macro") << "- length intro is " << eqii << std::endl;
+    // now, must prove eqii
   }
   lhs = eqii[0];
   Node exp;
   Node ret = ae.rewritePredViaEntailment(lhs, exp, true);
   Assert(ret == eqii[1]);
   Trace("brc-macro") << "- explanation is " << exp << std::endl;
+  // if trivially true equality
+  if (exp.isNull())
+  {
+    // explanation true if we are an equality that is trivially true
+    Assert (eqii[0].getKind()==Kind::EQUAL);
+    if (eqii[0][0]==eqii[0][1])
+    {
+      cdp->addStep(eqii[0], ProofRule::REFL, {}, {eqii[0][0]});
+    }
+    else
+    {
+      std::vector<Node> transEq;
+      for (size_t i=0; i<2; i++)
+      {
+        Node aec = ae.rewriteArith(eqii[0][i]);
+        if (aec!=eqii[0][i])
+        {
+          Node eqc = i==0 ? eqii[0][i].eqNode(aec) : aec.eqNode(eqii[0][i]);
+          cdp->addStep(eqc, ProofRule::ARITH_POLY_NORM, {}, {eqc});
+          transEq.push_back(eqc);
+        }
+      }
+      if (transEq.size()==2)
+      {
+        cdp->addStep(eqii[0], ProofRule::TRANS, transEq, {});
+      }
+    }
+    cdp->addStep(eqii, ProofRule::TRUE_INTRO, {eqii[0]}, {});
+    return true;
+  }
   Node expRew = ae.rewriteArith(exp);
   Node zero = nodeManager()->mkConstInt(Rational(0));
   Node geq = nodeManager()->mkNode(Kind::GEQ, expRew, zero);
