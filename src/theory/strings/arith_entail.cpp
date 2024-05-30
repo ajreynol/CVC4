@@ -190,8 +190,11 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
         Node rret = sum.size() == 1 ? sum[0] : nm->mkNode(Kind::ADD, sum);
         if (pg != nullptr)
         {
-          pg->addRewriteStep(
-              ret, rret, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+          pg->addRewriteStep(ret,
+                             rret,
+                             nullptr,
+                             false,
+                             TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
         }
         ret = rret;
       }

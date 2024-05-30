@@ -226,7 +226,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   {
     Node lhsn = ae.normalizeGeq(lhs);
     Node eqLhs = lhs.eqNode(lhsn);
-    cdp->addTrustedStep(eqLhs, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    cdp->addTrustedStep(
+        eqLhs, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     eqi = lhsn.eqNode(eq[1]);
     cdp->addStep(eq, ProofRule::TRANS, {eqLhs, eqi}, {});
     Trace("brc-macro") << "- GEQ normalize is " << eqi << std::endl;

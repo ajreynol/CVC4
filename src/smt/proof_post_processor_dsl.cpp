@@ -60,7 +60,7 @@ void ProofPostprocessDsl::reconstruct(
       // determine if we should disable rewrites, this is the case if the
       // trust id is MACRO_THEORY_REWRITE_RCONS_SIMPLE.
       d_tmode = mprev;
-      if (p->getRule()==ProofRule::TRUST)
+      if (p->getRule() == ProofRule::TRUST)
       {
         getTrustId(p->getArguments()[0], tid);
         if (tid == TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE)
