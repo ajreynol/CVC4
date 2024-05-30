@@ -196,9 +196,8 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
   cdp->addStep(eq, ProofRule::THEORY_REWRITE, {}, args);
 }
 
-bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(
-    CDProof* cdp,
-    const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
+                                                    const Node& eq)
 {
   Trace("brc-macro") << "Expand Bool NNF norm " << eq[0] << " == " << eq[1]
                      << std::endl;
@@ -213,9 +212,8 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
-    CDProof* cdp,
-    const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
+                                                              const Node& eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);
   Trace("brc-macro") << "Expand entailment for " << eq << std::endl;
@@ -256,25 +254,25 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   if (exp.isNull())
   {
     // explanation true if we are an equality that is trivially true
-    Assert (eqii[0].getKind()==Kind::EQUAL);
-    if (eqii[0][0]==eqii[0][1])
+    Assert(eqii[0].getKind() == Kind::EQUAL);
+    if (eqii[0][0] == eqii[0][1])
     {
       cdp->addStep(eqii[0], ProofRule::REFL, {}, {eqii[0][0]});
     }
     else
     {
       std::vector<Node> transEq;
-      for (size_t i=0; i<2; i++)
+      for (size_t i = 0; i < 2; i++)
       {
         Node aec = ae.rewriteArith(eqii[0][i]);
-        if (aec!=eqii[0][i])
+        if (aec != eqii[0][i])
         {
-          Node eqc = i==0 ? eqii[0][i].eqNode(aec) : aec.eqNode(eqii[0][i]);
+          Node eqc = i == 0 ? eqii[0][i].eqNode(aec) : aec.eqNode(eqii[0][i]);
           cdp->addStep(eqc, ProofRule::ARITH_POLY_NORM, {}, {eqc});
           transEq.push_back(eqc);
         }
       }
-      if (transEq.size()==2)
+      if (transEq.size() == 2)
       {
         cdp->addStep(eqii[0], ProofRule::TRANS, transEq, {});
       }
@@ -425,9 +423,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(
-    CDProof* cdp,
-    const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
+                                                             const Node& eq)
 {
   NodeManager* nm = NodeManager::currentNM();
   Trace("brc-macro") << "Expand substring strip for " << eq << std::endl;

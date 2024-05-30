@@ -136,17 +136,11 @@ class BasicRewriteRCons : protected EnvObj
    * @param eq The rewrite proven by ProofRewriteRule::MACRO_BOOL_NNF_NORM.
    * @return true if added a closed proof of eq to cdp.
    */
-  bool ensureProofMacroBoolNnfNorm(
-      CDProof* cdp,
-      const Node& eq);
+  bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& eq);
   /**
    */
-  bool ensureProofMacroArithStringPredEntail(
-      CDProof* cdp,
-      const Node& eq);
-  bool ensureProofMacroSubstrStripSymLength(
-      CDProof* cdp,
-      const Node& eq);
+  bool ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& eq);
+  bool ensureProofMacroSubstrStripSymLength(CDProof* cdp, const Node& eq);
   /**
    * Try THEORY_REWRITE with theory::TheoryRewriteCtx ctx.
    */
