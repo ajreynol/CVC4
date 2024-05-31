@@ -133,6 +133,7 @@ bool RewriteDbProofCons::prove(
       Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
       if (proveEq(cdp, eq, eq, i, stepLimit, subgoals))
       {
+        Trace("rpc") << "...success" << std::endl;
         success = true;
         break;
       }
@@ -148,6 +149,7 @@ bool RewriteDbProofCons::prove(
           Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
           if (proveEq(cdp, eq, eqi, i, stepLimit, subgoals))
           {
+            Trace("rpc") << "...success (via convert)" << std::endl;
             success = true;
             break;
           }
@@ -167,10 +169,6 @@ bool RewriteDbProofCons::prove(
     {
       Trace("rpc") << "...fail" << std::endl;
     }
-  }
-  else
-  {
-    Trace("rpc") << "...success" << std::endl;
   }
   return success;
 }
@@ -385,7 +383,6 @@ bool RewriteDbProofCons::processMatch(const Node& s,
                       recurse,
                       id))
     {
-      Trace("ajr-temp") << "...success" << std::endl;
       // if successful, we do not want to be notified of further matches
       // and return false here.
       return true;
