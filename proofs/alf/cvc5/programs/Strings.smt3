@@ -883,6 +883,7 @@
   (
   (($str_re_includes r1 r1)                               true)
   (($str_re_includes r1 (str.to_re s1))                   ($str_eval_str_in_re s1 r1))
+  (($str_re_includes (str.to_re s1) r1)                   false)
   (($str_re_includes (re.range s1 s2) (re.range s3 s4))   (let ((z1 (alf.to_z s1)))
                                                           (let ((z2 (alf.to_z s2)))
                                                           (let ((z3 (alf.to_z s3)))
