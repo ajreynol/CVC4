@@ -27,8 +27,7 @@
                        (x T) (y T) (z S) (ys S :list)
                        (b Bool) (n Int) (m Int)
                        (xb (BitVec m)) (ybs (BitVec m) :list)
-                       (xs (Seq T)) (yss (Seq T) :list)
-                       (xr RegLan))
+                       (xs (Seq T)) (yss (Seq T) :list))
     (S) S
     (
       ; core
@@ -130,29 +129,6 @@
   :conclusion (= t (run_evaluate t))
 )
 
-(define get_aci_normal_form ((S Type :implicit) (t S))
-  (alf.match ((T Type) (U Type) (V Type) (x V) (x1 T) (x2 U :list) (m Int)
-              (xb1 (BitVec m)) (xb2 (BitVec m) :list)
-              (xf1 (FiniteField m)) (xf2 (FiniteField m) :list)
-              (xs1 (Seq U)) (xs2 (Seq U) :list))
-    t
-    (
-      ((or x1 x2)        (get_aci_norm t))
-      ((and x1 x2)       (get_aci_norm t))
-      ((sep x1 x2)       (get_aci_norm t))
-      ((re.union x1 x2)  (get_aci_norm t))
-      ((re.inter x1 x2)  (get_aci_norm t))
-      ((bvor xb1 xb2)    (get_aci_norm t))
-      ((bvand xb1 xb2)   (get_aci_norm t))
-      ((ff.add xf1 xf2)  (get_aci_norm t))
-      ((ff.mul xf1 xf2)  (get_aci_norm t))
-      ((str.++ xs1 xs2)  (get_a_norm t))
-      ((re.++ x1 x2)     (get_a_norm t))
-      (x                 x)
-    )
-  )
-)
-
 (program is_poly_norm ((T Type) (U Type) (a T) (b T) (a1 U) (a2 U) (b1 U) (b2 U))
   (T T) Bool
   (
@@ -178,6 +154,29 @@
   :args ((= a b))
   :requires (((is_poly_norm a b) true))
   :conclusion (= a b)
+)
+
+(define get_aci_normal_form ((S Type :implicit) (t S))
+  (alf.match ((T Type) (U Type) (V Type) (x V) (x1 T) (x2 U :list) (m Int)
+              (xb1 (BitVec m)) (xb2 (BitVec m) :list)
+              (xf1 (FiniteField m)) (xf2 (FiniteField m) :list)
+              (xs1 (Seq U)) (xs2 (Seq U) :list))
+    t
+    (
+      ((or x1 x2)        (get_aci_norm t))
+      ((and x1 x2)       (get_aci_norm t))
+      ((sep x1 x2)       (get_aci_norm t))
+      ((re.union x1 x2)  (get_aci_norm t))
+      ((re.inter x1 x2)  (get_aci_norm t))
+      ((bvor xb1 xb2)    (get_aci_norm t))
+      ((bvand xb1 xb2)   (get_aci_norm t))
+      ((ff.add xf1 xf2)  (get_aci_norm t))
+      ((ff.mul xf1 xf2)  (get_aci_norm t))
+      ((str.++ xs1 xs2)  (get_a_norm t))
+      ((re.++ x1 x2)     (get_a_norm t))
+      (x                 x)
+    )
+  )
 )
 
 ; ProofRule::ACI_NORM
