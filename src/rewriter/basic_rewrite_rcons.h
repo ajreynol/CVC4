@@ -148,7 +148,8 @@ class BasicRewriteRCons : protected EnvObj
    * ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH.
    *
    * @param cdp The proof to add to.
-   * @param eq The rewrite proven by ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH.
    * @return true if added a closed proof of eq to cdp.
    */
   bool ensureProofMacroSubstrStripSymLength(CDProof* cdp, const Node& eq);
