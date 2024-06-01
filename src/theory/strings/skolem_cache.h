@@ -200,8 +200,6 @@ class SkolemCache
   std::map<Node, std::map<Node, std::map<StringSkolemId, Node>>> d_skolemCache;
   /** the set of all skolems we have generated */
   std::unordered_set<Node> d_allSkolems;
-  /** */
-  std::map<Node, Node> d_skRewrittenCache;
   /**
    * Get cache vals, which returns the vector of terms from (possibly null)
    * a and b that should be passed to the skolem manager.

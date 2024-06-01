@@ -1598,7 +1598,6 @@ bool RewriteRule<ShiftZero>::applies(TNode node) {
   return ((node.getKind() == Kind::BITVECTOR_SHL
            || node.getKind() == Kind::BITVECTOR_LSHR
            || node.getKind() == Kind::BITVECTOR_ASHR)
-          && node.getType().isBitVector()
           && node[0] == utils::mkConst(utils::getSize(node), 0));
 }
 
@@ -1655,10 +1654,6 @@ template <>
 inline bool RewriteRule<BBAddNeg>::applies(TNode node)
 {
   if (node.getKind() != Kind::BITVECTOR_ADD)
-  {
-    return false;
-  }
-  if (!node.getType().isBitVector())
   {
     return false;
   }
