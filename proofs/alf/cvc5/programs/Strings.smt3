@@ -849,14 +849,24 @@
   )
 )
 
-; `$str_is_unbound_wildcard r` returns true if `r` is of the form
+; `$re_is_unbound_wildcard r` returns true if `r` is of the form
 ; (re.++ re.allchar ... re.allchar (re.* re.allchar) ...).
-(program $str_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list))
+(program $re_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list))
   (RegLan) Bool
   (
-  (($str_is_unbound_wildcard (re.++ (re.* re.allchar) r2))  true)
-  (($str_is_unbound_wildcard (re.++ re.allchar r2))         ($str_is_unbound_wildcard r2))
-  (($str_is_unbound_wildcard r1)                            false)
+  (($re_is_unbound_wildcard (re.++ (re.* re.allchar) r2))  true)
+  (($re_is_unbound_wildcard (re.++ re.allchar r2))         ($re_is_unbound_wildcard r2))
+  (($re_is_unbound_wildcard r1)                            false)
+  )
+)
+
+;
+(program $re_is_empty ((r1 RegLan) (r2 RegLan :list))
+  (RegLan) Bool
+  (
+  (($re_is_empty (re.++ @re.empty r2))  ($re_is_empty r2))
+  (($re_is_empty @re.empty)             true)
+  (($re_is_empty r1)                    false)
   )
 )
 
@@ -874,10 +884,10 @@
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4)) 
     (alf.ite (alf.ite ($str_re_includes ($re_from_flat_form r1 false) ($re_from_flat_form r3 false)) ; can skip both if we have a base inclusion
-              ($str_re_includes_rec r2 r4)
-              false)
+               ($str_re_includes_rec r2 r4)
+               false)
       true
-    (alf.ite (alf.ite ($str_is_unbound_wildcard (re.++ r1 r2)) ; can skip LHS if unbounded wildcard
+    (alf.ite (alf.ite ($re_is_unbound_wildcard (re.++ r1 r2)) ; can skip LHS if unbounded wildcard
               ($str_re_includes_rec r2 (re.++ r3 r4))
               false)
       true
