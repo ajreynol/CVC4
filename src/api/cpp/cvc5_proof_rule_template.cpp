@@ -246,8 +246,6 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "dt-collapse-tester-singleton";
     case ProofRewriteRule::DT_CONS_EQ: return "dt-cons-eq";
     case ProofRewriteRule::BV_BITWISE_SLICING: return "bv-bitwise-slicing";
-    case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
-      return "macro-substr-strip-sym-length";
     case ProofRewriteRule::RE_LOOP_ELIM: return "re-loop-elim";
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
       return "re-inter-union-inclusion";
@@ -257,6 +255,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "str-in-re-concat-star-char";
     case ProofRewriteRule::STR_IN_RE_SIGMA: return "str-in-re-sigma";
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR: return "str-in-re-sigma-star";
+    case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
+      return "macro-substr-strip-sym-length";
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
       return "sets-is-empty-eval";
       //================================================= RARE rules

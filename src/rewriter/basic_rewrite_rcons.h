@@ -143,6 +143,14 @@ class BasicRewriteRCons : protected EnvObj
   /**
    */
   bool ensureProofMacroArithStringPredEntail(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH.
+   * @return true if added a closed proof of eq to cdp.
+   */
   bool ensureProofMacroSubstrStripSymLength(CDProof* cdp, const Node& eq);
   /**
    * Try THEORY_REWRITE with theory::TheoryRewriteCtx ctx.
