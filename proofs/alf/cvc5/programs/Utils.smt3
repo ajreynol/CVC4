@@ -29,17 +29,6 @@
 (define $compare_geq ((T Type :implicit) (x T) (y T))
   (alf.not (alf.is_neg (alf.add (alf.neg y) x))))
 
-; Compare arithmetic greater than. Assumes x and y are values.
-; Returns true if x > y.
-(define $compare_gt ((T Type :implicit) (x T) (y T))
-  (alf.is_neg (alf.add (alf.neg x) y)))
-
-; Compare arithmetic greater than. Assumes x and y are values.
-; Returns true if x >= y.
-(define $compare_geq ((T Type :implicit) (x T) (y T))
-  (alf.not (alf.is_neg (alf.add (alf.neg y) x))))
-
-
 (declare-type @Pair (Type Type))
 (declare-const @pair (-> (! Type :var U :implicit) (! Type :var T :implicit) U T (@Pair U T)))
 
@@ -51,6 +40,7 @@
 ; This is used to have a canonical ordering of variables.
 ; It could potentially be improved by having a builtin operator, e.g. alf.compare.
 (define compare_var ((T Type :implicit) (U Type :implicit) (a T) (b U))
+;  (alf.cmp a b))
   (alf.is_neg (alf.add (alf.hash a) (alf.neg (alf.hash b)))))
 
 ; Returns the tail of x, where x is expected to be a function application.
