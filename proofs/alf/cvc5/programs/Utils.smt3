@@ -41,7 +41,7 @@
 ; It could potentially be improved by having a builtin operator, e.g. alf.compare.
 (define compare_var ((T Type :implicit) (U Type :implicit) (a T) (b U))
 ;  (alf.cmp a b))
-  (alf.is_neg (alf.add (alf.hash a) (alf.neg (alf.hash b)))))
+  (alf.is_neg (alf.add (alf.hash b) (alf.neg (alf.hash a)))))
 
 ; Returns the tail of x, where x is expected to be a function application.
 (define $tail ((S Type :implicit) (x S))
