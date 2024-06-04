@@ -74,6 +74,13 @@ TEST_F(TestApiBlackSolver, pow2Large3)
   ASSERT_NO_THROW(d_solver->simplify(t536));
 }
 
+TEST_F(TestApiBlackSolver, assertFormulaFv)
+{
+  Sort s = d_tm.getIntegerSort();
+  Term v = d_tm.mkVar(s, "x");
+  ASSERT_THROW(d_solver->assertFormula(v), CVC5ApiException);
+}
+
 TEST_F(TestApiBlackSolver, recoverableException)
 {
   d_solver->setOption("produce-models", "true");
