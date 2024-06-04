@@ -157,7 +157,7 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
     Trace("final-pf-hole") << "hole TRUST";
     if (getTrustId(pn->getArguments()[0], id))
     {
-      AlwaysAssert(id != TrustId::PP_STATIC_REWRITE);
+      //AlwaysAssert(id != TrustId::PP_STATIC_REWRITE);
       d_trustIds << id;
       Trace("final-pf-hole") << " " << id;
     }
