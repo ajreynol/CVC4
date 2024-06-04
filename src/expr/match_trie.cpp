@@ -24,20 +24,20 @@ bool MatchTrie::getMatches(Node n, NotifyMatch* ntm)
 {
   std::vector<Node> vars;
   std::vector<Node> subs;
-  std::map<Node, Node> smap;
+  std::map<TNode, TNode> smap;
 
-  std::vector<std::vector<Node> > visit;
+  std::vector<std::vector<TNode> > visit;
   std::vector<MatchTrie*> visit_trie;
   std::vector<int> visit_var_index;
   std::vector<bool> visit_bound_var;
 
-  visit.push_back(std::vector<Node>{n});
+  visit.push_back(std::vector<TNode>{n});
   visit_trie.push_back(this);
   visit_var_index.push_back(-1);
   visit_bound_var.push_back(false);
   while (!visit.empty())
   {
-    std::vector<Node> cvisit = visit.back();
+    std::vector<TNode> cvisit = visit.back();
     MatchTrie* curr = visit_trie.back();
     if (cvisit.empty())
     {
@@ -56,7 +56,7 @@ bool MatchTrie::getMatches(Node n, NotifyMatch* ntm)
     }
     else
     {
-      Node cn = cvisit.back();
+      TNode cn = cvisit.back();
       Trace("match-debug") << "traverse : " << cn << " at depth "
                            << visit.size() << std::endl;
       unsigned index = visit.size() - 1;
@@ -65,7 +65,7 @@ bool MatchTrie::getMatches(Node n, NotifyMatch* ntm)
       {
         if (!cn.isVar())
         {
-          Node op = cn.hasOperator() ? cn.getOperator() : cn;
+          const Node& op = cn.hasOperator() ? cn.getOperator() : Node(cn);
           unsigned nchild = cn.hasOperator() ? cn.getNumChildren() : 0;
           std::map<unsigned, MatchTrie>::iterator itu =
               curr->d_children[op].find(nchild);
@@ -118,10 +118,10 @@ bool MatchTrie::getMatches(Node n, NotifyMatch* ntm)
                                << visit.size() << std::endl;
           Assert(vindex < static_cast<int>(curr->d_vars.size()));
           // recurse on variable?
-          Node var = curr->d_vars[vindex];
+          TNode var = curr->d_vars[vindex];
           bool recurse = true;
           // check if it is already bound
-          std::map<Node, Node>::iterator its = smap.find(var);
+          std::map<TNode, TNode>::iterator its = smap.find(var);
           if (its != smap.end())
           {
             if (its->second != cn)
