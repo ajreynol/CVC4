@@ -2584,10 +2584,10 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * **Strings - regular expression membership evaluation**
    *
    * .. math::
-   *   (str.in_re s R) = c
+   *   \mathit{str.in\_re}(s, R) = c
    *
-   * where `s` is a constant string, `R` is a constant regular expression and
-   * `c` is true or false.
+   * where :math:`s` is a constant string, :math:`R` is a constant regular
+   * expression and :math:`c` is true or false.
    *
    * \endverbatim
    */
@@ -2604,11 +2604,11 @@ enum ENUM(ProofRewriteRule) : uint32_t
   EVALUE(STR_IN_RE_CONSUME),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - regular expression loop elimination**
+   * **Strings - string in regular expression concatenation star character**
    *
    * .. math::
-   *   (str.in_re (str.++ s1 \ldots sn) (re.* R)) =
-   *   (and (str.in_re s1 (re.* R)) \ldots (str.in_re sn (re.* R)))
+   *   \mathit{str.in\_re}(\mathit{str}.\text{++}(s_1, \ldots, s_n), \mathit{re}.\text{*}(R)) =
+   *   \mathit{str.in\_re}(s_1, \mathit{re}.\text{*}(R)) \wedge \ldots \wedge \mathit{str.in\_re}(s_n, \mathit{re}.\text{*}(R))
    *
    * where all strings in :math:`R` have length one.
    *
@@ -2620,13 +2620,14 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * **Strings - string in regular expression sigma**
    *
    * .. math::
-   *   (str.in_re s (re.++ re.allchar \ldots re.allchar)) = (= (str.len s) n)
+   *   \mathit{str.in\_re}(s, \mathit{re}.\text{++}(\mathit{re.allchar}, \ldots, \mathit{re.allchar})) =
+   *   (\mathit{str.len}(s) = n)
    *
    * or alternatively:
    *
    * .. math::
-   *   (str.in_re s (re.++ re.allchar \ldots re.allchar (re.* re.allchar)) =
-   *   (>= (str.len s) n)
+   *   \mathit{str.in\_re}(s, \mathit{re}.\text{++}(\mathit{re.allchar}, \ldots, \mathit{re.allchar}, \mathit{re}.\text{*}(\mathit{re.allchar}))) =
+   *   (\mathit{str.len}(s) \ge n)
    *
    * \endverbatim
    */
@@ -2636,8 +2637,10 @@ enum ENUM(ProofRewriteRule) : uint32_t
    * **Strings - string in regular expression sigma star**
    *
    * .. math::
-   *   (str.in_re s (re.* re.allchar \ldots re.allchar)) =
-   *   (= (mod (str.len s) n) 0)
+   *   \mathit{str.in\_re}(s, \mathit{re}.\text{*}(\mathit{re}.\text{++}(\mathit{re.allchar}, \ldots, \mathit{re.allchar}))) =
+   *   (\mathit{str.len}(s) \ \% \ n = 0)
+   *
+   * where :math:`n` is the number of :math:`\mathit{re.allchar}` arguments to :math:`\mathit{re}.\text{++}`.
    *
    * \endverbatim
    */
