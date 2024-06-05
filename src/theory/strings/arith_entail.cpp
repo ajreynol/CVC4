@@ -104,7 +104,8 @@ Node ArithEntail::rewriteArith(Node a)
 Node ArithEntail::normalizeGeq(const Node& n) const
 {
   NodeManager* nm = NodeManager::currentNM();
-  if (n.getNumChildren()!=2 || !n[0].getType().isInteger() || !n[1].getType().isInteger())
+  if (n.getNumChildren() != 2 || !n[0].getType().isInteger()
+      || !n[1].getType().isInteger())
   {
     return Node::null();
   }
