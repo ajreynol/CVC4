@@ -1336,6 +1336,7 @@ Node ArithRewriter::rewriteIneqToBv(Kind kind,
                     ? zero
                     : (otherSum.size() == 1 ? otherSum[0]
                                             : nm->mkNode(Kind::ADD, otherSum));
+    // possibly negate the sum
     Node o = bv2natPol
                  ? (osum.getKind() == Kind::NEG ? osum[0]
                                                 : nm->mkNode(Kind::NEG, osum))
