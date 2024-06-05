@@ -182,16 +182,8 @@ Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm,
         Node preCur = nm->mkNode(k, pc);
         if (preCur != cur)
         {
-<<<<<<< HEAD
-          pg->addRewriteStep(cur,
-                             preCur,
-                             nullptr,
-                             true,
-                             TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
-=======
           pg->addRewriteStep(
               cur, preCur, nullptr, true, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
->>>>>>> 142680488dbd1177d0146ff13acaddd71fbe8403
         }
       }
     }
