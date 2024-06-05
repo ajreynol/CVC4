@@ -60,9 +60,11 @@ function finishwith {
 
 # designed for 300 seconds
 trywith 15 --finite-model-find --decision=internal
-trywith 15 --decision=internal --simplification=none --no-inst-no-entail --no-cbqi --full-saturate-quant
-trywith 15 --no-e-matching --full-saturate-quant
-trywith 15 --cegqi-all --purify-triggers --full-saturate-quant
-finishwith --macros-quant --macros-quant-mode=all --nl-ext-tplanes --full-saturate-quant
+trywith 10 --decision=internal --simplification=none --no-inst-no-entail --no-cbqi --enum-inst
+trywith 10 --no-e-matching --enum-inst
+trywith 10 --cegqi-all --purify-triggers --enum-inst
+trywith 5 --mbqi
+trywith 5 --mbqi --mbqi-fast-sygus
+finishwith --macros-quant --macros-quant-mode=all --nl-ext-tplanes --enum-inst
 # echo "% SZS status" "GaveUp for $filename"
 

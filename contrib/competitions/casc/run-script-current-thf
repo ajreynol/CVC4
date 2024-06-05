@@ -59,15 +59,15 @@ function finishwith {
 }
 
 # designed for 300 seconds
-trywith 10 --ho-elim --full-saturate-quant
-trywith 10 --ho-elim --no-e-matching --full-saturate-quant
-trywith 10 --ho-elim --no-e-matching --enum-inst-sum --full-saturate-quant
+trywith 10 --ho-elim --enum-inst
+trywith 10 --ho-elim --no-e-matching --enum-inst
+trywith 20 --mbqi --mbqi-fast-sygus
 trywith 5  --ho-elim --finite-model-find --uf-ss=no-minimal
 trywith 5  --no-ho-matching --finite-model-find --uf-ss=no-minimal
-trywith 10 --no-ho-matching --full-saturate-quant --enum-inst-interleave --ho-elim-store-ax
-trywith 10 --no-ho-matching --full-saturate-quant --macros-quant-mode=all
-trywith 10 --ho-elim --full-saturate-quant --enum-inst-interleave
-trywith 10 --no-ho-matching --full-saturate-quant --ho-elim-store-ax
-finishwith  --ho-elim --no-ho-elim-store-ax --full-saturate-quant
+trywith 10 --no-ho-matching --enum-inst --enum-inst-interleave --ho-elim-store-ax
+trywith 10 --mbqi
+trywith 10 --ho-elim --enum-inst --enum-inst-interleave
+trywith 10 --no-ho-matching --enum-inst --ho-elim-store-ax
+finishwith  --ho-elim --no-ho-elim-store-ax --enum-inst
 # echo "% SZS status" "GaveUp for $filename"
 

@@ -2,15 +2,47 @@
 
 # script is used for SLH division
 
+# Assumes a binary $cvc5conv for converting tptp (*.p) files to *.smt2.
+# cvc5 version 1.0.5 is recommended for this purpose.
+
 here=`dirname $0`
 cvc5=$here/cvc5
+cvc5conv=$here/cvc5-tptp-to-smt2
 bench="$1"
 
 file=${bench##*/}
 filename=${file%.*}
+unsatResult="Unsatisfiable"
+satResult="Satisfiable"
 
-echo "------- cvc5-slh casc j11 : $bench..."
+echo "------- convert to smt2 : $bench..."
 
+$cvc5conv -o raw-benchmark --parse-only --output-lang=smt2 $bench > $here/$filename.smt2
+
+echo -n "------- get file name : "
+
+function processFileName {
+  read pct file colon name colon;
+  echo "$name"
+}
+tptpfilename=$(grep "% File " $bench 2>/dev/null | processFileName)
+echo "TPTP file name is $tptpfilename"
+
+echo "------- cvc5-slh : $here/$filename.smt2..."
+
+function processresult {
+  (read result;
+  case "$result" in
+  unsat)
+    echo "% SZS status $unsatResult for $tptpfilename";
+    echo "% SZS output start Proof for $tptpfilename";
+    cat;
+    echo "% SZS output end Proof for $tptpfilename";
+    exit 0;;
+  sat) echo "% SZS status $satResult for $tptpfilename";cat;exit 0;;
+  esac; exit 1)
+}
+  
 # use: trywith [params..]
 # to attempt a run.  If an SZS ontology result is printed, then
 # the run script terminates immediately.  Otherwise, this
@@ -18,24 +50,20 @@ echo "------- cvc5-slh casc j11 : $bench..."
 function trywith {
   limit=$1; shift;
   echo "--- Run $@ at $limit...";
-  (ulimit -S -t "$limit";$cvc5 --lang=tptp --no-type-checking --no-interactive --dump-proofs --proof-format=tptp --force-no-limit-cpu-while-dump "$@" $bench) 2>/dev/null |
-  (read w1 w2 w3 result w4 w5;
-  case "$result" in
-  Unsatisfiable) echo "$w1 $w2 $w3 $result $w4 $w5";cat;exit 0;;
-  Theorem) echo "$w1 $w2 $w3 $result $w4 $w5";cat;exit 0;;
-  esac; exit 1)
+  (ulimit -S -t "$limit";$cvc5 --lang=smt2 --no-type-checking --no-interactive --dump-proofs --force-no-limit-cpu-while-dump -q "$@" $here/$filename.smt2) 2>/dev/null | processresult
   if [ ${PIPESTATUS[1]} -eq 0 ]; then exit 0; fi
 }
 function finishwith {
   echo "--- Run $@...";
-  $cvc5 --lang=tptp --no-type-checking --no-interactive --dump-proofs --proof-format=tptp --force-no-limit-cpu-while-dump "$@" $bench
+  $cvc5 --lang=smt2 --no-type-checking --no-interactive --dump-proofs --force-no-limit-cpu-while-dump -q "$@" $here/$filename.smt2 | processresult
 }
 
-# designed for 15 seconds
-trywith 5 --ho-elim --full-saturate-quant
-trywith 3 --ho-elim --no-e-matching --full-saturate-quant
-trywith 2 --no-ho-matching --full-saturate-quant --enum-inst-interleave --ho-elim-store-ax
-trywith 2 --no-ho-matching --full-saturate-quant --macros-quant-mode=all
-trywith 3 --ho-elim --finite-model-find --uf-ss=no-minimal
-finishwith --full-saturate-quant
+# designed for 15-90 seconds
+trywith 5 --ho-elim --enum-inst
+trywith 3 --mbqi
+trywith 3 --mbqi --mbqi-fast-sygus
+trywith 2 --ho-elim --no-e-matching --enum-inst
+trywith 2 --no-ho-matching --enum-inst --enum-inst-interleave --ho-elim-store-ax
+trywith 2 --ho-elim --finite-model-find --uf-ss=no-minimal
+finishwith --enum-inst
 # echo "% SZS status" "GaveUp for $filename"

@@ -1,14 +1,48 @@
 #!/bin/bash
 
+# script is used for TFN division
+
+# Assumes a binary $cvc5conv for converting tptp (*.p) files to *.smt2.
+# cvc5 version 1.0.5 is recommended for this purpose.
+
 here=`dirname $0`
-cvc4=$here/cvc4
+cvc5=$here/cvc5
+cvc5conv=$here/cvc5-tptp-to-smt2
 bench="$1"
 
 file=${bench##*/}
 filename=${file%.*}
+unsatResult="Unsatisfiable"
+satResult="Satisfiable"
 
-echo "------- cvc4-tfn casc j10 : $bench at $2..."
+echo "------- convert to smt2 : $bench..."
 
+$cvc5conv -o raw-benchmark --parse-only --output-lang=smt2 $bench > $here/$filename.smt2
+
+echo -n "------- get file name : "
+
+function processFileName {
+  read pct file colon name colon;
+  echo "$name"
+}
+tptpfilename=$(grep "% File " $bench 2>/dev/null | processFileName)
+echo "TPTP file name is $tptpfilename"
+
+echo "------- cvc5-tfn : $here/$filename.smt2..."
+
+function processresult {
+  (read result;
+  case "$result" in
+  unsat) echo "% SZS status $unsatResult for $tptpfilename";cat;exit 0;;
+  sat) 
+    echo "% SZS status $satResult for $tptpfilename";
+    echo "% SZS output start FiniteModel for $tptpfilename";
+    cat;
+    echo "% SZS output end FiniteModel for $tptpfilename";
+    exit 0;;
+  esac; exit 1)
+}
+  
 # use: trywith [params..]
 # to attempt a run.  If an SZS ontology result is printed, then
 # the run script terminates immediately.  Otherwise, this
@@ -16,17 +50,12 @@ echo "------- cvc4-tfn casc j10 : $bench at $2..."
 function trywith {
   limit=$1; shift;
   echo "--- Run $@ at $limit...";
-  (ulimit -S -t "$limit";$cvc4 --lang=tptp --no-type-checking --no-interactive --force-logic="UFNIRA" --dump-models --produce-models --force-no-limit-cpu-while-dump "$@" $bench) 2>/dev/null |
-  (read w1 w2 w3 result w4 w5;
-  case "$result" in
-  Satisfiable) echo "$w1 $w2 $w3 $result $w4 $w5";cat;exit 0;;
-  CounterSatisfiable) echo "$w1 $w2 $w3 $result $w4 $w5";cat;exit 0;;
-  esac; exit 1)
+  (ulimit -S -t "$limit";$cvc5 --lang=smt2 --no-type-checking --no-interactive --dump-proofs --force-no-limit-cpu-while-dump -q "$@" $here/$filename.smt2) 2>/dev/null | processresult
   if [ ${PIPESTATUS[1]} -eq 0 ]; then exit 0; fi
 }
 function finishwith {
   echo "--- Run $@...";
-  $cvc4 --lang=tptp --no-type-checking --no-interactive --force-logic="UFNIRA" --dump-models --produce-models --force-no-limit-cpu-while-dump "$@" $bench
+  $cvc5 --lang=smt2 --no-type-checking --no-interactive --dump-proofs --force-no-limit-cpu-while-dump -q "$@" $here/$filename.smt2 | processresult
 }
 
 # designed for 300 seconds
