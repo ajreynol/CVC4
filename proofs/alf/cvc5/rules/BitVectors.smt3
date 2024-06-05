@@ -81,6 +81,10 @@
 
 ; ---------------- ProofRewriteRule::BV_BITBLAST_STEP
 
+; @program $bv_mk_bitblast_step_eq
+; @arg arg1 : T. The left hand side of the equality.
+; @arg arg2 : T. The right hand side of the equality.
+; @return the bitblasting predicate for (= arg1 arg2).
 (program $bv_mk_bitblast_step_eq ((T Type) (U Type) (W Type) (b1 Bool) (b2 Bool) (a1 W :list) (a2 W :list))
   (T T) Bool
   (
@@ -89,6 +93,11 @@
   )
 )
 
+; @define $bv_mk_bitblast_step_extract
+; @arg u : Int. The upper index of the extract.
+; @arg l : Int. The lower index of the extract.
+; @arg a1 : (BitVec n). The argument of the extract.
+; @return the bitblasting predicate for (extract u l a1).
 (define $bv_mk_bitblast_step_extract ((n Int :implicit) (u Int) (l Int) (a1 (BitVec n)))
   (nary.subsequence @bbT @bv_empty l u a1))
 
@@ -132,6 +141,13 @@
   ))
 )
 
+; @rule bv_bitblast_step implements ProofRule::BV_BITBLAST_STEP.
+; @arg (= a b). The equality to prove.
+; @requires We require that $bv_mk_bitblast_step applied to a gives the desired
+; result b.
+; @conclusion The equality between a and b.
+; @note The current implementation only covers some of the operators that may
+; appear in ProofRule::BV_BITBLAST_STEP.
 (declare-rule bv_bitblast_step
   ((n Int) (a (BitVec n)) (b (BitVec n)))
   :args ((= a b))
