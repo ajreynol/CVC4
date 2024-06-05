@@ -59,7 +59,8 @@ function finishwith {
 }
 
 # designed for 300 seconds
-trywith 30 --finite-model-find --decision=internal --sort-inference --macros-quant --macros-quant-mode=all
-trywith 15 --nl-ext-tplanes --full-saturate-quant --macros-quant --macros-quant-mode=all
-finishwith --finite-model-find --fmf-inst-engine --sort-inference --macros-quant --macros-quant-mode=all
+trywith 30 --mbqi
+trywith 30 --mbqi --mbqi-fast-sygus
+trywith 30 --cegqi
+finishwith --finite-model-find --decision=internal --sort-inference --macros-quant --macros-quant-mode=all
 # echo "% SZS status" "GaveUp for $filename"
