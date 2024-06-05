@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# script is used for FOF division
+# script is used for THF division
 
 # Assumes a binary $cvc5conv for converting tptp (*.p) files to *.smt2.
 # cvc5 version 1.0.5 is recommended for this purpose.
@@ -28,12 +28,12 @@ function processFileName {
 tptpfilename=$(grep "% File " $bench 2>/dev/null | processFileName)
 echo "TPTP file name is $tptpfilename"
 
-echo "------- cvc5-fof : $here/$filename.smt2..."
+echo "------- cvc5-thf : $here/$filename.smt2..."
 
 function processresult {
   (read result;
   case "$result" in
-  unsat)
+  unsat) 
     echo "% SZS status $unsatResult for $tptpfilename";
     echo "% SZS output start Proof for $tptpfilename";
     cat;
@@ -50,30 +50,24 @@ function processresult {
 function trywith {
   limit=$1; shift;
   echo "--- Run $@ at $limit...";
-  (ulimit -S -t "$limit";$cvc5 --lang=smt2 --no-type-checking --no-interactive --dump-proofs --force-no-limit-cpu-while-dump -q "$@" $here/$filename.smt2) 2>/dev/null | processresult
+  (ulimit -S -t "$limit";$cvc5 --lang=smt2 --no-type-checking --no-interactive --dump-proofs --force-no-limit-cpu-while-dump --force-logic="HO_ALL" -q "$@" $here/$filename.smt2) 2>/dev/null | processresult
   if [ ${PIPESTATUS[1]} -eq 0 ]; then exit 0; fi
 }
 function finishwith {
   echo "--- Run $@...";
-  $cvc5 --lang=smt2 --no-type-checking --no-interactive --dump-proofs --force-no-limit-cpu-while-dump -q "$@" $here/$filename.smt2 | processresult
+  $cvc5 --lang=smt2 --no-type-checking --no-interactive --dump-proofs --force-no-limit-cpu-while-dump --force-logic="HO_ALL" -q "$@" $here/$filename.smt2 | processresult
 }
 
 # designed for 300 seconds
-trywith 10 --decision=internal --simplification=none --no-inst-no-entail --no-cbqi --enum-inst
-trywith 5 --no-e-matching --enum-inst
-trywith 5 --no-e-matching --enum-inst-sum --enum-inst
-trywith 5 --finite-model-find --uf-ss=no-minimal
-trywith 5 --multi-trigger-when-single --enum-inst
-trywith 5 --trigger-sel=max --enum-inst
-trywith 5 --multi-trigger-when-single --multi-trigger-priority --enum-inst
-trywith 5 --multi-trigger-cache --enum-inst
-trywith 5 --prenex-quant=none --enum-inst
-trywith 5 --enum-inst-interleave --decision=internal --enum-inst
-trywith 5 --relevant-triggers --enum-inst
-trywith 5 --finite-model-find --e-matching --sort-inference --uf-ss-fair
-trywith 10 --pre-skolem-quant=on --enum-inst
-trywith 10 --cbqi-vo-exp --enum-inst
-trywith 10 --no-cbqi --enum-inst
-finishwith --macros-quant --macros-quant-mode=all --enum-inst
+trywith 10 --ho-elim --full-saturate-quant
+trywith 10 --ho-elim --no-e-matching --full-saturate-quant
+trywith 10 --ho-elim --no-e-matching --enum-inst-sum --full-saturate-quant
+trywith 5  --ho-elim --finite-model-find --uf-ss=no-minimal
+trywith 5  --no-ho-matching --finite-model-find --uf-ss=no-minimal
+trywith 10 --no-ho-matching --full-saturate-quant --enum-inst-interleave --ho-elim-store-ax
+trywith 10 --no-ho-matching --full-saturate-quant --macros-quant-mode=all
+trywith 10 --ho-elim --full-saturate-quant --enum-inst-interleave
+trywith 10 --no-ho-matching --full-saturate-quant --ho-elim-store-ax
+finishwith  --ho-elim --no-ho-elim-store-ax --full-saturate-quant
 # echo "% SZS status" "GaveUp for $filename"
 

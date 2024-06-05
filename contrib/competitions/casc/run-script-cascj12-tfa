@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# script is used for FOF division
+# script is used for TFA division
 
 # Assumes a binary $cvc5conv for converting tptp (*.p) files to *.smt2.
 # cvc5 version 1.0.5 is recommended for this purpose.
@@ -28,7 +28,7 @@ function processFileName {
 tptpfilename=$(grep "% File " $bench 2>/dev/null | processFileName)
 echo "TPTP file name is $tptpfilename"
 
-echo "------- cvc5-fof : $here/$filename.smt2..."
+echo "------- cvc5-tfa : $here/$filename.smt2..."
 
 function processresult {
   (read result;
@@ -59,21 +59,10 @@ function finishwith {
 }
 
 # designed for 300 seconds
-trywith 10 --decision=internal --simplification=none --no-inst-no-entail --no-cbqi --enum-inst
-trywith 5 --no-e-matching --enum-inst
-trywith 5 --no-e-matching --enum-inst-sum --enum-inst
-trywith 5 --finite-model-find --uf-ss=no-minimal
-trywith 5 --multi-trigger-when-single --enum-inst
-trywith 5 --trigger-sel=max --enum-inst
-trywith 5 --multi-trigger-when-single --multi-trigger-priority --enum-inst
-trywith 5 --multi-trigger-cache --enum-inst
-trywith 5 --prenex-quant=none --enum-inst
-trywith 5 --enum-inst-interleave --decision=internal --enum-inst
-trywith 5 --relevant-triggers --enum-inst
-trywith 5 --finite-model-find --e-matching --sort-inference --uf-ss-fair
-trywith 10 --pre-skolem-quant=on --enum-inst
-trywith 10 --cbqi-vo-exp --enum-inst
-trywith 10 --no-cbqi --enum-inst
-finishwith --macros-quant --macros-quant-mode=all --enum-inst
+trywith 15 --finite-model-find --decision=internal
+trywith 15 --decision=internal --simplification=none --no-inst-no-entail --no-cbqi --full-saturate-quant
+trywith 15 --no-e-matching --full-saturate-quant
+trywith 15 --cegqi-all --purify-triggers --full-saturate-quant
+finishwith --macros-quant --macros-quant-mode=all --nl-ext-tplanes --full-saturate-quant
 # echo "% SZS status" "GaveUp for $filename"
 
