@@ -2,6 +2,21 @@
 
 ; ---------------- ProofRewriteRule::BV_BITWISE_SLICING
 
+; @program $bv_mk_bitwise_slicing_rec
+; @arg f : (-> (BitVec n) (BitVec n) (BitVec n)). The function we are applying
+; bitwise slicing to.
+; @arg c : (BitVec n). The bitvector constant we are basing the slicing on.
+; @arg a : (BitVec n). The non-constant porition that is being sliced.
+; @arg b : (BitVec m). The bitlist representation of c that we have yet to
+; process.
+; @arg bit : Bool. The value of the last bit we saw.
+; @arg start : Int. The start index from which all bits from c we processed each
+; had the same value as bit.
+; @arg end : Int. The end index, which is the current bit of c we are processing.
+; @return the result of the bitwise slicing. For example this program will
+; return (concat (bvand ((_ extract 3 2) #b0011) ((_ extract 3 2) x)) 
+;                (bvand ((_ extract 1 0) #b0011) ((_ extract 1 0) x)))
+; given input where f is bvand, c is #b0011, and a is x.
 (program $bv_mk_bitwise_slicing_rec
   ((n Int) (m Int)
    (f (-> (BitVec n) (BitVec n) (BitVec n))) (a (BitVec n)) (c (BitVec n))
@@ -20,9 +35,19 @@
   )
 )
 
+; @define $bv_is_bitwise_slicing_op
+; @arg f : (-> (BitVec n) (BitVec n) (BitVec n)). The function to inspect.
+; @return true if we can apply bitwise slicing to f. This is the case if f
+; is either bvand, bvor, or bvxor.
 (define $bv_is_bitwise_slicing_op ((n Int :implicit) (f (-> (BitVec n) (BitVec n) (BitVec n))))
   (alf.or (alf.is_eq f bvand) (alf.is_eq f bvor) (alf.is_eq f bvxor)))
 
+; @program $bv_mk_bitwise_slicing
+; @arg a : (BitVec n). The term to apply bitwise slicing to.
+; @return the result of applying bitwise slicing to a. For example, given
+; (bvand x #b0011) as a, this program will return
+; (concat (bvand ((_ extract 3 2) #b0011) ((_ extract 3 2) x)) 
+;         (bvand ((_ extract 1 0) #b0011) ((_ extract 1 0) x))).
 (define $bv_mk_bitwise_slicing ((n Int :implicit) (a (BitVec n)))
   (alf.match ((m Int) (f (-> (BitVec m) (BitVec m) (BitVec m))) (a1 (BitVec m)) (a2 (BitVec m) :list))
     a
@@ -43,6 +68,10 @@
   )
 )
 
+; @rule bv-bitwise-slicing implements ProofRewriteRule::BV_BITWISE_SLICING
+; @arg (= a b). The equality to prove with this rule.
+; @requires We require that applying $bv_mk_bitwise_slicing to a gives b.
+; @conclusion the equality between a and b.
 (declare-rule bv-bitwise-slicing
   ((n Int) (a (BitVec n)) (b (BitVec n)))
   :args ((= a b))
@@ -52,6 +81,10 @@
 
 ; ---------------- ProofRewriteRule::BV_BITBLAST_STEP
 
+; @program $bv_mk_bitblast_step_eq
+; @arg arg1 : T. The left hand side of the equality.
+; @arg arg2 : T. The right hand side of the equality.
+; @return the bitblasted term for (= arg1 arg2).
 (program $bv_mk_bitblast_step_eq ((T Type) (U Type) (W Type) (b1 Bool) (b2 Bool) (a1 W :list) (a2 W :list))
   (T T) Bool
   (
@@ -60,9 +93,18 @@
   )
 )
 
+; @define $bv_mk_bitblast_step_extract
+; @arg u : Int. The upper index of the extract.
+; @arg l : Int. The lower index of the extract.
+; @arg a1 : (BitVec n). The argument of the extract.
+; @return the bitblasted term for (extract u l a1).
 (define $bv_mk_bitblast_step_extract ((n Int :implicit) (u Int) (l Int) (a1 (BitVec n)))
   (nary.subsequence @bbT @bv_empty l u a1))
 
+; @program $bv_mk_bitblast_step_concat_rec
+; @arg a : (BitVec n). The (reverse) of the bitvector concatenation term to
+; process.
+; @return the bitblasted term for concatenation term a, reversed.
 (program $bv_mk_bitblast_step_concat_rec ((n Int) (a1 (BitVec n)) (m Int) (a2 (BitVec m) :list))
   ((BitVec n)) (BitVec n)
   (
@@ -71,12 +113,22 @@
   )
 )
 
+; @define $bv_mk_bitblast_step_concat
+; @arg a : (BitVec n). The bitvector concatenation term to process.
+; @return the bitblasted term for concatenation term a.
 (define $bv_mk_bitblast_step_concat ((n Int :implicit) (a (BitVec n)))
   ($bv_mk_bitblast_step_concat_rec (nary.reverse a)))
 
+; @define $bv_mk_bitblast_step_const
+; @arg a : (BitVec n). The bitvector constant to bitblast.
+; @return the bitblasted term for a, which is its reverse bitlist.
 (define $bv_mk_bitblast_step_const ((n Int :implicit) (a (BitVec n)))
   (nary.reverse ($bv_const_to_bitlist a)))
 
+; @program $bv_mk_bitblast_step_var_rec
+; @arg a : (BitVec n). The bitvector variable to bitblast.
+; @arg i : Int. The index of the bit we are currently processing.
+; @return the bitblasted term for variable a.
 (program $bv_mk_bitblast_step_var_rec ((n Int) (a (BitVec n)) (i Int))
   ((BitVec n) Int) (BitVec n)
   (
@@ -85,9 +137,15 @@
   )
 )
 
+; @define $bv_mk_bitblast_step_var
+; @arg a : (BitVec n). The bitvector variable to bitblast.
+; @return the bitblasted term for variable a.
 (define $bv_mk_bitblast_step_var ((n Int :implicit) (a (BitVec n)))
   (nary.reverse ($bv_mk_bitblast_step_var_rec a (alf.add ($bv_bitwidth (alf.typeof a)) -1))))
 
+; @define $bv_mk_bitblast_step
+; @arg a : T. The bitvector term or predicate to bitblast.
+; @return the bitblasted term for a.
 (define $bv_mk_bitblast_step ((T Type :implicit) (a T))
   (alf.match ((n Int) (a1 (BitVec n)) (a2 (BitVec n) :list) (u Int) (l Int) (m Int) (a3 (BitVec m) :list))
   a
@@ -103,6 +161,12 @@
   ))
 )
 
+; @rule bv_bitblast_step implements ProofRule::BV_BITBLAST_STEP.
+; @arg (= a b). The equality to prove.
+; @requires We require that $bv_mk_bitblast_step applied to a returns b.
+; @conclusion The equality between a and b.
+; @note The current implementation only covers some of the operators that may
+; appear in ProofRule::BV_BITBLAST_STEP.
 (declare-rule bv_bitblast_step
   ((n Int) (a (BitVec n)) (b (BitVec n)))
   :args ((= a b))
