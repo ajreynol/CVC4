@@ -182,11 +182,16 @@ Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm,
         Node preCur = nm->mkNode(k, pc);
         if (preCur != cur)
         {
+<<<<<<< HEAD
           pg->addRewriteStep(cur,
                              preCur,
                              nullptr,
                              true,
                              TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+=======
+          pg->addRewriteStep(
+              cur, preCur, nullptr, true, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+>>>>>>> 142680488dbd1177d0146ff13acaddd71fbe8403
         }
       }
     }
@@ -257,11 +262,8 @@ Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm,
         Node pcpc = nm->mkNode(k, pcc);
         if (pcpc != ret)
         {
-          pg->addRewriteStep(pcpc,
-                             ret,
-                             nullptr,
-                             false,
-                             TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+          pg->addRewriteStep(
+              pcpc, ret, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
         }
       }
       visited[cur] = ret;

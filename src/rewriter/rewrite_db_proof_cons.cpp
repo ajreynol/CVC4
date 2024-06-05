@@ -264,15 +264,10 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
   }
   // Maybe holds via a THEORY_REWRITE that has been marked with
   // TheoryRewriteCtx::DSL_SUBCALL.
-  if (d_tmode == TheoryRewriteMode::STANDARD)
+  if (d_tmode==TheoryRewriteMode::STANDARD)
   {
-    if (proveWithRule(RewriteProofStatus::THEORY_REWRITE,
-                      eqi,
-                      {},
-                      {},
-                      false,
-                      false,
-                      true))
+    if (proveWithRule(
+            RewriteProofStatus::THEORY_REWRITE, eqi, {}, {}, false, false, true))
     {
       return RewriteProofStatus::THEORY_REWRITE;
     }
