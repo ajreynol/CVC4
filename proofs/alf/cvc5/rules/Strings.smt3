@@ -285,7 +285,8 @@
 
 (declare-rule arith-string-pred-safe-approx ((n Int) (m Int))
   :args ((= (>= n 0) (>= m 0)))
-  :requires ((($str_arith_entail_is_approx n m true) true))
+  :requires ((($str_arith_entail_is_approx n m true) true)
+             (($str_arith_entail_simple_pred (>= m 0)) true))
   :conclusion (= (>= n 0) (>= m 0))
 )
 
