@@ -1030,12 +1030,10 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         Node retDef = d_env.rewriteViaMethod(retCurr, midi);
         if (retDef != retCurr)
         {
-          Trace("ajr-temp") << "Add step for " << retCurr << " == " << retDef << " via " << midi << std::endl;
           // will expand this as a default rewrite if needed
           Node eqd = retCurr.eqNode(retDef);
           Node mid = mkMethodId(midi);
           cdp->addStep(eqd, ProofRule::MACRO_REWRITE, {}, {retCurr, mid});
-          //cdp->addTrustedStep(eqd, TrustId::EXT_THEORY_REWRITE, {}, {});
           transEq.push_back(eqd);
         }
         retCurr = retDef;
