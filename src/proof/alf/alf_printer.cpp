@@ -206,7 +206,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DT_SPLIT:
     case ProofRule::DT_CLASH:
     case ProofRule::STRING_DECOMPOSE:
-    case ProofRule::RE_ELIM:
     case ProofRule::STRING_CODE_INJ:
     case ProofRule::STRING_SEQ_UNIT_INJ:
     case ProofRule::ARITH_MULT_SIGN:
@@ -229,8 +228,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::ARITH_TRANS_SINE_APPROX_ABOVE_POS:
     case ProofRule::ARITH_TRANS_SINE_APPROX_BELOW_NEG:
     case ProofRule::ARITH_TRANS_SINE_APPROX_BELOW_POS:
-    case ProofRule::ARITH_NL_COVERING_DIRECT:
-    case ProofRule::ARITH_NL_COVERING_RECURSIVE:
     // otherwise not handled
     default: break;
   }
