@@ -1030,6 +1030,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         Node retDef = d_env.rewriteViaMethod(retCurr, midi);
         if (retDef != retCurr)
         {
+          Trace("ajr-temp") << "Add step for " << retCurr << " == " << retDef << " via " << midi << std::endl;
           // will expand this as a default rewrite if needed
           Node eqd = retCurr.eqNode(retDef);
           Node mid = mkMethodId(midi);
