@@ -926,6 +926,12 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
         rewriter::getRewriteRule(pn->getArguments()[0], prid);
         ss << " (" << prid << ")";
       }
+      else if (pn->getRule() == ProofRule::TRUST)
+      {
+        TrustId tid;
+        getTrustId(pn->getArguments()[0], tid);
+        ss << " (" << tid << ")";
+      }
       Unreachable() << "An ALF proof equires a trust step for " << ss.str()
                     << ", but --" << options::proof::longName::alfAllowTrust
                     << " is false" << std::endl;
