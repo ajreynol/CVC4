@@ -932,6 +932,7 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
         getTrustId(pn->getArguments()[0], tid);
         ss << " (" << tid << ")";
       }
+      Trace("alf-pf-hole") << "Proof rule " << ss.str() << ": " << pn->getResult() << std::endl;
       Unreachable() << "An ALF proof equires a trust step for " << ss.str()
                     << ", but --" << options::proof::longName::alfAllowTrust
                     << " is false" << std::endl;
