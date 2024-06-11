@@ -255,7 +255,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-substr-strip-sym-length";
     case ProofRewriteRule::BV_UMULO_ELIMINATE: return "bv-umulo-eliminate";
     case ProofRewriteRule::BV_SMULO_ELIMINATE: return "bv-smulo-eliminate";
-    case ProofRewriteRule::BV_ADD_COMBINE_LIKE_TERMS: return "bv-add-combine-like-terms";
+    case ProofRewriteRule::BV_ADD_COMBINE_LIKE_TERMS:
+      return "bv-add-combine-like-terms";
     case ProofRewriteRule::BV_MULT_SIMPLIFY: return "bv-mult-simplify";
     case ProofRewriteRule::BV_BITWISE_SLICING: return "bv-bitwise-slicing";
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
