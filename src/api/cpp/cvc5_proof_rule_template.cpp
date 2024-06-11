@@ -242,6 +242,12 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::DT_COLLAPSE_TESTER_SINGLETON:
       return "dt-collapse-tester-singleton";
     case ProofRewriteRule::DT_CONS_EQ: return "dt-cons-eq";
+    case ProofRewriteRule::BV_UMULO_ELIMINATE: return "bv-umulo-eliminate";
+    case ProofRewriteRule::BV_SMULO_ELIMINATE: return "bv-smulo-eliminate";
+    case ProofRewriteRule::BV_ADD_COMBINE_LIKE_TERMS:
+      return "bv-add-combine-like-terms";
+    case ProofRewriteRule::BV_MULT_SIMPLIFY: return "bv-mult-simplify";
+    case ProofRewriteRule::BV_BITWISE_SLICING: return "bv-bitwise-slicing";
     case ProofRewriteRule::RE_LOOP_ELIM: return "re-loop-elim";
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
       return "re-inter-union-inclusion";
@@ -253,12 +259,6 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR: return "str-in-re-sigma-star";
     case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
       return "macro-substr-strip-sym-length";
-    case ProofRewriteRule::BV_UMULO_ELIMINATE: return "bv-umulo-eliminate";
-    case ProofRewriteRule::BV_SMULO_ELIMINATE: return "bv-smulo-eliminate";
-    case ProofRewriteRule::BV_ADD_COMBINE_LIKE_TERMS:
-      return "bv-add-combine-like-terms";
-    case ProofRewriteRule::BV_MULT_SIMPLIFY: return "bv-mult-simplify";
-    case ProofRewriteRule::BV_BITWISE_SLICING: return "bv-bitwise-slicing";
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
       return "sets-is-empty-eval";
       //================================================= RARE rules
