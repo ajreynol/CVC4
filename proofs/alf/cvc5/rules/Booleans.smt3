@@ -145,7 +145,7 @@
                     Cs
                     (((and C1 C2) ($macroResolveRec (to_clause C1) C2 pols lits))))))
         (alf.requires 
-              (let ((n1 (get_aci_norm Crr)) (n2 (get_aci_norm Cr)))
+              (let ((n1 ($get_aci_norm Crr)) (n2 ($get_aci_norm Cr)))
               (alf.ite (alf.is_eq Cr Crr) true 
               (alf.ite (alf.is_eq n1 Cr) true
               (alf.ite (alf.is_eq Crr n2) true
