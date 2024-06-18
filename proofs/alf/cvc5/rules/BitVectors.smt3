@@ -155,7 +155,7 @@
   ;((bvor a1 a2)     ($bv_mk_bitblast_step_bw or a1 a2))
   ((extract u l a1) ($bv_mk_bitblast_step_extract u l a1))
   ((concat a1 a3)   ($bv_mk_bitblast_step_concat a))
-  (a1               (alf.ite ($is_bin_literal a) 
+  (a1               (alf.ite (alf.is_bin a)
                       ($bv_mk_bitblast_step_const a)
                       ($bv_mk_bitblast_step_var a)))    ; otherwise assume a variable
   ))
