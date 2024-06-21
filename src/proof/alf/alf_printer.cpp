@@ -201,7 +201,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     }
     break;
     case ProofRule::ANNOTATION:
-    case ProofRule::HO_APP_ENCODE:
     case ProofRule::BV_EAGER_ATOM:
     case ProofRule::DT_UNIF:
     case ProofRule::DT_SPLIT:
