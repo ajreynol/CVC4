@@ -147,6 +147,7 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::SAT_EXTERNAL_PROVE:
     case ProofRule::ALPHA_EQUIV:
     case ProofRule::ENCODE_EQ_INTRO:
+    case ProofRule::HO_APP_ENCODE:
     case ProofRule::ACI_NORM:
     case ProofRule::DSL_REWRITE: return true;
     case ProofRule::BV_BITBLAST_STEP:
@@ -442,10 +443,12 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
     ss << id;
     return ss.str();
   }
-  else if (r == ProofRule::ENCODE_EQ_INTRO)
+  else if (r == ProofRule::ENCODE_EQ_INTRO || r == ProofRule::HO_APP_ENCODE)
   {
     // ENCODE_EQ_INTRO proves (= t (convert t)) from argument t,
     // where (convert t) is indistinguishable from t according to the proof.
+    // Similarly, HO_APP_ENCODE proves an equality between a term of kind
+    // Kind::HO_APPLY and Kind::APPLY_UF, which denotes the same term in ALF.
     return "refl";
   }
   std::string name = toString(r);
