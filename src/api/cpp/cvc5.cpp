@@ -1198,6 +1198,18 @@ std::ostream& operator<<(std::ostream& out, const Result& r)
   return out;
 }
 
+}  // namespace cvc5
+
+namespace std {
+
+size_t hash<cvc5::Result>::operator()(const cvc5::Result& result) const
+{
+  return std::hash<std::string>{}(result.toString());
+}
+}  // namespace std
+
+namespace cvc5 {
+
 /* -------------------------------------------------------------------------- */
 /* SynthResult */
 /* -------------------------------------------------------------------------- */
@@ -4736,13 +4748,15 @@ Grammar::Grammar(TermManager* tm,
                  const std::vector<Term>& sygusVars,
                  const std::vector<Term>& ntSymbols)
     : d_tm(tm),
-      d_sg(std::make_shared<internal::SygusGrammar>(
+      d_grammar(std::make_shared<internal::SygusGrammar>(
           Term::termVectorToNodes(sygusVars),
           Term::termVectorToNodes(ntSymbols)))
 {
 }
 
-Grammar::~Grammar() { d_sg.reset(); }
+Grammar::~Grammar() { d_grammar.reset(); }
+
+bool Grammar::isNull() const { return d_grammar == nullptr; }
 
 bool contains(const std::vector<internal::Node>& ns, const internal::Node& n)
 {
@@ -4752,20 +4766,20 @@ bool contains(const std::vector<internal::Node>& ns, const internal::Node& n)
 void Grammar::addRule(const Term& ntSymbol, const Term& rule)
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  CVC5_API_CHECK(!d_sg->isResolved())
+  CVC5_API_CHECK(!d_grammar->isResolved())
       << "Grammar cannot be modified after passing "
          "it as an argument to synthFun";
   CVC5_API_CHECK_TERM(ntSymbol);
   CVC5_API_CHECK_TERM(rule);
-  CVC5_API_ARG_CHECK_EXPECTED(contains(d_sg->getNtSyms(), *ntSymbol.d_node),
-                              ntSymbol)
+  CVC5_API_ARG_CHECK_EXPECTED(
+      contains(d_grammar->getNtSyms(), *ntSymbol.d_node), ntSymbol)
       << "ntSymbol to be one of the non-terminal symbols given in the "
          "predeclaration";
   CVC5_API_CHECK(
       ntSymbol.d_node->getType().isInstanceOf(rule.d_node->getType()))
       << "expected ntSymbol and rule to have the same sort";
   //////// all checks before this line
-  d_sg->addRule(*ntSymbol.d_node, *rule.d_node);
+  d_grammar->addRule(*ntSymbol.d_node, *rule.d_node);
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -4773,17 +4787,17 @@ void Grammar::addRule(const Term& ntSymbol, const Term& rule)
 void Grammar::addRules(const Term& ntSymbol, const std::vector<Term>& rules)
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  CVC5_API_CHECK(!d_sg->isResolved())
+  CVC5_API_CHECK(!d_grammar->isResolved())
       << "Grammar cannot be modified after passing "
          "it as an argument to synthFun";
   CVC5_API_CHECK_TERM(ntSymbol);
   CVC5_API_CHECK_TERMS_WITH_SORT(rules, ntSymbol.getSort());
-  CVC5_API_ARG_CHECK_EXPECTED(contains(d_sg->getNtSyms(), *ntSymbol.d_node),
-                              ntSymbol)
+  CVC5_API_ARG_CHECK_EXPECTED(
+      contains(d_grammar->getNtSyms(), *ntSymbol.d_node), ntSymbol)
       << "ntSymbol to be one of the non-terminal symbols given in the "
          "predeclaration";
   //////// all checks before this line
-  d_sg->addRules(*ntSymbol.d_node, Term::termVectorToNodes(rules));
+  d_grammar->addRules(*ntSymbol.d_node, Term::termVectorToNodes(rules));
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -4791,16 +4805,16 @@ void Grammar::addRules(const Term& ntSymbol, const std::vector<Term>& rules)
 void Grammar::addAnyConstant(const Term& ntSymbol)
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  CVC5_API_CHECK(!d_sg->isResolved())
+  CVC5_API_CHECK(!d_grammar->isResolved())
       << "Grammar cannot be modified after passing "
          "it as an argument to synthFun";
   CVC5_API_CHECK_TERM(ntSymbol);
-  CVC5_API_ARG_CHECK_EXPECTED(contains(d_sg->getNtSyms(), *ntSymbol.d_node),
-                              ntSymbol)
+  CVC5_API_ARG_CHECK_EXPECTED(
+      contains(d_grammar->getNtSyms(), *ntSymbol.d_node), ntSymbol)
       << "ntSymbol to be one of the non-terminal symbols given in the "
          "predeclaration";
   //////// all checks before this line
-  d_sg->addAnyConstant(*ntSymbol.d_node, ntSymbol.d_node->getType());
+  d_grammar->addAnyConstant(*ntSymbol.d_node, ntSymbol.d_node->getType());
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -4808,16 +4822,16 @@ void Grammar::addAnyConstant(const Term& ntSymbol)
 void Grammar::addAnyVariable(const Term& ntSymbol)
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  CVC5_API_CHECK(!d_sg->isResolved())
+  CVC5_API_CHECK(!d_grammar->isResolved())
       << "Grammar cannot be modified after passing "
          "it as an argument to synthFun";
   CVC5_API_CHECK_TERM(ntSymbol);
-  CVC5_API_ARG_CHECK_EXPECTED(contains(d_sg->getNtSyms(), *ntSymbol.d_node),
-                              ntSymbol)
+  CVC5_API_ARG_CHECK_EXPECTED(
+      contains(d_grammar->getNtSyms(), *ntSymbol.d_node), ntSymbol)
       << "ntSymbol to be one of the non-terminal symbols given in the "
          "predeclaration";
   //////// all checks before this line
-  d_sg->addAnyVariable(*ntSymbol.d_node);
+  d_grammar->addAnyVariable(*ntSymbol.d_node);
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -4826,7 +4840,7 @@ std::string Grammar::toString() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
-  return d_sg == nullptr ? "" : d_sg->toString();
+  return d_grammar == nullptr ? "" : d_grammar->toString();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -4835,7 +4849,7 @@ Sort Grammar::resolve()
 {
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
-  return Sort(d_tm, d_sg->resolve());
+  return Sort(d_tm, d_grammar->resolve());
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -5090,6 +5104,8 @@ Proof::Proof(TermManager* tm, const std::shared_ptr<internal::ProofNode> p)
 }
 
 Proof::~Proof() {}
+
+bool Proof::isNull() const { return d_proofNode == nullptr; }
 
 ProofRule Proof::getRule() const
 {
@@ -6747,18 +6763,19 @@ Term Solver::synthFunHelper(const std::string& symbol,
   {
     if (grammar)
     {
-      CVC5_API_CHECK(grammar->d_sg->getNtSyms()[0].getType() == *sort.d_type)
+      CVC5_API_CHECK(grammar->d_grammar->getNtSyms()[0].getType()
+                     == *sort.d_type)
           << "invalid Start symbol for grammar, expected Start's sort to be "
           << *sort.d_type << " but found "
-          << grammar->d_sg->getNtSyms()[0].getType();
+          << grammar->d_grammar->getNtSyms()[0].getType();
     }
     varTypes.push_back(bv.d_node->getType());
   }
   if (grammar)
   {
-    for (const auto& sym : grammar->d_sg->getNtSyms())
+    for (const auto& sym : grammar->d_grammar->getNtSyms())
     {
-      CVC5_API_CHECK(!grammar->d_sg->getRulesFor(sym).empty())
+      CVC5_API_CHECK(!grammar->d_grammar->getRulesFor(sym).empty())
           << "invalid grammar, must have at least one rule for each "
              "non-terminal symbol";
     }
@@ -7506,7 +7523,7 @@ std::string Solver::getInfo(const std::string& flag) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_UNSUPPORTED_CHECK(d_slv->isValidGetInfoFlag(flag))
-      << "Unrecognized flag: " << flag << ".";
+      << "unrecognized flag: " << flag << ".";
   //////// all checks before this line
   return d_slv->getInfo(flag);
   ////////
@@ -7585,16 +7602,17 @@ double OptionInfo::doubleValue() const
   CVC5_API_TRY_CATCH_END;
 }
 
-std::ostream& operator<<(std::ostream& os, const OptionInfo& oi)
+std::string OptionInfo::toString() const
 {
-  os << "OptionInfo{ " << oi.name;
-  if (oi.setByUser)
+  std::stringstream os;
+  os << "OptionInfo{ " << name;
+  if (setByUser)
   {
     os << " | set by user";
   }
-  if (!oi.aliases.empty())
+  if (!aliases.empty())
   {
-    internal::container_to_stream(os, oi.aliases, ", ", "", ", ");
+    internal::container_to_stream(os, aliases, ", ", "", ", ");
   }
   auto printNum = [&os](const std::string& type, const auto& vi) {
     os << " | " << type << " | " << vi.currentValue << " | default "
@@ -7638,8 +7656,14 @@ std::ostream& operator<<(std::ostream& os, const OptionInfo& oi)
                    internal::container_to_stream(os, vi.modes, "", "", ", ");
                  },
              },
-             oi.valueInfo);
+             valueInfo);
   os << " }";
+  return os.str();
+}
+
+std::ostream& operator<<(std::ostream& os, const OptionInfo& oi)
+{
+  os << oi.toString();
   return os;
 }
 
@@ -8270,9 +8294,9 @@ Term Solver::getInterpolant(const Term& conj, Grammar& grammar) const
       << "cannot get interpolant unless interpolants are enabled (try "
          "--"
       << internal::options::smt::longName::produceInterpolants << ")";
-  for (const auto& sym : grammar.d_sg->getNtSyms())
+  for (const auto& sym : grammar.d_grammar->getNtSyms())
   {
-    CVC5_API_CHECK(!grammar.d_sg->getRulesFor(sym).empty())
+    CVC5_API_CHECK(!grammar.d_grammar->getRulesFor(sym).empty())
         << "invalid grammar, must have at least one rule for each "
            "non-terminal symbol";
   }
@@ -8324,9 +8348,9 @@ Term Solver::getAbduct(const Term& conj, Grammar& grammar) const
   CVC5_API_CHECK(d_slv->getOptions().smt.produceAbducts)
       << "cannot get abduct unless abducts are enabled (try --"
       << internal::options::smt::longName::produceAbducts << ")";
-  for (const auto& sym : grammar.d_sg->getNtSyms())
+  for (const auto& sym : grammar.d_grammar->getNtSyms())
   {
-    CVC5_API_CHECK(!grammar.d_sg->getRulesFor(sym).empty())
+    CVC5_API_CHECK(!grammar.d_grammar->getRulesFor(sym).empty())
         << "invalid grammar, must have at least one rule for each "
            "non-terminal symbol";
   }
@@ -8439,7 +8463,7 @@ void Solver::setInfo(const std::string& keyword, const std::string& value) const
       || keyword == "filename" || keyword == "license" || keyword == "name"
       || keyword == "notes" || keyword == "smt-lib-version"
       || keyword == "status")
-      << "Unrecognized keyword: " << keyword
+      << "unrecognized keyword: " << keyword
       << ", expected 'source', 'category', 'difficulty', "
          "'filename', 'license', 'name', "
          "'notes', 'smt-lib-version' or 'status'";
@@ -8505,7 +8529,7 @@ void Solver::setOption(const std::string& option,
   CVC5_API_UNSUPPORTED_CHECK(
       option.find("command-verbosity") != std::string::npos
       || std::find(options.cbegin(), options.cend(), option) != options.cend())
-      << "Unrecognized option: " << option << '.';
+      << "unrecognized option: " << option << '.';
   // this list includes options that are prescribed to be changable in any
   // context based on the SMT-LIB standard, as well as options (e.g. tlimit-per)
   // that have no impact on solver initialization or imply other options.
@@ -8793,9 +8817,9 @@ Term Solver::findSynth(modes::FindSynthTarget fst) const
 Term Solver::findSynth(modes::FindSynthTarget fst, Grammar& grammar) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  for (const auto& sym : grammar.d_sg->getNtSyms())
+  for (const auto& sym : grammar.d_grammar->getNtSyms())
   {
-    CVC5_API_CHECK(!grammar.d_sg->getRulesFor(sym).empty())
+    CVC5_API_CHECK(!grammar.d_grammar->getRulesFor(sym).empty())
         << "invalid grammar, must have at least one rule for each "
            "non-terminal symbol";
   }
@@ -8917,35 +8941,68 @@ size_t std::hash<cvc5::Term>::operator()(const cvc5::Term& t) const
 size_t std::hash<cvc5::DatatypeConstructorDecl>::operator()(
     const cvc5::DatatypeConstructorDecl& decl) const
 {
+  if (decl.isNull())
+  {
+    return 0;
+  }
   return std::hash<cvc5::internal::DTypeConstructor>()(*decl.d_ctor);
 }
 
 size_t std::hash<cvc5::DatatypeDecl>::operator()(
     const cvc5::DatatypeDecl& decl) const
 {
+  if (decl.isNull())
+  {
+    return 0;
+  }
   return std::hash<cvc5::internal::DType>()(*decl.d_dtype);
 }
 
 size_t std::hash<cvc5::DatatypeSelector>::operator()(
     const cvc5::DatatypeSelector& sel) const
 {
+  if (sel.isNull())
+  {
+    return 0;
+  }
   return std::hash<cvc5::internal::DTypeSelector>()(*sel.d_stor);
 }
 
 size_t std::hash<cvc5::DatatypeConstructor>::operator()(
     const cvc5::DatatypeConstructor& cons) const
 {
+  if (cons.isNull())
+  {
+    return 0;
+  }
   return std::hash<cvc5::internal::DTypeConstructor>()(*cons.d_ctor);
 }
 
 size_t hash<cvc5::Datatype>::operator()(const cvc5::Datatype& dt) const
 {
+  if (dt.isNull())
+  {
+    return 0;
+  }
   return std::hash<cvc5::internal::DType>()(*dt.d_dtype);
 }
 
 size_t std::hash<cvc5::Proof>::operator()(const cvc5::Proof& p) const
 {
+  if (p.isNull())
+  {
+    return 0;
+  }
   return cvc5::internal::ProofNodeHashFunction()(p.d_proofNode);
+}
+
+size_t hash<cvc5::Grammar>::operator()(const cvc5::Grammar& grammar) const
+{
+  if (grammar.isNull())
+  {
+    return 0;
+  }
+  return std::hash<cvc5::internal::SygusGrammar>{}(*grammar.d_grammar);
 }
 
 }  // namespace std
