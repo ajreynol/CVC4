@@ -636,6 +636,7 @@ const static std::unordered_map<internal::Kind,
         {internal::Kind::INT_TO_BITVECTOR, Kind::INT_TO_BITVECTOR},
         {internal::Kind::BITVECTOR_TO_NAT, Kind::BITVECTOR_TO_NAT},
         {internal::Kind::BITVECTOR_FROM_BOOLS, Kind::BITVECTOR_FROM_BOOLS},
+        {internal::Kind::BITVECTOR_BIT_OP, Kind::BITVECTOR_BIT},
         {internal::Kind::BITVECTOR_BIT, Kind::BITVECTOR_BIT},
         /* Finite Fields --------------------------------------------------- */
         {internal::Kind::CONST_FINITE_FIELD, Kind::CONST_FINITE_FIELD},
@@ -8987,13 +8988,13 @@ size_t hash<cvc5::Datatype>::operator()(const cvc5::Datatype& dt) const
   return std::hash<cvc5::internal::DType>()(*dt.d_dtype);
 }
 
-size_t std::hash<cvc5::Proof>::operator()(const cvc5::Proof& p) const
+size_t hash<cvc5::Proof>::operator()(const cvc5::Proof& proof) const
 {
-  if (p.isNull())
+  if (proof.isNull())
   {
     return 0;
   }
-  return cvc5::internal::ProofNodeHashFunction()(p.d_proofNode);
+  return std::hash<cvc5::internal::ProofNode>{}(*proof.d_proofNode);
 }
 
 size_t hash<cvc5::Grammar>::operator()(const cvc5::Grammar& grammar) const
