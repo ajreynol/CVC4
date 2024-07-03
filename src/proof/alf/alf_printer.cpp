@@ -208,8 +208,6 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::DT_SPLIT:
     case ProofRule::DT_CLASH:
     case ProofRule::STRING_DECOMPOSE:
-    case ProofRule::STRING_CODE_INJ:
-    case ProofRule::STRING_SEQ_UNIT_INJ:
     case ProofRule::ARITH_MULT_SIGN:
     case ProofRule::ARITH_MULT_TANGENT:
     case ProofRule::ARITH_OP_ELIM_AXIOM:
