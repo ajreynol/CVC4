@@ -152,6 +152,7 @@
     (((f x y) (let ((id (alf.nil f x y))) ($singleton_elim_aci f id ($get_a_norm_rec f id t))))))
 )
 
+
 ;; =============== for results
 
 ; Used for representing partial results of the method below.
