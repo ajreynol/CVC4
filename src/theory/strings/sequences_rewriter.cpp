@@ -1151,19 +1151,6 @@ Node SequencesRewriter::rewriteViaStrInReConcatStarChar(const Node& n)
   return nm->mkAnd(conj);
 }
 
-Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
-                                                            Rewrite& rule,
-                                                            StringsEntail& sent)
-{
-  if (node.getKind() != Kind::STRING_SUBSTR)
-  {
-    return Node::null();
-  }
-  std::vector<Node> ch1;
-  std::vector<Node> ch2;
-  return sent.rewriteViaMacroSubstrStripSymLength(node, rule, ch1, ch2);
-}
-
 Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
 {
   Kind nk = node.getKind();
