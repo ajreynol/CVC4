@@ -84,6 +84,8 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return rewriteViaStrInReSigmaStar(n);
     case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
     {
+      // Rewrite without using the rewriter as a subutility, which ensures
+      // that we can reconstruct the reasoning in a proof.
       Rewrite rule;
       ArithEntail ae(nullptr);
       StringsEntail sent(nullptr, ae, nullptr);
@@ -1480,6 +1482,19 @@ Node SequencesRewriter::rewriteViaStrInReSigmaStar(const Node& n)
   return nm->mkNode(Kind::EQUAL, t, zero);
 }
 
+Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
+                                                            Rewrite& rule,
+                                                            StringsEntail& sent)
+{
+  if (node.getKind() != Kind::STRING_SUBSTR)
+  {
+    return Node::null();
+  }
+  std::vector<Node> ch1;
+  std::vector<Node> ch2;
+  return sent.rewriteViaMacroSubstrStripSymLength(node, rule, ch1, ch2);
+}
+
 Node SequencesRewriter::rewriteRepeatRegExp(TNode node)
 {
   Assert(node.getKind() == Kind::REGEXP_REPEAT);
@@ -2224,7 +2239,10 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     }
   }
 
-  // symbolic SymLen analysis
+  // Rewrite based on symbolic length analysis, using the strings entailment
+  // utility that is owned by this rewriter. This handles three rewrite rules
+  // that are also included as part of the macro proof rewrite rule
+  // MACRO_SUBSTR_STRIP_SYM_LENGTH.
   Rewrite ruleSymLen;
   Node retSymLen =
       rewriteViaMacroSubstrStripSymLength(node, ruleSymLen, d_stringsEntail);

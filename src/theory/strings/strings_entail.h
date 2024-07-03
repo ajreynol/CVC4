@@ -322,10 +322,12 @@ class StringsEntail
    * @param rule If we rewrite via this method, this is updated to the internal
    * rewrite identifier (strings/rewrites.h) that was used.
    * @param ch1 Along with ch2, this stores how the argument s of node was
-   * partitioned. In particular, s is equivalent to (str.++ ch1 ch2), and we
-   * have determined based on n and m that ch1/ch2 are in separate parts of the
-   * computation of the substring, e.g. ch1 is what is contained in the
-   * substring, and ch2 is not contained, or vice versa.
+   * partitioned. In particular, s is equivalent to (str.++ ch1 ch2)
+   * (respectively (str.++ ch2 ch1) if rule was set to
+   * Rewrite::SS_STRIP_END_PT), and we have determined based on n and m that
+   * ch1/ch2 are in separate parts of the computation of the substring, e.g.
+   * ch1 is what is contained in the substring, and ch2 is not contained, or
+   * vice versa.
    * @param ch2 The second part of the partition of s.
    * @return The rewritten form of node.
    */
