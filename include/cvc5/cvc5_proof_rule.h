@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Gereon Kremer, Haniel Barbosa, Andrew Reynolds
+ *   Gereon Kremer, Andrew Reynolds, Abdalrhman Mohamed
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -18,7 +18,7 @@
     || (defined(CVC5_API_USE_C_ENUMS)               \
         && !defined(CVC5__API__CVC5_C_PROOF_RULE_H))
 
-#include <cstdint>
+#include <stdint.h>
 
 #ifdef CVC5_API_USE_C_ENUMS
 #undef ENUM
@@ -88,7 +88,7 @@ namespace cvc5 {
  * in post-processing.
  * \endverbatim
  */
-enum ENUM(ProofRule) : uint32_t
+enum ENUM(ProofRule)
 {
   /**
    * \verbatim embed:rst:leading-asterisk
@@ -1589,15 +1589,17 @@ enum ENUM(ProofRule) : uint32_t
    *   \inferrule{\mathit{len}(t) \geq n\mid \bot}{t = w_1\cdot w_2 \wedge
    *   \mathit{len}(w_1) = n}
    *
-   * or alternatively for the reverse:
+   * where :math:`w_1` is :math:`\mathit{skolem}(\mathit{pre}(t,n)` and
+   * :math:`w_2` is :math:`\mathit{skolem}(\mathit{suf}(t,n)`.
+   * Or alternatively for the reverse:
    *
    * .. math::
    *
    *   \inferrule{\mathit{len}(t) \geq n\mid \top}{t = w_1\cdot w_2 \wedge
    *   \mathit{len}(w_2) = n}
    *
-   * where :math:`w_1` is :math:`\mathit{skolem}(\mathit{pre}(t,n)` and
-   * :math:`w_2` is :math:`\mathit{skolem}(\mathit{suf}(t,n)`.
+   * where :math:`w_1` is the purification skolem for :math:`\mathit{pre}(t,n)` and
+   * :math:`w_2` is the purification skolem for :math:`\mathit{suf}(t,n)`.
    * \endverbatim
    */
   EVALUE(STRING_DECOMPOSE),
@@ -1725,7 +1727,7 @@ enum ENUM(ProofRule) : uint32_t
    * .. math::
    *
    *   \inferrule{-\mid t,s}{\mathit{to\_code}(t) = -1 \vee \mathit{to\_code}(t) \neq
-   *   \mathit{to\_code}(s) \vee t\neq s}
+   *   \mathit{to\_code}(s) \vee t = s}
    * \endverbatim
    */
   EVALUE(STRING_CODE_INJ),
@@ -2242,7 +2244,7 @@ enum ENUM(ProofRule) : uint32_t
  * proof rule.
  * \endverbatim
  */
-enum ENUM(ProofRewriteRule) : uint32_t
+enum ENUM(ProofRewriteRule)
 {
   EVALUE(NONE),
   // Custom theory rewrites.
@@ -2590,7 +2592,7 @@ enum ENUM(ProofRewriteRule) : uint32_t
    *
    * .. math::
    *   \mathit{str.in_re}(s, R) = b
-   * 
+   *
    * where :math:`b` is either :math:`false` or the result of stripping
    * entailed prefixes and suffixes off of :math:`s` and :math:`R`.
    *
