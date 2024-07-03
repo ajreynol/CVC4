@@ -275,6 +275,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
     }
     else
     {
+      // prove via ARITH_POLY_NORM.
       std::vector<Node> transEq;
       for (size_t i = 0; i < 2; i++)
       {
@@ -511,6 +512,8 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
   Node eqLhs = lhs.eqNode(lhsm);
   cdp->addStep(eqLhs, cr, {eq1, eq2, eq3}, cargs);
   Node eqm = lhsm.eqNode(rhs);
+  // Note that this is not marked simple, since it may require length
+  // entailment to prove.
   // Note that there are three cases of string rewrites handled by this macro,
   // where we expect this trusted step to be filled by one of 3 RARE rewrites,
   // namely:
