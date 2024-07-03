@@ -15,7 +15,9 @@
 
 #include "proof/theory_proof_step_buffer.h"
 
+#include "expr/skolem_manager.h"
 #include "proof/proof.h"
+#include "util/rational.h"
 
 using namespace cvc5::internal::kind;
 
@@ -74,7 +76,7 @@ bool TheoryProofStepBuffer::applyPredTransform(Node src,
                                                bool useExpected)
 {
   // symmetric equalities
-  if (d_autoSym && CDProof::isSame(src, tgt))
+  if (src == tgt || (d_autoSym && CDProof::isSame(src, tgt)))
   {
     return true;
   }
@@ -141,7 +143,7 @@ Node TheoryProofStepBuffer::applyPredElim(Node src,
   return srcRew;
 }
 
-Node TheoryProofStepBuffer::factorReorderElimDoubleNeg(Node n)
+Node TheoryProofStepBuffer::factorReorderElimDoubleNeg(Node n, bool useAciNorm)
 {
   if (n.getKind() != Kind::OR)
   {
@@ -216,12 +218,25 @@ Node TheoryProofStepBuffer::factorReorderElimDoubleNeg(Node n)
     children.push_back(n[i]);
     clauseSet.insert(n[i]);
   }
+  if (useAciNorm)
+  {
+    if (children.size() >= 2)
+    {
+      std::sort(children.begin(), children.end());
+    }
+    Node ordered = nm->mkOr(children);
+    if (n != ordered)
+    {
+      Node eq = n.eqNode(ordered);
+      addStep(ProofRule::ACI_NORM, {}, {eq}, eq);
+      addStep(ProofRule::EQ_RESOLVE, {n, eq}, {}, ordered);
+    }
+    return ordered;
+  }
   // if factoring changed
   if (children.size() < size)
   {
-    Node factored = children.empty()       ? nm->mkConst<bool>(false)
-                    : children.size() == 1 ? children[0]
-                                           : nm->mkNode(Kind::OR, children);
+    Node factored = nm->mkOr(children);
     // don't overwrite what already has a proof step to avoid cycles
     addStep(ProofRule::FACTORING, {n}, {}, factored);
     n = factored;

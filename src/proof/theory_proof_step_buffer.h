@@ -105,7 +105,6 @@ class TheoryProofStepBuffer : public ProofStepBuffer
                      MethodId ida = MethodId::SBA_SEQUENTIAL,
                      MethodId idr = MethodId::RW_REWRITE);
   //---------------------------- end utilities builtin proof rules
-
   //---------------------------- utility methods for normalizing clauses
   /**
    * Normalizes a non-unit clause (an OR node) according to factoring and
@@ -117,7 +116,7 @@ class TheoryProofStepBuffer : public ProofStepBuffer
    * @param n the clause to be normalized
    * @return the normalized clause node
    */
-  Node factorReorderElimDoubleNeg(Node n);
+  Node factorReorderElimDoubleNeg(Node n, bool useAciNorm);
 
   /**
    * Eliminates double negation of a literal if it has the form
