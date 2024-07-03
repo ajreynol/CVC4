@@ -603,7 +603,8 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
                                        children,
                                        args,
                                        cdp,
-                                       pnm);
+                                       pnm,
+                                       options().proof.proofAciNormRf);
       // update vector of lits. Note that the set is no longer used, so we don't
       // need to update it
       //
