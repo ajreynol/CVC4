@@ -220,18 +220,10 @@ bool AlfPrinter::isHandled(const ProofNode* pfn) const
     case ProofRule::ARITH_MULT_TANGENT:
     case ProofRule::ARITH_OP_ELIM_AXIOM:
     case ProofRule::ARITH_TRANS_PI:
-    case ProofRule::ARITH_TRANS_EXP_NEG:
-    case ProofRule::ARITH_TRANS_EXP_POSITIVITY:
-    case ProofRule::ARITH_TRANS_EXP_SUPER_LIN:
-    case ProofRule::ARITH_TRANS_EXP_ZERO:
     case ProofRule::ARITH_TRANS_EXP_APPROX_ABOVE_NEG:
     case ProofRule::ARITH_TRANS_EXP_APPROX_ABOVE_POS:
     case ProofRule::ARITH_TRANS_EXP_APPROX_BELOW:
-    case ProofRule::ARITH_TRANS_SINE_BOUNDS:
     case ProofRule::ARITH_TRANS_SINE_SHIFT:
-    case ProofRule::ARITH_TRANS_SINE_SYMMETRY:
-    case ProofRule::ARITH_TRANS_SINE_TANGENT_ZERO:
-    case ProofRule::ARITH_TRANS_SINE_TANGENT_PI:
     case ProofRule::ARITH_TRANS_SINE_APPROX_ABOVE_NEG:
     case ProofRule::ARITH_TRANS_SINE_APPROX_ABOVE_POS:
     case ProofRule::ARITH_TRANS_SINE_APPROX_BELOW_NEG:
