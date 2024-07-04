@@ -132,7 +132,7 @@ class TheoryProofStepBuffer : public ProofStepBuffer
    * @param n the clause to be normalized
    * @return the normalized clause node
    */
-  Node factorReorderElimDoubleNeg(Node n, bool useAciNorm);
+  Node factorReorderElimDoubleNeg(Node n);
 
   /**
    * Eliminates double negation of a literal if it has the form

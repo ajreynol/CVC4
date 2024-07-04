@@ -114,10 +114,7 @@ PfManager::PfManager(Env& env)
     d_pfpp->setEliminateRule(ProofRule::MACRO_SR_PRED_ELIM);
     d_pfpp->setEliminateRule(ProofRule::MACRO_SR_PRED_TRANSFORM);
     d_pfpp->setEliminateRule(ProofRule::MACRO_RESOLUTION_TRUST);
-    if (!options().proof.proofMacroRes)
-    {
-      d_pfpp->setEliminateRule(ProofRule::MACRO_RESOLUTION);
-    }
+    d_pfpp->setEliminateRule(ProofRule::MACRO_RESOLUTION);
     d_pfpp->setEliminateRule(ProofRule::MACRO_ARITH_SCALE_SUM_UB);
     if (options().proof.proofGranularityMode
         != options::ProofGranularityMode::REWRITE)

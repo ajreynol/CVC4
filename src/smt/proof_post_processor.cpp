@@ -515,23 +515,6 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   else if (id == ProofRule::MACRO_RESOLUTION
            || id == ProofRule::MACRO_RESOLUTION_TRUST)
   {
-    if (options().proof.proofMacroRes)
-    {
-      Assert(id == ProofRule::MACRO_RESOLUTION_TRUST);
-      std::vector<Node> newArgs;
-      newArgs.push_back(args[0]);
-      std::vector<Node> pols;
-      std::vector<Node> lits;
-      for (size_t i = 1, nargs = args.size(); i < nargs; i = i + 2)
-      {
-        pols.push_back(args[i]);
-        lits.push_back(args[i + 1]);
-      }
-      newArgs.push_back(nodeManager()->mkNode(Kind::SEXPR, pols));
-      newArgs.push_back(nodeManager()->mkNode(Kind::SEXPR, lits));
-      cdp->addStep(args[0], ProofRule::MACRO_RESOLUTION, children, newArgs);
-      return args[0];
-    }
     ProofNodeManager* pnm = d_env.getProofNodeManager();
     // first generate the naive chain_resolution
     std::vector<Node> pols;
@@ -633,8 +616,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
                                        children,
                                        args,
                                        cdp,
-                                       pnm,
-                                       options().proof.proofAciNormRf);
+                                       pnm);
       // update vector of lits. Note that the set is no longer used, so we don't
       // need to update it
       //
@@ -666,19 +648,6 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         << "Conclusion lits: " << chainConclusionLits << "\n";
     // Placeholder for running conclusion
     Node n = chainConclusion;
-    if (options().proof.proofAciNormRf)
-    {
-      if (n != args[0])
-      {
-        Node eq = n.eqNode(args[0]);
-        if (!cdp->addStep(eq, ProofRule::ACI_NORM, {}, {eq}))
-        {
-          AlwaysAssert(false);
-        }
-        cdp->addStep(args[0], ProofRule::EQ_RESOLVE, {n, eq}, {});
-      }
-      return args[0];
-    }
     // factoring
     if (chainConclusionLits.size() != conclusionLits.size())
     {

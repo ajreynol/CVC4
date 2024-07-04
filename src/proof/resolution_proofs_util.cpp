@@ -70,8 +70,7 @@ Node eliminateCrowdingLits(bool reorderPremises,
                            const std::vector<Node>& children,
                            const std::vector<Node>& args,
                            CDProof* cdp,
-                           ProofNodeManager* pnm,
-                           bool useAciNorm)
+                           ProofNodeManager* pnm)
 {
   Trace("crowding-lits") << push;
   Trace("crowding-lits") << "Clause lits: " << clauseLits << "\n";
@@ -521,20 +520,7 @@ Node eliminateCrowdingLits(bool reorderPremises,
           ProofRule::FACTORING, {resPlaceHolder}, {}, Node::null(), "");
       if (!lastClause.isNull())
       {
-        if (useAciNorm)
-        {
-          if (resPlaceHolder != lastClause)
-          {
-            Node eq = resPlaceHolder.eqNode(lastClause);
-            cdp->addStep(eq, ProofRule::ACI_NORM, {}, {eq});
-            cdp->addStep(
-                lastClause, ProofRule::EQ_RESOLVE, {resPlaceHolder, eq}, {});
-          }
-        }
-        else
-        {
-          cdp->addStep(lastClause, ProofRule::FACTORING, {resPlaceHolder}, {});
-        }
+        cdp->addStep(lastClause, ProofRule::FACTORING, {resPlaceHolder}, {});
         Trace("crowding-lits") << "Apply factoring.\n";
       }
       else

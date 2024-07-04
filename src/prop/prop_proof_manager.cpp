@@ -438,8 +438,7 @@ Node PropPfManager::normalizeAndRegister(TNode clauseNode,
   if (doNormalize)
   {
     TheoryProofStepBuffer psb;
-    normClauseNode = psb.factorReorderElimDoubleNeg(
-        clauseNode, options().proof.proofAciNormRf);
+    normClauseNode = psb.factorReorderElimDoubleNeg(clauseNode);
     const std::vector<std::pair<Node, ProofStep>>& steps = psb.getSteps();
     for (const std::pair<Node, ProofStep>& step : steps)
     {
