@@ -135,6 +135,7 @@ void TheorySets::preRegisterTerm(TNode node)
   {
     if (d_setsUnivSubset.find(node) == d_setsUnivSubset.end())
     {
+      d_setsUnivSubset.insert(node);
       if (Theory::isLeafOf(node, THEORY_SETS))
       {
         // all set terms must be subsets of respective set universe
