@@ -133,7 +133,6 @@ void TheorySets::preRegisterTerm(TNode node)
   if (options().sets.setsExt)
   {
     // all set terms must be subsets of respective set universe
-
   }
 }
 
@@ -290,7 +289,7 @@ void TheorySets::NotifyClass::eqNotifyDisequal(TNode t1, TNode t2, TNode reason)
 
 Node TheorySets::getSetUniverseSkolem(const TypeNode& tn)
 {
-  SkolemManager * sm = nodeManager()->getSkolemManager();
+  SkolemManager* sm = nodeManager()->getSkolemManager();
   Node stt = nodeManager()->mkConst(SortToTerm(tn));
   return sm->mkSkolemFunction(SkolemId::SETS_UNIVERSE, stt);
 }
