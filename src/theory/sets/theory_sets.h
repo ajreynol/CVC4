@@ -91,6 +91,10 @@ class TheorySets : public Theory
    * Overrides to handle a special case of set membership.
    */
   void processCarePairArgs(TNode a, TNode b) override;
+  /**
+   * Get the set universe skolem.
+   */
+  Node getSetUniverseSkolem(const TypeNode& tn);
   /** Functions to handle callbacks from equality engine */
   class NotifyClass : public TheoryEqNotifyClass
   {

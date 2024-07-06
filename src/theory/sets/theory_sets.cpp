@@ -130,6 +130,11 @@ Node TheorySets::getCandidateModelValue(TNode node) { return Node::null(); }
 void TheorySets::preRegisterTerm(TNode node)
 {
   d_internal->preRegisterTerm(node);
+  if (options().sets.setsExt)
+  {
+    // all set terms must be subsets of respective set universe
+
+  }
 }
 
 TrustNode TheorySets::ppRewrite(TNode n, std::vector<SkolemLemma>& lems)
@@ -181,12 +186,17 @@ TrustNode TheorySets::ppRewrite(TNode n, std::vector<SkolemLemma>& lems)
   if (nk == Kind::RELATION_AGGREGATE)
   {
     Node ret = SetReduction::reduceAggregateOperator(n);
-    return TrustNode::mkTrustRewrite(ret, ret, nullptr);
+    return TrustNode::mkTrustRewrite(n, ret, nullptr);
   }
   if (nk == Kind::RELATION_PROJECT)
   {
     Node ret = SetReduction::reduceProjectOperator(n);
-    return TrustNode::mkTrustRewrite(ret, ret, nullptr);
+    return TrustNode::mkTrustRewrite(n, ret, nullptr);
+  }
+  if (nk == Kind::SET_UNIVERSE)
+  {
+    Node ret = getSetUniverseSkolem(n.getType());
+    return TrustNode::mkTrustRewrite(n, ret, nullptr);
   }
   return d_internal->ppRewrite(n, lems);
 }
@@ -276,6 +286,13 @@ void TheorySets::NotifyClass::eqNotifyDisequal(TNode t1, TNode t2, TNode reason)
                    << " t1 = " << t1 << " t2 = " << t2 << " reason = " << reason
                    << std::endl;
   d_theory.eqNotifyDisequal(t1, t2, reason);
+}
+
+Node TheorySets::getSetUniverseSkolem(const TypeNode& tn)
+{
+  SkolemManager * sm = nodeManager()->getSkolemManager();
+  Node stt = nodeManager()->mkConst(SortToTerm(tn));
+  return sm->mkSkolemFunction(SkolemId::SETS_UNIVERSE, stt);
 }
 
 }  // namespace sets
