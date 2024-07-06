@@ -546,6 +546,8 @@ enum class InferenceId
   SETS_UP_CLOSURE,
   SETS_UP_CLOSURE_2,
   SETS_UP_UNIV,
+  // a set term must be subset of its respective universe set
+  SETS_UNIVERSE_SUBSET,
   //-------------------- sets cardinality solver
   // split on emptyset
   SETS_CARD_SPLIT_EMPTY,

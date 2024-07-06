@@ -38,7 +38,8 @@ TheorySets::TheorySets(Env& env, OutputChannel& out, Valuation valuation)
       d_internal(
           new TheorySetsPrivate(env, *this, d_state, d_im, d_skCache, d_cpacb)),
       d_checker(nodeManager()),
-      d_notify(*d_internal.get(), d_im)
+      d_notify(*d_internal.get(), d_im),
+      d_setsUnivSubset(userContext())
 {
   // use the official theory state and inference manager objects
   d_theoryState = &d_state;
@@ -132,7 +133,20 @@ void TheorySets::preRegisterTerm(TNode node)
   d_internal->preRegisterTerm(node);
   if (options().sets.setsExt)
   {
-    // all set terms must be subsets of respective set universe
+    if (d_setsUnivSubset.find(node)==d_setsUnivSubset.end())
+    {
+      if (Theory::isLeafOf(node, THEORY_SETS))
+      {
+        // all set terms must be subsets of respective set universe
+        TypeNode tn = node.getType();
+        if (tn.isSet())
+        {
+          Node u = getSetUniverseSkolem(tn);
+          Node lem = nodeManager()->mkNode(Kind::SET_SUBSET, node, u);
+          d_im.lemma(lem, InferenceId::SETS_UNIVERSE_SUBSET);
+        }
+      }
+    }
   }
 }
 

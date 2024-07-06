@@ -126,7 +126,9 @@ class TheorySets : public Theory
   SetsProofRuleChecker d_checker;
   /** Instance of the above class */
   NotifyClass d_notify;
-}; /* class TheorySets */
+  /** The terms for which we have applied a SETS_UNIVERSE_SUBSET lemma. */
+  context::CDHashSet<Node> d_setsUnivSubset;
+};
 
 }  // namespace sets
 }  // namespace theory

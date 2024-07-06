@@ -384,6 +384,7 @@ const char* toString(InferenceId i)
     case InferenceId::SETS_UP_CLOSURE: return "SETS_UP_CLOSURE";
     case InferenceId::SETS_UP_CLOSURE_2: return "SETS_UP_CLOSURE_2";
     case InferenceId::SETS_UP_UNIV: return "SETS_UP_UNIV";
+    case InferenceId::SETS_UNIVERSE_SUBSET: return "SETS_UNIVERSE_SUBSET";
     case InferenceId::SETS_CARD_SPLIT_EMPTY: return "SETS_CARD_SPLIT_EMPTY";
     case InferenceId::SETS_CARD_SPLIT_EQ: return "SETS_CARD_SPLIT_EQ";
     case InferenceId::SETS_CARD_CYCLE: return "SETS_CARD_CYCLE";
