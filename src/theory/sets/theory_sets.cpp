@@ -133,7 +133,7 @@ void TheorySets::preRegisterTerm(TNode node)
   d_internal->preRegisterTerm(node);
   if (options().sets.setsExt)
   {
-    if (d_setsUnivSubset.find(node)==d_setsUnivSubset.end())
+    if (d_setsUnivSubset.find(node) == d_setsUnivSubset.end())
     {
       if (Theory::isLeafOf(node, THEORY_SETS))
       {
