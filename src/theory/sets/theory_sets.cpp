@@ -21,6 +21,7 @@
 #include "theory/sets/theory_sets_rewriter.h"
 #include "theory/theory_model.h"
 #include "theory/trust_substitutions.h"
+#include "expr/skolem_manager.h"
 
 using namespace cvc5::internal::kind;
 
@@ -305,8 +306,8 @@ void TheorySets::NotifyClass::eqNotifyDisequal(TNode t1, TNode t2, TNode reason)
 Node TheorySets::getSetUniverseSkolem(const TypeNode& tn)
 {
   SkolemManager* sm = nodeManager()->getSkolemManager();
-  Node stt = nodeManager()->mkConst(SortToTerm(tn));
-  return sm->mkSkolemFunction(SkolemId::SETS_UNIVERSE, stt);
+  Node univ = nodeManager()->mkNullaryOperator(tn, Kind::SET_UNIVERSE);
+  return sm->mkPurifySkolem(univ);
 }
 
 }  // namespace sets
