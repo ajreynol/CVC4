@@ -81,16 +81,6 @@
 
 ; ---------------- ProofRewriteRule::BV_BITBLAST_STEP
 
-; @program $bv_mk_bitblast_step_eq
-; @arg arg1 : T. The left hand side of the equality.
-; @arg arg2 : T. The right hand side of the equality.
-; @return the bitblasted term for (= arg1 arg2).
-(program $bv_mk_bitblast_step_eq ((T Type) (U Type) (W Type) (b1 Bool) (b2 Bool) (a1 W :list) (a2 W :list))
-  (T T) Bool
-  (
-  (($bv_mk_bitblast_step_eq @bv_empty @bv_empty)        true)
-; ---------------- ProofRewriteRule::BV_BITBLAST_STEP
-
 ; program: $bv_mk_bitblast_step_eq
 ; args:
 ; - x T: The left hand side of the equality.
