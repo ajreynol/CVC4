@@ -1,9 +1,11 @@
 (include "../theories/BitVectors.smt3")
 
-; @program $bv_get_const_child
-; @arg a : (BitVec n). The term to find a constant child in.
-; @return a direct child of a that it is a bitvector constant if one exists, or
-; the term @bv_empty otherwise.
+; program: $bv_get_const_child
+; args:
+; - a (BitVec n): The term to find a constant child in.
+; return: >
+;   A direct child of a that it is a bitvector constant if one exists, or
+;   the term @bv_empty otherwise.
 (program $bv_get_const_child ((n Int) (m Int) (k Int) (f (-> (BitVec n) (BitVec m) (BitVec k))) (a (BitVec n)) (b (BitVec m) :list))
   ((BitVec n)) (BitVec n)
   (
