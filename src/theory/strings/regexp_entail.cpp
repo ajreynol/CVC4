@@ -845,7 +845,8 @@ bool RegExpEntail::regExpIncludes(Node r1,
   {
     return (*it).second;
   }
-  Trace("strings-re-include") << "regExpIncludes " << r1 << " " << r2 << std::endl;
+  Trace("strings-re-include")
+      << "regExpIncludes " << r1 << " " << r2 << std::endl;
   // first, check some basic inclusions
   bool ret = false;
   Kind k2 = r2.getKind();
@@ -971,13 +972,16 @@ bool RegExpEntail::regExpIncludes(Node r1,
       {
         // If this component includes n2, then we can consume it.
         newIdxs.insert(idx + 1);
-        Trace("strings-re-include") << "...add " << (idx + 1) << " due to component inclusion" << std::endl;
+        Trace("strings-re-include")
+            << "...add " << (idx + 1) << " due to component inclusion"
+            << std::endl;
       }
       if (v1[idx] == sigmaStar)
       {
         // (re.* re.allchar) can match an arbitrary amount of `r2`
         newIdxs.insert(idx);
-        Trace("strings-re-include") << "...add " << idx << " due to wildcard" << std::endl;
+        Trace("strings-re-include")
+            << "...add " << idx << " due to wildcard" << std::endl;
       }
       else if (utils::isUnboundedWildcard(v1, idx))
       {
@@ -986,7 +990,8 @@ bool RegExpEntail::regExpIncludes(Node r1,
         // the two wildcards is not observable (i.e. it does not change
         // the sequences matched by the regular expression)
         newIdxs.insert(idx);
-        Trace("strings-re-include") << "...add " << idx << " due to unbound wildcard" << std::endl;
+        Trace("strings-re-include")
+            << "...add " << idx << " due to unbound wildcard" << std::endl;
       }
     }
 
@@ -1006,11 +1011,13 @@ bool RegExpEntail::regExpIncludes(Node r1,
   {
     if (idx == v1.size() || (idx == v1.size() - 1 && v1[idx] == sigmaStar))
     {
-      Trace("strings-re-include") << "...inclusion via index " << idx << std::endl;
+      Trace("strings-re-include")
+          << "...inclusion via index " << idx << std::endl;
       result = true;
       break;
     }
-    Trace("strings-re-include") << "...index " << idx << " does not suffice" << std::endl;
+    Trace("strings-re-include")
+        << "...index " << idx << " does not suffice" << std::endl;
   }
   Trace("strings-re-include") << "...result=" << result << std::endl;
   cache[key] = result;

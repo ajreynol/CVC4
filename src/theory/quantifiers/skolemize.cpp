@@ -106,7 +106,7 @@ TrustNode Skolemize::process(Node q)
 
 std::vector<Node> Skolemize::getSkolemConstants(const Node& q)
 {
-  if (q.getKind()==Kind::FORALL)
+  if (q.getKind() == Kind::FORALL)
   {
     std::vector<Node> echildren(q.begin(), q.end());
     echildren[1] = echildren[1].notNode();
