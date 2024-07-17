@@ -136,6 +136,7 @@
 )
 
 ; program: nary.diff
+; args:
 ; - cons (-> L L L): The n-ary function symbol.
 ; - nil L: The nil terminator of cons.
 ; - t1 L: The first term.
