@@ -883,12 +883,12 @@
                ($str_re_includes_rec r2 r4)
                false)
       true
-    (alf.ite (alf.ite ($re_is_unbound_wildcard (re.++ r1 r2)) ; can skip LHS if unbounded wildcard
-              ($str_re_includes_rec r2 (re.++ r3 r4))
+    (alf.ite (alf.ite ($re_is_unbound_wildcard (re.++ r1 r2))  ; can skip RHS if unbounded wildcard
+              ($str_re_includes_rec (re.++ r1 r2) r4)
               false)
       true
-    (alf.ite (alf.ite (alf.is_eq r1 (re.* re.allchar))         ; can skip RHS if it is sigma star
-              ($str_re_includes_rec (re.++ r1 r2) r4)
+    (alf.ite (alf.ite (alf.is_eq r1 (re.* re.allchar))         ; can skip LHS if it is sigma star
+              ($str_re_includes_rec r2 (re.++ r3 r4))
               false)
       true
       false))))
@@ -926,13 +926,6 @@
 
   )
 )
-
-(declare-rule test ((r1 RegLan) (r2 RegLan))
-  :args (r1 r2)
-  :requires ((($str_re_includes r1 r2) true))
-  :conclusion false)
-
-(step @p0 false :rule test :args ((re.++ re.allchar re.allchar (re.* re.allchar)) re.allchar))
 
 ; Checks whether r is an application of re.union with 2 children for which
 ; regular expression inclusion shows r is equivalent to (re.* re.allchar).
