@@ -2391,6 +2391,7 @@ set(regress_1_tests
   regress1/fmf/fore19-exp2-core.smt2
   regress1/fmf/german169.smt2
   regress1/fmf/german73.smt2
+  regress1/fmf/issue10943.smt2
   regress1/fmf/issue2034-preinit.smt2
   regress1/fmf/issue3587.smt2
   regress1/fmf/issue3615.smt2
@@ -3538,7 +3539,6 @@ set(regress_2_tests
   regress2/arith/uart-8.base.cvc.smtv1.smt2
   regress2/bags/injective_functions.smt2
   regress2/bags/map_bug.smt2
-  regress2/bags/reduce_constants_dup.smt2
   regress2/bug136.smtv1.smt2
   regress2/bug148.smtv1.smt2
   regress2/bug349.smtv1.smt2
@@ -3666,6 +3666,7 @@ set(regress_3_tests
   regress3/arith/abz5_1400.smtv1.smt2
   regress3/arith_prp-13-24.smt2
   regress3/auflia-fuzz06.smtv1.smt2
+  regress3/bags/reduce_constants_dup.smt2
   regress3/bmc-ibm-1.smtv1.smt2
   regress3/bmc-ibm-2.smtv1.smt2
   regress3/bmc-ibm-5.smtv1.smt2
