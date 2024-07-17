@@ -927,6 +927,13 @@
   )
 )
 
+(declare-rule test ((r1 RegLan) (r2 RegLan))
+  :args (r1 r2)
+  :requires ((($str_re_includes r1 r2) true))
+  :conclusion false)
+
+(step @p0 false :rule test :args ((re.++ re.allchar re.allchar (re.* re.allchar)) re.allchar))
+
 ; Checks whether r is an application of re.union with 2 children for which
 ; regular expression inclusion shows r is equivalent to (re.* re.allchar).
 (define $str_check_re_union_inclusion ((r RegLan))

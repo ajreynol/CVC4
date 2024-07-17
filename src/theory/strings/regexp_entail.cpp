@@ -845,6 +845,7 @@ bool RegExpEntail::regExpIncludes(Node r1,
   {
     return (*it).second;
   }
+  Trace("ajr-temp") << "regExpIncludes " << r1 << " " << r2 << std::endl;
   // first, check some basic inclusions
   bool ret = false;
   Kind k2 = r2.getKind();
@@ -942,12 +943,14 @@ bool RegExpEntail::regExpIncludes(Node r1,
   std::unordered_set<size_t> idxs;
   for (const Node& n2 : v2)
   {
+    Trace("ajr-temp") << "Look at component " << n2 << " [";
     // Transfer elements from `newIdxs` to `idxs`. Out-of-bound indices are
     // removed and for (re.* re.allchar), we additionally include the option of
     // skipping it. Indices must be smaller than the size of `v1`.
     idxs.clear();
     for (size_t idx : newIdxs)
     {
+      Trace("ajr-temp") << idx << " ";
       if (idx < v1.size())
       {
         idxs.insert(idx);
@@ -959,18 +962,22 @@ bool RegExpEntail::regExpIncludes(Node r1,
       }
     }
     newIdxs.clear();
+    Trace("ajr-temp") << "]" << std::endl;
 
     for (size_t idx : idxs)
     {
+      Trace("ajr-temp") << "Process " << idx << std::endl;
       if (regExpIncludes(v1[idx], n2, cache))
       {
         // If this component includes n2, then we can consume it.
         newIdxs.insert(idx + 1);
+        Trace("ajr-temp") << "...add " << (idx + 1) << " due to component inclusion" << std::endl;
       }
       if (v1[idx] == sigmaStar)
       {
         // (re.* re.allchar) can match an arbitrary amount of `r2`
         newIdxs.insert(idx);
+        Trace("ajr-temp") << "...add " << idx << " due to wildcard" << std::endl;
       }
       else if (utils::isUnboundedWildcard(v1, idx))
       {
@@ -979,11 +986,13 @@ bool RegExpEntail::regExpIncludes(Node r1,
         // the two wildcards is not observable (i.e. it does not change
         // the sequences matched by the regular expression)
         newIdxs.insert(idx);
+        Trace("ajr-temp") << "...add " << idx << " due to unbound wildcard" << std::endl;
       }
     }
 
     if (newIdxs.empty())
     {
+      Trace("ajr-temp") << "...no more ids" << std::endl;
       // If there are no candidates, we can't match the remainder of r2
       break;
     }
@@ -997,10 +1006,13 @@ bool RegExpEntail::regExpIncludes(Node r1,
   {
     if (idx == v1.size() || (idx == v1.size() - 1 && v1[idx] == sigmaStar))
     {
+      Trace("ajr-temp") << "...inclusion via index " << idx << std::endl;
       result = true;
       break;
     }
+    Trace("ajr-temp") << "...index " << idx << " does not suffice" << std::endl;
   }
+  Trace("ajr-temp") << "...result=" << result << std::endl;
   cache[key] = result;
   return result;
 }
