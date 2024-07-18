@@ -1421,6 +1421,7 @@ set(regress_0_tests
   regress0/quantifiers/dd.ho-matching-enum.smt2
   regress0/quantifiers/dd.ricart-ieval.smt2
   regress0/quantifiers/dd.javafe-ieval.smt2
+  regress0/quantifiers/dd-issue11066-var-shadow.smt2
   regress0/quantifiers/delta-simp.smt2
   regress0/quantifiers/double-pattern.smt2
   regress0/quantifiers/ex3.smt2

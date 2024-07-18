@@ -1,4 +1,4 @@
 ; EXPECT: unsat
 (set-logic ALL)
-(assert (exists ((v Real)) (and (<= 0 v) (exists ((v Real)) (forall ((y Real)) (> 0 v))))))
+(assert (exists ((x Real)) (let ((?y x)) (and (<= 0 x) (exists ((x Real)) (forall ((v Real)) (> 0 ?y)))))))
 (check-sat)
