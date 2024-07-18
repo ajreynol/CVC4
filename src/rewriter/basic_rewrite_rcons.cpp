@@ -328,7 +328,11 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
     Node areq = approxGeq.eqNode(approxRewGeq);
     Trace("brc-macro") << "- prove " << areq << " via arith-poly-norm"
                        << std::endl;
-    cdp->addStep(areq, ProofRule::ARITH_POLY_NORM, {}, {areq});
+    if (!ensureProofArithPolyNormRel(cdp, areq))
+    {
+      Trace("brc-macro") << "...failed to show normalization" << std::endl;
+      return false;
+    }
     transEq.push_back(areq);
   }
   // (>= approx 0) = true
@@ -382,8 +386,8 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
     Trace("brc-macro") << "- sum bound is " << sumBound << std::endl;
     if (sumBound.isNull())
     {
+      Trace("brc-macro") << "...failed to show normalization" << std::endl;
       AlwaysAssert(false);
-      Trace("brc-macro") << "...failed to add" << std::endl;
       return false;
     }
     Assert(sumBound.getNumChildren() == 2);
@@ -538,7 +542,8 @@ bool BasicRewriteRCons::ensureProofArithPolyNormRel(CDProof* cdp, const Node& eq
     Trace("brc-macro") << "...fail premise" << std::endl;
     return false;
   }
-  if (!cdp->addStep(eq, ProofRule::ARITH_POLY_NORM_REL, {premise}, {}))
+  Node kn = ProofRuleChecker::mkKindNode(eq[0].getKind());
+  if (!cdp->addStep(eq, ProofRule::ARITH_POLY_NORM_REL, {premise}, {kn}))
   {
     Trace("brc-macro") << "...fail application" << std::endl;
     return false;
