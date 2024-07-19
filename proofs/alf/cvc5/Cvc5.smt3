@@ -320,4 +320,5 @@
     :premise-list P and
     :args (F)
     :conclusion F
+    :sorry
 )
