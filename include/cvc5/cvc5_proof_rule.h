@@ -1629,7 +1629,7 @@ enum ENUM(ProofRule)
    *
    * where :math:`w` is :math:`\texttt{strings::StringsPreprocess::reduce}(t, R,
    * \dots)`.  In other words, :math:`R` is the reduction predicate for extended
-   * term :math:`t`, and :math:`w` is :math:`skolem(t)`.
+   * term :math:`t`, and :math:`w` is the purification Skolem for :math:`t`.
    *
    * Notice that the free variables of :math:`R` are :math:`w` and the free
    * variables of :math:`t`.
@@ -1861,11 +1861,26 @@ enum ENUM(ProofRule)
    *   \inferrule{- \mid t = s}{t = s}
    *
    * where :math:`\texttt{arith::PolyNorm::isArithPolyNorm(t, s)} = \top`. This
-   * method normalizes polynomials over arithmetic or bitvectors.
+   * method normalizes polynomials :math:`s` and :math:`t` over arithmetic or
+   * bitvectors.
    * \endverbatim
    */
   EVALUE(ARITH_POLY_NORM),
-
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Arithmetic -- Polynomial normalization for relations**
+   *
+   * .. math::
+   *  \inferrule{c_x \cdot (x_1 - x_2) = c_y \cdot (y_1 - y_2) \mid \diamond}
+   *            {(x_1 \diamond x_2) = (y_1 \diamond y_2)}
+   *
+   * where :math:`\diamond \in \{<, \leq, =, \geq, >\}` for arithmetic and
+   * :math:`\diamond \in \{=\}` for bitvectors. :math:`c_x` and :math:c_y` are
+   * scaling factors. For :math:`<, \leq, \geq, >`, the scaling factors have the
+   * same sign. For bitvectors, they are set to :math:`1`.
+   * \endverbatim
+   */
+  EVALUE(ARITH_POLY_NORM_REL),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Arithmetic -- Sign inference**
@@ -2284,6 +2299,25 @@ enum ENUM(ProofRewriteRule)
    * **Arithmetic - strings predicate entailment**
    *
    * .. math::
+   *   (= s t) = c
+   *
+   * .. math::
+   *   (>= s t) = c
+   *
+   * where :math:`c` is a Boolean constant.
+   * This macro is elaborated by applications of :math:`EVALUATE`,
+   * :math:`ARITH_POLY_NORM`, :math:`ARITH_STRING_PRED_ENTAIL`,
+   * :math:`ARITH_STRING_PRED_SAFE_APPROX`, as well as other rewrites for
+   * normalizing arithmetic predicates.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_ARITH_STRING_PRED_ENTAIL),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Arithmetic - strings predicate entailment**
+   *
+   * .. math::
    *   (>= n 0) = true
    *
    * Where :math:`n` can be shown to be greater than or equal to :math:`0` by
@@ -2468,7 +2502,6 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(DT_CONS_EQ),
-
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors - Unsigned multiplication overflow detection elimination**
