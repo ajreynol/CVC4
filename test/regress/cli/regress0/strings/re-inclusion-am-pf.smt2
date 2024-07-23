@@ -1,3 +1,5 @@
+; EXPECT: sat
+(set-logic ALL)
 (declare-fun x () String)
 
 (assert (str.in_re x (re.++
