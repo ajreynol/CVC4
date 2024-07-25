@@ -1830,6 +1830,7 @@ set(regress_0_tests
   regress0/strings/large-model.smt2
   regress0/strings/leadingzero001.smt2
   regress0/strings/leq.smt2
+  regress0/strings/long-easy-clash.smt2
   regress0/strings/loop-wrong-sem.smt2
   regress0/strings/loop001.smt2
   regress0/strings/min-norn-re-include.smt2
