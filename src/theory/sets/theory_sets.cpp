@@ -15,13 +15,13 @@
 
 #include "theory/sets/theory_sets.h"
 
+#include "expr/skolem_manager.h"
 #include "options/sets_options.h"
 #include "theory/sets/set_reduction.h"
 #include "theory/sets/theory_sets_private.h"
 #include "theory/sets/theory_sets_rewriter.h"
 #include "theory/theory_model.h"
 #include "theory/trust_substitutions.h"
-#include "expr/skolem_manager.h"
 
 using namespace cvc5::internal::kind;
 
@@ -118,7 +118,7 @@ bool TheorySets::collectModelValues(TheoryModel* m,
 {
   if (options().sets.setsExt)
   {
-    NodeManager * nm = nodeManager();
+    NodeManager* nm = nodeManager();
     SkolemManager* sm = nm->getSkolemManager();
     for (const TypeNode& tn : d_setsUnivTypes)
     {
@@ -149,7 +149,7 @@ void TheorySets::preRegisterTerm(TNode node)
     if (d_setsUnivSubset.find(node) == d_setsUnivSubset.end())
     {
       d_setsUnivSubset.insert(node);
-      if (node.getKind()!=Kind::SKOLEM && Theory::isLeafOf(node, THEORY_SETS))
+      if (node.getKind() != Kind::SKOLEM && Theory::isLeafOf(node, THEORY_SETS))
       {
         // all set terms must be subsets of respective set universe
         TypeNode tn = node.getType();
