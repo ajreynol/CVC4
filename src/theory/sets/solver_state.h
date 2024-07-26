@@ -76,11 +76,6 @@ class SolverState : public TheoryState
    */
   Node getEmptySetEqClass(TypeNode tn) const;
   /**
-   * Get the equivalence class of the universe set of type tn, or null if it
-   * does not exist as a term in the current context.
-   */
-  Node getUnivSetEqClass(TypeNode tn) const;
-  /**
    * Get the singleton set in the equivalence class of representative r if it
    * exists, or null if none exists.
    */
@@ -218,8 +213,6 @@ class SolverState : public TheoryState
   std::vector<Node> d_set_eqc;
   /** Maps types to the equivalence class containing empty set of that type */
   std::map<TypeNode, Node> d_eqc_emptyset;
-  /** Maps types to the equivalence class containing univ set of that type */
-  std::map<TypeNode, Node> d_eqc_univset;
   /** Maps equivalence classes to a singleton set that exists in it. */
   std::map<Node, Node> d_eqc_singleton;
   /** Map from terms to the representative of their congruence class */

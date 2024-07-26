@@ -43,7 +43,6 @@ void SolverState::reset()
 {
   d_set_eqc.clear();
   d_eqc_emptyset.clear();
-  d_eqc_univset.clear();
   d_eqc_singleton.clear();
   d_congruent.clear();
   d_nvar_sets.clear();
@@ -70,6 +69,7 @@ void SolverState::registerEqc(TypeNode tn, Node r)
 void SolverState::registerTerm(Node r, TypeNode tnn, Node n)
 {
   Kind nk = n.getKind();
+  Assert (nk!=Kind::SET_UNIVERSE);
   if (nk == Kind::SET_MEMBER)
   {
     if (r.isConst())
@@ -99,7 +99,7 @@ void SolverState::registerTerm(Node r, TypeNode tnn, Node n)
   }
   else if (nk == Kind::SET_SINGLETON || nk == Kind::SET_UNION
            || nk == Kind::SET_INTER || nk == Kind::SET_MINUS
-           || nk == Kind::SET_EMPTY || nk == Kind::SET_UNIVERSE)
+           || nk == Kind::SET_EMPTY)
   {
     if (nk == Kind::SET_SINGLETON)
     {
@@ -118,11 +118,6 @@ void SolverState::registerTerm(Node r, TypeNode tnn, Node n)
     else if (nk == Kind::SET_EMPTY)
     {
       d_eqc_emptyset[tnn] = r;
-    }
-    else if (nk == Kind::SET_UNIVERSE)
-    {
-      Assert(options().sets.setsExt);
-      d_eqc_univset[tnn] = r;
     }
     else
     {
@@ -206,16 +201,6 @@ Node SolverState::getEmptySetEqClass(TypeNode tn) const
 {
   std::map<TypeNode, Node>::const_iterator it = d_eqc_emptyset.find(tn);
   if (it != d_eqc_emptyset.end())
-  {
-    return it->second;
-  }
-  return Node::null();
-}
-
-Node SolverState::getUnivSetEqClass(TypeNode tn) const
-{
-  std::map<TypeNode, Node>::const_iterator it = d_eqc_univset.find(tn);
-  if (it != d_eqc_univset.end())
   {
     return it->second;
   }

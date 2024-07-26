@@ -91,8 +91,8 @@ void CardinalityExtension::checkCardinalityExtended(TypeNode& t)
   NodeManager* nm = nodeManager();
   TypeNode setType = nm->mkSetType(t);
   bool finiteType = d_env.isFiniteType(t);
-  // skip infinite types that do not have univset terms
-  if (!finiteType && d_state.getUnivSetEqClass(setType).isNull())
+  // skip infinite types
+  if (!finiteType)
   {
     return;
   }
