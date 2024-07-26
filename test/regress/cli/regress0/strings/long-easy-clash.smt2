@@ -1,3 +1,4 @@
+; EXPECT: unsat
 (set-logic ALL)
 (declare-const x String)
 (declare-const y String)
