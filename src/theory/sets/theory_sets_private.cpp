@@ -647,65 +647,6 @@ void TheorySetsPrivate::checkUpwardsClosure()
       }
     }
   }
-  if (!d_im.hasSent())
-  {
-    if (options().sets.setsExt)
-    {
-      // universal sets
-      Trace("sets-debug") << "Check universe sets..." << std::endl;
-      // all elements must be in universal set
-      const std::vector<Node>& sec = d_state.getSetsEqClasses();
-      for (const Node& s : sec)
-      {
-        // if equivalence class contains a variable
-        Node v = d_state.getVariableSet(s);
-        if (!v.isNull())
-        {
-          // the variable in the equivalence class
-          std::map<TypeNode, Node> univ_set;
-          const std::map<Node, Node>& smems = d_state.getMembers(s);
-          for (const std::pair<const Node, Node>& it2 : smems)
-          {
-            Node e = it2.second[0];
-            TypeNode tn = nodeManager()->mkSetType(e.getType());
-            Node u;
-            std::map<TypeNode, Node>::iterator itu = univ_set.find(tn);
-            if (itu == univ_set.end())
-            {
-              Node ueqc = d_state.getUnivSetEqClass(tn);
-              // if the universe does not yet exist, or is not in this
-              // equivalence class
-              if (s != ueqc)
-              {
-                u = d_treg.getUnivSet(tn);
-              }
-              univ_set[tn] = u;
-            }
-            else
-            {
-              u = itu->second;
-            }
-            if (!u.isNull())
-            {
-              Assert(it2.second.getKind() == Kind::SET_MEMBER);
-              std::vector<Node> exp;
-              exp.push_back(it2.second);
-              if (v != it2.second[1])
-              {
-                exp.push_back(v.eqNode(it2.second[1]));
-              }
-              Node fact = nm->mkNode(Kind::SET_MEMBER, it2.second[0], u);
-              d_im.assertInference(fact, InferenceId::SETS_UP_UNIV, exp);
-              if (d_state.isInConflict())
-              {
-                return;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 }
 
 void TheorySetsPrivate::checkFilterUp()
