@@ -1716,7 +1716,8 @@ TrustNode TheorySetsPrivate::expandIsSingletonOperator(const Node& node)
   
   NodeManager* nm = nodeManager();
   Node choose = nm->mkNode(Kind::SET_CHOOSE, node[0]);
-  Node ret = nm->mkNode(Kind::EQUAL, node[0], choose);
+  Node ss = nm->mkNode(Kind::SET_SINGLETON, choose);
+  Node ret = nm->mkNode(Kind::EQUAL, node[0], ss);
   return TrustNode::mkTrustRewrite(node, ret, nullptr);
 }
 
