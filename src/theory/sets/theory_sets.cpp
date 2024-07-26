@@ -134,6 +134,10 @@ void TheorySets::preRegisterTerm(TNode node)
   d_internal->preRegisterTerm(node);
   if (options().sets.setsExt)
   {
+    if (node.getKind()==Kind::SKOLEM)
+    {
+      return;
+    }
     if (d_setsUnivSubset.find(node) == d_setsUnivSubset.end())
     {
       d_setsUnivSubset.insert(node);
