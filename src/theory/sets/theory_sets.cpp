@@ -40,7 +40,8 @@ TheorySets::TheorySets(Env& env, OutputChannel& out, Valuation valuation)
           new TheorySetsPrivate(env, *this, d_state, d_im, d_skCache, d_cpacb)),
       d_checker(nodeManager()),
       d_notify(*d_internal.get(), d_im),
-      d_setsUnivSubset(userContext())
+      d_setsUnivSubset(userContext()),
+      d_setsUnivTypes(userContext())
 {
   // use the official theory state and inference manager objects
   d_theoryState = &d_state;
@@ -115,6 +116,17 @@ void TheorySets::notifyFact(TNode atom,
 bool TheorySets::collectModelValues(TheoryModel* m,
                                     const std::set<Node>& termSet)
 {
+  if (options().sets.setsExt)
+  {
+    NodeManager * nm = nodeManager();
+    SkolemManager* sm = nm->getSkolemManager();
+    for (const TypeNode& tn : d_setsUnivTypes)
+    {
+      Node univ = nm->mkNullaryOperator(tn, Kind::SET_UNIVERSE);
+      Node k = sm->mkPurifySkolem(univ);
+      m->assertEquality(univ, k, true);
+    }
+  }
   return d_internal->collectModelValues(m, termSet);
 }
 
@@ -134,19 +146,16 @@ void TheorySets::preRegisterTerm(TNode node)
   d_internal->preRegisterTerm(node);
   if (options().sets.setsExt)
   {
-    if (node.getKind()==Kind::SKOLEM)
-    {
-      return;
-    }
     if (d_setsUnivSubset.find(node) == d_setsUnivSubset.end())
     {
       d_setsUnivSubset.insert(node);
-      if (Theory::isLeafOf(node, THEORY_SETS))
+      if (node.getKind()!=Kind::SKOLEM && Theory::isLeafOf(node, THEORY_SETS))
       {
         // all set terms must be subsets of respective set universe
         TypeNode tn = node.getType();
         if (tn.isSet())
         {
+          d_setsUnivTypes.insert(tn);
           Node u = getSetUniverseSkolem(tn);
           Node lem = nodeManager()->mkNode(Kind::SET_SUBSET, node, u);
           d_im.lemma(lem, InferenceId::SETS_UNIVERSE_SUBSET);

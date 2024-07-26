@@ -128,6 +128,8 @@ class TheorySets : public Theory
   NotifyClass d_notify;
   /** The terms for which we have applied a SETS_UNIVERSE_SUBSET lemma. */
   context::CDHashSet<Node> d_setsUnivSubset;
+  /** The types of skolems introduced for the above */
+  context::CDHashSet<TypeNode> d_setsUnivTypes;
 };
 
 }  // namespace sets
