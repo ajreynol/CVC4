@@ -592,15 +592,6 @@ enum ENUM(SkolemId)
    */
   EVALUE(SETS_CHOOSE),
   /**
-   * An interpreted function for set.universe operator. This term is equivalent
-   * to set.universe.
-   *
-   * - Number of skolem indices: ``1``
-   *   - ``1:`` a term that represents the sort of the term.
-   * - Sort: ``(Set E)``
-   */
-  EVALUE(SETS_UNIVERSE),
-  /** 
    * The set diff skolem, which is the witness k for the inference
    * ``(=> (not (= A B)) (not (= (set.member k A) (set.member k B))))``.
    *
