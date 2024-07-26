@@ -647,6 +647,13 @@ void InferProofCons::convert(InferenceId infer,
           Trace("strings-ipc-deq")
               << "...main conclusion is " << mainConc << std::endl;
           useBuffer = (mainConc == conc);
+          if (!useBuffer)
+          {
+            // Should be made equal by transformation. This step is necessary
+            // if rewriting was used to change the skolem introduced in the
+            // conclusion.
+            useBuffer = psb.applyPredTransform(mainConc, conc, {});
+          }
           Trace("strings-ipc-deq")
               << "...success is " << useBuffer << std::endl;
         }
