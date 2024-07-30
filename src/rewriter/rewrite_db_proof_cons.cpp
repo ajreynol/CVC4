@@ -1219,6 +1219,7 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
           }
         }
         // should only be one
+        Assert(matches.size()==1);
         break;
       }
       d_mbuffer.pop_back();
