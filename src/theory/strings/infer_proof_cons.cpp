@@ -917,9 +917,13 @@ void InferProofCons::convert(InferenceId infer,
       {
         Node prev = curr;
         curr = convertTrans(curr, eqs[i], psb);
+        // if it is not a transitive step, it corresponds to a substitution
         if (curr.isNull())
         {
           curr = prev;
+          // This is an equality between a variable and a concatention or
+          // constant term (for example see below).
+          // orient the substitution properly
           if (!eqs[i][1].isConst()
               && eqs[i][1].getKind() != Kind::STRING_CONCAT)
           {
@@ -937,6 +941,13 @@ void InferProofCons::convert(InferenceId infer,
       {
         break;
       }
+      // Substitution is applied in reverse order
+      // An example of this inference that uses a substituion is the conflict:
+      //  (str.in_re w (re.++ (re.* re.allchar) (str.to_re "ABC")))
+      //  (= w (str.++ z y x))
+      //  (= x "D")
+      // where we apply w -> (str.++ z y x), then x -> "D" to the first
+      // predicate to obtain a conflict by rewriting (predicate elim).
       std::reverse(subs.begin(), subs.end());
       Trace("strings-ipc-prefix")
           << "- Possible conflicting equality : " << curr << std::endl;
