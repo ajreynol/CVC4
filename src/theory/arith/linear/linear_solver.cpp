@@ -52,16 +52,17 @@ void LinearSolver::preRegisterTermDebug(TNode n, bool isArith)
       d_allTerms.insert(n);
       if (!Theory::isLeafOf(n, THEORY_ARITH))
       {
-        d_arithTerms.insert(n);
+        isArith = true;
         for (const Node& nc : n)
         {
-          preRegisterTermDebug(nc, isArith);
+          preRegisterTermDebug(nc, true);
         }
         d_internal.preRegisterTerm(n);
       }
     }
     if (isArith)
     {
+      Trace("ajr-temp") << "term " << n << std::endl;
       d_arithTerms.insert(n);
     }
   }
@@ -102,7 +103,20 @@ void LinearSolver::collectModelValues(const std::set<Node>& termSet,
                                       std::map<Node, Node>& arithModel,
                                       std::map<Node, Node>& arithModelIllTyped)
 {
-  d_internal.collectModelValues(termSet, arithModel, arithModelIllTyped);
+  std::set<Node> atermSet;
+  std::vector<Node> natermSet;
+  for (const Node& t : termSet)
+  {
+    if (d_arithTerms.find(t)!=d_arithTerms.end())
+    {
+      atermSet.insert(t);
+    }
+    else
+    {
+      natermSet.push_back(t);
+    }
+  }
+  d_internal.collectModelValues(atermSet, arithModel, arithModelIllTyped);
 }
 
 void LinearSolver::presolve() { d_internal.presolve(); }
