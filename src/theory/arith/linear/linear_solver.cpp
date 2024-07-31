@@ -26,7 +26,7 @@ LinearSolver::LinearSolver(Env& env,
                            TheoryState& ts,
                            InferenceManager& im,
                            BranchAndBound& bab)
-    : EnvObj(env), d_im(im), d_internal(env, *this, ts, bab)
+    : EnvObj(env), d_im(im), d_internal(env, *this, ts, bab), d_allTerms(context()), d_arithTerms(context()), d_allPreds(context()), d_arithPreds(context())
 {
 }
 
@@ -34,7 +34,60 @@ void LinearSolver::finishInit(eq::EqualityEngine* ee)
 {
   d_internal.finishInit(ee);
 }
-void LinearSolver::preRegisterTerm(TNode n) { d_internal.preRegisterTerm(n); }
+void LinearSolver::preRegisterTerm(TNode n) 
+{
+  preRegisterTermDebug(n, false);
+}
+
+void LinearSolver::preRegisterTermDebug(TNode n, bool isArith) 
+{
+  TypeNode tn = n.getType();
+  if (tn.isRealOrInt())
+  {
+    if (d_allTerms.find(n)==d_allTerms.end())
+    {
+      d_allTerms.insert(n);
+      if (!Theory::isLeafOf(n, THEORY_ARITH))
+      {
+        d_arithTerms.insert(n);
+        for (const Node& nc : n)
+        {
+          preRegisterTermDebug(nc, isArith);
+        }
+        d_internal.preRegisterTerm(n);
+      }
+    }
+    if (isArith)
+    {
+      d_arithTerms.insert(n);
+    }
+  }
+  else if (tn.isBoolean())
+  {
+    d_allPreds.insert(n);
+    if (isArithmeticFact(n))
+    {
+      Trace("ajr-temp") << "predicate " << n << std::endl;
+      d_arithPreds.insert(n);
+      for (const Node& nc : n)
+      {
+        preRegisterTermDebug(nc, true);
+      }
+      d_internal.preRegisterTerm(n);
+    }
+  }
+  Trace("ajr-temp") << "at " << d_arithTerms.size() << " / " << d_allTerms.size() << " terms, " << d_arithPreds.size() << " / " << d_allPreds.size() << " predicates" << std::endl;
+}
+
+bool LinearSolver::isArithmeticFact(TNode n)
+{
+  if (n.getKind()==Kind::EQUAL)
+  {
+    return !Theory::isLeafOf(n[0], THEORY_ARITH) || !Theory::isLeafOf(n[1], THEORY_ARITH);
+  }
+  return true;
+}
+
 void LinearSolver::propagate(Theory::Effort e) { d_internal.propagate(e); }
 
 TrustNode LinearSolver::explain(TNode n) { return d_internal.explain(n); }
@@ -76,7 +129,14 @@ bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
 {
   return d_internal.preCheck(level, newFacts);
 }
-void LinearSolver::preNotifyFact(TNode fact) { d_internal.preNotifyFact(fact); }
+void LinearSolver::preNotifyFact(TNode fact)
+{ 
+  Node atom = fact.getKind()==Kind::NOT ? fact[0] : fact;
+  if (isArithmeticFact(atom))
+  {
+    d_internal.preNotifyFact(fact);
+  }
+}
 bool LinearSolver::postCheck(Theory::Effort level)
 {
   return d_internal.postCheck(level);
