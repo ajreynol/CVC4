@@ -10,13 +10,13 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Wrapper on linear solver 
+ * Wrapper on linear solver
  */
 
 #pragma once
 
-#include "context/cdhashset.h"
 #include "context/cdhashmap.h"
+#include "context/cdhashset.h"
 #include "smt/env_obj.h"
 #include "theory/arith/linear/theory_arith_private.h"
 #include "theory/theory.h"
@@ -121,7 +121,7 @@ class LinearSolver : protected EnvObj
   InferenceManager& d_im;
   /** The solver */
   TheoryArithPrivate d_internal;
-  
+
   void preRegisterTermDebug(TNode n, bool isArith);
   bool isArithmeticFact(TNode n);
   /** */
