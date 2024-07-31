@@ -1670,6 +1670,7 @@ set(regress_0_tests
   regress0/sets/complement2.cvc.smt2
   regress0/sets/complement3.cvc.smt2
   regress0/sets/cvc-sample.cvc.smt2
+  regress0/sets/dd-filters.smt2
   regress0/sets/dt-simp-mem.smt2
   regress0/sets/emptyset.smt2
   regress0/sets/eqtest.smt2
