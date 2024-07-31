@@ -1216,11 +1216,9 @@ Node RewriteDbProofCons::getRuleConclusion(const RewriteProofRule& rpr,
             // successfully proved, store in temporary variable
             currFixedPointConc = target;
             currFixedPointSubs = m.d_subs;
+            break;
           }
         }
-        // should only be one
-        Assert(matches.size()==1);
-        break;
       }
       d_mbuffer.pop_back();
       Trace("rpc-ctx") << "...conclusion is " << currFixedPointConc
