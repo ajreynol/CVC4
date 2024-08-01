@@ -47,10 +47,8 @@ FunctionEnumerator& FunctionEnumerator::operator++()
   return *this;
 }
 
-OpaqueEnumerator::OpaqueEnumerator(TypeNode type,
-                                       TypeEnumeratorProperties* tep)
-    : TypeEnumeratorBase<OpaqueEnumerator>(type),
-      d_typeEnum(type[0], tep)
+OpaqueEnumerator::OpaqueEnumerator(TypeNode type, TypeEnumeratorProperties* tep)
+    : TypeEnumeratorBase<OpaqueEnumerator>(type), d_typeEnum(type[0], tep)
 {
   Assert(type.getKind() == Kind::OPAQUE_TYPE);
 }

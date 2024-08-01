@@ -19,6 +19,8 @@
 
 #include <string>
 
+#include "expr/dtype.h"
+#include "expr/dtype_cons.h"
 #include "expr/node_converter.h"
 #include "expr/skolem_manager.h"
 #include "preprocessing/assertion_pipeline.h"
@@ -26,8 +28,6 @@
 #include "theory/theory.h"
 #include "theory/uf/opaque_value.h"
 #include "theory/uf/theory_uf_rewriter.h"
-#include "expr/dtype.h"
-#include "expr/dtype_cons.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory;
@@ -63,7 +63,8 @@ class ElimArithConverter : public NodeConverter
         }
         else
         {
-          AlwaysAssert(ctn.getKind()!=Kind::CONSTRUCTOR_TYPE) << "Make new constructor " << ctn << " from " << tn;
+          AlwaysAssert(ctn.getKind() != Kind::CONSTRUCTOR_TYPE)
+              << "Make new constructor " << ctn << " from " << tn;
           SkolemManager* sm = d_nm->getSkolemManager();
           return sm->mkInternalSkolemFunction(
               InternalSkolemId::PURIFY_OPAQUE, ctn, {orig});
@@ -75,7 +76,8 @@ class ElimArithConverter : public NodeConverter
     {
       return d_nm->mkConst(OpaqueValue(orig));
     }
-    else if (orig.getKind()!=Kind::EQUAL && !Theory::isLeafOf(orig, THEORY_ARITH))
+    else if (orig.getKind() != Kind::EQUAL
+             && !Theory::isLeafOf(orig, THEORY_ARITH))
     {
       TypeNode ctn = convertType(tn);
       std::vector<TypeNode> argTypes;
@@ -107,7 +109,7 @@ class ElimArithConverter : public NodeConverter
     if (tn.isDatatype())
     {
       std::map<TypeNode, TypeNode>::iterator it = d_dtCache.find(tn);
-      if (it !=d_dtCache.end())
+      if (it != d_dtCache.end())
       {
         return it->second;
       }
@@ -121,7 +123,7 @@ class ElimArithConverter : public NodeConverter
       {
         TypeNode curr = toProcess.back();
         toProcess.pop_back();
-        if (connected.find(curr)!=connected.end())
+        if (connected.find(curr) != connected.end())
         {
           continue;
         }
@@ -129,9 +131,9 @@ class ElimArithConverter : public NodeConverter
         if (curr.isDatatype())
         {
           it = d_dtCache.find(curr);
-          if (it !=d_dtCache.end())
+          if (it != d_dtCache.end())
           {
-            needsUpdate = needsUpdate || it->second!=curr;
+            needsUpdate = needsUpdate || it->second != curr;
             converted[curr] = it->second;
           }
           else
@@ -145,11 +147,12 @@ class ElimArithConverter : public NodeConverter
         else
         {
           TypeNode ccurr = convertType(curr);
-          needsUpdate = needsUpdate || ccurr!=curr;
+          needsUpdate = needsUpdate || ccurr != curr;
           converted[curr] = ccurr;
         }
-      }while(!toProcess.empty());
-      Trace("elim-arith-convert") << "...needs update is " << needsUpdate << std::endl;
+      } while (!toProcess.empty());
+      Trace("elim-arith-convert")
+          << "...needs update is " << needsUpdate << std::endl;
       if (!needsUpdate)
       {
         for (const TypeNode& curr : connected)
@@ -167,19 +170,19 @@ class ElimArithConverter : public NodeConverter
           newDatatypes.push_back(DType(ss.str()));
           converted[curr] = d_nm->mkUnresolvedDatatypeSort(ss.str());
         }
-        for (size_t d=0, numDts = connectedDt.size(); d<numDts; d++)
+        for (size_t d = 0, numDts = connectedDt.size(); d < numDts; d++)
         {
           TypeNode curr = connectedDt[d];
           DType& ndt = newDatatypes[d];
           const DType& dt = curr.getDType();
-          for (size_t i=0, ncons = dt.getNumConstructors(); i<ncons; i++)
+          for (size_t i = 0, ncons = dt.getNumConstructors(); i < ncons; i++)
           {
             const DTypeConstructor& dc = dt[i];
             std::stringstream ssc;
             ssc << "opaque_" << dc.getName();
             std::shared_ptr<DTypeConstructor> c =
                 std::make_shared<DTypeConstructor>(ssc.str());
-            for (size_t j=0, nargs = dc.getNumArgs(); j<nargs; j++)
+            for (size_t j = 0, nargs = dc.getNumArgs(); j < nargs; j++)
             {
               std::stringstream sss;
               sss << "opaque_" << dc[j].getName();
@@ -189,20 +192,20 @@ class ElimArithConverter : public NodeConverter
           }
         }
         std::vector<TypeNode> ndts = d_nm->mkMutualDatatypeTypes(newDatatypes);
-        Assert (ndts.size()==connectedDt.size());
-        for (size_t d=0, numDts = connectedDt.size(); d<numDts; d++)
+        Assert(ndts.size() == connectedDt.size());
+        for (size_t d = 0, numDts = connectedDt.size(); d < numDts; d++)
         {
           d_dtCache[connectedDt[d]] = ndts[d];
           const DType& ndt = ndts[d].getDType();
           const DType& odt = connectedDt[d].getDType();
-          for (size_t i=0, ncons = ndt.getNumConstructors(); i<ncons; i++)
+          for (size_t i = 0, ncons = ndt.getNumConstructors(); i < ncons; i++)
           {
             const DTypeConstructor& ndc = ndt[i];
             const DTypeConstructor& odc = odt[i];
-            for (size_t j=0, nargs = ndc.getNumArgs(); j<nargs; j++)
+            for (size_t j = 0, nargs = ndc.getNumArgs(); j < nargs; j++)
             {
-              d_dtSymCache[odc[j].getSelector()] = ndc[j].getSelector();     
-              d_dtSymCache[odc[j].getUpdater()] = ndc[j].getUpdater();             
+              d_dtSymCache[odc[j].getSelector()] = ndc[j].getSelector();
+              d_dtSymCache[odc[j].getUpdater()] = ndc[j].getUpdater();
             }
             d_dtSymCache[odc.getConstructor()] = ndc.getConstructor();
             d_dtSymCache[odc.getTester()] = ndc.getTester();
@@ -213,7 +216,8 @@ class ElimArithConverter : public NodeConverter
     }
     return tn;
   }
-private:
+
+ private:
   std::map<TypeNode, TypeNode> d_dtCache;
   std::map<Node, Node> d_dtSymCache;
 };

@@ -140,11 +140,12 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
       Node origr = d_rr->rewrite(orig);
       if (origr.isConst())
       {
-        if (node.getType().getKind()==Kind::OPAQUE_TYPE)
+        if (node.getType().getKind() == Kind::OPAQUE_TYPE)
         {
           origr = nodeManager()->mkConst(OpaqueValue(origr));
         }
-        Trace("rewrite-opaque") << "Rewrite " << node << " to " << origr << ", from original " << orig << std::endl;
+        Trace("rewrite-opaque") << "Rewrite " << node << " to " << origr
+                                << ", from original " << orig << std::endl;
         return RewriteResponse(REWRITE_DONE, origr);
       }
     }
