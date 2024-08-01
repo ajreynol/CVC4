@@ -32,76 +32,79 @@ LinearSolver::LinearSolver(Env& env,
 
 void LinearSolver::finishInit(eq::EqualityEngine* ee)
 {
-  //d_internal.finishInit(ee);
+  // d_internal.finishInit(ee);
 }
-void LinearSolver::preRegisterTerm(TNode n) { //d_internal.preRegisterTerm(n); 
-  
+void LinearSolver::preRegisterTerm(TNode n)
+{  // d_internal.preRegisterTerm(n);
 }
-void LinearSolver::propagate(Theory::Effort e) { //d_internal.propagate(e);
-  
+void LinearSolver::propagate(Theory::Effort e)
+{  // d_internal.propagate(e);
 }
 
-TrustNode LinearSolver::explain(TNode n) { return TrustNode::null(); //d_internal.explain(n);
-  
+TrustNode LinearSolver::explain(TNode n)
+{
+  return TrustNode::null();  // d_internal.explain(n);
 }
 
 void LinearSolver::collectModelValues(const std::set<Node>& termSet,
                                       std::map<Node, Node>& arithModel,
                                       std::map<Node, Node>& arithModelIllTyped)
 {
-  //d_internal.collectModelValues(termSet, arithModel, arithModelIllTyped);
+  // d_internal.collectModelValues(termSet, arithModel, arithModelIllTyped);
 }
 
-void LinearSolver::presolve() { //d_internal.presolve();
-  
+void LinearSolver::presolve()
+{  // d_internal.presolve();
 }
 
-void LinearSolver::notifyRestart() {// d_internal.notifyRestart(); 
-  
+void LinearSolver::notifyRestart()
+{  // d_internal.notifyRestart();
 }
 
 Theory::PPAssertStatus LinearSolver::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
-  return Theory::PP_ASSERT_STATUS_UNSOLVED; // d_internal.ppAssert(tin, outSubstitutions);
+  return Theory::PP_ASSERT_STATUS_UNSOLVED;  // d_internal.ppAssert(tin,
+                                             // outSubstitutions);
 }
 void LinearSolver::ppStaticLearn(TNode in, NodeBuilder& learned)
 {
-  //d_internal.ppStaticLearn(in, learned);
+  // d_internal.ppStaticLearn(in, learned);
 }
 EqualityStatus LinearSolver::getEqualityStatus(TNode a, TNode b)
 {
-  return EQUALITY_UNKNOWN; //d_internal.getEqualityStatus(a, b);
+  return EQUALITY_UNKNOWN;  // d_internal.getEqualityStatus(a, b);
 }
-void LinearSolver::notifySharedTerm(TNode n) { // d_internal.notifySharedTerm(n); 
-  
+void LinearSolver::notifySharedTerm(TNode n)
+{  // d_internal.notifySharedTerm(n);
 }
 Node LinearSolver::getCandidateModelValue(TNode var)
 {
-  return Node::null();//d_internal.getCandidateModelValue(var);
+  return Node::null();  // d_internal.getCandidateModelValue(var);
 }
 std::pair<bool, Node> LinearSolver::entailmentCheck(TNode lit)
 {
-  return std::pair<bool,Node>(false, Node::null()); //d_internal.entailmentCheck(lit);
+  return std::pair<bool, Node>(
+      false, Node::null());  // d_internal.entailmentCheck(lit);
 }
 bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
 {
-  return false;//d_internal.preCheck(level, newFacts);
+  return false;  // d_internal.preCheck(level, newFacts);
 }
-void LinearSolver::preNotifyFact(TNode fact) { //d_internal.preNotifyFact(fact);
-  
+void LinearSolver::preNotifyFact(TNode fact)
+{  // d_internal.preNotifyFact(fact);
 }
 bool LinearSolver::postCheck(Theory::Effort level)
 {
-  return false;//d_internal.postCheck(level);
+  return false;  // d_internal.postCheck(level);
 }
 bool LinearSolver::foundNonlinear() const
 {
-  return false;//d_internal.foundNonlinear();
+  return false;  // d_internal.foundNonlinear();
 }
 ArithCongruenceManager* LinearSolver::getCongruenceManager()
 {
-  return nullptr;//d_internal.getCongruenceManager();
+  return nullptr;  // d_internal.getCongruenceManager();
 }
 
 bool LinearSolver::outputTrustedLemma(TrustNode lemma, InferenceId id)
