@@ -114,6 +114,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
   }
   else if (k == Kind::APPLY_OPAQUE)
   {
+    Trace("rewrite-opaque-debug") << "Rewrite " << node << std::endl;
     // if all constant, reduces to original
     std::vector<Node> cc;
     bool allConst = true;
@@ -124,8 +125,14 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
         allConst = false;
         break;
       }
-      Assert(nc.getKind() == Kind::OPAQUE_VALUE);
-      cc.push_back(nc.getConst<OpaqueValue>().getValue());
+      if (nc.getKind() == Kind::OPAQUE_VALUE)
+      {
+        cc.push_back(nc.getConst<OpaqueValue>().getValue());
+      }
+      else
+      {
+        cc.push_back(nc);
+      }
     }
     if (allConst)
     {
@@ -137,7 +144,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
         {
           origr = nodeManager()->mkConst(OpaqueValue(origr));
         }
-        Trace("rewrite-opaque") << "Rewrite " << node << " to opaque value " << origr << ", from original " << orig << std::endl;
+        Trace("rewrite-opaque") << "Rewrite " << node << " to " << origr << ", from original " << orig << std::endl;
         return RewriteResponse(REWRITE_DONE, origr);
       }
     }

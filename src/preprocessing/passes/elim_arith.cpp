@@ -63,6 +63,7 @@ class ElimArithConverter : public NodeConverter
         }
         else
         {
+          AlwaysAssert(ctn.getKind()!=Kind::CONSTRUCTOR_TYPE) << "Make new constructor " << ctn << " from " << tn;
           SkolemManager* sm = d_nm->getSkolemManager();
           return sm->mkInternalSkolemFunction(
               InternalSkolemId::PURIFY_OPAQUE, ctn, {orig});
@@ -98,6 +99,7 @@ class ElimArithConverter : public NodeConverter
   }
   TypeNode postConvertType(TypeNode tn) override
   {
+    Trace("elim-arith-convert") << "Convert type " << tn << std::endl;
     if (tn.isRealOrInt())
     {
       return d_nm->mkOpaqueType(tn);
@@ -126,10 +128,19 @@ class ElimArithConverter : public NodeConverter
         connected.insert(curr);
         if (curr.isDatatype())
         {
-          connectedDt.push_back(curr);
-          const DType& dt = tn.getDType();
-          std::unordered_set<TypeNode> stypes = dt.getSubfieldTypes();
-          toProcess.insert(toProcess.end(), stypes.begin(), stypes.end());
+          it = d_dtCache.find(curr);
+          if (it !=d_dtCache.end())
+          {
+            needsUpdate = needsUpdate || it->second!=curr;
+            converted[curr] = it->second;
+          }
+          else
+          {
+            connectedDt.push_back(curr);
+            const DType& dt = tn.getDType();
+            std::unordered_set<TypeNode> stypes = dt.getSubfieldTypes();
+            toProcess.insert(toProcess.end(), stypes.begin(), stypes.end());
+          }
         }
         else
         {
@@ -138,6 +149,7 @@ class ElimArithConverter : public NodeConverter
           converted[curr] = ccurr;
         }
       }while(!toProcess.empty());
+      Trace("elim-arith-convert") << "...needs update is " << needsUpdate << std::endl;
       if (!needsUpdate)
       {
         for (const TypeNode& curr : connected)
