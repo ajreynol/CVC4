@@ -94,7 +94,7 @@ Node LinearSolver::isArithmeticFact(TNode n)
   if (nk == Kind::EQUAL)
   {
     if (!Theory::isLeafOf(n[0], THEORY_ARITH)
-           || !Theory::isLeafOf(n[1], THEORY_ARITH))
+        || !Theory::isLeafOf(n[1], THEORY_ARITH))
     {
       return n;
     }
@@ -119,7 +119,7 @@ void LinearSolver::collectModelValues(const std::set<Node>& termSet,
   std::vector<Node> natermSet;
   for (const Node& t : termSet)
   {
-    if (d_arithTerms.find(t)!=d_arithTerms.end())
+    if (d_arithTerms.find(t) != d_arithTerms.end())
     {
       atermSet.insert(t);
     }
@@ -169,14 +169,15 @@ void LinearSolver::preNotifyFact(TNode fact)
   if (!aatom.isNull())
   {
     Node afact = fact;
-    if (aatom!=atom)
+    if (aatom != atom)
     {
       afact = pol ? aatom : aatom.notNode();
     }
-    Trace("ajr-temp") << "pre-notify " << afact << " from " << fact << std::endl;
+    Trace("ajr-temp") << "pre-notify " << afact << " from " << fact
+                      << std::endl;
     d_internal.preNotifyFact(afact);
   }
-  else if (d_arithReduced.find(atom)==d_arithReduced.end())
+  else if (d_arithReduced.find(atom) == d_arithReduced.end())
   {
     Trace("ajr-temp") << "wait " << fact << std::endl;
     d_nonArithAsserts.push_back(fact);
@@ -187,15 +188,16 @@ bool LinearSolver::postCheck(Theory::Effort level)
   bool ret = d_internal.postCheck(level);
   if (!ret && !d_im.hasSent())
   {
-    Trace("ajr-temp") << "Checking " << d_nonArithAsserts.size() << " waiting assertions..." << std::endl;
+    Trace("ajr-temp") << "Checking " << d_nonArithAsserts.size()
+                      << " waiting assertions..." << std::endl;
     for (const Node& fact : d_nonArithAsserts)
     {
       bool pol = (fact.getKind() != Kind::NOT);
       Node atom = pol ? fact : fact[0];
       for (const Node& t : atom)
       {
-        Assert (atom.getKind()==Kind::EQUAL);
-        if (d_arithTerms.find(t)!=d_arithTerms.end())
+        Assert(atom.getKind() == Kind::EQUAL);
+        if (d_arithTerms.find(t) != d_arithTerms.end())
         {
           // reduce
           d_arithReduced.insert(atom);
