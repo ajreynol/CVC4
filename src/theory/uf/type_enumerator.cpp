@@ -17,6 +17,7 @@
 
 #include "expr/function_array_const.h"
 #include "theory/uf/function_const.h"
+#include "theory/uf/opaque_value.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -46,6 +47,29 @@ FunctionEnumerator& FunctionEnumerator::operator++()
   return *this;
 }
 
+OpaqueEnumerator::OpaqueEnumerator(TypeNode type,
+                                       TypeEnumeratorProperties* tep)
+    : TypeEnumeratorBase<OpaqueEnumerator>(type),
+      d_typeEnum(type[0], tep)
+{
+  Assert(type.getKind() == Kind::OPAQUE_TYPE);
+}
+
+Node OpaqueEnumerator::operator*()
+{
+  if (isFinished())
+  {
+    throw NoMoreValuesException(getType());
+  }
+  Node a = *d_typeEnum;
+  return NodeManager::currentNM()->mkConst(OpaqueValue(a));
+}
+
+OpaqueEnumerator& OpaqueEnumerator::operator++()
+{
+  ++d_typeEnum;
+  return *this;
+}
 }  // namespace uf
 }  // namespace theory
 }  // namespace cvc5::internal

@@ -47,6 +47,26 @@ class FunctionEnumerator : public TypeEnumeratorBase<FunctionEnumerator>
   TypeEnumerator d_arrayEnum;
 }; /* class FunctionEnumerator */
 
+/** OpaqueEnumerator
+ * This enumerates function values, based on the enumerator for the
+ * array type corresponding to the given function type.
+ */
+class OpaqueEnumerator : public TypeEnumeratorBase<OpaqueEnumerator>
+{
+ public:
+  OpaqueEnumerator(TypeNode type, TypeEnumeratorProperties* tep = nullptr);
+  /** Get the current term of the enumerator. */
+  Node operator*() override;
+  /** Increment the enumerator. */
+  OpaqueEnumerator& operator++() override;
+  /** is the enumerator finished? */
+  bool isFinished() override { return d_typeEnum.isFinished(); }
+
+ private:
+  /** Enumerates arrays, which we convert to functions. */
+  TypeEnumerator d_typeEnum;
+}; /* class OpaqueEnumerator */
+
 }  // namespace uf
 }  // namespace theory
 }  // namespace cvc5::internal

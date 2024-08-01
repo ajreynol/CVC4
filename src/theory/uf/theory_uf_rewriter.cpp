@@ -129,8 +129,9 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
     }
     if (allConst)
     {
-      Node orig = getOriginalFromOpaque(node.getOperator(), cc);
-      return RewriteResponse(REWRITE_AGAIN_FULL, orig);
+      Node orig = getOriginalFromOpaque(node, cc);
+      Node origr = d_rr->rewrite(orig);
+      return RewriteResponse(REWRITE_DONE, nodeManager()->mkConst(OpaqueValue(origr)));
     }
   }
   else if (k == Kind::HO_APPLY)

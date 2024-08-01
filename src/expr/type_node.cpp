@@ -194,6 +194,10 @@ CardinalityClass TypeNode::getCardinalityClass()
         ret = maxCardinalityClass(ret, cca);
       }
     }
+    else if (getKind()==Kind::OPAQUE_TYPE)
+    {
+      ret = (*this)[0].getCardinalityClass();
+    }
     else
     {
       // all types we care about should be handled above

@@ -102,4 +102,8 @@ constant OPAQUE_VALUE \
     "the kind of expressions representing opaque values; payload is an instance of the cvc5::internal::OpaqueValue class (used in models)"
 typerule OPAQUE_VALUE ::cvc5::internal::theory::uf::OpaqueValueTypeRule
 
+enumerator OPAQUE_TYPE \
+    "::cvc5::internal::theory::uf::OpaqueEnumerator" \
+    "theory/uf/type_enumerator.h"
+
 endtheory
