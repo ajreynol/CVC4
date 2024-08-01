@@ -1334,6 +1334,10 @@ void SetDefaults::widenLogic(LogicInfo& logic, const Options& opts) const
                << std::endl;
     needsUf = true;
   }
+  if (opts.smt.elimArith)
+  {
+    needsUf = true;
+  }
   if (needsUf
       // Arrays, datatypes and sets permit Boolean terms and thus require UF
       || logic.isTheoryEnabled(THEORY_ARRAYS)

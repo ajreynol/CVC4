@@ -1,5 +1,5 @@
 (set-logic ALL)
-(set-info :status sat)
+;(set-info :status sat)
 (declare-datatypes ((list 0)) (
 ((cons (head Int) (tail list)) (nil))
 ))

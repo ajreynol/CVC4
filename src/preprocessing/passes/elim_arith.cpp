@@ -26,6 +26,7 @@
 #include "theory/theory.h"
 #include "theory/uf/opaque_value.h"
 #include "theory/uf/theory_uf_rewriter.h"
+#include "expr/dtype.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory;
@@ -84,7 +85,12 @@ class ElimArithConverter : public NodeConverter
     }
     else if (!terms.empty())
     {
-      return d_nm->mkNode(orig.getKind(), terms);
+      Kind k = orig.getKind();
+      if (k == Kind::APPLY_CONSTRUCTOR || k==Kind::APPLY_SELECTOR || k == Kind::APPLY_UPDATER || k == Kind::APPLY_TESTER)
+      {
+        return orig;
+      }
+      return d_nm->mkNode(k, terms);
     }
     return orig;
   }
@@ -94,8 +100,64 @@ class ElimArithConverter : public NodeConverter
     {
       return d_nm->mkOpaqueType(tn);
     }
+    if (tn.isDatatype())
+    {
+      std::map<TypeNode, TypeNode>::iterator it = d_dtCache.find(tn);
+      if (it !=d_dtCache.end())
+      {
+        return it->second;
+      }
+      std::vector<TypeNode> toProcess;
+      std::unordered_set<TypeNode> connected;
+      std::map<TypeNode, TypeNode> converted;
+      bool needsUpdate = false;
+      toProcess.push_back(tn);
+      do
+      {
+        TypeNode curr = toProcess.back();
+        toProcess.pop_back();
+        if (connected.find(curr)!=connected.end())
+        {
+          continue;
+        }
+        connected.insert(curr);
+        if (curr.isDatatype())
+        {
+          const DType& dt = tn.getDType();
+          std::unordered_set<TypeNode> stypes = dt.getSubfieldTypes();
+          toProcess.insert(toProcess.end(), stypes.begin(), stypes.end());
+        }
+        else
+        {
+          TypeNode ccurr = convertType(curr);
+          needsUpdate = needsUpdate || ccurr!=curr;
+          converted[curr] = ccurr;
+        }
+      }while(!toProcess.empty());
+      if (!needsUpdate)
+      {
+        for (const TypeNode& curr : connected)
+        {
+          d_dtCache[curr] = curr;
+        }
+      }
+      else
+      {
+        // FIXME
+        std::vector<DType> newDatatypes;
+        for (const TypeNode& curr : connected)
+        {
+          if (!curr.isDatatype())
+          {
+            continue;
+          }
+        }
+      }
+    }
     return tn;
   }
+private:
+  std::map<TypeNode, TypeNode> d_dtCache;
 };
 
 ElimArith::ElimArith(PreprocessingPassContext* preprocContext)
