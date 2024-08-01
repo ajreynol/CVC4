@@ -173,13 +173,13 @@ void LinearSolver::preNotifyFact(TNode fact)
     {
       afact = pol ? aatom : aatom.notNode();
     }
-    Trace("ajr-temp") << "pre-notify " << afact << " from " << fact
+    Trace("ajr-temp2") << "pre-notify " << afact << " from " << fact
                       << std::endl;
     d_internal.preNotifyFact(afact);
   }
   else if (d_arithReduced.find(atom) == d_arithReduced.end())
   {
-    Trace("ajr-temp") << "wait " << fact << std::endl;
+    Trace("ajr-temp2") << "wait " << fact << std::endl;
     d_nonArithAsserts.push_back(fact);
   }
 }
@@ -188,7 +188,7 @@ bool LinearSolver::postCheck(Theory::Effort level)
   bool ret = d_internal.postCheck(level);
   if (!ret && !d_im.hasSent())
   {
-    Trace("ajr-temp") << "Checking " << d_nonArithAsserts.size()
+    Trace("ajr-temp2") << "Checking " << d_nonArithAsserts.size()
                       << " waiting assertions..." << std::endl;
     for (const Node& fact : d_nonArithAsserts)
     {
