@@ -166,6 +166,26 @@ class BitVectorConversionTypeRule
                               std::ostream* errOut);
 };
 
+class OpaqueValueTypeRule
+{
+ public:
+  static TypeNode preComputeType(NodeManager* nm, TNode n);
+
+  static TypeNode computeType(NodeManager* nodeManager,
+                              TNode n,
+                              bool check,
+                              std::ostream* errOut);
+};
+
+struct OpaqueProperties
+{
+  static Cardinality computeCardinality(TypeNode type);
+
+  static bool isWellFounded(TypeNode type);
+
+  static Node mkGroundTerm(TypeNode type);
+};
+
 }  // namespace uf
 }  // namespace theory
 }  // namespace cvc5::internal

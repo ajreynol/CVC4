@@ -21,6 +21,7 @@
 #include "expr/cardinality_constraint.h"
 #include "expr/function_array_const.h"
 #include "theory/uf/function_const.h"
+#include "theory/uf/opaque_value.h"
 #include "util/bitvector.h"
 #include "util/cardinality.h"
 #include "util/rational.h"
@@ -344,6 +345,40 @@ TypeNode BitVectorConversionTypeRule::computeType(NodeManager* nodeManager,
     return TypeNode::null();
   }
   return nodeManager->mkBitVectorType(bvSize);
+}
+
+TypeNode OpaqueValueTypeRule::preComputeType(NodeManager* nm, TNode n)
+{
+  return TypeNode::null();
+}
+TypeNode OpaqueValueTypeRule::computeType(NodeManager* nodeManager,
+                                               TNode n,
+                                               bool check,
+                                               std::ostream* errOut)
+{
+  Assert(n.getKind() == Kind::OPAQUE_VALUE);
+  const OpaqueValue& ov = n.getConst<OpaqueValue>();
+  TypeNode tn = ov.getValue().getType();
+  return nodeManager->mkOpaqueType(tn);
+}
+
+Cardinality OpaqueProperties::computeCardinality(TypeNode type)
+{
+  Assert(type.getKind() == Kind::OPAQUE_TYPE);
+  return type[0].getCardinality();
+}
+
+bool OpaqueProperties::isWellFounded(TypeNode type)
+{
+  return type[0].isWellFounded();
+}
+
+Node OpaqueProperties::mkGroundTerm(TypeNode type)
+{
+  Assert(type.getKind() == Kind::OPAQUE_TYPE);
+  NodeManager* nm = NodeManager::currentNM();
+  Node v = nm->mkGroundTerm(type[0]);
+  return nm->mkConst(OpaqueValue(v));
 }
 
 }  // namespace uf

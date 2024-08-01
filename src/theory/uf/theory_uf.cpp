@@ -102,6 +102,7 @@ void TheoryUF::finishInit() {
   // The kinds we are treating as function application in congruence
   bool isHo = logicInfo().isHigherOrder();
   d_equalityEngine->addFunctionKind(Kind::APPLY_UF, false, isHo);
+  d_equalityEngine->addFunctionKind(Kind::APPLY_OPAQUE, true);
   if (isHo)
   {
     d_equalityEngine->addFunctionKind(Kind::HO_APPLY);

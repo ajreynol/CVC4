@@ -23,6 +23,7 @@
 #include "theory/rewriter.h"
 #include "theory/substitutions.h"
 #include "theory/uf/function_const.h"
+#include "theory/uf/opaque_value.h"
 #include "util/bitvector.h"
 
 namespace cvc5::internal {
@@ -108,6 +109,26 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
     if (!canUseAsApplyUfOperator(node.getOperator()))
     {
       return RewriteResponse(REWRITE_AGAIN_FULL, getHoApplyForApplyUf(node));
+    }
+  }
+  else if (k == Kind::APPLY_OPAQUE)
+  {
+    // TODO: all constant, does fold
+    std::vector<Node> constChildren;
+    bool allConst = true;
+    for (const Node& nc : node)
+    {
+      if (!nc.isConst())
+      {
+        allConst = false;
+        break;
+      }
+      Assert (nc.getKind()==Kind::OPAQUE_VALUE);
+      constChildren.push_back(nc.getConst<OpaqueValue>().getValue());
+    }
+    if (allConst)
+    {
+      
     }
   }
   else if (k == Kind::HO_APPLY)

@@ -457,6 +457,9 @@ class NodeManager
 
   /** Make the type of arrays with the given parameterization */
   TypeNode mkArrayType(TypeNode indexType, TypeNode constituentType);
+  
+  /** Make the type of opaque with the given parameterization */
+  TypeNode mkOpaqueType(TypeNode type);
 
   /** Make the type of set with the given parameterization */
   TypeNode mkSetType(TypeNode elementType);
@@ -1063,6 +1066,12 @@ inline TypeNode NodeManager::mkArrayType(TypeNode indexType,
   Trace("arrays") << "making array type " << indexType << " "
                   << constituentType << std::endl;
   return mkTypeNode(Kind::ARRAY_TYPE, indexType, constituentType);
+}
+
+inline TypeNode NodeManager::mkOpaqueType(TypeNode type)
+{
+  Assert(!type.isNull()) << "unexpected NULL type";
+  return mkTypeNode(Kind::OPAQUE_TYPE, type);
 }
 
 inline TypeNode NodeManager::mkSetType(TypeNode elementType)
