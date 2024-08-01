@@ -123,12 +123,16 @@ class LinearSolver : protected EnvObj
   TheoryArithPrivate d_internal;
 
   void preRegisterTermDebug(TNode n, bool isArith);
-  bool isArithmeticFact(TNode n);
+  Node isArithmeticFact(TNode n);
   /** */
   context::CDHashSet<Node> d_allTerms;
   context::CDHashSet<Node> d_arithTerms;
   context::CDHashSet<Node> d_allPreds;
   context::CDHashSet<Node> d_arithPreds;
+  /** */
+  context::CDList<Node> d_nonArithAsserts;
+  /** */
+  context::CDHashSet<Node> d_arithReduced;
 };
 
 }  // namespace linear

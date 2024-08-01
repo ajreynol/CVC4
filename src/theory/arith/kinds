@@ -99,6 +99,7 @@ operator LT 2 "less than, x < y"
 operator LEQ 2 "less than or equal, x <= y"
 operator GT 2 "greater than, x > y"
 operator GEQ 2 "greater than or equal, x >= y"
+operator EQ 2 "arithmetic equality, x = y"
 
 # represents an indexed root predicate. See util/indexed_root_predicate.h for more documentation.
 constant INDEXED_ROOT_PREDICATE_OP \
@@ -131,6 +132,7 @@ typerule LT ::cvc5::internal::theory::arith::ArithRelationTypeRule
 typerule LEQ ::cvc5::internal::theory::arith::ArithRelationTypeRule
 typerule GT ::cvc5::internal::theory::arith::ArithRelationTypeRule
 typerule GEQ ::cvc5::internal::theory::arith::ArithRelationTypeRule
+typerule EQ ::cvc5::internal::theory::arith::ArithRelationTypeRule
 
 typerule INDEXED_ROOT_PREDICATE_OP "SimpleTypeRule<RBuiltinOperator>"
 typerule INDEXED_ROOT_PREDICATE ::cvc5::internal::theory::arith::IndexedRootPredicateTypeRule

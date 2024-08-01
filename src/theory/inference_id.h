@@ -105,6 +105,8 @@ enum class InferenceId
   ARITH_SPLIT_FOR_NL_MODEL,
   // dummy lemma to demand a restart
   ARITH_DEMAND_RESTART,
+  //
+  ARITH_EQUAL_EQ_INTRO,
   //-------------------- preprocessing
   // equivalence of term and its preprocessed form
   ARITH_PP_ELIM_OPERATORS,

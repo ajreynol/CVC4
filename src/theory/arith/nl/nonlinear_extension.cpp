@@ -128,6 +128,10 @@ void NonlinearExtension::getAssertions(std::vector<Node>& assertions)
     Trace("nl-ext-assert-debug")
         << "Loaded " << assertion.d_assertion << " from theory" << std::endl;
     Node lit = assertion.d_assertion;
+    if (lit.getKind()==Kind::EQ || (lit.getKind()==Kind::NOT && lit[0].getKind()==Kind::EQUAL))
+    {
+      continue;
+    }
     if (useRelevance && !v.isRelevant(lit))
     {
       // not relevant, skip

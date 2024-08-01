@@ -32,7 +32,9 @@ LinearSolver::LinearSolver(Env& env,
       d_allTerms(context()),
       d_arithTerms(context()),
       d_allPreds(context()),
-      d_arithPreds(context())
+      d_arithPreds(context()),
+      d_nonArithAsserts(context()),
+      d_arithReduced(userContext())
 {
 }
 
@@ -69,15 +71,16 @@ void LinearSolver::preRegisterTermDebug(TNode n, bool isArith)
   else if (tn.isBoolean())
   {
     d_allPreds.insert(n);
-    if (isArithmeticFact(n))
+    Node na = isArithmeticFact(n);
+    if (!na.isNull())
     {
-      Trace("ajr-temp") << "predicate " << n << std::endl;
-      d_arithPreds.insert(n);
-      for (const Node& nc : n)
+      Trace("ajr-temp") << "predicate " << na << std::endl;
+      d_arithPreds.insert(na);
+      for (const Node& nc : na)
       {
         preRegisterTermDebug(nc, true);
       }
-      d_internal.preRegisterTerm(n);
+      d_internal.preRegisterTerm(na);
     }
   }
   Trace("ajr-temp") << "at " << d_arithTerms.size() << " / "
@@ -85,14 +88,23 @@ void LinearSolver::preRegisterTermDebug(TNode n, bool isArith)
                     << " / " << d_allPreds.size() << " predicates" << std::endl;
 }
 
-bool LinearSolver::isArithmeticFact(TNode n)
+Node LinearSolver::isArithmeticFact(TNode n)
 {
-  if (n.getKind() == Kind::EQUAL)
+  Kind nk = n.getKind();
+  if (nk == Kind::EQUAL)
   {
-    return !Theory::isLeafOf(n[0], THEORY_ARITH)
-           || !Theory::isLeafOf(n[1], THEORY_ARITH);
+    if (!Theory::isLeafOf(n[0], THEORY_ARITH)
+           || !Theory::isLeafOf(n[1], THEORY_ARITH))
+    {
+      return n;
+    }
+    return Node::null();
   }
-  return true;
+  else if (nk == Kind::EQ)
+  {
+    return nodeManager()->mkNode(Kind::EQUAL, n[0], n[1]);
+  }
+  return n;
 }
 
 void LinearSolver::propagate(Theory::Effort e) { d_internal.propagate(e); }
@@ -151,15 +163,53 @@ bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
 }
 void LinearSolver::preNotifyFact(TNode fact)
 {
-  Node atom = fact.getKind() == Kind::NOT ? fact[0] : fact;
-  if (isArithmeticFact(atom))
+  bool pol = (fact.getKind() != Kind::NOT);
+  Node atom = pol ? fact : fact[0];
+  Node aatom = isArithmeticFact(atom);
+  if (!aatom.isNull())
   {
-    d_internal.preNotifyFact(fact);
+    Node afact = fact;
+    if (aatom!=atom)
+    {
+      afact = pol ? aatom : aatom.notNode();
+    }
+    Trace("ajr-temp") << "pre-notify " << afact << " from " << fact << std::endl;
+    d_internal.preNotifyFact(afact);
+  }
+  else if (d_arithReduced.find(atom)==d_arithReduced.end())
+  {
+    Trace("ajr-temp") << "wait " << fact << std::endl;
+    d_nonArithAsserts.push_back(fact);
   }
 }
 bool LinearSolver::postCheck(Theory::Effort level)
 {
-  return d_internal.postCheck(level);
+  bool ret = d_internal.postCheck(level);
+  if (!ret && !d_im.hasSent())
+  {
+    Trace("ajr-temp") << "Checking " << d_nonArithAsserts.size() << " waiting assertions..." << std::endl;
+    for (const Node& fact : d_nonArithAsserts)
+    {
+      bool pol = (fact.getKind() != Kind::NOT);
+      Node atom = pol ? fact : fact[0];
+      for (const Node& t : atom)
+      {
+        Assert (atom.getKind()==Kind::EQUAL);
+        if (d_arithTerms.find(t)!=d_arithTerms.end())
+        {
+          // reduce
+          d_arithReduced.insert(atom);
+          Node atomr = rewrite(atom);
+          Node eqAtom = nodeManager()->mkNode(Kind::EQ, atomr[0], atomr[1]);
+          Node lem = atom.eqNode(eqAtom);
+          TrustNode tlem = TrustNode::mkTrustLemma(lem);
+          outputTrustedLemma(tlem, InferenceId::ARITH_EQUAL_EQ_INTRO);
+          break;
+        }
+      }
+    }
+  }
+  return ret;
 }
 bool LinearSolver::foundNonlinear() const
 {

@@ -352,7 +352,8 @@ RewriteResponse ArithRewriter::preRewriteTerm(TNode t){
       case Kind::TO_INTEGER:
       case Kind::TO_REAL:
       case Kind::POW:
-      case Kind::PI: return RewriteResponse(REWRITE_DONE, t);
+      case Kind::PI: 
+      case Kind::EQ: return RewriteResponse(REWRITE_DONE, t);
       default: Unhandled() << k;
     }
   }
@@ -439,6 +440,14 @@ RewriteResponse ArithRewriter::postRewriteTerm(TNode t){
         return RewriteResponse(REWRITE_DONE, t);
       }
       case Kind::PI: return RewriteResponse(REWRITE_DONE, t);
+      case Kind::EQ: 
+      {
+        if (t[0].isConst() && t[1].isConst())
+        {
+          return RewriteResponse(REWRITE_DONE, nodeManager()->mkConst(t[0]==t[1]));
+        }
+        return RewriteResponse(REWRITE_DONE, t);
+      }
       default: Unreachable();
     }
   }
