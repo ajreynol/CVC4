@@ -131,7 +131,15 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
     {
       Node orig = getOriginalFromOpaque(node, cc);
       Node origr = d_rr->rewrite(orig);
-      return RewriteResponse(REWRITE_DONE, nodeManager()->mkConst(OpaqueValue(origr)));
+      if (origr.isConst())
+      {
+        if (node.getType().getKind()==Kind::OPAQUE_TYPE)
+        {
+          origr = nodeManager()->mkConst(OpaqueValue(origr));
+        }
+        Trace("rewrite-opaque") << "Rewrite " << node << " to opaque value " << origr << ", from original " << orig << std::endl;
+        return RewriteResponse(REWRITE_DONE, origr);
+      }
     }
   }
   else if (k == Kind::HO_APPLY)
