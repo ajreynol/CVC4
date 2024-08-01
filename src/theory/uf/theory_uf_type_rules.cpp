@@ -352,9 +352,9 @@ TypeNode OpaqueValueTypeRule::preComputeType(NodeManager* nm, TNode n)
   return TypeNode::null();
 }
 TypeNode OpaqueValueTypeRule::computeType(NodeManager* nodeManager,
-                                               TNode n,
-                                               bool check,
-                                               std::ostream* errOut)
+                                          TNode n,
+                                          bool check,
+                                          std::ostream* errOut)
 {
   Assert(n.getKind() == Kind::OPAQUE_VALUE);
   const OpaqueValue& ov = n.getConst<OpaqueValue>();

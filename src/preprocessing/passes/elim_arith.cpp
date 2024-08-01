@@ -23,9 +23,9 @@
 #include "expr/skolem_manager.h"
 #include "preprocessing/assertion_pipeline.h"
 #include "preprocessing/preprocessing_pass_context.h"
+#include "theory/theory.h"
 #include "theory/uf/opaque_value.h"
 #include "theory/uf/theory_uf_rewriter.h"
-#include "theory/theory.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory;
@@ -47,16 +47,17 @@ class ElimArithConverter : public NodeConverter
     if (orig.isVar())
     {
       TypeNode ctn = convertType(tn);
-      if (ctn!=tn)
+      if (ctn != tn)
       {
-        if (orig.getKind()==Kind::BOUND_VARIABLE)
+        if (orig.getKind() == Kind::BOUND_VARIABLE)
         {
           return d_nm->mkBoundVar(ctn);
         }
         else
         {
-          SkolemManager * sm = d_nm->getSkolemManager();
-          return sm->mkInternalSkolemFunction(InternalSkolemId::PURIFY_OPAQUE, ctn, {orig});
+          SkolemManager* sm = d_nm->getSkolemManager();
+          return sm->mkInternalSkolemFunction(
+              InternalSkolemId::PURIFY_OPAQUE, ctn, {orig});
         }
       }
       return orig;

@@ -200,7 +200,9 @@ class SkolemManager
    * call. Updates the arguments to the values used when constructing it.
    */
   bool isSkolemFunction(TNode k, SkolemId& id, Node& cacheVal) const;
-  bool isInternalSkolemFunction(TNode k, InternalSkolemId& id, std::vector<Node>& cacheVals) const;
+  bool isInternalSkolemFunction(TNode k,
+                                InternalSkolemId& id,
+                                std::vector<Node>& cacheVals) const;
   /**
    * Get skolem function id
    */

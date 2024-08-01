@@ -81,7 +81,9 @@ class TheoryUfRewriter : public TheoryRewriter
   /** */
   static Node getOpaqueOperator(const Node& app, const TypeNode& ftn);
   /** */
-  static Node getOriginalFromOpaque(const Node& op, const std::vector<Node>& cc);
+  static Node getOriginalFromOpaque(const Node& op,
+                                    const std::vector<Node>& cc);
+
  private:
   /**
    * Pointer to the rewriter, required for rewriting lambdas that appear

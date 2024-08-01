@@ -457,7 +457,7 @@ class NodeManager
 
   /** Make the type of arrays with the given parameterization */
   TypeNode mkArrayType(TypeNode indexType, TypeNode constituentType);
-  
+
   /** Make the type of opaque with the given parameterization */
   TypeNode mkOpaqueType(TypeNode type);
 

@@ -56,10 +56,8 @@ const char* toString(InternalSkolemId id)
     case InternalSkolemId::QE_CLOSED_INPUT: return "QE_CLOSED_INPUT";
     case InternalSkolemId::QUANTIFIERS_ATTRIBUTE_INTERNAL:
       return "QUANTIFIERS_ATTRIBUTE_INTERNAL";
-    case InternalSkolemId::PURIFY_OPAQUE:
-      return "PURIFY_OPAQUE";
-    case InternalSkolemId::PURIFY_OPAQUE_OP:
-      return "PURIFY_OPAQUE_OP";
+    case InternalSkolemId::PURIFY_OPAQUE: return "PURIFY_OPAQUE";
+    case InternalSkolemId::PURIFY_OPAQUE_OP: return "PURIFY_OPAQUE_OP";
     default: return "?";
   }
 }
@@ -220,18 +218,20 @@ bool SkolemManager::isSkolemFunction(TNode k,
   return true;
 }
 
-bool SkolemManager::isInternalSkolemFunction(TNode k, InternalSkolemId& id, std::vector<Node>& cacheVals) const
-{  
+bool SkolemManager::isInternalSkolemFunction(TNode k,
+                                             InternalSkolemId& id,
+                                             std::vector<Node>& cacheVals) const
+{
   SkolemId eid;
   Node cacheVal;
   // if its an internal skolem
-  if (isSkolemFunction(k, eid, cacheVal) &&eid == SkolemId::INTERNAL)
+  if (isSkolemFunction(k, eid, cacheVal) && eid == SkolemId::INTERNAL)
   {
     Node cval = cacheVal;
     if (cacheVal.getKind() == Kind::SEXPR)
     {
       cval = cacheVal[0];
-      cacheVals.insert(cacheVals.end(), cacheVal.begin()+1, cacheVal.end());
+      cacheVals.insert(cacheVals.end(), cacheVal.begin() + 1, cacheVal.end());
     }
     Assert(cval.getKind() == Kind::CONST_INTEGER);
     Rational r = cval.getConst<Rational>();
