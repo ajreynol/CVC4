@@ -27,6 +27,7 @@
 #include "theory/uf/opaque_value.h"
 #include "theory/uf/theory_uf_rewriter.h"
 #include "expr/dtype.h"
+#include "expr/dtype_cons.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory;
@@ -51,6 +52,11 @@ class ElimArithConverter : public NodeConverter
       TypeNode ctn = convertType(tn);
       if (ctn != tn)
       {
+        std::map<Node, Node>::iterator itd = d_dtSymCache.find(orig);
+        if (itd != d_dtSymCache.end())
+        {
+          return itd->second;
+        }
         if (orig.getKind() == Kind::BOUND_VARIABLE)
         {
           return d_nm->mkBoundVar(ctn);
@@ -86,10 +92,6 @@ class ElimArithConverter : public NodeConverter
     else if (!terms.empty())
     {
       Kind k = orig.getKind();
-      if (k == Kind::APPLY_CONSTRUCTOR || k==Kind::APPLY_SELECTOR || k == Kind::APPLY_UPDATER || k == Kind::APPLY_TESTER)
-      {
-        return orig;
-      }
       return d_nm->mkNode(k, terms);
     }
     return orig;
@@ -109,6 +111,7 @@ class ElimArithConverter : public NodeConverter
       }
       std::vector<TypeNode> toProcess;
       std::unordered_set<TypeNode> connected;
+      std::vector<TypeNode> connectedDt;
       std::map<TypeNode, TypeNode> converted;
       bool needsUpdate = false;
       toProcess.push_back(tn);
@@ -123,6 +126,7 @@ class ElimArithConverter : public NodeConverter
         connected.insert(curr);
         if (curr.isDatatype())
         {
+          connectedDt.push_back(curr);
           const DType& dt = tn.getDType();
           std::unordered_set<TypeNode> stypes = dt.getSubfieldTypes();
           toProcess.insert(toProcess.end(), stypes.begin(), stypes.end());
@@ -143,13 +147,53 @@ class ElimArithConverter : public NodeConverter
       }
       else
       {
-        // FIXME
         std::vector<DType> newDatatypes;
-        for (const TypeNode& curr : connected)
+        for (const TypeNode& curr : connectedDt)
         {
-          if (!curr.isDatatype())
+          std::stringstream ss;
+          ss << "opaque_" << curr.getDType().getName();
+          newDatatypes.push_back(DType(ss.str()));
+          converted[curr] = d_nm->mkUnresolvedDatatypeSort(ss.str());
+        }
+        for (size_t d=0, numDts = connectedDt.size(); d<numDts; d++)
+        {
+          TypeNode curr = connectedDt[d];
+          DType& ndt = newDatatypes[d];
+          const DType& dt = curr.getDType();
+          for (size_t i=0, ncons = dt.getNumConstructors(); i<ncons; i++)
           {
-            continue;
+            const DTypeConstructor& dc = dt[i];
+            std::stringstream ssc;
+            ssc << "opaque_" << dc.getName();
+            std::shared_ptr<DTypeConstructor> c =
+                std::make_shared<DTypeConstructor>(ssc.str());
+            for (size_t j=0, nargs = dc.getNumArgs(); j<nargs; j++)
+            {
+              std::stringstream sss;
+              sss << "opaque_" << dc[j].getName();
+              c->addArg(sss.str(), converted[dc[j].getRangeType()]);
+            }
+            ndt.addConstructor(c);
+          }
+        }
+        std::vector<TypeNode> ndts = d_nm->mkMutualDatatypeTypes(newDatatypes);
+        Assert (ndts.size()==connectedDt.size());
+        for (size_t d=0, numDts = connectedDt.size(); d<numDts; d++)
+        {
+          d_dtCache[connectedDt[d]] = ndts[d];
+          const DType& ndt = ndts[d].getDType();
+          const DType& odt = connectedDt[d].getDType();
+          for (size_t i=0, ncons = ndt.getNumConstructors(); i<ncons; i++)
+          {
+            const DTypeConstructor& ndc = ndt[i];
+            const DTypeConstructor& odc = odt[i];
+            for (size_t j=0, nargs = ndc.getNumArgs(); j<nargs; j++)
+            {
+              d_dtSymCache[odc[j].getSelector()] = ndc[j].getSelector();     
+              d_dtSymCache[odc[j].getUpdater()] = ndc[j].getUpdater();             
+            }
+            d_dtSymCache[odc.getConstructor()] = ndc.getConstructor();
+            d_dtSymCache[odc.getTester()] = ndc.getTester();
           }
         }
       }
@@ -158,6 +202,7 @@ class ElimArithConverter : public NodeConverter
   }
 private:
   std::map<TypeNode, TypeNode> d_dtCache;
+  std::map<Node, Node> d_dtSymCache;
 };
 
 ElimArith::ElimArith(PreprocessingPassContext* preprocContext)

@@ -1002,7 +1002,7 @@ inline bool TypeNode::isFunction() const {
 
 inline bool TypeNode::isFunctionLike() const {
   return getKind() == Kind::FUNCTION_TYPE || getKind() == Kind::CONSTRUCTOR_TYPE
-         || getKind() == Kind::SELECTOR_TYPE || getKind() == Kind::TESTER_TYPE;
+         || getKind() == Kind::SELECTOR_TYPE || getKind() == Kind::TESTER_TYPE || getKind()==Kind::UPDATER_TYPE;
 }
 
 inline bool TypeNode::isPredicate() const {
