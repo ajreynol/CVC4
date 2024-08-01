@@ -43,6 +43,7 @@ class ElimArithConverter : public NodeConverter
                           const std::vector<Node>& terms,
                           bool termsChanged) override
   {
+    Trace("elim-arith-convert") << "Convert " << orig << std::endl;
     TypeNode tn = orig.getType();
     if (orig.isVar())
     {
@@ -66,7 +67,7 @@ class ElimArithConverter : public NodeConverter
     {
       return d_nm->mkConst(OpaqueValue(orig));
     }
-    else if (!Theory::isLeafOf(orig, THEORY_ARITH))
+    else if (orig.getKind()!=Kind::EQUAL && !Theory::isLeafOf(orig, THEORY_ARITH))
     {
       TypeNode ctn = convertType(tn);
       std::vector<TypeNode> argTypes;
@@ -80,6 +81,10 @@ class ElimArithConverter : public NodeConverter
       oterms.push_back(oop);
       oterms.insert(oterms.end(), terms.begin(), terms.end());
       return d_nm->mkNode(Kind::APPLY_OPAQUE, oterms);
+    }
+    else if (!terms.empty())
+    {
+      return d_nm->mkNode(orig.getKind(), terms);
     }
     return orig;
   }
