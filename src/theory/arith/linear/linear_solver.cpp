@@ -194,20 +194,24 @@ bool LinearSolver::postCheck(Theory::Effort level)
     {
       bool pol = (fact.getKind() != Kind::NOT);
       Node atom = pol ? fact : fact[0];
+      size_t count = 0;
       for (const Node& t : atom)
       {
         Assert(atom.getKind() == Kind::EQUAL);
-        if (d_arithTerms.find(t) != d_arithTerms.end())
+        if (d_arithTerms.find(t) != d_arithTerms.end() || t.isConst())
         {
-          // reduce
-          d_arithReduced.insert(atom);
-          Node atomr = rewrite(atom);
-          Node eqAtom = nodeManager()->mkNode(Kind::EQ, atomr[0], atomr[1]);
-          Node lem = atom.eqNode(eqAtom);
-          TrustNode tlem = TrustNode::mkTrustLemma(lem);
-          outputTrustedLemma(tlem, InferenceId::ARITH_EQUAL_EQ_INTRO);
-          break;
+          count++;
         }
+      }
+      if (count==2)
+      {
+        // reduce
+        d_arithReduced.insert(atom);
+        Node atomr = rewrite(atom);
+        Node eqAtom = nodeManager()->mkNode(Kind::EQ, atomr[0], atomr[1]);
+        Node lem = atom.eqNode(eqAtom);
+        TrustNode tlem = TrustNode::mkTrustLemma(lem);
+        outputTrustedLemma(tlem, InferenceId::ARITH_EQUAL_EQ_INTRO);
       }
     }
   }
