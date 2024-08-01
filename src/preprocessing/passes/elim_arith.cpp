@@ -197,6 +197,7 @@ class ElimArithConverter : public NodeConverter
           }
         }
       }
+      return d_dtCache[tn];
     }
     return tn;
   }
