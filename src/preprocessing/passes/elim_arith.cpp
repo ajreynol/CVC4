@@ -19,8 +19,8 @@
 
 #include <string>
 
-#include "expr/skolem_manager.h"
 #include "expr/node_converter.h"
+#include "expr/skolem_manager.h"
 #include "preprocessing/assertion_pipeline.h"
 #include "preprocessing/preprocessing_pass_context.h"
 
@@ -33,8 +33,8 @@ namespace passes {
 
 class ElimArithConverter : public NodeConverter
 {
-public:
-  ElimArithConverter(NodeManager* nm) : NodeConverter(nm){}
+ public:
+  ElimArithConverter(NodeManager* nm) : NodeConverter(nm) {}
 
   Node postConvertUntyped(Node orig,
                           const std::vector<Node>& terms,
@@ -43,7 +43,7 @@ public:
     return orig;
   }
 };
-  
+
 ElimArith::ElimArith(PreprocessingPassContext* preprocContext)
     : PreprocessingPass(preprocContext, "elim-arith"), d_cache(userContext())
 {
@@ -62,7 +62,6 @@ PreprocessingPassResult ElimArith::applyInternal(
   }
   return PreprocessingPassResult::NO_CONFLICT;
 }
-
 
 }  // namespace passes
 }  // namespace preprocessing
