@@ -23,6 +23,9 @@
 #include "expr/skolem_manager.h"
 #include "preprocessing/assertion_pipeline.h"
 #include "preprocessing/preprocessing_pass_context.h"
+#include "theory/uf/opaque_value.h"
+#include "theory/uf/theory_uf_rewriter.h"
+#include "theory/theory.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory;
@@ -52,12 +55,31 @@ class ElimArithConverter : public NodeConverter
         }
         else
         {
-          
+          SkolemManager * sm = d_nm->getSkolemManager();
+          return sm->mkInternalSkolemFunction(InternalSkolemId::PURIFY_OPAQUE, ctn, {orig});
         }
       }
       return orig;
     }
-    
+    else if (orig.isConst() && tn.isRealOrInt())
+    {
+      return d_nm->mkConst(OpaqueValue(orig));
+    }
+    else if (!Theory::isLeafOf(orig, THEORY_ARITH))
+    {
+      TypeNode ctn = convertType(tn);
+      std::vector<TypeNode> argTypes;
+      for (const Node& t : terms)
+      {
+        argTypes.push_back(t.getType());
+      }
+      TypeNode ftype = d_nm->mkFunctionType(argTypes, ctn);
+      Node oop = theory::uf::TheoryUfRewriter::getOpaqueOperator(orig, ftype);
+      std::vector<Node> oterms;
+      oterms.push_back(oop);
+      oterms.insert(oterms.end(), terms.begin(), terms.end());
+      return d_nm->mkNode(Kind::APPLY_OPAQUE, oterms);
+    }
     return orig;
   }
   TypeNode postConvertType(TypeNode tn) override

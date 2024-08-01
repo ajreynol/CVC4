@@ -56,6 +56,10 @@ const char* toString(InternalSkolemId id)
     case InternalSkolemId::QE_CLOSED_INPUT: return "QE_CLOSED_INPUT";
     case InternalSkolemId::QUANTIFIERS_ATTRIBUTE_INTERNAL:
       return "QUANTIFIERS_ATTRIBUTE_INTERNAL";
+    case InternalSkolemId::PURIFY_OPAQUE:
+      return "PURIFY_OPAQUE";
+    case InternalSkolemId::PURIFY_OPAQUE_OP:
+      return "PURIFY_OPAQUE_OP";
     default: return "?";
   }
 }
@@ -216,6 +220,28 @@ bool SkolemManager::isSkolemFunction(TNode k,
   return true;
 }
 
+bool SkolemManager::isInternalSkolemFunction(TNode k, InternalSkolemId& id, std::vector<Node>& cacheVals) const
+{  
+  SkolemId eid;
+  Node cacheVal;
+  // if its an internal skolem
+  if (isSkolemFunction(k, eid, cacheVal) &&eid == SkolemId::INTERNAL)
+  {
+    Node cval = cacheVal;
+    if (cacheVal.getKind() == Kind::SEXPR)
+    {
+      cval = cacheVal[0];
+      cacheVals.insert(cacheVals.end(), cacheVal.begin()+1, cacheVal.end());
+    }
+    Assert(cval.getKind() == Kind::CONST_INTEGER);
+    Rational r = cval.getConst<Rational>();
+    Assert(r.sgn() >= 0 && r.getNumerator().fitsUnsignedInt());
+    id = static_cast<InternalSkolemId>(r.getNumerator().toUnsignedInt());
+    return true;
+  }
+  return false;
+}
+
 SkolemId SkolemManager::getId(TNode k) const
 {
   SkolemId id;
@@ -229,17 +255,12 @@ SkolemId SkolemManager::getId(TNode k) const
 
 InternalSkolemId SkolemManager::getInternalId(TNode k) const
 {
-  SkolemId id;
-  Node cacheVal;
+  InternalSkolemId id;
+  std::vector<Node> cacheVals;
   // if its an internal skolem
-  if (isSkolemFunction(k, id, cacheVal) && id == SkolemId::INTERNAL)
+  if (isInternalSkolemFunction(k, id, cacheVals))
   {
-    Assert(!cacheVal.isNull());
-    Node cval = cacheVal.getKind() == Kind::SEXPR ? cacheVal[0] : cacheVal;
-    Assert(cval.getKind() == Kind::CONST_INTEGER);
-    Rational r = cval.getConst<Rational>();
-    Assert(r.sgn() >= 0 && r.getNumerator().fitsUnsignedInt());
-    return static_cast<InternalSkolemId>(r.getNumerator().toUnsignedInt());
+    return id;
   }
   return InternalSkolemId::NONE;
 }

@@ -17,6 +17,7 @@
 
 #include "expr/elim_shadow_converter.h"
 #include "expr/function_array_const.h"
+#include "expr/skolem_manager.h"
 #include "expr/node_algorithm.h"
 #include "theory/arith/arith_utilities.h"
 #include "theory/bv/theory_bv_utils.h"
@@ -113,7 +114,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
   }
   else if (k == Kind::APPLY_OPAQUE)
   {
-    // TODO: all constant, does fold
+    // if all constant, reduces to original
     std::vector<Node> cc;
     bool allConst = true;
     for (const Node& nc : node)
@@ -128,13 +129,8 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
     }
     if (allConst)
     {
-      Node op = getOperatorFromOpaque(node);
-      if (!op.isNull())
-      {
-        cc.insert(cc.begin(), op);
-        Node ret = nodeManager()->mkNode(Kind::APPLY_UF, cc);
-        return RewriteResponse(REWRITE_AGAIN_FULL, ret);
-      }
+      Node orig = getOriginalFromOpaque(node.getOperator(), cc);
+      return RewriteResponse(REWRITE_AGAIN_FULL, orig);
     }
   }
   else if (k == Kind::HO_APPLY)
@@ -405,25 +401,42 @@ RewriteResponse TheoryUfRewriter::rewriteIntToBV(TNode node)
   return RewriteResponse(REWRITE_DONE, node);
 }
 
-Node TheoryUfRewriter::getOpaqueOperator(const Node& app)
+Node TheoryUfRewriter::getOpaqueOperator(const Node& app, const TypeNode& ftn)
 {
   NodeManager * nm = NodeManager::currentNM();
-  Assert (app.hasOperator());
-  Node op = app.getOperator();
-  std::vector<TypeNode> argTypes;
-  for (const Node& c : app)
+  SkolemManager * skm = nm->getSkolemManager();
+  Kind k = app.getKind();
+  std::vector<Node> cacheVals;
+  cacheVals.push_back(nm->mkConstInt(Rational(static_cast<uint32_t>(k))));
+  if (app.getMetaKind() == kind::metakind::PARAMETERIZED)
   {
-    TypeNode ct = c.getType();
-    argTypes.push_back(nm->mkOpaqueType(ct));
+    cacheVals.push_back(app.getOperator());
   }
-  TypeNode ret = app.getType();
-  ret = nm->mkOpaqueType(ret);
-  // FIXME
+  return skm->mkInternalSkolemFunction(InternalSkolemId::PURIFY_OPAQUE_OP, ftn, cacheVals);
 }
 
-Node TheoryUfRewriter::getOperatorFromOpaque(const Node& oapp)
+Node TheoryUfRewriter::getOriginalFromOpaque(const Node& oapp, const std::vector<Node>& cc)
 {
-  // FIXME
+  Assert (oapp.getKind()==Kind::APPLY_OPAQUE);
+  NodeManager * nm = NodeManager::currentNM();
+  SkolemManager * skm = nm->getSkolemManager();
+  std::vector<Node> children;
+  InternalSkolemId id;
+  std::vector<Node> cacheVals;
+  if (!skm->isInternalSkolemFunction(oapp.getOperator(), id, cacheVals))
+  {
+    Assert(false);
+    return oapp;
+  }
+  Assert (id==InternalSkolemId::PURIFY_OPAQUE_OP);
+  Node kn = cacheVals[0];
+  Assert (kn.getKind()==Kind::CONST_INTEGER);
+  const Rational& r =kn.getConst<Rational>();
+  Assert (r.sgn() >= 0 && r.getNumerator().fitsUnsignedInt());
+  Kind k = static_cast<Kind>(r.getNumerator().toUnsignedInt());
+  children.insert(children.end(), cacheVals.begin()+1, cacheVals.end());
+  children.insert(children.end(), cc.begin(), cc.end());
+  return nm->mkNode(k, children);
 }
 
 }  // namespace uf

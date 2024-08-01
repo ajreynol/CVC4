@@ -62,6 +62,9 @@ enum class InternalSkolemId
   QE_CLOSED_INPUT,
   /** Skolem used for marking a quantified attribute */
   QUANTIFIERS_ATTRIBUTE_INTERNAL,
+  /** */
+  PURIFY_OPAQUE,
+  PURIFY_OPAQUE_OP
 };
 /** Converts an internal skolem function name to a string. */
 const char* toString(InternalSkolemId id);
@@ -197,6 +200,7 @@ class SkolemManager
    * call. Updates the arguments to the values used when constructing it.
    */
   bool isSkolemFunction(TNode k, SkolemId& id, Node& cacheVal) const;
+  bool isInternalSkolemFunction(TNode k, InternalSkolemId& id, std::vector<Node>& cacheVals) const;
   /**
    * Get skolem function id
    */
