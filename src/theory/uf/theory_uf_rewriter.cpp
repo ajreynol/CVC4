@@ -114,7 +114,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
   else if (k == Kind::APPLY_OPAQUE)
   {
     // TODO: all constant, does fold
-    std::vector<Node> constChildren;
+    std::vector<Node> cc;
     bool allConst = true;
     for (const Node& nc : node)
     {
@@ -124,11 +124,17 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
         break;
       }
       Assert (nc.getKind()==Kind::OPAQUE_VALUE);
-      constChildren.push_back(nc.getConst<OpaqueValue>().getValue());
+      cc.push_back(nc.getConst<OpaqueValue>().getValue());
     }
     if (allConst)
     {
-      
+      Node op = getOperatorFromOpaque(node);
+      if (!op.isNull())
+      {
+        cc.insert(cc.begin(), op);
+        Node ret = nodeManager()->mkNode(Kind::APPLY_UF, cc);
+        return RewriteResponse(REWRITE_AGAIN_FULL, ret);
+      }
     }
   }
   else if (k == Kind::HO_APPLY)
@@ -398,6 +404,28 @@ RewriteResponse TheoryUfRewriter::rewriteIntToBV(TNode node)
   }
   return RewriteResponse(REWRITE_DONE, node);
 }
+
+Node TheoryUfRewriter::getOpaqueOperator(const Node& app)
+{
+  NodeManager * nm = NodeManager::currentNM();
+  Assert (app.hasOperator());
+  Node op = app.getOperator();
+  std::vector<TypeNode> argTypes;
+  for (const Node& c : app)
+  {
+    TypeNode ct = c.getType();
+    argTypes.push_back(nm->mkOpaqueType(ct));
+  }
+  TypeNode ret = app.getType();
+  ret = nm->mkOpaqueType(ret);
+  // FIXME
+}
+
+Node TheoryUfRewriter::getOperatorFromOpaque(const Node& oapp)
+{
+  // FIXME
+}
+
 }  // namespace uf
 }  // namespace theory
 }  // namespace cvc5::internal

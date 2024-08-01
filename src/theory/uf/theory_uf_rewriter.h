@@ -78,6 +78,10 @@ class TheoryUfRewriter : public TheoryRewriter
    */
   static bool canUseAsApplyUfOperator(TNode n);
 
+  /** */
+  static Node getOpaqueOperator(const Node& app);
+  /** */
+  static Node getOperatorFromOpaque(const Node& oapp);
  private:
   /**
    * Pointer to the rewriter, required for rewriting lambdas that appear

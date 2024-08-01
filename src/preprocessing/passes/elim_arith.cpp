@@ -40,7 +40,33 @@ class ElimArithConverter : public NodeConverter
                           const std::vector<Node>& terms,
                           bool termsChanged) override
   {
+    TypeNode tn = orig.getType();
+    if (orig.isVar())
+    {
+      TypeNode ctn = convertType(tn);
+      if (ctn!=tn)
+      {
+        if (orig.getKind()==Kind::BOUND_VARIABLE)
+        {
+          return d_nm->mkBoundVar(ctn);
+        }
+        else
+        {
+          
+        }
+      }
+      return orig;
+    }
+    
     return orig;
+  }
+  TypeNode postConvertType(TypeNode tn) override
+  {
+    if (tn.isRealOrInt())
+    {
+      return d_nm->mkOpaqueType(tn);
+    }
+    return tn;
   }
 };
 
