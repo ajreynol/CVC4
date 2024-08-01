@@ -45,7 +45,7 @@ class ElimArithConverter : public NodeConverter
 };
 
 ElimArith::ElimArith(PreprocessingPassContext* preprocContext)
-    : PreprocessingPass(preprocContext, "elim-arith"), d_cache(userContext())
+    : PreprocessingPass(preprocContext, "elim-arith")
 {
 }
 

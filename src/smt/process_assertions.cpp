@@ -327,7 +327,12 @@ bool ProcessAssertions::apply(AssertionPipeline& ap)
 
   // ensure rewritten
   applyPass("rewrite", ap);
-
+  
+  if (options().smt.elimArith)
+  {
+    applyPass("elim-arith", ap);
+  }
+  
   // Note the two passes below are very similar. Ideally, they could be
   // done in a single traversal, e.g. do both static (ppStaticRewrite) and
   // normal (ppRewrite) in one pass. However, we do theory-preprocess
