@@ -63,8 +63,8 @@ class ElimArithConverter : public NodeConverter
         }
         else
         {
-          AlwaysAssert(ctn.getKind() != Kind::CONSTRUCTOR_TYPE)
-              << "Make new constructor " << ctn << " from " << tn;
+          // all constructor symbols should be caught by d_dtSymCache
+          Assert(ctn.getKind() != Kind::CONSTRUCTOR_TYPE);
           SkolemManager* sm = d_nm->getSkolemManager();
           return sm->mkInternalSkolemFunction(
               InternalSkolemId::PURIFY_OPAQUE, ctn, {orig});
@@ -133,6 +133,7 @@ class ElimArithConverter : public NodeConverter
           it = d_dtCache.find(curr);
           if (it != d_dtCache.end())
           {
+            // a previously converted datatype
             needsUpdate = needsUpdate || it->second != curr;
             converted[curr] = it->second;
           }
