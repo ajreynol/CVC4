@@ -165,9 +165,9 @@ void TheoryUF::notifyFact(TNode atom, bool pol, TNode fact, bool isInternal)
   {
     case Kind::EQUAL:
     {
-      if (logicInfo().isHigherOrder() && options().uf.ufHoExt)
+      if (d_ho!=nullptr)
       {
-        if (!pol && !d_state.isInConflict() && atom[0].getType().isFunction())
+        if (options().uf.ufHoExt && !pol && !d_state.isInConflict() && atom[0].getType().isFunction())
         {
           // apply extensionality eagerly using the ho extension
           d_ho->applyExtensionality(fact);
@@ -194,6 +194,12 @@ void TheoryUF::notifyFact(TNode atom, bool pol, TNode fact, bool isInternal)
           d_im.setModelUnsound(IncompleteId::UF_CARD_DISABLED);
         }
       }
+    }
+    break;
+    case Kind::APPLY_OPAQUE:
+    {
+      Assert (d_osolver!=nullptr);
+      d_osolver->notifyFact(atom, pol);
     }
     break;
     default: break;

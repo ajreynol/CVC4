@@ -568,7 +568,7 @@ class Theory : protected EnvObj
    */
   virtual void computeRelevantTerms(std::set<Node>& termSet);
   /**
-   * Collect asserted terms for this theory and add them to  termSet.
+   * Collect asserted terms for this theory and add them to termSet.
    *
    * @param termSet The set to add terms to
    * @param includeShared Whether to include the shared terms of the theory
