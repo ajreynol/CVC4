@@ -18,6 +18,7 @@
 
 #include "base/output.h"
 #include "options/arith_options.h"
+#include "proof/proof_checker.h"
 #include "proof/proof_node.h"
 #include "proof/proof_node_manager.h"
 #include "smt/env.h"
@@ -396,9 +397,18 @@ bool ArithCongruenceManager::propagate(TNode x){
                                           : proven[1];
         if (peq[1].isConst())
         {
-          cdp.addStep(
-              falsen, ProofRule::MACRO_SR_PRED_TRANSFORM, {neg, peq}, {falsen});
-          success = true;
+          ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
+          Node res = pc->checkDebug(
+              ProofRule::MACRO_SR_PRED_TRANSFORM, {neg, peq}, {falsen}, falsen);
+          Assert(!res.isNull());
+          if (!res.isNull())
+          {
+            cdp.addStep(falsen,
+                        ProofRule::MACRO_SR_PRED_TRANSFORM,
+                        {neg, peq},
+                        {falsen});
+            success = true;
+          }
         }
       }
       if (success)
