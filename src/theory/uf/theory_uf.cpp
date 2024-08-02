@@ -31,6 +31,7 @@
 #include "theory/type_enumerator.h"
 #include "theory/uf/cardinality_extension.h"
 #include "theory/uf/conversions_solver.h"
+#include "theory/uf/opaque_solver.h"
 #include "theory/uf/ho_extension.h"
 #include "theory/uf/lambda_lift.h"
 #include "theory/uf/theory_uf_rewriter.h"
@@ -314,6 +315,17 @@ void TheoryUF::preRegisterTerm(TNode node)
       }
       // call preregister
       d_csolver->preRegisterTerm(node);
+    }
+    break;
+    case Kind::APPLY_OPAQUE:
+    {
+      d_equalityEngine->addTerm(node);
+      d_functionsTerms.push_back(node);
+      if (d_osolver==nullptr)
+      {
+        d_osolver.reset(new OpaqueSolver(d_env, d_state, d_im));
+      }
+      d_osolver->preRegisterTerm(node);
     }
     break;
     case Kind::CARDINALITY_CONSTRAINT:

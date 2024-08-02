@@ -1273,6 +1273,8 @@ libcvc5_add_sources(
   theory/uf/function_const.h
   theory/uf/lambda_lift.cpp
   theory/uf/lambda_lift.h
+  theory/uf/opaque_solver.cpp
+  theory/uf/opaque_solver.h
   theory/uf/opaque_value.cpp
   theory/uf/opaque_value.h
   theory/uf/proof_checker.cpp

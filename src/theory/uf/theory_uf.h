@@ -34,6 +34,7 @@ namespace uf {
 class CardinalityExtension;
 class HoExtension;
 class ConversionsSolver;
+class OpaqueSolver;
 class LambdaLift;
 
 class TheoryUF : public Theory {
@@ -80,6 +81,8 @@ private:
   std::unique_ptr<HoExtension> d_ho;
   /** the conversions solver */
   std::unique_ptr<ConversionsSolver> d_csolver;
+  /** the opaque solver */
+  std::unique_ptr<OpaqueSolver> d_osolver;
 
   /** node for true */
   Node d_true;
