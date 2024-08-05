@@ -142,9 +142,16 @@ void TheoryUF::postCheck(Effort level)
       d_csolver->check();
     }
     // check with the higher-order extension at full effort
-    if (fullEffort(level) && logicInfo().isHigherOrder())
+    if (fullEffort(level))
     {
-      d_ho->check();
+      if (d_ho!=nullptr)
+      {
+        d_ho->check();
+      }
+      if (d_osolver!=nullptr)
+      {
+        d_osolver->check();
+      }
     }
   }
 }

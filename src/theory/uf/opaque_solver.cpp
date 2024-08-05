@@ -24,13 +24,22 @@
 #include "theory/theory_model.h"
 #include "theory/theory_state.h"
 #include "options/smt_options.h"
+#include "theory/smt_engine_subsolver.h"
+#include "proof/unsat_core.h"
+#include "expr/attribute.h"
+
 
 using namespace cvc5::internal::kind;
 
 namespace cvc5::internal {
 namespace theory {
 namespace uf {
-
+  
+struct OpaqueFormAttributeId
+{
+};
+using OpaqueFormAttribute = expr::Attribute<OpaqueFormAttributeId, Node>;
+    
 Node OpaqueConverter::postConvertUntyped(Node orig,
                         const std::vector<Node>& terms,
                         bool termsChanged)
@@ -129,7 +138,17 @@ void OpaqueSolver::check()
   if (r.getStatus() == Result::UNSAT)
   {
     UnsatCore uc = findConflict->getUnsatCore();
-    Node ucc = nodeManager()->mkAnd(uc.getCore());
+    std::vector<Node> opaqueCore;
+    OpaqueFormAttribute ofa;
+    for (const Node& a : uc)
+    {
+      bool pol = a.getKind()!=Kind::NOT;
+      Node oa = pol ? a : a[0];
+      oa = oa.getAttribute(ofa);
+      Assert (!oa.isNull());
+      opaqueCore.push_back(pol ? oa : oa.notNode());
+    }
+    Node ucc = nodeManager()->mkAnd(opaqueCore);
     Trace("opaque-solver") << "Unsat core is " << ucc << std::endl;
     Trace("opaque-solver") << "Core size = " << uc.getCore().size() << std::endl;
     d_im.lemma(ucc.notNode(), InferenceId::OPAQUE_SUB_UC);
@@ -138,8 +157,10 @@ void OpaqueSolver::check()
 
 void OpaqueSolver::notifyFact(const Node& atom, bool pol)
 {
-  Node oatom = convertFromOpaque(atom);
-  d_asserts.push_back(std::pair<Node, bool>(atom, pol));
+  Node catom = convertFromOpaque(atom);
+  OpaqueFormAttribute ofa;
+  catom.setAttribute(ofa, atom);
+  d_asserts.push_back(std::pair<Node, bool>(catom, pol));
 }
 
 Node OpaqueSolver::convertFromOpaque(const Node& n)
