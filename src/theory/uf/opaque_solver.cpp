@@ -45,22 +45,17 @@ Node OpaqueConverter::postConvertUntyped(Node orig,
                         bool termsChanged)
 {
   Kind ok = orig.getKind();
+  Trace("ajr-temp") << "Convert " << orig << " " << terms << std::endl;
   if (ok==Kind::APPLY_OPAQUE)
   {
-    std::vector<Node> cc;
-    for (size_t i=1, nterms = terms.size(); i<nterms; i++)
-    {
-      const Node& t = terms[i];
-      if (t.getKind() == Kind::OPAQUE_VALUE)
-      {
-        cc.push_back(t.getConst<OpaqueValue>().getValue());
-      }
-      else
-      {
-        cc.push_back(t);
-      }
-    }
-    return TheoryUfRewriter::getOriginalFromOpaque(orig, cc);
+    std::vector<Node> cc(terms.begin()+1, terms.end());
+    Node ret = TheoryUfRewriter::getOriginalFromOpaque(orig, cc);
+    AlwaysAssert (!ret.getType().isOpaque());
+    return ret;
+  }
+  else if (ok==Kind::OPAQUE_VALUE)
+  {
+    return orig.getConst<OpaqueValue>().getValue();
   }
   else if (ok==Kind::EQUAL)
   {
@@ -69,19 +64,22 @@ Node OpaqueConverter::postConvertUntyped(Node orig,
   else if (orig.getNumChildren()>0)
   {
     SkolemManager * skm = d_nm->getSkolemManager();
-    return skm->mkPurifySkolem(orig);
+    Node tnew = d_nm->mkNode(orig.getKind(), terms);
+    AlwaysAssert (!tnew.getType().isOpaque());
+    return skm->mkPurifySkolem(tnew);
   }
-  else if (orig.isVar() && orig.getType().isOpaque())
+  else if (orig.isVar())
   {
     SkolemManager * skm = d_nm->getSkolemManager();
-    SkolemId id;
-    Node cacheVal;
-    if (skm->isSkolemFunction(orig, id, cacheVal))
+    InternalSkolemId id;
+    std::vector<Node> cacheVals;
+    if (skm->isInternalSkolemFunction(orig, id, cacheVals))
     {
-      Assert (id==SkolemFunId::PURIFY_OPAQUE);
-      return cacheVal[1];
+      if (id==InternalSkolemId::PURIFY_OPAQUE)
+      {
+        return cacheVals[0];
+      }
     }
-    Assert (false);
   }
   return orig;
 }
