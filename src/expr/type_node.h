@@ -537,7 +537,7 @@ class CVC5_EXPORT TypeNode
    * functions, here.
    */
   bool isFunction() const;
-  
+
   bool isOpaque() const;
 
   /**
@@ -1016,7 +1016,8 @@ inline bool TypeNode::isPredicateLike() const {
   return isFunctionLike() && getRangeType().isBoolean();
 }
 
-inline bool TypeNode::isOpaque() const {
+inline bool TypeNode::isOpaque() const
+{
   return getKind() == Kind::OPAQUE_TYPE;
 }
 

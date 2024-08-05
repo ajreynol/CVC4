@@ -22,8 +22,8 @@
 #include "context/cdhashset.h"
 #include "context/cdlist.h"
 #include "expr/node.h"
-#include "smt/env_obj.h"
 #include "expr/node_converter.h"
+#include "smt/env_obj.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -36,7 +36,7 @@ namespace uf {
 class OpaqueConverter : public NodeConverter
 {
  public:
-  OpaqueConverter(NodeManager* nm) : NodeConverter(nm) {}  
+  OpaqueConverter(NodeManager* nm) : NodeConverter(nm) {}
   Node postConvertUntyped(Node orig,
                           const std::vector<Node>& terms,
                           bool termsChanged) override;
@@ -73,7 +73,7 @@ class OpaqueSolver : protected EnvObj
 
  private:
   /** */
-  Node convertFromOpaque(const Node& n); 
+  Node convertFromOpaque(const Node& n);
   /** Reference to the state object */
   TheoryState& d_state;
   /** Reference to the inference manager */

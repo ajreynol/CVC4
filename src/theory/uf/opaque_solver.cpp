@@ -15,67 +15,66 @@
 
 #include "theory/uf/opaque_solver.h"
 
+#include "expr/attribute.h"
 #include "expr/skolem_manager.h"
+#include "options/smt_options.h"
 #include "options/uf_options.h"
-#include "theory/uf/theory_uf_rewriter.h"
+#include "proof/unsat_core.h"
 #include "theory/arith/arith_utilities.h"
-#include "theory/uf/opaque_value.h"
+#include "theory/smt_engine_subsolver.h"
 #include "theory/theory_inference_manager.h"
 #include "theory/theory_model.h"
 #include "theory/theory_state.h"
-#include "options/smt_options.h"
-#include "theory/smt_engine_subsolver.h"
-#include "proof/unsat_core.h"
-#include "expr/attribute.h"
-
+#include "theory/uf/opaque_value.h"
+#include "theory/uf/theory_uf_rewriter.h"
 
 using namespace cvc5::internal::kind;
 
 namespace cvc5::internal {
 namespace theory {
 namespace uf {
-  
+
 struct OpaqueFormAttributeId
 {
 };
 using OpaqueFormAttribute = expr::Attribute<OpaqueFormAttributeId, Node>;
-    
+
 Node OpaqueConverter::postConvertUntyped(Node orig,
-                        const std::vector<Node>& terms,
-                        bool termsChanged)
+                                         const std::vector<Node>& terms,
+                                         bool termsChanged)
 {
   Kind ok = orig.getKind();
   Trace("ajr-temp") << "Convert " << orig << " " << terms << std::endl;
-  if (ok==Kind::APPLY_OPAQUE)
+  if (ok == Kind::APPLY_OPAQUE)
   {
-    std::vector<Node> cc(terms.begin()+1, terms.end());
+    std::vector<Node> cc(terms.begin() + 1, terms.end());
     Node ret = TheoryUfRewriter::getOriginalFromOpaque(orig, cc);
-    AlwaysAssert (!ret.getType().isOpaque());
+    AlwaysAssert(!ret.getType().isOpaque());
     return ret;
   }
-  else if (ok==Kind::OPAQUE_VALUE)
+  else if (ok == Kind::OPAQUE_VALUE)
   {
     return orig.getConst<OpaqueValue>().getValue();
   }
-  else if (ok==Kind::EQUAL)
+  else if (ok == Kind::EQUAL)
   {
     return d_nm->mkNode(Kind::EQUAL, terms);
   }
-  else if (orig.getNumChildren()>0)
+  else if (orig.getNumChildren() > 0)
   {
-    SkolemManager * skm = d_nm->getSkolemManager();
+    SkolemManager* skm = d_nm->getSkolemManager();
     Node tnew = d_nm->mkNode(orig.getKind(), terms);
-    AlwaysAssert (!tnew.getType().isOpaque());
+    AlwaysAssert(!tnew.getType().isOpaque());
     return skm->mkPurifySkolem(tnew);
   }
   else if (orig.isVar())
   {
-    SkolemManager * skm = d_nm->getSkolemManager();
+    SkolemManager* skm = d_nm->getSkolemManager();
     InternalSkolemId id;
     std::vector<Node> cacheVals;
     if (skm->isInternalSkolemFunction(orig, id, cacheVals))
     {
-      if (id==InternalSkolemId::PURIFY_OPAQUE)
+      if (id == InternalSkolemId::PURIFY_OPAQUE)
       {
         return cacheVals[0];
       }
@@ -83,10 +82,10 @@ Node OpaqueConverter::postConvertUntyped(Node orig,
   }
   return orig;
 }
-                          
+
 OpaqueSolver::OpaqueSolver(Env& env,
-                                     TheoryState& state,
-                                     TheoryInferenceManager& im)
+                           TheoryState& state,
+                           TheoryInferenceManager& im)
     : EnvObj(env),
       d_state(state),
       d_im(im),
@@ -110,9 +109,7 @@ OpaqueSolver::OpaqueSolver(Env& env,
 
 OpaqueSolver::~OpaqueSolver() {}
 
-void OpaqueSolver::preRegisterTerm(TNode term)
-{
-}
+void OpaqueSolver::preRegisterTerm(TNode term) {}
 
 void OpaqueSolver::check()
 {
@@ -124,7 +121,8 @@ void OpaqueSolver::check()
   std::unique_ptr<SolverEngine> findConflict;
   initializeSubsolver(findConflict, ssi, false);
   // assert and check-sat
-  Trace("opaque-solver") << "Check opaque with " << d_asserts.size() << " assertions..." << std::endl;
+  Trace("opaque-solver") << "Check opaque with " << d_asserts.size()
+                         << " assertions..." << std::endl;
   for (const std::pair<Node, bool>& a : d_asserts)
   {
     Node lit = a.second ? a.first : a.first.notNode();
@@ -140,15 +138,16 @@ void OpaqueSolver::check()
     OpaqueFormAttribute ofa;
     for (const Node& a : uc)
     {
-      bool pol = a.getKind()!=Kind::NOT;
+      bool pol = a.getKind() != Kind::NOT;
       Node oa = pol ? a : a[0];
       oa = oa.getAttribute(ofa);
-      Assert (!oa.isNull());
+      Assert(!oa.isNull());
       opaqueCore.push_back(pol ? oa : oa.notNode());
     }
     Node ucc = nodeManager()->mkAnd(opaqueCore);
     Trace("opaque-solver") << "Unsat core is " << ucc << std::endl;
-    Trace("opaque-solver") << "Core size = " << uc.getCore().size() << std::endl;
+    Trace("opaque-solver") << "Core size = " << uc.getCore().size()
+                           << std::endl;
     d_im.lemma(ucc.notNode(), InferenceId::OPAQUE_SUB_UC);
   }
 }

@@ -19,7 +19,7 @@
 #include "expr/type_node.h"
 
 namespace cvc5::internal {
- 
+
 std::ostream& operator<<(std::ostream& out, const OpaqueValue& ov)
 {
   return out << "(opaque_value " << ov.getValue() << ")";
@@ -36,7 +36,10 @@ size_t OpaqueValueHashFunction::operator()(const OpaqueValue& ov) const
  */
 OpaqueValue::OpaqueValue(const Node& val) : d_value(new Node(val)) {}
 
-OpaqueValue::OpaqueValue(const OpaqueValue& ov) : d_value(new Node(ov.getValue())) {}
+OpaqueValue::OpaqueValue(const OpaqueValue& ov)
+    : d_value(new Node(ov.getValue()))
+{
+}
 
 OpaqueValue& OpaqueValue::operator=(const OpaqueValue& ov)
 {

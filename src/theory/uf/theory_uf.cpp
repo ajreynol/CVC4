@@ -31,9 +31,9 @@
 #include "theory/type_enumerator.h"
 #include "theory/uf/cardinality_extension.h"
 #include "theory/uf/conversions_solver.h"
-#include "theory/uf/opaque_solver.h"
 #include "theory/uf/ho_extension.h"
 #include "theory/uf/lambda_lift.h"
+#include "theory/uf/opaque_solver.h"
 #include "theory/uf/theory_uf_rewriter.h"
 
 using namespace std;
@@ -144,11 +144,11 @@ void TheoryUF::postCheck(Effort level)
     // check with the higher-order extension at full effort
     if (fullEffort(level))
     {
-      if (d_ho!=nullptr)
+      if (d_ho != nullptr)
       {
         d_ho->check();
       }
-      if (d_osolver!=nullptr)
+      if (d_osolver != nullptr)
       {
         d_osolver->check();
       }
@@ -172,15 +172,16 @@ void TheoryUF::notifyFact(TNode atom, bool pol, TNode fact, bool isInternal)
   {
     case Kind::EQUAL:
     {
-      if (d_ho!=nullptr)
+      if (d_ho != nullptr)
       {
-        if (options().uf.ufHoExt && !pol && !d_state.isInConflict() && atom[0].getType().isFunction())
+        if (options().uf.ufHoExt && !pol && !d_state.isInConflict()
+            && atom[0].getType().isFunction())
         {
           // apply extensionality eagerly using the ho extension
           d_ho->applyExtensionality(fact);
         }
       }
-      if (d_osolver!=nullptr)
+      if (d_osolver != nullptr)
       {
         if (atom[0].getType().isOpaque())
         {
@@ -212,7 +213,7 @@ void TheoryUF::notifyFact(TNode atom, bool pol, TNode fact, bool isInternal)
     break;
     case Kind::APPLY_OPAQUE:
     {
-      Assert (d_osolver!=nullptr);
+      Assert(d_osolver != nullptr);
       d_osolver->notifyFact(atom, pol);
     }
     break;
@@ -341,7 +342,7 @@ void TheoryUF::preRegisterTerm(TNode node)
     {
       d_equalityEngine->addTerm(node);
       d_functionsTerms.push_back(node);
-      if (d_osolver==nullptr)
+      if (d_osolver == nullptr)
       {
         d_osolver.reset(new OpaqueSolver(d_env, d_state, d_im));
       }
