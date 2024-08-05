@@ -54,6 +54,8 @@ enum class InferenceId
   EXPLAINED_PROPAGATION,
   // a skolem lemma introduced by the theory preprocessor
   THEORY_PP_SKOLEM_LEM,
+  // 
+  OPAQUE_SUB_UC,
   // ---------------------------------- ext theory
   // a simplification from the extended theory utility
   EXTT_SIMPLIFY,

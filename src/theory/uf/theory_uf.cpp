@@ -173,6 +173,13 @@ void TheoryUF::notifyFact(TNode atom, bool pol, TNode fact, bool isInternal)
           d_ho->applyExtensionality(fact);
         }
       }
+      if (d_osolver!=nullptr)
+      {
+        if (atom[0].getType().isOpaque())
+        {
+          d_osolver->notifyFact(atom, pol);
+        }
+      }
     }
     break;
     case Kind::CARDINALITY_CONSTRAINT:

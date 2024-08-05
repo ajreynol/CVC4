@@ -537,6 +537,8 @@ class CVC5_EXPORT TypeNode
    * functions, here.
    */
   bool isFunction() const;
+  
+  bool isOpaque() const;
 
   /**
    * Is this a function-LIKE type?  Function-like things
@@ -1012,6 +1014,10 @@ inline bool TypeNode::isPredicate() const {
 
 inline bool TypeNode::isPredicateLike() const {
   return isFunctionLike() && getRangeType().isBoolean();
+}
+
+inline bool TypeNode::isOpaque() const {
+  return getKind() == Kind::OPAQUE_TYPE;
 }
 
 }  // namespace cvc5::internal

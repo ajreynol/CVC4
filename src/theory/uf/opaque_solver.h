@@ -23,6 +23,7 @@
 #include "context/cdlist.h"
 #include "expr/node.h"
 #include "smt/env_obj.h"
+#include "expr/node_converter.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -31,6 +32,15 @@ class TheoryState;
 class TheoryInferenceManager;
 
 namespace uf {
+
+class OpaqueConverter : public NodeConverter
+{
+ public:
+  OpaqueConverter(NodeManager* nm) : NodeConverter(nm) {}  
+  Node postConvertUntyped(Node orig,
+                          const std::vector<Node>& terms,
+                          bool termsChanged) override;
+};
 
 /**
  * Arith-bitvector conversions solver.
@@ -62,10 +72,18 @@ class OpaqueSolver : protected EnvObj
   void notifyFact(const Node& atom, bool pol);
 
  private:
+  /** */
+  Node convertFromOpaque(const Node& n); 
   /** Reference to the state object */
   TheoryState& d_state;
   /** Reference to the inference manager */
   TheoryInferenceManager& d_im;
+  /** The options for subsolver calls */
+  Options d_subOptions;
+  /** Opaque converter */
+  OpaqueConverter d_oconv;
+  /** */
+  context::CDList<std::pair<Node, bool>> d_asserts;
 };
 
 }  // namespace uf
