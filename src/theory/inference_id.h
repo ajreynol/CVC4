@@ -61,6 +61,8 @@ enum class InferenceId
   //-------------------- linear core
   // black box conflicts. It's magic.
   ARITH_BLACK_BOX,
+  //
+  ARITH_LINEAR_SUB_UC,
   // conflicting equality
   ARITH_CONF_EQ,
   // conflicting lower bound

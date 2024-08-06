@@ -37,6 +37,7 @@ const char* toString(InferenceId i)
     case InferenceId::THEORY_PP_SKOLEM_LEM: return "THEORY_PP_SKOLEM_LEM";
     case InferenceId::EXTT_SIMPLIFY: return "EXTT_SIMPLIFY";
     case InferenceId::ARITH_BLACK_BOX: return "ARITH_BLACK_BOX";
+    case InferenceId::ARITH_LINEAR_SUB_UC: return "ARITH_LINEAR_SUB_UC";
     case InferenceId::ARITH_CONF_EQ: return "ARITH_CONF_EQ";
     case InferenceId::ARITH_CONF_LOWER: return "ARITH_CONF_LOWER";
     case InferenceId::ARITH_CONF_TRICHOTOMY: return "ARITH_CONF_TRICHOTOMY";
