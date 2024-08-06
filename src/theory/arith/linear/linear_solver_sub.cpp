@@ -66,7 +66,7 @@ void LinearSolverSub::collectModelValues(const std::set<Node>& termSet,
                                       std::map<Node, Node>& arithModel,
                                       std::map<Node, Node>& arithModelIllTyped)
 {
-
+  // TODO
 }
 
 void LinearSolverSub::presolve()
@@ -118,12 +118,13 @@ bool LinearSolverSub::postCheck(Theory::Effort level)
   SubsolverSetupInfo ssi(d_env, d_subOptions);
   initializeSubsolver(d_subsolver, ssi, false);
   // assert and check-sat  
+  Trace("linear-sub-solver") << "Check with subsolver..." << std::endl;
   for (Theory::assertions_iterator it = d_astate.factsBegin(THEORY_ARITH);
        it != d_astate.factsEnd(THEORY_ARITH);
        ++it)
   {
     Node lit = it->d_assertion;
-    Trace("opaque-assert") << "- " << lit << std::endl;
+    Trace("linear-sub-assert") << "- " << lit << std::endl;
     d_subsolver->assertFormula(lit);
   }
   Result r = d_subsolver->checkSat();
