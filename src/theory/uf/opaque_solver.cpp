@@ -58,29 +58,35 @@ Node OpaqueConverter::postConvertUntyped(Node orig,
   }
   else if (ok == Kind::EQUAL)
   {
+    AlwaysAssert(terms[0].getType()==terms[1].getType()) << "Bad eq " << terms[0].getType() << " " << terms[1].getType() << std::endl;
     return d_nm->mkNode(Kind::EQUAL, terms);
-  }
-  else if (orig.getNumChildren() > 0)
-  {
-    SkolemManager* skm = d_nm->getSkolemManager();
-    Node tnew = d_nm->mkNode(orig.getKind(), terms);
-    AlwaysAssert(!tnew.getType().isOpaque());
-    return skm->mkPurifySkolem(tnew);
   }
   else if (orig.isVar())
   {
     SkolemManager* skm = d_nm->getSkolemManager();
-    InternalSkolemId id;
+    InternalSkolemId iid;
     std::vector<Node> cacheVals;
-    if (skm->isInternalSkolemFunction(orig, id, cacheVals))
+    if (skm->isInternalSkolemFunction(orig, iid, cacheVals))
     {
-      if (id == InternalSkolemId::PURIFY_OPAQUE)
+      if (iid == InternalSkolemId::PURIFY_OPAQUE)
       {
         return cacheVals[0];
       }
     }
   }
-  return orig;
+  SkolemManager* skm = d_nm->getSkolemManager();
+  TypeNode tn = orig.getType();
+  if (tn.isOpaque())
+  {
+    tn = tn[0];
+  }
+  else if (orig.isVar())
+  {
+    // don't bother 
+    return orig;
+  }
+  // just return a new variable
+  return skm->mkInternalSkolemFunction(InternalSkolemId::ORIGINAL_OPAQUE, tn, {orig});
 }
 
 OpaqueSolver::OpaqueSolver(Env& env,

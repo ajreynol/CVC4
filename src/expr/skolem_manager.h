@@ -64,7 +64,8 @@ enum class InternalSkolemId
   QUANTIFIERS_ATTRIBUTE_INTERNAL,
   /** */
   PURIFY_OPAQUE,
-  PURIFY_OPAQUE_OP
+  PURIFY_OPAQUE_OP,
+  ORIGINAL_OPAQUE
 };
 /** Converts an internal skolem function name to a string. */
 const char* toString(InternalSkolemId id);

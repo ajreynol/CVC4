@@ -58,6 +58,7 @@ const char* toString(InternalSkolemId id)
       return "QUANTIFIERS_ATTRIBUTE_INTERNAL";
     case InternalSkolemId::PURIFY_OPAQUE: return "PURIFY_OPAQUE";
     case InternalSkolemId::PURIFY_OPAQUE_OP: return "PURIFY_OPAQUE_OP";
+    case InternalSkolemId::ORIGINAL_OPAQUE: return "ORIGINAL_OPAQUE";
     default: return "?";
   }
 }
