@@ -46,7 +46,7 @@ TheoryArith::TheoryArith(Env& env, OutputChannel& out, Valuation valuation)
       d_ppre(d_env),
       d_bab(env, d_astate, d_im, d_ppre),
       d_eqSolver(nullptr),
-      d_internal(env, d_astate, d_im, d_bab),
+      d_linearSolver(nullptr),
       d_nonlinearExtension(nullptr),
       d_opElim(d_env),
       d_arithPreproc(env, d_im, d_pnm, d_opElim),
@@ -64,6 +64,17 @@ TheoryArith::TheoryArith(Env& env, OutputChannel& out, Valuation valuation)
 
   // construct the equality solver
   d_eqSolver.reset(new EqualitySolver(env, d_astate, d_im));
+  
+  if (options().arith.arithSubSolver)
+  {
+    d_internalSub.reset(new linear::LinearSolverSub(env,*this));
+    d_linearSolver = d_internalSub.get();
+  }
+  else
+  {
+    d_internalLegacy.reset(new linear::LinearSolverLegacy(env, d_astate, d_im, d_bab));
+    d_linearSolver = d_internalLegacy.get();
+  }
 }
 
 TheoryArith::~TheoryArith(){
@@ -92,19 +103,19 @@ void TheoryArith::finishInit()
     d_valuation.setUnevaluatedKind(Kind::PI);
   }
   // only need to create nonlinear extension if non-linear logic
-  if (logic.isTheoryEnabled(THEORY_ARITH) && !logic.isLinear())
+  if (logic.isTheoryEnabled(THEORY_ARITH) && !logic.isLinear() && !options().arith.arithSubSolver)
   {
     d_nonlinearExtension.reset(new nl::NonlinearExtension(d_env, *this));
   }
   d_eqSolver->finishInit();
   // finish initialize in the old linear solver
   eq::EqualityEngine* ee = getEqualityEngine();
-  d_internal.finishInit(ee);
+  d_linearSolver->finishInit(ee);
 
   // Set the congruence manager on the equality solver. If the congruence
   // manager exists, it is responsible for managing the notifications from
   // the equality engine, which the equality solver forwards to it.
-  d_eqSolver->setCongruenceManager(d_internal.getCongruenceManager());
+  d_eqSolver->setCongruenceManager(d_linearSolver->getCongruenceManager());
 }
 
 void TheoryArith::preRegisterTerm(TNode n)
@@ -161,13 +172,13 @@ void TheoryArith::preRegisterTerm(TNode n)
   {
     d_nonlinearExtension->preRegisterTerm(n);
   }
-  d_internal.preRegisterTerm(n);
+  d_linearSolver->preRegisterTerm(n);
 }
 
 void TheoryArith::notifySharedTerm(TNode n)
 {
   n = n.getKind() == Kind::TO_REAL ? n[0] : n;
-  d_internal.notifySharedTerm(n);
+  d_linearSolver->notifySharedTerm(n);
 }
 
 TrustNode TheoryArith::ppRewrite(TNode atom, std::vector<SkolemLemma>& lems)
@@ -207,14 +218,14 @@ TrustNode TheoryArith::ppStaticRewrite(TNode atom)
 Theory::PPAssertStatus TheoryArith::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
-  return d_internal.ppAssert(tin, outSubstitutions);
+  return d_linearSolver->ppAssert(tin, outSubstitutions);
 }
 
 void TheoryArith::ppStaticLearn(TNode n, NodeBuilder& learned)
 {
   if (options().arith.arithStaticLearning)
   {
-    d_internal.ppStaticLearn(n, learned);
+    d_linearSolver->ppStaticLearn(n, learned);
   }
 }
 
@@ -222,7 +233,7 @@ bool TheoryArith::preCheck(Effort level)
 {
   Trace("arith-check") << "TheoryArith::preCheck " << level << std::endl;
   bool newFacts = !done();
-  return d_internal.preCheck(level, newFacts);
+  return d_linearSolver->preCheck(level, newFacts);
 }
 
 void TheoryArith::postCheck(Effort level)
@@ -252,7 +263,7 @@ void TheoryArith::postCheck(Effort level)
     return;
   }
   // otherwise, check with the linear solver
-  if (d_internal.postCheck(level))
+  if (d_linearSolver->postCheck(level))
   {
     // linear solver emitted a conflict or lemma, return
     return;
@@ -281,7 +292,7 @@ void TheoryArith::postCheck(Effort level)
         return;
       }
     }
-    else if (d_internal.foundNonlinear())
+    else if (d_linearSolver->foundNonlinear())
     {
       // set incomplete
       d_im.setModelUnsound(IncompleteId::ARITH_NL_DISABLED);
@@ -317,7 +328,7 @@ bool TheoryArith::preNotifyFact(
     ret = d_eqSolver->preNotifyFact(atom, pol, fact, isPrereg, isInternal);
   }
   // we also always also notify the internal solver
-  d_internal.preNotifyFact(fact);
+  d_linearSolver->preNotifyFact(fact);
   return ret;
 }
 
@@ -337,10 +348,10 @@ TrustNode TheoryArith::explain(TNode n)
   {
     return texp;
   }
-  return d_internal.explain(n);
+  return d_linearSolver->explain(n);
 }
 
-void TheoryArith::propagate(Effort e) { d_internal.propagate(e); }
+void TheoryArith::propagate(Effort e) { d_linearSolver->propagate(e); }
 
 bool TheoryArith::collectModelInfo(TheoryModel* m,
                                    const std::set<Node>& termSet)
@@ -414,9 +425,9 @@ bool TheoryArith::collectModelValues(TheoryModel* m,
   return true;
 }
 
-void TheoryArith::notifyRestart() { d_internal.notifyRestart(); }
+void TheoryArith::notifyRestart() { d_linearSolver->notifyRestart(); }
 
-void TheoryArith::presolve() { d_internal.presolve(); }
+void TheoryArith::presolve() { d_linearSolver->presolve(); }
 
 EqualityStatus TheoryArith::getEqualityStatus(TNode a, TNode b) {
   Trace("arith-eq-status") << "TheoryArith::getEqualityStatus(" << a << ", " << b << ")" << std::endl;
@@ -427,7 +438,7 @@ EqualityStatus TheoryArith::getEqualityStatus(TNode a, TNode b) {
   }
   if (d_arithModelCache.empty())
   {
-    EqualityStatus es = d_internal.getEqualityStatus(a, b);
+    EqualityStatus es = d_linearSolver->getEqualityStatus(a, b);
     Trace("arith-eq-status") << "...return (from linear) " << es << std::endl;
     return es;
   }
@@ -458,12 +469,12 @@ Node TheoryArith::getCandidateModelValue(TNode var)
   {
     return it->second;
   }
-  return d_internal.getCandidateModelValue(var);
+  return d_linearSolver->getCandidateModelValue(var);
 }
 
 std::pair<bool, Node> TheoryArith::entailmentCheck(TNode lit)
 {
-  return d_internal.entailmentCheck(lit);
+  return d_linearSolver->entailmentCheck(lit);
 }
 
 eq::ProofEqEngine* TheoryArith::getProofEqEngine()
@@ -484,7 +495,7 @@ void TheoryArith::updateModelCacheInternal(const std::set<Node>& termSet)
   if (!d_arithModelCacheSet)
   {
     d_arithModelCacheSet = true;
-    d_internal.collectModelValues(
+    d_linearSolver->collectModelValues(
         termSet, d_arithModelCache, d_arithModelCacheIllTyped);
   }
 }

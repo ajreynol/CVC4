@@ -17,122 +17,133 @@
 
 #include "expr/attribute.h"
 #include "theory/arith/arith_rewriter.h"
+#include "options/smt_options.h"
+#include "theory/arith/theory_arith.h"
+#include "proof/unsat_core.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace arith::linear {
 
-LinearSolverSub::LinearSolverSub(Env& env,
-                           TheoryState& ts,
-                           InferenceManager& im)
-    : LinearSolver(env), d_im(im)
+LinearSolverSub::LinearSolverSub(Env& env, TheoryArith& containing)
+    : LinearSolver(env),
+      d_containing(containing),
+      d_astate(*containing.getTheoryState()),
+      d_im(containing.getInferenceManager())
 {
+  // determine the options to use for the verification subsolvers we spawn
+  // we start with the provided options
+  d_subOptions.copyValues(options());
+  // requires full proofs
+  d_subOptions.write_smt().produceProofs = true;
+  // don't do simplification, which can preprocess quantifiers to those not
+  // occurring in the main solver
+  d_subOptions.write_smt().simplificationMode =
+      options::SimplificationMode::NONE;
+  // requires unsat cores
+  d_subOptions.write_smt().produceUnsatCores = true;
+  // don't do this strategy
+  d_subOptions.write_arith().arithSubSolver = false;
 }
-void LinearSolver::finishInit(eq::EqualityEngine* ee)
+
+void LinearSolverSub::finishInit(eq::EqualityEngine* ee)
 {
   // d_internal.finishInit(ee);
 }
-void LinearSolver::preRegisterTerm(TNode n)
+void LinearSolverSub::preRegisterTerm(TNode n)
 {  // d_internal.preRegisterTerm(n);
 }
-void LinearSolver::propagate(Theory::Effort e)
+void LinearSolverSub::propagate(Theory::Effort e)
 {  // d_internal.propagate(e);
 }
 
-TrustNode LinearSolver::explain(TNode n)
+TrustNode LinearSolverSub::explain(TNode n)
 {
   return TrustNode::null();  // d_internal.explain(n);
 }
 
-void LinearSolver::collectModelValues(const std::set<Node>& termSet,
+void LinearSolverSub::collectModelValues(const std::set<Node>& termSet,
                                       std::map<Node, Node>& arithModel,
                                       std::map<Node, Node>& arithModelIllTyped)
 {
 
 }
 
-void LinearSolver::presolve()
+void LinearSolverSub::presolve()
 {
 }
 
-void LinearSolver::notifyRestart()
+void LinearSolverSub::notifyRestart()
 {
 }
 
-Theory::PPAssertStatus LinearSolver::ppAssert(
+Theory::PPAssertStatus LinearSolverSub::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
   return Theory::PP_ASSERT_STATUS_UNSOLVED;
 }
-void LinearSolver::ppStaticLearn(TNode in, NodeBuilder& learned)
+void LinearSolverSub::ppStaticLearn(TNode in, NodeBuilder& learned)
 {
 }
-EqualityStatus LinearSolver::getEqualityStatus(TNode a, TNode b)
+EqualityStatus LinearSolverSub::getEqualityStatus(TNode a, TNode b)
 {
   return EQUALITY_UNKNOWN;
 }
-void LinearSolver::notifySharedTerm(TNode n)
+void LinearSolverSub::notifySharedTerm(TNode n)
 {
 }
-Node LinearSolver::getCandidateModelValue(TNode var)
+Node LinearSolverSub::getCandidateModelValue(TNode var)
 {
   return Node::null();
 }
-std::pair<bool, Node> LinearSolver::entailmentCheck(TNode lit)
+std::pair<bool, Node> LinearSolverSub::entailmentCheck(TNode lit)
 {
   return std::pair<bool, Node>(
       false, Node::null());
 }
-bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
+bool LinearSolverSub::preCheck(Theory::Effort level, bool newFacts)
 {
   return false;
 }
-void LinearSolver::preNotifyFact(TNode fact)
+void LinearSolverSub::preNotifyFact(TNode fact)
 {
 }
-bool LinearSolver::postCheck(Theory::Effort level)
+bool LinearSolverSub::postCheck(Theory::Effort level)
 {
-
-  SubsolverSetupInfo ssi(d_env, d_subOptions);
-  std::unique_ptr<SolverEngine> findConflict;
-  initializeSubsolver(findConflict, ssi, false);
-  // assert and check-sat
-  Trace("opaque-solver") << "Check opaque with " << d_asserts.size()
-                         << " assertions..." << std::endl;
-  for (const std::pair<Node, bool>& a : d_asserts)
+  if (level!=Theory::EFFORT_FULL)
   {
-    Node lit = a.second ? a.first : a.first.notNode();
-    Trace("opaque-assert") << "- " << lit << std::endl;
-    findConflict->assertFormula(lit);
+    return false;
   }
-  Result r = findConflict->checkSat();
-  Trace("opaque-solver") << "<<< ...result is " << r << std::endl;
+  
+  SubsolverSetupInfo ssi(d_env, d_subOptions);
+  initializeSubsolver(d_subsolver, ssi, false);
+  // assert and check-sat  
+  for (Theory::assertions_iterator it = d_astate.factsBegin(THEORY_ARITH);
+       it != d_astate.factsEnd(THEORY_ARITH);
+       ++it)
+  {
+    Node lit = it->d_assertion;
+    Trace("opaque-assert") << "- " << lit << std::endl;
+    d_subsolver->assertFormula(lit);
+  }
+  Result r = d_subsolver->checkSat();
+  Trace("linear-sub-solver") << "<<< ...result is " << r << std::endl;
   if (r.getStatus() == Result::UNSAT)
   {
-    UnsatCore uc = findConflict->getUnsatCore();
-    std::vector<Node> opaqueCore;
-    OpaqueFormAttribute ofa;
-    for (const Node& a : uc)
-    {
-      bool pol = a.getKind() != Kind::NOT;
-      Node oa = pol ? a : a[0];
-      oa = oa.getAttribute(ofa);
-      Assert(!oa.isNull());
-      opaqueCore.push_back(pol ? oa : oa.notNode());
-    }
-    Node ucc = nodeManager()->mkAnd(opaqueCore);
-    Trace("opaque-solver") << "Unsat core is " << ucc << std::endl;
-    Trace("opaque-solver") << "Core size = " << uc.getCore().size()
+    UnsatCore uc = d_subsolver->getUnsatCore();
+    Node ucc = nodeManager()->mkAnd(uc.getCore());
+    Trace("linear-sub-solver") << "Unsat core is " << ucc << std::endl;
+    Trace("linear-sub-solver") << "Core size = " << uc.getCore().size()
                            << std::endl;
     d_im.lemma(ucc.notNode(), InferenceId::ARITH_LINEAR_SUB_UC);
   }
   return false;
 }
-bool LinearSolver::foundNonlinear() const
+bool LinearSolverSub::foundNonlinear() const
 {
   return false;
 }
-ArithCongruenceManager* LinearSolver::getCongruenceManager()
+ArithCongruenceManager* LinearSolverSub::getCongruenceManager()
 {
   return nullptr;
 }

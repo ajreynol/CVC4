@@ -19,6 +19,7 @@
 #include "smt/env_obj.h"
 #include "theory/arith/linear/linear_solver.h"
 #include "theory/theory.h"
+#include "theory/smt_engine_subsolver.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -26,20 +27,15 @@ namespace theory {
 class TheoryModel;
 
 namespace arith {
-
-class BranchAndBound;
-
 namespace linear {
 
 /**
  * A wrapper of the linear arithmetic solver.
  */
-class LinearSolverSub : protected LinearSolver
+class LinearSolverSub : public LinearSolver
 {
  public:
-  LinearSolverSub(Env& env,
-               TheoryState& ts,
-               InferenceManager& im);
+  LinearSolverSub(Env& env, TheoryArith& containing);
   /** finish initialize */
   void finishInit(eq::EqualityEngine* ee) override;
   /** Does non-context dependent setup for a node connected to a theory. */
@@ -84,10 +80,15 @@ class LinearSolverSub : protected LinearSolver
   ArithCongruenceManager* getCongruenceManager() override;
 
  private:
-  /** The inference manager */
+  /** The theory of arithmetic containing this extension. */
+  TheoryArith& d_containing;
+  /** A reference to the arithmetic state object */
+  TheoryState& d_astate;
   InferenceManager& d_im;
   /** The options for subsolver calls */
   Options d_subOptions;
+  /** The last subsolver */
+  std::unique_ptr<SolverEngine> d_subsolver;
 };
 
 }  // namespace linear

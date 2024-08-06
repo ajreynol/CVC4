@@ -592,6 +592,14 @@ name   = "Arithmetic Theory"
   help       = "whether to use the equality solver in the theory of arithmetic"
 
 [[option]]
+  name       = "arithSubSolver"
+  category   = "expert"
+  long       = "arith-sub-solver"
+  type       = "bool"
+  default    = "false"
+  help       = "whether to use a subsolver in the theory of arithmetic"
+
+[[option]]
   name       = "arithStaticLearning"
   category   = "regular"
   long       = "arith-static-learning"

@@ -111,7 +111,7 @@ class LinearSolver : protected EnvObj
 /**
  * A wrapper of the linear arithmetic solver.
  */
-class LinearSolverLegacy : protected LinearSolver
+class LinearSolverLegacy : public LinearSolver
 {
  public:
   LinearSolverLegacy(Env& env,
