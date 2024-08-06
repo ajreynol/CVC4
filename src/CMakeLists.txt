@@ -431,6 +431,8 @@ libcvc5_add_sources(
   theory/arith/linear/infer_bounds.h
   theory/arith/linear/linear_solver.cpp
   theory/arith/linear/linear_solver.h
+  theory/arith/linear/linear_solver_sub.cpp
+  theory/arith/linear/linear_solver_sub.h
   theory/arith/linear/linear_equality.cpp
   theory/arith/linear/linear_equality.h
   theory/arith/linear/matrix.cpp
