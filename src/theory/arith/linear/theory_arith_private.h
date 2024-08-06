@@ -65,7 +65,7 @@ class TheoryModel;
 
 namespace arith::linear {
 
-class LinearSolver;
+class LinearSolverLegacy;
 class BranchCutInfo;
 class TreeLog;
 class ApproximateStatistics;
@@ -87,7 +87,7 @@ class TheoryArithPrivate : protected EnvObj
  private:
   static constexpr uint32_t RESET_START = 2;
 
-  LinearSolver& d_containing;
+  LinearSolverLegacy& d_containing;
 
   /**
    * Whether we encountered non-linear arithmetic at any time during solving.
@@ -431,7 +431,7 @@ private:
       /* throw(DeltaRationalException, ModelException) */;
  public:
   TheoryArithPrivate(Env& env,
-                     LinearSolver& containing,
+                     LinearSolverLegacy& containing,
                      TheoryState& ts,
                      BranchAndBound& bab);
   ~TheoryArithPrivate();

@@ -85,7 +85,7 @@ static Node toSumNode(const ArithVariables& vars, const DenseMap<Rational>& sum)
 static bool complexityBelow(const DenseMap<Rational>& row, uint32_t cap);
 
 TheoryArithPrivate::TheoryArithPrivate(Env& env,
-                                       LinearSolver& containing,
+                                       LinearSolverLegacy& containing,
                                        TheoryState& ts,
                                        BranchAndBound& bab)
     : EnvObj(env),

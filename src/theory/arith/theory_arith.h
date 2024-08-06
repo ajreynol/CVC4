@@ -165,7 +165,7 @@ class TheoryArith : public Theory {
   /** The equality solver */
   std::unique_ptr<EqualitySolver> d_eqSolver;
   /** The (old) linear arithmetic solver */
-  linear::LinearSolver d_internal;
+  linear::LinearSolverLegacy d_internal;
 
   /**
    * The non-linear extension, responsible for all approaches for non-linear

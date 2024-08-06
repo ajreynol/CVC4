@@ -22,87 +22,89 @@ namespace cvc5::internal {
 namespace theory {
 namespace arith::linear {
 
-LinearSolver::LinearSolver(Env& env,
+LinearSolver::LinearSolver(Env& env) : EnvObj(env){}
+                                       
+LinearSolverLegacy::LinearSolverLegacy(Env& env,
                            TheoryState& ts,
                            InferenceManager& im,
                            BranchAndBound& bab)
-    : EnvObj(env), d_im(im), d_internal(env, *this, ts, bab)
+    : LinearSolver(env), d_im(im), d_internal(env, *this, ts, bab)
 {
 }
 
-void LinearSolver::finishInit(eq::EqualityEngine* ee)
+void LinearSolverLegacy::finishInit(eq::EqualityEngine* ee)
 {
   d_internal.finishInit(ee);
 }
-void LinearSolver::preRegisterTerm(TNode n) { d_internal.preRegisterTerm(n); }
-void LinearSolver::propagate(Theory::Effort e) { d_internal.propagate(e); }
+void LinearSolverLegacy::preRegisterTerm(TNode n) { d_internal.preRegisterTerm(n); }
+void LinearSolverLegacy::propagate(Theory::Effort e) { d_internal.propagate(e); }
 
-TrustNode LinearSolver::explain(TNode n) { return d_internal.explain(n); }
+TrustNode LinearSolverLegacy::explain(TNode n) { return d_internal.explain(n); }
 
-void LinearSolver::collectModelValues(const std::set<Node>& termSet,
+void LinearSolverLegacy::collectModelValues(const std::set<Node>& termSet,
                                       std::map<Node, Node>& arithModel,
                                       std::map<Node, Node>& arithModelIllTyped)
 {
   d_internal.collectModelValues(termSet, arithModel, arithModelIllTyped);
 }
 
-void LinearSolver::presolve() { d_internal.presolve(); }
+void LinearSolverLegacy::presolve() { d_internal.presolve(); }
 
-void LinearSolver::notifyRestart() { d_internal.notifyRestart(); }
+void LinearSolverLegacy::notifyRestart() { d_internal.notifyRestart(); }
 
-Theory::PPAssertStatus LinearSolver::ppAssert(
+Theory::PPAssertStatus LinearSolverLegacy::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
   return d_internal.ppAssert(tin, outSubstitutions);
 }
-void LinearSolver::ppStaticLearn(TNode in, NodeBuilder& learned)
+void LinearSolverLegacy::ppStaticLearn(TNode in, NodeBuilder& learned)
 {
   d_internal.ppStaticLearn(in, learned);
 }
-EqualityStatus LinearSolver::getEqualityStatus(TNode a, TNode b)
+EqualityStatus LinearSolverLegacy::getEqualityStatus(TNode a, TNode b)
 {
   return d_internal.getEqualityStatus(a, b);
 }
-void LinearSolver::notifySharedTerm(TNode n) { d_internal.notifySharedTerm(n); }
-Node LinearSolver::getCandidateModelValue(TNode var)
+void LinearSolverLegacy::notifySharedTerm(TNode n) { d_internal.notifySharedTerm(n); }
+Node LinearSolverLegacy::getCandidateModelValue(TNode var)
 {
   return d_internal.getCandidateModelValue(var);
 }
-std::pair<bool, Node> LinearSolver::entailmentCheck(TNode lit)
+std::pair<bool, Node> LinearSolverLegacy::entailmentCheck(TNode lit)
 {
   return d_internal.entailmentCheck(lit);
 }
-bool LinearSolver::preCheck(Theory::Effort level, bool newFacts)
+bool LinearSolverLegacy::preCheck(Theory::Effort level, bool newFacts)
 {
   return d_internal.preCheck(level, newFacts);
 }
-void LinearSolver::preNotifyFact(TNode fact) { d_internal.preNotifyFact(fact); }
-bool LinearSolver::postCheck(Theory::Effort level)
+void LinearSolverLegacy::preNotifyFact(TNode fact) { d_internal.preNotifyFact(fact); }
+bool LinearSolverLegacy::postCheck(Theory::Effort level)
 {
   return d_internal.postCheck(level);
 }
-bool LinearSolver::foundNonlinear() const
+bool LinearSolverLegacy::foundNonlinear() const
 {
   return d_internal.foundNonlinear();
 }
-ArithCongruenceManager* LinearSolver::getCongruenceManager()
+ArithCongruenceManager* LinearSolverLegacy::getCongruenceManager()
 {
   return d_internal.getCongruenceManager();
 }
 
-bool LinearSolver::outputTrustedLemma(TrustNode lemma, InferenceId id)
+bool LinearSolverLegacy::outputTrustedLemma(TrustNode lemma, InferenceId id)
 {
   return d_im.trustedLemma(lemma, id);
 }
 
-void LinearSolver::outputTrustedConflict(TrustNode conf, InferenceId id)
+void LinearSolverLegacy::outputTrustedConflict(TrustNode conf, InferenceId id)
 {
   d_im.trustedConflict(conf, id);
 }
 
-void LinearSolver::outputPropagate(TNode lit) { d_im.propagateLit(lit); }
+void LinearSolverLegacy::outputPropagate(TNode lit) { d_im.propagateLit(lit); }
 
-void LinearSolver::spendResource(Resource r) { d_im.spendResource(r); }
+void LinearSolverLegacy::spendResource(Resource r) { d_im.spendResource(r); }
 
 }  // namespace arith::linear
 }  // namespace theory
