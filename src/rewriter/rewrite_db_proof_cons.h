@@ -243,7 +243,12 @@ class RewriteDbProofCons : protected EnvObj
                    const std::vector<Node>& subs);
   /**
    * Called when we are ready to process a match encounted by the above method.
-   *
+   * @param s The substituted form of n.
+   * @param n The term that was matched.
+   * @param vars The lhs of the substitution.
+   * @param subs The rhs of the substitution.
+   * @param isBasic Whether we will try to prove the target using non-basic
+   * techniques that require recursion (doTrans and doFixedPoint below).
    * @return true if we successfully proved the current target with this match,
    * where s is the left hand side of our current target (d_target).
    */
