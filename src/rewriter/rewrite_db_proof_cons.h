@@ -36,6 +36,7 @@
 namespace cvc5::internal {
 namespace rewriter {
 
+/** A data structure recording a match */
 class RdbMatch
 {
  public:
@@ -46,8 +47,11 @@ class RdbMatch
       : d_s(s), d_n(n), d_vars(vars), d_subs(subs)
   {
   }
+  /** The substituted node */
   Node d_s;
+  /** The original node */
   Node d_n;
+  /** The substitution such that d_n { d_vars -> d_subs } = d_s */
   std::vector<Node> d_vars;
   std::vector<Node> d_subs;
 };
@@ -217,7 +221,10 @@ class RewriteDbProofCons : protected EnvObj
                            std::vector<std::shared_ptr<ProofNode>>& subgoals);
   /** Return the evaluation of n, which uses local caching. */
   Node doEvaluate(const Node& n);
-  /** Return the flattening of n. */
+  /**
+   * Return the flattening of n. For example, this returns (+ a b c) for
+   * (+ (+ a b) c). This method is used in the CONG_FLATTEN tactic.
+   */
   Node doFlatten(const Node& n);
   /**
    * A notification that s is equal to n * { vars -> subs }. In this context,
@@ -235,6 +242,10 @@ class RewriteDbProofCons : protected EnvObj
                    const std::vector<Node>& vars,
                    const std::vector<Node>& subs);
   /**
+   * Called when we are ready to process a match encounted by the above method.
+   * 
+   * @return true if we successfully proved the current target with this match,
+   * where s is the left hand side of our current target (d_target).
    */
   bool processMatch(const Node& s,
                     const Node& n,
