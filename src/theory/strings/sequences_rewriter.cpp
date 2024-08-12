@@ -1122,34 +1122,6 @@ Node SequencesRewriter::rewriteViaReInterUnionInclusion(const Node& node)
   return Node::null();
 }
 
-Node SequencesRewriter::rewriteViaStrInReConcatStarChar(const Node& n)
-{
-  if (n.getKind() != Kind::STRING_IN_REGEXP
-      || n[0].getKind() != Kind::STRING_CONCAT
-      || n[1].getKind() != Kind::REGEXP_STAR)
-  {
-    return Node::null();
-  }
-  Node len = RegExpEntail::getFixedLengthForRegexp(n[1][0]);
-  if (len.isNull())
-  {
-    return Node::null();
-  }
-  if (!len.isConst() || len.getConst<Rational>() != Rational(1))
-  {
-    return Node::null();
-  }
-  NodeManager* nm = nodeManager();
-  std::vector<Node> cc;
-  utils::getConcat(n[0], cc);
-  std::vector<Node> conj;
-  for (const Node& c : cc)
-  {
-    conj.push_back(nm->mkNode(Kind::STRING_IN_REGEXP, c, n[1]));
-  }
-  return nm->mkAnd(conj);
-}
-
 Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
 {
   Kind nk = node.getKind();
@@ -1410,6 +1382,34 @@ Node SequencesRewriter::rewriteViaStrInReEval(const Node& node)
   String s = node[0].getConst<String>();
   bool test = RegExpEntail::testConstStringInRegExp(s, node[1]);
   return nodeManager()->mkConst(test);
+}
+
+Node SequencesRewriter::rewriteViaStrInReConcatStarChar(const Node& n)
+{
+  if (n.getKind() != Kind::STRING_IN_REGEXP
+      || n[0].getKind() != Kind::STRING_CONCAT
+      || n[1].getKind() != Kind::REGEXP_STAR)
+  {
+    return Node::null();
+  }
+  Node len = RegExpEntail::getFixedLengthForRegexp(n[1][0]);
+  if (len.isNull())
+  {
+    return Node::null();
+  }
+  if (!len.isConst() || len.getConst<Rational>() != Rational(1))
+  {
+    return Node::null();
+  }
+  NodeManager* nm = nodeManager();
+  std::vector<Node> cc;
+  utils::getConcat(n[0], cc);
+  std::vector<Node> conj;
+  for (const Node& c : cc)
+  {
+    conj.push_back(nm->mkNode(Kind::STRING_IN_REGEXP, c, n[1]));
+  }
+  return nm->mkAnd(conj);
 }
 
 Node SequencesRewriter::rewriteViaStrInReSigma(const Node& n)
