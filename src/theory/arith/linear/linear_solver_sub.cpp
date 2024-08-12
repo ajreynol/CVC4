@@ -119,7 +119,7 @@ void LinearSolverSub::preNotifyFact(TNode fact)
   {
     std::vector<Node> conflict = getSubsRewConflict(cfact);
     conflict.push_back(fact);
-    Trace("ajr-temp") << "Conflict: " << conflict << std::endl;
+    Trace("sub-conflict") << "Conflict: " << conflict << std::endl;
     Node conf = nodeManager()->mkAnd(conflict);
     d_im.conflict(conf, InferenceId::ARITH_LINEAR_SUB_EAGER_SR);
   }
@@ -143,6 +143,7 @@ void LinearSolverSub::preNotifyFact(TNode fact)
 
 std::vector<Node> LinearSolverSub::getSubsRewConflict(const Node& lit)
 {
+  Trace("sub-conflict") << "Get conflict " << lit << std::endl;
   std::vector<Node> conflict;
   std::unordered_set<Node> processed;
   std::vector<Node> toProcess;
@@ -150,6 +151,7 @@ std::vector<Node> LinearSolverSub::getSubsRewConflict(const Node& lit)
   do
   {
     Node curr = toProcess.back();
+    Trace("sub-conflict") << "...process " << curr << std::endl;
     toProcess.pop_back();
     if (processed.find(curr) != processed.end())
     {
@@ -164,8 +166,13 @@ std::vector<Node> LinearSolverSub::getSubsRewConflict(const Node& lit)
       it = d_smapExp.find(sym);
       if (it != d_smapExp.end())
       {
-        conflict.push_back(it->second);
-        // toProcess.push_back(d_aconv.convert(it->second));
+        Trace("sub-conflict") << "...substitution " << sym << std::endl;
+        if (std::find(conflict.begin(), conflict.end(), it->second)==conflict.end())
+        {
+          conflict.push_back(it->second);
+          Trace("sub-conflict") << "......include " << it->second << std::endl;
+          toProcess.push_back(d_aconv.convert(it->second));
+        }
       }
     }
   } while (!toProcess.empty());
@@ -200,7 +207,8 @@ bool LinearSolverSub::postCheck(Theory::Effort level)
       conflict.push_back(fact);
       Node conf = nodeManager()->mkAnd(conflict);
       d_im.conflict(conf, InferenceId::ARITH_LINEAR_SUB_UC_SIMPLE);
-      Trace("linear-sub-solver") << "...found conflict" << std::endl;
+      Trace("linear-sub-solver") << "...found conflict for " << fact << std::endl;
+      Trace("linear-sub-solver") << "conflict is " << conflict << std::endl;
       return true;
     }
     else if (crfact != d_true)
