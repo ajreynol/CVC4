@@ -20,6 +20,8 @@
 #include "theory/arith/linear/linear_solver.h"
 #include "theory/theory.h"
 #include "theory/smt_engine_subsolver.h"
+#include "theory/substitutions.h"
+#include "expr/node_converter.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -28,6 +30,14 @@ class TheoryModel;
 
 namespace arith {
 namespace linear {
+  
+class ArithPurifyNodeConverter : public NodeConverter
+{
+ public:
+  ArithPurifyNodeConverter(NodeManager* nm) : NodeConverter(nm) {}
+
+  Node postConvert(Node n) override;
+};
 
 /**
  * A wrapper of the linear arithmetic solver.
@@ -80,6 +90,8 @@ class LinearSolverSub : public LinearSolver
   ArithCongruenceManager* getCongruenceManager() override;
 
  private:
+  /** */
+  std::vector<Node> getSubsRewConflict(const Node& lit);
   /** The theory of arithmetic containing this extension. */
   TheoryArith& d_containing;
   /** A reference to the arithmetic state object */
@@ -89,6 +101,15 @@ class LinearSolverSub : public LinearSolver
   Options d_subOptions;
   /** The last subsolver */
   std::unique_ptr<SolverEngine> d_subsolver;
+  /** */
+  SubstitutionMap d_smap;
+  /** */
+  context::CDHashMap<Node, Node> d_smapExp;
+  /** */
+  ArithPurifyNodeConverter d_aconv;
+  /** common terms */
+  Node d_true;
+  Node d_false;
 };
 
 }  // namespace linear

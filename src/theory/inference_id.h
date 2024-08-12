@@ -63,6 +63,8 @@ enum class InferenceId
   ARITH_BLACK_BOX,
   //
   ARITH_LINEAR_SUB_UC,
+  ARITH_LINEAR_SUB_UC_SIMPLE,
+  ARITH_LINEAR_SUB_EAGER_SR,
   // conflicting equality
   ARITH_CONF_EQ,
   // conflicting lower bound
