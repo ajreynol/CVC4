@@ -432,6 +432,9 @@ name   = "Quantifiers"
   default    = "FULL_LAST_CALL"
   help       = "when to apply instantiation"
   help_mode  = "Instantiation modes."
+[[option.mode.FULL_PREEMPT]]
+  name = "full-preempt"
+  help = "Run instantiation round at full effort, before theory combination, before all other theories have checked."
 [[option.mode.FULL]]
   name = "full"
   help = "Run instantiation round at full effort, before theory combination."

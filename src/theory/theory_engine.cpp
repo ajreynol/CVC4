@@ -400,7 +400,7 @@ void TheoryEngine::check(Theory::Effort effort) {
 
   // Reset the interrupt flag
   d_interrupted = false;
-
+        
 #ifdef CVC5_FOR_EACH_THEORY_STATEMENT
 #undef CVC5_FOR_EACH_THEORY_STATEMENT
 #endif
@@ -434,6 +434,11 @@ void TheoryEngine::check(Theory::Effort effort) {
 
     // If in full effort, we have a fake new assertion just to jumpstart the checking
     if (Theory::fullEffort(effort)) {
+      // preemptive check
+      if (logicInfo().isQuantified() && options().quantifiers.instWhenMode==options::InstWhenMode::FULL_PREEMPT)
+      {
+        d_quantEngine->check(Theory::EFFORT_FULL);
+      }
       d_factsAsserted = true;
       d_tc->resetRound();
     }
