@@ -16,12 +16,12 @@
 #pragma once
 
 #include "context/cdhashmap.h"
+#include "expr/node_converter.h"
 #include "smt/env_obj.h"
 #include "theory/arith/linear/linear_solver.h"
-#include "theory/theory.h"
 #include "theory/smt_engine_subsolver.h"
 #include "theory/substitutions.h"
-#include "expr/node_converter.h"
+#include "theory/theory.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -30,7 +30,7 @@ class TheoryModel;
 
 namespace arith {
 namespace linear {
-  
+
 class ArithPurifyNodeConverter : public NodeConverter
 {
  public:
@@ -63,8 +63,8 @@ class LinearSolverSub : public LinearSolver
   /** Notify restart */
   void notifyRestart() override;
   /** Preprocess assert */
-  Theory::PPAssertStatus ppAssert(TrustNode tin,
-                                  TrustSubstitutionMap& outSubstitutions) override;
+  Theory::PPAssertStatus ppAssert(
+      TrustNode tin, TrustSubstitutionMap& outSubstitutions) override;
   /** Preprocess static learn */
   void ppStaticLearn(TNode in, NodeBuilder& learned) override;
 

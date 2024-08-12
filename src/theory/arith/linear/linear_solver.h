@@ -63,15 +63,15 @@ class LinearSolver : protected EnvObj
    * integer variable to a real.
    */
   virtual void collectModelValues(const std::set<Node>& termSet,
-                          std::map<Node, Node>& arithModel,
-                          std::map<Node, Node>& arithModelIllTyped) = 0;
+                                  std::map<Node, Node>& arithModel,
+                                  std::map<Node, Node>& arithModelIllTyped) = 0;
   /** Presolve */
   virtual void presolve() = 0;
   /** Notify restart */
   virtual void notifyRestart() = 0;
   /** Preprocess assert */
-  virtual Theory::PPAssertStatus ppAssert(TrustNode tin,
-                                  TrustSubstitutionMap& outSubstitutions) = 0;
+  virtual Theory::PPAssertStatus ppAssert(
+      TrustNode tin, TrustSubstitutionMap& outSubstitutions) = 0;
   /** Preprocess static learn */
   virtual void ppStaticLearn(TNode in, NodeBuilder& learned) = 0;
 
@@ -107,7 +107,6 @@ class LinearSolver : protected EnvObj
   virtual ArithCongruenceManager* getCongruenceManager() = 0;
 };
 
-
 /**
  * A wrapper of the linear arithmetic solver.
  */
@@ -115,9 +114,9 @@ class LinearSolverLegacy : public LinearSolver
 {
  public:
   LinearSolverLegacy(Env& env,
-               TheoryState& ts,
-               InferenceManager& im,
-               BranchAndBound& bab);
+                     TheoryState& ts,
+                     InferenceManager& im,
+                     BranchAndBound& bab);
   /** finish initialize */
   void finishInit(eq::EqualityEngine* ee) override;
   /** Does non-context dependent setup for a node connected to a theory. */
@@ -135,8 +134,8 @@ class LinearSolverLegacy : public LinearSolver
   /** Notify restart */
   void notifyRestart() override;
   /** Preprocess assert */
-  Theory::PPAssertStatus ppAssert(TrustNode tin,
-                                  TrustSubstitutionMap& outSubstitutions) override;
+  Theory::PPAssertStatus ppAssert(
+      TrustNode tin, TrustSubstitutionMap& outSubstitutions) override;
   /** Preprocess static learn */
   void ppStaticLearn(TNode in, NodeBuilder& learned) override;
 
@@ -173,7 +172,6 @@ class LinearSolverLegacy : public LinearSolver
   /** The solver */
   TheoryArithPrivate d_internal;
 };
-
 
 }  // namespace linear
 }  // namespace arith

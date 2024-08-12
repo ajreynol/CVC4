@@ -16,12 +16,12 @@
 #include "theory/arith/linear/linear_solver_sub.h"
 
 #include "expr/attribute.h"
-#include "expr/skolem_manager.h"
-#include "theory/arith/arith_rewriter.h"
-#include "options/smt_options.h"
-#include "theory/arith/theory_arith.h"
-#include "proof/unsat_core.h"
 #include "expr/node_algorithm.h"
+#include "expr/skolem_manager.h"
+#include "options/smt_options.h"
+#include "proof/unsat_core.h"
+#include "theory/arith/arith_rewriter.h"
+#include "theory/arith/theory_arith.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -29,13 +29,13 @@ namespace arith::linear {
 
 Node ArithPurifyNodeConverter::postConvert(Node n)
 {
-  if (n.getNumChildren()>0 && Theory::isLeafOf(n, THEORY_ARITH))
+  if (n.getNumChildren() > 0 && Theory::isLeafOf(n, THEORY_ARITH))
   {
     return d_nm->getSkolemManager()->mkPurifySkolem(n);
   }
   return n;
 }
-                          
+
 LinearSolverSub::LinearSolverSub(Env& env, TheoryArith& containing)
     : LinearSolver(env),
       d_containing(containing),
@@ -79,44 +79,33 @@ TrustNode LinearSolverSub::explain(TNode n)
   return TrustNode::null();  // d_internal.explain(n);
 }
 
-void LinearSolverSub::collectModelValues(const std::set<Node>& termSet,
-                                      std::map<Node, Node>& arithModel,
-                                      std::map<Node, Node>& arithModelIllTyped)
+void LinearSolverSub::collectModelValues(
+    const std::set<Node>& termSet,
+    std::map<Node, Node>& arithModel,
+    std::map<Node, Node>& arithModelIllTyped)
 {
   // TODO
 }
 
-void LinearSolverSub::presolve()
-{
-}
+void LinearSolverSub::presolve() {}
 
-void LinearSolverSub::notifyRestart()
-{
-}
+void LinearSolverSub::notifyRestart() {}
 
 Theory::PPAssertStatus LinearSolverSub::ppAssert(
     TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
   return Theory::PP_ASSERT_STATUS_UNSOLVED;
 }
-void LinearSolverSub::ppStaticLearn(TNode in, NodeBuilder& learned)
-{
-}
+void LinearSolverSub::ppStaticLearn(TNode in, NodeBuilder& learned) {}
 EqualityStatus LinearSolverSub::getEqualityStatus(TNode a, TNode b)
 {
   return EQUALITY_UNKNOWN;
 }
-void LinearSolverSub::notifySharedTerm(TNode n)
-{
-}
-Node LinearSolverSub::getCandidateModelValue(TNode var)
-{
-  return Node::null();
-}
+void LinearSolverSub::notifySharedTerm(TNode n) {}
+Node LinearSolverSub::getCandidateModelValue(TNode var) { return Node::null(); }
 std::pair<bool, Node> LinearSolverSub::entailmentCheck(TNode lit)
 {
-  return std::pair<bool, Node>(
-      false, Node::null());
+  return std::pair<bool, Node>(false, Node::null());
 }
 bool LinearSolverSub::preCheck(Theory::Effort level, bool newFacts)
 {
@@ -126,7 +115,7 @@ void LinearSolverSub::preNotifyFact(TNode fact)
 {
   Node cfact = d_aconv.convert(fact);
   Node crfact = d_smap.apply(cfact, d_env.getRewriter());
-  if (crfact==d_false)
+  if (crfact == d_false)
   {
     std::vector<Node> conflict = getSubsRewConflict(cfact);
     conflict.push_back(fact);
@@ -134,9 +123,9 @@ void LinearSolverSub::preNotifyFact(TNode fact)
     Node conf = nodeManager()->mkAnd(conflict);
     d_im.conflict(conf, InferenceId::ARITH_LINEAR_SUB_EAGER_SR);
   }
-  else if (cfact.getKind()==Kind::EQUAL)
+  else if (cfact.getKind() == Kind::EQUAL)
   {
-    for (size_t i=0; i<2; i++)
+    for (size_t i = 0; i < 2; i++)
     {
       if (cfact[i].isVar() && !d_smap.hasSubstitution(cfact[i]))
       {
@@ -144,7 +133,7 @@ void LinearSolverSub::preNotifyFact(TNode fact)
         if (!expr::hasSubterm(ns, cfact[i]))
         {
           d_smapExp[cfact[i]] = fact;
-          d_smap.addSubstitution(cfact[i], cfact[1-i]);
+          d_smap.addSubstitution(cfact[i], cfact[1 - i]);
           break;
         }
       }
@@ -162,7 +151,7 @@ std::vector<Node> LinearSolverSub::getSubsRewConflict(const Node& lit)
   {
     Node curr = toProcess.back();
     toProcess.pop_back();
-    if (processed.find(curr)!=processed.end())
+    if (processed.find(curr) != processed.end())
     {
       continue;
     }
@@ -173,26 +162,26 @@ std::vector<Node> LinearSolverSub::getSubsRewConflict(const Node& lit)
     for (const Node& sym : syms)
     {
       it = d_smapExp.find(sym);
-      if (it!=d_smapExp.end())
+      if (it != d_smapExp.end())
       {
         conflict.push_back(it->second);
-        //toProcess.push_back(d_aconv.convert(it->second));
+        // toProcess.push_back(d_aconv.convert(it->second));
       }
     }
-  }while (!toProcess.empty());
+  } while (!toProcess.empty());
   return conflict;
 }
 
 bool LinearSolverSub::postCheck(Theory::Effort level)
 {
-  if (level!=Theory::EFFORT_FULL)
+  if (level != Theory::EFFORT_FULL)
   {
     return false;
   }
-  
+
   SubsolverSetupInfo ssi(d_env, d_subOptions);
   initializeSubsolver(d_subsolver, ssi, false);
-  // assert and check-sat  
+  // assert and check-sat
   std::vector<Node> asserts;
   std::map<Node, Node> revMap;
   size_t nasserts = 0;
@@ -205,7 +194,7 @@ bool LinearSolverSub::postCheck(Theory::Effort level)
     Node fact = it->d_assertion;
     Node cfact = d_aconv.convert(fact);
     Node crfact = d_smap.apply(cfact, d_env.getRewriter());
-    if (crfact==d_false)
+    if (crfact == d_false)
     {
       std::vector<Node> conflict = getSubsRewConflict(cfact);
       conflict.push_back(fact);
@@ -214,13 +203,14 @@ bool LinearSolverSub::postCheck(Theory::Effort level)
       Trace("linear-sub-solver") << "...found conflict" << std::endl;
       return true;
     }
-    else if (crfact!=d_true)
+    else if (crfact != d_true)
     {
       asserts.push_back(cfact);
       revMap[cfact] = fact;
     }
   }
-  Trace("linear-sub-solver") << asserts.size() << " / " << nasserts << " relevant assertions" << std::endl;
+  Trace("linear-sub-solver") << asserts.size() << " / " << nasserts
+                             << " relevant assertions" << std::endl;
   for (const Node& lit : asserts)
   {
     Trace("linear-sub-assert") << "- " << lit << std::endl;
@@ -237,22 +227,19 @@ bool LinearSolverSub::postCheck(Theory::Effort level)
     for (const Node& lit : core)
     {
       itr = revMap.find(lit);
-      Assert (itr!=revMap.end());
+      Assert(itr != revMap.end());
       origCore.push_back(itr->second);
     }
     Node ucc = nodeManager()->mkAnd(origCore);
     Trace("linear-sub-solver") << "Unsat core is " << ucc << std::endl;
-    Trace("linear-sub-solver") << "Core size = " << uc.getCore().size()
-                           << std::endl;
+    Trace("linear-sub-solver")
+        << "Core size = " << uc.getCore().size() << std::endl;
     d_im.lemma(ucc.notNode(), InferenceId::ARITH_LINEAR_SUB_UC);
     return true;
   }
   return false;
 }
-bool LinearSolverSub::foundNonlinear() const
-{
-  return false;
-}
+bool LinearSolverSub::foundNonlinear() const { return false; }
 ArithCongruenceManager* LinearSolverSub::getCongruenceManager()
 {
   return nullptr;

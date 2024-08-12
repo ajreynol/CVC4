@@ -22,12 +22,12 @@ namespace cvc5::internal {
 namespace theory {
 namespace arith::linear {
 
-LinearSolver::LinearSolver(Env& env) : EnvObj(env){}
-                                       
+LinearSolver::LinearSolver(Env& env) : EnvObj(env) {}
+
 LinearSolverLegacy::LinearSolverLegacy(Env& env,
-                           TheoryState& ts,
-                           InferenceManager& im,
-                           BranchAndBound& bab)
+                                       TheoryState& ts,
+                                       InferenceManager& im,
+                                       BranchAndBound& bab)
     : LinearSolver(env), d_im(im), d_internal(env, *this, ts, bab)
 {
 }
@@ -36,14 +36,21 @@ void LinearSolverLegacy::finishInit(eq::EqualityEngine* ee)
 {
   d_internal.finishInit(ee);
 }
-void LinearSolverLegacy::preRegisterTerm(TNode n) { d_internal.preRegisterTerm(n); }
-void LinearSolverLegacy::propagate(Theory::Effort e) { d_internal.propagate(e); }
+void LinearSolverLegacy::preRegisterTerm(TNode n)
+{
+  d_internal.preRegisterTerm(n);
+}
+void LinearSolverLegacy::propagate(Theory::Effort e)
+{
+  d_internal.propagate(e);
+}
 
 TrustNode LinearSolverLegacy::explain(TNode n) { return d_internal.explain(n); }
 
-void LinearSolverLegacy::collectModelValues(const std::set<Node>& termSet,
-                                      std::map<Node, Node>& arithModel,
-                                      std::map<Node, Node>& arithModelIllTyped)
+void LinearSolverLegacy::collectModelValues(
+    const std::set<Node>& termSet,
+    std::map<Node, Node>& arithModel,
+    std::map<Node, Node>& arithModelIllTyped)
 {
   d_internal.collectModelValues(termSet, arithModel, arithModelIllTyped);
 }
@@ -65,7 +72,10 @@ EqualityStatus LinearSolverLegacy::getEqualityStatus(TNode a, TNode b)
 {
   return d_internal.getEqualityStatus(a, b);
 }
-void LinearSolverLegacy::notifySharedTerm(TNode n) { d_internal.notifySharedTerm(n); }
+void LinearSolverLegacy::notifySharedTerm(TNode n)
+{
+  d_internal.notifySharedTerm(n);
+}
 Node LinearSolverLegacy::getCandidateModelValue(TNode var)
 {
   return d_internal.getCandidateModelValue(var);
@@ -78,7 +88,10 @@ bool LinearSolverLegacy::preCheck(Theory::Effort level, bool newFacts)
 {
   return d_internal.preCheck(level, newFacts);
 }
-void LinearSolverLegacy::preNotifyFact(TNode fact) { d_internal.preNotifyFact(fact); }
+void LinearSolverLegacy::preNotifyFact(TNode fact)
+{
+  d_internal.preNotifyFact(fact);
+}
 bool LinearSolverLegacy::postCheck(Theory::Effort level)
 {
   return d_internal.postCheck(level);

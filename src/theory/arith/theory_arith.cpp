@@ -64,15 +64,16 @@ TheoryArith::TheoryArith(Env& env, OutputChannel& out, Valuation valuation)
 
   // construct the equality solver
   d_eqSolver.reset(new EqualitySolver(env, d_astate, d_im));
-  
+
   if (options().arith.arithSubSolver)
   {
-    d_internalSub.reset(new linear::LinearSolverSub(env,*this));
+    d_internalSub.reset(new linear::LinearSolverSub(env, *this));
     d_linearSolver = d_internalSub.get();
   }
   else
   {
-    d_internalLegacy.reset(new linear::LinearSolverLegacy(env, d_astate, d_im, d_bab));
+    d_internalLegacy.reset(
+        new linear::LinearSolverLegacy(env, d_astate, d_im, d_bab));
     d_linearSolver = d_internalLegacy.get();
   }
 }
@@ -103,7 +104,8 @@ void TheoryArith::finishInit()
     d_valuation.setUnevaluatedKind(Kind::PI);
   }
   // only need to create nonlinear extension if non-linear logic
-  if (logic.isTheoryEnabled(THEORY_ARITH) && !logic.isLinear() && !options().arith.arithSubSolver)
+  if (logic.isTheoryEnabled(THEORY_ARITH) && !logic.isLinear()
+      && !options().arith.arithSubSolver)
   {
     d_nonlinearExtension.reset(new nl::NonlinearExtension(d_env, *this));
   }
