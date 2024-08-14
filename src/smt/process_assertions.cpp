@@ -91,6 +91,12 @@ void ProcessAssertions::spendResource(Resource r)
 bool ProcessAssertions::apply(AssertionPipeline& ap)
 {
   Assert(d_preprocessingPassContext != nullptr);
+
+  if (options().smt.elimArith)
+  {
+    applyPass("elim-arith", ap);
+  }
+  
   // Dump the assertions
   dumpAssertions("assertions::pre-everything", ap);
   Trace("assertions::pre-everything") << std::endl;
@@ -334,11 +340,6 @@ bool ProcessAssertions::apply(AssertionPipeline& ap)
 
   // ensure rewritten
   applyPass("rewrite", ap);
-
-  if (options().smt.elimArith)
-  {
-    applyPass("elim-arith", ap);
-  }
 
   // Note the two passes below are very similar. Ideally, they could be
   // done in a single traversal, e.g. do both static (ppStaticRewrite) and

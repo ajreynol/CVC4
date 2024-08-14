@@ -26,7 +26,6 @@
 #include "preprocessing/assertion_pipeline.h"
 #include "preprocessing/preprocessing_pass_context.h"
 #include "theory/theory.h"
-#include "theory/uf/u_value.h"
 #include "theory/uf/theory_uf_rewriter.h"
 
 using namespace cvc5::internal::kind;
@@ -65,8 +64,7 @@ class ElimArithConverter : public NodeConverter
         {
           // all constructor symbols should be caught by d_dtSymCache
           Assert(ctn.getKind() != Kind::CONSTRUCTOR_TYPE);
-          SkolemManager* sm = d_nm->getSkolemManager();
-          Node vvar = d_nm->getSkolemManager()->mkDummySkolem("v", ctn);
+          Node vvar = d_nm->getSkolemManager()->mkDummySkolem("u_v", ctn);
           return vvar;
         }
       }
@@ -75,7 +73,7 @@ class ElimArithConverter : public NodeConverter
     else if (orig.isConst() && tn.isRealOrInt())
     {
       TypeNode ctn = convertType(tn);
-      Node cvar = d_nm->getSkolemManager()->mkDummySkolem("c",ctn);
+      Node cvar = d_nm->getSkolemManager()->mkDummySkolem("u_c",ctn);
       d_consts[tn].push_back(std::pair<Node,Node>(orig,cvar));
       return cvar;
     }
@@ -89,11 +87,23 @@ class ElimArithConverter : public NodeConverter
         argTypes.push_back(t.getType());
       }
       TypeNode ftype = d_nm->mkFunctionType(argTypes, ctn);
-      Node oop = theory::uf::TheoryUfRewriter::getOpaqueOperator(orig, ftype);
+      std::pair<TypeNode, Kind> key(ftype, orig.getKind());
+      std::map<std::pair<TypeNode, Kind>, Node>::iterator itc;
+      itc = d_opCache.find(key);
+      Node oop;
+      if (itc!=d_opCache.end())
+      {
+        oop = itc->second;
+      }
+      else
+      {
+        oop = d_nm->getSkolemManager()->mkDummySkolem("u_op",ftype);
+        d_opCache[key] = oop;
+      }
       std::vector<Node> oterms;
       oterms.push_back(oop);
       oterms.insert(oterms.end(), terms.begin(), terms.end());
-      return d_nm->mkNode(Kind::APPLY_OPAQUE, oterms);
+      return d_nm->mkNode(Kind::APPLY_UF, oterms);
     }
     else if (!terms.empty())
     {
@@ -229,13 +239,12 @@ class ElimArithConverter : public NodeConverter
     }
     return tn;
   }
-
- private:
-  std::map<TypeNode, std::vector<Node>> d_consts;
+  //----------------------
+  std::map<TypeNode, std::vector<std::pair<Node, Node>>> d_consts;
   std::map<TypeNode, TypeNode> d_arithCache;
   std::map<TypeNode, TypeNode> d_dtCache;
   std::map<Node, Node> d_dtSymCache;
-  std::map<std::pauir
+  std::map<std::pair<TypeNode, Kind>, Node> d_opCache;
 };
 
 ElimArith::ElimArith(PreprocessingPassContext* preprocContext)
