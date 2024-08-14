@@ -526,7 +526,7 @@ class CVC5_EXPORT SolverEngine
    * @return true if v is a model core symbol
    */
   bool isModelCoreSymbol(Node v);
-  
+
   /**
    * @return the current model trail.
    */

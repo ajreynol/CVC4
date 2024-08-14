@@ -347,13 +347,13 @@ void TheoryEngine::preRegister(TNode preprocessed) {
 std::vector<Node> TheoryEngine::getAssertions() const
 {
   std::vector<Node> assertions;
-  for (TheoryId theoryId = THEORY_FIRST; theoryId < THEORY_LAST; ++theoryId) {
+  for (TheoryId theoryId = THEORY_FIRST; theoryId < THEORY_LAST; ++theoryId)
+  {
     Theory* theory = d_theoryTable[theoryId];
     if (theory && isTheoryEnabled(theoryId))
     {
       context::CDList<Assertion>::const_iterator it = theory->facts_begin(),
-                                                  it_end =
-                                                      theory->facts_end();
+                                                 it_end = theory->facts_end();
       for (; it != it_end; ++it)
       {
         assertions.push_back(*it);
@@ -376,7 +376,7 @@ std::vector<Node> TheoryEngine::getAssertions() const
   }
   return assertions;
 }
-  
+
 void TheoryEngine::printAssertions(const char* tag) {
   if (TraceIsOn(tag)) {
 

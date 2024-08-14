@@ -8140,8 +8140,7 @@ std::vector<Term> Solver::getModelTrail() const
       << "cannot get model trail unless after a SAT or UNKNOWN response.";
   //////// all checks before this line
   std::vector<Term> res;
-  std::vector<internal::Node> trail =
-      d_slv->getModelTrail();
+  std::vector<internal::Node> trail = d_slv->getModelTrail();
   for (const internal::Node& n : trail)
   {
     res.push_back(Term(&d_tm, n));

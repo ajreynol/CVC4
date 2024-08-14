@@ -1507,10 +1507,7 @@ void GetModelTrailCommand::printResult(cvc5::Solver* solver,
   out << d_result << endl;
 }
 
-std::string GetModelTrailCommand::getCommandName() const
-{
-  return "get-trail";
-}
+std::string GetModelTrailCommand::getCommandName() const { return "get-trail"; }
 
 void GetModelTrailCommand::toStream(std::ostream& out) const
 {
