@@ -80,6 +80,7 @@ std::ostream& operator<<(std::ostream& o, Token t)
     case Token::GET_TIMEOUT_CORE_ASSUMING_TOK:
       o << "GET_TIMEOUT_CORE_ASSUMING_TOK";
       break;
+    case Token::GET_TRAIL_TOK: o << "GET_TRAIL_TOK"; break;
     case Token::GET_UNSAT_ASSUMPTIONS_TOK:
       o << "GET_UNSAT_ASSUMPTIONS_TOK";
       break;

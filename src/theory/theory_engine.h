@@ -358,7 +358,6 @@ class TheoryEngine : protected EnvObj
    * call).
    */
   bool buildModel();
-
   /**
    * Get the theory associated to a given Node.
    *
@@ -410,7 +409,10 @@ class TheoryEngine : protected EnvObj
    * error.
    */
   std::unordered_set<TNode> getRelevantAssertions(bool& success);
-
+  /**
+   * Get the current assertions.
+   */
+  std::vector<Node> getAssertions() const;
   /**
    * Get difficulty map, which populates dmap, mapping preprocessed assertions
    * to a value that estimates their difficulty for solving the current problem.

@@ -740,6 +740,21 @@ class CVC5_EXPORT GetAssignmentCommand : public Cmd
   void toStream(std::ostream& out) const override;
 }; /* class GetAssignmentCommand */
 
+class CVC5_EXPORT GetModelTrailCommand : public Cmd
+{
+ protected:
+  cvc5::Term d_result;
+
+ public:
+  GetModelTrailCommand();
+
+  cvc5::Term getResult() const;
+  void invoke(cvc5::Solver* solver, parser::SymManager* sm) override;
+  void printResult(cvc5::Solver* solver, std::ostream& out) const override;
+  std::string getCommandName() const override;
+  void toStream(std::ostream& out) const override;
+}; /* class GetAssignmentCommand */
+
 class CVC5_EXPORT GetModelCommand : public Cmd
 {
  public:

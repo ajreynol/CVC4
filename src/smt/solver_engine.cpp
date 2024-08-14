@@ -1243,11 +1243,11 @@ bool SolverEngine::isModelCoreSymbol(Node n)
   return tm->isModelCoreSymbol(n);
 }
 
-std::vector<Node> getModelTrail() const
+std::vector<Node> SolverEngine::getModelTrail() const
 {
-  PropEngine* pe = d_smtSolver->getPropEngine();
-  Assert(pe != nullptr);
-  return pe->getModelTrail();
+  TheoryEngine* te = d_smtSolver->getTheoryEngine();
+  Assert(te != nullptr);
+  return te->getAssertions();
 }
 
 std::string SolverEngine::getModel(const std::vector<TypeNode>& declaredSorts,

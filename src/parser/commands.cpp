@@ -1477,6 +1477,47 @@ void GetAssignmentCommand::toStream(std::ostream& out) const
 }
 
 /* -------------------------------------------------------------------------- */
+/* class GetModelTrailCommand                                                 */
+/* -------------------------------------------------------------------------- */
+
+GetModelTrailCommand::GetModelTrailCommand() {}
+void GetModelTrailCommand::invoke(cvc5::Solver* solver, SymManager* sm)
+{
+  try
+  {
+    std::vector<Term> trail = solver->getModelTrail();
+    TermManager& tm = solver->getTermManager();
+    d_result = tm.mkTerm(cvc5::Kind::SEXPR, trail);
+    d_commandStatus = CommandSuccess::instance();
+  }
+  catch (cvc5::CVC5ApiRecoverableException& e)
+  {
+    d_commandStatus = new CommandRecoverableFailure(e.what());
+  }
+  catch (exception& e)
+  {
+    d_commandStatus = new CommandFailure(e.what());
+  }
+}
+
+cvc5::Term GetModelTrailCommand::getResult() const { return d_result; }
+void GetModelTrailCommand::printResult(cvc5::Solver* solver,
+                                       std::ostream& out) const
+{
+  out << d_result << endl;
+}
+
+std::string GetModelTrailCommand::getCommandName() const
+{
+  return "get-trail";
+}
+
+void GetModelTrailCommand::toStream(std::ostream& out) const
+{
+  internal::Printer::getPrinter(out)->toStreamCmdGetAssignment(out);
+}
+
+/* -------------------------------------------------------------------------- */
 /* class GetModelCommand                                                      */
 /* -------------------------------------------------------------------------- */
 

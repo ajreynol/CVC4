@@ -49,6 +49,7 @@ Smt2CmdParser::Smt2CmdParser(Smt2Lexer& lex,
   d_table["get-assignment"] = Token::GET_ASSIGNMENT_TOK;
   d_table["get-info"] = Token::GET_INFO_TOK;
   d_table["get-model"] = Token::GET_MODEL_TOK;
+  d_table["get-model-trail"] = Token::GET_MODEL_TRAIL_TOK;
   d_table["get-option"] = Token::GET_OPTION_TOK;
   d_table["get-proof"] = Token::GET_PROOF_TOK;
   d_table["get-timeout-core"] = Token::GET_TIMEOUT_CORE_TOK;
@@ -647,6 +648,13 @@ std::unique_ptr<Cmd> Smt2CmdParser::parseNextCommand()
     {
       d_state.checkThatLogicIsSet();
       cmd.reset(new GetModelCommand());
+    }
+    break;
+    // (get-model-trail)
+    case Token::GET_MODEL_TRAIL_TOK:
+    {
+      d_state.checkThatLogicIsSet();
+      cmd.reset(new GetModelTrailCommand());
     }
     break;
     // (get-option <keyword>)

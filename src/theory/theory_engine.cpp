@@ -344,6 +344,38 @@ void TheoryEngine::preRegister(TNode preprocessed) {
   }
 }
 
+std::vector<Node> TheoryEngine::getAssertions() const
+{
+  std::vector<Node> assertions;
+  for (TheoryId theoryId = THEORY_FIRST; theoryId < THEORY_LAST; ++theoryId) {
+    Theory* theory = d_theoryTable[theoryId];
+    if (theory && isTheoryEnabled(theoryId))
+    {
+      context::CDList<Assertion>::const_iterator it = theory->facts_begin(),
+                                                  it_end =
+                                                      theory->facts_end();
+      for (; it != it_end; ++it)
+      {
+        assertions.push_back(*it);
+      }
+    }
+  }
+  std::vector<TNode> boolVars;
+  d_propEngine->getBooleanVariables(boolVars);
+  std::vector<TNode>::iterator it, iend = boolVars.end();
+  bool hasValue, value;
+  for (it = boolVars.begin(); it != iend; ++it)
+  {
+    TNode var = *it;
+    hasValue = d_propEngine->hasValue(var, value);
+    if (hasValue)
+    {
+      assertions.push_back(value ? var : var.notNode());
+    }
+  }
+  return assertions;
+}
+  
 void TheoryEngine::printAssertions(const char* tag) {
   if (TraceIsOn(tag)) {
 
