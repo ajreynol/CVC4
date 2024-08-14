@@ -72,6 +72,7 @@ std::ostream& operator<<(std::ostream& o, Token t)
       o << "GET_LEARNED_LITERALS_TOK";
       break;
     case Token::GET_MODEL_TOK: o << "GET_MODEL_TOK"; break;
+    case Token::GET_MODEL_TRAIL_TOK: o << "GET_MODEL_TRAIL_TOK"; break;
     case Token::GET_OPTION_TOK: o << "GET_OPTION_TOK"; break;
     case Token::GET_PROOF_TOK: o << "GET_PROOF_TOK"; break;
     case Token::GET_QE_DISJUNCT_TOK: o << "GET_QE_DISJUNCT_TOK"; break;
@@ -80,7 +81,6 @@ std::ostream& operator<<(std::ostream& o, Token t)
     case Token::GET_TIMEOUT_CORE_ASSUMING_TOK:
       o << "GET_TIMEOUT_CORE_ASSUMING_TOK";
       break;
-    case Token::GET_TRAIL_TOK: o << "GET_TRAIL_TOK"; break;
     case Token::GET_UNSAT_ASSUMPTIONS_TOK:
       o << "GET_UNSAT_ASSUMPTIONS_TOK";
       break;

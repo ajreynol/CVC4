@@ -370,7 +370,8 @@ std::vector<Node> TheoryEngine::getAssertions() const
     hasValue = d_propEngine->hasValue(var, value);
     if (hasValue)
     {
-      assertions.push_back(value ? var : var.notNode());
+      Node lit = value ? Node(var) : var.notNode();
+      assertions.push_back(lit);
     }
   }
   return assertions;

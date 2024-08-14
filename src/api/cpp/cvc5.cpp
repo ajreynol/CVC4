@@ -8137,7 +8137,7 @@ std::vector<Term> Solver::getModelTrail() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_RECOVERABLE_CHECK(d_slv->isSmtModeSat())
-      << "cannot get domain elements unless after a SAT or UNKNOWN response.";
+      << "cannot get model trail unless after a SAT or UNKNOWN response.";
   //////// all checks before this line
   std::vector<Term> res;
   std::vector<internal::Node> trail =
