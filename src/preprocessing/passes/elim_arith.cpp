@@ -26,7 +26,7 @@
 #include "preprocessing/assertion_pipeline.h"
 #include "preprocessing/preprocessing_pass_context.h"
 #include "theory/theory.h"
-#include "theory/uf/opaque_value.h"
+#include "theory/uf/u_value.h"
 #include "theory/uf/theory_uf_rewriter.h"
 
 using namespace cvc5::internal::kind;
@@ -66,15 +66,18 @@ class ElimArithConverter : public NodeConverter
           // all constructor symbols should be caught by d_dtSymCache
           Assert(ctn.getKind() != Kind::CONSTRUCTOR_TYPE);
           SkolemManager* sm = d_nm->getSkolemManager();
-          return sm->mkInternalSkolemFunction(
-              InternalSkolemId::PURIFY_OPAQUE, ctn, {orig});
+          Node vvar = d_nm->getSkolemManager()->mkDummySkolem("v", ctn);
+          return vvar;
         }
       }
       return orig;
     }
     else if (orig.isConst() && tn.isRealOrInt())
     {
-      return d_nm->mkConst(OpaqueValue(orig));
+      TypeNode ctn = convertType(tn);
+      Node cvar = d_nm->getSkolemManager()->mkDummySkolem("c",ctn);
+      d_consts[tn].push_back(std::pair<Node,Node>(orig,cvar));
+      return cvar;
     }
     else if (orig.getKind() != Kind::EQUAL
              && !Theory::isLeafOf(orig, THEORY_ARITH))
@@ -104,7 +107,16 @@ class ElimArithConverter : public NodeConverter
     Trace("elim-arith-convert") << "Convert type " << tn << std::endl;
     if (tn.isRealOrInt())
     {
-      return d_nm->mkOpaqueType(tn);
+      std::map<TypeNode, TypeNode>::iterator it = d_arithCache.find(tn);
+      if (it!=d_arithCache.end())
+      {
+        return it->second;
+      }
+      std::stringstream ss;
+      ss << "U" << tn;
+      TypeNode ret = d_nm->mkSort(ss.str());
+      d_arithCache[tn] = ret;
+      return ret;
     }
     if (tn.isDatatype())
     {
@@ -167,7 +179,7 @@ class ElimArithConverter : public NodeConverter
         for (const TypeNode& curr : connectedDt)
         {
           std::stringstream ss;
-          ss << "opaque_" << curr.getDType().getName();
+          ss << "u_" << curr.getDType().getName();
           newDatatypes.push_back(DType(ss.str()));
           converted[curr] = d_nm->mkUnresolvedDatatypeSort(ss.str());
         }
@@ -180,13 +192,13 @@ class ElimArithConverter : public NodeConverter
           {
             const DTypeConstructor& dc = dt[i];
             std::stringstream ssc;
-            ssc << "opaque_" << dc.getName();
+            ssc << "u_" << dc.getName();
             std::shared_ptr<DTypeConstructor> c =
                 std::make_shared<DTypeConstructor>(ssc.str());
             for (size_t j = 0, nargs = dc.getNumArgs(); j < nargs; j++)
             {
               std::stringstream sss;
-              sss << "opaque_" << dc[j].getName();
+              sss << "u_" << dc[j].getName();
               c->addArg(sss.str(), converted[dc[j].getRangeType()]);
             }
             ndt.addConstructor(c);
@@ -219,8 +231,11 @@ class ElimArithConverter : public NodeConverter
   }
 
  private:
+  std::map<TypeNode, std::vector<Node>> d_consts;
+  std::map<TypeNode, TypeNode> d_arithCache;
   std::map<TypeNode, TypeNode> d_dtCache;
   std::map<Node, Node> d_dtSymCache;
+  std::map<std::pauir
 };
 
 ElimArith::ElimArith(PreprocessingPassContext* preprocContext)
@@ -239,6 +254,7 @@ PreprocessingPassResult ElimArith::applyInternal(
     Trace("elim-arith") << "Converted " << a << " to " << ac << std::endl;
     assertionsToPreprocess->replace(i, rewrite(ac));
   }
+  // add additional assertions
   return PreprocessingPassResult::NO_CONFLICT;
 }
 
