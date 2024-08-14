@@ -526,6 +526,11 @@ class CVC5_EXPORT SolverEngine
    * @return true if v is a model core symbol
    */
   bool isModelCoreSymbol(Node v);
+  
+  /**
+   * @return the current model trail.
+   */
+  std::vector<Node> getModelTrail() const;
 
   /**
    * Get a model (only if immediately preceded by an SAT or unknown query).

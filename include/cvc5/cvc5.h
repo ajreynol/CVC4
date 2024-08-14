@@ -6193,6 +6193,10 @@ class CVC5_EXPORT Solver
   bool isModelCoreSymbol(const Term& v) const;
 
   /**
+   * @return The set of asserted literals in the current SAT assignment.
+   */
+  std::vector<Term> getModelTrail() const;
+  /**
    * Get the model
    *
    * SMT-LIB:
