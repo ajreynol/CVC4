@@ -327,6 +327,7 @@ void PrintBenchmark::printBenchmark(std::ostream& out,
   printAssertions(out, defs, assertions);
   d_printer->toStreamCmdCheckSat(out);
   out << std::endl;
+  out << "(exit)" << std::endl;
 }
 
 }  // namespace smt

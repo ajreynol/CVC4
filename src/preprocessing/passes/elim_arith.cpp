@@ -275,6 +275,21 @@ PreprocessingPassResult ElimArith::applyInternal(
     Trace("elim-arith") << "Converted " << a << " to " << ac << std::endl;
     assertionsToPreprocess->replace(i, rewrite(ac));
   }
+  for (const std::pair<const TypeNode, std::vector<std::pair<Node, Node>>>& c : eac.d_consts)
+  {
+    if (c.second.size()<=1)
+    {
+      continue;
+    }
+    std::vector<Node> uconsts;
+    for (const std::pair<Node, Node>& cs : c.second)
+    {
+      uconsts.push_back(cs.second);
+    }
+    Node distinct = nodeManager()->mkNode(Kind::DISTINCT, uconsts);
+    assertionsToPreprocess->push_back(distinct);
+  }
+  
   // add additional assertions
   return PreprocessingPassResult::NO_CONFLICT;
 }
