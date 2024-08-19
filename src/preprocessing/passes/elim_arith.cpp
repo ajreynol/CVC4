@@ -44,6 +44,7 @@ class ElimArithConverter : public NodeConverter
                           const std::vector<Node>& terms,
                           bool termsChanged) override
   {
+    Kind k = orig.getKind();
     Trace("elim-arith-convert") << "Convert " << orig << std::endl;
     TypeNode tn = orig.getType();
     if (orig.isVar())
@@ -56,7 +57,7 @@ class ElimArithConverter : public NodeConverter
         {
           return itd->second;
         }
-        if (orig.getKind() == Kind::BOUND_VARIABLE)
+        if (k == Kind::BOUND_VARIABLE)
         {
           return d_nm->mkBoundVar(ctn);
         }
@@ -77,7 +78,7 @@ class ElimArithConverter : public NodeConverter
       d_consts[tn].push_back(std::pair<Node,Node>(orig,cvar));
       return cvar;
     }
-    else if (orig.getKind() != Kind::EQUAL
+    else if (k != Kind::EQUAL
              && !Theory::isLeafOf(orig, THEORY_ARITH))
     {
       TypeNode ctn = convertType(tn);
@@ -87,7 +88,7 @@ class ElimArithConverter : public NodeConverter
         argTypes.push_back(t.getType());
       }
       TypeNode ftype = d_nm->mkFunctionType(argTypes, ctn);
-      std::pair<TypeNode, Kind> key(ftype, orig.getKind());
+      std::pair<TypeNode, Kind> key(ftype, k);
       std::map<std::pair<TypeNode, Kind>, Node>::iterator itc;
       itc = d_opCache.find(key);
       Node oop;
@@ -105,9 +106,20 @@ class ElimArithConverter : public NodeConverter
       oterms.insert(oterms.end(), terms.begin(), terms.end());
       return d_nm->mkNode(Kind::APPLY_UF, oterms);
     }
+    else if (k == Kind::INST_PATTERN_LIST)
+    {
+      std::vector<Node> newChildren;
+      for (const Node& t : terms)
+      {
+        if (t.getKind()!=Kind::INST_ATTRIBUTE)
+        {
+          newChildren.push_back(t);
+        }
+      }
+      return d_nm->mkNode(k, newChildren);
+    }
     else if (!terms.empty())
     {
-      Kind k = orig.getKind();
       return d_nm->mkNode(k, terms);
     }
     return orig;
