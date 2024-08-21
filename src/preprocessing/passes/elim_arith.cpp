@@ -45,13 +45,14 @@ class ElimArithConverter : public NodeConverter
                           bool termsChanged) override
   {
     Kind k = orig.getKind();
-    Trace("elim-arith-convert") << "Convert " << orig << std::endl;
+    Trace("elim-arith-convert") << "Convert term " << orig << " " << orig.getKind() << std::endl;
     TypeNode tn = orig.getType();
     if (orig.isVar())
     {
       TypeNode ctn = convertType(tn);
       if (ctn != tn)
       {
+        Trace("elim-arith-convert") << "...type changed to " << ctn << " " << ctn.getKind() << " from " << tn << " " << tn.getKind() << std::endl;
         std::map<Node, Node>::iterator itd = d_dtSymCache.find(orig);
         if (itd != d_dtSymCache.end())
         {
@@ -126,18 +127,20 @@ class ElimArithConverter : public NodeConverter
   }
   TypeNode postConvertType(TypeNode tn) override
   {
-    Trace("elim-arith-convert") << "Convert type " << tn << std::endl;
+    Trace("elim-arith-convert") << "Convert type " << tn << " " << tn.getKind() << std::endl;
     if (tn.isRealOrInt())
     {
       std::map<TypeNode, TypeNode>::iterator it = d_arithCache.find(tn);
       if (it!=d_arithCache.end())
       {
+        Trace("elim-arith-convert") << "...arith cached" << std::endl;
         return it->second;
       }
       std::stringstream ss;
       ss << "U" << tn;
       TypeNode ret = d_nm->mkSort(ss.str());
       d_arithCache[tn] = ret;
+      Trace("elim-arith-convert") << "...arith" << std::endl;
       return ret;
     }
     if (tn.isDatatype())
@@ -145,8 +148,10 @@ class ElimArithConverter : public NodeConverter
       std::map<TypeNode, TypeNode>::iterator it = d_dtCache.find(tn);
       if (it != d_dtCache.end())
       {
+        Trace("elim-arith-convert") << "...already cached" << std::endl;
         return it->second;
       }
+      Trace("elim-arith-convert") << "Convert datatype " << tn << std::endl;
       std::vector<TypeNode> toProcess;
       std::unordered_set<TypeNode> connected;
       std::vector<TypeNode> connectedDt;
@@ -157,6 +162,7 @@ class ElimArithConverter : public NodeConverter
       {
         TypeNode curr = toProcess.back();
         toProcess.pop_back();
+        Trace("elim-arith-convert") << "...process " << curr << " " << curr.getKind() << std::endl;
         if (connected.find(curr) != connected.end())
         {
           continue;
@@ -170,6 +176,7 @@ class ElimArithConverter : public NodeConverter
             // a previously converted datatype
             needsUpdate = needsUpdate || it->second != curr;
             converted[curr] = it->second;
+            Trace("elim-arith-convert") << "......already cache dt" << std::endl;
           }
           else
           {
@@ -177,6 +184,7 @@ class ElimArithConverter : public NodeConverter
             const DType& dt = tn.getDType();
             std::unordered_set<TypeNode> stypes = dt.getSubfieldTypes();
             toProcess.insert(toProcess.end(), stypes.begin(), stypes.end());
+            Trace("elim-arith-convert") << "......new dt, subfield types is " << stypes.size() << std::endl;
           }
         }
         else
@@ -184,6 +192,7 @@ class ElimArithConverter : public NodeConverter
           TypeNode ccurr = convertType(curr);
           needsUpdate = needsUpdate || ccurr != curr;
           converted[curr] = ccurr;
+          Trace("elim-arith-convert") << "......non dt" << std::endl;
         }
       } while (!toProcess.empty());
       Trace("elim-arith-convert")
@@ -248,6 +257,10 @@ class ElimArithConverter : public NodeConverter
         }
       }
       return d_dtCache[tn];
+    }
+    else
+    {
+      Trace("elim-arith-convert") << "...non-datatype" << std::endl;
     }
     return tn;
   }
