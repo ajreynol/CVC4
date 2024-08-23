@@ -393,7 +393,7 @@ bool RegExpEntail::isConstRegExp(TNode t)
           return false;
         }
       }
-      else if (ck == Kind::REGEXP_RV)
+      else if (ck == Kind::REGEXP_RV || ck==Kind::REGEXP_LOOP)
       {
         return false;
       }

@@ -102,8 +102,8 @@ TrustNode SequencesRewriter::expandDefinition(Node n)
   {
     case Kind::REGEXP_LOOP:
     {
-      Node retNode = rewriteViaReLoopElim(node);
-      return TrustNode::mkTrustRewrite(node, retNode);
+      Node retNode = rewriteViaReLoopElim(n);
+      return TrustNode::mkTrustRewrite(n, retNode);
     }
     break;
     default:
@@ -1793,6 +1793,25 @@ Node SequencesRewriter::rewriteMembership(TNode node)
   {
     Node retNode = nm->mkNode(Kind::STRING_IN_REGEXP, x, r[0]).negate();
     return returnRewrite(node, retNode, Rewrite::RE_IN_COMPLEMENT);
+  }
+  else if (r.getKind() ==Kind::REGEXP_LOOP)
+  {
+    Trace("ajr-temp") << "Maybe reduce? " << node << std::endl;
+    uint32_t l = utils::getLoopMinOccurrences(r);
+    uint32_t u = utils::getLoopMaxOccurrences(r);
+    if (u>15)
+    {
+      Node len = RegExpEntail::getFixedLengthForRegexp(r[0]);
+      if (!len.isNull())
+      {
+        Node lenx = nm->mkNode(Kind::STRING_LENGTH, x);
+        Node ll = nm->mkNode(Kind::LEQ, nm->mkNode(Kind::MULT, nm->mkConstInt(Rational(l)), len), lenx);
+        Node lu = nm->mkNode(Kind::LEQ, lenx, nm->mkNode(Kind::MULT, nm->mkConstInt(Rational(u)), len));
+        Node mem = nm->mkNode(Kind::STRING_IN_REGEXP, x, nm->mkNode(Kind::REGEXP_STAR, r[0]));
+        Node ret = nm->mkNode(Kind::AND, mem, ll, lu);
+        return returnRewrite(node, ret, Rewrite::RE_IN_LOOP_FIXED_LEN);
+      }
+    }
   }
 
   // do simple consumes
