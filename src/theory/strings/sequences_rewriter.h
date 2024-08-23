@@ -50,6 +50,8 @@ class SequencesRewriter : public TheoryRewriter
    */
   Node rewriteViaRule(ProofRewriteRule id, const Node& n) override;
 
+  /** expand defintions */
+  TrustNode expandDefinition(Node n) override;
  protected:
   /** rewrite regular expression all
    *

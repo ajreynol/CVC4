@@ -96,6 +96,22 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   return Node::null();
 }
 
+TrustNode SequencesRewriter::expandDefinition(Node n)
+{
+  switch (n.getKind())
+  {
+    case Kind::REGEXP_LOOP:
+    {
+      Node retNode = rewriteViaReLoopElim(node);
+      return TrustNode::mkTrustRewrite(node, retNode);
+    }
+    break;
+    default:
+      break;
+  }
+  return TrustNode::null();
+}
+
 ArithEntail& SequencesRewriter::getArithEntail() { return d_arithEntail; }
 
 StringsEntail& SequencesRewriter::getStringsEntail() { return d_stringsEntail; }
@@ -1319,9 +1335,7 @@ Node SequencesRewriter::rewriteLoopRegExp(TNode node)
   {
     return returnRewrite(node, r, Rewrite::RE_LOOP_STAR);
   }
-  retNode = rewriteViaReLoopElim(node);
-  Assert(!retNode.isNull() && retNode != node);
-  return returnRewrite(node, retNode, Rewrite::RE_LOOP);
+  return node;
 }
 
 Node SequencesRewriter::rewriteViaReLoopElim(const Node& node)
