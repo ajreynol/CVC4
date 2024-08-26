@@ -82,6 +82,16 @@ class ElimArithConverter : public NodeConverter
     else if (k != Kind::EQUAL
              && !Theory::isLeafOf(orig, THEORY_ARITH))
     {
+      // make into chain
+      if ((k==Kind::PLUS || k==Kind::MULT || k==Kind::NONLINEAR_MULT) && orig.getNumChildren()>2)
+      {
+        Node curr = orig[0];
+        for (size_t i=1, nchild = orig.getNumChildren(); i<nchild; i++)
+        {
+          curr = nm->mkNode(k, orig[i]);
+        }
+        return convert(curr);
+      }
       TypeNode ctn = convertType(tn);
       std::vector<TypeNode> argTypes;
       for (const Node& t : terms)
@@ -284,10 +294,12 @@ PreprocessingPassResult ElimArith::applyInternal(
   for (size_t i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
   {
     Node a = (*assertionsToPreprocess)[i];
+    a = rewrite(a);
     Node ac = eac.convert(a, false);
     Trace("elim-arith") << "Converted " << a << " to " << ac << std::endl;
     assertionsToPreprocess->replace(i, rewrite(ac));
   }
+  // all constants are distinct
   for (const std::pair<const TypeNode, std::vector<std::pair<Node, Node>>>& c : eac.d_consts)
   {
     if (c.second.size()<=1)
@@ -301,6 +313,18 @@ PreprocessingPassResult ElimArith::applyInternal(
     }
     Node distinct = nodeManager()->mkNode(Kind::DISTINCT, uconsts);
     assertionsToPreprocess->push_back(distinct);
+  }
+  for (const std::pair&<const std::pair<TypeNode, Kind>, Node>& op : d_opCache)
+  {
+    Kind k = op.first.second;
+    if (k==Kind::GEQ)
+    {
+      
+    }
+    else if (k==Kind::PLUS)
+    {
+      
+    }
   }
   
   // add additional assertions
