@@ -83,12 +83,12 @@ class ElimArithConverter : public NodeConverter
              && !Theory::isLeafOf(orig, THEORY_ARITH))
     {
       // make into chain
-      if ((k==Kind::PLUS || k==Kind::MULT || k==Kind::NONLINEAR_MULT) && orig.getNumChildren()>2)
+      if ((k==Kind::ADD || k==Kind::MULT || k==Kind::NONLINEAR_MULT) && orig.getNumChildren()>2)
       {
         Node curr = orig[0];
         for (size_t i=1, nchild = orig.getNumChildren(); i<nchild; i++)
         {
-          curr = nm->mkNode(k, orig[i]);
+          curr = d_nm->mkNode(k, orig[i]);
         }
         return convert(curr);
       }
@@ -290,7 +290,8 @@ ElimArith::ElimArith(PreprocessingPassContext* preprocContext)
 PreprocessingPassResult ElimArith::applyInternal(
     AssertionPipeline* assertionsToPreprocess)
 {
-  ElimArithConverter eac(nodeManager());
+  NodeManager * nm = nodeManager();
+  ElimArithConverter eac(nm);
   for (size_t i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
   {
     Node a = (*assertionsToPreprocess)[i];
@@ -311,19 +312,47 @@ PreprocessingPassResult ElimArith::applyInternal(
     {
       uconsts.push_back(cs.second);
     }
-    Node distinct = nodeManager()->mkNode(Kind::DISTINCT, uconsts);
+    Node distinct = nm->mkNode(Kind::DISTINCT, uconsts);
     assertionsToPreprocess->push_back(distinct);
   }
-  for (const std::pair&<const std::pair<TypeNode, Kind>, Node>& op : d_opCache)
+  for (const std::pair<const std::pair<TypeNode, Kind>, Node>& op : eac.d_opCache)
   {
     Kind k = op.first.second;
+    if (k!=Kind::GEQ && k!=Kind::ADD)
+    {
+      continue;
+    }
+    std::vector<Node> bv;
+    for (size_t i=0; i<3; i++)
+    {
+      bv.push_back(nm->mkBoundVar(op.first.first[0]));
+    }
+    Node uop = op.second;
     if (k==Kind::GEQ)
     {
-      
+      Node trans = nm->mkNode(Kind::IMPLIES, 
+                     nm->mkNode(Kind::AND, 
+                       nm->mkNode(Kind::APPLY_UF, uop, bv[0], bv[1]),
+                       nm->mkNode(Kind::APPLY_UF, uop, bv[1], bv[2])),
+                     nm->mkNode(Kind::APPLY_UF, uop, bv[0], bv[2]));
+      assertionsToPreprocess->push_back(nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bv), trans));
+      Node asym = nm->mkNode(Kind::IMPLIES, 
+                     nm->mkNode(Kind::AND, 
+                       nm->mkNode(Kind::APPLY_UF, uop, bv[0], bv[1]),
+                       nm->mkNode(Kind::APPLY_UF, uop, bv[1], bv[0])),
+                     nm->mkNode(Kind::EQUAL, bv[0], bv[1]));
+      assertionsToPreprocess->push_back(nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bv), asym));
     }
-    else if (k==Kind::PLUS)
+    else if (k==Kind::ADD)
     {
-      
+      Node assoc = nm->mkNode(Kind::EQUAL,
+                     nm->mkNode(Kind::APPLY_UF, uop, bv[0], nm->mkNode(Kind::APPLY_UF, uop, bv[1], bv[2])),
+                     nm->mkNode(Kind::APPLY_UF, uop, nm->mkNode(Kind::APPLY_UF, uop, bv[0], bv[1]), bv[2]));
+      assertionsToPreprocess->push_back(nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bv), assoc));
+      Node sym = nm->mkNode(Kind::EQUAL,
+                    nm->mkNode(Kind::APPLY_UF, uop, bv[0], bv[1]),
+                    nm->mkNode(Kind::APPLY_UF, uop, bv[1], bv[0]));
+      assertionsToPreprocess->push_back(nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bv), sym));
     }
   }
   
