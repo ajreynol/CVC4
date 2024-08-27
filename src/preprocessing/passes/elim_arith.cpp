@@ -109,7 +109,9 @@ class ElimArithConverter : public NodeConverter
       }
       else
       {
-        oop = d_nm->getSkolemManager()->mkDummySkolem("u_op",ftype);
+        std::stringstream ss;
+        ss << "u_op_" << k;
+        oop = d_nm->getSkolemManager()->mkDummySkolem(ss.str(),ftype);
         d_opCache[key] = oop;
       }
       std::vector<Node> oterms;
