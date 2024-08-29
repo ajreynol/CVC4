@@ -79,6 +79,21 @@ class InstLemmaList
   context::CDList<Node> d_list;
 };
 
+class InstCall
+{
+public:
+  InstCall(Node q,
+                                std::vector<Node>& terms,
+                                InferenceId id,
+                                Node pfArg,
+                                bool doVts) : d_q(q), d_terms(terms), d_id(id), d_pfArg(pfArg), d_doVts(doVts){}
+  Node d_q;
+  std::vector<Node> d_terms;
+  InferenceId d_id;
+  Node d_pfArg;
+  bool d_doVts;
+};
+
 /** Instantiate
  *
  * This class is used for generating instantiation lemmas.  It maintains an
@@ -355,6 +370,11 @@ class Instantiate : public QuantifiersUtil
    * A CDProof storing instantiation steps.
    */
   std::unique_ptr<CDProof> d_pfInst;
+  // ---- instLevelBufferFactor
+  /** */
+  size_t d_fullEffortChecks;
+  /** */
+  std::map<size_t, std::vector<InstCall>> d_bufferedInst;
 };
 
 }  // namespace quantifiers
