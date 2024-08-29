@@ -1618,11 +1618,14 @@ void SetDefaults::setDefaultsQuantifiers(const LogicInfo& logic,
     SET_AND_NOTIFY_VAL_SYM(
         smt, deepRestartMode, options::DeepRestartMode::NONE, "globalNegate");
   }
-  
-  if (options().quantifiers.instMaxLevel != -1 || options().quantifiers.instLevelBufferFactor != -1)
+
+  if (options().quantifiers.instMaxLevel != -1
+      || options().quantifiers.instLevelBufferFactor != -1)
   {
-    SET_AND_NOTIFY(
-        quantifiers, trackInstLevel, true, "instantiation policy relying on instantiation level");
+    SET_AND_NOTIFY(quantifiers,
+                   trackInstLevel,
+                   true,
+                   "instantiation policy relying on instantiation level");
   }
 }
 

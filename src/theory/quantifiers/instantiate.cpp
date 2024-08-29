@@ -56,7 +56,7 @@ Instantiate::Instantiate(Env& env,
       d_pfInst(isProofEnabled()
                    ? new CDProof(env, userContext(), "Instantiate::pfInst")
                    : nullptr),
-                   d_fullEffortChecks(0)
+      d_fullEffortChecks(0)
 {
 }
 
@@ -75,13 +75,16 @@ bool Instantiate::reset(Theory::Effort e)
   // clear explicitly recorded instantiations
   d_recordedInst.clear();
   d_instDebugTemp.clear();
-  if (options().quantifiers.instLevelBufferFactor!=-1)
+  if (options().quantifiers.instLevelBufferFactor != -1)
   {
     d_fullEffortChecks++;
-    std::map<size_t, std::vector<InstCall>>::iterator it = d_bufferedInst.find(d_fullEffortChecks);
-    if (it!=d_bufferedInst.end())
+    std::map<size_t, std::vector<InstCall>>::iterator it =
+        d_bufferedInst.find(d_fullEffortChecks);
+    if (it != d_bufferedInst.end())
     {
-      Trace("inst-buffer") << "Instantiate " << it->second.size() << " instantiations at level " << d_fullEffortChecks << std::endl;
+      Trace("inst-buffer") << "Instantiate " << it->second.size()
+                           << " instantiations at level " << d_fullEffortChecks
+                           << std::endl;
       for (InstCall& ic : it->second)
       {
         addInstantiation(ic.d_q, ic.d_terms, ic.d_id, ic.d_pfArg, ic.d_doVts);
@@ -270,7 +273,7 @@ bool Instantiate::addInstantiationInternal(
     }
   }
   // check based on buffering
-  if (options().quantifiers.instLevelBufferFactor!=-1)
+  if (options().quantifiers.instLevelBufferFactor != -1)
   {
     uint64_t maxLevel = 0;
     for (const Node& t : terms)
@@ -278,20 +281,25 @@ bool Instantiate::addInstantiationInternal(
       uint64_t level;
       if (QuantAttributes::getInstantiationLevel(t, level))
       {
-        if (level>maxLevel)
+        if (level > maxLevel)
         {
           maxLevel = level;
         }
       }
     }
-    //Trace("inst-buffer") << "Max inst level is " << maxLevel << ", compare against " << d_fullEffortChecks << " full effort check" << std::endl;
+    // Trace("inst-buffer") << "Max inst level is " << maxLevel << ", compare
+    // against " << d_fullEffortChecks << " full effort check" << std::endl;
     uint64_t bf = options().quantifiers.instLevelBufferFactor;
-    if (maxLevel>d_fullEffortChecks*bf)
+    if (maxLevel > d_fullEffortChecks * bf)
     {
-      size_t onLevel = maxLevel/bf;
+      size_t onLevel = maxLevel / bf;
       d_bufferedInst[onLevel].push_back(InstCall(q, terms, id, pfArg, doVts));
-      Trace("inst-buffer") << "--> Buffer inst with maxLevel " << maxLevel << ", will add at full check " << onLevel << std::endl;
-      Trace("inst-add-debug") << "--> Buffer inst with maxLevel " << maxLevel << ", will add at full check " << onLevel << std::endl;
+      Trace("inst-buffer") << "--> Buffer inst with maxLevel " << maxLevel
+                           << ", will add at full check " << onLevel
+                           << std::endl;
+      Trace("inst-add-debug")
+          << "--> Buffer inst with maxLevel " << maxLevel
+          << ", will add at full check " << onLevel << std::endl;
       return false;
     }
   }

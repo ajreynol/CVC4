@@ -81,12 +81,12 @@ class InstLemmaList
 
 class InstCall
 {
-public:
-  InstCall(Node q,
-                                std::vector<Node>& terms,
-                                InferenceId id,
-                                Node pfArg,
-                                bool doVts) : d_q(q), d_terms(terms), d_id(id), d_pfArg(pfArg), d_doVts(doVts){}
+ public:
+  InstCall(
+      Node q, std::vector<Node>& terms, InferenceId id, Node pfArg, bool doVts)
+      : d_q(q), d_terms(terms), d_id(id), d_pfArg(pfArg), d_doVts(doVts)
+  {
+  }
   Node d_q;
   std::vector<Node> d_terms;
   InferenceId d_id;
