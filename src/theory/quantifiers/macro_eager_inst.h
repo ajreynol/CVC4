@@ -20,8 +20,8 @@
 
 #include "smt/env_obj.h"
 #include "theory/quantifiers/quant_module.h"
-#include "theory/substitutions.h"
 #include "theory/quantifiers/quantifiers_macros.h"
+#include "theory/substitutions.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -33,10 +33,10 @@ class MacroEagerInst : public QuantifiersModule
 {
  public:
   MacroEagerInst(Env& env,
-                   QuantifiersState& qs,
-                   QuantifiersInferenceManager& qim,
-                   QuantifiersRegistry& qr,
-                   TermRegistry& tr);
+                 QuantifiersState& qs,
+                 QuantifiersInferenceManager& qim,
+                 QuantifiersRegistry& qr,
+                 TermRegistry& tr);
   ~MacroEagerInst();
   /** Presolve */
   void presolve() override;
@@ -55,6 +55,7 @@ class MacroEagerInst : public QuantifiersModule
   void check(Theory::Effort e, QEffort quant_e) override;
   /** Identify. */
   std::string identify() const override;
+
  private:
 };
 
