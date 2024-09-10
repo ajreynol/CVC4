@@ -654,25 +654,15 @@ void QuantifiersEngine::assertQuantifier( Node f, bool pol ){
   }
   // add term to the registry
   d_treg.addTerm(d_qreg.getInstConstantBody(f), true);
-
 }
 
-void QuantifiersEngine::eqNotifyNewClass(TNode t)
-{
-  d_treg.addTerm(t);
-}
+void QuantifiersEngine::eqNotifyNewClass(TNode t) { d_treg.addTerm(t); }
 
-void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
-{
-}
+void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2) {}
 
-void QuantifiersEngine::eqNotifyDisequal(TNode t1, TNode t2)
-{
-}
+void QuantifiersEngine::eqNotifyDisequal(TNode t1, TNode t2) {}
 
-void QuantifiersEngine::eqNotifyConstantTermMerge(TNode t1, TNode t2)
-{
-}
+void QuantifiersEngine::eqNotifyConstantTermMerge(TNode t1, TNode t2) {}
 
 void QuantifiersEngine::markRelevant( Node q ) {
   d_model->markRelevant( q );
