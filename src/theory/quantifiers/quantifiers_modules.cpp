@@ -132,6 +132,11 @@ void QuantifiersModules::initialize(Env& env,
     d_oracleEngine.reset(new OracleEngine(env, qs, qim, qr, tr));
     modules.push_back(d_oracleEngine.get());
   }
+  if (options.quantifiers.macrosEagerInst)
+  {
+    d_mei.reset(new MacroEagerInst(env, qs, qim, qr, tr));
+    modules.push_back(d_mei.get());
+  }
 }
 
 }  // namespace quantifiers

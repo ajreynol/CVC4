@@ -30,6 +30,7 @@
 #include "theory/quantifiers/inst_strategy_pool.h"
 #include "theory/quantifiers/inst_strategy_sub_conflict.h"
 #include "theory/quantifiers/mbqi_fast_sygus.h"
+#include "theory/quantifiers/macro_eager_inst.h"
 #include "theory/quantifiers/oracle_engine.h"
 #include "theory/quantifiers/quant_conflict_find.h"
 #include "theory/quantifiers/quant_split.h"
@@ -104,6 +105,8 @@ class QuantifiersModules
   std::unique_ptr<InstStrategyMbqi> d_mbqi;
   /** Oracle engine */
   std::unique_ptr<OracleEngine> d_oracleEngine;
+  /** Macro eager inst */
+  std::unique_ptr<MacroEagerInst> d_mei;
 };
 
 }  // namespace quantifiers

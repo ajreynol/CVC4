@@ -24,16 +24,26 @@ MacroEagerInst::MacroEagerInst(Env& env,
                                QuantifiersInferenceManager& qim,
                                QuantifiersRegistry& qr,
                                TermRegistry& tr)
-    : QuantifiersModule(env, qs, qim, qr, tr)
+    : QuantifiersModule(env, qs, qim, qr, tr), d_qm(env, qr), d_smap(context())
 {
 }
+
 MacroEagerInst::~MacroEagerInst() {}
+
 void MacroEagerInst::presolve() {}
+
 bool MacroEagerInst::needsCheck(Theory::Effort e) { return false; }
+
 void MacroEagerInst::reset_round(Theory::Effort e) {}
+
 void MacroEagerInst::registerQuantifier(Node q) {}
+
+void MacroEagerInst::assertNode(Node q) {}
+  
 void MacroEagerInst::checkOwnership(Node q) {}
+
 void MacroEagerInst::check(Theory::Effort e, QEffort quant_e) {}
+
 std::string MacroEagerInst::identify() const { return "MacroEagerInst"; }
 
 }  // namespace quantifiers

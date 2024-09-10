@@ -46,6 +46,8 @@ class MacroEagerInst : public QuantifiersModule
   void reset_round(Theory::Effort e) override;
   /** Register quantified formula q */
   void registerQuantifier(Node q) override;
+  /** Assert node. */
+  void assertNode(Node q) override;
   /** Check ownership for q */
   void checkOwnership(Node q) override;
   /** Check.
@@ -57,6 +59,8 @@ class MacroEagerInst : public QuantifiersModule
   std::string identify() const override;
 
  private:
+   QuantifiersMacros d_qm;
+   SubstitutionMap d_smap;
 };
 
 }  // namespace quantifiers
