@@ -59,8 +59,8 @@ class MacroEagerInst : public QuantifiersModule
   std::string identify() const override;
 
  private:
-   QuantifiersMacros d_qm;
-   SubstitutionMap d_smap;
+  QuantifiersMacros d_qm;
+  SubstitutionMap d_smap;
 };
 
 }  // namespace quantifiers

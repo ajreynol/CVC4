@@ -39,7 +39,7 @@ void MacroEagerInst::reset_round(Theory::Effort e) {}
 void MacroEagerInst::registerQuantifier(Node q) {}
 
 void MacroEagerInst::assertNode(Node q) {}
-  
+
 void MacroEagerInst::checkOwnership(Node q) {}
 
 void MacroEagerInst::check(Theory::Effort e, QEffort quant_e) {}
