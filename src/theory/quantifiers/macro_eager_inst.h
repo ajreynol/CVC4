@@ -35,7 +35,9 @@ class MacroEagerInst : public QuantifiersModule
   using NodeSet = context::CDHashSet<Node>;
   using NodePairHashFunction =
       PairHashFunction<Node, Node, std::hash<Node>, std::hash<Node>>;
-  using NodePairSet = context::CDHashSet<std::pair<Node,Node>, NodePairHashFunction>;
+  using NodePairSet =
+      context::CDHashSet<std::pair<Node, Node>, NodePairHashFunction>;
+
  public:
   MacroEagerInst(Env& env,
                  QuantifiersState& qs,
@@ -62,9 +64,10 @@ class MacroEagerInst : public QuantifiersModule
   void check(Theory::Effort e, QEffort quant_e) override;
   /** Identify. */
   std::string identify() const override;
-  
+
   /** Notify asserted term */
   void notifyAssertedTerm(TNode n);
+
  private:
   Node solveMacro(Node& q, Node& pat);
   QuantifiersMacros d_qm;

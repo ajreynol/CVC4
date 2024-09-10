@@ -124,7 +124,7 @@ void QuantifiersEngine::finishInit(TheoryEngine* te)
   {
     d_util.push_back(d_qmodules->d_rel_dom.get());
   }
-  d_trackAssertedTerms = (d_qmodules->d_mei!=nullptr);
+  d_trackAssertedTerms = (d_qmodules->d_mei != nullptr);
 
   // handle any circular dependencies
 
@@ -661,16 +661,16 @@ void QuantifiersEngine::assertQuantifier( Node f, bool pol ){
 
 void QuantifiersEngine::eqNotifyNewClass(TNode t) { d_treg.addTerm(t); }
 
-void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2) 
+void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
 {
   Trace("ajr-temp") << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
   if (d_trackAssertedTerms)
   {
-    for (size_t i=0; i<2; i++)
+    for (size_t i = 0; i < 2; i++)
     {
-      TNode t = i==0 ? t1 : t2;
+      TNode t = i == 0 ? t1 : t2;
       NodeSet::const_iterator it = d_assertedTerms.find(t);
-      if (it==d_assertedTerms.end())
+      if (it == d_assertedTerms.end())
       {
         d_assertedTerms.insert(t);
         notifyAssertedTerm(t);
@@ -681,7 +681,7 @@ void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
 
 void QuantifiersEngine::notifyAssertedTerm(TNode t)
 {
-  if (d_qmodules->d_mei!=nullptr)
+  if (d_qmodules->d_mei != nullptr)
   {
     d_qmodules->d_mei->notifyAssertedTerm(t);
   }
