@@ -32,6 +32,7 @@ namespace quantifiers {
 class MacroEagerInst : public QuantifiersModule
 {
   using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
+  using NodePairListMap = context::CDHashMap<Node, std::vector<std::pair<Node, Node>>>;
   using NodeSet = context::CDHashSet<Node>;
   using NodePairHashFunction =
       PairHashFunction<Node, Node, std::hash<Node>, std::hash<Node>>;
@@ -75,7 +76,10 @@ class MacroEagerInst : public QuantifiersModule
   bool d_reqGround;
   NodePairMap d_macros;
   NodePairSet d_instTerms;
-  NodeSet d_handledQuants;
+  NodeSet d_ownedQuants;
+  //
+  std::map<Node, std::vector<std::pair<Node, Node>>> d_userPat;
+  void doMatching(const Node& q, const Node& pat, const Node& n);
 };
 
 }  // namespace quantifiers

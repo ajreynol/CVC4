@@ -70,6 +70,8 @@ class QuantifiersRegistry : public QuantifiersUtil
   Node getInstantiationConstant(Node q, size_t i) const;
   /** get number of instantiation constants for q */
   size_t getNumInstantiationConstants(Node q) const;
+  /** get a reference to the instantiation constants of q */
+  const std::vector<Node>& getInstantiationConstants(const Node& q) const;
   /** get the ce body q[e/x] */
   Node getInstConstantBody(Node q);
   /** returns node n with bound vars of q replaced by instantiation constants of
