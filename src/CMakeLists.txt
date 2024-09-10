@@ -899,6 +899,8 @@ libcvc5_add_sources(
   theory/quantifiers/instantiation_list.h
   theory/quantifiers/lazy_trie.cpp
   theory/quantifiers/lazy_trie.h
+  theory/quantifiers/macro_eager_inst.cpp
+  theory/quantifiers/macro_eager_inst.h
   theory/quantifiers/master_eq_notify.cpp
   theory/quantifiers/master_eq_notify.h
   theory/quantifiers/mbqi_fast_sygus.cpp
