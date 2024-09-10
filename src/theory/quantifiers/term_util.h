@@ -88,6 +88,10 @@ class TermUtil
   static Node getBoundVarAttr( Node n );
   static bool hasBoundVarAttr( Node n );
   
+  /**
+   */
+  static uint64_t getInstVarNum(const Node& v);
+  
 private:
   /** get bound vars */
   static Node getRemoveQuantifiers2( Node n, std::map< Node, Node >& visited );

@@ -179,6 +179,8 @@ class QuantifiersEngine : protected EnvObj
   void registerQuantifierInternal(Node q);
   /** reduceQuantifier, return true if reduced */
   bool reduceQuantifier(Node q);
+  /** */
+  void notifyAssertedTerm(TNode t);
 
   /** The quantifiers state object */
   quantifiers::QuantifiersState& d_qstate;
@@ -214,7 +216,11 @@ class QuantifiersEngine : protected EnvObj
   BoolMap d_quants_red;
   /** Number of rounds we have instantiated */
   uint32_t d_numInstRoundsLemma;
-}; /* class QuantifiersEngine */
+  /** Track asserted terms? */
+  bool d_trackAssertedTerms;
+  /** quantifiers pre-registered */
+  NodeSet d_assertedTerms;
+};
 
 }  // namespace theory
 }  // namespace cvc5::internal

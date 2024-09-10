@@ -252,6 +252,8 @@ const char* toString(InferenceId i)
     case InferenceId::QUANTIFIERS_INST_POOL: return "QUANTIFIERS_INST_POOL";
     case InferenceId::QUANTIFIERS_INST_POOL_TUPLE:
       return "QUANTIFIERS_INST_POOL_TUPLE";
+    case InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST:
+      return "QUANTIFIERS_INST_MACRO_EAGER_INST";
     case InferenceId::QUANTIFIERS_BINT_PROXY: return "QUANTIFIERS_BINT_PROXY";
     case InferenceId::QUANTIFIERS_BINT_MIN_NG: return "QUANTIFIERS_BINT_MIN_NG";
     case InferenceId::QUANTIFIERS_CEGQI_CEX: return "QUANTIFIERS_CEGQI_CEX";

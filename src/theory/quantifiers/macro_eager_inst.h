@@ -31,6 +31,11 @@ namespace quantifiers {
  */
 class MacroEagerInst : public QuantifiersModule
 {
+  using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
+  using NodeSet = context::CDHashSet<Node>;
+  using NodePairHashFunction =
+      PairHashFunction<Node, Node, std::hash<Node>, std::hash<Node>>;
+  using NodePairSet = context::CDHashSet<std::pair<Node,Node>, NodePairHashFunction>;
  public:
   MacroEagerInst(Env& env,
                  QuantifiersState& qs,
@@ -57,10 +62,17 @@ class MacroEagerInst : public QuantifiersModule
   void check(Theory::Effort e, QEffort quant_e) override;
   /** Identify. */
   std::string identify() const override;
-
+  
+  /** Notify asserted term */
+  void notifyAssertedTerm(TNode n);
  private:
+  Node solveMacro(Node& q, Node& pat);
   QuantifiersMacros d_qm;
   SubstitutionMap d_smap;
+  bool d_reqGround;
+  NodePairMap d_macros;
+  NodePairSet d_instTerms;
+  NodeSet d_handledQuants;
 };
 
 }  // namespace quantifiers

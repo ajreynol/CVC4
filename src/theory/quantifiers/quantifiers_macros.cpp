@@ -38,6 +38,12 @@ QuantifiersMacros::QuantifiersMacros(Env& env, QuantifiersRegistry& qr)
 
 Node QuantifiersMacros::solve(Node lit, bool reqGround)
 {
+  Node pat;
+  return solve(lit, reqGround, pat);
+}
+
+Node QuantifiersMacros::solve(Node lit, bool reqGround, Node& pat)
+{
   Trace("macros-debug") << "QuantifiersMacros::solve " << lit << std::endl;
   if (lit.getKind() != Kind::FORALL)
   {
@@ -56,6 +62,7 @@ Node QuantifiersMacros::solve(Node lit, bool reqGround)
       Node n_def = nm->mkConst(pol);
       Node fdef = solveEq(n, n_def);
       Assert(!fdef.isNull());
+      pat = n;
       return returnMacro(fdef, lit);
     }
   }
@@ -99,6 +106,7 @@ Node QuantifiersMacros::solve(Node lit, bool reqGround)
           Node fdef = solveEq(m, n_def);
           if (!fdef.isNull())
           {
+            pat = m;
             return returnMacro(fdef, lit);
           }
         }
