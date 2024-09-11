@@ -17,10 +17,10 @@
 
 #include "expr/attribute.h"
 #include "expr/node_algorithm.h"
+#include "options/base_options.h"
 #include "options/quantifiers_options.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/term_util.h"
-#include "options/base_options.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -48,20 +48,20 @@ MacroEagerInst::~MacroEagerInst() {}
 
 void MacroEagerInst::presolve() {}
 
-bool MacroEagerInst::needsCheck(Theory::Effort e) { 
+bool MacroEagerInst::needsCheck(Theory::Effort e)
+{
   if (d_instOutput)
   {
-    Assert (isOutputOn(OutputTag::INST_STRATEGY));
+    Assert(isOutputOn(OutputTag::INST_STRATEGY));
     if (d_tmpAddedLemmas > 0)
     {
-      output(OutputTag::INST_STRATEGY)
-          << "(inst-strategy " << identify();
+      output(OutputTag::INST_STRATEGY) << "(inst-strategy " << identify();
       output(OutputTag::INST_STRATEGY) << " :inst " << d_tmpAddedLemmas;
       output(OutputTag::INST_STRATEGY) << ")" << std::endl;
       d_tmpAddedLemmas = 0;
     }
   }
-  return false; 
+  return false;
 }
 
 void MacroEagerInst::reset_round(Theory::Effort e) {}
@@ -148,9 +148,7 @@ void MacroEagerInst::checkOwnership(Node q)
   }
 }
 
-void MacroEagerInst::check(Theory::Effort e, QEffort quant_e) 
-{
-}
+void MacroEagerInst::check(Theory::Effort e, QEffort quant_e) {}
 
 std::string MacroEagerInst::identify() const { return "eager-inst"; }
 
@@ -179,7 +177,8 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
       if (doMatching(q, p.second, t, inst))
       {
         Instantiate* ie = d_qim.getInstantiate();
-        if (ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST))
+        if (ie->addInstantiation(
+                q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST))
         {
           addedInst = true;
           d_tmpAddedLemmas++;
@@ -223,7 +222,10 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
   */
 }
 
-bool MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t, std::vector<Node>& inst)
+bool MacroEagerInst::doMatching(const Node& q,
+                                const Node& pat,
+                                const Node& t,
+                                std::vector<Node>& inst)
 {
   Trace("macro-eager-inst-debug")
       << "Do matching " << t << " " << pat << std::endl;

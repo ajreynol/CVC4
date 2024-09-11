@@ -74,7 +74,7 @@ class MacroEagerInst : public QuantifiersModule
   void ppNotifyAssertions(const std::vector<Node>& assertions) override;
 
  private:
-   void registerQuant(const Node& q);
+  void registerQuant(const Node& q);
   Node solveMacro(Node& q, Node& pat);
   QuantifiersMacros d_qm;
   SubstitutionMap d_smap;
@@ -86,7 +86,10 @@ class MacroEagerInst : public QuantifiersModule
   bool d_instOutput;
   //
   std::map<Node, std::vector<std::pair<Node, Node>>> d_userPat;
-  bool doMatching(const Node& q, const Node& pat, const Node& n, std::vector<Node>& inst);
+  bool doMatching(const Node& q,
+                  const Node& pat,
+                  const Node& n,
+                  std::vector<Node>& inst);
 };
 
 }  // namespace quantifiers
