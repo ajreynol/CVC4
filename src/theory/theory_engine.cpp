@@ -1170,8 +1170,8 @@ void TheoryEngine::assertFact(TNode literal)
   if (d_inConflict) {
     return;
   }
-  
-  if (d_quantEngine!=nullptr)
+
+  if (d_quantEngine != nullptr)
   {
     d_quantEngine->preNotifyFact(literal);
   }

@@ -130,9 +130,12 @@ void QuantifiersEngine::finishInit(TheoryEngine* te)
   if (d_qmodules->d_ei != nullptr)
   {
     d_hasEagerInst = true;
-    d_eagerInstNewEqc = (options().quantifiers.eagerInstTermMode==options::EagerInstTermMode::NEW_EQC);
-    d_eagerInstEqcMerge = (options().quantifiers.eagerInstTermMode==options::EagerInstTermMode::EQC_MERGE);
-    d_eagerInstAssert = (options().quantifiers.eagerInstTermMode==options::EagerInstTermMode::ASSERTION);
+    d_eagerInstNewEqc = (options().quantifiers.eagerInstTermMode
+                         == options::EagerInstTermMode::NEW_EQC);
+    d_eagerInstEqcMerge = (options().quantifiers.eagerInstTermMode
+                           == options::EagerInstTermMode::EQC_MERGE);
+    d_eagerInstAssert = (options().quantifiers.eagerInstTermMode
+                         == options::EagerInstTermMode::ASSERTION);
   }
   // handle any circular dependencies
 
@@ -684,7 +687,8 @@ void QuantifiersEngine::notifyAssertedTermRec(TNode t)
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(t);
-  do {
+  do
+  {
     cur = visit.back();
     visit.pop_back();
     if (cur.isClosure())
@@ -701,7 +705,7 @@ void QuantifiersEngine::notifyAssertedTermRec(TNode t)
     visit.insert(visit.end(), cur.begin(), cur.end());
   } while (!visit.empty());
 }
-  
+
 void QuantifiersEngine::notifyAssertedTerm(TNode t)
 {
   if (d_qmodules->d_ei != nullptr)
@@ -722,7 +726,7 @@ void QuantifiersEngine::preNotifyFact(TNode fact)
     notifyAssertedTermRec(fact);
   }
 }
-  
+
 void QuantifiersEngine::markRelevant( Node q ) {
   d_model->markRelevant( q );
 }

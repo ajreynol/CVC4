@@ -20,6 +20,7 @@
 
 #include "theory/quantifiers/alpha_equivalence.h"
 #include "theory/quantifiers/conjecture_generator.h"
+#include "theory/quantifiers/eager_inst.h"
 #include "theory/quantifiers/ematching/instantiation_engine.h"
 #include "theory/quantifiers/fmf/bounded_integers.h"
 #include "theory/quantifiers/fmf/full_model_check.h"
@@ -29,7 +30,6 @@
 #include "theory/quantifiers/inst_strategy_mbqi.h"
 #include "theory/quantifiers/inst_strategy_pool.h"
 #include "theory/quantifiers/inst_strategy_sub_conflict.h"
-#include "theory/quantifiers/eager_inst.h"
 #include "theory/quantifiers/mbqi_fast_sygus.h"
 #include "theory/quantifiers/oracle_engine.h"
 #include "theory/quantifiers/quant_conflict_find.h"
