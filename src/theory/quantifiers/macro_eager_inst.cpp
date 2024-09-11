@@ -36,7 +36,8 @@ MacroEagerInst::MacroEagerInst(Env& env,
       d_smap(context()),
       d_macros(context()),
       d_instTerms(userContext()),
-      d_ownedQuants(context())
+      d_ownedQuants(context()),
+      d_ppQuants(userContext())
 {
   d_tmpAddedLemmas = 0;
   d_reqGround =
@@ -75,6 +76,7 @@ void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
   {
     if (n.getKind() == Kind::FORALL)
     {
+      d_ppQuants.insert(n);
       registerQuant(n);
     }
   }
@@ -83,26 +85,57 @@ void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 void MacroEagerInst::assertNode(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
-  registerQuant(q);
+  // 
+  if (d_ppQuants.find(q)==d_ppQuants.end())
+  {
+    registerQuant(q);
+  }
 }
 void MacroEagerInst::registerQuant(const Node& q)
 {
-  Trace("macro-eager-inst-debug") << "Assert " << q << std::endl;
+  Trace("macro-eager-inst-register") << "Assert " << q << std::endl;
   if (q.getNumChildren() != 3)
   {
     return;
   }
   Node ipl = q[2];
+  bool owner = d_ppQuants.find(q)!=d_ppQuants.end();
+  bool hasPat = false;
   for (const Node& pat : ipl)
   {
-    if (pat.getKind() == Kind::INST_PATTERN && pat.getNumChildren() == 1
-        && pat[0].getKind() == Kind::APPLY_UF)
+    if (pat.getKind() == Kind::INST_PATTERN)
     {
-      Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
-      Trace("macro-eager-inst-debug") << "Single pat: " << spat << std::endl;
-      Node op = spat.getOperator();
-      d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
+      if (pat.getNumChildren() == 1 && pat[0].getKind() == Kind::APPLY_UF)
+      {
+        hasPat = true;
+        Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
+        Trace("macro-eager-inst-register") << "Single pat: " << spat << std::endl;
+        Node op = spat.getOperator();
+        d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
+        if (owner)
+        {
+          for (const Node& spc : spat)
+          {
+            if (spc.getKind()!=Kind::INST_CONSTANT)
+            {
+              owner = false;
+              break;
+            }
+          }
+        }
+      }
+      else
+      {
+        owner = false;
+      }
     }
+  }
+  // can maybe assign owner if only a trivial trigger and the quantified formula
+  // is top level.
+  if (hasPat && owner)
+  {
+    Trace("macro-eager-inst-register") << "...owned" << std::endl;
+    d_ownedQuants.insert(q);
   }
   /*
   Node pat;
@@ -141,10 +174,9 @@ void MacroEagerInst::registerQuant(const Node& q)
 
 void MacroEagerInst::checkOwnership(Node q)
 {
-  // maybe take ownership???
   if (d_ownedQuants.find(q) != d_ownedQuants.end())
   {
-    d_qreg.setOwner(q, this, 1);
+    d_qreg.setOwner(q, this, 2);
   }
 }
 

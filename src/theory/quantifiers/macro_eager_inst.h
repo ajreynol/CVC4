@@ -84,6 +84,7 @@ class MacroEagerInst : public QuantifiersModule
   NodeSet d_ownedQuants;
   size_t d_tmpAddedLemmas;
   bool d_instOutput;
+  NodeSet d_ppQuants;
   //
   std::map<Node, std::vector<std::pair<Node, Node>>> d_userPat;
   bool doMatching(const Node& q,
