@@ -52,6 +52,7 @@ TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
 {
   d_true = nodeManager()->mkConst(true);
   d_false = nodeManager()->mkConst(false);
+  // we track relevant terms if the termDb mode is relevant
   d_trackRlvTerms = (options().quantifiers.termDbMode == options::TermDbMode::RELEVANT);
 }
 
@@ -554,19 +555,20 @@ void TermDb::getOperatorsFor(TNode f, std::vector<TNode>& ops)
 
 void TermDb::notifyAssertedTerm(TNode t)
 {
+  Assert (d_trackRlvTerms);
   std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
   TNode cur;
-  visit.push_back(n);
+  visit.push_back(t);
   do {
     cur = visit.back();
     visit.pop_back();
-    if (d_rlvTerms.find(n)!=d_rlvTerms.end())
+    if (d_rlvTerms.find(cur)!=d_rlvTerms.end())
     {
       continue;
     }
-    d_rlvTerms.insert(n);
-    visit.insert(visit.end(), n.begin(), n.end());
+    d_rlvTerms.insert(cur);
+    visit.insert(visit.end(), cur.begin(), cur.end());
   } while (!visit.empty());
 }
 
@@ -578,11 +580,7 @@ bool TermDb::reset( Theory::Effort effort ){
   d_func_map_trie.clear();
   d_func_map_eqc_trie.clear();
   d_fmapRelDom.clear();
-
-  eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
-
-  Assert(ee->consistent());
-
+  Assert(d_qstate.getEqualityEngine()->consistent());
   // finish reset
   return finishResetInternal(effort);
 }
