@@ -20,8 +20,8 @@
 #include "options/base_options.h"
 #include "options/quantifiers_options.h"
 #include "theory/quantifiers/instantiate.h"
-#include "theory/quantifiers/term_util.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
+#include "theory/quantifiers/term_util.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -106,8 +106,7 @@ void EagerInst::registerQuant(const Node& q)
         hasPat = true;
         Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
         // TODO: statically analyze if this would lead to matching loops
-        Trace("eager-inst-register")
-            << "Single pat: " << spat << std::endl;
+        Trace("eager-inst-register") << "Single pat: " << spat << std::endl;
         Node op = spat.getOperator();
         d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
         if (owner)
@@ -162,7 +161,8 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
   d_termNotifyCount[t]++;
   Trace("eager-inst-debug") << "Asserted term " << t << std::endl;
-  Trace("eager-inst-stats") << "#" << d_termNotifyCount[t] << " for " << t << std::endl;
+  Trace("eager-inst-stats")
+      << "#" << d_termNotifyCount[t] << " for " << t << std::endl;
   // NOTE: in some cases a macro definition for this term may come after it is
   // registered, we don't bother handling this.
   Node op = t.getOperator();
@@ -177,7 +177,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
     {
       const Node& q = p.first;
       std::pair<Node, Node> key(t, p.second);
-      if (d_instTerms.find(key)!=d_instTerms.end())
+      if (d_instTerms.find(key) != d_instTerms.end())
       {
         continue;
       }
@@ -207,8 +207,7 @@ bool EagerInst::doMatching(const Node& q,
                            const Node& t,
                            std::vector<Node>& inst)
 {
-  Trace("eager-inst-debug")
-      << "Do matching " << t << " " << pat << std::endl;
+  Trace("eager-inst-debug") << "Do matching " << t << " " << pat << std::endl;
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
   {
     if (pat[i].getKind() == Kind::INST_CONSTANT)
@@ -236,8 +235,7 @@ bool EagerInst::doMatching(const Node& q,
           }
         }
       }
-      Trace("eager-inst-debug")
-          << "...non-simple " << pat[i] << std::endl;
+      Trace("eager-inst-debug") << "...non-simple " << pat[i] << std::endl;
       return false;
     }
     else if (!d_qstate.areEqual(pat[i], t[i]))
