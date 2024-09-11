@@ -85,8 +85,8 @@ void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 void MacroEagerInst::assertNode(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
-  // 
-  if (d_ppQuants.find(q)==d_ppQuants.end())
+  //
+  if (d_ppQuants.find(q) == d_ppQuants.end())
   {
     registerQuant(q);
   }
@@ -99,7 +99,7 @@ void MacroEagerInst::registerQuant(const Node& q)
     return;
   }
   Node ipl = q[2];
-  bool owner = d_ppQuants.find(q)!=d_ppQuants.end();
+  bool owner = d_ppQuants.find(q) != d_ppQuants.end();
   bool hasPat = false;
   for (const Node& pat : ipl)
   {
@@ -109,14 +109,15 @@ void MacroEagerInst::registerQuant(const Node& q)
       {
         hasPat = true;
         Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
-        Trace("macro-eager-inst-register") << "Single pat: " << spat << std::endl;
+        Trace("macro-eager-inst-register")
+            << "Single pat: " << spat << std::endl;
         Node op = spat.getOperator();
         d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
         if (owner)
         {
           for (const Node& spc : spat)
           {
-            if (spc.getKind()!=Kind::INST_CONSTANT)
+            if (spc.getKind() != Kind::INST_CONSTANT)
             {
               owner = false;
               break;
