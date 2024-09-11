@@ -20,6 +20,7 @@
 #include "options/quantifiers_options.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/term_util.h"
+#include "options/base_options.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -37,15 +38,31 @@ MacroEagerInst::MacroEagerInst(Env& env,
       d_instTerms(userContext()),
       d_ownedQuants(context())
 {
+  d_tmpAddedLemmas = 0;
   d_reqGround =
       options().quantifiers.macrosQuantMode != options::MacrosQuantMode::ALL;
+  d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
 }
 
 MacroEagerInst::~MacroEagerInst() {}
 
 void MacroEagerInst::presolve() {}
 
-bool MacroEagerInst::needsCheck(Theory::Effort e) { return false; }
+bool MacroEagerInst::needsCheck(Theory::Effort e) { 
+  if (d_instOutput)
+  {
+    Assert (isOutputOn(OutputTag::INST_STRATEGY));
+    if (d_tmpAddedLemmas > 0)
+    {
+      output(OutputTag::INST_STRATEGY)
+          << "(inst-strategy " << identify();
+      output(OutputTag::INST_STRATEGY) << " :inst " << d_tmpAddedLemmas;
+      output(OutputTag::INST_STRATEGY) << ")" << std::endl;
+      d_tmpAddedLemmas = 0;
+    }
+  }
+  return false; 
+}
 
 void MacroEagerInst::reset_round(Theory::Effort e) {}
 
@@ -58,7 +75,7 @@ void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
   {
     if (n.getKind() == Kind::FORALL)
     {
-      assertNode(n);
+      registerQuant(n);
     }
   }
 }
@@ -66,6 +83,10 @@ void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 void MacroEagerInst::assertNode(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
+  registerQuant(q);
+}
+void MacroEagerInst::registerQuant(const Node& q)
+{
   Trace("macro-eager-inst-debug") << "Assert " << q << std::endl;
   if (q.getNumChildren() != 3)
   {
@@ -127,9 +148,11 @@ void MacroEagerInst::checkOwnership(Node q)
   }
 }
 
-void MacroEagerInst::check(Theory::Effort e, QEffort quant_e) {}
+void MacroEagerInst::check(Theory::Effort e, QEffort quant_e) 
+{
+}
 
-std::string MacroEagerInst::identify() const { return "MacroEagerInst"; }
+std::string MacroEagerInst::identify() const { return "eager-inst"; }
 
 void MacroEagerInst::notifyAssertedTerm(TNode t)
 {
@@ -156,8 +179,11 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
       if (doMatching(q, p.second, t, inst))
       {
         Instantiate* ie = d_qim.getInstantiate();
-        ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST);
-        addedInst = true;
+        if (ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST))
+        {
+          addedInst = true;
+          d_tmpAddedLemmas++;
+        }
       }
     }
     if (addedInst)
