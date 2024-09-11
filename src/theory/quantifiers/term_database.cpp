@@ -51,6 +51,8 @@ TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
 {
   d_true = nodeManager()->mkConst(true);
   d_false = nodeManager()->mkConst(false);
+  // we track relevant terms if the termDb mode is relevant
+  d_trackRlvTerms = (options().quantifiers.termDbMode == options::TermDbMode::RELEVANT);
 }
 
 TermDb::~TermDb(){
