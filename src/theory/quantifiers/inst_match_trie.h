@@ -57,7 +57,7 @@ class InstMatchTrie
    * The domain of m is the bound variables of quantified formula q.
    * It returns true if (the suffix) of m exists in this trie.
    */
-  bool existsInstMatch(Node q,
+  bool existsInstMatch(const Node& q,
                        const std::vector<Node>& m,
                        ImtIndexOrder* imtio = nullptr,
                        unsigned index = 0);
@@ -67,7 +67,7 @@ class InstMatchTrie
    * trie, and returns true if and only if m did not already occur in this trie.
    * The domain of m is the bound variables of quantified formula q.
    */
-  bool addInstMatch(Node f,
+  bool addInstMatch(const Node& q,
                     const std::vector<Node>& m,
                     ImtIndexOrder* imtio = nullptr,
                     bool onlyExist = false,
@@ -75,24 +75,24 @@ class InstMatchTrie
   /**
    * Adds the instantiations for q into insts.
    */
-  void getInstantiations(Node q, std::vector<std::vector<Node>>& insts) const;
+  void getInstantiations(const Node& q, std::vector<std::vector<Node>>& insts) const;
 
   /** clear the data of this class */
   void clear();
   /** print this class */
-  void print(std::ostream& out, Node q) const;
+  void print(std::ostream& out, const Node& q) const;
   /** the data */
   std::map<Node, InstMatchTrie> d_data;
 
  private:
   /** Helper for getInstantiations.*/
-  void getInstantiations(Node q,
+  void getInstantiations(const Node& q,
                          std::vector<std::vector<Node>>& insts,
                          std::vector<Node>& terms) const;
   /** helper for print
    * terms accumulates the path we are on in the trie.
    */
-  void print(std::ostream& out, Node q, std::vector<TNode>& terms) const;
+  void print(std::ostream& out, const Node& q, std::vector<TNode>& terms) const;
 };
 
 /** trie for InstMatch objects
@@ -113,7 +113,7 @@ class CDInstMatchTrie
    * It additionally takes a context c, for which the entry is valid in.
    */
   bool existsInstMatch(context::Context* context,
-                       Node q,
+                       const Node& q,
                        const std::vector<Node>& m,
                        unsigned index = 0);
   /** add inst match
@@ -124,27 +124,27 @@ class CDInstMatchTrie
    * It additionally takes a context c, for which the entry is valid in.
    */
   bool addInstMatch(context::Context* context,
-                    Node q,
+                    const Node& q,
                     const std::vector<Node>& m,
                     unsigned index = 0,
                     bool onlyExist = false);
   /**
    * Adds the instantiations for q into insts.
    */
-  void getInstantiations(Node q, std::vector<std::vector<Node>>& insts) const;
+  void getInstantiations(const Node& q, std::vector<std::vector<Node>>& insts) const;
 
   /** print this class */
-  void print(std::ostream& out, Node q) const;
+  void print(std::ostream& out, const Node& q) const;
 
  private:
   /** Helper for getInstantiations.*/
-  void getInstantiations(Node q,
+  void getInstantiations(const Node& q,
                          std::vector<std::vector<Node>>& insts,
                          std::vector<Node>& terms) const;
   /** helper for print
    * terms accumulates the path we are on in the trie.
    */
-  void print(std::ostream& out, Node q, std::vector<TNode>& terms) const;
+  void print(std::ostream& out, const Node& q, std::vector<TNode>& terms) const;
   /** the data */
   std::map<Node, CDInstMatchTrie*> d_data;
   /** is valid */
@@ -170,13 +170,13 @@ class InstMatchTrieOrdered
    * This method returns true if the match m was not previously added to this
    * class.
    */
-  bool addInstMatch(Node q, const std::vector<Node>& m);
+  bool addInstMatch(const Node& q, const std::vector<Node>& m);
   /** returns true if this trie contains m
    *
    * This method returns true if the match m exists in this
    * class.
    */
-  bool existsInstMatch(Node q, const std::vector<Node>& m);
+  bool existsInstMatch(const Node& q, const std::vector<Node>& m);
 
  private:
   /** the ordering */

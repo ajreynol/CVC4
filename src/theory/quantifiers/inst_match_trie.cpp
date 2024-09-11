@@ -21,7 +21,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-bool InstMatchTrie::existsInstMatch(Node q,
+bool InstMatchTrie::existsInstMatch(const Node& q,
                                     const std::vector<Node>& m,
                                     ImtIndexOrder* imtio,
                                     unsigned index)
@@ -29,13 +29,13 @@ bool InstMatchTrie::existsInstMatch(Node q,
   return !addInstMatch(q, m, imtio, true, index);
 }
 
-bool InstMatchTrie::addInstMatch(Node f,
+bool InstMatchTrie::addInstMatch(const Node& q,
                                  const std::vector<Node>& m,
                                  ImtIndexOrder* imtio,
                                  bool onlyExist,
                                  unsigned index)
 {
-  if (index == f[0].getNumChildren()
+  if (index == q[0].getNumChildren()
       || (imtio && index == imtio->d_order.size()))
   {
     return false;
@@ -45,7 +45,7 @@ bool InstMatchTrie::addInstMatch(Node f,
   std::map<Node, InstMatchTrie>::iterator it = d_data.find(n);
   if (it != d_data.end())
   {
-    bool ret = it->second.addInstMatch(f, m, imtio, onlyExist, index + 1);
+    bool ret = it->second.addInstMatch(q, m, imtio, onlyExist, index + 1);
     if (!onlyExist || !ret)
     {
       return ret;
@@ -53,13 +53,13 @@ bool InstMatchTrie::addInstMatch(Node f,
   }
   if (!onlyExist)
   {
-    d_data[n].addInstMatch(f, m, imtio, false, index + 1);
+    d_data[n].addInstMatch(q, m, imtio, false, index + 1);
   }
   return true;
 }
 
 void InstMatchTrie::print(std::ostream& out,
-                          Node q,
+                          const Node& q,
                           std::vector<TNode>& terms) const
 {
   if (terms.size() == q[0].getNumChildren())
@@ -87,13 +87,13 @@ void InstMatchTrie::print(std::ostream& out,
 }
 
 void InstMatchTrie::getInstantiations(
-    Node q, std::vector<std::vector<Node>>& insts) const
+    const Node& q, std::vector<std::vector<Node>>& insts) const
 {
   std::vector<Node> terms;
   getInstantiations(q, insts, terms);
 }
 
-void InstMatchTrie::getInstantiations(Node q,
+void InstMatchTrie::getInstantiations(const Node& q,
                                       std::vector<std::vector<Node>>& insts,
                                       std::vector<Node>& terms) const
 {
@@ -114,7 +114,7 @@ void InstMatchTrie::getInstantiations(Node q,
 
 void InstMatchTrie::clear() { d_data.clear(); }
 
-void InstMatchTrie::print(std::ostream& out, Node q) const
+void InstMatchTrie::print(std::ostream& out, const Node& q) const
 {
   std::vector<TNode> terms;
   print(out, q, terms);
@@ -131,7 +131,7 @@ CDInstMatchTrie::~CDInstMatchTrie()
 }
 
 bool CDInstMatchTrie::existsInstMatch(context::Context* context,
-                                      Node q,
+                                      const Node& q,
                                       const std::vector<Node>& m,
                                       unsigned index)
 {
@@ -139,7 +139,7 @@ bool CDInstMatchTrie::existsInstMatch(context::Context* context,
 }
 
 bool CDInstMatchTrie::addInstMatch(context::Context* context,
-                                   Node f,
+                                   const Node& q,
                                    const std::vector<Node>& m,
                                    unsigned index,
                                    bool onlyExist)
@@ -157,7 +157,7 @@ bool CDInstMatchTrie::addInstMatch(context::Context* context,
       reset = true;
     }
   }
-  if (index == f[0].getNumChildren())
+  if (index == q[0].getNumChildren())
   {
     return reset;
   }
@@ -165,7 +165,7 @@ bool CDInstMatchTrie::addInstMatch(context::Context* context,
   std::map<Node, CDInstMatchTrie*>::iterator it = d_data.find(n);
   if (it != d_data.end())
   {
-    bool ret = it->second->addInstMatch(context, f, m, index + 1, onlyExist);
+    bool ret = it->second->addInstMatch(context, q, m, index + 1, onlyExist);
     if (!onlyExist || !ret)
     {
       return reset || ret;
@@ -176,13 +176,13 @@ bool CDInstMatchTrie::addInstMatch(context::Context* context,
     CDInstMatchTrie* imt = new CDInstMatchTrie(context);
     Assert(d_data.find(n) == d_data.end());
     d_data[n] = imt;
-    imt->addInstMatch(context, f, m, index + 1, false);
+    imt->addInstMatch(context, q, m, index + 1, false);
   }
   return true;
 }
 
 void CDInstMatchTrie::print(std::ostream& out,
-                            Node q,
+                            const Node& q,
                             std::vector<TNode>& terms) const
 {
   if (d_valid.get())
@@ -210,13 +210,13 @@ void CDInstMatchTrie::print(std::ostream& out,
 }
 
 void CDInstMatchTrie::getInstantiations(
-    Node q, std::vector<std::vector<Node>>& insts) const
+    const Node& q, std::vector<std::vector<Node>>& insts) const
 {
   std::vector<Node> terms;
   getInstantiations(q, insts, terms);
 }
 
-void CDInstMatchTrie::getInstantiations(Node q,
+void CDInstMatchTrie::getInstantiations(const Node& q,
                                         std::vector<std::vector<Node>>& insts,
                                         std::vector<Node>& terms) const
 {
@@ -239,18 +239,18 @@ void CDInstMatchTrie::getInstantiations(Node q,
   }
 }
 
-void CDInstMatchTrie::print(std::ostream& out, Node q) const
+void CDInstMatchTrie::print(std::ostream& out, const Node& q) const
 {
   std::vector<TNode> terms;
   print(out, q, terms);
 }
 
-bool InstMatchTrieOrdered::addInstMatch(Node q, const std::vector<Node>& m)
+bool InstMatchTrieOrdered::addInstMatch(const Node& q, const std::vector<Node>& m)
 {
   return d_imt.addInstMatch(q, m, d_imtio);
 }
 
-bool InstMatchTrieOrdered::existsInstMatch(Node q, const std::vector<Node>& m)
+bool InstMatchTrieOrdered::existsInstMatch(const Node& q, const std::vector<Node>& m)
 {
   return d_imt.existsInstMatch(q, m, d_imtio);
 }
