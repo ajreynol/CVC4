@@ -27,10 +27,10 @@ namespace theory {
 namespace quantifiers {
 
 EagerInst::EagerInst(Env& env,
-                               QuantifiersState& qs,
-                               QuantifiersInferenceManager& qim,
-                               QuantifiersRegistry& qr,
-                               TermRegistry& tr)
+                     QuantifiersState& qs,
+                     QuantifiersInferenceManager& qim,
+                     QuantifiersRegistry& qr,
+                     TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
       d_qm(env, qr),
       d_smap(context()),
@@ -258,9 +258,9 @@ void EagerInst::notifyAssertedTerm(TNode t)
 }
 
 bool EagerInst::doMatching(const Node& q,
-                                const Node& pat,
-                                const Node& t,
-                                std::vector<Node>& inst)
+                           const Node& pat,
+                           const Node& t,
+                           std::vector<Node>& inst)
 {
   Trace("macro-eager-inst-debug")
       << "Do matching " << t << " " << pat << std::endl;

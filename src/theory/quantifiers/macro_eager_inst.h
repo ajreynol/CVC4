@@ -42,10 +42,10 @@ class EagerInst : public QuantifiersModule
 
  public:
   EagerInst(Env& env,
-                 QuantifiersState& qs,
-                 QuantifiersInferenceManager& qim,
-                 QuantifiersRegistry& qr,
-                 TermRegistry& tr);
+            QuantifiersState& qs,
+            QuantifiersInferenceManager& qim,
+            QuantifiersRegistry& qr,
+            TermRegistry& tr);
   ~EagerInst();
   /** Presolve */
   void presolve() override;

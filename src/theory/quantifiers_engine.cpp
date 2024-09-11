@@ -673,12 +673,12 @@ void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
 
 void QuantifiersEngine::notifyAssertedTerm(TNode t)
 {
-      NodeSet::const_iterator it = d_assertedTerms.find(t);
-      if (it != d_assertedTerms.end())
-      {
-        return;
-      }
-        d_assertedTerms.insert(t);
+  NodeSet::const_iterator it = d_assertedTerms.find(t);
+  if (it != d_assertedTerms.end())
+  {
+    return;
+  }
+  d_assertedTerms.insert(t);
   if (d_qmodules->d_ei != nullptr)
   {
     d_qmodules->d_ei->notifyAssertedTerm(t);
