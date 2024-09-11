@@ -69,6 +69,8 @@ class MacroEagerInst : public QuantifiersModule
   /** Notify asserted term */
   void notifyAssertedTerm(TNode n);
 
+  /* For collecting global terms from all available assertions. */
+  void ppNotifyAssertions(const std::vector<Node>& assertions) override;
  private:
   Node solveMacro(Node& q, Node& pat);
   QuantifiersMacros d_qm;

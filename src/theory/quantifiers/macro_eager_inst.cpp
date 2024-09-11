@@ -54,6 +54,11 @@ void MacroEagerInst::registerQuantifier(Node q)
   
 }
 
+void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
+{
+  
+}
+
 void MacroEagerInst::assertNode(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
@@ -129,6 +134,8 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
+  Trace("macro-eager-inst-debug")
+      << "Asserted term " << t << std::endl;
   // NOTE: in some cases a macro definition for this term may come after it is
   // registered, we don't bother handling this.
   Node op = t.getOperator();
@@ -137,6 +144,8 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
     std::map<Node, std::vector<std::pair<Node, Node>>>::iterator it = d_userPat.find(op);
     if (it!=d_userPat.end())
     {
+      Trace("macro-eager-inst-debug")
+          << "Asserted term " << t << " has user patterns" << std::endl;
       for (const std::pair<Node, Node>& p : it->second)
       {
         doMatching(p.first, p.second, t);
