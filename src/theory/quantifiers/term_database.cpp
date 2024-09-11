@@ -279,10 +279,11 @@ void TermDb::computeArgReps( TNode n ) {
   if (d_arg_reps.find(n) == d_arg_reps.end())
   {
     eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
+    std::vector< TNode >& tars = d_arg_reps[n];
     for (const TNode& nc : n)
     {
       TNode r = ee->hasTerm(nc) ? ee->getRepresentative(nc) : nc;
-      d_arg_reps[n].push_back( r );
+      tars.emplace_back( r );
     }
   }
 }
