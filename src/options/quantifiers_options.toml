@@ -1716,14 +1716,6 @@ name   = "Quantifiers"
   help       = "do eager instantiation based on macro analysis"
 
 [[option]]
-  name       = "macrosEagerInstUserPat"
-  category   = "expert"
-  long       = "macros-eager-inst-user-pat"
-  type       = "bool"
-  default    = "false"
-  help       = "do eager instantiation based on user-patterns analysis"
-
-[[option]]
   name       = "quantDynamicSplit"
   category   = "regular"
   long       = "quant-dsplit=MODE"

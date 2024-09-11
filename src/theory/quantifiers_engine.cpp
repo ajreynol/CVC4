@@ -178,6 +178,7 @@ void QuantifiersEngine::ppNotifyAssertions(
       QuantAttributes::setInstantiationLevelAttr(a, 0);
     }
   }
+  // notify all modules
   for (QuantifiersModule*& mdl : d_modules)
   {
     mdl->ppNotifyAssertions(assertions);

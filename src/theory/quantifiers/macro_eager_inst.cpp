@@ -67,26 +67,23 @@ void MacroEagerInst::assertNode(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
   Trace("macro-eager-inst-debug") << "Assert " << q << std::endl;
-  if (options().quantifiers.macrosEagerInstUserPat)
+  if (q.getNumChildren() != 3)
   {
-    if (q.getNumChildren() != 3)
-    {
-      return;
-    }
-    Node ipl = q[2];
-    for (const Node& pat : ipl)
-    {
-      if (pat.getKind() == Kind::INST_PATTERN && pat.getNumChildren() == 1
-          && pat[0].getKind() == Kind::APPLY_UF)
-      {
-        Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
-        Trace("macro-eager-inst-debug") << "Single pat: " << spat << std::endl;
-        Node op = spat.getOperator();
-        d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
-      }
-    }
     return;
   }
+  Node ipl = q[2];
+  for (const Node& pat : ipl)
+  {
+    if (pat.getKind() == Kind::INST_PATTERN && pat.getNumChildren() == 1
+        && pat[0].getKind() == Kind::APPLY_UF)
+    {
+      Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
+      Trace("macro-eager-inst-debug") << "Single pat: " << spat << std::endl;
+      Node op = spat.getOperator();
+      d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
+    }
+  }
+  /*
   Node pat;
   Node eq = d_qm.solve(q, d_reqGround, pat);
   if (!eq.isNull())
@@ -118,6 +115,7 @@ void MacroEagerInst::assertNode(Node q)
   {
     Trace("macro-eager-inst-debug") << "...not a macro quant" << std::endl;
   }
+  */
 }
 
 void MacroEagerInst::checkOwnership(Node q)
@@ -143,21 +141,31 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
   // NOTE: in some cases a macro definition for this term may come after it is
   // registered, we don't bother handling this.
   Node op = t.getOperator();
-  if (options().quantifiers.macrosEagerInstUserPat)
+  std::map<Node, std::vector<std::pair<Node, Node>>>::iterator it =
+      d_userPat.find(op);
+  if (it != d_userPat.end())
   {
-    std::map<Node, std::vector<std::pair<Node, Node>>>::iterator it =
-        d_userPat.find(op);
-    if (it != d_userPat.end())
+    Trace("macro-eager-inst-debug")
+        << "Asserted term " << t << " has user patterns" << std::endl;
+    bool addedInst = false;
+    for (const std::pair<Node, Node>& p : it->second)
     {
-      Trace("macro-eager-inst-debug")
-          << "Asserted term " << t << " has user patterns" << std::endl;
-      for (const std::pair<Node, Node>& p : it->second)
+      const Node& q = p.first;
+      std::vector<Node> inst;
+      inst.resize(q[0].getNumChildren());
+      if (doMatching(q, p.second, t, inst))
       {
-        doMatching(p.first, p.second, t);
+        Instantiate* ie = d_qim.getInstantiate();
+        ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST);
+        addedInst = true;
       }
     }
-    return;
+    if (addedInst)
+    {
+      d_qim.doPending();
+    }
   }
+  /*
   NodePairMap::const_iterator it = d_macros.find(op);
   if (it == d_macros.end())
   {
@@ -186,20 +194,23 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
   // note that the instantiation may already be implied, we mark t has processed
   // regardless
   ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST);
+  */
 }
 
-bool MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t)
+bool MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t, std::vector<Node>& inst)
 {
   Trace("macro-eager-inst-debug")
       << "Do matching " << t << " " << pat << std::endl;
-  std::vector<Node> inst;
-  inst.resize(q[0].getNumChildren());
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
   {
     if (pat[i].getKind() == Kind::INST_CONSTANT)
     {
       uint64_t vnum = TermUtil::getInstVarNum(pat[i]);
       Assert(vnum < inst.size());
+      if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], t[i]))
+      {
+        return false;
+      }
       inst[vnum] = t[i];
     }
     else if (TermUtil::hasInstConstAttr(pat[i]))
@@ -211,7 +222,7 @@ bool MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t)
         Node mop2 = tdb->getMatchOperator(t[i]);
         if (!mop1.isNull() && mop1 == mop2)
         {
-          if (doMatching(q, pat[i], t[i]))
+          if (doMatching(q, pat[i], t[i], inst))
           {
             continue;
           }
@@ -228,11 +239,6 @@ bool MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t)
       return false;
     }
   }
-  Trace("macro-eager-inst-debug")
-      << "...instantiation is " << inst << std::endl;
-  Instantiate* ie = d_qim.getInstantiate();
-  ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST);
-  d_qim.doPending();
   return true;
 }
 
