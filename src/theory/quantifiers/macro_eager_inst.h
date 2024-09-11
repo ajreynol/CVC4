@@ -81,7 +81,7 @@ class MacroEagerInst : public QuantifiersModule
   NodeSet d_ownedQuants;
   //
   std::map<Node, std::vector<std::pair<Node, Node>>> d_userPat;
-  void doMatching(const Node& q, const Node& pat, const Node& n);
+  bool doMatching(const Node& q, const Node& pat, const Node& n);
 };
 
 }  // namespace quantifiers

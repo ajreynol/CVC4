@@ -56,7 +56,14 @@ void MacroEagerInst::registerQuantifier(Node q)
 
 void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 {
-  
+  // temporary
+  for (const Node& n : assertions)
+  {
+    if (n.getKind()==Kind::FORALL)
+    {
+      assertNode(n);
+    }
+  }
 }
 
 void MacroEagerInst::assertNode(Node q)
@@ -183,7 +190,7 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
   ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST);
 }
 
-void MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t)
+bool MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t)
 {
   Trace("macro-eager-inst-debug")
       << "Do matching " << t << " " << pat << std::endl;
@@ -199,15 +206,33 @@ void MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t)
     }
     else if (TermUtil::hasInstConstAttr(pat[i]))
     {
-      return;
+      if (pat[i].getNumChildren()==t[i].getNumChildren())
+      {
+        TermDb* tdb = d_treg.getTermDatabase();
+        Node mop1 = tdb->getMatchOperator(pat[i]);
+        Node mop2 = tdb->getMatchOperator(t[i]);
+        if (!mop1.isNull() && mop1==mop2)
+        {
+          if (doMatching(q, pat[i], t[i]))
+          {
+            continue;
+          }
+        }
+      }
+      Trace("macro-eager-inst-debug") << "...non-simple " << pat[i] << std::endl;
+      return false;
     }
     else if (!d_qstate.areEqual(pat[i], t[i]))
     {
-      return;
+      Trace("macro-eager-inst-debug") << "...inequal " << pat[i] << " " << t[i] << std::endl;
+      return false;
     }
   }
+  Trace("macro-eager-inst-debug") << "...instantiation is " << inst << std::endl;
   Instantiate* ie = d_qim.getInstantiate();
   ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST);
+  d_qim.doPending();
+  return true;
 }
 
 }  // namespace quantifiers
