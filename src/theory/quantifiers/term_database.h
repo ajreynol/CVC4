@@ -211,7 +211,8 @@ class TermDb : public QuantifiersUtil {
   bool isTermEligibleForInstantiation(TNode n, TNode f);
   /** get eligible term in equivalence class of r */
   Node getEligibleTermInEqc(TNode r);
-
+  /** Notify asserted term */
+  void notifyAssertedTerm(TNode t);
  protected:
   /** The quantifiers state object */
   QuantifiersState& d_qstate;
@@ -254,8 +255,10 @@ class TermDb : public QuantifiersUtil {
    * that argument position (see inRelevantDomain).
    */
   std::map<Node, std::vector<std::vector<TNode>>> d_fmapRelDom;
+  /** Track relevant terms? */
+  bool d_trackRlvTerms;
   /** has map */
-  std::map< Node, bool > d_has_map;
+  context::CDHashSet<Node> d_rlvTerms;
   /** map from reps to a term in eqc in d_has_map */
   std::map<Node, Node> d_term_elig_eqc;
   /**
@@ -284,8 +287,6 @@ class TermDb : public QuantifiersUtil {
    */
   virtual bool checkCongruentDisequal(TNode a, TNode b, std::vector<Node>& exp);
   //----------------------------- end implementation-specific
-  /** set has term */
-  void setHasTerm( Node n );
   /** compute uf eqc terms :
   * Ensure entries for f are in d_func_map_eqc_trie for all equivalence classes
   */
