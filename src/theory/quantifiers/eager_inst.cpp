@@ -21,6 +21,7 @@
 #include "options/quantifiers_options.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/term_util.h"
+#include "theory/quantifiers/quantifiers_attributes.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -32,8 +33,6 @@ EagerInst::EagerInst(Env& env,
                      QuantifiersRegistry& qr,
                      TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
-      d_smap(context()),
-      d_macros(context()),
       d_instTerms(userContext()),
       d_ownedQuants(context()),
       d_ppQuants(userContext())
@@ -89,7 +88,7 @@ void EagerInst::assertNode(Node q)
 }
 void EagerInst::registerQuant(const Node& q)
 {
-  Trace("macro-eager-inst-register") << "Assert " << q << std::endl;
+  Trace("eager-inst-register") << "Assert " << q << std::endl;
   if (q.getNumChildren() != 3)
   {
     return;
@@ -107,7 +106,7 @@ void EagerInst::registerQuant(const Node& q)
         hasPat = true;
         Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
         // TODO: statically analyze if this would lead to matching loops
-        Trace("macro-eager-inst-register")
+        Trace("eager-inst-register")
             << "Single pat: " << spat << std::endl;
         Node op = spat.getOperator();
         d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
@@ -133,8 +132,13 @@ void EagerInst::registerQuant(const Node& q)
   // is top level.
   if (hasPat && owner)
   {
-    Trace("macro-eager-inst-register") << "...owned" << std::endl;
-    d_ownedQuants.insert(q);
+    QAttributes qa;
+    QuantAttributes::computeQuantAttributes(q, qa);
+    if (qa.isStandard())
+    {
+      Trace("eager-inst-register") << "...owned" << std::endl;
+      d_ownedQuants.insert(q);
+    }
   }
 }
 
@@ -156,7 +160,9 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
-  Trace("macro-eager-inst-debug") << "Asserted term " << t << std::endl;
+  d_termNotifyCount[t]++;
+  Trace("eager-inst-debug") << "Asserted term " << t << std::endl;
+  Trace("eager-inst-stats") << "#" << d_termNotifyCount[t] << " for " << t << std::endl;
   // NOTE: in some cases a macro definition for this term may come after it is
   // registered, we don't bother handling this.
   Node op = t.getOperator();
@@ -164,12 +170,17 @@ void EagerInst::notifyAssertedTerm(TNode t)
       d_userPat.find(op);
   if (it != d_userPat.end())
   {
-    Trace("macro-eager-inst-debug")
+    Trace("eager-inst-debug")
         << "Asserted term " << t << " has user patterns" << std::endl;
     bool addedInst = false;
     for (const std::pair<Node, Node>& p : it->second)
     {
       const Node& q = p.first;
+      std::pair<Node, Node> key(t, p.second);
+      if (d_instTerms.find(key)!=d_instTerms.end())
+      {
+        continue;
+      }
       std::vector<Node> inst;
       inst.resize(q[0].getNumChildren());
       if (doMatching(q, p.second, t, inst))
@@ -180,6 +191,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
         {
           addedInst = true;
           d_tmpAddedLemmas++;
+          d_instTerms.insert(key);
         }
       }
     }
@@ -195,7 +207,7 @@ bool EagerInst::doMatching(const Node& q,
                            const Node& t,
                            std::vector<Node>& inst)
 {
-  Trace("macro-eager-inst-debug")
+  Trace("eager-inst-debug")
       << "Do matching " << t << " " << pat << std::endl;
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
   {
@@ -224,13 +236,13 @@ bool EagerInst::doMatching(const Node& q,
           }
         }
       }
-      Trace("macro-eager-inst-debug")
+      Trace("eager-inst-debug")
           << "...non-simple " << pat[i] << std::endl;
       return false;
     }
     else if (!d_qstate.areEqual(pat[i], t[i]))
     {
-      Trace("macro-eager-inst-debug")
+      Trace("eager-inst-debug")
           << "...inequal " << pat[i] << " " << t[i] << std::endl;
       return false;
     }
