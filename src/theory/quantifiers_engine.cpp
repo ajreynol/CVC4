@@ -63,7 +63,10 @@ QuantifiersEngine::QuantifiersEngine(Env& env,
       d_quants_prereg(userContext()),
       d_quants_red(userContext()),
       d_numInstRoundsLemma(0),
-      d_trackAssertedTerms(false),
+      d_hasEagerInst(false),
+      d_eagerInstNewEqc(false),
+      d_eagerInstEqcMerge(false),
+      d_eagerInstAssert(false),
       d_assertedTerms(context())
 {
   options::FmfMbqiMode mmode = options().quantifiers.fmfMbqiMode;
@@ -124,9 +127,13 @@ void QuantifiersEngine::finishInit(TheoryEngine* te)
   {
     d_util.push_back(d_qmodules->d_rel_dom.get());
   }
-  // FIXME
-  // d_trackAssertedTerms = (d_qmodules->d_mei != nullptr);
-
+  if (d_qmodules->d_ei != nullptr)
+  {
+    d_hasEagerInst = true;
+    d_eagerInstNewEqc = (options().quantifiers.eagerInstTermMode==options::EagerInstTermMode::NEW_EQC);
+    d_eagerInstEqcMerge = (options().quantifiers.eagerInstTermMode==options::EagerInstTermMode::EQC_MERGE);
+    d_eagerInstAssert = (options().quantifiers.eagerInstTermMode==options::EagerInstTermMode::ASSERTION);
+  }
   // handle any circular dependencies
 
   // quantifiers bound inference needs to be informed of the bounded integers
@@ -652,7 +659,7 @@ void QuantifiersEngine::assertQuantifier( Node f, bool pol ){
 void QuantifiersEngine::eqNotifyNewClass(TNode t)
 {
   d_treg.addTerm(t);
-  if (!d_trackAssertedTerms)
+  if (d_eagerInstNewEqc)
   {
     notifyAssertedTerm(t);
   }
@@ -661,24 +668,42 @@ void QuantifiersEngine::eqNotifyNewClass(TNode t)
 void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
 {
   Trace("ajr-temp") << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
-  if (d_trackAssertedTerms)
+  if (d_eagerInstEqcMerge)
   {
     for (size_t i = 0; i < 2; i++)
     {
       TNode t = i == 0 ? t1 : t2;
-      notifyAssertedTerm(t);
+      notifyAssertedTermRec(t);
     }
   }
 }
 
+void QuantifiersEngine::notifyAssertedTermRec(TNode t)
+{
+  NodeSet::const_iterator it;
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(t);
+  do {
+    cur = visit.back();
+    visit.pop_back();
+    if (cur.isClosure())
+    {
+      continue;
+    }
+    it = d_assertedTerms.find(cur);
+    if (it != d_assertedTerms.end())
+    {
+      continue;
+    }
+    d_assertedTerms.insert(cur);
+    notifyAssertedTerm(cur);
+    visit.insert(visit.end(), cur.begin(), cur.end());
+  } while (!visit.empty());
+}
+  
 void QuantifiersEngine::notifyAssertedTerm(TNode t)
 {
-  NodeSet::const_iterator it = d_assertedTerms.find(t);
-  if (it != d_assertedTerms.end())
-  {
-    return;
-  }
-  d_assertedTerms.insert(t);
   if (d_qmodules->d_ei != nullptr)
   {
     d_qmodules->d_ei->notifyAssertedTerm(t);
@@ -689,6 +714,15 @@ void QuantifiersEngine::eqNotifyDisequal(TNode t1, TNode t2) {}
 
 void QuantifiersEngine::eqNotifyConstantTermMerge(TNode t1, TNode t2) {}
 
+void QuantifiersEngine::preNotifyFact(TNode fact)
+{
+  Trace("ajr-temp") << "preNotifyFact " << fact << std::endl;
+  if (d_eagerInstAssert)
+  {
+    notifyAssertedTermRec(fact);
+  }
+}
+  
 void QuantifiersEngine::markRelevant( Node q ) {
   d_model->markRelevant( q );
 }

@@ -1170,6 +1170,11 @@ void TheoryEngine::assertFact(TNode literal)
   if (d_inConflict) {
     return;
   }
+  
+  if (d_quantEngine!=nullptr)
+  {
+    d_quantEngine->preNotifyFact(literal);
+  }
 
   // Get the atom
   bool polarity = literal.getKind() != Kind::NOT;

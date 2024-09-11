@@ -1716,6 +1716,24 @@ name   = "Quantifiers"
   help       = "do eager instantiation"
 
 [[option]]
+  name       = "eagerInstTermMode"
+  category   = "regular"
+  long       = "eager-inst-term-mode=MODE"
+  type       = "EagerInstTermMode"
+  default    = "NEW_EQC"
+  help       = "mode for when to register ground terms with eager instantiation"
+  help_mode  = "Modes for when to register ground terms with eager instantiation."
+[[option.mode.NEW_EQC]]
+  name = "new_eqc"
+  help = "Upon new eqc."
+[[option.mode.EQC_MERGE]]
+  name = "eqc_merge"
+  help = "Upon eqc merge."
+[[option.mode.ASSERTION]]
+  name = "assert"
+  help = "Upon appearance in assertion."
+
+[[option]]
   name       = "quantDynamicSplit"
   category   = "regular"
   long       = "quant-dsplit=MODE"

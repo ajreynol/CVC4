@@ -10,10 +10,10 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Eager instantiation based on macros.
+ * Eager instantiation.
  */
 
-#include "theory/quantifiers/macro_eager_inst.h"
+#include "theory/quantifiers/eager_inst.h"
 
 #include "expr/attribute.h"
 #include "expr/node_algorithm.h"
@@ -32,7 +32,6 @@ EagerInst::EagerInst(Env& env,
                      QuantifiersRegistry& qr,
                      TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
-      d_qm(env, qr),
       d_smap(context()),
       d_macros(context()),
       d_instTerms(userContext()),
@@ -40,8 +39,6 @@ EagerInst::EagerInst(Env& env,
       d_ppQuants(userContext())
 {
   d_tmpAddedLemmas = 0;
-  d_reqGround =
-      options().quantifiers.macrosQuantMode != options::MacrosQuantMode::ALL;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
 }
 
@@ -71,7 +68,6 @@ void EagerInst::registerQuantifier(Node q) {}
 
 void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 {
-  // temporary
   for (const Node& n : assertions)
   {
     if (n.getKind() == Kind::FORALL)
@@ -140,39 +136,6 @@ void EagerInst::registerQuant(const Node& q)
     Trace("macro-eager-inst-register") << "...owned" << std::endl;
     d_ownedQuants.insert(q);
   }
-  /*
-  Node pat;
-  Node eq = d_qm.solve(q, d_reqGround, pat);
-  if (!eq.isNull())
-  {
-    Trace("macro-eager-inst-debug") << "...is macro for " << eq[0] << std::endl;
-    Assert(eq.getKind() == Kind::EQUAL);
-    Assert(eq[0].isVar());
-    // check if cyclic
-    if (d_smap.hasSubstitution(eq[0]))
-    {
-      Trace("macro-eager-inst-debug") << "...already have macro" << std::endl;
-      return;
-    }
-    Node srhs = d_smap.apply(eq[1]);
-    if (expr::hasSubterm(srhs, eq[0]))
-    {
-      Trace("macro-eager-inst-debug") << "...cyclic macro" << std::endl;
-      return;
-    }
-    // otherwise, we have a macro
-    Trace("macro-eager-inst") << "Asserted macro: " << eq[0] << std::endl;
-    Trace("macro-eager-inst") << "    definition: " << q << std::endl;
-    Node patn = d_qreg.substituteBoundVariablesToInstConstants(pat, q);
-    Trace("macro-eager-inst") << "       pattern: " << patn << std::endl;
-    d_macros.insert(eq[0], std::pair<Node, Node>(q, patn));
-    d_ownedQuants.insert(q);
-  }
-  else
-  {
-    Trace("macro-eager-inst-debug") << "...not a macro quant" << std::endl;
-  }
-  */
 }
 
 void EagerInst::checkOwnership(Node q)
@@ -225,36 +188,6 @@ void EagerInst::notifyAssertedTerm(TNode t)
       d_qim.doPending();
     }
   }
-  /*
-  NodePairMap::const_iterator it = d_macros.find(op);
-  if (it == d_macros.end())
-  {
-    return;
-  }
-  Node q = it->second.first;
-  std::pair<Node, Node> key(t, q);
-  if (d_instTerms.find(key) != d_instTerms.end())
-  {
-    return;
-  }
-  d_instTerms.insert(key);
-  Node pat = it->second.second;
-  Trace("macro-eager-inst-debug")
-      << "Asserted term " << t << " has a macro definition" << std::endl;
-  std::vector<Node> inst;
-  inst.resize(q[0].getNumChildren());
-  for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
-  {
-    uint64_t vnum = TermUtil::getInstVarNum(pat[i]);
-    Assert(vnum < inst.size());
-    inst[vnum] = t[i];
-  }
-  Trace("macro-eager-inst-debug") << "Instantiation is: " << inst << std::endl;
-  Instantiate* ie = d_qim.getInstantiate();
-  // note that the instantiation may already be implied, we mark t has processed
-  // regardless
-  ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST);
-  */
 }
 
 bool EagerInst::doMatching(const Node& q,

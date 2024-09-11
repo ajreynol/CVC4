@@ -101,6 +101,8 @@ class QuantifiersEngine : protected EnvObj
   void eqNotifyDisequal(TNode t1, TNode t2);
   /** */
   void eqNotifyConstantTermMerge(TNode t1, TNode t2);
+  /** */
+  void preNotifyFact(TNode fact);
   /** mark relevant quantified formula, this will indicate it should be checked
    * before the others */
   void markRelevant(Node q);
@@ -180,6 +182,7 @@ class QuantifiersEngine : protected EnvObj
   /** reduceQuantifier, return true if reduced */
   bool reduceQuantifier(Node q);
   /** */
+  void notifyAssertedTermRec(TNode t);
   void notifyAssertedTerm(TNode t);
 
   /** The quantifiers state object */
@@ -217,7 +220,11 @@ class QuantifiersEngine : protected EnvObj
   /** Number of rounds we have instantiated */
   uint32_t d_numInstRoundsLemma;
   /** Track asserted terms? */
-  bool d_trackAssertedTerms;
+  bool d_hasEagerInst;
+  /** */
+  bool d_eagerInstNewEqc;
+  bool d_eagerInstEqcMerge;
+  bool d_eagerInstAssert;
   /** quantifiers pre-registered */
   NodeSet d_assertedTerms;
 };

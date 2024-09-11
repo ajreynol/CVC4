@@ -10,7 +10,7 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Eager instantiation based on macros.
+ * Eager instantiation.
  */
 
 #include "cvc5_private.h"
@@ -20,7 +20,6 @@
 
 #include "smt/env_obj.h"
 #include "theory/quantifiers/quant_module.h"
-#include "theory/quantifiers/quantifiers_macros.h"
 #include "theory/substitutions.h"
 
 namespace cvc5::internal {
@@ -76,9 +75,7 @@ class EagerInst : public QuantifiersModule
  private:
   void registerQuant(const Node& q);
   Node solveMacro(Node& q, Node& pat);
-  QuantifiersMacros d_qm;
   SubstitutionMap d_smap;
-  bool d_reqGround;
   NodePairMap d_macros;
   NodePairSet d_instTerms;
   NodeSet d_ownedQuants;
