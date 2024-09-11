@@ -105,8 +105,8 @@ class QuantifiersModules
   std::unique_ptr<InstStrategyMbqi> d_mbqi;
   /** Oracle engine */
   std::unique_ptr<OracleEngine> d_oracleEngine;
-  /** Macro eager inst */
-  std::unique_ptr<MacroEagerInst> d_mei;
+  /** Eager inst */
+  std::unique_ptr<EagerInst> d_ei;
 };
 
 }  // namespace quantifiers

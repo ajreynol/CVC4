@@ -1708,12 +1708,12 @@ name   = "Quantifiers"
   help = "Only infer ground definitions for functions that result in triggers for all free variables."
 
 [[option]]
-  name       = "macrosEagerInst"
+  name       = "eagerInst"
   category   = "expert"
-  long       = "macros-eager-inst"
+  long       = "eager-inst"
   type       = "bool"
   default    = "false"
-  help       = "do eager instantiation based on macro analysis"
+  help       = "do eager instantiation"
 
 [[option]]
   name       = "quantDynamicSplit"

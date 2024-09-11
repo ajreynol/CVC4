@@ -26,7 +26,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-MacroEagerInst::MacroEagerInst(Env& env,
+EagerInst::EagerInst(Env& env,
                                QuantifiersState& qs,
                                QuantifiersInferenceManager& qim,
                                QuantifiersRegistry& qr,
@@ -45,11 +45,11 @@ MacroEagerInst::MacroEagerInst(Env& env,
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
 }
 
-MacroEagerInst::~MacroEagerInst() {}
+EagerInst::~EagerInst() {}
 
-void MacroEagerInst::presolve() {}
+void EagerInst::presolve() {}
 
-bool MacroEagerInst::needsCheck(Theory::Effort e)
+bool EagerInst::needsCheck(Theory::Effort e)
 {
   if (d_instOutput)
   {
@@ -65,11 +65,11 @@ bool MacroEagerInst::needsCheck(Theory::Effort e)
   return false;
 }
 
-void MacroEagerInst::reset_round(Theory::Effort e) {}
+void EagerInst::reset_round(Theory::Effort e) {}
 
-void MacroEagerInst::registerQuantifier(Node q) {}
+void EagerInst::registerQuantifier(Node q) {}
 
-void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
+void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 {
   // temporary
   for (const Node& n : assertions)
@@ -82,7 +82,7 @@ void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
   }
 }
 
-void MacroEagerInst::assertNode(Node q)
+void EagerInst::assertNode(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
   //
@@ -91,7 +91,7 @@ void MacroEagerInst::assertNode(Node q)
     registerQuant(q);
   }
 }
-void MacroEagerInst::registerQuant(const Node& q)
+void EagerInst::registerQuant(const Node& q)
 {
   Trace("macro-eager-inst-register") << "Assert " << q << std::endl;
   if (q.getNumChildren() != 3)
@@ -101,6 +101,7 @@ void MacroEagerInst::registerQuant(const Node& q)
   Node ipl = q[2];
   bool owner = d_ppQuants.find(q) != d_ppQuants.end();
   bool hasPat = false;
+  // TODO: do for any pattern selection
   for (const Node& pat : ipl)
   {
     if (pat.getKind() == Kind::INST_PATTERN)
@@ -109,6 +110,7 @@ void MacroEagerInst::registerQuant(const Node& q)
       {
         hasPat = true;
         Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
+        // TODO: statically analyze if this would lead to matching loops
         Trace("macro-eager-inst-register")
             << "Single pat: " << spat << std::endl;
         Node op = spat.getOperator();
@@ -173,7 +175,7 @@ void MacroEagerInst::registerQuant(const Node& q)
   */
 }
 
-void MacroEagerInst::checkOwnership(Node q)
+void EagerInst::checkOwnership(Node q)
 {
   if (d_ownedQuants.find(q) != d_ownedQuants.end())
   {
@@ -181,11 +183,11 @@ void MacroEagerInst::checkOwnership(Node q)
   }
 }
 
-void MacroEagerInst::check(Theory::Effort e, QEffort quant_e) {}
+void EagerInst::check(Theory::Effort e, QEffort quant_e) {}
 
-std::string MacroEagerInst::identify() const { return "eager-inst"; }
+std::string EagerInst::identify() const { return "eager-inst"; }
 
-void MacroEagerInst::notifyAssertedTerm(TNode t)
+void EagerInst::notifyAssertedTerm(TNode t)
 {
   if (t.getKind() != Kind::APPLY_UF)
   {
@@ -255,7 +257,7 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
   */
 }
 
-bool MacroEagerInst::doMatching(const Node& q,
+bool EagerInst::doMatching(const Node& q,
                                 const Node& pat,
                                 const Node& t,
                                 std::vector<Node>& inst)

@@ -666,21 +666,22 @@ void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
     for (size_t i = 0; i < 2; i++)
     {
       TNode t = i == 0 ? t1 : t2;
-      NodeSet::const_iterator it = d_assertedTerms.find(t);
-      if (it == d_assertedTerms.end())
-      {
-        d_assertedTerms.insert(t);
-        notifyAssertedTerm(t);
-      }
+      notifyAssertedTerm(t);
     }
   }
 }
 
 void QuantifiersEngine::notifyAssertedTerm(TNode t)
 {
-  if (d_qmodules->d_mei != nullptr)
+      NodeSet::const_iterator it = d_assertedTerms.find(t);
+      if (it != d_assertedTerms.end())
+      {
+        return;
+      }
+        d_assertedTerms.insert(t);
+  if (d_qmodules->d_ei != nullptr)
   {
-    d_qmodules->d_mei->notifyAssertedTerm(t);
+    d_qmodules->d_ei->notifyAssertedTerm(t);
   }
 }
 

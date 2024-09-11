@@ -15,8 +15,8 @@
 
 #include "cvc5_private.h"
 
-#ifndef CVC5__THEORY__QUANTIFIERS__MACRO_EAGER_INST_H
-#define CVC5__THEORY__QUANTIFIERS__MACRO_EAGER_INST_H
+#ifndef CVC5__THEORY__QUANTIFIERS__EAGER_INST_H
+#define CVC5__THEORY__QUANTIFIERS__EAGER_INST_H
 
 #include "smt/env_obj.h"
 #include "theory/quantifiers/quant_module.h"
@@ -29,7 +29,7 @@ namespace quantifiers {
 
 /**
  */
-class MacroEagerInst : public QuantifiersModule
+class EagerInst : public QuantifiersModule
 {
   using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
   using NodePairListMap =
@@ -41,12 +41,12 @@ class MacroEagerInst : public QuantifiersModule
       context::CDHashSet<std::pair<Node, Node>, NodePairHashFunction>;
 
  public:
-  MacroEagerInst(Env& env,
+  EagerInst(Env& env,
                  QuantifiersState& qs,
                  QuantifiersInferenceManager& qim,
                  QuantifiersRegistry& qr,
                  TermRegistry& tr);
-  ~MacroEagerInst();
+  ~EagerInst();
   /** Presolve */
   void presolve() override;
   /** Needs check. */
