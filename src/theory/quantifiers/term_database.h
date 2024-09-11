@@ -254,9 +254,11 @@ class TermDb : public QuantifiersUtil {
    * that argument position (see inRelevantDomain).
    */
   std::map<Node, std::vector<std::vector<TNode>>> d_fmapRelDom;
-  /** has map */
-  std::map< Node, bool > d_has_map;
-  /** map from reps to a term in eqc in d_has_map */
+  /** Are we tracking relevant terms? */
+  bool d_trackRlvTerms;
+  /** The set of relevant terms */
+  std::unordered_set< Node > d_rlvTerms;
+  /** map from reps to a term in eqc */
   std::map<Node, Node> d_term_elig_eqc;
   /**
    * Dummy predicate that states terms should be considered first-class members
@@ -285,7 +287,7 @@ class TermDb : public QuantifiersUtil {
   virtual bool checkCongruentDisequal(TNode a, TNode b, std::vector<Node>& exp);
   //----------------------------- end implementation-specific
   /** set has term */
-  void setHasTerm( Node n );
+  void setRelevantTerm( Node n );
   /** compute uf eqc terms :
   * Ensure entries for f are in d_func_map_eqc_trie for all equivalence classes
   */

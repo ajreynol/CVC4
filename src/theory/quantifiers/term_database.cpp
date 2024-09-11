@@ -474,21 +474,11 @@ void TermDb::setTermInactive(Node n) { d_inactive_map[n] = true; }
 
 bool TermDb::hasTermCurrent(const Node& n, bool useMode) const
 {
-  if( !useMode ){
-    return d_has_map.find( n )!=d_has_map.end();
-  }
-  //some assertions are not sent to EE
-  if (options().quantifiers.termDbMode == options::TermDbMode::ALL)
+  if( !useMode || d_trackRlvTerms )
   {
-    return true;
+    return d_rlvTerms.find( n )!=d_rlvTerms.end();
   }
-  else if (options().quantifiers.termDbMode == options::TermDbMode::RELEVANT)
-  {
-    return d_has_map.find( n )!=d_has_map.end();
-  }
-  Assert(false) << "TermDb::hasTermCurrent: Unknown termDbMode : "
-                << options().quantifiers.termDbMode;
-  return false;
+  return true;
 }
 
 bool TermDb::isTermEligibleForInstantiation(TNode n, TNode f)
@@ -560,14 +550,23 @@ void TermDb::getOperatorsFor(TNode f, std::vector<TNode>& ops)
   ops.push_back(f);
 }
 
-void TermDb::setHasTerm( Node n ) {
-  Trace("term-db-debug2") << "hasTerm : " << n  << std::endl;
-  if( d_has_map.find( n )==d_has_map.end() ){
-    d_has_map[n] = true;
-    for( unsigned i=0; i<n.getNumChildren(); i++ ){
-      setHasTerm( n[i] );
+void TermDb::setRelevantTerm( Node t ) {
+  Trace("term-db-debug2") << "setRelevantTerm : " << t  << std::endl;
+  Assert (d_trackRlvTerms);
+  std::unordered_set<TNode> visited;
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(t);
+  do {
+    cur = visit.back();
+    visit.pop_back();
+    if (d_rlvTerms.find(cur)!=d_rlvTerms.end())
+    {
+      continue;
     }
-  }
+    d_rlvTerms.insert(cur);
+    visit.insert(visit.end(), cur.begin(), cur.end());
+  } while (!visit.empty());
 }
 
 void TermDb::presolve() {}
@@ -578,6 +577,7 @@ bool TermDb::reset( Theory::Effort effort ){
   d_func_map_trie.clear();
   d_func_map_eqc_trie.clear();
   d_fmapRelDom.clear();
+  d_term_elig_eqc.clear();
 
   eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
 
@@ -586,30 +586,7 @@ bool TermDb::reset( Theory::Effort effort ){
   //compute has map
   if (options().quantifiers.termDbMode == options::TermDbMode::RELEVANT)
   {
-    d_has_map.clear();
-    d_term_elig_eqc.clear();
-    eq::EqClassesIterator eqcs_i = eq::EqClassesIterator( ee );
-    while( !eqcs_i.isFinished() ){
-      TNode r = (*eqcs_i);
-      bool addedFirst = false;
-      Node first;
-      //TODO: ignoring singleton eqc isn't enough, need to ensure eqc are relevant
-      eq::EqClassIterator eqc_i = eq::EqClassIterator(r, ee);
-      while( !eqc_i.isFinished() ){
-        TNode n = (*eqc_i);
-        if( first.isNull() ){
-          first = n;
-        }else{
-          if( !addedFirst ){
-            addedFirst = true;
-            setHasTerm( first );
-          }
-          setHasTerm( n );
-        }
-        ++eqc_i;
-      }
-      ++eqcs_i;
-    }
+    d_rlvTerms.clear();
     const LogicInfo& logicInfo = d_qstate.getLogicInfo();
     for (TheoryId theoryId = THEORY_FIRST; theoryId < THEORY_LAST; ++theoryId)
     {
@@ -623,7 +600,7 @@ bool TermDb::reset( Theory::Effort effort ){
            it != it_end;
            ++it)
       {
-        setHasTerm((*it).d_assertion);
+        setRelevantTerm((*it).d_assertion);
       }
     }
   }
