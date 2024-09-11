@@ -474,9 +474,9 @@ void TermDb::setTermInactive(Node n) { d_inactive_map[n] = true; }
 
 bool TermDb::hasTermCurrent(const Node& n, bool useMode) const
 {
-  if( !useMode || d_trackRlvTerms )
+  if (!useMode || d_trackRlvTerms)
   {
-    return d_rlvTerms.find( n )!=d_rlvTerms.end();
+    return d_rlvTerms.find(n) != d_rlvTerms.end();
   }
   return true;
 }
@@ -550,17 +550,19 @@ void TermDb::getOperatorsFor(TNode f, std::vector<TNode>& ops)
   ops.push_back(f);
 }
 
-void TermDb::setRelevantTerm( Node t ) {
-  Trace("term-db-debug2") << "setRelevantTerm : " << t  << std::endl;
-  Assert (d_trackRlvTerms);
+void TermDb::setRelevantTerm(Node t)
+{
+  Trace("term-db-debug2") << "setRelevantTerm : " << t << std::endl;
+  Assert(d_trackRlvTerms);
   std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(t);
-  do {
+  do
+  {
     cur = visit.back();
     visit.pop_back();
-    if (d_rlvTerms.find(cur)!=d_rlvTerms.end())
+    if (d_rlvTerms.find(cur) != d_rlvTerms.end())
     {
       continue;
     }

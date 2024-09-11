@@ -257,7 +257,7 @@ class TermDb : public QuantifiersUtil {
   /** Are we tracking relevant terms? */
   bool d_trackRlvTerms;
   /** The set of relevant terms */
-  std::unordered_set< Node > d_rlvTerms;
+  std::unordered_set<Node> d_rlvTerms;
   /** map from reps to a term in eqc */
   std::map<Node, Node> d_term_elig_eqc;
   /**
@@ -287,7 +287,7 @@ class TermDb : public QuantifiersUtil {
   virtual bool checkCongruentDisequal(TNode a, TNode b, std::vector<Node>& exp);
   //----------------------------- end implementation-specific
   /** set has term */
-  void setRelevantTerm( Node n );
+  void setRelevantTerm(Node n);
   /** compute uf eqc terms :
   * Ensure entries for f are in d_func_map_eqc_trie for all equivalence classes
   */
