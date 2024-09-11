@@ -581,6 +581,25 @@ bool TermDb::reset( Theory::Effort effort ){
   d_func_map_eqc_trie.clear();
   d_fmapRelDom.clear();
   Assert(d_qstate.getEqualityEngine()->consistent());
+  if (options().quantifiers.termDbMode == options::TermDbMode::RELEVANT)
+  {
+    const LogicInfo& logicInfo = d_qstate.getLogicInfo();
+    for (TheoryId theoryId = THEORY_FIRST; theoryId < THEORY_LAST; ++theoryId)
+    {
+      if (!logicInfo.isTheoryEnabled(theoryId))
+      {
+        continue;
+      }
+      for (context::CDList<Assertion>::const_iterator
+               it = d_qstate.factsBegin(theoryId),
+               it_end = d_qstate.factsEnd(theoryId);
+           it != it_end;
+           ++it)
+      {
+        notifyAssertedTerm((*it).d_assertion);
+      }
+    }
+  }
   // finish reset
   return finishResetInternal(effort);
 }
