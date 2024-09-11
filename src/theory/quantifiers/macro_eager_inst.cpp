@@ -49,17 +49,14 @@ bool MacroEagerInst::needsCheck(Theory::Effort e) { return false; }
 
 void MacroEagerInst::reset_round(Theory::Effort e) {}
 
-void MacroEagerInst::registerQuantifier(Node q) 
-{
-  
-}
+void MacroEagerInst::registerQuantifier(Node q) {}
 
 void MacroEagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 {
   // temporary
   for (const Node& n : assertions)
   {
-    if (n.getKind()==Kind::FORALL)
+    if (n.getKind() == Kind::FORALL)
     {
       assertNode(n);
     }
@@ -72,19 +69,20 @@ void MacroEagerInst::assertNode(Node q)
   Trace("macro-eager-inst-debug") << "Assert " << q << std::endl;
   if (options().quantifiers.macrosEagerInstUserPat)
   {
-    if (q.getNumChildren()!=3)
+    if (q.getNumChildren() != 3)
     {
       return;
     }
     Node ipl = q[2];
     for (const Node& pat : ipl)
     {
-      if (pat.getKind()==Kind::INST_PATTERN && pat.getNumChildren()==1 && pat[0].getKind()==Kind::APPLY_UF)
+      if (pat.getKind() == Kind::INST_PATTERN && pat.getNumChildren() == 1
+          && pat[0].getKind() == Kind::APPLY_UF)
       {
         Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
         Trace("macro-eager-inst-debug") << "Single pat: " << spat << std::endl;
         Node op = spat.getOperator();
-        d_userPat[op].push_back(std::pair<Node,Node>(q, spat));
+        d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
       }
     }
     return;
@@ -125,7 +123,7 @@ void MacroEagerInst::assertNode(Node q)
 void MacroEagerInst::checkOwnership(Node q)
 {
   // maybe take ownership???
-  if( d_ownedQuants.find(q)!=d_ownedQuants.end())
+  if (d_ownedQuants.find(q) != d_ownedQuants.end())
   {
     d_qreg.setOwner(q, this, 1);
   }
@@ -141,15 +139,15 @@ void MacroEagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
-  Trace("macro-eager-inst-debug")
-      << "Asserted term " << t << std::endl;
+  Trace("macro-eager-inst-debug") << "Asserted term " << t << std::endl;
   // NOTE: in some cases a macro definition for this term may come after it is
   // registered, we don't bother handling this.
   Node op = t.getOperator();
   if (options().quantifiers.macrosEagerInstUserPat)
   {
-    std::map<Node, std::vector<std::pair<Node, Node>>>::iterator it = d_userPat.find(op);
-    if (it!=d_userPat.end())
+    std::map<Node, std::vector<std::pair<Node, Node>>>::iterator it =
+        d_userPat.find(op);
+    if (it != d_userPat.end())
     {
       Trace("macro-eager-inst-debug")
           << "Asserted term " << t << " has user patterns" << std::endl;
@@ -198,7 +196,7 @@ bool MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t)
   inst.resize(q[0].getNumChildren());
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
   {
-    if (pat[i].getKind()==Kind::INST_CONSTANT)
+    if (pat[i].getKind() == Kind::INST_CONSTANT)
     {
       uint64_t vnum = TermUtil::getInstVarNum(pat[i]);
       Assert(vnum < inst.size());
@@ -206,12 +204,12 @@ bool MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t)
     }
     else if (TermUtil::hasInstConstAttr(pat[i]))
     {
-      if (pat[i].getNumChildren()==t[i].getNumChildren())
+      if (pat[i].getNumChildren() == t[i].getNumChildren())
       {
         TermDb* tdb = d_treg.getTermDatabase();
         Node mop1 = tdb->getMatchOperator(pat[i]);
         Node mop2 = tdb->getMatchOperator(t[i]);
-        if (!mop1.isNull() && mop1==mop2)
+        if (!mop1.isNull() && mop1 == mop2)
         {
           if (doMatching(q, pat[i], t[i]))
           {
@@ -219,16 +217,19 @@ bool MacroEagerInst::doMatching(const Node& q, const Node& pat, const Node& t)
           }
         }
       }
-      Trace("macro-eager-inst-debug") << "...non-simple " << pat[i] << std::endl;
+      Trace("macro-eager-inst-debug")
+          << "...non-simple " << pat[i] << std::endl;
       return false;
     }
     else if (!d_qstate.areEqual(pat[i], t[i]))
     {
-      Trace("macro-eager-inst-debug") << "...inequal " << pat[i] << " " << t[i] << std::endl;
+      Trace("macro-eager-inst-debug")
+          << "...inequal " << pat[i] << " " << t[i] << std::endl;
       return false;
     }
   }
-  Trace("macro-eager-inst-debug") << "...instantiation is " << inst << std::endl;
+  Trace("macro-eager-inst-debug")
+      << "...instantiation is " << inst << std::endl;
   Instantiate* ie = d_qim.getInstantiate();
   ie->addInstantiation(q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST);
   d_qim.doPending();

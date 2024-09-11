@@ -32,7 +32,8 @@ namespace quantifiers {
 class MacroEagerInst : public QuantifiersModule
 {
   using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
-  using NodePairListMap = context::CDHashMap<Node, std::vector<std::pair<Node, Node>>>;
+  using NodePairListMap =
+      context::CDHashMap<Node, std::vector<std::pair<Node, Node>>>;
   using NodeSet = context::CDHashSet<Node>;
   using NodePairHashFunction =
       PairHashFunction<Node, Node, std::hash<Node>, std::hash<Node>>;
@@ -71,6 +72,7 @@ class MacroEagerInst : public QuantifiersModule
 
   /* For collecting global terms from all available assertions. */
   void ppNotifyAssertions(const std::vector<Node>& assertions) override;
+
  private:
   Node solveMacro(Node& q, Node& pat);
   QuantifiersMacros d_qm;

@@ -125,7 +125,7 @@ void QuantifiersEngine::finishInit(TheoryEngine* te)
     d_util.push_back(d_qmodules->d_rel_dom.get());
   }
   // FIXME
-  //d_trackAssertedTerms = (d_qmodules->d_mei != nullptr);
+  // d_trackAssertedTerms = (d_qmodules->d_mei != nullptr);
 
   // handle any circular dependencies
 
@@ -648,13 +648,13 @@ void QuantifiersEngine::assertQuantifier( Node f, bool pol ){
   d_treg.addTerm(d_qreg.getInstConstantBody(f), true);
 }
 
-void QuantifiersEngine::eqNotifyNewClass(TNode t) 
+void QuantifiersEngine::eqNotifyNewClass(TNode t)
 {
-  d_treg.addTerm(t);  
+  d_treg.addTerm(t);
   if (!d_trackAssertedTerms)
   {
     notifyAssertedTerm(t);
-  } 
+  }
 }
 
 void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
