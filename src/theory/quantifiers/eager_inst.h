@@ -28,7 +28,7 @@ namespace quantifiers {
 
 class EagerWatchList
 {
-public:
+ public:
   EagerWatchList(context::Context* c) : d_valid(c, true), d_matchJobs(c) {}
   void add(const Node& pat, const Node& t);
   context::CDO<bool> d_valid;
@@ -46,9 +46,10 @@ class EagerWatchInfo
    * Mapping from terms in the above list to the term we are waiting the
    * equivalence class to become equal to.
    */
-  context::CDHashMap<Node, std::shared_ptr<EagerWatchList> > d_eqWatch;
-private:
-context::Context* d_ctx;
+  context::CDHashMap<Node, std::shared_ptr<EagerWatchList>> d_eqWatch;
+
+ private:
+  context::Context* d_ctx;
 };
 
 class EagerOpInfo
@@ -121,8 +122,10 @@ class EagerInst : public QuantifiersModule
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_userPat;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
-  bool doMatching(const Node& pat, const Node& t, 
-                          std::vector<std::pair<Node, Node>>& failExp, bool& failWasCd);
+  bool doMatching(const Node& pat,
+                  const Node& t,
+                  std::vector<std::pair<Node, Node>>& failExp,
+                  bool& failWasCd);
   bool doMatchingInternal(const Node& pat,
                           const Node& n,
                           std::vector<Node>& inst,
@@ -131,8 +134,9 @@ class EagerInst : public QuantifiersModule
   /**
    * Node n matching pat is waiting on a being equal to b.
    */
-  void addWatch(const Node& pat, const Node& t,
-                         const std::vector<std::pair<Node, Node>>& failExp);
+  void addWatch(const Node& pat,
+                const Node& t,
+                const std::vector<std::pair<Node, Node>>& failExp);
 };
 
 }  // namespace quantifiers

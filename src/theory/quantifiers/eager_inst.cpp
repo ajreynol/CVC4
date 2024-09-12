@@ -26,7 +26,7 @@
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
-  
+
 void EagerWatchList::add(const Node& pat, const Node& t)
 {
   d_matchJobs.push_back(std::pair<Node, Node>(pat, t));
@@ -260,8 +260,10 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
 }
 
-bool EagerInst::doMatching(const Node& pat, const Node& t, 
-                          std::vector<std::pair<Node, Node>>& failExp, bool& failWasCdi)
+bool EagerInst::doMatching(const Node& pat,
+                           const Node& t,
+                           std::vector<std::pair<Node, Node>>& failExp,
+                           bool& failWasCdi)
 {
   Node q = TermUtil::getInstConstAttr(pat);
   std::vector<Node> inst;
@@ -390,15 +392,17 @@ EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
   return ewi.get();
 }
 
-void EagerInst::addWatch(const Node& pat, const Node& t,
-                          const std::vector<std::pair<Node, Node>>& failExp)
+void EagerInst::addWatch(const Node& pat,
+                         const Node& t,
+                         const std::vector<std::pair<Node, Node>>& failExp)
 {
-  if (options().quantifiers.eagerInstWatchMode==options::EagerInstWatchMode::NONE)
+  if (options().quantifiers.eagerInstWatchMode
+      == options::EagerInstWatchMode::NONE)
   {
     return;
   }
   // TODO
-  for(const std::pair<Node, Node>& exp : failExp)
+  for (const std::pair<Node, Node>& exp : failExp)
   {
     TNode a = d_qstate.getRepresentative(exp.first);
     TNode b = d_qstate.getRepresentative(exp.second);
@@ -408,22 +412,23 @@ void EagerInst::addWatch(const Node& pat, const Node& t,
       a = b;
       b = tmp;
     }
-    Trace("eager-inst-watch") << "Fail to match: " << pat << ", " << t << " because " << a << " <> " << b << std::endl;
+    Trace("eager-inst-watch") << "Fail to match: " << pat << ", " << t
+                              << " because " << a << " <> " << b << std::endl;
     EagerWatchInfo* ew = getOrMkWatchInfo(a, true);
     EagerWatchList* ewl = ew->getOrMkList(b, true);
     ewl->d_matchJobs.push_back(std::pair<Node, Node>(pat, t));
-    
+
     // TODO: better heuristics about which term is least likely to merge later?
     // or perfer existing reps?
     break;
   }
 }
 
-
 void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
-{  
-  Assert(d_qstate.getRepresentative(t2)==t1);
-  Trace("eager-inst-debug2") << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
+{
+  Assert(d_qstate.getRepresentative(t2) == t1);
+  Trace("eager-inst-debug2")
+      << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
   EagerWatchInfo* ewi[2];
   std::map<std::pair<Node, Node>, std::vector<std::pair<Node, Node>>> nextFails;
   bool addedInst = false;
@@ -434,9 +439,14 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     {
       continue;
     }
-    Trace("eager-inst-debug2") << "...check watched terms of " << t1 << std::endl;
-    context::CDHashMap<Node, std::shared_ptr<EagerWatchList> >& w = ewi[i]->d_eqWatch;
-    for (context::CDHashMap<Node, std::shared_ptr<EagerWatchList> >::iterator itw = w.begin(); itw != w.end(); ++itw)
+    Trace("eager-inst-debug2")
+        << "...check watched terms of " << t1 << std::endl;
+    context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>& w =
+        ewi[i]->d_eqWatch;
+    for (context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator
+             itw = w.begin();
+         itw != w.end();
+         ++itw)
     {
       EagerWatchList* ewl = itw->second.get();
       if (!ewl->d_valid.get())
@@ -446,7 +456,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       if (!d_qstate.areEqual(itw->first, t2))
       {
         // if unprocessed, carry over
-        if (i==1)
+        if (i == 1)
         {
           // make the other if not generated, t2 was swapped from t1
           if (ewi[0] == nullptr)
@@ -457,7 +467,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           TNode rep = d_qstate.getRepresentative(itw->first);
           context::CDList<std::pair<Node, Node>>& wmj = ewl->d_matchJobs;
           EagerWatchList* ewlo = ewi[0]->getOrMkList(rep, true);
-          context::CDList<std::pair<Node, Node>>& wmjo = ewlo ->d_matchJobs;
+          context::CDList<std::pair<Node, Node>>& wmjo = ewlo->d_matchJobs;
           for (const std::pair<Node, Node>& p : wmj)
           {
             wmjo.push_back(p);
@@ -468,7 +478,9 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       context::CDList<std::pair<Node, Node>>& wmj = ewl->d_matchJobs;
       for (const std::pair<Node, Node>& j : wmj)
       {
-        Trace("eager-inst-watch") << "Since " << t1 << " and " << t2 << " merged, retry " << j.first << " and " << j.second << std::endl;
+        Trace("eager-inst-watch")
+            << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
+            << " and " << j.second << std::endl;
         bool failWasCdi = false;
         if (doMatching(j.first, j.second, nextFails[j], failWasCdi))
         {
@@ -494,7 +506,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     d_qim.doPending();
   }
   // add new watching
-  for (std::pair<const std::pair<Node, Node>, std::vector<std::pair<Node, Node>>>& nf : nextFails)
+  for (std::pair<const std::pair<Node, Node>,
+                 std::vector<std::pair<Node, Node>>>& nf : nextFails)
   {
     addWatch(nf.first.first, nf.first.second, nf.second);
   }
