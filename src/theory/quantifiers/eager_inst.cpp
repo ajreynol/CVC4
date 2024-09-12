@@ -36,7 +36,8 @@ EagerInst::EagerInst(Env& env,
       d_instTerms(userContext()),
       d_ownedQuants(context()),
       d_ppQuants(userContext()),
-      d_fullInstTerms(userContext())
+      d_fullInstTerms(userContext()),
+      d_cdOps(context())
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
@@ -99,7 +100,8 @@ void EagerInst::registerQuant(const Node& q)
     return;
   }
   Node ipl = q[2];
-  bool owner = d_ppQuants.find(q) != d_ppQuants.end();
+  bool isPp = (d_ppQuants.find(q) != d_ppQuants.end());
+  bool owner = isPp;
   bool hasPat = false;
   // TODO: do for any pattern selection
   for (const Node& pat : ipl)
@@ -114,6 +116,10 @@ void EagerInst::registerQuant(const Node& q)
         Trace("eager-inst-register") << "Single pat: " << spat << std::endl;
         Node op = spat.getOperator();
         d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
+        if (!isPp)
+        {
+          d_cdOps.insert(op);
+        }
         if (owner)
         {
           for (const Node& spc : spat)
@@ -164,9 +170,13 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
+  Node op = t.getOperator();
   if (d_fullInstTerms.find(t) != d_fullInstTerms.end())
   {
-    return;
+    if (d_cdOps.find(op)==d_cdOps.end())
+    {
+      return;
+    }
   }
   d_termNotifyCount[t]++;
   Trace("eager-inst-debug") << "Asserted term " << t << std::endl;
@@ -174,7 +184,6 @@ void EagerInst::notifyAssertedTerm(TNode t)
       << "#" << d_termNotifyCount[t] << " for " << t << std::endl;
   // NOTE: in some cases a macro definition for this term may come after it is
   // registered, we don't bother handling this.
-  Node op = t.getOperator();
   std::map<Node, std::vector<std::pair<Node, Node>>>::iterator it =
       d_userPat.find(op);
   if (it != d_userPat.end())
@@ -210,7 +219,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
           fullProc = false;
         }
       }
-      else if (!failWasCd.empty())
+      else if (failWasCd.empty())
       {
         pkeys.emplace_back(key);
       }
@@ -223,7 +232,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
     {
       d_qim.doPending();
     }
-    if (fullProc && !options().quantifiers.eagerInstCd)
+    if (fullProc)
     {
       d_fullInstTerms.insert(t);
     }
@@ -235,7 +244,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
       }
     }
   }
-  else if (!options().quantifiers.eagerInstCd)
+  else
   {
     d_fullInstTerms.insert(t);
   }

@@ -26,6 +26,12 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+class EagerWatchInfo
+{
+  using NodeMap = context::CDHashMap<Node, Node>;
+public:
+};
+    
 /**
  */
 class EagerInst : public QuantifiersModule
@@ -82,6 +88,7 @@ class EagerInst : public QuantifiersModule
   NodeSet d_ppQuants;
   std::map<Node, size_t> d_termNotifyCount;
   NodeSet d_fullInstTerms;
+  NodeSet d_cdOps;
   //
   std::map<Node, std::vector<std::pair<Node, Node>>> d_userPat;
   bool doMatching(const Node& q,

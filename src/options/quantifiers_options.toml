@@ -1718,16 +1718,16 @@ name   = "Quantifiers"
 [[option]]
   name       = "eagerInstTermMode"
   category   = "regular"
-  long       = "eager-inst-term-mode=MODE"
+  long       = "eager-inst-term=MODE"
   type       = "EagerInstTermMode"
   default    = "NEW_EQC"
   help       = "mode for when to register ground terms with eager instantiation"
   help_mode  = "Modes for when to register ground terms with eager instantiation."
 [[option.mode.NEW_EQC]]
-  name = "new_eqc"
+  name = "eqc"
   help = "Upon new eqc."
 [[option.mode.EQC_MERGE]]
-  name = "eqc_merge"
+  name = "eqc-merge"
   help = "Upon eqc merge."
 [[option.mode.ASSERTION]]
   name = "assert"
@@ -1738,9 +1738,23 @@ name   = "Quantifiers"
   category   = "expert"
   long       = "eager-inst-cd"
   type       = "bool"
-  default    = "false"
+  default    = "true"
   help       = "handle quantified formulas that are not asserted at top-level in eager instantiation"
 
+[[option]]
+  name       = "eagerInstWatchMode"
+  category   = "regular"
+  long       = "eager-inst-watch=MODE"
+  type       = "EagerInstWatchMode"
+  default    = "NONE"
+  help       = "mode for what to watch for for readding terms for eager instantiation"
+  help_mode  = "Modes for what to watch for for readding terms for eager instantiation."
+[[option.mode.NONE]]
+  name = "none"
+  help = "Do not watch."
+[[option.mode.SIMPLE]]
+  name = "simple"
+  help = "Simple watching for ground terms."
 
 [[option]]
   name       = "quantDynamicSplit"
