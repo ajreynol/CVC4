@@ -206,27 +206,14 @@ void EagerInst::notifyAssertedTerm(TNode t)
     {
       continue;
     }
-    Node q = TermUtil::getInstConstAttr(pat);
-    std::vector<Node> inst;
-    inst.resize(q[0].getNumChildren());
-    std::map<Node, Node> failWasCd;
-    if (doMatching(pat, t, inst, failWasCd))
+    bool failWasCdi = false;
+    if (doMatching(pat, t, failWasCdi))
     {
-      Instantiate* ie = d_qim.getInstantiate();
-      if (ie->addInstantiation(
-              q, inst, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
-      {
-        addedInst = true;
-        d_tmpAddedLemmas++;
-        pkeys.emplace_back(key);
-      }
-      else
-      {
-        fullProc = false;
-      }
+      addedInst = true;
     }
-    else if (failWasCd.empty())
+    else if (failWasCdi)
     {
+      // fail was context-independent
       pkeys.emplace_back(key);
     }
     else
@@ -252,9 +239,43 @@ void EagerInst::notifyAssertedTerm(TNode t)
 }
 
 bool EagerInst::doMatching(const Node& pat,
+                const Node& t,
+                bool& failWasCdi)
+{
+  Node q = TermUtil::getInstConstAttr(pat);
+  std::vector<Node> inst;
+  inst.resize(q[0].getNumChildren());
+  std::vector<std::pair<Node, Node>> failExp;
+  failWasCdi = false;
+  if (doMatchingInternal(pat, t, inst, failExp, failWasCdi))
+  {
+    Instantiate* ie = d_qim.getInstantiate();
+    if (ie->addInstantiation(
+            q, inst, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
+    {
+      d_tmpAddedLemmas++;
+      return true;
+    }
+    else
+    {
+      // The failure will always be in this SAT context, we do not watch
+      // anything, but we cannot 
+      failWasCdi = false;
+    }
+  }
+  else if (!failWasCdi)
+  {
+    // add watches???
+  }
+  // otherwise, failWasCdi is set by the above method
+  return false;
+}
+
+bool EagerInst::doMatchingInternal(const Node& pat,
                            const Node& t,
                            std::vector<Node>& inst,
-                           std::map<Node, Node>& failWasCd)
+  std::vector<std::pair<Node, Node>>& failExp,
+                bool& failWasCdi)
 {
   Trace("eager-inst-debug") << "Do matching " << t << " " << pat << std::endl;
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
@@ -265,7 +286,7 @@ bool EagerInst::doMatching(const Node& pat,
       Assert(vnum < inst.size());
       if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], t[i]))
       {
-        failWasCd[inst[vnum]] = t[i];
+        failExp.emplace_back(inst[vnum], t[i]);
         return false;
       }
       inst[vnum] = t[i];
@@ -279,11 +300,16 @@ bool EagerInst::doMatching(const Node& pat,
         Node mop2 = tdb->getMatchOperator(t[i]);
         if (!mop1.isNull() && mop1 == mop2)
         {
-          if (doMatching(pat[i], t[i], inst, failWasCd))
+          if (doMatchingInternal(pat[i], t[i], inst, failExp, failWasCdi))
           {
             continue;
           }
         }
+      }
+      else
+      {
+        // note we only do simple matching, meaning (f a) fails context-independently against (f (g x)).
+        failWasCdi = true;
       }
       Trace("eager-inst-debug") << "...non-simple " << pat[i] << std::endl;
       return false;
@@ -292,7 +318,14 @@ bool EagerInst::doMatching(const Node& pat,
     {
       Trace("eager-inst-debug")
           << "...inequal " << pat[i] << " " << t[i] << std::endl;
-      failWasCd[pat[i]] = t[i];
+      if (pat[i].isConst() && t[i].isConst())
+      {
+        failWasCdi = true;
+      }
+      else
+      {
+        failExp.emplace_back(pat[i], t[i]);
+      }
       return false;
     }
   }
