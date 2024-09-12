@@ -195,7 +195,7 @@ bool Instantiate::addInstantiationInternal(
     // this assertion is critical to soundness
     if (bad_inst)
     {
-      Trace("inst") << "***& Bad Instantiate " << q << " with " << std::endl;
+      Trace("inst") << "***& Bad Instantiate [" << id << "] " << q << " with " << std::endl;
       for (unsigned j = 0; j < terms.size(); j++)
       {
         Trace("inst") << "   " << terms[j] << std::endl;
@@ -366,19 +366,16 @@ bool Instantiate::addInstantiationInternal(
   d_instDebugTemp[q]++;
   if (TraceIsOn("inst"))
   {
-    Trace("inst") << "*** Instantiate " << q << " with " << std::endl;
+    Trace("inst") << "*** Instantiate [" << id << "] " << q << " with " << std::endl;
     for (size_t i = 0, size = terms.size(); i < size; i++)
     {
-      if (TraceIsOn("inst"))
+      Trace("inst") << "   " << terms[i];
+      if (TraceIsOn("inst-debug"))
       {
-        Trace("inst") << "   " << terms[i];
-        if (TraceIsOn("inst-debug"))
-        {
-          Trace("inst-debug") << ", type=" << terms[i].getType()
-                              << ", var_type=" << q[0][i].getType();
-        }
-        Trace("inst") << std::endl;
+        Trace("inst-debug") << ", type=" << terms[i].getType()
+                            << ", var_type=" << q[0][i].getType();
       }
+      Trace("inst") << std::endl;
     }
   }
   if (options().quantifiers.instMaxLevel != -1)

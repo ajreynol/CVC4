@@ -81,12 +81,14 @@ class EagerInst : public QuantifiersModule
   bool d_instOutput;
   NodeSet d_ppQuants;
   std::map<Node, size_t> d_termNotifyCount;
+  NodeSet d_fullInstTerms;
   //
   std::map<Node, std::vector<std::pair<Node, Node>>> d_userPat;
   bool doMatching(const Node& q,
                   const Node& pat,
                   const Node& n,
-                  std::vector<Node>& inst);
+                  std::vector<Node>& inst,
+                  bool& failWasCd);
 };
 
 }  // namespace quantifiers

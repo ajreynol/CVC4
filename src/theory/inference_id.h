@@ -370,8 +370,8 @@ enum class InferenceId
   QUANTIFIERS_INST_POOL,
   // instantiations from pool instantiation (tuple semantics)
   QUANTIFIERS_INST_POOL_TUPLE,
-  // instantiation from the eager instantiation of macros
-  QUANTIFIERS_INST_MACRO_EAGER_INST,
+  // instantiation from the eager instantiation strategy
+  QUANTIFIERS_INST_EAGER_E_MATCHING,
   //-------------------- bounded integers
   // a proxy lemma from bounded integers, used to control bounds on ground terms
   QUANTIFIERS_BINT_PROXY,

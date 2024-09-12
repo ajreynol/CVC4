@@ -35,7 +35,8 @@ EagerInst::EagerInst(Env& env,
     : QuantifiersModule(env, qs, qim, qr, tr),
       d_instTerms(userContext()),
       d_ownedQuants(context()),
-      d_ppQuants(userContext())
+      d_ppQuants(userContext()),
+      d_fullInstTerms(userContext())
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
@@ -79,6 +80,10 @@ void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 
 void EagerInst::assertNode(Node q)
 {
+  if (!options().quantifiers.eagerInstCd)
+  {
+    return;
+  }
   Assert(q.getKind() == Kind::FORALL);
   //
   if (d_ppQuants.find(q) == d_ppQuants.end())
@@ -159,6 +164,10 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
+  if (d_fullInstTerms.find(t)!=d_fullInstTerms.end())
+  {
+    return;
+  }
   d_termNotifyCount[t]++;
   Trace("eager-inst-debug") << "Asserted term " << t << std::endl;
   Trace("eager-inst-stats")
@@ -173,6 +182,8 @@ void EagerInst::notifyAssertedTerm(TNode t)
     Trace("eager-inst-debug")
         << "Asserted term " << t << " has user patterns" << std::endl;
     bool addedInst = false;
+    std::vector<std::pair<Node, Node>> pkeys;
+    bool fullProc = true;
     for (const std::pair<Node, Node>& p : it->second)
     {
       const Node& q = p.first;
@@ -183,29 +194,58 @@ void EagerInst::notifyAssertedTerm(TNode t)
       }
       std::vector<Node> inst;
       inst.resize(q[0].getNumChildren());
-      if (doMatching(q, p.second, t, inst))
+      bool failWasCd = false;
+      if (doMatching(q, p.second, t, inst, failWasCd))
       {
         Instantiate* ie = d_qim.getInstantiate();
         if (ie->addInstantiation(
-                q, inst, InferenceId::QUANTIFIERS_INST_MACRO_EAGER_INST))
+                q, inst, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
         {
           addedInst = true;
           d_tmpAddedLemmas++;
-          d_instTerms.insert(key);
+          pkeys.emplace_back(key);
         }
+        else
+        {
+          fullProc = false;
+        }
+      }
+      else if (!failWasCd)
+      {
+        pkeys.emplace_back(key);
+      }
+      else
+      {
+        fullProc = false;
       }
     }
     if (addedInst)
     {
       d_qim.doPending();
     }
+    if (fullProc && !options().quantifiers.eagerInstCd)
+    {
+      d_fullInstTerms.insert(t);
+    }
+    else
+    {
+      for (std::pair<Node, Node>& k : pkeys)
+      {
+        d_instTerms.insert(k);
+      }
+    }
+  }
+  else if (!options().quantifiers.eagerInstCd)
+  {
+    d_fullInstTerms.insert(t);
   }
 }
 
 bool EagerInst::doMatching(const Node& q,
                            const Node& pat,
                            const Node& t,
-                           std::vector<Node>& inst)
+                           std::vector<Node>& inst,
+                  bool& failWasCd)
 {
   Trace("eager-inst-debug") << "Do matching " << t << " " << pat << std::endl;
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
@@ -216,6 +256,7 @@ bool EagerInst::doMatching(const Node& q,
       Assert(vnum < inst.size());
       if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], t[i]))
       {
+        failWasCd = true;
         return false;
       }
       inst[vnum] = t[i];
@@ -229,7 +270,7 @@ bool EagerInst::doMatching(const Node& q,
         Node mop2 = tdb->getMatchOperator(t[i]);
         if (!mop1.isNull() && mop1 == mop2)
         {
-          if (doMatching(q, pat[i], t[i], inst))
+          if (doMatching(q, pat[i], t[i], inst, failWasCd))
           {
             continue;
           }
@@ -242,6 +283,7 @@ bool EagerInst::doMatching(const Node& q,
     {
       Trace("eager-inst-debug")
           << "...inequal " << pat[i] << " " << t[i] << std::endl;
+      failWasCd = true;
       return false;
     }
   }

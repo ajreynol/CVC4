@@ -1734,6 +1734,15 @@ name   = "Quantifiers"
   help = "Upon appearance in assertion."
 
 [[option]]
+  name       = "eagerInstCd"
+  category   = "expert"
+  long       = "eager-inst-cd"
+  type       = "bool"
+  default    = "false"
+  help       = "handle quantified formulas that are not asserted at top-level in eager instantiation"
+
+
+[[option]]
   name       = "quantDynamicSplit"
   category   = "regular"
   long       = "quant-dsplit=MODE"
