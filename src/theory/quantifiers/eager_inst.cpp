@@ -61,7 +61,13 @@ EagerInst::EagerInst(Env& env,
       d_fullInstTerms(userContext()),
       d_cdOps(context()),
       d_repWatch(context()),
-      d_userPat(context())
+      d_userPat(context()),
+      d_statUserPats(
+          statisticsRegistry().registerInt("EagerInst::userPats")),
+      d_statUserPatsCd(
+          statisticsRegistry().registerInt("EagerInst::userPatsCd")),
+      d_statMatchCall(
+          statisticsRegistry().registerInt("EagerInst::matchCall"))
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
@@ -144,6 +150,11 @@ void EagerInst::registerQuant(const Node& q)
         if (!isPp)
         {
           d_cdOps.insert(op);
+          ++d_statUserPatsCd;
+        }
+        else
+        {
+          ++d_statUserPats;
         }
         if (owner)
         {
@@ -265,6 +276,7 @@ bool EagerInst::doMatching(const Node& pat,
                            std::vector<std::pair<Node, Node>>& failExp,
                            bool& failWasCdi)
 {
+  ++d_statMatchCall;
   Node q = TermUtil::getInstConstAttr(pat);
   std::vector<Node> inst;
   inst.resize(q[0].getNumChildren());

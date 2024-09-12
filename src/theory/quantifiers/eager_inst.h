@@ -120,6 +120,12 @@ class EagerInst : public QuantifiersModule
   NodeSet d_cdOps;
   context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>> d_repWatch;
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_userPat;
+  /** Number of patterns */
+  IntStat d_statUserPats;
+  /** Number of cd patterns */
+  IntStat d_statUserPatsCd;
+  /** Number of calls to match */
+  IntStat d_statMatchCall;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
   bool doMatching(const Node& pat,
