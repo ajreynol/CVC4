@@ -37,8 +37,6 @@ class EagerWatchList
 
 class EagerWatchInfo
 {
-  using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
-
  public:
   EagerWatchInfo(context::Context* c) : d_eqWatch(c), d_ctx(c) {}
   EagerWatchList* getOrMkList(const Node& r, bool doMk);
@@ -52,20 +50,32 @@ class EagerWatchInfo
   context::Context* d_ctx;
 };
 
+class EagerTrie
+{
+public:
+  std::map<uint64_t, EagerTrie> d_varChildren;
+  std::map<Node, EagerTrie> d_groundChildren;
+  std::map<Node, EagerTrie> d_ngroundChildren;
+  std::vector<Node> d_pats;
+  bool add(TermDb* tdb, const Node& n);
+private:
+  bool add(TermDb* tdb, const Node& pat, const Node& n, size_t i, std::vector<std::pair<Node, size_t>>& ets);
+};
+
 class EagerOpInfo
 {
  public:
   EagerOpInfo(context::Context* c) : d_pats(c) {}
   /** The patterns for this operator in the current context */
   context::CDList<Node> d_pats;
+  EagerTrie d_trie;
 };
+
 
 /**
  */
 class EagerInst : public QuantifiersModule
 {
-  using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
-  using NodeListMap = context::CDHashMap<Node, std::vector<Node>>;
   using NodeSet = context::CDHashSet<Node>;
   using NodePairHashFunction =
       PairHashFunction<Node, Node, std::hash<Node>, std::hash<Node>>;
@@ -137,6 +147,11 @@ class EagerInst : public QuantifiersModule
                           std::vector<Node>& inst,
                           std::vector<std::pair<Node, Node>>& failExp,
                           bool& failWasCd);
+  void doMatchingTrie(const EagerTrie* pat,
+                      const Node& t,
+                      size_t i,
+                      std::vector<Node>& inst,
+                      std::vector<std::pair<Node, size_t>>& ets);
   /**
    * Node n matching pat is waiting on a being equal to b.
    */
