@@ -26,27 +26,36 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+class EagerWatchList
+{
+public:
+  EagerWatchList(context::Context* c) : d_valid(c, true), d_matchJobs(c) {}
+  void add(const Node& pat, const Node& t);
+  context::CDO<bool> d_valid;
+  context::CDList<std::pair<Node, Node>> d_matchJobs;
+};
+
 class EagerWatchInfo
 {
   using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
 
  public:
-  EagerWatchInfo(context::Context* c) : d_list(c), d_eqWatch(c) {}
-  /** The list of terms that care about this representative */
-  context::CDList<Node> d_list;
+  EagerWatchInfo(context::Context* c) : d_eqWatch(c), d_ctx(c) {}
+  EagerWatchList* getOrMkList(const Node& r, bool doMk);
   /**
    * Mapping from terms in the above list to the term we are waiting the
    * equivalence class to become equal to.
    */
-  NodePairMap d_eqWatch;
+  context::CDHashMap<Node, std::shared_ptr<EagerWatchList> > d_eqWatch;
+private:
+context::Context* d_ctx;
 };
 
 class EagerOpInfo
 {
  public:
   EagerOpInfo(context::Context* c) : d_pats(c) {}
-
-  /** The list of terms that care about this representative */
+  /** The patterns for this operator in the current context */
   context::CDList<Node> d_pats;
 };
 
@@ -109,11 +118,11 @@ class EagerInst : public QuantifiersModule
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
   context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>> d_repWatch;
+  context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_userPat;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
-  // FIXME: context dependent
-  context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_userPat;
-  bool doMatching(const Node& pat, const Node& t, bool& failWasCd);
+  bool doMatching(const Node& pat, const Node& t, 
+                          std::vector<std::pair<Node, Node>>& failExp, bool& failWasCd);
   bool doMatchingInternal(const Node& pat,
                           const Node& n,
                           std::vector<Node>& inst,
@@ -122,7 +131,8 @@ class EagerInst : public QuantifiersModule
   /**
    * Node n matching pat is waiting on a being equal to b.
    */
-  void addWatch(TNode n, TNode pat, TNode a, TNode b);
+  void addWatch(const Node& pat, const Node& t,
+                         const std::vector<std::pair<Node, Node>>& failExp);
 };
 
 }  // namespace quantifiers

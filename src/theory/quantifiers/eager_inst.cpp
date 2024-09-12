@@ -26,6 +26,28 @@
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
+  
+void EagerWatchList::add(const Node& pat, const Node& t)
+{
+  d_matchJobs.push_back(std::pair<Node, Node>(pat, t));
+}
+
+EagerWatchList* EagerWatchInfo::getOrMkList(const Node& r, bool doMk)
+{
+  context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator it =
+      d_eqWatch.find(r);
+  if (it != d_eqWatch.end())
+  {
+    return it->second.get();
+  }
+  else if (!doMk)
+  {
+    return nullptr;
+  }
+  std::shared_ptr<EagerWatchList> eoi = std::make_shared<EagerWatchList>(d_ctx);
+  d_eqWatch.insert(r, eoi);
+  return eoi.get();
+}
 
 EagerInst::EagerInst(Env& env,
                      QuantifiersState& qs,
@@ -181,10 +203,6 @@ void EagerInst::notifyAssertedTerm(TNode t)
       return;
     }
   }
-  d_termNotifyCount[t]++;
-  Trace("eager-inst-debug") << "Asserted term " << t << std::endl;
-  Trace("eager-inst-stats")
-      << "#" << d_termNotifyCount[t] << " for " << t << std::endl;
   // NOTE: in some cases a macro definition for this term may come after it is
   // registered, we don't bother handling this.
   EagerOpInfo* eoi = getOrMkOpInfo(op, false);
@@ -194,7 +212,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
     return;
   }
   Trace("eager-inst-debug")
-      << "Asserted term " << t << " has user patterns" << std::endl;
+      << "Asserted term " << t << " with user patterns" << std::endl;
   bool addedInst = false;
   std::vector<std::pair<Node, Node>> pkeys;
   bool fullProc = true;
@@ -207,7 +225,8 @@ void EagerInst::notifyAssertedTerm(TNode t)
       continue;
     }
     bool failWasCdi = false;
-    if (doMatching(pat, t, failWasCdi))
+    std::vector<std::pair<Node, Node>> failExp;
+    if (doMatching(pat, t, failExp, failWasCdi))
     {
       addedInst = true;
     }
@@ -218,6 +237,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
     }
     else
     {
+      addWatch(pat, t, failExp);
       fullProc = false;
     }
   }
@@ -227,10 +247,12 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
   if (fullProc)
   {
+    // this term is never matchable again (unless against cd-dependent user ops)
     d_fullInstTerms.insert(t);
   }
   else
   {
+    // finer-grained caching, per user pattern
     for (std::pair<Node, Node>& k : pkeys)
     {
       d_instTerms.insert(k);
@@ -238,12 +260,12 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
 }
 
-bool EagerInst::doMatching(const Node& pat, const Node& t, bool& failWasCdi)
+bool EagerInst::doMatching(const Node& pat, const Node& t, 
+                          std::vector<std::pair<Node, Node>>& failExp, bool& failWasCdi)
 {
   Node q = TermUtil::getInstConstAttr(pat);
   std::vector<Node> inst;
   inst.resize(q[0].getNumChildren());
-  std::vector<std::pair<Node, Node>> failExp;
   failWasCdi = false;
   if (doMatchingInternal(pat, t, inst, failExp, failWasCdi))
   {
@@ -307,7 +329,8 @@ bool EagerInst::doMatchingInternal(const Node& pat,
       else
       {
         // note we only do simple matching, meaning (f a) fails
-        // context-independently against (f (g x)).
+        // context-independently against (f (g x)) since we don't bother
+        // finding g-apps in equivalence class of a here.
         failWasCdi = true;
       }
       Trace("eager-inst-debug") << "...non-simple " << pat[i] << std::endl;
@@ -319,6 +342,7 @@ bool EagerInst::doMatchingInternal(const Node& pat,
           << "...inequal " << pat[i] << " " << t[i] << std::endl;
       if (pat[i].isConst() && t[i].isConst())
       {
+        // constants will never be equal to one another
         failWasCdi = true;
       }
       else
@@ -366,11 +390,43 @@ EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
   return ewi.get();
 }
 
-void EagerInst::addWatch(TNode n, TNode pat, TNode a, TNode b) {}
+void EagerInst::addWatch(const Node& pat, const Node& t,
+                          const std::vector<std::pair<Node, Node>>& failExp)
+{
+  if (options().quantifiers.eagerInstWatchMode==options::EagerInstWatchMode::NONE)
+  {
+    return;
+  }
+  // TODO
+  for(const std::pair<Node, Node>& exp : failExp)
+  {
+    TNode a = d_qstate.getRepresentative(exp.first);
+    TNode b = d_qstate.getRepresentative(exp.second);
+    if (b.isConst())
+    {
+      TNode tmp = a;
+      a = b;
+      b = tmp;
+    }
+    Trace("eager-inst-watch") << "Fail to match: " << pat << ", " << t << " because " << a << " <> " << b << std::endl;
+    EagerWatchInfo* ew = getOrMkWatchInfo(a, true);
+    EagerWatchList* ewl = ew->getOrMkList(b, true);
+    ewl->d_matchJobs.push_back(std::pair<Node, Node>(pat, t));
+    
+    // TODO: better heuristics about which term is least likely to merge later?
+    // or perfer existing reps?
+    break;
+  }
+}
+
 
 void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
-{
+{  
+  Assert(d_qstate.getRepresentative(t2)==t1);
+  Trace("eager-inst-debug2") << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
   EagerWatchInfo* ewi[2];
+  std::map<std::pair<Node, Node>, std::vector<std::pair<Node, Node>>> nextFails;
+  bool addedInst = false;
   for (size_t i = 0; i < 2; i++)
   {
     ewi[i] = getOrMkWatchInfo(t1, false);
@@ -378,24 +434,51 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     {
       continue;
     }
-    context::CDList<Node>& l = ewi[i]->d_list;
-    context::CDHashMap<Node, std::pair<Node, Node>>& m = ewi[i]->d_eqWatch;
-    for (const Node& t : l)
+    Trace("eager-inst-debug2") << "...check watched terms of " << t1 << std::endl;
+    context::CDHashMap<Node, std::shared_ptr<EagerWatchList> >& w = ewi[i]->d_eqWatch;
+    for (context::CDHashMap<Node, std::shared_ptr<EagerWatchList> >::iterator itw = w.begin(); itw != w.end(); ++itw)
     {
-      Assert(m.find(t) != m.end());
-      const std::pair<Node, Node>& p = m[t];
-      const Node& r = p.second;
-      // if equal, try matching again
-      if (d_qstate.areEqual(r, t2))
+      EagerWatchList* ewl = itw->second.get();
+      if (!ewl->d_valid.get())
       {
+        continue;
       }
-      // if unprocessed, carry over
-      if (i == 1)
+      if (!d_qstate.areEqual(itw->first, t2))
       {
-        if (ewi[0] == nullptr)
+        // if unprocessed, carry over
+        if (i==1)
         {
+          // make the other if not generated, t2 was swapped from t1
+          if (ewi[0] == nullptr)
+          {
+            ewi[0] = getOrMkWatchInfo(t2, true);
+          }
+          // update the representative as you go
+          TNode rep = d_qstate.getRepresentative(itw->first);
+          context::CDList<std::pair<Node, Node>>& wmj = ewl->d_matchJobs;
+          EagerWatchList* ewlo = ewi[0]->getOrMkList(rep, true);
+          context::CDList<std::pair<Node, Node>>& wmjo = ewlo ->d_matchJobs;
+          for (const std::pair<Node, Node>& p : wmj)
+          {
+            wmjo.push_back(p);
+          }
+        }
+        continue;
+      }
+      context::CDList<std::pair<Node, Node>>& wmj = ewl->d_matchJobs;
+      for (const std::pair<Node, Node>& j : wmj)
+      {
+        Trace("eager-inst-watch") << "Since " << t1 << " and " << t2 << " merged, retry " << j.first << " and " << j.second << std::endl;
+        bool failWasCdi = false;
+        if (doMatching(j.first, j.second, nextFails[j], failWasCdi))
+        {
+          Trace("eager-inst-watch") << "...readd success" << std::endl;
+          addedInst = true;
+          nextFails.erase(j);
         }
       }
+      // no longer valid
+      ewl->d_valid = false;
     }
     if (i == 0)
     {
@@ -404,6 +487,16 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       t1 = t2;
       t2 = tmp;
     }
+  }
+  // flush if added
+  if (addedInst)
+  {
+    d_qim.doPending();
+  }
+  // add new watching
+  for (std::pair<const std::pair<Node, Node>, std::vector<std::pair<Node, Node>>>& nf : nextFails)
+  {
+    addWatch(nf.first.first, nf.first.second, nf.second);
   }
 }
 
