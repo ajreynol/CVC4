@@ -28,18 +28,34 @@ namespace quantifiers {
 
 class EagerWatchInfo
 {
-  using NodeMap = context::CDHashMap<Node, Node>;
-
+  using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
  public:
+    EagerWatchInfo(context::Context* c) : d_list(c), d_eqWatch(c) {}
+    /** The list of terms that care about this representative */
+    context::CDList<Node> d_list;
+    /**
+     * Mapping from terms in the above list to the term we are waiting the equivalence class to become equal to.
+     */
+    NodePairMap d_eqWatch;
 };
+
+class EagerOpInfo
+{
+ public:
+    EagerOpInfo(context::Context* c) : d_pats(c) {}
+    
+    /** The list of terms that care about this representative */
+    context::CDList<Node> d_pats;
+};
+
 
 /**
  */
 class EagerInst : public QuantifiersModule
 {
   using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
-  using NodePairListMap =
-      context::CDHashMap<Node, std::vector<std::pair<Node, Node>>>;
+  using NodeListMap =
+      context::CDHashMap<Node, std::vector<Node>>;
   using NodeSet = context::CDHashSet<Node>;
   using NodePairHashFunction =
       PairHashFunction<Node, Node, std::hash<Node>, std::hash<Node>>;
@@ -79,6 +95,7 @@ class EagerInst : public QuantifiersModule
   /* For collecting global terms from all available assertions. */
   void ppNotifyAssertions(const std::vector<Node>& assertions) override;
 
+void eqNotifyMerge(TNode t1, TNode t2);
  private:
   void registerQuant(const Node& q);
   Node solveMacro(Node& q, Node& pat);
@@ -90,13 +107,19 @@ class EagerInst : public QuantifiersModule
   std::map<Node, size_t> d_termNotifyCount;
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
-  //
-  std::map<Node, std::vector<std::pair<Node, Node>>> d_userPat;
-  bool doMatching(const Node& q,
-                  const Node& pat,
+  context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>> d_repWatch;
+  EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
+  EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
+  // FIXME: context dependent
+  context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_userPat;
+  bool doMatching(const Node& pat,
                   const Node& n,
                   std::vector<Node>& inst,
                   std::map<Node, Node>& failWasCd);
+  /**
+   * Node n matching pat is waiting on a being equal to b.
+   */
+  void addWatch(TNode n, TNode pat, TNode a, TNode b);
 };
 
 }  // namespace quantifiers

@@ -136,6 +136,8 @@ void QuantifiersEngine::finishInit(TheoryEngine* te)
                            == options::EagerInstTermMode::EQC_MERGE);
     d_eagerInstAssert = (options().quantifiers.eagerInstTermMode
                          == options::EagerInstTermMode::ASSERTION);
+    d_eagerTrackMerge = (options().quantifiers.eagerInstWatchMode
+                         != options::EagerInstWatchMode::NONE);
   }
   // handle any circular dependencies
 
@@ -678,6 +680,11 @@ void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
       TNode t = i == 0 ? t1 : t2;
       notifyAssertedTermRec(t);
     }
+  }
+  if (d_eagerTrackMerge)
+  {
+    Assert (d_qmodules->d_ei!=nullptr);
+    d_qmodules->d_ei->eqNotifyMerge(t1, t2);
   }
 }
 

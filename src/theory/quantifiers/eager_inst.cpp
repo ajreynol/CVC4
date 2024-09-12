@@ -37,7 +37,9 @@ EagerInst::EagerInst(Env& env,
       d_ownedQuants(context()),
       d_ppQuants(userContext()),
       d_fullInstTerms(userContext()),
-      d_cdOps(context())
+      d_cdOps(context()),
+      d_repWatch(context()),
+      d_userPat(context())
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
@@ -115,7 +117,8 @@ void EagerInst::registerQuant(const Node& q)
         // TODO: statically analyze if this would lead to matching loops
         Trace("eager-inst-register") << "Single pat: " << spat << std::endl;
         Node op = spat.getOperator();
-        d_userPat[op].push_back(std::pair<Node, Node>(q, spat));
+        EagerOpInfo* eoi = getOrMkOpInfo(op, true);
+        eoi->d_pats.push_back(spat);
         if (!isPp)
         {
           d_cdOps.insert(op);
@@ -184,43 +187,37 @@ void EagerInst::notifyAssertedTerm(TNode t)
       << "#" << d_termNotifyCount[t] << " for " << t << std::endl;
   // NOTE: in some cases a macro definition for this term may come after it is
   // registered, we don't bother handling this.
-  std::map<Node, std::vector<std::pair<Node, Node>>>::iterator it =
-      d_userPat.find(op);
-  if (it != d_userPat.end())
+  EagerOpInfo* eoi = getOrMkOpInfo(op, false);
+  if (eoi==nullptr)
   {
-    Trace("eager-inst-debug")
-        << "Asserted term " << t << " has user patterns" << std::endl;
-    bool addedInst = false;
-    std::vector<std::pair<Node, Node>> pkeys;
-    bool fullProc = true;
-    for (const std::pair<Node, Node>& p : it->second)
+    d_fullInstTerms.insert(t);
+    return;
+  }
+  Trace("eager-inst-debug")
+      << "Asserted term " << t << " has user patterns" << std::endl;
+  bool addedInst = false;
+  std::vector<std::pair<Node, Node>> pkeys;
+  bool fullProc = true;
+  context::CDList<Node>& pats = eoi->d_pats;
+  for (const Node& pat : pats)
+  {
+    std::pair<Node, Node> key(t, pat);
+    if (d_instTerms.find(key) != d_instTerms.end())
     {
-      const Node& q = p.first;
-      std::pair<Node, Node> key(t, p.second);
-      if (d_instTerms.find(key) != d_instTerms.end())
+      continue;
+    }
+    Node q = TermUtil::getInstConstAttr(pat);
+    std::vector<Node> inst;
+    inst.resize(q[0].getNumChildren());
+    std::map<Node, Node> failWasCd;
+    if (doMatching(pat, t, inst, failWasCd))
+    {
+      Instantiate* ie = d_qim.getInstantiate();
+      if (ie->addInstantiation(
+              q, inst, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
       {
-        continue;
-      }
-      std::vector<Node> inst;
-      inst.resize(q[0].getNumChildren());
-      std::map<Node, Node> failWasCd;
-      if (doMatching(q, p.second, t, inst, failWasCd))
-      {
-        Instantiate* ie = d_qim.getInstantiate();
-        if (ie->addInstantiation(
-                q, inst, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
-        {
-          addedInst = true;
-          d_tmpAddedLemmas++;
-          pkeys.emplace_back(key);
-        }
-        else
-        {
-          fullProc = false;
-        }
-      }
-      else if (failWasCd.empty())
-      {
+        addedInst = true;
+        d_tmpAddedLemmas++;
         pkeys.emplace_back(key);
       }
       else
@@ -228,30 +225,33 @@ void EagerInst::notifyAssertedTerm(TNode t)
         fullProc = false;
       }
     }
-    if (addedInst)
+    else if (failWasCd.empty())
     {
-      d_qim.doPending();
-    }
-    if (fullProc)
-    {
-      d_fullInstTerms.insert(t);
+      pkeys.emplace_back(key);
     }
     else
     {
-      for (std::pair<Node, Node>& k : pkeys)
-      {
-        d_instTerms.insert(k);
-      }
+      fullProc = false;
     }
   }
-  else
+  if (addedInst)
+  {
+    d_qim.doPending();
+  }
+  if (fullProc)
   {
     d_fullInstTerms.insert(t);
   }
+  else
+  {
+    for (std::pair<Node, Node>& k : pkeys)
+    {
+      d_instTerms.insert(k);
+    }
+  }
 }
 
-bool EagerInst::doMatching(const Node& q,
-                           const Node& pat,
+bool EagerInst::doMatching(const Node& pat,
                            const Node& t,
                            std::vector<Node>& inst,
                            std::map<Node, Node>& failWasCd)
@@ -279,7 +279,7 @@ bool EagerInst::doMatching(const Node& q,
         Node mop2 = tdb->getMatchOperator(t[i]);
         if (!mop1.isNull() && mop1 == mop2)
         {
-          if (doMatching(q, pat[i], t[i], inst, failWasCd))
+          if (doMatching(pat[i], t[i], inst, failWasCd))
           {
             continue;
           }
@@ -297,6 +297,83 @@ bool EagerInst::doMatching(const Node& q,
     }
   }
   return true;
+}
+
+EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
+{
+  context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>>::iterator it = d_userPat.find(op);
+  if (it!=d_userPat.end())
+  {
+    return it->second.get();
+  }
+  else if (!doMk)
+  {
+    return nullptr;
+  }
+  std::shared_ptr<EagerOpInfo> eoi = std::make_shared<EagerOpInfo>(context());
+  d_userPat.insert(op, eoi);
+  return eoi.get();
+}
+
+EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
+{
+  context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>>::iterator it = d_repWatch.find(r);
+  if (it!=d_repWatch.end())
+  {
+    return it->second.get();
+  }
+  else if (!doMk)
+  {
+    return nullptr;
+  }
+  std::shared_ptr<EagerWatchInfo> ewi = std::make_shared<EagerWatchInfo>(context());
+  d_repWatch.insert(r, ewi);
+  return ewi.get();
+}
+
+void EagerInst::addWatch(TNode n, TNode pat, TNode a, TNode b)
+{
+  
+}
+
+void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
+{
+  EagerWatchInfo* ewi[2];
+  for (size_t i=0; i<2; i++)
+  {
+    ewi[i] = getOrMkWatchInfo(t1, false);
+    if (ewi[i]==nullptr)
+    {
+      continue;
+    }
+    context::CDList<Node>& l = ewi[i]->d_list;
+    context::CDHashMap<Node, std::pair<Node, Node>>& m = ewi[i]->d_eqWatch;
+    for (const Node& t : l)
+    {
+      Assert (m.find(t)!=m.end());
+      const std::pair<Node, Node>& p = m[t];
+      const Node& r = p.second;
+      // if equal, try matching again
+      if (d_qstate.areEqual(r, t2))
+      {
+        
+      }
+      // if unprocessed, carry over
+      if (i==1)
+      {
+        if (ewi[0]==nullptr)
+        {
+        }
+      }
+    }
+    if (i==0)
+    {
+      // now swap
+      TNode tmp = t1;
+      t1 = t2;
+      t2 = tmp;
+    }
+  }
 }
 
 }  // namespace quantifiers

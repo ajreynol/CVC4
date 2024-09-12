@@ -225,6 +225,7 @@ class QuantifiersEngine : protected EnvObj
   bool d_eagerInstNewEqc;
   bool d_eagerInstEqcMerge;
   bool d_eagerInstAssert;
+  bool d_eagerTrackMerge;
   /** quantifiers pre-registered */
   NodeSet d_assertedTerms;
 };
