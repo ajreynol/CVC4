@@ -188,7 +188,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   // NOTE: in some cases a macro definition for this term may come after it is
   // registered, we don't bother handling this.
   EagerOpInfo* eoi = getOrMkOpInfo(op, false);
-  if (eoi==nullptr)
+  if (eoi == nullptr)
   {
     d_fullInstTerms.insert(t);
     return;
@@ -301,8 +301,9 @@ bool EagerInst::doMatching(const Node& pat,
 
 EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
 {
-  context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>>::iterator it = d_userPat.find(op);
-  if (it!=d_userPat.end())
+  context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>>::iterator it =
+      d_userPat.find(op);
+  if (it != d_userPat.end())
   {
     return it->second.get();
   }
@@ -317,8 +318,9 @@ EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
 
 EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
 {
-  context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>>::iterator it = d_repWatch.find(r);
-  if (it!=d_repWatch.end())
+  context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>>::iterator it =
+      d_repWatch.find(r);
+  if (it != d_repWatch.end())
   {
     return it->second.get();
   }
@@ -326,23 +328,21 @@ EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
   {
     return nullptr;
   }
-  std::shared_ptr<EagerWatchInfo> ewi = std::make_shared<EagerWatchInfo>(context());
+  std::shared_ptr<EagerWatchInfo> ewi =
+      std::make_shared<EagerWatchInfo>(context());
   d_repWatch.insert(r, ewi);
   return ewi.get();
 }
 
-void EagerInst::addWatch(TNode n, TNode pat, TNode a, TNode b)
-{
-  
-}
+void EagerInst::addWatch(TNode n, TNode pat, TNode a, TNode b) {}
 
 void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
 {
   EagerWatchInfo* ewi[2];
-  for (size_t i=0; i<2; i++)
+  for (size_t i = 0; i < 2; i++)
   {
     ewi[i] = getOrMkWatchInfo(t1, false);
-    if (ewi[i]==nullptr)
+    if (ewi[i] == nullptr)
     {
       continue;
     }
@@ -350,23 +350,22 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     context::CDHashMap<Node, std::pair<Node, Node>>& m = ewi[i]->d_eqWatch;
     for (const Node& t : l)
     {
-      Assert (m.find(t)!=m.end());
+      Assert(m.find(t) != m.end());
       const std::pair<Node, Node>& p = m[t];
       const Node& r = p.second;
       // if equal, try matching again
       if (d_qstate.areEqual(r, t2))
       {
-        
       }
       // if unprocessed, carry over
-      if (i==1)
+      if (i == 1)
       {
-        if (ewi[0]==nullptr)
+        if (ewi[0] == nullptr)
         {
         }
       }
     }
-    if (i==0)
+    if (i == 0)
     {
       // now swap
       TNode tmp = t1;

@@ -29,33 +29,33 @@ namespace quantifiers {
 class EagerWatchInfo
 {
   using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
+
  public:
-    EagerWatchInfo(context::Context* c) : d_list(c), d_eqWatch(c) {}
-    /** The list of terms that care about this representative */
-    context::CDList<Node> d_list;
-    /**
-     * Mapping from terms in the above list to the term we are waiting the equivalence class to become equal to.
-     */
-    NodePairMap d_eqWatch;
+  EagerWatchInfo(context::Context* c) : d_list(c), d_eqWatch(c) {}
+  /** The list of terms that care about this representative */
+  context::CDList<Node> d_list;
+  /**
+   * Mapping from terms in the above list to the term we are waiting the
+   * equivalence class to become equal to.
+   */
+  NodePairMap d_eqWatch;
 };
 
 class EagerOpInfo
 {
  public:
-    EagerOpInfo(context::Context* c) : d_pats(c) {}
-    
-    /** The list of terms that care about this representative */
-    context::CDList<Node> d_pats;
-};
+  EagerOpInfo(context::Context* c) : d_pats(c) {}
 
+  /** The list of terms that care about this representative */
+  context::CDList<Node> d_pats;
+};
 
 /**
  */
 class EagerInst : public QuantifiersModule
 {
   using NodePairMap = context::CDHashMap<Node, std::pair<Node, Node>>;
-  using NodeListMap =
-      context::CDHashMap<Node, std::vector<Node>>;
+  using NodeListMap = context::CDHashMap<Node, std::vector<Node>>;
   using NodeSet = context::CDHashSet<Node>;
   using NodePairHashFunction =
       PairHashFunction<Node, Node, std::hash<Node>, std::hash<Node>>;
@@ -95,7 +95,8 @@ class EagerInst : public QuantifiersModule
   /* For collecting global terms from all available assertions. */
   void ppNotifyAssertions(const std::vector<Node>& assertions) override;
 
-void eqNotifyMerge(TNode t1, TNode t2);
+  void eqNotifyMerge(TNode t1, TNode t2);
+
  private:
   void registerQuant(const Node& q);
   Node solveMacro(Node& q, Node& pat);

@@ -683,7 +683,7 @@ void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
   }
   if (d_eagerTrackMerge)
   {
-    Assert (d_qmodules->d_ei!=nullptr);
+    Assert(d_qmodules->d_ei != nullptr);
     d_qmodules->d_ei->eqNotifyMerge(t1, t2);
   }
 }
