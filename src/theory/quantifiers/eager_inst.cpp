@@ -194,7 +194,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
       }
       std::vector<Node> inst;
       inst.resize(q[0].getNumChildren());
-      bool failWasCd = false;
+      std::map<Node, Node> failWasCd;
       if (doMatching(q, p.second, t, inst, failWasCd))
       {
         Instantiate* ie = d_qim.getInstantiate();
@@ -210,7 +210,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
           fullProc = false;
         }
       }
-      else if (!failWasCd)
+      else if (!failWasCd.empty())
       {
         pkeys.emplace_back(key);
       }
@@ -245,7 +245,7 @@ bool EagerInst::doMatching(const Node& q,
                            const Node& pat,
                            const Node& t,
                            std::vector<Node>& inst,
-                  bool& failWasCd)
+                  std::map<Node, Node>& failWasCd)
 {
   Trace("eager-inst-debug") << "Do matching " << t << " " << pat << std::endl;
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
@@ -256,7 +256,7 @@ bool EagerInst::doMatching(const Node& q,
       Assert(vnum < inst.size());
       if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], t[i]))
       {
-        failWasCd = true;
+        failWasCd[inst[vnum]] = t[i];
         return false;
       }
       inst[vnum] = t[i];
@@ -283,7 +283,7 @@ bool EagerInst::doMatching(const Node& q,
     {
       Trace("eager-inst-debug")
           << "...inequal " << pat[i] << " " << t[i] << std::endl;
-      failWasCd = true;
+        failWasCd[pat[i]] = t[i];
       return false;
     }
   }

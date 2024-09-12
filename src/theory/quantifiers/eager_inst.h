@@ -88,7 +88,7 @@ class EagerInst : public QuantifiersModule
                   const Node& pat,
                   const Node& n,
                   std::vector<Node>& inst,
-                  bool& failWasCd);
+                  std::map<Node, Node>& failWasCd);
 };
 
 }  // namespace quantifiers
