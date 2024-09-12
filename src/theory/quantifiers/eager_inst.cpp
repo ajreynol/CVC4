@@ -444,8 +444,13 @@ void EagerInst::doMatchingTrie(const EagerTrie* et,
       ets.pop_back();
       doMatchingTrie(et, p.first, p.second, inst, ets);
     }
-    else if (!et->d_pats.empty())
+    else
     {
+      std::vector<Node>& pats = et->d_pats;
+      for (const Node& pat : pats)
+      {
+        
+      }
     }
     return;
   }
