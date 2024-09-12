@@ -238,9 +238,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
 }
 
-bool EagerInst::doMatching(const Node& pat,
-                const Node& t,
-                bool& failWasCdi)
+bool EagerInst::doMatching(const Node& pat, const Node& t, bool& failWasCdi)
 {
   Node q = TermUtil::getInstConstAttr(pat);
   std::vector<Node> inst;
@@ -259,7 +257,7 @@ bool EagerInst::doMatching(const Node& pat,
     else
     {
       // The failure will always be in this SAT context, we do not watch
-      // anything, but we cannot 
+      // anything, but we cannot
       failWasCdi = false;
     }
   }
@@ -272,10 +270,10 @@ bool EagerInst::doMatching(const Node& pat,
 }
 
 bool EagerInst::doMatchingInternal(const Node& pat,
-                           const Node& t,
-                           std::vector<Node>& inst,
-  std::vector<std::pair<Node, Node>>& failExp,
-                bool& failWasCdi)
+                                   const Node& t,
+                                   std::vector<Node>& inst,
+                                   std::vector<std::pair<Node, Node>>& failExp,
+                                   bool& failWasCdi)
 {
   Trace("eager-inst-debug") << "Do matching " << t << " " << pat << std::endl;
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
@@ -308,7 +306,8 @@ bool EagerInst::doMatchingInternal(const Node& pat,
       }
       else
       {
-        // note we only do simple matching, meaning (f a) fails context-independently against (f (g x)).
+        // note we only do simple matching, meaning (f a) fails
+        // context-independently against (f (g x)).
         failWasCdi = true;
       }
       Trace("eager-inst-debug") << "...non-simple " << pat[i] << std::endl;

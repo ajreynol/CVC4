@@ -113,15 +113,12 @@ class EagerInst : public QuantifiersModule
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
   // FIXME: context dependent
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_userPat;
-  bool doMatching(const Node& pat,
-                  const Node& t,
-                  bool& failWasCd);
+  bool doMatching(const Node& pat, const Node& t, bool& failWasCd);
   bool doMatchingInternal(const Node& pat,
-                  const Node& n,
-                  std::vector<Node>& inst,
-                  std::vector<std::pair<Node, Node>>& failExp,
-                  bool& failWasCd
-                          );
+                          const Node& n,
+                          std::vector<Node>& inst,
+                          std::vector<std::pair<Node, Node>>& failExp,
+                          bool& failWasCd);
   /**
    * Node n matching pat is waiting on a being equal to b.
    */
