@@ -173,7 +173,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   Node op = t.getOperator();
   if (d_fullInstTerms.find(t) != d_fullInstTerms.end())
   {
-    if (d_cdOps.find(op)==d_cdOps.end())
+    if (d_cdOps.find(op) == d_cdOps.end())
     {
       return;
     }

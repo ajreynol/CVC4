@@ -29,9 +29,10 @@ namespace quantifiers {
 class EagerWatchInfo
 {
   using NodeMap = context::CDHashMap<Node, Node>;
-public:
+
+ public:
 };
-    
+
 /**
  */
 class EagerInst : public QuantifiersModule
