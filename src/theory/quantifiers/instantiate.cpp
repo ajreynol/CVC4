@@ -195,7 +195,8 @@ bool Instantiate::addInstantiationInternal(
     // this assertion is critical to soundness
     if (bad_inst)
     {
-      Trace("inst") << "***& Bad Instantiate [" << id << "] " << q << " with " << std::endl;
+      Trace("inst") << "***& Bad Instantiate [" << id << "] " << q << " with "
+                    << std::endl;
       for (unsigned j = 0; j < terms.size(); j++)
       {
         Trace("inst") << "   " << terms[j] << std::endl;
@@ -366,7 +367,8 @@ bool Instantiate::addInstantiationInternal(
   d_instDebugTemp[q]++;
   if (TraceIsOn("inst"))
   {
-    Trace("inst") << "*** Instantiate [" << id << "] " << q << " with " << std::endl;
+    Trace("inst") << "*** Instantiate [" << id << "] " << q << " with "
+                  << std::endl;
     for (size_t i = 0, size = terms.size(); i < size; i++)
     {
       Trace("inst") << "   " << terms[i];

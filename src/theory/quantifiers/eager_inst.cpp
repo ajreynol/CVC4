@@ -164,7 +164,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
-  if (d_fullInstTerms.find(t)!=d_fullInstTerms.end())
+  if (d_fullInstTerms.find(t) != d_fullInstTerms.end())
   {
     return;
   }
@@ -245,7 +245,7 @@ bool EagerInst::doMatching(const Node& q,
                            const Node& pat,
                            const Node& t,
                            std::vector<Node>& inst,
-                  std::map<Node, Node>& failWasCd)
+                           std::map<Node, Node>& failWasCd)
 {
   Trace("eager-inst-debug") << "Do matching " << t << " " << pat << std::endl;
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
@@ -283,7 +283,7 @@ bool EagerInst::doMatching(const Node& q,
     {
       Trace("eager-inst-debug")
           << "...inequal " << pat[i] << " " << t[i] << std::endl;
-        failWasCd[pat[i]] = t[i];
+      failWasCd[pat[i]] = t[i];
       return false;
     }
   }
