@@ -23,7 +23,7 @@
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/term_util.h"
 
-//#define USE_TRIE
+// #define USE_TRIE
 
 namespace cvc5::internal {
 namespace theory {
@@ -57,12 +57,15 @@ bool EagerTrie::add(TermDb* tdb, const Node& n)
   return add(tdb, n, n, 0, ets);
 }
 
-bool EagerTrie::add(TermDb* tdb, const Node& pat, const Node& n, size_t i, 
-  std::vector<std::pair<Node, size_t>>& ets)
+bool EagerTrie::add(TermDb* tdb,
+                    const Node& pat,
+                    const Node& n,
+                    size_t i,
+                    std::vector<std::pair<Node, size_t>>& ets)
 {
   EagerTrie* et = this;
   bool ret;
-  if (i==n.getNumChildren())
+  if (i == n.getNumChildren())
   {
     if (!ets.empty())
     {
@@ -79,14 +82,14 @@ bool EagerTrie::add(TermDb* tdb, const Node& pat, const Node& n, size_t i,
   else
   {
     const Node& nc = n[i];
-    if (nc.getKind()==Kind::INST_CONSTANT)
+    if (nc.getKind() == Kind::INST_CONSTANT)
     {
       uint64_t vnum = TermUtil::getInstVarNum(nc);
-      ret = et->d_varChildren[vnum].add(tdb, pat, n, i+1, ets);
+      ret = et->d_varChildren[vnum].add(tdb, pat, n, i + 1, ets);
     }
     else if (!TermUtil::hasInstConstAttr(nc))
     {
-      ret = et->d_groundChildren[nc].add(tdb, pat, n, i+1, ets);
+      ret = et->d_groundChildren[nc].add(tdb, pat, n, i + 1, ets);
     }
     else
     {
@@ -95,13 +98,13 @@ bool EagerTrie::add(TermDb* tdb, const Node& pat, const Node& n, size_t i,
       {
         return false;
       }
-      ets.emplace_back(n, i+1);
+      ets.emplace_back(n, i + 1);
       ret = et->d_ngroundChildren[op].add(tdb, pat, nc, 0, ets);
     }
   }
   return ret;
 }
-  
+
 EagerInst::EagerInst(Env& env,
                      QuantifiersState& qs,
                      QuantifiersInferenceManager& qim,
@@ -115,12 +118,10 @@ EagerInst::EagerInst(Env& env,
       d_cdOps(context()),
       d_repWatch(context()),
       d_userPat(context()),
-      d_statUserPats(
-          statisticsRegistry().registerInt("EagerInst::userPats")),
+      d_statUserPats(statisticsRegistry().registerInt("EagerInst::userPats")),
       d_statUserPatsCd(
           statisticsRegistry().registerInt("EagerInst::userPatsCd")),
-      d_statMatchCall(
-          statisticsRegistry().registerInt("EagerInst::matchCall"))
+      d_statMatchCall(statisticsRegistry().registerInt("EagerInst::matchCall"))
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
@@ -427,58 +428,59 @@ bool EagerInst::doMatchingInternal(const Node& pat,
   return true;
 }
 
-void EagerInst::doMatchingTrie(const EagerTrie* et, const Node& t, size_t i,
-                          std::vector<Node>& inst,  
-                      std::vector<std::pair<Node, size_t>>& ets)
+void EagerInst::doMatchingTrie(const EagerTrie* et,
+                               const Node& t,
+                               size_t i,
+                               std::vector<Node>& inst,
+                               std::vector<std::pair<Node, size_t>>& ets)
 {
-  if (i==t.getNumChildren())
+  if (i == t.getNumChildren())
   {
     // continue matching
     if (!ets.empty())
     {
-      Assert (et->d_pats.empty());
+      Assert(et->d_pats.empty());
       std::pair<Node, size_t> p = ets.back();
       ets.pop_back();
       doMatchingTrie(et, p.first, p.second, inst, ets);
     }
     else if (!et->d_pats.empty())
     {
-      
     }
     return;
   }
-  Assert (et->d_pats.empty());
+  Assert(et->d_pats.empty());
   for (const std::pair<const uint64_t, EagerTrie>& c : et->d_varChildren)
   {
     uint64_t vnum = c.first;
-    if (vnum<inst.size() && !inst[vnum].isNull() && 
-        !d_qstate.areEqual(inst[vnum], t[i]))
+    if (vnum < inst.size() && !inst[vnum].isNull()
+        && !d_qstate.areEqual(inst[vnum], t[i]))
     {
       continue;
     }
-    if (vnum>=inst.size())
+    if (vnum >= inst.size())
     {
-      inst.resize(vnum+1);
+      inst.resize(vnum + 1);
     }
     Node prev = inst[vnum];
     inst[vnum] = t[i];
-    doMatchingTrie(&c.second, t, i+1, inst, ets);
+    doMatchingTrie(&c.second, t, i + 1, inst, ets);
     inst[vnum] = prev;
   }
-  for (const std::pair<const Node, EagerTrie>& c : et-> d_groundChildren)
+  for (const std::pair<const Node, EagerTrie>& c : et->d_groundChildren)
   {
     if (!d_qstate.areEqual(t[i], c.first))
     {
       continue;
     }
-    doMatchingTrie(&c.second, t, i+1, inst, ets);
+    doMatchingTrie(&c.second, t, i + 1, inst, ets);
   }
   TermDb* tdb = d_treg.getTermDatabase();
   Node op = tdb->getMatchOperator(t[i]);
   std::map<Node, EagerTrie>::const_iterator it = et->d_ngroundChildren.find(op);
-  if (it!=et->d_ngroundChildren.end())
+  if (it != et->d_ngroundChildren.end())
   {
-    ets.emplace_back(t, i+1);
+    ets.emplace_back(t, i + 1);
     doMatchingTrie(&it->second, t[i], 0, inst, ets);
   }
 }

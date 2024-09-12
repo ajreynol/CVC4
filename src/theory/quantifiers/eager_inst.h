@@ -52,14 +52,19 @@ class EagerWatchInfo
 
 class EagerTrie
 {
-public:
+ public:
   std::map<uint64_t, EagerTrie> d_varChildren;
   std::map<Node, EagerTrie> d_groundChildren;
   std::map<Node, EagerTrie> d_ngroundChildren;
   std::vector<Node> d_pats;
   bool add(TermDb* tdb, const Node& n);
-private:
-  bool add(TermDb* tdb, const Node& pat, const Node& n, size_t i, std::vector<std::pair<Node, size_t>>& ets);
+
+ private:
+  bool add(TermDb* tdb,
+           const Node& pat,
+           const Node& n,
+           size_t i,
+           std::vector<std::pair<Node, size_t>>& ets);
 };
 
 class EagerOpInfo
@@ -70,7 +75,6 @@ class EagerOpInfo
   context::CDList<Node> d_pats;
   EagerTrie d_trie;
 };
-
 
 /**
  */
