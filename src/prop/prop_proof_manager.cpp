@@ -67,7 +67,9 @@ PropPfManager::PropPfManager(Env& env,
       d_trackLemmaClauseIds(false),
       d_lemmaClauseIds(userContext()),
       d_currLemmaId(theory::InferenceId::NONE),
-      d_satPm(nullptr)
+      d_satPm(nullptr),
+      d_uclIds(statisticsRegistry().registerHistogram<theory::InferenceId>(
+          "ppm::unsatCoreLemmaIds"))
 {
   // add trivial assumption. This is so that we can check the that the prop
   // engine's proof is closed, as the SAT solver's refutation proof may use True
@@ -141,6 +143,13 @@ std::vector<Node> PropPfManager::getUnsatCoreLemmas()
     if (std::find(ucc.begin(), ucc.end(), lemma) != ucc.end())
     {
       usedLemmas.push_back(lemma);
+    }
+  }
+  if (d_trackLemmaClauseIds)
+  {
+    for (const Node& lemma : usedLemmas)
+    {
+      d_uclIds << getInferenceIdFor(lemma);
     }
   }
   return usedLemmas;

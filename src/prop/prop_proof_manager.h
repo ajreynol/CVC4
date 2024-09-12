@@ -288,6 +288,11 @@ class PropPfManager : protected EnvObj
   Node d_currPropagationProcessed;
   /** Temporary, pointer to SAT proof manager */
   SatProofManager* d_satPm;
+  /**
+   * Counts number of inference ids in requested unsat core lemmas. Note this is
+   * tracked only if -o unsat-core-lemmas is on.
+   */
+  HistogramStat<theory::InferenceId> d_uclIds;
 }; /* class PropPfManager */
 
 }  // namespace prop
