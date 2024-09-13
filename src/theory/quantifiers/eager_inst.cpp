@@ -135,28 +135,28 @@ void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
     {
       toProcess.emplace_back(n);
     }
-    else if (k==Kind::AND)
+    else if (k == Kind::AND)
     {
       toProcess.insert(toProcess.end(), n.begin(), n.end());
     }
   }
-  size_t i=0;
-  while (i<toProcess.size())
+  size_t i = 0;
+  while (i < toProcess.size())
   {
     const Node& a = toProcess[i];
     i++;
-    if (processed.find(a)!=processed.end())
+    if (processed.find(a) != processed.end())
     {
       continue;
     }
     processed.insert(a);
     Kind k = a.getKind();
-    if (k==Kind::FORALL)
+    if (k == Kind::FORALL)
     {
       d_ppQuants.insert(a);
       registerQuant(a);
     }
-    else if (k==Kind::AND)
+    else if (k == Kind::AND)
     {
       toProcess.insert(toProcess.end(), a.begin(), a.end());
     }

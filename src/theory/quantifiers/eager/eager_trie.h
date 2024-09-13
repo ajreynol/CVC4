@@ -23,8 +23,8 @@
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
-    
-    class TermDb;
+
+class TermDb;
 
 class EagerTrie
 {
