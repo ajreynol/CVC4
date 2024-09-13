@@ -15,11 +15,11 @@
 
 #include "theory/quantifiers/ematching/inst_strategy_e_matching_user.h"
 
+#include "expr/node_algorithm.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/ematching/trigger_database.h"
-#include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/quantifiers_registry.h"
-#include "expr/node_algorithm.h"
+#include "theory/quantifiers/quantifiers_state.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory::quantifiers::inst;
@@ -146,7 +146,7 @@ void InstStrategyUserPatterns::addUserPattern(Node q, Node pat)
   }
   // in rare cases, a user-provided multi-trigger might be decomposable into
   // single trigger(s)
-  if (nodes.size()>1)
+  if (nodes.size() > 1)
   {
     Node singleTrigger;
     const std::vector<Node>& ics = d_qreg.getInstantiationConstants(q);
@@ -154,12 +154,12 @@ void InstStrategyUserPatterns::addUserPattern(Node q, Node pat)
     {
       std::unordered_set<Node> vars;
       expr::getKindSubterms(p, Kind::INST_CONSTANT, false, vars);
-      if (vars.size()>=ics.size())
+      if (vars.size() >= ics.size())
       {
         bool isSingleTrigger = true;
         for (const Node& ic : ics)
         {
-          if (vars.find(ic)==vars.end())
+          if (vars.find(ic) == vars.end())
           {
             isSingleTrigger = false;
             break;
@@ -174,7 +174,10 @@ void InstStrategyUserPatterns::addUserPattern(Node q, Node pat)
     }
     // if there was at least one single trigger, it subsumes the multi-trigger
     // TODO: the remaining terms will be requirements for matching.
-    Trace("user-pat-single-infer") << "User multi-trigger, is single = " << !singleTrigger.isNull() << std::endl;;
+    Trace("user-pat-single-infer")
+        << "User multi-trigger, is single = " << !singleTrigger.isNull()
+        << std::endl;
+    ;
   }
   Trace("user-pat") << "Add user pattern: " << pat << " for " << q << std::endl;
   // check match option

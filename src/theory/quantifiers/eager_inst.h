@@ -30,9 +30,9 @@ class EagerWatchList
 {
  public:
   EagerWatchList(context::Context* c) : d_valid(c, true), d_matchJobs(c) {}
-  void add(const Node& pat, const Node& t);
+  void add(const EagerTrie* et, const Node& t);
   context::CDO<bool> d_valid;
-  context::CDList<std::pair<Node, Node>> d_matchJobs;
+  context::CDList<std::pair<const EagerTrie*, Node>> d_matchJobs;
 };
 
 class EagerWatchInfo
@@ -124,6 +124,7 @@ class EagerInst : public QuantifiersModule
   size_t d_tmpAddedLemmas;
   bool d_instOutput;
   NodeSet d_ppQuants;
+  NodeSet d_rlvTerms;
   std::map<Node, size_t> d_termNotifyCount;
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
@@ -133,8 +134,12 @@ class EagerInst : public QuantifiersModule
   IntStat d_statUserPats;
   /** Number of cd patterns */
   IntStat d_statUserPatsCd;
+  /** Multi filter */
+  IntStat d_statUserPatsMultiFilter;
   /** Number of calls to match */
   IntStat d_statMatchCall;
+  /** */
+  std::pair<Node, Node> d_nullPair;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
   void doMatchingTrieInternal(const EagerTrie* pat,
@@ -143,16 +148,18 @@ class EagerInst : public QuantifiersModule
                               size_t i,
                               std::vector<Node>& inst,
                               std::vector<std::pair<Node, size_t>>& ets,
-                              std::vector<std::pair<Node, Node>>& failExp);
-  void addToFailExp(std::vector<std::pair<Node, Node>>& failExp,
+                              std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+  void addToFailExp(const EagerTrie* et,
+                    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp,
                     const Node& a,
                     const Node& b);
   /**
    * Node n matching pat is waiting on a being equal to b.
    */
-  void addWatch(const Node& pat,
+  void addWatch(const EagerTrie* pat,
                 const Node& t,
-                const std::vector<std::pair<Node, Node>>& failExp);
+                         const Node&  a,
+                         const Node&  b);
 };
 
 }  // namespace quantifiers
