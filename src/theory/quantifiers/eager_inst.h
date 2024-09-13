@@ -59,14 +59,16 @@ class EagerTrie
   std::map<Node, EagerTrie> d_ngroundChildren;
   std::vector<Node> d_pats;
   bool add(TermDb* tdb, const Node& n);
-
+  bool erase(TermDb* tdb, const Node& n);
+  bool empty() const;
  private:
-  bool add(TermDb* tdb,
+  bool addInternal(TermDb* tdb,
            const Node& pat,
            const Node& n,
            size_t i,
            std::vector<std::pair<Node, size_t>>& ets,
-           std::vector<uint64_t>& alreadyBound);
+           std::vector<uint64_t>& alreadyBound,
+           bool isErase);
 };
 
 class EagerOpInfo
@@ -154,6 +156,7 @@ class EagerInst : public QuantifiersModule
                           std::vector<std::pair<Node, Node>>& failExp,
                           bool& failWasCd);
   void doMatchingTrieInternal(const EagerTrie* pat,
+                              const Node& n,
                               const Node& t,
                               size_t i,
                               std::vector<Node>& inst,

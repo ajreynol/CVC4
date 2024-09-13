@@ -23,7 +23,7 @@
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/term_util.h"
 
-// #define USE_TRIE
+#define USE_TRIE
 
 namespace cvc5::internal {
 namespace theory {
@@ -55,15 +55,23 @@ bool EagerTrie::add(TermDb* tdb, const Node& n)
 {
   std::vector<std::pair<Node, size_t>> ets;
   std::vector<uint64_t> alreadyBound;
-  return add(tdb, n, n, 0, ets, alreadyBound);
+  return addInternal(tdb, n, n, 0, ets, alreadyBound, false);
 }
 
-bool EagerTrie::add(TermDb* tdb,
+bool EagerTrie::erase(TermDb* tdb, const Node& n)
+{
+  std::vector<std::pair<Node, size_t>> ets;
+  std::vector<uint64_t> alreadyBound;
+  return addInternal(tdb, n, n, 0, ets, alreadyBound, true);
+}
+
+bool EagerTrie::addInternal(TermDb* tdb,
                     const Node& pat,
                     const Node& n,
                     size_t i,
                     std::vector<std::pair<Node, size_t>>& ets,
-                    std::vector<uint64_t>& alreadyBound)
+                    std::vector<uint64_t>& alreadyBound,
+                            bool isErase)
 {
   EagerTrie* et = this;
   bool ret;
@@ -73,11 +81,19 @@ bool EagerTrie::add(TermDb* tdb,
     {
       std::pair<Node, size_t> p = ets.back();
       ets.pop_back();
-      ret = add(tdb, pat, p.first, p.second, ets, alreadyBound);
+      ret = addInternal(tdb, pat, p.first, p.second, ets, alreadyBound, isErase);
     }
     else
     {
-      d_pats.push_back(pat);
+      if (isErase)
+      {
+        Assert (d_pats.back()==pat);
+        d_pats.pop_back();
+      }
+      else
+      {
+        d_pats.push_back(pat);
+      }
       ret = true;
     }
   }
@@ -93,12 +109,43 @@ bool EagerTrie::add(TermDb* tdb,
         // TODO
       }
       alreadyBound.push_back(vnum);
-      ret = et->d_varChildren[vnum].add(tdb, pat, n, i + 1, ets, alreadyBound);
-      alreadyBound.pop_back();
+      if (isErase)
+      {
+        std::map<uint64_t, EagerTrie>::iterator it = d_varChildren.find(vnum);
+        if (it==d_varChildren.end())
+        {
+          return false;
+        }
+        ret = it->second.addInternal(tdb, pat, n, i + 1, ets, alreadyBound, isErase);
+        if (it->second.empty())
+        {
+          d_varChildren.erase(it);
+        }
+      }
+      else
+      {
+        ret = et->d_varChildren[vnum].addInternal(tdb, pat, n, i + 1, ets, alreadyBound, isErase);
+      }
     }
     else if (!TermUtil::hasInstConstAttr(nc))
     {
-      ret = et->d_groundChildren[nc].add(tdb, pat, n, i + 1, ets, alreadyBound);
+      if (isErase)
+      {
+        std::map<Node, EagerTrie>::iterator it = d_groundChildren.find(nc);
+        if (it==d_groundChildren.end())
+        {
+          return false;
+        }
+        ret = it->second.addInternal(tdb, pat, n, i + 1, ets, alreadyBound, isErase);
+        if (it->second.empty())
+        {
+          d_groundChildren.erase(it);
+        }
+      }
+      else
+      {
+        ret = et->d_groundChildren[nc].addInternal(tdb, pat, n, i + 1, ets, alreadyBound, isErase);
+      }
     }
     else
     {
@@ -108,10 +155,31 @@ bool EagerTrie::add(TermDb* tdb,
         return false;
       }
       ets.emplace_back(n, i + 1);
-      ret = et->d_ngroundChildren[op].add(tdb, pat, nc, 0, ets, alreadyBound);
+      if (isErase)
+      {
+        std::map<Node, EagerTrie>::iterator it = d_ngroundChildren.find(op);
+        if (it==d_ngroundChildren.end())
+        {
+          return false;
+        }
+        ret = it->second.addInternal(tdb, pat, nc, 0, ets, alreadyBound, isErase);
+        if (it->second.empty())
+        {
+          d_ngroundChildren.erase(it);
+        }
+      }
+      else
+      {
+        ret = et->d_ngroundChildren[op].addInternal(tdb, pat, nc, 0, ets, alreadyBound, isErase);
+      }
     }
   }
   return ret;
+}
+
+bool EagerTrie::empty() const
+{
+  return d_varChildren.empty() && d_checkVarChildren.empty() && d_groundChildren.empty() && d_ngroundChildren.empty() && d_pats.empty();
 }
 
 EagerInst::EagerInst(Env& env,
@@ -293,9 +361,21 @@ void EagerInst::notifyAssertedTerm(TNode t)
   Trace("eager-inst-debug")
       << "Asserted term " << t << " with user patterns" << std::endl;
 #ifdef USE_TRIE
+  ++d_statMatchCall;
+  size_t prevLemmas = d_tmpAddedLemmas;
   std::vector<Node> inst;
   std::vector<std::pair<Node, size_t>> ets;
-  doMatchingTrieInternal(&eoi->d_trie, t, 0, inst, ets);
+  std::vector<std::pair<Node, Node>> failExp;
+  doMatchingTrieInternal(&eoi->d_trie, t, t, 0, inst, ets, failExp);
+  if (failExp.empty())
+  {
+    // this term is never matchable again (unless against cd-dependent user ops)
+    d_fullInstTerms.insert(t);
+  }
+  if (d_tmpAddedLemmas>prevLemmas)
+  {
+    d_qim.doPending();
+  }
 #else
   bool addedInst = false;
   std::vector<std::pair<Node, Node>> pkeys;
@@ -445,6 +525,7 @@ bool EagerInst::doMatchingInternal(const Node& pat,
 
 void EagerInst::doMatchingTrieInternal(
     const EagerTrie* et,
+    const Node& n,
     const Node& t,
     size_t i,
     std::vector<Node>& inst,
@@ -459,7 +540,7 @@ void EagerInst::doMatchingTrieInternal(
       Assert(et->d_pats.empty());
       std::pair<Node, size_t> p = ets.back();
       ets.pop_back();
-      doMatchingTrieInternal(et, p.first, p.second, inst, ets, failExp);
+      doMatchingTrieInternal(et, n, p.first, p.second, inst, ets, failExp);
     }
     else
     {
@@ -468,6 +549,11 @@ void EagerInst::doMatchingTrieInternal(
       std::vector<Node> instSub;
       for (const Node& pat : pats)
       {
+        std::pair<Node, Node> key(t, pat);
+        if (d_instTerms.find(key)!=d_instTerms.end())
+        {
+          continue;
+        }
         Node q = TermUtil::getInstConstAttr(pat);
         Assert(!q.isNull());
         // must resize
@@ -477,10 +563,12 @@ void EagerInst::doMatchingTrieInternal(
                 q, instq, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
         {
           d_tmpAddedLemmas++;
+          d_instTerms.insert(key);
         }
         else
         {
-          // ....
+          // dummy mark that the failure was due to entailed pattern
+          failExp.emplace_back(pat, pat);
         }
       }
     }
@@ -502,7 +590,7 @@ void EagerInst::doMatchingTrieInternal(
     }
     Node prev = inst[vnum];
     inst[vnum] = t[i];
-    doMatchingTrieInternal(&c.second, t, i + 1, inst, ets, failExp);
+    doMatchingTrieInternal(&c.second, n, t, i + 1, inst, ets, failExp);
     inst[vnum] = prev;
   }
   for (const std::pair<const Node, EagerTrie>& c : et->d_groundChildren)
@@ -512,7 +600,7 @@ void EagerInst::doMatchingTrieInternal(
       addToFailExp(failExp, c.first, t[i]);
       continue;
     }
-    doMatchingTrieInternal(&c.second, t, i + 1, inst, ets, failExp);
+    doMatchingTrieInternal(&c.second, n, t, i + 1, inst, ets, failExp);
   }
   TermDb* tdb = d_treg.getTermDatabase();
   Node op = tdb->getMatchOperator(t[i]);
@@ -520,7 +608,7 @@ void EagerInst::doMatchingTrieInternal(
   if (it != et->d_ngroundChildren.end())
   {
     ets.emplace_back(t, i + 1);
-    doMatchingTrieInternal(&it->second, t[i], 0, inst, ets, failExp);
+    doMatchingTrieInternal(&it->second, n, t[i], 0, inst, ets, failExp);
   }
 }
 
