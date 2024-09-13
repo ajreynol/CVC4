@@ -154,6 +154,8 @@ class EagerInst : public QuantifiersModule
                     std::map<const EagerTrie*, std::pair<Node, Node>>& failExp,
                     const Node& a,
                     const Node& b);
+  void addWatches(const Node& t,
+                std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
   /**
    * Node n matching pat is waiting on a being equal to b.
    */
