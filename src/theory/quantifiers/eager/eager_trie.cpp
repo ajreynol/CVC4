@@ -26,7 +26,7 @@ bool EagerTrie::add(TermDb* tdb, const Node& n)
 {
   std::vector<std::pair<Node, size_t>> ets;
   std::vector<uint64_t> bound;
-  Node t = n.getKind()==Kind::INST_PATTERN ? n[0] : n;
+  Node t = n.getKind() == Kind::INST_PATTERN ? n[0] : n;
   return addInternal(tdb, n, t, 0, ets, bound, false);
 }
 
@@ -34,7 +34,7 @@ bool EagerTrie::erase(TermDb* tdb, const Node& n)
 {
   std::vector<std::pair<Node, size_t>> ets;
   std::vector<uint64_t> bound;
-  Node t = n.getKind()==Kind::INST_PATTERN ? n[0] : n;
+  Node t = n.getKind() == Kind::INST_PATTERN ? n[0] : n;
   return addInternal(tdb, n, t, 0, ets, bound, true);
 }
 

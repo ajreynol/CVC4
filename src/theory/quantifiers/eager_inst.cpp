@@ -222,7 +222,8 @@ void EagerInst::registerQuant(const Node& q)
       if (spats.empty())
       {
         owner = false;
-        Trace("eager-inst-warn") << "Cannot handle user pattern " << pat << std::endl;
+        Trace("eager-inst-warn")
+            << "Cannot handle user pattern " << pat << std::endl;
       }
       for (const Node& spat : spats)
       {
@@ -381,14 +382,15 @@ void EagerInst::doMatchingTrieInternal(
         // must resize
         std::vector<Node> instq(inst.begin(),
                                 inst.begin() + q[0].getNumChildren());
-        if (pat.getKind()==Kind::INST_PATTERN)
+        if (pat.getKind() == Kind::INST_PATTERN)
         {
           std::vector<Node> ics = d_qreg.getInstantiationConstants(q);
           bool filtered = false;
-          for (size_t j=1, npats=pat.getNumChildren(); j<npats; j++)
+          for (size_t j = 1, npats = pat.getNumChildren(); j < npats; j++)
           {
-            Node pcs = pat[j].substitute(ics.begin(), ics.end(), instq.begin(), instq.end());
-            if (d_rlvTerms.find(pcs)==d_rlvTerms.end())
+            Node pcs = pat[j].substitute(
+                ics.begin(), ics.end(), instq.begin(), instq.end());
+            if (d_rlvTerms.find(pcs) == d_rlvTerms.end())
             {
               filtered = true;
               break;
@@ -500,10 +502,11 @@ void EagerInst::doMatchingTrieInternal(
   }
 }
 
-void EagerInst::addToFailExp(const EagerTrie* et,
-                             std::map<const EagerTrie*, std::pair<Node, Node>>& failExp,
-                             const Node& a,
-                             const Node& b)
+void EagerInst::addToFailExp(
+    const EagerTrie* et,
+    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp,
+    const Node& a,
+    const Node& b)
 {
   if (!a.isConst() || !b.isConst())
   {
@@ -548,8 +551,8 @@ EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
 
 void EagerInst::addWatch(const EagerTrie* pat,
                          const Node& t,
-                         const Node&  a,
-                         const Node&  b)
+                         const Node& a,
+                         const Node& b)
 {
   TNode ar = d_qstate.getRepresentative(a);
   TNode br = d_qstate.getRepresentative(b);
@@ -559,12 +562,11 @@ void EagerInst::addWatch(const EagerTrie* pat,
     ar = br;
     br = tmp;
   }
-  Trace("eager-inst-watch") << "Fail to match: " << t
-                            << " because " << ar << " <> " << br << std::endl;
+  Trace("eager-inst-watch") << "Fail to match: " << t << " because " << ar
+                            << " <> " << br << std::endl;
   EagerWatchInfo* ew = getOrMkWatchInfo(ar, true);
   EagerWatchList* ewl = ew->getOrMkList(br, true);
   ewl->d_matchJobs.push_back(std::pair<const EagerTrie*, Node>(pat, t));
-
 }
 
 void EagerInst::eqNotifyMerge(TNode t1, TNode t2)

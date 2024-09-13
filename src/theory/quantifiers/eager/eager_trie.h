@@ -34,7 +34,7 @@ class EagerTrie
   std::map<Node, EagerTrie> d_groundChildren;
   std::map<Node, EagerTrie> d_ngroundChildren;
   std::vector<Node> d_pats;
-  /** 
+  /**
    * Permits adding pattern terms directly e.g. (P x), or instantiation pattern
    * terms of the form (INST_PATTERN (P x) t1 ... tn), where (P x) is a complete
    * single trigger and t1 ... tn do not have further variables to match.

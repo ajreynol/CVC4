@@ -142,13 +142,14 @@ class EagerInst : public QuantifiersModule
   std::pair<Node, Node> d_nullPair;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
-  void doMatchingTrieInternal(const EagerTrie* pat,
-                              const Node& n,
-                              const Node& t,
-                              size_t i,
-                              std::vector<Node>& inst,
-                              std::vector<std::pair<Node, size_t>>& ets,
-                              std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+  void doMatchingTrieInternal(
+      const EagerTrie* pat,
+      const Node& n,
+      const Node& t,
+      size_t i,
+      std::vector<Node>& inst,
+      std::vector<std::pair<Node, size_t>>& ets,
+      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
   void addToFailExp(const EagerTrie* et,
                     std::map<const EagerTrie*, std::pair<Node, Node>>& failExp,
                     const Node& a,
@@ -158,8 +159,8 @@ class EagerInst : public QuantifiersModule
    */
   void addWatch(const EagerTrie* pat,
                 const Node& t,
-                         const Node&  a,
-                         const Node&  b);
+                const Node& a,
+                const Node& b);
 };
 
 }  // namespace quantifiers
