@@ -137,15 +137,6 @@ class EagerInst : public QuantifiersModule
   IntStat d_statMatchCall;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
-  bool doMatching(const Node& pat,
-                  const Node& t,
-                  std::vector<std::pair<Node, Node>>& failExp,
-                  bool& failWasCd);
-  bool doMatchingInternal(const Node& pat,
-                          const Node& n,
-                          std::vector<Node>& inst,
-                          std::vector<std::pair<Node, Node>>& failExp,
-                          bool& failWasCd);
   void doMatchingTrieInternal(const EagerTrie* pat,
                               const Node& n,
                               const Node& t,

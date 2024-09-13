@@ -131,7 +131,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
       {
         return false;
       }
-      std::map<Node, EagerTrie>& etng = et->d_groundChildren;
+      std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
       ets.emplace_back(n, i + 1);
       if (isErase)
       {

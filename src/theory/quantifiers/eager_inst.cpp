@@ -23,8 +23,6 @@
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/term_util.h"
 
-#define USE_TRIE
-
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
@@ -201,11 +199,7 @@ void EagerInst::registerQuant(const Node& q)
         Trace("eager-inst-register") << "Single pat: " << spat << std::endl;
         Node op = spat.getOperator();
         EagerOpInfo* eoi = getOrMkOpInfo(op, true);
-#ifdef USE_TRIE
         eoi->addPattern(d_tdb, spat);
-#else
-        eoi->addPatternSimple(spat);
-#endif
         if (!isPp)
         {
           d_cdOps.insert(op);
@@ -283,7 +277,6 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
   Trace("eager-inst-debug")
       << "Asserted term " << t << " with user patterns" << std::endl;
-#ifdef USE_TRIE
   EagerTrie* et = eoi->getCurrentTrie(d_tdb);
   if (et == nullptr)
   {
@@ -305,150 +298,6 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     d_qim.doPending();
   }
-#else
-  bool addedInst = false;
-  std::vector<std::pair<Node, Node>> pkeys;
-  bool fullProc = true;
-  context::CDList<Node>& pats = eoi->getPatterns();
-  for (const Node& pat : pats)
-  {
-    std::pair<Node, Node> key(t, pat);
-    if (d_instTerms.find(key) != d_instTerms.end())
-    {
-      continue;
-    }
-    bool failWasCdi = false;
-    std::vector<std::pair<Node, Node>> failExp;
-    if (doMatching(pat, t, failExp, failWasCdi))
-    {
-      addedInst = true;
-    }
-    else if (failWasCdi)
-    {
-      // fail was context-independent
-      pkeys.emplace_back(key);
-    }
-    else
-    {
-      addWatch(pat, t, failExp);
-      fullProc = false;
-    }
-  }
-  if (addedInst)
-  {
-    d_qim.doPending();
-  }
-  if (fullProc)
-  {
-    // this term is never matchable again (unless against cd-dependent user ops)
-    d_fullInstTerms.insert(t);
-  }
-  else
-  {
-    // finer-grained caching, per user pattern
-    for (std::pair<Node, Node>& k : pkeys)
-    {
-      d_instTerms.insert(k);
-    }
-  }
-#endif
-}
-
-bool EagerInst::doMatching(const Node& pat,
-                           const Node& t,
-                           std::vector<std::pair<Node, Node>>& failExp,
-                           bool& failWasCdi)
-{
-  ++d_statMatchCall;
-  Node q = TermUtil::getInstConstAttr(pat);
-  std::vector<Node> inst;
-  inst.resize(q[0].getNumChildren());
-  failWasCdi = false;
-  if (doMatchingInternal(pat, t, inst, failExp, failWasCdi))
-  {
-    Instantiate* ie = d_qim.getInstantiate();
-    if (ie->addInstantiation(
-            q, inst, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
-    {
-      d_tmpAddedLemmas++;
-      return true;
-    }
-    else
-    {
-      // The failure will always be in this SAT context, we do not watch
-      // anything, but we cannot
-      failWasCdi = false;
-    }
-  }
-  else if (!failWasCdi)
-  {
-    // add watches???
-  }
-  // otherwise, failWasCdi is set by the above method
-  return false;
-}
-
-bool EagerInst::doMatchingInternal(const Node& pat,
-                                   const Node& t,
-                                   std::vector<Node>& inst,
-                                   std::vector<std::pair<Node, Node>>& failExp,
-                                   bool& failWasCdi)
-{
-  Trace("eager-inst-debug") << "Do matching " << t << " " << pat << std::endl;
-  for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
-  {
-    if (pat[i].getKind() == Kind::INST_CONSTANT)
-    {
-      uint64_t vnum = TermUtil::getInstVarNum(pat[i]);
-      Assert(vnum < inst.size());
-      if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], t[i]))
-      {
-        addToFailExp(failExp, inst[vnum], t[i]);
-        return false;
-      }
-      inst[vnum] = t[i];
-    }
-    else if (TermUtil::hasInstConstAttr(pat[i]))
-    {
-      if (pat[i].getNumChildren() == t[i].getNumChildren())
-      {
-        Node mop1 = d_tdb->getMatchOperator(pat[i]);
-        Node mop2 = d_tdb->getMatchOperator(t[i]);
-        if (!mop1.isNull() && mop1 == mop2)
-        {
-          if (doMatchingInternal(pat[i], t[i], inst, failExp, failWasCdi))
-          {
-            continue;
-          }
-        }
-      }
-      else
-      {
-        // note we only do simple matching, meaning (f a) fails
-        // context-independently against (f (g x)) since we don't bother
-        // finding g-apps in equivalence class of a here.
-        failWasCdi = true;
-      }
-      Trace("eager-inst-debug") << "...non-simple " << pat[i] << std::endl;
-      return false;
-    }
-    else if (!d_qstate.areEqual(pat[i], t[i]))
-    {
-      Trace("eager-inst-debug")
-          << "...inequal " << pat[i] << " " << t[i] << std::endl;
-      if (pat[i].isConst() && t[i].isConst())
-      {
-        // constants will never be equal to one another
-        failWasCdi = true;
-      }
-      else
-      {
-        failExp.emplace_back(pat[i], t[i]);
-      }
-      return false;
-    }
-  }
-  return true;
 }
 
 void EagerInst::doMatchingTrieInternal(
@@ -658,6 +507,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
   Assert(d_qstate.getRepresentative(t2) == t1);
   Trace("eager-inst-debug2")
       << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
+#if 0
   EagerWatchInfo* ewi[2];
   std::map<std::pair<Node, Node>, std::vector<std::pair<Node, Node>>> nextFails;
   bool addedInst = false;
@@ -740,6 +590,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
   {
     addWatch(nf.first.first, nf.first.second, nf.second);
   }
+#endif
 }
 
 }  // namespace quantifiers
