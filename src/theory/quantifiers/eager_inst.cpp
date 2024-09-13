@@ -610,9 +610,11 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           }
           // update the representative as you go
           TNode rep = d_qstate.getRepresentative(itw->first);
-          context::CDList<std::pair<const EagerTrie*, Node>>& wmj = ewl->d_matchJobs;
+          context::CDList<std::pair<const EagerTrie*, Node>>& wmj =
+              ewl->d_matchJobs;
           EagerWatchList* ewlo = ewi[0]->getOrMkList(rep, true);
-          context::CDList<std::pair<const EagerTrie*, Node>>& wmjo = ewlo->d_matchJobs;
+          context::CDList<std::pair<const EagerTrie*, Node>>& wmjo =
+              ewlo->d_matchJobs;
           for (const std::pair<const EagerTrie*, Node>& p : wmj)
           {
             wmjo.push_back(p);
@@ -620,7 +622,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         }
         continue;
       }
-      context::CDList<std::pair<const EagerTrie*, Node>>& wmj = ewl->d_matchJobs;
+      context::CDList<std::pair<const EagerTrie*, Node>>& wmj =
+          ewl->d_matchJobs;
       for (const std::pair<const EagerTrie*, Node>& j : wmj)
       {
         Trace("eager-inst-watch")
@@ -645,9 +648,11 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     d_qim.doPending();
   }
   // add new watching
-  for (std::pair<const Node, std::map<const EagerTrie*, std::pair<Node, Node>>>& nf : nextFails)
+  for (std::pair<const Node, std::map<const EagerTrie*, std::pair<Node, Node>>>&
+           nf : nextFails)
   {
-    for (std::pair<const EagerTrie* const, std::pair<Node, Node>>& f : nf.second)
+    for (std::pair<const EagerTrie* const, std::pair<Node, Node>>& f :
+         nf.second)
     {
       addWatch(f.first, nf.first, f.second.first, f.second.second);
     }
