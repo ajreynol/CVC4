@@ -84,6 +84,8 @@ EagerInst::EagerInst(Env& env,
                      QuantifiersRegistry& qr,
                      TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
+    d_ee(qs.getEqualityEngine()),
+    d_tdb(tr.getTermDatabase()),
       d_instTerms(userContext()),
       d_ownedQuants(context()),
       d_ppQuants(userContext()),
@@ -200,10 +202,9 @@ void EagerInst::registerQuant(const Node& q)
         Node op = spat.getOperator();
         EagerOpInfo* eoi = getOrMkOpInfo(op, true);
 #ifdef USE_TRIE
-        TermDb* tdb = d_treg.getTermDatabase();
-        eoi->addPattern(tdb, spat);
+        eoi->addPattern(d_tdb, spat);
 #else
-        eoi->d_pats.emplace_back(spat);
+        eoi->addPatternSimple(spat);
 #endif
         if (!isPp)
         {
@@ -283,18 +284,17 @@ void EagerInst::notifyAssertedTerm(TNode t)
   Trace("eager-inst-debug")
       << "Asserted term " << t << " with user patterns" << std::endl;
 #ifdef USE_TRIE
-  ++d_statMatchCall;
-  size_t prevLemmas = d_tmpAddedLemmas;
-  std::vector<Node> inst;
-  std::vector<std::pair<Node, size_t>> ets;
-  std::vector<std::pair<Node, Node>> failExp;
-  TermDb* tdb = d_treg.getTermDatabase();
-  EagerTrie* et = eoi->getCurrentTrie(tdb);
+  EagerTrie* et = eoi->getCurrentTrie(d_tdb);
   if (et == nullptr)
   {
     // no current active patterns
     return;
   }
+  ++d_statMatchCall;
+  size_t prevLemmas = d_tmpAddedLemmas;
+  std::vector<Node> inst;
+  std::vector<std::pair<Node, size_t>> ets;
+  std::vector<std::pair<Node, Node>> failExp;
   doMatchingTrieInternal(et, t, t, 0, inst, ets, failExp);
   if (failExp.empty())
   {
@@ -309,7 +309,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   bool addedInst = false;
   std::vector<std::pair<Node, Node>> pkeys;
   bool fullProc = true;
-  context::CDList<Node>& pats = eoi->d_pats;
+  context::CDList<Node>& pats = eoi->getPatterns();
   for (const Node& pat : pats)
   {
     std::pair<Node, Node> key(t, pat);
@@ -403,7 +403,7 @@ bool EagerInst::doMatchingInternal(const Node& pat,
       Assert(vnum < inst.size());
       if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], t[i]))
       {
-        failExp.emplace_back(inst[vnum], t[i]);
+        addToFailExp(failExp, inst[vnum], t[i]);
         return false;
       }
       inst[vnum] = t[i];
@@ -412,9 +412,8 @@ bool EagerInst::doMatchingInternal(const Node& pat,
     {
       if (pat[i].getNumChildren() == t[i].getNumChildren())
       {
-        TermDb* tdb = d_treg.getTermDatabase();
-        Node mop1 = tdb->getMatchOperator(pat[i]);
-        Node mop2 = tdb->getMatchOperator(t[i]);
+        Node mop1 = d_tdb->getMatchOperator(pat[i]);
+        Node mop2 = d_tdb->getMatchOperator(t[i]);
         if (!mop1.isNull() && mop1 == mop2)
         {
           if (doMatchingInternal(pat[i], t[i], inst, failExp, failWasCdi))
@@ -470,6 +469,7 @@ void EagerInst::doMatchingTrieInternal(
       std::pair<Node, size_t> p = ets.back();
       ets.pop_back();
       doMatchingTrieInternal(et, n, p.first, p.second, inst, ets, failExp);
+      ets.emplace_back(p);
     }
     else
     {
@@ -507,16 +507,15 @@ void EagerInst::doMatchingTrieInternal(
   for (const std::pair<const uint64_t, EagerTrie>& c : et->d_varChildren)
   {
     uint64_t vnum = c.first;
-    if (vnum < inst.size() && !inst[vnum].isNull()
-        && !d_qstate.areEqual(inst[vnum], t[i]))
-    {
-      addToFailExp(failExp, inst[vnum], t[i]);
-      continue;
-    }
     // not necessary?
     if (vnum >= inst.size())
     {
       inst.resize(vnum + 1);
+    }
+    if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], t[i]))
+    {
+      addToFailExp(failExp, inst[vnum], t[i]);
+      continue;
     }
     // not necessary??
     Node prev = inst[vnum];
@@ -533,14 +532,48 @@ void EagerInst::doMatchingTrieInternal(
     }
     doMatchingTrieInternal(&c.second, n, t, i + 1, inst, ets, failExp);
   }
-  TermDb* tdb = d_treg.getTermDatabase();
-  Node op = tdb->getMatchOperator(t[i]);
+#if 0
+  const std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
+  if (!etng.empty())
+  {
+    ets.emplace_back(t, i + 1);
+    // extract terms per operator
+    Assert (d_ee->hasTerm(t[i]));
+    TNode r = d_ee->getRepresentative(t[i]);
+    eq::EqClassIterator eqc_i = eq::EqClassIterator(r, d_ee);
+    std::map<Node, std::vector<Node>> terms;
+    while( !eqc_i.isFinished() ){
+      Node fapp = (*eqc_i);
+      Node fop = d_tdb->getMatchOperator(fapp);
+      if (etng.find(fop)!=etng.end())
+      {
+        terms[fop].emplace_back(fapp);
+      }
+      ++eqc_i;
+    }
+  std::map<Node, EagerTrie>::const_iterator itc;
+    for (const std::pair<const Node, std::vector<Node>>& tp : terms)
+    {
+      itc = etng.find(tp.first);
+      Assert (itc!=etng.end());
+      const EagerTrie* etc = &itc->second;
+      for (const Node& tc : tp.second)
+      {
+        doMatchingTrieInternal(etc, n, tc, 0, inst, ets, failExp);
+      }
+    }
+    ets.pop_back();
+  }
+#else
+  Node op = d_tdb->getMatchOperator(t[i]);
   std::map<Node, EagerTrie>::const_iterator it = et->d_ngroundChildren.find(op);
   if (it != et->d_ngroundChildren.end())
   {
     ets.emplace_back(t, i + 1);
     doMatchingTrieInternal(&it->second, n, t[i], 0, inst, ets, failExp);
+    ets.pop_back();
   }
+#endif
 }
 
 void EagerInst::addToFailExp(std::vector<std::pair<Node, Node>>& failExp,

@@ -59,6 +59,9 @@ class EagerOpInfo
   /** Add pattern */
   void addPattern(TermDb* tdb, const Node& pat);
 
+  // without trie
+  context::CDList<Node>& getPatterns() { return d_pats; }
+  void addPatternSimple(const Node& pat) { d_pats.push_back(pat); }
  private:
   /** The patterns for this operator in the current context */
   context::CDList<Node> d_pats;
@@ -113,7 +116,8 @@ class EagerInst : public QuantifiersModule
 
  private:
   void registerQuant(const Node& q);
-  Node solveMacro(Node& q, Node& pat);
+  eq::EqualityEngine* d_ee;
+  TermDb* d_tdb;
   NodePairSet d_instTerms;
   NodeSet d_ownedQuants;
   size_t d_tmpAddedLemmas;
