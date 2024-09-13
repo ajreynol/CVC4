@@ -54,6 +54,7 @@ class EagerTrie
 {
  public:
   std::map<uint64_t, EagerTrie> d_varChildren;
+  std::map<uint64_t, EagerTrie> d_checkVarChildren;
   std::map<Node, EagerTrie> d_groundChildren;
   std::map<Node, EagerTrie> d_ngroundChildren;
   std::vector<Node> d_pats;
@@ -64,7 +65,8 @@ class EagerTrie
            const Node& pat,
            const Node& n,
            size_t i,
-           std::vector<std::pair<Node, size_t>>& ets);
+           std::vector<std::pair<Node, size_t>>& ets,
+           std::vector<uint64_t>& alreadyBound);
 };
 
 class EagerOpInfo
@@ -151,11 +153,14 @@ class EagerInst : public QuantifiersModule
                           std::vector<Node>& inst,
                           std::vector<std::pair<Node, Node>>& failExp,
                           bool& failWasCd);
-  void doMatchingTrie(const EagerTrie* pat,
+  void doMatchingTrieInternal(const EagerTrie* pat,
                       const Node& t,
                       size_t i,
                       std::vector<Node>& inst,
-                      std::vector<std::pair<Node, size_t>>& ets);
+                      std::vector<std::pair<Node, size_t>>& ets,
+                          std::vector<std::pair<Node, Node>>& failExp);
+  void addToFailExp(
+                          std::vector<std::pair<Node, Node>>& failExp, const Node& a, const Node& b);
   /**
    * Node n matching pat is waiting on a being equal to b.
    */
