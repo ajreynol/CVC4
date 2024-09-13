@@ -82,7 +82,7 @@ EagerInst::EagerInst(Env& env,
                      QuantifiersRegistry& qr,
                      TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
-      d_ee(qs.getEqualityEngine()),
+      d_ee(nullptr),
       d_tdb(tr.getTermDatabase()),
       d_instTerms(userContext()),
       d_ownedQuants(context()),
@@ -102,7 +102,8 @@ EagerInst::EagerInst(Env& env,
 
 EagerInst::~EagerInst() {}
 
-void EagerInst::presolve() {}
+void EagerInst::presolve() {
+}
 
 bool EagerInst::needsCheck(Theory::Effort e)
 {
@@ -161,6 +162,8 @@ void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
       toProcess.insert(toProcess.end(), a.begin(), a.end());
     }
   }
+  d_ee = d_qstate.getEqualityEngine();
+  Assert (d_ee!=nullptr);
 }
 
 void EagerInst::assertNode(Node q)
@@ -191,13 +194,47 @@ void EagerInst::registerQuant(const Node& q)
   {
     if (pat.getKind() == Kind::INST_PATTERN)
     {
-      if (pat.getNumChildren() == 1 && pat[0].getKind() == Kind::APPLY_UF)
+      Node pati = d_qreg.substituteBoundVariablesToInstConstants(pat, q);
+      std::vector<Node> ppc(pati.begin(), pati.end());
+      std::vector<Node> spats;
+      for (size_t i=0, npats=pati.getNumChildren(); i<npats; i++)
+      {
+        Node pc = pati[i];
+        if (pc.getKind()==Kind::APPLY_UF && d_qreg.hasAllInstantiationConstants(pc, q))
+        {
+          if (ppc.size()==1)
+          {
+            spats.push_back(pc);
+          }
+          else
+          {
+            Node tmp = ppc[0];
+            ppc[0] = ppc[i];
+            ppc[i] = tmp;
+            Node pp = nodeManager()->mkNode(Kind::INST_PATTERN, ppc);
+            spats.push_back(pp);
+          }
+        }
+      }
+      if (spats.empty())
+      {
+        owner = false;
+      }
+      for (const Node& spat : spats)
       {
         hasPat = true;
-        Node spat = d_qreg.substituteBoundVariablesToInstConstants(pat[0], q);
         // TODO: statically analyze if this would lead to matching loops
         Trace("eager-inst-register") << "Single pat: " << spat << std::endl;
-        Node op = spat.getOperator();
+        Node op;
+        if (spat.getKind()==Kind::INST_PATTERN)
+        {
+          op = spat[0].getOperator();
+          continue;
+        }
+        else
+        {
+          op = spat.getOperator();
+        }
         EagerOpInfo* eoi = getOrMkOpInfo(op, true);
         eoi->addPattern(d_tdb, spat);
         if (!isPp)
@@ -220,10 +257,6 @@ void EagerInst::registerQuant(const Node& q)
             }
           }
         }
-      }
-      else
-      {
-        owner = false;
       }
     }
   }
@@ -281,6 +314,12 @@ void EagerInst::notifyAssertedTerm(TNode t)
   if (et == nullptr)
   {
     // no current active patterns
+    return;
+  }
+  // if master equality engine is inconsistent, we are in conflict
+  Assert (d_ee!=nullptr);
+  if (!d_ee->consistent())
+  {
     return;
   }
   ++d_statMatchCall;
@@ -381,17 +420,26 @@ void EagerInst::doMatchingTrieInternal(
     }
     doMatchingTrieInternal(&c.second, n, t, i + 1, inst, ets, failExp);
   }
-#if 0
   const std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
-  if (!etng.empty())
+  if (etng.empty())
   {
-    ets.emplace_back(t, i + 1);
+    return;
+  }
+  Node op = d_tdb->getMatchOperator(t[i]);
+  if (op.isNull())
+  {
+    // don't bother if we are in simple mode
+    if (options().quantifiers.eagerInstSimple)
+    {
+      return;
+    }
+    std::map<Node, std::vector<Node>> terms;
     // extract terms per operator
     Assert (d_ee->hasTerm(t[i]));
     TNode r = d_ee->getRepresentative(t[i]);
     eq::EqClassIterator eqc_i = eq::EqClassIterator(r, d_ee);
-    std::map<Node, std::vector<Node>> terms;
-    while( !eqc_i.isFinished() ){
+    while( !eqc_i.isFinished() )
+    {
       Node fapp = (*eqc_i);
       Node fop = d_tdb->getMatchOperator(fapp);
       if (etng.find(fop)!=etng.end())
@@ -400,29 +448,33 @@ void EagerInst::doMatchingTrieInternal(
       }
       ++eqc_i;
     }
-  std::map<Node, EagerTrie>::const_iterator itc;
-    for (const std::pair<const Node, std::vector<Node>>& tp : terms)
+    if (!terms.empty())
     {
-      itc = etng.find(tp.first);
-      Assert (itc!=etng.end());
-      const EagerTrie* etc = &itc->second;
-      for (const Node& tc : tp.second)
+      ets.emplace_back(t, i + 1);
+      std::map<Node, EagerTrie>::const_iterator itc;
+      for (const std::pair<const Node, std::vector<Node>>& tp : terms)
       {
-        doMatchingTrieInternal(etc, n, tc, 0, inst, ets, failExp);
+        itc = etng.find(tp.first);
+        Assert (itc!=etng.end());
+        const EagerTrie* etc = &itc->second;
+        for (const Node& tc : tp.second)
+        {
+          doMatchingTrieInternal(etc, n, tc, 0, inst, ets, failExp);
+        }
       }
+      ets.pop_back();
     }
-    ets.pop_back();
   }
-#else
-  Node op = d_tdb->getMatchOperator(t[i]);
-  std::map<Node, EagerTrie>::const_iterator it = et->d_ngroundChildren.find(op);
-  if (it != et->d_ngroundChildren.end())
+  else
   {
-    ets.emplace_back(t, i + 1);
-    doMatchingTrieInternal(&it->second, n, t[i], 0, inst, ets, failExp);
-    ets.pop_back();
+    std::map<Node, EagerTrie>::const_iterator it = etng.find(op);
+    if (it != etng.end())
+    {
+      ets.emplace_back(t, i + 1);
+      doMatchingTrieInternal(&it->second, n, t[i], 0, inst, ets, failExp);
+      ets.pop_back();
+    }
   }
-#endif
 }
 
 void EagerInst::addToFailExp(std::vector<std::pair<Node, Node>>& failExp,

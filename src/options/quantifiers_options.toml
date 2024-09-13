@@ -1757,6 +1757,14 @@ name   = "Quantifiers"
   help = "Simple watching for ground terms."
 
 [[option]]
+  name       = "eagerInstSimple"
+  category   = "expert"
+  long       = "eager-inst-simple"
+  type       = "bool"
+  default    = "true"
+  help       = "handle quantified formulas that are not asserted at top-level in eager instantiation"
+
+[[option]]
   name       = "quantDynamicSplit"
   category   = "regular"
   long       = "quant-dsplit=MODE"

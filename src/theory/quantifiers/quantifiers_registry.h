@@ -72,6 +72,8 @@ class QuantifiersRegistry : public QuantifiersUtil
   size_t getNumInstantiationConstants(Node q) const;
   /** get a reference to the instantiation constants of q */
   const std::vector<Node>& getInstantiationConstants(const Node& q) const;
+  /** Does term t have all instantiation constants from q? */
+  bool hasAllInstantiationConstants(const Node& t, const Node& q) const;
   /** get the ce body q[e/x] */
   Node getInstConstantBody(Node q);
   /** returns node n with bound vars of q replaced by instantiation constants of

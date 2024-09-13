@@ -18,6 +18,7 @@
 #include "options/quantifiers_options.h"
 #include "theory/quantifiers/quant_module.h"
 #include "theory/quantifiers/term_util.h"
+#include "expr/node_algorithm.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -129,13 +130,31 @@ size_t QuantifiersRegistry::getNumInstantiationConstants(Node q) const
   return 0;
 }
 
-const std::vector<Node>& QuantifiersRegistry::getInstantiationConstants(
-    const Node& q) const
+const std::vector<Node>& QuantifiersRegistry::getInstantiationConstants(const Node& q) const
 {
   std::map<Node, std::vector<Node> >::const_iterator it =
       d_inst_constants.find(q);
-  Assert(it != d_inst_constants.end());
+  Assert (it != d_inst_constants.end());
   return it->second;
+}
+
+bool QuantifiersRegistry::hasAllInstantiationConstants(const Node& t, const Node& q) const
+{
+  const std::vector<Node>& ics = getInstantiationConstants(q);
+  std::unordered_set<Node> vars;
+  expr::getKindSubterms(t, Kind::INST_CONSTANT, false, vars);
+  if (vars.size()>=ics.size())
+  {
+    for (const Node& ic : ics)
+    {
+      if (vars.find(ic)==vars.end())
+      {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 Node QuantifiersRegistry::getInstConstantBody(Node q)
