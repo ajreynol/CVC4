@@ -29,6 +29,8 @@ class TermDb;
 class EagerTrie
 {
  public:
+  EagerTrie();
+  EagerTrie* d_parent;
   std::map<uint64_t, EagerTrie> d_varChildren;
   std::map<uint64_t, EagerTrie> d_checkVarChildren;
   std::map<Node, EagerTrie> d_groundChildren;

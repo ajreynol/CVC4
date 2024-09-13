@@ -22,6 +22,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+EagerTrie::EagerTrie() : d_parent(nullptr) {}
+
 bool EagerTrie::add(TermDb* tdb, const Node& n)
 {
   std::vector<std::pair<Node, size_t>> ets;

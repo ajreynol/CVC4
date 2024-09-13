@@ -574,9 +574,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
   Assert(d_qstate.getRepresentative(t2) == t1);
   Trace("eager-inst-debug2")
       << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
-#if 0
   EagerWatchInfo* ewi[2];
-  std::map<std::pair<Node, Node>, std::vector<std::pair<Node, Node>>> nextFails;
+  std::map<Node, std::map<const EagerTrie*, std::pair<Node, Node>>> nextFails;
   bool addedInst = false;
   for (size_t i = 0; i < 2; i++)
   {
@@ -611,29 +610,23 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           }
           // update the representative as you go
           TNode rep = d_qstate.getRepresentative(itw->first);
-          context::CDList<std::pair<Node, Node>>& wmj = ewl->d_matchJobs;
+          context::CDList<std::pair<const EagerTrie*, Node>>& wmj = ewl->d_matchJobs;
           EagerWatchList* ewlo = ewi[0]->getOrMkList(rep, true);
-          context::CDList<std::pair<Node, Node>>& wmjo = ewlo->d_matchJobs;
-          for (const std::pair<Node, Node>& p : wmj)
+          context::CDList<std::pair<const EagerTrie*, Node>>& wmjo = ewlo->d_matchJobs;
+          for (const std::pair<const EagerTrie*, Node>& p : wmj)
           {
             wmjo.push_back(p);
           }
         }
         continue;
       }
-      context::CDList<std::pair<Node, Node>>& wmj = ewl->d_matchJobs;
-      for (const std::pair<Node, Node>& j : wmj)
+      context::CDList<std::pair<const EagerTrie*, Node>>& wmj = ewl->d_matchJobs;
+      for (const std::pair<const EagerTrie*, Node>& j : wmj)
       {
         Trace("eager-inst-watch")
             << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
             << " and " << j.second << std::endl;
-        bool failWasCdi = false;
-        if (doMatching(j.first, j.second, nextFails[j], failWasCdi))
-        {
-          Trace("eager-inst-watch") << "...readd success" << std::endl;
-          addedInst = true;
-          nextFails.erase(j);
-        }
+        // TODO: resume
       }
       // no longer valid
       ewl->d_valid = false;
@@ -652,12 +645,13 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     d_qim.doPending();
   }
   // add new watching
-  for (std::pair<const std::pair<Node, Node>,
-                 std::vector<std::pair<Node, Node>>>& nf : nextFails)
+  for (std::pair<const Node, std::map<const EagerTrie*, std::pair<Node, Node>>>& nf : nextFails)
   {
-    addWatch(nf.first.first, nf.first.second, nf.second);
+    for (std::pair<const EagerTrie* const, std::pair<Node, Node>>& f : nf.second)
+    {
+      addWatch(f.first, nf.first, f.second.first, f.second.second);
+    }
   }
-#endif
 }
 
 }  // namespace quantifiers
