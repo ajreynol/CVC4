@@ -80,7 +80,8 @@ class EagerOpInfo
   EagerTrie* getCurrentTrie(TermDb* tdb);
   /** Add pattern */
   void addPattern(TermDb* tdb, const Node& pat);
-private:
+
+ private:
   /** The patterns for this operator in the current context */
   context::CDList<Node> d_pats;
   EagerTrie d_trie;

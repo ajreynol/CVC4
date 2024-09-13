@@ -154,8 +154,8 @@ bool EagerTrie::addInternal(TermDb* tdb,
       }
       else
       {
-        ret = etg[nc].addInternal(
-            tdb, pat, n, i + 1, ets, alreadyBound, isErase);
+        ret =
+            etg[nc].addInternal(tdb, pat, n, i + 1, ets, alreadyBound, isErase);
       }
     }
     else
@@ -183,8 +183,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
       }
       else
       {
-        ret = etng[op].addInternal(
-            tdb, pat, nc, 0, ets, alreadyBound, isErase);
+        ret = etng[op].addInternal(tdb, pat, nc, 0, ets, alreadyBound, isErase);
       }
     }
   }
@@ -204,12 +203,12 @@ EagerTrie* EagerOpInfo::getCurrentTrie(TermDb* tdb)
   {
     return nullptr;
   }
-  Assert (!d_triePats.empty());
+  Assert(!d_triePats.empty());
   size_t tsize = d_pats.size();
-  if (d_triePats.size()>d_pats.size())
+  if (d_triePats.size() > d_pats.size())
   {
     // clean up any stale patterns that appear in the trie
-    for (size_t i=d_triePats.size()-1; i>=tsize; i--)
+    for (size_t i = d_triePats.size() - 1; i >= tsize; i--)
     {
       d_trie.erase(tdb, d_triePats[i]);
     }
@@ -409,9 +408,9 @@ void EagerInst::notifyAssertedTerm(TNode t)
   std::vector<Node> inst;
   std::vector<std::pair<Node, size_t>> ets;
   std::vector<std::pair<Node, Node>> failExp;
-        TermDb* tdb = d_treg.getTermDatabase();
+  TermDb* tdb = d_treg.getTermDatabase();
   EagerTrie* et = eoi->getCurrentTrie(tdb);
-  if (et==nullptr)
+  if (et == nullptr)
   {
     // no current active patterns
     return;
