@@ -62,6 +62,7 @@ class EagerOpInfo
   // without trie
   context::CDList<Node>& getPatterns() { return d_pats; }
   void addPatternSimple(const Node& pat) { d_pats.push_back(pat); }
+
  private:
   /** The patterns for this operator in the current context */
   context::CDList<Node> d_pats;
