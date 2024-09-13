@@ -76,9 +76,15 @@ class EagerOpInfo
 {
  public:
   EagerOpInfo(context::Context* c) : d_pats(c) {}
+  /** Get trie, possibly with cleaning */
+  EagerTrie* getCurrentTrie(TermDb* tdb);
+  /** Add pattern */
+  void addPattern(TermDb* tdb, const Node& pat);
+private:
   /** The patterns for this operator in the current context */
   context::CDList<Node> d_pats;
   EagerTrie d_trie;
+  std::vector<Node> d_triePats;
 };
 
 /**
