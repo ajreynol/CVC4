@@ -549,20 +549,20 @@ EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
   return ewi.get();
 }
 
-void EagerInst::addWatches(const Node& t,
-              std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+void EagerInst::addWatches(
+    const Node& t, std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
 {
-  if (options().quantifiers.eagerInstWatchMode==options::EagerInstWatchMode::NONE)
+  if (options().quantifiers.eagerInstWatchMode
+      == options::EagerInstWatchMode::NONE)
   {
     return;
   }
-  for (std::pair<const EagerTrie* const, std::pair<Node, Node>>& f :
-        failExp)
+  for (std::pair<const EagerTrie* const, std::pair<Node, Node>>& f : failExp)
   {
     addWatch(f.first, t, f.second.first, f.second.second);
   }
 }
-  
+
 void EagerInst::addWatch(const EagerTrie* pat,
                          const Node& t,
                          const Node& a,
