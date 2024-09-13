@@ -63,7 +63,7 @@ bool EagerTrie::add(TermDb* tdb,
                     const Node& n,
                     size_t i,
                     std::vector<std::pair<Node, size_t>>& ets,
-                  std::vector<uint64_t>& alreadyBound)
+                    std::vector<uint64_t>& alreadyBound)
 {
   EagerTrie* et = this;
   bool ret;
@@ -87,7 +87,8 @@ bool EagerTrie::add(TermDb* tdb,
     if (nc.getKind() == Kind::INST_CONSTANT)
     {
       uint64_t vnum = TermUtil::getInstVarNum(nc);
-      if (std::find(alreadyBound.begin(), alreadyBound.end(), vnum)!=alreadyBound.end())
+      if (std::find(alreadyBound.begin(), alreadyBound.end(), vnum)
+          != alreadyBound.end())
       {
         // TODO
       }
@@ -442,12 +443,13 @@ bool EagerInst::doMatchingInternal(const Node& pat,
   return true;
 }
 
-void EagerInst::doMatchingTrieInternal(const EagerTrie* et,
-                               const Node& t,
-                               size_t i,
-                               std::vector<Node>& inst,
-                               std::vector<std::pair<Node, size_t>>& ets,
-                          std::vector<std::pair<Node, Node>>& failExp)
+void EagerInst::doMatchingTrieInternal(
+    const EagerTrie* et,
+    const Node& t,
+    size_t i,
+    std::vector<Node>& inst,
+    std::vector<std::pair<Node, size_t>>& ets,
+    std::vector<std::pair<Node, Node>>& failExp)
 {
   if (i == t.getNumChildren())
   {
@@ -467,9 +469,10 @@ void EagerInst::doMatchingTrieInternal(const EagerTrie* et,
       for (const Node& pat : pats)
       {
         Node q = TermUtil::getInstConstAttr(pat);
-        Assert (!q.isNull());
+        Assert(!q.isNull());
         // must resize
-        std::vector<Node> instq(inst.begin(), inst.begin()+q[0].getNumChildren());
+        std::vector<Node> instq(inst.begin(),
+                                inst.begin() + q[0].getNumChildren());
         if (ie->addInstantiation(
                 q, instq, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
         {
@@ -521,15 +524,16 @@ void EagerInst::doMatchingTrieInternal(const EagerTrie* et,
   }
 }
 
-  void EagerInst::addToFailExp(
-                          std::vector<std::pair<Node, Node>>& failExp, const Node& a, const Node& b)
+void EagerInst::addToFailExp(std::vector<std::pair<Node, Node>>& failExp,
+                             const Node& a,
+                             const Node& b)
+{
+  if (!a.isConst() || !b.isConst())
   {
-    if (!a.isConst() || !b.isConst())
-    {
-      failExp.emplace_back(a, b);
-    }
+    failExp.emplace_back(a, b);
   }
-  
+}
+
 EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
 {
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>>::iterator it =

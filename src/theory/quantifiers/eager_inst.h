@@ -154,13 +154,14 @@ class EagerInst : public QuantifiersModule
                           std::vector<std::pair<Node, Node>>& failExp,
                           bool& failWasCd);
   void doMatchingTrieInternal(const EagerTrie* pat,
-                      const Node& t,
-                      size_t i,
-                      std::vector<Node>& inst,
-                      std::vector<std::pair<Node, size_t>>& ets,
-                          std::vector<std::pair<Node, Node>>& failExp);
-  void addToFailExp(
-                          std::vector<std::pair<Node, Node>>& failExp, const Node& a, const Node& b);
+                              const Node& t,
+                              size_t i,
+                              std::vector<Node>& inst,
+                              std::vector<std::pair<Node, size_t>>& ets,
+                              std::vector<std::pair<Node, Node>>& failExp);
+  void addToFailExp(std::vector<std::pair<Node, Node>>& failExp,
+                    const Node& a,
+                    const Node& b);
   /**
    * Node n matching pat is waiting on a being equal to b.
    */
