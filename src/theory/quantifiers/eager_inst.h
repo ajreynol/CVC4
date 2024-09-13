@@ -61,14 +61,15 @@ class EagerTrie
   bool add(TermDb* tdb, const Node& n);
   bool erase(TermDb* tdb, const Node& n);
   bool empty() const;
+
  private:
   bool addInternal(TermDb* tdb,
-           const Node& pat,
-           const Node& n,
-           size_t i,
-           std::vector<std::pair<Node, size_t>>& ets,
-           std::vector<uint64_t>& alreadyBound,
-           bool isErase);
+                   const Node& pat,
+                   const Node& n,
+                   size_t i,
+                   std::vector<std::pair<Node, size_t>>& ets,
+                   std::vector<uint64_t>& alreadyBound,
+                   bool isErase);
 };
 
 class EagerOpInfo
