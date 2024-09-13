@@ -51,152 +51,6 @@ EagerWatchList* EagerWatchInfo::getOrMkList(const Node& r, bool doMk)
   return eoi.get();
 }
 
-bool EagerTrie::add(TermDb* tdb, const Node& n)
-{
-  std::vector<std::pair<Node, size_t>> ets;
-  std::vector<uint64_t> alreadyBound;
-  return addInternal(tdb, n, n, 0, ets, alreadyBound, false);
-}
-
-bool EagerTrie::erase(TermDb* tdb, const Node& n)
-{
-  std::vector<std::pair<Node, size_t>> ets;
-  std::vector<uint64_t> alreadyBound;
-  return addInternal(tdb, n, n, 0, ets, alreadyBound, true);
-}
-
-bool EagerTrie::addInternal(TermDb* tdb,
-                            const Node& pat,
-                            const Node& n,
-                            size_t i,
-                            std::vector<std::pair<Node, size_t>>& ets,
-                            std::vector<uint64_t>& alreadyBound,
-                            bool isErase)
-{
-  EagerTrie* et = this;
-  bool ret;
-  if (i == n.getNumChildren())
-  {
-    if (!ets.empty())
-    {
-      // we have another child to continue from a higher level
-      std::pair<Node, size_t> p = ets.back();
-      ets.pop_back();
-      ret =
-          addInternal(tdb, pat, p.first, p.second, ets, alreadyBound, isErase);
-    }
-    else
-    {
-      // we are at the leaf, we add or remove the pattern
-      if (isErase)
-      {
-        AlwaysAssert(d_pats.back() == pat);
-        d_pats.pop_back();
-      }
-      else
-      {
-        d_pats.push_back(pat);
-      }
-      ret = true;
-    }
-  }
-  else
-  {
-    const Node& nc = n[i];
-    if (nc.getKind() == Kind::INST_CONSTANT)
-    {
-      uint64_t vnum = TermUtil::getInstVarNum(nc);
-      /*
-      if (std::find(alreadyBound.begin(), alreadyBound.end(), vnum)
-          != alreadyBound.end())
-      {
-        // TODO
-      }
-      alreadyBound.push_back(vnum);
-      */
-      std::map<uint64_t, EagerTrie>& etv = et->d_varChildren;
-      if (isErase)
-      {
-        std::map<uint64_t, EagerTrie>::iterator it = etv.find(vnum);
-        if (it == etv.end())
-        {
-          return false;
-        }
-        ret = it->second.addInternal(
-            tdb, pat, n, i + 1, ets, alreadyBound, isErase);
-        if (it->second.empty())
-        {
-          etv.erase(it);
-        }
-      }
-      else
-      {
-        ret = etv[vnum].addInternal(
-            tdb, pat, n, i + 1, ets, alreadyBound, isErase);
-      }
-    }
-    else if (!TermUtil::hasInstConstAttr(nc))
-    {
-      std::map<Node, EagerTrie>& etg = et->d_groundChildren;
-      if (isErase)
-      {
-        std::map<Node, EagerTrie>::iterator it = etg.find(nc);
-        if (it == etg.end())
-        {
-          return false;
-        }
-        ret = it->second.addInternal(
-            tdb, pat, n, i + 1, ets, alreadyBound, isErase);
-        if (it->second.empty())
-        {
-          etg.erase(it);
-        }
-      }
-      else
-      {
-        ret =
-            etg[nc].addInternal(tdb, pat, n, i + 1, ets, alreadyBound, isErase);
-      }
-    }
-    else
-    {
-      Node op = tdb->getMatchOperator(nc);
-      if (op.isNull())
-      {
-        return false;
-      }
-      std::map<Node, EagerTrie>& etng = et->d_groundChildren;
-      ets.emplace_back(n, i + 1);
-      if (isErase)
-      {
-        std::map<Node, EagerTrie>::iterator it = etng.find(op);
-        if (it == etng.end())
-        {
-          return false;
-        }
-        ret =
-            it->second.addInternal(tdb, pat, nc, 0, ets, alreadyBound, isErase);
-        if (it->second.empty())
-        {
-          etng.erase(it);
-        }
-      }
-      else
-      {
-        ret = etng[op].addInternal(tdb, pat, nc, 0, ets, alreadyBound, isErase);
-      }
-    }
-  }
-  return ret;
-}
-
-bool EagerTrie::empty() const
-{
-  return d_varChildren.empty() && d_checkVarChildren.empty()
-         && d_groundChildren.empty() && d_ngroundChildren.empty()
-         && d_pats.empty();
-}
-
 EagerTrie* EagerOpInfo::getCurrentTrie(TermDb* tdb)
 {
   if (d_pats.empty())
@@ -272,12 +126,39 @@ void EagerInst::registerQuantifier(Node q) {}
 
 void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 {
+  std::vector<Node> toProcess;
+  std::unordered_set<Node> processed;
   for (const Node& n : assertions)
   {
-    if (n.getKind() == Kind::FORALL)
+    Kind k = n.getKind();
+    if (k == Kind::FORALL)
     {
-      d_ppQuants.insert(n);
-      registerQuant(n);
+      toProcess.emplace_back(n);
+    }
+    else if (k==Kind::AND)
+    {
+      toProcess.insert(toProcess.end(), n.begin(), n.end());
+    }
+  }
+  size_t i=0;
+  while (i<toProcess.size())
+  {
+    const Node& a = toProcess[i];
+    i++;
+    if (processed.find(a)!=processed.end())
+    {
+      continue;
+    }
+    processed.insert(a);
+    Kind k = a.getKind();
+    if (k==Kind::FORALL)
+    {
+      d_ppQuants.insert(a);
+      registerQuant(a);
+    }
+    else if (k==Kind::AND)
+    {
+      toProcess.insert(toProcess.end(), a.begin(), a.end());
     }
   }
 }
@@ -289,7 +170,6 @@ void EagerInst::assertNode(Node q)
     return;
   }
   Assert(q.getKind() == Kind::FORALL);
-  //
   if (d_ppQuants.find(q) == d_ppQuants.end())
   {
     registerQuant(q);
@@ -598,7 +478,7 @@ void EagerInst::doMatchingTrieInternal(
       std::vector<Node> instSub;
       for (const Node& pat : pats)
       {
-        std::pair<Node, Node> key(t, pat);
+        std::pair<Node, Node> key(n, pat);
         if (d_instTerms.find(key) != d_instTerms.end())
         {
           continue;
@@ -633,10 +513,12 @@ void EagerInst::doMatchingTrieInternal(
       addToFailExp(failExp, inst[vnum], t[i]);
       continue;
     }
+    // not necessary?
     if (vnum >= inst.size())
     {
       inst.resize(vnum + 1);
     }
+    // not necessary??
     Node prev = inst[vnum];
     inst[vnum] = t[i];
     doMatchingTrieInternal(&c.second, n, t, i + 1, inst, ets, failExp);

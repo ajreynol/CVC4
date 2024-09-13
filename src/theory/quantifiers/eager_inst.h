@@ -20,7 +20,7 @@
 
 #include "smt/env_obj.h"
 #include "theory/quantifiers/quant_module.h"
-#include "theory/substitutions.h"
+#include "theory/quantifiers/eager/eager_trie.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -48,28 +48,6 @@ class EagerWatchInfo
 
  private:
   context::Context* d_ctx;
-};
-
-class EagerTrie
-{
- public:
-  std::map<uint64_t, EagerTrie> d_varChildren;
-  std::map<uint64_t, EagerTrie> d_checkVarChildren;
-  std::map<Node, EagerTrie> d_groundChildren;
-  std::map<Node, EagerTrie> d_ngroundChildren;
-  std::vector<Node> d_pats;
-  bool add(TermDb* tdb, const Node& n);
-  bool erase(TermDb* tdb, const Node& n);
-  bool empty() const;
-
- private:
-  bool addInternal(TermDb* tdb,
-                   const Node& pat,
-                   const Node& n,
-                   size_t i,
-                   std::vector<std::pair<Node, size_t>>& ets,
-                   std::vector<uint64_t>& alreadyBound,
-                   bool isErase);
 };
 
 class EagerOpInfo
