@@ -354,19 +354,13 @@ void EagerInst::doMatchingTrieInternal(
   if (eti.needsBacktrack())
   {
     // continue matching
-    if (eti.d_stack.size()>1)
+    if (eti.canPop())
     {
       Assert(et->d_pats.empty());
-      // save state
-      //Node pt = eti.d_term;
-      //size_t pi = eti.d_index;
       std::pair<Node, size_t> p = eti.d_stack.back();
       // pop
       eti.pop();
       doMatchingTrieInternal(et, eti, inst, failExp);
-      // restore state
-      //eti.d_term = pt;
-      //eti.d_index = pi;
       eti.d_stack.emplace_back(p);
     }
     else
@@ -459,9 +453,6 @@ void EagerInst::doMatchingTrieInternal(
   {
     return;
   }
-  // save state
-  //Node pt = eti.d_term;
-  //size_t pi = eti.d_index;
   Node op = d_tdb->getMatchOperator(tc);
   if (op.isNull())
   {
@@ -470,11 +461,10 @@ void EagerInst::doMatchingTrieInternal(
     {
       return;
     }
-    /*
     std::map<Node, std::vector<Node>> terms;
     // extract terms per operator
-    Assert(d_ee->hasTerm(t[i]));
-    TNode r = d_ee->getRepresentative(t[i]);
+    Assert(d_ee->hasTerm(tc));
+    TNode r = d_ee->getRepresentative(tc);
     eq::EqClassIterator eqc_i = eq::EqClassIterator(r, d_ee);
     while (!eqc_i.isFinished())
     {
@@ -488,8 +478,8 @@ void EagerInst::doMatchingTrieInternal(
     }
     if (!terms.empty())
     {
-      ets.emplace_back(t, i + 1);
       std::map<Node, EagerTrie>::const_iterator itc;
+      eti.incrementChild();
       for (const std::pair<const Node, std::vector<Node>>& tp : terms)
       {
         itc = etng.find(tp.first);
@@ -497,12 +487,13 @@ void EagerInst::doMatchingTrieInternal(
         const EagerTrie* etc = &itc->second;
         for (const Node& tt : tp.second)
         {
-          doMatchingTrieInternal(etc, n, tt, 0, inst, ets, failExp);
+          eti.push(tt);
+          doMatchingTrieInternal(etc, eti, inst, failExp);
+          eti.pop();
         }
       }
-      ets.pop_back();
+      eti.decrementChild();
     }
-    */
   }
   else
   {
@@ -517,9 +508,6 @@ void EagerInst::doMatchingTrieInternal(
       eti.decrementChild();
     }
   }
-  // revert state
-  //eti.d_term = pt;
-  //eti.d_index = pi;
 }
 
 void EagerInst::addToFailExp(

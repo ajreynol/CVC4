@@ -59,16 +59,11 @@ class EagerTermIterator
     Assert(d_stack.back().second > 0);
     d_stack.back().second--;
   }
-  void push()
-  {
-    std::pair<Node, size_t>& cur = d_stack.back();
-    d_stack.emplace_back(cur.first[cur.second], 0);
-    cur.second++;
-  }
   void push(const Node& t)
   {
     d_stack.emplace_back(t, 0);
   }
+  bool canPop() const { return d_stack.size()>1; }
   bool pop()
   {
     if (d_stack.size()<=1)
