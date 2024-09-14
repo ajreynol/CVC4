@@ -261,21 +261,22 @@ void EagerInst::registerQuant(const Node& q)
           ++d_statUserPatsCd;
           // match the current terms
           // FIXME
-          /*
           EagerTrie* root = eoi->getCurrentTrie(d_tdb);
           Assert (root!=nullptr);
           const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
           const Node& spatr = spat.getKind() == Kind::INST_PATTERN ? spat[0] : spat;
+          Trace("eager-inst-watch") << "Since " << spat << " was added, revisit match with " << gts.size() << " terms" << std::endl;
           for (const Node& t : gts)
           {
             EagerTermIterator etip(spat, spatr);
             EagerTermIterator eti(t);
             ++d_statCdPatMatchCall;
             std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
-            resumeMatching(root, eti, et, etip, failExp);
+            doMatchingPath(root, eti, et, etip, failExp);
             addWatches(t, failExp);
           }
-          */
+
+          Trace("eager-inst-watch") << "...finish" << std::endl;
         }
         else
         {
@@ -382,7 +383,6 @@ void EagerInst::doMatching(
     // continue matching
     if (eti.canPop())
     {
-      Assert(et->d_pats.empty());
       std::pair<Node, size_t> p = eti.d_stack.back();
       // pop
       eti.pop();
@@ -393,52 +393,8 @@ void EagerInst::doMatching(
     else
     {
       // instantiate with all patterns stored on this leaf
-      const std::vector<Node>& pats = et->d_pats;
-      Instantiate* ie = d_qim.getInstantiate();
       const Node& n = eti.getOriginal();
-      for (const Node& pat : pats)
-      {
-        std::pair<Node, Node> key(n, pat);
-        if (d_instTerms.find(key) != d_instTerms.end())
-        {
-          continue;
-        }
-        Node q = TermUtil::getInstConstAttr(pat);
-        Assert(!q.isNull());
-        // must resize
-        std::vector<Node> instq(d_inst.begin(),
-                                d_inst.begin() + q[0].getNumChildren());
-        if (pat.getKind() == Kind::INST_PATTERN)
-        {
-          std::vector<Node> ics = d_qreg.getInstantiationConstants(q);
-          bool filtered = false;
-          for (size_t j = 1, npats = pat.getNumChildren(); j < npats; j++)
-          {
-            Node pcs = pat[j].substitute(
-                ics.begin(), ics.end(), instq.begin(), instq.end());
-            if (!isRelevantTerm(pcs))
-            {
-              filtered = true;
-              break;
-            }
-          }
-          if (filtered)
-          {
-            continue;
-          }
-        }
-        if (ie->addInstantiation(
-                q, instq, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
-        {
-          d_tmpAddedLemmas++;
-          d_instTerms.insert(key);
-        }
-        else
-        {
-          // dummy mark that the failure was due to entailed pattern
-          failExp[et] = d_nullPair;
-        }
-      }
+      doInstantiations(et, n, failExp);
     }
     return;
   }
@@ -535,6 +491,57 @@ void EagerInst::doMatching(
     }
   }
 }
+
+void EagerInst::doInstantiations(const EagerTrie* et, const Node& n,
+      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+{
+  const std::vector<Node>& pats = et->d_pats;
+  Instantiate* ie = d_qim.getInstantiate();
+  for (const Node& pat : pats)
+  {
+    std::pair<Node, Node> key(n, pat);
+    if (d_instTerms.find(key) != d_instTerms.end())
+    {
+      continue;
+    }
+    Node q = TermUtil::getInstConstAttr(pat);
+    Assert(!q.isNull());
+    // must resize
+    std::vector<Node> instq(d_inst.begin(),
+                            d_inst.begin() + q[0].getNumChildren());
+    if (pat.getKind() == Kind::INST_PATTERN)
+    {
+      std::vector<Node> ics = d_qreg.getInstantiationConstants(q);
+      bool filtered = false;
+      for (size_t j = 1, npats = pat.getNumChildren(); j < npats; j++)
+      {
+        Node pcs = pat[j].substitute(
+            ics.begin(), ics.end(), instq.begin(), instq.end());
+        if (!isRelevantTerm(pcs))
+        {
+          filtered = true;
+          break;
+        }
+      }
+      if (filtered)
+      {
+        continue;
+      }
+    }
+    if (ie->addInstantiation(
+            q, instq, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
+    {
+      d_tmpAddedLemmas++;
+      d_instTerms.insert(key);
+    }
+    else
+    {
+      // dummy mark that the failure was due to entailed pattern
+      failExp[et] = d_nullPair;
+    }
+  }
+}
+
 void EagerInst::resumeMatching(
     const EagerTrie* pat,
     EagerTermIterator& eti,
@@ -552,10 +559,12 @@ void EagerInst::resumeMatching(
   // to resume matching at tgt. This is guided by an example
   // pattern that was stored at tgt and is being traversed with etip.
   // We assume that all steps of the matching succeed below.
-  while (eti.needsBacktrack())
+  if (eti.needsBacktrack())
   {
     eti.pop();
     etip.pop();
+    resumeMatching(pat, eti, tgt, etip, failExp);
+    return;
   }
   const Node& tc = eti.getCurrent();
   const Node& pc = etip.getCurrent();
@@ -594,6 +603,14 @@ void EagerInst::resumeMatching(
     Assert(it != png.end());
     resumeMatching(&it->second, eti, tgt, etip, failExp);
   }
+}
+void EagerInst::doMatchingPath(
+    const EagerTrie* pat,
+    EagerTermIterator& eti,
+    const EagerTrie* tgt,
+    EagerTermIterator& etip,
+    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+{
 }
 
 void EagerInst::addToFailExp(

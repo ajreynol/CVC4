@@ -161,6 +161,18 @@ class EagerInst : public QuantifiersModule
       const EagerTrie* tgt,
       EagerTermIterator& etip,
       std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+  void doMatchingPath(
+      const EagerTrie* pat,
+      EagerTermIterator& eti,
+      const EagerTrie* tgt,
+      EagerTermIterator& etip,
+      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+  /**
+   * Assumes d_inst is ready, instantiate with the patterns in et.
+   */
+  void doInstantiations(
+      const EagerTrie* et, const Node& n,
+      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
   void addToFailExp(const EagerTrie* et,
                     std::map<const EagerTrie*, std::pair<Node, Node>>& failExp,
                     const Node& a,
