@@ -24,7 +24,7 @@ namespace quantifiers {
 
 EagerTrie::EagerTrie() {}
 
-bool EagerTrie::add(TermDb* tdb, const Node& n)
+EagerTrie* EagerTrie::add(TermDb* tdb, const Node& n)
 {
   std::vector<uint64_t> bound;
   // if n has kind INST_PATTERN, it is a filtering multi-trigger where the first
@@ -34,24 +34,24 @@ bool EagerTrie::add(TermDb* tdb, const Node& n)
   return addInternal(tdb, eti, bound, false);
 }
 
-bool EagerTrie::erase(TermDb* tdb, const Node& n)
+void EagerTrie::erase(TermDb* tdb, const Node& n)
 {
   std::vector<uint64_t> bound;
   // if n has kind INST_PATTERN, it is a filtering multi-trigger where the first
   // child is a single trigger
   Node t = n.getKind() == Kind::INST_PATTERN ? n[0] : n;
   EagerTermIterator eti(n, t);
-  return addInternal(tdb, eti, bound, true);
+  addInternal(tdb, eti, bound, true);
 }
 
-bool EagerTrie::addInternal(TermDb* tdb,
+EagerTrie* EagerTrie::addInternal(TermDb* tdb,
                             EagerTermIterator& eti,
                             std::vector<uint64_t>& bound,
                             bool isErase)
 {
   // remember the pattern, even if being erased
   d_exPat = eti.getOriginal();
-  bool ret;
+  EagerTrie* ret;
   if (eti.needsBacktrack())
   {
     if (eti.pop())
@@ -59,20 +59,17 @@ bool EagerTrie::addInternal(TermDb* tdb,
       // we have another child to continue from a higher level
       ret = addInternal(tdb, eti, bound, isErase);
     }
+    // we are at the leaf, we add or remove the pattern
+    else if (isErase)
+    {
+      AlwaysAssert(d_pats.back() == eti.getOriginal());
+      d_pats.pop_back();
+      ret = nullptr;
+    }
     else
     {
-      const Node& pat = eti.getOriginal();
-      // we are at the leaf, we add or remove the pattern
-      if (isErase)
-      {
-        AlwaysAssert(d_pats.back() == pat);
-        d_pats.pop_back();
-      }
-      else
-      {
-        d_pats.push_back(pat);
-      }
-      ret = true;
+      d_pats.push_back(eti.getOriginal());
+      ret = this;
     }
   }
   else
@@ -96,7 +93,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
         std::map<uint64_t, EagerTrie>::iterator it = etv.find(vnum);
         if (it == etv.end())
         {
-          return false;
+          return nullptr;
         }
         ret = it->second.addInternal(tdb, eti, bound, isErase);
         if (it->second.empty())
@@ -118,7 +115,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
         std::map<Node, EagerTrie>::iterator it = etg.find(nc);
         if (it == etg.end())
         {
-          return false;
+          return nullptr;
         }
         ret = it->second.addInternal(tdb, eti, bound, isErase);
         if (it->second.empty())
@@ -136,7 +133,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
       Node op = tdb->getMatchOperator(nc);
       if (op.isNull())
       {
-        return false;
+        return nullptr;
       }
       eti.incrementChild();
       eti.push(nc);
@@ -146,7 +143,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
         std::map<Node, EagerTrie>::iterator it = etng.find(op);
         if (it == etng.end())
         {
-          return false;
+          return nullptr;
         }
         ret = it->second.addInternal(tdb, eti, bound, isErase);
         if (it->second.empty())

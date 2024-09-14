@@ -90,12 +90,12 @@ class EagerTrie
    * terms of the form (INST_PATTERN (P x) t1 ... tn), where (P x) is a complete
    * single trigger and t1 ... tn do not have further variables to match.
    */
-  bool add(TermDb* tdb, const Node& pat);
-  bool erase(TermDb* tdb, const Node& pat);
+  EagerTrie* add(TermDb* tdb, const Node& pat);
+  void erase(TermDb* tdb, const Node& pat);
   bool empty() const;
 
  private:
-  bool addInternal(TermDb* tdb,
+  EagerTrie* addInternal(TermDb* tdb,
                    EagerTermIterator& eti,
                    std::vector<uint64_t>& alreadyBound,
                    bool isErase);

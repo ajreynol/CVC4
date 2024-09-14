@@ -69,11 +69,11 @@ EagerTrie* EagerOpInfo::getCurrentTrie(TermDb* tdb)
   return &d_trie;
 }
 
-void EagerOpInfo::addPattern(TermDb* tdb, const Node& pat)
+EagerTrie* EagerOpInfo::addPattern(TermDb* tdb, const Node& pat)
 {
-  d_trie.add(tdb, pat);
   d_triePats.emplace_back(pat);
   d_pats.emplace_back(pat);
+  return  d_trie.add(tdb, pat);
 }
 
 void EagerOpInfo::addGroundTerm(const Node& n) { d_rlvTerms.insert(n); }
@@ -102,7 +102,9 @@ EagerInst::EagerInst(Env& env,
       d_statWatchCount(
           statisticsRegistry().registerInt("EagerInst::watchCount")),
       d_statResumeMatchCall(
-          statisticsRegistry().registerInt("EagerInst::resumeMatchCall"))
+          statisticsRegistry().registerInt("EagerInst::resumeMatchCall")),
+      d_statCdPatMatchCall(
+          statisticsRegistry().registerInt("EagerInst::cdPatMatchCall"))
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
@@ -246,11 +248,34 @@ void EagerInst::registerQuant(const Node& q)
           op = spat.getOperator();
         }
         EagerOpInfo* eoi = getOrMkOpInfo(op, true);
-        eoi->addPattern(d_tdb, spat);
+        EagerTrie* et = eoi->addPattern(d_tdb, spat);
+        // can happen if not a usable trigger
+        if (et==nullptr)
+        {
+          owner = false;
+          continue;
+        }
         if (!isPp)
         {
           d_cdOps.insert(op);
           ++d_statUserPatsCd;
+          // match the current terms
+          // FIXME
+          /*
+          EagerTrie* root = eoi->getCurrentTrie(d_tdb);
+          Assert (root!=nullptr);
+          const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
+          const Node& spatr = spat.getKind() == Kind::INST_PATTERN ? spat[0] : spat;
+          for (const Node& t : gts)
+          {
+            EagerTermIterator etip(spat, spatr);
+            EagerTermIterator eti(t);
+            ++d_statCdPatMatchCall;
+            std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
+            resumeMatching(root, eti, et, etip, failExp);
+            addWatches(t, failExp);
+          }
+          */
         }
         else
         {

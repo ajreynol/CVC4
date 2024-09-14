@@ -57,7 +57,7 @@ class EagerOpInfo
   /** Get trie, possibly with cleaning */
   EagerTrie* getCurrentTrie(TermDb* tdb);
   /** Add pattern */
-  void addPattern(TermDb* tdb, const Node& pat);
+  EagerTrie* addPattern(TermDb* tdb, const Node& pat);
   /** Add ground term */
   void addGroundTerm(const Node& n);
   /** Get ground terms */
@@ -143,6 +143,8 @@ class EagerInst : public QuantifiersModule
   IntStat d_statWatchCount;
   /** Number of calls to match */
   IntStat d_statResumeMatchCall;
+  /** Number of calls to match */
+  IntStat d_statCdPatMatchCall;
   /** Static registers for instantiations */
   std::vector<Node> d_inst;
   /** */
