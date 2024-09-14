@@ -97,7 +97,9 @@ EagerInst::EagerInst(Env& env,
           statisticsRegistry().registerInt("EagerInst::userPatsCd")),
       d_statUserPatsMultiFilter(
           statisticsRegistry().registerInt("EagerInst::userPatsMultiFilter")),
-      d_statMatchCall(statisticsRegistry().registerInt("EagerInst::matchCall"))
+      d_statMatchCall(statisticsRegistry().registerInt("EagerInst::matchCall")),
+      d_statWatchCount(statisticsRegistry().registerInt("EagerInst::watchCount")),
+      d_statResumeMatchCall(statisticsRegistry().registerInt("EagerInst::resumeMatchCall"))
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
@@ -339,6 +341,10 @@ void EagerInst::notifyAssertedTerm(TNode t)
     // this term is never matchable again (unless against cd-dependent user ops)
     d_fullInstTerms.insert(t);
   }
+  else
+  {
+    addWatches(t, failExp);
+  }
   if (d_tmpAddedLemmas > prevLemmas)
   {
     d_qim.doPending();
@@ -361,6 +367,7 @@ void EagerInst::doMatching(
       // pop
       eti.pop();
       doMatching(et, eti, inst, failExp);
+      // restore state
       eti.d_stack.emplace_back(p);
     }
     else
@@ -517,8 +524,6 @@ void EagerInst::resumeMatching(
     EagerTermIterator& etip,
     std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
 {
-  // FIXME
-  return;
   if (pat == tgt)
   {
     // we have now fully resumed the match, now go to main matching procedure
@@ -529,12 +534,10 @@ void EagerInst::resumeMatching(
   // to resume matching at tgt. This is guided by an example
   // pattern that was stored at tgt and is being traversed with etip.
   // We assume that all steps of the matching succeed below.
-  if (eti.needsBacktrack())
+  while (eti.needsBacktrack())
   {
     eti.pop();
     etip.pop();
-    resumeMatching(pat, eti, inst, tgt, etip, failExp);
-    return;
   }
   const Node& tc = eti.getCurrent();
   const Node& pc = etip.getCurrent();
@@ -544,6 +547,10 @@ void EagerInst::resumeMatching(
   {
     const std::map<uint64_t, EagerTrie>& pv = pat->d_varChildren;
     uint64_t vnum = TermUtil::getInstVarNum(pc);
+    if (vnum >= inst.size())
+    {
+      inst.resize(vnum + 1);
+    }
     inst[vnum] = tc;
     std::map<uint64_t, EagerTrie>::const_iterator it = pv.find(vnum);
     Assert(it != pv.end());
@@ -652,6 +659,7 @@ void EagerInst::addWatch(const EagerTrie* pat,
     ar = br;
     br = tmp;
   }
+  ++d_statWatchCount;
   Trace("eager-inst-watch") << "Fail to match: " << t << " because " << ar
                             << " <> " << br << std::endl;
   EagerWatchInfo* ew = getOrMkWatchInfo(ar, true);
@@ -720,9 +728,6 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           ewl->d_matchJobs;
       for (const std::pair<const EagerTrie*, Node>& j : wmj)
       {
-        Trace("eager-inst-watch")
-            << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
-            << " and " << j.second << std::endl;
         const Node& t = j.second;
         const Node& op = d_tdb->getMatchOperator(t);
         Assert(!op.isNull());
@@ -733,10 +738,14 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         }
         const Node& pat = j.first->d_exPat;
         Assert(!pat.isNull());
+        Trace("eager-inst-watch")
+            << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
+            << " and " << j.second << ", resume pattern is " << pat << std::endl;
         const Node& patr = pat.getKind() == Kind::INST_PATTERN ? pat[0] : pat;
         EagerTermIterator etip(pat, patr);
         EagerTermIterator eti(t);
         std::vector<Node> inst;
+        ++d_statResumeMatchCall;
         resumeMatching(root, eti, inst, j.first, etip, nextFails[t]);
       }
       // no longer valid

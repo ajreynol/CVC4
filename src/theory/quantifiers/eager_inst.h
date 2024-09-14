@@ -138,6 +138,10 @@ class EagerInst : public QuantifiersModule
   IntStat d_statUserPatsMultiFilter;
   /** Number of calls to match */
   IntStat d_statMatchCall;
+  /** Number of calls to match */
+  IntStat d_statWatchCount;
+  /** Number of calls to match */
+  IntStat d_statResumeMatchCall;
   /** */
   std::pair<Node, Node> d_nullPair;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
