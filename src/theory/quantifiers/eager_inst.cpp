@@ -76,6 +76,11 @@ void EagerOpInfo::addPattern(TermDb* tdb, const Node& pat)
   d_pats.emplace_back(pat);
 }
 
+void EagerOpInfo::addGroundTerm(const Node& n)
+{
+  d_rlvTerms.insert(n);
+}
+
 EagerInst::EagerInst(Env& env,
                      QuantifiersState& qs,
                      QuantifiersInferenceManager& qim,
@@ -87,7 +92,6 @@ EagerInst::EagerInst(Env& env,
       d_instTerms(userContext()),
       d_ownedQuants(context()),
       d_ppQuants(userContext()),
-      d_rlvTerms(context()),
       d_fullInstTerms(userContext()),
       d_cdOps(context()),
       d_repWatch(context()),
@@ -302,7 +306,8 @@ void EagerInst::notifyAssertedTerm(TNode t)
     return;
   }
   Node op = t.getOperator();
-  d_rlvTerms.insert(t);
+  EagerOpInfo* eoi = getOrMkOpInfo(op, true);
+  eoi->addGroundTerm(t);
   if (d_fullInstTerms.find(t) != d_fullInstTerms.end())
   {
     if (d_cdOps.find(op) == d_cdOps.end())
@@ -310,20 +315,13 @@ void EagerInst::notifyAssertedTerm(TNode t)
       return;
     }
   }
-  // NOTE: in some cases a macro definition for this term may come after it is
-  // registered, we don't bother handling this.
-  EagerOpInfo* eoi = getOrMkOpInfo(op, false);
-  if (eoi == nullptr)
-  {
-    d_fullInstTerms.insert(t);
-    return;
-  }
   Trace("eager-inst-debug")
       << "Asserted term " << t << " with user patterns" << std::endl;
   EagerTrie* et = eoi->getCurrentTrie(d_tdb);
   if (et == nullptr)
   {
     // no current active patterns
+    d_fullInstTerms.insert(t);
     return;
   }
   // if master equality engine is inconsistent, we are in conflict
@@ -396,7 +394,7 @@ void EagerInst::doMatching(
           {
             Node pcs = pat[j].substitute(
                 ics.begin(), ics.end(), instq.begin(), instq.end());
-            if (d_rlvTerms.find(pcs) == d_rlvTerms.end())
+            if (!isRelevantTerm(pcs))
             {
               filtered = true;
               break;
@@ -771,6 +769,18 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
   {
     addWatches(nf.first, nf.second);
   }
+}
+
+bool EagerInst::isRelevantTerm(const Node& t)
+{
+  Node op = d_tdb->getMatchOperator(t);
+  EagerOpInfo* eoi = getOrMkOpInfo(op, false);
+  if (eoi==nullptr)
+  {
+    return false;
+  }
+  const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
+  return gts.find(t)!=gts.end();
 }
 
 }  // namespace quantifiers
