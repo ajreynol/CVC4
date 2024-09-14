@@ -646,8 +646,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         }
         continue;
       }
-      // otherwise, we have a list of matching jobs that where waiting for this merge,
-      // process them now.
+      // otherwise, we have a list of matching jobs that where waiting for this
+      // merge, process them now.
       context::CDList<std::pair<const EagerTrie*, Node>>& wmj =
           ewl->d_matchJobs;
       for (const std::pair<const EagerTrie*, Node>& j : wmj)

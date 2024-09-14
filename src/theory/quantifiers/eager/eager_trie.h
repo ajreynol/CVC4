@@ -30,28 +30,26 @@ class EagerInst;
 class EagerTermIterator
 {
   friend class EagerInst;
+
  public:
-  EagerTermIterator(const Node& t) : d_orig(t)
+  EagerTermIterator(const Node& t) : d_orig(t) { d_stack.emplace_back(t, 0); }
+  EagerTermIterator(const Node& n, const Node& t) : d_orig(n)
   {
-    d_stack.emplace_back(t,0);
-  }
-  EagerTermIterator(const Node& n, const Node& t)
-      : d_orig(n)
-  {
-    d_stack.emplace_back(t,0);
+    d_stack.emplace_back(t, 0);
   }
   TNode getOriginal() const { return d_orig; }
   TNode getCurrent() const
   {
-    Assert (!d_stack.empty());
+    Assert(!d_stack.empty());
     const std::pair<Node, size_t>& cur = d_stack.back();
     Assert(cur.second < cur.first.getNumChildren());
     return cur.first[cur.second];
   }
-  bool needsBacktrack() const {
-    Assert (!d_stack.empty());
+  bool needsBacktrack() const
+  {
+    Assert(!d_stack.empty());
     const std::pair<Node, size_t>& cur = d_stack.back();
-    return cur.second==cur.first.getNumChildren();
+    return cur.second == cur.first.getNumChildren();
   }
   void incrementChild() { d_stack.back().second++; }
   void decrementChild()
@@ -59,20 +57,18 @@ class EagerTermIterator
     Assert(d_stack.back().second > 0);
     d_stack.back().second--;
   }
-  void push(const Node& t)
-  {
-    d_stack.emplace_back(t, 0);
-  }
-  bool canPop() const { return d_stack.size()>1; }
+  void push(const Node& t) { d_stack.emplace_back(t, 0); }
+  bool canPop() const { return d_stack.size() > 1; }
   bool pop()
   {
-    if (d_stack.size()<=1)
+    if (d_stack.size() <= 1)
     {
       return false;
     }
     d_stack.pop_back();
     return true;
   }
+
  private:
   Node d_orig;
   std::vector<std::pair<Node, size_t>> d_stack;
