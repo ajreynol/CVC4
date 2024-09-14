@@ -30,6 +30,7 @@ class EagerTermIterator
 {
 public:
   EagerTermIterator(const Node& t) : d_orig(t), d_term(t), d_index(0){}
+  EagerTermIterator(const Node& n, const Node& t) : d_orig(n), d_term(t), d_index(0){}
   TNode getOriginal() const { return d_orig; }
   TNode getCurrent() const
   {
@@ -51,11 +52,16 @@ public:
     d_term = d_term[d_index];
     d_index = 0;
   }
-  void pop() {
+  bool pop() {
+    if (d_stack.empty())
+    {
+      return false;
+    }
     std::pair<Node, size_t> p = d_stack.back();
     d_term = p.first;
     d_index = p.second;
     d_stack.pop_back();
+    return true;
   }
 private:
   Node d_orig;
@@ -85,10 +91,7 @@ class EagerTrie
 
  private:
   bool addInternal(TermDb* tdb,
-                   const Node& pat,
-                   const Node& n,
-                   size_t i,
-                   std::vector<std::pair<Node, size_t>>& ets,
+                   EagerTermIterator& eti,
                    std::vector<uint64_t>& alreadyBound,
                    bool isErase);
 };

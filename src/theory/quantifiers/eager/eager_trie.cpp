@@ -26,41 +26,37 @@ EagerTrie::EagerTrie() : d_parent(nullptr) {}
 
 bool EagerTrie::add(TermDb* tdb, const Node& n)
 {
-  std::vector<std::pair<Node, size_t>> ets;
   std::vector<uint64_t> bound;
   Node t = n.getKind() == Kind::INST_PATTERN ? n[0] : n;
-  return addInternal(tdb, n, t, 0, ets, bound, false);
+  EagerTermIterator eti(n, t);
+  return addInternal(tdb, eti, bound, false);
 }
 
 bool EagerTrie::erase(TermDb* tdb, const Node& n)
 {
-  std::vector<std::pair<Node, size_t>> ets;
   std::vector<uint64_t> bound;
   Node t = n.getKind() == Kind::INST_PATTERN ? n[0] : n;
-  return addInternal(tdb, n, t, 0, ets, bound, true);
+  EagerTermIterator eti(n, t);
+  return addInternal(tdb, eti, bound, true);
 }
 
 bool EagerTrie::addInternal(TermDb* tdb,
-                            const Node& pat,
-                            const Node& n,
-                            size_t i,
-                            std::vector<std::pair<Node, size_t>>& ets,
+                            EagerTermIterator& eti,
                             std::vector<uint64_t>& bound,
                             bool isErase)
 {
   EagerTrie* et = this;
   bool ret;
-  if (i == n.getNumChildren())
+  if (eti.needsBacktrack())
   {
-    if (!ets.empty())
+    if (eti.pop())
     {
       // we have another child to continue from a higher level
-      std::pair<Node, size_t> p = ets.back();
-      ets.pop_back();
-      ret = addInternal(tdb, pat, p.first, p.second, ets, bound, isErase);
+      ret = addInternal(tdb, eti, bound, isErase);
     }
     else
     {
+      const Node& pat = eti.getOriginal();
       // we are at the leaf, we add or remove the pattern
       if (isErase)
       {
@@ -76,7 +72,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
   }
   else
   {
-    const Node& nc = n[i];
+    const Node& nc = eti.getCurrent();
     if (nc.getKind() == Kind::INST_CONSTANT)
     {
       uint64_t vnum = TermUtil::getInstVarNum(nc);
@@ -88,6 +84,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
       }
       bound.push_back(vnum);
       */
+      eti.incrementChild();
       std::map<uint64_t, EagerTrie>& etv = et->d_varChildren;
       if (isErase)
       {
@@ -96,7 +93,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
         {
           return false;
         }
-        ret = it->second.addInternal(tdb, pat, n, i + 1, ets, bound, isErase);
+        ret = it->second.addInternal(tdb, eti, bound, isErase);
         if (it->second.empty())
         {
           etv.erase(it);
@@ -104,11 +101,12 @@ bool EagerTrie::addInternal(TermDb* tdb,
       }
       else
       {
-        ret = etv[vnum].addInternal(tdb, pat, n, i + 1, ets, bound, isErase);
+        ret = etv[vnum].addInternal(tdb, eti, bound, isErase);
       }
     }
     else if (!TermUtil::hasInstConstAttr(nc))
     {
+      eti.incrementChild();
       std::map<Node, EagerTrie>& etg = et->d_groundChildren;
       if (isErase)
       {
@@ -117,7 +115,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
         {
           return false;
         }
-        ret = it->second.addInternal(tdb, pat, n, i + 1, ets, bound, isErase);
+        ret = it->second.addInternal(tdb, eti, bound, isErase);
         if (it->second.empty())
         {
           etg.erase(it);
@@ -125,7 +123,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
       }
       else
       {
-        ret = etg[nc].addInternal(tdb, pat, n, i + 1, ets, bound, isErase);
+        ret = etg[nc].addInternal(tdb, eti, bound, isErase);
       }
     }
     else
@@ -135,8 +133,8 @@ bool EagerTrie::addInternal(TermDb* tdb,
       {
         return false;
       }
+      eti.push();
       std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
-      ets.emplace_back(n, i + 1);
       if (isErase)
       {
         std::map<Node, EagerTrie>::iterator it = etng.find(op);
@@ -144,7 +142,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
         {
           return false;
         }
-        ret = it->second.addInternal(tdb, pat, nc, 0, ets, bound, isErase);
+        ret = it->second.addInternal(tdb, eti, bound, isErase);
         if (it->second.empty())
         {
           etng.erase(it);
@@ -152,7 +150,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
       }
       else
       {
-        ret = etng[op].addInternal(tdb, pat, nc, 0, ets, bound, isErase);
+        ret = etng[op].addInternal(tdb, eti, bound, isErase);
       }
     }
   }
