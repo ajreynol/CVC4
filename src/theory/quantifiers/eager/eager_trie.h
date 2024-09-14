@@ -25,9 +25,11 @@ namespace theory {
 namespace quantifiers {
 
 class TermDb;
+class EagerInst;
 
 class EagerTermIterator
 {
+  friend class EagerInst;
  public:
   EagerTermIterator(const Node& t) : d_orig(t), d_term(t), d_index(0) {}
   EagerTermIterator(const Node& n, const Node& t)
@@ -65,7 +67,6 @@ class EagerTermIterator
     d_stack.pop_back();
     return true;
   }
-
  private:
   Node d_orig;
   Node d_term;

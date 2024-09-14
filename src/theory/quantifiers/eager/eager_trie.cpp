@@ -27,6 +27,7 @@ EagerTrie::EagerTrie() : d_parent(nullptr) {}
 bool EagerTrie::add(TermDb* tdb, const Node& n)
 {
   std::vector<uint64_t> bound;
+  // if n has kind INST_PATTERN, it is a filtering multi-trigger where the first child is a single trigger
   Node t = n.getKind() == Kind::INST_PATTERN ? n[0] : n;
   EagerTermIterator eti(n, t);
   return addInternal(tdb, eti, bound, false);
@@ -35,6 +36,7 @@ bool EagerTrie::add(TermDb* tdb, const Node& n)
 bool EagerTrie::erase(TermDb* tdb, const Node& n)
 {
   std::vector<uint64_t> bound;
+  // if n has kind INST_PATTERN, it is a filtering multi-trigger where the first child is a single trigger
   Node t = n.getKind() == Kind::INST_PATTERN ? n[0] : n;
   EagerTermIterator eti(n, t);
   return addInternal(tdb, eti, bound, true);

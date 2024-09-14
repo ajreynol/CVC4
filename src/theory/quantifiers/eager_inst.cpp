@@ -331,9 +331,9 @@ void EagerInst::notifyAssertedTerm(TNode t)
   ++d_statMatchCall;
   size_t prevLemmas = d_tmpAddedLemmas;
   std::vector<Node> inst;
-  std::vector<std::pair<Node, size_t>> ets;
+  EagerTermIterator eti(t);
   std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
-  doMatchingTrieInternal(et, t, t, 0, inst, ets, failExp);
+  doMatchingTrieInternal(et, eti, inst, failExp);
   if (failExp.empty())
   {
     // this term is never matchable again (unless against cd-dependent user ops)
@@ -347,23 +347,27 @@ void EagerInst::notifyAssertedTerm(TNode t)
 
 void EagerInst::doMatchingTrieInternal(
     const EagerTrie* et,
-    const Node& n,
-    const Node& t,
-    size_t i,
+    EagerTermIterator& eti,
     std::vector<Node>& inst,
-    std::vector<std::pair<Node, size_t>>& ets,
     std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
 {
-  if (i == t.getNumChildren())
+  if (eti.needsBacktrack())
   {
     // continue matching
-    if (!ets.empty())
+    if (!eti.d_stack.empty())
     {
       Assert(et->d_pats.empty());
-      std::pair<Node, size_t> p = ets.back();
-      ets.pop_back();
-      doMatchingTrieInternal(et, n, p.first, p.second, inst, ets, failExp);
-      ets.emplace_back(p);
+      // save state
+      Node pt = eti.d_term;
+      size_t pi = eti.d_index;
+      std::pair<Node, size_t> p = eti.d_stack.back();
+      // pop
+      eti.pop();
+      doMatchingTrieInternal(et, eti, inst, failExp);
+      // restore state
+      eti.d_term = pt;
+      eti.d_index = pi;
+      eti.d_stack.emplace_back(p);
     }
     else
     {
@@ -371,6 +375,7 @@ void EagerInst::doMatchingTrieInternal(
       const std::vector<Node>& pats = et->d_pats;
       Instantiate* ie = d_qim.getInstantiate();
       std::vector<Node> instSub;
+      const Node& n = eti.getOriginal();
       for (const Node& pat : pats)
       {
         std::pair<Node, Node> key(n, pat);
@@ -418,6 +423,8 @@ void EagerInst::doMatchingTrieInternal(
     return;
   }
   Assert(et->d_pats.empty());
+  const Node& tc = eti.getCurrent();
+  eti.incrementChild();
   for (const std::pair<const uint64_t, EagerTrie>& c : et->d_varChildren)
   {
     uint64_t vnum = c.first;
@@ -426,32 +433,33 @@ void EagerInst::doMatchingTrieInternal(
     {
       inst.resize(vnum + 1);
     }
-    if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], t[i]))
+    if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], tc))
     {
-      addToFailExp(&c.second, failExp, inst[vnum], t[i]);
+      addToFailExp(&c.second, failExp, inst[vnum], tc);
       continue;
     }
     // not necessary??
     Node prev = inst[vnum];
-    inst[vnum] = t[i];
-    doMatchingTrieInternal(&c.second, n, t, i + 1, inst, ets, failExp);
+    inst[vnum] = tc;
+    doMatchingTrieInternal(&c.second, eti, inst, failExp);
     inst[vnum] = prev;
   }
   for (const std::pair<const Node, EagerTrie>& c : et->d_groundChildren)
   {
-    if (!d_qstate.areEqual(c.first, t[i]))
+    if (!d_qstate.areEqual(c.first, tc))
     {
-      addToFailExp(&c.second, failExp, c.first, t[i]);
+      addToFailExp(&c.second, failExp, c.first, tc);
       continue;
     }
-    doMatchingTrieInternal(&c.second, n, t, i + 1, inst, ets, failExp);
+    doMatchingTrieInternal(&c.second, eti, inst, failExp);
   }
+  eti.decrementChild();
   const std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
   if (etng.empty())
   {
     return;
   }
-  Node op = d_tdb->getMatchOperator(t[i]);
+  Node op = d_tdb->getMatchOperator(tc);
   if (op.isNull())
   {
     // don't bother if we are in simple mode
@@ -459,6 +467,7 @@ void EagerInst::doMatchingTrieInternal(
     {
       return;
     }
+    /*
     std::map<Node, std::vector<Node>> terms;
     // extract terms per operator
     Assert(d_ee->hasTerm(t[i]));
@@ -483,22 +492,30 @@ void EagerInst::doMatchingTrieInternal(
         itc = etng.find(tp.first);
         Assert(itc != etng.end());
         const EagerTrie* etc = &itc->second;
-        for (const Node& tc : tp.second)
+        for (const Node& tt : tp.second)
         {
-          doMatchingTrieInternal(etc, n, tc, 0, inst, ets, failExp);
+          doMatchingTrieInternal(etc, n, tt, 0, inst, ets, failExp);
         }
       }
       ets.pop_back();
     }
+    */
   }
   else
   {
     std::map<Node, EagerTrie>::const_iterator it = etng.find(op);
     if (it != etng.end())
     {
-      ets.emplace_back(t, i + 1);
-      doMatchingTrieInternal(&it->second, n, t[i], 0, inst, ets, failExp);
-      ets.pop_back();
+      // save state
+      Node pt = eti.d_term;
+      size_t pi = eti.d_index;
+      // push
+      eti.push();
+      doMatchingTrieInternal(&it->second, eti, inst, failExp);
+      eti.d_stack.pop_back();
+      // revert state
+      eti.d_term = pt;
+      eti.d_index = pi;
     }
   }
 }
@@ -592,6 +609,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
   EagerWatchInfo* ewi[2];
   std::map<Node, std::map<const EagerTrie*, std::pair<Node, Node>>> nextFails;
   bool addedInst = false;
+  // look at the watch info of both equivalence classes
   for (size_t i = 0; i < 2; i++)
   {
     ewi[i] = getOrMkWatchInfo(t1, false);
@@ -611,6 +629,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       EagerWatchList* ewl = itw->second.get();
       if (!ewl->d_valid.get())
       {
+        // this list was already processed by a previous merge
         continue;
       }
       if (!d_qstate.areEqual(itw->first, t2))
@@ -637,6 +656,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         }
         continue;
       }
+      // otherwise, we have a list of matching jobs that where waiting for this merge,
+      // process them now.
       context::CDList<std::pair<const EagerTrie*, Node>>& wmj =
           ewl->d_matchJobs;
       for (const std::pair<const EagerTrie*, Node>& j : wmj)
@@ -657,7 +678,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       t2 = tmp;
     }
   }
-  // flush if added
+  // do pending lemmas if added
   if (addedInst)
   {
     d_qim.doPending();
