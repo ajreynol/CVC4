@@ -333,7 +333,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   std::vector<Node> inst;
   EagerTermIterator eti(t);
   std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
-  doMatchingTrieInternal(et, eti, inst, failExp);
+  doMatching(et, eti, inst, failExp);
   if (failExp.empty())
   {
     // this term is never matchable again (unless against cd-dependent user ops)
@@ -345,7 +345,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
 }
 
-void EagerInst::doMatchingTrieInternal(
+void EagerInst::doMatching(
     const EagerTrie* et,
     EagerTermIterator& eti,
     std::vector<Node>& inst,
@@ -360,7 +360,7 @@ void EagerInst::doMatchingTrieInternal(
       std::pair<Node, size_t> p = eti.d_stack.back();
       // pop
       eti.pop();
-      doMatchingTrieInternal(et, eti, inst, failExp);
+      doMatching(et, eti, inst, failExp);
       eti.d_stack.emplace_back(p);
     }
     else
@@ -435,7 +435,7 @@ void EagerInst::doMatchingTrieInternal(
     // not necessary??
     Node prev = inst[vnum];
     inst[vnum] = tc;
-    doMatchingTrieInternal(&c.second, eti, inst, failExp);
+    doMatching(&c.second, eti, inst, failExp);
     inst[vnum] = prev;
   }
   for (const std::pair<const Node, EagerTrie>& c : et->d_groundChildren)
@@ -445,7 +445,7 @@ void EagerInst::doMatchingTrieInternal(
       addToFailExp(&c.second, failExp, c.first, tc);
       continue;
     }
-    doMatchingTrieInternal(&c.second, eti, inst, failExp);
+    doMatching(&c.second, eti, inst, failExp);
   }
   eti.decrementChild();
   const std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
@@ -488,7 +488,7 @@ void EagerInst::doMatchingTrieInternal(
         for (const Node& tt : tp.second)
         {
           eti.push(tt);
-          doMatchingTrieInternal(etc, eti, inst, failExp);
+          doMatching(etc, eti, inst, failExp);
           eti.pop();
         }
       }
@@ -503,10 +503,68 @@ void EagerInst::doMatchingTrieInternal(
       // push
       eti.incrementChild();
       eti.push(tc);
-      doMatchingTrieInternal(&it->second, eti, inst, failExp);
+      doMatching(&it->second, eti, inst, failExp);
       eti.pop();
       eti.decrementChild();
     }
+  }
+}
+void EagerInst::resumeMatching(
+      const EagerTrie* pat,
+      EagerTermIterator& eti,
+      std::vector<Node>& inst,
+      const EagerTrie* tgt,
+      EagerTermIterator& etip,
+      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+{
+  // FIXME
+  return;
+  if (pat==tgt)
+  {
+    // we have now fully resumed the match, now go to main matching procedure
+    doMatching(pat, eti, inst, failExp);
+    return;
+  }
+  // The following traverses a single path of the eager trie
+  // to resume matching at tgt. This is guided by an example
+  // pattern that was stored at tgt and is being traversed with etip.
+  // We assume that all steps of the matching succeed below.
+  if (eti.needsBacktrack())
+  {
+    eti.pop();
+    etip.pop();
+    resumeMatching(pat, eti, inst, tgt, etip, failExp);
+    return;
+  }
+  const Node& tc = eti.getCurrent();
+  const Node& pc = etip.getCurrent();
+  eti.incrementChild();
+  etip.incrementChild();
+  if (pc.getKind() == Kind::INST_CONSTANT)
+  {
+    const std::map<uint64_t, EagerTrie>& pv = pat->d_varChildren;
+    uint64_t vnum = TermUtil::getInstVarNum(pc);
+    inst[vnum] = tc;
+    std::map<uint64_t, EagerTrie>::const_iterator it = pv.find(vnum);
+    Assert (it!=pv.end());
+    resumeMatching(&it->second, eti, inst, tgt, etip, failExp);
+  }
+  else if (!TermUtil::hasInstConstAttr(pc))
+  {
+    const std::map<Node, EagerTrie>& pg = pat->d_groundChildren;
+    std::map<Node, EagerTrie>::const_iterator it = pg.find(pc);
+    Assert (it!=pg.end());
+    resumeMatching(&it->second, eti, inst, tgt, etip, failExp);
+  }
+  else
+  {
+    eti.push(tc);
+    etip.push(pc);
+    const Node& op = d_tdb->getMatchOperator(pc);
+    const std::map<Node, EagerTrie>& png = pat->d_ngroundChildren;
+    std::map<Node, EagerTrie>::const_iterator it = png.find(op);
+    Assert (it!=png.end());
+    resumeMatching(&it->second, eti, inst, tgt, etip, failExp);
   }
 }
 
@@ -537,6 +595,16 @@ EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
   std::shared_ptr<EagerOpInfo> eoi = std::make_shared<EagerOpInfo>(context());
   d_userPat.insert(op, eoi);
   return eoi.get();
+}
+
+EagerTrie* EagerInst::getCurrentTrie(const Node& op)
+{
+  EagerOpInfo* eoi = getOrMkOpInfo(op, false);
+  if (eoi == nullptr)
+  {
+    return nullptr;
+  }
+  return eoi->getCurrentTrie(d_tdb);
 }
 
 EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
@@ -655,7 +723,21 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         Trace("eager-inst-watch")
             << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
             << " and " << j.second << std::endl;
-        // TODO: resume
+        const Node& t = j.second;
+        const Node& op = d_tdb->getMatchOperator(t);
+        Assert (!op.isNull());
+        EagerTrie* root = getCurrentTrie(op);
+        if (root==nullptr)
+        {
+          continue;
+        }
+        const Node& pat = j.first->d_exPat;
+        Assert (!pat.isNull());
+        const Node& patr = pat.getKind()==Kind::INST_PATTERN ? pat[0] : pat;
+        EagerTermIterator etip(pat, patr);
+        EagerTermIterator eti(t);
+        std::vector<Node> inst;
+        resumeMatching(root, eti, inst, j.first, etip, nextFails[t]);
       }
       // no longer valid
       ewl->d_valid = false;

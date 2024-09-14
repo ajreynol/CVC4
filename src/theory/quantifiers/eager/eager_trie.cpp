@@ -22,7 +22,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-EagerTrie::EagerTrie() : d_parent(nullptr) {}
+EagerTrie::EagerTrie() {}
 
 bool EagerTrie::add(TermDb* tdb, const Node& n)
 {
@@ -49,7 +49,8 @@ bool EagerTrie::addInternal(TermDb* tdb,
                             std::vector<uint64_t>& bound,
                             bool isErase)
 {
-  EagerTrie* et = this;
+  // remember the pattern, even if being erased
+  d_exPat = eti.getOriginal();
   bool ret;
   if (eti.needsBacktrack())
   {
@@ -89,7 +90,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
       bound.push_back(vnum);
       */
       eti.incrementChild();
-      std::map<uint64_t, EagerTrie>& etv = et->d_varChildren;
+      std::map<uint64_t, EagerTrie>& etv = d_varChildren;
       if (isErase)
       {
         std::map<uint64_t, EagerTrie>::iterator it = etv.find(vnum);
@@ -111,7 +112,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
     else if (!TermUtil::hasInstConstAttr(nc))
     {
       eti.incrementChild();
-      std::map<Node, EagerTrie>& etg = et->d_groundChildren;
+      std::map<Node, EagerTrie>& etg = d_groundChildren;
       if (isErase)
       {
         std::map<Node, EagerTrie>::iterator it = etg.find(nc);
@@ -139,7 +140,7 @@ bool EagerTrie::addInternal(TermDb* tdb,
       }
       eti.incrementChild();
       eti.push(nc);
-      std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
+      std::map<Node, EagerTrie>& etng = d_ngroundChildren;
       if (isErase)
       {
         std::map<Node, EagerTrie>::iterator it = etng.find(op);

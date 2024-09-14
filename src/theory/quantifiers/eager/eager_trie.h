@@ -78,7 +78,8 @@ class EagerTrie
 {
  public:
   EagerTrie();
-  EagerTrie* d_parent;
+  /** An example of a pattern that was added */
+  Node d_exPat;
   std::map<uint64_t, EagerTrie> d_varChildren;
   std::map<uint64_t, EagerTrie> d_checkVarChildren;  // TODO: use???
   std::map<Node, EagerTrie> d_groundChildren;
