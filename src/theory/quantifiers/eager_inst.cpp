@@ -459,6 +459,9 @@ void EagerInst::doMatchingTrieInternal(
   {
     return;
   }
+  // save state
+  Node pt = eti.d_term;
+  size_t pi = eti.d_index;
   Node op = d_tdb->getMatchOperator(tc);
   if (op.isNull())
   {
@@ -506,18 +509,15 @@ void EagerInst::doMatchingTrieInternal(
     std::map<Node, EagerTrie>::const_iterator it = etng.find(op);
     if (it != etng.end())
     {
-      // save state
-      Node pt = eti.d_term;
-      size_t pi = eti.d_index;
       // push
       eti.push();
       doMatchingTrieInternal(&it->second, eti, inst, failExp);
       eti.d_stack.pop_back();
-      // revert state
-      eti.d_term = pt;
-      eti.d_index = pi;
     }
   }
+  // revert state
+  eti.d_term = pt;
+  eti.d_index = pi;
 }
 
 void EagerInst::addToFailExp(
