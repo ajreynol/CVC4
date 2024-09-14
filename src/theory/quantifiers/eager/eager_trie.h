@@ -96,9 +96,9 @@ class EagerTrie
 
  private:
   EagerTrie* addInternal(TermDb* tdb,
-                   EagerTermIterator& eti,
-                   std::vector<uint64_t>& alreadyBound,
-                   bool isErase);
+                         EagerTermIterator& eti,
+                         std::vector<uint64_t>& alreadyBound,
+                         bool isErase);
 };
 
 }  // namespace quantifiers

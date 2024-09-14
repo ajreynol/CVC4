@@ -45,9 +45,9 @@ void EagerTrie::erase(TermDb* tdb, const Node& n)
 }
 
 EagerTrie* EagerTrie::addInternal(TermDb* tdb,
-                            EagerTermIterator& eti,
-                            std::vector<uint64_t>& bound,
-                            bool isErase)
+                                  EagerTermIterator& eti,
+                                  std::vector<uint64_t>& bound,
+                                  bool isErase)
 {
   // remember the pattern, even if being erased
   d_exPat = eti.getOriginal();

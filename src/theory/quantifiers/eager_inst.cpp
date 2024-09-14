@@ -73,7 +73,7 @@ EagerTrie* EagerOpInfo::addPattern(TermDb* tdb, const Node& pat)
 {
   d_triePats.emplace_back(pat);
   d_pats.emplace_back(pat);
-  return  d_trie.add(tdb, pat);
+  return d_trie.add(tdb, pat);
 }
 
 void EagerOpInfo::addGroundTerm(const Node& n) { d_rlvTerms.insert(n); }
@@ -250,7 +250,7 @@ void EagerInst::registerQuant(const Node& q)
         EagerOpInfo* eoi = getOrMkOpInfo(op, true);
         EagerTrie* et = eoi->addPattern(d_tdb, spat);
         // can happen if not a usable trigger
-        if (et==nullptr)
+        if (et == nullptr)
         {
           owner = false;
           continue;
@@ -262,10 +262,13 @@ void EagerInst::registerQuant(const Node& q)
           // match the current terms
           // FIXME
           EagerTrie* root = eoi->getCurrentTrie(d_tdb);
-          Assert (root!=nullptr);
+          Assert(root != nullptr);
           const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
-          const Node& spatr = spat.getKind() == Kind::INST_PATTERN ? spat[0] : spat;
-          Trace("eager-inst-watch") << "Since " << spat << " was added, revisit match with " << gts.size() << " terms" << std::endl;
+          const Node& spatr =
+              spat.getKind() == Kind::INST_PATTERN ? spat[0] : spat;
+          Trace("eager-inst-watch")
+              << "Since " << spat << " was added, revisit match with "
+              << gts.size() << " terms" << std::endl;
           for (const Node& t : gts)
           {
             EagerTermIterator etip(spat, spatr);
@@ -492,8 +495,10 @@ void EagerInst::doMatching(
   }
 }
 
-void EagerInst::doInstantiations(const EagerTrie* et, const Node& n,
-      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+void EagerInst::doInstantiations(
+    const EagerTrie* et,
+    const Node& n,
+    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
 {
   const std::vector<Node>& pats = et->d_pats;
   Instantiate* ie = d_qim.getInstantiate();

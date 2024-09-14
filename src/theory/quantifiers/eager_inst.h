@@ -171,7 +171,8 @@ class EagerInst : public QuantifiersModule
    * Assumes d_inst is ready, instantiate with the patterns in et.
    */
   void doInstantiations(
-      const EagerTrie* et, const Node& n,
+      const EagerTrie* et,
+      const Node& n,
       std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
   void addToFailExp(const EagerTrie* et,
                     std::map<const EagerTrie*, std::pair<Node, Node>>& failExp,
