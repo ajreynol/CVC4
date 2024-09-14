@@ -142,6 +142,8 @@ class EagerInst : public QuantifiersModule
   IntStat d_statWatchCount;
   /** Number of calls to match */
   IntStat d_statResumeMatchCall;
+  /** Static registers for instantiations */
+  std::vector<Node> d_inst;
   /** */
   std::pair<Node, Node> d_nullPair;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
@@ -149,12 +151,10 @@ class EagerInst : public QuantifiersModule
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
   void doMatching(const EagerTrie* pat,
                   EagerTermIterator& eti,
-                  std::vector<Node>& inst,
                   std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
   void resumeMatching(
       const EagerTrie* pat,
       EagerTermIterator& eti,
-      std::vector<Node>& inst,
       const EagerTrie* tgt,
       EagerTermIterator& etip,
       std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);

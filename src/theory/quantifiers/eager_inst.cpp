@@ -332,10 +332,9 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
   ++d_statMatchCall;
   size_t prevLemmas = d_tmpAddedLemmas;
-  std::vector<Node> inst;
   EagerTermIterator eti(t);
   std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
-  doMatching(et, eti, inst, failExp);
+  doMatching(et, eti, failExp);
   if (failExp.empty())
   {
     // this term is never matchable again (unless against cd-dependent user ops)
@@ -354,7 +353,6 @@ void EagerInst::notifyAssertedTerm(TNode t)
 void EagerInst::doMatching(
     const EagerTrie* et,
     EagerTermIterator& eti,
-    std::vector<Node>& inst,
     std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
 {
   if (eti.needsBacktrack())
@@ -366,7 +364,7 @@ void EagerInst::doMatching(
       std::pair<Node, size_t> p = eti.d_stack.back();
       // pop
       eti.pop();
-      doMatching(et, eti, inst, failExp);
+      doMatching(et, eti, failExp);
       // restore state
       eti.d_stack.emplace_back(p);
     }
@@ -375,7 +373,6 @@ void EagerInst::doMatching(
       // instantiate with all patterns stored on this leaf
       const std::vector<Node>& pats = et->d_pats;
       Instantiate* ie = d_qim.getInstantiate();
-      std::vector<Node> instSub;
       const Node& n = eti.getOriginal();
       for (const Node& pat : pats)
       {
@@ -387,8 +384,8 @@ void EagerInst::doMatching(
         Node q = TermUtil::getInstConstAttr(pat);
         Assert(!q.isNull());
         // must resize
-        std::vector<Node> instq(inst.begin(),
-                                inst.begin() + q[0].getNumChildren());
+        std::vector<Node> instq(d_inst.begin(),
+                                d_inst.begin() + q[0].getNumChildren());
         if (pat.getKind() == Kind::INST_PATTERN)
         {
           std::vector<Node> ics = d_qreg.getInstantiationConstants(q);
@@ -430,20 +427,20 @@ void EagerInst::doMatching(
   {
     uint64_t vnum = c.first;
     // not necessary?
-    if (vnum >= inst.size())
+    if (vnum >= d_inst.size())
     {
-      inst.resize(vnum + 1);
+      d_inst.resize(vnum + 1);
     }
-    if (!inst[vnum].isNull() && !d_qstate.areEqual(inst[vnum], tc))
+    if (!d_inst[vnum].isNull() && !d_qstate.areEqual(d_inst[vnum], tc))
     {
-      addToFailExp(&c.second, failExp, inst[vnum], tc);
+      addToFailExp(&c.second, failExp, d_inst[vnum], tc);
       continue;
     }
-    // not necessary??
-    Node prev = inst[vnum];
-    inst[vnum] = tc;
-    doMatching(&c.second, eti, inst, failExp);
-    inst[vnum] = prev;
+    Node prev = d_inst[vnum];
+    d_inst[vnum] = tc;
+    doMatching(&c.second, eti, failExp);
+    // clean up, since global
+    d_inst[vnum] = prev;
   }
   for (const std::pair<const Node, EagerTrie>& c : et->d_groundChildren)
   {
@@ -452,7 +449,7 @@ void EagerInst::doMatching(
       addToFailExp(&c.second, failExp, c.first, tc);
       continue;
     }
-    doMatching(&c.second, eti, inst, failExp);
+    doMatching(&c.second, eti, failExp);
   }
   eti.decrementChild();
   const std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
@@ -495,7 +492,7 @@ void EagerInst::doMatching(
         for (const Node& tt : tp.second)
         {
           eti.push(tt);
-          doMatching(etc, eti, inst, failExp);
+          doMatching(etc, eti, failExp);
           eti.pop();
         }
       }
@@ -510,7 +507,7 @@ void EagerInst::doMatching(
       // push
       eti.incrementChild();
       eti.push(tc);
-      doMatching(&it->second, eti, inst, failExp);
+      doMatching(&it->second, eti, failExp);
       eti.pop();
       eti.decrementChild();
     }
@@ -519,7 +516,6 @@ void EagerInst::doMatching(
 void EagerInst::resumeMatching(
     const EagerTrie* pat,
     EagerTermIterator& eti,
-    std::vector<Node>& inst,
     const EagerTrie* tgt,
     EagerTermIterator& etip,
     std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
@@ -527,7 +523,7 @@ void EagerInst::resumeMatching(
   if (pat == tgt)
   {
     // we have now fully resumed the match, now go to main matching procedure
-    doMatching(pat, eti, inst, failExp);
+    doMatching(pat, eti, failExp);
     return;
   }
   // The following traverses a single path of the eager trie
@@ -547,21 +543,24 @@ void EagerInst::resumeMatching(
   {
     const std::map<uint64_t, EagerTrie>& pv = pat->d_varChildren;
     uint64_t vnum = TermUtil::getInstVarNum(pc);
-    if (vnum >= inst.size())
+    if (vnum >= d_inst.size())
     {
-      inst.resize(vnum + 1);
+      d_inst.resize(vnum + 1);
     }
-    inst[vnum] = tc;
+    Node prev = d_inst[vnum];
+    d_inst[vnum] = tc;
     std::map<uint64_t, EagerTrie>::const_iterator it = pv.find(vnum);
     Assert(it != pv.end());
-    resumeMatching(&it->second, eti, inst, tgt, etip, failExp);
+    resumeMatching(&it->second, eti, tgt, etip, failExp);
+    // clean up, since global
+    d_inst[vnum] = prev;
   }
   else if (!TermUtil::hasInstConstAttr(pc))
   {
     const std::map<Node, EagerTrie>& pg = pat->d_groundChildren;
     std::map<Node, EagerTrie>::const_iterator it = pg.find(pc);
     Assert(it != pg.end());
-    resumeMatching(&it->second, eti, inst, tgt, etip, failExp);
+    resumeMatching(&it->second, eti, tgt, etip, failExp);
   }
   else
   {
@@ -571,7 +570,7 @@ void EagerInst::resumeMatching(
     const std::map<Node, EagerTrie>& png = pat->d_ngroundChildren;
     std::map<Node, EagerTrie>::const_iterator it = png.find(op);
     Assert(it != png.end());
-    resumeMatching(&it->second, eti, inst, tgt, etip, failExp);
+    resumeMatching(&it->second, eti, tgt, etip, failExp);
   }
 }
 
@@ -744,9 +743,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         const Node& patr = pat.getKind() == Kind::INST_PATTERN ? pat[0] : pat;
         EagerTermIterator etip(pat, patr);
         EagerTermIterator eti(t);
-        std::vector<Node> inst;
         ++d_statResumeMatchCall;
-        resumeMatching(root, eti, inst, j.first, etip, nextFails[t]);
+        resumeMatching(root, eti, j.first, etip, nextFails[t]);
       }
       // no longer valid
       ewl->d_valid = false;
