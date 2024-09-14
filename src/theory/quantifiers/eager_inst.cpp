@@ -98,8 +98,10 @@ EagerInst::EagerInst(Env& env,
       d_statUserPatsMultiFilter(
           statisticsRegistry().registerInt("EagerInst::userPatsMultiFilter")),
       d_statMatchCall(statisticsRegistry().registerInt("EagerInst::matchCall")),
-      d_statWatchCount(statisticsRegistry().registerInt("EagerInst::watchCount")),
-      d_statResumeMatchCall(statisticsRegistry().registerInt("EagerInst::resumeMatchCall"))
+      d_statWatchCount(
+          statisticsRegistry().registerInt("EagerInst::watchCount")),
+      d_statResumeMatchCall(
+          statisticsRegistry().registerInt("EagerInst::resumeMatchCall"))
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
@@ -739,7 +741,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         Assert(!pat.isNull());
         Trace("eager-inst-watch")
             << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
-            << " and " << j.second << ", resume pattern is " << pat << std::endl;
+            << " and " << j.second << ", resume pattern is " << pat
+            << std::endl;
         const Node& patr = pat.getKind() == Kind::INST_PATTERN ? pat[0] : pat;
         EagerTermIterator etip(pat, patr);
         EagerTermIterator eti(t);
