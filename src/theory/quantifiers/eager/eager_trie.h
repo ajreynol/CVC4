@@ -31,46 +31,55 @@ class EagerTermIterator
 {
   friend class EagerInst;
  public:
-  EagerTermIterator(const Node& t) : d_orig(t), d_term(t), d_index(0) {}
-  EagerTermIterator(const Node& n, const Node& t)
-      : d_orig(n), d_term(t), d_index(0)
+  EagerTermIterator(const Node& t) : d_orig(t)
   {
+    d_stack.emplace_back(t,0);
+  }
+  EagerTermIterator(const Node& n, const Node& t)
+      : d_orig(n)
+  {
+    d_stack.emplace_back(t,0);
   }
   TNode getOriginal() const { return d_orig; }
   TNode getCurrent() const
   {
-    Assert(d_index < d_terms.size());
-    return d_term[d_index];
+    Assert (!d_stack.empty());
+    const std::pair<Node, size_t>& cur = d_stack.back();
+    Assert(cur.second < cur.first.getNumChildren());
+    return cur.first[cur.second];
   }
-  bool needsBacktrack() const { return d_index == d_term.getNumChildren(); }
-  void incrementChild() { d_index++; }
+  bool needsBacktrack() const {
+    Assert (!d_stack.empty());
+    const std::pair<Node, size_t>& cur = d_stack.back();
+    return cur.second==cur.first.getNumChildren();
+  }
+  void incrementChild() { d_stack.back().second++; }
   void decrementChild()
   {
-    Assert(d_index > 0);
-    d_index--;
+    Assert(d_stack.back().second > 0);
+    d_stack.back().second--;
   }
   void push()
   {
-    d_stack.emplace_back(d_term, d_index + 1);
-    d_term = d_term[d_index];
-    d_index = 0;
+    std::pair<Node, size_t>& cur = d_stack.back();
+    d_stack.emplace_back(cur.first[cur.second], 0);
+    cur.second++;
+  }
+  void push(const Node& t)
+  {
+    d_stack.emplace_back(t, 0);
   }
   bool pop()
   {
-    if (d_stack.empty())
+    if (d_stack.size()<=1)
     {
       return false;
     }
-    std::pair<Node, size_t> p = d_stack.back();
-    d_term = p.first;
-    d_index = p.second;
     d_stack.pop_back();
     return true;
   }
  private:
   Node d_orig;
-  Node d_term;
-  size_t d_index;
   std::vector<std::pair<Node, size_t>> d_stack;
 };
 

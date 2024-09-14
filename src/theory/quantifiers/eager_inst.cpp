@@ -354,19 +354,19 @@ void EagerInst::doMatchingTrieInternal(
   if (eti.needsBacktrack())
   {
     // continue matching
-    if (!eti.d_stack.empty())
+    if (eti.d_stack.size()>1)
     {
       Assert(et->d_pats.empty());
       // save state
-      Node pt = eti.d_term;
-      size_t pi = eti.d_index;
+      //Node pt = eti.d_term;
+      //size_t pi = eti.d_index;
       std::pair<Node, size_t> p = eti.d_stack.back();
       // pop
       eti.pop();
       doMatchingTrieInternal(et, eti, inst, failExp);
       // restore state
-      eti.d_term = pt;
-      eti.d_index = pi;
+      //eti.d_term = pt;
+      //eti.d_index = pi;
       eti.d_stack.emplace_back(p);
     }
     else
@@ -460,8 +460,8 @@ void EagerInst::doMatchingTrieInternal(
     return;
   }
   // save state
-  Node pt = eti.d_term;
-  size_t pi = eti.d_index;
+  //Node pt = eti.d_term;
+  //size_t pi = eti.d_index;
   Node op = d_tdb->getMatchOperator(tc);
   if (op.isNull())
   {
@@ -510,14 +510,16 @@ void EagerInst::doMatchingTrieInternal(
     if (it != etng.end())
     {
       // push
-      eti.push();
+      eti.incrementChild();
+      eti.push(tc);
       doMatchingTrieInternal(&it->second, eti, inst, failExp);
-      eti.d_stack.pop_back();
+      eti.pop();
+      eti.decrementChild();
     }
   }
   // revert state
-  eti.d_term = pt;
-  eti.d_index = pi;
+  //eti.d_term = pt;
+  //eti.d_index = pi;
 }
 
 void EagerInst::addToFailExp(
