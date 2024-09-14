@@ -510,16 +510,16 @@ void EagerInst::doMatching(
   }
 }
 void EagerInst::resumeMatching(
-      const EagerTrie* pat,
-      EagerTermIterator& eti,
-      std::vector<Node>& inst,
-      const EagerTrie* tgt,
-      EagerTermIterator& etip,
-      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+    const EagerTrie* pat,
+    EagerTermIterator& eti,
+    std::vector<Node>& inst,
+    const EagerTrie* tgt,
+    EagerTermIterator& etip,
+    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
 {
   // FIXME
   return;
-  if (pat==tgt)
+  if (pat == tgt)
   {
     // we have now fully resumed the match, now go to main matching procedure
     doMatching(pat, eti, inst, failExp);
@@ -546,14 +546,14 @@ void EagerInst::resumeMatching(
     uint64_t vnum = TermUtil::getInstVarNum(pc);
     inst[vnum] = tc;
     std::map<uint64_t, EagerTrie>::const_iterator it = pv.find(vnum);
-    Assert (it!=pv.end());
+    Assert(it != pv.end());
     resumeMatching(&it->second, eti, inst, tgt, etip, failExp);
   }
   else if (!TermUtil::hasInstConstAttr(pc))
   {
     const std::map<Node, EagerTrie>& pg = pat->d_groundChildren;
     std::map<Node, EagerTrie>::const_iterator it = pg.find(pc);
-    Assert (it!=pg.end());
+    Assert(it != pg.end());
     resumeMatching(&it->second, eti, inst, tgt, etip, failExp);
   }
   else
@@ -563,7 +563,7 @@ void EagerInst::resumeMatching(
     const Node& op = d_tdb->getMatchOperator(pc);
     const std::map<Node, EagerTrie>& png = pat->d_ngroundChildren;
     std::map<Node, EagerTrie>::const_iterator it = png.find(op);
-    Assert (it!=png.end());
+    Assert(it != png.end());
     resumeMatching(&it->second, eti, inst, tgt, etip, failExp);
   }
 }
@@ -725,15 +725,15 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
             << " and " << j.second << std::endl;
         const Node& t = j.second;
         const Node& op = d_tdb->getMatchOperator(t);
-        Assert (!op.isNull());
+        Assert(!op.isNull());
         EagerTrie* root = getCurrentTrie(op);
-        if (root==nullptr)
+        if (root == nullptr)
         {
           continue;
         }
         const Node& pat = j.first->d_exPat;
-        Assert (!pat.isNull());
-        const Node& patr = pat.getKind()==Kind::INST_PATTERN ? pat[0] : pat;
+        Assert(!pat.isNull());
+        const Node& patr = pat.getKind() == Kind::INST_PATTERN ? pat[0] : pat;
         EagerTermIterator etip(pat, patr);
         EagerTermIterator eti(t);
         std::vector<Node> inst;

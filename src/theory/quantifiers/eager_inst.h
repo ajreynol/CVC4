@@ -143,11 +143,10 @@ class EagerInst : public QuantifiersModule
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerTrie* getCurrentTrie(const Node& op);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
-  void doMatching(
-      const EagerTrie* pat,
-      EagerTermIterator& eti,
-      std::vector<Node>& inst,
-      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+  void doMatching(const EagerTrie* pat,
+                  EagerTermIterator& eti,
+                  std::vector<Node>& inst,
+                  std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
   void resumeMatching(
       const EagerTrie* pat,
       EagerTermIterator& eti,
