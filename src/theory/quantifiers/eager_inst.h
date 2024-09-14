@@ -62,6 +62,7 @@ class EagerOpInfo
   void addGroundTerm(const Node& n);
   /** Get ground terms */
   const context::CDHashSet<Node>& getGroundTerms() const { return d_rlvTerms; }
+
  private:
   /** The patterns for this operator in the current context */
   context::CDList<Node> d_pats;

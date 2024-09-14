@@ -76,10 +76,7 @@ void EagerOpInfo::addPattern(TermDb* tdb, const Node& pat)
   d_pats.emplace_back(pat);
 }
 
-void EagerOpInfo::addGroundTerm(const Node& n)
-{
-  d_rlvTerms.insert(n);
-}
+void EagerOpInfo::addGroundTerm(const Node& n) { d_rlvTerms.insert(n); }
 
 EagerInst::EagerInst(Env& env,
                      QuantifiersState& qs,
@@ -775,12 +772,12 @@ bool EagerInst::isRelevantTerm(const Node& t)
 {
   Node op = d_tdb->getMatchOperator(t);
   EagerOpInfo* eoi = getOrMkOpInfo(op, false);
-  if (eoi==nullptr)
+  if (eoi == nullptr)
   {
     return false;
   }
   const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
-  return gts.find(t)!=gts.end();
+  return gts.find(t) != gts.end();
 }
 
 }  // namespace quantifiers
