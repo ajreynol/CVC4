@@ -26,13 +26,51 @@ namespace quantifiers {
 
 class TermDb;
 
+class EagerTermIterator
+{
+public:
+  EagerTermIterator(const Node& t) : d_orig(t), d_term(t), d_index(0){}
+  TNode getOriginal() const { return d_orig; }
+  TNode getCurrent() const
+  {
+    Assert (d_index<d_terms.size());
+    return d_term[d_index];
+  }
+  bool needsBacktrack() const { return d_index==d_term.getNumChildren(); }
+  void incrementChild()
+  {
+    d_index++;
+  }
+  void decrementChild()
+  {
+    Assert (d_index>0);
+    d_index--;
+  }
+  void push() {
+    d_stack.emplace_back(d_term, d_index+1);
+    d_term = d_term[d_index];
+    d_index = 0;
+  }
+  void pop() {
+    std::pair<Node, size_t> p = d_stack.back();
+    d_term = p.first;
+    d_index = p.second;
+    d_stack.pop_back();
+  }
+private:
+  Node d_orig;
+  Node d_term;
+  size_t d_index;
+  std::vector<std::pair<Node, size_t>> d_stack;
+};
+
 class EagerTrie
 {
  public:
   EagerTrie();
   EagerTrie* d_parent;
   std::map<uint64_t, EagerTrie> d_varChildren;
-  std::map<uint64_t, EagerTrie> d_checkVarChildren;
+  std::map<uint64_t, EagerTrie> d_checkVarChildren; // TODO: use???
   std::map<Node, EagerTrie> d_groundChildren;
   std::map<Node, EagerTrie> d_ngroundChildren;
   std::vector<Node> d_pats;

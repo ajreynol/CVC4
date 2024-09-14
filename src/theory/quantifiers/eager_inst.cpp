@@ -367,6 +367,7 @@ void EagerInst::doMatchingTrieInternal(
     }
     else
     {
+      // instantiate with all patterns stored on this leaf
       const std::vector<Node>& pats = et->d_pats;
       Instantiate* ie = d_qim.getInstantiate();
       std::vector<Node> instSub;
