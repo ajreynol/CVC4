@@ -28,31 +28,33 @@ class TermDb;
 
 class EagerTermIterator
 {
-public:
-  EagerTermIterator(const Node& t) : d_orig(t), d_term(t), d_index(0){}
-  EagerTermIterator(const Node& n, const Node& t) : d_orig(n), d_term(t), d_index(0){}
+ public:
+  EagerTermIterator(const Node& t) : d_orig(t), d_term(t), d_index(0) {}
+  EagerTermIterator(const Node& n, const Node& t)
+      : d_orig(n), d_term(t), d_index(0)
+  {
+  }
   TNode getOriginal() const { return d_orig; }
   TNode getCurrent() const
   {
-    Assert (d_index<d_terms.size());
+    Assert(d_index < d_terms.size());
     return d_term[d_index];
   }
-  bool needsBacktrack() const { return d_index==d_term.getNumChildren(); }
-  void incrementChild()
-  {
-    d_index++;
-  }
+  bool needsBacktrack() const { return d_index == d_term.getNumChildren(); }
+  void incrementChild() { d_index++; }
   void decrementChild()
   {
-    Assert (d_index>0);
+    Assert(d_index > 0);
     d_index--;
   }
-  void push() {
-    d_stack.emplace_back(d_term, d_index+1);
+  void push()
+  {
+    d_stack.emplace_back(d_term, d_index + 1);
     d_term = d_term[d_index];
     d_index = 0;
   }
-  bool pop() {
+  bool pop()
+  {
     if (d_stack.empty())
     {
       return false;
@@ -63,7 +65,8 @@ public:
     d_stack.pop_back();
     return true;
   }
-private:
+
+ private:
   Node d_orig;
   Node d_term;
   size_t d_index;
@@ -76,7 +79,7 @@ class EagerTrie
   EagerTrie();
   EagerTrie* d_parent;
   std::map<uint64_t, EagerTrie> d_varChildren;
-  std::map<uint64_t, EagerTrie> d_checkVarChildren; // TODO: use???
+  std::map<uint64_t, EagerTrie> d_checkVarChildren;  // TODO: use???
   std::map<Node, EagerTrie> d_groundChildren;
   std::map<Node, EagerTrie> d_ngroundChildren;
   std::vector<Node> d_pats;
