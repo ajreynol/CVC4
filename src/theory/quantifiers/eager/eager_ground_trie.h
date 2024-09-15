@@ -22,11 +22,14 @@
 #include "context/cdhashset.h"
 #include "context/cdo.h"
 #include "expr/node.h"
+#include "smt/env_obj.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+  class TermDb;
+  class QuantifiersState;
 class EagerGroundTrieAllocator;
 
 class EagerGroundTrie
@@ -85,6 +88,23 @@ class EagerGroundTrieAllocator
   context::CDHashSet<Node> d_congruent;
   /** All trie nodes we have allocated */
   std::vector<std::shared_ptr<EagerGroundTrie>> d_alloc;
+};
+
+class EagerGroundDb : protected EnvObj
+{
+public:
+  EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb);
+  bool add(const Node& n);
+private:
+  EagerGroundTrie* getTrie(const Node& op);
+  /** */
+  QuantifiersState& d_qstate;
+  /** */
+  TermDb* d_tdb;
+  /** */
+  EagerGroundTrieAllocator d_alloc;
+  /** */
+  std::map<Node, EagerGroundTrie*> d_db;
 };
 
 }  // namespace quantifiers

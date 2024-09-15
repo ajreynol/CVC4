@@ -15,6 +15,9 @@
 
 #include "theory/quantifiers/eager/eager_ground_trie.h"
 
+#include "theory/quantifiers/term_database.h"
+#include "theory/quantifiers/quantifiers_state.h"
+
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
@@ -87,6 +90,38 @@ bool EagerGroundTrie::setData(EagerGroundTrieAllocator* al, TNode t)
 EagerGroundTrieAllocator::EagerGroundTrieAllocator(context::Context* c)
     : d_ctx(c), d_congruent(c)
 {
+}
+
+EagerGroundDb::EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb) : EnvObj(env), d_qstate(qs), d_tdb(tdb), d_alloc(context())
+{
+}
+
+bool EagerGroundDb::add(const Node& n)
+{
+  Node op = d_tdb->getMatchOperator(n);
+  if (op.isNull())
+  {
+    return false;
+  }
+  EagerGroundTrie* t = getTrie(op);
+  std::vector<TNode> args;
+  for (const Node& nc : n)
+  {
+    args.emplace_back(d_qstate.getRepresentative(nc));
+  }
+  return t->add(&d_alloc, args, n);
+}
+
+EagerGroundTrie* EagerGroundDb::getTrie(const Node& op)
+{
+  std::map<Node, EagerGroundTrie*>::iterator it = d_db.find(op);
+  if (it!=d_db.end())
+  {
+    return it->second;
+  }
+  EagerGroundTrie* t = d_alloc.alloc();
+  d_db[op] = t;
+  return t;
 }
 
 }  // namespace quantifiers
