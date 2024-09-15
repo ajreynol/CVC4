@@ -22,9 +22,13 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-EagerGroundTrie::EagerGroundTrie(context::Context* c) : d_cmap(c), d_csize(c, 0) {}
+EagerGroundTrie::EagerGroundTrie(context::Context* c) : d_cmap(c), d_csize(c, 0)
+{
+}
 
-bool EagerGroundTrie::add(QuantifiersState& qs, EagerGroundTrieAllocator* al, TNode t)
+bool EagerGroundTrie::add(QuantifiersState& qs,
+                          EagerGroundTrieAllocator* al,
+                          TNode t)
 {
   std::vector<TNode> args;
   for (const Node& tc : t)

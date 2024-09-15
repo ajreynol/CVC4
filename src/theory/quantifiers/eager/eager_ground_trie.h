@@ -97,6 +97,7 @@ class EagerGroundDb : protected EnvObj
   EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb);
   EagerGroundTrieAllocator* getAlloc() { return &d_alloc; }
   EagerGroundTrie* getTrie(const Node& op);
+
  private:
   /** */
   QuantifiersState& d_qstate;

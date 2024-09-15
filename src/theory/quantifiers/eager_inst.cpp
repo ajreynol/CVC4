@@ -49,8 +49,16 @@ EagerWatchList* EagerWatchInfo::getOrMkList(const Node& r, bool doMk)
   return eoi.get();
 }
 
-EagerOpInfo::EagerOpInfo(context::Context* c, const Node& op, EagerGroundDb* gdb) : d_galloc(nullptr), d_gtrie(nullptr), d_pats(c), d_rlvTerms(c), d_rlvTermsWaiting(c) {
-  if (gdb!=nullptr)
+EagerOpInfo::EagerOpInfo(context::Context* c,
+                         const Node& op,
+                         EagerGroundDb* gdb)
+    : d_galloc(nullptr),
+      d_gtrie(nullptr),
+      d_pats(c),
+      d_rlvTerms(c),
+      d_rlvTermsWaiting(c)
+{
+  if (gdb != nullptr)
   {
     d_galloc = gdb->getAlloc();
     d_gtrie = gdb->getTrie(op);
@@ -68,11 +76,13 @@ EagerTrie* EagerOpInfo::getCurrentTrie(TermDb* tdb)
   return &d_trie;
 }
 
-EagerTrie* EagerOpInfo::addPattern(QuantifiersState& qs, TermDb* tdb, const Node& pat)
+EagerTrie* EagerOpInfo::addPattern(QuantifiersState& qs,
+                                   TermDb* tdb,
+                                   const Node& pat)
 {
   // must make current before adding
   makeCurrent(tdb);
-  if (d_pats.empty() && d_gtrie!=nullptr)
+  if (d_pats.empty() && d_gtrie != nullptr)
   {
     // index all ground terms now
     for (const Node& tw : d_rlvTermsWaiting)
@@ -101,7 +111,7 @@ void EagerOpInfo::makeCurrent(TermDb* tdb)
 
 bool EagerOpInfo::addGroundTerm(QuantifiersState& qs, const Node& n)
 {
-  if (d_gtrie==nullptr)
+  if (d_gtrie == nullptr)
   {
     d_rlvTerms.insert(n);
     return true;
@@ -117,7 +127,7 @@ bool EagerOpInfo::addGroundTerm(QuantifiersState& qs, const Node& n)
 
 bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
 {
-  Assert (d_gtrie!=nullptr);
+  Assert(d_gtrie != nullptr);
   if (d_gtrie->add(qs, d_galloc, n))
   {
     d_rlvTerms.insert(n);
@@ -774,12 +784,13 @@ EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
   {
     return nullptr;
   }
-  EagerGroundDb * gdbu = nullptr;
+  EagerGroundDb* gdbu = nullptr;
   if (options().quantifiers.eagerInstGroundCongruence)
   {
     gdbu = &d_gdb;
   }
-  std::shared_ptr<EagerOpInfo> eoi = std::make_shared<EagerOpInfo>(context(), op, gdbu);
+  std::shared_ptr<EagerOpInfo> eoi =
+      std::make_shared<EagerOpInfo>(context(), op, gdbu);
   d_userPat.insert(op, eoi);
   return eoi.get();
 }

@@ -19,8 +19,8 @@
 #define CVC5__THEORY__QUANTIFIERS__EAGER_INST_H
 
 #include "smt/env_obj.h"
-#include "theory/quantifiers/eager/eager_trie.h"
 #include "theory/quantifiers/eager/eager_ground_trie.h"
+#include "theory/quantifiers/eager/eager_trie.h"
 #include "theory/quantifiers/quant_module.h"
 
 namespace cvc5::internal {
