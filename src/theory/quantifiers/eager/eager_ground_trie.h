@@ -28,8 +28,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-  class TermDb;
-  class QuantifiersState;
+class TermDb;
+class QuantifiersState;
 class EagerGroundTrieAllocator;
 
 class EagerGroundTrie
@@ -92,10 +92,11 @@ class EagerGroundTrieAllocator
 
 class EagerGroundDb : protected EnvObj
 {
-public:
+ public:
   EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb);
   bool add(const Node& n);
-private:
+
+ private:
   EagerGroundTrie* getTrie(const Node& op);
   /** */
   QuantifiersState& d_qstate;

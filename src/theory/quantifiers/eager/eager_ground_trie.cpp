@@ -15,8 +15,8 @@
 
 #include "theory/quantifiers/eager/eager_ground_trie.h"
 
-#include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_database.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -92,7 +92,8 @@ EagerGroundTrieAllocator::EagerGroundTrieAllocator(context::Context* c)
 {
 }
 
-EagerGroundDb::EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb) : EnvObj(env), d_qstate(qs), d_tdb(tdb), d_alloc(context())
+EagerGroundDb::EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb)
+    : EnvObj(env), d_qstate(qs), d_tdb(tdb), d_alloc(context())
 {
 }
 
@@ -115,7 +116,7 @@ bool EagerGroundDb::add(const Node& n)
 EagerGroundTrie* EagerGroundDb::getTrie(const Node& op)
 {
   std::map<Node, EagerGroundTrie*>::iterator it = d_db.find(op);
-  if (it!=d_db.end())
+  if (it != d_db.end())
   {
     return it->second;
   }
