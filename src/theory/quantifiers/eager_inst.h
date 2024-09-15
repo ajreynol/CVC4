@@ -154,14 +154,16 @@ class EagerInst : public QuantifiersModule
   EagerTrie* getCurrentTrie(const Node& op);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
   /**
-   * Match ground term iterated on by eti with the entire trie of patterns in pat.
+   * Match ground term iterated on by eti with the entire trie of patterns in
+   * pat.
    */
   void doMatching(const EagerTrie* pat,
                   EagerTermIterator& eti,
                   std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
   /**
-   * Resume matching the ground term iterated on by eti with the entire trie of patterns beneath tgt.
-   * We have so far traversed to the path pat guided by the example pattern iterated on by etip.
+   * Resume matching the ground term iterated on by eti with the entire trie of
+   * patterns beneath tgt. We have so far traversed to the path pat guided by
+   * the example pattern iterated on by etip.
    */
   void resumeMatching(
       const EagerTrie* pat,

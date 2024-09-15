@@ -19,59 +19,59 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-  EagerGroundTrie::EagerGroundTrie(context::Context* c) : d_cmap(c), d_csize(0) {}
+EagerGroundTrie::EagerGroundTrie(context::Context* c) : d_cmap(c), d_csize(0) {}
 
-
-  bool EagerGroundTrie::add(EagerGroundTrieAllocator* al,
-           const std::vector<TNode>& args,
-           TNode t)
+bool EagerGroundTrie::add(EagerGroundTrieAllocator* al,
+                          const std::vector<TNode>& args,
+                          TNode t)
+{
+  EagerGroundTrie* cur = this;
+  context::CDHashMap<TNode, size_t>::const_iterator it;
+  for (TNode a : args)
   {
-    EagerGroundTrie* cur = this;
-    context::CDHashMap<TNode, size_t>::const_iterator it;
-    for (TNode a : args)
+    it = cur->d_cmap.find(a);
+    if (it == cur->d_cmap.end())
     {
-      it = cur->d_cmap.find(a);
-      if (it == cur->d_cmap.end())
-      {
-        // NOTE: if using stale, we would confirm that the next has the right data
-        cur = cur->push_back(al, a);
-      }
-      else
-      {
-        Assert(it->second < cur->d_children.size());
-        cur = cur->d_children[it->second];
-      }
-    }
-    // set data, which will return false if we already have data
-    return cur->setData(al, t);
-  }
-
-  EagerGroundTrie* EagerGroundTrie::push_back(EagerGroundTrieAllocator* al, TNode r)
-  {
-    Assert(d_cmap.find(r) == d_cmap.end());
-    // TODO: optimization, can fill in empty child that was disabled?
-    // this would require being more careful since its internal data would be
-    // stale
-    EagerGroundTrie* ret;
-    if (d_csize < d_children.size())
-    {
-      ret = d_children[d_csize];
-      Assert(ret != nullptr);
+      // NOTE: if using stale, we would confirm that the next has the right data
+      cur = cur->push_back(al, a);
     }
     else
     {
-      ret = al->alloc();
-      d_children.emplace_back(ret);
+      Assert(it->second < cur->d_children.size());
+      cur = cur->d_children[it->second];
     }
-    Assert(ret != nullptr);
-    Assert(d_children[d_csize] == ret);
-    d_cmap[r] = d_csize;
-    d_csize = d_csize + 1;
-    return ret;
   }
+  // set data, which will return false if we already have data
+  return cur->setData(al, t);
+}
 
-  bool EagerGroundTrie::setData(EagerGroundTrieAllocator* al, TNode t)
+EagerGroundTrie* EagerGroundTrie::push_back(EagerGroundTrieAllocator* al,
+                                            TNode r)
+{
+  Assert(d_cmap.find(r) == d_cmap.end());
+  // TODO: optimization, can fill in empty child that was disabled?
+  // this would require being more careful since its internal data would be
+  // stale
+  EagerGroundTrie* ret;
+  if (d_csize < d_children.size())
   {
+    ret = d_children[d_csize];
+    Assert(ret != nullptr);
+  }
+  else
+  {
+    ret = al->alloc();
+    d_children.emplace_back(ret);
+  }
+  Assert(ret != nullptr);
+  Assert(d_children[d_csize] == ret);
+  d_cmap[r] = d_csize;
+  d_csize = d_csize + 1;
+  return ret;
+}
+
+bool EagerGroundTrie::setData(EagerGroundTrieAllocator* al, TNode t)
+{
   // data is stored as an element in the domain of d_repMap
   if (d_cmap.empty())
   {
@@ -84,9 +84,11 @@ namespace quantifiers {
   return false;
 }
 
-EagerGroundTrieAllocator::EagerGroundTrieAllocator(context::Context* c) : d_ctx(c), d_congruent(c) {}
+EagerGroundTrieAllocator::EagerGroundTrieAllocator(context::Context* c)
+    : d_ctx(c), d_congruent(c)
+{
+}
 
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
-

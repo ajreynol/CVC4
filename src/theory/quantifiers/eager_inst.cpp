@@ -193,7 +193,7 @@ void EagerInst::assertNode(Node q)
   {
     size_t prevLemmas = d_tmpAddedLemmas;
     registerQuant(q);
-    if (d_tmpAddedLemmas>prevLemmas)
+    if (d_tmpAddedLemmas > prevLemmas)
     {
       d_qim.doPending();
     }
@@ -584,7 +584,7 @@ void EagerInst::resumeMatching(
   // We assume that all steps of the matching succeed below.
   if (eti.needsBacktrack())
   {
-    Assert (eti.canPop());
+    Assert(eti.canPop());
     eti.pop();
     etip.pop();
     resumeMatching(pat, eti, tgt, etip, failExp);
@@ -692,7 +692,7 @@ void EagerInst::doMatchingPath(
   else
   {
     const Node& op = d_tdb->getMatchOperator(pc);
-    if (d_tdb->getMatchOperator(tc)!=op)
+    if (d_tdb->getMatchOperator(tc) != op)
     {
       return;
     }

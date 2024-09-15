@@ -18,10 +18,10 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_GROUND_TRIE_H
 #define CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_GROUND_TRIE_H
 
-#include "expr/node.h"
 #include "context/cdhashmap.h"
 #include "context/cdhashset.h"
 #include "context/cdo.h"
+#include "expr/node.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -31,7 +31,7 @@ class EagerGroundTrieAllocator;
 
 class EagerGroundTrie
 {
-public:
+ public:
   EagerGroundTrie(context::Context* c);
   /**
    * Adds a term, without refactoring this trie.
@@ -48,7 +48,8 @@ public:
   bool setData(EagerGroundTrieAllocator* al, TNode t);
   /** For leaf nodes : get the node corresponding to this leaf. */
   TNode getData() const { return d_cmap.begin()->first; }
-private:
+
+ private:
   /** */
   context::CDHashMap<TNode, size_t> d_cmap;
   /**
@@ -66,7 +67,8 @@ class EagerGroundTrieAllocator
   /** Allocate a new trie node */
   EagerGroundTrie* alloc()
   {
-    d_alloc.emplace_back(std::shared_ptr<EagerGroundTrie>(new EagerGroundTrie(d_ctx)));
+    d_alloc.emplace_back(
+        std::shared_ptr<EagerGroundTrie>(new EagerGroundTrie(d_ctx)));
     return d_alloc.back().get();
   }
   /** Mark congruent */
@@ -76,6 +78,7 @@ class EagerGroundTrieAllocator
   {
     return d_congruent.find(t) != d_congruent.end();
   }
+
  private:
   context::Context* d_ctx;
   /** The set of terms we have determined are congruent in the current ctx */
