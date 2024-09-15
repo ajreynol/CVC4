@@ -64,6 +64,7 @@ class EagerOpInfo
   const context::CDHashSet<Node>& getGroundTerms() const { return d_rlvTerms; }
 
  private:
+  void makeCurrent(TermDb* tdb);
   /** The patterns for this operator in the current context */
   context::CDList<Node> d_pats;
   EagerTrie d_trie;
@@ -152,9 +153,16 @@ class EagerInst : public QuantifiersModule
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerTrie* getCurrentTrie(const Node& op);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
+  /**
+   * Match ground term iterated on by eti with the entire trie of patterns in pat.
+   */
   void doMatching(const EagerTrie* pat,
                   EagerTermIterator& eti,
                   std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+  /**
+   * Resume matching the ground term iterated on by eti with the entire trie of patterns beneath tgt.
+   * We have so far traversed to the path pat guided by the example pattern iterated on by etip.
+   */
   void resumeMatching(
       const EagerTrie* pat,
       EagerTermIterator& eti,
@@ -162,9 +170,8 @@ class EagerInst : public QuantifiersModule
       EagerTermIterator& etip,
       std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
   void doMatchingPath(
-      const EagerTrie* pat,
+      const EagerTrie* et,
       EagerTermIterator& eti,
-      const EagerTrie* tgt,
       EagerTermIterator& etip,
       std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
   /**
