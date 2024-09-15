@@ -271,32 +271,33 @@ void EagerInst::registerQuant(const Node& q)
         {
           d_cdOps.insert(op);
           ++d_statUserPatsCd;
-#if 0
-          // match the current terms
-          EagerTrie* root = eoi->getCurrentTrie(d_tdb);
-          Assert(root != nullptr);
-          const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
-          const Node& spatr =
-              spat.getKind() == Kind::INST_PATTERN ? spat[0] : spat;
-          Trace("eager-inst-watch")
-              << "Since " << spat << " was added, revisit match with "
-              << gts.size() << " terms" << std::endl;
-          for (const Node& t : gts)
+          if (options().quantifiers.eagerInstCdWatch)
           {
-            std::pair<Node, Node> key(t, spat);
-            if (d_instTerms.find(key) != d_instTerms.end())
+            // match the current terms
+            EagerTrie* root = eoi->getCurrentTrie(d_tdb);
+            Assert(root != nullptr);
+            const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
+            const Node& spatr =
+                spat.getKind() == Kind::INST_PATTERN ? spat[0] : spat;
+            Trace("eager-inst-watch")
+                << "Since " << spat << " was added, revisit match with "
+                << gts.size() << " terms" << std::endl;
+            for (const Node& t : gts)
             {
-              continue;
+              std::pair<Node, Node> key(t, spat);
+              if (d_instTerms.find(key) != d_instTerms.end())
+              {
+                continue;
+              }
+              EagerTermIterator etip(spat, spatr);
+              EagerTermIterator eti(t);
+              ++d_statCdPatMatchCall;
+              std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
+              doMatchingPath(root, eti, etip, failExp);
+              addWatches(t, failExp);
             }
-            EagerTermIterator etip(spat, spatr);
-            EagerTermIterator eti(t);
-            ++d_statCdPatMatchCall;
-            std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
-            doMatchingPath(root, eti, etip, failExp);
-            addWatches(t, failExp);
+            Trace("eager-inst-watch") << "...finish" << std::endl;
           }
-          Trace("eager-inst-watch") << "...finish" << std::endl;
-#endif
         }
         else
         {

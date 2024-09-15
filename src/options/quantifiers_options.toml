@@ -1762,7 +1762,15 @@ name   = "Quantifiers"
   long       = "eager-inst-simple"
   type       = "bool"
   default    = "true"
-  help       = "handle quantified formulas that are not asserted at top-level in eager instantiation"
+  help       = "do not search modulo equality to match operators"
+
+[[option]]
+  name       = "eagerInstCdWatch"
+  category   = "expert"
+  long       = "eager-cd-watch"
+  type       = "bool"
+  default    = "false"
+  help       = "match all terms when a user pattern becomes active"
 
 [[option]]
   name       = "quantDynamicSplit"

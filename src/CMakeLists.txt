@@ -803,6 +803,8 @@ libcvc5_add_sources(
   theory/quantifiers/conjecture_generator.h
   theory/quantifiers/dynamic_rewrite.cpp
   theory/quantifiers/dynamic_rewrite.h
+  theory/quantifiers/eager/eager_ground_trie.cpp
+  theory/quantifiers/eager/eager_ground_trie.h
   theory/quantifiers/eager/eager_trie.cpp
   theory/quantifiers/eager/eager_trie.h
   theory/quantifiers/eager_inst.cpp
