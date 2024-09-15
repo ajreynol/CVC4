@@ -36,6 +36,7 @@ class EagerGroundTrie
 {
  public:
   EagerGroundTrie(context::Context* c);
+  bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, TNode t);
   /**
    * Adds a term, without refactoring this trie.
    * Returns true if t was added to the trie, false otherwise.
@@ -94,10 +95,9 @@ class EagerGroundDb : protected EnvObj
 {
  public:
   EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb);
-  bool add(const Node& n);
-
- private:
+  EagerGroundTrieAllocator* getAlloc() { return &d_alloc; }
   EagerGroundTrie* getTrie(const Node& op);
+ private:
   /** */
   QuantifiersState& d_qstate;
   /** */

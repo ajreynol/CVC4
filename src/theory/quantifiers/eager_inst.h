@@ -20,6 +20,7 @@
 
 #include "smt/env_obj.h"
 #include "theory/quantifiers/eager/eager_trie.h"
+#include "theory/quantifiers/eager/eager_ground_trie.h"
 #include "theory/quantifiers/quant_module.h"
 
 namespace cvc5::internal {
@@ -53,24 +54,31 @@ class EagerWatchInfo
 class EagerOpInfo
 {
  public:
-  EagerOpInfo(context::Context* c) : d_pats(c), d_rlvTerms(c) {}
+  EagerOpInfo(context::Context* c, const Node& op, EagerGroundDb* gdb);
   /** Get trie, possibly with cleaning */
   EagerTrie* getCurrentTrie(TermDb* tdb);
   /** Add pattern */
-  EagerTrie* addPattern(TermDb* tdb, const Node& pat);
+  EagerTrie* addPattern(QuantifiersState& qs, TermDb* tdb, const Node& pat);
   /** Add ground term */
-  void addGroundTerm(const Node& n);
+  bool addGroundTerm(QuantifiersState& qs, const Node& n);
   /** Get ground terms */
   const context::CDHashSet<Node>& getGroundTerms() const { return d_rlvTerms; }
 
  private:
   void makeCurrent(TermDb* tdb);
+  /** Add ground term */
+  bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
+  /** For ground term indexing */
+  EagerGroundTrieAllocator* d_galloc;
+  EagerGroundTrie* d_gtrie;
   /** The patterns for this operator in the current context */
   context::CDList<Node> d_pats;
   EagerTrie d_trie;
   std::vector<Node> d_triePats;
   /** Relevant terms for this in the current context */
   context::CDHashSet<Node> d_rlvTerms;
+  /** Relevant terms for this in the current context */
+  context::CDHashSet<Node> d_rlvTermsWaiting;
 };
 
 /**
@@ -127,11 +135,11 @@ class EagerInst : public QuantifiersModule
   size_t d_tmpAddedLemmas;
   bool d_instOutput;
   NodeSet d_ppQuants;
-  std::map<Node, size_t> d_termNotifyCount;
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
   context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>> d_repWatch;
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_userPat;
+  EagerGroundDb d_gdb;
   /** Number of patterns */
   IntStat d_statUserPats;
   /** Number of cd patterns */

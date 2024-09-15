@@ -1767,10 +1767,18 @@ name   = "Quantifiers"
 [[option]]
   name       = "eagerInstCdWatch"
   category   = "expert"
-  long       = "eager-cd-watch"
+  long       = "eager-inst-cd-watch"
   type       = "bool"
   default    = "false"
   help       = "match all terms when a user pattern becomes active"
+
+[[option]]
+  name       = "eagerInstGroundCongruence"
+  category   = "expert"
+  long       = "eager-inst-gcong"
+  type       = "bool"
+  default    = "false"
+  help       = "track ground congruence"
 
 [[option]]
   name       = "quantDynamicSplit"

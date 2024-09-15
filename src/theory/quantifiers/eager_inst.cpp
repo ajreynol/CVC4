@@ -49,6 +49,14 @@ EagerWatchList* EagerWatchInfo::getOrMkList(const Node& r, bool doMk)
   return eoi.get();
 }
 
+EagerOpInfo::EagerOpInfo(context::Context* c, const Node& op, EagerGroundDb* gdb) : d_galloc(nullptr), d_gtrie(nullptr), d_pats(c), d_rlvTerms(c), d_rlvTermsWaiting(c) {
+  if (gdb!=nullptr)
+  {
+    d_galloc = gdb->getAlloc();
+    d_gtrie = gdb->getTrie(op);
+  }
+}
+
 EagerTrie* EagerOpInfo::getCurrentTrie(TermDb* tdb)
 {
   if (d_pats.empty())
@@ -60,10 +68,18 @@ EagerTrie* EagerOpInfo::getCurrentTrie(TermDb* tdb)
   return &d_trie;
 }
 
-EagerTrie* EagerOpInfo::addPattern(TermDb* tdb, const Node& pat)
+EagerTrie* EagerOpInfo::addPattern(QuantifiersState& qs, TermDb* tdb, const Node& pat)
 {
   // must make current before adding
   makeCurrent(tdb);
+  if (d_pats.empty() && d_gtrie!=nullptr)
+  {
+    // index all ground terms now
+    for (const Node& tw : d_rlvTermsWaiting)
+    {
+      addGroundTermInternal(qs, tw);
+    }
+  }
   d_pats.emplace_back(pat);
   d_triePats.emplace_back(pat);
   return d_trie.add(tdb, pat);
@@ -83,7 +99,32 @@ void EagerOpInfo::makeCurrent(TermDb* tdb)
   }
 }
 
-void EagerOpInfo::addGroundTerm(const Node& n) { d_rlvTerms.insert(n); }
+bool EagerOpInfo::addGroundTerm(QuantifiersState& qs, const Node& n)
+{
+  if (d_gtrie==nullptr)
+  {
+    d_rlvTerms.insert(n);
+    return true;
+  }
+  if (!d_pats.empty())
+  {
+    // index now
+    return addGroundTermInternal(qs, n);
+  }
+  d_rlvTermsWaiting.insert(n);
+  return false;
+}
+
+bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
+{
+  Assert (d_gtrie!=nullptr);
+  if (d_gtrie->add(qs, d_galloc, n))
+  {
+    d_rlvTerms.insert(n);
+    return true;
+  }
+  return false;
+}
 
 EagerInst::EagerInst(Env& env,
                      QuantifiersState& qs,
@@ -100,6 +141,7 @@ EagerInst::EagerInst(Env& env,
       d_cdOps(context()),
       d_repWatch(context()),
       d_userPat(context()),
+      d_gdb(env, qs, tr.getTermDatabase()),
       d_statUserPats(statisticsRegistry().registerInt("EagerInst::userPats")),
       d_statUserPatsCd(
           statisticsRegistry().registerInt("EagerInst::userPatsCd")),
@@ -260,7 +302,7 @@ void EagerInst::registerQuant(const Node& q)
           op = spat.getOperator();
         }
         EagerOpInfo* eoi = getOrMkOpInfo(op, true);
-        EagerTrie* et = eoi->addPattern(d_tdb, spat);
+        EagerTrie* et = eoi->addPattern(d_qstate, d_tdb, spat);
         // can happen if not a usable trigger
         if (et == nullptr)
         {
@@ -351,7 +393,10 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
   Node op = t.getOperator();
   EagerOpInfo* eoi = getOrMkOpInfo(op, true);
-  eoi->addGroundTerm(t);
+  if (!eoi->addGroundTerm(d_qstate, t))
+  {
+    return;
+  }
   if (d_fullInstTerms.find(t) != d_fullInstTerms.end())
   {
     if (d_cdOps.find(op) == d_cdOps.end())
@@ -729,7 +774,12 @@ EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
   {
     return nullptr;
   }
-  std::shared_ptr<EagerOpInfo> eoi = std::make_shared<EagerOpInfo>(context());
+  EagerGroundDb * gdbu = nullptr;
+  if (options().quantifiers.eagerInstGroundCongruence)
+  {
+    gdbu = &d_gdb;
+  }
+  std::shared_ptr<EagerOpInfo> eoi = std::make_shared<EagerOpInfo>(context(), op, gdbu);
   d_userPat.insert(op, eoi);
   return eoi.get();
 }

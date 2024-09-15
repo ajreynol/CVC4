@@ -22,7 +22,17 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-EagerGroundTrie::EagerGroundTrie(context::Context* c) : d_cmap(c), d_csize(0) {}
+EagerGroundTrie::EagerGroundTrie(context::Context* c) : d_cmap(c), d_csize(c, 0) {}
+
+bool EagerGroundTrie::add(QuantifiersState& qs, EagerGroundTrieAllocator* al, TNode t)
+{
+  std::vector<TNode> args;
+  for (const Node& tc : t)
+  {
+    args.emplace_back(qs.getRepresentative(tc));
+  }
+  return add(al, args, t);
+}
 
 bool EagerGroundTrie::add(EagerGroundTrieAllocator* al,
                           const std::vector<TNode>& args,
@@ -35,7 +45,6 @@ bool EagerGroundTrie::add(EagerGroundTrieAllocator* al,
     it = cur->d_cmap.find(a);
     if (it == cur->d_cmap.end())
     {
-      // NOTE: if using stale, we would confirm that the next has the right data
       cur = cur->push_back(al, a);
     }
     else
@@ -52,9 +61,6 @@ EagerGroundTrie* EagerGroundTrie::push_back(EagerGroundTrieAllocator* al,
                                             TNode r)
 {
   Assert(d_cmap.find(r) == d_cmap.end());
-  // TODO: optimization, can fill in empty child that was disabled?
-  // this would require being more careful since its internal data would be
-  // stale
   EagerGroundTrie* ret;
   if (d_csize < d_children.size())
   {
@@ -97,6 +103,7 @@ EagerGroundDb::EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb)
 {
 }
 
+/*
 bool EagerGroundDb::add(const Node& n)
 {
   Node op = d_tdb->getMatchOperator(n);
@@ -112,6 +119,7 @@ bool EagerGroundDb::add(const Node& n)
   }
   return t->add(&d_alloc, args, n);
 }
+*/
 
 EagerGroundTrie* EagerGroundDb::getTrie(const Node& op)
 {
