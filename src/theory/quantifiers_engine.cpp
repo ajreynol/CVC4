@@ -67,6 +67,7 @@ QuantifiersEngine::QuantifiersEngine(Env& env,
       d_eagerInstNewEqc(false),
       d_eagerInstEqcMerge(false),
       d_eagerInstAssert(false),
+      d_eagerTrackMerge(false),
       d_assertedTerms(context())
 {
   options::FmfMbqiMode mmode = options().quantifiers.fmfMbqiMode;
