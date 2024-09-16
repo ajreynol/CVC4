@@ -256,7 +256,8 @@ void EagerInst::registerQuant(const Node& q)
   Trace("eager-inst-register") << "Assert " << q << std::endl;
   if (q.getNumChildren() != 3)
   {
-    Trace("eager-inst-warn") << "Unhandled quantified formula (no patterns) " << q << std::endl;
+    Trace("eager-inst-warn")
+        << "Unhandled quantified formula (no patterns) " << q << std::endl;
     return;
   }
   Node ipl = q[2];
@@ -370,11 +371,11 @@ void EagerInst::registerQuant(const Node& q)
         }
       }
     }
-
   }
   if (!hasPat)
   {
-    Trace("eager-inst-warn") << "Unhandled quantified formula " << q << std::endl;
+    Trace("eager-inst-warn")
+        << "Unhandled quantified formula " << q << std::endl;
   }
   // can maybe assign owner if only a trivial trigger and the quantified formula
   // is top level.

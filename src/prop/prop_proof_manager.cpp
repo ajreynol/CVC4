@@ -70,8 +70,7 @@ PropPfManager::PropPfManager(Env& env,
       d_satPm(nullptr),
       d_uclIds(statisticsRegistry().registerHistogram<theory::InferenceId>(
           "ppm::unsatCoreLemmaIds")),
-      d_uclSize(
-          statisticsRegistry().registerInt("ppm::unsatCoreLemmaSize"))
+      d_uclSize(statisticsRegistry().registerInt("ppm::unsatCoreLemmaSize"))
 {
   // add trivial assumption. This is so that we can check the that the prop
   // engine's proof is closed, as the SAT solver's refutation proof may use True
