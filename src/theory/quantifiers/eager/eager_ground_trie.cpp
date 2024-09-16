@@ -38,6 +38,36 @@ bool EagerGroundTrie::add(QuantifiersState& qs,
   return add(al, args, t);
 }
 
+bool EagerGroundTrie::isCongruent(QuantifiersState& qs, TNode t) const
+{
+  return isCongruentInternal(qs, t, 0);
+}
+
+bool EagerGroundTrie::isCongruentInternal(QuantifiersState& qs, TNode t, size_t i) const
+{
+  const Node& tc = t[i];
+  context::CDHashMap<TNode, size_t>::iterator it = d_cmap.find(tc);
+  if (d_cmap.find(tc)!=d_cmap.end())
+  {
+    if (isCongruentInternal(qs,t,i+1))
+    {
+      return true;
+    }
+  }
+  TNode r = qs.getRepresentative(tc);
+  for (it=d_cmap.begin(); it !=d_cmap.end(); ++it)
+  {
+    if (it->first!=tc && qs.getRepresentative(it->first)==r)
+    {
+      if (isCongruentInternal(qs, t, i+1))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool EagerGroundTrie::add(EagerGroundTrieAllocator* al,
                           const std::vector<TNode>& args,
                           TNode t)
