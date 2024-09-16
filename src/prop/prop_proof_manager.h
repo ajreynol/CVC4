@@ -293,6 +293,8 @@ class PropPfManager : protected EnvObj
    * tracked only if -o unsat-core-lemmas is on.
    */
   HistogramStat<theory::InferenceId> d_uclIds;
+  /** Total number of ucl */
+  IntStat d_uclSize;
 }; /* class PropPfManager */
 
 }  // namespace prop

@@ -256,6 +256,7 @@ void EagerInst::registerQuant(const Node& q)
   Trace("eager-inst-register") << "Assert " << q << std::endl;
   if (q.getNumChildren() != 3)
   {
+    Trace("eager-inst-warn") << "Unhandled quantified formula (no patterns) " << q << std::endl;
     return;
   }
   Node ipl = q[2];
@@ -265,109 +266,115 @@ void EagerInst::registerQuant(const Node& q)
   // TODO: do for any pattern selection?
   for (const Node& pat : ipl)
   {
-    if (pat.getKind() == Kind::INST_PATTERN)
+    if (pat.getKind() != Kind::INST_PATTERN)
     {
-      Node pati = d_qreg.substituteBoundVariablesToInstConstants(pat, q);
-      std::vector<Node> ppc(pati.begin(), pati.end());
-      std::vector<Node> spats;
-      for (size_t i = 0, npats = pati.getNumChildren(); i < npats; i++)
+      continue;
+    }
+    Node pati = d_qreg.substituteBoundVariablesToInstConstants(pat, q);
+    std::vector<Node> ppc(pati.begin(), pati.end());
+    std::vector<Node> spats;
+    for (size_t i = 0, npats = pati.getNumChildren(); i < npats; i++)
+    {
+      Node pc = pati[i];
+      if (pc.getKind() == Kind::APPLY_UF
+          && d_qreg.hasAllInstantiationConstants(pc, q))
       {
-        Node pc = pati[i];
-        if (pc.getKind() == Kind::APPLY_UF
-            && d_qreg.hasAllInstantiationConstants(pc, q))
+        if (ppc.size() == 1)
         {
-          if (ppc.size() == 1)
-          {
-            spats.push_back(pc);
-          }
-          else
-          {
-            Node tmp = ppc[0];
-            ppc[0] = ppc[i];
-            ppc[i] = tmp;
-            Node pp = nodeManager()->mkNode(Kind::INST_PATTERN, ppc);
-            spats.push_back(pp);
-          }
+          spats.push_back(pc);
+        }
+        else
+        {
+          Node tmp = ppc[0];
+          ppc[0] = ppc[i];
+          ppc[i] = tmp;
+          Node pp = nodeManager()->mkNode(Kind::INST_PATTERN, ppc);
+          spats.push_back(pp);
         }
       }
-      if (spats.empty())
+    }
+    if (spats.empty())
+    {
+      owner = false;
+      Trace("eager-inst-warn")
+          << "Cannot handle user pattern " << pat << std::endl;
+    }
+    for (const Node& spat : spats)
+    {
+      hasPat = true;
+      // TODO: statically analyze if this would lead to matching loops
+      Trace("eager-inst-register") << "Single pat: " << spat << std::endl;
+      Node op;
+      if (spat.getKind() == Kind::INST_PATTERN)
+      {
+        op = spat[0].getOperator();
+        ++d_statUserPatsMultiFilter;
+      }
+      else
+      {
+        op = spat.getOperator();
+      }
+      EagerOpInfo* eoi = getOrMkOpInfo(op, true);
+      EagerTrie* et = eoi->addPattern(d_qstate, d_tdb, spat);
+      // can happen if not a usable trigger
+      if (et == nullptr)
       {
         owner = false;
-        Trace("eager-inst-warn")
-            << "Cannot handle user pattern " << pat << std::endl;
+        continue;
       }
-      for (const Node& spat : spats)
+      if (!isPp)
       {
-        hasPat = true;
-        // TODO: statically analyze if this would lead to matching loops
-        Trace("eager-inst-register") << "Single pat: " << spat << std::endl;
-        Node op;
-        if (spat.getKind() == Kind::INST_PATTERN)
+        d_cdOps.insert(op);
+        ++d_statUserPatsCd;
+        if (options().quantifiers.eagerInstCdWatch)
         {
-          op = spat[0].getOperator();
-          ++d_statUserPatsMultiFilter;
-        }
-        else
-        {
-          op = spat.getOperator();
-        }
-        EagerOpInfo* eoi = getOrMkOpInfo(op, true);
-        EagerTrie* et = eoi->addPattern(d_qstate, d_tdb, spat);
-        // can happen if not a usable trigger
-        if (et == nullptr)
-        {
-          owner = false;
-          continue;
-        }
-        if (!isPp)
-        {
-          d_cdOps.insert(op);
-          ++d_statUserPatsCd;
-          if (options().quantifiers.eagerInstCdWatch)
+          // match the current terms
+          EagerTrie* root = eoi->getCurrentTrie(d_tdb);
+          Assert(root != nullptr);
+          const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
+          const Node& spatr =
+              spat.getKind() == Kind::INST_PATTERN ? spat[0] : spat;
+          Trace("eager-inst-watch")
+              << "Since " << spat << " was added, revisit match with "
+              << gts.size() << " terms" << std::endl;
+          for (const Node& t : gts)
           {
-            // match the current terms
-            EagerTrie* root = eoi->getCurrentTrie(d_tdb);
-            Assert(root != nullptr);
-            const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
-            const Node& spatr =
-                spat.getKind() == Kind::INST_PATTERN ? spat[0] : spat;
-            Trace("eager-inst-watch")
-                << "Since " << spat << " was added, revisit match with "
-                << gts.size() << " terms" << std::endl;
-            for (const Node& t : gts)
+            std::pair<Node, Node> key(t, spat);
+            if (d_instTerms.find(key) != d_instTerms.end())
             {
-              std::pair<Node, Node> key(t, spat);
-              if (d_instTerms.find(key) != d_instTerms.end())
-              {
-                continue;
-              }
-              EagerTermIterator etip(spat, spatr);
-              EagerTermIterator eti(t);
-              ++d_statCdPatMatchCall;
-              std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
-              doMatchingPath(root, eti, etip, failExp);
-              addWatches(t, failExp);
+              continue;
             }
-            Trace("eager-inst-watch") << "...finish" << std::endl;
+            EagerTermIterator etip(spat, spatr);
+            EagerTermIterator eti(t);
+            ++d_statCdPatMatchCall;
+            std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
+            doMatchingPath(root, eti, etip, failExp);
+            addWatches(t, failExp);
           }
+          Trace("eager-inst-watch") << "...finish" << std::endl;
         }
-        else
+      }
+      else
+      {
+        ++d_statUserPats;
+      }
+      if (owner)
+      {
+        for (const Node& spc : spat)
         {
-          ++d_statUserPats;
-        }
-        if (owner)
-        {
-          for (const Node& spc : spat)
+          if (spc.getKind() != Kind::INST_CONSTANT)
           {
-            if (spc.getKind() != Kind::INST_CONSTANT)
-            {
-              owner = false;
-              break;
-            }
+            owner = false;
+            break;
           }
         }
       }
     }
+
+  }
+  if (!hasPat)
+  {
+    Trace("eager-inst-warn") << "Unhandled quantified formula " << q << std::endl;
   }
   // can maybe assign owner if only a trivial trigger and the quantified formula
   // is top level.
