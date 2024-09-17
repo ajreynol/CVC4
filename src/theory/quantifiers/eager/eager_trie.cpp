@@ -22,25 +22,32 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+EagerTermIterator::EagerTermIterator(const Node& t)
+{
+  d_orig.emplace_back(t);
+  Assert (t.getKind()==Kind::INST_PATTERN);
+  std::vector<Node> ts(t.begin(), t.end());
+  d_stack.emplace_back(ts, 0);
+}
+
+EagerTermIterator::EagerTermIterator(const std::vector<Node>& ts) : d_orig(ts)
+{
+  d_stack.emplace_back(ts, 0);
+}
+
 EagerTrie::EagerTrie() {}
 
 EagerTrie* EagerTrie::add(TermDb* tdb, const Node& n)
 {
   std::vector<uint64_t> bound;
-  // if n has kind INST_PATTERN, it is a filtering multi-trigger where the first
-  // child is a single trigger
-  Node t = n.getKind() == Kind::INST_PATTERN ? n[0] : n;
-  EagerTermIterator eti(n, t);
+  EagerTermIterator eti(n);
   return addInternal(tdb, eti, bound, false);
 }
 
 void EagerTrie::erase(TermDb* tdb, const Node& n)
 {
   std::vector<uint64_t> bound;
-  // if n has kind INST_PATTERN, it is a filtering multi-trigger where the first
-  // child is a single trigger
-  Node t = n.getKind() == Kind::INST_PATTERN ? n[0] : n;
-  EagerTermIterator eti(n, t);
+  EagerTermIterator eti(n);
   addInternal(tdb, eti, bound, true);
 }
 
@@ -50,7 +57,7 @@ EagerTrie* EagerTrie::addInternal(TermDb* tdb,
                                   bool isErase)
 {
   // remember the pattern, even if being erased
-  d_exPat = eti.getOriginal();
+  d_exPat = eti.getOriginal()[0];
   EagerTrie* ret;
   if (eti.needsBacktrack())
   {
@@ -62,13 +69,13 @@ EagerTrie* EagerTrie::addInternal(TermDb* tdb,
     // we are at the leaf, we add or remove the pattern
     else if (isErase)
     {
-      AlwaysAssert(d_pats.back() == eti.getOriginal());
+      Assert(d_pats.back() == d_exPat);
       d_pats.pop_back();
       ret = nullptr;
     }
     else
     {
-      d_pats.push_back(eti.getOriginal());
+      d_pats.push_back(d_exPat);
       ret = this;
     }
   }

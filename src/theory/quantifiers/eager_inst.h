@@ -31,9 +31,9 @@ class EagerWatchList
 {
  public:
   EagerWatchList(context::Context* c) : d_valid(c, true), d_matchJobs(c) {}
-  void add(const EagerTrie* et, const Node& t);
+  void add(const EagerTrie* et, const std::vector<Node>& t);
   context::CDO<bool> d_valid;
-  context::CDList<std::pair<const EagerTrie*, Node>> d_matchJobs;
+  context::CDList<std::pair<const EagerTrie*, std::vector<Node>>> d_matchJobs;
 };
 
 class EagerWatchInfo
@@ -55,32 +55,43 @@ class EagerOpInfo
 {
  public:
   EagerOpInfo(context::Context* c, const Node& op, EagerGroundDb* gdb);
-  /** Get trie, possibly with cleaning */
-  EagerTrie* getCurrentTrie(TermDb* tdb);
-  /** Add pattern */
-  EagerTrie* addPattern(QuantifiersState& qs, TermDb* tdb, const Node& pat);
   /** Add ground term */
   bool addGroundTerm(QuantifiersState& qs, const Node& n);
   /** Get ground terms */
   const context::CDHashSet<Node>& getGroundTerms() const { return d_rlvTerms; }
-
+  /** Set active */
+  void setActive(QuantifiersState& qs);
  private:
-  void makeCurrent(TermDb* tdb);
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
   /** For ground term indexing */
   EagerGroundTrieAllocator* d_galloc;
   EagerGroundTrie* d_gtrie;
-  /** The patterns for this operator in the current context */
-  context::CDList<Node> d_pats;
-  EagerTrie d_trie;
-  std::vector<Node> d_triePats;
   /** Relevant terms for this in the current context */
   context::CDHashSet<Node> d_rlvTerms;
   /** Relevant terms for this in the current context */
   context::CDHashSet<Node> d_rlvTermsWaiting;
+  /** */
+  context::CDO<bool> d_active;
 };
 
+  using EagerFailExp = std::map<Node, std::map<Node, std::vector<std::pair<const EagerTrie*, std::vector<Node>>>>>;
+
+class CDEagerTrie
+{
+public:
+  CDEagerTrie(context::Context* c);
+  /** Add pattern */
+  EagerTrie* addPattern(TermDb* tdb, const Node& pat);
+  /** */
+  EagerTrie* getCurrent(TermDb* tdb);
+private:
+  void makeCurrent(TermDb* tdb);
+  EagerTrie d_trie;
+  /** The patterns for this operator in the current context */
+  context::CDList<Node> d_pats;
+  std::vector<Node> d_triePats;
+};
 /**
  */
 class EagerInst : public QuantifiersModule
@@ -130,10 +141,12 @@ class EagerInst : public QuantifiersModule
   void registerQuant(const Node& q);
   eq::EqualityEngine* d_ee;
   TermDb* d_tdb;
+  Node d_null;
   NodePairSet d_instTerms;
   NodeSet d_ownedQuants;
   size_t d_tmpAddedLemmas;
   bool d_instOutput;
+  CDEagerTrie d_etrie;
   NodeSet d_ppQuants;
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
@@ -157,9 +170,10 @@ class EagerInst : public QuantifiersModule
   /** Static registers for instantiations */
   std::vector<Node> d_inst;
   /** */
+  std::vector<Node> d_keep;
+  /** */
   std::pair<Node, Node> d_nullPair;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
-  EagerTrie* getCurrentTrie(const Node& op);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
   /**
    * Match ground term iterated on by eti with the entire trie of patterns in
@@ -167,7 +181,7 @@ class EagerInst : public QuantifiersModule
    */
   void doMatching(const EagerTrie* pat,
                   EagerTermIterator& eti,
-                  std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+                  EagerFailExp& failExp);
   /**
    * Resume matching the ground term iterated on by eti with the entire trie of
    * patterns beneath tgt. We have so far traversed to the path pat guided by
@@ -178,33 +192,26 @@ class EagerInst : public QuantifiersModule
       EagerTermIterator& eti,
       const EagerTrie* tgt,
       EagerTermIterator& etip,
-      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+      EagerFailExp& failExp);
   void doMatchingPath(
       const EagerTrie* et,
       EagerTermIterator& eti,
       EagerTermIterator& etip,
-      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+      EagerFailExp& failExp);
   /**
    * Assumes d_inst is ready, instantiate with the patterns in et.
    */
   void doInstantiations(
       const EagerTrie* et,
-      const Node& n,
-      std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+      const std::vector<Node>& n,
+      EagerFailExp& failExp);
   void addToFailExp(const EagerTrie* et,
-                    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp,
+                    const std::vector<Node>& ts,
+                    EagerFailExp& failExp,
                     const Node& a,
                     const Node& b);
-  void addWatches(const Node& t,
-                  std::map<const EagerTrie*, std::pair<Node, Node>>& failExp);
+  void addWatches(EagerFailExp& failExp);
   bool isRelevantTerm(const Node& t);
-  /**
-   * Node n matching pat is waiting on a being equal to b.
-   */
-  void addWatch(const EagerTrie* pat,
-                const Node& t,
-                const Node& a,
-                const Node& b);
 };
 
 }  // namespace quantifiers

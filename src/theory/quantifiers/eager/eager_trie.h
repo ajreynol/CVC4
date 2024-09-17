@@ -27,29 +27,22 @@ namespace quantifiers {
 class TermDb;
 class EagerInst;
 
+/**
+ *
+ */
 class EagerTermIterator
 {
   friend class EagerInst;
-
  public:
-  EagerTermIterator(const Node& t) : d_orig(t) { d_stack.emplace_back(t, 0); }
-  EagerTermIterator(const Node& n, const Node& t) : d_orig(n)
-  {
-    d_stack.emplace_back(t, 0);
-  }
-  TNode getOriginal() const { return d_orig; }
+  EagerTermIterator(const Node& t);
+  EagerTermIterator(const std::vector<Node>& ts);
+  const std::vector<Node>& getOriginal() const { return d_orig; }
   TNode getCurrent() const
   {
     Assert(!d_stack.empty());
-    const std::pair<Node, size_t>& cur = d_stack.back();
-    Assert(cur.second < cur.first.getNumChildren());
+    const std::pair<std::vector<Node>, size_t>& cur = d_stack.back();
+    Assert(cur.second <= cur.first.size());
     return cur.first[cur.second];
-  }
-  bool needsBacktrack() const
-  {
-    Assert(!d_stack.empty());
-    const std::pair<Node, size_t>& cur = d_stack.back();
-    return cur.second == cur.first.getNumChildren();
   }
   void incrementChild() { d_stack.back().second++; }
   void decrementChild()
@@ -57,7 +50,16 @@ class EagerTermIterator
     Assert(d_stack.back().second > 0);
     d_stack.back().second--;
   }
-  void push(const Node& t) { d_stack.emplace_back(t, 0); }
+  bool needsBacktrack() const
+  {
+    Assert(!d_stack.empty());
+    const std::pair<std::vector<Node>, size_t>& cur = d_stack.back();
+    return cur.second == cur.first.size();
+  }
+  void push(const Node& t) {
+    std::vector<Node> ts(t.begin(), t.end());
+    d_stack.emplace_back(ts, 0);
+  }
   bool canPop() const { return d_stack.size() > 1; }
   bool pop()
   {
@@ -68,10 +70,19 @@ class EagerTermIterator
     d_stack.pop_back();
     return true;
   }
-
+  void pushOriginal(const Node& t)
+  {
+    d_orig.emplace_back(t);
+    push(t);
+  }
+  void popOriginal()
+  {
+    pop();
+    d_orig.pop_back();
+  }
  private:
-  Node d_orig;
-  std::vector<std::pair<Node, size_t>> d_stack;
+  std::vector<Node> d_orig;
+  std::vector<std::pair<std::vector<Node>, size_t>> d_stack;
 };
 
 class EagerTrie

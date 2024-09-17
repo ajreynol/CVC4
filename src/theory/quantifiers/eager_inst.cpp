@@ -27,9 +27,9 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-void EagerWatchList::add(const EagerTrie* et, const Node& t)
+void EagerWatchList::add(const EagerTrie* et, const std::vector<Node>& t)
 {
-  d_matchJobs.push_back(std::pair<const EagerTrie*, Node>(et, t));
+  d_matchJobs.push_back(std::pair<const EagerTrie*, std::vector<Node>>(et, t));
 }
 
 EagerWatchList* EagerWatchInfo::getOrMkList(const Node& r, bool doMk)
@@ -54,58 +54,14 @@ EagerOpInfo::EagerOpInfo(context::Context* c,
                          EagerGroundDb* gdb)
     : d_galloc(nullptr),
       d_gtrie(nullptr),
-      d_pats(c),
       d_rlvTerms(c),
-      d_rlvTermsWaiting(c)
+      d_rlvTermsWaiting(c),
+      d_active(c, false)
 {
   if (gdb != nullptr)
   {
     d_galloc = gdb->getAlloc();
     d_gtrie = gdb->getTrie(op);
-  }
-}
-
-EagerTrie* EagerOpInfo::getCurrentTrie(TermDb* tdb)
-{
-  if (d_pats.empty())
-  {
-    return nullptr;
-  }
-  Assert(!d_triePats.empty());
-  makeCurrent(tdb);
-  return &d_trie;
-}
-
-EagerTrie* EagerOpInfo::addPattern(QuantifiersState& qs,
-                                   TermDb* tdb,
-                                   const Node& pat)
-{
-  // must make current before adding
-  makeCurrent(tdb);
-  if (d_pats.empty() && d_gtrie != nullptr)
-  {
-    // index all ground terms now
-    for (const Node& tw : d_rlvTermsWaiting)
-    {
-      addGroundTermInternal(qs, tw);
-    }
-  }
-  d_pats.emplace_back(pat);
-  d_triePats.emplace_back(pat);
-  return d_trie.add(tdb, pat);
-}
-
-void EagerOpInfo::makeCurrent(TermDb* tdb)
-{
-  size_t tsize = d_pats.size();
-  if (d_triePats.size() > tsize)
-  {
-    // clean up any stale patterns that appear in the trie
-    for (size_t i = d_triePats.size() - 1; i >= tsize; i--)
-    {
-      d_trie.erase(tdb, d_triePats[i]);
-    }
-    d_triePats.resize(tsize);
   }
 }
 
@@ -116,7 +72,7 @@ bool EagerOpInfo::addGroundTerm(QuantifiersState& qs, const Node& n)
     d_rlvTerms.insert(n);
     return true;
   }
-  if (!d_pats.empty())
+  if (!d_active.get())
   {
     // index now
     return addGroundTermInternal(qs, n);
@@ -136,6 +92,49 @@ bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
   return false;
 }
 
+void EagerOpInfo::setActive(QuantifiersState& qs)
+{
+  Assert (!d_active.get());
+  for (const Node& nw : d_rlvTermsWaiting)
+  {
+    addGroundTerm(qs, nw);
+  }
+}
+
+CDEagerTrie::CDEagerTrie(context::Context* c) : d_pats(c)
+{
+}
+
+EagerTrie* CDEagerTrie::addPattern(TermDb* tdb, const Node& pat)
+{
+  Trace("eager-inst-pattern") << "add pat: " << pat << std::endl;
+  makeCurrent(tdb);
+  d_pats.push_back(pat);
+  d_triePats.emplace_back(pat);
+  return d_trie.add(tdb, pat);
+}
+
+EagerTrie* CDEagerTrie::getCurrent(TermDb* tdb)
+{
+  makeCurrent(tdb);
+  return &d_trie;
+}
+
+void CDEagerTrie::makeCurrent(TermDb* tdb)
+{
+  size_t i = d_triePats.size();
+  size_t tsize = d_pats.size();
+  // clean up any stale patterns that appear in the trie
+  while(i>tsize)
+  {
+    i--;
+    Node pat = d_triePats[i];
+    Trace("eager-inst-pattern") << "remove pat: " << pat << std::endl;
+    d_trie.erase(tdb, pat);
+  }
+  d_triePats.resize(tsize);
+}
+
 EagerInst::EagerInst(Env& env,
                      QuantifiersState& qs,
                      QuantifiersInferenceManager& qim,
@@ -146,6 +145,7 @@ EagerInst::EagerInst(Env& env,
       d_tdb(tr.getTermDatabase()),
       d_instTerms(userContext()),
       d_ownedQuants(context()),
+      d_etrie(context()),
       d_ppQuants(userContext()),
       d_fullInstTerms(userContext()),
       d_cdOps(context()),
@@ -272,6 +272,14 @@ void EagerInst::registerQuant(const Node& q)
       continue;
     }
     Node pati = d_qreg.substituteBoundVariablesToInstConstants(pat, q);
+    Trace("eager-inst-register") << "Register pattern: " << pati << std::endl;
+    Node op = d_tdb->getMatchOperator(pati[0]);
+    if (op.isNull())
+    {
+      owner = false;
+      continue;
+    }
+    /*
     std::vector<Node> ppc(pati.begin(), pati.end());
     std::vector<Node> spats;
     for (size_t i = 0, npats = pati.getNumChildren(); i < npats; i++)
@@ -294,74 +302,59 @@ void EagerInst::registerQuant(const Node& q)
         }
       }
     }
-    if (spats.empty())
+    */
+    // TODO: statically analyze if this would lead to matching loops
+    EagerTrie* et = d_etrie.addPattern(d_tdb, pati);
+    // can happen if not a usable trigger
+    if (et == nullptr)
     {
       owner = false;
-      Trace("eager-inst-warn")
-          << "Cannot handle user pattern " << pat << std::endl;
+      continue;
     }
-    for (const Node& spat : spats)
+    d_keep.emplace_back(pati);
+    if (!isPp)
     {
-      hasPat = true;
-      // TODO: statically analyze if this would lead to matching loops
-      Trace("eager-inst-register") << "Single pat: " << spat << std::endl;
-      Node op;
-      if (spat.getKind() == Kind::INST_PATTERN)
+      d_cdOps.insert(op);
+      ++d_statUserPatsCd;
+      if (options().quantifiers.eagerInstCdWatch)
       {
-        op = spat[0].getOperator();
-        ++d_statUserPatsMultiFilter;
-      }
-      else
-      {
-        op = spat.getOperator();
-      }
-      EagerOpInfo* eoi = getOrMkOpInfo(op, true);
-      EagerTrie* et = eoi->addPattern(d_qstate, d_tdb, spat);
-      // can happen if not a usable trigger
-      if (et == nullptr)
-      {
-        owner = false;
-        continue;
-      }
-      if (!isPp)
-      {
-        d_cdOps.insert(op);
-        ++d_statUserPatsCd;
-        if (options().quantifiers.eagerInstCdWatch)
+        // match the current terms
+        EagerTrie* root = d_etrie.getCurrent(d_tdb);
+        Assert(root != nullptr);
+        EagerOpInfo* eoi = getOrMkOpInfo(op, false);
+        if (eoi!=nullptr)
         {
-          // match the current terms
-          EagerTrie* root = eoi->getCurrentTrie(d_tdb);
-          Assert(root != nullptr);
           const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
-          const Node& spatr =
-              spat.getKind() == Kind::INST_PATTERN ? spat[0] : spat;
           Trace("eager-inst-watch")
-              << "Since " << spat << " was added, revisit match with "
+              << "Since " << pati << " was added, revisit match with "
               << gts.size() << " terms" << std::endl;
           for (const Node& t : gts)
           {
-            std::pair<Node, Node> key(t, spat);
+            std::pair<Node, Node> key(t, pati);
             if (d_instTerms.find(key) != d_instTerms.end())
             {
               continue;
             }
-            EagerTermIterator etip(spat, spatr);
-            EagerTermIterator eti(t);
+            EagerTermIterator etip(pati);
+            EagerTermIterator eti({t});
             ++d_statCdPatMatchCall;
-            std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
+            EagerFailExp failExp;
             doMatchingPath(root, eti, etip, failExp);
-            addWatches(t, failExp);
+            addWatches(failExp);
           }
           Trace("eager-inst-watch") << "...finish" << std::endl;
         }
       }
-      else
+    }
+    else
+    {
+      ++d_statUserPats;
+    }
+    if (owner)
+    {
+      for (const Node& p : pati)
       {
-        ++d_statUserPats;
-      }
-      if (owner)
-      {
-        for (const Node& spc : spat)
+        for (const Node& spc : p)
         {
           if (spc.getKind() != Kind::INST_CONSTANT)
           {
@@ -369,8 +362,13 @@ void EagerInst::registerQuant(const Node& q)
             break;
           }
         }
+        if (!owner)
+        {
+          break;
+        }
       }
     }
+
   }
   if (!hasPat)
   {
@@ -424,11 +422,10 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
   Trace("eager-inst-debug")
       << "Asserted term " << t << " with user patterns" << std::endl;
-  EagerTrie* et = eoi->getCurrentTrie(d_tdb);
-  if (et == nullptr)
+  EagerTrie* root = d_etrie.getCurrent(d_tdb);
+  if (root == nullptr)
   {
     // no current active patterns
-    d_fullInstTerms.insert(t);
     return;
   }
   // if master equality engine is inconsistent, we are in conflict
@@ -439,9 +436,10 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
   ++d_statMatchCall;
   size_t prevLemmas = d_tmpAddedLemmas;
-  EagerTermIterator eti(t);
-  std::map<const EagerTrie*, std::pair<Node, Node>> failExp;
-  doMatching(et, eti, failExp);
+  std::vector<Node> ts{t};
+  EagerTermIterator eti(ts);
+  EagerFailExp failExp;
+  doMatching(root, eti, failExp);
   if (failExp.empty())
   {
     // this term is never matchable again (unless against cd-dependent user ops)
@@ -449,7 +447,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
   else
   {
-    addWatches(t, failExp);
+    addWatches(failExp);
   }
   if (d_tmpAddedLemmas > prevLemmas)
   {
@@ -460,14 +458,14 @@ void EagerInst::notifyAssertedTerm(TNode t)
 void EagerInst::doMatching(
     const EagerTrie* et,
     EagerTermIterator& eti,
-    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+    EagerFailExp& failExp)
 {
   if (eti.needsBacktrack())
   {
     // continue matching
     if (eti.canPop())
     {
-      std::pair<Node, size_t> p = eti.d_stack.back();
+      std::pair<std::vector<Node>, size_t> p = eti.d_stack.back();
       // pop
       eti.pop();
       doMatching(et, eti, failExp);
@@ -476,14 +474,37 @@ void EagerInst::doMatching(
     }
     else
     {
+      const std::vector<Node>& n = eti.getOriginal();
       // instantiate with all patterns stored on this leaf
-      const Node& n = eti.getOriginal();
       doInstantiations(et, n, failExp);
+      // also process potential multi triggers
+      const std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
+      Trace("ajr-temp") << "At leaf, " << et->d_pats.size() << " patterns, " << etng.size() << " mpat continues" << std::endl;
+      for (const std::pair<const Node, EagerTrie>& ng : etng)
+      {
+        EagerOpInfo* eoi = getOrMkOpInfo(ng.first, false);
+        if (eoi==nullptr)
+        {
+          continue;
+        }
+        const EagerTrie* etn = &ng.second;
+        const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
+          Trace("eager-inst-watch")
+              << "Prefix multi-trigger matched for " << n << ", revisit match with "
+              << gts.size() << " " << ng.first << " terms" << std::endl;
+        for (const Node& t : gts)
+        {
+          eti.pushOriginal(t);
+          doMatching(etn, eti, failExp);
+          eti.popOriginal();
+        }
+      }
     }
     return;
   }
   Assert(et->d_pats.empty());
   const Node& tc = eti.getCurrent();
+  Trace("ajr-temp") << "Matching-here: " << tc << std::endl;
   eti.incrementChild();
   for (const std::pair<const uint64_t, EagerTrie>& c : et->d_varChildren)
   {
@@ -495,7 +516,7 @@ void EagerInst::doMatching(
     }
     if (!d_inst[vnum].isNull() && !d_qstate.areEqual(d_inst[vnum], tc))
     {
-      addToFailExp(&c.second, failExp, d_inst[vnum], tc);
+      addToFailExp(&c.second, eti.getOriginal(), failExp, d_inst[vnum], tc);
       continue;
     }
     Node prev = d_inst[vnum];
@@ -508,7 +529,7 @@ void EagerInst::doMatching(
   {
     if (!d_qstate.areEqual(c.first, tc))
     {
-      addToFailExp(&c.second, failExp, c.first, tc);
+      addToFailExp(&c.second, eti.getOriginal(), failExp, c.first, tc);
       continue;
     }
     doMatching(&c.second, eti, failExp);
@@ -578,23 +599,27 @@ void EagerInst::doMatching(
 
 void EagerInst::doInstantiations(
     const EagerTrie* et,
-    const Node& n,
-    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+    const std::vector<Node>& n,
+    EagerFailExp& failExp)
 {
   const std::vector<Node>& pats = et->d_pats;
   Instantiate* ie = d_qim.getInstantiate();
   for (const Node& pat : pats)
   {
-    std::pair<Node, Node> key(n, pat);
-    if (d_instTerms.find(key) != d_instTerms.end())
+    std::pair<Node, Node> key(n[0], pat);
+    if (n.size()==1)
     {
-      continue;
+      if (d_instTerms.find(key) != d_instTerms.end())
+      {
+        continue;
+      }
     }
     Node q = TermUtil::getInstConstAttr(pat);
     Assert(!q.isNull());
     // must resize
     std::vector<Node> instq(d_inst.begin(),
                             d_inst.begin() + q[0].getNumChildren());
+    /*
     if (pat.getKind() == Kind::INST_PATTERN)
     {
       std::vector<Node> ics = d_qreg.getInstantiationConstants(q);
@@ -614,16 +639,20 @@ void EagerInst::doInstantiations(
         continue;
       }
     }
+    */
     if (ie->addInstantiation(
             q, instq, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
     {
       d_tmpAddedLemmas++;
-      d_instTerms.insert(key);
+      if (n.size()==1)
+      {
+        d_instTerms.insert(key);
+      }
     }
     else
     {
       // dummy mark that the failure was due to entailed pattern
-      failExp[et] = d_nullPair;
+      failExp[d_null][d_null].emplace_back();
     }
   }
 }
@@ -633,7 +662,7 @@ void EagerInst::resumeMatching(
     EagerTermIterator& eti,
     const EagerTrie* tgt,
     EagerTermIterator& etip,
-    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+    EagerFailExp& failExp)
 {
   if (pat == tgt)
   {
@@ -695,7 +724,7 @@ void EagerInst::doMatchingPath(
     const EagerTrie* et,
     EagerTermIterator& eti,
     EagerTermIterator& etip,
-    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+    EagerFailExp& failExp)
 {
   if (eti.needsBacktrack())
   {
@@ -710,7 +739,7 @@ void EagerInst::doMatchingPath(
     else
     {
       // instantiate with all patterns stored on this leaf
-      const Node& n = eti.getOriginal();
+      const std::vector<Node>& n = eti.getOriginal();
       doInstantiations(et, n, failExp);
     }
     return;
@@ -731,7 +760,7 @@ void EagerInst::doMatchingPath(
     }
     if (!d_inst[vnum].isNull() && !d_qstate.areEqual(d_inst[vnum], tc))
     {
-      addToFailExp(&it->second, failExp, d_inst[vnum], tc);
+      addToFailExp(&it->second, eti.getOriginal(), failExp, d_inst[vnum], tc);
       return;
     }
     Node prev = d_inst[vnum];
@@ -747,7 +776,7 @@ void EagerInst::doMatchingPath(
     Assert(it != pg.end());
     if (!d_qstate.areEqual(pc, tc))
     {
-      addToFailExp(&it->second, failExp, pc, tc);
+      addToFailExp(&it->second, eti.getOriginal(), failExp, pc, tc);
       return;
     }
     doMatchingPath(&it->second, eti, etip, failExp);
@@ -770,14 +799,26 @@ void EagerInst::doMatchingPath(
 
 void EagerInst::addToFailExp(
     const EagerTrie* et,
-    std::map<const EagerTrie*, std::pair<Node, Node>>& failExp,
+    const std::vector<Node>& ts,
+    EagerFailExp& failExp,
     const Node& a,
     const Node& b)
 {
-  if (!a.isConst() || !b.isConst())
+  TNode ar = d_qstate.getRepresentative(a);
+  TNode br = d_qstate.getRepresentative(b);
+  if (ar.isConst())
   {
-    failExp[et] = std::pair<Node, Node>(a, b);
+    if (br.isConst())
+    {
+      return;
+    }
   }
+  else if (br.isConst())
+  {
+    failExp[br][ar].emplace_back(et, ts);
+    return;
+  }
+  failExp[ar][br].emplace_back(et, ts);
 }
 
 EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
@@ -803,16 +844,6 @@ EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
   return eoi.get();
 }
 
-EagerTrie* EagerInst::getCurrentTrie(const Node& op)
-{
-  EagerOpInfo* eoi = getOrMkOpInfo(op, false);
-  if (eoi == nullptr)
-  {
-    return nullptr;
-  }
-  return eoi->getCurrentTrie(d_tdb);
-}
-
 EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
 {
   context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>>::iterator it =
@@ -832,38 +863,30 @@ EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
 }
 
 void EagerInst::addWatches(
-    const Node& t, std::map<const EagerTrie*, std::pair<Node, Node>>& failExp)
+    EagerFailExp& failExp)
 {
   if (options().quantifiers.eagerInstWatchMode
       == options::EagerInstWatchMode::NONE)
   {
     return;
   }
-  for (std::pair<const EagerTrie* const, std::pair<Node, Node>>& f : failExp)
+  for(const std::pair<const Node, std::map<Node, std::vector<std::pair<const EagerTrie*, std::vector<Node>>>>>& f : failExp)
   {
-    addWatch(f.first, t, f.second.first, f.second.second);
+    // if a dummy mark
+    if (f.first.isNull())
+    {
+      continue;
+    }
+    EagerWatchInfo* ew = getOrMkWatchInfo(f.first, true);
+    for (const std::pair<const Node, std::vector<std::pair<const EagerTrie*, std::vector<Node>>>>& ff : f.second)
+    {
+      EagerWatchList* ewl = ew->getOrMkList(ff.first, true);
+      for (const std::pair<const EagerTrie*, std::vector<Node>>& fmj : ff.second)
+      {
+        ewl->d_matchJobs.emplace_back(fmj);
+      }
+    }
   }
-}
-
-void EagerInst::addWatch(const EagerTrie* pat,
-                         const Node& t,
-                         const Node& a,
-                         const Node& b)
-{
-  TNode ar = d_qstate.getRepresentative(a);
-  TNode br = d_qstate.getRepresentative(b);
-  if (br.isConst())
-  {
-    TNode tmp = ar;
-    ar = br;
-    br = tmp;
-  }
-  ++d_statWatchCount;
-  Trace("eager-inst-watch") << "Fail to match: " << t << " because " << ar
-                            << " <> " << br << std::endl;
-  EagerWatchInfo* ew = getOrMkWatchInfo(ar, true);
-  EagerWatchList* ewl = ew->getOrMkList(br, true);
-  ewl->d_matchJobs.push_back(std::pair<const EagerTrie*, Node>(pat, t));
 }
 
 void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
@@ -872,7 +895,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
   Trace("eager-inst-debug2")
       << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
   EagerWatchInfo* ewi[2];
-  std::map<Node, std::map<const EagerTrie*, std::pair<Node, Node>>> nextFails;
+  EagerFailExp nextFails;
   bool addedInst = false;
   // look at the watch info of both equivalence classes
   for (size_t i = 0; i < 2; i++)
@@ -909,12 +932,12 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           }
           // update the representative as you go
           TNode rep = d_qstate.getRepresentative(itw->first);
-          context::CDList<std::pair<const EagerTrie*, Node>>& wmj =
+          context::CDList<std::pair<const EagerTrie*, std::vector<Node>>>& wmj =
               ewl->d_matchJobs;
           EagerWatchList* ewlo = ewi[0]->getOrMkList(rep, true);
-          context::CDList<std::pair<const EagerTrie*, Node>>& wmjo =
+          context::CDList<std::pair<const EagerTrie*, std::vector<Node>>>& wmjo =
               ewlo->d_matchJobs;
-          for (const std::pair<const EagerTrie*, Node>& p : wmj)
+          for (const std::pair<const EagerTrie*, std::vector<Node>>& p : wmj)
           {
             wmjo.push_back(p);
           }
@@ -923,29 +946,22 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       }
       // otherwise, we have a list of matching jobs that where waiting for this
       // merge, process them now.
-      context::CDList<std::pair<const EagerTrie*, Node>>& wmj =
+      context::CDList<std::pair<const EagerTrie*, std::vector<Node>>>& wmj =
           ewl->d_matchJobs;
-      for (const std::pair<const EagerTrie*, Node>& j : wmj)
+      EagerTrie* root = d_etrie.getCurrent(d_tdb);
+      for (const std::pair<const EagerTrie*, std::vector<Node>>& j : wmj)
       {
-        const Node& t = j.second;
-        const Node& op = d_tdb->getMatchOperator(t);
-        Assert(!op.isNull());
-        EagerTrie* root = getCurrentTrie(op);
-        if (root == nullptr)
-        {
-          continue;
-        }
+        const std::vector<Node>& t = j.second;
         const Node& pat = j.first->d_exPat;
         Assert(!pat.isNull());
         Trace("eager-inst-watch")
             << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
             << " and " << j.second << ", resume pattern is " << pat
             << std::endl;
-        const Node& patr = pat.getKind() == Kind::INST_PATTERN ? pat[0] : pat;
-        EagerTermIterator etip(pat, patr);
+        EagerTermIterator etip(pat);
         EagerTermIterator eti(t);
         ++d_statResumeMatchCall;
-        resumeMatching(root, eti, j.first, etip, nextFails[t]);
+        resumeMatching(root, eti, j.first, etip, nextFails);
       }
       // no longer valid
       ewl->d_valid = false;
@@ -964,11 +980,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     d_qim.doPending();
   }
   // add new watching
-  for (std::pair<const Node, std::map<const EagerTrie*, std::pair<Node, Node>>>&
-           nf : nextFails)
-  {
-    addWatches(nf.first, nf.second);
-  }
+  addWatches(nextFails);
 }
 
 bool EagerInst::isRelevantTerm(const Node& t)
