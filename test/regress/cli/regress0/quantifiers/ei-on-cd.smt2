@@ -1,0 +1,16 @@
+; COMMAND-LINE: --eager-inst
+(set-logic ALL)
+(set-info :status unsat)
+(declare-fun P (Int) Bool)
+(declare-fun Q (Int) Bool)
+(declare-fun R (Int) Bool)
+(assert (or
+          (forall ((x Int)) (! (not (P x)) :pattern ((P x))))
+          (forall ((x Int)) (! (not (Q x)) :pattern ((Q x))))
+          (forall ((x Int)) (! (not (R x)) :pattern ((R x))))
+        )
+)
+(assert (P 0))
+(assert (Q 0))
+(assert (R 0))
+(check-sat)

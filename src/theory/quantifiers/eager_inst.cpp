@@ -315,7 +315,7 @@ void EagerInst::registerQuant(const Node& q)
       owner = false;
       continue;
     }
-    d_keep.emplace_back(pati);
+    hasPat = true;
     if (!isPp)
     {
       d_cdOps.insert(op);

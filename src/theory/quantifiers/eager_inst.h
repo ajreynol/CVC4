@@ -186,8 +186,6 @@ class EagerInst : public QuantifiersModule
   /** Static registers for instantiations */
   std::vector<Node> d_inst;
   /** */
-  std::vector<Node> d_keep;
-  /** */
   std::pair<Node, Node> d_nullPair;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
