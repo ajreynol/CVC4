@@ -56,7 +56,8 @@ EagerOpInfo::EagerOpInfo(context::Context* c,
       d_gtrie(nullptr),
       d_rlvTerms(c),
       d_rlvTermsWaiting(c),
-      d_active(c, false)
+      d_active(c, false),
+      d_ewl(c)
 {
   if (gdb != nullptr)
   {
@@ -325,7 +326,7 @@ void EagerInst::registerQuant(const Node& q)
         if (eoi!=nullptr)
         {
           const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
-          Trace("eager-inst-watch")
+          Trace("eager-inst-match-event")
               << "Since " << pati << " was added, revisit match with "
               << gts.size() << " terms" << std::endl;
           for (const Node& t : gts)
@@ -336,13 +337,13 @@ void EagerInst::registerQuant(const Node& q)
               continue;
             }
             EagerTermIterator etip(pati);
-            EagerTermIterator eti({t});
+            std::vector<Node> ts{t};
+            EagerTermIterator eti(ts);
             ++d_statCdPatMatchCall;
             EagerFailExp failExp;
             doMatchingPath(root, eti, etip, failExp);
             addWatches(failExp);
           }
-          Trace("eager-inst-watch") << "...finish" << std::endl;
         }
       }
     }
@@ -407,6 +408,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
+  Trace("eager-inst-notify") << "notify: asserted term " << t << std::endl;
   Node op = t.getOperator();
   EagerOpInfo* eoi = getOrMkOpInfo(op, true);
   if (!eoi->addGroundTerm(d_qstate, t))
@@ -439,10 +441,32 @@ void EagerInst::notifyAssertedTerm(TNode t)
   std::vector<Node> ts{t};
   EagerTermIterator eti(ts);
   EagerFailExp failExp;
+  Trace("eager-inst-match") << "Complete matching (upon asserted) for " << t << std::endl;
   doMatching(root, eti, failExp);
+  
+  // Also see if this triggers progress on any partially completed multi-triggers
+  EagerWatchList& ewl = eoi->getEagerWatchList();
+  context::CDList<std::pair<const EagerTrie*, std::vector<Node>>>& wmj =
+      ewl.d_matchJobs;
+  for (const std::pair<const EagerTrie*, std::vector<Node>>& j : wmj)
+  {
+    std::vector<Node> tsr = j.second;
+    tsr.push_back(t);
+    const Node& pat = j.first->d_exPat;
+    Assert(!pat.isNull());
+    Trace("eager-inst-match-event") 
+        << "Since " << t << " was added, resume " << j.first
+        << " and " << tsr << ", resume pattern is " << pat
+        << std::endl;
+    EagerTermIterator etipr(pat);
+    EagerTermIterator etir(tsr);
+    //++d_statResumeMatchCall;
+    resumeMatching(root, etir, j.first, etipr, failExp);
+  }
+  
   if (failExp.empty())
   {
-    // this term is never matchable again (unless against cd-dependent user ops)
+    // optimization: this term is never matchable again (unless against cd-dependent user ops)
     d_fullInstTerms.insert(t);
   }
   else
@@ -479,33 +503,33 @@ void EagerInst::doMatching(
       doInstantiations(et, n, failExp);
       // also process potential multi triggers
       const std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
-      Trace("ajr-temp") << "At leaf, " << et->d_pats.size() << " patterns, " << etng.size() << " mpat continues" << std::endl;
       for (const std::pair<const Node, EagerTrie>& ng : etng)
       {
-        EagerOpInfo* eoi = getOrMkOpInfo(ng.first, false);
-        if (eoi==nullptr)
-        {
-          continue;
-        }
+        EagerOpInfo* eoi = getOrMkOpInfo(ng.first, true);
         const EagerTrie* etn = &ng.second;
         const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
-          Trace("eager-inst-watch")
-              << "Prefix multi-trigger matched for " << n << ", revisit match with "
-              << gts.size() << " " << ng.first << " terms" << std::endl;
+        Trace("eager-inst-match-debug")
+            << "Prefix multi-trigger matched for " << n << ", continue match with "
+            << gts.size() << " " << ng.first << " terms" << std::endl;
         for (const Node& t : gts)
         {
+          Trace("eager-inst-match") << "Complete matching (upon multi-trigger prefix " << eti.getOriginal() << ") for " << t << std::endl;
           eti.pushOriginal(t);
           doMatching(etn, eti, failExp);
           eti.popOriginal();
         }
+        // also set up an assert watch
+        EagerWatchList& ewl = eoi->getEagerWatchList();
+        ewl.add(etn, eti.getOriginal());
       }
     }
     return;
   }
   Assert(et->d_pats.empty());
   const Node& tc = eti.getCurrent();
-  Trace("ajr-temp") << "Matching-here: " << tc << std::endl;
+  Trace("eager-inst-match-debug") << "  Complete matching: " << tc << std::endl;
   eti.incrementChild();
+  // try all variable children
   for (const std::pair<const uint64_t, EagerTrie>& c : et->d_varChildren)
   {
     uint64_t vnum = c.first;
@@ -667,6 +691,7 @@ void EagerInst::resumeMatching(
   if (pat == tgt)
   {
     // we have now fully resumed the match, now go to main matching procedure
+    Trace("eager-inst-match") << "Complete matching (upon resume) for " << eti.getOriginal() << std::endl;
     doMatching(pat, eti, failExp);
     return;
   }
@@ -746,6 +771,8 @@ void EagerInst::doMatchingPath(
   }
   const Node& tc = eti.getCurrent();
   const Node& pc = etip.getCurrent();
+  Trace("eager-inst-match-debug") << "  Path matching: " << tc << " " << pc << std::endl;
+  Assert (tc.getType()==pc.getType());
   eti.incrementChild();
   etip.incrementChild();
   if (pc.getKind() == Kind::INST_CONSTANT)
@@ -883,6 +910,7 @@ void EagerInst::addWatches(
       EagerWatchList* ewl = ew->getOrMkList(ff.first, true);
       for (const std::pair<const EagerTrie*, std::vector<Node>>& fmj : ff.second)
       {
+        Trace("eager-inst-watch") << "-- watch merge " << f.first << " " << ff.first << " to resume matching with " << fmj.second << std::endl;
         ewl->d_matchJobs.emplace_back(fmj);
       }
     }
@@ -894,6 +922,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
   Assert(d_qstate.getRepresentative(t2) == t1);
   Trace("eager-inst-debug2")
       << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
+  Trace("eager-inst-notify") << "notify: merge " << t1 << " " << t2 << std::endl;
   EagerWatchInfo* ewi[2];
   EagerFailExp nextFails;
   bool addedInst = false;
@@ -954,7 +983,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         const std::vector<Node>& t = j.second;
         const Node& pat = j.first->d_exPat;
         Assert(!pat.isNull());
-        Trace("eager-inst-watch")
+        Trace("eager-inst-match-event") 
             << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
             << " and " << j.second << ", resume pattern is " << pat
             << std::endl;

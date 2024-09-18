@@ -1746,7 +1746,7 @@ name   = "Quantifiers"
   category   = "regular"
   long       = "eager-inst-watch=MODE"
   type       = "EagerInstWatchMode"
-  default    = "NONE"
+  default    = "SIMPLE"
   help       = "mode for what to watch for for readding terms for eager instantiation"
   help_mode  = "Modes for what to watch for for readding terms for eager instantiation."
 [[option.mode.NONE]]
@@ -1769,7 +1769,7 @@ name   = "Quantifiers"
   category   = "expert"
   long       = "eager-inst-cd-watch"
   type       = "bool"
-  default    = "false"
+  default    = "true"
   help       = "match all terms when a user pattern becomes active"
 
 [[option]]

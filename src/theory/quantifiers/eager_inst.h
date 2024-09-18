@@ -46,7 +46,6 @@ class EagerWatchInfo
    * equivalence class to become equal to.
    */
   context::CDHashMap<Node, std::shared_ptr<EagerWatchList>> d_eqWatch;
-
  private:
   context::Context* d_ctx;
 };
@@ -61,6 +60,11 @@ class EagerOpInfo
   const context::CDHashSet<Node>& getGroundTerms() const { return d_rlvTerms; }
   /** Set active */
   void setActive(QuantifiersState& qs);
+  /**
+   * These are the set of partially completed multi-trigger matches that are
+   * waiting on new terms for this operator.
+   */
+  EagerWatchList& getEagerWatchList() { return d_ewl; }
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
@@ -73,6 +77,8 @@ class EagerOpInfo
   context::CDHashSet<Node> d_rlvTermsWaiting;
   /** */
   context::CDO<bool> d_active;
+  /** */
+  EagerWatchList d_ewl;
 };
 
   using EagerFailExp = std::map<Node, std::map<Node, std::vector<std::pair<const EagerTrie*, std::vector<Node>>>>>;

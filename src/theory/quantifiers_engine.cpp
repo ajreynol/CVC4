@@ -673,7 +673,6 @@ void QuantifiersEngine::eqNotifyNewClass(TNode t)
 
 void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
 {
-  Trace("ajr-temp") << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
   if (d_eagerInstEqcMerge)
   {
     for (size_t i = 0; i < 2; i++)
@@ -728,7 +727,6 @@ void QuantifiersEngine::eqNotifyConstantTermMerge(TNode t1, TNode t2) {}
 
 void QuantifiersEngine::preNotifyFact(TNode fact)
 {
-  Trace("ajr-temp") << "preNotifyFact " << fact << std::endl;
   if (d_eagerInstAssert)
   {
     notifyAssertedTermRec(fact);
