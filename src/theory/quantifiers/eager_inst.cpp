@@ -157,10 +157,13 @@ EagerInst::EagerInst(Env& env,
       d_statUserPatsMultiFilter(
           statisticsRegistry().registerInt("EagerInst::userPatsMultiFilter")),
       d_statMatchCall(statisticsRegistry().registerInt("EagerInst::matchCall")),
+      d_statMatchContinueCall(statisticsRegistry().registerInt("EagerInst::matchContinueCall")),
       d_statWatchCount(
           statisticsRegistry().registerInt("EagerInst::watchCount")),
-      d_statResumeMatchCall(
-          statisticsRegistry().registerInt("EagerInst::resumeMatchCall")),
+      d_statResumeMergeMatchCall(
+          statisticsRegistry().registerInt("EagerInst::resumeMergeMatchCall")),
+      d_statResumeAssertMatchCall(
+          statisticsRegistry().registerInt("EagerInst::resumeAssertMatchCall")),
       d_statCdPatMatchCall(
           statisticsRegistry().registerInt("EagerInst::cdPatMatchCall"))
 {
@@ -275,6 +278,7 @@ void EagerInst::registerQuant(const Node& q)
     Node op = d_tdb->getMatchOperator(pati[0]);
     if (op.isNull())
     {
+      Trace("eager-inst-warn") << "Unhandled pattern: " << pat << std::endl;
       owner = false;
       continue;
     }
@@ -307,6 +311,7 @@ void EagerInst::registerQuant(const Node& q)
     // can happen if not a usable trigger
     if (et == nullptr)
     {
+      Trace("eager-inst-warn") << "Unhandled pattern: " << pat << std::endl;
       owner = false;
       continue;
     }
@@ -459,7 +464,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
         << ", resume pattern is " << pat << std::endl;
     EagerTermIterator etipr(pat);
     EagerTermIterator etir(tsr);
-    //++d_statResumeMatchCall;
+    ++d_statResumeAssertMatchCall;
     Trace("eager-inst-match") << "Resume match (upon new term) for " << etir.getOriginal() << std::endl;
     resumeMatching(root, etir, j.first, etipr, failExp);
     Trace("eager-inst-match") << "...finished" << std::endl;
@@ -515,6 +520,7 @@ void EagerInst::doMatching(const EagerTrie* et,
             << " terms" << std::endl;
         for (const Node& t : gts)
         {
+          ++d_statMatchContinueCall;
           Trace("eager-inst-match")
               << "Complete matching (upon multi-trigger prefix "
               << eti.getOriginal() << ") for " << t << std::endl;
@@ -1004,7 +1010,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
             << std::endl;
         EagerTermIterator etip(pat);
         EagerTermIterator eti(t);
-        ++d_statResumeMatchCall;
+        ++d_statResumeMergeMatchCall;
         Trace("eager-inst-match") << "Resume match (upon merge) for " << eti.getOriginal() << std::endl;
         resumeMatching(root, eti, j.first, etip, nextFails);
         Trace("eager-inst-match") << "...finished" << std::endl;

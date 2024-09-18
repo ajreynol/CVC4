@@ -174,9 +174,13 @@ class EagerInst : public QuantifiersModule
   /** Number of calls to match */
   IntStat d_statMatchCall;
   /** Number of calls to match */
+  IntStat d_statMatchContinueCall;
+  /** Number of calls to match */
   IntStat d_statWatchCount;
   /** Number of calls to match */
-  IntStat d_statResumeMatchCall;
+  IntStat d_statResumeMergeMatchCall;
+  /** Number of calls to match */
+  IntStat d_statResumeAssertMatchCall;
   /** Number of calls to match */
   IntStat d_statCdPatMatchCall;
   /** Static registers for instantiations */
