@@ -66,7 +66,8 @@ class EagerOpInfo
    * waiting on new terms for this operator.
    */
   EagerWatchList& getEagerWatchList() { return d_ewl; }
-
+  /** */
+  bool isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const;
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
@@ -113,7 +114,11 @@ class EagerInst : public QuantifiersModule
       PairHashFunction<Node, Node, std::hash<Node>, std::hash<Node>>;
   using NodePairSet =
       context::CDHashSet<std::pair<Node, Node>, NodePairHashFunction>;
+  using NodePairMap =
+      context::CDHashMap<std::pair<Node, Node>, Node, NodePairHashFunction>;
 
+  using NodeMap =
+      context::CDHashMap<Node, Node>;
  public:
   EagerInst(Env& env,
             QuantifiersState& qs,
@@ -156,6 +161,8 @@ class EagerInst : public QuantifiersModule
   Node d_null;
   NodePairSet d_instTerms;
   NodeSet d_ownedQuants;
+  NodePairMap d_patRegister;
+  NodeSet d_filteringSingleTriggers;
   size_t d_tmpAddedLemmas;
   bool d_instOutput;
   CDEagerTrie d_etrie;
@@ -223,6 +230,9 @@ class EagerInst : public QuantifiersModule
                     const Node& b);
   void addWatches(EagerFailExp& failExp);
   bool isRelevantTerm(const Node& t);
+  bool isRelevant(const Node& op, const std::vector<TNode>& args);
+  /** */
+  Node getPatternFor(const Node& pat, const Node& q);
 };
 
 }  // namespace quantifiers

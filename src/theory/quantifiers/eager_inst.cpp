@@ -102,6 +102,12 @@ void EagerOpInfo::setActive(QuantifiersState& qs)
   }
 }
 
+bool EagerOpInfo::isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const
+{
+  Assert(d_gtrie != nullptr);
+  return d_gtrie->contains(qs, args);
+}
+
 CDEagerTrie::CDEagerTrie(context::Context* c) : d_pats(c) {}
 
 EagerTrie* CDEagerTrie::addPattern(TermDb* tdb, const Node& pat)
@@ -144,6 +150,8 @@ EagerInst::EagerInst(Env& env,
       d_tdb(tr.getTermDatabase()),
       d_instTerms(userContext()),
       d_ownedQuants(context()),
+      d_patRegister(userContext()),
+      d_filteringSingleTriggers(userContext()),
       d_etrie(context()),
       d_ppQuants(userContext()),
       d_fullInstTerms(userContext()),
@@ -273,51 +281,26 @@ void EagerInst::registerQuant(const Node& q)
     {
       continue;
     }
-    Node pati = d_qreg.substituteBoundVariablesToInstConstants(pat, q);
-    Trace("eager-inst-register") << "Register pattern: " << pati << std::endl;
-    Node op = d_tdb->getMatchOperator(pati[0]);
-    if (op.isNull())
+    Node upat = getPatternFor(pat, q);
+    if (upat.isNull())
     {
-      Trace("eager-inst-warn") << "Unhandled pattern: " << pat << std::endl;
       owner = false;
       continue;
     }
-    /*
-    std::vector<Node> ppc(pati.begin(), pati.end());
-    std::vector<Node> spats;
-    for (size_t i = 0, npats = pati.getNumChildren(); i < npats; i++)
-    {
-      Node pc = pati[i];
-      if (pc.getKind() == Kind::APPLY_UF
-          && d_qreg.hasAllInstantiationConstants(pc, q))
-      {
-        if (ppc.size() == 1)
-        {
-          spats.push_back(pc);
-        }
-        else
-        {
-          Node tmp = ppc[0];
-          ppc[0] = ppc[i];
-          ppc[i] = tmp;
-          Node pp = nodeManager()->mkNode(Kind::INST_PATTERN, ppc);
-          spats.push_back(pp);
-        }
-      }
-    }
-    */
     // TODO: statically analyze if this would lead to matching loops
-    EagerTrie* et = d_etrie.addPattern(d_tdb, pati);
+    EagerTrie* et = d_etrie.addPattern(d_tdb, upat);
     // can happen if not a usable trigger
     if (et == nullptr)
     {
-      Trace("eager-inst-warn") << "Unhandled pattern: " << pat << std::endl;
+      Trace("eager-inst-warn") << "Unhandled pattern: " << upat << std::endl;
       owner = false;
+      d_patRegister[std::pair<Node, Node>(pat, q)] = d_null;
       continue;
     }
     hasPat = true;
     if (!isPp)
     {
+      Node op = d_tdb->getMatchOperator(upat[0]);
       d_cdOps.insert(op);
       ++d_statUserPatsCd;
       if (options().quantifiers.eagerInstCdWatch)
@@ -330,16 +313,16 @@ void EagerInst::registerQuant(const Node& q)
         {
           const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
           Trace("eager-inst-match-event")
-              << "Since " << pati << " was added, revisit match with "
+              << "Since " << upat << " was added, revisit match with "
               << gts.size() << " terms" << std::endl;
           for (const Node& t : gts)
           {
-            std::pair<Node, Node> key(t, pati);
+            std::pair<Node, Node> key(t, upat);
             if (d_instTerms.find(key) != d_instTerms.end())
             {
               continue;
             }
-            EagerTermIterator etip(pati);
+            EagerTermIterator etip(upat);
             std::vector<Node> ts{t};
             EagerTermIterator eti(ts);
             ++d_statCdPatMatchCall;
@@ -356,7 +339,7 @@ void EagerInst::registerQuant(const Node& q)
     }
     if (owner)
     {
-      for (const Node& p : pati)
+      for (const Node& p : upat)
       {
         for (const Node& spc : p)
         {
@@ -1045,6 +1028,56 @@ bool EagerInst::isRelevantTerm(const Node& t)
   }
   const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
   return gts.find(t) != gts.end();
+}
+
+bool EagerInst::isRelevant(const Node& op, const std::vector<TNode>& args)
+{
+  EagerOpInfo* eoi = getOrMkOpInfo(op, false);
+  if (eoi == nullptr)
+  {
+    return false;
+  }
+  return eoi->isRelevant(d_qstate, args);
+}
+
+Node EagerInst::getPatternFor(const Node& pat, const Node& q)
+{
+  Assert (pat.getKind()==Kind::INST_PATTERN);
+  std::pair<Node, Node> key(pat,q);
+  NodePairMap::iterator it= d_patRegister.find(key);
+  if (it!=d_patRegister.end())
+  {
+    return it->second;
+  }
+  Node pati = d_qreg.substituteBoundVariablesToInstConstants(pat, q);
+  Trace("eager-inst-register") << "Register pattern: " << pati << std::endl;
+  size_t npats = pati.getNumChildren();
+  Node upat = pati;
+  if (npats>1)
+  {
+    // TODO: more heuristics
+    for (size_t i = 0; i < npats; i++)
+    {
+      if (!d_qreg.hasAllInstantiationConstants(pati[i], q))
+      {
+        d_filteringSingleTriggers.insert(upat);
+        continue;
+      }
+      if (i==0)
+      {
+        break;
+      }
+      // reorder to process single trigger first
+      std::vector<Node> ppc(pati.begin(), pati.end());
+      Node tmp = ppc[0];
+      ppc[0] = ppc[i];
+      ppc[i] = tmp;
+      upat = nodeManager()->mkNode(Kind::INST_PATTERN, ppc);
+      d_filteringSingleTriggers.insert(upat);
+    }
+  }
+  d_patRegister.insert(key, upat);
+  return upat;
 }
 
 }  // namespace quantifiers

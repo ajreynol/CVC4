@@ -43,15 +43,24 @@ bool EagerGroundTrie::isCongruent(QuantifiersState& qs, TNode t) const
   return isCongruentInternal(qs, t, 0);
 }
 
+bool EagerGroundTrie::contains(QuantifiersState& qs, const std::vector<TNode>& args) const
+{
+  return containsInternal(qs, args, 0);
+}
+
 bool EagerGroundTrie::isCongruentInternal(QuantifiersState& qs,
                                           TNode t,
                                           size_t i) const
 {
+  if (i==t.getNumChildren())
+  {
+    return true;
+  }
   const Node& tc = t[i];
-  context::CDHashMap<TNode, size_t>::iterator it = d_cmap.find(tc);
+  context::CDHashMap<TNode, size_t>::const_iterator it = d_cmap.find(tc);
   if (d_cmap.find(tc) != d_cmap.end())
   {
-    if (isCongruentInternal(qs, t, i + 1))
+    if (d_children[it->second]->isCongruentInternal(qs, t, i + 1))
     {
       return true;
     }
@@ -61,7 +70,36 @@ bool EagerGroundTrie::isCongruentInternal(QuantifiersState& qs,
   {
     if (it->first != tc && qs.getRepresentative(it->first) == r)
     {
-      if (isCongruentInternal(qs, t, i + 1))
+      if (d_children[it->second]->isCongruentInternal(qs, t, i + 1))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool EagerGroundTrie::containsInternal(QuantifiersState& qs, const std::vector<TNode>& args, size_t i) const
+{
+  if (i==args.size())
+  {
+    return true;
+  }
+  const Node& tc = args[i];
+  context::CDHashMap<TNode, size_t>::const_iterator it = d_cmap.find(tc);
+  if (d_cmap.find(tc) != d_cmap.end())
+  {
+    if (d_children[it->second]->containsInternal(qs, args, i + 1))
+    {
+      return true;
+    }
+  }
+  TNode r = qs.getRepresentative(tc);
+  for (it = d_cmap.begin(); it != d_cmap.end(); ++it)
+  {
+    if (it->first != tc && qs.getRepresentative(it->first) == r)
+    {
+      if (d_children[it->second]->containsInternal(qs, args, i + 1))
       {
         return true;
       }
