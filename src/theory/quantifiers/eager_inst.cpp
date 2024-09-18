@@ -102,7 +102,8 @@ void EagerOpInfo::setActive(QuantifiersState& qs)
   }
 }
 
-bool EagerOpInfo::isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const
+bool EagerOpInfo::isRelevant(QuantifiersState& qs,
+                             const std::vector<TNode>& args) const
 {
   Assert(d_gtrie != nullptr);
   return d_gtrie->contains(qs, args);
@@ -165,7 +166,8 @@ EagerInst::EagerInst(Env& env,
       d_statUserPatsMultiFilter(
           statisticsRegistry().registerInt("EagerInst::userPatsMultiFilter")),
       d_statMatchCall(statisticsRegistry().registerInt("EagerInst::matchCall")),
-      d_statMatchContinueCall(statisticsRegistry().registerInt("EagerInst::matchContinueCall")),
+      d_statMatchContinueCall(
+          statisticsRegistry().registerInt("EagerInst::matchContinueCall")),
       d_statWatchCount(
           statisticsRegistry().registerInt("EagerInst::watchCount")),
       d_statResumeMergeMatchCall(
@@ -448,7 +450,8 @@ void EagerInst::notifyAssertedTerm(TNode t)
     EagerTermIterator etipr(pat);
     EagerTermIterator etir(tsr);
     ++d_statResumeAssertMatchCall;
-    Trace("eager-inst-match") << "Resume match (upon new term) for " << etir.getOriginal() << std::endl;
+    Trace("eager-inst-match") << "Resume match (upon new term) for "
+                              << etir.getOriginal() << std::endl;
     resumeMatching(root, etir, j.first, etipr, failExp);
     Trace("eager-inst-match") << "...finished" << std::endl;
   }
@@ -515,7 +518,9 @@ void EagerInst::doMatching(const EagerTrie* et,
         // also set up an assert watch
         EagerWatchList& ewl = eoi->getEagerWatchList();
         ewl.add(etn, eti.getOriginal());
-        Trace("eager-inst-watch") << "-- watch asserted " << ng.first << " terms to resume matching with " << eti.getOriginal() << std::endl;
+        Trace("eager-inst-watch") << "-- watch asserted " << ng.first
+                                  << " terms to resume matching with "
+                                  << eti.getOriginal() << std::endl;
       }
     }
     return;
@@ -994,7 +999,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         EagerTermIterator etip(pat);
         EagerTermIterator eti(t);
         ++d_statResumeMergeMatchCall;
-        Trace("eager-inst-match") << "Resume match (upon merge) for " << eti.getOriginal() << std::endl;
+        Trace("eager-inst-match") << "Resume match (upon merge) for "
+                                  << eti.getOriginal() << std::endl;
         resumeMatching(root, eti, j.first, etip, nextFails);
         Trace("eager-inst-match") << "...finished" << std::endl;
       }
@@ -1042,10 +1048,10 @@ bool EagerInst::isRelevant(const Node& op, const std::vector<TNode>& args)
 
 Node EagerInst::getPatternFor(const Node& pat, const Node& q)
 {
-  Assert (pat.getKind()==Kind::INST_PATTERN);
-  std::pair<Node, Node> key(pat,q);
-  NodePairMap::iterator it= d_patRegister.find(key);
-  if (it!=d_patRegister.end())
+  Assert(pat.getKind() == Kind::INST_PATTERN);
+  std::pair<Node, Node> key(pat, q);
+  NodePairMap::iterator it = d_patRegister.find(key);
+  if (it != d_patRegister.end())
   {
     return it->second;
   }
@@ -1053,7 +1059,7 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
   Trace("eager-inst-register") << "Register pattern: " << pati << std::endl;
   size_t npats = pati.getNumChildren();
   Node upat = pati;
-  if (npats>1)
+  if (npats > 1)
   {
     // TODO: more heuristics
     for (size_t i = 0; i < npats; i++)
@@ -1063,7 +1069,7 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
         d_filteringSingleTriggers.insert(upat);
         continue;
       }
-      if (i==0)
+      if (i == 0)
       {
         break;
       }

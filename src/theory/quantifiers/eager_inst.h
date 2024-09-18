@@ -68,6 +68,7 @@ class EagerOpInfo
   EagerWatchList& getEagerWatchList() { return d_ewl; }
   /** */
   bool isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const;
+
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
@@ -117,8 +118,8 @@ class EagerInst : public QuantifiersModule
   using NodePairMap =
       context::CDHashMap<std::pair<Node, Node>, Node, NodePairHashFunction>;
 
-  using NodeMap =
-      context::CDHashMap<Node, Node>;
+  using NodeMap = context::CDHashMap<Node, Node>;
+
  public:
   EagerInst(Env& env,
             QuantifiersState& qs,

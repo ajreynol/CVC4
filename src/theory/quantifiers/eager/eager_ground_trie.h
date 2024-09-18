@@ -56,7 +56,9 @@ class EagerGroundTrie
   TNode getData() const { return d_cmap.begin()->first; }
 
  private:
-  bool containsInternal(QuantifiersState& qs, const std::vector<TNode>& args, size_t i) const;
+  bool containsInternal(QuantifiersState& qs,
+                        const std::vector<TNode>& args,
+                        size_t i) const;
   bool isCongruentInternal(QuantifiersState& qs, TNode t, size_t i) const;
   /** */
   context::CDHashMap<TNode, size_t> d_cmap;

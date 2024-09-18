@@ -43,7 +43,8 @@ bool EagerGroundTrie::isCongruent(QuantifiersState& qs, TNode t) const
   return isCongruentInternal(qs, t, 0);
 }
 
-bool EagerGroundTrie::contains(QuantifiersState& qs, const std::vector<TNode>& args) const
+bool EagerGroundTrie::contains(QuantifiersState& qs,
+                               const std::vector<TNode>& args) const
 {
   return containsInternal(qs, args, 0);
 }
@@ -52,7 +53,7 @@ bool EagerGroundTrie::isCongruentInternal(QuantifiersState& qs,
                                           TNode t,
                                           size_t i) const
 {
-  if (i==t.getNumChildren())
+  if (i == t.getNumChildren())
   {
     return true;
   }
@@ -79,9 +80,11 @@ bool EagerGroundTrie::isCongruentInternal(QuantifiersState& qs,
   return false;
 }
 
-bool EagerGroundTrie::containsInternal(QuantifiersState& qs, const std::vector<TNode>& args, size_t i) const
+bool EagerGroundTrie::containsInternal(QuantifiersState& qs,
+                                       const std::vector<TNode>& args,
+                                       size_t i) const
 {
-  if (i==args.size())
+  if (i == args.size())
   {
     return true;
   }
