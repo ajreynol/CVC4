@@ -33,6 +33,7 @@ class EagerInst;
 class EagerTermIterator
 {
   friend class EagerInst;
+
  public:
   EagerTermIterator(const Node& t);
   EagerTermIterator(const std::vector<Node>& ts);
@@ -56,7 +57,8 @@ class EagerTermIterator
     const std::pair<std::vector<Node>, size_t>& cur = d_stack.back();
     return cur.second == cur.first.size();
   }
-  void push(const Node& t) {
+  void push(const Node& t)
+  {
     std::vector<Node> ts(t.begin(), t.end());
     d_stack.emplace_back(ts, 0);
   }
@@ -80,6 +82,7 @@ class EagerTermIterator
     pop();
     d_orig.pop_back();
   }
+
  private:
   std::vector<Node> d_orig;
   std::vector<std::pair<std::vector<Node>, size_t>> d_stack;

@@ -25,7 +25,7 @@ namespace quantifiers {
 EagerTermIterator::EagerTermIterator(const Node& t)
 {
   d_orig.emplace_back(t);
-  Assert (t.getKind()==Kind::INST_PATTERN);
+  Assert(t.getKind() == Kind::INST_PATTERN);
   std::vector<Node> ts(t.begin(), t.end());
   d_stack.emplace_back(ts, 0);
 }

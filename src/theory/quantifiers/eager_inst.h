@@ -46,6 +46,7 @@ class EagerWatchInfo
    * equivalence class to become equal to.
    */
   context::CDHashMap<Node, std::shared_ptr<EagerWatchList>> d_eqWatch;
+
  private:
   context::Context* d_ctx;
 };
@@ -65,6 +66,7 @@ class EagerOpInfo
    * waiting on new terms for this operator.
    */
   EagerWatchList& getEagerWatchList() { return d_ewl; }
+
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
@@ -81,17 +83,21 @@ class EagerOpInfo
   EagerWatchList d_ewl;
 };
 
-  using EagerFailExp = std::map<Node, std::map<Node, std::vector<std::pair<const EagerTrie*, std::vector<Node>>>>>;
+using EagerFailExp = std::map<
+    Node,
+    std::map<Node,
+             std::vector<std::pair<const EagerTrie*, std::vector<Node>>>>>;
 
 class CDEagerTrie
 {
-public:
+ public:
   CDEagerTrie(context::Context* c);
   /** Add pattern */
   EagerTrie* addPattern(TermDb* tdb, const Node& pat);
   /** */
   EagerTrie* getCurrent(TermDb* tdb);
-private:
+
+ private:
   void makeCurrent(TermDb* tdb);
   EagerTrie d_trie;
   /** The patterns for this operator in the current context */
@@ -193,24 +199,21 @@ class EagerInst : public QuantifiersModule
    * patterns beneath tgt. We have so far traversed to the path pat guided by
    * the example pattern iterated on by etip.
    */
-  void resumeMatching(
-      const EagerTrie* pat,
-      EagerTermIterator& eti,
-      const EagerTrie* tgt,
-      EagerTermIterator& etip,
-      EagerFailExp& failExp);
-  void doMatchingPath(
-      const EagerTrie* et,
-      EagerTermIterator& eti,
-      EagerTermIterator& etip,
-      EagerFailExp& failExp);
+  void resumeMatching(const EagerTrie* pat,
+                      EagerTermIterator& eti,
+                      const EagerTrie* tgt,
+                      EagerTermIterator& etip,
+                      EagerFailExp& failExp);
+  void doMatchingPath(const EagerTrie* et,
+                      EagerTermIterator& eti,
+                      EagerTermIterator& etip,
+                      EagerFailExp& failExp);
   /**
    * Assumes d_inst is ready, instantiate with the patterns in et.
    */
-  void doInstantiations(
-      const EagerTrie* et,
-      const std::vector<Node>& n,
-      EagerFailExp& failExp);
+  void doInstantiations(const EagerTrie* et,
+                        const std::vector<Node>& n,
+                        EagerFailExp& failExp);
   void addToFailExp(const EagerTrie* et,
                     const std::vector<Node>& ts,
                     EagerFailExp& failExp,
