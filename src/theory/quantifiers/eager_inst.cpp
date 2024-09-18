@@ -441,6 +441,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   Trace("eager-inst-match")
       << "Complete matching (upon asserted) for " << t << std::endl;
   doMatching(root, eti, failExp);
+  Trace("eager-inst-match") << "...finished" << std::endl;
 
   // Also see if this triggers progress on any partially completed
   // multi-triggers
@@ -459,7 +460,9 @@ void EagerInst::notifyAssertedTerm(TNode t)
     EagerTermIterator etipr(pat);
     EagerTermIterator etir(tsr);
     //++d_statResumeMatchCall;
+    Trace("eager-inst-match") << "Resume match (upon new term) for " << etir.getOriginal() << std::endl;
     resumeMatching(root, etir, j.first, etipr, failExp);
+    Trace("eager-inst-match") << "...finished" << std::endl;
   }
 
   if (failExp.empty())
@@ -518,10 +521,12 @@ void EagerInst::doMatching(const EagerTrie* et,
           eti.pushOriginal(t);
           doMatching(etn, eti, failExp);
           eti.popOriginal();
+          Trace("eager-inst-match") << "...finished" << std::endl;
         }
         // also set up an assert watch
         EagerWatchList& ewl = eoi->getEagerWatchList();
         ewl.add(etn, eti.getOriginal());
+        Trace("eager-inst-watch") << "-- watch asserted " << ng.first << " terms to resume matching with " << eti.getOriginal() << std::endl;
       }
     }
     return;
@@ -693,6 +698,7 @@ void EagerInst::resumeMatching(const EagerTrie* pat,
     Trace("eager-inst-match") << "Complete matching (upon resume) for "
                               << eti.getOriginal() << std::endl;
     doMatching(pat, eti, failExp);
+    Trace("eager-inst-match") << "...finished" << std::endl;
     return;
   }
   // The following traverses a single path of the eager trie
@@ -999,7 +1005,9 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         EagerTermIterator etip(pat);
         EagerTermIterator eti(t);
         ++d_statResumeMatchCall;
+        Trace("eager-inst-match") << "Resume match (upon merge) for " << eti.getOriginal() << std::endl;
         resumeMatching(root, eti, j.first, etip, nextFails);
+        Trace("eager-inst-match") << "...finished" << std::endl;
       }
       // no longer valid
       ewl->d_valid = false;
