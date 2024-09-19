@@ -177,8 +177,12 @@ class EagerInst : public QuantifiersModule
   IntStat d_statUserPats;
   /** Number of cd patterns */
   IntStat d_statUserPatsCd;
-  /** Multi filter */
-  IntStat d_statUserPatsMultiFilter;
+  /** Number of single patterns */
+  IntStat d_statSinglePat;
+  /** Number of single patterns */
+  IntStat d_statFilteringSinglePat;
+  /** Number of single patterns */
+  IntStat d_statMultiPat;
   /** Number of calls to match */
   IntStat d_statMatchCall;
   /** Number of calls to match */
@@ -224,6 +228,9 @@ class EagerInst : public QuantifiersModule
   bool doInstantiation(const Node& pat,
                        const std::vector<Node>& n,
                        EagerFailExp& failExp);
+  /** */
+  bool isRelevantSuffix(const Node& pat,
+                       const std::vector<Node>& n);
   void addToFailExp(const EagerTrie* et,
                     const std::vector<Node>& ts,
                     EagerFailExp& failExp,

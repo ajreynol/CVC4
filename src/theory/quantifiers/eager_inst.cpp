@@ -163,19 +163,20 @@ EagerInst::EagerInst(Env& env,
       d_statUserPats(statisticsRegistry().registerInt("EagerInst::userPats")),
       d_statUserPatsCd(
           statisticsRegistry().registerInt("EagerInst::userPatsCd")),
-      d_statUserPatsMultiFilter(
-          statisticsRegistry().registerInt("EagerInst::userPatsMultiFilter")),
+      d_statSinglePat(statisticsRegistry().registerInt("EagerInst::patternSingle")),
+      d_statFilteringSinglePat(statisticsRegistry().registerInt("EagerInst::patternFilteringSingle")),
+      d_statMultiPat(statisticsRegistry().registerInt("EagerInst::patternMulti")),
       d_statMatchCall(statisticsRegistry().registerInt("EagerInst::matchCall")),
       d_statMatchContinueCall(
           statisticsRegistry().registerInt("EagerInst::matchContinueCall")),
       d_statWatchCount(
           statisticsRegistry().registerInt("EagerInst::watchCount")),
       d_statResumeMergeMatchCall(
-          statisticsRegistry().registerInt("EagerInst::resumeMergeMatchCall")),
+          statisticsRegistry().registerInt("EagerInst::matchResumeOnMergeCall")),
       d_statResumeAssertMatchCall(
-          statisticsRegistry().registerInt("EagerInst::resumeAssertMatchCall")),
+          statisticsRegistry().registerInt("EagerInst::matchResumeOnAssertCall")),
       d_statCdPatMatchCall(
-          statisticsRegistry().registerInt("EagerInst::cdPatMatchCall"))
+          statisticsRegistry().registerInt("EagerInst::matchCdPatCall"))
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
@@ -510,10 +511,11 @@ void EagerInst::doMatching(const EagerTrie* et,
           if (d_filteringSingleTriggers.find(pat)
               != d_filteringSingleTriggers.end())
           {
-            // if the instantiation succeeded, we are done
-            if (doInstantiation(pat, n, failExp))
+            // if relevant suffix, we are done
+            if (isRelevantSuffix(pat, n))
             {
               Trace("ajr-temp") << "...success inst fst" << std::endl;
+              doInstantiation(pat, n, failExp);
               continue;
             }
             Trace("ajr-temp") << "...fail inst" << std::endl;
@@ -658,6 +660,33 @@ void EagerInst::doMatching(const EagerTrie* et,
   }
 }
 
+bool EagerInst::isRelevantSuffix(const Node& pat,
+                      const std::vector<Node>& n)
+{
+  if (n.size() < pat.getNumChildren())
+  {
+    Node q = TermUtil::getInstConstAttr(pat);
+    Assert(!q.isNull());
+    Assert(q[0].getNumChildren() >= d_inst.size());
+    // must resize
+    std::vector<Node> instq(d_inst.begin(),
+                            d_inst.begin() + q[0].getNumChildren());
+    Trace("eager-inst-inst")
+        << "Ensure the instantiation is filtered..." << std::endl;
+    const std::vector<Node>& ics = d_qreg.getInstantiationConstants(q);
+    for (size_t j = n.size(), npats = pat.getNumChildren(); j < npats; j++)
+    {
+      Node pcs =
+          pat[j].substitute(ics.begin(), ics.end(), instq.begin(), instq.end());
+      if (!isRelevantTerm(pcs))
+      {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+  
 bool EagerInst::doInstantiation(const Node& pat,
                                 const std::vector<Node>& n,
                                 EagerFailExp& failExp)
@@ -680,22 +709,6 @@ bool EagerInst::doInstantiation(const Node& pat,
   std::vector<Node> instq(d_inst.begin(),
                           d_inst.begin() + q[0].getNumChildren());
   Trace("eager-inst-inst") << "Instantiation :  " << instq << std::endl;
-  if (n.size() < pat.getNumChildren())
-  {
-    Trace("eager-inst-inst")
-        << "Ensure the instantiation is filtered..." << std::endl;
-    const std::vector<Node>& ics = d_qreg.getInstantiationConstants(q);
-    for (size_t j = n.size(), npats = pat.getNumChildren(); j < npats; j++)
-    {
-      Node pcs =
-          pat[j].substitute(ics.begin(), ics.end(), instq.begin(), instq.end());
-      if (!isRelevantTerm(pcs))
-      {
-        // TODO: set up watch
-        return false;
-      }
-    }
-  }
   if (ie->addInstantiation(
           q, instq, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
   {
@@ -1101,6 +1114,7 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
   if (npats > 1)
   {
     // TODO: more heuristics, e.g. most constrained trigger
+    bool isFiltering = false;
     for (size_t i = 0; i < npats; i++)
     {
       if (!d_qreg.hasAllInstantiationConstants(pati[i], q))
@@ -1119,8 +1133,21 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
       d_filteringSingleTriggers.insert(upat);
       Trace("eager-inst-register")
           << "Filtering single trigger: " << upat << std::endl;
+      isFiltering = true;
       break;
     }
+    if (isFiltering)
+    {
+      ++d_statFilteringSinglePat;
+    }
+    else
+    {
+      ++d_statMultiPat;
+    }
+  }
+  else
+  {
+    ++d_statSinglePat;
   }
   d_patRegister.insert(key, upat);
   return upat;
