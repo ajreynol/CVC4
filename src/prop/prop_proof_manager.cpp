@@ -150,9 +150,10 @@ std::vector<Node> PropPfManager::getUnsatCoreLemmas()
   }
   if (d_trackLemmaClauseIds)
   {
+    uint64_t timestamp;
     for (const Node& lemma : usedLemmas)
     {
-      d_uclIds << getInferenceIdFor(lemma);
+      d_uclIds << getInferenceIdFor(lemma, timestamp);
       ++d_uclSize;
     }
   }
