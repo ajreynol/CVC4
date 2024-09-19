@@ -34,7 +34,7 @@ bool EagerGroundTrie::add(QuantifiersState& qs,
   for (const Node& tc : t)
   {
     // makes a difference if >0 children
-    if (tc.getNumChildren()==0)
+    if (tc.getNumChildren() == 0)
     {
       args.emplace_back(qs.getRepresentative(tc));
     }

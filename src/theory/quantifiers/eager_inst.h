@@ -222,8 +222,8 @@ class EagerInst : public QuantifiersModule
    * Assumes d_inst is ready, instantiate with the patterns in et.
    */
   bool doInstantiation(const Node& pat,
-                        const std::vector<Node>& n,
-                        EagerFailExp& failExp);
+                       const std::vector<Node>& n,
+                       EagerFailExp& failExp);
   void addToFailExp(const EagerTrie* et,
                     const std::vector<Node>& ts,
                     EagerFailExp& failExp,

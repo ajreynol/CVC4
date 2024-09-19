@@ -442,7 +442,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     std::vector<Node> tsr = j.second;
     tsr.push_back(t);
-    Assert (!j.first->d_pats.empty());
+    Assert(!j.first->d_pats.empty());
     const Node& pat = j.first->d_pats[0];
     Assert(!pat.isNull());
     Trace("eager-inst-match-event")
@@ -500,14 +500,15 @@ void EagerInst::doMatching(const EagerTrie* et,
       // instantiate with all patterns stored on this leaf
       for (const Node& pat : pats)
       {
-        if (pat.getNumChildren()==n.size())
+        if (pat.getNumChildren() == n.size())
         {
           doInstantiation(pat, n, failExp);
           continue;
         }
-        else if (n.size()==1)
+        else if (n.size() == 1)
         {
-          if (d_filteringSingleTriggers.find(pat)!=d_filteringSingleTriggers.end())
+          if (d_filteringSingleTriggers.find(pat)
+              != d_filteringSingleTriggers.end())
           {
             // if the instantiation succeeded, we are done
             if (doInstantiation(pat, n, failExp))
@@ -523,7 +524,8 @@ void EagerInst::doMatching(const EagerTrie* et,
       }
       if (needsGeneralMatching)
       {
-        Trace("ajr-temp") << "Needs gen matching " << eti.getOriginal() << std::endl;
+        Trace("ajr-temp") << "Needs gen matching " << eti.getOriginal()
+                          << std::endl;
         // also process potential multi triggers
         for (const std::pair<const Node, EagerTrie>& ng : etng)
         {
@@ -555,7 +557,8 @@ void EagerInst::doMatching(const EagerTrie* et,
       }
       else if (!etng.empty())
       {
-        Trace("ajr-temp") << "Avoid gen matching " << eti.getOriginal() << std::endl;
+        Trace("ajr-temp") << "Avoid gen matching " << eti.getOriginal()
+                          << std::endl;
       }
     }
     return;
@@ -656,10 +659,10 @@ void EagerInst::doMatching(const EagerTrie* et,
 }
 
 bool EagerInst::doInstantiation(const Node& pat,
-                                 const std::vector<Node>& n,
-                                 EagerFailExp& failExp)
+                                const std::vector<Node>& n,
+                                EagerFailExp& failExp)
 {
-  Assert (!n.empty());
+  Assert(!n.empty());
   Trace("eager-inst-inst") << "Instantiate based on " << pat << std::endl;
   std::pair<Node, Node> key(n[0], pat);
   if (n.size() == 1)
@@ -672,19 +675,20 @@ bool EagerInst::doInstantiation(const Node& pat,
   Instantiate* ie = d_qim.getInstantiate();
   Node q = TermUtil::getInstConstAttr(pat);
   Assert(!q.isNull());
-  Assert (q[0].getNumChildren()>=d_inst.size());
+  Assert(q[0].getNumChildren() >= d_inst.size());
   // must resize
   std::vector<Node> instq(d_inst.begin(),
                           d_inst.begin() + q[0].getNumChildren());
   Trace("eager-inst-inst") << "Instantiation :  " << instq << std::endl;
-  if (n.size()<pat.getNumChildren())
+  if (n.size() < pat.getNumChildren())
   {
-    Trace("eager-inst-inst") << "Ensure the instantiation is filtered..." << std::endl;
+    Trace("eager-inst-inst")
+        << "Ensure the instantiation is filtered..." << std::endl;
     const std::vector<Node>& ics = d_qreg.getInstantiationConstants(q);
     for (size_t j = n.size(), npats = pat.getNumChildren(); j < npats; j++)
     {
-      Node pcs = pat[j].substitute(
-          ics.begin(), ics.end(), instq.begin(), instq.end());
+      Node pcs =
+          pat[j].substitute(ics.begin(), ics.end(), instq.begin(), instq.end());
       if (!isRelevantTerm(pcs))
       {
         return false;
@@ -1020,7 +1024,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       for (const std::pair<const EagerTrie*, std::vector<Node>>& j : wmj)
       {
         const std::vector<Node>& t = j.second;
-        Assert (!j.first->d_pats.empty());
+        Assert(!j.first->d_pats.empty());
         const Node& pat = j.first->d_pats[0];
         Assert(!pat.isNull());
         Trace("eager-inst-match-event")
@@ -1057,9 +1061,9 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
 
 bool EagerInst::isRelevantTerm(const Node& t)
 {
-  //Node op = d_tdb->getMatchOperator(t);
-  //std::vector<TNode> args(t.begin(), t.end());
-  //return isRelevant(op, args);
+  // Node op = d_tdb->getMatchOperator(t);
+  // std::vector<TNode> args(t.begin(), t.end());
+  // return isRelevant(op, args);
   Node op = d_tdb->getMatchOperator(t);
   EagerOpInfo* eoi = getOrMkOpInfo(op, false);
   if (eoi == nullptr)
@@ -1102,7 +1106,7 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
       {
         continue;
       }
-      if (i!=0)
+      if (i != 0)
       {
         // reorder to process single trigger first
         std::vector<Node> ppc(pati.begin(), pati.end());
@@ -1112,7 +1116,8 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
         upat = nodeManager()->mkNode(Kind::INST_PATTERN, ppc);
       }
       d_filteringSingleTriggers.insert(upat);
-      Trace("eager-inst-register") << "Filtering single trigger: " << upat << std::endl;
+      Trace("eager-inst-register")
+          << "Filtering single trigger: " << upat << std::endl;
       break;
     }
   }
