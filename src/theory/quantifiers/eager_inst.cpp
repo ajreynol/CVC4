@@ -691,6 +691,7 @@ bool EagerInst::doInstantiation(const Node& pat,
           pat[j].substitute(ics.begin(), ics.end(), instq.begin(), instq.end());
       if (!isRelevantTerm(pcs))
       {
+        // TODO: set up watch
         return false;
       }
     }
