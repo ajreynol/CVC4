@@ -56,114 +56,110 @@ EagerTrie* EagerTrie::addInternal(TermDb* tdb,
                                   std::vector<uint64_t>& bound,
                                   bool isErase)
 {
-  // remember the pattern, even if being erased
-  d_exPat = eti.getOriginal()[0];
   EagerTrie* ret;
-  if (eti.needsBacktrack())
+  // add or remove the pattern, even if not at leaf
+  if (isErase)
   {
-    if (eti.pop())
+    Assert(d_pats.back() == eti.getOriginal()[0]);
+    d_pats.pop_back();
+    ret = nullptr;
+  }
+  else
+  {
+    d_pats.push_back(eti.getOriginal()[0]);
+    ret = this;
+  }
+  // we have another child to continue from a higher level
+  while (eti.needsBacktrack())
+  {
+    if (!eti.pop())
     {
-      // we have another child to continue from a higher level
-      ret = addInternal(tdb, eti, bound, isErase);
+      return ret;
     }
-    // we are at the leaf, we add or remove the pattern
-    else if (isErase)
+  }
+  const Node& nc = eti.getCurrent();
+  if (nc.getKind() == Kind::INST_CONSTANT)
+  {
+    uint64_t vnum = TermUtil::getInstVarNum(nc);
+    /*
+    if (std::find(bound.begin(), bound.end(), vnum)
+        != bound.end())
     {
-      Assert(d_pats.back() == d_exPat);
-      d_pats.pop_back();
-      ret = nullptr;
+      // TODO
+    }
+    bound.push_back(vnum);
+    */
+    eti.incrementChild();
+    std::map<uint64_t, EagerTrie>& etv = d_varChildren;
+    if (isErase)
+    {
+      std::map<uint64_t, EagerTrie>::iterator it = etv.find(vnum);
+      if (it == etv.end())
+      {
+        return nullptr;
+      }
+      ret = it->second.addInternal(tdb, eti, bound, isErase);
+      if (it->second.empty())
+      {
+        etv.erase(it);
+      }
     }
     else
     {
-      d_pats.push_back(d_exPat);
-      ret = this;
+      ret = etv[vnum].addInternal(tdb, eti, bound, isErase);
+    }
+  }
+  else if (!TermUtil::hasInstConstAttr(nc))
+  {
+    eti.incrementChild();
+    std::map<Node, EagerTrie>& etg = d_groundChildren;
+    if (isErase)
+    {
+      std::map<Node, EagerTrie>::iterator it = etg.find(nc);
+      if (it == etg.end())
+      {
+        return nullptr;
+      }
+      ret = it->second.addInternal(tdb, eti, bound, isErase);
+      if (it->second.empty())
+      {
+        etg.erase(it);
+      }
+    }
+    else
+    {
+      ret = etg[nc].addInternal(tdb, eti, bound, isErase);
     }
   }
   else
   {
-    const Node& nc = eti.getCurrent();
-    if (nc.getKind() == Kind::INST_CONSTANT)
+    Node op = tdb->getMatchOperator(nc);
+    if (op.isNull())
     {
-      uint64_t vnum = TermUtil::getInstVarNum(nc);
-      /*
-      if (std::find(bound.begin(), bound.end(), vnum)
-          != bound.end())
-      {
-        // TODO
-      }
-      bound.push_back(vnum);
-      */
-      eti.incrementChild();
-      std::map<uint64_t, EagerTrie>& etv = d_varChildren;
-      if (isErase)
-      {
-        std::map<uint64_t, EagerTrie>::iterator it = etv.find(vnum);
-        if (it == etv.end())
-        {
-          return nullptr;
-        }
-        ret = it->second.addInternal(tdb, eti, bound, isErase);
-        if (it->second.empty())
-        {
-          etv.erase(it);
-        }
-      }
-      else
-      {
-        ret = etv[vnum].addInternal(tdb, eti, bound, isErase);
-      }
+      return nullptr;
     }
-    else if (!TermUtil::hasInstConstAttr(nc))
+    eti.incrementChild();
+    eti.push(nc);
+    std::map<Node, EagerTrie>& etng = d_ngroundChildren;
+    if (isErase)
     {
-      eti.incrementChild();
-      std::map<Node, EagerTrie>& etg = d_groundChildren;
-      if (isErase)
+      std::map<Node, EagerTrie>::iterator it = etng.find(op);
+      if (it == etng.end())
       {
-        std::map<Node, EagerTrie>::iterator it = etg.find(nc);
-        if (it == etg.end())
-        {
-          return nullptr;
-        }
-        ret = it->second.addInternal(tdb, eti, bound, isErase);
-        if (it->second.empty())
-        {
-          etg.erase(it);
-        }
+        return nullptr;
       }
-      else
+      ret = it->second.addInternal(tdb, eti, bound, isErase);
+      if (it->second.empty())
       {
-        ret = etg[nc].addInternal(tdb, eti, bound, isErase);
+        etng.erase(it);
       }
     }
     else
     {
-      Node op = tdb->getMatchOperator(nc);
-      if (op.isNull())
-      {
-        return nullptr;
-      }
-      eti.incrementChild();
-      eti.push(nc);
-      std::map<Node, EagerTrie>& etng = d_ngroundChildren;
-      if (isErase)
-      {
-        std::map<Node, EagerTrie>::iterator it = etng.find(op);
-        if (it == etng.end())
-        {
-          return nullptr;
-        }
-        ret = it->second.addInternal(tdb, eti, bound, isErase);
-        if (it->second.empty())
-        {
-          etng.erase(it);
-        }
-      }
-      else
-      {
-        ret = etng[op].addInternal(tdb, eti, bound, isErase);
-      }
+      ret = etng[op].addInternal(tdb, eti, bound, isErase);
     }
   }
+
   return ret;
 }
 

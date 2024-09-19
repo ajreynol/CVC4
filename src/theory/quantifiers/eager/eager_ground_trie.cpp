@@ -33,7 +33,15 @@ bool EagerGroundTrie::add(QuantifiersState& qs,
   std::vector<TNode> args;
   for (const Node& tc : t)
   {
-    args.emplace_back(qs.getRepresentative(tc));
+    // makes a difference if >0 children
+    if (tc.getNumChildren()==0)
+    {
+      args.emplace_back(qs.getRepresentative(tc));
+    }
+    else
+    {
+      args.emplace_back(tc);
+    }
   }
   return add(al, args, t);
 }
