@@ -54,9 +54,6 @@ class QuantifiersMacros : protected EnvObj
    * (op = lambda x1 ... xn. def)), or the null node otherwise.
    */
   Node solve(Node lit, bool reqGround = false);
-  /**
-   */
-  Node solve(Node lit, bool reqGround, Node& pat);
 
  private:
   /**
