@@ -1785,7 +1785,7 @@ name   = "Quantifiers"
   category   = "regular"
   long       = "quant-dsplit=MODE"
   type       = "QuantDSplitMode"
-  default    = "DEFAULT"
+  default    = "NONE"
   help       = "mode for dynamic quantifiers splitting"
   help_mode  = "Modes for quantifiers splitting."
 [[option.mode.NONE]]
