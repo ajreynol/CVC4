@@ -106,6 +106,23 @@ class CDEagerTrie
   context::CDList<Node> d_pats;
   std::vector<Node> d_triePats;
 };
+
+
+class EagerPatternInfo
+{
+public:
+  EagerPatternInfo(context::Context* c, const Node& q) : d_quant(q), d_pmatches(c) {}
+  void addMultiTriggerContext(const Node& pat, size_t i) { d_multiCtx.emplace_back(pat, i); }
+  /** */
+  const Node& getQuantFormula() const { return d_quant; }
+  const std::vector<std::pair<Node, size_t>>& getMultiCtx() const { return d_multiCtx; }
+  EagerGroundTrie* getPartialMatches() { return &d_pmatches; }
+private:
+  Node d_quant;
+  std::vector<std::pair<Node, size_t>> d_multiCtx;
+  EagerGroundTrie d_pmatches;
+};
+
 /**
  */
 class EagerInst : public QuantifiersModule
@@ -171,7 +188,9 @@ class EagerInst : public QuantifiersModule
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
   context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>> d_repWatch;
-  context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_userPat;
+  context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_opInfo;
+  context::CDHashMap<Node, std::shared_ptr<EagerPatternInfo>> d_patInfo;
+
   EagerGroundDb d_gdb;
   /** Number of patterns */
   IntStat d_statUserPats;
@@ -201,6 +220,7 @@ class EagerInst : public QuantifiersModule
   std::pair<Node, Node> d_nullPair;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
+  EagerPatternInfo* getOrMkPatternInfo(const Node& pat, bool doMk);
   /**
    * Match ground term iterated on by eti with the entire trie of patterns in
    * pat.

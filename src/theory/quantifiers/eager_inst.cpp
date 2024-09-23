@@ -158,7 +158,8 @@ EagerInst::EagerInst(Env& env,
       d_fullInstTerms(userContext()),
       d_cdOps(context()),
       d_repWatch(context()),
-      d_userPat(context()),
+      d_opInfo(context()),
+      d_patInfo(context()),
       d_gdb(env, qs, tr.getTermDatabase()),
       d_statUserPats(statisticsRegistry().registerInt("EagerInst::userPats")),
       d_statUserPatsCd(
@@ -898,8 +899,8 @@ void EagerInst::addToFailExp(const EagerTrie* et,
 EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
 {
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>>::iterator it =
-      d_userPat.find(op);
-  if (it != d_userPat.end())
+      d_opInfo.find(op);
+  if (it != d_opInfo.end())
   {
     return it->second.get();
   }
@@ -914,7 +915,7 @@ EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
   }
   std::shared_ptr<EagerOpInfo> eoi =
       std::make_shared<EagerOpInfo>(context(), op, gdbu);
-  d_userPat.insert(op, eoi);
+  d_opInfo.insert(op, eoi);
   return eoi.get();
 }
 
@@ -934,6 +935,25 @@ EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
       std::make_shared<EagerWatchInfo>(context());
   d_repWatch.insert(r, ewi);
   return ewi.get();
+}
+
+EagerPatternInfo* EagerInst::getOrMkPatternInfo(const Node& pat, bool doMk)
+{
+  context::CDHashMap<Node, std::shared_ptr<EagerPatternInfo>>::iterator it =
+      d_patInfo.find(pat);
+  if (it != d_patInfo.end())
+  {
+    return it->second.get();
+  }
+  else if (!doMk)
+  {
+    return nullptr;
+  }
+  const Node& q = TermUtil::getInstConstAttr(pat);
+  std::shared_ptr<EagerPatternInfo> epi =
+      std::make_shared<EagerPatternInfo>(context(), q);
+  d_patInfo.insert(pat, epi);
+  return epi.get();
 }
 
 void EagerInst::addWatches(EagerFailExp& failExp)
@@ -1121,6 +1141,7 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
       {
         continue;
       }
+      // TODO: eliminate this heuristic
       if (i != 0)
       {
         // reorder to process single trigger first
@@ -1143,6 +1164,12 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
     else
     {
       ++d_statMultiPat;
+    }
+    // set the contexts
+    for (size_t i = 0; i < npats; i++)
+    {
+      EagerPatternInfo* epi = getOrMkPatternInfo(pati[i], true);
+      epi->addMultiTriggerContext(pati, i);
     }
   }
   else
