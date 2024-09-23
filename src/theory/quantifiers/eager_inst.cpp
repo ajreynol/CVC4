@@ -103,7 +103,7 @@ void EagerOpInfo::setActive(QuantifiersState& qs)
 }
 
 bool EagerOpInfo::isRelevant(QuantifiersState& qs,
-                             const std::vector<Node>& args) const
+                             const std::vector<TNode>& args) const
 {
   Assert(d_gtrie != nullptr);
   return d_gtrie->contains(qs, args);
@@ -638,7 +638,8 @@ void EagerInst::processInstantiation(const EagerTrie* et,
           != d_filteringSingleTriggers.end())
       {
         // if relevant suffix, we are done
-        if (isRelevantSuffix(pat, n))
+        std::vector<TNode> tn(n.begin(), n.end());
+        if (isRelevantSuffix(pat, tn))
         {
           Trace("ajr-temp") << "...success inst fst" << std::endl;
           doInstantiation(pat, n, failExp);
@@ -715,9 +716,26 @@ void EagerInst::processMultiTriggerInstantiation(EagerPatternInfo* epi,
     // otherwise, we add now
     egt->add(d_qstate, d_gdb.getAlloc(), d_inst, n, qvars);
   }
+  // now, go back to other patterns
+  processMultiTriggerInstantiationNext(q, pat, 0, index, failExp);
 }
 
-bool EagerInst::isRelevantSuffix(const Node& pat, const std::vector<Node>& n)
+void EagerInst::processMultiTriggerInstantiationNext(const Node& q,
+                                          const Node& pat,
+                                            size_t i,
+                                            size_t index,
+                                      EagerFailExp& failExp)
+{
+  if (i==q[0].getNumChildren())
+  {
+    // TODO: instantiation
+  }
+  size_t ii = i>=index ? i+1 : i;
+  const Node& nextPat = pat[ii];
+
+}
+
+bool EagerInst::isRelevantSuffix(const Node& pat, const std::vector<TNode>& n)
 {
   if (n.size() < pat.getNumChildren())
   {
@@ -749,27 +767,38 @@ bool EagerInst::doInstantiation(const Node& pat,
 {
   Assert(!n.empty());
   Trace("eager-inst-inst") << "Instantiate based on " << pat << std::endl;
-  std::pair<Node, Node> key(n[0], pat);
-  if (n.size() == 1)
+  Node q = TermUtil::getInstConstAttr(pat);
+  Assert(!q.isNull());
+  Assert(q[0].getNumChildren() >= d_inst.size());
+  Node nn = n.size()==1 ? n[0] : d_null;
+  return doInstantiation(q, pat, nn, failExp);
+}
+
+bool EagerInst::doInstantiation(const Node& q,
+                      const Node& pat,
+                      const Node& n,
+                      EagerFailExp& failExp)
+{
+  Assert(!q.isNull());
+  Assert(q[0].getNumChildren() >= d_inst.size());
+  std::pair<Node, Node> key(n, pat);
+  if (!n.isNull())
   {
     if (d_instTerms.find(key) != d_instTerms.end())
     {
       return false;
     }
   }
-  Instantiate* ie = d_qim.getInstantiate();
-  Node q = TermUtil::getInstConstAttr(pat);
-  Assert(!q.isNull());
-  Assert(q[0].getNumChildren() >= d_inst.size());
   // must resize
   std::vector<Node> instq(d_inst.begin(),
                           d_inst.begin() + q[0].getNumChildren());
   Trace("eager-inst-inst") << "Instantiation :  " << instq << std::endl;
+  Instantiate* ie = d_qim.getInstantiate();
   if (ie->addInstantiation(
           q, instq, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
   {
     d_tmpAddedLemmas++;
-    if (n.size() == 1)
+    if (!n.isNull())
     {
       d_instTerms.insert(key);
     }
@@ -1163,7 +1192,7 @@ bool EagerInst::isRelevantTerm(const Node& t)
   return gts.find(t) != gts.end();
 }
 
-bool EagerInst::isRelevant(const Node& op, const std::vector<Node>& args)
+bool EagerInst::isRelevant(const Node& op, const std::vector<TNode>& args)
 {
   EagerOpInfo* eoi = getOrMkOpInfo(op, false);
   if (eoi == nullptr)

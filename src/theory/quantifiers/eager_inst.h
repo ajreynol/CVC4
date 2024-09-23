@@ -67,7 +67,7 @@ class EagerOpInfo
    */
   EagerWatchList& getEagerWatchList() { return d_ewl; }
   /** */
-  bool isRelevant(QuantifiersState& qs, const std::vector<Node>& args) const;
+  bool isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const;
 
  private:
   /** Add ground term */
@@ -224,7 +224,7 @@ class EagerInst : public QuantifiersModule
   /** Number of calls to match */
   IntStat d_statCdPatMatchCall;
   /** Static registers for instantiations */
-  std::vector<Node> d_inst;
+  std::vector<TNode> d_inst;
   /** */
   std::pair<Node, Node> d_nullPair;
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
@@ -248,6 +248,12 @@ class EagerInst : public QuantifiersModule
                                         size_t index,
                                         const Node& n,
                                         EagerFailExp& failExp);
+  void processMultiTriggerInstantiationNext(const Node& q,
+                                          const Node& pat,
+                                            size_t i,
+                                            size_t index,
+                                      EagerFailExp& failExp);
+
   /**
    * Resume matching the ground term iterated on by eti with the entire trie of
    * patterns beneath tgt. We have so far traversed to the path pat guided by
@@ -268,8 +274,12 @@ class EagerInst : public QuantifiersModule
   bool doInstantiation(const Node& pat,
                        const std::vector<Node>& n,
                        EagerFailExp& failExp);
+  bool doInstantiation(const Node& q,
+                       const Node& pat,
+                       const Node& n,
+                       EagerFailExp& failExp);
   /** */
-  bool isRelevantSuffix(const Node& pat, const std::vector<Node>& n);
+  bool isRelevantSuffix(const Node& pat, const std::vector<TNode>& n);
   void addToFailExp(const EagerTrie* et,
                     const std::vector<Node>& ts,
                     EagerFailExp& failExp,
@@ -277,7 +287,7 @@ class EagerInst : public QuantifiersModule
                     const Node& b);
   void addWatches(EagerFailExp& failExp);
   bool isRelevantTerm(const Node& t);
-  bool isRelevant(const Node& op, const std::vector<Node>& args);
+  bool isRelevant(const Node& op, const std::vector<TNode>& args);
   /** */
   Node getPatternFor(const Node& pat, const Node& q);
 };

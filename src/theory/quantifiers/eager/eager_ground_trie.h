@@ -36,21 +36,21 @@ class EagerGroundTrie
 {
  public:
   EagerGroundTrie(context::Context* c);
-  bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, Node t);
+  bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, TNode t);
   bool add(QuantifiersState& qs,
            EagerGroundTrieAllocator* al,
-           const std::vector<Node>& args,
-           Node t,
+           const std::vector<TNode>& args,
+           TNode t,
            size_t nargs = 0);
   const EagerGroundTrie* contains(QuantifiersState& qs,
-                                  const std::vector<Node>& args,
+                                  const std::vector<TNode>& args,
                                   size_t nargs = 0) const;
   /** For leaf nodes : does this node have data? */
   bool hasData() const { return !d_cmap.empty(); }
   /** Set data, return true if sucessful, else t is marked congruent */
-  bool setData(EagerGroundTrieAllocator* al, Node t);
+  bool setData(EagerGroundTrieAllocator* al, TNode t);
   /** For leaf nodes : get the node corresponding to this leaf. */
-  Node getData() const { return d_cmap.begin()->first; }
+  TNode getData() const { return d_cmap.begin()->first; }
   /**
    * WANT: possible joins of args
    *
@@ -128,9 +128,9 @@ class EagerGroundTrie
    */
  private:
   /** Push an edge r and return the child */
-  EagerGroundTrie* push_back(EagerGroundTrieAllocator* al, Node r);
+  EagerGroundTrie* push_back(EagerGroundTrieAllocator* al, TNode r);
   const EagerGroundTrie* containsInternal(QuantifiersState& qs,
-                                          const std::vector<Node>& args,
+                                          const std::vector<TNode>& args,
                                           size_t i,
                                           size_t total) const;
   /** */
@@ -155,9 +155,9 @@ class EagerGroundTrieAllocator
     return d_alloc.back().get();
   }
   /** Mark congruent */
-  void markCongruent(Node t) { d_congruent.insert(t); }
+  void markCongruent(TNode t) { d_congruent.insert(t); }
   /** Is term congruent? */
-  bool isCongruent(Node t) const
+  bool isCongruent(TNode t) const
   {
     return d_congruent.find(t) != d_congruent.end();
   }
@@ -175,7 +175,7 @@ class EagerGroundDb : protected EnvObj
  public:
   EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb);
   EagerGroundTrieAllocator* getAlloc() { return &d_alloc; }
-  EagerGroundTrie* getTrie(const Node& op);
+  EagerGroundTrie* getTrie(const TNode& op);
 
  private:
   /** */
@@ -185,7 +185,7 @@ class EagerGroundDb : protected EnvObj
   /** */
   EagerGroundTrieAllocator d_alloc;
   /** */
-  std::map<Node, EagerGroundTrie*> d_db;
+  std::map<TNode, EagerGroundTrie*> d_db;
 };
 
 }  // namespace quantifiers
