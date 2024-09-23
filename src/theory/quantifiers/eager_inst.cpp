@@ -721,18 +721,17 @@ void EagerInst::processMultiTriggerInstantiation(EagerPatternInfo* epi,
 }
 
 void EagerInst::processMultiTriggerInstantiationNext(const Node& q,
-                                          const Node& pat,
-                                            size_t i,
-                                            size_t index,
-                                      EagerFailExp& failExp)
+                                                     const Node& pat,
+                                                     size_t i,
+                                                     size_t index,
+                                                     EagerFailExp& failExp)
 {
-  if (i==q[0].getNumChildren())
+  if (i == q[0].getNumChildren())
   {
     // TODO: instantiation
   }
-  size_t ii = i>=index ? i+1 : i;
+  size_t ii = i >= index ? i + 1 : i;
   const Node& nextPat = pat[ii];
-
 }
 
 bool EagerInst::isRelevantSuffix(const Node& pat, const std::vector<TNode>& n)
@@ -770,14 +769,14 @@ bool EagerInst::doInstantiation(const Node& pat,
   Node q = TermUtil::getInstConstAttr(pat);
   Assert(!q.isNull());
   Assert(q[0].getNumChildren() >= d_inst.size());
-  Node nn = n.size()==1 ? n[0] : d_null;
+  Node nn = n.size() == 1 ? n[0] : d_null;
   return doInstantiation(q, pat, nn, failExp);
 }
 
 bool EagerInst::doInstantiation(const Node& q,
-                      const Node& pat,
-                      const Node& n,
-                      EagerFailExp& failExp)
+                                const Node& pat,
+                                const Node& n,
+                                EagerFailExp& failExp)
 {
   Assert(!q.isNull());
   Assert(q[0].getNumChildren() >= d_inst.size());

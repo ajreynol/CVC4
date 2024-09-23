@@ -249,10 +249,10 @@ class EagerInst : public QuantifiersModule
                                         const Node& n,
                                         EagerFailExp& failExp);
   void processMultiTriggerInstantiationNext(const Node& q,
-                                          const Node& pat,
+                                            const Node& pat,
                                             size_t i,
                                             size_t index,
-                                      EagerFailExp& failExp);
+                                            EagerFailExp& failExp);
 
   /**
    * Resume matching the ground term iterated on by eti with the entire trie of
