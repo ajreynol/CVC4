@@ -36,24 +36,15 @@ class EagerGroundTrie
 {
  public:
   EagerGroundTrie(context::Context* c);
-  bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, TNode t);
-  bool isCongruent(QuantifiersState& qs, TNode t) const;
-  bool contains(QuantifiersState& qs, const std::vector<TNode>& args) const;
-  /**
-   * Adds a term, without refactoring this trie.
-   * Returns true if t was added to the trie, false otherwise.
-   */
-  bool add(EagerGroundTrieAllocator* al,
-           const std::vector<TNode>& args,
-           TNode t);
-  /** Push an edge r and return the child */
-  EagerGroundTrie* push_back(EagerGroundTrieAllocator* al, TNode r);
+  bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, Node t);
+  bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, const std::vector<Node>& args, Node t, size_t nargs=0);
+  const EagerGroundTrie* contains(QuantifiersState& qs, const std::vector<Node>& args, size_t nargs=0) const;
   /** For leaf nodes : does this node have data? */
   bool hasData() const { return !d_cmap.empty(); }
   /** Set data, return true if sucessful, else t is marked congruent */
-  bool setData(EagerGroundTrieAllocator* al, TNode t);
+  bool setData(EagerGroundTrieAllocator* al, Node t);
   /** For leaf nodes : get the node corresponding to this leaf. */
-  TNode getData() const { return d_cmap.begin()->first; }
+  Node getData() const { return d_cmap.begin()->first; }
   /**
    * WANT: possible joins of args
    *
@@ -130,12 +121,14 @@ class EagerGroundTrie
    *
    */
  private:
-  bool containsInternal(QuantifiersState& qs,
-                        const std::vector<TNode>& args,
-                        size_t i) const;
-  bool isCongruentInternal(QuantifiersState& qs, TNode t, size_t i) const;
+  /** Push an edge r and return the child */
+  EagerGroundTrie* push_back(EagerGroundTrieAllocator* al, Node r);
+  const EagerGroundTrie* containsInternal(QuantifiersState& qs,
+                        const std::vector<Node>& args,
+                        size_t i,
+                                    size_t total) const;
   /** */
-  context::CDHashMap<TNode, size_t> d_cmap;
+  context::CDHashMap<Node, size_t> d_cmap;
   /**
    * The size of d_children that are valid in this context.
    */
@@ -156,9 +149,9 @@ class EagerGroundTrieAllocator
     return d_alloc.back().get();
   }
   /** Mark congruent */
-  void markCongruent(TNode t) { d_congruent.insert(t); }
+  void markCongruent(Node t) { d_congruent.insert(t); }
   /** Is term congruent? */
-  bool isCongruent(TNode t) const
+  bool isCongruent(Node t) const
   {
     return d_congruent.find(t) != d_congruent.end();
   }

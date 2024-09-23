@@ -67,7 +67,7 @@ class EagerOpInfo
    */
   EagerWatchList& getEagerWatchList() { return d_ewl; }
   /** */
-  bool isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const;
+  bool isRelevant(QuantifiersState& qs, const std::vector<Node>& args) const;
 
  private:
   /** Add ground term */
@@ -240,10 +240,13 @@ class EagerInst : public QuantifiersModule
   void processInstantiation(const EagerTrie* pat,
                             EagerTermIterator& eti,
                             EagerFailExp& failExp);
-  void processMultiTriggerInstantiation(const EagerPatternInfo* epi,
+  /**
+   * Called when n matches pat, d_inst is populated with the match.
+   */
+  void processMultiTriggerInstantiation(EagerPatternInfo* epi,
                                         const Node& pat,
                                         size_t index,
-                                        const std::vector<Node>& n,
+                                        const Node& n,
                                         EagerFailExp& failExp);
   /**
    * Resume matching the ground term iterated on by eti with the entire trie of
@@ -274,7 +277,7 @@ class EagerInst : public QuantifiersModule
                     const Node& b);
   void addWatches(EagerFailExp& failExp);
   bool isRelevantTerm(const Node& t);
-  bool isRelevant(const Node& op, const std::vector<TNode>& args);
+  bool isRelevant(const Node& op, const std::vector<Node>& args);
   /** */
   Node getPatternFor(const Node& pat, const Node& q);
 };

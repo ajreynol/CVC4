@@ -103,7 +103,7 @@ void EagerOpInfo::setActive(QuantifiersState& qs)
 }
 
 bool EagerOpInfo::isRelevant(QuantifiersState& qs,
-                             const std::vector<TNode>& args) const
+                             const std::vector<Node>& args) const
 {
   Assert(d_gtrie != nullptr);
   return d_gtrie->contains(qs, args);
@@ -611,11 +611,12 @@ void EagerInst::processInstantiation(const EagerTrie* et,
       doInstantiation(pat, n, failExp);
       continue;
     }
+    Assert (n.size()==1); // FIXME: will go away
     // for each multi-trigger this is a part of
     const std::vector<std::pair<Node, size_t>>& mctx = epi->getMultiCtx();
     for (const std::pair<Node, size_t>& m : mctx)
     {
-      processMultiTriggerInstantiation(epi, m.first, m.second, eti.getOriginal(), failExp);
+      processMultiTriggerInstantiation(epi, m.first, m.second, n[0], failExp);
     }
   }
 #endif
@@ -689,12 +690,31 @@ void EagerInst::processInstantiation(const EagerTrie* et,
   }
 }
 
-void EagerInst::processMultiTriggerInstantiation(const EagerPatternInfo* epi,
+void EagerInst::processMultiTriggerInstantiation(EagerPatternInfo* epi,
                                                  const Node& pat,
                                                  size_t index,
-                                                 const std::vector<Node>& n,
+                                                 const Node& n,
                                                  EagerFailExp& failExp)
 {
+  EagerGroundTrie* egt = epi->getPartialMatches();
+  const Node& q = epi->getQuantFormula();
+  size_t qvars = q.getNumChildren();
+  // check if redundant (by congruence)
+  const EagerGroundTrie* egtc = egt->contains(d_qstate, d_inst, qvars);
+  if (egtc!=nullptr)
+  {
+    if (egtc->getData()!=n)
+    {
+      // added congruent term, we are done
+      return;
+    }
+    // otherwise already added, we process again below
+  }
+  else
+  {
+    // otherwise, we add now
+    egt->add(d_qstate, d_gdb.getAlloc(), d_inst, n, qvars);
+  }
 }
 
 bool EagerInst::isRelevantSuffix(const Node& pat, const std::vector<Node>& n)
@@ -1143,7 +1163,7 @@ bool EagerInst::isRelevantTerm(const Node& t)
   return gts.find(t) != gts.end();
 }
 
-bool EagerInst::isRelevant(const Node& op, const std::vector<TNode>& args)
+bool EagerInst::isRelevant(const Node& op, const std::vector<Node>& args)
 {
   EagerOpInfo* eoi = getOrMkOpInfo(op, false);
   if (eoi == nullptr)
@@ -1200,7 +1220,7 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
     {
       ++d_statMultiPat;
     }
-    // set the contexts
+    // set the multi-pattern contexts
     for (size_t i = 0; i < npats; i++)
     {
       EagerPatternInfo* epi = getOrMkPatternInfo(pati[i], true);
