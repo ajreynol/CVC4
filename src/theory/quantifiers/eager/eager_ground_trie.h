@@ -54,8 +54,79 @@ class EagerGroundTrie
   bool setData(EagerGroundTrieAllocator* al, TNode t);
   /** For leaf nodes : get the node corresponding to this leaf. */
   TNode getData() const { return d_cmap.begin()->first; }
-
+  /**
+   * WANT: possible joins of args
+   *
+   *
+   * P(x,y) P(y,z) P(z,w), Q(z)
+   *
+   * P(a,b)
+   *
+   *  a:
+   *    b:
+   *      _:
+   *        _: 1
+   *  _:
+   *    a:
+   *      b:
+   *        _: 2
+   *    _:
+   *      a:
+   *        b: 3
+   *
+   *
+   * P(b,c)
+   *
+   *  a:
+   *    b:
+   *      _:
+   *        _: 1
+   *  b:
+   *    c:
+   *      _:
+   *        _: 1
+   *  _:
+   *    a:
+   *      b:
+   *        _: 2
+   *    b:
+   *      c:
+   *        _: 2
+   *    _:
+   *      a:
+   *        b: 3
+   *      b:
+   *        c: 3
+   *
+   * P(c,d)
+   *
+   * Each pattern within a multi-trigger is added to the ordinary trie. Instead of instantiation, we notify
+   * the match to the handling of multi triggers.
+   *
+   * Ground trie per (pattern, index), leaf stores ground term. Arguments may be null.
+   *
+   * If notified (term g, pattern, n) -> [t1? ... tk?]
+   * 1. add to trie, return if redundant.  Redundant is only on first add: g may be re-added due to a watch.
+   * 2. for each index = 1 ... p \ n, collect list of compatible term vectors V_i. Take V_n = (g, [t1? ... tk?]).
+   * 3. compute product of vectors.
+   *    Start with V_n.
+   *    Proceed with those with shared variables, smallest size.
+   *    For each failure, add a watch to (one of) the ground terms if not clearly disequal.
+   *
+   * In 3, compute step 2 only for those with shared variables.
+   * In 2, traverse as we go. Do not compute vectors.
+   * Track size per ground trie as a heuristic.
+   *
+   *
+   * P(a,b) P(c,d) then b=c???
+   *
+   *
+   */
+  void addMultiTrigger(const std::vector<Node>& args, size_t n);
  private:
+  /**
+   */
+  void addMultiTriggerInternal(const std::vector<Node>& args, size_t i, size_t n, const std::vector<EagerGroundTrie*>& siblings, EagerGroundTrie* tgt);
   bool containsInternal(QuantifiersState& qs,
                         const std::vector<TNode>& args,
                         size_t i) const;
