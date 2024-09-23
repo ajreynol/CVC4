@@ -103,7 +103,7 @@ class EagerGroundTrie
    * Each pattern within a multi-trigger is added to the ordinary trie. Instead of instantiation, we notify
    * the match to the handling of multi triggers.
    *
-   * Ground trie per (pattern, index), leaf stores ground term. Arguments may be null.
+   * Ground trie per (pattern, index), leaf stores (single?) ground term. Arguments may be null.
    *
    * If notified (term g, pattern, n) -> [t1? ... tk?]
    * 1. add to trie, return if redundant.  Redundant is only on first add: g may be re-added due to a watch.
@@ -120,13 +120,11 @@ class EagerGroundTrie
    *
    * P(a,b) P(c,d) then b=c???
    *
+   * Need SAT-context dependent computation of congruent term via e.g. equality engine.
+   *
    *
    */
-  void addMultiTrigger(const std::vector<Node>& args, size_t n);
  private:
-  /**
-   */
-  void addMultiTriggerInternal(const std::vector<Node>& args, size_t i, size_t n, const std::vector<EagerGroundTrie*>& siblings, EagerGroundTrie* tgt);
   bool containsInternal(QuantifiersState& qs,
                         const std::vector<TNode>& args,
                         size_t i) const;
@@ -174,7 +172,6 @@ class EagerGroundDb : protected EnvObj
   EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb);
   EagerGroundTrieAllocator* getAlloc() { return &d_alloc; }
   EagerGroundTrie* getTrie(const Node& op);
-
  private:
   /** */
   QuantifiersState& d_qstate;
