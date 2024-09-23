@@ -228,6 +228,12 @@ class EagerInst : public QuantifiersModule
   void doMatching(const EagerTrie* pat,
                   EagerTermIterator& eti,
                   EagerFailExp& failExp);
+  void processInstantiation(const EagerTrie* pat,
+                  EagerTermIterator& eti,
+                  EagerFailExp& failExp);
+  void processMultiTriggerInstantiation(const EagerPatternInfo* epi, const Node& pat, size_t index,
+                       const std::vector<Node>& n,
+                       EagerFailExp& failExp);
   /**
    * Resume matching the ground term iterated on by eti with the entire trie of
    * patterns beneath tgt. We have so far traversed to the path pat guided by

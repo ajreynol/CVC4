@@ -493,76 +493,7 @@ void EagerInst::doMatching(const EagerTrie* et,
     }
     else
     {
-      const std::vector<Node>& n = eti.getOriginal();
-      const std::vector<Node>& pats = et->d_pats;
-      const std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
-      bool needsGeneralMatching = false;
-      Trace("ajr-temp") << "Matched " << eti.getOriginal() << std::endl;
-      Trace("ajr-temp") << "Patterns " << pats << std::endl;
-      // instantiate with all patterns stored on this leaf
-      for (const Node& pat : pats)
-      {
-        if (pat.getNumChildren() == n.size())
-        {
-          doInstantiation(pat, n, failExp);
-          continue;
-        }
-        else if (n.size() == 1)
-        {
-          if (d_filteringSingleTriggers.find(pat)
-              != d_filteringSingleTriggers.end())
-          {
-            // if relevant suffix, we are done
-            if (isRelevantSuffix(pat, n))
-            {
-              Trace("ajr-temp") << "...success inst fst" << std::endl;
-              doInstantiation(pat, n, failExp);
-              continue;
-            }
-            Trace("ajr-temp") << "...fail inst" << std::endl;
-          }
-        }
-        // TODO: only continue with true multi-triggers
-        needsGeneralMatching = true;
-      }
-      if (needsGeneralMatching)
-      {
-        Trace("ajr-temp") << "Needs gen matching " << eti.getOriginal()
-                          << std::endl;
-        // also process potential multi triggers
-        for (const std::pair<const Node, EagerTrie>& ng : etng)
-        {
-          EagerOpInfo* eoi = getOrMkOpInfo(ng.first, true);
-          const EagerTrie* etn = &ng.second;
-          const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
-          Trace("eager-inst-match-debug")
-              << "Prefix multi-trigger matched for " << n
-              << ", continue match with " << gts.size() << " " << ng.first
-              << " terms" << std::endl;
-          for (const Node& t : gts)
-          {
-            ++d_statMatchContinueCall;
-            Trace("eager-inst-match")
-                << "Complete matching (upon multi-trigger prefix "
-                << eti.getOriginal() << ") for " << t << std::endl;
-            eti.pushOriginal(t);
-            doMatching(etn, eti, failExp);
-            eti.popOriginal();
-            Trace("eager-inst-match") << "...finished" << std::endl;
-          }
-          // also set up an assert watch
-          EagerWatchList& ewl = eoi->getEagerWatchList();
-          ewl.add(etn, eti.getOriginal());
-          Trace("eager-inst-watch") << "-- watch asserted " << ng.first
-                                    << " terms to resume matching with "
-                                    << eti.getOriginal() << std::endl;
-        }
-      }
-      else if (!etng.empty())
-      {
-        Trace("ajr-temp") << "Avoid gen matching " << eti.getOriginal()
-                          << std::endl;
-      }
+      processInstantiation(et, eti, failExp);
     }
     return;
   }
@@ -659,6 +590,108 @@ void EagerInst::doMatching(const EagerTrie* et,
       eti.decrementChild();
     }
   }
+}
+
+
+void EagerInst::processInstantiation(const EagerTrie* et,
+                           EagerTermIterator& eti,
+                           EagerFailExp& failExp)
+{
+  const std::vector<Node>& pats = et->d_pats;
+  const std::vector<Node>& n = eti.getOriginal();
+#if 0
+  for (const Node& pat : pats)
+  {
+    EagerPatternInfo* epi = getOrMkPatternInfo(pat, false);
+    if (epi==nullptr)
+    {
+      // single trigger, ready for instantiation
+      doInstantiation(pat, n, failExp);
+      continue;
+    }
+    // for each multi-trigger this is a part of
+    const std::vector<std::pair<Node, size_t>>& mctx = epi->getMultiCtx();
+    for (const std::pair<Node, size_t>& m : mctx)
+    {
+      processMultiTriggerInstantiation(epi, m.first, m.second, eti.getOriginal(), failExp);
+    }
+  }
+#endif
+  const std::map<Node, EagerTrie>& etng = et->d_ngroundChildren;
+  bool needsGeneralMatching = false;
+  Trace("ajr-temp") << "Matched " << eti.getOriginal() << std::endl;
+  Trace("ajr-temp") << "Patterns " << pats << std::endl;
+  // instantiate with all patterns stored on this leaf
+  for (const Node& pat : pats)
+  {
+    if (pat.getNumChildren() == n.size())
+    {
+      doInstantiation(pat, n, failExp);
+      continue;
+    }
+    else if (n.size() == 1)
+    {
+      if (d_filteringSingleTriggers.find(pat)
+          != d_filteringSingleTriggers.end())
+      {
+        // if relevant suffix, we are done
+        if (isRelevantSuffix(pat, n))
+        {
+          Trace("ajr-temp") << "...success inst fst" << std::endl;
+          doInstantiation(pat, n, failExp);
+          continue;
+        }
+        Trace("ajr-temp") << "...fail inst" << std::endl;
+      }
+    }
+    // TODO: only continue with true multi-triggers
+    needsGeneralMatching = true;
+  }
+  if (needsGeneralMatching)
+  {
+    Trace("ajr-temp") << "Needs gen matching " << eti.getOriginal()
+                      << std::endl;
+    // also process potential multi triggers
+    for (const std::pair<const Node, EagerTrie>& ng : etng)
+    {
+      EagerOpInfo* eoi = getOrMkOpInfo(ng.first, true);
+      const EagerTrie* etn = &ng.second;
+      const context::CDHashSet<Node>& gts = eoi->getGroundTerms();
+      Trace("eager-inst-match-debug")
+          << "Prefix multi-trigger matched for " << n
+          << ", continue match with " << gts.size() << " " << ng.first
+          << " terms" << std::endl;
+      for (const Node& t : gts)
+      {
+        ++d_statMatchContinueCall;
+        Trace("eager-inst-match")
+            << "Complete matching (upon multi-trigger prefix "
+            << eti.getOriginal() << ") for " << t << std::endl;
+        eti.pushOriginal(t);
+        doMatching(etn, eti, failExp);
+        eti.popOriginal();
+        Trace("eager-inst-match") << "...finished" << std::endl;
+      }
+      // also set up an assert watch
+      EagerWatchList& ewl = eoi->getEagerWatchList();
+      ewl.add(etn, eti.getOriginal());
+      Trace("eager-inst-watch") << "-- watch asserted " << ng.first
+                                << " terms to resume matching with "
+                                << eti.getOriginal() << std::endl;
+    }
+  }
+  else if (!etng.empty())
+  {
+    Trace("ajr-temp") << "Avoid gen matching " << eti.getOriginal()
+                      << std::endl;
+  }
+}
+
+void EagerInst::processMultiTriggerInstantiation(const EagerPatternInfo* epi, const Node& pat, size_t index,
+                    const std::vector<Node>& n,
+                    EagerFailExp& failExp)
+{
+
 }
 
 bool EagerInst::isRelevantSuffix(const Node& pat,
