@@ -100,18 +100,22 @@ class EagerGroundTrie
    *
    * P(c,d)
    *
-   * Each pattern within a multi-trigger is added to the ordinary trie. Instead of instantiation, we notify
-   * the match to the handling of multi triggers.
+   * Each pattern within a multi-trigger is added to the ordinary trie. Instead
+   * of instantiation, we notify the match to the handling of multi triggers.
    *
-   * Ground trie per (pattern, index), leaf stores (single?) ground term. Arguments may be null.
+   * Ground trie per (pattern, index), leaf stores (single?) ground term.
+   * Arguments may be null.
    *
    * If notified (term g, pattern, n) -> [t1? ... tk?]
-   * 1. add to trie, return if redundant.  Redundant is only on first add: g may be re-added due to a watch.
-   * 2. for each index = 1 ... p \ n, collect list of compatible term vectors V_i. Take V_n = (g, [t1? ... tk?]).
+   * 1. add to trie, return if redundant.  Redundant is only on first add: g may
+   * be re-added due to a watch.
+   * 2. for each index = 1 ... p \ n, collect list of compatible term vectors
+   * V_i. Take V_n = (g, [t1? ... tk?]).
    * 3. compute product of vectors.
    *    Start with V_n.
    *    Proceed with those with shared variables, smallest size.
-   *    For each failure, add a watch to (one of) the ground terms if not clearly disequal.
+   *    For each failure, add a watch to (one of) the ground terms if not
+   * clearly disequal.
    *
    * In 3, compute step 2 only for those with shared variables.
    * In 2, traverse as we go. Do not compute vectors.
@@ -120,7 +124,8 @@ class EagerGroundTrie
    *
    * P(a,b) P(c,d) then b=c???
    *
-   * Need SAT-context dependent computation of congruent term via e.g. equality engine.
+   * Need SAT-context dependent computation of congruent term via e.g. equality
+   * engine.
    *
    *
    */
@@ -172,6 +177,7 @@ class EagerGroundDb : protected EnvObj
   EagerGroundDb(Env& env, QuantifiersState& qs, TermDb* tdb);
   EagerGroundTrieAllocator* getAlloc() { return &d_alloc; }
   EagerGroundTrie* getTrie(const Node& op);
+
  private:
   /** */
   QuantifiersState& d_qstate;

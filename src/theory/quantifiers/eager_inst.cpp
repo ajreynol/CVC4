@@ -164,18 +164,21 @@ EagerInst::EagerInst(Env& env,
       d_statUserPats(statisticsRegistry().registerInt("EagerInst::userPats")),
       d_statUserPatsCd(
           statisticsRegistry().registerInt("EagerInst::userPatsCd")),
-      d_statSinglePat(statisticsRegistry().registerInt("EagerInst::patternSingle")),
-      d_statFilteringSinglePat(statisticsRegistry().registerInt("EagerInst::patternFilteringSingle")),
-      d_statMultiPat(statisticsRegistry().registerInt("EagerInst::patternMulti")),
+      d_statSinglePat(
+          statisticsRegistry().registerInt("EagerInst::patternSingle")),
+      d_statFilteringSinglePat(statisticsRegistry().registerInt(
+          "EagerInst::patternFilteringSingle")),
+      d_statMultiPat(
+          statisticsRegistry().registerInt("EagerInst::patternMulti")),
       d_statMatchCall(statisticsRegistry().registerInt("EagerInst::matchCall")),
       d_statMatchContinueCall(
           statisticsRegistry().registerInt("EagerInst::matchContinueCall")),
       d_statWatchCount(
           statisticsRegistry().registerInt("EagerInst::watchCount")),
-      d_statResumeMergeMatchCall(
-          statisticsRegistry().registerInt("EagerInst::matchResumeOnMergeCall")),
-      d_statResumeAssertMatchCall(
-          statisticsRegistry().registerInt("EagerInst::matchResumeOnAssertCall")),
+      d_statResumeMergeMatchCall(statisticsRegistry().registerInt(
+          "EagerInst::matchResumeOnMergeCall")),
+      d_statResumeAssertMatchCall(statisticsRegistry().registerInt(
+          "EagerInst::matchResumeOnAssertCall")),
       d_statCdPatMatchCall(
           statisticsRegistry().registerInt("EagerInst::matchCdPatCall"))
 {
@@ -592,10 +595,9 @@ void EagerInst::doMatching(const EagerTrie* et,
   }
 }
 
-
 void EagerInst::processInstantiation(const EagerTrie* et,
-                           EagerTermIterator& eti,
-                           EagerFailExp& failExp)
+                                     EagerTermIterator& eti,
+                                     EagerFailExp& failExp)
 {
   const std::vector<Node>& pats = et->d_pats;
   const std::vector<Node>& n = eti.getOriginal();
@@ -687,15 +689,15 @@ void EagerInst::processInstantiation(const EagerTrie* et,
   }
 }
 
-void EagerInst::processMultiTriggerInstantiation(const EagerPatternInfo* epi, const Node& pat, size_t index,
-                    const std::vector<Node>& n,
-                    EagerFailExp& failExp)
+void EagerInst::processMultiTriggerInstantiation(const EagerPatternInfo* epi,
+                                                 const Node& pat,
+                                                 size_t index,
+                                                 const std::vector<Node>& n,
+                                                 EagerFailExp& failExp)
 {
-
 }
 
-bool EagerInst::isRelevantSuffix(const Node& pat,
-                      const std::vector<Node>& n)
+bool EagerInst::isRelevantSuffix(const Node& pat, const std::vector<Node>& n)
 {
   if (n.size() < pat.getNumChildren())
   {
@@ -720,7 +722,7 @@ bool EagerInst::isRelevantSuffix(const Node& pat,
   }
   return true;
 }
-  
+
 bool EagerInst::doInstantiation(const Node& pat,
                                 const std::vector<Node>& n,
                                 EagerFailExp& failExp)

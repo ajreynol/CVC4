@@ -107,17 +107,26 @@ class CDEagerTrie
   std::vector<Node> d_triePats;
 };
 
-
 class EagerPatternInfo
 {
-public:
-  EagerPatternInfo(context::Context* c, const Node& q) : d_quant(q), d_pmatches(c) {}
-  void addMultiTriggerContext(const Node& pat, size_t i) { d_multiCtx.emplace_back(pat, i); }
+ public:
+  EagerPatternInfo(context::Context* c, const Node& q)
+      : d_quant(q), d_pmatches(c)
+  {
+  }
+  void addMultiTriggerContext(const Node& pat, size_t i)
+  {
+    d_multiCtx.emplace_back(pat, i);
+  }
   /** */
   const Node& getQuantFormula() const { return d_quant; }
-  const std::vector<std::pair<Node, size_t>>& getMultiCtx() const { return d_multiCtx; }
+  const std::vector<std::pair<Node, size_t>>& getMultiCtx() const
+  {
+    return d_multiCtx;
+  }
   EagerGroundTrie* getPartialMatches() { return &d_pmatches; }
-private:
+
+ private:
   Node d_quant;
   std::vector<std::pair<Node, size_t>> d_multiCtx;
   EagerGroundTrie d_pmatches;
@@ -229,11 +238,13 @@ class EagerInst : public QuantifiersModule
                   EagerTermIterator& eti,
                   EagerFailExp& failExp);
   void processInstantiation(const EagerTrie* pat,
-                  EagerTermIterator& eti,
-                  EagerFailExp& failExp);
-  void processMultiTriggerInstantiation(const EagerPatternInfo* epi, const Node& pat, size_t index,
-                       const std::vector<Node>& n,
-                       EagerFailExp& failExp);
+                            EagerTermIterator& eti,
+                            EagerFailExp& failExp);
+  void processMultiTriggerInstantiation(const EagerPatternInfo* epi,
+                                        const Node& pat,
+                                        size_t index,
+                                        const std::vector<Node>& n,
+                                        EagerFailExp& failExp);
   /**
    * Resume matching the ground term iterated on by eti with the entire trie of
    * patterns beneath tgt. We have so far traversed to the path pat guided by
@@ -255,8 +266,7 @@ class EagerInst : public QuantifiersModule
                        const std::vector<Node>& n,
                        EagerFailExp& failExp);
   /** */
-  bool isRelevantSuffix(const Node& pat,
-                       const std::vector<Node>& n);
+  bool isRelevantSuffix(const Node& pat, const std::vector<Node>& n);
   void addToFailExp(const EagerTrie* et,
                     const std::vector<Node>& ts,
                     EagerFailExp& failExp,
