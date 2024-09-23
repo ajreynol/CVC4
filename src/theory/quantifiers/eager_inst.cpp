@@ -701,9 +701,9 @@ void EagerInst::processMultiTriggerInstantiation(EagerPatternInfo* epi,
   size_t qvars = q.getNumChildren();
   // check if redundant (by congruence)
   const EagerGroundTrie* egtc = egt->contains(d_qstate, d_inst, qvars);
-  if (egtc!=nullptr)
+  if (egtc != nullptr)
   {
-    if (egtc->getData()!=n)
+    if (egtc->getData() != n)
     {
       // added congruent term, we are done
       return;

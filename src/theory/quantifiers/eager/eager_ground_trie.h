@@ -37,8 +37,14 @@ class EagerGroundTrie
  public:
   EagerGroundTrie(context::Context* c);
   bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, Node t);
-  bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, const std::vector<Node>& args, Node t, size_t nargs=0);
-  const EagerGroundTrie* contains(QuantifiersState& qs, const std::vector<Node>& args, size_t nargs=0) const;
+  bool add(QuantifiersState& qs,
+           EagerGroundTrieAllocator* al,
+           const std::vector<Node>& args,
+           Node t,
+           size_t nargs = 0);
+  const EagerGroundTrie* contains(QuantifiersState& qs,
+                                  const std::vector<Node>& args,
+                                  size_t nargs = 0) const;
   /** For leaf nodes : does this node have data? */
   bool hasData() const { return !d_cmap.empty(); }
   /** Set data, return true if sucessful, else t is marked congruent */
@@ -124,9 +130,9 @@ class EagerGroundTrie
   /** Push an edge r and return the child */
   EagerGroundTrie* push_back(EagerGroundTrieAllocator* al, Node r);
   const EagerGroundTrie* containsInternal(QuantifiersState& qs,
-                        const std::vector<Node>& args,
-                        size_t i,
-                                    size_t total) const;
+                                          const std::vector<Node>& args,
+                                          size_t i,
+                                          size_t total) const;
   /** */
   context::CDHashMap<Node, size_t> d_cmap;
   /**

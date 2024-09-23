@@ -26,21 +26,27 @@ EagerGroundTrie::EagerGroundTrie(context::Context* c) : d_cmap(c), d_csize(c, 0)
 {
 }
 
-bool EagerGroundTrie::add(QuantifiersState& qs, EagerGroundTrieAllocator* al, Node t)
+bool EagerGroundTrie::add(QuantifiersState& qs,
+                          EagerGroundTrieAllocator* al,
+                          Node t)
 {
   std::vector<Node> args(t.begin(), t.end());
   return add(qs, al, args, t, args.size());
 }
 
-bool EagerGroundTrie::add(QuantifiersState& qs, EagerGroundTrieAllocator* al, const std::vector<Node>& args, Node t, size_t nargs)
+bool EagerGroundTrie::add(QuantifiersState& qs,
+                          EagerGroundTrieAllocator* al,
+                          const std::vector<Node>& args,
+                          Node t,
+                          size_t nargs)
 {
   EagerGroundTrie* cur = this;
   context::CDHashMap<Node, size_t>::const_iterator it;
-  if (nargs==0)
+  if (nargs == 0)
   {
     nargs = args.size();
   }
-  for (size_t i=0; i<nargs; i++)
+  for (size_t i = 0; i < nargs; i++)
   {
     Node a = args[i];
     it = cur->d_cmap.find(a);
@@ -58,19 +64,22 @@ bool EagerGroundTrie::add(QuantifiersState& qs, EagerGroundTrieAllocator* al, co
   return cur->setData(al, t);
 }
 
-const EagerGroundTrie* EagerGroundTrie::contains(QuantifiersState& qs, const std::vector<Node>& args, size_t nargs) const
+const EagerGroundTrie* EagerGroundTrie::contains(QuantifiersState& qs,
+                                                 const std::vector<Node>& args,
+                                                 size_t nargs) const
 {
-  if (nargs==0)
+  if (nargs == 0)
   {
     nargs = args.size();
   }
   return containsInternal(qs, args, 0, nargs);
 }
 
-const EagerGroundTrie* EagerGroundTrie::containsInternal(QuantifiersState& qs,
-                                    const std::vector<Node>& args,
-                                    size_t i,
-                                    size_t total) const
+const EagerGroundTrie* EagerGroundTrie::containsInternal(
+    QuantifiersState& qs,
+    const std::vector<Node>& args,
+    size_t i,
+    size_t total) const
 {
   if (i == total)
   {
@@ -80,8 +89,9 @@ const EagerGroundTrie* EagerGroundTrie::containsInternal(QuantifiersState& qs,
   context::CDHashMap<Node, size_t>::const_iterator it = d_cmap.find(tc);
   if (d_cmap.find(tc) != d_cmap.end())
   {
-    const EagerGroundTrie* egt = d_children[it->second]->containsInternal(qs, args, i + 1, total);
-    if (egt!=nullptr)
+    const EagerGroundTrie* egt =
+        d_children[it->second]->containsInternal(qs, args, i + 1, total);
+    if (egt != nullptr)
     {
       return egt;
     }
@@ -96,8 +106,9 @@ const EagerGroundTrie* EagerGroundTrie::containsInternal(QuantifiersState& qs,
   {
     if (it->first != tc && qs.getRepresentative(it->first) == r)
     {
-      const EagerGroundTrie* egt = d_children[it->second]->containsInternal(qs, args, i + 1, total);
-      if (egt!=nullptr)
+      const EagerGroundTrie* egt =
+          d_children[it->second]->containsInternal(qs, args, i + 1, total);
+      if (egt != nullptr)
       {
         return egt;
       }
@@ -137,7 +148,7 @@ bool EagerGroundTrie::setData(EagerGroundTrieAllocator* al, Node t)
     d_cmap[t] = 0;
     return true;
   }
-  else if (d_cmap.begin()->first==t)
+  else if (d_cmap.begin()->first == t)
   {
     // if being readded, we also return true
     return true;
