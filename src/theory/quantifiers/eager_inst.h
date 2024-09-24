@@ -88,7 +88,7 @@ class EagerInst : public QuantifiersModule
   NodeSet d_filteringSingleTriggers;
   size_t d_tmpAddedLemmas;
   bool d_instOutput;
-  CDEagerTrie d_etrie;
+  //CDEagerTrie d_etrie;
   NodeSet d_ppQuants;
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
@@ -127,6 +127,7 @@ class EagerInst : public QuantifiersModule
   EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
   EagerPatternInfo* getOrMkPatternInfo(const Node& pat, bool doMk);
+  EagerTrie* getCurrentTrie(const Node& op);
   /**
    * Match ground term iterated on by eti with the entire trie of patterns in
    * pat.
@@ -176,7 +177,7 @@ class EagerInst : public QuantifiersModule
    * TODO: remove this variant
    */
   bool doInstantiation(const Node& pat,
-                       const std::vector<Node>& n,
+                       TNode n,
                        EagerFailExp& failExp);
   /**
    * Assumes d_inst is ready, instantiate q with d_inst.
@@ -188,7 +189,7 @@ class EagerInst : public QuantifiersModule
   /** */
   bool isRelevantSuffix(const Node& pat, const std::vector<TNode>& n);
   void addToFailExp(const EagerTrie* et,
-                    const std::vector<Node>& ts,
+                    TNode t,
                     EagerFailExp& failExp,
                     const Node& a,
                     const Node& b);

@@ -22,29 +22,22 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-EagerTermIterator::EagerTermIterator(const Node& t)
+EagerTermIterator::EagerTermIterator(TNode t) : d_orig(t)
 {
-  d_orig.emplace_back(t);
-  Assert(t.getKind() == Kind::INST_PATTERN);
-  std::vector<Node> ts(t.begin(), t.end());
-  d_stack.emplace_back(ts, 0);
-}
-
-EagerTermIterator::EagerTermIterator(const std::vector<Node>& ts) : d_orig(ts)
-{
-  d_stack.emplace_back(ts, 0);
+  Assert(t.getKind() != Kind::INST_PATTERN);
+  d_stack.emplace_back(t, 0);
 }
 
 EagerTrie::EagerTrie() {}
 
-EagerTrie* EagerTrie::add(TermDb* tdb, const Node& n)
+EagerTrie* EagerTrie::add(TermDb* tdb, TNode n)
 {
   std::vector<uint64_t> bound;
   EagerTermIterator eti(n);
   return addInternal(tdb, eti, bound, false);
 }
 
-void EagerTrie::erase(TermDb* tdb, const Node& n)
+void EagerTrie::erase(TermDb* tdb, TNode n)
 {
   std::vector<uint64_t> bound;
   EagerTermIterator eti(n);
@@ -60,13 +53,13 @@ EagerTrie* EagerTrie::addInternal(TermDb* tdb,
   // add or remove the pattern, even if not at leaf
   if (isErase)
   {
-    Assert(d_pats.back() == eti.getOriginal()[0]);
+    Assert(d_pats.back() == eti.getOriginal());
     d_pats.pop_back();
     ret = nullptr;
   }
   else
   {
-    d_pats.push_back(eti.getOriginal()[0]);
+    d_pats.push_back(eti.getOriginal());
     ret = this;
   }
   // we have another child to continue from a higher level
@@ -77,7 +70,7 @@ EagerTrie* EagerTrie::addInternal(TermDb* tdb,
       return ret;
     }
   }
-  const Node& nc = eti.getCurrent();
+  TNode nc = eti.getCurrent();
   if (nc.getKind() == Kind::INST_CONSTANT)
   {
     uint64_t vnum = TermUtil::getInstVarNum(nc);
@@ -172,7 +165,7 @@ bool EagerTrie::empty() const
 
 CDEagerTrie::CDEagerTrie(context::Context* c) : d_pats(c) {}
 
-EagerTrie* CDEagerTrie::addPattern(TermDb* tdb, const Node& pat)
+EagerTrie* CDEagerTrie::addPattern(TermDb* tdb, TNode pat)
 {
   Trace("eager-inst-pattern") << "add pat: " << pat << std::endl;
   makeCurrent(tdb);

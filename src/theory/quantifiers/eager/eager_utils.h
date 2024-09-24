@@ -31,9 +31,9 @@ class EagerWatchList
 {
  public:
   EagerWatchList(context::Context* c) : d_valid(c, true), d_matchJobs(c) {}
-  void add(const EagerTrie* et, const std::vector<Node>& t);
+  void add(const EagerTrie* et, TNode t);
   context::CDO<bool> d_valid;
-  context::CDList<std::pair<const EagerTrie*, std::vector<Node>>> d_matchJobs;
+  context::CDList<std::pair<const EagerTrie*, TNode>> d_matchJobs;
 };
 
 class EagerWatchInfo
@@ -65,7 +65,7 @@ class EagerOpInfo
    * These are the set of partially completed multi-trigger matches that are
    * waiting on new terms for this operator.
    */
-  EagerWatchList& getEagerWatchList() { return d_ewl; }
+  //EagerWatchList& getEagerWatchList() { return d_ewl; }
   /** */
   bool isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const;
   /** */
@@ -89,9 +89,9 @@ class EagerOpInfo
 };
 
 using EagerFailExp = std::map<
-    Node,
-    std::map<Node,
-             std::vector<std::pair<const EagerTrie*, std::vector<Node>>>>>;
+    TNode,
+    std::map<TNode,
+             std::vector<std::pair<const EagerTrie*, TNode>>>>;
 using EagerWatchSet = std::map<TNode, std::unordered_set<TNode>>;
 using EagerGtMVector = std::vector<std::vector<EagerGroundTrie*>>;
 

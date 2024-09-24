@@ -29,9 +29,9 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-void EagerWatchList::add(const EagerTrie* et, const std::vector<Node>& t)
+void EagerWatchList::add(const EagerTrie* et, TNode t)
 {
-  d_matchJobs.push_back(std::pair<const EagerTrie*, std::vector<Node>>(et, t));
+  d_matchJobs.push_back(std::pair<const EagerTrie*, TNode>(et, t));
 }
 
 EagerWatchList* EagerWatchInfo::getOrMkList(const Node& r, bool doMk)

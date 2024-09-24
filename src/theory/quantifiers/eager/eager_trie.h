@@ -36,14 +36,13 @@ class EagerTermIterator
   friend class EagerInst;
 
  public:
-  EagerTermIterator(const Node& t);
-  EagerTermIterator(const std::vector<Node>& ts);
-  const std::vector<Node>& getOriginal() const { return d_orig; }
+  EagerTermIterator(TNode t);
+  TNode getOriginal() const { return d_orig; }
   TNode getCurrent() const
   {
     Assert(!d_stack.empty());
-    const std::pair<std::vector<Node>, size_t>& cur = d_stack.back();
-    Assert(cur.second <= cur.first.size());
+    const std::pair<TNode, size_t>& cur = d_stack.back();
+    Assert(cur.second <= cur.first.getNumChildren());
     return cur.first[cur.second];
   }
   void incrementChild() { d_stack.back().second++; }
@@ -55,13 +54,12 @@ class EagerTermIterator
   bool needsBacktrack() const
   {
     Assert(!d_stack.empty());
-    const std::pair<std::vector<Node>, size_t>& cur = d_stack.back();
-    return cur.second == cur.first.size();
+    const std::pair<TNode, size_t>& cur = d_stack.back();
+    return cur.second == cur.first.getNumChildren();
   }
-  void push(const Node& t)
+  void push(TNode t)
   {
-    std::vector<Node> ts(t.begin(), t.end());
-    d_stack.emplace_back(ts, 0);
+    d_stack.emplace_back(t, 0);
   }
   bool canPop() const { return d_stack.size() > 1; }
   bool pop()
@@ -73,20 +71,9 @@ class EagerTermIterator
     d_stack.pop_back();
     return true;
   }
-  void pushOriginal(const Node& t)
-  {
-    d_orig.emplace_back(t);
-    push(t);
-  }
-  void popOriginal()
-  {
-    pop();
-    d_orig.pop_back();
-  }
-
  private:
-  std::vector<Node> d_orig;
-  std::vector<std::pair<std::vector<Node>, size_t>> d_stack;
+  TNode d_orig;
+  std::vector<std::pair<TNode, size_t>> d_stack;
 };
 
 class EagerTrie
@@ -103,8 +90,8 @@ class EagerTrie
    * terms of the form (INST_PATTERN (P x) t1 ... tn), where (P x) is a complete
    * single trigger and t1 ... tn do not have further variables to match.
    */
-  EagerTrie* add(TermDb* tdb, const Node& pat);
-  void erase(TermDb* tdb, const Node& pat);
+  EagerTrie* add(TermDb* tdb, TNode pat);
+  void erase(TermDb* tdb, TNode pat);
   bool empty() const;
 
  private:
@@ -119,7 +106,7 @@ class CDEagerTrie
  public:
   CDEagerTrie(context::Context* c);
   /** Add pattern */
-  EagerTrie* addPattern(TermDb* tdb, const Node& pat);
+  EagerTrie* addPattern(TermDb* tdb, TNode pat);
   /** */
   EagerTrie* getCurrent(TermDb* tdb);
 

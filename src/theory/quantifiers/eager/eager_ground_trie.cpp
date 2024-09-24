@@ -47,6 +47,7 @@ bool EagerGroundTrie::add(QuantifiersState& qs,
   {
     nargs = args.size();
   }
+  Assert (nargs<=args.size());
   for (size_t i = 0; i < nargs; i++)
   {
     TNode a = args[i];
@@ -57,7 +58,6 @@ bool EagerGroundTrie::add(QuantifiersState& qs,
     }
     else
     {
-      Assert(it->second < cur->d_children.size());
       cur = it->second;
     }
   }
