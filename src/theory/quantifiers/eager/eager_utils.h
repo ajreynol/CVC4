@@ -68,7 +68,8 @@ class EagerOpInfo
   EagerWatchList& getEagerWatchList() { return d_ewl; }
   /** */
   bool isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const;
-
+  /** */
+  CDEagerTrie* getPatternTrie() { return &d_etrie; }
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
@@ -84,7 +85,7 @@ class EagerOpInfo
   /** TODO: likely remove? */
   EagerWatchList d_ewl;
   /** */
-  EagerTrie d_etrie;
+  CDEagerTrie d_etrie;
 };
 
 using EagerFailExp = std::map<

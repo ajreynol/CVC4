@@ -59,7 +59,8 @@ EagerOpInfo::EagerOpInfo(context::Context* c,
       d_rlvTerms(c),
       d_rlvTermsWaiting(c),
       d_active(c, false),
-      d_ewl(c)
+      d_ewl(c),
+      d_etrie(c)
 {
   if (gdb != nullptr)
   {
