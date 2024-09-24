@@ -1439,6 +1439,7 @@ set(regress_0_tests
   regress0/quantifiers/ei-on-multi-filter.smt2
   regress0/quantifiers/ei-multi-filter.smt2
   regress0/quantifiers/ei-true-mt.smt2
+  regress0/quantifiers/ei-true-mt-simplest.smt2
   regress0/quantifiers/ex3.smt2
   regress0/quantifiers/ex6.smt2
   regress0/quantifiers/floor.smt2

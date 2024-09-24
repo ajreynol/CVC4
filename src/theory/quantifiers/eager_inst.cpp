@@ -543,6 +543,7 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
                                                  const Node& n,
                                                  EagerWatchSet& failWatch)
 {
+  Trace("eager-inst-mt") << "Multi-trigger instantiation trigger by matching " << n << " with " << pat << "[" << index << "]" << std::endl;
   Assert(d_multiPatInfo.find(pat) != d_multiPatInfo.end());
   EagerMultiPatternInfo& empi = d_multiPatInfo[pat];
   std::vector<EagerPatternInfo*>& pvec = empi.d_epis;
@@ -557,15 +558,18 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
   {
     if (egtc->getData() != n)
     {
+      Trace("eager-inst-mt") << "...congruent" << std::endl;
       // added congruent term, we are done
       return;
     }
     // otherwise already added, we process again below
+    Trace("eager-inst-mt") << "...already added" << std::endl;
   }
   else
   {
     // otherwise, we add now
     egt->add(d_qstate, d_gdb.getAlloc(), d_inst, n, qvars);
+    Trace("eager-inst-mt") << "...newly added" << std::endl;
   }
   // now, go back to other patterns
   EagerGtMVector pats;
@@ -573,7 +577,9 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
   {
     pats.emplace_back(std::vector<EagerGroundTrie*>{epic->getPartialMatches()});
   }
+  Trace("eager-inst-mt") << "Do multi-trigger instantiations" << std::endl;
   processMultiTriggerInstantiations(q, pat, 0, index, pats, failWatch);
+  Trace("eager-inst-mt") << "...finished" << std::endl;
 }
 
 void EagerInst::processMultiTriggerInstantiations(
@@ -608,6 +614,7 @@ void EagerInst::processMultiTriggerInstantiations(
   // if the variable was set by the base pattern, we direct the continuing
   if (!d_inst[varIndex].isNull())
   {
+    Trace("eager-inst-mt") << "* join #" << varIndex << " " << d_inst[varIndex] << std::endl;
     TNode r = d_qstate.getRepresentative(d_inst[varIndex]);
     std::map<size_t, std::unordered_set<TNode>> watchFails;
     size_t minWatchIndex = 0;
@@ -622,6 +629,8 @@ void EagerInst::processMultiTriggerInstantiations(
       }
       std::vector<EagerGroundTrie*>& nps = nextPats[i];
       std::vector<EagerGroundTrie*>& p = pats[i];
+      Assert (!p.empty());
+      Trace("eager-inst-mt") << "Check " << p.size() << " paths for pattern [" << i << "]..." << std::endl;
       // get the trie(s) we are traversing for this pattern
       std::unordered_set<TNode>& wf = watchFails[i];
       for (EagerGroundTrie* egt : p)
@@ -633,6 +642,7 @@ void EagerInst::processMultiTriggerInstantiations(
           // at varIndex 0. Here, everything fails, nothing to watch for (we
           // are waiting to get the first match for this component pattern).
           Assert(varIndex == 0);
+          Trace("eager-inst-mt") << "...failed (empty) #" << i << " " << pat[i] << std::endl;
           return;
         }
         it = cmap.begin();
@@ -642,17 +652,20 @@ void EagerInst::processMultiTriggerInstantiations(
           nps.emplace_back(it->second);
           continue;
         }
+        Trace("eager-inst-mt-debug") << "...has children " << cmap.size() << std::endl;
         // otherwise, continue with all that are equal
         for (it = cmap.begin(); it != cmap.end(); ++it)
         {
           Assert(!it->first.isNull());
           TNode rr = d_qstate.getRepresentative(it->first);
+          Trace("eager-inst-mt-debug") << "Check " << it->first << std::endl;
           if (rr == r)
           {
             nps.emplace_back(it->second);
           }
           else if (!rr.isConst() || !r.isConst())
           {
+            Trace("eager-inst-mt-debug") << "not equal: " << it->first << " " << r << std::endl;
             // those that are not equal are a potential watch
             wf.insert(rr);
           }
@@ -661,6 +674,7 @@ void EagerInst::processMultiTriggerInstantiations(
       // if nps is empty, we cannot continue
       if (nps.empty())
       {
+        Trace("eager-inst-mt") << "...failed #" << i << " " << pat[i] << std::endl;
         allNonEmpty = false;
         // we continue to continue, since we want to find a minimal watch set?
       }
@@ -687,6 +701,7 @@ void EagerInst::processMultiTriggerInstantiations(
   }
   // if null, we consider all possibilities of what to set d_inst[varIndex] to.
   
+  Trace("eager-inst-mt") << "* look for values #" << varIndex << std::endl;
   // Mapping representatives to the vector we would pass to pats on the next
   // call to this method.
   std::map<TNode, EagerGtMVector> nextPatRep;
@@ -714,6 +729,7 @@ void EagerInst::processMultiTriggerInstantiations(
         // at varIndex 0. Here, everything fails, nothing to watch for (we
         // are waiting to get the first match for this component pattern).
         Assert(varIndex == 0);
+        Trace("eager-inst-mt") << "...failed (empty) #" << i << " " << pat[i] << std::endl;
         return;
       }
       it = cmap.begin();
@@ -753,6 +769,7 @@ void EagerInst::processMultiTriggerInstantiations(
   // now go back and try possibilities
   for (std::pair<const TNode, EagerGtMVector>& npr : nextPatRep)
   {
+    Trace("eager-inst-mt") << "  * rep : " << npr.first << std::endl;
     EagerGtMVector& evec = npr.second;
     bool allNonEmpty = true;
     // fist check that all simultanesouly match
@@ -765,9 +782,11 @@ void EagerInst::processMultiTriggerInstantiations(
         std::vector<EagerGroundTrie*>& wcvec = nextPats[i];
         if (wcvec.empty())
         {
+          Trace("eager-inst-mt") << "...failed #" << i << " " << pat[i] << std::endl;
           allNonEmpty = false;
           break;
         }
+        // add wildcards (and base) to vec
         vec.insert(vec.end(), wcvec.begin(), wcvec.end());
       }
     }
@@ -777,8 +796,9 @@ void EagerInst::processMultiTriggerInstantiations(
       Assert (repUse.find(npr.first)!=repUse.end());
       d_inst[varIndex] = repUse[npr.first];
       processMultiTriggerInstantiations(
-          q, pat, varIndex + 1, basePatIndex, nextPats, failWatch);
+          q, pat, varIndex + 1, basePatIndex, evec, failWatch);
     }
+    // note that we don't need to set up watches here.
   }
   // cleanup
   d_inst[varIndex] = d_null;
