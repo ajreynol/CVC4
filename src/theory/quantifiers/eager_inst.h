@@ -261,7 +261,7 @@ class EagerInst : public QuantifiersModule
   void processMultiTriggerInstantiation(const Node& pat,
                                         size_t index,
                                         const Node& n,
-      EagerWatchSet& failWatch);
+                                        EagerWatchSet& failWatch);
   void processMultiTriggerInstantiations(
       const Node& q,
       const Node& pat,
@@ -297,9 +297,7 @@ class EagerInst : public QuantifiersModule
    * cached if n is non-null (which is the case iff pat is a single trigger).
    * If the instantiation fails, adds to failExp.
    */
-  bool doInstantiation(const Node& q,
-                       const Node& pat,
-                       const Node& n);
+  bool doInstantiation(const Node& q, const Node& pat, const Node& n);
   /** */
   bool isRelevantSuffix(const Node& pat, const std::vector<TNode>& n);
   void addToFailExp(const EagerTrie* et,

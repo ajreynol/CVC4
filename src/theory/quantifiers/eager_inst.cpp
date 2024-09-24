@@ -699,7 +699,7 @@ void EagerInst::processInstantiation(const EagerTrie* et,
 void EagerInst::processMultiTriggerInstantiation(const Node& pat,
                                                  size_t index,
                                                  const Node& n,
-                                        EagerWatchSet& failWatch)
+                                                 EagerWatchSet& failWatch)
 {
   Assert(d_multiPatInfo.find(pat) != d_multiPatInfo.end());
   EagerMultiPatternInfo& empi = d_multiPatInfo[pat];
@@ -740,7 +740,7 @@ void EagerInst::processMultiTriggerInstantiations(
     size_t varIndex,
     size_t basePatIndex,
     std::vector<std::vector<EagerGroundTrie*>>& pats,
-                                        EagerWatchSet& failWatch)
+    EagerWatchSet& failWatch)
 {
   // invariant: each index of pats should be non-empty
   if (varIndex == q[0].getNumChildren())
@@ -748,7 +748,6 @@ void EagerInst::processMultiTriggerInstantiations(
     // instantiate now, d_inst should be complete
     if (!doInstantiation(q, pat, d_null))
     {
-      
     }
     return;
   }
@@ -821,7 +820,7 @@ void EagerInst::processMultiTriggerInstantiations(
         // we continue to continue, since we want to find a minimal watch set?
       }
       size_t wfsize = wf.size();
-      if (i==0 || wfsize<minWatchSize)
+      if (i == 0 || wfsize < minWatchSize)
       {
         minWatchIndex = i;
         minWatchSize = wfsize;
@@ -890,9 +889,7 @@ bool EagerInst::doInstantiation(const Node& pat,
   return true;
 }
 
-bool EagerInst::doInstantiation(const Node& q,
-                                const Node& pat,
-                                const Node& n)
+bool EagerInst::doInstantiation(const Node& q, const Node& pat, const Node& n)
 {
   Assert(!q.isNull());
   Assert(q[0].getNumChildren() >= d_inst.size());
@@ -1086,7 +1083,7 @@ void EagerInst::addToFailExp(const EagerTrie* et,
       return;
     }
   }
-  else if (br.isConst() || br<ar)
+  else if (br.isConst() || br < ar)
   {
     failExp[br][ar].emplace_back(et, ts);
     return;
@@ -1105,14 +1102,14 @@ void EagerInst::addToWatchSet(EagerWatchSet& ews, TNode a, TNode b)
       return;
     }
   }
-  else if (br.isConst() || br<ar)
+  else if (br.isConst() || br < ar)
   {
     ews[br].insert(ar);
     return;
   }
   ews[ar].insert(br);
 }
-  
+
 EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
 {
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>>::iterator it =
