@@ -95,6 +95,7 @@ void AletheProofPrinter::printStep(
     const std::vector<Node>& pfArgs,
     const std::vector<std::shared_ptr<ProofNode>>& pfChildren)
 {
+  AlwaysAssert(false);
   out << "(step " << stepId << " ";
   // print the conclusion and the rule
   printTerm(out, pfArgs[2]);
