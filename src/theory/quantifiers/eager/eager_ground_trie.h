@@ -31,9 +31,11 @@ namespace quantifiers {
 class TermDb;
 class QuantifiersState;
 class EagerGroundTrieAllocator;
+class EagerInst;
 
 class EagerGroundTrie
 {
+  friend class EagerInst;
  public:
   EagerGroundTrie(context::Context* c);
   bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, TNode t);
@@ -126,6 +128,14 @@ class EagerGroundTrie
    *
    *
    */
+  /** Active toggle */
+  bool isActive() const { return d_active.get(); }
+  /** Set active */
+  void setActive(bool val=true) { d_active = val; }
+  /**
+   * Get the children that are compatible with r; null is always taken
+   */
+  void getChildren(QuantifiersState& qs, TNode r, std::vector<EagerGroundTrie*>& children);
  private:
   /** Push an edge r and return the child */
   EagerGroundTrie* push_back(EagerGroundTrieAllocator* al, TNode r);
@@ -134,11 +144,13 @@ class EagerGroundTrie
                                           size_t i,
                                           size_t total) const;
   /** */
-  context::CDHashMap<Node, size_t> d_cmap;
+  context::CDHashMap<Node, EagerGroundTrie*> d_cmap;
   /**
    * The size of d_children that are valid in this context.
    */
   context::CDO<size_t> d_csize;
+  /** */
+  context::CDO<bool> d_active;
   /** The children, stored in a non-context-dependent manner. */
   std::vector<EagerGroundTrie*> d_children;
 };

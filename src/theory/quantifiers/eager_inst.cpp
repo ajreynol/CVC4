@@ -616,7 +616,7 @@ void EagerInst::processInstantiation(const EagerTrie* et,
     const std::vector<std::pair<Node, size_t>>& mctx = epi->getMultiCtx();
     for (const std::pair<Node, size_t>& m : mctx)
     {
-      processMultiTriggerInstantiation(epi, m.first, m.second, n[0], failExp);
+      processMultiTriggerInstantiation(m.first, m.second, n[0], failExp);
     }
   }
 #endif
@@ -691,12 +691,16 @@ void EagerInst::processInstantiation(const EagerTrie* et,
   }
 }
 
-void EagerInst::processMultiTriggerInstantiation(EagerPatternInfo* epi,
-                                                 const Node& pat,
+void EagerInst::processMultiTriggerInstantiation(const Node& pat,
                                                  size_t index,
                                                  const Node& n,
                                                  EagerFailExp& failExp)
 {
+  Assert (d_multiPatInfo.find(pat)!=d_multiPatInfo.end());
+  EagerMultiPatternInfo& empi = d_multiPatInfo[pat];
+  std::vector<EagerPatternInfo*>& pvec = empi.d_epis;
+  Assert (epi!=nullptr);
+  EagerPatternInfo* epi = pvec[index];
   EagerGroundTrie* egt = epi->getPartialMatches();
   const Node& q = epi->getQuantFormula();
   size_t qvars = q.getNumChildren();
@@ -717,23 +721,96 @@ void EagerInst::processMultiTriggerInstantiation(EagerPatternInfo* epi,
     egt->add(d_qstate, d_gdb.getAlloc(), d_inst, n, qvars);
   }
   // now, go back to other patterns
-  processMultiTriggerInstantiationNext(q, pat, 0, index, failExp);
+  std::vector<std::vector<EagerGroundTrie*>> pats;
+  for (EagerPatternInfo* epic : pvec)
+  {
+    pats.emplace_back(std::vector<EagerGroundTrie*>{epic->getPartialMatches()});
+  }
+  processMultiTriggerInstantiations(q, pat, 0, index, pats, failExp);
 }
 
-void EagerInst::processMultiTriggerInstantiationNext(const Node& q,
+void EagerInst::processMultiTriggerInstantiations(const Node& q,
                                                      const Node& pat,
-                                                     size_t i,
-                                                     size_t index,
+                                            size_t varIndex,
+                                            size_t basePatIndex,
+                                         std::vector<std::vector<EagerGroundTrie*>>& pats,
                                                      EagerFailExp& failExp)
 {
-  if (i == q[0].getNumChildren())
+  // invariant: each index of pats should be non-empty
+  if (varIndex == q[0].getNumChildren())
   {
     // instantiate now, d_inst should be complete
     doInstantiation(q, pat, d_null, failExp);
     return;
   }
-  size_t ii = i >= index ? i + 1 : i;
-  const Node& nextPat = pat[ii];
+  context::CDHashMap<Node, EagerGroundTrie*>::iterator it;
+  std::vector<std::vector<EagerGroundTrie*>> nextPats;
+  nextPats.resize(pats.size());
+  // immediately populate the next pat vector for the base pattern, which
+  // should be size one.
+  std::vector<EagerGroundTrie*>& basep = pats[basePatIndex];
+  Assert (basep.size()==1);
+  it = basep[0]->d_cmap.find(d_inst[varIndex]);
+  Assert (it!=basep[0]->d_cmap.end());
+  nextPats[basePatIndex].emplace_back(it->second);
+  // if the variable was set by the base pattern, we direct the continuing
+  if (!d_inst[varIndex].isNull())
+  {
+    TNode r = d_qstate.getRepresentative(d_inst[varIndex]);
+    std::map<size_t, std::unordered_set<TNode>> watchFails;
+    for (size_t i=0, npats = pats.size(); i<npats; i++)
+    {
+      if (i==basePatIndex)
+      {
+        // don't process the base pattern index here
+        continue;
+      }
+      std::vector<EagerGroundTrie*>& nps = nextPats[i];
+      std::vector<EagerGroundTrie*>& p = pats[i];
+      // get the trie(s) we are traversing for this pattern
+      std::unordered_set<TNode>& wf = watchFails[i];
+      for (EagerGroundTrie* egt : p)
+      {
+        context::CDHashMap<Node, EagerGroundTrie*>& cmap = egt->d_cmap;
+        if (cmap.empty())
+        {
+          // there are no matches for this pattern. This can only occur
+          // at varIndex 0.
+          Assert (varIndex==0);
+          continue;
+        }
+        it = cmap.begin();
+        // if a wildcard, just continue with the child
+        if (it->first.isNull())
+        {
+          nps.emplace_back(it->second);
+          continue;
+        }
+        // otherwise, continue with all that are equal
+        for (it = cmap.begin(); it != cmap.end(); ++it)
+        {
+          Assert (!it->first.isNull());
+          TNode rr = d_qstate.getRepresentative(it->first);
+          if (rr == r)
+          {
+            nps.emplace_back(it->second);
+          }
+          else if (!rr.isConst() || !r.isConst())
+          {
+            // those that are not equal are a potential watch
+            wf.insert(rr);
+          }
+        }
+      }
+      // if nps is empty, we cannot continue
+      if (nps.empty())
+      {
+        
+      }
+    }
+    processMultiTriggerInstantiations(q, pat, varIndex+1, basePatIndex, pats, failExp);
+    return;
+  }
 }
 
 bool EagerInst::isRelevantSuffix(const Node& pat, const std::vector<TNode>& n)
@@ -1251,10 +1328,13 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
       ++d_statMultiPat;
     }
     // set the multi-pattern contexts
+    EagerMultiPatternInfo& empi = d_multiPatInfo[pati];
+    Assert (empi.d_epis.empty());
     for (size_t i = 0; i < npats; i++)
     {
       EagerPatternInfo* epi = getOrMkPatternInfo(pati[i], true);
       epi->addMultiTriggerContext(pati, i);
+      empi.d_epis.emplace_back(epi);
     }
   }
   else

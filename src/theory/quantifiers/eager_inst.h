@@ -132,6 +132,14 @@ class EagerPatternInfo
   EagerGroundTrie d_pmatches;
 };
 
+class EagerMultiPatternInfo
+{
+public:
+  EagerMultiPatternInfo(){}
+  /** The list of eager pattern infos */
+  std::vector<EagerPatternInfo*> d_epis;
+};
+
 /**
  */
 class EagerInst : public QuantifiersModule
@@ -199,6 +207,7 @@ class EagerInst : public QuantifiersModule
   context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>> d_repWatch;
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_opInfo;
   context::CDHashMap<Node, std::shared_ptr<EagerPatternInfo>> d_patInfo;
+  std::map<Node, EagerMultiPatternInfo> d_multiPatInfo;
 
   EagerGroundDb d_gdb;
   /** Number of patterns */
@@ -248,15 +257,15 @@ class EagerInst : public QuantifiersModule
    * Otherwise, if this is the first time seeing n, we add the partial match
    * and proceed to joining with the remaining matches
    */
-  void processMultiTriggerInstantiation(EagerPatternInfo* epi,
-                                        const Node& pat,
+  void processMultiTriggerInstantiation(const Node& pat,
                                         size_t index,
                                         const Node& n,
                                         EagerFailExp& failExp);
-  void processMultiTriggerInstantiationNext(const Node& q,
+  void processMultiTriggerInstantiations(const Node& q,
                                             const Node& pat,
-                                            size_t i,
-                                            size_t index,
+                                            size_t varIndex,
+                                            size_t basePatIndex,
+                                         std::vector<std::vector<EagerGroundTrie*>>& pats,
                                             EagerFailExp& failExp);
 
   /**
