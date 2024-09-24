@@ -614,9 +614,14 @@ void EagerInst::processInstantiation(const EagerTrie* et,
     Assert (n.size()==1); // FIXME: will go away
     // for each multi-trigger this is a part of
     const std::vector<std::pair<Node, size_t>>& mctx = epi->getMultiCtx();
+    EagerWatchSet failWatch;
     for (const std::pair<Node, size_t>& m : mctx)
     {
-      processMultiTriggerInstantiation(m.first, m.second, n[0], failExp);
+      processMultiTriggerInstantiation(m.first, m.second, n[0], failWatch);
+    }
+    for (std::pair<TNode, TNode>& fw : failWatch)
+    {
+      failExp[fw.first][fw.second].emplace_back(et, n);
     }
   }
 #endif
@@ -694,7 +699,7 @@ void EagerInst::processInstantiation(const EagerTrie* et,
 void EagerInst::processMultiTriggerInstantiation(const Node& pat,
                                                  size_t index,
                                                  const Node& n,
-                                                 EagerFailExp& failExp)
+                                        EagerWatchSet& failWatch)
 {
   Assert(d_multiPatInfo.find(pat) != d_multiPatInfo.end());
   EagerMultiPatternInfo& empi = d_multiPatInfo[pat];
@@ -726,7 +731,7 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
   {
     pats.emplace_back(std::vector<EagerGroundTrie*>{epic->getPartialMatches()});
   }
-  processMultiTriggerInstantiations(q, pat, 0, index, pats, failExp);
+  processMultiTriggerInstantiations(q, pat, 0, index, pats, failWatch);
 }
 
 void EagerInst::processMultiTriggerInstantiations(
@@ -735,13 +740,16 @@ void EagerInst::processMultiTriggerInstantiations(
     size_t varIndex,
     size_t basePatIndex,
     std::vector<std::vector<EagerGroundTrie*>>& pats,
-    EagerFailExp& failExp)
+                                        EagerWatchSet& failWatch)
 {
   // invariant: each index of pats should be non-empty
   if (varIndex == q[0].getNumChildren())
   {
     // instantiate now, d_inst should be complete
-    doInstantiation(q, pat, d_null, failExp);
+    if (!doInstantiation(q, pat, d_null))
+    {
+      
+    }
     return;
   }
   context::CDHashMap<Node, EagerGroundTrie*>::iterator it;
@@ -759,6 +767,9 @@ void EagerInst::processMultiTriggerInstantiations(
   {
     TNode r = d_qstate.getRepresentative(d_inst[varIndex]);
     std::map<size_t, std::unordered_set<TNode>> watchFails;
+    size_t minWatchIndex = 0;
+    size_t minWatchSize = 0;
+    bool allNonEmpty = true;
     for (size_t i = 0, npats = pats.size(); i < npats; i++)
     {
       if (i == basePatIndex)
@@ -806,12 +817,32 @@ void EagerInst::processMultiTriggerInstantiations(
       // if nps is empty, we cannot continue
       if (nps.empty())
       {
+        allNonEmpty = false;
+        // we continue to continue, since we want to find a minimal watch set?
+      }
+      size_t wfsize = wf.size();
+      if (i==0 || wfsize<minWatchSize)
+      {
+        minWatchIndex = i;
+        minWatchSize = wfsize;
       }
     }
-    processMultiTriggerInstantiations(
-        q, pat, varIndex + 1, basePatIndex, pats, failExp);
+    // set up watches for the minimal failure
+    std::unordered_set<TNode>& mwf = watchFails[minWatchIndex];
+    for (TNode rr : mwf)
+    {
+      addToWatchSet(failWatch, r, rr);
+    }
+    // if all non-empty, we can continue
+    if (allNonEmpty)
+    {
+      processMultiTriggerInstantiations(
+          q, pat, varIndex + 1, basePatIndex, pats, failWatch);
+    }
     return;
   }
+  // if null, we consider all possibilities of what to set d_inst[varIndex] to.
+  AlwaysAssert(false) << "Not yet implemented";
 }
 
 bool EagerInst::isRelevantSuffix(const Node& pat, const std::vector<TNode>& n)
@@ -850,13 +881,18 @@ bool EagerInst::doInstantiation(const Node& pat,
   Assert(!q.isNull());
   Assert(q[0].getNumChildren() >= d_inst.size());
   Node nn = n.size() == 1 ? n[0] : d_null;
-  return doInstantiation(q, pat, nn, failExp);
+  if (!doInstantiation(q, pat, nn))
+  {
+    // dummy mark that the failure was due to entailed pattern
+    failExp[d_null][d_null].emplace_back();
+    return false;
+  }
+  return true;
 }
 
 bool EagerInst::doInstantiation(const Node& q,
                                 const Node& pat,
-                                const Node& n,
-                                EagerFailExp& failExp)
+                                const Node& n)
 {
   Assert(!q.isNull());
   Assert(q[0].getNumChildren() >= d_inst.size());
@@ -865,7 +901,8 @@ bool EagerInst::doInstantiation(const Node& q,
   {
     if (d_instTerms.find(key) != d_instTerms.end())
     {
-      return false;
+      // already instantiated
+      return true;
     }
   }
   // must resize
@@ -883,8 +920,6 @@ bool EagerInst::doInstantiation(const Node& q,
     }
     return true;
   }
-  // dummy mark that the failure was due to entailed pattern
-  failExp[d_null][d_null].emplace_back();
   return false;
 }
 
@@ -1051,7 +1086,7 @@ void EagerInst::addToFailExp(const EagerTrie* et,
       return;
     }
   }
-  else if (br.isConst())
+  else if (br.isConst() || br<ar)
   {
     failExp[br][ar].emplace_back(et, ts);
     return;
@@ -1059,6 +1094,25 @@ void EagerInst::addToFailExp(const EagerTrie* et,
   failExp[ar][br].emplace_back(et, ts);
 }
 
+void EagerInst::addToWatchSet(EagerWatchSet& ews, TNode a, TNode b)
+{
+  TNode ar = d_qstate.getRepresentative(a);
+  TNode br = d_qstate.getRepresentative(b);
+  if (ar.isConst())
+  {
+    if (br.isConst())
+    {
+      return;
+    }
+  }
+  else if (br.isConst() || br<ar)
+  {
+    ews[br].insert(ar);
+    return;
+  }
+  ews[ar].insert(br);
+}
+  
 EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
 {
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>>::iterator it =

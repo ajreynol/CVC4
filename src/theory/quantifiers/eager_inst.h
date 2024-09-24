@@ -89,6 +89,7 @@ using EagerFailExp = std::map<
     Node,
     std::map<Node,
              std::vector<std::pair<const EagerTrie*, std::vector<Node>>>>>;
+using EagerWatchSet = std::map<TNode, std::unordered_set<TNode>>;
 
 class CDEagerTrie
 {
@@ -260,14 +261,14 @@ class EagerInst : public QuantifiersModule
   void processMultiTriggerInstantiation(const Node& pat,
                                         size_t index,
                                         const Node& n,
-                                        EagerFailExp& failExp);
+      EagerWatchSet& failWatch);
   void processMultiTriggerInstantiations(
       const Node& q,
       const Node& pat,
       size_t varIndex,
       size_t basePatIndex,
       std::vector<std::vector<EagerGroundTrie*>>& pats,
-      EagerFailExp& failExp);
+      EagerWatchSet& failWatch);
 
   /**
    * Resume matching the ground term iterated on by eti with the entire trie of
@@ -298,8 +299,7 @@ class EagerInst : public QuantifiersModule
    */
   bool doInstantiation(const Node& q,
                        const Node& pat,
-                       const Node& n,
-                       EagerFailExp& failExp);
+                       const Node& n);
   /** */
   bool isRelevantSuffix(const Node& pat, const std::vector<TNode>& n);
   void addToFailExp(const EagerTrie* et,
@@ -307,6 +307,7 @@ class EagerInst : public QuantifiersModule
                     EagerFailExp& failExp,
                     const Node& a,
                     const Node& b);
+  void addToWatchSet(EagerWatchSet& ews, TNode a, TNode b);
   void addWatches(EagerFailExp& failExp);
   bool isRelevantTerm(const Node& t);
   bool isRelevant(const Node& op, const std::vector<TNode>& args);
