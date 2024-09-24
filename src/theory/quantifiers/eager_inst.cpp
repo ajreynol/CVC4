@@ -23,123 +23,11 @@
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/term_util.h"
 
+// #define MULTI_TRIGGER_NEW
+
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
-
-void EagerWatchList::add(const EagerTrie* et, const std::vector<Node>& t)
-{
-  d_matchJobs.push_back(std::pair<const EagerTrie*, std::vector<Node>>(et, t));
-}
-
-EagerWatchList* EagerWatchInfo::getOrMkList(const Node& r, bool doMk)
-{
-  context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator it =
-      d_eqWatch.find(r);
-  if (it != d_eqWatch.end())
-  {
-    return it->second.get();
-  }
-  else if (!doMk)
-  {
-    return nullptr;
-  }
-  std::shared_ptr<EagerWatchList> eoi = std::make_shared<EagerWatchList>(d_ctx);
-  d_eqWatch.insert(r, eoi);
-  return eoi.get();
-}
-
-EagerOpInfo::EagerOpInfo(context::Context* c,
-                         const Node& op,
-                         EagerGroundDb* gdb)
-    : d_galloc(nullptr),
-      d_gtrie(nullptr),
-      d_rlvTerms(c),
-      d_rlvTermsWaiting(c),
-      d_active(c, false),
-      d_ewl(c)
-{
-  if (gdb != nullptr)
-  {
-    d_galloc = gdb->getAlloc();
-    d_gtrie = gdb->getTrie(op);
-  }
-}
-
-bool EagerOpInfo::addGroundTerm(QuantifiersState& qs, const Node& n)
-{
-  if (d_gtrie == nullptr)
-  {
-    d_rlvTerms.insert(n);
-    return true;
-  }
-  if (!d_active.get())
-  {
-    // index now
-    return addGroundTermInternal(qs, n);
-  }
-  d_rlvTermsWaiting.insert(n);
-  return false;
-}
-
-bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
-{
-  Assert(d_gtrie != nullptr);
-  if (d_gtrie->add(qs, d_galloc, n))
-  {
-    d_rlvTerms.insert(n);
-    return true;
-  }
-  return false;
-}
-
-void EagerOpInfo::setActive(QuantifiersState& qs)
-{
-  Assert(!d_active.get());
-  for (const Node& nw : d_rlvTermsWaiting)
-  {
-    addGroundTerm(qs, nw);
-  }
-}
-
-bool EagerOpInfo::isRelevant(QuantifiersState& qs,
-                             const std::vector<TNode>& args) const
-{
-  Assert(d_gtrie != nullptr);
-  return d_gtrie->contains(qs, args);
-}
-
-CDEagerTrie::CDEagerTrie(context::Context* c) : d_pats(c) {}
-
-EagerTrie* CDEagerTrie::addPattern(TermDb* tdb, const Node& pat)
-{
-  Trace("eager-inst-pattern") << "add pat: " << pat << std::endl;
-  makeCurrent(tdb);
-  d_pats.push_back(pat);
-  d_triePats.emplace_back(pat);
-  return d_trie.add(tdb, pat);
-}
-
-EagerTrie* CDEagerTrie::getCurrent(TermDb* tdb)
-{
-  makeCurrent(tdb);
-  return &d_trie;
-}
-
-void CDEagerTrie::makeCurrent(TermDb* tdb)
-{
-  size_t i = d_triePats.size();
-  size_t tsize = d_pats.size();
-  // clean up any stale patterns that appear in the trie
-  while (i > tsize)
-  {
-    i--;
-    Node pat = d_triePats[i];
-    Trace("eager-inst-pattern") << "remove pat: " << pat << std::endl;
-    d_trie.erase(tdb, pat);
-  }
-  d_triePats.resize(tsize);
-}
 
 EagerInst::EagerInst(Env& env,
                      QuantifiersState& qs,
@@ -601,7 +489,7 @@ void EagerInst::processInstantiation(const EagerTrie* et,
 {
   const std::vector<Node>& pats = et->d_pats;
   const std::vector<Node>& n = eti.getOriginal();
-#if 0
+#ifdef MULTI_TRIGGER_NEW
   for (const Node& pat : pats)
   {
     EagerPatternInfo* epi = getOrMkPatternInfo(pat, false);
@@ -726,7 +614,7 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
     egt->add(d_qstate, d_gdb.getAlloc(), d_inst, n, qvars);
   }
   // now, go back to other patterns
-  std::vector<std::vector<EagerGroundTrie*>> pats;
+  EagerGtMVector pats;
   for (EagerPatternInfo* epic : pvec)
   {
     pats.emplace_back(std::vector<EagerGroundTrie*>{epic->getPartialMatches()});
@@ -739,7 +627,7 @@ void EagerInst::processMultiTriggerInstantiations(
     const Node& pat,
     size_t varIndex,
     size_t basePatIndex,
-    std::vector<std::vector<EagerGroundTrie*>>& pats,
+    EagerGtMVector& pats,
     EagerWatchSet& failWatch)
 {
   // invariant: each index of pats should be non-empty
@@ -748,11 +636,13 @@ void EagerInst::processMultiTriggerInstantiations(
     // instantiate now, d_inst should be complete
     if (!doInstantiation(q, pat, d_null))
     {
+      // TODO: ?
     }
     return;
   }
+  size_t npats = pats.size();
   context::CDHashMap<Node, EagerGroundTrie*>::iterator it;
-  std::vector<std::vector<EagerGroundTrie*>> nextPats;
+  EagerGtMVector nextPats;
   nextPats.resize(pats.size());
   // immediately populate the next pat vector for the base pattern, which
   // should be size one.
@@ -769,7 +659,7 @@ void EagerInst::processMultiTriggerInstantiations(
     size_t minWatchIndex = 0;
     size_t minWatchSize = 0;
     bool allNonEmpty = true;
-    for (size_t i = 0, npats = pats.size(); i < npats; i++)
+    for (size_t i = 0; i < npats; i++)
     {
       if (i == basePatIndex)
       {
@@ -785,10 +675,11 @@ void EagerInst::processMultiTriggerInstantiations(
         context::CDHashMap<Node, EagerGroundTrie*>& cmap = egt->d_cmap;
         if (cmap.empty())
         {
-          // there are no matches for this pattern. This can only occur
-          // at varIndex 0.
+          // There are no matches for this pattern. This can only occur
+          // at varIndex 0. Here, everything fails, nothing to watch for (we
+          // are waiting to get the first match for this component pattern).
           Assert(varIndex == 0);
-          continue;
+          return;
         }
         it = cmap.begin();
         // if a wildcard, just continue with the child
@@ -836,12 +727,108 @@ void EagerInst::processMultiTriggerInstantiations(
     if (allNonEmpty)
     {
       processMultiTriggerInstantiations(
-          q, pat, varIndex + 1, basePatIndex, pats, failWatch);
+          q, pat, varIndex + 1, basePatIndex, nextPats, failWatch);
     }
     return;
   }
   // if null, we consider all possibilities of what to set d_inst[varIndex] to.
   AlwaysAssert(false) << "Not yet implemented";
+  
+  // Mapping representatives to the vector we would pass to pats on the next
+  // call to this method.
+  std::map<TNode, EagerGtMVector> nextPatRep;
+  std::map<TNode, EagerGtMVector>::iterator itn;
+  // an "actual" term per rep
+  std::map<TNode, TNode> repUse;
+  std::pair<std::map<TNode, EagerGtMVector>::iterator, bool> iret;
+  bool firstTime = true;
+  for (size_t i = 0; i < npats; i++)
+  {
+    if (i == basePatIndex)
+    {
+      // don't process the base pattern index here
+      continue;
+    }
+    // for each trie we are processing for this pattern
+    std::vector<EagerGroundTrie*>& p = pats[i];
+    for (EagerGroundTrie* egt : p)
+    {
+      context::CDHashMap<Node, EagerGroundTrie*>& cmap = egt->d_cmap;
+      if (cmap.empty())
+      {
+        // Similar to above.
+        // There are no matches for this pattern. This can only occur
+        // at varIndex 0. Here, everything fails, nothing to watch for (we
+        // are waiting to get the first match for this component pattern).
+        Assert(varIndex == 0);
+        return;
+      }
+      it = cmap.begin();
+      if (it->first.isNull())
+      {
+        // if a wildcard, we will including it always
+        std::vector<EagerGroundTrie*>& nps = nextPats[i];
+        nps.emplace_back(it->second);
+        break;
+      }
+      for (it = cmap.begin(); it != cmap.end(); ++it)
+      {
+        Assert(!it->first.isNull());
+        TNode rr = d_qstate.getRepresentative(it->first);
+        if (firstTime)
+        {
+          // if first time, we populate nextPatRep
+          iret = nextPatRep.insert(std::pair<TNode, EagerGtMVector>(rr, EagerGtMVector()));
+          if (iret.second)
+          {
+            iret.first->second.resize(npats);
+            repUse[rr] = it->first;
+          }
+          iret.first->second[i].emplace_back(it->second);
+          continue;
+        }
+        // if not first time, combine with a previous
+        itn = nextPatRep.find(rr);
+        if (itn != nextPatRep.end())
+        {
+          itn->second[i].emplace_back(it->second);
+        }
+      }
+    }
+    firstTime = false;
+  }
+  // now go back and try possibilities
+  for (std::pair<const TNode, EagerGtMVector>& npr : nextPatRep)
+  {
+    EagerGtMVector& evec = npr.second;
+    bool allNonEmpty = true;
+    // fist check that all simultanesouly match
+    for (size_t i = 0; i < npats; i++)
+    {
+      std::vector<EagerGroundTrie*>& vec = evec[i];
+      if (vec.empty())
+      {
+        // maybe a wildcard
+        std::vector<EagerGroundTrie*>& wcvec = nextPats[i];
+        if (wcvec.empty())
+        {
+          allNonEmpty = false;
+          break;
+        }
+        vec.insert(vec.end(), wcvec.begin(), wcvec.end());
+      }
+    }
+    // if all non-empty, this this value
+    if (allNonEmpty)
+    {
+      Assert (repUse.find(npr.first)!=repUse.end());
+      d_inst[varIndex] = repUse[npr.first];
+      processMultiTriggerInstantiations(
+          q, pat, varIndex + 1, basePatIndex, nextPats, failWatch);
+    }
+  }
+  // cleanup
+  d_inst[varIndex] = d_null;
 }
 
 bool EagerInst::isRelevantSuffix(const Node& pat, const std::vector<TNode>& n)

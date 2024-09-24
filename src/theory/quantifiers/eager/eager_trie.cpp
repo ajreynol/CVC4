@@ -170,6 +170,38 @@ bool EagerTrie::empty() const
          && d_pats.empty();
 }
 
+CDEagerTrie::CDEagerTrie(context::Context* c) : d_pats(c) {}
+
+EagerTrie* CDEagerTrie::addPattern(TermDb* tdb, const Node& pat)
+{
+  Trace("eager-inst-pattern") << "add pat: " << pat << std::endl;
+  makeCurrent(tdb);
+  d_pats.push_back(pat);
+  d_triePats.emplace_back(pat);
+  return d_trie.add(tdb, pat);
+}
+
+EagerTrie* CDEagerTrie::getCurrent(TermDb* tdb)
+{
+  makeCurrent(tdb);
+  return &d_trie;
+}
+
+void CDEagerTrie::makeCurrent(TermDb* tdb)
+{
+  size_t i = d_triePats.size();
+  size_t tsize = d_pats.size();
+  // clean up any stale patterns that appear in the trie
+  while (i > tsize)
+  {
+    i--;
+    Node pat = d_triePats[i];
+    Trace("eager-inst-pattern") << "remove pat: " << pat << std::endl;
+    d_trie.erase(tdb, pat);
+  }
+  d_triePats.resize(tsize);
+}
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

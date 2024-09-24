@@ -19,6 +19,7 @@
 #define CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_TRIE_H
 
 #include "expr/node.h"
+#include "context/cdlist.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -111,6 +112,23 @@ class EagerTrie
                          EagerTermIterator& eti,
                          std::vector<uint64_t>& alreadyBound,
                          bool isErase);
+};
+
+class CDEagerTrie
+{
+ public:
+  CDEagerTrie(context::Context* c);
+  /** Add pattern */
+  EagerTrie* addPattern(TermDb* tdb, const Node& pat);
+  /** */
+  EagerTrie* getCurrent(TermDb* tdb);
+
+ private:
+  void makeCurrent(TermDb* tdb);
+  EagerTrie d_trie;
+  /** The patterns for this operator in the current context */
+  context::CDList<Node> d_pats;
+  std::vector<Node> d_triePats;
 };
 
 }  // namespace quantifiers
