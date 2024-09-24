@@ -728,7 +728,9 @@ void EagerInst::processMultiTriggerInstantiationNext(const Node& q,
 {
   if (i == q[0].getNumChildren())
   {
-    // TODO: instantiation
+    // instantiate now, d_inst should be complete
+    doInstantiation(q, pat, d_null, failExp);
+    return;
   }
   size_t ii = i >= index ? i + 1 : i;
   const Node& nextPat = pat[ii];

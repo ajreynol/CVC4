@@ -241,7 +241,12 @@ class EagerInst : public QuantifiersModule
                             EagerTermIterator& eti,
                             EagerFailExp& failExp);
   /**
-   * Called when n matches pat, d_inst is populated with the match.
+   * Called when n matches pat, d_inst is populated with the partial match.
+   *
+   * We first see if the partial match is already equal modulo equality to
+   * another partial match. If so, we return.
+   * Otherwise, if this is the first time seeing n, we add the partial match
+   * and proceed to joining with the remaining matches
    */
   void processMultiTriggerInstantiation(EagerPatternInfo* epi,
                                         const Node& pat,
@@ -270,10 +275,17 @@ class EagerInst : public QuantifiersModule
                       EagerFailExp& failExp);
   /**
    * Assumes d_inst is ready, instantiate with the patterns in et.
+   * TODO: remove this variant
    */
   bool doInstantiation(const Node& pat,
                        const std::vector<Node>& n,
                        EagerFailExp& failExp);
+  /**
+   * Assumes d_inst is ready, instantiate q with d_inst.
+   * The pattern and term matched (pat and n) are checked and
+   * cached if n is non-null (which is the case iff pat is a single trigger).
+   * If the instantiation fails, adds to failExp.
+   */
   bool doInstantiation(const Node& q,
                        const Node& pat,
                        const Node& n,
