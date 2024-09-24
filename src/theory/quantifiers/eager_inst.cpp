@@ -696,10 +696,10 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
                                                  const Node& n,
                                                  EagerFailExp& failExp)
 {
-  Assert (d_multiPatInfo.find(pat)!=d_multiPatInfo.end());
+  Assert(d_multiPatInfo.find(pat) != d_multiPatInfo.end());
   EagerMultiPatternInfo& empi = d_multiPatInfo[pat];
   std::vector<EagerPatternInfo*>& pvec = empi.d_epis;
-  Assert (epi!=nullptr);
+  Assert(epi != nullptr);
   EagerPatternInfo* epi = pvec[index];
   EagerGroundTrie* egt = epi->getPartialMatches();
   const Node& q = epi->getQuantFormula();
@@ -729,12 +729,13 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
   processMultiTriggerInstantiations(q, pat, 0, index, pats, failExp);
 }
 
-void EagerInst::processMultiTriggerInstantiations(const Node& q,
-                                                     const Node& pat,
-                                            size_t varIndex,
-                                            size_t basePatIndex,
-                                         std::vector<std::vector<EagerGroundTrie*>>& pats,
-                                                     EagerFailExp& failExp)
+void EagerInst::processMultiTriggerInstantiations(
+    const Node& q,
+    const Node& pat,
+    size_t varIndex,
+    size_t basePatIndex,
+    std::vector<std::vector<EagerGroundTrie*>>& pats,
+    EagerFailExp& failExp)
 {
   // invariant: each index of pats should be non-empty
   if (varIndex == q[0].getNumChildren())
@@ -749,18 +750,18 @@ void EagerInst::processMultiTriggerInstantiations(const Node& q,
   // immediately populate the next pat vector for the base pattern, which
   // should be size one.
   std::vector<EagerGroundTrie*>& basep = pats[basePatIndex];
-  Assert (basep.size()==1);
+  Assert(basep.size() == 1);
   it = basep[0]->d_cmap.find(d_inst[varIndex]);
-  Assert (it!=basep[0]->d_cmap.end());
+  Assert(it != basep[0]->d_cmap.end());
   nextPats[basePatIndex].emplace_back(it->second);
   // if the variable was set by the base pattern, we direct the continuing
   if (!d_inst[varIndex].isNull())
   {
     TNode r = d_qstate.getRepresentative(d_inst[varIndex]);
     std::map<size_t, std::unordered_set<TNode>> watchFails;
-    for (size_t i=0, npats = pats.size(); i<npats; i++)
+    for (size_t i = 0, npats = pats.size(); i < npats; i++)
     {
-      if (i==basePatIndex)
+      if (i == basePatIndex)
       {
         // don't process the base pattern index here
         continue;
@@ -776,7 +777,7 @@ void EagerInst::processMultiTriggerInstantiations(const Node& q,
         {
           // there are no matches for this pattern. This can only occur
           // at varIndex 0.
-          Assert (varIndex==0);
+          Assert(varIndex == 0);
           continue;
         }
         it = cmap.begin();
@@ -789,7 +790,7 @@ void EagerInst::processMultiTriggerInstantiations(const Node& q,
         // otherwise, continue with all that are equal
         for (it = cmap.begin(); it != cmap.end(); ++it)
         {
-          Assert (!it->first.isNull());
+          Assert(!it->first.isNull());
           TNode rr = d_qstate.getRepresentative(it->first);
           if (rr == r)
           {
@@ -805,10 +806,10 @@ void EagerInst::processMultiTriggerInstantiations(const Node& q,
       // if nps is empty, we cannot continue
       if (nps.empty())
       {
-        
       }
     }
-    processMultiTriggerInstantiations(q, pat, varIndex+1, basePatIndex, pats, failExp);
+    processMultiTriggerInstantiations(
+        q, pat, varIndex + 1, basePatIndex, pats, failExp);
     return;
   }
 }
@@ -1329,7 +1330,7 @@ Node EagerInst::getPatternFor(const Node& pat, const Node& q)
     }
     // set the multi-pattern contexts
     EagerMultiPatternInfo& empi = d_multiPatInfo[pati];
-    Assert (empi.d_epis.empty());
+    Assert(empi.d_epis.empty());
     for (size_t i = 0; i < npats; i++)
     {
       EagerPatternInfo* epi = getOrMkPatternInfo(pati[i], true);

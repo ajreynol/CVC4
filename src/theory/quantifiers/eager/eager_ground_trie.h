@@ -36,6 +36,7 @@ class EagerInst;
 class EagerGroundTrie
 {
   friend class EagerInst;
+
  public:
   EagerGroundTrie(context::Context* c);
   bool add(QuantifiersState& qs, EagerGroundTrieAllocator* al, TNode t);
@@ -131,11 +132,14 @@ class EagerGroundTrie
   /** Active toggle */
   bool isActive() const { return d_active.get(); }
   /** Set active */
-  void setActive(bool val=true) { d_active = val; }
+  void setActive(bool val = true) { d_active = val; }
   /**
    * Get the children that are compatible with r; null is always taken
    */
-  void getChildren(QuantifiersState& qs, TNode r, std::vector<EagerGroundTrie*>& children);
+  void getChildren(QuantifiersState& qs,
+                   TNode r,
+                   std::vector<EagerGroundTrie*>& children);
+
  private:
   /** Push an edge r and return the child */
   EagerGroundTrie* push_back(EagerGroundTrieAllocator* al, TNode r);

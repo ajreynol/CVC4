@@ -134,8 +134,8 @@ class EagerPatternInfo
 
 class EagerMultiPatternInfo
 {
-public:
-  EagerMultiPatternInfo(){}
+ public:
+  EagerMultiPatternInfo() {}
   /** The list of eager pattern infos */
   std::vector<EagerPatternInfo*> d_epis;
 };
@@ -261,12 +261,13 @@ class EagerInst : public QuantifiersModule
                                         size_t index,
                                         const Node& n,
                                         EagerFailExp& failExp);
-  void processMultiTriggerInstantiations(const Node& q,
-                                            const Node& pat,
-                                            size_t varIndex,
-                                            size_t basePatIndex,
-                                         std::vector<std::vector<EagerGroundTrie*>>& pats,
-                                            EagerFailExp& failExp);
+  void processMultiTriggerInstantiations(
+      const Node& q,
+      const Node& pat,
+      size_t varIndex,
+      size_t basePatIndex,
+      std::vector<std::vector<EagerGroundTrie*>>& pats,
+      EagerFailExp& failExp);
 
   /**
    * Resume matching the ground term iterated on by eti with the entire trie of

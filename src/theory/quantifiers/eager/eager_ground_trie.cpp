@@ -22,7 +22,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-EagerGroundTrie::EagerGroundTrie(context::Context* c) : d_cmap(c), d_csize(c, 0), d_active(c, false)
+EagerGroundTrie::EagerGroundTrie(context::Context* c)
+    : d_cmap(c), d_csize(c, 0), d_active(c, false)
 {
 }
 
@@ -86,7 +87,8 @@ const EagerGroundTrie* EagerGroundTrie::containsInternal(
     return this;
   }
   TNode tc = args[i];
-  context::CDHashMap<Node, EagerGroundTrie*>::const_iterator it = d_cmap.find(tc);
+  context::CDHashMap<Node, EagerGroundTrie*>::const_iterator it =
+      d_cmap.find(tc);
   if (d_cmap.find(tc) != d_cmap.end())
   {
     const EagerGroundTrie* egt =
@@ -161,7 +163,9 @@ bool EagerGroundTrie::setData(EagerGroundTrieAllocator* al, TNode t)
   return false;
 }
 
-void EagerGroundTrie::getChildren(QuantifiersState& qs, TNode r, std::vector<EagerGroundTrie*>& children)
+void EagerGroundTrie::getChildren(QuantifiersState& qs,
+                                  TNode r,
+                                  std::vector<EagerGroundTrie*>& children)
 {
   if (d_cmap.empty())
   {
@@ -169,14 +173,14 @@ void EagerGroundTrie::getChildren(QuantifiersState& qs, TNode r, std::vector<Eag
   }
   else if (d_cmap.begin()->first.isNull())
   {
-    Assert (d_cmap.size()==1);
+    Assert(d_cmap.size() == 1);
     children.emplace_back(d_cmap.begin()->second);
     return;
   }
   context::CDHashMap<Node, EagerGroundTrie*>::const_iterator it;
   for (it = d_cmap.begin(); it != d_cmap.end(); ++it)
   {
-    Assert (!it->first.isNull());
+    Assert(!it->first.isNull());
     if (qs.getRepresentative(it->first) == r)
     {
       children.emplace_back(it->second);
