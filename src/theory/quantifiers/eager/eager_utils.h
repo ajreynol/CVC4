@@ -27,6 +27,11 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+using EagerWatchVec = std::vector<std::pair<const EagerTrie*, TNode>>;
+using EagerWatchSet = std::map<TNode, std::unordered_set<TNode>>;
+using EagerGtMVector = std::vector<std::vector<EagerGroundTrie*>>;
+using EagerFailExp = std::map<TNode, std::map<TNode, std::pair<EagerWatchVec, EagerWatchVec>>>;
+
 class EagerWatchList
 {
  public:
@@ -39,17 +44,32 @@ class EagerWatchList
 class EagerRepInfo
 {
  public:
-  EagerRepInfo(context::Context* c) : d_eqWatch(c), d_ctx(c) {}
-  EagerWatchList* getOrMkList(const Node& r, bool doMk);
+  EagerRepInfo(context::Context* c) : d_eqWatch(c), d_ops(c), d_opWatch(c), d_ctx(c) {}
+  EagerWatchList* getOrMkListForRep(const Node& r, bool doMk);
+  EagerWatchList* getOrMkListForOp(const Node& op, bool doMk);
+  EagerWatchList* getOrMkListInternal(const Node& r, bool doMk, size_t i);
   /**
    * Mapping from terms in the above list to the term we are waiting the
    * equivalence class to become equal to.
    */
   context::CDHashMap<Node, std::shared_ptr<EagerWatchList>> d_eqWatch;
-
+  /** Operators that are definitely in this equivalence class */
+  context::CDHashSet<Node> d_ops;
+  /** */
+  context::CDHashMap<Node, std::shared_ptr<EagerWatchList>> d_opWatch;
  private:
   context::Context* d_ctx;
 };
+
+// TODO: for preregister
+/*
+class EagerQuantInfo
+{
+ public:
+  EagerQuantInfo(context::Context* c) : d_ewl(c) {}
+  context::CDList<std::pair<const EagerTrie*, TNode>> d_matchJobs;
+};
+*/
 
 class EagerOpInfo
 {
@@ -79,12 +99,6 @@ class EagerOpInfo
   /** */
   CDEagerTrie d_etrie;
 };
-
-using EagerFailExp =
-    std::map<TNode,
-             std::map<TNode, std::vector<std::pair<const EagerTrie*, TNode>>>>;
-using EagerWatchSet = std::map<TNode, std::unordered_set<TNode>>;
-using EagerGtMVector = std::vector<std::vector<EagerGroundTrie*>>;
 
 class EagerPatternInfo
 {

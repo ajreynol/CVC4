@@ -72,6 +72,10 @@ EagerInst::EagerInst(Env& env,
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
+  
+  options::EagerInstQuantMode eqm = options().quantifiers.eagerInstQuantMode;
+  d_quantOnAssert = (eqm==options::EagerInstQuantMode::ASSERTION);
+  d_quantOnPreregister = (eqm==options::EagerInstQuantMode::PREREGISTER);
 }
 
 EagerInst::~EagerInst() {}
@@ -96,7 +100,14 @@ bool EagerInst::needsCheck(Theory::Effort e)
 
 void EagerInst::reset_round(Theory::Effort e) {}
 
-void EagerInst::registerQuantifier(Node q) {}
+void EagerInst::preRegisterQuantifier(Node q) 
+{
+  Assert(q.getKind() == Kind::FORALL);
+  if (d_quantOnPreregister)
+  {
+    registerQuant(q);
+  }
+}
 
 void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 {
@@ -128,7 +139,7 @@ void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
     if (k == Kind::FORALL)
     {
       d_ppQuants.insert(a);
-      registerQuant(a);
+      registerQuantInternal(a);
     }
     else if (k == Kind::AND)
     {
@@ -141,22 +152,29 @@ void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 
 void EagerInst::assertNode(Node q)
 {
-  if (!options().quantifiers.eagerInstCd)
-  {
-    return;
-  }
   Assert(q.getKind() == Kind::FORALL);
+  if (d_quantOnAssert)
+  {
+    registerQuant(q);
+  }
+  if (d_quantOnPreregister)
+  {
+    // go back and process waiting instantiations?
+  }
+}
+void EagerInst::registerQuant(const Node& q)
+{
   if (d_ppQuants.find(q) == d_ppQuants.end())
   {
     size_t prevLemmas = d_tmpAddedLemmas;
-    registerQuant(q);
+    registerQuantInternal(q);
     if (d_tmpAddedLemmas > prevLemmas)
     {
       d_qim.doPending();
     }
   }
 }
-void EagerInst::registerQuant(const Node& q)
+void EagerInst::registerQuantInternal(const Node& q)
 {
   Trace("eager-inst-register") << "Assert " << q << std::endl;
   if (q.getNumChildren() != 3)
@@ -392,13 +410,14 @@ void EagerInst::doMatching(const EagerTrie* et,
   Trace("eager-inst-match-debug") << "  Complete matching: " << tc << std::endl;
   eti.incrementChild();
   // try all variable children
-  for (const std::pair<const uint64_t, EagerTrie>& c : et->d_varChildren)
+  const std::map<uint64_t, EagerTrie>& etv = et->d_varChildren;
+  for (const std::pair<const uint64_t, EagerTrie>& c : etv)
   {
     uint64_t vnum = c.first;
     Assert(vnum < d_inst.size());
     if (!d_inst[vnum].isNull() && !d_qstate.areEqual(d_inst[vnum], tc))
     {
-      addToFailExp(&c.second, eti.getOriginal(), failExp, d_inst[vnum], tc);
+      addEqToWatch(&c.second, eti.getOriginal(), failExp, d_inst[vnum], tc);
       continue;
     }
     Node prev = d_inst[vnum];
@@ -407,11 +426,12 @@ void EagerInst::doMatching(const EagerTrie* et,
     // clean up, since global
     d_inst[vnum] = prev;
   }
-  for (const std::pair<const Node, EagerTrie>& c : et->d_groundChildren)
+  const std::map<Node, EagerTrie>& etg = et->d_groundChildren;
+  for (const std::pair<const Node, EagerTrie>& c : etg)
   {
     if (!d_qstate.areEqual(c.first, tc))
     {
-      addToFailExp(&c.second, eti.getOriginal(), failExp, c.first, tc);
+      addEqToWatch(&c.second, eti.getOriginal(), failExp, c.first, tc);
       continue;
     }
     doMatching(&c.second, eti, failExp);
@@ -463,6 +483,11 @@ void EagerInst::doMatching(const EagerTrie* et,
       }
       eti.decrementChild();
     }
+    // TODO: add op watch
+    for (const std::pair<const Node, EagerTrie>& c : etng)
+    {
+      addOpToWatch(et, eti.getOriginal(), failExp, r, c.first);
+    }
   }
   else
   {
@@ -503,12 +528,12 @@ void EagerInst::processInstantiation(const EagerTrie* et,
     }
     for (std::pair<const TNode, std::unordered_set<TNode>>& fw : failWatch)
     {
-      std::map<TNode, std::vector<std::pair<const EagerTrie*, TNode>>>& wmj =
+      std::map<TNode, std::pair<EagerWatchVec, EagerWatchVec>>& wmj =
           failExp[fw.first];
       for (TNode fwb : fw.second)
       {
         ++d_statWatchMtCount;
-        wmj[fwb].emplace_back(et, n);
+        wmj[fwb].first.emplace_back(et, n);
       }
     }
   }
@@ -800,7 +825,7 @@ bool EagerInst::doInstantiation(const Node& pat, TNode n, EagerFailExp& failExp)
   if (!doInstantiation(q, pat, n))
   {
     // dummy mark that the failure was due to entailed pattern
-    failExp[d_null][d_null].emplace_back();
+    failExp[d_null][d_null].first.clear();
     return false;
   }
   return true;
@@ -945,7 +970,7 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
     Assert(vnum < d_inst.size());
     if (!d_inst[vnum].isNull() && !d_qstate.areEqual(d_inst[vnum], tc))
     {
-      addToFailExp(&it->second, eti.getOriginal(), failExp, d_inst[vnum], tc);
+      addEqToWatch(&it->second, eti.getOriginal(), failExp, d_inst[vnum], tc);
       return;
     }
     Node prev = d_inst[vnum];
@@ -961,7 +986,7 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
     Assert(it != pg.end());
     if (!d_qstate.areEqual(pc, tc))
     {
-      addToFailExp(&it->second, eti.getOriginal(), failExp, pc, tc);
+      addEqToWatch(&it->second, eti.getOriginal(), failExp, pc, tc);
       return;
     }
     doMatchingPath(&it->second, eti, etip, failExp);
@@ -982,7 +1007,7 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
   }
 }
 
-void EagerInst::addToFailExp(const EagerTrie* et,
+void EagerInst::addEqToWatch(const EagerTrie* et,
                              TNode t,
                              EagerFailExp& failExp,
                              const Node& a,
@@ -999,12 +1024,22 @@ void EagerInst::addToFailExp(const EagerTrie* et,
   }
   else if (br.isConst() || br < ar)
   {
-    failExp[br][ar].emplace_back(et, t);
+    failExp[br][ar].first.emplace_back(et, t);
     return;
   }
-  failExp[ar][br].emplace_back(et, t);
+  failExp[ar][br].first.emplace_back(et, t);
 }
 
+void EagerInst::addOpToWatch(const EagerTrie* et,
+                  TNode t,
+                  EagerFailExp& failExp,
+                  const Node& a,
+                  const Node& op)
+{
+  TNode ar = d_qstate.getRepresentative(a);
+  failExp[ar][op].second.emplace_back(et, t);
+}
+  
 void EagerInst::addToWatchSet(EagerWatchSet& ews, TNode a, TNode b)
 {
   TNode ar = d_qstate.getRepresentative(a);
@@ -1104,7 +1139,7 @@ void EagerInst::addWatches(EagerFailExp& failExp)
   d_statWatchCount += failExp.size();
   for (const std::pair<
            const TNode,
-           std::map<TNode, std::vector<std::pair<const EagerTrie*, TNode>>>>&
+           std::map<TNode, std::pair<EagerWatchVec, EagerWatchVec>>>&
            f : failExp)
   {
     // if a dummy mark
@@ -1114,16 +1149,24 @@ void EagerInst::addWatches(EagerFailExp& failExp)
     }
     EagerRepInfo* ew = getOrMkRepInfo(f.first, true);
     for (const std::pair<const TNode,
-                         std::vector<std::pair<const EagerTrie*, TNode>>>& ff :
+                         std::pair<EagerWatchVec, EagerWatchVec>>& ff :
          f.second)
     {
-      EagerWatchList* ewl = ew->getOrMkList(ff.first, true);
-      for (const std::pair<const EagerTrie*, TNode>& fmj : ff.second)
+      for (size_t i=0; i<2; i++)
       {
-        Trace("eager-inst-watch")
-            << "-- watch merge " << f.first << " " << ff.first
-            << " to resume matching with " << fmj.second << std::endl;
-        ewl->d_matchJobs.emplace_back(fmj);
+        const EagerWatchVec& ewv = i==0 ? ff.second.first : ff.second.second;
+        if (ewv.empty())
+        {
+          continue;
+        }
+        EagerWatchList* ewl = ew->getOrMkListInternal(ff.first, true, i);
+        for (const std::pair<const EagerTrie*, TNode>& fmj : ewv)
+        {
+          Trace("eager-inst-watch")
+              << "-- watch merge " << f.first << " " << ff.first
+              << " to resume matching with " << fmj.second << std::endl;
+          ewl->d_matchJobs.emplace_back(fmj);
+        }
       }
     }
   }
@@ -1151,11 +1194,12 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     }
     Trace("eager-inst-debug2")
         << "...check watched terms of " << t1 << std::endl;
-    context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>& w =
+    // process eq watch
+    context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>& weq =
         ewi[i]->d_eqWatch;
     for (context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator
-             itw = w.begin();
-         itw != w.end();
+             itw = weq.begin();
+         itw != weq.end();
          ++itw)
     {
       EagerWatchList* ewl = itw->second.get();
@@ -1178,7 +1222,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           TNode rep = d_qstate.getRepresentative(itw->first);
           context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
               ewl->d_matchJobs;
-          EagerWatchList* ewlo = ewi[0]->getOrMkList(rep, true);
+          EagerWatchList* ewlo = ewi[0]->getOrMkListForRep(rep, true);
           context::CDList<std::pair<const EagerTrie*, TNode>>& wmjo =
               ewlo->d_matchJobs;
           for (const std::pair<const EagerTrie*, TNode>& p : wmj)
@@ -1234,7 +1278,44 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       t1 = t2;
       t2 = tmp;
     }
+    else
+    {
+#if 0
+      // carry over the watched ops
+      context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>& wop =
+        ewi[i]->d_opWatch;
+      if (!wop.empty())
+      {
+        // scan the equivalence class 
+        // make the other if not generated, t2 was swapped from t1
+        if (ewi[0] == nullptr)
+        {
+          ewi[0] = getOrMkRepInfo(t2, true);
+        }
+        for (context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator
+                itw = wop.begin();
+            itw != wop.end();
+            ++itw)
+        {
+          Node op = itw->first;
+          EagerWatchList* ewl = itw->second.get();
+          // always carry over op watches
+          context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
+              ewl->d_matchJobs;
+          EagerWatchList* ewlo = ewi[0]->getOrMkListForOp(op, true);
+          context::CDList<std::pair<const EagerTrie*, TNode>>& wmjo =
+              ewlo->d_matchJobs;
+          for (const std::pair<const EagerTrie*, TNode>& p : wmj)
+          {
+            wmjo.push_back(p);
+          }
+        }
+      }
+#endif
+    }
   }
+  // now process op watches
+  
   // do pending lemmas if added
   if (addedInst)
   {

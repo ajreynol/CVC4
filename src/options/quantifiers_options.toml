@@ -1734,12 +1734,19 @@ name   = "Quantifiers"
   help = "Upon appearance in assertion."
 
 [[option]]
-  name       = "eagerInstCd"
-  category   = "expert"
-  long       = "eager-inst-cd"
-  type       = "bool"
-  default    = "true"
-  help       = "handle quantified formulas that are not asserted at top-level in eager instantiation"
+  name       = "eagerInstQuantMode"
+  category   = "regular"
+  long       = "eager-inst-quant=MODE"
+  type       = "EagerInstQuantMode"
+  default    = "ASSERTION"
+  help       = "mode for when to register quantified formulas with eager instantiation"
+  help_mode  = "Modes for when to register quantified formulas with eager instantiation."
+[[option.mode.PREREGISTER]]
+  name = "preregister"
+  help = "Upon preregister."
+[[option.mode.ASSERTION]]
+  name = "assert"
+  help = "Upon appearance in assertion."
 
 [[option]]
   name       = "eagerInstWatchMode"

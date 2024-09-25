@@ -55,8 +55,8 @@ class EagerInst : public QuantifiersModule
   bool needsCheck(Theory::Effort e) override;
   /** Reset round. */
   void reset_round(Theory::Effort e) override;
-  /** Register quantified formula q */
-  void registerQuantifier(Node q) override;
+  /** Preregister quantified formula q */
+  void preRegisterQuantifier(Node q) override;
   /** Assert node. */
   void assertNode(Node q) override;
   /** Check ownership for q */
@@ -79,6 +79,7 @@ class EagerInst : public QuantifiersModule
 
  private:
   void registerQuant(const Node& q);
+  void registerQuantInternal(const Node& q);
   eq::EqualityEngine* d_ee;
   TermDb* d_tdb;
   Node d_null;
@@ -88,7 +89,6 @@ class EagerInst : public QuantifiersModule
   NodeSet d_filteringSingleTriggers;
   size_t d_tmpAddedLemmas;
   bool d_instOutput;
-  // CDEagerTrie d_etrie;
   NodeSet d_ppQuants;
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
@@ -96,6 +96,9 @@ class EagerInst : public QuantifiersModule
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_opInfo;
   context::CDHashMap<Node, std::shared_ptr<EagerPatternInfo>> d_patInfo;
   std::map<Node, EagerMultiPatternInfo> d_multiPatInfo;
+  /** */
+  bool d_quantOnAssert;
+  bool d_quantOnPreregister;
 
   EagerGroundDb d_gdb;
   /** Number of patterns */
@@ -184,11 +187,16 @@ class EagerInst : public QuantifiersModule
    * If the instantiation fails, adds to failExp.
    */
   bool doInstantiation(const Node& q, const Node& pat, const Node& n);
-  void addToFailExp(const EagerTrie* et,
+  void addEqToWatch(const EagerTrie* et,
                     TNode t,
                     EagerFailExp& failExp,
                     const Node& a,
                     const Node& b);
+  void addOpToWatch(const EagerTrie* et,
+                    TNode t,
+                    EagerFailExp& failExp,
+                    const Node& a,
+                    const Node& op);
   void addToWatchSet(EagerWatchSet& ews, TNode a, TNode b);
   void addWatches(EagerFailExp& failExp);
   /** */
