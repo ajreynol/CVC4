@@ -58,14 +58,7 @@ class EagerOpInfo
   /** Add ground term */
   bool addGroundTerm(QuantifiersState& qs, const Node& n);
   /** Get ground terms */
-  const context::CDHashSet<Node>& getGroundTerms() const { return d_rlvTerms; }
-  /** Set active */
-  void setActive(QuantifiersState& qs);
-  /**
-   * These are the set of partially completed multi-trigger matches that are
-   * waiting on new terms for this operator.
-   */
-  //EagerWatchList& getEagerWatchList() { return d_ewl; }
+  const context::CDHashSet<Node>& getGroundTerms(QuantifiersState& qs);
   /** */
   bool isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const;
   /** */
@@ -82,8 +75,6 @@ class EagerOpInfo
   context::CDHashSet<Node> d_rlvTermsWaiting;
   /** */
   context::CDO<bool> d_active;
-  /** TODO: likely remove? */
-  EagerWatchList d_ewl;
   /** */
   CDEagerTrie d_etrie;
 };

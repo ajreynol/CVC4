@@ -58,8 +58,7 @@ EagerOpInfo::EagerOpInfo(context::Context* c,
       d_gtrie(nullptr),
       d_rlvTerms(c),
       d_rlvTermsWaiting(c),
-      d_active(c, false),
-      d_ewl(c),
+      d_active(c, d_gtrie==nullptr),  // initially active if not indexing
       d_etrie(c)
 {
   if (gdb != nullptr)
@@ -71,12 +70,7 @@ EagerOpInfo::EagerOpInfo(context::Context* c,
 
 bool EagerOpInfo::addGroundTerm(QuantifiersState& qs, const Node& n)
 {
-  if (d_gtrie == nullptr)
-  {
-    d_rlvTerms.insert(n);
-    return true;
-  }
-  if (!d_active.get())
+  if (d_active.get())
   {
     // index now
     return addGroundTermInternal(qs, n);
@@ -85,24 +79,41 @@ bool EagerOpInfo::addGroundTerm(QuantifiersState& qs, const Node& n)
   return false;
 }
 
+const context::CDHashSet<Node>& EagerOpInfo::getGroundTerms(QuantifiersState& qs)
+{
+  if (!d_active.get())
+  {
+    // go back and index now
+    for (const Node& nw : d_rlvTermsWaiting)
+    {
+      addGroundTermInternal(qs, nw);
+    }
+    d_active = true;
+  }
+  return d_rlvTerms;
+}
+
 bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
 {
-  Assert(d_gtrie != nullptr);
-  if (d_gtrie->add(qs, d_galloc, n))
+  if (d_gtrie==nullptr)
   {
     d_rlvTerms.insert(n);
     return true;
   }
-  return false;
-}
-
-void EagerOpInfo::setActive(QuantifiersState& qs)
-{
-  Assert(!d_active.get());
-  for (const Node& nw : d_rlvTermsWaiting)
+  std::vector<TNode> args;
+  for (const Node& nc : n)
   {
-    addGroundTerm(qs, nw);
+    // the operator of terms matters currently
+    if (nc.getNumChildren()==0)
+    {
+      args.emplace_back(qs.getRepresentative(nc));
+    }
+    else
+    {
+      args.emplace_back(nc);
+    }
   }
+  return d_gtrie->add(qs, d_galloc, args, n);
 }
 
 bool EagerOpInfo::isRelevant(QuantifiersState& qs,

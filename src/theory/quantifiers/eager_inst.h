@@ -109,17 +109,17 @@ class EagerInst : public QuantifiersModule
   /** Number of single patterns */
   IntStat d_statMultiPat;
   /** Number of calls to match */
-  IntStat d_statMatchCall;
-  /** Number of calls to match */
-  IntStat d_statMatchContinueCall;
-  /** Number of calls to match */
   IntStat d_statWatchCount;
+  /** Number of calls to match */
+  IntStat d_statWatchMtCount;
+  /** Number of calls to match */
+  IntStat d_statMatchCall;
   /** Number of calls to match */
   IntStat d_statResumeMergeMatchCall;
   /** Number of calls to match */
-  IntStat d_statResumeAssertMatchCall;
-  /** Number of calls to match */
   IntStat d_statCdPatMatchCall;
+  /** Number of calls to match */
+  IntStat d_statMtJoinCount;
   /** Static registers for instantiations */
   std::vector<TNode> d_inst;
   /** */
@@ -186,8 +186,6 @@ class EagerInst : public QuantifiersModule
    * If the instantiation fails, adds to failExp.
    */
   bool doInstantiation(const Node& q, const Node& pat, const Node& n);
-  /** */
-  bool isRelevantSuffix(const Node& pat, const std::vector<TNode>& n);
   void addToFailExp(const EagerTrie* et,
                     TNode t,
                     EagerFailExp& failExp,
@@ -195,8 +193,6 @@ class EagerInst : public QuantifiersModule
                     const Node& b);
   void addToWatchSet(EagerWatchSet& ews, TNode a, TNode b);
   void addWatches(EagerFailExp& failExp);
-  bool isRelevantTerm(const Node& t);
-  bool isRelevant(const Node& op, const std::vector<TNode>& args);
   /** */
   Node getPatternFor(const Node& pat, const Node& q);
 };
