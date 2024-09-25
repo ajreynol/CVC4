@@ -159,8 +159,8 @@ int runCvc5(int argc, char* argv[], std::unique_ptr<cvc5::Solver>& solver)
   }
 
   // if proofs or plugins are enabled, we don't use fresh binders
-  if (solver->getOption("produce-proofs") == "true" ||
-    solver->getOption("plugins") == "true")
+  if (solver->getOption("produce-proofs") == "true"
+      || solver->getOption("plugins") == "true")
   {
     pExecutor->setOptionInternal("fresh-binders", "false");
   }
