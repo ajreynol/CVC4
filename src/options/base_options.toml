@@ -346,6 +346,14 @@ name   = "Base"
   help       = "do not allow setting any option that is not common or regular"
 
 [[option]]
+  name       = "plugins"
+  category   = "expert"
+  long       = "plugins"
+  type       = "bool"
+  default    = "false"
+  help       = "allow for user plugins"
+
+[[option]]
   name       = "pluginNotifySatClauseInSolve"
   category   = "expert"
   long       = "plugin-notify-sat-clause-in-solve"

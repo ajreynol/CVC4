@@ -158,6 +158,13 @@ int runCvc5(int argc, char* argv[], std::unique_ptr<cvc5::Solver>& solver)
                                  solver->getOption("input-language"));
   }
 
+  // if proofs or plugins are enabled, we don't use fresh binders
+  if (solver->getOption("produce-proofs") == "true" ||
+    solver->getOption("plugins") == "true")
+  {
+    pExecutor->setOptionInternal("fresh-binders", "false");
+  }
+
   // Determine which messages to show based on smtcomp_mode and verbosity
   if(Configuration::isMuzzledBuild()) {
     TraceChannel.setStream(&cvc5::internal::null_os);
