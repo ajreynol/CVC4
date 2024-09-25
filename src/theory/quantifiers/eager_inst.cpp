@@ -72,10 +72,10 @@ EagerInst::EagerInst(Env& env,
 {
   d_tmpAddedLemmas = 0;
   d_instOutput = isOutputOn(OutputTag::INST_STRATEGY);
-  
+
   options::EagerInstQuantMode eqm = options().quantifiers.eagerInstQuantMode;
-  d_quantOnAssert = (eqm==options::EagerInstQuantMode::ASSERTION);
-  d_quantOnPreregister = (eqm==options::EagerInstQuantMode::PREREGISTER);
+  d_quantOnAssert = (eqm == options::EagerInstQuantMode::ASSERTION);
+  d_quantOnPreregister = (eqm == options::EagerInstQuantMode::PREREGISTER);
 }
 
 EagerInst::~EagerInst() {}
@@ -100,7 +100,7 @@ bool EagerInst::needsCheck(Theory::Effort e)
 
 void EagerInst::reset_round(Theory::Effort e) {}
 
-void EagerInst::preRegisterQuantifier(Node q) 
+void EagerInst::preRegisterQuantifier(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
   if (d_quantOnPreregister)
@@ -1031,15 +1031,15 @@ void EagerInst::addEqToWatch(const EagerTrie* et,
 }
 
 void EagerInst::addOpToWatch(const EagerTrie* et,
-                  TNode t,
-                  EagerFailExp& failExp,
-                  const Node& a,
-                  const Node& op)
+                             TNode t,
+                             EagerFailExp& failExp,
+                             const Node& a,
+                             const Node& op)
 {
   TNode ar = d_qstate.getRepresentative(a);
   failExp[ar][op].second.emplace_back(et, t);
 }
-  
+
 void EagerInst::addToWatchSet(EagerWatchSet& ews, TNode a, TNode b)
 {
   TNode ar = d_qstate.getRepresentative(a);
@@ -1139,8 +1139,8 @@ void EagerInst::addWatches(EagerFailExp& failExp)
   d_statWatchCount += failExp.size();
   for (const std::pair<
            const TNode,
-           std::map<TNode, std::pair<EagerWatchVec, EagerWatchVec>>>&
-           f : failExp)
+           std::map<TNode, std::pair<EagerWatchVec, EagerWatchVec>>>& f :
+       failExp)
   {
     // if a dummy mark
     if (f.first.isNull())
@@ -1148,13 +1148,12 @@ void EagerInst::addWatches(EagerFailExp& failExp)
       continue;
     }
     EagerRepInfo* ew = getOrMkRepInfo(f.first, true);
-    for (const std::pair<const TNode,
-                         std::pair<EagerWatchVec, EagerWatchVec>>& ff :
-         f.second)
+    for (const std::pair<const TNode, std::pair<EagerWatchVec, EagerWatchVec>>&
+             ff : f.second)
     {
-      for (size_t i=0; i<2; i++)
+      for (size_t i = 0; i < 2; i++)
       {
-        const EagerWatchVec& ewv = i==0 ? ff.second.first : ff.second.second;
+        const EagerWatchVec& ewv = i == 0 ? ff.second.first : ff.second.second;
         if (ewv.empty())
         {
           continue;
@@ -1315,7 +1314,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     }
   }
   // now process op watches
-  
+
   // do pending lemmas if added
   if (addedInst)
   {

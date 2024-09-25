@@ -30,7 +30,8 @@ namespace quantifiers {
 using EagerWatchVec = std::vector<std::pair<const EagerTrie*, TNode>>;
 using EagerWatchSet = std::map<TNode, std::unordered_set<TNode>>;
 using EagerGtMVector = std::vector<std::vector<EagerGroundTrie*>>;
-using EagerFailExp = std::map<TNode, std::map<TNode, std::pair<EagerWatchVec, EagerWatchVec>>>;
+using EagerFailExp =
+    std::map<TNode, std::map<TNode, std::pair<EagerWatchVec, EagerWatchVec>>>;
 
 class EagerWatchList
 {
@@ -44,7 +45,10 @@ class EagerWatchList
 class EagerRepInfo
 {
  public:
-  EagerRepInfo(context::Context* c) : d_eqWatch(c), d_ops(c), d_opWatch(c), d_ctx(c) {}
+  EagerRepInfo(context::Context* c)
+      : d_eqWatch(c), d_ops(c), d_opWatch(c), d_ctx(c)
+  {
+  }
   EagerWatchList* getOrMkListForRep(const Node& r, bool doMk);
   EagerWatchList* getOrMkListForOp(const Node& op, bool doMk);
   EagerWatchList* getOrMkListInternal(const Node& r, bool doMk, size_t i);
@@ -57,6 +61,7 @@ class EagerRepInfo
   context::CDHashSet<Node> d_ops;
   /** */
   context::CDHashMap<Node, std::shared_ptr<EagerWatchList>> d_opWatch;
+
  private:
   context::Context* d_ctx;
 };

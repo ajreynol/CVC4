@@ -41,10 +41,13 @@ EagerWatchList* EagerRepInfo::getOrMkListForRep(const Node& r, bool doMk)
 EagerWatchList* EagerRepInfo::getOrMkListForOp(const Node& r, bool doMk)
 {
   return getOrMkListInternal(r, doMk, 1);
-}  
-EagerWatchList* EagerRepInfo::getOrMkListInternal(const Node& r, bool doMk, size_t i)
+}
+EagerWatchList* EagerRepInfo::getOrMkListInternal(const Node& r,
+                                                  bool doMk,
+                                                  size_t i)
 {
-  context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>& wl = i==0 ? d_eqWatch : d_opWatch;
+  context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>& wl =
+      i == 0 ? d_eqWatch : d_opWatch;
   context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator it =
       wl.find(r);
   if (it != wl.end())
