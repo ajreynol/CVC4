@@ -442,66 +442,66 @@ void EagerInst::doMatching(const EagerTrie* et,
   {
     return;
   }
-  Node op = d_tdb->getMatchOperator(tc);
-  if (op.isNull())
+  if (options().quantifiers.eagerInstSimple)
   {
-    // don't bother if we are in simple mode
-    if (options().quantifiers.eagerInstSimple)
+    // if simple, we just match this term
+    Node op = d_tdb->getMatchOperator(tc);
+    if (!op.isNull())
     {
-      return;
-    }
-    std::map<Node, std::vector<Node>> terms;
-    // extract terms per operator
-    Assert(d_ee->hasTerm(tc));
-    TNode r = d_ee->getRepresentative(tc);
-    eq::EqClassIterator eqc_i = eq::EqClassIterator(r, d_ee);
-    while (!eqc_i.isFinished())
-    {
-      Node fapp = (*eqc_i);
-      Node fop = d_tdb->getMatchOperator(fapp);
-      if (etng.find(fop) != etng.end())
+      std::map<Node, EagerTrie>::const_iterator it = etng.find(op);
+      if (it != etng.end())
       {
-        terms[fop].emplace_back(fapp);
+        // push
+        eti.incrementChild();
+        eti.push(tc);
+        doMatching(&it->second, eti, failExp);
+        eti.pop();
+        eti.decrementChild();
       }
-      ++eqc_i;
     }
-    if (!terms.empty())
-    {
-      std::map<Node, EagerTrie>::const_iterator itc;
-      eti.incrementChild();
-      for (const std::pair<const Node, std::vector<Node>>& tp : terms)
-      {
-        itc = etng.find(tp.first);
-        Assert(itc != etng.end());
-        const EagerTrie* etc = &itc->second;
-        for (const Node& tt : tp.second)
-        {
-          eti.push(tt);
-          doMatching(etc, eti, failExp);
-          eti.pop();
-        }
-      }
-      eti.decrementChild();
-    }
-    // TODO: add op watch
-    for (const std::pair<const Node, EagerTrie>& c : etng)
-    {
-      addOpToWatch(et, eti.getOriginal(), failExp, r, c.first);
-    }
+    return;
   }
-  else
+  // otherwise we scan the equivalence class
+  std::map<Node, std::vector<Node>> terms;
+  // extract terms per operator
+  Assert(d_ee->hasTerm(tc));
+  TNode r = d_ee->getRepresentative(tc);
+  eq::EqClassIterator eqc_i = eq::EqClassIterator(r, d_ee);
+  while (!eqc_i.isFinished())
   {
-    std::map<Node, EagerTrie>::const_iterator it = etng.find(op);
-    if (it != etng.end())
+    Node fapp = (*eqc_i);
+    Node fop = d_tdb->getMatchOperator(fapp);
+    if (etng.find(fop) != etng.end())
     {
-      // push
-      eti.incrementChild();
-      eti.push(tc);
-      doMatching(&it->second, eti, failExp);
-      eti.pop();
-      eti.decrementChild();
+      terms[fop].emplace_back(fapp);
     }
+    ++eqc_i;
   }
+  if (!terms.empty())
+  {
+    std::map<Node, EagerTrie>::const_iterator itc;
+    eti.incrementChild();
+    for (const std::pair<const Node, std::vector<Node>>& tp : terms)
+    {
+      itc = etng.find(tp.first);
+      Assert(itc != etng.end());
+      const EagerTrie* etc = &itc->second;
+      for (const Node& tt : tp.second)
+      {
+        eti.push(tt);
+        doMatching(etc, eti, failExp);
+        eti.pop();
+      }
+    }
+    eti.decrementChild();
+  }
+  // TODO: add op watch
+  /*
+  for (const std::pair<const Node, EagerTrie>& c : etng)
+  {
+    addOpToWatch(et, eti.getOriginal(), failExp, r, c.first);
+  }
+  */
 }
 
 void EagerInst::processInstantiation(const EagerTrie* et,
@@ -568,6 +568,8 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
     }
     // otherwise already added, we process again below
     Trace("eager-inst-mt") << "...already added" << std::endl;
+    // TODO: must ensure the instantiation agrees with the path for what
+    // we added here, e.g. by modifying d_inst within contains above.
   }
   else
   {
@@ -821,7 +823,7 @@ bool EagerInst::doInstantiation(const Node& pat, TNode n, EagerFailExp& failExp)
   Trace("eager-inst-inst") << "Instantiate based on " << pat << std::endl;
   Node q = TermUtil::getInstConstAttr(pat);
   Assert(!q.isNull());
-  Assert(q[0].getNumChildren() >= d_inst.size());
+  Assert(q[0].getNumChildren() <= d_inst.size());
   if (!doInstantiation(q, pat, n))
   {
     // dummy mark that the failure was due to entailed pattern
@@ -834,7 +836,7 @@ bool EagerInst::doInstantiation(const Node& pat, TNode n, EagerFailExp& failExp)
 bool EagerInst::doInstantiation(const Node& q, const Node& pat, const Node& n)
 {
   Assert(!q.isNull());
-  Assert(q[0].getNumChildren() >= d_inst.size());
+  Assert(q[0].getNumChildren() <= d_inst.size());
   std::pair<Node, Node> key(n, pat);
   if (!n.isNull())
   {
@@ -844,7 +846,6 @@ bool EagerInst::doInstantiation(const Node& q, const Node& pat, const Node& n)
       return true;
     }
   }
-  // TODO: context dependent instantiation
   // must resize now
   std::vector<Node> instq(d_inst.begin(),
                           d_inst.begin() + q[0].getNumChildren());
@@ -978,6 +979,7 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
     doMatchingPath(&it->second, eti, etip, failExp);
     // clean up, since global
     d_inst[vnum] = prev;
+    return;
   }
   else if (!TermUtil::hasInstConstAttr(pc))
   {
@@ -990,21 +992,54 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
       return;
     }
     doMatchingPath(&it->second, eti, etip, failExp);
+    return;
   }
-  else
+  etip.push(pc);
+  const Node& op = d_tdb->getMatchOperator(pc);
+  if (options().quantifiers.eagerInstSimple)
   {
-    const Node& op = d_tdb->getMatchOperator(pc);
-    if (d_tdb->getMatchOperator(tc) != op)
+    // if we are simple, we just try this term only
+    if (d_tdb->getMatchOperator(tc) == op)
     {
-      return;
+      eti.push(tc);
+      const std::map<Node, EagerTrie>& png = et->d_ngroundChildren;
+      std::map<Node, EagerTrie>::const_iterator it = png.find(op);
+      Assert(it != png.end());
+      doMatchingPath(&it->second, eti, etip, failExp);
     }
-    eti.push(tc);
-    etip.push(pc);
+    return;
+  }
+  return;
+  // otherwise we check the entire equivalence class
+  std::vector<Node> terms;
+  // extract terms per operator
+  Assert(d_ee->hasTerm(tc));
+  TNode r = d_ee->getRepresentative(tc);
+  eq::EqClassIterator eqc_i = eq::EqClassIterator(r, d_ee);
+  while (!eqc_i.isFinished())
+  {
+    Node fapp = (*eqc_i);
+    Node fop = d_tdb->getMatchOperator(fapp);
+    if (fop==op)
+    {
+      terms.emplace_back(fapp);
+    }
+    ++eqc_i;
+  }
+  if (!terms.empty())
+  {
     const std::map<Node, EagerTrie>& png = et->d_ngroundChildren;
     std::map<Node, EagerTrie>::const_iterator it = png.find(op);
     Assert(it != png.end());
-    doMatchingPath(&it->second, eti, etip, failExp);
+    etip.push(pc);
+    for (const Node& tt : terms)
+    {
+      eti.push(tt);
+      doMatching(&it->second, eti, failExp);
+      eti.pop();
+    }
   }
+
 }
 
 void EagerInst::addEqToWatch(const EagerTrie* et,
