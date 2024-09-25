@@ -63,6 +63,7 @@ class EagerOpInfo
   bool isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const;
   /** */
   CDEagerTrie* getPatternTrie() { return &d_etrie; }
+
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
@@ -79,10 +80,9 @@ class EagerOpInfo
   CDEagerTrie d_etrie;
 };
 
-using EagerFailExp = std::map<
-    TNode,
+using EagerFailExp =
     std::map<TNode,
-             std::vector<std::pair<const EagerTrie*, TNode>>>>;
+             std::map<TNode, std::vector<std::pair<const EagerTrie*, TNode>>>>;
 using EagerWatchSet = std::map<TNode, std::unordered_set<TNode>>;
 using EagerGtMVector = std::vector<std::vector<EagerGroundTrie*>>;
 

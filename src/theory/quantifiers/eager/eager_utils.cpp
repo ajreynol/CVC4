@@ -58,7 +58,7 @@ EagerOpInfo::EagerOpInfo(context::Context* c,
       d_gtrie(nullptr),
       d_rlvTerms(c),
       d_rlvTermsWaiting(c),
-      d_active(c, d_gtrie==nullptr),  // initially active if not indexing
+      d_active(c, d_gtrie == nullptr),  // initially active if not indexing
       d_etrie(c)
 {
   if (gdb != nullptr)
@@ -79,7 +79,8 @@ bool EagerOpInfo::addGroundTerm(QuantifiersState& qs, const Node& n)
   return false;
 }
 
-const context::CDHashSet<Node>& EagerOpInfo::getGroundTerms(QuantifiersState& qs)
+const context::CDHashSet<Node>& EagerOpInfo::getGroundTerms(
+    QuantifiersState& qs)
 {
   if (!d_active.get())
   {
@@ -95,7 +96,7 @@ const context::CDHashSet<Node>& EagerOpInfo::getGroundTerms(QuantifiersState& qs
 
 bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
 {
-  if (d_gtrie==nullptr)
+  if (d_gtrie == nullptr)
   {
     d_rlvTerms.insert(n);
     return true;
@@ -104,7 +105,7 @@ bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
   for (const Node& nc : n)
   {
     // the operator of terms matters currently
-    if (nc.getNumChildren()==0)
+    if (nc.getNumChildren() == 0)
     {
       args.emplace_back(qs.getRepresentative(nc));
     }

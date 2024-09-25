@@ -41,7 +41,7 @@ EagerInst::EagerInst(Env& env,
       d_ownedQuants(context()),
       d_patRegister(userContext()),
       d_filteringSingleTriggers(userContext()),
-      //d_etrie(context()),
+      // d_etrie(context()),
       d_ppQuants(userContext()),
       d_fullInstTerms(userContext()),
       d_cdOps(context()),
@@ -171,7 +171,7 @@ void EagerInst::registerQuant(const Node& q)
   bool hasPat = false;
   // ensure we have enough in the instantiation vector
   size_t nvars = q[0].getNumChildren();
-  if (d_inst.size()<nvars)
+  if (d_inst.size() < nvars)
   {
     d_inst.resize(nvars);
   }
@@ -190,7 +190,7 @@ void EagerInst::registerQuant(const Node& q)
     }
     // TODO: statically analyze if this would lead to matching loops
     bool success = true;
-    for (size_t i=0, npats=upat.getNumChildren(); i<npats; i++)
+    for (size_t i = 0, npats = upat.getNumChildren(); i < npats; i++)
     {
       TNode pc = upat[i];
       TNode op = d_tdb->getMatchOperator(pc);
@@ -204,7 +204,7 @@ void EagerInst::registerQuant(const Node& q)
         owner = false;
         d_patRegister[std::pair<Node, Node>(pat, q)] = d_null;
         // TODO: cleanup successful patterns????
-        //for (size_t j=0; j<i; j++)
+        // for (size_t j=0; j<i; j++)
         success = false;
         break;
       }
@@ -395,7 +395,7 @@ void EagerInst::doMatching(const EagerTrie* et,
   for (const std::pair<const uint64_t, EagerTrie>& c : et->d_varChildren)
   {
     uint64_t vnum = c.first;
-    Assert (vnum<d_inst.size());
+    Assert(vnum < d_inst.size());
     if (!d_inst[vnum].isNull() && !d_qstate.areEqual(d_inst[vnum], tc))
     {
       addToFailExp(&c.second, eti.getOriginal(), failExp, d_inst[vnum], tc);
@@ -488,7 +488,7 @@ void EagerInst::processInstantiation(const EagerTrie* et,
   for (const Node& pat : pats)
   {
     EagerPatternInfo* epi = getOrMkPatternInfo(pat, false);
-    if (epi==nullptr)
+    if (epi == nullptr)
     {
       // single trigger, ready for instantiation
       doInstantiation(pat, n, failExp);
@@ -503,8 +503,8 @@ void EagerInst::processInstantiation(const EagerTrie* et,
     }
     for (std::pair<const TNode, std::unordered_set<TNode>>& fw : failWatch)
     {
-      std::map<TNode,
-             std::vector<std::pair<const EagerTrie*, TNode>>>& wmj = failExp[fw.first];
+      std::map<TNode, std::vector<std::pair<const EagerTrie*, TNode>>>& wmj =
+          failExp[fw.first];
       for (TNode fwb : fw.second)
       {
         ++d_statWatchMtCount;
@@ -520,11 +520,13 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
                                                  EagerWatchSet& failWatch)
 {
   ++d_statMtJoinCount;
-  Trace("eager-inst-mt") << "Multi-trigger instantiation trigger by matching " << n << " with " << pat << "[" << index << "]" << std::endl;
+  Trace("eager-inst-mt") << "Multi-trigger instantiation trigger by matching "
+                         << n << " with " << pat << "[" << index << "]"
+                         << std::endl;
   Assert(d_multiPatInfo.find(pat) != d_multiPatInfo.end());
   EagerMultiPatternInfo& empi = d_multiPatInfo[pat];
   std::vector<EagerPatternInfo*>& pvec = empi.d_epis;
-  Assert(index<pvec.size());
+  Assert(index < pvec.size());
   EagerPatternInfo* epi = pvec[index];
   EagerGroundTrie* egt = epi->getPartialMatches();
   const Node& q = epi->getQuantFormula();
@@ -559,13 +561,12 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
   Trace("eager-inst-mt") << "...finished" << std::endl;
 }
 
-void EagerInst::processMultiTriggerInstantiations(
-    const Node& q,
-    const Node& pat,
-    size_t varIndex,
-    size_t basePatIndex,
-    EagerGtMVector& pats,
-    EagerWatchSet& failWatch)
+void EagerInst::processMultiTriggerInstantiations(const Node& q,
+                                                  const Node& pat,
+                                                  size_t varIndex,
+                                                  size_t basePatIndex,
+                                                  EagerGtMVector& pats,
+                                                  EagerWatchSet& failWatch)
 {
   // invariant: each index of pats should be non-empty
   if (varIndex == q[0].getNumChildren())
@@ -591,7 +592,8 @@ void EagerInst::processMultiTriggerInstantiations(
   // if the variable was set by the base pattern, we direct the continuing
   if (!d_inst[varIndex].isNull())
   {
-    Trace("eager-inst-mt") << "* join #" << varIndex << " " << d_inst[varIndex] << std::endl;
+    Trace("eager-inst-mt") << "* join #" << varIndex << " " << d_inst[varIndex]
+                           << std::endl;
     TNode r = d_qstate.getRepresentative(d_inst[varIndex]);
     std::map<size_t, std::unordered_set<TNode>> watchFails;
     size_t minWatchIndex = 0;
@@ -606,8 +608,9 @@ void EagerInst::processMultiTriggerInstantiations(
       }
       std::vector<EagerGroundTrie*>& nps = nextPats[i];
       std::vector<EagerGroundTrie*>& p = pats[i];
-      Assert (!p.empty());
-      Trace("eager-inst-mt") << "Check " << p.size() << " paths for pattern [" << i << "]..." << std::endl;
+      Assert(!p.empty());
+      Trace("eager-inst-mt") << "Check " << p.size() << " paths for pattern ["
+                             << i << "]..." << std::endl;
       // get the trie(s) we are traversing for this pattern
       std::unordered_set<TNode>& wf = watchFails[i];
       for (EagerGroundTrie* egt : p)
@@ -619,7 +622,8 @@ void EagerInst::processMultiTriggerInstantiations(
           // at varIndex 0. Here, everything fails, nothing to watch for (we
           // are waiting to get the first match for this component pattern).
           Assert(varIndex == 0);
-          Trace("eager-inst-mt") << "...failed (empty) #" << i << " " << pat[i] << std::endl;
+          Trace("eager-inst-mt")
+              << "...failed (empty) #" << i << " " << pat[i] << std::endl;
           return;
         }
         it = cmap.begin();
@@ -629,7 +633,8 @@ void EagerInst::processMultiTriggerInstantiations(
           nps.emplace_back(it->second);
           continue;
         }
-        Trace("eager-inst-mt-debug") << "...has children " << cmap.size() << std::endl;
+        Trace("eager-inst-mt-debug")
+            << "...has children " << cmap.size() << std::endl;
         // otherwise, continue with all that are equal
         for (it = cmap.begin(); it != cmap.end(); ++it)
         {
@@ -642,7 +647,8 @@ void EagerInst::processMultiTriggerInstantiations(
           }
           else if (!rr.isConst() || !r.isConst())
           {
-            Trace("eager-inst-mt-debug") << "not equal: " << it->first << " " << r << std::endl;
+            Trace("eager-inst-mt-debug")
+                << "not equal: " << it->first << " " << r << std::endl;
             // those that are not equal are a potential watch
             wf.insert(rr);
           }
@@ -651,7 +657,8 @@ void EagerInst::processMultiTriggerInstantiations(
       // if nps is empty, we cannot continue
       if (nps.empty())
       {
-        Trace("eager-inst-mt") << "...failed #" << i << " " << pat[i] << std::endl;
+        Trace("eager-inst-mt")
+            << "...failed #" << i << " " << pat[i] << std::endl;
         allNonEmpty = false;
         // we continue to continue, since we want to find a minimal watch set?
       }
@@ -677,7 +684,7 @@ void EagerInst::processMultiTriggerInstantiations(
     return;
   }
   // if null, we consider all possibilities of what to set d_inst[varIndex] to.
-  
+
   Trace("eager-inst-mt") << "* look for values #" << varIndex << std::endl;
   // Mapping representatives to the vector we would pass to pats on the next
   // call to this method.
@@ -706,7 +713,8 @@ void EagerInst::processMultiTriggerInstantiations(
         // at varIndex 0. Here, everything fails, nothing to watch for (we
         // are waiting to get the first match for this component pattern).
         Assert(varIndex == 0);
-        Trace("eager-inst-mt") << "...failed (empty) #" << i << " " << pat[i] << std::endl;
+        Trace("eager-inst-mt")
+            << "...failed (empty) #" << i << " " << pat[i] << std::endl;
         return;
       }
       it = cmap.begin();
@@ -724,7 +732,8 @@ void EagerInst::processMultiTriggerInstantiations(
         if (firstTime)
         {
           // if first time, we populate nextPatRep
-          iret = nextPatRep.insert(std::pair<TNode, EagerGtMVector>(rr, EagerGtMVector()));
+          iret = nextPatRep.insert(
+              std::pair<TNode, EagerGtMVector>(rr, EagerGtMVector()));
           if (iret.second)
           {
             iret.first->second.resize(npats);
@@ -759,7 +768,8 @@ void EagerInst::processMultiTriggerInstantiations(
         std::vector<EagerGroundTrie*>& wcvec = nextPats[i];
         if (wcvec.empty())
         {
-          Trace("eager-inst-mt") << "...failed #" << i << " " << pat[i] << std::endl;
+          Trace("eager-inst-mt")
+              << "...failed #" << i << " " << pat[i] << std::endl;
           allNonEmpty = false;
           break;
         }
@@ -770,7 +780,7 @@ void EagerInst::processMultiTriggerInstantiations(
     // if all non-empty, this this value
     if (allNonEmpty)
     {
-      Assert (repUse.find(npr.first)!=repUse.end());
+      Assert(repUse.find(npr.first) != repUse.end());
       d_inst[varIndex] = repUse[npr.first];
       processMultiTriggerInstantiations(
           q, pat, varIndex + 1, basePatIndex, evec, failWatch);
@@ -781,9 +791,7 @@ void EagerInst::processMultiTriggerInstantiations(
   d_inst[varIndex] = d_null;
 }
 
-bool EagerInst::doInstantiation(const Node& pat,
-                                TNode n,
-                                EagerFailExp& failExp)
+bool EagerInst::doInstantiation(const Node& pat, TNode n, EagerFailExp& failExp)
 {
   Trace("eager-inst-inst") << "Instantiate based on " << pat << std::endl;
   Node q = TermUtil::getInstConstAttr(pat);
@@ -866,7 +874,7 @@ void EagerInst::resumeMatching(const EagerTrie* pat,
   {
     const std::map<uint64_t, EagerTrie>& pv = pat->d_varChildren;
     uint64_t vnum = TermUtil::getInstVarNum(pc);
-    Assert (vnum<d_inst.size());
+    Assert(vnum < d_inst.size());
     Node prev = d_inst[vnum];
     d_inst[vnum] = tc;
     std::map<uint64_t, EagerTrie>::const_iterator it = pv.find(vnum);
@@ -934,7 +942,7 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
     const std::map<uint64_t, EagerTrie>& pv = et->d_varChildren;
     std::map<uint64_t, EagerTrie>::const_iterator it = pv.find(vnum);
     Assert(it != pv.end());
-    Assert (vnum<d_inst.size());
+    Assert(vnum < d_inst.size());
     if (!d_inst[vnum].isNull() && !d_qstate.areEqual(d_inst[vnum], tc))
     {
       addToFailExp(&it->second, eti.getOriginal(), failExp, d_inst[vnum], tc);
@@ -1051,8 +1059,7 @@ EagerRepInfo* EagerInst::getOrMkRepInfo(const Node& r, bool doMk)
   {
     return nullptr;
   }
-  std::shared_ptr<EagerRepInfo> ewi =
-      std::make_shared<EagerRepInfo>(context());
+  std::shared_ptr<EagerRepInfo> ewi = std::make_shared<EagerRepInfo>(context());
   d_repWatch.insert(r, ewi);
   return ewi.get();
 }
@@ -1095,11 +1102,10 @@ void EagerInst::addWatches(EagerFailExp& failExp)
     return;
   }
   d_statWatchCount += failExp.size();
-  for (const std::pair<const TNode,
-                       std::map<TNode,
-                                std::vector<std::pair<const EagerTrie*,
-                                                      TNode>>>>& f :
-       failExp)
+  for (const std::pair<
+           const TNode,
+           std::map<TNode, std::vector<std::pair<const EagerTrie*, TNode>>>>&
+           f : failExp)
   {
     // if a dummy mark
     if (f.first.isNull())
@@ -1107,14 +1113,12 @@ void EagerInst::addWatches(EagerFailExp& failExp)
       continue;
     }
     EagerRepInfo* ew = getOrMkRepInfo(f.first, true);
-    for (const std::pair<
-             const TNode,
-             std::vector<std::pair<const EagerTrie*, TNode>>>& ff :
+    for (const std::pair<const TNode,
+                         std::vector<std::pair<const EagerTrie*, TNode>>>& ff :
          f.second)
     {
       EagerWatchList* ewl = ew->getOrMkList(ff.first, true);
-      for (const std::pair<const EagerTrie*, TNode>& fmj :
-           ff.second)
+      for (const std::pair<const EagerTrie*, TNode>& fmj : ff.second)
       {
         Trace("eager-inst-watch")
             << "-- watch merge " << f.first << " " << ff.first
@@ -1175,8 +1179,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
               ewl->d_matchJobs;
           EagerWatchList* ewlo = ewi[0]->getOrMkList(rep, true);
-          context::CDList<std::pair<const EagerTrie*, TNode>>&
-              wmjo = ewlo->d_matchJobs;
+          context::CDList<std::pair<const EagerTrie*, TNode>>& wmjo =
+              ewlo->d_matchJobs;
           for (const std::pair<const EagerTrie*, TNode>& p : wmj)
           {
             wmjo.push_back(p);
@@ -1201,9 +1205,9 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         const Node& pat = j.first->d_pats[0];
         Assert(!pat.isNull());
         TNode patOp = d_tdb->getMatchOperator(pat);
-        Assert (!patOp.isNull());
+        Assert(!patOp.isNull());
         EagerTrie* root = getCurrentTrie(patOp);
-        if (root==nullptr)
+        if (root == nullptr)
         {
           continue;
         }

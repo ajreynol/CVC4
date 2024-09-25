@@ -18,8 +18,8 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_TRIE_H
 #define CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_TRIE_H
 
-#include "expr/node.h"
 #include "context/cdlist.h"
+#include "expr/node.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -57,10 +57,7 @@ class EagerTermIterator
     const std::pair<TNode, size_t>& cur = d_stack.back();
     return cur.second == cur.first.getNumChildren();
   }
-  void push(TNode t)
-  {
-    d_stack.emplace_back(t, 0);
-  }
+  void push(TNode t) { d_stack.emplace_back(t, 0); }
   bool canPop() const { return d_stack.size() > 1; }
   bool pop()
   {
@@ -71,6 +68,7 @@ class EagerTermIterator
     d_stack.pop_back();
     return true;
   }
+
  private:
   TNode d_orig;
   std::vector<std::pair<TNode, size_t>> d_stack;

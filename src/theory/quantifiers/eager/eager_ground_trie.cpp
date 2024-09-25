@@ -47,7 +47,7 @@ bool EagerGroundTrie::add(QuantifiersState& qs,
   {
     nargs = args.size();
   }
-  Assert (nargs<=args.size());
+  Assert(nargs <= args.size());
   for (size_t i = 0; i < nargs; i++)
   {
     TNode a = args[i];

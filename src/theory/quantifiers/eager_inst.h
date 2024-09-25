@@ -88,7 +88,7 @@ class EagerInst : public QuantifiersModule
   NodeSet d_filteringSingleTriggers;
   size_t d_tmpAddedLemmas;
   bool d_instOutput;
-  //CDEagerTrie d_etrie;
+  // CDEagerTrie d_etrie;
   NodeSet d_ppQuants;
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
@@ -176,9 +176,7 @@ class EagerInst : public QuantifiersModule
    * Assumes d_inst is ready, instantiate with the patterns in et.
    * TODO: remove this variant
    */
-  bool doInstantiation(const Node& pat,
-                       TNode n,
-                       EagerFailExp& failExp);
+  bool doInstantiation(const Node& pat, TNode n, EagerFailExp& failExp);
   /**
    * Assumes d_inst is ready, instantiate q with d_inst.
    * The pattern and term matched (pat and n) are checked and
