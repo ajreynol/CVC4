@@ -36,10 +36,10 @@ class EagerWatchList
   context::CDList<std::pair<const EagerTrie*, TNode>> d_matchJobs;
 };
 
-class EagerWatchInfo
+class EagerRepInfo
 {
  public:
-  EagerWatchInfo(context::Context* c) : d_eqWatch(c), d_ctx(c) {}
+  EagerRepInfo(context::Context* c) : d_eqWatch(c), d_ctx(c) {}
   EagerWatchList* getOrMkList(const Node& r, bool doMk);
   /**
    * Mapping from terms in the above list to the term we are waiting the

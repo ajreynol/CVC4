@@ -92,7 +92,7 @@ class EagerInst : public QuantifiersModule
   NodeSet d_ppQuants;
   NodeSet d_fullInstTerms;
   NodeSet d_cdOps;
-  context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>> d_repWatch;
+  context::CDHashMap<Node, std::shared_ptr<EagerRepInfo>> d_repWatch;
   context::CDHashMap<Node, std::shared_ptr<EagerOpInfo>> d_opInfo;
   context::CDHashMap<Node, std::shared_ptr<EagerPatternInfo>> d_patInfo;
   std::map<Node, EagerMultiPatternInfo> d_multiPatInfo;
@@ -124,7 +124,7 @@ class EagerInst : public QuantifiersModule
   std::vector<TNode> d_inst;
   /** */
   std::pair<Node, Node> d_nullPair;
-  EagerWatchInfo* getOrMkWatchInfo(const Node& r, bool doMk);
+  EagerRepInfo* getOrMkRepInfo(const Node& r, bool doMk);
   EagerOpInfo* getOrMkOpInfo(const Node& op, bool doMk);
   EagerPatternInfo* getOrMkPatternInfo(const Node& pat, bool doMk);
   EagerTrie* getCurrentTrie(const Node& op);

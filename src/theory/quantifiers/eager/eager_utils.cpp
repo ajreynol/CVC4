@@ -34,7 +34,7 @@ void EagerWatchList::add(const EagerTrie* et, TNode t)
   d_matchJobs.push_back(std::pair<const EagerTrie*, TNode>(et, t));
 }
 
-EagerWatchList* EagerWatchInfo::getOrMkList(const Node& r, bool doMk)
+EagerWatchList* EagerRepInfo::getOrMkList(const Node& r, bool doMk)
 {
   context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator it =
       d_eqWatch.find(r);

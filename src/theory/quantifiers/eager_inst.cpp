@@ -1039,9 +1039,9 @@ EagerOpInfo* EagerInst::getOrMkOpInfo(const Node& op, bool doMk)
   return eoi.get();
 }
 
-EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
+EagerRepInfo* EagerInst::getOrMkRepInfo(const Node& r, bool doMk)
 {
-  context::CDHashMap<Node, std::shared_ptr<EagerWatchInfo>>::iterator it =
+  context::CDHashMap<Node, std::shared_ptr<EagerRepInfo>>::iterator it =
       d_repWatch.find(r);
   if (it != d_repWatch.end())
   {
@@ -1051,8 +1051,8 @@ EagerWatchInfo* EagerInst::getOrMkWatchInfo(const Node& r, bool doMk)
   {
     return nullptr;
   }
-  std::shared_ptr<EagerWatchInfo> ewi =
-      std::make_shared<EagerWatchInfo>(context());
+  std::shared_ptr<EagerRepInfo> ewi =
+      std::make_shared<EagerRepInfo>(context());
   d_repWatch.insert(r, ewi);
   return ewi.get();
 }
@@ -1106,7 +1106,7 @@ void EagerInst::addWatches(EagerFailExp& failExp)
     {
       continue;
     }
-    EagerWatchInfo* ew = getOrMkWatchInfo(f.first, true);
+    EagerRepInfo* ew = getOrMkRepInfo(f.first, true);
     for (const std::pair<
              const TNode,
              std::vector<std::pair<const EagerTrie*, TNode>>>& ff :
@@ -1132,13 +1132,15 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       << "eqNotifyMerge " << t1 << " " << t2 << std::endl;
   Trace("eager-inst-notify")
       << "notify: merge " << t1 << " " << t2 << std::endl;
-  EagerWatchInfo* ewi[2];
+  EagerRepInfo* ewi[2];
   EagerFailExp nextFails;
   bool addedInst = false;
+  std::map<const EagerTrie*, std::unordered_set<TNode>> processed;
+  std::pair<std::unordered_set<TNode>::iterator, bool> iret;
   // look at the watch info of both equivalence classes
   for (size_t i = 0; i < 2; i++)
   {
-    ewi[i] = getOrMkWatchInfo(t1, false);
+    ewi[i] = getOrMkRepInfo(t1, false);
     if (ewi[i] == nullptr)
     {
       continue;
@@ -1166,7 +1168,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           // make the other if not generated, t2 was swapped from t1
           if (ewi[0] == nullptr)
           {
-            ewi[0] = getOrMkWatchInfo(t2, true);
+            ewi[0] = getOrMkRepInfo(t2, true);
           }
           // update the representative as you go
           TNode rep = d_qstate.getRepresentative(itw->first);
@@ -1188,6 +1190,13 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           ewl->d_matchJobs;
       for (const std::pair<const EagerTrie*, TNode>& j : wmj)
       {
+        // don't process duplicates
+        std::unordered_set<TNode>& p = processed[j.first];
+        iret = p.insert(j.second);
+        if (!iret.second)
+        {
+          continue;
+        }
         Assert(!j.first->d_pats.empty());
         const Node& pat = j.first->d_pats[0];
         Assert(!pat.isNull());
