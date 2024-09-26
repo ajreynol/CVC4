@@ -45,8 +45,16 @@ class EagerGroundTrie
            const std::vector<TNode>& args,
            TNode t,
            size_t nargs = 0);
+  /**
+   * Does this trie contain args (modulo equality)? If so, args may be modified
+   * with equal terms according to qs such that args is in this trie.
+   * 
+   * @param qs The quantifiers state.
+   * @param args The arguments to lookup
+   * @param nargs If non-zero, we consider only the prefix of args up to nargs.
+   */
   const EagerGroundTrie* contains(QuantifiersState& qs,
-                                  const std::vector<TNode>& args,
+                                  std::vector<TNode>& args,
                                   size_t nargs = 0) const;
   /** For leaf nodes : does this node have data? */
   bool hasData() const { return !d_cmap.empty(); }
@@ -144,7 +152,7 @@ class EagerGroundTrie
   /** Push an edge r and return the child */
   EagerGroundTrie* push_back(EagerGroundTrieAllocator* al, TNode r);
   const EagerGroundTrie* containsInternal(QuantifiersState& qs,
-                                          const std::vector<TNode>& args,
+                                          std::vector<TNode>& args,
                                           size_t i,
                                           size_t total) const;
   /** */

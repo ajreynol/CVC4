@@ -66,7 +66,7 @@ bool EagerGroundTrie::add(QuantifiersState& qs,
 }
 
 const EagerGroundTrie* EagerGroundTrie::contains(QuantifiersState& qs,
-                                                 const std::vector<TNode>& args,
+                                                 std::vector<TNode>& args,
                                                  size_t nargs) const
 {
   if (nargs == 0)
@@ -78,7 +78,7 @@ const EagerGroundTrie* EagerGroundTrie::contains(QuantifiersState& qs,
 
 const EagerGroundTrie* EagerGroundTrie::containsInternal(
     QuantifiersState& qs,
-    const std::vector<TNode>& args,
+    std::vector<TNode>& args,
     size_t i,
     size_t total) const
 {
@@ -115,6 +115,8 @@ const EagerGroundTrie* EagerGroundTrie::containsInternal(
           it->second->containsInternal(qs, args, i + 1, total);
       if (egt != nullptr)
       {
+        // update args
+        args[i] = it->first;
         return egt;
       }
     }

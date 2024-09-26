@@ -85,8 +85,6 @@ class EagerOpInfo
   /** Get ground terms */
   const context::CDHashSet<Node>& getGroundTerms(QuantifiersState& qs);
   /** */
-  bool isRelevant(QuantifiersState& qs, const std::vector<TNode>& args) const;
-  /** */
   CDEagerTrie* getPatternTrie() { return &d_etrie; }
 
  private:

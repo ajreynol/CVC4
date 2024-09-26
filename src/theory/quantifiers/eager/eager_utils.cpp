@@ -129,13 +129,6 @@ bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
   return d_gtrie->add(qs, d_galloc, args, n);
 }
 
-bool EagerOpInfo::isRelevant(QuantifiersState& qs,
-                             const std::vector<TNode>& args) const
-{
-  Assert(d_gtrie != nullptr);
-  return d_gtrie->contains(qs, args);
-}
-
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
