@@ -1158,22 +1158,27 @@ Node RegExpOpr::reduceRegExpPos(NodeManager* nm,
   }
   else if (k == Kind::REGEXP_LOOP)
   {
-    uint32_t l = utils::getLoopMinOccurrences(node);
-    uint32_t u = utils::getLoopMaxOccurrences(node);
+    uint32_t l = utils::getLoopMinOccurrences(r);
+    uint32_t u = utils::getLoopMaxOccurrences(r);
     Assert (u>=2);
     if (l>0)
     {
+      Assert (l>=2);
+      Node op = nm->mkConst(RegExpLoop(l-2, u-2));
+      Node rconcat = nm->mkNode(Kind::STRING_CONCAT, r[0], nm->mkNode(Kind::REGEXP_LOOP, op, r[0]), r[0]);
       // x in (re.loop l u R) ---> x in R ++ (re.loop l-2 u-2 R) ++ R
       conc = nm->mkNode(Kind::STRING_IN_REGEXP, s, rconcat);
     }
     else
     {
-      // x in (re.loop 0 u R) ----> x = "" V x in R ++ (re.loop 0 u-2 R) ++ R
+      // x in (re.loop 0 u R) ----> x = "" V x in R V x in R ++ (re.loop 0 u-2 R) ++ R
       Node emp = Word::mkEmptyWord(s.getType());
       Node se = s.eqNode(emp);
-      Node rconcat = nm->mkNode(Kind::STRING_CONCAT,
+      Node op = nm->mkConst(RegExpLoop(0, u-2));
+      Node rconcat = nm->mkNode(Kind::STRING_CONCAT, r[0], nm->mkNode(Kind::REGEXP_LOOP, op, r[0]), r[0]);
       conc = nm->mkNode(Kind::OR,
                         se,
+                        nm->mkNode(Kind::STRING_IN_REGEXP, s, r[0]),                        
                         nm->mkNode(Kind::STRING_IN_REGEXP, s, rconcat));
     }
   }

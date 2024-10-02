@@ -21,6 +21,7 @@
 #include "theory/strings/word.h"
 #include "util/rational.h"
 #include "util/string.h"
+#include "util/regexp.h"
 
 using namespace std;
 using namespace cvc5::internal::kind;
@@ -393,7 +394,7 @@ bool RegExpEntail::isConstRegExp(TNode t)
           return false;
         }
       }
-      else if (ck == Kind::REGEXP_RV || ck==Kind::REGEXP_LOOP)
+      else if (ck == Kind::REGEXP_RV)
       {
         return false;
       }
@@ -603,12 +604,13 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
     case Kind::REGEXP_LOOP:
     {
       NodeManager* nm = NodeManager::currentNM();
-      uint32_t l = r[1].getConst<Rational>().getNumerator().toUnsignedInt();
+      uint32_t l = utils::getLoopMinOccurrences(r);
+      uint32_t u = utils::getLoopMaxOccurrences(r);
       if (s.size() == index_start)
       {
         return l == 0 || testConstStringInRegExpInternal(s, index_start, r[0]);
       }
-      else if (l == 0 && r[1] == r[2])
+      else if (l == 0 && u==0)
       {
         return false;
       }
@@ -619,7 +621,6 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
         if (l == 0)
         {
           // R{0,u}
-          uint32_t u = r[2].getConst<Rational>().getNumerator().toUnsignedInt();
           for (unsigned len = s.size() - index_start; len >= 1; len--)
           {
             cvc5::internal::String t = s.substr(index_start, len);
@@ -631,8 +632,8 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
               }
               else
               {
-                Node num2 = nm->mkConstInt(cvc5::internal::Rational(u - 1));
-                Node r2 = nm->mkNode(Kind::REGEXP_LOOP, r[0], r[1], num2);
+                Node op = nm->mkConst(RegExpLoop(l, u-1));
+                Node r2 = nm->mkNode(Kind::REGEXP_LOOP, op, r[0]);
                 if (testConstStringInRegExpInternal(s, index_start + len, r2))
                 {
                   return true;
@@ -645,7 +646,7 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
         else
         {
           // R{l,l}
-          Assert(r[1] == r[2])
+          Assert(l==u)
               << "String rewriter error: LOOP nums are not equal";
           if (l > s.size() - index_start)
           {
@@ -658,13 +659,13 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
               return false;
             }
           }
-          for (unsigned len = 1; len <= s.size() - index_start; len++)
+          for (size_t len = 1; len <= s.size() - index_start; len++)
           {
             cvc5::internal::String t = s.substr(index_start, len);
             if (testConstStringInRegExpInternal(t, 0, r[0]))
             {
-              Node num2 = nm->mkConstInt(cvc5::internal::Rational(l - 1));
-              Node r2 = nm->mkNode(Kind::REGEXP_LOOP, r[0], num2, num2);
+              Node op = nm->mkConst(RegExpLoop(l-1, l-1));
+              Node r2 = nm->mkNode(Kind::REGEXP_LOOP, op, r[0]);
               if (testConstStringInRegExpInternal(s, index_start + len, r2))
               {
                 return true;
@@ -748,6 +749,10 @@ Node RegExpEntail::getFixedLengthForRegexp(TNode n)
     }
     return nm->mkConstInt(sum);
   }
+  else if (k == Kind::REGEXP_LOOP)
+  {
+    // TODO
+  }
   return Node::null();
 }
 
@@ -818,6 +823,14 @@ Node RegExpEntail::getConstantBoundLengthForRegexp(TNode n, bool isLower) const
     if (success && !firstTime)
     {
       ret = nm->mkConstInt(rr);
+    }
+  }
+  else if (k ==Kind::REGEXP_LOOP)
+  {
+    Node bc = getConstantBoundLengthForRegexp(n[0], isLower);
+    if (!bc.isNull())
+    {
+      // TODO 
     }
   }
   if (ret.isNull() && isLower)

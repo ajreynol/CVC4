@@ -97,7 +97,8 @@ const char* toString(Rewrite r)
     case Rewrite::RE_IN_CHAR_MODULUS_STAR: return "RE_IN_CHAR_MODULUS_STAR";
     case Rewrite::RE_IN_INCLUSION: return "RE_IN_INCLUSION";
     case Rewrite::RE_IN_LOOP_FIXED_LEN: return "RE_IN_LOOP_FIXED_LEN";
-    case Rewrite::RE_LOOP: return "RE_LOOP";
+    case Rewrite::RE_LOOP_ELIM: return "RE_LOOP_ELIM";
+    case Rewrite::RE_LOOP_UNFOLD_ONE: return "RE_LOOP_UNFOLD_ONE";
     case Rewrite::RE_LOOP_NONE: return "RE_LOOP_NONE";
     case Rewrite::RE_LOOP_ZERO: return "RE_LOOP_ZERO";
     case Rewrite::RE_LOOP_STAR: return "RE_LOOP_STAR";

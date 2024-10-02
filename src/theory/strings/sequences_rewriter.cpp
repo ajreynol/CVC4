@@ -1330,7 +1330,13 @@ Node SequencesRewriter::rewriteLoopRegExp(TNode node)
   {
     retNode = rewriteViaReLoopElim(node);
     Assert(!retNode.isNull() && retNode != node);
-    return returnRewrite(node, retNode, Rewrite::RE_LOOP);
+    return returnRewrite(node, retNode, Rewrite::RE_LOOP_ELIM);
+  }
+  else if (l==1)
+  {
+    Node op = nm->mkConst(RegExpLoop(l-1, u-1));
+    Node ret = nm->mkNode(Kind::REGEXP_CONCAT, r, nm->mkNode(Kind::REGEXP_LOOP, op, r));
+    return returnRewrite(node, retNode, Rewrite::RE_LOOP_UNFOLD_ONE);
   }
   return node;
 }
