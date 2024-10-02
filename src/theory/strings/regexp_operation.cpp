@@ -1007,6 +1007,7 @@ Node RegExpOpr::reduceRegExpNeg(NodeManager* nm, Node mem)
   {
     Assert(!utils::isRegExpKind(k));
   }
+  // FIXME: add re.loop
   return conc;
 }
 

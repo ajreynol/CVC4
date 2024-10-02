@@ -608,63 +608,30 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
       uint32_t u = utils::getLoopMaxOccurrences(r);
       if (s.size() == index_start)
       {
+        // Empty string, either we allow 0 unfoldings, or the empty string
+        // is in the base regular expression.
         return l == 0 || testConstStringInRegExpInternal(s, index_start, r[0]);
       }
       else if (l == 0 && u==0)
       {
+        // If non-empty and we can't unfold once.
         return false;
       }
-      else
+      else if (l == 0)
       {
-        Assert(r.getNumChildren() == 3)
-            << "String rewriter error: LOOP has 2 children";
-        if (l == 0)
+        // R{0,u}
+        for (size_t len = s.size() - index_start; len >= 1; len--)
         {
-          // R{0,u}
-          for (unsigned len = s.size() - index_start; len >= 1; len--)
+          cvc5::internal::String t = s.substr(index_start, len);
+          if (testConstStringInRegExpInternal(t, 0, r[0]))
           {
-            cvc5::internal::String t = s.substr(index_start, len);
-            if (testConstStringInRegExpInternal(t, 0, r[0]))
+            if (len + index_start == s.size())
             {
-              if (len + index_start == s.size())
-              {
-                return true;
-              }
-              else
-              {
-                Node op = nm->mkConst(RegExpLoop(l, u-1));
-                Node r2 = nm->mkNode(Kind::REGEXP_LOOP, op, r[0]);
-                if (testConstStringInRegExpInternal(s, index_start + len, r2))
-                {
-                  return true;
-                }
-              }
-            }
-          }
-          return false;
-        }
-        else
-        {
-          // R{l,l}
-          Assert(l==u)
-              << "String rewriter error: LOOP nums are not equal";
-          if (l > s.size() - index_start)
-          {
-            if (testConstStringInRegExpInternal(s, s.size(), r[0]))
-            {
-              l = s.size() - index_start;
+              return true;
             }
             else
             {
-              return false;
-            }
-          }
-          for (size_t len = 1; len <= s.size() - index_start; len++)
-          {
-            cvc5::internal::String t = s.substr(index_start, len);
-            if (testConstStringInRegExpInternal(t, 0, r[0]))
-            {
-              Node op = nm->mkConst(RegExpLoop(l-1, l-1));
+              Node op = nm->mkConst(RegExpLoop(l, u-1));
               Node r2 = nm->mkNode(Kind::REGEXP_LOOP, op, r[0]);
               if (testConstStringInRegExpInternal(s, index_start + len, r2))
               {
@@ -672,9 +639,42 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
               }
             }
           }
-          return false;
         }
+        return false;
       }
+      else
+      {
+        // R{l,l}
+        // FIXME
+        Assert(l==u)
+            << "String rewriter error: LOOP nums are not equal";
+        if (l > s.size() - index_start)
+        {
+          if (testConstStringInRegExpInternal(s, s.size(), r[0]))
+          {
+            l = s.size() - index_start;
+          }
+          else
+          {
+            return false;
+          }
+        }
+        for (size_t len = 1; len <= s.size() - index_start; len++)
+        {
+          cvc5::internal::String t = s.substr(index_start, len);
+          if (testConstStringInRegExpInternal(t, 0, r[0]))
+          {
+            Node op = nm->mkConst(RegExpLoop(l-1, l-1));
+            Node r2 = nm->mkNode(Kind::REGEXP_LOOP, op, r[0]);
+            if (testConstStringInRegExpInternal(s, index_start + len, r2))
+            {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
+    
     }
     case Kind::REGEXP_COMPLEMENT:
     {
