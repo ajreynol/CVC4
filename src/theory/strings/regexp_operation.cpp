@@ -1156,6 +1156,27 @@ Node RegExpOpr::reduceRegExpPos(NodeManager* nm,
                                  newSkolemsC[0].eqNode(emp).negate(),
                                  newSkolemsC[2].eqNode(emp).negate()));
   }
+  else if (k == Kind::REGEXP_LOOP)
+  {
+    uint32_t l = utils::getLoopMinOccurrences(node);
+    uint32_t u = utils::getLoopMaxOccurrences(node);
+    Assert (u>=2);
+    if (l>0)
+    {
+      // x in (re.loop l u R) ---> x in R ++ (re.loop l-2 u-2 R) ++ R
+      conc = nm->mkNode(Kind::STRING_IN_REGEXP, s, rconcat);
+    }
+    else
+    {
+      // x in (re.loop 0 u R) ----> x = "" V x in R ++ (re.loop 0 u-2 R) ++ R
+      Node emp = Word::mkEmptyWord(s.getType());
+      Node se = s.eqNode(emp);
+      Node rconcat = nm->mkNode(Kind::STRING_CONCAT,
+      conc = nm->mkNode(Kind::OR,
+                        se,
+                        nm->mkNode(Kind::STRING_IN_REGEXP, s, rconcat));
+    }
+  }
   else
   {
     Assert(!utils::isRegExpKind(k));

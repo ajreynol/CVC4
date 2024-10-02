@@ -1325,8 +1325,8 @@ Node SequencesRewriter::rewriteLoopRegExp(TNode node)
     return returnRewrite(node, r, Rewrite::RE_LOOP_STAR);
   }
   // eliminate eagerly if lower and upper bound is equivalent and upper bound
-  // is less than or equal 32
-  if (u<=32 && l==u)
+  // is less than or equal 32, or u is less than or equal 2.
+  if (u<=2 || (u<=32 && l==u))
   {
     retNode = rewriteViaReLoopElim(node);
     Assert(!retNode.isNull() && retNode != node);
