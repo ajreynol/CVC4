@@ -52,6 +52,7 @@ class SequencesRewriter : public TheoryRewriter
 
   /** expand defintions */
   TrustNode expandDefinition(Node n) override;
+
  protected:
   /** rewrite regular expression all
    *

@@ -1326,16 +1326,17 @@ Node SequencesRewriter::rewriteLoopRegExp(TNode node)
   }
   // eliminate eagerly if lower and upper bound is equivalent and upper bound
   // is less than or equal 32, or u is less than or equal 2.
-  if (u<=2 || (u<=32 && l==u))
+  if (u <= 2 || (u <= 32 && l == u))
   {
     retNode = rewriteViaReLoopElim(node);
     Assert(!retNode.isNull() && retNode != node);
     return returnRewrite(node, retNode, Rewrite::RE_LOOP_ELIM);
   }
-  else if (l==1)
+  else if (l == 1)
   {
-    Node op = nm->mkConst(RegExpLoop(l-1, u-1));
-    Node ret = nm->mkNode(Kind::REGEXP_CONCAT, r, nm->mkNode(Kind::REGEXP_LOOP, op, r));
+    Node op = nm->mkConst(RegExpLoop(l - 1, u - 1));
+    Node ret = nm->mkNode(
+        Kind::REGEXP_CONCAT, r, nm->mkNode(Kind::REGEXP_LOOP, op, r));
     return returnRewrite(node, retNode, Rewrite::RE_LOOP_UNFOLD_ONE);
   }
   return node;
@@ -1797,7 +1798,7 @@ Node SequencesRewriter::rewriteMembership(TNode node)
     Node retNode = nm->mkNode(Kind::STRING_IN_REGEXP, x, r[0]).negate();
     return returnRewrite(node, retNode, Rewrite::RE_IN_COMPLEMENT);
   }
-  else if (r.getKind() ==Kind::REGEXP_LOOP)
+  else if (r.getKind() == Kind::REGEXP_LOOP)
   {
     Trace("ajr-temp") << "Maybe reduce? " << node << std::endl;
     uint32_t l = utils::getLoopMinOccurrences(r);
@@ -1806,9 +1807,16 @@ Node SequencesRewriter::rewriteMembership(TNode node)
     if (!len.isNull())
     {
       Node lenx = nm->mkNode(Kind::STRING_LENGTH, x);
-      Node ll = nm->mkNode(Kind::LEQ, nm->mkNode(Kind::MULT, nm->mkConstInt(Rational(l)), len), lenx);
-      Node lu = nm->mkNode(Kind::LEQ, lenx, nm->mkNode(Kind::MULT, nm->mkConstInt(Rational(u)), len));
-      Node mem = nm->mkNode(Kind::STRING_IN_REGEXP, x, nm->mkNode(Kind::REGEXP_STAR, r[0]));
+      Node ll =
+          nm->mkNode(Kind::LEQ,
+                     nm->mkNode(Kind::MULT, nm->mkConstInt(Rational(l)), len),
+                     lenx);
+      Node lu =
+          nm->mkNode(Kind::LEQ,
+                     lenx,
+                     nm->mkNode(Kind::MULT, nm->mkConstInt(Rational(u)), len));
+      Node mem = nm->mkNode(
+          Kind::STRING_IN_REGEXP, x, nm->mkNode(Kind::REGEXP_STAR, r[0]));
       Node ret = nm->mkNode(Kind::AND, mem, ll, lu);
       return returnRewrite(node, ret, Rewrite::RE_IN_LOOP_FIXED_LEN);
     }

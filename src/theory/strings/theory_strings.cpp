@@ -1178,7 +1178,7 @@ TrustNode TheoryStrings::ppRewrite(TNode atom, std::vector<SkolemLemma>& lems)
     // otherwise use standard expand definitions call
     ret = d_rewriter.expandDefinition(atom);
   }
-  
+
   if (options().strings.stringFMF)
   {
     // Our decision strategy will minimize the length of this term if it is a

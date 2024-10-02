@@ -20,8 +20,8 @@
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/strings/word.h"
 #include "util/rational.h"
-#include "util/string.h"
 #include "util/regexp.h"
+#include "util/string.h"
 
 using namespace std;
 using namespace cvc5::internal::kind;
@@ -612,7 +612,7 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
         // is in the base regular expression.
         return l == 0 || testConstStringInRegExpInternal(s, index_start, r[0]);
       }
-      else if (l == 0 && u==0)
+      else if (l == 0 && u == 0)
       {
         // If non-empty and we can't unfold once.
         return false;
@@ -631,7 +631,7 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
             }
             else
             {
-              Node op = nm->mkConst(RegExpLoop(l, u-1));
+              Node op = nm->mkConst(RegExpLoop(l, u - 1));
               Node r2 = nm->mkNode(Kind::REGEXP_LOOP, op, r[0]);
               if (testConstStringInRegExpInternal(s, index_start + len, r2))
               {
@@ -667,7 +667,7 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
           cvc5::internal::String t = s.substr(index_start, len);
           if (testConstStringInRegExpInternal(t, 0, r[0]))
           {
-            Node op = nm->mkConst(RegExpLoop(l-1, u-1));
+            Node op = nm->mkConst(RegExpLoop(l - 1, u - 1));
             Node r2 = nm->mkNode(Kind::REGEXP_LOOP, op, r[0]);
             if (testConstStringInRegExpInternal(s, index_start + len, r2))
             {
@@ -677,7 +677,6 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
         }
         return false;
       }
-    
     }
     case Kind::REGEXP_COMPLEMENT:
     {
@@ -756,12 +755,12 @@ Node RegExpEntail::getFixedLengthForRegexp(TNode n)
   {
     uint32_t l = utils::getLoopMinOccurrences(n);
     uint32_t u = utils::getLoopMaxOccurrences(n);
-    if (l==u)
+    if (l == u)
     {
       Node flc = getFixedLengthForRegexp(n[0]);
       if (!flc.isNull())
       {
-        return nm->mkConstInt(flc.getConst<Rational>()*Rational(l));
+        return nm->mkConstInt(flc.getConst<Rational>() * Rational(l));
       }
     }
   }
@@ -837,13 +836,14 @@ Node RegExpEntail::getConstantBoundLengthForRegexp(TNode n, bool isLower) const
       ret = nm->mkConstInt(rr);
     }
   }
-  else if (k ==Kind::REGEXP_LOOP)
+  else if (k == Kind::REGEXP_LOOP)
   {
     Node bc = getConstantBoundLengthForRegexp(n[0], isLower);
     if (!bc.isNull())
     {
-      uint32_t b = isLower ? utils::getLoopMinOccurrences(n) : utils::getLoopMaxOccurrences(n);
-      return nm->mkConstInt(bc.getConst<Rational>()*Rational(b));
+      uint32_t b = isLower ? utils::getLoopMinOccurrences(n)
+                           : utils::getLoopMaxOccurrences(n);
+      return nm->mkConstInt(bc.getConst<Rational>() * Rational(b));
     }
   }
   if (ret.isNull() && isLower)
