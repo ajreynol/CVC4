@@ -645,26 +645,29 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
       else
       {
         // R{l,l}
-        // FIXME
-        Assert(l==u)
-            << "String rewriter error: LOOP nums are not equal";
-        if (l > s.size() - index_start)
+        size_t remChars = (s.size() - index_start);
+        if (l > remChars)
         {
+          // optimization: if we require at least l unfoldings which is greater
+          // than the number of remaining characters, then if the empty string
+          // is in the base regular expression, we check for at most the
+          // number of remaining characters. Otherwise, we the membership is
+          // false.
           if (testConstStringInRegExpInternal(s, s.size(), r[0]))
           {
-            l = s.size() - index_start;
+            l = remChars;
           }
           else
           {
             return false;
           }
         }
-        for (size_t len = 1; len <= s.size() - index_start; len++)
+        for (size_t len = 1; len <= remChars; len++)
         {
           cvc5::internal::String t = s.substr(index_start, len);
           if (testConstStringInRegExpInternal(t, 0, r[0]))
           {
-            Node op = nm->mkConst(RegExpLoop(l-1, l-1));
+            Node op = nm->mkConst(RegExpLoop(l-1, u-1));
             Node r2 = nm->mkNode(Kind::REGEXP_LOOP, op, r[0]);
             if (testConstStringInRegExpInternal(s, index_start + len, r2))
             {
