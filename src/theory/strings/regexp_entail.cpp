@@ -754,7 +754,16 @@ Node RegExpEntail::getFixedLengthForRegexp(TNode n)
   }
   else if (k == Kind::REGEXP_LOOP)
   {
-    // TODO
+    uint32_t l = utils::getLoopMinOccurrences(n);
+    uint32_t u = utils::getLoopMaxOccurrences(n);
+    if (l==u)
+    {
+      Node flc = getFixedLengthForRegexp(n[0]);
+      if (!flc.isNull())
+      {
+        return nm->mkConstInt(flc.getConst<Rational>()*Rational(l));
+      }
+    }
   }
   return Node::null();
 }
@@ -833,7 +842,8 @@ Node RegExpEntail::getConstantBoundLengthForRegexp(TNode n, bool isLower) const
     Node bc = getConstantBoundLengthForRegexp(n[0], isLower);
     if (!bc.isNull())
     {
-      // TODO 
+      uint32_t b = isLower ? utils::getLoopMinOccurrences(n) : utils::getLoopMaxOccurrences(n);
+      return nm->mkConstInt(bc.getConst<Rational>()*Rational(b));
     }
   }
   if (ret.isNull() && isLower)
