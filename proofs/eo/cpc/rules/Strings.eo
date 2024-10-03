@@ -359,11 +359,12 @@
             ; allows us by convention to do bidirectional unfolding.
             (eo::ite (eo::is_eq l 0)
               (eo::requires (eo::gt u 1) true
-              (or (= t "")
-                  (str.in_re t r1)
-                  (str.in_re t (re.++ r1 (re.loop 0 (eo::add u -2) r1) r1))))
+                (or (= t "")
+                    (str.in_re t r1)
+                    (str.in_re t (re.++ r1 (re.loop 0 (eo::add u -2) r1) r1))))
               (eo::requires (eo::gt l 1) true
-                (str.in_re t (re.++ r1 (re.loop (eo::add l -2) (eo::add u -2) r1) r1)))))
+                (str.in_re t
+                  (re.++ r1 (re.loop (eo::add l -2) (eo::add u -2) r1) r1)))))
     ))
 )
 
