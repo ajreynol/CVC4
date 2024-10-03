@@ -1183,7 +1183,7 @@ Node RegExpOpr::reduceRegExpPos(NodeManager* nm,
     }
     else
     {
-      // x in (re.loop 0 u R) ----> 
+      // x in (re.loop 0 u R) ---->
       //  (x = "") or (x in R) or (x in R ++ (re.loop 0 u-2 R) ++ R)
       Node emp = Word::mkEmptyWord(s.getType());
       Node se = s.eqNode(emp);
