@@ -979,7 +979,10 @@ Node RegExpOpr::reduceRegExpNeg(NodeManager* nm, Node mem)
   Node conc;
   if (k == Kind::REGEXP_CONCAT)
   {
-    // do not use length entailment, call regular expression concat
+    // Do not use length entailment, call regular expression concat.
+    // This method is called directly by the proof checker, whereas the
+    // simplify routine above will choose to call reduceRegExpNegConcatFixed
+    // for the appropriate length entailment information.
     Node reLen;
     conc = reduceRegExpNegConcatFixed(nm, mem, reLen, false);
   }
@@ -1002,6 +1005,44 @@ Node RegExpOpr::reduceRegExpNeg(NodeManager* nm, Node mem)
     // must mark as an internal quantifier
     conc = utils::mkForallInternal(nm, b1v, conc);
     conc = nm->mkNode(Kind::AND, sne, conc);
+  }
+  else if (k == Kind::REGEXP_LOOP)
+  {
+    // Note that it is never the case that the body of the re.loop as fixed
+    // length, since these are reduced to re.* with length constraints.
+    uint32_t l = utils::getLoopMinOccurrences(r);
+    uint32_t u = utils::getLoopMaxOccurrences(r);
+    Node b1 = SkolemCache::mkIndexVar(nm, mem);
+    Node b1v = nm->mkNode(Kind::BOUND_VAR_LIST, b1);
+    Node lens = nm->mkNode(Kind::STRING_LENGTH, s);
+    Node g11n = nm->mkNode(Kind::LEQ, b1, zero);
+    Node g12n = nm->mkNode(Kind::LT, lens, b1);
+    Node s1 = utils::mkPrefix(s, b1);
+    Node s2 = utils::mkSuffix(s, b1);
+    Node s1r1 = nm->mkNode(Kind::STRING_IN_REGEXP, s1, r[0]).negate();
+    Node op = nm->mkConst(RegExpLoop(l==0 ? 0 : l-1, u-1));
+    Node runfold = nm->mkNode(Kind::REGEXP_LOOP, op, r[0]);
+    Node s2r2 = nm->mkNode(Kind::STRING_IN_REGEXP, s2, runfold).negate();
+    conc = nm->mkNode(Kind::OR, {g11n, g12n, s1r1, s2r2});
+    conc = utils::mkForallInternal(nm, b1v, conc);
+    // ~(s in ((_ re.loop l u) R))
+    //    reduces to
+    // forall x. 
+    //   (0 <= x <= len(s) => 
+    //     (~(substr(s,0,x) in R) or
+    //      ~(substr(s,x,len(s)-x) in ((_ re.loop l-1 u-1) R))))
+    // Alternatively, if l=0, then it reduces to:
+    // s != "" and
+    // forall x. 
+    //   (0 <= x <= len(s) => 
+    //     (~(substr(s,0,x) in R) or
+    //      ~(substr(s,x,len(s)-x) in ((_ re.loop l u-1) R))))
+    if (l==0)
+    {
+      Node emp = Word::mkEmptyWord(s.getType());
+      Node sne = s.eqNode(emp).negate();
+      conc = nm->mkNode(Kind::AND, sne, conc);
+    }
   }
   else
   {
@@ -1174,7 +1215,7 @@ Node RegExpOpr::reduceRegExpPos(NodeManager* nm,
       // our rewriter ensures 1 is never the lower bound for re.loop
       Assert(l >= 2);
       Node op = nm->mkConst(RegExpLoop(l - 2, u - 2));
-      Node rconcat = nm->mkNode(Kind::STRING_CONCAT,
+      Node rconcat = nm->mkNode(Kind::REGEXP_CONCAT,
                                 r[0],
                                 nm->mkNode(Kind::REGEXP_LOOP, op, r[0]),
                                 r[0]);
@@ -1188,7 +1229,7 @@ Node RegExpOpr::reduceRegExpPos(NodeManager* nm,
       Node emp = Word::mkEmptyWord(s.getType());
       Node se = s.eqNode(emp);
       Node op = nm->mkConst(RegExpLoop(0, u - 2));
-      Node rconcat = nm->mkNode(Kind::STRING_CONCAT,
+      Node rconcat = nm->mkNode(Kind::REGEXP_CONCAT,
                                 r[0],
                                 nm->mkNode(Kind::REGEXP_LOOP, op, r[0]),
                                 r[0]);

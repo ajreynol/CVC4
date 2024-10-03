@@ -1335,7 +1335,7 @@ Node SequencesRewriter::rewriteLoopRegExp(TNode node)
   else if (l == 1)
   {
     Node op = nm->mkConst(RegExpLoop(l - 1, u - 1));
-    Node ret = nm->mkNode(
+    retNode = nm->mkNode(
         Kind::REGEXP_CONCAT, r, nm->mkNode(Kind::REGEXP_LOOP, op, r));
     return returnRewrite(node, retNode, Rewrite::RE_LOOP_UNFOLD_ONE);
   }
@@ -1800,12 +1800,14 @@ Node SequencesRewriter::rewriteMembership(TNode node)
   }
   else if (r.getKind() == Kind::REGEXP_LOOP)
   {
-    Trace("ajr-temp") << "Maybe reduce? " << node << std::endl;
     uint32_t l = utils::getLoopMinOccurrences(r);
     uint32_t u = utils::getLoopMaxOccurrences(r);
     Node len = RegExpEntail::getFixedLengthForRegexp(r[0]);
     if (!len.isNull())
     {
+      // (str.in_re x ((_ re.loop l u) R) ---->
+      //   (and (str.in_re x (re.* R)) (<= (* l k) (str.len x) (* u k)))
+      // if R has fixed length k.
       Node lenx = nm->mkNode(Kind::STRING_LENGTH, x);
       Node ll =
           nm->mkNode(Kind::LEQ,

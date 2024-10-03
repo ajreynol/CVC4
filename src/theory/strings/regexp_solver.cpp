@@ -700,6 +700,11 @@ Node RegExpSolver::getNormalSymRegExp(Node r, std::vector<Node>& nf_exp)
       ret = rewrite(nodeManager()->mkNode(r.getKind(), vec_nodes));
       break;
     }
+    case Kind::REGEXP_LOOP:
+    {
+      ret = nodeManager()->mkNode(r.getKind(), r.getOperator(),getNormalSymRegExp(r[0], nf_exp));
+    }
+      break;
     default:
     {
       Trace("strings-error") << "Unsupported term: " << r

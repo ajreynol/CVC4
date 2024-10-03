@@ -330,12 +330,12 @@
 ; - m: A regular expression membership (str.in_re t r).
 ; conclusion: >
 ;   The single step reduction of m. At a high level, this either reasons about
-;   unfolding a regular expression star, or decomposes the components of t in
-;   r if the latter is a regular expression concatenation.
+;   unfolding a regular expression star or loop, or decomposes the components of
+;   t in r if the latter is a regular expression concatenation.
 (declare-rule re_unfold_pos ((t String) (r RegLan))
   :premises ((str.in_re t r))
   :conclusion
-    (eo::match ((r1 RegLan) (r2 RegLan :list))
+    (eo::match ((r1 RegLan) (r2 RegLan :list) (u Int) (l Int))
       r
       (
         ((re.* r1)
@@ -354,6 +354,16 @@
             ($re_unfold_pos_concat t r)
             (((@pair tk M)
                 (eo::define ((teq (= t tk))) (eo::ite (eo::is_eq M true) teq (and teq M)))))))
+        ((re.loop l u r1)
+            ; Due to invariants on rewriting, we assume l and u are not 1. This
+            ; allows us by convention to do bidirectional unfolding.
+            (eo::ite (eo::is_eq l 0)
+              (eo::requires (eo::gt u 1) true
+              (or (= t "")
+                  (str.in_re t r1)
+                  (str.in_re t (re.++ r1 (re.loop 0 (eo::add u -2) r1) r1))))
+              (eo::requires (eo::gt l 1) true
+                (str.in_re t (re.++ r1 (re.loop (eo::add l -2) (eo::add u -2) r1) r1)))))
     ))
 )
 

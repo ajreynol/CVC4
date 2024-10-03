@@ -3244,6 +3244,8 @@ set(regress_1_tests
   regress1/strings/loop007.smt2
   regress1/strings/loop008.smt2
   regress1/strings/loop009.smt2
+  regress1/strings/neg-loop-1.smt2
+  regress1/strings/neg-loop-2.smt2
   regress1/strings/nf-ff-contains-abs.smt2
   regress1/strings/no-lazy-pp-quant.smt2
   regress1/strings/non_termination_regular_expression4.smt2
