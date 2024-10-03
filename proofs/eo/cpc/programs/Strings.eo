@@ -106,6 +106,44 @@
   (eo::and (eo::is_eq (eo::len s1) 1) (eo::is_eq (eo::len s2) 1))
 )
 
+
+; program: $str_mk_re_loop_elim_rec
+; args:
+; - n Int: The minimum number of iterations for a re.loop term.
+; - d Int: The difference between the min and max iterations for a re.loop term.
+; - r RegLan: The regular expression argument of re.loop.
+; - rr RegLan: The current accumulated regular expression.
+; return: >
+;   The result of elimination re.loop for the given arguments. In particular,
+;   when we call $str_mk_re_loop_elim n d r rr, we first decrement n until it
+;   is zero, while accumulating rr. When n is zero, then rr is r^n.
+;   We then decrement d until it is zero, while adding regular expressions
+;   to a union, giving us (re.union r^n ... r^{n+d}).
+(program $str_mk_re_loop_elim_rec ((n Int) (d Int) (r RegLan) (rr RegLan :list))
+  (Int Int RegLan RegLan) RegLan
+  (
+    (($str_mk_re_loop_elim_rec 0 0 r rr) (eo::cons re.union ($singleton_elim rr) re.none))
+    (($str_mk_re_loop_elim_rec 0 d r rr) (eo::cons re.union ($singleton_elim rr) ($str_mk_re_loop_elim_rec 0 (eo::add d -1) r (re.++ r rr))))
+    (($str_mk_re_loop_elim_rec n d r rr) ($str_mk_re_loop_elim_rec (eo::add n -1) d r (re.++ r rr)))
+  )
+)
+
+; define: $str_mk_re_loop_elim
+; args:
+; - n Int: The minimum number of iterations for a re.loop term.
+; - d Int: The difference between the min and max iterations for a re.loop term.
+; - r RegLan: The regular expression argument of re.loop.
+; return: >
+;   The reduction of the regular expression
+;     (re.loop n n+d r)
+;   where d>0. This is the regular expression:
+;     (re.union r^n ... r^{n+d})
+;   where r^k is (re.++ r ... r), where r is repeated k times when k>1, or
+;   r if k=1 or @re.empty if k=0.
+(define $str_mk_re_loop_elim ((n Int) (d Int) (r RegLan))
+  ($singleton_elim ($str_mk_re_loop_elim_rec n d r @re.empty))
+)
+
 ;;-------------------- RE evaluation
 
 ; note: used to represent an invalid regular expression below.
@@ -126,7 +164,7 @@
 ; note: >
 ;   This method has an exponential runtime. It is a placeholder for a
 ;   more efficient algorithm (via NFAs) to be written later.
-(program $str_eval_str_in_re_rec ((s String) (s1 String) (s2 String) (n Int) (r1 RegLan) (rr RegLan :list) (r2 RegLan) (sr String))
+(program $str_eval_str_in_re_rec ((s String) (s1 String) (s2 String) (n Int) (r1 RegLan) (rr RegLan :list) (r2 RegLan) (sr String) (u Int) (l Int))
   (String Int RegLan RegLan) Bool
   (
   (($str_eval_str_in_re_rec s 0 (re.++ r1 rr) @re.null)     ($str_eval_str_in_re_rec s 0 r1 rr))
@@ -151,6 +189,7 @@
   (($str_eval_str_in_re_rec s 0 re.all @re.null)            true)
   (($str_eval_str_in_re_rec s 0 re.none @re.null)           false)
   (($str_eval_str_in_re_rec s 0 (re.comp r1) @re.null)      (eo::not ($str_eval_str_in_re_rec s 0 r1 @re.null)))
+  (($str_eval_str_in_re_rec s 0 (re.loop l u r1) @re.null)  ($str_eval_str_in_re_rec s 0 ($str_mk_re_loop_elim l (eo::add u (eo::neg l)) r1) @re.null))
   (($str_eval_str_in_re_rec s n r1 r2)                      (eo::define ((ls (eo::len s)))
                                                             (eo::define ((ss1 (eo::extract s 0 (eo::add n -1))))
                                                             (eo::define ((ss2 (eo::extract s n ls)))
@@ -764,43 +803,6 @@
 ;   $str_overlap (str.++ "A" "B" "C" "") (str.++ "A" "") = 0
 (define $str_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)))
   ($str_overlap_rec ($mk_emptystr (eo::typeof s)) s t))
-
-; program: $str_mk_re_loop_elim_rec
-; args:
-; - n Int: The minimum number of iterations for a re.loop term.
-; - d Int: The difference between the min and max iterations for a re.loop term.
-; - r RegLan: The regular expression argument of re.loop.
-; - rr RegLan: The current accumulated regular expression.
-; return: >
-;   The result of elimination re.loop for the given arguments. In particular,
-;   when we call $str_mk_re_loop_elim n d r rr, we first decrement n until it
-;   is zero, while accumulating rr. When n is zero, then rr is r^n.
-;   We then decrement d until it is zero, while adding regular expressions
-;   to a union, giving us (re.union r^n ... r^{n+d}).
-(program $str_mk_re_loop_elim_rec ((n Int) (d Int) (r RegLan) (rr RegLan :list))
-  (Int Int RegLan RegLan) RegLan
-  (
-    (($str_mk_re_loop_elim_rec 0 0 r rr) (eo::cons re.union ($singleton_elim rr) re.none))
-    (($str_mk_re_loop_elim_rec 0 d r rr) (eo::cons re.union ($singleton_elim rr) ($str_mk_re_loop_elim_rec 0 (eo::add d -1) r (re.++ r rr))))
-    (($str_mk_re_loop_elim_rec n d r rr) ($str_mk_re_loop_elim_rec (eo::add n -1) d r (re.++ r rr)))
-  )
-)
-
-; define: $str_mk_re_loop_elim
-; args:
-; - n Int: The minimum number of iterations for a re.loop term.
-; - d Int: The difference between the min and max iterations for a re.loop term.
-; - r RegLan: The regular expression argument of re.loop.
-; return: >
-;   The reduction of the regular expression
-;     (re.loop n n+d r)
-;   where d>0. This is the regular expression:
-;     (re.union r^n ... r^{n+d})
-;   where r^k is (re.++ r ... r), where r is repeated k times when k>1, or
-;   r if k=1 or @re.empty if k=0.
-(define $str_mk_re_loop_elim ((n Int) (d Int) (r RegLan))
-  ($singleton_elim ($str_mk_re_loop_elim_rec n d r @re.empty))
-)
 
 ; program: $str_mk_str_in_re_concat_star_char
 ; args:

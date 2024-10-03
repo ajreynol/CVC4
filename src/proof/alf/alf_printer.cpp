@@ -383,7 +383,8 @@ bool AlfPrinter::canEvaluateRegExp(Node r) const
         case Kind::REGEXP_UNION:
         case Kind::REGEXP_INTER:
         case Kind::REGEXP_CONCAT:
-        case Kind::REGEXP_STAR: break;
+        case Kind::REGEXP_STAR: 
+        case Kind::REGEXP_LOOP: break;
         case Kind::REGEXP_RANGE:
           if (!theory::strings::utils::isCharacterRange(cur))
           {
