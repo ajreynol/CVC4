@@ -1034,9 +1034,9 @@ Node RegExpOpr::reduceRegExpNeg(NodeManager* nm, Node mem)
     // Alternatively, if l=0, then it reduces to:
     // s != "" and
     // forall x. 
-    //   (0 <= x <= len(s) => 
+    //   (0 <= x <= len(s) =>
     //     (~(substr(s,0,x) in R) or
-    //      ~(substr(s,x,len(s)-x) in ((_ re.loop l u-1) R))))
+    //      ~(substr(s,x,len(s)-x) in ((_ re.loop 0 u-1) R))))
     if (l==0)
     {
       Node emp = Word::mkEmptyWord(s.getType());
