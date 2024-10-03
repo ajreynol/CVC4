@@ -644,15 +644,15 @@ bool RegExpEntail::testConstStringInRegExpInternal(String& s,
       }
       else
       {
-        // R{l,l}
+        // R{l,u}
         size_t remChars = (s.size() - index_start);
         if (l > remChars)
         {
           // optimization: if we require at least l unfoldings which is greater
           // than the number of remaining characters, then if the empty string
-          // is in the base regular expression, we check for at most the
-          // number of remaining characters. Otherwise, we the membership is
-          // false.
+          // is in the base regular expression, we check for unfoldings equal
+          // to number of remaining characters. If we require more than that
+          // number of unfoldings, the membership is false.
           if (testConstStringInRegExpInternal(s, s.size(), r[0]))
           {
             l = remChars;

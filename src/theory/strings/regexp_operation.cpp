@@ -1022,20 +1022,20 @@ Node RegExpOpr::reduceRegExpNegConcatFixed(NodeManager* nm,
   Node r = mem[0][1];
   Assert(r.getKind() == Kind::REGEXP_CONCAT);
   Node zero = nm->mkConstInt(Rational(0));
-  // The following simplification states that
-  //    ~( s in R1 ++ R2 ++... ++ Rn )
-  // is equivalent to
-  //    forall x.
-  //      0 <= x <= len(s) =>
-  //        ~(substr(s,0,x) in R1) OR ~(substr(s,x,len(s)-x) in R2 ++ ... ++ Rn)
-  // Index is the child index of r that we are stripping off, which is either
-  // from the beginning or the end.
   Node lens = nm->mkNode(Kind::STRING_LENGTH, s);
   Node b1;
   Node b1v;
   Node guard1n, guard2n;
   if (reLen.isNull())
   {
+    // The following simplification states that
+    //  ~( s in R1 ++ R2 ++... ++ Rn )
+    // is equivalent to
+    //  forall x.
+    //    0 <= x <= len(s) =>
+    //      ~(substr(s,0,x) in R1) or ~(substr(s,x,len(s)-x) in R2 ++ ... ++ Rn)
+    // Index is the child index of r that we are stripping off, which is either
+    // from the beginning or the end.
     b1 = SkolemCache::mkIndexVar(nm, mem);
     b1v = nm->mkNode(Kind::BOUND_VAR_LIST, b1);
     guard1n = nm->mkNode(Kind::LT, b1, zero);
@@ -1043,6 +1043,13 @@ Node RegExpOpr::reduceRegExpNegConcatFixed(NodeManager* nm,
   }
   else
   {
+    // optimization:
+    //    ~( s in R1 ++ R2 ++... ++ Rn )
+    // is equivalent to
+    //    ~(substr(s,0,k) in R1) or ~(substr(s,k,len(s)-k) in R2 ++ ... ++ Rn)
+    // if R1 has a fixed length k. An analoguous optimization is used if Rn
+    // has fixed length k, when isRev=true. This information is computed
+    // as an input to this method.
     b1 = reLen;
   }
   Node s1;
@@ -1164,6 +1171,7 @@ Node RegExpOpr::reduceRegExpPos(NodeManager* nm,
     Assert(u >= 2);
     if (l > 0)
     {
+      // our rewriter ensures 1 is never the lower bound for re.loop
       Assert(l >= 2);
       Node op = nm->mkConst(RegExpLoop(l - 2, u - 2));
       Node rconcat = nm->mkNode(Kind::STRING_CONCAT,
@@ -1175,8 +1183,8 @@ Node RegExpOpr::reduceRegExpPos(NodeManager* nm,
     }
     else
     {
-      // x in (re.loop 0 u R) ----> x = "" V x in R V x in R ++ (re.loop 0 u-2
-      // R) ++ R
+      // x in (re.loop 0 u R) ----> 
+      //  (x = "") or (x in R) or (x in R ++ (re.loop 0 u-2 R) ++ R)
       Node emp = Word::mkEmptyWord(s.getType());
       Node se = s.eqNode(emp);
       Node op = nm->mkConst(RegExpLoop(0, u - 2));
