@@ -1723,7 +1723,9 @@ enum ENUM(ProofRule)
   EVALUE(RE_UNFOLD_NEG),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings -- Regular expressions -- Unfold negative concatenation, fixed**
+   * **Strings -- Regular expressions -- Unfold negative, fixed**
+   *
+   * If the regular expression is a concatenation:
    *
    * .. math::
    *
@@ -1732,8 +1734,8 @@ enum ENUM(ProofRule)
    *
    * where :math:`r_1` has fixed length :math:`L`.
    *
-   * or alternatively for the reverse:
-   *
+   * or alternatively if the regular expression is a concatenation and we are
+   * processing the last child:
    *
    * .. math::
    *
@@ -1742,10 +1744,20 @@ enum ENUM(ProofRule)
    *   \mathit{pre}(t, str.len(t) - L) \not \in \mathit{re}.\text{re.++}(r_1, \ldots, r_{n-1})}
    *
    * where :math:`r_n` has fixed length :math:`L`.
+   * 
+   * If the regular expression is a star:
+   *
+   * .. math::
+   *
+   *   \inferrule{t \not \in \mathit{re}.\text{re.*}(r) \mid \top}{
+   *   \mathit{suf}(t, str.len(t) - L) \not \in t \vee
+   *   \mathit{pre}(t, str.len(t) - L) \not \in \mathit{re}.\text{re.*}(r)}
+   *
+   * where :math:`r` has fixed length :math:`L`.
    *
    * \endverbatim
    */
-  EVALUE(RE_UNFOLD_NEG_CONCAT_FIXED),
+  EVALUE(RE_UNFOLD_NEG_FIXED),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Code points**

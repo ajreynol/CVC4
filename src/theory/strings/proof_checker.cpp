@@ -419,12 +419,12 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
     return nm->mkNode(Kind::STRING_IN_REGEXP, x, rei);
   }
   else if (id == ProofRule::RE_UNFOLD_POS || id == ProofRule::RE_UNFOLD_NEG
-           || id == ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED)
+           || id == ProofRule::RE_UNFOLD_NEG_FIXED)
   {
     Assert(children.size() == 1);
     Node skChild = children[0];
     if (id == ProofRule::RE_UNFOLD_NEG
-        || id == ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED)
+        || id == ProofRule::RE_UNFOLD_NEG_FIXED)
     {
       if (skChild.getKind() != Kind::NOT
           || skChild[0].getKind() != Kind::STRING_IN_REGEXP)
@@ -452,7 +452,7 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
       Assert(args.empty());
       conc = RegExpOpr::reduceRegExpNeg(nodeManager(), skChild);
     }
-    else if (id == ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED)
+    else if (id == ProofRule::RE_UNFOLD_NEG_FIXED)
     {
       Assert(args.size() == 1);
       bool isRev;
@@ -461,11 +461,6 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
         return Node::null();
       }
       Node r = skChild[0][1];
-      if (r.getKind() != Kind::REGEXP_CONCAT)
-      {
-        Trace("strings-pfcheck") << "...fail, no concat regexp" << std::endl;
-        return Node::null();
-      }
       size_t index = isRev ? r.getNumChildren() - 1 : 0;
       Node reLen = RegExpEntail::getFixedLengthForRegexp(r[index]);
       if (reLen.isNull())
@@ -473,7 +468,7 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
         Trace("strings-pfcheck") << "...fail, non-fixed lengths" << std::endl;
         return Node::null();
       }
-      conc = RegExpOpr::reduceRegExpNegConcatFixed(
+      conc = RegExpOpr::reduceRegExpNegFixed(
           nodeManager(), skChild, reLen, isRev);
     }
     return conc;

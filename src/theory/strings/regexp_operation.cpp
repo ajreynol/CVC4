@@ -972,36 +972,26 @@ Node RegExpOpr::reduceRegExpNeg(NodeManager* nm, Node mem)
 {
   Assert(mem.getKind() == Kind::NOT
          && mem[0].getKind() == Kind::STRING_IN_REGEXP);
-  Node s = mem[0][0];
-  Node r = mem[0][1];
-  Kind k = r.getKind();
-  Node zero = nm->mkConstInt(Rational(0));
-  Node conc;
-  if (k == Kind::REGEXP_CONCAT)
-  {
-    // do not use length entailment, call regular expression concat
-    Node reLen;
-    conc = reduceRegExpNegConcatFixed(nm, mem, reLen, false);
-  }
-  else if (k == Kind::REGEXP_STAR)
-  {
-    Node emp = Word::mkEmptyWord(s.getType());
-    Node lens = nm->mkNode(Kind::STRING_LENGTH, s);
-    Node sne = s.eqNode(emp).negate();
-    Node b1 = SkolemCache::mkIndexVar(nm, mem);
-    Node b1v = nm->mkNode(Kind::BOUND_VAR_LIST, b1);
-    Node g11n = nm->mkNode(Kind::LEQ, b1, zero);
-    Node g12n = nm->mkNode(Kind::LT, lens, b1);
-    // internal
-    Node s1 = utils::mkPrefix(s, b1);
-    Node s2 = utils::mkSuffix(s, b1);
-    Node s1r1 = nm->mkNode(Kind::STRING_IN_REGEXP, s1, r[0]).negate();
-    Node s2r2 = nm->mkNode(Kind::STRING_IN_REGEXP, s2, r).negate();
+  // do not use length entailment, call regular expression concat
+  Node reLen;
+  return reduceRegExpNegConcatFixed(nm, mem, reLen, false);
+}
 
-    conc = nm->mkNode(Kind::OR, {g11n, g12n, s1r1, s2r2});
-    // must mark as an internal quantifier
-    conc = utils::mkForallInternal(nm, b1v, conc);
-    conc = nm->mkNode(Kind::AND, sne, conc);
+Node RegExpOpr::reduceRegExpNegFixed(NodeManager* nm, Node mem,
+                                         Node reLen,
+                                           bool isRev)
+{
+  Assert(mem.getKind() == Kind::NOT
+         && mem[0].getKind() == Kind::STRING_IN_REGEXP);
+  Node conc;
+  Kind k = mem[0][1].getKind();
+  if (k==Kind::REGEXP_CONCAT)
+  {
+    conc = reduceRegExpNegConcatFixed(nm, mem, reLen, isRev);
+  }
+  else if (k==Kind::REGEXP_STAR)
+  {
+    conc = reduceRegExpNegConcatFixed(nm, mem, reLen);
   }
   else
   {
@@ -1079,6 +1069,54 @@ Node RegExpOpr::reduceRegExpNegConcatFixed(NodeManager* nm,
   {
     conc = nm->mkNode(Kind::OR, s1r1, s2r2);
   }
+  return conc;
+}
+
+Node RegExpOpr::reduceRegExpNegStarFixed(NodeManager* nm,
+                                         Node mem,
+                                         Node reLen)
+{
+  Assert(mem.getKind() == Kind::NOT
+         && mem[0].getKind() == Kind::STRING_IN_REGEXP);
+  Node s = mem[0][0];
+  Node r = mem[0][1];
+  Node conc;
+  Assert(r.getKind() == Kind::REGEXP_STAR);
+  Node zero = nm->mkConstInt(Rational(0));
+
+  Node emp = Word::mkEmptyWord(s.getType());
+  Node lens = nm->mkNode(Kind::STRING_LENGTH, s);
+  Node sne = s.eqNode(emp).negate();
+  Node b1, b1v, g11n, g12n;
+  if (reLen.isNull())
+  {
+    b1 = SkolemCache::mkIndexVar(nm, mem);
+    b1v = nm->mkNode(Kind::BOUND_VAR_LIST, b1);
+    g11n = nm->mkNode(Kind::LEQ, b1, zero);
+    g12n = nm->mkNode(Kind::LT, lens, b1);
+  }
+  else
+  {
+    b1 = reLen; 
+  }
+  // internal
+  Node s1 = utils::mkPrefix(s, b1);
+  Node s2 = utils::mkSuffix(s, b1);
+  Node s1r1 = nm->mkNode(Kind::STRING_IN_REGEXP, s1, r[0]).negate();
+  Node s2r2 = nm->mkNode(Kind::STRING_IN_REGEXP, s2, r).negate();
+
+  if (!b1v.isNull())
+  {
+    conc = nm->mkNode(Kind::OR, {g11n, g12n, s1r1, s2r2});
+    // must mark as an internal quantifier
+    conc = utils::mkForallInternal(nm, b1v, conc);
+    conc = nm->mkNode(Kind::AND, sne, conc);
+  }
+  else
+  {
+    conc = nm->mkNode(Kind::OR, {s1r1, s2r2});
+  }
+  
   return conc;
 }
 
