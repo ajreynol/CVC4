@@ -147,6 +147,11 @@ class RegExpOpr : protected EnvObj
    * Return the unfolded form of mem of the form (not (str.in_re s r)).
    */
   static Node reduceRegExpNeg(NodeManager* nm, Node mem);
+  /**
+   * Return the unfolded form of mem of the form (not (str.in_re s r)).
+   * If reLen is non-null, then the first (or last child if isRev=true) has
+   * fixed length reLen.
+   */
   static Node reduceRegExpNegFixed(NodeManager* nm,
                                    Node mem,
                                    Node reLen,
@@ -164,6 +169,14 @@ class RegExpOpr : protected EnvObj
                                          Node mem,
                                          Node reLen,
                                          bool isRev);
+  /**
+   * Return the unfolded form of mem of the form
+   *   (not (str.in_re s (re.* r)))
+   * Called when RegExpEntail::getFixedLengthForRegexp(r) = reLen.
+   *
+   * This uses reLen as an optimization to improve the reduction. If reLen
+   * is null, then this optimization is not applied.
+   */
   static Node reduceRegExpNegStarFixed(NodeManager* nm, Node mem, Node reLen);
   //------------------------ end trusted reductions
   /**

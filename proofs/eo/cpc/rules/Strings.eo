@@ -368,7 +368,7 @@
 ;   regular expression in question has a fixed length. This is an optimized
 ;   version of ProofRule::RE_UNFOLD_NEG that does not introduce a quantified
 ;   formula for reasoning about length.
-(declare-rule re_unfold_neg_concat_fixed ((s String) (r RegLan) (rev Bool))
+(declare-rule re_unfold_neg_fixed ((s String) (r RegLan) (rev Bool))
   :premises ((not (str.in_re s r)))
   :args (rev)
   :conclusion
