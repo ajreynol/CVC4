@@ -150,8 +150,7 @@ const char* toString(ProofRule rule)
     case ProofRule::RE_INTER: return "RE_INTER";
     case ProofRule::RE_UNFOLD_POS: return "RE_UNFOLD_POS";
     case ProofRule::RE_UNFOLD_NEG: return "RE_UNFOLD_NEG";
-    case ProofRule::RE_UNFOLD_NEG_FIXED:
-      return "RE_UNFOLD_NEG_FIXED";
+    case ProofRule::RE_UNFOLD_NEG_FIXED: return "RE_UNFOLD_NEG_FIXED";
     case ProofRule::STRING_CODE_INJ: return "STRING_CODE_INJ";
     case ProofRule::STRING_SEQ_UNIT_INJ: return "STRING_SEQ_UNIT_INJ";
     case ProofRule::MACRO_STRING_INFERENCE: return "MACRO_STRING_INFERENCE";

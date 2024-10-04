@@ -423,8 +423,7 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
   {
     Assert(children.size() == 1);
     Node skChild = children[0];
-    if (id == ProofRule::RE_UNFOLD_NEG
-        || id == ProofRule::RE_UNFOLD_NEG_FIXED)
+    if (id == ProofRule::RE_UNFOLD_NEG || id == ProofRule::RE_UNFOLD_NEG_FIXED)
     {
       if (skChild.getKind() != Kind::NOT
           || skChild[0].getKind() != Kind::STRING_IN_REGEXP)
@@ -468,8 +467,8 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
         Trace("strings-pfcheck") << "...fail, non-fixed lengths" << std::endl;
         return Node::null();
       }
-      conc = RegExpOpr::reduceRegExpNegFixed(
-          nodeManager(), skChild, reLen, isRev);
+      conc =
+          RegExpOpr::reduceRegExpNegFixed(nodeManager(), skChild, reLen, isRev);
     }
     return conc;
   }

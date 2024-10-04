@@ -147,9 +147,10 @@ class RegExpOpr : protected EnvObj
    * Return the unfolded form of mem of the form (not (str.in_re s r)).
    */
   static Node reduceRegExpNeg(NodeManager* nm, Node mem);
-  static Node reduceRegExpNegFixed(NodeManager* nm, Node mem,
-                                         Node reLen,
-                                           bool isRev);
+  static Node reduceRegExpNegFixed(NodeManager* nm,
+                                   Node mem,
+                                   Node reLen,
+                                   bool isRev);
   /**
    * Return the unfolded form of mem of the form
    *   (not (str.in_re s (re.++ r_0 ... r_{n-1})))
@@ -163,9 +164,7 @@ class RegExpOpr : protected EnvObj
                                          Node mem,
                                          Node reLen,
                                          bool isRev);
-  static Node reduceRegExpNegStarFixed(NodeManager* nm,
-                                         Node mem,
-                                         Node reLen);
+  static Node reduceRegExpNegStarFixed(NodeManager* nm, Node mem, Node reLen);
   //------------------------ end trusted reductions
   /**
    * This method returns 1 if the empty string is in r, 2 if the empty string

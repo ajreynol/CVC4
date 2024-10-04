@@ -981,19 +981,20 @@ Node RegExpOpr::reduceRegExpNeg(NodeManager* nm, Node mem)
   return reduceRegExpNegConcatFixed(nm, mem, reLen, false);
 }
 
-Node RegExpOpr::reduceRegExpNegFixed(NodeManager* nm, Node mem,
-                                         Node reLen,
-                                           bool isRev)
+Node RegExpOpr::reduceRegExpNegFixed(NodeManager* nm,
+                                     Node mem,
+                                     Node reLen,
+                                     bool isRev)
 {
   Assert(mem.getKind() == Kind::NOT
          && mem[0].getKind() == Kind::STRING_IN_REGEXP);
   Node conc;
   Kind k = mem[0][1].getKind();
-  if (k==Kind::REGEXP_CONCAT)
+  if (k == Kind::REGEXP_CONCAT)
   {
     conc = reduceRegExpNegConcatFixed(nm, mem, reLen, isRev);
   }
-  else if (k==Kind::REGEXP_STAR)
+  else if (k == Kind::REGEXP_STAR)
   {
     conc = reduceRegExpNegStarFixed(nm, mem, reLen);
   }
@@ -1076,9 +1077,7 @@ Node RegExpOpr::reduceRegExpNegConcatFixed(NodeManager* nm,
   return conc;
 }
 
-Node RegExpOpr::reduceRegExpNegStarFixed(NodeManager* nm,
-                                         Node mem,
-                                         Node reLen)
+Node RegExpOpr::reduceRegExpNegStarFixed(NodeManager* nm, Node mem, Node reLen)
 {
   Assert(mem.getKind() == Kind::NOT
          && mem[0].getKind() == Kind::STRING_IN_REGEXP);
@@ -1101,7 +1100,7 @@ Node RegExpOpr::reduceRegExpNegStarFixed(NodeManager* nm,
   }
   else
   {
-    b1 = reLen; 
+    b1 = reLen;
   }
   // internal
   Node s1 = utils::mkPrefix(s, b1);
