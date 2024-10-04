@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Haniel Barbosa, Mathias Preiner
+ *   Andrew Reynolds, Haniel Barbosa, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -56,16 +56,16 @@ int TermCanonize::getIdForType(TypeNode t)
 
 bool TermCanonize::getTermOrder(Node a, Node b)
 {
-  if (a.getKind() == BOUND_VARIABLE)
+  if (a.getKind() == Kind::BOUND_VARIABLE)
   {
-    if (b.getKind() == BOUND_VARIABLE)
+    if (b.getKind() == Kind::BOUND_VARIABLE)
     {
       // just use builtin node comparison
       return a < b;
     }
     return true;
   }
-  if (b.getKind() != BOUND_VARIABLE)
+  if (b.getKind() != Kind::BOUND_VARIABLE)
   {
     Node aop = a.hasOperator() ? a.getOperator() : a;
     Node bop = b.hasOperator() ? b.getOperator() : b;
@@ -163,7 +163,7 @@ Node TermCanonize::getCanonicalTerm(
   }
 
   Trace("canon-term-debug") << "Get canonical term for " << n << std::endl;
-  if (n.getKind() == BOUND_VARIABLE)
+  if (n.getKind() == Kind::BOUND_VARIABLE)
   {
     uint32_t tc = getTypeClass(n);
     TypeNode tn = n.getType();

@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -56,7 +56,7 @@ Node FunDefEvaluator::evaluateDefinitions(Node n) const
   // should do standard rewrite before this call
   Assert(rewrite(n) == n);
   Trace("fd-eval") << "FunDefEvaluator: evaluateDefinitions " << n << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::unordered_map<TNode, unsigned> funDefCount;
   std::unordered_map<TNode, unsigned>::iterator itCount;
   std::unordered_map<TNode, Node> visited;
@@ -83,7 +83,7 @@ Node FunDefEvaluator::evaluateDefinitions(Node n) const
         Trace("fd-eval-debug") << "constant " << cur << std::endl;
         visited[cur] = cur;
       }
-      else if (cur.getKind() == ITE)
+      else if (cur.getKind() == Kind::ITE)
       {
         Trace("fd-eval-debug") << "ITE " << cur << std::endl;
         visited[cur] = Node::null();
@@ -113,11 +113,12 @@ Node FunDefEvaluator::evaluateDefinitions(Node n) const
         Kind ck = cur.getKind();
         // If a parameterized node that is not APPLY_UF (which is handled below,
         // we add it to the children vector.
-        if (ck != APPLY_UF && cur.getMetaKind() == metakind::PARAMETERIZED)
+        if (ck != Kind::APPLY_UF
+            && cur.getMetaKind() == metakind::PARAMETERIZED)
         {
           children.push_back(cur.getOperator());
         }
-        else if (ck == ITE)
+        else if (ck == Kind::ITE)
         {
           // get evaluation of condition
           it = visited.find(cur[0]);
@@ -155,7 +156,7 @@ Node FunDefEvaluator::evaluateDefinitions(Node n) const
           Trace("fd-eval-debug2") << "argument " << child++
                                   << " eval : " << it->second << std::endl;
         }
-        if (cur.getKind() == APPLY_UF)
+        if (cur.getKind() == Kind::APPLY_UF)
         {
           // need to evaluate it
           f = cur.getOperator();

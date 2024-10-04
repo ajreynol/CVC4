@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Mathias Preiner, Andrew Reynolds
+ *   Mathias Preiner, Andrew Reynolds, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -33,7 +33,7 @@ BvEagerAtoms::BvEagerAtoms(PreprocessingPassContext* preprocContext)
 PreprocessingPassResult BvEagerAtoms::applyInternal(
     AssertionPipeline* assertionsToPreprocess)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (unsigned i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
   {
     TNode atom = (*assertionsToPreprocess)[i];
@@ -42,7 +42,7 @@ PreprocessingPassResult BvEagerAtoms::applyInternal(
       // don't bother making true/false into atoms
       continue;
     }
-    Node eager_atom = nm->mkNode(kind::BITVECTOR_EAGER_ATOM, atom);
+    Node eager_atom = nm->mkNode(Kind::BITVECTOR_EAGER_ATOM, atom);
     assertionsToPreprocess->replace(i, eager_atom);
   }
   return PreprocessingPassResult::NO_CONFLICT;

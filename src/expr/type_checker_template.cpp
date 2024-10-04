@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Morgan Deters, Andrew Reynolds, Aina Niemetz
+ *   Morgan Deters, Aina Niemetz, Andrew Reynolds
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -34,15 +34,15 @@ TypeNode TypeChecker::preComputeType(NodeManager* nodeManager, TNode n)
   // Infer the type
   switch (n.getKind())
   {
-    case kind::VARIABLE:
-    case kind::SKOLEM:
-    case kind::BOUND_VARIABLE:
-    case kind::INST_CONSTANT:
-    case kind::RAW_SYMBOL:
+    case Kind::VARIABLE:
+    case Kind::SKOLEM:
+    case Kind::BOUND_VARIABLE:
+    case Kind::INST_CONSTANT:
+    case Kind::RAW_SYMBOL:
       // variable kinds have their type marked as an attribute upon construction
       typeNode = nodeManager->getAttribute(n, TypeAttr());
       break;
-    case kind::BUILTIN:
+    case Kind::BUILTIN:
       typeNode = nodeManager->builtinOperatorType();
       break;
 

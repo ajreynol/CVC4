@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Mathias Preiner
+ *   Andrew Reynolds, Aina Niemetz, Mathias Preiner
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -58,7 +58,8 @@ void SygusRedundantCons::initialize(TermDbSygus* tds, TypeNode tn)
     d_gen_terms[i] = g;
     // is the operator a lambda of the form (lambda x1...xn. f(x1...xn))?
     bool lamInOrder = false;
-    if (sop.getKind() == LAMBDA && sop[0].getNumChildren() == sop[1].getNumChildren())
+    if (sop.getKind() == Kind::LAMBDA
+        && sop[0].getNumChildren() == sop[1].getNumChildren())
     {
       Assert(g.getNumChildren()==sop[0].getNumChildren());
       lamInOrder = true;

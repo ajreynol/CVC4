@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Morgan Deters, Aina Niemetz
+ *   Andrew Reynolds, Aina Niemetz, Morgan Deters
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -94,7 +94,7 @@ Node DTypeConstructor::getInstantiatedConstructor(TypeNode returnType) const
   Assert(isResolved());
   NodeManager* nm = NodeManager::currentNM();
   return nm->mkNode(
-      kind::APPLY_TYPE_ASCRIPTION,
+      Kind::APPLY_TYPE_ASCRIPTION,
       nm->mkConst(AscriptionType(getInstantiatedConstructorType(returnType))),
       d_constructor);
 }
@@ -109,12 +109,12 @@ void DTypeConstructor::setSygus(Node op)
 {
   Assert(!isResolved());
   d_sygusOp = op;
-  if (op.getKind() == SKOLEM)
+  if (op.getKind() == Kind::SKOLEM)
   {
     // check if stands for the "any constant" constructor
     NodeManager* nm = NodeManager::currentNM();
     SkolemManager* sm = nm->getSkolemManager();
-    if (sm->getId(op) == SkolemFunId::SYGUS_ANY_CONSTANT)
+    if (sm->getInternalId(op) == InternalSkolemId::SYGUS_ANY_CONSTANT)
     {
       // mark with attribute, which is a faster lookup
       SygusAnyConstAttribute saca;
@@ -133,7 +133,8 @@ bool DTypeConstructor::isSygusIdFunc() const
 {
   Assert(isResolved());
   Assert(!d_sygusOp.isNull());
-  return (d_sygusOp.getKind() == LAMBDA && d_sygusOp[0].getNumChildren() == 1
+  return (d_sygusOp.getKind() == Kind::LAMBDA
+          && d_sygusOp[0].getNumChildren() == 1
           && d_sygusOp[0][0] == d_sygusOp[1]);
 }
 
@@ -141,7 +142,12 @@ bool DTypeConstructor::isSygusAnyConstant() const
 {
   Assert(isResolved());
   Assert(!d_sygusOp.isNull());
-  return d_sygusOp.getAttribute(SygusAnyConstAttribute());
+  return isSygusAnyConstantOp(d_sygusOp);
+}
+
+bool DTypeConstructor::isSygusAnyConstantOp(const Node& n)
+{
+  return n.getAttribute(SygusAnyConstAttribute());
 }
 
 unsigned DTypeConstructor::getWeight() const
@@ -465,7 +471,7 @@ Node DTypeConstructor::computeGroundTerm(TypeNode t,
     }
   }
 
-  Node groundTerm = nm->mkNode(APPLY_CONSTRUCTOR, groundTerms);
+  Node groundTerm = nm->mkNode(Kind::APPLY_CONSTRUCTOR, groundTerms);
   if (isParam)
   {
     Assert(DType::datatypeOf(d_constructor).isParametric());
@@ -473,10 +479,10 @@ Node DTypeConstructor::computeGroundTerm(TypeNode t,
     Trace("datatypes-init") << "ambiguous type for " << groundTerm
                             << ", ascribe to " << t << std::endl;
     groundTerms[0] = nm->mkNode(
-        APPLY_TYPE_ASCRIPTION,
+        Kind::APPLY_TYPE_ASCRIPTION,
         nm->mkConst(AscriptionType(getInstantiatedConstructorType(t))),
         groundTerms[0]);
-    groundTerm = nm->mkNode(APPLY_CONSTRUCTOR, groundTerms);
+    groundTerm = nm->mkNode(Kind::APPLY_CONSTRUCTOR, groundTerms);
   }
   Trace("datatypes-init") << "...return " << groundTerm << std::endl;
   Assert(!isValue || groundTerm.isConst()) << "Non-constant term " << groundTerm
@@ -669,7 +675,7 @@ TypeNode DTypeConstructor::doParametricSubstitution(
     children.push_back(
         doParametricSubstitution((*i), paramTypes, paramReplacements));
   }
-  if (range.getKind() == INSTANTIATED_SORT_TYPE)
+  if (range.getKind() == Kind::INSTANTIATED_SORT_TYPE)
   {
     // paramTypes contains a list of uninterpreted sort constructors.
     // paramReplacements contains a list of instantiated parametric datatypes.
@@ -725,3 +731,11 @@ std::ostream& operator<<(std::ostream& os, const DTypeConstructor& ctor)
 }
 
 }  // namespace cvc5::internal
+
+namespace std {
+size_t hash<cvc5::internal::DTypeConstructor>::operator()(
+    const cvc5::internal::DTypeConstructor& cons) const
+{
+  return std::hash<std::string>()(cons.getName());
+}
+}  // namespace std

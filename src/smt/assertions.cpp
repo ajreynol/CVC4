@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -157,12 +157,13 @@ void Assertions::addFormula(TNode n,
   if (isFunDef)
   {
     // if a non-recursive define-fun, just add as a top-level substitution
-    if (n.getKind() == EQUAL && ns[0].isVar())
+
+    if (n.getKind() == Kind::EQUAL && n[0].isVar())
     {
       // A define-fun is an assumption in the overall proof, thus
       // we justify the substitution with ASSUME here.
       d_env.getTopLevelSubstitutions().addSubstitution(
-          ns[0], ns[1], PfRule::ASSUME, {}, {ns});
+          ns[0], ns[1], ProofRule::ASSUME, {}, {ns});
       return;
     }
   }
@@ -170,19 +171,19 @@ void Assertions::addFormula(TNode n,
   // Ensure that it does not contain free variables
   if (maybeHasFv)
   {
-    bool wasShadow = false;
-    if (expr::hasFreeOrShadowedVar(ns, wasShadow))
+    // Note that API users and the smt2 parser may generate assertions with
+    // shadowed variables, which are resolved during rewriting. Hence we do not
+    // check for this here.
+    if (expr::hasFreeVar(ns))
     {
-      std::string varType(wasShadow ? "shadowed" : "free");
       std::stringstream se;
       if (isFunDef)
       {
-        se << "Cannot process function definition with " << varType
-           << " variable.";
+        se << "Cannot process function definition with free variable.";
       }
       else
       {
-        se << "Cannot process assertion with " << varType << " variable.";
+        se << "Cannot process assertion with free variable.";
         if (language::isLangSygus(options().base.inputLanguage))
         {
           // Common misuse of SyGuS is to use top-level assert instead of

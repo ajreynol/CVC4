@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -24,7 +24,7 @@ namespace utils {
 
 Integer getCardinality(const TypeNode& type)
 {
-  Assert(type.getKind() == kind::FLOATINGPOINT_TYPE);
+  Assert(type.getKind() == Kind::FLOATINGPOINT_TYPE);
 
   FloatingPointSize fps = type.getConst<FloatingPointSize>();
 

@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Gereon Kremer, Andrew Reynolds, Aina Niemetz
+ *   Gereon Kremer, Andrew Reynolds, Hans-Joerg Schurr
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -43,11 +43,11 @@ TranscendentalState::TranscendentalState(Env& env,
       d_trPurifies(userContext()),
       d_trPurifyVars(userContext())
 {
-  d_true = NodeManager::currentNM()->mkConst(true);
-  d_false = NodeManager::currentNM()->mkConst(false);
-  d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
-  d_one = NodeManager::currentNM()->mkConstInt(Rational(1));
-  d_neg_one = NodeManager::currentNM()->mkConstInt(Rational(-1));
+  d_true = nodeManager()->mkConst(true);
+  d_false = nodeManager()->mkConst(false);
+  d_zero = nodeManager()->mkConstInt(Rational(0));
+  d_one = nodeManager()->mkConstInt(Rational(1));
+  d_neg_one = nodeManager()->mkConstInt(Rational(-1));
   if (d_env.isTheoryProofProducing())
   {
     d_proof.reset(
@@ -177,7 +177,7 @@ void TranscendentalState::init(const std::vector<Node>& xts,
 void TranscendentalState::ensureCongruence(TNode a,
                                            std::map<Kind, ArgTrie>& argTrie)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::vector<Node> repList;
   for (const Node& ac : a)
   {
@@ -217,7 +217,7 @@ void TranscendentalState::ensureCongruence(TNode a,
 
 void TranscendentalState::mkPi()
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   if (d_pi.isNull())
   {
     d_pi = nm->mkNullaryOperator(nm->realType(), Kind::PI);
@@ -238,7 +238,7 @@ void TranscendentalState::getCurrentPiBounds()
       || piv.getConst<Rational>() < d_pi_bound[0].getConst<Rational>()
       || piv.getConst<Rational>() > d_pi_bound[1].getConst<Rational>())
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     Node pi_lem = nm->mkNode(Kind::AND,
                              nm->mkNode(Kind::GEQ, d_pi, d_pi_bound[0]),
                              nm->mkNode(Kind::LEQ, d_pi, d_pi_bound[1]));
@@ -246,8 +246,10 @@ void TranscendentalState::getCurrentPiBounds()
     if (isProofEnabled())
     {
       proof = getProof();
-      proof->addStep(
-          pi_lem, PfRule::ARITH_TRANS_PI, {}, {d_pi_bound[0], d_pi_bound[1]});
+      proof->addStep(pi_lem,
+                     ProofRule::ARITH_TRANS_PI,
+                     {},
+                     {d_pi_bound[0], d_pi_bound[1]});
     }
     d_im.addPendingLemma(pi_lem, InferenceId::ARITH_NL_T_PI_BOUND, proof);
   }
@@ -287,7 +289,7 @@ std::pair<Node, Node> TranscendentalState::getClosestSecantPoints(TNode e,
 Node TranscendentalState::mkSecantPlane(
     TNode arg, TNode lower, TNode upper, TNode lval, TNode uval)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // Figure 3: S_l( x ), S_u( x ) for s = 0,1
   Node rcoeff_n = rewrite(nm->mkNode(Kind::SUB, lower, upper));
   Assert(rcoeff_n.isConst());
@@ -322,7 +324,7 @@ NlLemma TranscendentalState::mkSecantLemma(TNode lower,
 {
   Assert(lower.isConst() && upper.isConst());
   Assert(lower.getConst<Rational>() < upper.getConst<Rational>());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // With respect to Figure 3, this is slightly different.
   // In particular, we chose b to be the model value of bounds[s],
   // which is a constant although bounds[s] may not be (e.g. if it
@@ -361,14 +363,14 @@ NlLemma TranscendentalState::mkSecantLemma(TNode lower,
       if (csign == 1)
       {
         proof->addStep(lem,
-                       PfRule::ARITH_TRANS_EXP_APPROX_ABOVE_POS,
+                       ProofRule::ARITH_TRANS_EXP_APPROX_ABOVE_POS,
                        {},
                        {nm->mkConstInt(2 * actual_d), tf[0], lower, upper});
       }
       else
       {
         proof->addStep(lem,
-                       PfRule::ARITH_TRANS_EXP_APPROX_ABOVE_NEG,
+                       ProofRule::ARITH_TRANS_EXP_APPROX_ABOVE_NEG,
                        {},
                        {nm->mkConstInt(2 * actual_d), tf[0], lower, upper});
       }
@@ -379,7 +381,7 @@ NlLemma TranscendentalState::mkSecantLemma(TNode lower,
       {
         proof->addStep(
             lem,
-            PfRule::ARITH_TRANS_SINE_APPROX_BELOW_POS,
+            ProofRule::ARITH_TRANS_SINE_APPROX_BELOW_POS,
             {},
             {nm->mkConstInt(2 * actual_d), tf[0], lower, upper, lapprox, uapprox
 
@@ -388,7 +390,7 @@ NlLemma TranscendentalState::mkSecantLemma(TNode lower,
       else
       {
         proof->addStep(lem,
-                       PfRule::ARITH_TRANS_SINE_APPROX_ABOVE_NEG,
+                       ProofRule::ARITH_TRANS_SINE_APPROX_ABOVE_NEG,
                        {},
                        {nm->mkConstInt(2 * actual_d),
                         tf[0],
@@ -463,7 +465,7 @@ bool TranscendentalState::isPurified(TNode n) const
 
 Node TranscendentalState::getPurifiedForm(TNode n)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   NodeMap::const_iterator it = d_trPurify.find(n);
   if (it != d_trPurify.end())
@@ -479,8 +481,7 @@ Node TranscendentalState::getPurifiedForm(TNode n)
   }
   else
   {
-    y = sm->mkSkolemFunction(
-        SkolemFunId::TRANSCENDENTAL_PURIFY_ARG, nm->realType(), n);
+    y = sm->mkSkolemFunction(SkolemId::TRANSCENDENTAL_PURIFY_ARG, n);
   }
   Node new_n = nm->mkNode(k, y);
   d_trPurify[n] = new_n;
@@ -492,7 +493,7 @@ Node TranscendentalState::getPurifiedForm(TNode n)
 
 bool TranscendentalState::isSimplePurify(TNode n)
 {
-  if (n.getKind() != kind::SINE)
+  if (n.getKind() != Kind::SINE)
   {
     return true;
   }

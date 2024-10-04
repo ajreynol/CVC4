@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Aina Niemetz, Andres Noetzli
+ *   Andrew Reynolds, Aina Niemetz, Gereon Kremer
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -116,41 +116,7 @@ void SmtSolver::interrupt()
 Result SmtSolver::checkSatInternal()
 {
   // call the prop engine to check sat
-  Result result = d_propEngine->checkSat();
-  // handle options-specific modifications to result
-  if ((options().smt.solveRealAsInt || options().smt.solveIntAsBV > 0)
-      && result.getStatus() == Result::UNSAT)
-  {
-    result = Result(Result::UNKNOWN, UnknownExplanation::UNKNOWN_REASON);
-  }
-  // handle preprocessing-specific modifications to result
-  if (options().quantifiers.globalNegate)
-  {
-    Trace("smt") << "SmtSolver::process global negate " << result << std::endl;
-    if (result.getStatus() == Result::UNSAT)
-    {
-      result = Result(Result::SAT);
-    }
-    else if (result.getStatus() == Result::SAT)
-    {
-      // Only can answer unsat if the theory is satisfaction complete. This
-      // includes linear arithmetic and bitvectors, which are the primary
-      // targets for the global negate option. Other logics are possible
-      // here but not considered.
-      LogicInfo logic = logicInfo();
-      if ((logic.isPure(theory::THEORY_ARITH) && logic.isLinear())
-          || logic.isPure(theory::THEORY_BV))
-      {
-        result = Result(Result::UNSAT);
-      }
-      else
-      {
-        result = Result(Result::UNKNOWN, UnknownExplanation::UNKNOWN_REASON);
-      }
-    }
-    Trace("smt") << "SmtSolver::global negate returned " << result << std::endl;
-  }
-  return result;
+  return d_propEngine->checkSat();
 }
 
 void SmtSolver::preprocess(preprocessing::AssertionPipeline& ap)
@@ -167,6 +133,15 @@ void SmtSolver::preprocess(preprocessing::AssertionPipeline& ap)
 
 void SmtSolver::assertToInternal(preprocessing::AssertionPipeline& ap)
 {
+  // carry information about soundness to the theory engine we are sending to
+  if (ap.isRefutationUnsound())
+  {
+    d_theoryEngine->setRefutationUnsound(theory::IncompleteId::PREPROCESSING);
+  }
+  if (ap.isModelUnsound())
+  {
+    d_theoryEngine->setModelUnsound(theory::IncompleteId::PREPROCESSING);
+  }
   // get the assertions
   const std::vector<Node>& assertions = ap.ref();
   preprocessing::IteSkolemMap& ism = ap.getIteSkolemMap();

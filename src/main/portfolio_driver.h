@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Gereon Kremer, Andrew Reynolds, Andres Noetzli
+ *   Gereon Kremer, Andrew Reynolds
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -58,11 +58,10 @@ class ExecutionContext
    * Execute the given commands.
    * Returns true if the commands have been executed without being interrupted.
    */
-  bool solveCommands(std::vector<std::unique_ptr<cvc5::parser::Command>>& cmds);
+  bool solveCommands(std::vector<cvc5::parser::Command>& cmds);
 
   /** Parse the remaining input from d_parser into a vector of commands */
-  std::vector<std::unique_ptr<cvc5::parser::Command>> parseCommands(
-      parser::InputParser* parser);
+  std::vector<cvc5::parser::Command> parseCommands(parser::InputParser* parser);
 };
 
 /**

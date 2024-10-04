@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Mathias Preiner, Aina Niemetz
+ *   Andrew Reynolds, Aina Niemetz, Mathias Preiner
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -38,7 +38,7 @@ QueryGeneratorSampleSat::QueryGeneratorSampleSat(Env& env, unsigned deqThresh)
 
 bool QueryGeneratorSampleSat::addTerm(Node n, std::vector<Node>& foundQueries)
 {
-  Node nn = n.getKind() == NOT ? n[0] : n;
+  Node nn = n.getKind() == Kind::NOT ? n[0] : n;
   if (d_terms.find(nn) != d_terms.end())
   {
     return false;
@@ -129,7 +129,7 @@ bool QueryGeneratorSampleSat::addTerm(Node n, std::vector<Node>& foundQueries)
     }
   }
   // for each new index, we may have a new conjunctive query
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (const unsigned& i : indices)
   {
     std::vector<Node>& qsi = d_ptToQueries[i];
@@ -142,7 +142,7 @@ bool QueryGeneratorSampleSat::addTerm(Node n, std::vector<Node>& foundQueries)
       {
         rindex2 = rindex2 + 1;
       }
-      Node qy = nm->mkNode(AND, qsi[rindex], qsi[rindex2]);
+      Node qy = nm->mkNode(Kind::AND, qsi[rindex], qsi[rindex2]);
       checkQuery(qy, i, foundQueries);
     }
   }

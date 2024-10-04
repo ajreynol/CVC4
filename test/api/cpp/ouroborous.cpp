@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Aina Niemetz, Mathias Preiner, Morgan Deters
+ *   Aina Niemetz, Andrew Reynolds, Mathias Preiner
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -20,7 +20,7 @@
  *
  * To add a new test, simply add a call to runTestString() under
  * runTest(), below.  If you don't specify an input language,
- * LANG_SMTLIB_V2 is used.  If your example depends on variables,
+ * LANG_SMTLIB_V2 is used.  If your example depends on symbolic constants,
  * you'll need to declare them in the "declarations" global, just
  * below, in SMT-LIBv2 form (but they're good for all languages).
  */
@@ -31,8 +31,6 @@
 #include <cassert>
 #include <iostream>
 #include <string>
-
-#include "parser/parser_exception.h"
 
 using namespace cvc5;
 using namespace cvc5::internal;
@@ -50,10 +48,6 @@ int main()
   {
     std::cerr << e.getMessage() << std::endl;
   }
-  catch (ParserException& e)
-  {
-    std::cerr << e.getMessage() << std::endl;
-  }
   catch (...)
   {
     std::cerr << "non-cvc5 exception thrown" << std::endl;
@@ -68,24 +62,23 @@ std::string parse(std::string instr,
   assert(input_language == "smt2");
   assert(output_language == "smt2");
 
-  std::string declarations;
+  std::string declarations =
+      "(set-logic ALL)\n"
+      "(declare-sort U 0)\n"
+      "(declare-fun f (U) U)\n"
+      "(declare-fun x () U)\n"
+      "(declare-fun y () U)\n"
+      "(assert (= (f x) x))\n"
+      "(declare-fun a () (Array U (Array U U)))\n";
 
-    declarations =
-        "\
-  (declare-sort U 0)\n\
-  (declare-fun f (U) U)\n\
-  (declare-fun x () U)\n\
-  (declare-fun y () U)\n\
-  (assert (= (f x) x))\n\
-  (declare-fun a () (Array U (Array U U)))\n\
-  ";
+  cvc5::TermManager tm;
+  cvc5::Solver solver(tm);
 
-  cvc5::Solver solver;
-  std::string ilang = "LANG_SMTLIB_V2_6";
+  modes::InputLanguage ilang = modes::InputLanguage::SMT_LIB_2_6;
 
   solver.setOption("input-language", input_language);
   solver.setOption("output-language", output_language);
-  SymbolManager symman(&solver);
+  SymbolManager symman(tm);
   InputParser parser(&solver, &symman);
   std::stringstream ss;
   ss << declarations;
@@ -93,18 +86,24 @@ std::string parse(std::string instr,
   // we don't need to execute the commands, but we DO need to parse them to
   // get the declarations
   std::stringstream tmp;
-  while (std::unique_ptr<Command> c = parser.nextCommand())
+  Command c;
+  while (true)
   {
+    c = parser.nextCommand();
+    if (c.isNull())
+    {
+      break;
+    }
     // invoke the command, which may bind symbols
-    c->invoke(&solver, &symman, tmp);
+    c.invoke(&solver, &symman, tmp);
   }
   assert(parser.done());  // parser should be done
   std::stringstream ssi;
   ssi << instr;
   parser.setStreamInput(ilang, ss, "internal-buffer");
-  cvc5::Term e = parser.nextExpression();
+  cvc5::Term e = parser.nextTerm();
   std::string s = e.toString();
-  assert(parser.nextExpression().isNull());  // next expr should be null
+  assert(parser.nextTerm().isNull());  // next expr should be null
   return s;
 }
 

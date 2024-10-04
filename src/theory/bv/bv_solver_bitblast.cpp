@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Mathias Preiner, Andrew Reynolds, Andres Noetzli
+ *   Mathias Preiner, Andrew Reynolds, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -86,11 +86,11 @@ class BBRegistrar : public prop::Registrar
       return;
     }
     /* We are only interested in bit-vector atoms. */
-    if ((n.getKind() == kind::EQUAL && n[0].getType().isBitVector())
-        || n.getKind() == kind::BITVECTOR_ULT
-        || n.getKind() == kind::BITVECTOR_ULE
-        || n.getKind() == kind::BITVECTOR_SLT
-        || n.getKind() == kind::BITVECTOR_SLE)
+    if ((n.getKind() == Kind::EQUAL && n[0].getType().isBitVector())
+        || n.getKind() == Kind::BITVECTOR_ULT
+        || n.getKind() == Kind::BITVECTOR_ULE
+        || n.getKind() == Kind::BITVECTOR_SLT
+        || n.getKind() == Kind::BITVECTOR_SLE)
     {
       d_registeredAtoms.insert(n);
       d_bitblaster->bbAtom(n);
@@ -121,6 +121,7 @@ BVSolverBitblast::BVSolverBitblast(Env& env,
       d_epg(env.isTheoryProofProducing()
                 ? new EagerProofGenerator(env, userContext(), "")
                 : nullptr),
+      d_bvProofChecker(nodeManager()),
       d_factLiteralCache(context()),
       d_literalFactCache(context()),
       d_propagate(options().bv.bitvectorPropagate),
@@ -162,7 +163,7 @@ void BVSolverBitblast::postCheck(Theory::Effort level)
     d_resetNotify->reset();
   }
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   /* Process input assertions bit-blast queue. */
   while (!d_bbInputFacts.empty())
@@ -172,7 +173,7 @@ void BVSolverBitblast::postCheck(Theory::Effort level)
     /* Bit-blast fact and cache literal. */
     if (d_factLiteralCache.find(fact) == d_factLiteralCache.end())
     {
-      if (fact.getKind() == kind::BITVECTOR_EAGER_ATOM)
+      if (fact.getKind() == Kind::BITVECTOR_EAGER_ATOM)
       {
         handleEagerAtom(fact, true);
       }
@@ -195,7 +196,7 @@ void BVSolverBitblast::postCheck(Theory::Effort level)
     if (d_factLiteralCache.find(fact) == d_factLiteralCache.end())
     {
       prop::SatLiteral lit;
-      if (fact.getKind() == kind::BITVECTOR_EAGER_ATOM)
+      if (fact.getKind() == Kind::BITVECTOR_EAGER_ATOM)
       {
         handleEagerAtom(fact, false);
         lit = d_cnfStream->getLiteral(fact[0]);
@@ -313,7 +314,7 @@ bool BVSolverBitblast::collectModelValues(TheoryModel* m,
   // Boolean variables in the CNF stream.
   if (options().bv.bitblastMode == options::BitblastMode::EAGER)
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     std::vector<TNode> vars;
     d_cnfStream->getBooleanVariables(vars);
     for (TNode var : vars)
@@ -345,6 +346,7 @@ void BVSolverBitblast::initSatSolver()
       break;
     default:
       d_satSolver.reset(prop::SatSolverFactory::createCadical(
+          d_env,
           statisticsRegistry(),
           d_env.getResourceManager(),
           "theory::bv::BVSolverBitblast::"));
@@ -392,7 +394,7 @@ Node BVSolverBitblast::getValue(TNode node, bool initialize)
 
 void BVSolverBitblast::handleEagerAtom(TNode fact, bool assertFact)
 {
-  Assert(fact.getKind() == kind::BITVECTOR_EAGER_ATOM);
+  Assert(fact.getKind() == Kind::BITVECTOR_EAGER_ATOM);
 
   if (assertFact)
   {

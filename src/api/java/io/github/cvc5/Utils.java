@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Mudathir Mohamed, Karlheinz Friedberger, Andres Noetzli
+ *   Mudathir Mohamed, Aina Niemetz, Hans-Joerg Schurr
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -16,8 +16,6 @@
 package io.github.cvc5;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Utils
 {
@@ -63,6 +61,20 @@ public class Utils
       terms[i] = new Term(pointers[i]);
     }
     return terms;
+  }
+
+  /**
+   * @return proofs array from array of pointers
+   * @param pointers The array of pointers.
+   */
+  public static Proof[] getProofs(long[] pointers)
+  {
+    Proof[] proofs = new Proof[pointers.length];
+    for (int i = 0; i < pointers.length; i++)
+    {
+      proofs[i] = new Proof(pointers[i]);
+    }
+    return proofs;
   }
 
   /**
@@ -150,6 +162,7 @@ public class Utils
 
   /**
    * Convert a rational string a/b to a pair of BigIntegers
+   * @param rational The rational string.
    * @return The pair of big integers.
    */
   public static Pair<BigInteger, BigInteger> getRational(String rational)
@@ -164,6 +177,7 @@ public class Utils
 
   /**
    * Convert a pair of BigIntegers to a rational string a/b
+   * @param pair The pair of big integers.
    * @return The rational string.
    */
   public static String getRational(Pair<BigInteger, BigInteger> pair)

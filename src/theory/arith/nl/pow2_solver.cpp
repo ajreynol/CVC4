@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Yoni Zohar, Andrew Reynolds, Andres Noetzli
+ *   Yoni Zohar, Aina Niemetz, Andrew Reynolds
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -37,7 +37,7 @@ Pow2Solver::Pow2Solver(Env& env,
                        NlModel& model)
     : EnvObj(env), d_im(im), d_model(model), d_initRefine(userContext())
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   d_false = nm->mkConst(false);
   d_true = nm->mkConst(true);
   d_zero = nm->mkConstInt(Rational(0));
@@ -56,7 +56,7 @@ void Pow2Solver::initLastCall(const std::vector<Node>& assertions,
   for (const Node& a : xts)
   {
     Kind ak = a.getKind();
-    if (ak != POW2)
+    if (ak != Kind::POW2)
     {
       // don't care about other terms
       continue;
@@ -69,7 +69,7 @@ void Pow2Solver::initLastCall(const std::vector<Node>& assertions,
 void Pow2Solver::checkInitialRefine()
 {
   Trace("pow2-check") << "Pow2Solver::checkInitialRefine" << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (const Node& i : d_pow2s)
   {
     if (d_initRefine.find(i) != d_initRefine.end())
@@ -81,9 +81,9 @@ void Pow2Solver::checkInitialRefine()
     // initial refinement lemmas
     std::vector<Node> conj;
     // x>=0 -> x < pow2(x)
-    Node xgeq0 = nm->mkNode(LEQ, d_zero, i[0]);
-    Node xltpow2x = nm->mkNode(LT, i[0], i);
-    conj.push_back(nm->mkNode(IMPLIES, xgeq0, xltpow2x));
+    Node xgeq0 = nm->mkNode(Kind::LEQ, d_zero, i[0]);
+    Node xltpow2x = nm->mkNode(Kind::LT, i[0], i);
+    conj.push_back(nm->mkNode(Kind::IMPLIES, xgeq0, xltpow2x));
     Node lem = nm->mkAnd(conj);
     Trace("pow2-lemma") << "Pow2Solver::Lemma: " << lem << " ; INIT_REFINE"
                         << std::endl;
@@ -109,7 +109,7 @@ void Pow2Solver::sortPow2sBasedOnModel()
 void Pow2Solver::checkFullRefine()
 {
   Trace("pow2-check") << "Pow2Solver::checkFullRefine" << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   sortPow2sBasedOnModel();
   // add lemmas for each pow2 term
   for (uint64_t i = 0, size = d_pow2s.size(); i < size; i++)
@@ -145,9 +145,9 @@ void Pow2Solver::checkFullRefine()
 
       if (x < y && pow2x >= pow2y)
       {
-        Node assumption = nm->mkNode(LEQ, n[0], m[0]);
-        Node conclusion = nm->mkNode(LEQ, n, m);
-        Node lem = nm->mkNode(IMPLIES, assumption, conclusion);
+        Node assumption = nm->mkNode(Kind::LEQ, n[0], m[0]);
+        Node conclusion = nm->mkNode(Kind::LEQ, n, m);
+        Node lem = nm->mkNode(Kind::IMPLIES, assumption, conclusion);
         d_im.addPendingLemma(
             lem, InferenceId::ARITH_NL_POW2_MONOTONE_REFINE, nullptr, true);
         }
@@ -156,9 +156,9 @@ void Pow2Solver::checkFullRefine()
     // triviality lemmas: pow2(x) = 0 whenever x < 0
     if (x < 0 && pow2x != 0)
     {
-      Node assumption = nm->mkNode(LT, n[0], d_zero);
-      Node conclusion = nm->mkNode(EQUAL, n, mkZero(n.getType()));
-      Node lem = nm->mkNode(IMPLIES, assumption, conclusion);
+      Node assumption = nm->mkNode(Kind::LT, n[0], d_zero);
+      Node conclusion = nm->mkNode(Kind::EQUAL, n, mkZero(n.getType()));
+      Node lem = nm->mkNode(Kind::IMPLIES, assumption, conclusion);
       d_im.addPendingLemma(
           lem, InferenceId::ARITH_NL_POW2_TRIVIAL_CASE_REFINE, nullptr, true);
     }
@@ -179,16 +179,16 @@ void Pow2Solver::checkFullRefine()
 
 Node Pow2Solver::valueBasedLemma(Node i)
 {
-  Assert(i.getKind() == POW2);
+  Assert(i.getKind() == Kind::POW2);
   Node x = i[0];
 
   Node valX = d_model.computeConcreteModelValue(x);
 
-  NodeManager* nm = NodeManager::currentNM();
-  Node valC = nm->mkNode(POW2, valX);
+  NodeManager* nm = nodeManager();
+  Node valC = nm->mkNode(Kind::POW2, valX);
   valC = rewrite(valC);
 
-  return nm->mkNode(IMPLIES, x.eqNode(valX), i.eqNode(valC));
+  return nm->mkNode(Kind::IMPLIES, x.eqNode(valX), i.eqNode(valC));
 }
 
 }  // namespace nl

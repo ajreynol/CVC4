@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Andres Noetzli, Mathias Preiner
+ *   Andrew Reynolds, Andres Noetzli, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -169,7 +169,7 @@ Node CandidateRewriteDatabase::addOrGetTerm(Node sol,
             Node refv = v;
             // if a bound variable, map to the skolem we introduce before
             // looking up the model value
-            if (v.getKind() == BOUND_VARIABLE)
+            if (v.getKind() == Kind::BOUND_VARIABLE)
             {
               std::map<Node, Node>::iterator itf = d_fv_to_skolem.find(v);
               if (itf == d_fv_to_skolem.end())
@@ -185,7 +185,7 @@ Node CandidateRewriteDatabase::addOrGetTerm(Node sol,
             }
             if (val.isNull())
             {
-              Assert(!refv.isNull() && refv.getKind() != BOUND_VARIABLE);
+              Assert(!refv.isNull() && refv.getKind() != Kind::BOUND_VARIABLE);
               val = rrChecker->getValue(refv);
             }
             Trace("rr-check") << "  " << v << " -> " << val << std::endl;

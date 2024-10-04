@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Andres Noetzli
+ *   Andrew Reynolds, Andres Noetzli, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -156,9 +156,42 @@ SmtDriverSingleCall::SmtDriverSingleCall(Env& env,
 
 Result SmtDriverSingleCall::checkSatNext(preprocessing::AssertionPipeline& ap)
 {
+  // preprocess
   d_smt.preprocess(ap);
+  // assert to internal
   d_smt.assertToInternal(ap);
-  return d_smt.checkSatInternal();
+  // get result
+  Result result = d_smt.checkSatInternal();
+  // handle preprocessing-specific modifications to result
+  if (ap.isNegated())
+  {
+    Trace("smt") << "SmtSolver::process global negate " << result << std::endl;
+    if (result.getStatus() == Result::UNSAT)
+    {
+      result = Result(Result::SAT);
+    }
+    else if (result.getStatus() == Result::SAT)
+    {
+      // Only can answer unsat if the theory is satisfaction complete. In
+      // other words, a "sat" result for a closed formula indicates that the
+      // formula is true in *all* models.
+      // This includes linear arithmetic and bitvectors, which are the primary
+      // targets for the global negate option. Other logics are possible
+      // here but not considered.
+      LogicInfo logic = logicInfo();
+      if ((logic.isPure(theory::THEORY_ARITH) && logic.isLinear())
+          || logic.isPure(theory::THEORY_BV))
+      {
+        result = Result(Result::UNSAT);
+      }
+      else
+      {
+        result = Result(Result::UNKNOWN, UnknownExplanation::UNKNOWN_REASON);
+      }
+    }
+    Trace("smt") << "SmtSolver::global negate returned " << result << std::endl;
+  }
+  return result;
 }
 
 void SmtDriverSingleCall::getNextAssertions(

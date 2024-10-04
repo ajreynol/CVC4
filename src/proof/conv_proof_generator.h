@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Gereon Kremer, Mathias Preiner
+ *   Andrew Reynolds, Hans-Joerg Schurr, Gereon Kremer
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -30,9 +30,9 @@ class TermContext;
 /** A policy for how rewrite steps are applied in TConvProofGenerator */
 enum class TConvPolicy : uint32_t
 {
-  // steps are applied to fix-point, common use case is PfRule::REWRITE
+  // steps are applied to fix-point, common use case is ProofRule::REWRITE
   FIXPOINT,
-  // steps are applied once at pre-rewrite, common use case is PfRule::SUBS
+  // steps are applied once at pre-rewrite, common use case is ProofRule::SUBS
   ONCE,
 };
 /** Writes a term conversion policy name to a stream. */
@@ -158,7 +158,7 @@ class TConvProofGenerator : protected EnvObj, public ProofGenerator
                       Node s,
                       ProofGenerator* pg,
                       bool isPre = false,
-                      PfRule trustId = PfRule::ASSUME,
+                      TrustId trustId = TrustId::NONE,
                       bool isClosed = false,
                       uint32_t tctx = 0);
   /** Same as above, for a single step */
@@ -167,7 +167,7 @@ class TConvProofGenerator : protected EnvObj, public ProofGenerator
   /** Same as above, with explicit arguments */
   void addRewriteStep(Node t,
                       Node s,
-                      PfRule id,
+                      ProofRule id,
                       const std::vector<Node>& children,
                       const std::vector<Node>& args,
                       bool isPre = false,

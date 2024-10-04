@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -15,8 +15,10 @@
 
 #include "smt/print_benchmark.h"
 
+#include "expr/attribute.h"
 #include "expr/dtype.h"
 #include "expr/node_algorithm.h"
+#include "expr/node_converter.h"
 #include "printer/printer.h"
 
 using namespace cvc5::internal::kind;
@@ -24,20 +26,40 @@ using namespace cvc5::internal::kind;
 namespace cvc5::internal {
 namespace smt {
 
-void PrintBenchmark::printAssertions(std::ostream& out,
-                                     const std::vector<Node>& defs,
-                                     const std::vector<Node>& assertions)
+/**
+ * Attribute true for symbols that should be excluded from the output of this
+ * utility.
+ */
+struct BenchmarkNoPrintAttributeId
 {
-  std::unordered_set<TypeNode> types;
+};
+using BenchmarkNoPrintAttribute =
+    expr::Attribute<BenchmarkNoPrintAttributeId, bool>;
+
+void PrintBenchmark::printDeclarationsFrom(std::ostream& outDecl,
+                                           std::ostream& outDef,
+                                           const std::vector<Node>& defs,
+                                           const std::vector<Node>& terms)
+{
+  std::unordered_set<TypeNode> unorderedTypes;
   std::unordered_set<TNode> typeVisited;
   for (const Node& a : defs)
   {
-    expr::getTypes(a, types, typeVisited);
+    expr::getTypes(a, unorderedTypes, typeVisited);
   }
-  for (const Node& a : assertions)
+  for (const Node& a : terms)
   {
-    Assert(!expr::hasFreeVar(a));
-    expr::getTypes(a, types, typeVisited);
+    expr::getTypes(a, unorderedTypes, typeVisited);
+  }
+  std::vector<TypeNode> types{unorderedTypes.begin(), unorderedTypes.end()};
+  if (d_sorted)
+  {
+    // We want to print declarations in a deterministic order, independent of
+    // the implementation of data structures. Hence, we insert into a vector
+    // and reorder. Note that collecting the types in an std::unordered_map,
+    // then inserting them into a vector and sorting the vector is faster than
+    // immediately using an std::set instead.
+    std::sort(types.begin(), types.end());
   }
   // print the declared types first
   std::unordered_set<TypeNode> alreadyPrintedDeclSorts;
@@ -55,9 +77,15 @@ void PrintBenchmark::printAssertions(std::ostream& out,
       if ((ctn.isUninterpretedSort() && ctn.getNumChildren() == 0)
           || ctn.isUninterpretedSortConstructor())
       {
-        d_printer->toStreamCmdDeclareType(out, ctn);
+        TypeNode ctnp = ctn;
+        if (d_converter != nullptr)
+        {
+          ctnp = d_converter->convertType(ctnp);
+        }
+        d_printer->toStreamCmdDeclareType(outDecl, ctn);
+        outDecl << std::endl;
       }
-      else if (ctn.isDatatype())
+      else if (ctn.isDatatype() && !ctn.isTuple() && !ctn.isNullable())
       {
         datatypeBlock.push_back(ctn);
       }
@@ -65,7 +93,8 @@ void PrintBenchmark::printAssertions(std::ostream& out,
     // print the mutually recursive datatype block if necessary
     if (!datatypeBlock.empty())
     {
-      d_printer->toStreamCmdDatatypeDeclaration(out, datatypeBlock);
+      d_printer->toStreamCmdDatatypeDeclaration(outDecl, datatypeBlock);
+      outDecl << std::endl;
     }
   }
 
@@ -101,19 +130,46 @@ void PrintBenchmark::printAssertions(std::ostream& out,
   {
     std::vector<Node> recDefs;
     std::vector<Node> ordinaryDefs;
-    std::unordered_set<Node> syms;
-    getConnectedDefinitions(
-        s, recDefs, ordinaryDefs, syms, defMap, alreadyPrintedDef, visited);
+    std::unordered_set<Node> unorderedSyms;
+    getConnectedDefinitions(s,
+                            recDefs,
+                            ordinaryDefs,
+                            unorderedSyms,
+                            defMap,
+                            alreadyPrintedDef,
+                            visited);
+    std::vector<Node> syms{unorderedSyms.begin(), unorderedSyms.end()};
+    if (d_sorted)
+    {
+      // We want to print declarations in a deterministic order, independent of
+      // the implementation of data structures. Hence, we insert into a vector
+      // and reorder. Note that collecting `syms` in an std::unordered_map,
+      // then inserting them into a vector and sorting the vector is faster than
+      // immediately using an std::set instead.
+      std::sort(syms.begin(), syms.end());
+    }
     // print the declarations that are encountered for the first time in this
     // block
-    printDeclaredFuns(out, syms, alreadyPrintedDecl);
+    printDeclaredFuns(outDecl, syms, alreadyPrintedDecl);
+    if (d_sorted)
+    {
+      // Sort ordinary and recursive definitions for deterministic order.
+      std::sort(recDefs.begin(), recDefs.end());
+      std::sort(ordinaryDefs.begin(), ordinaryDefs.end());
+    }
     // print the ordinary definitions
     for (const Node& f : ordinaryDefs)
     {
       itd = defMap.find(f);
       Assert(itd != defMap.end());
       Assert(!itd->second.first);
-      d_printer->toStreamCmdDefineFunction(out, f, itd->second.second);
+      Node def = itd->second.second;
+      if (d_converter != nullptr)
+      {
+        def = d_converter->convert(def);
+      }
+      d_printer->toStreamCmdDefineFunction(outDef, f, def);
+      outDef << std::endl;
       // a definition is also a declaration
       alreadyPrintedDecl.insert(f);
     }
@@ -123,28 +179,57 @@ void PrintBenchmark::printAssertions(std::ostream& out,
       std::vector<Node> lambdas;
       for (const Node& f : recDefs)
       {
-        lambdas.push_back(defMap[f].second);
+        Node lam = defMap[f].second;
+        if (d_converter != nullptr)
+        {
+          lam = d_converter->convert(lam);
+        }
+        lambdas.push_back(lam);
         // a recursive definition is also a declaration
         alreadyPrintedDecl.insert(f);
       }
-      d_printer->toStreamCmdDefineFunctionRec(out, recDefs, lambdas);
+      d_printer->toStreamCmdDefineFunctionRec(outDef, recDefs, lambdas);
+      outDef << std::endl;
     }
   }
 
   // print the remaining declared symbols
-  std::unordered_set<Node> syms;
-  for (const Node& a : assertions)
+  std::unordered_set<Node> unorderedSyms;
+  for (const Node& a : terms)
   {
-    expr::getSymbols(a, syms, visited);
+    expr::getSymbols(a, unorderedSyms, visited);
   }
-  printDeclaredFuns(out, syms, alreadyPrintedDecl);
+  std::vector<Node> syms{unorderedSyms.begin(), unorderedSyms.end()};
+  if (d_sorted)
+  {
+    // We want to print declarations in a deterministic order, independent of
+    // the implementation of data structures. Hence, we insert into a vector
+    // and reorder. Note that collecting `syms` in an std::unordered_map,
+    // then inserting them into a vector and sorting the vector is faster than
+    // immediately using an std::set instead.
+    std::sort(syms.begin(), syms.end());
+  }
+  printDeclaredFuns(outDecl, syms, alreadyPrintedDecl);
+}
 
+void PrintBenchmark::printAssertions(std::ostream& out,
+                                     const std::vector<Node>& defs,
+                                     const std::vector<Node>& assertions)
+{
+  printDeclarationsFrom(out, out, defs, assertions);
   // print the assertions
   for (const Node& a : assertions)
   {
-    d_printer->toStreamCmdAssert(out, a);
+    Node ap = a;
+    if (d_converter != nullptr)
+    {
+      ap = d_converter->convert(ap);
+    }
+    d_printer->toStreamCmdAssert(out, ap);
+    out << std::endl;
   }
 }
+
 void PrintBenchmark::printAssertions(std::ostream& out,
                                      const std::vector<Node>& assertions)
 {
@@ -153,9 +238,10 @@ void PrintBenchmark::printAssertions(std::ostream& out,
 }
 
 void PrintBenchmark::printDeclaredFuns(std::ostream& out,
-                                       const std::unordered_set<Node>& funs,
+                                       const std::vector<Node>& funs,
                                        std::unordered_set<Node>& alreadyPrinted)
 {
+  BenchmarkNoPrintAttribute bnpa;
   for (const Node& f : funs)
   {
     Assert(f.isVar());
@@ -164,9 +250,15 @@ void PrintBenchmark::printDeclaredFuns(std::ostream& out,
     {
       continue;
     }
+    // don't print symbols that have been marked
+    if (f.getAttribute(bnpa))
+    {
+      continue;
+    }
     if (alreadyPrinted.find(f) == alreadyPrinted.end())
     {
       d_printer->toStreamCmdDeclareFunction(out, f);
+      out << std::endl;
     }
   }
   alreadyPrinted.insert(funs.begin(), funs.end());
@@ -261,7 +353,7 @@ bool PrintBenchmark::decomposeDefinition(Node a,
                                          Node& sym,
                                          Node& body)
 {
-  if (a.getKind() == EQUAL && a[0].isVar())
+  if (a.getKind() == Kind::EQUAL && a[0].isVar())
   {
     // an ordinary define-fun
     isRecDef = false;
@@ -269,12 +361,12 @@ bool PrintBenchmark::decomposeDefinition(Node a,
     body = a[1];
     return true;
   }
-  else if (a.getKind() == FORALL && a[1].getKind() == EQUAL
-           && a[1][0].getKind() == APPLY_UF)
+  else if (a.getKind() == Kind::FORALL && a[1].getKind() == Kind::EQUAL
+           && a[1][0].getKind() == Kind::APPLY_UF)
   {
     isRecDef = true;
     sym = a[1][0].getOperator();
-    body = NodeManager::currentNM()->mkNode(LAMBDA, a[0], a[1][1]);
+    body = NodeManager::currentNM()->mkNode(Kind::LAMBDA, a[0], a[1][1]);
     return true;
   }
   else
@@ -290,8 +382,16 @@ void PrintBenchmark::printBenchmark(std::ostream& out,
                                     const std::vector<Node>& assertions)
 {
   d_printer->toStreamCmdSetBenchmarkLogic(out, logic);
+  out << std::endl;
   printAssertions(out, defs, assertions);
   d_printer->toStreamCmdCheckSat(out);
+  out << std::endl;
+}
+
+void PrintBenchmark::markNoPrint(Node& sym)
+{
+  BenchmarkNoPrintAttribute bnpa;
+  sym.setAttribute(bnpa, true);
 }
 
 }  // namespace smt

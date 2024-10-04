@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -553,7 +553,10 @@ void LogicInfo::setLogicString(std::string logicString)
     } else {
       err << "junk (\"" << p << "\") at end of logic string: " << logicString;
     }
-    IllegalArgument(logicString, err.str().c_str());
+    // The strings logicString and p are user-provided and
+    // may include format specifiers (e.g. "QF_LIA%s").
+    // Do not use unsafe macros/functions such as IllegalArgument.
+    throw cvc5::internal::Exception(err.str().c_str());
   }
 
   // ensure a getLogic() returns the same thing as was set
