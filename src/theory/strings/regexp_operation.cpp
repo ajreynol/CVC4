@@ -921,21 +921,18 @@ Node RegExpOpr::simplify(Node t, bool polarity)
   }
   else
   {
-    // see if we can use an optimized version of the reduction for re.++.
+    // see if we can use an optimized version of the reduction for fixed length
     Node r = t[1];
-    if (r.getKind() == Kind::REGEXP_CONCAT)
+    // the index we are removing from the RE concatenation
+    bool isRev;
+    // As an optimization to the reduction, if we can determine that
+    // all strings in the language of R1 have the same length, say n,
+    // then the conclusion of the reduction is quantifier-free:
+    //    ~( substr(s,0,n) in R1 ) OR ~( substr(s,len(s)-n,n) in R2)
+    Node reLen = getRegExpFixed(r, isRev);
+    if (!reLen.isNull())
     {
-      // the index we are removing from the RE concatenation
-      bool isRev;
-      // As an optimization to the reduction, if we can determine that
-      // all strings in the language of R1 have the same length, say n,
-      // then the conclusion of the reduction is quantifier-free:
-      //    ~( substr(s,0,n) in R1 ) OR ~( substr(s,len(s)-n,n) in R2)
-      Node reLen = getRegExpConcatFixed(r, isRev);
-      if (!reLen.isNull())
-      {
-        conc = reduceRegExpNegConcatFixed(nodeManager(), tlit, reLen, isRev);
-      }
+      conc = reduceRegExpNegFixed(nodeManager(), tlit, reLen, isRev);
     }
     if (conc.isNull())
     {
@@ -948,9 +945,13 @@ Node RegExpOpr::simplify(Node t, bool polarity)
   return conc;
 }
 
-Node RegExpOpr::getRegExpConcatFixed(Node r, bool& isRev)
+Node RegExpOpr::getRegExpFixed(Node r, bool& isRev)
 {
-  Assert(r.getKind() == Kind::REGEXP_CONCAT);
+  Kind k = r.getKind();
+  if (k != Kind::REGEXP_CONCAT && k != Kind::REGEXP_STAR)
+  {
+    return Node::null();
+  }
   isRev = false;
   Node reLen = RegExpEntail::getFixedLengthForRegexp(r[0]);
   if (!reLen.isNull())
@@ -958,12 +959,15 @@ Node RegExpOpr::getRegExpConcatFixed(Node r, bool& isRev)
     return reLen;
   }
   // try from the opposite end
-  size_t indexE = r.getNumChildren() - 1;
-  reLen = RegExpEntail::getFixedLengthForRegexp(r[indexE]);
-  if (!reLen.isNull())
+  if (k == Kind::REGEXP_CONCAT)
   {
-    isRev = true;
-    return reLen;
+    size_t indexE = r.getNumChildren() - 1;
+    reLen = RegExpEntail::getFixedLengthForRegexp(r[indexE]);
+    if (!reLen.isNull())
+    {
+      isRev = true;
+      return reLen;
+    }
   }
   return Node::null();
 }
@@ -991,7 +995,7 @@ Node RegExpOpr::reduceRegExpNegFixed(NodeManager* nm, Node mem,
   }
   else if (k==Kind::REGEXP_STAR)
   {
-    conc = reduceRegExpNegConcatFixed(nm, mem, reLen);
+    conc = reduceRegExpNegStarFixed(nm, mem, reLen);
   }
   else
   {
@@ -1110,13 +1114,12 @@ Node RegExpOpr::reduceRegExpNegStarFixed(NodeManager* nm,
     conc = nm->mkNode(Kind::OR, {g11n, g12n, s1r1, s2r2});
     // must mark as an internal quantifier
     conc = utils::mkForallInternal(nm, b1v, conc);
-    conc = nm->mkNode(Kind::AND, sne, conc);
   }
   else
   {
     conc = nm->mkNode(Kind::OR, {s1r1, s2r2});
   }
-  
+  conc = nm->mkNode(Kind::AND, sne, conc);
   return conc;
 }
 

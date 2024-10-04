@@ -357,8 +357,8 @@
     ))
 )
 
-; rule: re_unfold_neg_concat_fixed
-; implements: ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED
+; rule: re_unfold_neg_fixed
+; implements: ProofRule::RE_UNFOLD_NEG_FIXED
 ; premises:
 ; - m: The negation of a regular expression membership.
 ; args:
@@ -375,6 +375,11 @@
     (eo::match ((r1 RegLan) (r2 RegLan :list))
       ($str_rev rev r)
       (
+        ((re.* r1)     (eo::define ((n ($str_fixed_len_re r)))
+                       (and
+                         (not (= s ""))
+                         (or (not (str.in_re ($str_prefix s n) r1))
+                             (not (str.in_re ($str_suffix_rem s n) r))))))
         ((re.++ r1 r2) (eo::define ((n ($str_fixed_len_re r1)))
                        (eo::ite rev
                        (or (not (str.in_re ($str_suffix s n) r1))

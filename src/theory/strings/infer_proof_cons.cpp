@@ -744,17 +744,14 @@ void InferProofCons::convert(InferenceId infer,
         // it may be an optimized form of concat simplification
         Assert(mem.getKind() == Kind::NOT
                && mem[0].getKind() == Kind::STRING_IN_REGEXP);
-        if (mem[0][1].getKind() == Kind::REGEXP_CONCAT)
+        bool isCRev;
+        Node reLen = RegExpOpr::getRegExpFixed(mem[0][1], isCRev);
+        // if we can find a fixed length for a component, use the optimized
+        // version
+        if (!reLen.isNull())
         {
-          bool isCRev;
-          Node reLen = RegExpOpr::getRegExpConcatFixed(mem[0][1], isCRev);
-          // if we can find a fixed length for a component, use the optimized
-          // version
-          if (!reLen.isNull())
-          {
-            r = ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED;
-            args.push_back(nm->mkConst(isCRev));
-          }
+          r = ProofRule::RE_UNFOLD_NEG_FIXED;
+          args.push_back(nm->mkConst(isCRev));
         }
       }
       if (useBuffer)

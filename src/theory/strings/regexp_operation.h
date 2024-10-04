@@ -134,7 +134,7 @@ class RegExpOpr : protected EnvObj
    *   RegExpEntail::getFixedLengthForRegexp(r_index) = reLen
    * where index is either 0 or n-1 when isRev is false or true respectively.
    */
-  static Node getRegExpConcatFixed(Node r, bool& isRev);
+  static Node getRegExpFixed(Node r, bool& isRev);
   //------------------------ trusted reductions
   /**
    * Return the unfolded form of mem of the form (str.in_re s r).

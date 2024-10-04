@@ -57,7 +57,7 @@ void StringProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::RE_INTER, this);
   pc->registerChecker(ProofRule::RE_UNFOLD_POS, this);
   pc->registerChecker(ProofRule::RE_UNFOLD_NEG, this);
-  pc->registerChecker(ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED, this);
+  pc->registerChecker(ProofRule::RE_UNFOLD_NEG_FIXED, this);
   pc->registerChecker(ProofRule::MACRO_RE_ELIM, this);
   pc->registerChecker(ProofRule::STRING_CODE_INJ, this);
   pc->registerChecker(ProofRule::STRING_SEQ_UNIT_INJ, this);
