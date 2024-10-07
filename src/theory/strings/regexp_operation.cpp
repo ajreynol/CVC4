@@ -978,7 +978,7 @@ Node RegExpOpr::reduceRegExpNeg(NodeManager* nm, Node mem)
          && mem[0].getKind() == Kind::STRING_IN_REGEXP);
   // do not use length entailment, call regular expression concat
   Node reLen;
-  return reduceRegExpNegConcatFixed(nm, mem, reLen, false);
+  return reduceRegExpNegFixed(nm, mem, reLen, false);
 }
 
 Node RegExpOpr::reduceRegExpNegFixed(NodeManager* nm,
