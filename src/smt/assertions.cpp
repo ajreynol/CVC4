@@ -126,17 +126,17 @@ void Assertions::addFormula(TNode n,
     if (ns != n)
     {
       // do beta-reductions
-      BetaReduceNodeConverter brnc;
+      BetaReduceNodeConverter brnc(nodeManager());
       ns = brnc.convert(ns);
     }
-    if (isFunDef && ns.getKind() == EQUAL && ns[0].isVar())
+    if (isFunDef && ns.getKind() == Kind::EQUAL && ns[0].isVar())
     {
       Trace("smt") << "Add substitution " << ns[0] << " -> " << ns[1] << std::endl;
       // add the definition substitution
       d_definitionSubs.addSubstitution(ns[0], ns[1]);
       // also add to top-level substitutions as a trusted rule
-      d_env.getTopLevelSubstitutions().addSubstitution(
-          ns[0], ns[1], PfRule::PREPROCESS_LEMMA, {}, {ns});
+      //d_env.getTopLevelSubstitutions().addSubstitution(
+      //    ns[0], ns[1], ProofRule::PREPROCESS_LEMMA, {}, {ns});
       return;
     }
     isFunDef = false;

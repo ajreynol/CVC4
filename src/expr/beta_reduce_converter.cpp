@@ -20,8 +20,8 @@ namespace cvc5::internal {
 /** convert node n as described above during post-order traversal */
 Node BetaReduceNodeConverter::postConvert(Node n)
 {
-  if (n.getKind() == kind::APPLY_UF
-      && n.getOperator().getKind() == kind::LAMBDA)
+  if (n.getKind() == Kind::APPLY_UF
+      && n.getOperator().getKind() == Kind::LAMBDA)
   {
     Node lam = n.getOperator();
     std::vector<Node> vars(lam[0].begin(), lam[0].end());

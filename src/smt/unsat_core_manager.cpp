@@ -231,7 +231,7 @@ std::vector<Node> UnsatCoreManager::reduceUnsatCore(
   d_env.verbose(1) << "SolverEngine::reduceUnsatCore(): reducing unsat core"
                    << std::endl;
   std::unordered_set<Node> removed;
-  std::unordered_set<Node> adefs = as.getCurrentAssertionListDefinitions();
+  std::unordered_set<Node> adefs= as.getCurrentAssertionListDefinitions();
   for (const Node& skip : core)
   {
     std::unique_ptr<SolverEngine> coreChecker;
@@ -286,7 +286,7 @@ void UnsatCoreManager::partitionUnsatCore(const std::vector<Node>& core,
                                           std::vector<Node>& coreAsserts)
 {
   const Assertions& as = d_slv.getAssertions();
-  std::unordered_set<Node> defs = as.getCurrentAssertionListDefitions();
+  std::unordered_set<Node> defs = as.getCurrentAssertionListDefinitions();
   for (const Node& c : core)
   {
     if (defs.find(c) != defs.end())
