@@ -46,21 +46,22 @@ class EagerRepInfo
 {
  public:
   EagerRepInfo(context::Context* c)
-      : d_eqWatch(c), d_ops(c), d_opWatch(c), d_ctx(c)
+      : d_eqWatch(c), d_opWatch(c), d_ctx(c)
   {
   }
   EagerWatchList* getOrMkListForRep(const Node& r, bool doMk);
-  EagerWatchList* getOrMkListForOp(const Node& op, bool doMk);
-  EagerWatchList* getOrMkListInternal(const Node& r, bool doMk, size_t i);
   /**
    * Mapping from terms in the above list to the term we are waiting the
    * equivalence class to become equal to.
    */
   context::CDHashMap<Node, std::shared_ptr<EagerWatchList>> d_eqWatch;
-  /** Operators that are definitely in this equivalence class */
-  context::CDHashSet<Node> d_ops;
-  /** */
-  context::CDHashMap<Node, std::shared_ptr<EagerWatchList>> d_opWatch;
+  /**
+   * Map from operators to a witness term and a watch list.
+   * If an f-term is added to this equivalence class, we set it as the first
+   * part of this pair and reprocess the watch list that is the second part of
+   * the pair.
+   */
+  context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>> d_opWatch;
 
  private:
   context::Context* d_ctx;

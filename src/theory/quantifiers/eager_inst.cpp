@@ -1186,14 +1186,10 @@ void EagerInst::addWatches(EagerFailExp& failExp)
     for (const std::pair<const TNode, std::pair<EagerWatchVec, EagerWatchVec>>&
              ff : f.second)
     {
-      for (size_t i = 0; i < 2; i++)
+      const EagerWatchVec& ewv = ff.second.first;
+      if (!ewv.empty())
       {
-        const EagerWatchVec& ewv = i == 0 ? ff.second.first : ff.second.second;
-        if (ewv.empty())
-        {
-          continue;
-        }
-        EagerWatchList* ewl = ew->getOrMkListInternal(ff.first, true, i);
+        EagerWatchList* ewl = ew->getOrMkListForRep(ff.first, true);
         for (const std::pair<const EagerTrie*, TNode>& fmj : ewv)
         {
           Trace("eager-inst-watch")

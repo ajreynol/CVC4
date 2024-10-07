@@ -117,7 +117,7 @@ bool TermUtil::hasInstConstAttr(Node n)
   return !getInstConstAttr(n).isNull();
 }
 
-size_t TermUtil::getInstVarNum(const Node& v)
+uint64_t TermUtil::getInstVarNum(const Node& v)
 {
   InstVarNumAttribute ivna;
   Assert(v.hasAttribute(ivna));

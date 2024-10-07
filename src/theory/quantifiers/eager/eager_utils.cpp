@@ -36,21 +36,9 @@ void EagerWatchList::add(const EagerTrie* et, TNode t)
 
 EagerWatchList* EagerRepInfo::getOrMkListForRep(const Node& r, bool doMk)
 {
-  return getOrMkListInternal(r, doMk, 0);
-}
-EagerWatchList* EagerRepInfo::getOrMkListForOp(const Node& r, bool doMk)
-{
-  return getOrMkListInternal(r, doMk, 1);
-}
-EagerWatchList* EagerRepInfo::getOrMkListInternal(const Node& r,
-                                                  bool doMk,
-                                                  size_t i)
-{
-  context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>& wl =
-      i == 0 ? d_eqWatch : d_opWatch;
   context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator it =
-      wl.find(r);
-  if (it != wl.end())
+      d_eqWatch.find(r);
+  if (it != d_eqWatch.end())
   {
     return it->second.get();
   }
@@ -59,7 +47,7 @@ EagerWatchList* EagerRepInfo::getOrMkListInternal(const Node& r,
     return nullptr;
   }
   std::shared_ptr<EagerWatchList> eoi = std::make_shared<EagerWatchList>(d_ctx);
-  wl.insert(r, eoi);
+  d_eqWatch.insert(r, eoi);
   return eoi.get();
 }
 
