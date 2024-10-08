@@ -868,7 +868,7 @@ void EagerInst::resumeMatching(const EagerTrie* pat,
                                EagerTermIterator& eti,
                                const EagerTrie* tgt,
                                EagerTermIterator& etip,
-                      std::unordered_set<size_t>& bindices)
+                               std::unordered_set<size_t>& bindices)
 {
   // TODO: make non-recursive
   if (pat == tgt)
@@ -1368,7 +1368,7 @@ void EagerInst::resumeWatchList(
     EagerTermIterator eti(t);
     ++d_statResumeMergeMatchCall;
     Trace("eager-inst-match")
-        << "Resume match (upon merge) for " << eti.getOriginal() << std::endl; 
+        << "Resume match (upon merge) for " << eti.getOriginal() << std::endl;
     std::unordered_set<size_t> bindices;
     resumeMatching(root, eti, j.first, etip, bindices);
     Trace("eager-inst-match") << "...finished" << std::endl;
