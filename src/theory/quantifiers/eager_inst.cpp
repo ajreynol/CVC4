@@ -484,7 +484,13 @@ void EagerInst::doMatching(const EagerTrie* et,
   for (const std::pair<const Node, EagerTrie>& c : etng)
   {
     const Node& opc = c.first;
-    // NOTE: skip if op == opc ??
+    // Skip if op == opc, since we already considered the term itself. Note
+    // this is incomplete but makes it so that doMatchingPath can always
+    // deterministically resume.
+    if (opc==op)
+    {
+      continue;
+    }
     itw = ewl.find(opc);
     Trace("eager-inst-match-debug") << "...look mod eq " << opc << std::endl;
     if (itw == ewl.end() || itw->second.first.isNull())
