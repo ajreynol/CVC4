@@ -170,7 +170,7 @@ class EagerInst : public QuantifiersModule
                       EagerTermIterator& eti,
                       const EagerTrie* tgt,
                       EagerTermIterator& etip,
-                      EagerFailExp& failExp);
+                      std::unordered_set<size_t>& bindices);
   void doMatchingPath(const EagerTrie* et,
                       EagerTermIterator& eti,
                       EagerTermIterator& etip,

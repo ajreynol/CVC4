@@ -868,16 +868,11 @@ void EagerInst::resumeMatching(const EagerTrie* pat,
                                EagerTermIterator& eti,
                                const EagerTrie* tgt,
                                EagerTermIterator& etip,
-                               EagerFailExp& failExp)
+                      std::unordered_set<size_t>& bindices)
 {
   // TODO: make non-recursive
   if (pat == tgt)
   {
-    // we have now fully resumed the match, now go to main matching procedure
-    Trace("eager-inst-match") << "Complete matching (upon resume) for "
-                              << eti.getOriginal() << std::endl;
-    doMatching(pat, eti, failExp);
-    Trace("eager-inst-match") << "...finished" << std::endl;
     return;
   }
   // The following traverses a single path of the eager trie
@@ -889,7 +884,7 @@ void EagerInst::resumeMatching(const EagerTrie* pat,
     Assert(eti.canPop());
     eti.pop();
     etip.pop();
-    resumeMatching(pat, eti, tgt, etip, failExp);
+    resumeMatching(pat, eti, tgt, etip, bindices);
     return;
   }
   const Node& tc = eti.getCurrent();
@@ -903,18 +898,17 @@ void EagerInst::resumeMatching(const EagerTrie* pat,
     Assert(vnum < d_inst.size());
     Node prev = d_inst[vnum];
     d_inst[vnum] = tc;
+    bindices.insert(vnum);
     std::map<uint64_t, EagerTrie>::const_iterator it = pv.find(vnum);
     Assert(it != pv.end());
-    resumeMatching(&it->second, eti, tgt, etip, failExp);
-    // clean up, since global
-    d_inst[vnum] = prev;
+    resumeMatching(&it->second, eti, tgt, etip, bindices);
   }
   else if (!TermUtil::hasInstConstAttr(pc))
   {
     const std::map<Node, EagerTrie>& pg = pat->d_groundChildren;
     std::map<Node, EagerTrie>::const_iterator it = pg.find(pc);
     Assert(it != pg.end());
-    resumeMatching(&it->second, eti, tgt, etip, failExp);
+    resumeMatching(&it->second, eti, tgt, etip, bindices);
   }
   else
   {
@@ -924,7 +918,7 @@ void EagerInst::resumeMatching(const EagerTrie* pat,
     const std::map<Node, EagerTrie>& png = pat->d_ngroundChildren;
     std::map<Node, EagerTrie>::const_iterator it = png.find(op);
     Assert(it != png.end());
-    resumeMatching(&it->second, eti, tgt, etip, failExp);
+    resumeMatching(&it->second, eti, tgt, etip, bindices);
   }
 }
 void EagerInst::doMatchingPath(const EagerTrie* et,
@@ -1374,9 +1368,20 @@ void EagerInst::resumeWatchList(
     EagerTermIterator eti(t);
     ++d_statResumeMergeMatchCall;
     Trace("eager-inst-match")
-        << "Resume match (upon merge) for " << eti.getOriginal() << std::endl;
-    resumeMatching(root, eti, j.first, etip, nextFails);
+        << "Resume match (upon merge) for " << eti.getOriginal() << std::endl; 
+    std::unordered_set<size_t> bindices;
+    resumeMatching(root, eti, j.first, etip, bindices);
     Trace("eager-inst-match") << "...finished" << std::endl;
+    // eti is now ready to resume
+    Trace("eager-inst-match") << "Complete matching (upon resume) for "
+                              << eti.getOriginal() << std::endl;
+    doMatching(j.first, eti, nextFails);
+    Trace("eager-inst-match") << "...finished" << std::endl;
+    // cleanup what was bound in resumeMatching.
+    for (size_t i : bindices)
+    {
+      d_inst[i] = d_null;
+    }
   }
   // no longer valid
   ewl->d_valid = false;
