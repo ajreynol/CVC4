@@ -470,16 +470,28 @@ void EagerInst::doMatching(const EagerTrie* et,
     }
     return;
   }
+  eti.incrementChild();
   TNode r = d_ee->getRepresentative(tc);
-#if 0
-  EagerRepInfo* eri = getOrMkRepInfo(r, false);
-  if (eri==nullptr)
+  EagerRepInfo* eri = getOrMkRepInfo(r, true);
+  // otherwise, we try for non-ground operator
+  context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator itw;
+  context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>& ewl = eri->d_opWatch;
+  for (const std::pair<const Node, EagerTrie>& c : etng)
   {
-    return;
+    itw = ewl.find(c.first);
+    if (itw==ewl.end() || itw->second.first.isNull())
+    {
+      // add to watch list
+      addOpToWatch(et, eti.getOriginal(), failExp, r, c.first);
+      continue;
+    }
+    // otherwise we try it
+    eti.push(itw->second.first);
+    doMatching(&c.second, eti, failExp);
+    eti.pop();
   }
-  // otherwise, we try for each term
-#endif
-
+  eti.decrementChild();
+#if 0
   // otherwise we scan the equivalence class
   std::map<Node, std::vector<Node>> terms;
   // extract terms per operator
@@ -520,6 +532,7 @@ void EagerInst::doMatching(const EagerTrie* et,
     addOpToWatch(et, eti.getOriginal(), failExp, r, c.first);
   }
   */
+#endif
 }
 
 void EagerInst::processInstantiation(const EagerTrie* et,
@@ -586,8 +599,8 @@ void EagerInst::processMultiTriggerInstantiation(const Node& pat,
     }
     // otherwise already added, we process again below
     Trace("eager-inst-mt") << "...already added" << std::endl;
-    // TODO: must ensure the instantiation agrees with the path for what
-    // we added here, e.g. by modifying d_inst within contains above.
+    // notice that d_inst was modified within contains to agree with the path
+    // for what we are considering below.
   }
   else
   {
