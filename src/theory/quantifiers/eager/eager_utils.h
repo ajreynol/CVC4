@@ -90,7 +90,8 @@ class EagerOpInfo
    * Mark that we are tracking terms of this operator, for non-simple matching.
    */
   void markWatchOp();
-
+  /** */
+  bool isWatchOp() const { return d_isWatchOp; }
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
@@ -105,6 +106,8 @@ class EagerOpInfo
   context::CDO<bool> d_active;
   /** */
   CDEagerTrie d_etrie;
+  /** Are we watching this operator? */
+  bool d_isWatchOp;
 };
 
 class EagerPatternInfo

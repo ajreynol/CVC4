@@ -68,7 +68,8 @@ EagerOpInfo::EagerOpInfo(context::Context* c,
       d_rlvTerms(c),
       d_rlvTermsWaiting(c),
       d_active(c, d_gtrie == nullptr),  // initially active if not indexing
-      d_etrie(c)
+      d_etrie(c),
+      d_isWatchOp(false)
 {
   if (gdb != nullptr)
   {
@@ -126,7 +127,9 @@ bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
   return d_gtrie->add(qs, d_galloc, args, n);
 }
 
-void EagerOpInfo::markWatchOp() {}
+void EagerOpInfo::markWatchOp() {
+  d_isWatchOp = true;  
+}
 
 }  // namespace quantifiers
 }  // namespace theory

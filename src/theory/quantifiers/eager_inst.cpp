@@ -337,6 +337,14 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
+  // if its a watch op, we carry it
+  if (eoi->isWatchOp())
+  {
+    // store it, where note the watch list for this class is nullptr, since
+    // we won't watch for a term that is already there.
+    EagerRepInfo* eri = getOrMkRepInfo(t, false);
+    eri->d_opWatch[op] = std::pair<Node, std::shared_ptr<EagerWatchList>>(t, nullptr);
+  }
   if (d_fullInstTerms.find(t) != d_fullInstTerms.end())
   {
     if (d_cdOps.find(op) == d_cdOps.end())
@@ -461,11 +469,20 @@ void EagerInst::doMatching(const EagerTrie* et,
     }
     return;
   }
+  TNode r = d_ee->getRepresentative(tc);
+#if 0
+  EagerRepInfo* eri = getOrMkRepInfo(r, false);
+  if (eri==nullptr)
+  {
+    return;
+  }
+  // otherwise, we try for each term
+#endif
+  
   // otherwise we scan the equivalence class
   std::map<Node, std::vector<Node>> terms;
   // extract terms per operator
   Assert(d_ee->hasTerm(tc));
-  TNode r = d_ee->getRepresentative(tc);
   eq::EqClassIterator eqc_i = eq::EqClassIterator(r, d_ee);
   while (!eqc_i.isFinished())
   {
@@ -1250,7 +1267,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       }
       // otherwise, we have a list of matching jobs that where waiting for this
       // merge, process them now.
-      resumeWatchList(ewl, processed, nextFails);
+      resumeWatchList(ewl, processed, nextFails, d_null);
     }
     if (i == 0)
     {
@@ -1313,7 +1330,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
             ewp = itw->second.second.get();
           }
           Assert(ewp != nullptr);
-          resumeWatchList(ewp, processed, nextFails);
+          const Node& nextTerm = wisNull ? itw->second.first : itw1->second.first;
+          resumeWatchList(ewp, processed, nextFails, nextTerm);
         }
         else if (wisNull)
         {
@@ -1336,7 +1354,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
 void EagerInst::resumeWatchList(
     EagerWatchList* ewl,
     std::map<const EagerTrie*, std::unordered_set<TNode>>& processed,
-    EagerFailExp& nextFails)
+    EagerFailExp& nextFails,
+                                const Node& nextTerm)
 {
   std::pair<std::unordered_set<TNode>::iterator, bool> iret;
   context::CDList<std::pair<const EagerTrie*, TNode>>& wmj = ewl->d_matchJobs;
@@ -1372,6 +1391,13 @@ void EagerInst::resumeWatchList(
     std::unordered_set<size_t> bindices;
     resumeMatching(root, eti, j.first, etip, bindices);
     Trace("eager-inst-match") << "...finished" << std::endl;
+    // if we were given the next term, process it now
+    if (!nextTerm.isNull())
+    {
+      TNode op = d_tdb->getMatchOperator(nextTerm);
+      Assert (!op.isNull());
+      
+    }
     // eti is now ready to resume
     Trace("eager-inst-match") << "Complete matching (upon resume) for "
                               << eti.getOriginal() << std::endl;
