@@ -451,29 +451,34 @@ void EagerInst::doMatching(const EagerTrie* et,
   {
     return;
   }
+  // first, we just match this term
+  Node op = d_tdb->getMatchOperator(tc);
+  if (!op.isNull())
+  {
+    std::map<Node, EagerTrie>::const_iterator it = etng.find(op);
+    if (it != etng.end())
+    {
+      // push
+      eti.incrementChild();
+      eti.push(tc);
+      doMatching(&it->second, eti, failExp);
+      eti.pop();
+      eti.decrementChild();
+    }
+  }
   if (options().quantifiers.eagerInstSimple)
   {
-    // if simple, we just match this term
-    Node op = d_tdb->getMatchOperator(tc);
-    if (!op.isNull())
-    {
-      std::map<Node, EagerTrie>::const_iterator it = etng.find(op);
-      if (it != etng.end())
-      {
-        // push
-        eti.incrementChild();
-        eti.push(tc);
-        doMatching(&it->second, eti, failExp);
-        eti.pop();
-        eti.decrementChild();
-      }
-    }
+    // if simple, we don't do anything else.
+    return;
+  }
+  TNode r = d_ee->getRepresentative(tc);
+  EagerRepInfo* eri = getOrMkRepInfo(r, false);
+  if (eri==nullptr)
+  {
     return;
   }
   eti.incrementChild();
-  TNode r = d_ee->getRepresentative(tc);
-  EagerRepInfo* eri = getOrMkRepInfo(r, true);
-  // otherwise, we try for non-ground operator
+  // otherwise, we try for each non-ground operator
   context::CDHashMap<Node,
                      std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator
       itw;
@@ -481,11 +486,13 @@ void EagerInst::doMatching(const EagerTrie* et,
       ewl = eri->d_opWatch;
   for (const std::pair<const Node, EagerTrie>& c : etng)
   {
-    itw = ewl.find(c.first);
+    const Node& opc = c.first;
+    // NOTE: skip if op == opc ??
+    itw = ewl.find(opc);
     if (itw == ewl.end() || itw->second.first.isNull())
     {
-      // add to watch list
-      addOpToWatch(et, eti.getOriginal(), failExp, r, c.first);
+      // add to op-watch list
+      addOpToWatch(et, eti.getOriginal(), failExp, r, opc);
       continue;
     }
     // otherwise we try it
@@ -1024,20 +1031,43 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
   }
   etip.push(pc);
   const Node& op = d_tdb->getMatchOperator(pc);
+  if (d_tdb->getMatchOperator(tc) == op)
+  {
+    eti.push(tc);
+    const std::map<Node, EagerTrie>& png = et->d_ngroundChildren;
+    std::map<Node, EagerTrie>::const_iterator it = png.find(op);
+    Assert(it != png.end());
+    doMatchingPath(&it->second, eti, etip, failExp);
+    // NOTE: we must return here since this method doesn't restore state
+    return;
+  }
   if (options().quantifiers.eagerInstSimple)
   {
     // if we are simple, we just try this term only
-    if (d_tdb->getMatchOperator(tc) == op)
-    {
-      eti.push(tc);
-      const std::map<Node, EagerTrie>& png = et->d_ngroundChildren;
-      std::map<Node, EagerTrie>::const_iterator it = png.find(op);
-      Assert(it != png.end());
-      doMatchingPath(&it->second, eti, etip, failExp);
-    }
     return;
   }
-  return;
+  // otherwise, look if there is an op-term in this equivalence class
+  TNode r = d_ee->getRepresentative(tc);
+  EagerRepInfo* eri = getOrMkRepInfo(r, false);
+  if (eri==nullptr)
+  {
+    return;
+  }
+  context::CDHashMap<Node,
+                     std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator
+      itw;
+  context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>&
+      ewl = eri->d_opWatch;
+  itw = ewl.find(op);
+  if (itw!=ewl.end() && !itw->second.first.isNull())
+  {
+    eti.push(itw->second.first);
+    const std::map<Node, EagerTrie>& png = et->d_ngroundChildren;
+    std::map<Node, EagerTrie>::const_iterator it = png.find(op);
+    Assert(it != png.end());
+    doMatchingPath(&it->second, eti, etip, failExp);
+  }
+#if 0
   // otherwise we check the entire equivalence class
   std::vector<Node> terms;
   // extract terms per operator
@@ -1067,6 +1097,7 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
       eti.pop();
     }
   }
+#endif
 }
 
 void EagerInst::addEqToWatch(const EagerTrie* et,
@@ -1221,6 +1252,18 @@ void EagerInst::addWatches(EagerFailExp& failExp)
         {
           Trace("eager-inst-watch")
               << "-- watch merge " << f.first << " " << ff.first
+              << " to resume matching with " << fmj.second << std::endl;
+          ewl->d_matchJobs.emplace_back(fmj);
+        }
+      }
+      const EagerWatchVec& ewo = ff.second.second;
+      if (!ewo.empty())
+      {
+        EagerWatchList* ewl = ew->getOrMkListForOp(ff.first, true);
+        for (const std::pair<const EagerTrie*, TNode>& fmj : ewv)
+        {
+          Trace("eager-inst-watch")
+              << "-- watch " << ff.first << " operators to merge with " << f.first
               << " to resume matching with " << fmj.second << std::endl;
           ewl->d_matchJobs.emplace_back(fmj);
         }
