@@ -474,12 +474,15 @@ void EagerInst::doMatching(const EagerTrie* et,
   TNode r = d_ee->getRepresentative(tc);
   EagerRepInfo* eri = getOrMkRepInfo(r, true);
   // otherwise, we try for non-ground operator
-  context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator itw;
-  context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>& ewl = eri->d_opWatch;
+  context::CDHashMap<Node,
+                     std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator
+      itw;
+  context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>&
+      ewl = eri->d_opWatch;
   for (const std::pair<const Node, EagerTrie>& c : etng)
   {
     itw = ewl.find(c.first);
-    if (itw==ewl.end() || itw->second.first.isNull())
+    if (itw == ewl.end() || itw->second.first.isNull())
     {
       // add to watch list
       addOpToWatch(et, eti.getOriginal(), failExp, r, c.first);
