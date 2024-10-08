@@ -111,6 +111,7 @@ void EagerInst::preRegisterQuantifier(Node q)
 
 void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 {
+  // TODO: set up watched ops?
   std::vector<Node> toProcess;
   std::unordered_set<Node> processed;
   for (const Node& n : assertions)
