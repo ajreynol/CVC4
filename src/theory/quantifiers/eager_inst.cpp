@@ -338,11 +338,12 @@ void EagerInst::notifyAssertedTerm(TNode t)
     return;
   }
   // if its a watch op, we carry it
-  if (eoi->isWatchOp())
+  // FIXME: only watch some
+  if (true || eoi->isWatchOp())
   {
     // store it, where note the watch list for this class is nullptr, since
     // we won't watch for a term that is already there.
-    EagerRepInfo* eri = getOrMkRepInfo(t, false);
+    EagerRepInfo* eri = getOrMkRepInfo(t, true);
     eri->d_opWatch[op] =
         std::pair<Node, std::shared_ptr<EagerWatchList>>(t, nullptr);
   }
@@ -472,11 +473,7 @@ void EagerInst::doMatching(const EagerTrie* et,
     return;
   }
   TNode r = d_ee->getRepresentative(tc);
-  EagerRepInfo* eri = getOrMkRepInfo(r, false);
-  if (eri == nullptr)
-  {
-    return;
-  }
+  EagerRepInfo* eri = getOrMkRepInfo(r, true);
   eti.incrementChild();
   // otherwise, we try for each non-ground operator
   context::CDHashMap<Node,
@@ -489,12 +486,15 @@ void EagerInst::doMatching(const EagerTrie* et,
     const Node& opc = c.first;
     // NOTE: skip if op == opc ??
     itw = ewl.find(opc);
+    Trace("eager-inst-match-debug") << "...look mod eq " << opc << std::endl;
     if (itw == ewl.end() || itw->second.first.isNull())
     {
+      Trace("eager-inst-match-debug") << "......must watch" << std::endl;
       // add to op-watch list
       addOpToWatch(et, eti.getOriginal(), failExp, r, opc);
       continue;
     }
+    Trace("eager-inst-match-debug") << "......can continue " << itw->second.first << std::endl;
     // otherwise we try it
     eti.push(itw->second.first);
     doMatching(&c.second, eti, failExp);
@@ -1260,7 +1260,7 @@ void EagerInst::addWatches(EagerFailExp& failExp)
       if (!ewo.empty())
       {
         EagerWatchList* ewl = ew->getOrMkListForOp(ff.first, true);
-        for (const std::pair<const EagerTrie*, TNode>& fmj : ewv)
+        for (const std::pair<const EagerTrie*, TNode>& fmj : ewo)
         {
           Trace("eager-inst-watch")
               << "-- watch " << ff.first << " operators to merge with "
@@ -1328,6 +1328,9 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       }
       // otherwise, we have a list of matching jobs that where waiting for this
       // merge, process them now.
+      Trace("eager-inst-match-event")
+              << "Since " << t1 << " and " << t2 << " merged, retry matches"
+              << std::endl;
       resumeWatchList(ewl, processed, nextFails, d_null);
     }
     if (i == 0)
@@ -1393,6 +1396,9 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           Assert(ewp != nullptr);
           const Node& nextTerm =
               wisNull ? itw->second.first : itw1->second.first;
+          Trace("eager-inst-match-event")
+                  << "Since " << t1 << " and " << t2 << " merged with operator " << nextTerm << ", retry matches"
+                  << std::endl;
           resumeWatchList(ewp, processed, nextFails, nextTerm);
         }
         else if (wisNull)
@@ -1441,28 +1447,31 @@ void EagerInst::resumeWatchList(
       continue;
     }
     TNode t = j.second;
-    // Trace("eager-inst-match-event")
-    //     << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
-    //     << " and " << j.second << ", resume pattern is " << pat
-    //     << std::endl;
     EagerTermIterator etip(pat);
     EagerTermIterator eti(t);
     ++d_statResumeMergeMatchCall;
     Trace("eager-inst-match")
         << "Resume match (upon merge) for " << eti.getOriginal() << std::endl;
+    const EagerTrie* tgt = j.first;
     std::unordered_set<size_t> bindices;
-    resumeMatching(root, eti, j.first, etip, bindices);
+    resumeMatching(root, eti, tgt, etip, bindices);
     Trace("eager-inst-match") << "...finished" << std::endl;
     // if we were given the next term, process it now
     if (!nextTerm.isNull())
     {
       TNode op = d_tdb->getMatchOperator(nextTerm);
       Assert(!op.isNull());
+      eti.incrementChild();
+      eti.push(nextTerm);
+      const std::map<Node, EagerTrie>& etng = tgt->d_ngroundChildren;
+      const std::map<Node, EagerTrie>::const_iterator itn = etng.find(op);
+      Assert (itn!=etng.end());
+      tgt = &itn->second;
     }
     // eti is now ready to resume
     Trace("eager-inst-match") << "Complete matching (upon resume) for "
                               << eti.getOriginal() << std::endl;
-    doMatching(j.first, eti, nextFails);
+    doMatching(tgt, eti, nextFails);
     Trace("eager-inst-match") << "...finished" << std::endl;
     // cleanup what was bound in resumeMatching.
     for (size_t i : bindices)

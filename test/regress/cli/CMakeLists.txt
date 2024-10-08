@@ -1447,6 +1447,7 @@ set(regress_0_tests
   regress0/quantifiers/double-pattern.smt2
   regress0/quantifiers/ei-on-cd.smt2
   regress0/quantifiers/ei-on-merge.smt2
+  regress0/quantifiers/ei-on-merge-f.smt2
   regress0/quantifiers/ei-on-multi-filter.smt2
   regress0/quantifiers/ei-multi-filter.smt2
   regress0/quantifiers/ei-true-mt.smt2
