@@ -337,7 +337,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
-  // if its a watch op, we carry it
+  // if its a watch op, we must track it
   // FIXME: only watch some
   if (true || eoi->isWatchOp())
   {
