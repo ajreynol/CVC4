@@ -473,7 +473,7 @@ void EagerInst::doMatching(const EagerTrie* et,
   }
   TNode r = d_ee->getRepresentative(tc);
   EagerRepInfo* eri = getOrMkRepInfo(r, false);
-  if (eri==nullptr)
+  if (eri == nullptr)
   {
     return;
   }
@@ -1049,7 +1049,7 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
   // otherwise, look if there is an op-term in this equivalence class
   TNode r = d_ee->getRepresentative(tc);
   EagerRepInfo* eri = getOrMkRepInfo(r, false);
-  if (eri==nullptr)
+  if (eri == nullptr)
   {
     return;
   }
@@ -1059,7 +1059,7 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
   context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>&
       ewl = eri->d_opWatch;
   itw = ewl.find(op);
-  if (itw!=ewl.end() && !itw->second.first.isNull())
+  if (itw != ewl.end() && !itw->second.first.isNull())
   {
     eti.push(itw->second.first);
     const std::map<Node, EagerTrie>& png = et->d_ngroundChildren;
@@ -1263,8 +1263,9 @@ void EagerInst::addWatches(EagerFailExp& failExp)
         for (const std::pair<const EagerTrie*, TNode>& fmj : ewv)
         {
           Trace("eager-inst-watch")
-              << "-- watch " << ff.first << " operators to merge with " << f.first
-              << " to resume matching with " << fmj.second << std::endl;
+              << "-- watch " << ff.first << " operators to merge with "
+              << f.first << " to resume matching with " << fmj.second
+              << std::endl;
           ewl->d_matchJobs.emplace_back(fmj);
         }
       }
