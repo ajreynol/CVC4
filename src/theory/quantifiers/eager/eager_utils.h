@@ -46,10 +46,7 @@ class EagerWatchList
 class EagerRepInfo
 {
  public:
-  EagerRepInfo(context::Context* c)
-      : d_eqWatch(c), d_opWatch(c), d_ctx(c)
-  {
-  }
+  EagerRepInfo(context::Context* c) : d_eqWatch(c), d_opWatch(c), d_ctx(c) {}
   EagerWatchList* getOrMkListForRep(const Node& r, bool doMk);
   /**
    * Mapping from terms in the above list to the term we are waiting the
@@ -62,7 +59,8 @@ class EagerRepInfo
    * part of this pair and reprocess the watch list that is the second part of
    * the pair.
    */
-  context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>> d_opWatch;
+  context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>
+      d_opWatch;
 
  private:
   context::Context* d_ctx;
@@ -88,10 +86,11 @@ class EagerOpInfo
   const context::CDHashSet<Node>& getGroundTerms(QuantifiersState& qs);
   /** */
   CDEagerTrie* getPatternTrie() { return &d_etrie; }
-  /** 
+  /**
    * Mark that we are tracking terms of this operator, for non-simple matching.
    */
   void markWatchOp();
+
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);

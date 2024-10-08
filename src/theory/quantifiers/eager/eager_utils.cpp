@@ -36,8 +36,7 @@ void EagerWatchList::add(const EagerTrie* et, TNode t)
 
 void EagerWatchList::addMatchJobs(EagerWatchList* ewl)
 {
-  context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
-      ewl->d_matchJobs;
+  context::CDList<std::pair<const EagerTrie*, TNode>>& wmj = ewl->d_matchJobs;
   for (const std::pair<const EagerTrie*, TNode>& p : wmj)
   {
     d_matchJobs.push_back(p);
@@ -127,10 +126,7 @@ bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
   return d_gtrie->add(qs, d_galloc, args, n);
 }
 
-void EagerOpInfo::markWatchOp()
-{
-  
-}
+void EagerOpInfo::markWatchOp() {}
 
 }  // namespace quantifiers
 }  // namespace theory

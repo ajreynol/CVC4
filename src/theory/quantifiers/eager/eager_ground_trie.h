@@ -48,7 +48,7 @@ class EagerGroundTrie
   /**
    * Does this trie contain args (modulo equality)? If so, args may be modified
    * with equal terms according to qs such that args is in this trie.
-   * 
+   *
    * @param qs The quantifiers state.
    * @param args The arguments to lookup
    * @param nargs If non-zero, we consider only the prefix of args up to nargs.

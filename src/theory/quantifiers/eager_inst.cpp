@@ -1020,7 +1020,7 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
   {
     Node fapp = (*eqc_i);
     Node fop = d_tdb->getMatchOperator(fapp);
-    if (fop==op)
+    if (fop == op)
     {
       terms.emplace_back(fapp);
     }
@@ -1039,7 +1039,6 @@ void EagerInst::doMatchingPath(const EagerTrie* et,
       eti.pop();
     }
   }
-
 }
 
 void EagerInst::addEqToWatch(const EagerTrie* et,
@@ -1269,8 +1268,9 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     else
     {
       // now process the operator watch list
-      context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>& wop =
-        ewi[i]->d_opWatch;
+      context::CDHashMap<Node,
+                         std::pair<Node, std::shared_ptr<EagerWatchList>>>&
+          wop = ewi[i]->d_opWatch;
       if (wop.empty())
       {
         continue;
@@ -1280,17 +1280,22 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       {
         ewi[0] = getOrMkRepInfo(t2, true);
       }
-      context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>& wop1 =
-        ewi[0]->d_opWatch;
-      context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator itw1;
-      for (context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator
-              itw = wop.begin();
-          itw != wop.end();
-          ++itw)
+      context::CDHashMap<Node,
+                         std::pair<Node, std::shared_ptr<EagerWatchList>>>&
+          wop1 = ewi[0]->d_opWatch;
+      context::CDHashMap<
+          Node,
+          std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator itw1;
+      for (context::CDHashMap<
+               Node,
+               std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator itw =
+               wop.begin();
+           itw != wop.end();
+           ++itw)
       {
         const Node& f = itw->first;
         itw1 = wop1.find(f);
-        if (itw1==wop1.end())
+        if (itw1 == wop1.end())
         {
           // not there, carry over
           wop1[f] = itw->second;
@@ -1298,7 +1303,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         }
         // check if one or the other is null
         bool wisNull = itw1->second.first.isNull();
-        if (wisNull!=itw->second.first.isNull())
+        if (wisNull != itw->second.first.isNull())
         {
           // if so process the appropriate one
           EagerWatchList* ewp;
@@ -1306,13 +1311,14 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           {
             ewp = itw1->second.second.get();
             // we carry the mark that we have an f-app now
-            wop1[f] = std::pair<Node, std::shared_ptr<EagerWatchList>>(itw->second.first, itw1->second.second);
+            wop1[f] = std::pair<Node, std::shared_ptr<EagerWatchList>>(
+                itw->second.first, itw1->second.second);
           }
           else
           {
             ewp = itw->second.second.get();
           }
-          Assert (ewp!=nullptr);
+          Assert(ewp != nullptr);
           resumeWatchList(ewp, processed, nextFails);
         }
         else if (wisNull)
@@ -1332,11 +1338,13 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
   addWatches(nextFails);
 }
 
-void EagerInst::resumeWatchList(EagerWatchList* ewl, std::map<const EagerTrie*, std::unordered_set<TNode>>& processed, EagerFailExp& nextFails)
+void EagerInst::resumeWatchList(
+    EagerWatchList* ewl,
+    std::map<const EagerTrie*, std::unordered_set<TNode>>& processed,
+    EagerFailExp& nextFails)
 {
   std::pair<std::unordered_set<TNode>::iterator, bool> iret;
-  context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
-      ewl->d_matchJobs;
+  context::CDList<std::pair<const EagerTrie*, TNode>>& wmj = ewl->d_matchJobs;
   for (const std::pair<const EagerTrie*, TNode>& j : wmj)
   {
     // don't process duplicates
@@ -1357,15 +1365,15 @@ void EagerInst::resumeWatchList(EagerWatchList* ewl, std::map<const EagerTrie*, 
       continue;
     }
     TNode t = j.second;
-    //Trace("eager-inst-match-event")
-    //    << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
-    //    << " and " << j.second << ", resume pattern is " << pat
-    //    << std::endl;
+    // Trace("eager-inst-match-event")
+    //     << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
+    //     << " and " << j.second << ", resume pattern is " << pat
+    //     << std::endl;
     EagerTermIterator etip(pat);
     EagerTermIterator eti(t);
     ++d_statResumeMergeMatchCall;
-    Trace("eager-inst-match") << "Resume match (upon merge) for "
-                              << eti.getOriginal() << std::endl;
+    Trace("eager-inst-match")
+        << "Resume match (upon merge) for " << eti.getOriginal() << std::endl;
     resumeMatching(root, eti, j.first, etip, nextFails);
     Trace("eager-inst-match") << "...finished" << std::endl;
   }
