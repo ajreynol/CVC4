@@ -1324,8 +1324,9 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         else if (wisNull)
         {
           // both null, merge
+          itw1->second.second->addMatchJobs(itw->second.second.get());
         }
-        // otherwise both already processed
+        // otherwise both already processed, skip
       }
     }
   }
