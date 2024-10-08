@@ -343,7 +343,8 @@ void EagerInst::notifyAssertedTerm(TNode t)
     // store it, where note the watch list for this class is nullptr, since
     // we won't watch for a term that is already there.
     EagerRepInfo* eri = getOrMkRepInfo(t, false);
-    eri->d_opWatch[op] = std::pair<Node, std::shared_ptr<EagerWatchList>>(t, nullptr);
+    eri->d_opWatch[op] =
+        std::pair<Node, std::shared_ptr<EagerWatchList>>(t, nullptr);
   }
   if (d_fullInstTerms.find(t) != d_fullInstTerms.end())
   {
@@ -478,7 +479,7 @@ void EagerInst::doMatching(const EagerTrie* et,
   }
   // otherwise, we try for each term
 #endif
-  
+
   // otherwise we scan the equivalence class
   std::map<Node, std::vector<Node>> terms;
   // extract terms per operator
@@ -1330,7 +1331,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
             ewp = itw->second.second.get();
           }
           Assert(ewp != nullptr);
-          const Node& nextTerm = wisNull ? itw->second.first : itw1->second.first;
+          const Node& nextTerm =
+              wisNull ? itw->second.first : itw1->second.first;
           resumeWatchList(ewp, processed, nextFails, nextTerm);
         }
         else if (wisNull)
@@ -1355,7 +1357,7 @@ void EagerInst::resumeWatchList(
     EagerWatchList* ewl,
     std::map<const EagerTrie*, std::unordered_set<TNode>>& processed,
     EagerFailExp& nextFails,
-                                const Node& nextTerm)
+    const Node& nextTerm)
 {
   std::pair<std::unordered_set<TNode>::iterator, bool> iret;
   context::CDList<std::pair<const EagerTrie*, TNode>>& wmj = ewl->d_matchJobs;
@@ -1395,8 +1397,7 @@ void EagerInst::resumeWatchList(
     if (!nextTerm.isNull())
     {
       TNode op = d_tdb->getMatchOperator(nextTerm);
-      Assert (!op.isNull());
-      
+      Assert(!op.isNull());
     }
     // eti is now ready to resume
     Trace("eager-inst-match") << "Complete matching (upon resume) for "

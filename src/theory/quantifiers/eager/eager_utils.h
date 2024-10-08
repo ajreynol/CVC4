@@ -92,6 +92,7 @@ class EagerOpInfo
   void markWatchOp();
   /** */
   bool isWatchOp() const { return d_isWatchOp; }
+
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);

@@ -207,7 +207,7 @@ class EagerInst : public QuantifiersModule
       EagerWatchList* ewl,
       std::map<const EagerTrie*, std::unordered_set<TNode>>& processed,
       EagerFailExp& nextFails,
-                       const Node& nextTerm);
+      const Node& nextTerm);
 };
 
 }  // namespace quantifiers

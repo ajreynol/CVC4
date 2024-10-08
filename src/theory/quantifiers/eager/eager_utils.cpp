@@ -127,9 +127,7 @@ bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
   return d_gtrie->add(qs, d_galloc, args, n);
 }
 
-void EagerOpInfo::markWatchOp() {
-  d_isWatchOp = true;  
-}
+void EagerOpInfo::markWatchOp() { d_isWatchOp = true; }
 
 }  // namespace quantifiers
 }  // namespace theory
