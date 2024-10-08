@@ -34,6 +34,16 @@ void EagerWatchList::add(const EagerTrie* et, TNode t)
   d_matchJobs.push_back(std::pair<const EagerTrie*, TNode>(et, t));
 }
 
+void EagerWatchList::addMatchJobs(EagerWatchList* ewl)
+{
+  context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
+      ewl->d_matchJobs;
+  for (const std::pair<const EagerTrie*, TNode>& p : wmj)
+  {
+    d_matchJobs.push_back(p);
+  }
+}
+
 EagerWatchList* EagerRepInfo::getOrMkListForRep(const Node& r, bool doMk)
 {
   context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator it =
@@ -115,6 +125,11 @@ bool EagerOpInfo::addGroundTermInternal(QuantifiersState& qs, const Node& n)
     }
   }
   return d_gtrie->add(qs, d_galloc, args, n);
+}
+
+void EagerOpInfo::markWatchOp()
+{
+  
 }
 
 }  // namespace quantifiers

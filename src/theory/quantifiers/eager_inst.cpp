@@ -1250,56 +1250,14 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           }
           // update the representative as you go
           TNode rep = d_qstate.getRepresentative(itw->first);
-          context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
-              ewl->d_matchJobs;
           EagerWatchList* ewlo = ewi[0]->getOrMkListForRep(rep, true);
-          context::CDList<std::pair<const EagerTrie*, TNode>>& wmjo =
-              ewlo->d_matchJobs;
-          for (const std::pair<const EagerTrie*, TNode>& p : wmj)
-          {
-            wmjo.push_back(p);
-          }
+          ewlo->addMatchJobs(ewl);
         }
         continue;
       }
       // otherwise, we have a list of matching jobs that where waiting for this
       // merge, process them now.
-      context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
-          ewl->d_matchJobs;
-      for (const std::pair<const EagerTrie*, TNode>& j : wmj)
-      {
-        // don't process duplicates
-        std::unordered_set<TNode>& p = processed[j.first];
-        iret = p.insert(j.second);
-        if (!iret.second)
-        {
-          continue;
-        }
-        Assert(!j.first->d_pats.empty());
-        const Node& pat = j.first->d_pats[0];
-        Assert(!pat.isNull());
-        TNode patOp = d_tdb->getMatchOperator(pat);
-        Assert(!patOp.isNull());
-        EagerTrie* root = getCurrentTrie(patOp);
-        if (root == nullptr)
-        {
-          continue;
-        }
-        TNode t = j.second;
-        Trace("eager-inst-match-event")
-            << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
-            << " and " << j.second << ", resume pattern is " << pat
-            << std::endl;
-        EagerTermIterator etip(pat);
-        EagerTermIterator eti(t);
-        ++d_statResumeMergeMatchCall;
-        Trace("eager-inst-match") << "Resume match (upon merge) for "
-                                  << eti.getOriginal() << std::endl;
-        resumeMatching(root, eti, j.first, etip, nextFails);
-        Trace("eager-inst-match") << "...finished" << std::endl;
-      }
-      // no longer valid
-      ewl->d_valid = false;
+      resumeWatchList(ewl, processed, nextFails);
     }
     if (i == 0)
     {
@@ -1310,42 +1268,61 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
     }
     else
     {
-#if 0
-      // carry over the watched ops
-      context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>& wop =
+      // now process the operator watch list
+      context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>& wop =
         ewi[i]->d_opWatch;
-      if (!wop.empty())
+      if (wop.empty())
       {
-        // scan the equivalence class 
-        // make the other if not generated, t2 was swapped from t1
-        if (ewi[0] == nullptr)
-        {
-          ewi[0] = getOrMkRepInfo(t2, true);
-        }
-        for (context::CDHashMap<Node, std::shared_ptr<EagerWatchList>>::iterator
-                itw = wop.begin();
-            itw != wop.end();
-            ++itw)
-        {
-          Node op = itw->first;
-          EagerWatchList* ewl = itw->second.get();
-          // always carry over op watches
-          context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
-              ewl->d_matchJobs;
-          EagerWatchList* ewlo = ewi[0]->getOrMkListForOp(op, true);
-          context::CDList<std::pair<const EagerTrie*, TNode>>& wmjo =
-              ewlo->d_matchJobs;
-          for (const std::pair<const EagerTrie*, TNode>& p : wmj)
-          {
-            wmjo.push_back(p);
-          }
-        }
+        continue;
       }
-#endif
+      // make the other if not generated, t2 was swapped from t1
+      if (ewi[0] == nullptr)
+      {
+        ewi[0] = getOrMkRepInfo(t2, true);
+      }
+      context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>& wop1 =
+        ewi[0]->d_opWatch;
+      context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator itw1;
+      for (context::CDHashMap<Node, std::pair<Node, std::shared_ptr<EagerWatchList>>>::iterator
+              itw = wop.begin();
+          itw != wop.end();
+          ++itw)
+      {
+        const Node& f = itw->first;
+        itw1 = wop1.find(f);
+        if (itw1==wop1.end())
+        {
+          // not there, carry over
+          wop1[f] = itw->second;
+          continue;
+        }
+        // check if one or the other is null
+        bool wisNull = itw1->second.first.isNull();
+        if (wisNull!=itw->second.first.isNull())
+        {
+          // if so process the appropriate one
+          EagerWatchList* ewp;
+          if (wisNull)
+          {
+            ewp = itw1->second.second.get();
+            // we carry the mark that we have an f-app now
+            wop1[f] = std::pair<Node, std::shared_ptr<EagerWatchList>>(itw->second.first, itw1->second.second);
+          }
+          else
+          {
+            ewp = itw->second.second.get();
+          }
+          Assert (ewp!=nullptr);
+          resumeWatchList(ewp, processed, nextFails);
+        }
+        else if (wisNull)
+        {
+          // both null, merge
+        }
+        // otherwise both already processed
+      }
     }
   }
-  // now process op watches
-
   // do pending lemmas if added
   if (addedInst)
   {
@@ -1353,6 +1330,47 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
   }
   // add new watching
   addWatches(nextFails);
+}
+
+void EagerInst::resumeWatchList(EagerWatchList* ewl, std::map<const EagerTrie*, std::unordered_set<TNode>>& processed, EagerFailExp& nextFails)
+{
+  std::pair<std::unordered_set<TNode>::iterator, bool> iret;
+  context::CDList<std::pair<const EagerTrie*, TNode>>& wmj =
+      ewl->d_matchJobs;
+  for (const std::pair<const EagerTrie*, TNode>& j : wmj)
+  {
+    // don't process duplicates
+    std::unordered_set<TNode>& p = processed[j.first];
+    iret = p.insert(j.second);
+    if (!iret.second)
+    {
+      continue;
+    }
+    Assert(!j.first->d_pats.empty());
+    const Node& pat = j.first->d_pats[0];
+    Assert(!pat.isNull());
+    TNode patOp = d_tdb->getMatchOperator(pat);
+    Assert(!patOp.isNull());
+    EagerTrie* root = getCurrentTrie(patOp);
+    if (root == nullptr)
+    {
+      continue;
+    }
+    TNode t = j.second;
+    //Trace("eager-inst-match-event")
+    //    << "Since " << t1 << " and " << t2 << " merged, retry " << j.first
+    //    << " and " << j.second << ", resume pattern is " << pat
+    //    << std::endl;
+    EagerTermIterator etip(pat);
+    EagerTermIterator eti(t);
+    ++d_statResumeMergeMatchCall;
+    Trace("eager-inst-match") << "Resume match (upon merge) for "
+                              << eti.getOriginal() << std::endl;
+    resumeMatching(root, eti, j.first, etip, nextFails);
+    Trace("eager-inst-match") << "...finished" << std::endl;
+  }
+  // no longer valid
+  ewl->d_valid = false;
 }
 
 Node EagerInst::getPatternFor(const Node& pat, const Node& q)

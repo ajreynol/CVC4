@@ -201,6 +201,9 @@ class EagerInst : public QuantifiersModule
   void addWatches(EagerFailExp& failExp);
   /** */
   Node getPatternFor(const Node& pat, const Node& q);
+  
+  /** */
+  void resumeWatchList(EagerWatchList* ewl, std::map<const EagerTrie*, std::unordered_set<TNode>>& processed, EagerFailExp& nextFails);
 };
 
 }  // namespace quantifiers

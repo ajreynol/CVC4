@@ -38,6 +38,7 @@ class EagerWatchList
  public:
   EagerWatchList(context::Context* c) : d_valid(c, true), d_matchJobs(c) {}
   void add(const EagerTrie* et, TNode t);
+  void addMatchJobs(EagerWatchList* ewl);
   context::CDO<bool> d_valid;
   context::CDList<std::pair<const EagerTrie*, TNode>> d_matchJobs;
 };
@@ -87,7 +88,10 @@ class EagerOpInfo
   const context::CDHashSet<Node>& getGroundTerms(QuantifiersState& qs);
   /** */
   CDEagerTrie* getPatternTrie() { return &d_etrie; }
-
+  /** 
+   * Mark that we are tracking terms of this operator, for non-simple matching.
+   */
+  void markWatchOp();
  private:
   /** Add ground term */
   bool addGroundTermInternal(QuantifiersState& qs, const Node& n);
