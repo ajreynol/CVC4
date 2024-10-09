@@ -154,11 +154,13 @@ void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
   Assert(d_ee != nullptr);
 }
 
-void EagerInst::ppNotifyAssertionInternal(TNode n, std::unordered_set<TNode>& visited, std::unordered_set<TNode>& wvisited)
+void EagerInst::ppNotifyAssertionInternal(TNode n,
+                                          std::unordered_set<TNode>& visited,
+                                          std::unordered_set<TNode>& wvisited)
 {
   // n is a top-level formula, if it is a FORALL, we add to d_ppQuants, which
   // stores the top-level quantified formulas.
-  if (n.getKind()==Kind::FORALL)
+  if (n.getKind() == Kind::FORALL)
   {
     d_ppQuants.insert(n);
     registerQuantInternal(n);
@@ -171,18 +173,20 @@ void EagerInst::ppNotifyAssertionInternal(TNode n, std::unordered_set<TNode>& vi
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(n);
-  do {
+  do
+  {
     cur = visit.back();
     visit.pop_back();
-    if (visited.find(cur) == visited.end()) {
+    if (visited.find(cur) == visited.end())
+    {
       visited.insert(cur);
       // if a quantified formula with a pattern, mark the watched operators,
       // which are those appearing not at top-level in the patterns
-      if (cur.getKind()==Kind::FORALL && cur.getNumChildren()==3)
+      if (cur.getKind() == Kind::FORALL && cur.getNumChildren() == 3)
       {
         for (TNode pl : cur[2])
         {
-          if (pl.getKind()==Kind::INST_PATTERN)
+          if (pl.getKind() == Kind::INST_PATTERN)
           {
             for (TNode pterm : pl)
             {
@@ -204,15 +208,18 @@ void EagerInst::ppMarkWatchedOps(TNode n, std::unordered_set<TNode>& visited)
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(n);
-  do {
+  do
+  {
     cur = visit.back();
     visit.pop_back();
-    if (visited.find(cur) == visited.end()) {
+    if (visited.find(cur) == visited.end())
+    {
       visited.insert(cur);
       TNode op = d_tdb->getMatchOperator(cur);
       if (!op.isNull())
       {
-        Trace("eager-inst-register") << "Mark watched operator " << op << std::endl;
+        Trace("eager-inst-register")
+            << "Mark watched operator " << op << std::endl;
         EagerOpInfo* eoi = getOrMkOpInfo(op, true);
         eoi->markWatchOp();
       }
@@ -557,7 +564,7 @@ void EagerInst::doMatching(const EagerTrie* et,
     // Skip if op == opc, since we already considered the term itself. Note
     // this is incomplete but makes it so that doMatchingPath can always
     // deterministically resume.
-    if (opc==op)
+    if (opc == op)
     {
       continue;
     }
@@ -570,7 +577,8 @@ void EagerInst::doMatching(const EagerTrie* et,
       addOpToWatch(et, eti.getOriginal(), failExp, r, opc);
       continue;
     }
-    Trace("eager-inst-match-debug") << "......can continue " << itw->second.first << std::endl;
+    Trace("eager-inst-match-debug")
+        << "......can continue " << itw->second.first << std::endl;
     // otherwise we try it
     eti.push(itw->second.first);
     doMatching(&c.second, eti, failExp);
@@ -1404,9 +1412,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       }
       // otherwise, we have a list of matching jobs that where waiting for this
       // merge, process them now.
-      Trace("eager-inst-match-event")
-              << "Since " << t1 << " and " << t2 << " merged, retry matches"
-              << std::endl;
+      Trace("eager-inst-match-event") << "Since " << t1 << " and " << t2
+                                      << " merged, retry matches" << std::endl;
       resumeWatchList(ewl, processed, nextFails, d_null);
     }
     if (i == 0)
@@ -1473,8 +1480,8 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           const Node& nextTerm =
               wisNull ? itw->second.first : itw1->second.first;
           Trace("eager-inst-match-event")
-                  << "Since " << t1 << " and " << t2 << " merged with operator " << nextTerm << ", retry matches"
-                  << std::endl;
+              << "Since " << t1 << " and " << t2 << " merged with operator "
+              << nextTerm << ", retry matches" << std::endl;
           resumeWatchList(ewp, processed, nextFails, nextTerm);
         }
         else if (wisNull)
@@ -1541,7 +1548,7 @@ void EagerInst::resumeWatchList(
       eti.push(nextTerm);
       const std::map<Node, EagerTrie>& etng = tgt->d_ngroundChildren;
       const std::map<Node, EagerTrie>::const_iterator itn = etng.find(op);
-      Assert (itn!=etng.end());
+      Assert(itn != etng.end());
       tgt = &itn->second;
     }
     // eti is now ready to resume
