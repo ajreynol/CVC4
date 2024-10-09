@@ -64,7 +64,8 @@ PreprocessingPassResult BVToInt::applyInternal(
     Trace("bv-to-int-debug") << "bv node: " << bvNode << std::endl;
     Trace("bv-to-int-debug") << "int node: " << intNode << std::endl;
     Trace("bv-to-int-debug") << "rw node: " << rwNode << std::endl;
-    assertionsToPreprocess->replace(i, rwNode, nullptr, TrustId::PREPROCESS_BV_TO_INT);
+    assertionsToPreprocess->replace(
+        i, rwNode, nullptr, TrustId::PREPROCESS_BV_TO_INT);
   }
   addFinalizeAssertions(assertionsToPreprocess, additionalConstraints);
   addSkolemDefinitions(skolems);
