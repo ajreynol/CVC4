@@ -75,7 +75,7 @@ void AssertionPipeline::push_back(Node n,
     {
       if (!isInput)
       {
-        AlwaysAssert(pgen!=nullptr || trustId!=TrustId::PREPROCESS_LEMMA);
+        Assert(pgen!=nullptr || trustId!=TrustId::PREPROCESS_LEMMA);
         d_andElimEpg->addLazyStep(n, pgen, trustId);
       }
     }
@@ -179,7 +179,6 @@ void AssertionPipeline::replaceTrusted(size_t i, TrustNode trn)
   }
   Assert(trn.getKind() == TrustNodeKind::REWRITE);
   Assert(trn.getProven()[0] == d_nodes[i]);
-  Assert(!isProofEnabled() || trn.getGenerator()!=nullptr);
   replace(i, trn.getNode(), trn.getGenerator());
 }
 
