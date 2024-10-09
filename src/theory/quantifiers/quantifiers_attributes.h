@@ -246,15 +246,9 @@ class QuantAttributes
   static Node mkAttrPreserveStructure();
   /**
    * Set instantiation level attribute for all subterms without an instantiation
-   * level in n to level,
+   * level in n to level.
    */
   static void setInstantiationLevelAttr(Node n, uint64_t level);
-  /**
-   * Set instantiation level attribute for all subterms  without an
-   * instantiation level in n to level, where n is the result of instantiating
-   * the term qn. We skip terms that are not new based on qn.
-   */
-  static void setInstantiationLevelAttr(Node n, Node qn, uint64_t level);
   /**
    * Get "instantiation level" for term n, if applicable. If n has an
    * instantiation level, we return true and set level to its instantiation

@@ -444,6 +444,8 @@ bool Instantiate::addInstantiationInternal(
       {
         if (!QuantAttributes::getInstantiationLevel(tc, clevel))
         {
+          // ensure it is set to zero.
+          QuantAttributes::setInstantiationLevelAttr(tc, 0);
           continue;
         }
         if (clevel > maxInstLevel)
@@ -452,7 +454,7 @@ bool Instantiate::addInstantiationInternal(
         }
       }
       QuantAttributes::setInstantiationLevelAttr(
-          orig_body, q[1], maxInstLevel + 1);
+          body, maxInstLevel + 1);
     }
   }
   Trace("inst-add-debug") << " --> Success." << std::endl;

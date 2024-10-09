@@ -33,10 +33,14 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+/**
+ * Mapping from terms to their "instantiation level", for details see
+ * QuantAttributes::getInstantiationLevel.
+ */
 struct InstLevelAttributeId
 {
 };
-typedef expr::Attribute<InstLevelAttributeId, uint64_t> InstLevelAttribute;
+using InstLevelAttribute = expr::Attribute<InstLevelAttributeId, uint64_t>;
 
 /** Attribute true for quantifiers we are doing quantifier elimination on */
 struct QuantElimAttributeId
@@ -448,29 +452,6 @@ Node QuantAttributes::mkAttrInternal(AttrType at)
       {id});
   nattr = nm->mkNode(Kind::INST_ATTRIBUTE, nattr);
   return nattr;
-}
-
-void QuantAttributes::setInstantiationLevelAttr(Node n, Node qn, uint64_t level)
-{
-  Trace("inst-level-debug2") << "IL : " << n << " " << qn << " " << level
-                             << std::endl;
-  // if not from the vector of terms we instantiatied
-  if (qn.getKind() != Kind::BOUND_VARIABLE && n != qn)
-  {
-    InstLevelAttribute ila;
-    // if this is a new term, without an instantiation level
-    if (!n.hasAttribute(ila))
-    {
-      n.setAttribute(ila, level);
-      Trace("inst-level-debug") << "Set instantiation level " << n << " to "
-                                << level << std::endl;
-      Assert(n.getNumChildren() == qn.getNumChildren());
-      for (unsigned i = 0; i < n.getNumChildren(); i++)
-      {
-        setInstantiationLevelAttr(n[i], qn[i], level);
-      }
-    }
-  }
 }
 
 void QuantAttributes::setInstantiationLevelAttr(Node n, uint64_t level)
