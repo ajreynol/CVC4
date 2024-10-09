@@ -57,6 +57,9 @@ enum class TrustId : uint32_t
   PREPROCESS_REWRITE,
   PREPROCESS_FF_BITSUM,
   PREPROCESS_FF_DISJUNCTIVE_BIT,
+  PREPROCESS_FUN_DEF_FMF,
+  PREPROCESS_LEARNED_REWRITE,
+  PREPROCESS_LEARNED_REWRITE_LEMMA,
 
   /**
    * We use :math:`\texttt{IRP}_k(poly)` for an IndexedRootPredicate that is
