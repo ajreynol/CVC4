@@ -208,6 +208,10 @@ class EagerInst : public QuantifiersModule
       std::map<const EagerTrie*, std::unordered_set<TNode>>& processed,
       EagerFailExp& nextFails,
       const Node& nextTerm);
+  
+  /** */
+  void ppNotifyAssertionInternal(TNode n, std::unordered_set<TNode>& visited, std::unordered_set<TNode>& wvisited );
+  void ppMarkWatchedOps(TNode n, std::unordered_set<TNode>& visited);
 };
 
 }  // namespace quantifiers

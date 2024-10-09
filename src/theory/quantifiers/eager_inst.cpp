@@ -114,16 +114,19 @@ void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
   // TODO: set up watched ops?
   std::vector<Node> toProcess;
   std::unordered_set<Node> processed;
+  std::unordered_set<TNode> ivisited;
+  std::unordered_set<TNode> iwvisited;
   for (const Node& n : assertions)
   {
     Kind k = n.getKind();
-    if (k == Kind::FORALL)
-    {
-      toProcess.emplace_back(n);
-    }
-    else if (k == Kind::AND)
+    if (k == Kind::AND)
     {
       toProcess.insert(toProcess.end(), n.begin(), n.end());
+    }
+    else
+    {
+      // otherwise look for quantified formulas
+      ppNotifyAssertionInternal(n, ivisited, iwvisited);
     }
   }
   size_t i = 0;
@@ -137,18 +140,85 @@ void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
     }
     processed.insert(a);
     Kind k = a.getKind();
-    if (k == Kind::FORALL)
-    {
-      d_ppQuants.insert(a);
-      registerQuantInternal(a);
-    }
-    else if (k == Kind::AND)
+    if (k == Kind::AND)
     {
       toProcess.insert(toProcess.end(), a.begin(), a.end());
+    }
+    else
+    {
+      // otherwise look for quantified formulas
+      ppNotifyAssertionInternal(a, ivisited, iwvisited);
     }
   }
   d_ee = d_qstate.getEqualityEngine();
   Assert(d_ee != nullptr);
+}
+
+void EagerInst::ppNotifyAssertionInternal(TNode n, std::unordered_set<TNode>& visited, std::unordered_set<TNode>& wvisited)
+{
+  // n is a top-level formula, if it is a FORALL, we add to d_ppQuants, which
+  // stores the top-level quantified formulas.
+  if (n.getKind()==Kind::FORALL)
+  {
+    d_ppQuants.insert(n);
+    registerQuantInternal(n);
+  }
+  if (options().quantifiers.eagerInstSimple)
+  {
+    // if simple, we don't care about watched operators below
+    return;
+  }
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(n);
+  do {
+    cur = visit.back();
+    visit.pop_back();
+    if (visited.find(cur) == visited.end()) {
+      visited.insert(cur);
+      // if a quantified formula with a pattern, mark the watched operators,
+      // which are those appearing not at top-level in the patterns
+      if (cur.getKind()==Kind::FORALL && cur.getNumChildren()==3)
+      {
+        for (TNode pl : cur[2])
+        {
+          if (pl.getKind()==Kind::INST_PATTERN)
+          {
+            for (TNode pterm : pl)
+            {
+              for (TNode ptc : pterm)
+              {
+                ppMarkWatchedOps(ptc, wvisited);
+              }
+            }
+          }
+        }
+      }
+      visit.insert(visit.end(), cur.begin(), cur.end());
+    }
+  } while (!visit.empty());
+}
+
+void EagerInst::ppMarkWatchedOps(TNode n, std::unordered_set<TNode>& visited)
+{
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(n);
+  do {
+    cur = visit.back();
+    visit.pop_back();
+    if (visited.find(cur) == visited.end()) {
+      visited.insert(cur);
+      TNode op = d_tdb->getMatchOperator(cur);
+      if (!op.isNull())
+      {
+        Trace("eager-inst-register") << "Mark watched operator " << op << std::endl;
+        EagerOpInfo* eoi = getOrMkOpInfo(op, true);
+        eoi->markWatchOp();
+      }
+      visit.insert(visit.end(), cur.begin(), cur.end());
+    }
+  } while (!visit.empty());
 }
 
 void EagerInst::assertNode(Node q)
@@ -339,8 +409,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
     return;
   }
   // if its a watch op, we must track it
-  // FIXME: only watch some
-  if (true || eoi->isWatchOp())
+  if (eoi->isWatchOp())
   {
     // store it, where note the watch list for this class is nullptr, since
     // we won't watch for a term that is already there.
