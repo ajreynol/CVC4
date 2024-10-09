@@ -23,6 +23,7 @@
 #include "preprocessing/preprocessing_pass.h"
 
 namespace cvc5::internal {
+  class CDProof;
 namespace preprocessing {
 namespace passes {
 
@@ -34,6 +35,8 @@ class ExtRewPre : public PreprocessingPass
  protected:
   PreprocessingPassResult applyInternal(
       AssertionPipeline* assertionsToPreprocess) override;
+      /** The proof generator if proofs are enabled */
+      std::shared_ptr<CDProof> d_proof;
 };
 
 }  // namespace passes

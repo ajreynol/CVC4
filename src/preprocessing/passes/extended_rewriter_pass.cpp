@@ -26,18 +26,34 @@ namespace preprocessing {
 namespace passes {
 
 ExtRewPre::ExtRewPre(PreprocessingPassContext* preprocContext)
-    : PreprocessingPass(preprocContext, "ext-rew-pre"){};
+    : PreprocessingPass(preprocContext, "ext-rew-pre"),
+    d_proof(options().smt.produceProofs ? new CDProof(d_env, userContext()): nullptr) {}
 
 PreprocessingPassResult ExtRewPre::applyInternal(
     AssertionPipeline* assertionsToPreprocess)
 {
+  bool isAgg = (options().smt.extRewPrep == options::ExtRewPrepMode::AGG);
   for (unsigned i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
   {
-    assertionsToPreprocess->replace(
-        i,
-        extendedRewrite(
-            (*assertionsToPreprocess)[i],
-            options().smt.extRewPrep == options::ExtRewPrepMode::AGG));
+    const Node& a = (*assertionsToPreprocess)[i];
+    Node ar = extendedRewrite(a, isAgg);
+    if (a==ar)
+    {
+      continue;
+    }
+    if (d_proof!=nullptr)
+    {
+      d_proof->addTrustedStep(a.eqNode(ar), TrustId::EXT_THEORY_REWRITE, {}, {});
+      assertionsToPreprocess->replace(
+          i,
+          ar, d_proof.get());
+    }
+    else
+    {
+      assertionsToPreprocess->replace(
+          i,
+          ar);
+    }
     if (assertionsToPreprocess->isInConflict())
     {
       return PreprocessingPassResult::CONFLICT;
