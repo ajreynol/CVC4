@@ -126,7 +126,7 @@ void AssertionPipeline::push_back(Node n,
     if (!isInput)
     {
       // notice this is always called, regardless of whether pgen is nullptr
-      d_pppg->notifyNewAssert(n, pgen);
+      d_pppg->notifyNewAssert(n, pgen, trustId);
     }
     else
     {
