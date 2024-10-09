@@ -221,7 +221,7 @@ void AssertionPipeline::addSubstitutionNode(Node n,
   for (size_t i = prevNodeSize, newSize = d_nodes.size(); i < newSize; i++)
   {
     // ensure rewritten
-    replace(i, rewrite(d_nodes[i]));
+    replace(i, rewrite(d_nodes[i]), nullptr, TrustId::PREPROCESS_REWRITE);
     d_substsIndices.insert(i);
   }
 }
