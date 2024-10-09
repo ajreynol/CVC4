@@ -60,7 +60,10 @@ enum class TrustId : uint32_t
   PREPROCESS_FUN_DEF_FMF,
   PREPROCESS_LEARNED_REWRITE,
   PREPROCESS_LEARNED_REWRITE_LEMMA,
-
+  PREPROCESS_BV_INTRO_POW2,
+  PREPROCESS_FOREIGN_THEORY_REWRITE,
+  PREPROCESS_UNCONSTRAINED_SIMP,
+  PREPROCESS_STRINGS_EAGER_PP,
   /**
    * We use :math:`\texttt{IRP}_k(poly)` for an IndexedRootPredicate that is
    * defined as the :math:`k`'th root of the polynomial :math:`poly`. Note that
