@@ -74,7 +74,8 @@ class AssertionPipeline : protected EnvObj
                  ProofGenerator* pg = nullptr,
                  TrustId trustId = TrustId::PREPROCESS_LEMMA);
   /** Same as above, with TrustNode */
-  void pushBackTrusted(TrustNode trn);
+  void pushBackTrusted(TrustNode trn,
+                 TrustId trustId = TrustId::PREPROCESS_LEMMA);
 
   /**
    * Get the constant reference to the underlying assertions. It is only

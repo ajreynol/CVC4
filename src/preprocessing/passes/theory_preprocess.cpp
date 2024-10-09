@@ -58,7 +58,7 @@ PreprocessingPassResult TheoryPreprocess::applyInternal(
     for (const SkolemLemma& lem : newAsserts)
     {
       imap[assertions->size()] = lem.d_skolem;
-      assertions->pushBackTrusted(lem.d_lemma);
+      assertions->pushBackTrusted(lem.d_lemma, TrustId::THEORY_PREPROCESS_LEMMA);
     }
   }
 

@@ -137,11 +137,12 @@ void AssertionPipeline::push_back(Node n,
   }
 }
 
-void AssertionPipeline::pushBackTrusted(TrustNode trn)
+void AssertionPipeline::pushBackTrusted(TrustNode trn,
+                 TrustId trustId)
 {
   Assert(trn.getKind() == TrustNodeKind::LEMMA);
   // push back what was proven
-  push_back(trn.getProven(), false, trn.getGenerator());
+  push_back(trn.getProven(), false, trn.getGenerator(), trustId);
 }
 
 void AssertionPipeline::replace(size_t i,
@@ -159,7 +160,7 @@ void AssertionPipeline::replace(size_t i,
                            << n << std::endl;
   if (isProofEnabled())
   {
-    AlwaysAssert(pgen!=nullptr || trustId!=TrustId::PREPROCESS);
+    Assert(pgen!=nullptr || trustId!=TrustId::PREPROCESS);
     d_pppg->notifyPreprocessed(d_nodes[i], n, pgen, trustId);
   }
   if (n == d_false)

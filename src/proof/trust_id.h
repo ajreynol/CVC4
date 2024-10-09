@@ -51,6 +51,8 @@ enum class TrustId : uint32_t
   PREPROCESS_ACKERMANN,
   PREPROCESS_ACKERMANN_LEMMA,
   PREPROCESS_STATIC_LEARNING,
+  PREPROCESS_HO_ELIM,
+  PREPROCESS_HO_ELIM_LEMMA,
 
   /**
    * We use :math:`\texttt{IRP}_k(poly)` for an IndexedRootPredicate that is
