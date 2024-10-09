@@ -76,14 +76,19 @@ class PreprocessProofGenerator : protected EnvObj, public ProofGenerator
   /**
    * Notify that n is a new assertion, where pg can provide a proof of n.
    */
-  void notifyNewAssert(Node n, ProofGenerator* pg, TrustId id = TrustId::PREPROCESS_LEMMA);
+  void notifyNewAssert(Node n,
+                       ProofGenerator* pg,
+                       TrustId id = TrustId::PREPROCESS_LEMMA);
   /**  Notify a new assertion, trust node version. */
   void notifyNewTrustedAssert(TrustNode tn);
   /**
    * Notify that n was replaced by np due to preprocessing, where pg can
    * provide a proof of the equality n=np.
    */
-  void notifyPreprocessed(Node n, Node np, ProofGenerator* pg, TrustId id = TrustId::PREPROCESS);
+  void notifyPreprocessed(Node n,
+                          Node np,
+                          ProofGenerator* pg,
+                          TrustId id = TrustId::PREPROCESS);
   /** Notify preprocessed, trust node version */
   void notifyTrustedPreprocessed(TrustNode tnp);
   /**

@@ -94,14 +94,17 @@ class AssertionPipeline : protected EnvObj
    * @param pg The proof generator who can provide a proof of d_nodes[i] == n,
    * where d_nodes[i] is the assertion at position i prior to this call.
    */
-  void replace(size_t i, Node n, ProofGenerator* pg = nullptr,
-                 TrustId trustId = TrustId::PREPROCESS);
+  void replace(size_t i,
+               Node n,
+               ProofGenerator* pg = nullptr,
+               TrustId trustId = TrustId::PREPROCESS);
   /**
    * Same as above, with TrustNode trn, which is of kind REWRITE and proves
    * d_nodes[i] = n for some n.
    */
-  void replaceTrusted(size_t i, TrustNode trn,
-                 TrustId trustId = TrustId::PREPROCESS);
+  void replaceTrusted(size_t i,
+                      TrustNode trn,
+                      TrustId trustId = TrustId::PREPROCESS);
 
   IteSkolemMap& getIteSkolemMap() { return d_iteSkolemMap; }
   const IteSkolemMap& getIteSkolemMap() const { return d_iteSkolemMap; }
@@ -132,8 +135,9 @@ class AssertionPipeline : protected EnvObj
    * @param trustId The trust id to use if pg is not provided and proofs are
    * enabled.
    */
-  void addSubstitutionNode(Node n, ProofGenerator* pg = nullptr,
-                   TrustId trustId = TrustId::PREPROCESS_LEMMA);
+  void addSubstitutionNode(Node n,
+                           ProofGenerator* pg = nullptr,
+                           TrustId trustId = TrustId::PREPROCESS_LEMMA);
 
   /**
    * Checks whether the assertion at a given index represents substitutions.

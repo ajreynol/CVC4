@@ -100,7 +100,8 @@ void BVToInt::addFinalizeAssertions(
 {
   NodeManager* nm = nodeManager();
   Node lemmas = nm->mkAnd(additionalConstraints);
-  assertionsToPreprocess->push_back(lemmas, false, nullptr, TrustId::PREPROCESS_BV_TO_INT_LEMMA);
+  assertionsToPreprocess->push_back(
+      lemmas, false, nullptr, TrustId::PREPROCESS_BV_TO_INT_LEMMA);
   Trace("bv-to-int-debug") << "range constraints: " << lemmas.toString()
                            << std::endl;
 }

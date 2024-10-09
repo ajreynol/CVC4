@@ -30,8 +30,9 @@
 namespace cvc5::internal {
 namespace smt {
 
-PreprocessProofGenerator::PreprocessProofGenerator(
-    Env& env, context::Context* c, std::string name)
+PreprocessProofGenerator::PreprocessProofGenerator(Env& env,
+                                                   context::Context* c,
+                                                   std::string name)
     : EnvObj(env),
       d_ctx(c ? c : &d_context),
       d_src(d_ctx),
@@ -47,7 +48,9 @@ void PreprocessProofGenerator::notifyInput(Node n)
   notifyNewAssert(n, &d_inputPf);
 }
 
-void PreprocessProofGenerator::notifyNewAssert(Node n, ProofGenerator* pg, TrustId id )
+void PreprocessProofGenerator::notifyNewAssert(Node n,
+                                               ProofGenerator* pg,
+                                               TrustId id)
 {
   if (n.isConst() && n.getConst<bool>())
   {
@@ -80,14 +83,15 @@ void PreprocessProofGenerator::notifyNewTrustedAssert(TrustNode tn)
 
 void PreprocessProofGenerator::notifyPreprocessed(Node n,
                                                   Node np,
-                                                  ProofGenerator* pg, TrustId id )
+                                                  ProofGenerator* pg,
+                                                  TrustId id)
 {
   // only do anything if indeed it rewrote
   if (n == np)
   {
     return;
   }
-  if (pg==nullptr)
+  if (pg == nullptr)
   {
     d_trustPf.addTrustedStep(n.eqNode(np), id, {}, {});
     pg = &d_trustPf;
@@ -109,7 +113,7 @@ void PreprocessProofGenerator::notifyTrustedPreprocessed(TrustNode tnp)
       << "PreprocessProofGenerator::notifyPreprocessed: " << tnp << std::endl;
   if (d_src.find(np) == d_src.end())
   {
-    Assert (tnp.getGenerator() != nullptr);
+    Assert(tnp.getGenerator() != nullptr);
     d_src[np] = tnp;
   }
   else
@@ -194,10 +198,10 @@ std::shared_ptr<ProofNode> PreprocessProofGenerator::getProofFor(Node f)
       // if we had a dynamic failure
       if (!proofStepProcessed)
       {
-        TrustId id = (tnk == TrustNodeKind::LEMMA) ? TrustId::PREPROCESS_LEMMA : TrustId::PREPROCESS;
+        TrustId id = (tnk == TrustNodeKind::LEMMA) ? TrustId::PREPROCESS_LEMMA
+                                                   : TrustId::PREPROCESS;
         Trace("smt-pppg-debug")
-            << "...justify missing step with "
-            << id << std::endl;
+            << "...justify missing step with " << id << std::endl;
         // add trusted step, the rule depends on the kind of trust node
         cdp.addTrustedStep(proven, id, {}, {});
       }

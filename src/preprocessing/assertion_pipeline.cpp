@@ -53,7 +53,7 @@ void AssertionPipeline::clear()
 void AssertionPipeline::push_back(Node n,
                                   bool isInput,
                                   ProofGenerator* pgen,
-                TrustId trustId)
+                                  TrustId trustId)
 {
   if (d_conflict)
   {
@@ -75,7 +75,7 @@ void AssertionPipeline::push_back(Node n,
     {
       if (!isInput)
       {
-        AlwaysAssert(pgen!=nullptr || trustId!=TrustId::PREPROCESS_LEMMA);
+        AlwaysAssert(pgen != nullptr || trustId != TrustId::PREPROCESS_LEMMA);
         d_andElimEpg->addLazyStep(n, pgen, trustId);
       }
     }
@@ -144,8 +144,10 @@ void AssertionPipeline::pushBackTrusted(TrustNode trn)
   push_back(trn.getProven(), false, trn.getGenerator());
 }
 
-void AssertionPipeline::replace(size_t i, Node n, ProofGenerator* pgen,
-                 TrustId trustId)
+void AssertionPipeline::replace(size_t i,
+                                Node n,
+                                ProofGenerator* pgen,
+                                TrustId trustId)
 {
   Assert(i < d_nodes.size());
   if (n == d_nodes[i])
@@ -169,8 +171,7 @@ void AssertionPipeline::replace(size_t i, Node n, ProofGenerator* pgen,
   }
 }
 
-void AssertionPipeline::replaceTrusted(size_t i, TrustNode trn,
-                 TrustId trustId)
+void AssertionPipeline::replaceTrusted(size_t i, TrustNode trn, TrustId trustId)
 {
   Assert(i < d_nodes.size());
   if (trn.isNull())
@@ -206,8 +207,9 @@ void AssertionPipeline::disableStoreSubstsInAsserts()
   d_storeSubstsInAsserts = false;
 }
 
-void AssertionPipeline::addSubstitutionNode(Node n, ProofGenerator* pg,
-                 TrustId trustId)
+void AssertionPipeline::addSubstitutionNode(Node n,
+                                            ProofGenerator* pg,
+                                            TrustId trustId)
 {
   Assert(d_storeSubstsInAsserts);
   Assert(n.getKind() == Kind::EQUAL);
