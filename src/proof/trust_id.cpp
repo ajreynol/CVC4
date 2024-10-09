@@ -40,6 +40,11 @@ const char* toString(TrustId id)
     case TrustId::PREPROCESS_BV_TO_INT: return "PREPROCESS_BV_TO_INT";
     case TrustId::PREPROCESS_BV_TO_INT_LEMMA:
       return "PREPROCESS_BV_TO_INT_LEMMA";
+    case TrustId::PREPROCESS_ACKERMANN:
+        return "PREPROCESS_ACKERMANN";
+    case TrustId::PREPROCESS_ACKERMANN_LEMMA:
+        return "PREPROCESS_ACKERMANN_LEMMA";
+    case TrustId::PREPROCESS_STATIC_LEARNING: return "PREPROCESS_STATIC_LEARNING";
     // other
     case TrustId::ARITH_NL_COVERING_DIRECT: return "ARITH_NL_COVERING_DIRECT";
     case TrustId::ARITH_NL_COVERING_RECURSIVE:

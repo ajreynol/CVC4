@@ -159,6 +159,7 @@ void AssertionPipeline::replace(size_t i,
                            << n << std::endl;
   if (isProofEnabled())
   {
+    AlwaysAssert(pgen!=nullptr || trustId!=TrustId::PREPROCESS);
     d_pppg->notifyPreprocessed(d_nodes[i], n, pgen, trustId);
   }
   if (n == d_false)

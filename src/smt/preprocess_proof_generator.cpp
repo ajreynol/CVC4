@@ -65,6 +65,7 @@ void PreprocessProofGenerator::notifyNewAssert(Node n,
     // if no proof generator provided for (non-true) assertion
     if (pg == nullptr)
     {
+      // if no proof generator provided, use a trust step
       d_trustPf.addTrustedStep(n, id, {}, {});
       pg = &d_trustPf;
     }
@@ -93,6 +94,7 @@ void PreprocessProofGenerator::notifyPreprocessed(Node n,
   }
   if (pg == nullptr)
   {
+    // if no proof generator provided, use a trust step
     d_trustPf.addTrustedStep(n.eqNode(np), id, {}, {});
     pg = &d_trustPf;
   }
@@ -195,9 +197,11 @@ std::shared_ptr<ProofNode> PreprocessProofGenerator::getProofFor(Node f)
         Assert(tnk == TrustNodeKind::LEMMA);
       }
 
-      // if we had a dynamic failure
+      // if we had a dynamic failure, e.g. the provided proof generator did
+      // not generate a proof
       if (!proofStepProcessed)
       {
+        AlwaysAssert(false);
         TrustId id = (tnk == TrustNodeKind::LEMMA) ? TrustId::PREPROCESS_LEMMA
                                                    : TrustId::PREPROCESS;
         Trace("smt-pppg-debug")
