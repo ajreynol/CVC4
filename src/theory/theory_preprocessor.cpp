@@ -479,12 +479,17 @@ void TheoryPreprocessor::registerTrustedRewrite(TrustNode trn,
   Node term = eq[0];
   Node termr = eq[1];
   Trace("tpp-debug") << "TheoryPreprocessor: addRewriteStep (generator) "
-                      << term << " -> " << termr << std::endl;
+                     << term << " -> " << termr << std::endl;
   trn.debugCheckClosed(
       options(), "tpp-debug", "TheoryPreprocessor::preprocessWithProof");
   // always use term context hash 0 (default)
-  pg->addRewriteStep(
-      term, termr, trn.getGenerator(), isPre, TrustId::THEORY_PREPROCESS, true, tctx);
+  pg->addRewriteStep(term,
+                     termr,
+                     trn.getGenerator(),
+                     isPre,
+                     TrustId::THEORY_PREPROCESS,
+                     true,
+                     tctx);
 }
 
 }  // namespace theory

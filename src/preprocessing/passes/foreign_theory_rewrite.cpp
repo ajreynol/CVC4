@@ -150,7 +150,7 @@ PreprocessingPassResult ForeignTheoryRewrite::applyInternal(
   {
     const Node& a = (*assertionsToPreprocess)[i];
     Node ar = d_ftr.simplify(a);
-    if (a==ar)
+    if (a == ar)
     {
       continue;
     }

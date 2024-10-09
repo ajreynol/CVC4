@@ -379,7 +379,8 @@ PreprocessingPassResult HoElim::applyInternal(
       {
         Node axr = rewrite(ax);
         Assert(!expr::hasFreeVar(axr));
-        assertionsToPreprocess->push_back(axr, false, nullptr, TrustId::PREPROCESS_HO_ELIM_LEMMA);
+        assertionsToPreprocess->push_back(
+            axr, false, nullptr, TrustId::PREPROCESS_HO_ELIM_LEMMA);
       }
     }
     axioms.clear();
