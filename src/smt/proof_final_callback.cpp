@@ -48,7 +48,10 @@ ProofFinalCallback::ProofFinalCallback(Env& env)
           "finalProof::trustCount")),
       d_trustTheoryIdCount(
           statisticsRegistry().registerHistogram<theory::TheoryId>(
-              "finalProof::trustTheoryIdCount")),
+              "finalProof::trustTheoryRewriteCount")),
+      d_trustTheoryLemmaCount(
+          statisticsRegistry().registerHistogram<theory::TheoryId>(
+              "finalProof::trustTheoryLemmaCount")),
       d_totalRuleCount(
           statisticsRegistry().registerInt("finalProof::totalRuleCount")),
       d_minPedanticLevel(
@@ -137,6 +140,16 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
     {
       d_trustIds << id;
       Trace("final-pf-hole") << " " << id;
+      if (id==TrustId::THEORY_LEMMA)
+      {
+        const std::vector<Node>& args = pn->getArguments();
+        TheoryId tid = THEORY_BUILTIN;
+        if (args.size()>=3)
+        {
+          builtin::BuiltinProofRuleChecker::getTheoryId(args[2], tid);
+        }
+        d_trustTheoryLemmaCount << tid;
+      }
     }
     Trace("final-pf-hole") << ": " << pn->getResult() << std::endl;
   }
