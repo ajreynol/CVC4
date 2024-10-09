@@ -27,8 +27,9 @@ namespace passes {
 using namespace cvc5::internal::theory;
 
 Rewrite::Rewrite(PreprocessingPassContext* preprocContext)
-    : PreprocessingPass(preprocContext, "rewrite"){}
-
+    : PreprocessingPass(preprocContext, "rewrite")
+{
+}
 
 PreprocessingPassResult Rewrite::applyInternal(
   AssertionPipeline* assertionsToPreprocess)
@@ -37,11 +38,12 @@ PreprocessingPassResult Rewrite::applyInternal(
   {
     const Node& a = (*assertionsToPreprocess)[i];
     Node ar = rewrite(a);
-    if (a==ar)
+    if (a == ar)
     {
       continue;
     }
-    assertionsToPreprocess->replace(i, ar, nullptr, TrustId::PREPROCESS_REWRITE);
+    assertionsToPreprocess->replace(
+        i, ar, nullptr, TrustId::PREPROCESS_REWRITE);
     if (assertionsToPreprocess->isInConflict())
     {
       return PreprocessingPassResult::CONFLICT;

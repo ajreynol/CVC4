@@ -65,7 +65,7 @@ void PreprocessProofGenerator::notifyNewAssert(Node n,
     // if no proof generator provided for (non-true) assertion
     if (pg == nullptr)
     {
-      Assert(id!=TrustId::PREPROCESS_LEMMA);
+      Assert(id != TrustId::PREPROCESS_LEMMA);
       // if no proof generator provided, use a trust step
       d_trustPf.addTrustedStep(n, id, {}, {});
       pg = &d_trustPf;
@@ -78,8 +78,7 @@ void PreprocessProofGenerator::notifyNewAssert(Node n,
   }
 }
 
-void PreprocessProofGenerator::notifyNewTrustedAssert(TrustNode tn,
-                       TrustId id)
+void PreprocessProofGenerator::notifyNewTrustedAssert(TrustNode tn, TrustId id)
 {
   notifyNewAssert(tn.getProven(), tn.getGenerator(), id);
 }
@@ -96,7 +95,7 @@ void PreprocessProofGenerator::notifyPreprocessed(Node n,
   }
   if (pg == nullptr)
   {
-    Assert(id!=TrustId::PREPROCESS);
+    Assert(id != TrustId::PREPROCESS);
     // if no proof generator provided, use a trust step
     d_trustPf.addTrustedStep(n.eqNode(np), id, {}, {});
     pg = &d_trustPf;

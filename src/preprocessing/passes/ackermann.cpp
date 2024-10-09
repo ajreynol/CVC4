@@ -88,7 +88,8 @@ void addLemmaForPair(TNode args1,
   }
   Node func_eq = nm->mkNode(Kind::EQUAL, args1, args2);
   Node lemma = nm->mkNode(Kind::IMPLIES, args_eq, func_eq);
-  assertionsToPreprocess->push_back(lemma, false, nullptr, TrustId::PREPROCESS_ACKERMANN_LEMMA);
+  assertionsToPreprocess->push_back(
+      lemma, false, nullptr, TrustId::PREPROCESS_ACKERMANN_LEMMA);
 }
 
 void storeFunctionAndAddLemmas(TNode func,
@@ -327,7 +328,10 @@ PreprocessingPassResult Ackermann::applyInternal(
   for (unsigned i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
   {
     assertionsToPreprocess->replace(
-        i, d_funcToSkolem.apply((*assertionsToPreprocess)[i]), nullptr, TrustId::PREPROCESS_ACKERMANN);
+        i,
+        d_funcToSkolem.apply((*assertionsToPreprocess)[i]),
+        nullptr,
+        TrustId::PREPROCESS_ACKERMANN);
   }
 
   /* replace uninterpreted sorts with bit-vectors */
