@@ -46,6 +46,7 @@ enum class TrustId : uint32_t
   /** A expanding of definitions of the input formula made without a proof */
   THEORY_EXPAND_DEF,
   /** Specific preprocessing passes */
+  PREPROCESS_BV_TO_INT,
   PREPROCESS_BV_TO_INT_LEMMA,
 
   /**
@@ -97,6 +98,8 @@ enum class TrustId : uint32_t
    * no :math:`x_i` exists that extends the cell and satisfies all assumptions.
    */
   ARITH_NL_COVERING_RECURSIVE,
+  /** Arithmetic operator elimination */
+  ARITH_OP_ELIM,
   /** An extended theory rewrite */
   EXT_THEORY_REWRITE,
   /** A rewrite whose proof could not be elaborated */

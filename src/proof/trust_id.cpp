@@ -27,6 +27,7 @@ const char* toString(TrustId id)
   switch (id)
   {
     case TrustId::NONE: return "NONE";
+    // core
     case TrustId::THEORY_LEMMA: return "THEORY_LEMMA";
     case TrustId::THEORY_INFERENCE: return "THEORY_INFERENCE";
     case TrustId::PREPROCESS: return "PREPROCESS";
@@ -35,11 +36,15 @@ const char* toString(TrustId id)
     case TrustId::THEORY_PREPROCESS: return "THEORY_PREPROCESS";
     case TrustId::THEORY_PREPROCESS_LEMMA: return "THEORY_PREPROCESS_LEMMA";
     case TrustId::THEORY_EXPAND_DEF: return "THEORY_EXPAND_DEF";
+    // preprocess passes
+    case TrustId::PREPROCESS_BV_TO_INT: return "PREPROCESS_BV_TO_INT";
     case TrustId::PREPROCESS_BV_TO_INT_LEMMA:
       return "PREPROCESS_BV_TO_INT_LEMMA";
+    // other
     case TrustId::ARITH_NL_COVERING_DIRECT: return "ARITH_NL_COVERING_DIRECT";
     case TrustId::ARITH_NL_COVERING_RECURSIVE:
       return "ARITH_NL_COVERING_RECURSIVE";
+    case TrustId::ARITH_OP_ELIM: return "ARITH_OP_ELIM";
     case TrustId::EXT_THEORY_REWRITE: return "EXT_THEORY_REWRITE";
     case TrustId::REWRITE_NO_ELABORATE: return "REWRITE_NO_ELABORATE";
     case TrustId::FLATTENING_REWRITE: return "FLATTENING_REWRITE";
