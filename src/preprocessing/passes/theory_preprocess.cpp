@@ -49,7 +49,7 @@ PreprocessingPassResult TheoryPreprocess::applyInternal(
     if (!trn.isNull())
     {
       // process
-      assertions->replaceTrusted(i, trn);
+      assertions->replaceTrusted(i, trn, TrustId::THEORY_PREPROCESS);
       if (assertions->isInConflict())
       {
         return PreprocessingPassResult::CONFLICT;

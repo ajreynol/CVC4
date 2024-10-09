@@ -100,7 +100,8 @@ class AssertionPipeline : protected EnvObj
    * Same as above, with TrustNode trn, which is of kind REWRITE and proves
    * d_nodes[i] = n for some n.
    */
-  void replaceTrusted(size_t i, TrustNode trn);
+  void replaceTrusted(size_t i, TrustNode trn,
+                 TrustId trustId = TrustId::PREPROCESS);
 
   IteSkolemMap& getIteSkolemMap() { return d_iteSkolemMap; }
   const IteSkolemMap& getIteSkolemMap() const { return d_iteSkolemMap; }
