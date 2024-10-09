@@ -75,7 +75,7 @@ void AssertionPipeline::push_back(Node n,
     {
       if (!isInput)
       {
-        AlwaysAssert(pgen != nullptr || trustId != TrustId::PREPROCESS_LEMMA);
+        Assert(pgen != nullptr || trustId != TrustId::PREPROCESS_LEMMA);
         d_andElimEpg->addLazyStep(n, pgen, trustId);
       }
     }
