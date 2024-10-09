@@ -503,12 +503,16 @@ bool TermDb::isTermEligibleForInstantiation(TNode n, TNode f)
           f.isNull() ? -1 : d_qreg.getQuantAttributes().getQuantInstLevel(f);
       unsigned ml = fml >= 0 ? fml : options().quantifiers.instMaxLevel;
 
-      if( level>ml ){
-        Trace("inst-add-debug") << "Term " << n << " has instantiation level " << level;
+      if (level > ml)
+      {
+        Trace("inst-add-debug")
+            << "Term " << n << " has instantiation level " << level;
         Trace("inst-add-debug") << ", which is more than maximum allowed level " << ml << " for this quantified formula." << std::endl;
         return false;
       }
-    }else{
+    }
+    else
+    {
       Trace("inst-add-debug")
           << "Term " << n << " does not have an instantiation level."
           << std::endl;
