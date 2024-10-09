@@ -99,14 +99,6 @@ Node SkolemManager::mkSkolemFunction(SkolemId id,
 {
   TypeNode ctn = getTypeFor(id, cacheVals);
   Assert(!ctn.isNull());
-  if (isCommutativeSkolemId(id))
-  {
-    // sort arguments if commutative, which should not impact its type
-    std::vector<Node> cvs = cacheVals;
-    std::sort(cvs.begin(), cvs.end());
-    Assert(getTypeFor(id, cvs) == ctn);
-    return mkSkolemFunctionTyped(id, ctn, cvs);
-  }
   return mkSkolemFunctionTyped(id, ctn, cacheVals);
 }
 
@@ -269,8 +261,8 @@ Node SkolemManager::getOriginalForm(Node n)
   OriginalFormAttribute ofa;
   UnpurifiedFormAttribute ufa;
   NodeManager* nm = NodeManager::currentNM();
-  std::unordered_map<TNode, Node> visited;
-  std::unordered_map<TNode, Node>::iterator it;
+  std::unordered_set<TNode> visited;
+  std::unordered_set<TNode>::iterator it;
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(n);
@@ -301,48 +293,47 @@ Node SkolemManager::getOriginalForm(Node n)
       }
       continue;
     }
+    else if (cur.getNumChildren() == 0)
+    {
+      cur.setAttribute(ofa, cur);
+      visit.pop_back();
+      continue;
+    }
     it = visited.find(cur);
     if (it == visited.end())
     {
-      visited[cur] = Node::null();
-      visit.push_back(cur);
+      visited.insert(cur);
       if (cur.getMetaKind() == metakind::PARAMETERIZED)
       {
         visit.push_back(cur.getOperator());
       }
-      for (const Node& cn : cur)
-      {
-        visit.push_back(cn);
-      }
+      visit.insert(visit.end(), cur.begin(), cur.end());
       continue;
     }
     visit.pop_back();
-    if (it->second.isNull())
+    Node ret = cur;
+    bool childChanged = false;
+    std::vector<Node> children;
+    if (cur.getMetaKind() == metakind::PARAMETERIZED)
     {
-      Node ret = cur;
-      bool childChanged = false;
-      std::vector<Node> children;
-      if (cur.getMetaKind() == metakind::PARAMETERIZED)
-      {
-        const Node& oon = cur.getOperator().getAttribute(ofa);
-        Assert(!oon.isNull());
-        childChanged = childChanged || cur.getOperator() != oon;
-        children.push_back(oon);
-      }
-      for (const Node& cn : cur)
-      {
-        const Node& ocn = cn.getAttribute(ofa);
-        Assert(!ocn.isNull());
-        childChanged = childChanged || cn != ocn;
-        children.push_back(ocn);
-      }
-      if (childChanged)
-      {
-        ret = nm->mkNode(cur.getKind(), children);
-      }
-      cur.setAttribute(ofa, ret);
-      visited[cur] = ret;
+      const Node& oon = cur.getOperator().getAttribute(ofa);
+      Assert(!oon.isNull());
+      childChanged = childChanged || cur.getOperator() != oon;
+      children.push_back(oon);
     }
+    for (const Node& cn : cur)
+    {
+      const Node& ocn = cn.getAttribute(ofa);
+      Assert(!ocn.isNull());
+      childChanged = childChanged || cn != ocn;
+      children.push_back(ocn);
+    }
+    if (childChanged)
+    {
+      ret = nm->mkNode(cur.getKind(), children);
+    }
+    cur.setAttribute(ofa, ret);
+
   } while (!visit.empty());
   const Node& on = n.getAttribute(ofa);
   Trace("sk-manager-debug") << "..return " << on << std::endl;
