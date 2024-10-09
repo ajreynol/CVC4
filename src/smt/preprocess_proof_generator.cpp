@@ -31,15 +31,14 @@ namespace cvc5::internal {
 namespace smt {
 
 PreprocessProofGenerator::PreprocessProofGenerator(
-    Env& env, context::Context* c, std::string name, TrustId ra, TrustId rpp)
+    Env& env, context::Context* c, std::string name)
     : EnvObj(env),
       d_ctx(c ? c : &d_context),
       d_src(d_ctx),
       d_helperProofs(env, d_ctx, "PreprocessHelper"),
       d_inputPf(env, c, "InputProof"),
-      d_name(name),
-      d_ra(ra),
-      d_rpp(rpp)
+      d_trustPf(env, c, "PreprocessTrustProof"),
+      d_name(name)
 {
 }
 
@@ -48,7 +47,7 @@ void PreprocessProofGenerator::notifyInput(Node n)
   notifyNewAssert(n, &d_inputPf);
 }
 
-void PreprocessProofGenerator::notifyNewAssert(Node n, ProofGenerator* pg)
+void PreprocessProofGenerator::notifyNewAssert(Node n, ProofGenerator* pg, TrustId id )
 {
   if (n.isConst() && n.getConst<bool>())
   {
@@ -63,7 +62,8 @@ void PreprocessProofGenerator::notifyNewAssert(Node n, ProofGenerator* pg)
     // if no proof generator provided for (non-true) assertion
     if (pg == nullptr)
     {
-      checkEagerPedantic(d_ra);
+      d_trustPf.addTrustedStep(n, id, {}, {});
+      pg = &d_trustPf;
     }
     d_src[n] = TrustNode::mkTrustLemma(n, pg);
   }
@@ -80,12 +80,17 @@ void PreprocessProofGenerator::notifyNewTrustedAssert(TrustNode tn)
 
 void PreprocessProofGenerator::notifyPreprocessed(Node n,
                                                   Node np,
-                                                  ProofGenerator* pg)
+                                                  ProofGenerator* pg, TrustId id )
 {
   // only do anything if indeed it rewrote
   if (n == np)
   {
     return;
+  }
+  if (pg==nullptr)
+  {
+    d_trustPf.addTrustedStep(n.eqNode(np), id, {}, {});
+    pg = &d_trustPf;
   }
   // call the trusted version
   notifyTrustedPreprocessed(TrustNode::mkTrustRewrite(n, np, pg));
@@ -104,10 +109,7 @@ void PreprocessProofGenerator::notifyTrustedPreprocessed(TrustNode tnp)
       << "PreprocessProofGenerator::notifyPreprocessed: " << tnp << std::endl;
   if (d_src.find(np) == d_src.end())
   {
-    if (tnp.getGenerator() == nullptr)
-    {
-      checkEagerPedantic(d_rpp);
-    }
+    Assert (tnp.getGenerator() != nullptr);
     d_src[np] = tnp;
   }
   else
@@ -189,14 +191,15 @@ std::shared_ptr<ProofNode> PreprocessProofGenerator::getProofFor(Node f)
         Assert(tnk == TrustNodeKind::LEMMA);
       }
 
+      // if we had a dynamic failure
       if (!proofStepProcessed)
       {
+        TrustId id = (tnk == TrustNodeKind::LEMMA) ? TrustId::PREPROCESS_LEMMA : TrustId::PREPROCESS;
         Trace("smt-pppg-debug")
             << "...justify missing step with "
-            << (tnk == TrustNodeKind::LEMMA ? d_ra : d_rpp) << std::endl;
+            << id << std::endl;
         // add trusted step, the rule depends on the kind of trust node
-        Node tid = mkTrustId(tnk == TrustNodeKind::LEMMA ? d_ra : d_rpp);
-        cdp.addStep(proven, ProofRule::TRUST, {}, {tid, proven});
+        cdp.addTrustedStep(proven, id, {}, {});
       }
     }
   } while (success);

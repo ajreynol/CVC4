@@ -52,7 +52,8 @@ void AssertionPipeline::clear()
 
 void AssertionPipeline::push_back(Node n,
                                   bool isInput,
-                                  ProofGenerator* pgen)
+                                  ProofGenerator* pgen,
+                TrustId trustId)
 {
   if (d_conflict)
   {
@@ -74,7 +75,8 @@ void AssertionPipeline::push_back(Node n,
     {
       if (!isInput)
       {
-        d_andElimEpg->addLazyStep(n, pgen, TrustId::PREPROCESS_LEMMA);
+        AlwaysAssert(pgen!=nullptr || trustId!=TrustId::PREPROCESS_LEMMA);
+        d_andElimEpg->addLazyStep(n, pgen, trustId);
       }
     }
     std::vector<Node> toProcess;
@@ -142,7 +144,8 @@ void AssertionPipeline::pushBackTrusted(TrustNode trn)
   push_back(trn.getProven(), false, trn.getGenerator());
 }
 
-void AssertionPipeline::replace(size_t i, Node n, ProofGenerator* pgen)
+void AssertionPipeline::replace(size_t i, Node n, ProofGenerator* pgen,
+                 TrustId trustId)
 {
   Assert(i < d_nodes.size());
   if (n == d_nodes[i])
@@ -176,6 +179,7 @@ void AssertionPipeline::replaceTrusted(size_t i, TrustNode trn)
   }
   Assert(trn.getKind() == TrustNodeKind::REWRITE);
   Assert(trn.getProven()[0] == d_nodes[i]);
+  Assert(!isProofEnabled() || trn.getGenerator()!=nullptr);
   replace(i, trn.getNode(), trn.getGenerator());
 }
 
@@ -202,12 +206,13 @@ void AssertionPipeline::disableStoreSubstsInAsserts()
   d_storeSubstsInAsserts = false;
 }
 
-void AssertionPipeline::addSubstitutionNode(Node n, ProofGenerator* pg)
+void AssertionPipeline::addSubstitutionNode(Node n, ProofGenerator* pg,
+                 TrustId trustId)
 {
   Assert(d_storeSubstsInAsserts);
   Assert(n.getKind() == Kind::EQUAL);
   size_t prevNodeSize = d_nodes.size();
-  push_back(n, false, pg);
+  push_back(n, false, pg, trustId);
   // remember this is a substitution index
   for (size_t i = prevNodeSize, newSize = d_nodes.size(); i < newSize; i++)
   {

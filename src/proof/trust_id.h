@@ -45,6 +45,8 @@ enum class TrustId : uint32_t
   THEORY_PREPROCESS_LEMMA,
   /** A expanding of definitions of the input formula made without a proof */
   THEORY_EXPAND_DEF,
+  /** Specific preprocessing passes */
+  PREPROCESS_BV_TO_INT_LEMMA,
 
   /**
    * We use :math:`\texttt{IRP}_k(poly)` for an IndexedRootPredicate that is

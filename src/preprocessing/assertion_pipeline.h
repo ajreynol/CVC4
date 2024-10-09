@@ -66,10 +66,13 @@ class AssertionPipeline : protected EnvObj
    * body of the overall proof).
    * @param pg The proof generator who can provide a proof of n. The proof
    * generator is not required and is ignored if isInput is true.
+   * @param trustId The trust id to use if pg is not provided when isInput
+   * is false and proofs are enabled.
    */
   void push_back(Node n,
                  bool isInput = false,
-                 ProofGenerator* pg = nullptr);
+                 ProofGenerator* pg = nullptr,
+                 TrustId trustId = TrustId::PREPROCESS_LEMMA);
   /** Same as above, with TrustNode */
   void pushBackTrusted(TrustNode trn);
 
@@ -91,7 +94,8 @@ class AssertionPipeline : protected EnvObj
    * @param pg The proof generator who can provide a proof of d_nodes[i] == n,
    * where d_nodes[i] is the assertion at position i prior to this call.
    */
-  void replace(size_t i, Node n, ProofGenerator* pg = nullptr);
+  void replace(size_t i, Node n, ProofGenerator* pg = nullptr,
+                 TrustId trustId = TrustId::PREPROCESS);
   /**
    * Same as above, with TrustNode trn, which is of kind REWRITE and proves
    * d_nodes[i] = n for some n.
@@ -124,8 +128,11 @@ class AssertionPipeline : protected EnvObj
    *
    * @param n The substitution node
    * @param pg The proof generator that can provide a proof of n.
+   * @param trustId The trust id to use if pg is not provided and proofs are
+   * enabled.
    */
-  void addSubstitutionNode(Node n, ProofGenerator* pg = nullptr);
+  void addSubstitutionNode(Node n, ProofGenerator* pg = nullptr,
+                   TrustId trustId = TrustId::PREPROCESS_LEMMA);
 
   /**
    * Checks whether the assertion at a given index represents substitutions.
