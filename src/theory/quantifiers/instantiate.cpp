@@ -55,7 +55,8 @@ Instantiate::Instantiate(Env& env,
       d_c_inst_match_trie_dom(userContext()),
       d_pfInst(isProofEnabled()
                    ? new CDProof(env, userContext(), "Instantiate::pfInst")
-                   : nullptr)
+                   : nullptr),
+      d_fullEffortChecks(0)
 {
 }
 
@@ -74,6 +75,23 @@ bool Instantiate::reset(Theory::Effort e)
   // clear explicitly recorded instantiations
   d_recordedInst.clear();
   d_instDebugTemp.clear();
+  if (options().quantifiers.instLevelBufferFactor != -1)
+  {
+    d_fullEffortChecks++;
+    std::map<size_t, std::vector<InstCall>>::iterator it =
+        d_bufferedInst.find(d_fullEffortChecks);
+    if (it != d_bufferedInst.end())
+    {
+      Trace("inst-buffer") << "Instantiate " << it->second.size()
+                           << " instantiations at level " << d_fullEffortChecks
+                           << std::endl;
+      for (InstCall& ic : it->second)
+      {
+        addInstantiation(ic.d_q, ic.d_terms, ic.d_id, ic.d_pfArg, ic.d_doVts);
+      }
+      d_bufferedInst.erase(it);
+    }
+  }
   return true;
 }
 
@@ -184,8 +202,7 @@ bool Instantiate::addInstantiationInternal(
     // this assertion is critical to soundness
     if (bad_inst)
     {
-      Trace("inst") << "***& Bad Instantiate [" << id << "] " << q << " with "
-                    << std::endl;
+      Trace("inst") << "***& Bad Instantiate [" << id << "] " << q << " with " << std::endl;
       for (unsigned j = 0; j < terms.size(); j++)
       {
         Trace("inst") << "   " << terms[j] << std::endl;
@@ -195,7 +212,6 @@ bool Instantiate::addInstantiationInternal(
   }
 #endif
 
-  EntailmentCheck* ec = d_treg.getEntailmentCheck();
   // Note we check for entailment before checking for term vector duplication.
   // Although checking for term vector duplication is a faster check, it is
   // included automatically with recordInstantiationInternal, hence we prefer
@@ -211,6 +227,7 @@ bool Instantiate::addInstantiationInternal(
   // check for positive entailment
   if (options().quantifiers.instNoEntail)
   {
+    EntailmentCheck* ec = d_treg.getEntailmentCheck();
     // should check consistency of equality engine
     // (if not aborting on utility's reset)
     std::map<TNode, TNode> subs;
@@ -236,6 +253,37 @@ bool Instantiate::addInstantiationInternal(
       {
         return false;
       }
+    }
+  }
+  // check based on buffering
+  if (options().quantifiers.instLevelBufferFactor != -1)
+  {
+    uint64_t maxLevel = 0;
+    for (const Node& t : terms)
+    {
+      uint64_t level;
+      if (QuantAttributes::getInstantiationLevel(t, level))
+      {
+        if (level > maxLevel)
+        {
+          maxLevel = level;
+        }
+      }
+    }
+    // Trace("inst-buffer") << "Max inst level is " << maxLevel << ", compare
+    // against " << d_fullEffortChecks << " full effort check" << std::endl;
+    uint64_t bf = options().quantifiers.instLevelBufferFactor;
+    if (maxLevel > d_fullEffortChecks * bf)
+    {
+      size_t onLevel = maxLevel / bf;
+      d_bufferedInst[onLevel].push_back(InstCall(q, terms, id, pfArg, doVts));
+      Trace("inst-buffer") << "--> Buffer inst with maxLevel " << maxLevel
+                           << ", will add at full check " << onLevel
+                           << std::endl;
+      Trace("inst-add-debug")
+          << "--> Buffer inst with maxLevel " << maxLevel
+          << ", will add at full check " << onLevel << std::endl;
+      return false;
     }
   }
 
@@ -356,44 +404,40 @@ bool Instantiate::addInstantiationInternal(
   d_instDebugTemp[q]++;
   if (TraceIsOn("inst"))
   {
-    Trace("inst") << "*** Instantiate [" << id << "] " << q << " with "
-                  << std::endl;
+    Trace("inst") << "*** Instantiate [" << id << "] " << q << " with " << std::endl;
     for (size_t i = 0, size = terms.size(); i < size; i++)
     {
-      Trace("inst") << "   " << terms[i];
-      if (TraceIsOn("inst-debug"))
+      if (TraceIsOn("inst"))
       {
-        Trace("inst-debug") << ", type=" << terms[i].getType()
-                            << ", var_type=" << q[0][i].getType();
+        Trace("inst") << "   " << terms[i];
+        if (TraceIsOn("inst-debug"))
+        {
+          Trace("inst-debug") << ", type=" << terms[i].getType()
+                              << ", var_type=" << q[0][i].getType();
+        }
+        Trace("inst") << std::endl;
       }
-      Trace("inst") << std::endl;
     }
   }
-  if (options().quantifiers.instMaxLevel != -1)
+  if (options().quantifiers.trackInstLevel)
   {
-    if (doVts)
+    Assert (lem.getKind()==Kind::IMPLIES);
+    uint64_t maxInstLevel = 0;
+    uint64_t clevel;
+    for (const Node& tc : terms)
     {
-      // virtual term substitution/instantiation level features are
-      // incompatible
-      std::stringstream ss;
-      ss << "Cannot combine instantiation strategies that require virtual term "
-            "substitution with those that restrict instantiation levels";
-      throw LogicException(ss.str());
-    }
-    else
-    {
-      uint64_t maxInstLevel = 0;
-      for (const Node& tc : terms)
+      if (!QuantAttributes::getInstantiationLevel(tc, clevel))
       {
-        if (tc.hasAttribute(InstLevelAttribute())
-            && tc.getAttribute(InstLevelAttribute()) > maxInstLevel)
-        {
-          maxInstLevel = tc.getAttribute(InstLevelAttribute());
-        }
+        // ensure it is set to zero.
+        QuantAttributes::setInstantiationLevelAttr(tc, 0);
+        continue;
       }
-      QuantAttributes::setInstantiationLevelAttr(
-          orig_body, q[1], maxInstLevel + 1);
+      if (clevel > maxInstLevel)
+      {
+        maxInstLevel = clevel;
+      }
     }
+    QuantAttributes::setInstantiationLevelAttr(lem[1], maxInstLevel + 1);
   }
   Trace("inst-add-debug") << " --> Success." << std::endl;
   ++(d_statistics.d_instantiations);
