@@ -196,18 +196,37 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
       {
         query = nm->mkNode(Kind::IMPLIES, nm->mkAnd(premises), query);
       }
+      // print the trusted step information
       if (isOutputOn(OutputTag::TRUSTED_PROOF_STEPS))
       {
         output(OutputTag::TRUSTED_PROOF_STEPS)
             << "(trusted-proof-step " << query;
         output(OutputTag::TRUSTED_PROOF_STEPS) << " :rule " << r;
+        TheoryId tid = THEORY_LAST;
         if (r == ProofRule::TRUST)
         {
           TrustId id;
           if (getTrustId(pn->getArguments()[0], id))
           {
             output(OutputTag::TRUSTED_PROOF_STEPS) << " :trust-id " << id;
+            if (id == TrustId::THEORY_LEMMA)
+            {
+              const std::vector<Node>& args = pn->getArguments();
+              if (args.size()>=3)
+              {
+                builtin::BuiltinProofRuleChecker::getTheoryId(args[2], tid);
+              }
+            }
           }
+        }
+        else if (r== ProofRule::TRUST_THEORY_REWRITE)
+        {
+          const std::vector<Node>& args = pn->getArguments();
+          builtin::BuiltinProofRuleChecker::getTheoryId(args[1], tid);
+        }
+        if (tid!=THEORY_LAST)
+        {
+          output(OutputTag::TRUSTED_PROOF_STEPS) << " :theory " << tid;
         }
         output(OutputTag::TRUSTED_PROOF_STEPS) << ")" << std::endl;
       }
