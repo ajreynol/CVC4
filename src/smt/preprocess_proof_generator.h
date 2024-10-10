@@ -101,7 +101,7 @@ class PreprocessProofGenerator : protected EnvObj, public ProofGenerator
                           TrustId id = TrustId::UNKNOWN_PREPROCESS);
   /** Notify preprocessed, trust node version */
   void notifyTrustedPreprocessed(TrustNode tnp,
-                          TrustId id = TrustId::UNKNOWN_PREPROCESS);
+                                 TrustId id = TrustId::UNKNOWN_PREPROCESS);
   /**
    * Get proof for f, which returns a proof based on proving an equality based
    * on transitivity of preprocessing steps, and then using the original

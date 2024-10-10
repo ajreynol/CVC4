@@ -140,11 +140,11 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
     {
       d_trustIds << id;
       Trace("final-pf-hole") << " " << id;
-      if (id==TrustId::THEORY_LEMMA)
+      if (id == TrustId::THEORY_LEMMA)
       {
         const std::vector<Node>& args = pn->getArguments();
         TheoryId tid = THEORY_BUILTIN;
-        if (args.size()>=3)
+        if (args.size() >= 3)
         {
           builtin::BuiltinProofRuleChecker::getTheoryId(args[2], tid);
         }

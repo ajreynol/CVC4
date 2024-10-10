@@ -98,7 +98,7 @@ void PreprocessProofGenerator::notifyPreprocessed(Node n,
 }
 
 void PreprocessProofGenerator::notifyTrustedPreprocessed(TrustNode tnp,
-                                                  TrustId id)
+                                                         TrustId id)
 {
   if (tnp.isNull())
   {
@@ -198,14 +198,15 @@ std::shared_ptr<ProofNode> PreprocessProofGenerator::getProofFor(Node f)
         Assert(tnk == TrustNodeKind::LEMMA);
       }
 
-      Assert (proofStepProcessed) << "Failed to get proof for preprocess step";
+      Assert(proofStepProcessed) << "Failed to get proof for preprocess step";
       // if we had a dynamic failure, e.g. the provided proof generator did
       // not generate a proof
       if (!proofStepProcessed)
       {
         // if in production, we get an unknown trust step
-        TrustId id = (tnk == TrustNodeKind::LEMMA) ? TrustId::UNKNOWN_PREPROCESS_LEMMA
-                                                   : TrustId::UNKNOWN_PREPROCESS;
+        TrustId id = (tnk == TrustNodeKind::LEMMA)
+                         ? TrustId::UNKNOWN_PREPROCESS_LEMMA
+                         : TrustId::UNKNOWN_PREPROCESS;
         Trace("smt-pppg-debug")
             << "...justify missing step with " << id << std::endl;
         // add trusted step, the rule depends on the kind of trust node

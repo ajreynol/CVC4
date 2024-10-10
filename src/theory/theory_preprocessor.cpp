@@ -480,7 +480,7 @@ void TheoryPreprocessor::registerTrustedRewrite(TrustNode trn,
   Node termr = eq[1];
   Trace("tpp-debug") << "TheoryPreprocessor: addRewriteStep (generator) "
                      << term << " -> " << termr << std::endl;
-  if (trn.getGenerator()!=nullptr)
+  if (trn.getGenerator() != nullptr)
   {
     trn.debugCheckClosed(
         options(), "tpp-debug", "TheoryPreprocessor::preprocessWithProof");
