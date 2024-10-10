@@ -19,6 +19,9 @@
 (define-rule arith-int-mod-total-one ((t Int)) (mod_total t 1) 0)
 (define-rule arith-int-mod-total-zero ((t Int)) (mod_total t 0) t)
 
+(define-cond-rule arith-int-mod-total-elim ((t Int) (s Int)) (> s 0) (mod_total t s) (- t (* s (div_total t s))))
+(define-rule arith-int-div-elim ((t Int) (s Int)) (div t s) (ite (= s 0) (@div_by_zero t) (div_total t s)))
+
 (define-rule arith-neg-neg-one ((t ?)) (* (- 1) (* (- 1) t)) t)
 
 ; Eliminations

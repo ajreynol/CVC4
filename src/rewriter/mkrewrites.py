@@ -96,6 +96,8 @@ def gen_mk_node(defns, expr):
                        Op.ROTATE_LEFT, Op.ROTATE_RIGHT, Op.INT_TO_BV, Op.REGEXP_LOOP}:
           args = f'nm->mkConst(GenericOp(Kind::{gen_kind(expr.op)})),' + args
           return f'nm->mkNode(Kind::APPLY_INDEXED_SYMBOLIC, {{ {args} }})'
+        if expr.op in {Op.DIV_BY_ZERO, Op.INT_DIV_BY_ZERO, Op.INT_MOD_BY_ZERO}:
+          return f'nm->getSkolemManager()->mkSkolemFun(SkolemId::{gen_kind(expr.op)}, {{ {args} }})'
         return f'nm->mkNode(Kind::{gen_kind(expr.op)}, {{ {args} }})'
     else:
         die(f'Cannot generate code for {expr}')

@@ -132,6 +132,10 @@ class Op(Enum):
 
     INT_ISPOW2 = ('int.ispow2', 'INTS_ISPOW2')  # Backdoor for some bv rewrites
     INT_LENGTH = ('int.log2', 'INTS_LOG2')  # Backdoor for some bv rewrites
+    
+    DIV_BY_ZERO = ('@div_by_zero', 'DIV_BY_ZERO')
+    INT_DIV_BY_ZERO = ('@int_div_by_zero', 'INT_DIV_BY_ZERO')
+    INT_MOD_BY_ZERO = ('@int_mod_by_zero', 'INT_MOD_BY_ZERO')
 
     ###########################################################################
     # Theory-independent

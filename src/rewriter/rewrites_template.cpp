@@ -15,6 +15,7 @@
 
 #include "expr/node.h"
 #include "expr/node_manager.h"
+#include "expr/skolem_manager.h"
 #include "proof/proof_checker.h"
 #include "rewriter/rewrite_db.h"
 #include "rewriter/rewrites.h"
