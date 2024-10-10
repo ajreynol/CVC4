@@ -25,6 +25,7 @@
 #include "proof/lazy_proof.h"
 #include "proof/trust_node.h"
 #include "smt/env_obj.h"
+#include "proof/rewrite_proof_generator.h"
 
 namespace cvc5::internal {
 
