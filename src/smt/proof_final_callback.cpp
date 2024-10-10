@@ -191,11 +191,25 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
         premises.push_back(pncc->getResult());
       }
       NodeManager* nm = nodeManager();
-      Node query = nm->mkNode(Kind::IMPLIES, nm->mkAnd(premises), conc);
+      Node query = conc;
+      if (!premises.empty())
+      {
+        conc = nm->mkNode(Kind::IMPLIES, nm->mkAnd(premises), conc);
+      }
       if (isOutputOn(OutputTag::TRUSTED_PROOF_STEPS))
       {
         output(OutputTag::TRUSTED_PROOF_STEPS)
-            << "(trusted-proof-step " << query << ")" << std::endl;
+            << "(trusted-proof-step " << query;
+        output(OutputTag::TRUSTED_PROOF_STEPS) << " :rule " << r;
+        if (r == ProofRule::TRUST)
+        {
+          TrustId id;
+          if (getTrustId(pn->getArguments()[0], id))
+          {
+            output(OutputTag::TRUSTED_PROOF_STEPS) << " :trust-id " << id;
+          }
+        }
+        output(OutputTag::TRUSTED_PROOF_STEPS) << ")" << std::endl;
       }
       if (options().proof.checkProofSteps)
       {
