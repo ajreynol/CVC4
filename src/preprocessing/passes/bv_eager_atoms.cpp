@@ -18,12 +18,12 @@
 
 #include "preprocessing/passes/bv_eager_atoms.h"
 
+#include "options/smt_options.h"
 #include "preprocessing/assertion_pipeline.h"
 #include "preprocessing/preprocessing_pass_context.h"
+#include "proof/proof.h"
 #include "theory/theory_engine.h"
 #include "theory/theory_model.h"
-#include "proof/proof.h"
-#include "options/smt_options.h"
 
 namespace cvc5::internal {
 namespace preprocessing {
@@ -34,12 +34,12 @@ namespace passes {
  */
 class BVEagerAtomProofGenerator : protected EnvObj, public ProofGenerator
 {
-public:
-  BVEagerAtomProofGenerator(Env& env) : EnvObj(env){}
+ public:
+  BVEagerAtomProofGenerator(Env& env) : EnvObj(env) {}
   virtual ~BVEagerAtomProofGenerator() {}
   /**
    * Proves (BITVECTOR_EAGER_ATOM F) from F via:
-   * 
+   *
    *     ---------------------------- BV_EAGER_ATOM
    *     (BITVECTOR_EAGER_ATOM F) = F
    *     ---------------------------- SYMM
@@ -49,13 +49,13 @@ public:
    */
   std::shared_ptr<ProofNode> getProofFor(Node fact) override
   {
-    Assert (fact.getKind()==Kind::BITVECTOR_EAGER_ATOM);
+    Assert(fact.getKind() == Kind::BITVECTOR_EAGER_ATOM);
     CDProof cdp(d_env);
     Node eq = fact.eqNode(fact[0]);
     Node eqSym = fact[0].eqNode(fact);
     cdp.addStep(eq, ProofRule::BV_EAGER_ATOM, {}, {fact});
     cdp.addStep(fact, ProofRule::EQ_RESOLVE, {fact[0], eqSym}, {});
-    return cdp.getProofFor(fact);                
+    return cdp.getProofFor(fact);
   }
   /** identify */
   std::string identify() const override { return "BVEagerAtomProofGenerator"; }
@@ -66,7 +66,6 @@ BvEagerAtoms::BvEagerAtoms(PreprocessingPassContext* preprocContext)
       d_proof(options().smt.produceProofs ? new BVEagerAtomProofGenerator(d_env)
                                           : nullptr)
 {
-  
 }
 
 PreprocessingPassResult BvEagerAtoms::applyInternal(

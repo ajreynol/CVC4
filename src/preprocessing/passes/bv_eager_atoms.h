@@ -28,7 +28,7 @@ namespace preprocessing {
 namespace passes {
 
 class BVEagerAtomProofGenerator;
-  
+
 class BvEagerAtoms : public PreprocessingPass
 {
  public:
