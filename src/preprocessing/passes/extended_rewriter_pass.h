@@ -21,6 +21,7 @@
 #define CVC5__PREPROCESSING__PASSES__EXTENDED_REWRITER_PASS_H
 
 #include "preprocessing/preprocessing_pass.h"
+#include "proof/rewrite_proof_generator.h"
 
 namespace cvc5::internal {
 class CDProof;
@@ -36,7 +37,7 @@ class ExtRewPre : public PreprocessingPass
   PreprocessingPassResult applyInternal(
       AssertionPipeline* assertionsToPreprocess) override;
   /** The proof generator if proofs are enabled */
-  std::shared_ptr<CDProof> d_proof;
+  std::unique_ptr<RewriteProofGenerator> d_proof;
 };
 
 }  // namespace passes

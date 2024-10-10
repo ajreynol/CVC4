@@ -27,7 +27,7 @@ namespace passes {
 
 ExtRewPre::ExtRewPre(PreprocessingPassContext* preprocContext)
     : PreprocessingPass(preprocContext, "ext-rew-pre"),
-      d_proof(options().smt.produceProofs ? new CDProof(d_env, userContext())
+      d_proof(options().smt.produceProofs ? new RewriteProofGenerator(d_env, MethodId::RW_EXT_REWRITE)
                                           : nullptr)
 {
 }
@@ -44,16 +44,7 @@ PreprocessingPassResult ExtRewPre::applyInternal(
     {
       continue;
     }
-    if (d_proof != nullptr)
-    {
-      d_proof->addTrustedStep(
-          a.eqNode(ar), TrustId::EXT_THEORY_REWRITE, {}, {});
-      assertionsToPreprocess->replace(i, ar, d_proof.get());
-    }
-    else
-    {
-      assertionsToPreprocess->replace(i, ar);
-    }
+    assertionsToPreprocess->replace(i, ar, d_proof.get());
     if (assertionsToPreprocess->isInConflict())
     {
       return PreprocessingPassResult::CONFLICT;

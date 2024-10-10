@@ -17,6 +17,7 @@
 
 #include "preprocessing/passes/rewrite.h"
 
+#include "options/smt_options.h"
 #include "preprocessing/assertion_pipeline.h"
 #include "theory/rewriter.h"
 
@@ -27,7 +28,9 @@ namespace passes {
 using namespace cvc5::internal::theory;
 
 Rewrite::Rewrite(PreprocessingPassContext* preprocContext)
-    : PreprocessingPass(preprocContext, "rewrite")
+    : PreprocessingPass(preprocContext, "rewrite"),
+      d_proof(options().smt.produceProofs ? new RewriteProofGenerator(d_env)
+                                          : nullptr)
 {
 }
 
@@ -43,7 +46,7 @@ PreprocessingPassResult Rewrite::applyInternal(
       continue;
     }
     assertionsToPreprocess->replace(
-        i, ar, nullptr, TrustId::PREPROCESS_REWRITE);
+        i, ar, d_proof.get());
     if (assertionsToPreprocess->isInConflict())
     {
       return PreprocessingPassResult::CONFLICT;

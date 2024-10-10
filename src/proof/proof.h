@@ -138,7 +138,7 @@ class CDProof : protected EnvObj, public ProofGenerator
 {
  public:
   /**
-   * @param pnm The proof node manager responsible for constructor ProofNode
+   * @param env Reference to the environment
    * @param c The context this proof depends on
    * @param name The name of this proof (for debugging)
    * @param autoSymm Whether this proof automatically adds symmetry steps based
