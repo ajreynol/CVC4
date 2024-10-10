@@ -194,7 +194,7 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
       Node query = conc;
       if (!premises.empty())
       {
-        conc = nm->mkNode(Kind::IMPLIES, nm->mkAnd(premises), conc);
+        query = nm->mkNode(Kind::IMPLIES, nm->mkAnd(premises), query);
       }
       if (isOutputOn(OutputTag::TRUSTED_PROOF_STEPS))
       {
