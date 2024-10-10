@@ -10,7 +10,7 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Generated rewrites
+ * Generated theory rewrites
  */
 
 #include "expr/node.h"

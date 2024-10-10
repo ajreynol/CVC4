@@ -2752,10 +2752,12 @@ enum ENUM(ProofRewriteRule) {
   EVALUE(ARITH_INT_MOD_TOTAL_ONE),
   /** Auto-generated from RARE rule arith-int-mod-total-zero */
   EVALUE(ARITH_INT_MOD_TOTAL_ZERO),
-  /** Auto-generated from RARE rule arith-int-mod-total-elim */
-  EVALUE(ARITH_INT_MOD_TOTAL_ELIM),
+  /** Auto-generated from RARE rule arith-int-mod-total-pos-const */
+  EVALUE(ARITH_INT_MOD_TOTAL_POS_CONST),
   /** Auto-generated from RARE rule arith-int-div-elim */
   EVALUE(ARITH_INT_DIV_ELIM),
+  /** Auto-generated from RARE rule arith-int-mod-elim */
+  EVALUE(ARITH_INT_MOD_ELIM),
   /** Auto-generated from RARE rule arith-neg-neg-one */
   EVALUE(ARITH_NEG_NEG_ONE),
   /** Auto-generated from RARE rule arith-elim-uminus */
