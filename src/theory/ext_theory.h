@@ -43,6 +43,7 @@
 #include "expr/node.h"
 #include "smt/env_obj.h"
 #include "theory/theory_inference_manager.h"
+#include "proof/proof.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -171,7 +172,7 @@ class ExtTheoryCallback
  * underlying theory for a "derivable substitution", whereby extended functions
  * may be reducable.
  */
-class ExtTheory : protected EnvObj
+class ExtTheory : protected EnvObj, public ProofGenerator
 {
   using NodeBoolMap = context::CDHashMap<Node, bool>;
   using NodeExtReducedIdMap = context::CDHashMap<Node, ExtReducedId>;
@@ -276,6 +277,11 @@ class ExtTheory : protected EnvObj
   /** get the set of active terms from d_ext_func_terms of kind k */
   std::vector<Node> getActive(Kind k) const;
 
+  /**
+   */
+  std::shared_ptr<ProofNode> getProofFor(Node fact) override;
+  /** identify */
+  std::string identify() const override;
  private:
   /** returns the set of variable subterms of n */
   static std::vector<Node> collectVars(Node n);
@@ -292,7 +298,7 @@ class ExtTheory : protected EnvObj
                             std::vector<Node>& nred,
                             bool isRed);
   /** send lemma on the output channel */
-  bool sendLemma(Node lem, InferenceId id);
+  bool sendLemma(TrustNode lem, InferenceId id);
   /** reference to the callback */
   ExtTheoryCallback& d_parent;
   /** inference manager used to send lemmas */

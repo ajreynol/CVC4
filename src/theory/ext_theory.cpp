@@ -236,7 +236,8 @@ bool ExtTheory::doInferencesInternal(int effort,
         if (!nr.isNull() && n != nr)
         {
           Node lem = nodeManager()->mkNode(Kind::EQUAL, n, nr);
-          if (sendLemma(lem, InferenceId::EXTT_SIMPLIFY))
+          TrustNode trn = TrustNode::mkTrustLemma(lem, nullptr);
+          if (sendLemma(trn, InferenceId::EXTT_SIMPLIFY))
           {
             Trace("extt-lemma")
                 << "ExtTheory : reduction lemma : " << lem << std::endl;
@@ -274,19 +275,15 @@ bool ExtTheory::doInferencesInternal(int effort,
           Node lem = eq;
           if (!exp[i].empty())
           {
-            std::vector<Node> eei;
-            for (const Node& e : exp[i])
-            {
-              eei.push_back(e.negate());
-            }
-            eei.push_back(eq);
-            lem = nm->mkNode(Kind::OR, eei);
+            Node antec = nm->mkAnd(exp[i]);
+            lem = nm->mkNode(Kind::IMPLIES, antec, eq);
           }
+          TrustNode trn = TrustNode::mkTrustLemma(lem, this);
 
           Trace("extt-debug") << "ExtTheory::doInferences : infer : " << eq
                               << " by " << exp[i] << std::endl;
           Trace("extt-debug") << "...send lemma " << lem << std::endl;
-          if (sendLemma(lem, InferenceId::EXTT_SIMPLIFY))
+          if (sendLemma(trn, InferenceId::EXTT_SIMPLIFY))
           {
             Trace("extt-lemma")
                 << "ExtTheory : substitution + rewrite lemma : " << lem
@@ -325,13 +322,14 @@ bool ExtTheory::doInferencesInternal(int effort,
   return addedLemma;
 }
 
-bool ExtTheory::sendLemma(Node lem, InferenceId id)
+bool ExtTheory::sendLemma(TrustNode lem, InferenceId id)
 {
-  if (d_lemmas.find(lem) == d_lemmas.end())
+  const Node& n = lem.getProven();
+  if (d_lemmas.find(n) == d_lemmas.end())
   {
-    if (d_im.lemma(lem, id))
+    if (d_im.trustedLemma(lem, id))
     {
-      d_lemmas.insert(lem);
+      d_lemmas.insert(n);
       return true;
     }
   }
@@ -501,6 +499,33 @@ std::vector<Node> ExtTheory::getActive(Kind k) const
   }
   return active;
 }
+
+std::shared_ptr<ProofNode> ExtTheory::getProofFor(Node fact)
+{
+  CDProof proof(d_env);
+  std::vector<Node> antec;
+  Node conc = fact;
+  if (conc.getKind()==Kind::IMPLIES)
+  {
+    if (conc[0].getKind()==Kind::AND)
+    {
+      antec.insert(antec.end(), conc[0].begin(), conc[0].end());
+    }
+    else
+    {
+      antec.push_back(conc[0]);
+    }
+    conc = conc[1];
+  }
+  proof.addStep(conc, ProofRule::MACRO_SR_PRED_INTRO, antec, {conc});
+  if (!antec.empty())
+  {
+    proof.addStep(fact, ProofRule::SCOPE, {conc}, antec);
+  }
+  return proof.getProofFor(fact);
+}
+
+std::string ExtTheory::identify() const { return "ExtTheory"; }
 
 }  // namespace theory
 }  // namespace cvc5::internal
