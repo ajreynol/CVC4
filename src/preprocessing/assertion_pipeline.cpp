@@ -192,6 +192,7 @@ void AssertionPipeline::enableProofs(smt::PreprocessProofGenerator* pppg)
   {
     d_andElimEpg.reset(
         new LazyCDProof(d_env, nullptr, userContext(), "AssertionsAndElim"));
+    d_rewpg.reset(new RewriteProofGenerator(d_env));
   }
 }
 
@@ -220,7 +221,7 @@ void AssertionPipeline::addSubstitutionNode(Node n,
   for (size_t i = prevNodeSize, newSize = d_nodes.size(); i < newSize; i++)
   {
     // ensure rewritten
-    replace(i, rewrite(d_nodes[i]), nullptr, TrustId::PREPROCESS_REWRITE);
+    replace(i, rewrite(d_nodes[i]), d_rewpg.get());
     d_substsIndices.insert(i);
   }
 }

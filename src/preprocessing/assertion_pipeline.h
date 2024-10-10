@@ -222,6 +222,10 @@ class AssertionPipeline : protected EnvObj
    * Maintains proofs for eliminating top-level AND from inputs to this class.
    */
   std::unique_ptr<LazyCDProof> d_andElimEpg;
+  /**
+   * Maintains proofs for rewrite steps.
+   */
+  std::unique_ptr<RewriteProofGenerator> d_rewpg;
 }; /* class AssertionPipeline */
 
 }  // namespace preprocessing
