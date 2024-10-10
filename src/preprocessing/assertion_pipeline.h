@@ -73,10 +73,10 @@ class AssertionPipeline : protected EnvObj
   void push_back(Node n,
                  bool isInput = false,
                  ProofGenerator* pg = nullptr,
-                 TrustId trustId = TrustId::PREPROCESS_LEMMA);
+                 TrustId trustId = TrustId::UNKNOWN_PREPROCESS_LEMMA);
   /** Same as above, with TrustNode */
   void pushBackTrusted(TrustNode trn,
-                       TrustId trustId = TrustId::PREPROCESS_LEMMA);
+                       TrustId trustId = TrustId::UNKNOWN_PREPROCESS_LEMMA);
 
   /**
    * Get the constant reference to the underlying assertions. It is only
@@ -99,14 +99,14 @@ class AssertionPipeline : protected EnvObj
   void replace(size_t i,
                Node n,
                ProofGenerator* pg = nullptr,
-               TrustId trustId = TrustId::PREPROCESS);
+               TrustId trustId = TrustId::UNKNOWN_PREPROCESS);
   /**
    * Same as above, with TrustNode trn, which is of kind REWRITE and proves
    * d_nodes[i] = n for some n.
    */
   void replaceTrusted(size_t i,
                       TrustNode trn,
-                      TrustId trustId = TrustId::PREPROCESS);
+                      TrustId trustId = TrustId::UNKNOWN_PREPROCESS);
 
   IteSkolemMap& getIteSkolemMap() { return d_iteSkolemMap; }
   const IteSkolemMap& getIteSkolemMap() const { return d_iteSkolemMap; }
@@ -139,7 +139,7 @@ class AssertionPipeline : protected EnvObj
    */
   void addSubstitutionNode(Node n,
                            ProofGenerator* pg = nullptr,
-                           TrustId trustId = TrustId::PREPROCESS_LEMMA);
+                           TrustId trustId = TrustId::UNKNOWN_PREPROCESS_LEMMA);
 
   /**
    * Checks whether the assertion at a given index represents substitutions.

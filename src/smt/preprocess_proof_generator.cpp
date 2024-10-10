@@ -93,18 +93,12 @@ void PreprocessProofGenerator::notifyPreprocessed(Node n,
   {
     return;
   }
-  if (pg == nullptr)
-  {
-    Assert(id != TrustId::PREPROCESS);
-    // if no proof generator provided, use a trust step
-    d_trustPf.addTrustedStep(n.eqNode(np), id, {}, {});
-    pg = &d_trustPf;
-  }
   // call the trusted version
-  notifyTrustedPreprocessed(TrustNode::mkTrustRewrite(n, np, pg));
+  notifyTrustedPreprocessed(TrustNode::mkTrustRewrite(n, np, pg), id);
 }
 
-void PreprocessProofGenerator::notifyTrustedPreprocessed(TrustNode tnp)
+void PreprocessProofGenerator::notifyTrustedPreprocessed(TrustNode tnp,
+                                                  TrustId id)
 {
   if (tnp.isNull())
   {
@@ -117,7 +111,12 @@ void PreprocessProofGenerator::notifyTrustedPreprocessed(TrustNode tnp)
       << "PreprocessProofGenerator::notifyPreprocessed: " << tnp << std::endl;
   if (d_src.find(np) == d_src.end())
   {
-    Assert(tnp.getGenerator() != nullptr);
+    if (tnp.getGenerator() == nullptr)
+    {
+      // if no proof generator provided, use a trust step
+      d_trustPf.addTrustedStep(tnp.getProven(), id, {}, {});
+      tnp = TrustNode::mkReplaceGenTrustNode(tnp, &d_trustPf);
+    }
     d_src[np] = tnp;
   }
   else
@@ -199,13 +198,14 @@ std::shared_ptr<ProofNode> PreprocessProofGenerator::getProofFor(Node f)
         Assert(tnk == TrustNodeKind::LEMMA);
       }
 
+      Assert (proofStepProcessed) << "Failed to get proof for preprocess step";
       // if we had a dynamic failure, e.g. the provided proof generator did
       // not generate a proof
       if (!proofStepProcessed)
       {
-        AlwaysAssert(false);
-        TrustId id = (tnk == TrustNodeKind::LEMMA) ? TrustId::PREPROCESS_LEMMA
-                                                   : TrustId::PREPROCESS;
+        // if in production, we get an unknown trust step
+        TrustId id = (tnk == TrustNodeKind::LEMMA) ? TrustId::UNKNOWN_PREPROCESS_LEMMA
+                                                   : TrustId::UNKNOWN_PREPROCESS;
         Trace("smt-pppg-debug")
             << "...justify missing step with " << id << std::endl;
         // add trusted step, the rule depends on the kind of trust node

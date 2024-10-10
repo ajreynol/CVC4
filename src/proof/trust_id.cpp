@@ -30,13 +30,12 @@ const char* toString(TrustId id)
     // core
     case TrustId::THEORY_LEMMA: return "THEORY_LEMMA";
     case TrustId::THEORY_INFERENCE: return "THEORY_INFERENCE";
-    case TrustId::PREPROCESS: return "PREPROCESS";
-    case TrustId::PREPROCESS_LEMMA: return "PREPROCESS_LEMMA";
     case TrustId::PP_STATIC_REWRITE: return "PP_STATIC_REWRITE";
     case TrustId::THEORY_PREPROCESS: return "THEORY_PREPROCESS";
     case TrustId::THEORY_PREPROCESS_LEMMA: return "THEORY_PREPROCESS_LEMMA";
     case TrustId::THEORY_EXPAND_DEF: return "THEORY_EXPAND_DEF";
     // preprocess passes
+    case TrustId::PREPROCESS_BV_TO_BOOL: return "PREPROCESS_BV_TO_BOOL";
     case TrustId::PREPROCESS_BV_TO_INT: return "PREPROCESS_BV_TO_INT";
     case TrustId::PREPROCESS_BV_TO_INT_LEMMA:
       return "PREPROCESS_BV_TO_INT_LEMMA";
@@ -47,8 +46,8 @@ const char* toString(TrustId id)
       return "PREPROCESS_STATIC_LEARNING";
     case TrustId::PREPROCESS_HO_ELIM: return "PREPROCESS_HO_ELIM";
     case TrustId::PREPROCESS_HO_ELIM_LEMMA: return "PREPROCESS_HO_ELIM_LEMMA";
-    case TrustId::PREPROCESS_BITVECTOR_EAGER_ATOM:
-      return "PREPROCESS_BITVECTOR_EAGER_ATOM";
+    case TrustId::PREPROCESS_BITVECTOR_EAGER_ATOMS:
+      return "PREPROCESS_BITVECTOR_EAGER_ATOMS";
     case TrustId::PREPROCESS_FF_BITSUM: return "PREPROCESS_FF_BITSUM";
     case TrustId::PREPROCESS_FF_DISJUNCTIVE_BIT:
       return "PREPROCESS_FF_DISJUNCTIVE_BIT";
@@ -64,7 +63,6 @@ const char* toString(TrustId id)
       return "PREPROCESS_UNCONSTRAINED_SIMP";
     case TrustId::PREPROCESS_STRINGS_EAGER_PP:
       return "PREPROCESS_STRINGS_EAGER_PP";
-    case TrustId::PREPROCESS_BV_TO_BOOL: return "PREPROCESS_BV_TO_BOOL";
     // other
     case TrustId::ARITH_NL_COVERING_DIRECT: return "ARITH_NL_COVERING_DIRECT";
     case TrustId::ARITH_NL_COVERING_RECURSIVE:
@@ -83,6 +81,9 @@ const char* toString(TrustId id)
       return "MACRO_THEORY_REWRITE_RCONS";
     case TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE:
       return "MACRO_THEORY_REWRITE_RCONS_SIMPLE";
+    // unknown sources
+    case TrustId::UNKNOWN_PREPROCESS: return "PREPROCESS";
+    case TrustId::UNKNOWN_PREPROCESS_LEMMA: return "PREPROCESS_LEMMA";
     default: return "TrustId::Unknown";
   };
 }

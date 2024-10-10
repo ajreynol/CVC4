@@ -32,10 +32,6 @@ enum class TrustId : uint32_t
   THEORY_LEMMA,
   /** An internal inference made by a theory without a proof */
   THEORY_INFERENCE,
-  /** A rewrite of the input formula by a preprocessing pass without a proof */
-  PREPROCESS,
-  /** A lemma added during preprocessing without a proof */
-  PREPROCESS_LEMMA,
   /** A ppStaticRewrite step */
   PP_STATIC_REWRITE,
   /** A rewrite of the input formula made by a theory during preprocessing
@@ -46,24 +42,38 @@ enum class TrustId : uint32_t
   /** A expanding of definitions of the input formula made without a proof */
   THEORY_EXPAND_DEF,
   /** Specific preprocessing passes */
+  /** BvToBool preprocessing pass */
+  PREPROCESS_BV_TO_BOOL,
+  /** BvToInt preprocessing pass */
   PREPROCESS_BV_TO_INT,
   PREPROCESS_BV_TO_INT_LEMMA,
+  /** Ackermann preprocessing pass */
   PREPROCESS_ACKERMANN,
   PREPROCESS_ACKERMANN_LEMMA,
+  /** StaticLearning preprocessing pass */
   PREPROCESS_STATIC_LEARNING,
+  /** HoElim preprocessing pass */
   PREPROCESS_HO_ELIM,
   PREPROCESS_HO_ELIM_LEMMA,
-  PREPROCESS_BITVECTOR_EAGER_ATOM,
+  /** BitvectorEagerAtoms preprocessing pass */
+  PREPROCESS_BITVECTOR_EAGER_ATOMS,
+  /** FfBitsum preprocessing pass */
   PREPROCESS_FF_BITSUM,
+  /** FfDisjunctiveBit preprocessing pass */
   PREPROCESS_FF_DISJUNCTIVE_BIT,
+  /** FunDefFmf preprocessing pass */
   PREPROCESS_FUN_DEF_FMF,
+  /** LearnedRewrite preprocessing pass */
   PREPROCESS_LEARNED_REWRITE,
   PREPROCESS_LEARNED_REWRITE_LEMMA,
+  /** BvIntroPow2 preprocessing pass */
   PREPROCESS_BV_INTRO_POW2,
+  /** ForeignTheoryRewrite preprocessing pass */
   PREPROCESS_FOREIGN_THEORY_REWRITE,
+  /** UnconstrainedSimp preprocessing pass */
   PREPROCESS_UNCONSTRAINED_SIMP,
+  /** StringsEagerPp preprocessing pass */
   PREPROCESS_STRINGS_EAGER_PP,
-  PREPROCESS_BV_TO_BOOL,
   /**
    * We use :math:`\texttt{IRP}_k(poly)` for an IndexedRootPredicate that is
    * defined as the :math:`k`'th root of the polynomial :math:`poly`. Note that
@@ -141,6 +151,11 @@ enum class TrustId : uint32_t
    * require the use of theory rewrites to prove.
    */
   MACRO_THEORY_REWRITE_RCONS_SIMPLE,
+  /** Untracked sources of trust, which are discouraged */
+  /** A rewrite of the input formula by a preprocessing pass without a proof */
+  UNKNOWN_PREPROCESS,
+  /** A lemma added during preprocessing without a proof */
+  UNKNOWN_PREPROCESS_LEMMA,
 };
 /** Converts a trust id to a string. */
 const char* toString(TrustId id);

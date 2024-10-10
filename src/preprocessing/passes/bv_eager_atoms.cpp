@@ -44,7 +44,7 @@ PreprocessingPassResult BvEagerAtoms::applyInternal(
     }
     Node eager_atom = nm->mkNode(Kind::BITVECTOR_EAGER_ATOM, atom);
     assertionsToPreprocess->replace(
-        i, eager_atom, nullptr, TrustId::PREPROCESS_BITVECTOR_EAGER_ATOM);
+        i, eager_atom, nullptr, TrustId::PREPROCESS_BITVECTOR_EAGER_ATOMS);
   }
   return PreprocessingPassResult::NO_CONFLICT;
 }

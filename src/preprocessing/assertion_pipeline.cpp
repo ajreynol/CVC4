@@ -75,7 +75,7 @@ void AssertionPipeline::push_back(Node n,
     {
       if (!isInput)
       {
-        Assert(pgen != nullptr || trustId != TrustId::PREPROCESS_LEMMA);
+        Assert(pgen != nullptr || trustId != TrustId::UNKNOWN_PREPROCESS_LEMMA);
         d_andElimEpg->addLazyStep(n, pgen, trustId);
       }
     }
@@ -159,7 +159,7 @@ void AssertionPipeline::replace(size_t i,
                            << n << std::endl;
   if (isProofEnabled())
   {
-    Assert(pgen != nullptr || trustId != TrustId::PREPROCESS);
+    Assert(pgen != nullptr || trustId != TrustId::UNKNOWN_PREPROCESS);
     d_pppg->notifyPreprocessed(d_nodes[i], n, pgen, trustId);
   }
   if (n == d_false)
