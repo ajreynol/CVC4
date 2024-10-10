@@ -212,19 +212,19 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
             if (id == TrustId::THEORY_LEMMA)
             {
               const std::vector<Node>& args = pn->getArguments();
-              if (args.size()>=3)
+              if (args.size() >= 3)
               {
                 builtin::BuiltinProofRuleChecker::getTheoryId(args[2], tid);
               }
             }
           }
         }
-        else if (r== ProofRule::TRUST_THEORY_REWRITE)
+        else if (r == ProofRule::TRUST_THEORY_REWRITE)
         {
           const std::vector<Node>& args = pn->getArguments();
           builtin::BuiltinProofRuleChecker::getTheoryId(args[1], tid);
         }
-        if (tid!=THEORY_LAST)
+        if (tid != THEORY_LAST)
         {
           output(OutputTag::TRUSTED_PROOF_STEPS) << " :theory " << tid;
         }
