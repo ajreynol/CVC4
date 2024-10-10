@@ -660,4 +660,20 @@ size_t SkolemManager::getNumIndicesForSkolemId(SkolemId id) const
   }
 }
 
+Node SkolemManager::mkSkolemFunctionApp(SkolemId id, const std::vector<Node>& children)
+{
+  size_t num = getNumIndicesForSkolemId(id);
+  std::vector<Node> cindices(children.begin(), children.begin()+num);
+  Node op = mkSkolemFunction(id, cindices);
+  if (num==children.size())
+  {
+    return op;
+  }
+  NodeManager* nm = NodeManager::currentNM();
+  std::vector<Node> cargs;
+  cargs.push_back(op);
+  cargs.insert(cargs.end(),children.begin()+num, children.end());
+  return nm->mkNode(Kind::APPLY_UF, cargs);
+}
+
 }  // namespace cvc5::internal

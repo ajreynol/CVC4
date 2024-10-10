@@ -267,6 +267,9 @@ class SkolemManager
    * we sort the arguments to the skolem upon construction via the API.
    */
   static bool isCommutativeSkolemId(SkolemId id);
+  /**
+   */
+  Node mkSkolemFunctionApp(SkolemId id, const std::vector<Node>& children);
  private:
   /** Cache of skolem functions for mkSkolemFunction above. */
   std::map<std::tuple<SkolemId, TypeNode, Node>, Node> d_skolemFuns;
