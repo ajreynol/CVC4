@@ -204,7 +204,7 @@ class DslProofTester(Tester):
         return super().run_internal(
             benchmark_info._replace(
                 command_line_args=
-                benchmark_info.command_line_args +
+                ["--safe-options"] + benchmark_info.command_line_args +
                 ["--check-proofs", "--proof-granularity=dsl-rewrite"]
             )
         )

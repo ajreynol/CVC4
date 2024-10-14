@@ -218,11 +218,6 @@ class ExtTheory : protected EnvObj, public ProofGenerator
                            const std::vector<Node>& terms,
                            std::vector<Node>& sterms,
                            std::vector<std::vector<Node> >& exp);
-  /**
-   * Same as above, but for a single term. We return the substituted form of
-   * term and add its explanation to exp.
-   */
-  Node getSubstitutedTerm(int effort, Node term, std::vector<Node>& exp);
   /** doInferences
    *
    * This function performs "context-dependent simplification". The method takes
@@ -250,16 +245,6 @@ class ExtTheory : protected EnvObj, public ProofGenerator
    * active terms.
    */
   bool doInferences(int effort, std::vector<Node>& nred);
-  /** doReductions
-   *
-   * This method has the same interface as doInferences. In contrast to
-   * doInfereces, this method will send reduction lemmas of the form ( t = t' )
-   * where t is in terms and t' is an equivalent reduced term.
-   */
-  bool doReductions(int effort,
-                    const std::vector<Node>& terms,
-                    std::vector<Node>& nred);
-  bool doReductions(int effort, std::vector<Node>& nred);
 
   /** get the set of all extended function terms from d_ext_func_terms */
   void getTerms(std::vector<Node>& terms);
@@ -295,8 +280,7 @@ class ExtTheory : protected EnvObj, public ProofGenerator
   /** do inferences internal */
   bool doInferencesInternal(int effort,
                             const std::vector<Node>& terms,
-                            std::vector<Node>& nred,
-                            bool isRed);
+                            std::vector<Node>& nred);
   /** send lemma on the output channel */
   bool sendLemma(TrustNode lem, InferenceId id);
   /** reference to the callback */
