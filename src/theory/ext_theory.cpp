@@ -24,6 +24,8 @@
 #include "theory/quantifiers_engine.h"
 #include "theory/rewriter.h"
 #include "theory/substitutions.h"
+#include "proof/proof_node_manager.h"
+#include "proof/proof_checker.h"
 
 using namespace std;
 
@@ -454,6 +456,14 @@ std::shared_ptr<ProofNode> ExtTheory::getProofFor(Node fact)
       antec.push_back(conc[0]);
     }
     conc = conc[1];
+  }
+  ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
+  Node res = pc->checkDebug(
+      ProofRule::MACRO_SR_PRED_INTRO, antec, {conc}, conc);
+  if (res.isNull())
+  {
+    Assert(false) << "ExtTheory failed to prove " << fact;
+    return nullptr;
   }
   proof.addStep(conc, ProofRule::MACRO_SR_PRED_INTRO, antec, {conc});
   if (!antec.empty())

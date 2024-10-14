@@ -263,6 +263,9 @@ class ExtTheory : protected EnvObj, public ProofGenerator
   std::vector<Node> getActive(Kind k) const;
 
   /**
+   * Get proof for a lemma sent via this class, which is of the form
+   *   (t1 = s1 ^ ... ^ tn = sn) => (t = s)
+   * where the conclusion can be shown via substitution + rewriting.
    */
   std::shared_ptr<ProofNode> getProofFor(Node fact) override;
   /** identify */
