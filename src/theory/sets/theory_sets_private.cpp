@@ -216,7 +216,7 @@ void TheorySetsPrivate::ensureRelationsEnabled()
     d_hasEnabledRels = true;
   }
 }
-  
+
 void TheorySetsPrivate::fullEffortReset()
 {
   Assert(d_equalityEngine->consistent());

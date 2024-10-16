@@ -387,7 +387,7 @@ class TheorySetsPrivate : protected EnvObj
   /** ensure that the set type is over first class type, throw logic exception
    * if not */
   void ensureFirstClassSetType(TypeNode tn) const;
-  /** 
+  /**
    * Ensure relations are enabled, which may throw a logic exception if
    * relsExp is false.
    */
