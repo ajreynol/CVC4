@@ -25,7 +25,7 @@ BVProofRuleChecker::BVProofRuleChecker(NodeManager* nm) : ProofRuleChecker(nm)
 void BVProofRuleChecker::registerTo(ProofChecker* pc)
 {
   pc->registerTrustedChecker(ProofRule::MACRO_BV_BITBLAST, this, 2);
-  pc->registerTrustedChecker(ProofRule::BV_BITBLAST_STEP, this, 2);
+  pc->registerChecker(ProofRule::BV_BITBLAST_STEP, this);
   pc->registerChecker(ProofRule::BV_EAGER_ATOM, this);
 }
 
