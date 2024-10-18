@@ -58,7 +58,8 @@ void QuantDSplit::checkOwnership(Node q)
   bool doSplit = false;
   QuantifiersBoundInference& qbi = d_qreg.getQuantifiersBoundInference();
   Trace("quant-dsplit-debug") << "Check split quantified formula : " << q << std::endl;
-  for( size_t i=0, nvars = q[0].getNumChildren(); i<nvars; i++ ){
+  for (size_t i = 0, nvars = q[0].getNumChildren(); i < nvars; i++)
+  {
     TypeNode tn = q[0][i].getType();
     if( tn.isDatatype() ){
       bool isFinite = d_env.isFiniteType(tn);
@@ -172,7 +173,7 @@ void QuantDSplit::check(Theory::Effort e, QEffort quant_e)
   Trace("quant-dsplit") << "QuantDSplit::check finished" << std::endl;
 }
 
-Node QuantDSplit::split(NodeManager * nm, const Node& q, size_t index)
+Node QuantDSplit::split(NodeManager* nm, const Node& q, size_t index)
 {
   std::vector<Node> bvs;
   for (size_t i = 0, nvars = q[0].getNumChildren(); i < nvars; i++)
