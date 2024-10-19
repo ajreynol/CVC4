@@ -28,6 +28,7 @@
 #include "theory/arith/nl/poly_conversion.h"
 #include "theory/rewriter.h"
 #include "theory/theory.h"
+#include "proof/proof.h"
 
 using namespace cvc5::internal::kind;
 
@@ -81,11 +82,13 @@ TrustNode OperatorElim::eliminate(Node n,
   Assert(klems.size() <= 1);
   for (std::pair<Node, Node>& p : klems)
   {
+    // each skolem lemma can be justified by this class
     lems.emplace_back(mkSkolemLemma(p.first, p.second, n));
   }
   if (nn != n)
   {
-    return TrustNode::mkTrustRewrite(n, nn, nullptr);
+    // we can provide a proof for the rewrite as well
+    return TrustNode::mkTrustRewrite(n, nn, this);
   }
   return TrustNode::null();
 }
@@ -441,11 +444,22 @@ Node OperatorElim::getAxiomFor(NodeManager* nm, const Node& n)
   std::vector<std::pair<Node, Node>> klems;
   bool wasNonLinear = false;
   Node nn = eliminateOperators(nm, n, klems, false, wasNonLinear);
-  if (klems.size() == 1)
+  if (nn==n)
   {
-    return klems[0].first;
+    return Node::null();
   }
-  return Node::null();
+  Node eqLem = n.eqNode(nn);
+  std::vector<Node> lemmas;
+  for (const std::pair<Node, Node>& kl : klems)
+  {
+    lemmas.emplace_back(kl.first);
+  }
+  if (!lemmas.empty())
+  {
+    Node axiom = nm->mkAnd(lemmas);
+    return nm->mkNode(Kind::AND, eqLem, axiom);
+  }
+  return eqLem;
 }
 
 Node OperatorElim::getArithSkolemApp(NodeManager* nm, Node n, SkolemId id)
@@ -482,16 +496,61 @@ SkolemLemma OperatorElim::mkSkolemLemma(const Node& lem,
 
 std::shared_ptr<ProofNode> OperatorElim::getProofFor(Node f)
 {
+  // This class provides proofs for two things:
+  // (1) rewrites n --> nn during preprocessing,
+  // (2) the axioms A added when rewriting n ---> nn.
+  // The proof rule ARITH_REDUCTION proves things of the form:
+  //    (and (= n nn) A)
+  // where A may be omitted. We first determine which case we are in (whether
+  // being asked for a proof of a preprocessing rewrite or an axiom) and store
+  // the target term (n above) into tgt.
   context::CDHashMap<Node, Node>::iterator it = d_lemmaMap.find(f);
+  Node tgt;
   if (it == d_lemmaMap.end())
   {
-    Assert(false) << "arith::OperatorElim could not prove " << f;
+    if (f.getKind()!=Kind::EQUAL)
+    {
+      Assert(false) << "arith::OperatorElim could not prove " << f;
+      return nullptr;
+    }
+    // target is the left hand side.
+    tgt = f[0];
+  }
+  else
+  {
+    // target was stored in d_lemmaMap for an axiom.
+    tgt = it->second;
+  }
+  CDProof cdp(d_env);
+  Node res = getAxiomFor(nodeManager(), tgt);
+  cdp.addStep(res, ProofRule::ARITH_REDUCTION, {}, {tgt});
+  bool success = false;
+  // If the axiom was an AND, then the fact in question should be one of the
+  // conjuncts, in which case we do an AND_ELIM step.
+  if (res.getKind()==Kind::AND)
+  {
+    Assert (res.getNumChildren()==2);
+    for (size_t i=0; i<2; i++)
+    {
+      if (res[i]==f)
+      {
+        Node ni = nodeManager()->mkConstInt(i);
+        cdp.addStep(f, ProofRule::AND_ELIM, {res}, {ni});
+        success = true;
+        break;
+      }
+    }
+  }
+  else
+  {
+    success = (res==f);
+  }
+  Assert(success) << "arith::OperatorElim could not prove " << f;
+  if (!success)
+  {
     return nullptr;
   }
-  ProofNodeManager* pnm = d_env.getProofNodeManager();
-  std::shared_ptr<ProofNode> pfn =
-      pnm->mkNode(ProofRule::ARITH_OP_ELIM_AXIOM, {}, {it->second}, f);
-  return pfn;
+  return cdp.getProofFor(f);
 }
 
 std::string OperatorElim::identify() const { return "arith::OperatorElim"; }

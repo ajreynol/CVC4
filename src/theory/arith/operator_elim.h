@@ -61,7 +61,7 @@ class OperatorElim : protected EnvObj, public ProofGenerator
   static Node getAxiomFor(NodeManager* nm, const Node& n);
   /**
    * Get proof for formula f, which should have been generated as a lemma
-   * via eliminate above.
+   * via eliminate above, or as a rewrite performed by eliminate.
    */
   std::shared_ptr<ProofNode> getProofFor(Node f) override;
   /** Identify this, for proof generator interface */
@@ -104,7 +104,12 @@ class OperatorElim : protected EnvObj, public ProofGenerator
    *
    * This method is called both during expandDefinition and during ppRewrite.
    *
+   * @param nm Pointer to the node manager
    * @param n The node to eliminate operators from.
+   * @param lems The lemmas storing (L, k) where L is the lemma and k is the 
+   * attached skolem it is associated with.
+   * @param partialOnly Whether we are only eliminating partial operators.
+   * @param wasNonLinear Set to true if n requires a non-linear logic.
    * @return The (single step) eliminated form of n.
    */
   static Node eliminateOperators(NodeManager* nm,
@@ -127,9 +132,6 @@ class OperatorElim : protected EnvObj, public ProofGenerator
    *
    * By default, this returns the term f( n ), where f is the Skolem function
    * for the identifier asi.
-   *
-   * If the option arithNoPartialFun is enabled, this returns f, where f is
-   * the Skolem constant for the identifier asi.
    */
   static Node getArithSkolemApp(NodeManager* nm, Node n, SkolemId asi);
 };
