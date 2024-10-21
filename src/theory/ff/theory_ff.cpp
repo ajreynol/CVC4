@@ -67,7 +67,13 @@ TheoryFiniteFields::TheoryFiniteFields(Env& env,
 
 TheoryFiniteFields::~TheoryFiniteFields() {}
 
-TheoryRewriter* TheoryFiniteFields::getTheoryRewriter() { return &d_rewriter; }
+TheoryRewriter* TheoryFiniteFields::getTheoryRewriter() {
+  if (!options().ff.ffExp)
+  {
+    return nullptr;
+  }
+  return &d_rewriter;
+}
 
 ProofRuleChecker* TheoryFiniteFields::getProofChecker() { return nullptr; }
 
