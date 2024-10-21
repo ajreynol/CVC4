@@ -67,7 +67,8 @@ TheoryFiniteFields::TheoryFiniteFields(Env& env,
 
 TheoryFiniteFields::~TheoryFiniteFields() {}
 
-TheoryRewriter* TheoryFiniteFields::getTheoryRewriter() {
+TheoryRewriter* TheoryFiniteFields::getTheoryRewriter()
+{
   if (!options().ff.ffExp)
   {
     return nullptr;

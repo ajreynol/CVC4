@@ -236,17 +236,23 @@ class TheoryRewriter
 };
 
 /**
- * The null theory rewriter, which does not perform any rewrites. This is used if
- * a theory does not have an (active) rewriter.
+ * The null theory rewriter, which does not perform any rewrites. This is used
+ * if a theory does not have an (active) rewriter.
  */
 class NullTheoryRewriter : public TheoryRewriter
 {
-public:
+ public:
   NullTheoryRewriter(NodeManager* nm) : TheoryRewriter(nm) {}
   /** Performs a post-rewrite step. */
-  RewriteResponse postRewrite(TNode node) override { return RewriteResponse(REWRITE_DONE, node); }
+  RewriteResponse postRewrite(TNode node) override
+  {
+    return RewriteResponse(REWRITE_DONE, node);
+  }
   /** Performs a pre-rewrite step. */
-  RewriteResponse preRewrite(TNode node)  override { return RewriteResponse(REWRITE_DONE, node); }
+  RewriteResponse preRewrite(TNode node) override
+  {
+    return RewriteResponse(REWRITE_DONE, node);
+  }
 };
 
 }  // namespace theory
