@@ -90,6 +90,7 @@ class AlfPrinter : protected EnvObj
 
   /** Return true if it is possible to trust the topmost application in pfn */
   static bool isHandled(const Options& opts, const ProofNode* pfn);
+
  private:
   /** Return true if id is handled as a theory rewrite for term n */
   static bool isHandledTheoryRewrite(ProofRewriteRule id, const Node& n);

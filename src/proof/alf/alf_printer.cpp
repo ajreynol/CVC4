@@ -243,8 +243,7 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
   return false;
 }
 
-bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id,
-                                        const Node& n)
+bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
 {
   switch (id)
   {
