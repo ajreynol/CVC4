@@ -282,18 +282,18 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
         cdp->addStep(sconc, ProofRule::DT_SPLIT, {}, {t});
         Node truen = nm->mkConst(true);
         Node curr = sconc;
-        for (const Node& exp : expv)
+        for (const Node& e : expv)
         {
-          if (exp.getKind()!=Kind::NOT || exp[0].getKind()!=Kind::APPLY_TESTER)
+          if (e.getKind()!=Kind::NOT || e[0].getKind()!=Kind::APPLY_TESTER)
           {
             curr = Node::null();
             break;
           }
-          curr = pc->checkDebug(ProofRule::RESOLUTION, {sconc, exp }, {truen, exp[0]});
+          curr = pc->checkDebug(ProofRule::RESOLUTION, {sconc, e }, {truen, e[0]});
           if (!curr.isNull())
           {
-            Trace("dt-ipc") << "...conclude " << curr << " by resolution via " << exp[0] << std::endl;
-            cdp->addStep(curr, ProofRule::RESOLUTION, {sconc, exp }, {truen, exp[0]});
+            Trace("dt-ipc") << "...conclude " << curr << " by resolution via " << e[0] << std::endl;
+            cdp->addStep(curr, ProofRule::RESOLUTION, {sconc, e }, {truen, e[0]});
           }
           else
           {
