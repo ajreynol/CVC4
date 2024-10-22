@@ -99,6 +99,7 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
         }
         else if (exp[0][i]==conc[1] && exp[1][i]==conc[0])
         {
+          // it is for the symmetric fact
           argSuccess = true;
           unifConc = conc[1].eqNode(conc[0]);
         }
@@ -123,7 +124,9 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
       {
         // In rare cases, this rule is applied to a constructor without an explanation
         // and introduces purification variables. In this case, it can be shown by
-        // MACRO_SR_PRED_INTRO.
+        // MACRO_SR_PRED_INTRO. An example of this would be:
+        //   C(a) = C(s(@purify(C(a))))
+        // which requires converting to original form and rewriting.
         ProofChecker * pc = d_env.getProofNodeManager()->getChecker();
         Node concc = pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, {}, {conc}, conc);
         if (concc==conc)
@@ -262,7 +265,12 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
     break;
     case InferenceId::DATATYPES_LABEL_EXH:
     {
-      Assert (expv.size()==1);
+      // Exhausted labels. For example, this proves ~is-cons(x) => is-nil(x)
+      // We prove this by:
+      // ------------------------ DT_SPLIT
+      // is-cons(x) or is-nil(x)            ~is-cons(x)
+      // ---------------------------------------------- RESOLUTION
+      // is-nil(x)
       Node tst = expv[0];
       Assert(tst.getKind()==Kind::NOT && tst[0].getKind()==Kind::APPLY_TESTER);
       Node t = tst[0][0];
@@ -273,13 +281,27 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
         Trace("dt-ipc") << "...conclude " << sconc << " by split" << std::endl;
         cdp->addStep(sconc, ProofRule::DT_SPLIT, {}, {t});
         Node truen = nm->mkConst(true);
-        Node srconc = pc->checkDebug(ProofRule::RESOLUTION, {sconc, expv[0]}, {truen, expv[0][0]});
-        if (!srconc.isNull())
+        Node curr = sconc;
+        for (const Node& exp : expv)
         {
-          Trace("dt-ipc") << "...conclude " << srconc << " by resolution via " << expv[0][0] << std::endl;
-          cdp->addStep(srconc, ProofRule::RESOLUTION, {sconc, expv[0]}, {truen, expv[0][0]});
-          success = true;
+          if (exp.getKind()!=Kind::NOT || exp[0].getKind()!=Kind::APPLY_TESTER)
+          {
+            curr = Node::null();
+            break;
+          }
+          curr = pc->checkDebug(ProofRule::RESOLUTION, {sconc, exp }, {truen, exp[0]});
+          if (!curr.isNull())
+          {
+            Trace("dt-ipc") << "...conclude " << curr << " by resolution via " << exp[0] << std::endl;
+            cdp->addStep(curr, ProofRule::RESOLUTION, {sconc, exp }, {truen, exp[0]});
+          }
+          else
+          {
+            break;
+          }
         }
+        success = (curr==conc);
+        Assert(success);
       }
     }
       break;
