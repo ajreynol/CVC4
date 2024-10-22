@@ -17,6 +17,8 @@
 
 #include "proof/proof.h"
 #include "proof/proof_checker.h"
+#include "proof/proof_node_manager.h"
+#include "proof/proof_checker.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
 #include "theory/model_manager.h"
@@ -81,6 +83,7 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
              && exp[0].getKind() == Kind::APPLY_CONSTRUCTOR
              && exp[1].getKind() == Kind::APPLY_CONSTRUCTOR
              && exp[0].getOperator() == exp[1].getOperator());
+      Assert(conc.getKind()==Kind::EQUAL);
       Node narg;
       // we may be asked for a proof of (not P) coming from (= P false) or
       // (= false P), or similarly P from (= P true) or (= true P).
@@ -90,22 +93,14 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
       for (size_t i = 0, nchild = exp[0].getNumChildren(); i < nchild; i++)
       {
         bool argSuccess = false;
-        if (conc.getKind() == Kind::EQUAL)
+        if (exp[0][i] == conc[0] && exp[1][i] == conc[1])
         {
-          argSuccess = (exp[0][i] == conc[0] && exp[1][i] == conc[1]);
+          argSuccess = true;
         }
-        else
+        else if (exp[0][i]==conc[1] && exp[1][i]==conc[0])
         {
-          for (size_t j = 0; j < 2; j++)
-          {
-            if (exp[j][i] == concAtom && exp[1 - j][i].isConst()
-                && exp[1 - j][i].getConst<bool>() == concPol)
-            {
-              argSuccess = true;
-              unifConc = exp[0][i].eqNode(exp[1][i]);
-              break;
-            }
-          }
+          argSuccess = true;
+          unifConc = conc[1].eqNode(conc[0]);
         }
         if (argSuccess)
         {
@@ -115,39 +110,40 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
       }
       if (!narg.isNull())
       {
-        if (conc.getKind() == Kind::EQUAL)
-        {
-          // normal case where we conclude an equality
-          cdp->addStep(conc, ProofRule::DT_UNIF, {exp}, {narg});
-        }
-        else
-        {
-          // must use true or false elim to prove the final
-          cdp->addStep(unifConc, ProofRule::DT_UNIF, {exp}, {narg});
-          // may use symmetry
-          Node eq = concAtom.eqNode(nm->mkConst(concPol));
-          cdp->addStep(conc,
-                       concPol ? ProofRule::TRUE_ELIM : ProofRule::FALSE_ELIM,
-                       {eq},
-                       {});
-        }
+        cdp->addStep(unifConc, ProofRule::DT_UNIF, {exp}, {narg});
         success = true;
       }
     }
     break;
     case InferenceId::DATATYPES_INST:
     {
-      if (expv.size() == 1)
+      Assert(conc.getKind() == Kind::EQUAL);
+      Node tst;
+      if (expv.empty())
       {
-        Assert(conc.getKind() == Kind::EQUAL);
-        int n = utils::isTester(exp);
+        // In rare cases, this rule is applied to a constructor without an explanation
+        // and introduces purification variables. In this case, it can be shown by
+        // MACRO_SR_PRED_INTRO.
+        ProofChecker * pc = d_env.getProofNodeManager()->getChecker();
+        Node concc = pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, {}, {conc}, conc);
+        if (concc==conc)
+        {
+          cdp->addStep(conc, ProofRule::MACRO_SR_PRED_INTRO, {}, {conc});
+          success = true;
+        }
+      }
+      else if (expv.size() == 1)
+      {
+        tst = exp;
+      }
+      if (!tst.isNull())
+      {
+        int n = utils::isTester(tst);
         if (n >= 0)
         {
-          Node t = exp[0];
-          Node nn = nm->mkConstInt(Rational(n));
-          Node eq = exp.eqNode(conc);
+          Node eq = tst.eqNode(conc);
           cdp->addTheoryRewriteStep(eq, ProofRewriteRule::DT_INST);
-          cdp->addStep(conc, ProofRule::EQ_RESOLVE, {exp, eq}, {});
+          cdp->addStep(conc, ProofRule::EQ_RESOLVE, {tst, eq}, {});
           success = true;
         }
       }
@@ -264,8 +260,30 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
       success = true;
     }
     break;
-    // inferences currently not supported
     case InferenceId::DATATYPES_LABEL_EXH:
+    {
+      Assert (expv.size()==1);
+      Node tst = expv[0];
+      Assert(tst.getKind()==Kind::NOT && tst[0].getKind()==Kind::APPLY_TESTER);
+      Node t = tst[0][0];
+      ProofChecker * pc = d_env.getProofNodeManager()->getChecker();
+      Node sconc = pc->checkDebug(ProofRule::DT_SPLIT, {}, {t});
+      if (!sconc.isNull())
+      {
+        Trace("dt-ipc") << "...conclude " << sconc << " by split" << std::endl;
+        cdp->addStep(sconc, ProofRule::DT_SPLIT, {}, {t});
+        Node truen = nm->mkConst(true);
+        Node srconc = pc->checkDebug(ProofRule::RESOLUTION, {sconc, expv[0]}, {truen, expv[0][0]});
+        if (!srconc.isNull())
+        {
+          Trace("dt-ipc") << "...conclude " << srconc << " by resolution via " << expv[0][0] << std::endl;
+          cdp->addStep(srconc, ProofRule::RESOLUTION, {sconc, expv[0]}, {truen, expv[0][0]});
+          success = true;
+        }
+      }
+    }
+      break;
+    // inferences currently not supported
     case InferenceId::DATATYPES_BISIMILAR:
     case InferenceId::DATATYPES_CYCLE:
     default:
