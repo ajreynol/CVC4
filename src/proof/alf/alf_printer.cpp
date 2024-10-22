@@ -69,6 +69,7 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
   switch (pfn->getRule())
   {
     // List of handled rules
+    case ProofRule::ASSUME:
     case ProofRule::SCOPE:
     case ProofRule::REFL:
     case ProofRule::SYMM:

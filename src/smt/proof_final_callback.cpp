@@ -26,6 +26,7 @@
 #include "theory/builtin/proof_checker.h"
 #include "theory/smt_engine_subsolver.h"
 #include "theory/theory_id.h"
+#include "proof/alf/alf_printer.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory;
@@ -37,6 +38,8 @@ ProofFinalCallback::ProofFinalCallback(Env& env)
     : EnvObj(env),
       d_ruleCount(statisticsRegistry().registerHistogram<ProofRule>(
           "finalProof::ruleCount")),
+      d_ruleEouCount(statisticsRegistry().registerHistogram<ProofRule>(
+          "finalProof::ruleUnhandledEoCount")),
       d_instRuleIds(statisticsRegistry().registerHistogram<theory::InferenceId>(
           "finalProof::instRuleId")),
       d_dslRuleCount(statisticsRegistry().registerHistogram<ProofRewriteRule>(
@@ -100,6 +103,10 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
   }
   // record stats for the rule
   d_ruleCount << r;
+  if (!proof::AlfPrinter::isHandled(options(), pn.get()))
+  {
+    d_ruleEouCount << r;
+  }
   ++d_totalRuleCount;
   // if a DSL rewrite, take DSL stat
   if (r == ProofRule::DSL_REWRITE || r == ProofRule::THEORY_REWRITE)
