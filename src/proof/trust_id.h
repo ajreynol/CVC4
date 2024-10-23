@@ -142,6 +142,8 @@ enum class TrustId : uint32_t
   ARITH_PRED_CAST_TYPE,
   /** A quantifiers preprocessing step that was given without a proof */
   QUANTIFIERS_PREPROCESS,
+  /** */
+  RE_ELIM,
   /** A subtype elimination step that could not be processed */
   SUBTYPE_ELIMINATION,
   /** A rewrite required for showing a macro theory rewrite */
