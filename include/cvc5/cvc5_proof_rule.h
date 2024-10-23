@@ -2605,6 +2605,18 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DT_CONS_EQ),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Datatypes - updater elimination**
+   *
+   * .. math::
+   *   u_{c,i}(t, s) = ite(\mathit{is}_c(t), c(s_0(t), \ldots, s, \ldots s_n(t)), t)
+   *
+   * where :math:`s_i` is the :math:`i^{th}` selector for constructor :math:`c`.
+   *
+   * \endverbatim
+   */
+  EVALUE(DT_UPDATER_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bitvectors - Unsigned multiplication overflow detection elimination**
    *
    * See M.Gok, M.J. Schulte, P.I. Balzola, "Efficient integer multiplication
