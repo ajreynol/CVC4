@@ -1,4 +1,4 @@
-; COMMAND-LINE: --solve-real-as-int --nl-cov
+; COMMAND-LINE: --solve-real-as-int
 ; EXPECT: sat
 (set-logic QF_NRA)
 (set-info :status sat)
