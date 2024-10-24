@@ -1,5 +1,5 @@
 ; REQUIRES: tracing
-; COMMAND-LINE: --solve-real-as-int -t assertions::post-real-to-int --produce-assertions
+; COMMAND-LINE: --solve-real-as-int -t assertions::post-real-to-int --produce-assertions --nl-cov
 ; EXIT: 0
 ; SCRUBBER: grep -v -E '.*'
 (set-logic QF_NRA)

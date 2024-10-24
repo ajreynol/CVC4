@@ -1,3 +1,4 @@
+; COMMAND-LINE: --nl-cov
 ; REQUIRES: poly
 ; EXPECT: unsat
 ; EXPECT: unsat
