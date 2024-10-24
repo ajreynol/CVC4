@@ -2331,6 +2331,32 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DISTINCT_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **UF -- Bitvector to natural elimination**
+   *
+   * .. math::
+   *   \texttt{bv2nat}(t) = t_1 + \ldots + t_n
+   *
+   * where for :math:`i=1, \ldots, n`, :math:`t_i` is
+   * :math:`\texttt{ite}(x[i-1, i-1] = 1, 2^i, 0)`.
+   *
+   * \endverbatim
+   */
+  EVALUE(BV_TO_NAT_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **UF -- Integer to bitvector elimination**
+   *
+   * .. math::
+   *   \texttt{int2bv}_n(t) = (bvconcat t_1 \ldots t_n)
+   *
+   * where for :math:`i=1, \ldots, n`, :math:`t_i` is
+   * :math:`\texttt{ite}(\texttt{mod}(t,2^n) \geq 2^{n-1}, 1, 0)`.
+   *
+   * \endverbatim
+   */
+  EVALUE(INT_TO_BV_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Booleans -- Negation Normal Form with normalization**
    *
    * .. math::
