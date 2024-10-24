@@ -342,8 +342,7 @@ bool Instantiate::addInstantiationInternal(
   Trace("inst-assert") << "(assert " << body << ")" << std::endl;
 
   // construct the instantiation, and rewrite the lemma
-  Node lemo = NodeManager::currentNM()->mkNode(Kind::IMPLIES, q, body);
-  Node lem = lemo;
+  Node lem = NodeManager::currentNM()->mkNode(Kind::IMPLIES, q, body);
 
   // If proofs are enabled, construct the proof, which is of the form:
   // ... free assumption q ...
@@ -424,7 +423,6 @@ bool Instantiate::addInstantiationInternal(
   }
   if (options().quantifiers.trackInstLevel)
   {
-    Assert(lemo.getKind() == Kind::IMPLIES);
     uint64_t maxInstLevel = 0;
     uint64_t clevel;
     for (const Node& tc : terms)
@@ -440,7 +438,7 @@ bool Instantiate::addInstantiationInternal(
         maxInstLevel = clevel;
       }
     }
-    Node rb = rewrite(lemo[1]);
+    Node rb = rewrite(body);
     QuantAttributes::setInstantiationLevelAttr(rb, maxInstLevel + 1);
   }
   Trace("inst-add-debug") << " --> Success." << std::endl;
