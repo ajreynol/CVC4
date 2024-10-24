@@ -274,13 +274,13 @@ bool Instantiate::addInstantiationInternal(
     // Trace("inst-buffer") << "Max inst level is " << maxLevel << ", compare
     // against " << d_fullEffortChecks << " full effort check" << std::endl;
     uint64_t bf = options().quantifiers.instLevelBufferFactor;
-    if (maxLevel > d_fullEffortChecks * bf)
+    size_t onLevel = maxLevel / bf;
+    if (onLevel > d_fullEffortChecks)
     {
-      size_t onLevel = maxLevel / bf;
       d_bufferedInst[onLevel].push_back(InstCall(q, terms, id, pfArg, doVts));
       Trace("inst-buffer") << "--> Buffer inst with maxLevel " << maxLevel
                            << ", will add at full check " << onLevel
-                           << std::endl;
+                           << ", currently full check " << d_fullEffortChecks << std::endl;
       Trace("inst-add-debug")
           << "--> Buffer inst with maxLevel " << maxLevel
           << ", will add at full check " << onLevel << std::endl;

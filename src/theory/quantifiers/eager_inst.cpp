@@ -48,6 +48,10 @@ EagerInst::EagerInst(Env& env,
       d_repWatch(context()),
       d_opInfo(context()),
       d_patInfo(context()),
+      d_bufferNewEqc(context()),
+      d_bufferNewEqcIndex(context(),0),
+      d_bufferMerge(context()),
+      d_bufferMergeIndex(context(),0),
       d_gdb(env, qs, tr.getTermDatabase()),
       d_statUserPats(statisticsRegistry().registerInt("EagerInst::userPats")),
       d_statUserPatsCd(
@@ -76,6 +80,7 @@ EagerInst::EagerInst(Env& env,
   options::EagerInstQuantMode eqm = options().quantifiers.eagerInstQuantMode;
   d_quantOnAssert = (eqm == options::EagerInstQuantMode::ASSERTION);
   d_quantOnPreregister = (eqm == options::EagerInstQuantMode::PREREGISTER);
+  d_bufferCheck = false;
 }
 
 EagerInst::~EagerInst() {}
@@ -95,7 +100,39 @@ bool EagerInst::needsCheck(Theory::Effort e)
       d_tmpAddedLemmas = 0;
     }
   }
+  if (d_bufferCheck)
+  {
+    return e==Theory::Effort::EFFORT_STANDARD;
+  }
   return false;
+}
+
+void EagerInst::check(Theory::Effort e, QEffort quant_e)
+{
+  if (quant_e != QEFFORT_STANDARD)
+  {
+    return;
+  }
+  size_t nsize = d_bufferNewEqc.size();
+  if (d_bufferNewEqcIndex.get()<nsize)
+  {
+    for (size_t i=d_bufferNewEqcIndex.get(); i<nsize; i++)
+    {
+      const Node& n = d_bufferNewEqc[i];
+      newTerm(n);
+    }
+    d_bufferNewEqcIndex = nsize;
+  }
+  size_t msize = d_bufferMerge.size();
+  if (d_bufferMergeIndex.get()<msize)
+  {
+    for (size_t i=d_bufferMergeIndex.get(); i<msize; i++)
+    {
+      const std::pair<Node, Node>& m = d_bufferMerge[i];
+      merge(m.first, m.second);
+    }
+    d_bufferMergeIndex = msize;
+  }
 }
 
 void EagerInst::reset_round(Theory::Effort e) {}
@@ -398,8 +435,6 @@ void EagerInst::checkOwnership(Node q)
   }
 }
 
-void EagerInst::check(Theory::Effort e, QEffort quant_e) {}
-
 std::string EagerInst::identify() const { return "eager-inst"; }
 
 void EagerInst::notifyAssertedTerm(TNode t)
@@ -408,6 +443,16 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
+  if (d_bufferCheck)
+  {
+    d_bufferNewEqc.push_back(t);
+    return;
+  }
+  newTerm(t);
+}
+
+void EagerInst::newTerm(TNode t)
+{
   Trace("eager-inst-notify") << "notify: asserted term " << t << std::endl;
   Node op = t.getOperator();
   EagerOpInfo* eoi = getOrMkOpInfo(op, true);
@@ -1358,6 +1403,16 @@ void EagerInst::addWatches(EagerFailExp& failExp)
 }
 
 void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
+{
+  if (d_bufferCheck)
+  {
+    d_bufferMerge.push_back(std::pair<Node, Node>(t1,t2));
+    return;
+  }
+  merge(t1, t2);
+}
+
+void EagerInst::merge(TNode t1, TNode t2)
 {
   Assert(d_qstate.getRepresentative(t2) == t1);
   Trace("eager-inst-debug2")

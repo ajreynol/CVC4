@@ -78,6 +78,8 @@ class EagerInst : public QuantifiersModule
   void eqNotifyMerge(TNode t1, TNode t2);
 
  private:
+  void newTerm(TNode n);
+  void merge(TNode t1, TNode t2);
   void registerQuant(const Node& q);
   void registerQuantInternal(const Node& q);
   eq::EqualityEngine* d_ee;
@@ -99,6 +101,13 @@ class EagerInst : public QuantifiersModule
   /** */
   bool d_quantOnAssert;
   bool d_quantOnPreregister;
+  bool d_bufferCheck;
+  /** */
+  context::CDList<Node> d_bufferNewEqc;
+  context::CDO<size_t> d_bufferNewEqcIndex;
+  context::CDList<std::pair<Node, Node>> d_bufferMerge;
+  context::CDO<size_t> d_bufferMergeIndex;
+  
 
   EagerGroundDb d_gdb;
   /** Number of patterns */
