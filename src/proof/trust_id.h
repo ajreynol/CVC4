@@ -143,6 +143,8 @@ enum class TrustId : uint32_t
   /** A quantifiers preprocessing step that was given without a proof */
   QUANTIFIERS_PREPROCESS,
   /** */
+  QUANTIFIERS_INST_REWRITE,
+  /** */
   RE_ELIM,
   /** A subtype elimination step that could not be processed */
   SUBTYPE_ELIMINATION,

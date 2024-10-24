@@ -133,12 +133,12 @@ void SetDefaults::setDefaultsPre(Options& opts)
     SET_AND_NOTIFY_IF_NOT_USER(ff, ffExp, false, "safe options");
     SET_AND_NOTIFY_IF_NOT_USER(
         datatypes, codatatypesExp, false, "safe options");
+    SET_AND_NOTIFY_IF_NOT_USER(sets, relsExp, false, "safe options");
+    SET_AND_NOTIFY_IF_NOT_USER(sets, setsCardExp, false, "safe options");
     // these are disabled by default but are listed here in case they are
     // enabled by default later
     SET_AND_NOTIFY_IF_NOT_USER(fp, fpExp, false, "safe options");
     SET_AND_NOTIFY_IF_NOT_USER(sets, setsExp, false, "safe options");
-    SET_AND_NOTIFY_IF_NOT_USER(sets, relsExp, false, "safe options");
-    SET_AND_NOTIFY_IF_NOT_USER(sets, setsCardExp, false, "safe options");
   }
   // implied options
   if (opts.smt.debugCheckModels)
@@ -1657,6 +1657,10 @@ void SetDefaults::setDefaultsQuantifiers(const LogicInfo& logic,
   {
     SET_AND_NOTIFY_VAL_SYM(
         smt, deepRestartMode, options::DeepRestartMode::NONE, "globalNegate");
+  }
+  if (options().base.safeOptions)
+  {
+    SET_AND_NOTIFY_IF_NOT_USER(quantifiers,cegqiMidpoint, true, "safe options");
   }
 }
 
