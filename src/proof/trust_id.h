@@ -140,6 +140,18 @@ enum class TrustId : uint32_t
   SUBS_EQ,
   /** A step of the form (~ s t) = (~ (to_real s) (to_real t)) */
   ARITH_PRED_CAST_TYPE,
+  /**
+   * Strings -- Regular expression elimination
+   *
+   * Proves :math:`F = F'` where :math:`F'` is the result of eliminating regular
+   * expressions from :math:`F` using the routine
+   * :math:`\texttt{strings::RegExpElimination::eliminate}(F, b)` for some
+   * :math:`b`.
+   *
+   * Here, :math:`b` is a Boolean indicating whether we are using aggressive
+   * eliminations.
+   */
+  RE_ELIM,
   /** A quantifiers preprocessing step that was given without a proof */
   QUANTIFIERS_PREPROCESS,
   /** */
@@ -155,6 +167,8 @@ enum class TrustId : uint32_t
    * require the use of theory rewrites to prove.
    */
   MACRO_THEORY_REWRITE_RCONS_SIMPLE,
+  /** An unproven step from the int-blaster */
+  INT_BLASTER,
   /** Untracked sources of trust, which are discouraged */
   /** A rewrite of the input formula by a preprocessing pass without a proof */
   UNKNOWN_PREPROCESS,
