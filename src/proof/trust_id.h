@@ -156,8 +156,6 @@ enum class TrustId : uint32_t
   QUANTIFIERS_PREPROCESS,
   /** */
   QUANTIFIERS_INST_REWRITE,
-  /** */
-  RE_ELIM,
   /** A subtype elimination step that could not be processed */
   SUBTYPE_ELIMINATION,
   /** A rewrite required for showing a macro theory rewrite */
