@@ -78,7 +78,6 @@ const char* toString(TrustId id)
     case TrustId::RE_ELIM: return "RE_ELIM";
     case TrustId::QUANTIFIERS_PREPROCESS: return "QUANTIFIERS_PREPROCESS";
     case TrustId::QUANTIFIERS_INST_REWRITE: return "QUANTIFIERS_INST_REWRITE";
-    case TrustId::RE_ELIM: return "RE_ELIM";
     case TrustId::SUBTYPE_ELIMINATION: return "SUBTYPE_ELIMINATION";
     case TrustId::MACRO_THEORY_REWRITE_RCONS:
       return "MACRO_THEORY_REWRITE_RCONS";
