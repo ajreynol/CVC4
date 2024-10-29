@@ -25,6 +25,7 @@
 #include "theory/sets/normal_form.h"
 #include "theory/sets/rels_utils.h"
 #include "theory/sets/set_reduction.h"
+#include "theory/sets/theory_sets_rels.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -34,7 +35,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace sets {
 
-TheorySetsRewriter::TheorySetsRewriter(NodeManager* nm) : TheoryRewriter(nm)
+TheorySetsRewriter::TheorySetsRewriter(NodeManager* nm, bool cardEnabled, bool relsEnabled) : TheoryRewriter(nm), d_cardEnabled(cardEnabled), d_relsEnabled(relsEnabled)
 {
   // Needs to be a subcall in DSL reconstruction since set.is_empty is used
   // as a premise to test emptiness of a set.
@@ -295,6 +296,11 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
   }
   case Kind::SET_CARD:
   {
+    // if cardinality not enabled, do not rewrite
+    if (!d_cardEnabled)
+    {
+      return RewriteResponse(REWRITE_DONE, node);
+    }
     if(node[0].isConst()) {
       std::set<Node> elements = NormalForm::getElementsFromNormalConstant(node[0]);
       return RewriteResponse(REWRITE_DONE,
@@ -375,13 +381,29 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
 
   case Kind::SET_COMPREHENSION: return postRewriteComprehension(node); break;
 
-  case Kind::RELATION_TABLE_JOIN: return postRewriteTableJoin(node); break;
   case Kind::SET_MAP: return postRewriteMap(node);
   case Kind::SET_FILTER: return postRewriteFilter(node);
   case Kind::SET_ALL: return postRewriteAll(node);
   case Kind::SET_SOME: return postRewriteSome(node);
   case Kind::SET_FOLD: return postRewriteFold(node);
+  default:
+    // maybe a relation kind?
+    if (d_relsEnabled)
+    {
+      return postRewriteRelations(node);
+    }
+    break;
+  }
 
+  return RewriteResponse(REWRITE_DONE, node);
+}
+
+RewriteResponse TheorySetsRewriter::postRewriteRelations(TNode node)
+{
+  NodeManager* nm = nodeManager();
+  Kind kind = node.getKind();
+  switch(kind) {
+  case Kind::RELATION_TABLE_JOIN: return postRewriteTableJoin(node); break;
   case Kind::RELATION_TRANSPOSE:
   {
     if (node[0].getKind() == Kind::RELATION_TRANSPOSE)
