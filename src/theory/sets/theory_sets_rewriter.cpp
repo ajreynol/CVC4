@@ -386,12 +386,23 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
   case Kind::SET_ALL: return postRewriteAll(node);
   case Kind::SET_SOME: return postRewriteSome(node);
   case Kind::SET_FOLD: return postRewriteFold(node);
-  default:
+  case Kind::RELATION_TABLE_JOIN: 
+  case Kind::RELATION_TRANSPOSE:
+  case Kind::RELATION_PRODUCT:
+  case Kind::RELATION_JOIN:
+  case Kind::RELATION_TCLOSURE:
+  case Kind::RELATION_IDEN:
+  case Kind::RELATION_JOIN_IMAGE:
+  case Kind::RELATION_GROUP:
+  case Kind::RELATION_AGGREGATE:
+  case Kind::RELATION_PROJECT:
     // maybe a relation kind?
     if (d_relsEnabled)
     {
       return postRewriteRelations(node);
     }
+    break;
+  default:
     break;
   }
 
