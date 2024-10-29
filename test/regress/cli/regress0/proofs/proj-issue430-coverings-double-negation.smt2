@@ -1,4 +1,4 @@
-; COMMAND-LINE: --nl-cov
+; COMMAND-LINE: --nl-cov --nl-ext=light
 ; REQUIRES: poly
 ; EXPECT: unsat
 ; EXPECT: unsat
