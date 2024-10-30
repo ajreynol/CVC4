@@ -162,6 +162,7 @@ const char* toString(ProofRule rule)
     case ProofRule::ARITH_TRICHOTOMY: return "ARITH_TRICHOTOMY";
     case ProofRule::INT_TIGHT_LB: return "INT_TIGHT_LB";
     case ProofRule::INT_TIGHT_UB: return "INT_TIGHT_UB";
+    case ProofRule::ARITH_MULT_ABS_COMPARISON: return "ARITH_MULT_ABS_COMPARISON";
     case ProofRule::ARITH_MULT_SIGN: return "ARITH_MULT_SIGN";
     case ProofRule::ARITH_MULT_POS: return "ARITH_MULT_POS";
     case ProofRule::ARITH_MULT_NEG: return "ARITH_MULT_NEG";
