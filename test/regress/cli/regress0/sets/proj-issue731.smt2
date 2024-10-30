@@ -1,4 +1,4 @@
-; EXPECT: sat
+; EXPECT: unsat
 (set-logic ALL)
 (set-option :sets-exp true)
 (set-option :debug-check-models true)

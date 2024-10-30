@@ -116,7 +116,7 @@ void TheorySets::notifyFact(TNode atom,
 bool TheorySets::collectModelValues(TheoryModel* m,
                                     const std::set<Node>& termSet)
 {
-  if (options().sets.setsExt)
+  if (options().sets.setsExp)
   {
     NodeManager* nm = nodeManager();
     SkolemManager* sm = nm->getSkolemManager();
@@ -144,7 +144,7 @@ Node TheorySets::getCandidateModelValue(TNode node) { return Node::null(); }
 void TheorySets::preRegisterTerm(TNode node)
 {
   d_internal->preRegisterTerm(node);
-  if (options().sets.setsExt)
+  if (options().sets.setsExp)
   {
     if (d_setsUnivSubset.find(node) == d_setsUnivSubset.end())
     {
