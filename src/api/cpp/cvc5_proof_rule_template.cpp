@@ -233,6 +233,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
       return "macro-arith-string-pred-entail";
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";
+    case ProofRewriteRule::ARRAYS_SELECT_CONST: return "arrays-select-const";
     case ProofRewriteRule::ARRAYS_EQ_RANGE_EXPAND:
       return "arrays-eq-range-expand";
     case ProofRewriteRule::EXISTS_ELIM: return "exists-elim";
