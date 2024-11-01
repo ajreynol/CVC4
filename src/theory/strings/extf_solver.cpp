@@ -216,8 +216,7 @@ void ExtfSolver::doReduction(Node n, int pol)
     Node res = d_preproc.simplify(n, new_nodes);
     Assert(res != n);
     new_nodes.push_back(n.eqNode(res));
-    Node nnlem =
-        new_nodes.size() == 1 ? new_nodes[0] : nm->mkNode(Kind::AND, new_nodes);
+    Node nnlem = nm->mkAnd(new_nodes);
     // in rare case where it rewrites to true, just record it is reduced
     if (rewrite(nnlem) == d_true)
     {

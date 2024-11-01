@@ -40,7 +40,7 @@ PreprocessingPassResult StringsEagerPp::applyInternal(
   {
     Node prev = (*assertionsToPreprocess)[i];
     std::vector<TrustNode> asserts;
-    TrustNode trn = pp.simplify(prev, asserts);
+    TrustNode trn = pp.simplifyTrusted(prev, asserts);
     if (trn.isNull())
     {
       continue;

@@ -27,6 +27,7 @@
 #include "theory/strings/skolem_cache.h"
 #include "theory/theory.h"
 #include "util/hash.h"
+#include "proof/proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -39,7 +40,7 @@ namespace strings {
  * used for reducing extended functions on-demand during the "extended function
  * reductions" inference schema of TheoryStrings.
  */
-class StringsPreprocess : protected EnvObj
+class StringsPreprocess : protected EnvObj, public ProofGenerator
 {
  public:
   StringsPreprocess(Env& env,
@@ -79,8 +80,12 @@ class StringsPreprocess : protected EnvObj
    *
    * This method is called only for eager preprocessing of extended functions.
    */
-  TrustNode simplify(Node t, std::vector<TrustNode>& asserts);
-
+  TrustNode simplifyTrusted(Node t, std::vector<TrustNode>& asserts);
+  Node simplify(Node t, std::vector<Node>& asserts);
+  /** Get proof for formula */
+  std::shared_ptr<ProofNode> getProofFor(Node f) override;
+  /** Identify this generator (for debugging, etc..) */
+  std::string identify() const override;
  private:
   /** pointer to the skolem cache used by this class */
   SkolemCache* d_sc;

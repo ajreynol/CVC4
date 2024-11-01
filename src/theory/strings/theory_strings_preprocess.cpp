@@ -1086,10 +1086,21 @@ Node StringsPreprocess::simplifyInternal(Node t, std::vector<Node>& asserts)
   return retNode;
 }
 
-TrustNode StringsPreprocess::simplify(Node t, std::vector<TrustNode>& asserts)
+TrustNode StringsPreprocess::simplifyTrusted(Node t, std::vector<TrustNode>& asserts)
 {
   std::vector<Node> newAsserts;
+  Node ret = simplify(t, newAsserts);
+  for (const Node& a : newAsserts)
+  {
+    asserts.push_back(TrustNode::mkTrustLemma(a, this));
+  }
+  return TrustNode::mkTrustRewrite(t, ret, this);
+}
+
+Node StringsPreprocess::simplify(Node t, std::vector<Node>& asserts)
+{
   NodeManager* nm = NodeManager::currentNM();
+  std::map<Node, Node>::iterator it;
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(t);
@@ -1097,15 +1108,15 @@ TrustNode StringsPreprocess::simplify(Node t, std::vector<TrustNode>& asserts)
   {
     cur = visit.back();
     visit.pop_back();
-    it = visited.find(cur);
-    if (it == visited.end())
+    it = d_visited.find(cur);
+    if (it == d_visited.end())
     {
       if (cur.isClosure())
       {
-        visited[cur] = cur;
+        d_visited[cur] = cur;
         continue;
       }
-      visited[cur] = Node::null();
+      d_visited[cur] = Node::null();
       visit.push_back(cur);
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
@@ -1120,8 +1131,8 @@ TrustNode StringsPreprocess::simplify(Node t, std::vector<TrustNode>& asserts)
       }
       for (const Node& cn : cur)
       {
-        it = visited.find(cn);
-        Assert(it != visited.end());
+        it = d_visited.find(cn);
+        Assert(it != d_visited.end());
         Assert(!it->second.isNull());
         childChanged = childChanged || cn != it->second;
         children.push_back(it->second);
@@ -1132,22 +1143,18 @@ TrustNode StringsPreprocess::simplify(Node t, std::vector<TrustNode>& asserts)
       }
       // We cannot statically reduce seq.nth due to it being partial function.
       // Reducing it here would violate the functional property of seq.nth.
-      if (tmp.getKind() != Kind::SEQ_NTH)
+      if (ret.getKind() != Kind::SEQ_NTH)
       {
-        ret = simplifyInternal(ret, newAsserts);
+        ret = simplifyInternal(ret, asserts);
       }
-      visited[cur] = ret;
+      d_visited[cur] = ret;
     }
   } while (!visit.empty());
-  Assert(visited.find(t) != visited.end());
-  Assert(!visited.find(t)->second.isNull());
-  Node ret = visited[t];
-  for (const Node& a : newAsserts)
-  {
-    asserts.push_back(TrustNode::mkTrustLemma(a, this));
-  }
-  return TrustNode::mkTrustRewrite(t, ret, this);
+  Assert(d_visited.find(t) != d_visited.end());
+  Assert(!d_visited.find(t)->d_visited.isNull());
+  return d_visited[t];
 }
+
 Node StringsPreprocess::mkCodePointAtIndex(Node x, Node i)
 {
   // If x is a string, we use (STRING_TO_CODE, (STRING_SUBSTR, x, i, 1)).
@@ -1161,24 +1168,16 @@ Node StringsPreprocess::mkCodePointAtIndex(Node x, Node i)
     return nm->mkNode(Kind::STRING_TO_CODE,
                       nm->mkNode(Kind::STRING_SUBSTR, {x, i, one}));
   }
-  return nm->mkNode(Kind::SEQ_NTH, x, i);
+return nm->mkNode(Kind::SEQ_NTH, x, i);
 }
 
-Node StringsPreprocess::processAssertion(Node n, std::vector<Node>& asserts)
+std::shared_ptr<ProofNode> StringsPreprocess::getProofFor(Node f)
 {
-  std::vector<Node> asserts_curr;
-  Node ret = simplifyRec(n, asserts_curr);
-  while (!asserts_curr.empty())
-  {
-    Node curr = asserts_curr.back();
-    asserts_curr.pop_back();
-    std::vector<Node> asserts_tmp;
-    curr = simplifyRec(curr, asserts_tmp);
-    asserts_curr.insert(
-        asserts_curr.end(), asserts_tmp.begin(), asserts_tmp.end());
-    asserts.push_back(curr);
-  }
-  return ret;
+  return nullptr;
+}
+std::string StringsPreprocess::identify() const
+{
+  return "StringsPreprocess";
 }
 
 }  // namespace strings
