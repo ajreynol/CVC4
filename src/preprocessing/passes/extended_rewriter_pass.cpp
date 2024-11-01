@@ -40,7 +40,6 @@ ExtRewPre::ExtRewPre(PreprocessingPassContext* preprocContext)
 PreprocessingPassResult ExtRewPre::applyInternal(
     AssertionPipeline* assertionsToPreprocess)
 {
-  bool isAgg = (options().smt.extRewPrep == options::ExtRewPrepMode::AGG);
   for (unsigned i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
   {
     const Node& a = (*assertionsToPreprocess)[i];

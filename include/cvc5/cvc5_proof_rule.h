@@ -3522,14 +3522,24 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPLACE_NO_CONTAINS),
   /** Auto-generated from RARE rule str-replace-empty */
   EVALUE(STR_REPLACE_EMPTY),
+  /** Auto-generated from RARE rule str-replace-contains-pre */
+  EVALUE(STR_REPLACE_CONTAINS_PRE),
   /** Auto-generated from RARE rule str-replace-all-no-contains */
   EVALUE(STR_REPLACE_ALL_NO_CONTAINS),
+  /** Auto-generated from RARE rule str-replace-re-none */
+  EVALUE(STR_REPLACE_RE_NONE),
+  /** Auto-generated from RARE rule str-replace-re-all-none */
+  EVALUE(STR_REPLACE_RE_ALL_NONE),
   /** Auto-generated from RARE rule str-len-concat-rec */
   EVALUE(STR_LEN_CONCAT_REC),
   /** Auto-generated from RARE rule str-indexof-self */
   EVALUE(STR_INDEXOF_SELF),
   /** Auto-generated from RARE rule str-indexof-no-contains */
   EVALUE(STR_INDEXOF_NO_CONTAINS),
+  /** Auto-generated from RARE rule str-indexof-contains-pre */
+  EVALUE(STR_INDEXOF_CONTAINS_PRE),
+  /** Auto-generated from RARE rule str-indexof-re-none */
+  EVALUE(STR_INDEXOF_RE_NONE),
   /** Auto-generated from RARE rule str-to-lower-concat */
   EVALUE(STR_TO_LOWER_CONCAT),
   /** Auto-generated from RARE rule str-to-upper-concat */

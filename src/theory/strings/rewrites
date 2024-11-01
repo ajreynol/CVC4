@@ -232,9 +232,22 @@
   (str.replace t "" s)
   (str.++ s t))
 
+(define-cond-rule str-replace-contains-pre ((t1 ?Seq) (t2 ?Seq :list) (s ?Seq) (r ?Seq)) 
+  (not (str.contains t1 s))
+  (str.replace (str.++ t1 t2) s r)
+  (str.++ (str.replace t1 s r) t2))
+
 (define-cond-rule str-replace-all-no-contains ((t ?Seq) (s ?Seq) (r ?Seq))
   (not (str.contains t s))
   (str.replace_all t s r)
+  t)
+
+(define-rule str-replace-re-none ((t ?Seq) (r ?Seq))
+  (str.replace_re t re.none r)
+  t)
+
+(define-rule str-replace-re-all-none ((t ?Seq) (r ?Seq))
+  (str.replace_re_all t re.none r)
   t)
 
 (define-rule* str-len-concat-rec ((s1 ?Seq) (s2 ?Seq) (s3 ?Seq :list))
@@ -248,6 +261,15 @@
 
 (define-cond-rule str-indexof-no-contains ((t ?Seq) (s ?Seq) (n Int))
   (not (str.contains (str.substr t n (str.len t)) s))
+  (str.indexof t s n)
+  (- 1))
+
+(define-cond-rule str-indexof-contains-pre ((t1 ?Seq) (t2 ?Seq :list) (s ?Seq) (n Int))
+  (str.contains (str.substr t1 n (str.len t1)) s)
+  (str.indexof (str.++ t1 t2) s n)
+  (str.indexof t1 s n))
+
+(define-rule str-indexof-re-none ((t ?Seq) (s ?Seq) (n Int))
   (str.indexof t s n)
   (- 1))
 
