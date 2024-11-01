@@ -73,20 +73,13 @@ class StringsPreprocess : protected EnvObj
                      SkolemCache* sc,
                      size_t alphaCard);
   /**
-   * Calls the above method for the skolem cache owned by this class, and
-   * records statistics.
-   */
-  Node simplify(Node t, std::vector<Node>& asserts);
-  /**
-   * Applies simplifyRec on t until a fixed point is reached, and returns
-   * the resulting term t', which is such that
-   *   (exists k) asserts => t = t'
-   * is valid, where k are the free skolems introduced when constructing
-   * asserts.
+   * Applies simplify to all top-level extended function subterms of t. New
+   * assertions created in this reduction are added to asserts. The argument
+   * visited stores a cache of previous results.
    *
    * This method is called only for eager preprocessing of extended functions.
    */
-  Node processAssertion(Node t, std::vector<Node>& asserts);
+  TrustNode simplify(Node t, std::vector<TrustNode>& asserts);
 
  private:
   /** pointer to the skolem cache used by this class */
@@ -96,13 +89,10 @@ class StringsPreprocess : protected EnvObj
   /** visited cache */
   std::map<Node, Node> d_visited;
   /**
-   * Applies simplify to all top-level extended function subterms of t. New
-   * assertions created in this reduction are added to asserts. The argument
-   * visited stores a cache of previous results.
-   *
-   * This method is called only for eager preprocessing of extended functions.
+   * Calls the above method for the skolem cache owned by this class, and
+   * records statistics.
    */
-  Node simplifyRec(Node t, std::vector<Node>& asserts);
+  Node simplifyInternal(Node t, std::vector<Node>& asserts);
   /**
    * Makes the term returning the code point of string x at point i.
    */

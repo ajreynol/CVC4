@@ -34,27 +34,33 @@ PreprocessingPassResult StringsEagerPp::applyInternal(
   NodeManager* nm = nodeManager();
   theory::strings::SkolemCache skc(nm, nullptr);
   theory::strings::StringsPreprocess pp(d_env, &skc);
-  for (size_t i = 0, nasserts = assertionsToPreprocess->size(); i < nasserts;
-       ++i)
+  size_t i = 0;
+  size_t nasserts = assertionsToPreprocess->size();
+  while (i<nasserts)
   {
     Node prev = (*assertionsToPreprocess)[i];
-    std::vector<Node> asserts;
-    Node rew = pp.processAssertion(prev, asserts);
-    if (!asserts.empty())
+    std::vector<TrustNode> asserts;
+    TrustNode trn = pp.simplify(prev, asserts);
+    if (trn.isNull())
     {
-      std::vector<Node> conj;
-      conj.push_back(rew);
-      conj.insert(conj.end(), asserts.begin(), asserts.end());
-      rew = nm->mkAnd(conj);
+      continue;
     }
-    if (prev != rew)
+    assertionsToPreprocess->replaceTrusted(i, trn);
+    prev = (*assertionsToPreprocess)[i];
+    Node rew = rewrite(prev);
+    if (rew!=prev)
     {
-      assertionsToPreprocess->replace(i, rewrite(rew));
-      if (assertionsToPreprocess->isInConflict())
-      {
-        return PreprocessingPassResult::CONFLICT;
-      }
+      assertionsToPreprocess->replace(i, rew);
     }
+    if (assertionsToPreprocess->isInConflict())
+    {
+      return PreprocessingPassResult::CONFLICT;
+    }
+    for (const TrustNode& ta : asserts)
+    {
+      assertionsToPreprocess->pushBackTrusted(ta);
+    }
+    nasserts = assertionsToPreprocess->size();
   }
 
   return PreprocessingPassResult::NO_CONFLICT;

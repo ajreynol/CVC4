@@ -1051,21 +1051,25 @@ Node StringsPreprocess::reduce(Node t,
   return retNode;
 }
 
-Node StringsPreprocess::simplify(Node t, std::vector<Node>& asserts)
+Node StringsPreprocess::simplifyInternal(Node t, std::vector<Node>& asserts)
 {
   size_t prev_asserts = asserts.size();
   // call the static reduce routine
   Node retNode = reduce(t, asserts, d_sc, options().strings.stringsAlphaCard);
-  if( t!=retNode ){
-    Trace("strings-preprocess") << "StringsPreprocess::simplify: " << t << " -> " << retNode << std::endl;
-    if (!asserts.empty())
+  if( t!=retNode )
+  {
+    if (TraceIsOn("strings-preprocess"))
     {
-      Trace("strings-preprocess")
-          << " ... new nodes (" << (asserts.size() - prev_asserts)
-          << "):" << std::endl;
-      for (size_t i = prev_asserts; i < asserts.size(); ++i)
+      Trace("strings-preprocess") << "StringsPreprocess::simplify: " << t << " -> " << retNode << std::endl;
+      if (!asserts.empty())
       {
-        Trace("strings-preprocess") << "   " << asserts[i] << std::endl;
+        Trace("strings-preprocess")
+            << " ... new nodes (" << (asserts.size() - prev_asserts)
+            << "):" << std::endl;
+        for (size_t i = prev_asserts; i < asserts.size(); ++i)
+        {
+          Trace("strings-preprocess") << "   " << asserts[i] << std::endl;
+        }
       }
     }
     if (d_statReductions != nullptr)
@@ -1081,45 +1085,60 @@ Node StringsPreprocess::simplify(Node t, std::vector<Node>& asserts)
   return retNode;
 }
 
-Node StringsPreprocess::simplifyRec(Node t, std::vector<Node>& asserts)
+TrustNode StringsPreprocess::simplify(Node t, std::vector<TrustNode>& asserts)
 {
-  std::map<Node, Node>::iterator it = d_visited.find(t);
-  if (it != d_visited.end())
-  {
-    return it->second;
-  }else{
-    Node retNode = t;
-    if( t.getNumChildren()==0 ){
-      retNode = simplify(t, asserts);
-    }
-    else if (!t.isClosure())
-    {
-      bool changed = false;
-      std::vector< Node > cc;
-      if( t.getMetaKind() == kind::metakind::PARAMETERIZED ){
-        cc.push_back( t.getOperator() );
+  std::vector<Node> newAsserts;
+  NodeManager * nm = NodeManager::currentNM();
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(t);
+  do {
+    cur = visit.back();
+    visit.pop_back();
+    it = visited.find(cur);
+    if (it == visited.end()) {
+      if (cur.isClosure())
+      {
+        visited[cur] = cur;
+        continue;
       }
-      for(unsigned i=0; i<t.getNumChildren(); i++) {
-        Node s = simplifyRec(t[i], asserts);
-        cc.push_back( s );
-        if( s!=t[i] ) {
-          changed = true;
-        }
+      visited[cur] = Node::null();
+      visit.push_back(cur);
+      visit.insert(visit.end(), cur.begin(), cur.end());
+    } else if (it->second.isNull()) {
+      Node ret = cur;
+      bool childChanged = false;
+      std::vector<Node> children;
+      if (cur.getMetaKind() == kind::metakind::PARAMETERIZED) {
+        children.push_back(cur.getOperator());
       }
-      Node tmp = t;
-      if( changed ){
-        tmp = NodeManager::currentNM()->mkNode( t.getKind(), cc );
+      for (const Node& cn : cur) {
+        it = visited.find(cn);
+        Assert(it != visited.end());
+        Assert(!it->second.isNull());
+        childChanged = childChanged || cn != it->second;
+        children.push_back(it->second);
+      }
+      if (childChanged) {
+        ret = nm->mkNode(cur.getKind(), children);
       }
       // We cannot statically reduce seq.nth due to it being partial function.
       // Reducing it here would violate the functional property of seq.nth.
       if (tmp.getKind() != Kind::SEQ_NTH)
       {
-        retNode = simplify(tmp, asserts);
+        ret = simplifyInternal(ret, newAsserts);
       }
+      visited[cur] = ret;
     }
-    d_visited[t] = retNode;
-    return retNode;
+  } while (!visit.empty());
+  Assert(visited.find(t) != visited.end());
+  Assert(!visited.find(t)->second.isNull());
+  Node ret = visited[t];
+  for (const Node& a : newAsserts)
+  {
+    asserts.push_back(TrustNode::mkTrustLemma(a, this));
   }
+  return TrustNode::mkTrustRewrite(t, ret, this);
 }
 Node StringsPreprocess::mkCodePointAtIndex(Node x, Node i)
 {
