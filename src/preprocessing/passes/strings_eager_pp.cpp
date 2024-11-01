@@ -58,12 +58,6 @@ PreprocessingPassResult StringsEagerPp::applyInternal(
     {
       return PreprocessingPassResult::CONFLICT;
     }
-    prev = (*assertionsToPreprocess)[i];
-    Node rew = rewrite(prev);
-    if (rew != prev)
-    {
-      assertionsToPreprocess->replace(i, rew);
-    }
     for (const TrustNode& ta : asserts)
     {
       assertionsToPreprocess->pushBackTrusted(ta);

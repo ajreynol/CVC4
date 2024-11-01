@@ -1051,7 +1051,7 @@ Node StringsPreprocess::reduce(Node t,
   return retNode;
 }
 
-Node StringsPreprocess::simplifyInternal(Node t, std::vector<Node>& asserts)
+Node StringsPreprocess::simplify(Node t, std::vector<Node>& asserts)
 {
   size_t prev_asserts = asserts.size();
   // call the static reduce routine
@@ -1089,19 +1089,19 @@ Node StringsPreprocess::simplifyInternal(Node t, std::vector<Node>& asserts)
 TrustNode StringsPreprocess::simplifyTrusted(Node t, std::vector<TrustNode>& asserts)
 {
   std::vector<Node> newAsserts;
-  Node ret = simplify(t, newAsserts);
+  Node ret = simplifyInternal(t, newAsserts);
   for (const Node& a : newAsserts)
   {
-    asserts.push_back(TrustNode::mkTrustLemma(a, this));
+    asserts.push_back(TrustNode::mkTrustLemma(a, nullptr));
   }
   if (ret==t)
   {
     return TrustNode::null();
   }
-  return TrustNode::mkTrustRewrite(t, ret, this);
+  return TrustNode::mkTrustRewrite(t, ret, nullptr);
 }
 
-Node StringsPreprocess::simplify(Node t, std::vector<Node>& asserts)
+Node StringsPreprocess::simplifyInternal(Node t, std::vector<Node>& asserts)
 {
   NodeManager* nm = NodeManager::currentNM();
   std::map<Node, Node>::iterator it;
