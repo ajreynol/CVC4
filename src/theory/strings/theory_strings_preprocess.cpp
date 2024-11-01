@@ -1056,11 +1056,12 @@ Node StringsPreprocess::simplifyInternal(Node t, std::vector<Node>& asserts)
   size_t prev_asserts = asserts.size();
   // call the static reduce routine
   Node retNode = reduce(t, asserts, d_sc, options().strings.stringsAlphaCard);
-  if( t!=retNode )
+  if (t != retNode)
   {
     if (TraceIsOn("strings-preprocess"))
     {
-      Trace("strings-preprocess") << "StringsPreprocess::simplify: " << t << " -> " << retNode << std::endl;
+      Trace("strings-preprocess") << "StringsPreprocess::simplify: " << t
+                                  << " -> " << retNode << std::endl;
       if (!asserts.empty())
       {
         Trace("strings-preprocess")
@@ -1088,15 +1089,17 @@ Node StringsPreprocess::simplifyInternal(Node t, std::vector<Node>& asserts)
 TrustNode StringsPreprocess::simplify(Node t, std::vector<TrustNode>& asserts)
 {
   std::vector<Node> newAsserts;
-  NodeManager * nm = NodeManager::currentNM();
+  NodeManager* nm = NodeManager::currentNM();
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(t);
-  do {
+  do
+  {
     cur = visit.back();
     visit.pop_back();
     it = visited.find(cur);
-    if (it == visited.end()) {
+    if (it == visited.end())
+    {
       if (cur.isClosure())
       {
         visited[cur] = cur;
@@ -1105,21 +1108,26 @@ TrustNode StringsPreprocess::simplify(Node t, std::vector<TrustNode>& asserts)
       visited[cur] = Node::null();
       visit.push_back(cur);
       visit.insert(visit.end(), cur.begin(), cur.end());
-    } else if (it->second.isNull()) {
+    }
+    else if (it->second.isNull())
+    {
       Node ret = cur;
       bool childChanged = false;
       std::vector<Node> children;
-      if (cur.getMetaKind() == kind::metakind::PARAMETERIZED) {
+      if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
+      {
         children.push_back(cur.getOperator());
       }
-      for (const Node& cn : cur) {
+      for (const Node& cn : cur)
+      {
         it = visited.find(cn);
         Assert(it != visited.end());
         Assert(!it->second.isNull());
         childChanged = childChanged || cn != it->second;
         children.push_back(it->second);
       }
-      if (childChanged) {
+      if (childChanged)
+      {
         ret = nm->mkNode(cur.getKind(), children);
       }
       // We cannot statically reduce seq.nth due to it being partial function.

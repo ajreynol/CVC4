@@ -36,7 +36,7 @@ PreprocessingPassResult StringsEagerPp::applyInternal(
   theory::strings::StringsPreprocess pp(d_env, &skc);
   size_t i = 0;
   size_t nasserts = assertionsToPreprocess->size();
-  while (i<nasserts)
+  while (i < nasserts)
   {
     Node prev = (*assertionsToPreprocess)[i];
     std::vector<TrustNode> asserts;
@@ -48,7 +48,7 @@ PreprocessingPassResult StringsEagerPp::applyInternal(
     assertionsToPreprocess->replaceTrusted(i, trn);
     prev = (*assertionsToPreprocess)[i];
     Node rew = rewrite(prev);
-    if (rew!=prev)
+    if (rew != prev)
     {
       assertionsToPreprocess->replace(i, rew);
     }
