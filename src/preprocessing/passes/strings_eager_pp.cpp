@@ -49,7 +49,7 @@ PreprocessingPassResult StringsEagerPp::applyInternal(
     TrustNode trn = pp.simplifyTrusted(prev, asserts);
     if (trn.isNull())
     {
-      Assert (asserts.empty());
+      Assert(asserts.empty());
       i++;
       continue;
     }

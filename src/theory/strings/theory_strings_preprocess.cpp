@@ -1086,7 +1086,8 @@ Node StringsPreprocess::simplify(Node t, std::vector<Node>& asserts)
   return retNode;
 }
 
-TrustNode StringsPreprocess::simplifyTrusted(Node t, std::vector<TrustNode>& asserts)
+TrustNode StringsPreprocess::simplifyTrusted(Node t,
+                                             std::vector<TrustNode>& asserts)
 {
   std::vector<Node> newAsserts;
   Node ret = simplifyInternal(t, newAsserts);
@@ -1094,7 +1095,7 @@ TrustNode StringsPreprocess::simplifyTrusted(Node t, std::vector<TrustNode>& ass
   {
     asserts.push_back(TrustNode::mkTrustLemma(a, nullptr));
   }
-  if (ret==t)
+  if (ret == t)
   {
     return TrustNode::null();
   }
@@ -1179,10 +1180,7 @@ std::shared_ptr<ProofNode> StringsPreprocess::getProofFor(Node f)
 {
   return nullptr;
 }
-std::string StringsPreprocess::identify() const
-{
-  return "StringsPreprocess";
-}
+std::string StringsPreprocess::identify() const { return "StringsPreprocess"; }
 
 }  // namespace strings
 }  // namespace theory

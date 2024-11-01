@@ -21,13 +21,13 @@
 #include <vector>
 
 #include "context/cdhashmap.h"
+#include "proof/proof_generator.h"
 #include "smt/env_obj.h"
 #include "theory/rewriter.h"
 #include "theory/strings/sequences_stats.h"
 #include "theory/strings/skolem_cache.h"
 #include "theory/theory.h"
 #include "util/hash.h"
-#include "proof/proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -86,6 +86,7 @@ class StringsPreprocess : protected EnvObj, public ProofGenerator
   std::shared_ptr<ProofNode> getProofFor(Node f) override;
   /** Identify this generator (for debugging, etc..) */
   std::string identify() const override;
+
  private:
   /** pointer to the skolem cache used by this class */
   SkolemCache* d_sc;
