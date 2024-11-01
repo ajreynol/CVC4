@@ -3702,6 +3702,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DISTINCT_BINARY_ELIM),
   /** Auto-generated from RARE rule uf-bv2nat-int2bv */
   EVALUE(UF_BV2NAT_INT2BV),
+  /** Auto-generated from RARE rule uf-int2bv-bv2nat */
+  EVALUE(UF_INT2BV_BV2NAT),
   /** Auto-generated from RARE rule uf-bv2nat-geq-elim */
   EVALUE(UF_BV2NAT_GEQ_ELIM),
 // ${rules}$

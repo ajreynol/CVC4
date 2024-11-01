@@ -27,9 +27,10 @@
 ;  (int2bv w (bv2nat t))
 ;  (concat (@bv 0 n) t))
 ;
-;(define-rule uf-int2bv-bv2nat ((w Int) (t Int))
-;  (bv2nat (int2bv w t))
-;  (mod_total t (^ 2 w)))
+
+(define-rule uf-int2bv-bv2nat ((w Int) (t Int))
+  (bv2nat (int2bv w t))
+  (mod_total t (int.pow2 w)))
 
 
 (define-cond-rule uf-bv2nat-geq-elim ((x ?BitVec) (n Int) (w Int))
