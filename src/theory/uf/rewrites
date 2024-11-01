@@ -12,14 +12,24 @@
 
 ; bv to arith conversions
 
+(define-cond-rule uf-bv2nat-int2bv ((w Int) (t ?BitVec))
+  (= (@bvsize t) w)
+  (int2bv w (bv2nat t))
+  t)
+
 ;(define-cond-rule uf-bv2nat-int2bv ((w Int) (t ?BitVec))
-;  (= (bvsize t) w)
+;  (> w (@bvsize t))
 ;  (int2bv w (bv2nat t))
-;  t)
+;  (concat (@bv 0 n) t))
+;
+;(define-cond-rule uf-bv2nat-int2bv ((w Int) (t ?BitVec))
+;  (< w (@bvsize t))
+;  (int2bv w (bv2nat t))
+;  (concat (@bv 0 n) t))
 ;
 ;(define-rule uf-int2bv-bv2nat ((w Int) (t Int))
 ;  (bv2nat (int2bv w t))
-;  (mod t (^ 2 w)))
+;  (mod_total t (^ 2 w)))
 
 
 (define-cond-rule uf-bv2nat-geq-elim ((x ?BitVec) (n Int) (w Int))
