@@ -39,22 +39,30 @@ PreprocessingPassResult StringsEagerPp::applyInternal(
   while (i < nasserts)
   {
     Node prev = (*assertionsToPreprocess)[i];
+    prev = rewrite(prev);
+    assertionsToPreprocess->replace(i, prev);
+    if (assertionsToPreprocess->isInConflict())
+    {
+      return PreprocessingPassResult::CONFLICT;
+    }
     std::vector<TrustNode> asserts;
     TrustNode trn = pp.simplifyTrusted(prev, asserts);
     if (trn.isNull())
     {
+      Assert (asserts.empty());
+      i++;
       continue;
     }
     assertionsToPreprocess->replaceTrusted(i, trn);
+    if (assertionsToPreprocess->isInConflict())
+    {
+      return PreprocessingPassResult::CONFLICT;
+    }
     prev = (*assertionsToPreprocess)[i];
     Node rew = rewrite(prev);
     if (rew != prev)
     {
       assertionsToPreprocess->replace(i, rew);
-    }
-    if (assertionsToPreprocess->isInConflict())
-    {
-      return PreprocessingPassResult::CONFLICT;
     }
     for (const TrustNode& ta : asserts)
     {

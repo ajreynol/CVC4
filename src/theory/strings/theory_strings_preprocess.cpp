@@ -1094,6 +1094,10 @@ TrustNode StringsPreprocess::simplifyTrusted(Node t, std::vector<TrustNode>& ass
   {
     asserts.push_back(TrustNode::mkTrustLemma(a, this));
   }
+  if (ret==t)
+  {
+    return TrustNode::null();
+  }
   return TrustNode::mkTrustRewrite(t, ret, this);
 }
 
