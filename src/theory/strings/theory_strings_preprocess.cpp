@@ -1168,7 +1168,7 @@ Node StringsPreprocess::mkCodePointAtIndex(Node x, Node i)
     return nm->mkNode(Kind::STRING_TO_CODE,
                       nm->mkNode(Kind::STRING_SUBSTR, {x, i, one}));
   }
-return nm->mkNode(Kind::SEQ_NTH, x, i);
+  return nm->mkNode(Kind::SEQ_NTH, x, i);
 }
 
 std::shared_ptr<ProofNode> StringsPreprocess::getProofFor(Node f)
