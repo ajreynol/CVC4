@@ -2394,7 +2394,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_DIV_BY_CONST_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Arithmetic - strings predicate entailment**
+   * **Arithmetic -- strings predicate entailment**
    *
    * .. math::
    *   (= s t) = c
@@ -2414,7 +2414,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_ARITH_STRING_PRED_ENTAIL),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Arithmetic - strings predicate entailment**
+   * **Arithmetic -- strings predicate entailment**
    *
    * .. math::
    *   (>= n 0) = true
@@ -2428,7 +2428,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_STRING_PRED_ENTAIL),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Arithmetic - strings predicate entailment**
+   * **Arithmetic -- strings predicate entailment**
    *
    * .. math::
    *   (>= n 0) = (>= m 0)
@@ -2444,6 +2444,18 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(ARITH_STRING_PRED_SAFE_APPROX),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Arithmetic -- power elimination**
+   *
+   * .. math::
+   *   (^ x c) = (x \cdot \ldots \cdot x)
+   *
+   * where :math:`c` is a non-negative integer.
+   *
+   * \endverbatim
+   */
+  EVALUE(ARITH_POW_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Equality -- Beta reduction**
@@ -2595,7 +2607,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DT_INST),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Datatypes - collapse selector**
+   * **Datatypes -- collapse selector**
    *
    * .. math::
    *   s_i(c(t_1, \ldots, t_n)) = t_i
@@ -2607,7 +2619,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DT_COLLAPSE_SELECTOR),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Datatypes - collapse tester**
+   * **Datatypes -- collapse tester**
    *
    * .. math::
    *   \mathit{is}_c(c(t_1, \ldots, t_n)) = true
@@ -2624,7 +2636,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DT_COLLAPSE_TESTER),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Datatypes - collapse tester**
+   * **Datatypes -- collapse tester**
    *
    * .. math::
    *   \mathit{is}_c(t) = true
@@ -2636,7 +2648,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DT_COLLAPSE_TESTER_SINGLETON),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Datatypes - constructor equality**
+   * **Datatypes -- constructor equality**
    *
    * .. math::
    *   (c(t_1, \ldots, t_n) = c(s_1, \ldots, s_n)) =
@@ -2666,7 +2678,22 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DT_UPDATER_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Bitvectors - Unsigned multiplication overflow detection elimination**
+   * **Datatypes -- match elimination**
+   *
+   * .. math::
+   *   \texttt{match}(t ((p_1 c_1) \ldots (p_n c_n))) = \texttt{ite}(F_1, r_1, \texttt{ite}( \ldots, r_n))
+   * 
+   * where for :math:`i=1, \ldots, n`, :math:`F_1` is a formula that holds iff
+   * :math:`t` matches :math:`p_i` and :math:`r_i` is the result of a
+   * substitution on :math:`c_i` based on this match.
+   *
+   * \endverbatim
+   */
+  EVALUE(DT_MATCH_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Unsigned multiplication overflow detection elimination**
+
    *
    * See M.Gok, M.J. Schulte, P.I. Balzola, "Efficient integer multiplication
    * overflow detection circuits", 2001.
@@ -2676,7 +2703,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_UMULO_ELIMINATE),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Bitvectors - Unsigned multiplication overflow detection elimination**
+   * **Bitvectors -- Unsigned multiplication overflow detection elimination**
    *
    * See M.Gok, M.J. Schulte, P.I. Balzola, "Efficient integer multiplication
    * overflow detection circuits", 2001.
@@ -2686,13 +2713,13 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_SMULO_ELIMINATE),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Bitvectors - Combine like terms during addition by counting terms**
+   * **Bitvectors -- Combine like terms during addition by counting terms**
    * \endverbatim
    */
   EVALUE(BV_ADD_COMBINE_LIKE_TERMS),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Bitvectors - Extract negations from multiplicands**
+   * **Bitvectors -- Extract negations from multiplicands**
    *
    * .. math::
    *    bvmul(bvneg(a),\ b,\ c) = bvneg(bvmul(a,\ b,\ c))
@@ -2702,7 +2729,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_MULT_SIMPLIFY),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Bitvectors - Extract continuous substrings of bitvectors**
+   * **Bitvectors -- Extract continuous substrings of bitvectors**
    *
    * .. math::
    *    bvand(a,\ c) = concat(bvand(a[i_0:j_0],\ c_0) ... bvand(a[i_n:j_n],\ c_n))
@@ -2713,7 +2740,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_BITWISE_SLICING),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - regular expression loop elimination**
+   * **Strings -- regular expression loop elimination**
    *
    * .. math::
    *   re.loop_{l,u}(R) = re.union(R^l, \ldots, R^u)
@@ -2725,7 +2752,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_LOOP_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - regular expression intersection/union inclusion**
+   * **Strings -- regular expression intersection/union inclusion**
    *
    * .. math::
    *   (re.inter\ R) = \mathit{re.inter}(\mathit{re.none}, R_0)
@@ -2748,7 +2775,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_INTER_UNION_INCLUSION),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - regular expression membership evaluation**
+   * **Strings -- regular expression membership evaluation**
    *
    * .. math::
    *   \mathit{str.in\_re}(s, R) = c
@@ -2761,7 +2788,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_IN_RE_EVAL),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - regular expression membership consume**
+   * **Strings -- regular expression membership consume**
    *
    * .. math::
    *   \mathit{str.in_re}(s, R) = b
@@ -2774,7 +2801,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_IN_RE_CONSUME),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - string in regular expression concatenation star character**
+   * **Strings -- string in regular expression concatenation star character**
    *
    * .. math::
    *   \mathit{str.in\_re}(\mathit{str}.\text{++}(s_1, \ldots, s_n), \mathit{re}.\text{*}(R)) =\\ \mathit{str.in\_re}(s_1, \mathit{re}.\text{*}(R)) \wedge \ldots \wedge \mathit{str.in\_re}(s_n, \mathit{re}.\text{*}(R))
@@ -2786,7 +2813,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_IN_RE_CONCAT_STAR_CHAR),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - string in regular expression sigma**
+   * **Strings -- string in regular expression sigma**
    *
    * .. math::
    *   \mathit{str.in\_re}(s, \mathit{re}.\text{++}(\mathit{re.allchar}, \ldots, \mathit{re.allchar})) = (\mathit{str.len}(s) = n)
@@ -2801,7 +2828,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_IN_RE_SIGMA),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - string in regular expression sigma star**
+   * **Strings -- string in regular expression sigma star**
    *
    * .. math::
    *   \mathit{str.in\_re}(s, \mathit{re}.\text{*}(\mathit{re}.\text{++}(\mathit{re.allchar}, \ldots, \mathit{re.allchar}))) = (\mathit{str.len}(s) \ \% \ n = 0)
@@ -2814,7 +2841,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_IN_RE_SIGMA_STAR),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings - strings substring strip symbolic length**
+   * **Strings -- strings substring strip symbolic length**
    *
    * .. math::
    *   str.substr(s, n, m) = t
@@ -2839,7 +2866,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(SEQ_LENGTH_EVAL),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Sets - empty tester evaluation**
+   * **Sets -- empty tester evaluation**
    *
    * .. math::
    *   \mathit{sets.is\_empty}(\epsilon) = \top
@@ -2854,6 +2881,16 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(SETS_IS_EMPTY_EVAL),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Sets -- sets insert elimination**
+   *
+   * .. math::
+   *   \mathit{sets.insert}(t_1, \ldots, t_n, S) = \texttt{set.union}(\texttt{sets.singleton}(t_1), \ldots, \texttt{sets.singleton}(t_n), S)
+   *
+   * \endverbatim
+   */
+  EVALUE(SETS_INSERT_ELIM),
   // RARE rules
   // ${rules}$
   /** Auto-generated from RARE rule arith-plus-zero */

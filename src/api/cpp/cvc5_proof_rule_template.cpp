@@ -233,6 +233,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "arith-string-pred-safe-approx";
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
       return "macro-arith-string-pred-entail";
+    case ProofRewriteRule::ARITH_POW_ELIM: return "arith-pow-elim";
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";
     case ProofRewriteRule::ARRAYS_SELECT_CONST: return "arrays-select-const";
     case ProofRewriteRule::ARRAYS_EQ_RANGE_EXPAND:
@@ -255,6 +256,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "dt-collapse-tester-singleton";
     case ProofRewriteRule::DT_CONS_EQ: return "dt-cons-eq";
     case ProofRewriteRule::DT_UPDATER_ELIM: return "dt-updater-elim";
+    case ProofRewriteRule::DT_MATCH_ELIM: return "dt-match-elim";
     case ProofRewriteRule::BV_UMULO_ELIMINATE: return "bv-umulo-eliminate";
     case ProofRewriteRule::BV_SMULO_ELIMINATE: return "bv-smulo-eliminate";
     case ProofRewriteRule::BV_ADD_COMBINE_LIKE_TERMS:
@@ -275,6 +277,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::SEQ_LENGTH_EVAL: return "seq-length-eval";
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
       return "sets-is-empty-eval";
+    case ProofRewriteRule::SETS_INSERT_ELIM:
+      return "sets-insert-elim";
       //================================================= RARE rules
       // clang-format off
       ${printer}$
