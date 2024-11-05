@@ -30,6 +30,8 @@ class QuantifiersEngine;
 
 namespace quantifiers {
 
+class QuantDSplitProofGenerator;
+
 /** Quantifiers dynamic splitting
  *
  * This module identifies quantified formulas that should be "split", e.g.
@@ -76,6 +78,8 @@ class QuantDSplit : public QuantifiersModule {
   NodeIntMap d_quant_to_reduce;
   /** whether we have instantiated quantified formulas */
   NodeSet d_added_split;
+  /** Proof generator */
+  std::shared_ptr<QuantDSplitProofGenerator> d_pfgen;
 };
 
 }
