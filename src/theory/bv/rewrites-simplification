@@ -179,10 +179,16 @@
   (bvxor x x) 
   (@bv 0 w))
 
-(define-cond-rule bv-xor-ones ((x ?BitVec) (n Int) (w Int))
+(define-cond-rule bv-xor-ones-base ((x ?BitVec) (n Int) (w Int))
   (= n (- (int.pow2 (@bvsize x)) 1))
   (bvxor x (@bv n w))
   (bvnot x))
+
+(define-cond-rule bv-xor-ones ((xs ?BitVec :list) (zs ?BitVec :list) (n Int) (w Int))
+  (= n (- (int.pow2 w) 1))
+  (bvxor xs (@bv n w) zs)
+  (bvnot (bvxor xs zs)))
+
 (define-rule bv-xor-zero ((x ?BitVec) (n Int))
   (bvxor x (@bv 0 n))
   x)
