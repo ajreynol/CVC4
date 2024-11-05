@@ -2468,19 +2468,7 @@ enum ENUM(ProofRewriteRule)
    * standard substitution via ``Node::substitute``.
    * \endverbatim
    */
-  EVALUE(BETA_REDUCE),  
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Arrays -- Constant array select**
-   *
-   * .. math::
-   *   (select A x) = c
-   *
-   * where :math:`A` is a constant array storing element :math:`c`.
-   *
-   * \endverbatim
-   */
-  EVALUE(ARRAYS_SELECT_CONST),
+  EVALUE(BETA_REDUCE),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Equality -- Lambda elimination**
