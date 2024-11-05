@@ -240,6 +240,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::ARRAYS_SELECT_CONST: return "arrays-select-const";
     case ProofRewriteRule::ARRAYS_EQ_RANGE_EXPAND:
       return "arrays-eq-range-expand";
+    case ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS:
+      return "macro-arrays-distinct-arrays";
     case ProofRewriteRule::EXISTS_ELIM: return "exists-elim";
     case ProofRewriteRule::QUANT_UNUSED_VARS: return "quant-unused-vars";
     case ProofRewriteRule::QUANT_MERGE_PRENEX: return "quant-merge-prenex";

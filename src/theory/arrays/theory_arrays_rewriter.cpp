@@ -68,6 +68,8 @@ TheoryArraysRewriter::TheoryArraysRewriter(NodeManager* nm,
                                            EagerProofGenerator* epg)
     : TheoryRewriter(nm), d_rewriter(r), d_epg(epg)
 {
+  registerProofRewriteRule(ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS,
+                           TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::ARRAYS_SELECT_CONST,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::ARRAYS_EQ_RANGE_EXPAND,
@@ -78,6 +80,15 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
 {
   switch (id)
   {
+    case ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS:
+    {
+      if (n.getKind()==Kind::EQUAL && n[0].isConst() && n[1].isConst() && n[0]!=n[1])
+      {
+        Assert (n[0].getType().isArray());
+        return d_nm->mkConst(false);
+      }
+    }
+    break;
     case ProofRewriteRule::ARRAYS_SELECT_CONST:
     {
       if (n.getKind() == Kind::SELECT && n[0].getKind() == Kind::STORE_ALL)
