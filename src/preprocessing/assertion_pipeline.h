@@ -107,6 +107,10 @@ class AssertionPipeline : protected EnvObj
   void replaceTrusted(size_t i,
                       TrustNode trn,
                       TrustId trustId = TrustId::UNKNOWN_PREPROCESS);
+  /**
+   * Ensure assertion at index i is rewritten.
+   */
+  void ensureRewritten(size_t i);
 
   IteSkolemMap& getIteSkolemMap() { return d_iteSkolemMap; }
   const IteSkolemMap& getIteSkolemMap() const { return d_iteSkolemMap; }

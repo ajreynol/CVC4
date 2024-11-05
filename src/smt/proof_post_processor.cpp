@@ -909,7 +909,6 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     }
     else
     {
-      Assert(idr == MethodId::RW_EXT_REWRITE);
       Node retCurr = args[0];
       std::vector<Node> transEq;
       // try to reconstruct the (extended) rewrite

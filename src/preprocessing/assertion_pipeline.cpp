@@ -185,6 +185,12 @@ void AssertionPipeline::replaceTrusted(size_t i, TrustNode trn, TrustId trustId)
   replace(i, trn.getNode(), trn.getGenerator(), trustId);
 }
 
+void AssertionPipeline::ensureRewritten(size_t i)
+{
+  Assert(i < d_nodes.size());
+  replace(i, rewrite(d_nodes[i]), d_rewpg.get());
+}
+  
 void AssertionPipeline::enableProofs(smt::PreprocessProofGenerator* pppg)
 {
   d_pppg = pppg;

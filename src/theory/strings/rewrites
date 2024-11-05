@@ -307,6 +307,11 @@
   (str.to_upper (str.from_int n))
   (str.from_int n))
 
+(define-cond-rule str-to-int-concat-neg-one ((s1 String :list) (s2 String) (s3 String :list))
+  (= (str.to_int s2) (- 1))
+  (str.to_int (str.++ s1 s2 s3))
+  (- 1))
+
 (define-rule str-leq-empty ((s String))
   (str.<= "" s)
   true)
@@ -343,6 +348,8 @@
 (define-rule re-concat-flatten ((xs RegLan :list) (s RegLan) (ys RegLan :list) (zs RegLan :list)) (re.++ xs (re.++ s ys) zs) (re.++ xs s ys zs))
 
 (define-rule re-concat-star-swap ((xs RegLan :list) (r RegLan) (ys RegLan :list)) (re.++ xs (re.* r) r ys) (re.++ xs r (re.* r) ys))
+
+(define-rule re-concat-star-repeat ((xs RegLan :list) (r RegLan) (ys RegLan :list)) (re.++ xs (re.* r) (re.* r) ys) (re.++ xs (re.* r) ys))
 
 (define-rule* re-concat-merge ((xs RegLan :list) (s String) (t String) (ys RegLan :list)) 
   (re.++ xs (str.to_re s) (str.to_re t) ys)
