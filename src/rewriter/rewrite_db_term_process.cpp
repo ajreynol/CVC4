@@ -24,8 +24,11 @@
 #include "theory/uf/function_const.h"
 #include "theory/uf/theory_uf_rewriter.h"
 #include "util/bitvector.h"
+#include "theory/datatypes/theory_datatypes_utils.h"
 #include "util/rational.h"
 #include "util/string.h"
+#include "expr/dtype.h"
+#include "expr/dtype_cons.h"
 
 using namespace cvc5::internal::kind;
 
@@ -42,7 +45,6 @@ RewriteDbNodeConverter::RewriteDbNodeConverter(NodeManager* nm,
 Node RewriteDbNodeConverter::postConvert(Node n)
 {
   Kind k = n.getKind();
-  TypeNode tn = n.getType();
   if (k == Kind::CONST_STRING)
   {
     NodeManager* nm = NodeManager::currentNM();
@@ -104,6 +106,29 @@ Node RewriteDbNodeConverter::postConvert(Node n)
     Node ret = theory::uf::TheoryUfRewriter::getHoApplyForApplyUf(n);
     recordProofStep(n, ret, ProofRule::ENCODE_EQ_INTRO);
     return ret;
+  }  
+  else if (k == Kind::APPLY_CONSTRUCTOR)
+  {
+    TypeNode tn = n.getType();
+    if (tn.isParametricDatatype())
+    {
+      if (n.getOperator().getKind() != Kind::APPLY_TYPE_ASCRIPTION)
+      {
+        Node op = n.getOperator();
+        size_t index = theory::datatypes::utils::indexOf(op);
+        // get the constructor object
+        const DTypeConstructor& dtc = theory::datatypes::utils::datatypeOf(op)[index];
+        // create ascribed constructor type
+        Node op_new = dtc.getInstantiatedConstructor(tn);
+        // make new node
+        std::vector<Node> children;
+        children.push_back(op_new);
+        children.insert(children.end(), n.begin(), n.end());
+        Node inr = d_nm->mkNode(Kind::APPLY_CONSTRUCTOR, children);
+        recordProofStep(n, inr, ProofRule::ENCODE_EQ_INTRO);
+        return inr;
+      }
+    }
   }
   // convert indexed operators to symbolic
   if (GenericOp::isNumeralIndexedOperatorKind(k))
