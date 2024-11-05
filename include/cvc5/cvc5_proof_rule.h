@@ -3239,10 +3239,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_ULE_ELIMINATE),
   /** Auto-generated from RARE rule bv-comp-eliminate */
   EVALUE(BV_COMP_ELIMINATE),
-  /** Auto-generated from RARE rule bv-repeat-eliminate-1 */
-  EVALUE(BV_REPEAT_ELIMINATE_1),
-  /** Auto-generated from RARE rule bv-repeat-eliminate-2 */
-  EVALUE(BV_REPEAT_ELIMINATE_2),
   /** Auto-generated from RARE rule bv-rotate-left-eliminate-1 */
   EVALUE(BV_ROTATE_LEFT_ELIMINATE_1),
   /** Auto-generated from RARE rule bv-rotate-left-eliminate-2 */
@@ -3781,8 +3777,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(UF_INT2BV_BV2NAT),
   /** Auto-generated from RARE rule uf-bv2nat-geq-elim */
   EVALUE(UF_BV2NAT_GEQ_ELIM),
-  /** Auto-generated from RARE rule uf-bvult-int2bv */
-  EVALUE(UF_BVULT_INT2BV),
+  /** Auto-generated from RARE rule uf-int2bv-bvult-elim */
+  EVALUE(UF_INT2BV_BVULT_ELIM),
 // ${rules}$
 #ifdef CVC5_API_USE_C_ENUMS
   // must be last entry
