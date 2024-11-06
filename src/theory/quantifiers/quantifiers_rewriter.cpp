@@ -115,6 +115,7 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_VAR_ELIM_INEQ,
                            TheoryRewriteCtx::PRE_DSL);
+  // we don't register MACRO_QUANT_REWRITE_BODY.
 }
 
 Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -307,6 +308,11 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         qc[0] = d_nm->mkNode(Kind::BOUND_VAR_LIST, args);
         return d_nm->mkNode(Kind::FORALL, qc);
       }
+    }
+    break;
+    case ProofRewriteRule::MACRO_QUANT_REWRITE_BODY:
+    {
+      // TODO
     }
     break;
     default: break;

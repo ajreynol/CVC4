@@ -2630,6 +2630,18 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_QUANT_VAR_ELIM_INEQ),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Macro quantifiers rewrite body**
+   *
+   * .. math::
+   *   \forall X.\> F = \forall X.\> G
+   *
+   * where :math:`G` is the result of performing rewrites on :math:`F`.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_QUANT_REWRITE_BODY),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Datatypes -- Instantiation**
    *
    * .. math::
