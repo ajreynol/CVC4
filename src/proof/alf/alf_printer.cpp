@@ -265,7 +265,7 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX:
     case ProofRewriteRule::EXISTS_ELIM:
     case ProofRewriteRule::QUANT_UNUSED_VARS:
-    //case ProofRewriteRule::QUANT_MINISCOPE:
+    // case ProofRewriteRule::QUANT_MINISCOPE:
     case ProofRewriteRule::ARRAYS_SELECT_CONST:
     case ProofRewriteRule::QUANT_MINISCOPE_FV:
     case ProofRewriteRule::RE_LOOP_ELIM:

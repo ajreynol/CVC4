@@ -48,7 +48,9 @@ namespace cvc5::internal {
 namespace theory {
 namespace arith {
 
-ArithRewriter::ArithRewriter(NodeManager* nm, OperatorElim& oe, bool expertEnabled)
+ArithRewriter::ArithRewriter(NodeManager* nm,
+                             OperatorElim& oe,
+                             bool expertEnabled)
     : TheoryRewriter(nm), d_opElim(oe), d_expertEnabled(expertEnabled)
 {
   registerProofRewriteRule(ProofRewriteRule::ARITH_POW_ELIM,

@@ -33,7 +33,7 @@ class OperatorElim;
 class ArithRewriter : public TheoryRewriter
 {
  public:
-  ArithRewriter(NodeManager* nm, OperatorElim& oe, bool expertEnabled=true);
+  ArithRewriter(NodeManager* nm, OperatorElim& oe, bool expertEnabled = true);
   RewriteResponse preRewrite(TNode n) override;
   RewriteResponse postRewrite(TNode n) override;
   /**

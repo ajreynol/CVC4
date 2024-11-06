@@ -95,18 +95,18 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     }
     case ProofRewriteRule::SEQ_LENGTH_EVAL:
     {
-      if (n.getKind()==Kind::STRING_LENGTH)
+      if (n.getKind() == Kind::STRING_LENGTH)
       {
-        if (n[0].getKind()==Kind::CONST_SEQUENCE)
+        if (n[0].getKind() == Kind::CONST_SEQUENCE)
         {
           return nodeManager()->mkConstInt(Rational(Word::getLength(n[0])));
         }
         // maybe after converting to its node form
-        if (n[0].getKind()==Kind::STRING_CONCAT)
+        if (n[0].getKind() == Kind::STRING_CONCAT)
         {
           for (const Node& nc : n[0])
           {
-            if (nc.getKind()!=Kind::SEQ_UNIT)
+            if (nc.getKind() != Kind::SEQ_UNIT)
             {
               return Node::null();
             }

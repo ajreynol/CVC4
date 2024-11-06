@@ -190,7 +190,7 @@ void AssertionPipeline::ensureRewritten(size_t i)
   Assert(i < d_nodes.size());
   replace(i, rewrite(d_nodes[i]), d_rewpg.get());
 }
-  
+
 void AssertionPipeline::enableProofs(smt::PreprocessProofGenerator* pppg)
 {
   d_pppg = pppg;

@@ -82,9 +82,10 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   {
     case ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS:
     {
-      if (n.getKind()==Kind::EQUAL && n[0].isConst() && n[1].isConst() && n[0]!=n[1])
+      if (n.getKind() == Kind::EQUAL && n[0].isConst() && n[1].isConst()
+          && n[0] != n[1])
       {
-        Assert (n[0].getType().isArray());
+        Assert(n[0].getType().isArray());
         return d_nm->mkConst(false);
       }
     }

@@ -307,7 +307,8 @@ void SetDefaults::setDefaultsPre(Options& opts)
       }
     }
     // upgrade to full strict if safe options
-    if (options().base.safeOptions && opts.smt.proofMode == options::ProofMode::FULL)
+    if (options().base.safeOptions
+        && opts.smt.proofMode == options::ProofMode::FULL)
     {
       SET_AND_NOTIFY_IF_NOT_USER(
           smt, proofMode, options::ProofMode::FULL_STRICT, "safe options");
@@ -940,8 +941,8 @@ void SetDefaults::setDefaultsPost(const LogicInfo& logic, Options& opts) const
       }
     }
     else if (logic.isQuantified() && logic.isTheoryEnabled(theory::THEORY_ARITH)
-            && logic.areRealsUsed() && !logic.areIntegersUsed()
-            && !logic.areTranscendentalsUsed())
+             && logic.areRealsUsed() && !logic.areIntegersUsed()
+             && !logic.areTranscendentalsUsed())
     {
       if (!opts.arith.nlCov && !opts.arith.nlCovWasSetByUser)
       {
@@ -1660,7 +1661,8 @@ void SetDefaults::setDefaultsQuantifiers(const LogicInfo& logic,
   }
   if (options().base.safeOptions)
   {
-    SET_AND_NOTIFY_IF_NOT_USER(quantifiers,cegqiMidpoint, true, "safe options");
+    SET_AND_NOTIFY_IF_NOT_USER(
+        quantifiers, cegqiMidpoint, true, "safe options");
   }
 }
 

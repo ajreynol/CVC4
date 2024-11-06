@@ -18,6 +18,7 @@
 #include "expr/skolem_manager.h"
 #include "options/base_options.h"
 #include "options/proof_options.h"
+#include "proof/alf/alf_printer.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node_manager.h"
 #include "rewriter/rewrite_proof_rule.h"
@@ -26,7 +27,6 @@
 #include "theory/builtin/proof_checker.h"
 #include "theory/smt_engine_subsolver.h"
 #include "theory/theory_id.h"
-#include "proof/alf/alf_printer.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory;

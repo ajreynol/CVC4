@@ -78,19 +78,19 @@ bool BasicRewriteRCons::prove(CDProof* cdp,
     return true;
   }
   // alpha equivalence?
-  if (a.isClosure() && a.getKind()==b.getKind())
+  if (a.isClosure() && a.getKind() == b.getKind())
   {
     size_t nchild = a[0].getNumChildren();
-    if (nchild==b[0].getNumChildren())
+    if (nchild == b[0].getNumChildren())
     {
       bool success = true;
       std::vector<Node> vars;
       std::vector<Node> subs;
-      for (size_t i=0; i<nchild; i++)
+      for (size_t i = 0; i < nchild; i++)
       {
-        if (a[0][i]!=b[0][i])
+        if (a[0][i] != b[0][i])
         {
-          if (a[0][i].getType()!=b[0][i].getType())
+          if (a[0][i].getType() != b[0][i].getType())
           {
             success = false;
             break;

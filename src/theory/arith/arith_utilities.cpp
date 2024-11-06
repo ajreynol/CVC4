@@ -120,8 +120,8 @@ Node mkOne(const TypeNode& tn, bool isNeg)
 
 bool isTranscendentalKind(Kind k)
 {
-  switch(k)
-  {      
+  switch (k)
+  {
     case Kind::EXPONENTIAL:
     case Kind::SINE:
     case Kind::COSINE:
@@ -135,10 +135,8 @@ bool isTranscendentalKind(Kind k)
     case Kind::ARCCOSECANT:
     case Kind::ARCSECANT:
     case Kind::ARCCOTANGENT:
-    case Kind::SQRT:
-      return true;
-    default:
-      break;
+    case Kind::SQRT: return true;
+    default: break;
   }
   return false;
 }

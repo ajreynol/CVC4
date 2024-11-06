@@ -64,7 +64,7 @@ TrustNode OperatorElim::eliminate(Node n,
   std::vector<std::pair<Node, Node>> klems;
   bool wasNonLinear = false;
   Node nn = eliminateOperators(nm, n, klems, partialOnly, wasNonLinear);
-  if (nn==n)
+  if (nn == n)
   {
     return TrustNode::null();
   }
