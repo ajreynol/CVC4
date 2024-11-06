@@ -343,7 +343,7 @@
   (BitVec m) Int)
 )
 
-(declare-const BITVECTOR_EAGER_ATOM (-> Bool Bool))
+(declare-const @bv_eager_atom (-> Bool Bool))
 
 ; internal operators
 

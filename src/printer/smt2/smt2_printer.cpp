@@ -1268,6 +1268,7 @@ std::string Smt2Printer::smtKindString(Kind k)
     case Kind::BITVECTOR_ULTBV: return "bvultbv";
     case Kind::BITVECTOR_SLTBV: return "bvsltbv";
 
+    case Kind::BITVECTOR_EAGER_ATOM: return "@bv_eager_atom";
     case Kind::BITVECTOR_FROM_BOOLS: return "@from_bools";
     case Kind::BITVECTOR_BIT: return "@bit";
     case Kind::BITVECTOR_SIZE: return "@bvsize";
