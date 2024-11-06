@@ -69,7 +69,7 @@ TheoryFiniteFields::~TheoryFiniteFields() {}
 
 TheoryRewriter* TheoryFiniteFields::getTheoryRewriter()
 {
-  if (!options().ff.ffExp)
+  if (!options().ff.ff)
   {
     return nullptr;
   }
