@@ -1353,7 +1353,7 @@ Node InferProofCons::purifyPredicate(
   }
   else if (pt == PurifyType::CORE_EQ)
   {
-    if (atom.getKind() != Kind::EQUAL || !atom[0].getType().isStringLike())
+    if (atom.getKind() != Kind::EQUAL)
     {
       // we only purify string (dis)equalities
       return lit;
@@ -1406,14 +1406,19 @@ Node InferProofCons::purifyPredicate(
 Node InferProofCons::purifyCoreTerm(
     Node n, const std::unordered_set<Node>& termsToPurify)
 {
-  if (n.getKind() == Kind::STRING_CONCAT)
+  Kind k = n.getKind();
+  if (k == Kind::STRING_CONCAT || k == Kind::STRING_LENGTH)
   {
     std::vector<Node> pcs;
     for (const Node& nc : n)
     {
       pcs.push_back(purifyCoreTerm(nc, termsToPurify));
     }
-    return NodeManager::currentNM()->mkNode(Kind::STRING_CONCAT, pcs);
+    return NodeManager::currentNM()->mkNode(k, pcs);
+  }
+  else if (!n.getType().isStringLike())
+  {
+    return n;
   }
   return maybePurifyTerm(n, termsToPurify);
 }
