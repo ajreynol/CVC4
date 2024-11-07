@@ -122,6 +122,7 @@ bool isTranscendentalKind(Kind k)
 {
   switch (k)
   {
+    case Kind::PI:
     case Kind::EXPONENTIAL:
     case Kind::SINE:
     case Kind::COSINE:
