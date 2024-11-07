@@ -194,6 +194,8 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
     break;
     case ProofRule::ARITH_POLY_NORM:
     {
+      // FIXME
+      // return true;
       // we don't support bitvectors yet
       Assert(pargs[0].getKind() == Kind::EQUAL);
       return pargs[0][0].getType().isRealOrInt();

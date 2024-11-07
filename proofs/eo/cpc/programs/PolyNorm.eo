@@ -48,17 +48,26 @@
 ; program: $mvar_mul_mvar
 ; args:
 ; - a X: The first monomial variable to multiply.
-; - b Y: The second monomial variable to multiply.
+; - c Y: The second monomial variable to multiply.
 ; return: the multiplication of the given monomial variables.
-(program $mvar_mul_mvar ((T Type) (U Type) (V Type) (W Type) (X Type) (Y Type) (Z Type) (a1 T) (a2 U :list) (b1 V) (b2 W :list))
+(program $mvar_mul_mvar ((T Type) (U Type) (V Type) (W Type) (X Type) (Y Type) (Z Type) 
+                         (a1 T) (a2 U :list) (c1 V) (c2 W :list)
+                         (m Int)  (ba1 (BitVec m)) (ba2 (BitVec m) :list) (bc1 (BitVec m)) (bc2 (BitVec m) :list))
   (X Y) Z
   (
-    (($mvar_mul_mvar (* a1 a2) (* b1 b2))  (eo::ite ($compare_var a1 b1)
-                                            (eo::cons * a1 ($mvar_mul_mvar a2 (* b1 b2)))
-                                            (eo::cons * b1 ($mvar_mul_mvar (* a1 a2) b2))))
+    (($mvar_mul_mvar (* a1 a2) (* c1 c2))  (eo::ite ($compare_var a1 c1)
+                                            (eo::cons * a1 ($mvar_mul_mvar a2 (* c1 c2)))
+                                            (eo::cons * c1 ($mvar_mul_mvar (* a1 a2) c2))))
     (($mvar_mul_mvar (* a1 a2) 1)          (* a1 a2))
-    (($mvar_mul_mvar 1 (* b1 b2))          (* b1 b2))
+    (($mvar_mul_mvar 1 (* c1 c2))          (* c1 c2))
     (($mvar_mul_mvar 1 1)                  1)
+    (($mvar_mul_mvar (bvmul ba1 ba2) (bvmul bc1 bc2))  (eo::ite ($compare_var ba1 bc1)
+                                                       (eo::cons bvmul ba1 ($mvar_mul_mvar ba2 (bvmul bc1 bc2)))
+                                                       (eo::cons bvmul bc1 ($mvar_mul_mvar (bvmul ba1 ba2) bc2))))
+    (($mvar_mul_mvar (bvmul ba1 ba2) bc1)              (eo::requires (eo::to_z bc1) 1 (bvmul ba1 ba2)))
+    (($mvar_mul_mvar ba1 (bvmul bc1 bc2))              (eo::requires (eo::to_z ba1) 1 (bvmul bc1 bc2)))
+    (($mvar_mul_mvar ba1 bc1)                          (eo::requires (eo::to_z ba1) 1
+                                                       (eo::requires (eo::to_z bc1) 1 ba1)))
   )
 )
 
@@ -101,26 +110,54 @@
   )
 )
 
+; program: $mk_nil_mvar
+(program $mk_nil_mvar ((T Type) (m Int))
+  (Type) T
+  (
+    (($mk_nil_mvar Real)        1)
+    (($mk_nil_mvar Int)         1)
+    (($mk_nil_mvar (BitVec m))  (eo::to_bin 1 m))
+  )
+)
+(define $mk_singleton_mvar ((T Type :implicit) (a T))
+  (eo::define ((at (eo::typeof a)))
+  (eo::ite (eo::is_eq ($is_arith_type at) true) 
+    (eo::cons * a ($mk_nil_mvar at)) 
+    (eo::cons bvmul a ($mk_nil_mvar at))))
+)
+
 ; program: $get_poly_norm
 ; args:
 ; - a T: The arithmetic term to process of type Int or Real.
 ; return: the polynomial corresponding to the (normalized) form of a.
-(program $get_poly_norm ((T Type) (U Type) (V Type) (a T) (a1 U) (a2 V :list))
+(program $get_poly_norm ((T Type) (U Type) (V Type) (a T) (a1 U) (a2 V :list) 
+                         (m Int) (b1 (BitVec m)) (b2 (BitVec m) :list))
   (T) @Polynomial
   (
-    (($get_poly_norm (- a1))       ($poly_neg ($get_poly_norm a1)))
-    (($get_poly_norm (+ a1 a2))    ($poly_add ($get_poly_norm a1) ($get_poly_norm a2)))
-    (($get_poly_norm (- a1 a2))    ($poly_add ($get_poly_norm a1) ($poly_neg ($get_poly_norm a2))))
-    (($get_poly_norm (* a1 a2))    ($poly_mul ($get_poly_norm a1) ($get_poly_norm a2)))
-    (($get_poly_norm (to_real a1)) ($get_poly_norm a1))
-    (($get_poly_norm a)            (eo::define ((aq (eo::to_q a)))
-                                  ; if it is a constant, which can be tested if to_q is idempotent after the first
-                                  (eo::ite (eo::is_eq aq (eo::to_q aq))
-                                    ; if it is zero, it cancels, otherwise it is 1 with itself as coefficient
-                                    (eo::ite (eo::is_eq aq 0/1)
-                                      @poly.zero
-                                      (@poly (@mon 1 aq)))
-                                  (@poly (@mon (* a) 1/1)))))    ; introduces list
+    (($get_poly_norm (- a1))        ($poly_neg ($get_poly_norm a1)))
+    (($get_poly_norm (+ a1 a2))     ($poly_add ($get_poly_norm a1) ($get_poly_norm a2)))
+    (($get_poly_norm (- a1 a2))     ($poly_add ($get_poly_norm a1) ($poly_neg ($get_poly_norm a2))))
+    (($get_poly_norm (* a1 a2))     ($poly_mul ($get_poly_norm a1) ($get_poly_norm a2)))
+    (($get_poly_norm (bvneg b1))    ($poly_neg ($get_poly_norm b1)))
+    (($get_poly_norm (bvadd b1 b2)) ($poly_add ($get_poly_norm b1) ($get_poly_norm b2)))
+    (($get_poly_norm (bvsub b1 b2)) ($poly_add ($get_poly_norm b1) ($poly_neg ($get_poly_norm b2))))
+    (($get_poly_norm (bvmul b1 b2)) ($poly_mul ($get_poly_norm b1) ($get_poly_norm b2)))
+    (($get_poly_norm (to_real a1))  ($get_poly_norm a1))
+    (($get_poly_norm a)             (eo::define ((aq (eo::to_q a)))
+                                    (eo::define ((at (eo::typeof a)))
+                                    ; if it is a constant, which can be tested if to_q is idempotent after the first
+                                    (eo::ite (eo::is_q aq)
+                                      ; if it is zero, it cancels, otherwise it is 1 with itself as coefficient
+                                      (eo::ite (eo::is_eq aq 0/1)
+                                        @poly.zero
+                                        (@poly (@mon ($mk_nil_mvar at) aq)))
+                                    (eo::ite (eo::is_bin a)
+                                      (eo::define ((az (eo::to_z a)))
+                                      ; if it is zero, it cancels, otherwise it is 1 with itself as coefficient
+                                      (eo::ite (eo::is_eq az 0)
+                                        @poly.zero
+                                        (@poly (@mon ($mk_nil_mvar at) (eo::to_q az)))))
+                                    (@poly (@mon ($mk_singleton_mvar a) 1/1)))))))    ; introduces list
   )
 )
 
@@ -130,7 +167,7 @@
 ; - b T: The second arithmetic term to process, of type Int or Real.
 ; return: true if a and b normalize to the same polynomial
 (define $is_poly_norm ((T Type :implicit) (a T) (b T))
-  (eo::is_eq ($get_poly_norm a) ($get_poly_norm b))
+  (eo::requires ($get_poly_norm a) ($get_poly_norm b) true)
 )
 
 ; program: $arith_poly_to_term_rec
