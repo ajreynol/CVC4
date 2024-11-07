@@ -3400,8 +3400,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_OR_ONE),
   /** Auto-generated from RARE rule bv-xor-duplicate */
   EVALUE(BV_XOR_DUPLICATE),
-  /** Auto-generated from RARE rule bv-xor-ones-base */
-  EVALUE(BV_XOR_ONES_BASE),
   /** Auto-generated from RARE rule bv-xor-ones */
   EVALUE(BV_XOR_ONES),
   /** Auto-generated from RARE rule bv-xor-zero */
