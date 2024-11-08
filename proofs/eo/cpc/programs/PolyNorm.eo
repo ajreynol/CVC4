@@ -33,7 +33,11 @@
   (@Polynomial Int) @Polynomial
   (
     (($poly_mod_coeffs @poly.zero w)           @poly.zero)
-    (($poly_mod_coeffs (@poly (@mon a c) p) w) (eo::cons @poly (@mon a (eo::to_q (eo::zmod (eo::to_z c) w))) ($poly_mod_coeffs p w)))
+    (($poly_mod_coeffs (@poly (@mon a c) p) w) (eo::define ((newc (eo::zmod (eo::to_z c) w)))
+                                               (eo::ite (eo::is_eq newc 0)
+                                                 ; if it becomes zero, it cancels
+                                                 ($poly_mod_coeffs p w)
+                                                 (eo::cons @poly (@mon a (eo::to_q newc)) ($poly_mod_coeffs p w)))))
   )
 )
 
@@ -156,7 +160,7 @@
     (($get_bv_poly_norm_rec (bvsub b1 b2)) ($poly_add ($get_bv_poly_norm_rec b1) ($poly_neg ($get_bv_poly_norm_rec b2))))
     (($get_bv_poly_norm_rec (bvmul b1 b2)) ($poly_mul ($get_bv_poly_norm_rec b1) ($get_bv_poly_norm_rec b2)))
     (($get_bv_poly_norm_rec b)             (eo::define ((bt (eo::typeof b)))
-                                           (eo::define ((one (eo::to_bin 1 ($bv_bitwidth bt))))
+                                           (eo::define ((one (eo::to_bin ($bv_bitwidth bt) 1)))
                                            (eo::ite (eo::is_bin b)
                                              (eo::define ((bz (eo::to_z b)))
                                              ; if it is zero, it cancels, otherwise it is 1 with itself as coefficient
@@ -169,10 +173,10 @@
 
 ; program: $get_bv_poly_norm
 ; args:
-; - w Int: The bitwidth of the second argument.
-; - b (BitVec w): The bitvector term to process.
+; - w Int: two raised to the bitwidth of the second argument.
+; - b (BitVec m): The bitvector term to process.
 ; return: the polynomial corresponding to the (normalized) form of b.
-(define $get_bv_poly_norm ((w Int) (b (BitVec w)))
+(define $get_bv_poly_norm ((m Int :implicit) (w Int) (b (BitVec m)))
   ($poly_mod_coeffs ($get_bv_poly_norm_rec b) w))
 
 ; define: $is_poly_norm
@@ -185,8 +189,8 @@
   (eo::ite (eo::is_eq ($is_arith_type at) true)
     ; if arithmetic, use arith routine on a and b
     (eo::requires ($get_arith_poly_norm a) ($get_arith_poly_norm b) true)
-    ; it bitvector, get bitwidth and use bv routine on a and b
-    (eo::define ((w ($bv_bitwidth at)))
+    ; it bitvector, get two to the power of the bitwidth and use bv routine on a and b
+    (eo::define ((w ($arith_eval_int_pow_2 ($bv_bitwidth at))))
       (eo::requires ($get_bv_poly_norm w a) ($get_bv_poly_norm w b) true))))
 )
 
