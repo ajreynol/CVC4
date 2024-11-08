@@ -188,10 +188,10 @@
   (eo::define ((at (eo::typeof a)))
   (eo::ite (eo::is_eq ($is_arith_type at) true)
     ; if arithmetic, use arith routine on a and b
-    (eo::requires ($get_arith_poly_norm a) ($get_arith_poly_norm b) true)
+    (eo::is_eq ($get_arith_poly_norm a) ($get_arith_poly_norm b))
     ; it bitvector, get two to the power of the bitwidth and use bv routine on a and b
     (eo::define ((w ($arith_eval_int_pow_2 ($bv_bitwidth at))))
-      (eo::requires ($get_bv_poly_norm w a) ($get_bv_poly_norm w b) true))))
+      (eo::is_eq ($get_bv_poly_norm w a) ($get_bv_poly_norm w b)))))
 )
 
 ; program: $arith_poly_to_term_rec
