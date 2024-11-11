@@ -18,6 +18,7 @@
 #include "expr/skolem_manager.h"
 #include "options/base_options.h"
 #include "options/proof_options.h"
+#include "proof/alf/alf_printer.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node_manager.h"
 #include "rewriter/rewrite_proof_rule.h"
@@ -37,6 +38,8 @@ ProofFinalCallback::ProofFinalCallback(Env& env)
     : EnvObj(env),
       d_ruleCount(statisticsRegistry().registerHistogram<ProofRule>(
           "finalProof::ruleCount")),
+      d_ruleEouCount(statisticsRegistry().registerHistogram<ProofRule>(
+          "finalProof::ruleUnhandledEoCount")),
       d_instRuleIds(statisticsRegistry().registerHistogram<theory::InferenceId>(
           "finalProof::instRuleId")),
       d_dslRuleCount(statisticsRegistry().registerHistogram<ProofRewriteRule>(
@@ -100,6 +103,10 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
   }
   // record stats for the rule
   d_ruleCount << r;
+  if (!proof::AlfPrinter::isHandled(options(), pn.get()))
+  {
+    d_ruleEouCount << r;
+  }
   ++d_totalRuleCount;
   // if a DSL rewrite, take DSL stat
   if (r == ProofRule::DSL_REWRITE || r == ProofRule::THEORY_REWRITE)
