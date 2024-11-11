@@ -257,6 +257,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-quant-var-elim-ineq";
     case ProofRewriteRule::MACRO_QUANT_REWRITE_BODY:
       return "macro-quant-rewrite-body";
+    case ProofRewriteRule::QUANT_VAR_ELIM_EQ: return "quant-var-elim-eq";
     case ProofRewriteRule::DT_INST: return "dt-inst";
     case ProofRewriteRule::DT_COLLAPSE_SELECTOR: return "dt-collapse-selector";
     case ProofRewriteRule::DT_COLLAPSE_TESTER: return "dt-collapse-tester";
