@@ -39,6 +39,7 @@ const char* toString(TrustId id)
     case TrustId::PREPROCESS_BV_TO_INT: return "PREPROCESS_BV_TO_INT";
     case TrustId::PREPROCESS_BV_TO_INT_LEMMA:
       return "PREPROCESS_BV_TO_INT_LEMMA";
+    case TrustId::PREPROCESS_BOOL_TO_BV: return "PREPROCESS_BOOL_TO_BV";
     case TrustId::PREPROCESS_ACKERMANN: return "PREPROCESS_ACKERMANN";
     case TrustId::PREPROCESS_ACKERMANN_LEMMA:
       return "PREPROCESS_ACKERMANN_LEMMA";
@@ -87,8 +88,8 @@ const char* toString(TrustId id)
       return "MACRO_THEORY_REWRITE_RCONS_SIMPLE";
     case TrustId::INT_BLASTER: return "INT_BLASTER";
     // unknown sources
-    case TrustId::UNKNOWN_PREPROCESS: return "PREPROCESS";
-    case TrustId::UNKNOWN_PREPROCESS_LEMMA: return "PREPROCESS_LEMMA";
+    case TrustId::UNKNOWN_PREPROCESS: return "UNKNOWN_PREPROCESS";
+    case TrustId::UNKNOWN_PREPROCESS_LEMMA: return "UNKNOWN_PREPROCESS_LEMMA";
     default: return "TrustId::Unknown";
   };
 }
