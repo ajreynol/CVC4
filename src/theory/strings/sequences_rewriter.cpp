@@ -2626,13 +2626,16 @@ Node SequencesRewriter::rewriteContains(Node node)
       Node ret = nm->mkNode(Kind::EQUAL, node[0], node[1]);
       return returnRewrite(node, ret, Rewrite::CTN_SUBSTR_EQ_LEN);
     }
-    if (node[0][2].getKind()==Kind::STRING_INDEXOF && node[0][2][0]==node[0][0] && node[0][2][1]==node[1] && node[0][2][2]==d_zero && node[0][2][2]==node[0][1])
+    if (node[0][2].getKind()==Kind::STRING_INDEXOF)
     {
-      if (d_stringsEntail.checkNonEmpty(node[1]))
+      if (node[0][2][1]==node[1] && node[0][2][2]==d_zero && node[0][2][2]==node[0][1])
       {
-        // y non-empty =>
-        // (str.contains (str.substr x 0 (str.indexof x y 0)) y) ---> false
-        return returnRewrite(node, d_false, Rewrite::CTN_SUBSTR_INDEXOF);
+        if (d_stringsEntail.checkIsPrefix(node[0][2][0], node[0][0]) && d_stringsEntail.checkNonEmpty(node[1]))
+        {
+          // y non-empty =>
+          // (str.contains (str.substr x 0 (str.indexof x' y 0)) y) ---> false
+          return returnRewrite(node, d_false, Rewrite::CTN_SUBSTR_INDEXOF);
+        }
       }
     }
   }

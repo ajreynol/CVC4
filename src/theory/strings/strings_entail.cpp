@@ -724,6 +724,29 @@ bool StringsEntail::checkLengthOne(Node s, bool strict)
          && (!strict || d_arithEntail.check(len, true));
 }
 
+bool StringsEntail::checkIsPrefix(const Node& s, const Node& t)
+{
+  if (s==t)
+  {
+    return true;
+  }
+  if (s.getKind()==Kind::STRING_SUBSTR)
+  {
+    if (s[0]==t && s[1].isConst() && s[1].getConst<Rational>().sgn()==0)
+    {
+      return true;
+    }
+    if (t.getKind()==Kind::STRING_SUBSTR)
+    {
+      if (t[0]==s[0] && t[1]==s[1])
+      {
+        return d_arithEntail.check(t[2], s[2]);
+      }
+    }
+  }
+  return false;
+}
+
 bool StringsEntail::checkMultisetSubset(Node a, Node b)
 {
   std::vector<Node> avec;

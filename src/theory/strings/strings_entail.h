@@ -248,9 +248,18 @@ class StringsEntail
    * @param s The string to check
    * @param strict If true, the string must have exactly length one, otherwise
    * at most length one
-   * @return True if the string has at most/exactly length one, false otherwise
+   * @return True if we can infer the string has at most/exactly length one,
+   * false otherwise
    */
   bool checkLengthOne(Node s, bool strict = false);
+  
+  /**
+   * Returns true if we can (easily) infer s is a prefix of t.
+   * @param s The string to check
+   * @param t The string to check
+   * @return True if we can infer s is a prefix of t, false otherwise
+   */
+  bool checkIsPrefix(const Node& s, const Node& t);
 
   /**
    * Checks whether it is always true that `a` is a strict subset of `b` in the
