@@ -82,7 +82,15 @@ Node TermRegistry::eagerReduce(Node t, SkolemCache* sc, uint32_t alphaCard)
   NodeManager* nm = NodeManager::currentNM();
   Node lemma;
   Kind tk = t.getKind();
-  if (tk == Kind::STRING_TO_CODE)
+  if (tk == Kind::STRING_SUBSTR)
+  {
+    Node len = nm->mkNode(Kind::STRING_LENGTH, t);
+    Node zero = nm->mkConstInt(Rational(0));
+    Node cond = nm->mkNode(Kind::AND, nm->mkNode(Kind::GEQ, t[1], zero), nm->mkNode(Kind::GEQ, t[2], zero));
+    Node cond2 = nm->mkNode(Kind::GEQ, nm->mkNode(Kind::STRING_LENGTH, t[0]), nm->mkNode(Kind::ADD, t[1], t[2]));
+    lemma = nm->mkNode(Kind::ITE, cond, nm->mkNode(Kind::IMPLIES, cond2, len.eqNode(t[2])), len.eqNode(zero));
+  }
+  else if (tk == Kind::STRING_TO_CODE)
   {
     // ite( str.len(s)==1, 0 <= str.code(s) < |A|, str.code(s)=-1 )
     Node len = nm->mkNode(Kind::STRING_LENGTH, t[0]);
@@ -302,6 +310,11 @@ void TermRegistry::registerTermInternal(Node n)
     //  for variables, split on empty vs positive length
     //  for concat/const/replace, introduce proxy var and state length relation
     regTermLem = getRegisterTermLemma(n);
+    if (n.getKind()==Kind::STRING_SUBSTR)
+    {
+      TrustNode regTermLem2 = eagerReduceTrusted(n);
+      d_im->trustedLemma(regTermLem2, InferenceId::STRINGS_REGISTER_TERM);
+    }
   }
   else
   {
