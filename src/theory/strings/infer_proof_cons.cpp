@@ -305,7 +305,7 @@ void InferProofCons::convert(InferenceId infer,
     {
       ps.d_rule = ProofRule::STRING_EXT;
     }
-      break;
+    break;
     // ========================== substitution+rewriting, CONCAT_EQ, ...
     case InferenceId::STRINGS_F_CONST:
     case InferenceId::STRINGS_F_UNIFY:
@@ -479,7 +479,8 @@ void InferProofCons::convert(InferenceId infer,
         }
         else
         {
-          Trace("strings-ipc-core") << "...failed " << conflict << " via " << r << " " << childrenC << std::endl;
+          Trace("strings-ipc-core") << "...failed " << conflict << " via " << r
+                                    << " " << childrenC << std::endl;
         }
       }
       else if (infer == InferenceId::STRINGS_F_NCTN
@@ -872,17 +873,18 @@ void InferProofCons::convert(InferenceId infer,
     // ========================== unit injectivity
     case InferenceId::STRINGS_UNIT_INJ:
     {
-      Assert (conc.getKind()==Kind::EQUAL);
-      Assert (ps.d_children.size()==1 && ps.d_children[0].getKind()==Kind::EQUAL);
+      Assert(conc.getKind() == Kind::EQUAL);
+      Assert(ps.d_children.size() == 1
+             && ps.d_children[0].getKind() == Kind::EQUAL);
       Node concS =
-            psb.tryStep(ProofRule::STRING_SEQ_UNIT_INJ, ps.d_children, {});
+          psb.tryStep(ProofRule::STRING_SEQ_UNIT_INJ, ps.d_children, {});
       if (!concS.isNull())
       {
         // may need to apply symmetry
-        if (concS!=conc)
+        if (concS != conc)
         {
           Node ss = psb.tryStep(ProofRule::SYMM, {concS}, {});
-          useBuffer = (ss==conc);
+          useBuffer = (ss == conc);
         }
         else
         {

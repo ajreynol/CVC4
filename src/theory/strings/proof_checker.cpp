@@ -72,7 +72,8 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
   NodeManager* nm = nodeManager();
   // core rules for word equations
   if (id == ProofRule::CONCAT_EQ || id == ProofRule::CONCAT_UNIFY
-      || id == ProofRule::CONCAT_CONFLICT || id == ProofRule::CONCAT_CONFLICT_DEQ || id == ProofRule::CONCAT_SPLIT
+      || id == ProofRule::CONCAT_CONFLICT
+      || id == ProofRule::CONCAT_CONFLICT_DEQ || id == ProofRule::CONCAT_SPLIT
       || id == ProofRule::CONCAT_CSPLIT || id == ProofRule::CONCAT_LPROP
       || id == ProofRule::CONCAT_CPROP)
   {
@@ -540,7 +541,8 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
       return Node::null();
     }
     SkolemCache skc(nm, nullptr);
-    return CoreSolver::getExtensionalityConclusion(nm, deq[0][0], deq[0][1], &skc);
+    return CoreSolver::getExtensionalityConclusion(
+        nm, deq[0][0], deq[0][1], &skc);
   }
   else if (id == ProofRule::MACRO_STRING_INFERENCE)
   {
