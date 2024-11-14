@@ -862,7 +862,23 @@ void InferProofCons::convert(InferenceId infer,
     // ========================== unit injectivity
     case InferenceId::STRINGS_UNIT_INJ:
     {
-      ps.d_rule = ProofRule::STRING_SEQ_UNIT_INJ;
+      Assert (conc.getKind()==Kind::EQUAL);
+      Assert (ps.d_children.size()==1 && ps.d_children[0].getKind()==Kind::EQUAL);
+      Node concS =
+            psb.tryStep(ProofRule::STRING_SEQ_UNIT_INJ, ps.d_children, {});
+      if (!concS.isNull())
+      {
+        // may need to apply symmetry
+        if (concS!=conc)
+        {
+          Node ss = psb.tryStep(ProofRule::SYMM, {concS}, {});
+          useBuffer = (ss==conc);
+        }
+        else
+        {
+          useBuffer = true;
+        }
+      }
     }
     break;
     // ========================== prefix conflict
