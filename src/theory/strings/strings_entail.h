@@ -252,7 +252,7 @@ class StringsEntail
    * false otherwise
    */
   bool checkLengthOne(Node s, bool strict = false);
-  
+
   /**
    * Returns true if we can (easily) infer s is a prefix of t.
    * @param s The string to check

@@ -2619,18 +2619,20 @@ Node SequencesRewriter::rewriteContains(Node node)
   else if (node[0].getKind() == Kind::STRING_SUBSTR)
   {
     // TODO: Remove with under-/over-approximation
-    if (node[0][2].getKind()==Kind::STRING_LENGTH && node[0][2][0] == node[1])
+    if (node[0][2].getKind() == Kind::STRING_LENGTH && node[0][2][0] == node[1])
     {
       // (str.contains (str.substr x n (str.len y)) y) --->
       //   (= (str.substr x n (str.len y)) y)
       Node ret = nm->mkNode(Kind::EQUAL, node[0], node[1]);
       return returnRewrite(node, ret, Rewrite::CTN_SUBSTR_EQ_LEN);
     }
-    if (node[0][2].getKind()==Kind::STRING_INDEXOF)
+    if (node[0][2].getKind() == Kind::STRING_INDEXOF)
     {
-      if (node[0][2][1]==node[1] && node[0][2][2]==d_zero && node[0][2][2]==node[0][1])
+      if (node[0][2][1] == node[1] && node[0][2][2] == d_zero
+          && node[0][2][2] == node[0][1])
       {
-        if (d_stringsEntail.checkIsPrefix(node[0][2][0], node[0][0]) && d_stringsEntail.checkNonEmpty(node[1]))
+        if (d_stringsEntail.checkIsPrefix(node[0][2][0], node[0][0])
+            && d_stringsEntail.checkNonEmpty(node[1]))
         {
           // y non-empty =>
           // (str.contains (str.substr x 0 (str.indexof x' y 0)) y) ---> false
@@ -2968,7 +2970,8 @@ Node SequencesRewriter::rewriteIndexofRe(Node node)
   Node n = node[2];
   Node slen = nm->mkNode(Kind::STRING_LENGTH, s);
 
-  if (d_arithEntail.check(d_zero, n, true) || d_arithEntail.check(n, slen, true))
+  if (d_arithEntail.check(d_zero, n, true)
+      || d_arithEntail.check(n, slen, true))
   {
     Node ret = nm->mkConstInt(Rational(-1));
     return returnRewrite(node, ret, Rewrite::INDEXOF_RE_INVALID_INDEX);
