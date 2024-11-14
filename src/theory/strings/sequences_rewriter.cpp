@@ -2634,7 +2634,7 @@ Node SequencesRewriter::rewriteContains(Node node)
         if (d_stringsEntail.checkIsPrefix(node[0][2][0], node[0][0])
             && d_stringsEntail.checkNonEmpty(node[1]))
         {
-          // y non-empty =>
+          // y non-empty, x' is a prefix of x =>
           // (str.contains (str.substr x 0 (str.indexof x' y 0)) y) ---> false
           return returnRewrite(node, d_false, Rewrite::CTN_SUBSTR_INDEXOF);
         }

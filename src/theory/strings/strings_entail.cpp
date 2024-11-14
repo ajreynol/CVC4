@@ -744,6 +744,17 @@ bool StringsEntail::checkIsPrefix(const Node& s, const Node& t)
       }
     }
   }
+  if (t.getKind()==Kind::STRING_CONCAT)
+  {
+    if (t[0]==s)
+    {
+      return true;
+    }
+    if (t[0].isConst())
+    {
+      // TODO
+    }
+  }
   return false;
 }
 
