@@ -477,6 +477,10 @@ void InferProofCons::convert(InferenceId infer,
           useBuffer = true;
           Trace("strings-ipc-core") << "...success!" << std::endl;
         }
+        else
+        {
+          Trace("strings-ipc-core") << "...failed " << conflict << " via " << r << " " << childrenC << std::endl;
+        }
       }
       else if (infer == InferenceId::STRINGS_F_NCTN
                || infer == InferenceId::STRINGS_N_NCTN)
