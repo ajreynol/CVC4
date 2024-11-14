@@ -300,6 +300,11 @@ void InferProofCons::convert(InferenceId infer,
       useBuffer = (mainEqSRew3 == conc);
     }
     break;
+    // ========================== extensionality
+    case InferenceId::STRINGS_DEQ_EXTENSIONALITY:
+    {
+    }
+      break;
     // ========================== substitution+rewriting, CONCAT_EQ, ...
     case InferenceId::STRINGS_F_CONST:
     case InferenceId::STRINGS_F_UNIFY:

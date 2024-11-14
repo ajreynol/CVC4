@@ -1786,6 +1786,21 @@ enum ENUM(ProofRule)
   EVALUE(STRING_SEQ_UNIT_INJ),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Sequence extensionality**
+   *
+   * .. math::
+   *
+   *   \inferrule{s \neq t\mid -}
+   *   {\mathit{seq.len}(s) \neq \mathit{seq.len}(t) \vee (\mathit{seq.nth}(s,k)\neq\mathit{set.nth}(t,k) \wedge 0 \leq k \wedge k < \mathit{seq.len}(s))}
+   *
+   * where :math:`k` is the :math:`\texttt{STRINGS_DEQ_DIFF}` skolem for
+   * `(s, t)`.
+   *
+   * \endverbatim
+   */
+  EVALUE(STRING_SEQ_EXT),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Strings -- (Macro) String inference**
    *
    * .. math::
