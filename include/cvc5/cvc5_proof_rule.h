@@ -3536,6 +3536,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_CONTAINS_EMP),
   /** Auto-generated from RARE rule str-contains-is-emp */
   EVALUE(STR_CONTAINS_IS_EMP),
+  /** Auto-generated from RARE rule str-contains-substr-before-indexof */
+  EVALUE(STR_CONTAINS_SUBSTR_BEFORE_INDEXOF),
   /** Auto-generated from RARE rule str-concat-emp */
   EVALUE(STR_CONCAT_EMP),
   /** Auto-generated from RARE rule str-at-elim */

@@ -1906,6 +1906,7 @@ set(regress_0_tests
   regress0/strings/std2.6.1.smt2
   regress0/strings/str_unsound_ext_rew_eq.smt2
   regress0/strings/str-in-re-mixed-include.smt2
+  regress0/strings/str-rewrite-issue11362.smt2
   regress0/strings/str-rev-simple.smt2
   regress0/strings/str003.smt2
   regress0/strings/str004.smt2

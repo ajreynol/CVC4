@@ -352,6 +352,7 @@ class SequencesRewriter : public TheoryRewriter
   Node d_sigmaStar;
   Node d_true;
   Node d_false;
+  Node d_zero;
 }; /* class SequencesRewriter */
 
 }  // namespace strings

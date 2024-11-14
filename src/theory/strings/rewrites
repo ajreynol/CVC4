@@ -203,6 +203,11 @@
   (str.contains x y)
   (= x y))
 
+(define-cond-rule str-contains-substr-before-indexof ((x ?Seq) (y ?Seq))
+  (> (str.len y) 0)
+  (str.contains (str.substr x 0 (str.indexof x y 0)) y)
+  false)
+
 (define-rule str-concat-emp ((xs String :list) (ys String :list)) 
   (str.++ xs "" ys) 
   (str.++ xs ys))
