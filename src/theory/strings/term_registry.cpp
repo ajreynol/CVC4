@@ -310,11 +310,13 @@ void TermRegistry::registerTermInternal(Node n)
     //  for variables, split on empty vs positive length
     //  for concat/const/replace, introduce proxy var and state length relation
     regTermLem = getRegisterTermLemma(n);
+    /*
     if (n.getKind()==Kind::STRING_SUBSTR)
     {
       TrustNode regTermLem2 = eagerReduceTrusted(n);
       d_im->trustedLemma(regTermLem2, InferenceId::STRINGS_REGISTER_TERM);
     }
+    */
   }
   else
   {
