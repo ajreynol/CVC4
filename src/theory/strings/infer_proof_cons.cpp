@@ -303,6 +303,7 @@ void InferProofCons::convert(InferenceId infer,
     // ========================== extensionality
     case InferenceId::STRINGS_DEQ_EXTENSIONALITY:
     {
+      ps.d_rule = ProofRule::STRING_EXT;
     }
       break;
     // ========================== substitution+rewriting, CONCAT_EQ, ...

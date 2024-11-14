@@ -60,7 +60,7 @@ void StringProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::RE_UNFOLD_NEG_CONCAT_FIXED, this);
   pc->registerChecker(ProofRule::STRING_CODE_INJ, this);
   pc->registerChecker(ProofRule::STRING_SEQ_UNIT_INJ, this);
-  pc->registerChecker(ProofRule::STRING_SEQ_EXT, this);
+  pc->registerChecker(ProofRule::STRING_EXT, this);
   // trusted rule
   pc->registerTrustedChecker(ProofRule::MACRO_STRING_INFERENCE, this, 2);
 }
@@ -529,26 +529,18 @@ Node StringProofRuleChecker::checkInternal(ProofRule id,
     AlwaysAssert(t[0].getType() == t[1].getType());
     return t[0].eqNode(t[1]);
   }
-  else if (id == ProofRule::STRING_SEQ_EXT)
+  else if (id == ProofRule::STRING_EXT)
   {
     Assert(children.size() == 1);
     Assert(args.empty());
     Node deq = children[0];
     if (deq.getKind() != Kind::NOT || deq[0].getKind() != Kind::EQUAL
-        || !deq[0][0].getType().isSequence())
+        || !deq[0][0].getType().isStringLike())
     {
       return Node::null();
     }
-    Node a = deq[0][0];
-    Node b = deq[0][1];
-    SkolemManager* sm = nm->getSkolemManager();
-    Node k = sm->mkSkolemFunction(SkolemId::STRINGS_DEQ_DIFF, {a, b});
-    Node len1 = nm->mkNode(Kind::STRING_LENGTH, a);
-    Node len2 = nm->mkNode(Kind::STRING_LENGTH, b);
-    Node conc2 = nm->mkNode(Kind::LEQ, d_zero, k);
-    Node conc3 = nm->mkNode(Kind::LT, k, len1);
-    Node lenDeq = nm->mkNode(Kind::EQUAL, len1, len2).negate();
-    return nm->mkNode(Kind::OR, lenDeq, nm->mkAnd({conc1, conc2, conc3}));
+    SkolemCache skc(nm, nullptr);
+    return CoreSolver::getExtensionalityConclusion(nm, deq[0][0], deq[0][1], &skc);
   }
   else if (id == ProofRule::MACRO_STRING_INFERENCE)
   {
