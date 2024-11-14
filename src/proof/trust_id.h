@@ -166,7 +166,7 @@ enum class TrustId : uint32_t
   QUANTIFIERS_PREPROCESS,
   /** */
   QUANTIFIERS_INST_REWRITE,
-  /** 
+  /**
    * An existential corresponding to a witness term introduced e.g. in
    * quantifier instantiation
    */
