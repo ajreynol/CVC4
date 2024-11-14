@@ -3730,6 +3730,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_OPT_ELIM),
   /** Auto-generated from RARE rule re-diff-elim */
   EVALUE(RE_DIFF_ELIM),
+  /** Auto-generated from RARE rule re-plus-elim */
+  EVALUE(RE_PLUS_ELIM),
   /** Auto-generated from RARE rule re-concat-emp */
   EVALUE(RE_CONCAT_EMP),
   /** Auto-generated from RARE rule re-concat-none */
