@@ -307,3 +307,9 @@
     :conclusion F
     :sorry
 )
+
+(declare-rule trust_internal ((P Bool) (F Bool))
+    :premise-list P and
+    :args (F)
+    :conclusion F
+)
