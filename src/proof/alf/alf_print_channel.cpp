@@ -169,9 +169,15 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r,
     }
   }
   d_out << std::endl;
-  
+
   // trust takes a premise-list which must be specified even if empty
-  printStepInternal(isInternalTrust ? "trust_internal" : "trust", n, i, premises, {nc}, false, true);
+  printStepInternal(isInternalTrust ? "trust_internal" : "trust",
+                    n,
+                    i,
+                    premises,
+                    {nc},
+                    false,
+                    true);
 }
 
 void AlfPrintChannelOut::printNodeInternal(std::ostream& out, Node n)

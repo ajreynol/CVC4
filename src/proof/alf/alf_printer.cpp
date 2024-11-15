@@ -984,7 +984,8 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
     bool isInternalTrust = false;
     if (options().proof.cpcProofAllowInternalTrust)
     {
-      isInternalTrust = (r != ProofRule::TRUST && r != ProofRule::TRUST_THEORY_REWRITE);
+      isInternalTrust =
+          (r != ProofRule::TRUST && r != ProofRule::TRUST_THEORY_REWRITE);
     }
     out->printTrustStep(r,
                         conclusionPrint,

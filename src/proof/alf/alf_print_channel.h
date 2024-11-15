@@ -67,7 +67,7 @@ class AlfPrintChannel
                               const std::vector<size_t>& premises,
                               const std::vector<Node>& args,
                               TNode conc,
-                                        bool isInternalTrust) = 0;
+                              bool isInternalTrust) = 0;
 };
 
 /** Prints the proof to output stream d_out */
@@ -93,7 +93,7 @@ class AlfPrintChannelOut : public AlfPrintChannel
                       const std::vector<size_t>& premises,
                       const std::vector<Node>& args,
                       TNode conc,
-                                        bool isInternalTrust) override;
+                      bool isInternalTrust) override;
 
   /**
    * Print node to stream in the expected format of ALF.
@@ -156,7 +156,7 @@ class AlfPrintChannelPre : public AlfPrintChannel
                       const std::vector<size_t>& premises,
                       const std::vector<Node>& args,
                       TNode conc,
-                                        bool isInternalTrust) override;
+                      bool isInternalTrust) override;
 
  private:
   /** The let binding */
