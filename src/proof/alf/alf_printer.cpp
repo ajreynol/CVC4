@@ -959,17 +959,18 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
   // if we don't handle the rule, print trust
   if (!handled)
   {
+    ProofRule r = pn->getRule();
     if (!options().proof.proofAllowTrust)
     {
       std::stringstream ss;
-      ss << pn->getRule();
-      if (pn->getRule() == ProofRule::THEORY_REWRITE)
+      ss << r;
+      if (r == ProofRule::THEORY_REWRITE)
       {
         ProofRewriteRule prid;
         rewriter::getRewriteRule(pn->getArguments()[0], prid);
         ss << " (" << prid << ")";
       }
-      else if (pn->getRule() == ProofRule::TRUST)
+      else if (r == ProofRule::TRUST)
       {
         TrustId tid;
         getTrustId(pn->getArguments()[0], tid);
@@ -981,12 +982,18 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
                     << ", but --" << options::proof::longName::proofAllowTrust
                     << " is false" << std::endl;
     }
-    out->printTrustStep(pn->getRule(),
+    bool isInternalTrust = false;
+    if (options().proof.cpcProofAllowInternalTrust)
+    {
+      isInternalTrust = (r != ProofRule::TRUST && r != ProofRule::TRUST_THEORY_REWRITE);
+    }
+    out->printTrustStep(r,
                         conclusionPrint,
                         id,
                         premises,
                         pn->getArguments(),
-                        conclusion);
+                        conclusion,
+                        isInternalTrust);
     return;
   }
   std::string rname = getRuleName(pn);

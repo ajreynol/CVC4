@@ -245,3 +245,11 @@ name   = "Proof"
   type       = "bool"
   default    = "true"
   help       = "Whether to allow trust in the proof printer (when applicable)"
+
+[[option]]
+  name       = "cpcProofAllowInternalTrust"
+  category   = "expert"
+  long       = "cpc-proof-allow-internal-trust"
+  type       = "bool"
+  default    = "false"
+  help       = "Whether to allow trust in the proof printer (when applicable)"

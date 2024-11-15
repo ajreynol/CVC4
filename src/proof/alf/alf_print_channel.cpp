@@ -131,7 +131,8 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r,
                                         size_t i,
                                         const std::vector<size_t>& premises,
                                         const std::vector<Node>& args,
-                                        TNode nc)
+                                        TNode nc,
+                                        bool isInternalTrust)
 {
   Assert(!nc.isNull());
   if (d_trackWarn)
@@ -168,8 +169,9 @@ void AlfPrintChannelOut::printTrustStep(ProofRule r,
     }
   }
   d_out << std::endl;
+  
   // trust takes a premise-list which must be specified even if empty
-  printStepInternal("trust", n, i, premises, {nc}, false, true);
+  printStepInternal(isInternalTrust ? "trust_internal" : "trust", n, i, premises, {nc}, false, true);
 }
 
 void AlfPrintChannelOut::printNodeInternal(std::ostream& out, Node n)
@@ -233,7 +235,8 @@ void AlfPrintChannelPre::printTrustStep(ProofRule r,
                                         size_t i,
                                         const std::vector<size_t>& premises,
                                         const std::vector<Node>& args,
-                                        TNode nc)
+                                        TNode nc,
+                                        bool isInternalTrust)
 {
   Assert(!nc.isNull());
   processInternal(nc);
