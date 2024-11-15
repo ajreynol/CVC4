@@ -959,7 +959,6 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
   // if we don't handle the rule, print trust
   if (!handled)
   {
-    ProofRule r = pn->getRule();
     if (!options().proof.proofAllowTrust)
     {
       std::stringstream ss;
