@@ -1786,7 +1786,7 @@ enum ENUM(ProofRule)
   EVALUE(STRING_SEQ_UNIT_INJ),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings -- Sequence extensionality**
+   * **Strings -- Extensionality**
    *
    * .. math::
    *
