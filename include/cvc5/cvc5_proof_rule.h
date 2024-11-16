@@ -2566,6 +2566,7 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(QUANT_MERGE_PRENEX),
+  EVALUE(QUANT_PRENEX),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Quantifiers -- Miniscoping**

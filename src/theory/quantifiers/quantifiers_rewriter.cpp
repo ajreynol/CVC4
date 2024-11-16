@@ -105,6 +105,8 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::QUANT_MERGE_PRENEX,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::QUANT_PRENEX,
+                           TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::QUANT_MINISCOPE,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_PARTITION_CONNECTED_FV,
@@ -169,6 +171,23 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       if (q != n)
       {
         return q;
+      }
+    }
+    break;
+    case ProofRewriteRule::QUANT_PRENEX:
+    {
+      if (n.getKind()==Kind::FORALL)
+      {
+        std::vector<Node> args, nargs;
+        Node nn = computePrenex(n, n[1], args, nargs, true, false);
+        Assert (nargs.empty());
+        if (!args.empty())
+        {
+          std::vector<Node> qargs(n[0].begin(), n[0].end());
+          qargs.insert(qargs.end(), args.begin(), args.end());
+          Node bvl = d_nm->mkNode(Kind::BOUND_VAR_LIST, qargs);
+          return d_nm->mkNode(Kind::FORALL, bvl, nn);
+        }
       }
     }
     break;
@@ -1642,8 +1661,8 @@ Node QuantifiersRewriter::computeVarElimination(Node body,
 
 Node QuantifiersRewriter::computePrenex(Node q,
                                         Node body,
-                                        std::unordered_set<Node>& args,
-                                        std::unordered_set<Node>& nargs,
+                                        std::vector<Node>& args,
+                                        std::vector<Node>& nargs,
                                         bool pol,
                                         bool prenexAgg) const
 {
@@ -1684,11 +1703,11 @@ Node QuantifiersRewriter::computePrenex(Node q,
       }
       if (pol)
       {
-        args.insert(subs.begin(), subs.end());
+        args.insert(args.end(), subs.begin(), subs.end());
       }
       else
       {
-        nargs.insert(subs.begin(), subs.end());
+        nargs.insert(nargs.end(), subs.begin(), subs.end());
       }
       Node newBody = body[1];
       newBody = newBody.substitute( terms.begin(), terms.end(), subs.begin(), subs.end() );
@@ -2262,7 +2281,7 @@ Node QuantifiersRewriter::computeOperation(Node f,
     }
     else
     {
-      std::unordered_set<Node> argsSet, nargsSet;
+      std::vector<Node> argsSet, nargsSet;
       n = computePrenex(f, n, argsSet, nargsSet, true, false);
       Assert(nargsSet.empty());
       args.insert(args.end(), argsSet.begin(), argsSet.end());
