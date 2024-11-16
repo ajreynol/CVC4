@@ -2850,6 +2850,7 @@ enum ENUM(ProofRewriteRule)
    */
   EVALUE(BV_REPEAT_ELIM),
   EVALUE(STR_CTN_MULTISET_SUBSET),
+  EVALUE(STR_EQ_LEN_UNIFY_PREFIX),
   EVALUE(STR_EQ_LEN_UNIFY),
   /**
    * \verbatim embed:rst:leading-asterisk

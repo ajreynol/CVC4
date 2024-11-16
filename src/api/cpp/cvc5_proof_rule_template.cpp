@@ -277,6 +277,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::BV_BITWISE_SLICING: return "bv-bitwise-slicing";
     case ProofRewriteRule::BV_REPEAT_ELIM: return "bv-repeat-elim";
     case ProofRewriteRule::STR_CTN_MULTISET_SUBSET: return "str-ctn-multiset-subset";
+    case ProofRewriteRule::STR_EQ_LEN_UNIFY_PREFIX: return "str-eq-len-unify-prefix";
     case ProofRewriteRule::STR_EQ_LEN_UNIFY: return "str-eq-len-unify";
     case ProofRewriteRule::RE_LOOP_ELIM: return "re-loop-elim";
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
