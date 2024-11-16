@@ -133,8 +133,6 @@ enum class TrustId : uint32_t
    * values as used by ProofRule::ARITH_MULT_ABS_COMPARISON.
    */
   ARITH_NL_COMPARE_LIT_TRANSFORM,
-  /** Arithmetic operator elimination */
-  ARITH_OP_ELIM,
   /** An extended theory rewrite */
   EXT_THEORY_REWRITE,
   /** A rewrite whose proof could not be elaborated */

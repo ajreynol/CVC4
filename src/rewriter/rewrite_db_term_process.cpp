@@ -109,6 +109,8 @@ Node RewriteDbNodeConverter::postConvert(Node n)
   }
   else if (k == Kind::APPLY_CONSTRUCTOR)
   {
+    // We apply annotations to parametric datatype constructors, which is
+    // a no-op based on our proof signature.
     TypeNode tn = n.getType();
     if (tn.isParametricDatatype())
     {

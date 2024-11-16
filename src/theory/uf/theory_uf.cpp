@@ -436,7 +436,7 @@ void TheoryUF::presolve() {
   Trace("uf") << "uf: end presolve()" << endl;
 }
 
-void TheoryUF::ppStaticLearn(TNode n, NodeBuilder& learned)
+void TheoryUF::ppStaticLearn(TNode n, std::vector<TrustNode>& learned)
 {
   //TimerStat::CodeTimer codeTimer(d_staticLearningTimer);
 
@@ -547,7 +547,9 @@ void TheoryUF::ppStaticLearn(TNode n, NodeBuilder& learned)
         Trace("diamonds") << "+ C holds" << endl;
         Node newEquality = a.eqNode(d);
         Trace("diamonds") << "  ==> " << newEquality << endl;
-        learned << n.impNode(newEquality);
+        Node lem = n.impNode(newEquality);
+        TrustNode trn = TrustNode::mkTrustLemma(lem, nullptr);
+        learned.emplace_back(trn);
       } else {
         Trace("diamonds") << "+ C fails" << endl;
       }
