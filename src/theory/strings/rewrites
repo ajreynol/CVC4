@@ -22,10 +22,10 @@
   (= x y)
   false)
 
-;(define-cond-rule str-eq-len-false ((x String) (y String))
-;  (not (= (str.len x) (str.len y)))
-;  (= x y)
-;  false)
+(define-cond-rule str-eq-len-false ((x String) (y String))
+  (not (= (str.len x) (str.len y)))
+  (= x y)
+  false)
 
 (define-rule str-concat-flatten ((xs ?Seq :list) (s ?Seq) (ys ?Seq :list) (zs ?Seq :list))
   (str.++ xs (str.++ s ys) zs)

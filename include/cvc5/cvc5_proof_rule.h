@@ -3570,6 +3570,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_EQ_CTN_FULL_FALSE1),
   /** Auto-generated from RARE rule str-eq-ctn-full-false2 */
   EVALUE(STR_EQ_CTN_FULL_FALSE2),
+  /** Auto-generated from RARE rule str-eq-len-false */
+  EVALUE(STR_EQ_LEN_FALSE),
   /** Auto-generated from RARE rule str-concat-flatten */
   EVALUE(STR_CONCAT_FLATTEN),
   /** Auto-generated from RARE rule str-concat-flatten-eq */
