@@ -43,8 +43,8 @@ const char* toString(TrustId id)
     case TrustId::PREPROCESS_ACKERMANN: return "PREPROCESS_ACKERMANN";
     case TrustId::PREPROCESS_ACKERMANN_LEMMA:
       return "PREPROCESS_ACKERMANN_LEMMA";
-    case TrustId::PREPROCESS_STATIC_LEARNING:
-      return "PREPROCESS_STATIC_LEARNING";
+    case TrustId::PREPROCESS_STATIC_LEARNING_LEMMA:
+      return "PREPROCESS_STATIC_LEARNING_LEMMA";
     case TrustId::PREPROCESS_HO_ELIM: return "PREPROCESS_HO_ELIM";
     case TrustId::PREPROCESS_HO_ELIM_LEMMA: return "PREPROCESS_HO_ELIM_LEMMA";
     case TrustId::PREPROCESS_BITVECTOR_EAGER_ATOMS:
@@ -71,6 +71,7 @@ const char* toString(TrustId id)
     case TrustId::ARITH_DIO_LEMMA: return "ARITH_DIO_LEMMA";
     case TrustId::ARITH_NL_COMPARE_LIT_TRANSFORM:
       return "ARITH_NL_COMPARE_LIT_TRANSFORM";
+    case TrustId::DIAMONDS: return "DIAMONDS";
     case TrustId::EXT_THEORY_REWRITE: return "EXT_THEORY_REWRITE";
     case TrustId::REWRITE_NO_ELABORATE: return "REWRITE_NO_ELABORATE";
     case TrustId::FLATTENING_REWRITE: return "FLATTENING_REWRITE";

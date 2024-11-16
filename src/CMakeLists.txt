@@ -167,6 +167,8 @@ libcvc5_add_sources(
   proof/conv_seq_proof_generator.cpp
   proof/conv_seq_proof_generator.h
   proof/clause_id.h
+  proof/diamonds_proof_generator.cpp
+  proof/diamonds_proof_generator.h
   proof/dot/dot_printer.cpp
   proof/dot/dot_printer.h
   proof/eager_proof_generator.cpp

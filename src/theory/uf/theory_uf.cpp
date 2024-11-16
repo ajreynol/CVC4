@@ -63,6 +63,11 @@ TheoryUF::TheoryUF(Env& env,
   // indicate we are using the default theory state and inference managers
   d_theoryState = &d_state;
   d_inferManager = &d_im;
+
+  if (env.isTheoryProofProducing())
+  {
+    d_dpfgen.reset(new DiamondsProofGenerator(env));
+  }
 }
 
 TheoryUF::~TheoryUF() {
@@ -548,7 +553,7 @@ void TheoryUF::ppStaticLearn(TNode n, std::vector<TrustNode>& learned)
         Node newEquality = a.eqNode(d);
         Trace("diamonds") << "  ==> " << newEquality << endl;
         Node lem = n.impNode(newEquality);
-        TrustNode trn = TrustNode::mkTrustLemma(lem, nullptr);
+        TrustNode trn = TrustNode::mkTrustLemma(lem, d_dpfgen.get());
         learned.emplace_back(trn);
       } else {
         Trace("diamonds") << "+ C fails" << endl;

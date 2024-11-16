@@ -26,6 +26,7 @@
 #include "theory/uf/proof_checker.h"
 #include "theory/uf/symmetry_breaker.h"
 #include "theory/uf/theory_uf_rewriter.h"
+#include "proof/diamonds_proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -80,6 +81,8 @@ private:
   std::unique_ptr<HoExtension> d_ho;
   /** the conversions solver */
   std::unique_ptr<ConversionsSolver> d_csolver;
+  /** Diamonds proof generator */
+  std::unique_ptr<DiamondsProofGenerator> d_dpfgen;
 
   /** node for true */
   Node d_true;
