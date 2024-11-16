@@ -140,6 +140,8 @@ class SequencesRewriter : public TheoryRewriter
    */
   Node returnRewrite(Node node, Node ret, Rewrite r);
   //-------------------- ProofRewriteRule
+  /** Rewrite based on STR_EQ_LEN_UNIFY */
+  Node rewriteViaStrEqLenUnify(const Node& n);
   /** Rewrite based on RE_LOOP_ELIM */
   Node rewriteViaReLoopElim(const Node& n);
   /** Rewrite based on RE_INTER_UNION_INCLUSION */

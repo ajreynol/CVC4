@@ -67,6 +67,10 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::SEQ_LENGTH_EVAL,
                            TheoryRewriteCtx::DSL_SUBCALL);
+  registerProofRewriteRule(ProofRewriteRule::STR_CTN_MULTISET_SUBSET,
+                           TheoryRewriteCtx::DSL_SUBCALL);
+  registerProofRewriteRule(ProofRewriteRule::STR_EQ_LEN_UNIFY,
+                           TheoryRewriteCtx::POST_DSL);
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -113,6 +117,25 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
           }
           return nodeManager()->mkConstInt(Rational(n[0].getNumChildren()));
         }
+      }
+    }
+    break;
+    case ProofRewriteRule::STR_CTN_MULTISET_SUBSET:
+    {
+      if (n.getKind()==Kind::STRING_CONTAINS)
+      {
+        if (d_stringsEntail.checkMultisetSubset(n[0], n[1]))
+        {
+          return d_nm->mkConst(false);
+        }
+      }
+    }
+    break;
+    case ProofRewriteRule::STR_EQ_LEN_UNIFY:
+    {
+      if (n.getKind()==Kind::EQUAL)
+      {
+        return rewriteViaStrEqLenUnify(n);
       }
     }
     break;
@@ -524,16 +547,10 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
   //
   // where yi' and yi'' correspond to some yj and
   //   (<= (str.len x) (str.++ y1' ... ym'))
-  for (unsigned i = 0; i < 2; i++)
+  new_ret = rewriteViaStrEqLenUnify(node);
+  if (!new_ret.isNull())
   {
-    if (node[1 - i].getKind() == Kind::STRING_CONCAT)
-    {
-      new_ret = d_stringsEntail.inferEqsFromContains(node[i], node[1 - i]);
-      if (!new_ret.isNull())
-      {
-        return returnRewrite(node, new_ret, Rewrite::STR_EQ_CONJ_LEN_ENTAIL);
-      }
-    }
+    return returnRewrite(node, new_ret, Rewrite::STR_EQ_CONJ_LEN_ENTAIL);
   }
 
   if (node[0].getKind() == Kind::STRING_CONCAT
@@ -1347,6 +1364,23 @@ Node SequencesRewriter::rewriteLoopRegExp(TNode node)
   retNode = rewriteViaReLoopElim(node);
   Assert(!retNode.isNull() && retNode != node);
   return returnRewrite(node, retNode, Rewrite::RE_LOOP);
+}
+
+Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node)
+{
+  Node newRet;
+  for (unsigned i = 0; i < 2; i++)
+  {
+    if (node[1 - i].getKind() == Kind::STRING_CONCAT)
+    {
+      newRet = d_stringsEntail.inferEqsFromContains(node[i], node[1 - i]);
+      if (!newRet.isNull())
+      {
+        return newRet;
+      }
+    }
+  }
+  return Node::null();
 }
 
 Node SequencesRewriter::rewriteViaReLoopElim(const Node& node)
