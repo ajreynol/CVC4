@@ -346,8 +346,7 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
       // original node was an equality but we may be able to do additional
       // rewriting here, e.g.,
       // x++y = "" --> x = "" and y = ""
-      new_ret = returnRewrite(node, new_ret, Rewrite::STR_EQ_UNIFY);
-      return rewriteStrEqualityExt(new_ret);
+      return returnRewrite(node, new_ret, Rewrite::STR_EQ_UNIFY);
     }
   }
 
@@ -426,8 +425,7 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
         // original node was an equality but we may be able to do additional
         // rewriting here.
         new_ret = lhs.eqNode(ss);
-        new_ret = returnRewrite(node, new_ret, Rewrite::STR_EQ_HOMOG_CONST);
-        return rewriteStrEqualityExt(new_ret);
+        return returnRewrite(node, new_ret, Rewrite::STR_EQ_HOMOG_CONST);
       }
     }
   }
