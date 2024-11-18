@@ -58,6 +58,11 @@
   (extract j i (concat x xs y))
   (extract j i (concat xs y)))
 
+(define-cond-rule bv-eq-extract-elim
+  ((x ?BitVec) (y ?BitVec) (i Int) (j Int) (wm1 Int) (jp1 Int) (im1 Int))
+  (and (= wm1 (- (@bvsize x) 1)) (= jp1 (+ j 1)) (= im1 (- i 1)))
+  (= (extract j i x) y)
+  (= x (concat (extract wm1 jp1 x) y (extract im1 0 x))))
 
 ; -- Normalization Rules --
 (define-rule bv-extract-bitwise-and

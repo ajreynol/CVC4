@@ -3225,6 +3225,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_EXTRACT_CONCAT_3),
   /** Auto-generated from RARE rule bv-extract-concat-4 */
   EVALUE(BV_EXTRACT_CONCAT_4),
+  /** Auto-generated from RARE rule bv-eq-extract-elim */
+  EVALUE(BV_EQ_EXTRACT_ELIM),
   /** Auto-generated from RARE rule bv-extract-bitwise-and */
   EVALUE(BV_EXTRACT_BITWISE_AND),
   /** Auto-generated from RARE rule bv-extract-bitwise-or */
