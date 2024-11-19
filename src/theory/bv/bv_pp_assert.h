@@ -18,14 +18,14 @@
 #ifndef CVC5__THEORY__BV__BV_PP_ASSERT_H
 #define CVC5__THEORY__BV__BV_PP_ASSERT_H
 
+#include "proof/proof_generator.h"
+#include "proof/trust_node.h"
 #include "smt/env_obj.h"
 #include "theory/valuation.h"
-#include "proof/trust_node.h"
-#include "proof/proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
-  
+
 class TrustSubstitutionMap;
 
 namespace bv {
@@ -36,25 +36,24 @@ class BvPpAssert : protected EnvObj, public ProofGenerator
   /**
    * Constructor.
    */
-  BvPpAssert(Env& env,
-              Valuation val);
+  BvPpAssert(Env& env, Valuation val);
   ~BvPpAssert();
   /**
    */
-  bool ppAssert(TrustNode tin,
-                          TrustSubstitutionMap& outSubstitutions);
+  bool ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions);
   /**
    */
   std::shared_ptr<ProofNode> getProofFor(Node fact) override;
   /** identify */
   std::string identify() const override;
-private:
+
+ private:
   /** The valuation proxy. */
   Valuation d_valuation;
 };
 
-}
-}
+}  // namespace bv
+}  // namespace theory
 }  // namespace cvc5::internal
 
 #endif /* CVC5__THEORY__BV__BV_PP_ASSERT_H */

@@ -124,7 +124,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::STR_CTN_MULTISET_SUBSET:
     {
-      if (n.getKind()==Kind::STRING_CONTAINS)
+      if (n.getKind() == Kind::STRING_CONTAINS)
       {
         if (d_stringsEntail.checkMultisetSubset(n[0], n[1]))
         {
@@ -135,7 +135,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::STR_EQ_LEN_UNIFY_PREFIX:
     {
-      if (n.getKind()==Kind::EQUAL)
+      if (n.getKind() == Kind::EQUAL)
       {
         return rewriteViaStrEqLenUnifyPrefix(n);
       }
@@ -143,7 +143,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::STR_EQ_LEN_UNIFY:
     {
-      if (n.getKind()==Kind::EQUAL)
+      if (n.getKind() == Kind::EQUAL)
       {
         Rewrite rule;
         return rewriteViaStrEqLenUnify(n, rule);
@@ -1294,10 +1294,8 @@ Node SequencesRewriter::rewriteViaStrEqLenUnifyPrefix(const Node& node)
   return Node::null();
 }
 
-Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node,
-                                           Rewrite& rule)
+Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
 {
-
   if (node[0].getKind() == Kind::STRING_CONCAT
       && node[1].getKind() == Kind::STRING_CONCAT)
   {
@@ -1324,9 +1322,9 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node,
             std::vector<Node> sfxv0(v0.begin() + i, v0.end());
             std::vector<Node> sfxv1(v1.begin() + j, v1.end());
             Node ret = d_nm->mkNode(Kind::AND,
-                                  pfx0.eqNode(pfx1),
-                                  utils::mkConcat(sfxv0, stype)
-                                      .eqNode(utils::mkConcat(sfxv1, stype)));
+                                    pfx0.eqNode(pfx1),
+                                    utils::mkConcat(sfxv0, stype)
+                                        .eqNode(utils::mkConcat(sfxv1, stype)));
             rule = Rewrite::SPLIT_EQ;
             return ret;
           }
@@ -1352,9 +1350,9 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node,
                 pfxv1.insert(pfxv1.end(), v1.begin() + j, v1.end());
                 Node ret =
                     d_nm->mkNode(Kind::AND,
-                               pfx0.eqNode(utils::mkConcat(rpfxv1, stype)),
-                               utils::mkConcat(sfxv0, stype)
-                                   .eqNode(utils::mkConcat(pfxv1, stype)));
+                                 pfx0.eqNode(utils::mkConcat(rpfxv1, stype)),
+                                 utils::mkConcat(sfxv0, stype)
+                                     .eqNode(utils::mkConcat(pfxv1, stype)));
                 rule = Rewrite::SPLIT_EQ_STRIP_R;
                 return ret;
               }
@@ -1389,9 +1387,9 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node,
                 std::vector<Node> sfxv1(v1.begin() + j, v1.end());
                 Node ret =
                     d_nm->mkNode(Kind::AND,
-                               utils::mkConcat(rpfxv0, stype).eqNode(pfx1),
-                               utils::mkConcat(sfxv0, stype)
-                                   .eqNode(utils::mkConcat(sfxv1, stype)));
+                                 utils::mkConcat(rpfxv0, stype).eqNode(pfx1),
+                                 utils::mkConcat(sfxv0, stype)
+                                     .eqNode(utils::mkConcat(sfxv1, stype)));
                 rule = Rewrite::SPLIT_EQ_STRIP_L;
                 return ret;
               }

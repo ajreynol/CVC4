@@ -19,6 +19,7 @@
 #define CVC5__THEORY__UF__THEORY_UF_H
 
 #include "expr/node.h"
+#include "proof/diamonds_proof_generator.h"
 #include "theory/care_pair_argument_callback.h"
 #include "theory/theory.h"
 #include "theory/theory_eq_notify.h"
@@ -26,7 +27,6 @@
 #include "theory/uf/proof_checker.h"
 #include "theory/uf/symmetry_breaker.h"
 #include "theory/uf/theory_uf_rewriter.h"
-#include "proof/diamonds_proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {

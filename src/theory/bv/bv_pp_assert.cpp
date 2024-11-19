@@ -15,32 +15,32 @@
 
 #include "theory/bv/bv_pp_assert.h"
 
-#include "theory/bv/theory_bv_utils.h"
-#include "proof/proof.h"
-#include "theory/trust_substitutions.h"
 #include "expr/skolem_manager.h"
+#include "proof/proof.h"
+#include "theory/bv/theory_bv_utils.h"
+#include "theory/trust_substitutions.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace bv {
 
-BvPpAssert::BvPpAssert(Env& env,
-              Valuation val) : EnvObj(env), d_valuation(val){}
+BvPpAssert::BvPpAssert(Env& env, Valuation val) : EnvObj(env), d_valuation(val)
+{
+}
 BvPpAssert::~BvPpAssert() {}
-bool BvPpAssert::ppAssert(TrustNode tin,
-                        TrustSubstitutionMap& outSubstitutions)
+bool BvPpAssert::ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
   /**
-    * Eliminate extract over bit-vector variables.
-    *
-    * Given x[h:l] = c, where c is a constant and x is a variable.
-    *
-    * We rewrite to:
-    *
-    * x = sk1::c       if l == 0, where bw(sk1) = bw(x)-1-h
-    * x = c::sk2       if h == bw(x)-1, where bw(sk2) = l
-    * x = sk1::c::sk2  otherwise, where bw(sk1) = bw(x)-1-h and bw(sk2) = l
-    */
+   * Eliminate extract over bit-vector variables.
+   *
+   * Given x[h:l] = c, where c is a constant and x is a variable.
+   *
+   * We rewrite to:
+   *
+   * x = sk1::c       if l == 0, where bw(sk1) = bw(x)-1-h
+   * x = c::sk2       if h == bw(x)-1, where bw(sk2) = l
+   * x = sk1::c::sk2  otherwise, where bw(sk1) = bw(x)-1-h and bw(sk2) = l
+   */
   Node node = rewrite(tin.getNode());
   if ((node[0].getKind() == Kind::BITVECTOR_EXTRACT && node[1].isConst())
       || (node[1].getKind() == Kind::BITVECTOR_EXTRACT && node[0].isConst()))
@@ -87,14 +87,13 @@ bool BvPpAssert::ppAssert(TrustNode tin,
   }
   return false;
 }
-std::shared_ptr<ProofNode> BvPpAssert::getProofFor(Node fact) 
+std::shared_ptr<ProofNode> BvPpAssert::getProofFor(Node fact)
 {
   return nullptr;
 }
 
 std::string BvPpAssert::identify() const { return "BvPpAssert"; }
 
-
-}
-}
+}  // namespace bv
+}  // namespace theory
 }  // namespace cvc5::internal
