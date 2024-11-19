@@ -3171,8 +3171,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BOOL_XOR_ELIM),
   /** Auto-generated from RARE rule bool-not-xor-elim */
   EVALUE(BOOL_NOT_XOR_ELIM),
-  /** Auto-generated from RARE rule bool-not-eq-elim */
-  EVALUE(BOOL_NOT_EQ_ELIM),
+  /** Auto-generated from RARE rule bool-not-eq-elim1 */
+  EVALUE(BOOL_NOT_EQ_ELIM1),
+  /** Auto-generated from RARE rule bool-not-eq-elim2 */
+  EVALUE(BOOL_NOT_EQ_ELIM2),
   /** Auto-generated from RARE rule ite-neg-branch */
   EVALUE(ITE_NEG_BRANCH),
   /** Auto-generated from RARE rule ite-then-true */
