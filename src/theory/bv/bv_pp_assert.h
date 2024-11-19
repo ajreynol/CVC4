@@ -31,18 +31,43 @@ class TrustSubstitutionMap;
 
 namespace bv {
 
+/**
+ * A class for implementing TheoryBv::ppAssert along with its proof tracking.
+ */
 class BvPpAssert : protected EnvObj, public ProofGenerator
 {
  public:
-  /**
-   * Constructor.
-   */
+  /** Constructor */
   BvPpAssert(Env& env, Valuation val);
   ~BvPpAssert();
   /**
+   * Handles specific cases of ppAssert for theory of bitvectors. Currently
+   * this is limited to solving based on extract applied to variables e.g.:
+   * (= (extract 3 1 x) #b00) becomes the substitution
+   * x -> (concat (extract 7 4 x) #b00 (extract 0 0 x))
+   * 
+   * @param tin The incoming literal with its proof.
+   * @param outSubstitutions The substitutions to add to.
+   * @return true if we added a substitution to outSubstitutions
    */
   bool ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions);
   /**
+   * Get proof for fact, where fact is expected to be of the form (= x t) where
+   * x -> t was a substitution added to outSubstitutions.
+   * 
+   * Proofs are of the form:
+   * 
+   * ... from input
+   * ---------------------     -------------------------------- BV_PP_ASSERT
+   * (= (extract n m x) y)     (= (extract n m x) y) (= x t_o))
+   * ---------------------------------------------------------- EQ_RESOLVE
+   * (= x t_o)
+   * --------- MACRO_SR_PRED_TRANSFORM.
+   * (= x t)
+   * 
+   * where e.g. t_o is (concat (extract 7 4 x) #b00 (extract 0 0 x)) and
+   * t is (concat purifyX74 #b00 purifyX00). The (trust) step BV_PP_ASSERT can
+   * be justified by RARE rules bv-eq-extract-elim{1,2,3}
    */
   std::shared_ptr<ProofNode> getProofFor(Node fact) override;
   /** identify */
@@ -57,10 +82,14 @@ class BvPpAssert : protected EnvObj, public ProofGenerator
    */
   context::CDHashMap<Node, TrustNode> d_ppsolves;
   /**
-   * Original form
+   * Maps terms introduced by ppAssert to their original for that can be used
+   * in justification, e.g.
+   * (concat purifyX31 #b0) --> (concat (extract 3 1 x) #b0).
    */
   context::CDHashMap<Node, Node> d_origForm;
   /**
+   * Add substitution x -> t which is justified based on the input equality
+   * tin. This bookkeeps the connection to tin if proofs are enabled.
    */
   void addSubstitution(TrustSubstitutionMap& outSubstitutions, const Node& x, const Node& t, TrustNode tin);
 };
