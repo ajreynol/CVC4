@@ -19,15 +19,18 @@
 #include "proof/proof.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "theory/trust_substitutions.h"
+#include "smt/env.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace bv {
 
-BvPpAssert::BvPpAssert(Env& env, Valuation val) : EnvObj(env), d_valuation(val)
+BvPpAssert::BvPpAssert(Env& env, Valuation val) : EnvObj(env), d_valuation(val), d_ppsolves(userContext()), d_origForm(userContext())
 {
 }
+
 BvPpAssert::~BvPpAssert() {}
+
 bool BvPpAssert::ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 {
   /**
@@ -54,6 +57,7 @@ bool BvPpAssert::ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions)
       uint32_t low = utils::getExtractLow(extract);
       uint32_t var_bw = utils::getSize(extract[0]);
       std::vector<Node> children;
+      std::vector<Node> ochildren;
 
       SkolemManager* sm = nodeManager()->getSkolemManager();
       // create sk1 with size bw(x)-1-h
@@ -63,9 +67,11 @@ bool BvPpAssert::ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions)
         Node ext = utils::mkExtract(extract[0], var_bw - 1, high + 1);
         Node skolem = sm->mkPurifySkolem(ext);
         children.push_back(skolem);
+        ochildren.push_back(ext);
       }
 
       children.push_back(c);
+      ochildren.push_back(c);
 
       // create sk2 with size l
       if (high == var_bw - 1 || low != 0)
@@ -74,13 +80,19 @@ bool BvPpAssert::ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions)
         Node ext = utils::mkExtract(extract[0], low - 1, 0);
         Node skolem = sm->mkPurifySkolem(ext);
         children.push_back(skolem);
+        ochildren.push_back(ext);
       }
 
       Node concat = utils::mkConcat(children);
       Assert(utils::getSize(concat) == utils::getSize(extract[0]));
       if (d_valuation.isLegalElimination(extract[0], concat))
       {
-        outSubstitutions.addSubstitutionSolved(extract[0], concat, tin);
+        if (d_env.isProofProducing())
+        {
+          Node oconcat = utils::mkConcat(ochildren);
+          d_origForm[concat] = oconcat;
+        }
+        addSubstitution(outSubstitutions, extract[0], concat, tin);
         return true;
       }
     }
@@ -89,10 +101,51 @@ bool BvPpAssert::ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 }
 std::shared_ptr<ProofNode> BvPpAssert::getProofFor(Node fact)
 {
-  return nullptr;
+  Assert (fact.getKind()==Kind::EQUAL);
+  context::CDHashMap<Node, TrustNode>::iterator it = d_ppsolves.find(fact);
+  if (it==d_ppsolves.end())
+  {
+    Assert(false) << "BvPpAssert::getProofFor: Failed to find source for " << fact;
+    return nullptr;
+  }
+  Node assump = it->second.getProven();
+  // reorient so that extract is on the left hand side
+  //Node assumpn = assump[1].getKind()==Kind::BITVECTOR_EXTRACT ? assump[1].eqNode(assump[0]) : assump;
+  Assert (assump.getKind()==Kind::EQUAL);
+  context::CDHashMap<Node, Node>::iterator ito;
+  ito = d_origForm.find(fact[1]);
+  Node oconcat = ito->second;
+  Trace("bv-pp-assert") << "Find proof: " << fact << std::endl;
+  Trace("bv-pp-assert") << "Have: " << assump << std::endl;
+  Trace("bv-pp-assert") << "Orig form: " << oconcat << std::endl;
+  CDProof cdp(d_env);
+  Node eqo = fact[0].eqNode(oconcat);
+  Node equiv = assump.eqNode(eqo);
+  std::shared_ptr<ProofNode> pfa = it->second.toProofNode();
+  cdp.addProof(pfa);
+  cdp.addTrustedStep(equiv, TrustId::BV_PP_ASSERT, {}, {});
+  cdp.addStep(eqo, ProofRule::EQ_RESOLVE, {assump, equiv}, {});
+  cdp.addStep(fact, ProofRule::MACRO_SR_PRED_TRANSFORM, {eqo}, {fact});
+  return cdp.getProofFor(fact);
 }
 
 std::string BvPpAssert::identify() const { return "BvPpAssert"; }
+
+void BvPpAssert::addSubstitution(TrustSubstitutionMap& outSubstitutions, const Node& x, const Node& t, TrustNode tin)
+{
+  if (d_env.isProofProducing())
+  {
+    Node eq = x.eqNode(t);
+    d_ppsolves[eq] = tin;
+    // we will provide the proof of (= x t)
+    TrustNode tnew = TrustNode::mkTrustLemma(eq, this);
+    outSubstitutions.addSubstitutionSolved(x,t,tnew);
+  }
+  else
+  {
+    outSubstitutions.addSubstitutionSolved(x,t,tin);
+  }
+}
 
 }  // namespace bv
 }  // namespace theory

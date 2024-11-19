@@ -22,6 +22,7 @@
 #include "proof/trust_node.h"
 #include "smt/env_obj.h"
 #include "theory/valuation.h"
+#include "context/cdhashmap.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -50,6 +51,18 @@ class BvPpAssert : protected EnvObj, public ProofGenerator
  private:
   /** The valuation proxy. */
   Valuation d_valuation;
+  /** 
+   * Mapping from solved equalities we gave to the substitution map and the
+   * trust node they were derived from.
+   */
+  context::CDHashMap<Node, TrustNode> d_ppsolves;
+  /**
+   * Original form
+   */
+  context::CDHashMap<Node, Node> d_origForm;
+  /**
+   */
+  void addSubstitution(TrustSubstitutionMap& outSubstitutions, const Node& x, const Node& t, TrustNode tin);
 };
 
 }  // namespace bv

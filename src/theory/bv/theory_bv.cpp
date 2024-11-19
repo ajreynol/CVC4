@@ -191,6 +191,10 @@ Theory::PPAssertStatus TheoryBV::ppAssert(
     {
       return status;
     }
+    if (d_ppAssert.ppAssert(tin, outSubstitutions))
+    {
+      return Theory::PP_ASSERT_STATUS_SOLVED;
+    }
   }
   return Theory::PP_ASSERT_STATUS_UNSOLVED;
 }

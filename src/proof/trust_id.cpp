@@ -80,6 +80,7 @@ const char* toString(TrustId id)
     case TrustId::SUBS_EQ: return "SUBS_EQ";
     case TrustId::ARITH_PRED_CAST_TYPE: return "ARITH_PRED_CAST_TYPE";
     case TrustId::RE_ELIM: return "RE_ELIM";
+    case TrustId::BV_PP_ASSERT: return "BV_PP_ASSERT";
     case TrustId::QUANTIFIERS_PREPROCESS: return "QUANTIFIERS_PREPROCESS";
     case TrustId::QUANTIFIERS_INST_REWRITE: return "QUANTIFIERS_INST_REWRITE";
     case TrustId::VALID_WITNESS: return "VALID_WITNESS";
