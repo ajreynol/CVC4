@@ -123,8 +123,10 @@ std::shared_ptr<ProofNode> BvPpAssert::getProofFor(Node fact)
   Node equiv = assump.eqNode(eqo);
   std::shared_ptr<ProofNode> pfa = it->second.toProofNode();
   cdp.addProof(pfa);
+  // This step should be justifiable by a RARE rule bv-eq-extract-elim{1,2,3}
   cdp.addTrustedStep(equiv, TrustId::BV_PP_ASSERT, {}, {});
   cdp.addStep(eqo, ProofRule::EQ_RESOLVE, {assump, equiv}, {});
+  // Justify the usage of purification skolems
   cdp.addStep(fact, ProofRule::MACRO_SR_PRED_TRANSFORM, {eqo}, {fact});
   return cdp.getProofFor(fact);
 }
