@@ -17,15 +17,19 @@
 
 #include "expr/skolem_manager.h"
 #include "proof/proof.h"
+#include "smt/env.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "theory/trust_substitutions.h"
-#include "smt/env.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace bv {
 
-BvPpAssert::BvPpAssert(Env& env, Valuation val) : EnvObj(env), d_valuation(val), d_ppsolves(userContext()), d_origForm(userContext())
+BvPpAssert::BvPpAssert(Env& env, Valuation val)
+    : EnvObj(env),
+      d_valuation(val),
+      d_ppsolves(userContext()),
+      d_origForm(userContext())
 {
 }
 
@@ -101,17 +105,19 @@ bool BvPpAssert::ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions)
 }
 std::shared_ptr<ProofNode> BvPpAssert::getProofFor(Node fact)
 {
-  Assert (fact.getKind()==Kind::EQUAL);
+  Assert(fact.getKind() == Kind::EQUAL);
   context::CDHashMap<Node, TrustNode>::iterator it = d_ppsolves.find(fact);
-  if (it==d_ppsolves.end())
+  if (it == d_ppsolves.end())
   {
-    Assert(false) << "BvPpAssert::getProofFor: Failed to find source for " << fact;
+    Assert(false) << "BvPpAssert::getProofFor: Failed to find source for "
+                  << fact;
     return nullptr;
   }
   Node assump = it->second.getProven();
   // reorient so that extract is on the left hand side
-  //Node assumpn = assump[1].getKind()==Kind::BITVECTOR_EXTRACT ? assump[1].eqNode(assump[0]) : assump;
-  Assert (assump.getKind()==Kind::EQUAL);
+  // Node assumpn = assump[1].getKind()==Kind::BITVECTOR_EXTRACT ?
+  // assump[1].eqNode(assump[0]) : assump;
+  Assert(assump.getKind() == Kind::EQUAL);
   context::CDHashMap<Node, Node>::iterator ito;
   ito = d_origForm.find(fact[1]);
   Node oconcat = ito->second;
@@ -133,7 +139,10 @@ std::shared_ptr<ProofNode> BvPpAssert::getProofFor(Node fact)
 
 std::string BvPpAssert::identify() const { return "BvPpAssert"; }
 
-void BvPpAssert::addSubstitution(TrustSubstitutionMap& outSubstitutions, const Node& x, const Node& t, TrustNode tin)
+void BvPpAssert::addSubstitution(TrustSubstitutionMap& outSubstitutions,
+                                 const Node& x,
+                                 const Node& t,
+                                 TrustNode tin)
 {
   if (d_env.isProofProducing())
   {
@@ -141,11 +150,11 @@ void BvPpAssert::addSubstitution(TrustSubstitutionMap& outSubstitutions, const N
     d_ppsolves[eq] = tin;
     // we will provide the proof of (= x t)
     TrustNode tnew = TrustNode::mkTrustLemma(eq, this);
-    outSubstitutions.addSubstitutionSolved(x,t,tnew);
+    outSubstitutions.addSubstitutionSolved(x, t, tnew);
   }
   else
   {
-    outSubstitutions.addSubstitutionSolved(x,t,tin);
+    outSubstitutions.addSubstitutionSolved(x, t, tin);
   }
 }
 

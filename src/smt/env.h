@@ -106,7 +106,7 @@ class Env
    * set.
    */
   bool isProofProducing() const;
-  
+
   /**
    * Check whether the SAT solver should produce proofs. Other than whether
    * the proof node manager is set, SAT proofs are only generated if the proof

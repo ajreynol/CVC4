@@ -280,7 +280,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "str-ctn-multiset-subset";
     case ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY_PREFIX:
       return "macro-str-eq-len-unify-prefix";
-    case ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY: return "macro-str-eq-len-unify";
+    case ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY:
+      return "macro-str-eq-len-unify";
     case ProofRewriteRule::RE_LOOP_ELIM: return "re-loop-elim";
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
       return "re-inter-union-inclusion";

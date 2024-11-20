@@ -18,11 +18,11 @@
 #ifndef CVC5__THEORY__BV__BV_PP_ASSERT_H
 #define CVC5__THEORY__BV__BV_PP_ASSERT_H
 
+#include "context/cdhashmap.h"
 #include "proof/proof_generator.h"
 #include "proof/trust_node.h"
 #include "smt/env_obj.h"
 #include "theory/valuation.h"
-#include "context/cdhashmap.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -45,7 +45,7 @@ class BvPpAssert : protected EnvObj, public ProofGenerator
    * this is limited to solving based on extract applied to variables e.g.:
    * (= (extract 3 1 x) #b00) becomes the substitution
    * x -> (concat (extract 7 4 x) #b00 (extract 0 0 x))
-   * 
+   *
    * @param tin The incoming literal with its proof.
    * @param outSubstitutions The substitutions to add to.
    * @return true if we added a substitution to outSubstitutions
@@ -54,9 +54,9 @@ class BvPpAssert : protected EnvObj, public ProofGenerator
   /**
    * Get proof for fact, where fact is expected to be of the form (= x t) where
    * x -> t was a substitution added to outSubstitutions.
-   * 
+   *
    * Proofs are of the form:
-   * 
+   *
    * ... from input
    * ---------------------     -------------------------------- BV_PP_ASSERT
    * (= (extract n m x) y)     (= (extract n m x) y) (= x t_o))
@@ -64,7 +64,7 @@ class BvPpAssert : protected EnvObj, public ProofGenerator
    * (= x t_o)
    * --------- MACRO_SR_PRED_TRANSFORM.
    * (= x t)
-   * 
+   *
    * where e.g. t_o is (concat (extract 7 4 x) #b00 (extract 0 0 x)) and
    * t is (concat purifyX74 #b00 purifyX00). The (trust) step BV_PP_ASSERT can
    * be justified by RARE rules bv-eq-extract-elim{1,2,3}
@@ -76,7 +76,7 @@ class BvPpAssert : protected EnvObj, public ProofGenerator
  private:
   /** The valuation proxy. */
   Valuation d_valuation;
-  /** 
+  /**
    * Mapping from solved equalities we gave to the substitution map and the
    * trust node they were derived from.
    */
@@ -91,7 +91,10 @@ class BvPpAssert : protected EnvObj, public ProofGenerator
    * Add substitution x -> t which is justified based on the input equality
    * tin. This bookkeeps the connection to tin if proofs are enabled.
    */
-  void addSubstitution(TrustSubstitutionMap& outSubstitutions, const Node& x, const Node& t, TrustNode tin);
+  void addSubstitution(TrustSubstitutionMap& outSubstitutions,
+                       const Node& x,
+                       const Node& t,
+                       TrustNode tin);
 };
 
 }  // namespace bv
