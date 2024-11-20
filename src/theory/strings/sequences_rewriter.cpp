@@ -69,9 +69,9 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::DSL_SUBCALL);
   registerProofRewriteRule(ProofRewriteRule::STR_CTN_MULTISET_SUBSET,
                            TheoryRewriteCtx::DSL_SUBCALL);
-  registerProofRewriteRule(ProofRewriteRule::STR_EQ_LEN_UNIFY_PREFIX,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY_PREFIX,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::STR_EQ_LEN_UNIFY,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY,
                            TheoryRewriteCtx::POST_DSL);
 }
 
@@ -133,7 +133,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::STR_EQ_LEN_UNIFY_PREFIX:
+    case ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY_PREFIX:
     {
       if (n.getKind() == Kind::EQUAL)
       {
@@ -141,7 +141,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::STR_EQ_LEN_UNIFY:
+    case ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY:
     {
       if (n.getKind() == Kind::EQUAL)
       {
