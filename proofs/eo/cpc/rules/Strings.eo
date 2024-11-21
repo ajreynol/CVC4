@@ -583,3 +583,41 @@
   :requires ((($str_mk_str_in_re_sigma_star s r) b))
   :conclusion (= (str.in_re s (re.* r)) b)
 )
+
+;;;;; ProofRewriteRule::STR_CTN_MULTISET_SUBSET
+
+(program $str_multiset_approx ((T Type) (s (Seq T)) (ss (Seq T) :list) (t (Seq T)) (r (Seq T)))
+    ((Seq T)) (Seq T)
+    (
+      (($str_multiset_approx (str.++ s ss))        (eo::list_concat str.++ ($str_multiset_approx s) ($str_multiset_approx ss)))
+      (($str_multiset_approx (str.replace s t r))  (eo::list_concat str.++ ($str_multiset_approx s) ($str_multiset_approx r)))
+      (($str_multiset_approx s)                    ($str_to_flat_form s false))
+    )
+)
+(program $str_is_multiset_subset_strict ((T Type :implicit) (id (Seq T)) (s (Seq T)) (ss (Seq T) :list) (t (Seq T)) (b Bool))
+    ((Seq T) (Seq T) (Seq T) Bool) Bool
+    (
+      (($str_is_multiset_subset_strict id (str.++ s ss) t b) (eo::define ((tr ($nary_remove str.++ id s t)))
+                                                             (eo::define ((nrem (eo::is_eq t tr)))
+                                                               ($str_is_multiset_subset_strict id ss tr (eo::ite b true (eo::ite nrem ($str_is_const_like s) false))))))
+      (($str_is_multiset_subset_strict id s t b)             (eo::ite b ($str_all_is_const_like t) false))
+    )
+)
+
+
+; rule: str-ctn-multiset-subset
+; implements: ProofRewriteRule::STR_CTN_MULTISET_SUBSET
+; args:
+; - eq Bool: The equality between a contains predicate and false
+; requires: >
+;   The contains predicate can be shown false by multiset reasoning
+; conclusion: The given equality.
+(declare-rule str-ctn-multiset-subset ((T Type)  (s (Seq T)) (t (Seq T)))
+  :args ((= (str.contains s t) false))
+  :requires ((($str_is_multiset_subset_strict 
+                ($mk_emptystr (eo::typeof s))
+                ($str_to_flat_form t false)
+                ($str_multiset_approx s) false) true))
+  ;:requires (((eo::requires ($str_to_flat_form t false) ($str_multiset_approx s) true) true))
+  :conclusion (= (str.contains s t) false)
+)

@@ -80,6 +80,7 @@
 
 (define-rule arith-pi-not-int () (is_int real.pi) false)
 
+
 ; absolute value comparisons
 
 (define-rule arith-abs-eq ((x ?) (y ?))
@@ -95,7 +96,7 @@
     (ite (>= y 0)
       (> (- x) y)
       (> (- x) (- y)))))
-  
+
 (define-rule arith-abs-real-gt ((x Real) (y Real))
   (> (abs x) (abs y))
   (ite (>= x 0/1)

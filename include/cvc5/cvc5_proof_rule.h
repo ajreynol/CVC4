@@ -2864,8 +2864,8 @@ enum ENUM(ProofRewriteRule)
    */
   EVALUE(BV_REPEAT_ELIM),
   EVALUE(STR_CTN_MULTISET_SUBSET),
-  EVALUE(STR_EQ_LEN_UNIFY_PREFIX),
-  EVALUE(STR_EQ_LEN_UNIFY),
+  EVALUE(MACRO_STR_EQ_LEN_UNIFY_PREFIX),
+  EVALUE(MACRO_STR_EQ_LEN_UNIFY),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- regular expression loop elimination**
@@ -3149,20 +3149,12 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BOOL_IMPL_ELIM),
   /** Auto-generated from RARE rule bool-or-true */
   EVALUE(BOOL_OR_TRUE),
-  /** Auto-generated from RARE rule bool-or-false */
-  EVALUE(BOOL_OR_FALSE),
   /** Auto-generated from RARE rule bool-or-flatten */
   EVALUE(BOOL_OR_FLATTEN),
-  /** Auto-generated from RARE rule bool-or-dup */
-  EVALUE(BOOL_OR_DUP),
-  /** Auto-generated from RARE rule bool-and-true */
-  EVALUE(BOOL_AND_TRUE),
   /** Auto-generated from RARE rule bool-and-false */
   EVALUE(BOOL_AND_FALSE),
   /** Auto-generated from RARE rule bool-and-flatten */
   EVALUE(BOOL_AND_FLATTEN),
-  /** Auto-generated from RARE rule bool-and-dup */
-  EVALUE(BOOL_AND_DUP),
   /** Auto-generated from RARE rule bool-and-conf */
   EVALUE(BOOL_AND_CONF),
   /** Auto-generated from RARE rule bool-and-conf2 */
@@ -3191,8 +3183,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BOOL_XOR_ELIM),
   /** Auto-generated from RARE rule bool-not-xor-elim */
   EVALUE(BOOL_NOT_XOR_ELIM),
-  /** Auto-generated from RARE rule bool-not-eq-elim */
-  EVALUE(BOOL_NOT_EQ_ELIM),
+  /** Auto-generated from RARE rule bool-not-eq-elim1 */
+  EVALUE(BOOL_NOT_EQ_ELIM1),
+  /** Auto-generated from RARE rule bool-not-eq-elim2 */
+  EVALUE(BOOL_NOT_EQ_ELIM2),
   /** Auto-generated from RARE rule ite-neg-branch */
   EVALUE(ITE_NEG_BRANCH),
   /** Auto-generated from RARE rule ite-then-true */

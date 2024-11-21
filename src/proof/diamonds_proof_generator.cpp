@@ -19,9 +19,7 @@
 
 namespace cvc5::internal {
 
-DiamondsProofGenerator::DiamondsProofGenerator(Env& env) : EnvObj(env)
-{
-}
+DiamondsProofGenerator::DiamondsProofGenerator(Env& env) : EnvObj(env) {}
 
 DiamondsProofGenerator::~DiamondsProofGenerator() {}
 

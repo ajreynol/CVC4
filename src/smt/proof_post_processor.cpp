@@ -221,10 +221,8 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     // maybe we can show it rewrites to true based on rewriting
     // modulo original forms (MACRO_SR_PRED_INTRO).
     TheoryProofStepBuffer psb(d_pc);
-    if (psb.applyPredIntro(res,
-                           {},
-                           MethodId::SB_DEFAULT,
-                           MethodId::SBA_SEQUENTIAL))
+    if (psb.applyPredIntro(
+            res, {}, MethodId::SB_DEFAULT, MethodId::SBA_SEQUENTIAL))
     {
       cdp->addSteps(psb);
       return res;

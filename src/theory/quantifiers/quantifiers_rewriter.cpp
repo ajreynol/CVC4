@@ -178,11 +178,11 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::QUANT_PRENEX:
     {
-      if (n.getKind()==Kind::FORALL)
+      if (n.getKind() == Kind::FORALL)
       {
         std::vector<Node> args, nargs;
         Node nn = computePrenex(n, n[1], args, nargs, true, false);
-        Assert (nargs.empty());
+        Assert(nargs.empty());
         if (!args.empty())
         {
           std::vector<Node> qargs(n[0].begin(), n[0].end());

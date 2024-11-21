@@ -35,11 +35,8 @@ const char* toString(TrustId id)
     case TrustId::THEORY_PREPROCESS_LEMMA: return "THEORY_PREPROCESS_LEMMA";
     case TrustId::THEORY_EXPAND_DEF: return "THEORY_EXPAND_DEF";
     // preprocess passes
-<<<<<<< HEAD
-=======
     case TrustId::PREPROCESS_BV_GUASS: return "PREPROCESS_BV_GUASS";
     case TrustId::PREPROCESS_BV_GUASS_LEMMA: return "PREPROCESS_BV_GUASS_LEMMA";
->>>>>>> 024c9822d74d271f96a33ba375bdeac04ed8b227
     case TrustId::PREPROCESS_BV_TO_BOOL: return "PREPROCESS_BV_TO_BOOL";
     case TrustId::PREPROCESS_BV_TO_INT: return "PREPROCESS_BV_TO_INT";
     case TrustId::PREPROCESS_BV_TO_INT_LEMMA:
@@ -58,35 +55,26 @@ const char* toString(TrustId id)
     case TrustId::PREPROCESS_FF_DISJUNCTIVE_BIT:
       return "PREPROCESS_FF_DISJUNCTIVE_BIT";
     case TrustId::PREPROCESS_FUN_DEF_FMF: return "PREPROCESS_FUN_DEF_FMF";
-<<<<<<< HEAD
-=======
     case TrustId::PREPROCESS_ITE_SIMP: return "PREPROCESS_ITE_SIMP";
->>>>>>> 024c9822d74d271f96a33ba375bdeac04ed8b227
     case TrustId::PREPROCESS_LEARNED_REWRITE:
       return "PREPROCESS_LEARNED_REWRITE";
     case TrustId::PREPROCESS_LEARNED_REWRITE_LEMMA:
       return "PREPROCESS_LEARNED_REWRITE_LEMMA";
-<<<<<<< HEAD
-=======
     case TrustId::PREPROCESS_MIPLIB_TRICK: return "PREPROCESS_MIPLIB_TRICK";
     case TrustId::PREPROCESS_MIPLIB_TRICK_LEMMA:
       return "PREPROCESS_MIPLIB_TRICK_LEMMA";
     case TrustId::PREPROCESS_NL_EXT_PURIFY: return "PREPROCESS_NL_EXT_PURIFY";
     case TrustId::PREPROCESS_NL_EXT_PURIFY_LEMMA:
       return "PREPROCESS_NL_EXT_PURIFY_LEMMA";
->>>>>>> 024c9822d74d271f96a33ba375bdeac04ed8b227
     case TrustId::PREPROCESS_BV_INTRO_POW2: return "PREPROCESS_BV_INTRO_POW2";
     case TrustId::PREPROCESS_FOREIGN_THEORY_REWRITE:
       return "PREPROCESS_FOREIGN_THEORY_REWRITE";
     case TrustId::PREPROCESS_UNCONSTRAINED_SIMP:
       return "PREPROCESS_UNCONSTRAINED_SIMP";
-<<<<<<< HEAD
-=======
     case TrustId::PREPROCESS_QUANTIFIERS_PP: return "PREPROCESS_QUANTIFIERS_PP";
     case TrustId::PREPROCESS_SORT_INFER: return "PREPROCESS_SORT_INFER";
     case TrustId::PREPROCESS_SORT_INFER_LEMMA:
       return "PREPROCESS_SORT_INFER_LEMMA";
->>>>>>> 024c9822d74d271f96a33ba375bdeac04ed8b227
     case TrustId::PREPROCESS_STRINGS_EAGER_PP:
       return "PREPROCESS_STRINGS_EAGER_PP";
     // other
@@ -105,6 +93,7 @@ const char* toString(TrustId id)
     case TrustId::SUBS_EQ: return "SUBS_EQ";
     case TrustId::ARITH_PRED_CAST_TYPE: return "ARITH_PRED_CAST_TYPE";
     case TrustId::RE_ELIM: return "RE_ELIM";
+    case TrustId::BV_PP_ASSERT: return "BV_PP_ASSERT";
     case TrustId::QUANTIFIERS_PREPROCESS: return "QUANTIFIERS_PREPROCESS";
     case TrustId::QUANTIFIERS_INST_REWRITE: return "QUANTIFIERS_INST_REWRITE";
     case TrustId::VALID_WITNESS: return "VALID_WITNESS";

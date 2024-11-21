@@ -22,6 +22,22 @@
   )
 )
 
+(program $str_is_const_like ((T Type) (t (Seq T)) (n T))
+    ((Seq T)) Bool
+    (
+      (($str_is_const_like (seq.unit n))  true)
+      (($str_is_const_like t)             (eo::is_str t))
+    )
+)
+
+(program $str_all_is_const_like ((T Type) (s (Seq T)) (ss (Seq T) :list))
+    ((Seq T)) Bool
+    (
+      (($str_all_is_const_like (str.++ s ss)) (eo::ite ($str_is_const_like s) ($str_all_is_const_like ss) false))
+      (($str_all_is_const_like s)             true)
+    )
+)
+
 ; define: $char_type_of
 ; args:
 ; - T Type: The string-like type to check.

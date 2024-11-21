@@ -266,6 +266,7 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::STR_IN_RE_SIGMA:
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR:
     case ProofRewriteRule::STR_IN_RE_CONSUME:
+    case ProofRewriteRule::STR_CTN_MULTISET_SUBSET:
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
     case ProofRewriteRule::BV_BITWISE_SLICING: return true;
     case ProofRewriteRule::STR_IN_RE_EVAL:

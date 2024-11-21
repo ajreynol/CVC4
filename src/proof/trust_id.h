@@ -178,6 +178,8 @@ enum class TrustId : uint32_t
    * eliminations.
    */
   RE_ELIM,
+  /** A step from BvPpAssert utility */
+  BV_PP_ASSERT,
   /** A quantifiers preprocessing step that was given without a proof */
   QUANTIFIERS_PREPROCESS,
   /** */
