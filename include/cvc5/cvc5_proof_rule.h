@@ -2397,6 +2397,7 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(ARITH_DIV_BY_CONST_ELIM),
+  EVALUE(ARITH_INT_EQ_CONFLICT),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Arithmetic -- strings predicate entailment**
@@ -3089,6 +3090,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_ABS_ELIM_REAL),
   /** Auto-generated from RARE rule arith-to-real-elim */
   EVALUE(ARITH_TO_REAL_ELIM),
+  /** Auto-generated from RARE rule arith-to-int-elim */
+  EVALUE(ARITH_TO_INT_ELIM),
   /** Auto-generated from RARE rule arith-to-int-elim-to-real */
   EVALUE(ARITH_TO_INT_ELIM_TO_REAL),
   /** Auto-generated from RARE rule arith-div-elim-to-real1 */

@@ -89,6 +89,11 @@ Node buildIntegerInequality(Sum&& sum, Kind k);
  */
 Node buildRealInequality(Sum&& sum, Kind k);
 
+/**
+ * Return true if the given sum is a conflict.
+ */
+bool isIntConflictGCDLCM(Sum&& sum);
+
 }  // namespace rewriter
 }  // namespace arith
 }  // namespace theory

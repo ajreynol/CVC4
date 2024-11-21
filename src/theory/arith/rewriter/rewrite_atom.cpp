@@ -259,6 +259,22 @@ Node buildRelation(Kind kind, Node left, Node right, bool negate)
   return NodeManager::currentNM()->mkNode(kind, left, right);
 }
 
+
+bool isIntConflictGCDLCM(Sum&& sum)
+{
+  normalizeGCDLCM(sum);
+  const auto& constant = *sum.begin();
+  if (constant.first.isConst())
+  {
+    Assert(constant.second.isRational());
+    if (!constant.second.toRational().isIntegral())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 Node buildIntegerEquality(Sum&& sum)
 {
   Trace("arith-rewriter") << "building integer equality from " << sum

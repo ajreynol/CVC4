@@ -59,6 +59,9 @@ ArithRewriter::ArithRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL,
                            TheoryRewriteCtx::DSL_SUBCALL);
+  registerProofRewriteRule(ProofRewriteRule::ARITH_INT_EQ_CONFLICT,
+                           TheoryRewriteCtx::DSL_SUBCALL);
+
   // we don't register ARITH_STRING_PRED_ENTAIL or
   // ARITH_STRING_PRED_SAFE_APPROX, as these are subsumed by
   // MACRO_ARITH_STRING_PRED_ENTAIL.
@@ -153,6 +156,20 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
           Trace("arith-rewriter-proof")
               << n[0] << " --> " << approx << " by safe approx" << std::endl;
           return nodeManager()->mkNode(Kind::GEQ, approx, n[1]);
+        }
+      }
+    }
+    break;
+    case ProofRewriteRule::ARITH_INT_EQ_CONFLICT:
+    {
+      if (n.getKind()==Kind::EQUAL && n[0].getType().isInteger())
+      {
+        rewriter::Sum sum;
+        rewriter::addToSum(sum, n[0], false);
+        rewriter::addToSum(sum, n[1], true);
+        if (rewriter::isIntConflictGCDLCM(std::move(sum)))
+        {
+          return nodeManager()->mkConst(false);
         }
       }
     }
@@ -898,6 +915,10 @@ RewriteResponse ArithRewriter::rewriteExtIntegerOp(TNode t)
 
 RewriteResponse ArithRewriter::postRewriteIAnd(TNode t)
 {
+  if (!d_expertEnabled)
+  {
+    return RewriteResponse(REWRITE_DONE, t);
+  }
   Assert(t.getKind() == Kind::IAND);
   uint32_t bsize = t.getOperator().getConst<IntAnd>().d_size;
   NodeManager* nm = nodeManager();
