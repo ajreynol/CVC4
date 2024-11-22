@@ -259,7 +259,6 @@ Node buildRelation(Kind kind, Node left, Node right, bool negate)
   return NodeManager::currentNM()->mkNode(kind, left, right);
 }
 
-
 bool isIntConflictGCDLCM(Sum&& sum)
 {
   normalizeGCDLCM(sum);

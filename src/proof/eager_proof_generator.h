@@ -19,10 +19,10 @@
 #define CVC5__PROOF__EAGER_PROOF_GENERATOR_H
 
 #include "context/cdhashmap.h"
+#include "cvc5/cvc5_proof_rule.h"
 #include "expr/node.h"
 #include "proof/proof_generator.h"
 #include "proof/trust_id.h"
-#include "cvc5/cvc5_proof_rule.h"
 #include "proof/trust_node.h"
 #include "smt/env_obj.h"
 
@@ -152,10 +152,10 @@ class EagerProofGenerator : protected EnvObj, public ProofGenerator
    * a proof of (exp => conc), or of conc if exp is empty.
    */
   TrustNode mkTrustNodeTrusted(Node conc,
-                        TrustId id,
-                        const std::vector<Node>& exp,
-                        const std::vector<Node>& args,
-                        bool isConflict = false);
+                               TrustId id,
+                               const std::vector<Node>& exp,
+                               const std::vector<Node>& args,
+                               bool isConflict = false);
   /**
    * Make trust node from a single step proof of a rewrite. This is a
    * convenience function that avoids the need to explictly construct ProofNode

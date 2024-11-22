@@ -242,9 +242,10 @@ void BVSolverBitblast::postCheck(Theory::Effort level)
       conflict = nm->mkAnd(assertions);
     }
     TrustNode tconflict;
-    if (d_epg!=nullptr)
+    if (d_epg != nullptr)
     {
-      tconflict = d_epg->mkTrustNodeTrusted(conflict, TrustId::BV_BITBLAST_CONFLICT, {}, {}, true);
+      tconflict = d_epg->mkTrustNodeTrusted(
+          conflict, TrustId::BV_BITBLAST_CONFLICT, {}, {}, true);
     }
     else
     {
