@@ -149,6 +149,8 @@ enum class TrustId : uint32_t
    * values as used by ProofRule::ARITH_MULT_ABS_COMPARISON.
    */
   ARITH_NL_COMPARE_LIT_TRANSFORM,
+  /** */
+  BV_BITBLAST_CONFLICT,
   /** Diamonds */
   DIAMONDS,
   /** An extended theory rewrite */
