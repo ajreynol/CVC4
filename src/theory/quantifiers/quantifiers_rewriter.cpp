@@ -107,7 +107,7 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_MINISCOPE,
                            TheoryRewriteCtx::PRE_DSL);
-  // QUANT_MINISCOPE is handled as part of the reconstruction for
+  // QUANT_MINISCOPE is used as part of the reconstruction for
   // MACRO_QUANT_MINISCOPE
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_PARTITION_CONNECTED_FV,
                            TheoryRewriteCtx::PRE_DSL);
@@ -117,6 +117,10 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_VAR_ELIM_INEQ,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_SOLVE_FUN_DEF,
+                           TheoryRewriteCtx::PRE_DSL);
+  // note ProofRewriteRule::QUANT_SOLVE_FUN_DEF is used as part of the reconstruction for
+  // MACRO_QUANT_SOLVE_FUN_DEF
 }
 
 Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -357,6 +361,15 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         qc[0] = d_nm->mkNode(Kind::BOUND_VAR_LIST, args);
         return d_nm->mkNode(Kind::FORALL, qc);
       }
+    }
+    break;
+    case ProofRewriteRule::MACRO_QUANT_SOLVE_FUN_DEF:
+    {
+      if (n.getKind() != Kind::FORALL)
+      {
+        return Node::null();
+      }
+      //return QuantifiersMacros::solve(n);
     }
     break;
     default: break;
