@@ -54,7 +54,7 @@ class QuantifiersMacros : protected EnvObj
    * (op = lambda x1 ... xn. def)), or the null node otherwise.
    */
   Node solve(Node lit, bool reqGround = false);
-  
+
  private:
   /**
    * Return true n is an APPLY_UF with pairwise unique BOUND_VARIABLE as

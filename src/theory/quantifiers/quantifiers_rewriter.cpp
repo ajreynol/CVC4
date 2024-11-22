@@ -119,8 +119,8 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_SOLVE_FUN_DEF,
                            TheoryRewriteCtx::PRE_DSL);
-  // note ProofRewriteRule::QUANT_SOLVE_FUN_DEF is used as part of the reconstruction for
-  // MACRO_QUANT_SOLVE_FUN_DEF
+  // note ProofRewriteRule::QUANT_SOLVE_FUN_DEF is used as part of the
+  // reconstruction for MACRO_QUANT_SOLVE_FUN_DEF
 }
 
 Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -369,7 +369,7 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      //return QuantifiersMacros::solve(n);
+      // return QuantifiersMacros::solve(n);
     }
     break;
     default: break;
