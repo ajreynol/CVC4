@@ -162,7 +162,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::ARITH_INT_EQ_CONFLICT:
     {
-      if (n.getKind()==Kind::EQUAL && n[0].getType().isInteger())
+      if (n.getKind()==Kind::EQUAL && n[0].getType().isInteger() && n[0]!=n[1])
       {
         rewriter::Sum sum;
         rewriter::addToSum(sum, n[0], false);
