@@ -29,10 +29,21 @@
 #include "theory/strings/infer_info.h"
 #include "theory/strings/sequences_stats.h"
 #include "theory/uf/proof_equality_engine.h"
+#include "expr/term_context.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace strings {
+
+class StringCoreTermContext : public TermContext
+{
+ public:
+  StringCoreTermContext();
+  /** The initial value: valid. */
+  uint32_t initialValue() const override;
+  /** Compute the value of the index^th child of t whose hash is tval */
+  uint32_t computeValue(TNode t, uint32_t tval, size_t index) const override;
+};
 
 /**
  * Converts between the strings-specific (untrustworthy) InferInfo class and
@@ -90,15 +101,6 @@ class InferProofCons : protected EnvObj, public ProofGenerator
   /** Identify this generator (for debugging, etc..) */
   virtual std::string identify() const override;
   /**
-   * Add proof of running convert on the given arguments to CDProof pf. This is
-   * called lazily during proof post-processing.
-   */
-  static bool convertAndAddProofTo(CDProof* pf,
-                                   Node conc,
-                                   InferenceId infer,
-                                   bool isRev,
-                                   const std::vector<Node>& exp);
-  /**
    * Pack arguments of a MACRO_STRING_INFERENCE rule application in args. This
    * proof rule stores the arguments to the convert method of this class below.
    */
@@ -117,8 +119,10 @@ class InferProofCons : protected EnvObj, public ProofGenerator
                          bool& isRev,
                          std::vector<Node>& exp);
 
- private:
   /** convert
+   *
+   * Add proof of running convert on the given arguments to CDProof pf. This is
+   * called lazily during proof post-processing.
    *
    * This method is called when the theory of strings makes an inference
    * described by an InferInfo, whose fields are given by the first four
@@ -140,13 +144,13 @@ class InferProofCons : protected EnvObj, public ProofGenerator
    * In particular, psb will contain a set of steps that form a proof
    * whose conclusion is conc and whose free assumptions are exp.
    */
-  static void convert(InferenceId infer,
+  static bool convert(Env& env,
+                      InferenceId infer,
                       bool isRev,
                       Node conc,
                       const std::vector<Node>& exp,
-                      ProofStep& ps,
-                      TheoryProofStepBuffer& psb,
-                      bool& useBuffer);
+                      CDProof* pf);
+ private:
   /**
    * Convert length proof. If this method returns true, it adds proof step(s)
    * to the buffer psb that conclude lenReq from premises lenExp.
