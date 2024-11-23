@@ -3,7 +3,7 @@ name   = "SMT Layer"
 
 [[option]]
   name       = "ackermann"
-  category   = "regular"
+  category   = "expert"
   long       = "ackermann"
   type       = "bool"
   default    = "false"
@@ -317,7 +317,7 @@ name   = "SMT Layer"
 
 [[option]]
   name       = "unconstrainedSimp"
-  category   = "regular"
+  category   = "expert"
   long       = "unconstrained-simp"
   type       = "bool"
   default    = "false"
@@ -357,7 +357,7 @@ name   = "SMT Layer"
 
 [[option]]
   name       = "solveBVAsInt"
-  category   = "regular"
+  category   = "expert"
   long       = "solve-bv-as-int=MODE"
   type       = "SolveBVAsIntMode"
   default    = "OFF"
@@ -417,7 +417,7 @@ name   = "SMT Layer"
 
 [[option]]
   name       = "solveIntAsBV"
-  category   = "regular"
+  category   = "expert"
   long       = "solve-int-as-bv=N"
   type       = "uint64_t"
   default    = "0"

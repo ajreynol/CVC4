@@ -1691,7 +1691,7 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "macrosQuant"
-  category   = "regular"
+  category   = "expert"
   long       = "macros-quant"
   type       = "bool"
   default    = "false"
