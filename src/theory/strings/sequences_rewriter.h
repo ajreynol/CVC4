@@ -328,15 +328,6 @@ class SequencesRewriter : public TheoryRewriter
    */
   Node canonicalStrForSymbolicLength(Node n, TypeNode stype) const;
 
-  /**
-   * post-process rewrite
-   *
-   * If node is not an equality and ret is an equality,
-   * this method applies an additional rewrite step (rewriteEqualityExt) that
-   * performs additional rewrites on ret, after which we return the result of
-   * this call. Otherwise, this method simply returns ret.
-   */
-  Node postProcessRewrite(Node node, Node ret);
   /** Reference to the rewriter statistics. */
   HistogramStat<Rewrite>* d_statistics;
   /**

@@ -186,17 +186,6 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
     }
   }
 
-  // ( len( s ) != len( t ) ) => ( s == t ---> false )
-  // This covers cases like str.++( x, x ) == "a" ---> false
-  Node len0 = nodeManager()->mkNode(Kind::STRING_LENGTH, node[0]);
-  Node len1 = nodeManager()->mkNode(Kind::STRING_LENGTH, node[1]);
-  Node len_eq = len0.eqNode(len1);
-  len_eq = d_rr->rewrite(len_eq);
-  if (len_eq.isConst() && !len_eq.getConst<bool>())
-  {
-    return returnRewrite(node, len_eq, Rewrite::EQ_LEN_DEQ);
-  }
-
   std::vector<Node> c[2];
   for (unsigned i = 0; i < 2; i++)
   {
@@ -287,8 +276,7 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
       // original node was an equality but we may be able to do additional
       // rewriting here, e.g.,
       // x++y = "" --> x = "" and y = ""
-      new_ret = returnRewrite(node, new_ret, Rewrite::STR_EQ_UNIFY);
-      return rewriteStrEqualityExt(new_ret);
+      return returnRewrite(node, new_ret, Rewrite::STR_EQ_UNIFY);
     }
   }
 
@@ -367,8 +355,7 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
         // original node was an equality but we may be able to do additional
         // rewriting here.
         new_ret = lhs.eqNode(ss);
-        new_ret = returnRewrite(node, new_ret, Rewrite::STR_EQ_HOMOG_CONST);
-        return rewriteStrEqualityExt(new_ret);
+        return returnRewrite(node, new_ret, Rewrite::STR_EQ_HOMOG_CONST);
       }
     }
   }
@@ -1999,9 +1986,6 @@ RewriteResponse SequencesRewriter::postRewrite(TNode node)
       << std::endl;
   if (node != retNode)
   {
-    // also post process the rewrite, which may apply extended rewriting to
-    // equalities, if we rewrite to an equality from a non-equality
-    retNode = postProcessRewrite(node, retNode);
     Trace("strings-rewrite-debug") << "Strings::SequencesRewriter::postRewrite "
                                    << node << " to " << retNode << std::endl;
     return RewriteResponse(REWRITE_AGAIN_FULL, retNode);
@@ -2831,7 +2815,6 @@ Node SequencesRewriter::rewriteIndexof(Node node)
   if (!node[2].isConst() || node[2].getConst<Rational>().sgn() != 0)
   {
     fstr = nm->mkNode(Kind::STRING_SUBSTR, node[0], node[2], len0);
-    fstr = d_rr->rewrite(fstr);
   }
 
   Node cmp_conr = d_stringsEntail.checkContains(fstr, node[1]);
@@ -3628,8 +3611,10 @@ Node SequencesRewriter::rewriteReplaceReAll(Node node)
       //   "Z" ++ y ++ "Z" ++ y
       TypeNode t = x.getType();
       Node emp = Word::mkEmptyWord(t);
-      Node yp = d_rr->rewrite(nm->mkNode(
-          Kind::REGEXP_DIFF, y, nm->mkNode(Kind::STRING_TO_REGEXP, emp)));
+      Node yp =
+      nm->mkNode(Kind::REGEXP_INTER,
+                            y,
+                            nm->mkNode(Kind::REGEXP_COMPLEMENT, nm->mkNode(Kind::STRING_TO_REGEXP, emp)));
       std::vector<Node> res;
       String rem = x.getConst<String>();
       std::pair<size_t, size_t> match(0, 0);
@@ -3911,50 +3896,6 @@ Node SequencesRewriter::returnRewrite(Node node, Node ret, Rewrite r)
   if (d_statistics != nullptr)
   {
     (*d_statistics) << r;
-  }
-  return ret;
-}
-
-Node SequencesRewriter::postProcessRewrite(Node node, Node ret)
-{
-  NodeManager* nm = nodeManager();
-  // standard post-processing
-  // We rewrite (string) equalities immediately here. This allows us to forego
-  // the standard invariant on equality rewrites (that s=t must rewrite to one
-  // of { s=t, t=s, true, false } ).
-  Kind retk = ret.getKind();
-  if (retk == Kind::OR || retk == Kind::AND)
-  {
-    std::vector<Node> children;
-    bool childChanged = false;
-    for (const Node& cret : ret)
-    {
-      Node creter = cret;
-      if (cret.getKind() == Kind::EQUAL)
-      {
-        creter = rewriteEqualityExt(cret);
-      }
-      else if (cret.getKind() == Kind::NOT && cret[0].getKind() == Kind::EQUAL)
-      {
-        creter = nm->mkNode(Kind::NOT, rewriteEqualityExt(cret[0]));
-      }
-      childChanged = childChanged || cret != creter;
-      children.push_back(creter);
-    }
-    if (childChanged)
-    {
-      ret = nm->mkNode(retk, children);
-    }
-  }
-  else if (retk == Kind::NOT && ret[0].getKind() == Kind::EQUAL)
-  {
-    ret = nm->mkNode(Kind::NOT, rewriteEqualityExt(ret[0]));
-  }
-  else if (retk == Kind::EQUAL && node.getKind() != Kind::EQUAL)
-  {
-    Trace("strings-rewrite")
-        << "Apply extended equality rewrite on " << ret << std::endl;
-    ret = rewriteEqualityExt(ret);
   }
   return ret;
 }
