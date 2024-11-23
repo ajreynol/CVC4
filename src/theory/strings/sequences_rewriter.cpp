@@ -3090,10 +3090,10 @@ Node SequencesRewriter::rewriteReplace(Node node)
   utils::getConcat(node[1], children1);
 
   // check if contains definitely does (or does not) hold
-  Node cmp_con = nm->mkNode(Kind::STRING_CONTAINS, node[0], node[1]);
-  Node cmp_conr = d_rr->rewrite(cmp_con);
-  if (cmp_conr.isConst())
+  Node cmp_conr = d_stringsEntail.checkContains(node[0], node[1]);
+  if (!cmp_conr.isNull())
   {
+    Assert (cmp_conr.isConst());
     if (cmp_conr.getConst<bool>())
     {
       // component-wise containment
@@ -3192,7 +3192,8 @@ Node SequencesRewriter::rewriteReplace(Node node)
     }
   }
 
-  if (cmp_conr != cmp_con)
+  // FIXME: is this right?
+  if (!cmp_conr.isNull())
   {
     if (d_stringsEntail.checkNonEmpty(node[1]))
     {
@@ -3413,8 +3414,8 @@ Node SequencesRewriter::rewriteReplace(Node node)
       {
         // str.contains( x, z ) ----> false implies
         // str.replace( x, y, str.replace( y, z, w ) ) ---> x
-        cmp_con = d_stringsEntail.checkContains(node[0], node[2][1]);
-        success = !cmp_con.isNull() && !cmp_con.getConst<bool>();
+        cmp_conr = d_stringsEntail.checkContains(node[0], node[2][1]);
+        success = !cmp_conr.isNull() && !cmp_conr.getConst<bool>();
       }
       if (success)
       {
