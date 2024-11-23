@@ -176,14 +176,6 @@ bool InferProofCons::convert(Env& env,
     case InferenceId::STRINGS_CODE_PROXY:
     {
       PurifyType pt = PurifyType::CORE_EQ;
-      if (infer == InferenceId::STRINGS_EXTF
-          || infer == InferenceId::STRINGS_EXTF_N)
-      {
-        // since we use congruence+rewriting, and not substitution+rewriting,
-        // these must purify a substitution over arguments to the left hand
-        // side of what we are proving.
-        pt = PurifyType::EXTF;
-      }
       CDProof assumps(env);
       StringCoreTermContext sctc;
       TConvProofGenerator tconv(env, nullptr, TConvPolicy::FIXPOINT, TConvCachePolicy::NEVER, "StrTConv", &sctc);
@@ -192,16 +184,38 @@ bool InferProofCons::convert(Env& env,
         Assert (s.getKind()==Kind::EQUAL);
         tconv.addRewriteStep(s[0], s[1], &assumps);
       }
-      std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(conc);
-      Node res = pfn->getResult();
-
+      Node res;
+      std::shared_ptr<ProofNode> pfn;
+      if (infer == InferenceId::STRINGS_EXTF
+          || infer == InferenceId::STRINGS_EXTF_N)
+      {
+        Node extt = conc;
+        if (extt.getKind()==Kind::EQUAL)
+        {
+          extt = extt[0];
+        }
+        // apply substitution to the arguments of the extended function
+        std::vector<Node> extcr;
+        for (const Node& extc : extt)
+        {
+          pfn = tconv.getProofForRewriting(extc);
+          pf->addProof(pfn);
+          extcr.push_back(pf->getResult()[1]);
+        }
+        // TODO: congruence
+      }
+      else
+      {
+        pfn = tconv.getProofForRewriting(conc);
+        pf->addProof(pfn);
+        res = pfn->getResult();
+      }
       Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
       Trace("strings-ipc-core") << "- " << res[0] << std::endl;
       Trace("strings-ipc-core") << "- to " << res[1] << std::endl;
       if (psb.applyPredIntro(res[1], {}))
       {
         useBuffer = true;
-        pf->addProof(pfn);
         psb.addStep(ProofRule::EQ_RESOLVE, {res[1], res[1].eqNode(res[0])}, {}, res[0]);
       }
     }
