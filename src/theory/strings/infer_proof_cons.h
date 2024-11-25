@@ -20,17 +20,17 @@
 
 #include <vector>
 
-#include "expr/node.h"
-#include "proof/proof_checker.h"
 #include "cvc5/cvc5_proof_rule.h"
+#include "expr/node.h"
+#include "expr/term_context.h"
+#include "proof/conv_proof_generator.h"
+#include "proof/proof_checker.h"
 #include "proof/theory_proof_step_buffer.h"
 #include "smt/env_obj.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/strings/infer_info.h"
 #include "theory/strings/sequences_stats.h"
 #include "theory/uf/proof_equality_engine.h"
-#include "expr/term_context.h"
-#include "proof/conv_proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -151,6 +151,7 @@ class InferProofCons : protected EnvObj, public ProofGenerator
                       Node conc,
                       const std::vector<Node>& exp,
                       CDProof* pf);
+
  private:
   /**
    * Convert length proof. If this method returns true, it adds proof step(s)
@@ -279,10 +280,11 @@ class InferProofCons : protected EnvObj, public ProofGenerator
                               const std::unordered_set<Node>& termsToPurify);
   /**
    */
-  static Node applySubsToArgs(Env& env, TConvProofGenerator& tconv,
+  static Node applySubsToArgs(Env& env,
+                              TConvProofGenerator& tconv,
                               const Node& n,
-                      CDProof* pf);
-                              
+                              CDProof* pf);
+
   /** The lazy fact map */
   NodeInferInfoMap d_lazyFactMap;
   /** Reference to the statistics for the theory of strings/sequences. */

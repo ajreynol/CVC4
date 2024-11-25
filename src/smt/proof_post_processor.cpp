@@ -18,6 +18,7 @@
 #include "expr/skolem_manager.h"
 #include "options/proof_options.h"
 #include "preprocessing/assertion_pipeline.h"
+#include "proof/proof_ensure_closed.h"
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
 #include "proof/resolution_proofs_util.h"
@@ -30,7 +31,6 @@
 #include "theory/rewriter.h"
 #include "theory/strings/infer_proof_cons.h"
 #include "theory/theory.h"
-#include "proof/proof_ensure_closed.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -978,8 +978,8 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     if (theory::strings::InferProofCons::unpackArgs(
             args, conc, iid, isRev, exp))
     {
-      if (theory::strings::InferProofCons::convert(d_env,
-              iid, isRev, conc, exp, cdp))
+      if (theory::strings::InferProofCons::convert(
+              d_env, iid, isRev, conc, exp, cdp))
       {
         pfgEnsureClosedWrt(options(), conc, cdp, exp, "check", "check");
         return conc;

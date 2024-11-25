@@ -18,14 +18,14 @@
 #include "expr/skolem_manager.h"
 #include "options/smt_options.h"
 #include "options/strings_options.h"
+#include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
+#include "smt/env.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
 #include "theory/strings/regexp_operation.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "util/statistics_registry.h"
-#include "proof/proof_node_algorithm.h"
-#include "smt/env.h"
 
 using namespace cvc5::internal::kind;
 
@@ -35,18 +35,18 @@ namespace strings {
 
 StringCoreTermContext::StringCoreTermContext() {}
 
-uint32_t StringCoreTermContext::initialValue() const
-{
-  return 0;
-}
+uint32_t StringCoreTermContext::initialValue() const { return 0; }
 
-uint32_t StringCoreTermContext::computeValue(TNode t, uint32_t tval, size_t index) const
+uint32_t StringCoreTermContext::computeValue(TNode t,
+                                             uint32_t tval,
+                                             size_t index) const
 {
-  if (tval==0)
+  if (tval == 0)
   {
     Kind k = t.getKind();
     // kinds we wish to substitute beneath
-    if (k==Kind::EQUAL || k==Kind::STRING_CONCAT || k==Kind::STRING_LENGTH)
+    if (k == Kind::EQUAL || k == Kind::STRING_CONCAT
+        || k == Kind::STRING_LENGTH)
     {
       return 0;
     }
@@ -179,10 +179,15 @@ bool InferProofCons::convert(Env& env,
       PurifyType pt = PurifyType::CORE_EQ;
       CDProof assumps(env);
       StringCoreTermContext sctc;
-      TConvProofGenerator tconv(env, nullptr, TConvPolicy::FIXPOINT, TConvCachePolicy::NEVER, "StrTConv", &sctc);
+      TConvProofGenerator tconv(env,
+                                nullptr,
+                                TConvPolicy::FIXPOINT,
+                                TConvCachePolicy::NEVER,
+                                "StrTConv",
+                                &sctc);
       for (const Node& s : ps.d_children)
       {
-        Assert (s.getKind()==Kind::EQUAL);
+        Assert(s.getKind() == Kind::EQUAL);
         tconv.addRewriteStep(s[0], s[1], &assumps);
       }
       Node res;
@@ -191,16 +196,16 @@ bool InferProofCons::convert(Env& env,
           || infer == InferenceId::STRINGS_EXTF_N)
       {
         Node extt = conc;
-        if (extt.getKind()==Kind::EQUAL)
+        if (extt.getKind() == Kind::EQUAL)
         {
           Node s1 = applySubsToArgs(env, tconv, extt[0], pf);
           Node s2 = applySubsToArgs(env, tconv, extt[1], pf);
           std::vector<Node> transEq;
-          if (extt[0]!=s1)
+          if (extt[0] != s1)
           {
             transEq.push_back(extt[0].eqNode(s1));
           }
-          if (s1!=s2)
+          if (s1 != s2)
           {
             Node seq = s1.eqNode(s2);
             Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
@@ -213,15 +218,16 @@ bool InferProofCons::convert(Env& env,
             }
             else
             {
-              Trace("strings-ipc-core") << "...failed to show " << seq << std::endl;
+              Trace("strings-ipc-core")
+                  << "...failed to show " << seq << std::endl;
               return false;
             }
           }
-          if (s1!=extt[1])
+          if (s1 != extt[1])
           {
             transEq.push_back(s2.eqNode(extt[1]));
           }
-          if (transEq.size()>1)
+          if (transEq.size() > 1)
           {
             pf->addStep(conc, ProofRule::TRANS, transEq, {});
           }
@@ -246,7 +252,10 @@ bool InferProofCons::convert(Env& env,
         if (psb.applyPredIntro(res[1], {}))
         {
           useBuffer = true;
-          psb.addStep(ProofRule::EQ_RESOLVE, {res[1], res[1].eqNode(res[0])}, {}, res[0]);
+          psb.addStep(ProofRule::EQ_RESOLVE,
+                      {res[1], res[1].eqNode(res[0])},
+                      {},
+                      res[0]);
         }
       }
     }
@@ -1536,13 +1545,14 @@ Node InferProofCons::maybePurifyTerm(
   return k;
 }
 
-Node InferProofCons::applySubsToArgs(Env& env, TConvProofGenerator& tconv,
-                              const Node& n,
-                      CDProof* pf)
+Node InferProofCons::applySubsToArgs(Env& env,
+                                     TConvProofGenerator& tconv,
+                                     const Node& n,
+                                     CDProof* pf)
 {
   Trace("strings-ipc-debug") << "Apply substitution to " << n << std::endl;
   std::shared_ptr<ProofNode> pfn;
-  if (n.getNumChildren()==0)
+  if (n.getNumChildren() == 0)
   {
     pfn = tconv.getProofForRewriting(n);
     pf->addProof(pfn);
@@ -1562,7 +1572,7 @@ Node InferProofCons::applySubsToArgs(Env& env, TConvProofGenerator& tconv,
   }
   std::vector<Node> cargs;
   ProofRule cr = expr::getCongRule(n, cargs);
-  ProofNodeManager * pnm = env.getProofNodeManager();
+  ProofNodeManager* pnm = env.getProofNodeManager();
   ProofChecker* pc = pnm->getChecker();
   pfn = pnm->mkNode(cr, cpfs, cargs);
   pf->addProof(pfn);
