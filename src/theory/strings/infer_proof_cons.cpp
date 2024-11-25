@@ -45,8 +45,7 @@ uint32_t StringCoreTermContext::computeValue(TNode t,
   {
     Kind k = t.getKind();
     // kinds we wish to substitute beneath
-    if (k == Kind::EQUAL || k == Kind::STRING_CONCAT
-        || k == Kind::STRING_LENGTH)
+    if (k == Kind::EQUAL || k == Kind::STRING_CONCAT)
     {
       return 0;
     }
@@ -160,7 +159,8 @@ bool InferProofCons::convert(Env& env,
   for (const Node& ec : ps.d_children)
   {
     Trace("strings-ipc-debug") << "Explicit add " << ec << std::endl;
-    psb.addStep(ProofRule::ASSUME, {}, {ec}, ec);
+   // psb.addStep(ProofRule::ASSUME, {}, {ec}, ec);
+    pf->addStep(ec, ProofRule::ASSUME, {}, {ec});
   }
   NodeManager* nm = NodeManager::currentNM();
   Node nodeIsRev = nm->mkConst(isRev);
@@ -187,7 +187,7 @@ bool InferProofCons::convert(Env& env,
       for (const Node& s : ps.d_children)
       {
         Assert(s.getKind() == Kind::EQUAL);
-        tconv.addRewriteStep(s[0], s[1], &assumps);
+        tconv.addRewriteStep(s[0], s[1], pf);
       }
       Node res;
       std::shared_ptr<ProofNode> pfn;
@@ -440,7 +440,7 @@ bool InferProofCons::convert(Env& env,
       {
         Node s = ps.d_children[i];
         Assert(s.getKind() == Kind::EQUAL);
-        tconv.addRewriteStep(s[0], s[1], &assumps);
+        tconv.addRewriteStep(s[0], s[1], pf);
       }
       std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(mainEq);
       Node res = pfn->getResult();
@@ -448,6 +448,7 @@ bool InferProofCons::convert(Env& env,
       Node pmainEq = mainEq;
       if (res[0] != res[1])
       {
+        Trace("strings-ipc-core") << "Rewrites: " << res << std::endl;
         pf->addProof(pfn);
         psb.tryStep(
             ProofRule::EQ_RESOLVE, {pmainEq, res[1].eqNode(res[0])}, {});
