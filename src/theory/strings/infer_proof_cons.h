@@ -30,6 +30,7 @@
 #include "theory/strings/sequences_stats.h"
 #include "theory/uf/proof_equality_engine.h"
 #include "expr/term_context.h"
+#include "proof/conv_proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -276,6 +277,12 @@ class InferProofCons : protected EnvObj, public ProofGenerator
    */
   static Node maybePurifyTerm(Node n,
                               const std::unordered_set<Node>& termsToPurify);
+  /**
+   */
+  static Node applySubsToArgs(Env& env, TConvProofGenerator& tconv,
+                              const Node& n,
+                      CDProof* pf);
+                              
   /** The lazy fact map */
   NodeInferInfoMap d_lazyFactMap;
   /** Reference to the statistics for the theory of strings/sequences. */

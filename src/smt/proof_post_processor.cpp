@@ -30,6 +30,7 @@
 #include "theory/rewriter.h"
 #include "theory/strings/infer_proof_cons.h"
 #include "theory/theory.h"
+#include "proof/proof_ensure_closed.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -980,6 +981,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       if (theory::strings::InferProofCons::convert(d_env,
               iid, isRev, conc, exp, cdp))
       {
+        pfgEnsureClosedWrt(options(), conc, cdp, exp, "check", "check");
         return conc;
       }
     }

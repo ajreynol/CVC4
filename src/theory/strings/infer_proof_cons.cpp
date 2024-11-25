@@ -23,8 +23,9 @@
 #include "theory/rewriter.h"
 #include "theory/strings/regexp_operation.h"
 #include "theory/strings/theory_strings_utils.h"
-#include "proof/conv_proof_generator.h"
 #include "util/statistics_registry.h"
+#include "proof/proof_node_algorithm.h"
+#include "smt/env.h"
 
 using namespace cvc5::internal::kind;
 
@@ -64,17 +65,17 @@ InferProofCons::InferProofCons(Env& env,
 void InferProofCons::notifyFact(const InferInfo& ii)
 {
   Node fact = ii.d_conc;
-  Trace("strings-ipc-debug")
+  Trace("strings-ipc-notify")
       << "InferProofCons::notifyFact: " << ii << std::endl;
   if (d_lazyFactMap.find(fact) != d_lazyFactMap.end())
   {
-    Trace("strings-ipc-debug") << "...duplicate!" << std::endl;
+    Trace("strings-ipc-notify") << "...duplicate!" << std::endl;
     return;
   }
   Node symFact = CDProof::getSymmFact(fact);
   if (!symFact.isNull() && d_lazyFactMap.find(symFact) != d_lazyFactMap.end())
   {
-    Trace("strings-ipc-debug") << "...duplicate (sym)!" << std::endl;
+    Trace("strings-ipc-notify") << "...duplicate (sym)!" << std::endl;
     return;
   }
   std::shared_ptr<InferInfo> iic = std::make_shared<InferInfo>(ii);
@@ -192,17 +193,44 @@ bool InferProofCons::convert(Env& env,
         Node extt = conc;
         if (extt.getKind()==Kind::EQUAL)
         {
-          extt = extt[0];
+          Node s1 = applySubsToArgs(env, tconv, extt[0], pf);
+          Node s2 = applySubsToArgs(env, tconv, extt[1], pf);
+          std::vector<Node> transEq;
+          if (extt[0]!=s1)
+          {
+            transEq.push_back(extt[0].eqNode(s1));
+          }
+          if (s1!=s2)
+          {
+            Node seq = s1.eqNode(s2);
+            Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
+            Trace("strings-ipc-core") << "- " << conc << std::endl;
+            Trace("strings-ipc-core") << "- to " << seq << std::endl;
+            if (psb.applyPredIntro(seq, {}))
+            {
+              transEq.push_back(seq);
+              useBuffer = true;
+            }
+            else
+            {
+              Trace("strings-ipc-core") << "...failed to show " << seq << std::endl;
+              return false;
+            }
+          }
+          if (s1!=extt[1])
+          {
+            transEq.push_back(s2.eqNode(extt[1]));
+          }
+          if (transEq.size()>1)
+          {
+            pf->addStep(conc, ProofRule::TRANS, transEq, {});
+          }
         }
-        // apply substitution to the arguments of the extended function
-        std::vector<Node> extcr;
-        for (const Node& extc : extt)
+        else
         {
-          pfn = tconv.getProofForRewriting(extc);
-          pf->addProof(pfn);
-          extcr.push_back(pf->getResult()[1]);
+          Node s = applySubsToArgs(env, tconv, extt, pf);
+          res = extt.eqNode(s);
         }
-        // TODO: congruence
       }
       else
       {
@@ -210,13 +238,16 @@ bool InferProofCons::convert(Env& env,
         pf->addProof(pfn);
         res = pfn->getResult();
       }
-      Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
-      Trace("strings-ipc-core") << "- " << res[0] << std::endl;
-      Trace("strings-ipc-core") << "- to " << res[1] << std::endl;
-      if (psb.applyPredIntro(res[1], {}))
+      if (!res.isNull())
       {
-        useBuffer = true;
-        psb.addStep(ProofRule::EQ_RESOLVE, {res[1], res[1].eqNode(res[0])}, {}, res[0]);
+        Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
+        Trace("strings-ipc-core") << "- " << res[0] << std::endl;
+        Trace("strings-ipc-core") << "- to " << res[1] << std::endl;
+        if (psb.applyPredIntro(res[1], {}))
+        {
+          useBuffer = true;
+          psb.addStep(ProofRule::EQ_RESOLVE, {res[1], res[1].eqNode(res[0])}, {}, res[0]);
+        }
       }
     }
     break;
@@ -1503,6 +1534,40 @@ Node InferProofCons::maybePurifyTerm(
   SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
   Node k = sm->mkPurifySkolem(n);
   return k;
+}
+
+Node InferProofCons::applySubsToArgs(Env& env, TConvProofGenerator& tconv,
+                              const Node& n,
+                      CDProof* pf)
+{
+  Trace("strings-ipc-debug") << "Apply substitution to " << n << std::endl;
+  std::shared_ptr<ProofNode> pfn;
+  if (n.getNumChildren()==0)
+  {
+    pfn = tconv.getProofForRewriting(n);
+    pf->addProof(pfn);
+    Node res = pfn->getResult();
+    return res[0];
+  }
+  // apply substitution to the arguments of the extended function
+  std::vector<std::shared_ptr<ProofNode>> cpfs;
+  std::vector<Node> cpremises;
+  for (const Node& extc : n)
+  {
+    pfn = tconv.getProofForRewriting(extc);
+    pf->addProof(pfn);
+    Trace("strings-ipc-debug") << "...proof arg " << *pfn.get() << std::endl;
+    cpfs.push_back(pfn);
+    cpremises.push_back(pfn->getResult());
+  }
+  std::vector<Node> cargs;
+  ProofRule cr = expr::getCongRule(n, cargs);
+  ProofNodeManager * pnm = env.getProofNodeManager();
+  ProofChecker* pc = pnm->getChecker();
+  pfn = pnm->mkNode(cr, cpfs, cargs);
+  pf->addProof(pfn);
+  Trace("strings-ipc-debug") << "...proof conc " << *pfn.get() << std::endl;
+  return pfn->getResult()[1];
 }
 
 }  // namespace strings
