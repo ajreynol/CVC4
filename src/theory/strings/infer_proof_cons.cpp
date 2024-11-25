@@ -176,7 +176,6 @@ bool InferProofCons::convert(Env& env,
     case InferenceId::STRINGS_NORMAL_FORM:
     case InferenceId::STRINGS_CODE_PROXY:
     {
-      PurifyType pt = PurifyType::CORE_EQ;
       CDProof assumps(env);
       StringCoreTermContext sctc;
       TConvProofGenerator tconv(env,
@@ -428,16 +427,33 @@ bool InferProofCons::convert(Env& env,
       // we purify the core substitution
       std::vector<Node> pcsr(ps.d_children.begin(),
                              ps.d_children.begin() + mainEqIndex);
-      Node pmainEq = mainEq;
-      // we transform mainEq to pmainEq and then use this as the first
-      // argument to MACRO_SR_PRED_ELIM.
-      if (!purifyCoreSubstitutionAndTarget(
-              PurifyType::CORE_EQ, pmainEq, pcsr, psb, true))
+
+      StringCoreTermContext sctc;
+      TConvProofGenerator tconv(env,
+                                nullptr,
+                                TConvPolicy::FIXPOINT,
+                                TConvCachePolicy::NEVER,
+                                "StrTConv",
+                                &sctc);
+      CDProof assumps(env);
+      for (size_t i=0; i<mainEqIndex; i++)
       {
-        break;
+        Node s = ps.d_children[i];
+        Assert(s.getKind() == Kind::EQUAL);
+        tconv.addRewriteStep(s[0], s[1], &assumps);
+      }
+      std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(mainEq);
+      Node res = pfn->getResult();
+      Assert (res.getKind()==Kind::EQUAL);
+      Node pmainEq = mainEq;
+      if (res[0]!=res[1])
+      {
+        pf->addProof(pfn);
+        psb.tryStep(ProofRule::EQ_RESOLVE, {pmainEq, res[1].eqNode(res[0])}, {});
+        pmainEq = res[1];
       }
       Trace("strings-ipc-core")
-          << "Main equality after purify " << pmainEq << std::endl;
+          << "Main equality after subs " << pmainEq << std::endl;
       std::vector<Node> childrenSRew;
       childrenSRew.push_back(pmainEq);
       childrenSRew.insert(childrenSRew.end(), pcsr.begin(), pcsr.end());
@@ -1342,209 +1358,6 @@ std::string InferProofCons::identify() const
   return "strings::InferProofCons";
 }
 
-bool InferProofCons::purifyCoreSubstitutionAndTarget(
-    PurifyType pt,
-    Node& tgt,
-    std::vector<Node>& children,
-    TheoryProofStepBuffer& psb,
-    bool concludeTgtNew)
-{
-  // collect the terms to purify, which are the LHS of the substitution
-  std::unordered_set<Node> termsToPurify;
-  if (!purifyCoreSubstitution(children, psb, termsToPurify))
-  {
-    return false;
-  }
-  // no need to purify, e.g. if all LHS of substitution are variables
-  if (termsToPurify.empty())
-  {
-    return true;
-  }
-  // now, purify the target predicate
-  tgt = purifyPredicate(pt, tgt, concludeTgtNew, psb, termsToPurify);
-  if (tgt.isNull())
-  {
-    Trace("strings-ipc-pure-subs")
-        << "...failed to purify target " << tgt << std::endl;
-    return false;
-  }
-  return true;
-}
-
-bool InferProofCons::purifyCoreSubstitution(
-    std::vector<Node>& children,
-    TheoryProofStepBuffer& psb,
-    std::unordered_set<Node>& termsToPurify)
-{
-  for (const Node& nc : children)
-  {
-    Assert(nc.getKind() == Kind::EQUAL);
-    if (!nc[0].isVar())
-    {
-      termsToPurify.insert(nc[0]);
-    }
-  }
-  // To avoid rare issues where purification variables introduced by this method
-  // already appear in the inference, we also purify them here.
-  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
-  SkolemId id;
-  Node cval;
-  for (const Node& nc : children)
-  {
-    // if this is a purification skolem of a term that is being purified,
-    // we purify this.
-    if (sm->isSkolemFunction(nc[0], id, cval) && id == SkolemId::PURIFY
-        && termsToPurify.find(cval) != termsToPurify.end())
-    {
-      termsToPurify.insert(nc[0]);
-    }
-  }
-  // now, purify each of the children of the substitution
-  for (size_t i = 0, nchild = children.size(); i < nchild; i++)
-  {
-    Node pnc = purifyPredicate(
-        PurifyType::SUBS_EQ, children[i], true, psb, termsToPurify);
-    if (pnc.isNull())
-    {
-      Trace("strings-ipc-pure-subs")
-          << "...failed to purify " << children[i] << std::endl;
-      return false;
-    }
-    if (children[i] != pnc)
-    {
-      Trace("strings-ipc-pure-subs")
-          << "Converted: " << children[i] << " to " << pnc << std::endl;
-      children[i] = pnc;
-    }
-    // we now should have a substitution with only atomic terms
-    Assert(children[i][0].getNumChildren() == 0);
-  }
-  return true;
-}
-
-Node InferProofCons::purifyPredicate(
-    PurifyType pt,
-    Node lit,
-    bool concludeNew,
-    TheoryProofStepBuffer& psb,
-    const std::unordered_set<Node>& termsToPurify)
-{
-  bool pol = lit.getKind() != Kind::NOT;
-  Node atom = pol ? lit : lit[0];
-  NodeManager* nm = NodeManager::currentNM();
-  Node newLit;
-  if (pt == PurifyType::SUBS_EQ)
-  {
-    if (atom.getKind() != Kind::EQUAL)
-    {
-      Assert(false) << "Expected equality";
-      return lit;
-    }
-    // purify the LHS directly, purify the RHS as a core term
-    newLit = nm->mkNode(Kind::EQUAL,
-                        maybePurifyTerm(atom[0], termsToPurify),
-                        purifyCoreTerm(atom[1], termsToPurify));
-  }
-  else if (pt == PurifyType::CORE_EQ)
-  {
-    if (atom.getKind() != Kind::EQUAL)
-    {
-      // we only purify string (dis)equalities
-      return lit;
-    }
-    // purify both sides of the equality
-    std::vector<Node> pcs;
-    for (const Node& lc : atom)
-    {
-      pcs.push_back(purifyCoreTerm(lc, termsToPurify));
-    }
-    newLit = nm->mkNode(Kind::EQUAL, pcs);
-  }
-  else if (pt == PurifyType::EXTF)
-  {
-    if (atom.getKind() == Kind::EQUAL)
-    {
-      // purify the left hand side, which should be an extended function
-      newLit =
-          nm->mkNode(Kind::EQUAL, purifyApp(atom[0], termsToPurify), atom[1]);
-    }
-    else
-    {
-      // predicate case, e.g. for inferring contains
-      newLit = purifyApp(atom, termsToPurify);
-    }
-  }
-  else
-  {
-    Assert(false) << "Unknown purify type in InferProofCons::purifyPredicate";
-  }
-  if (!pol)
-  {
-    newLit = newLit.notNode();
-  }
-  if (lit == newLit)
-  {
-    // no change
-    return lit;
-  }
-  // prove by transformation, should always succeed
-  if (!psb.applyPredTransform(
-          concludeNew ? lit : newLit, concludeNew ? newLit : lit, {}))
-  {
-    // failed, return null
-    return Node::null();
-  }
-  return newLit;
-}
-
-Node InferProofCons::purifyCoreTerm(
-    Node n, const std::unordered_set<Node>& termsToPurify)
-{
-  Kind k = n.getKind();
-  if (k == Kind::STRING_CONCAT || k == Kind::STRING_LENGTH)
-  {
-    std::vector<Node> pcs;
-    for (const Node& nc : n)
-    {
-      pcs.push_back(purifyCoreTerm(nc, termsToPurify));
-    }
-    return NodeManager::currentNM()->mkNode(k, pcs);
-  }
-  else if (!n.getType().isStringLike())
-  {
-    return n;
-  }
-  return maybePurifyTerm(n, termsToPurify);
-}
-
-Node InferProofCons::purifyApp(Node n,
-                               const std::unordered_set<Node>& termsToPurify)
-{
-  if (n.getNumChildren() == 0)
-  {
-    return n;
-  }
-  std::vector<Node> pcs;
-  for (const Node& nc : n)
-  {
-    pcs.push_back(maybePurifyTerm(nc, termsToPurify));
-  }
-  return NodeManager::currentNM()->mkNode(n.getKind(), pcs);
-}
-
-Node InferProofCons::maybePurifyTerm(
-    Node n, const std::unordered_set<Node>& termsToPurify)
-{
-  if (termsToPurify.find(n) == termsToPurify.end())
-  {
-    // did not need to purify
-    return n;
-  }
-  SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
-  Node k = sm->mkPurifySkolem(n);
-  return k;
-}
-
 Node InferProofCons::applySubsToArgs(Env& env,
                                      TConvProofGenerator& tconv,
                                      const Node& n,
@@ -1573,7 +1386,6 @@ Node InferProofCons::applySubsToArgs(Env& env,
   std::vector<Node> cargs;
   ProofRule cr = expr::getCongRule(n, cargs);
   ProofNodeManager* pnm = env.getProofNodeManager();
-  ProofChecker* pc = pnm->getChecker();
   pfn = pnm->mkNode(cr, cpfs, cargs);
   pf->addProof(pfn);
   Trace("strings-ipc-debug") << "...proof conc " << *pfn.get() << std::endl;
