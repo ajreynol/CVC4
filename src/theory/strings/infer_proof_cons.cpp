@@ -436,7 +436,7 @@ bool InferProofCons::convert(Env& env,
                                 "StrTConv",
                                 &sctc);
       CDProof assumps(env);
-      for (size_t i=0; i<mainEqIndex; i++)
+      for (size_t i = 0; i < mainEqIndex; i++)
       {
         Node s = ps.d_children[i];
         Assert(s.getKind() == Kind::EQUAL);
@@ -444,12 +444,13 @@ bool InferProofCons::convert(Env& env,
       }
       std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(mainEq);
       Node res = pfn->getResult();
-      Assert (res.getKind()==Kind::EQUAL);
+      Assert(res.getKind() == Kind::EQUAL);
       Node pmainEq = mainEq;
-      if (res[0]!=res[1])
+      if (res[0] != res[1])
       {
         pf->addProof(pfn);
-        psb.tryStep(ProofRule::EQ_RESOLVE, {pmainEq, res[1].eqNode(res[0])}, {});
+        psb.tryStep(
+            ProofRule::EQ_RESOLVE, {pmainEq, res[1].eqNode(res[0])}, {});
         pmainEq = res[1];
       }
       Trace("strings-ipc-core")
