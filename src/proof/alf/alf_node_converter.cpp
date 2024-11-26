@@ -276,7 +276,7 @@ Node AlfNodeConverter::postConvert(Node n)
       std::vector<Node> children(n.begin(), n.end());
       return mkInternalApp("to_fp_bv", children, tn);
     }
-  }  
+  }
   else if (k == Kind::BITVECTOR_EAGER_ATOM)
   {
     // For now, we explicity remove the application.

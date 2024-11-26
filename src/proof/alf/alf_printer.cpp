@@ -490,7 +490,7 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
     std::stringstream ss;
     ss << id;
     return ss.str();
-  }  
+  }
   else if (r == ProofRule::ENCODE_EQ_INTRO || r == ProofRule::HO_APP_ENCODE
            || r == ProofRule::BV_EAGER_ATOM)
   {

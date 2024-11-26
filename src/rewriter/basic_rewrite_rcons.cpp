@@ -781,7 +781,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
       // step will be unsound. this is the case e.g. when
       // a != (str.++ b x) is turned into x != (str.substr a (str.len b) ...)
       // where the latter implies the former, but they are not equivalent
-      if (rewrite(body1r[i])!=rewrite(body1re[i]))
+      if (rewrite(body1r[i]) != rewrite(body1re[i]))
       {
         return false;
       }
