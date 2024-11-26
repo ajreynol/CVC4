@@ -706,7 +706,7 @@ Node StringsEntail::checkContains(Node a, Node b, bool fullRewriter)
 bool StringsEntail::checkNonEmpty(Node a)
 {
   Node len = NodeManager::currentNM()->mkNode(Kind::STRING_LENGTH, a);
-  len = d_rr->rewrite(len);
+  len = d_arithEntail.rewriteLengthIntro(len);
   return d_arithEntail.check(len, true);
 }
 
@@ -715,7 +715,7 @@ bool StringsEntail::checkLengthOne(Node s, bool strict)
   NodeManager* nm = NodeManager::currentNM();
   Node one = nm->mkConstInt(Rational(1));
   Node len = nm->mkNode(Kind::STRING_LENGTH, s);
-  len = d_rr->rewrite(len);
+  len = d_arithEntail.rewriteLengthIntro(len);
   return d_arithEntail.check(one, len)
          && (!strict || d_arithEntail.check(len, true));
 }
