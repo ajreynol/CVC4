@@ -279,7 +279,7 @@ class QuantifiersRewriter : public TheoryRewriter
                             Node body,
                             std::map<Node, Node>& cache,
                             options::IteLiftQuantMode iteLiftMode,
-                             TConvProofGenerator* pg = nullptr) const;
+                            TConvProofGenerator* pg = nullptr) const;
   void computeDtTesterIteSplit(Node n,
                                std::map<Node, Node>& pcons,
                                std::map<Node, std::map<int, Node> >& ncons,

@@ -23,6 +23,7 @@
 #include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
 #include "options/quantifiers_options.h"
+#include "proof/conv_proof_generator.h"
 #include "theory/arith/arith_msum.h"
 #include "theory/booleans/theory_bool_rewriter.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
@@ -38,7 +39,6 @@
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/uf/theory_uf_rewriter.h"
 #include "util/rational.h"
-#include "proof/conv_proof_generator.h"
 
 using namespace std;
 using namespace cvc5::internal::kind;
@@ -804,7 +804,7 @@ Node QuantifiersRewriter::computeProcessTerms2(
     }
   }
   else if (ret.getKind() == Kind::EQUAL
-      && iteLiftMode != options::IteLiftQuantMode::NONE)
+           && iteLiftMode != options::IteLiftQuantMode::NONE)
   {
     for (size_t i = 0; i < 2; i++)
     {
@@ -865,12 +865,15 @@ Node QuantifiersRewriter::computeProcessTerms2(
       ret = fullApp;
     }
   }
-  if (pg!=nullptr)
+  if (pg != nullptr)
   {
-    if (retOrig!=ret)
+    if (retOrig != ret)
     {
-      pg->addRewriteStep(
-          retOrig, ret, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+      pg->addRewriteStep(retOrig,
+                         ret,
+                         nullptr,
+                         false,
+                         TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
     }
   }
   cache[body] = ret;
