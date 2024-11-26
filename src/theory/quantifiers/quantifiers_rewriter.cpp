@@ -120,7 +120,8 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_VAR_ELIM_INEQ,
                            TheoryRewriteCtx::PRE_DSL);
-  // we don't register MACRO_QUANT_REWRITE_BODY.
+  registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_REWRITE_BODY,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -382,7 +383,15 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_QUANT_REWRITE_BODY:
     {
-      // TODO
+      if (n.getKind() != Kind::FORALL)
+      {
+        return Node::null();
+      }
+      Node nr = computeRewriteBody(n);
+      if (nr!=n)
+      {
+        return nr;
+      }
     }
     break;
     default: break;
@@ -721,7 +730,8 @@ void QuantifiersRewriter::computeDtTesterIteSplit(
 Node QuantifiersRewriter::computeProcessTerms(const Node& q,
                                               const std::vector<Node>& args,
                                               Node body,
-                                              QAttributes& qa) const
+                                              QAttributes& qa,
+                           TConvProofGenerator* pg) const
 {
   options::IteLiftQuantMode iteLiftMode = options::IteLiftQuantMode::NONE;
   if (qa.isStandard())
@@ -729,7 +739,7 @@ Node QuantifiersRewriter::computeProcessTerms(const Node& q,
     iteLiftMode = d_opts.quantifiers.iteLiftQuant;
   }
   std::map<Node, Node> cache;
-  return computeProcessTerms2(q, args, body, cache, iteLiftMode);
+  return computeProcessTerms2(q, args, body, cache, iteLiftMode, pg);
 }
 
 Node QuantifiersRewriter::computeProcessTerms2(
@@ -752,7 +762,7 @@ Node QuantifiersRewriter::computeProcessTerms2(
   for (const Node& bc : body)
   {
     // do the recursive call on children
-    Node nn = computeProcessTerms2(q, args, bc, cache, iteLiftMode);
+    Node nn = computeProcessTerms2(q, args, bc, cache, iteLiftMode, pg);
     children.push_back(nn);
     changed = changed || nn != bc;
   }
@@ -2167,6 +2177,28 @@ bool QuantifiersRewriter::isStandard(QAttributes& qa, const Options& opts)
   return qa.isStandard() && !is_strict_trigger;
 }
 
+Node QuantifiersRewriter::computeRewriteBody(const Node& n,
+                            TConvProofGenerator* pg) const
+{
+  Assert (n.getKind()==Kind::FORALL);
+  QAttributes qa;
+  QuantAttributes::computeQuantAttributes(n, qa);
+  std::vector<Node> args(n[0].begin(), n[0].end());
+  Node body = computeProcessTerms(n, args, n[1], qa, pg);
+  if (body!=n[1])
+  {
+    std::vector<Node> children;
+    children.push_back(n[0]);
+    children.push_back(body);
+    if (n.getNumChildren()==3)
+    {
+      children.push_back(n[2]);
+    }
+    return d_nm->mkNode(Kind::FORALL, children);
+  }
+  return n;
+}
+                             
 bool QuantifiersRewriter::doOperation(Node q,
                                       RewriteStep computeOption,
                                       QAttributes& qa) const

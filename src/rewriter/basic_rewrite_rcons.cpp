@@ -247,6 +247,12 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
+    case ProofRewriteRule::MACRO_QUANT_REWRITE_BODY:
+      if (ensureProofMacroQuantRewriteBody(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
     default: break;
   }
   if (handledMacro)
@@ -898,6 +904,26 @@ bool BasicRewriteRCons::ensureProofMacroQuantMiniscope(CDProof* cdp,
   return true;
 }
 
+bool BasicRewriteRCons::ensureProofMacroQuantRewriteBody(CDProof* cdp, const Node& eq)
+{
+  Trace("brc-macro") << "Expand quant rewrite body " << eq[0] << " == " << eq[1]
+                     << std::endl;
+  // Call the utility again with proof tracking and construct the term
+  // conversion proof. This proof itself may have trust steps in it.
+  TConvProofGenerator tcpg(d_env, nullptr);
+  theory::quantifiers::QuantifiersRewriter qrew(
+      nodeManager(), d_env.getRewriter(), options());
+  Node qr = qrew.computeRewriteBody(
+      eq[0], &tcpg);
+  if (qr!=eq[1])
+  {
+    return false;
+  }
+  std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);
+  cdp->addProof(pfn);
+  return true;
+}
+  
 bool BasicRewriteRCons::ensureProofArithPolyNormRel(CDProof* cdp,
                                                     const Node& eq)
 {
