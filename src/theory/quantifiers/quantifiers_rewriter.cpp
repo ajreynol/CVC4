@@ -388,7 +388,7 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         return Node::null();
       }
       Node nr = computeRewriteBody(n);
-      if (nr!=n)
+      if (nr != n)
       {
         return nr;
       }
@@ -731,7 +731,7 @@ Node QuantifiersRewriter::computeProcessTerms(const Node& q,
                                               const std::vector<Node>& args,
                                               Node body,
                                               QAttributes& qa,
-                           TConvProofGenerator* pg) const
+                                              TConvProofGenerator* pg) const
 {
   options::IteLiftQuantMode iteLiftMode = options::IteLiftQuantMode::NONE;
   if (qa.isStandard())
@@ -2178,19 +2178,19 @@ bool QuantifiersRewriter::isStandard(QAttributes& qa, const Options& opts)
 }
 
 Node QuantifiersRewriter::computeRewriteBody(const Node& n,
-                            TConvProofGenerator* pg) const
+                                             TConvProofGenerator* pg) const
 {
-  Assert (n.getKind()==Kind::FORALL);
+  Assert(n.getKind() == Kind::FORALL);
   QAttributes qa;
   QuantAttributes::computeQuantAttributes(n, qa);
   std::vector<Node> args(n[0].begin(), n[0].end());
   Node body = computeProcessTerms(n, args, n[1], qa, pg);
-  if (body!=n[1])
+  if (body != n[1])
   {
     std::vector<Node> children;
     children.push_back(n[0]);
     children.push_back(body);
-    if (n.getNumChildren()==3)
+    if (n.getNumChildren() == 3)
     {
       children.push_back(n[2]);
     }
@@ -2198,7 +2198,7 @@ Node QuantifiersRewriter::computeRewriteBody(const Node& n,
   }
   return n;
 }
-                             
+
 bool QuantifiersRewriter::doOperation(Node q,
                                       RewriteStep computeOption,
                                       QAttributes& qa) const

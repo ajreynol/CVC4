@@ -904,7 +904,8 @@ bool BasicRewriteRCons::ensureProofMacroQuantMiniscope(CDProof* cdp,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroQuantRewriteBody(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroQuantRewriteBody(CDProof* cdp,
+                                                         const Node& eq)
 {
   Trace("brc-macro") << "Expand quant rewrite body " << eq[0] << " == " << eq[1]
                      << std::endl;
@@ -913,18 +914,18 @@ bool BasicRewriteRCons::ensureProofMacroQuantRewriteBody(CDProof* cdp, const Nod
   TConvProofGenerator tcpg(d_env, nullptr);
   theory::quantifiers::QuantifiersRewriter qrew(
       nodeManager(), d_env.getRewriter(), options());
-  Node qr = qrew.computeRewriteBody(
-      eq[0], &tcpg);
-  if (qr!=eq[1])
+  Node qr = qrew.computeRewriteBody(eq[0], &tcpg);
+  if (qr != eq[1])
   {
-    Assert(false) << "Failed to rewrite " << eq[0] << " to " << qr << " != " << eq[1];
+    Assert(false) << "Failed to rewrite " << eq[0] << " to " << qr
+                  << " != " << eq[1];
     return false;
   }
   std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);
   cdp->addProof(pfn);
   return true;
 }
-  
+
 bool BasicRewriteRCons::ensureProofArithPolyNormRel(CDProof* cdp,
                                                     const Node& eq)
 {

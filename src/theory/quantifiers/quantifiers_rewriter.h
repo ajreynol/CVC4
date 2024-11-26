@@ -234,7 +234,8 @@ class QuantifiersRewriter : public TheoryRewriter
    * to show that q rewrites to the returned quantified formula.
    */
   Node computeRewriteBody(const Node& q,
-                             TConvProofGenerator* pg = nullptr) const;
+                          TConvProofGenerator* pg = nullptr) const;
+
  private:
   /**
    * Do trivial merging of the prenex of quantified formula q, e.g.
@@ -286,7 +287,7 @@ class QuantifiersRewriter : public TheoryRewriter
                             Node body,
                             std::map<Node, Node>& cache,
                             options::IteLiftQuantMode iteLiftMode,
-                             TConvProofGenerator* pg) const;
+                            TConvProofGenerator* pg) const;
   void computeDtTesterIteSplit(Node n,
                                std::map<Node, Node>& pcons,
                                std::map<Node, std::map<int, Node> >& ncons,
@@ -337,7 +338,7 @@ class QuantifiersRewriter : public TheoryRewriter
                            const std::vector<Node>& args,
                            Node body,
                            QAttributes& qa,
-                             TConvProofGenerator* pg = nullptr) const;
+                           TConvProofGenerator* pg = nullptr) const;
   //------------------------------------- end process terms
   //------------------------------------- extended rewrite
   /** compute extended rewrite
