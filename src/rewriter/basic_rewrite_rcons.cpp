@@ -917,6 +917,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantRewriteBody(CDProof* cdp, const Nod
       eq[0], &tcpg);
   if (qr!=eq[1])
   {
+    Assert(false) << "Failed to rewrite " << eq[0] << " to " << qr << " != " << eq[1];
     return false;
   }
   std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);
