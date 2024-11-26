@@ -727,15 +727,8 @@ Node QuantifiersRewriter::computeProcessTerms(const Node& q,
   {
     iteLiftMode = d_opts.quantifiers.iteLiftQuant;
   }
-  std::vector<Node> new_conds;
   std::map<Node, Node> cache;
-  Node n = computeProcessTerms2(q, args, body, cache, new_conds, iteLiftMode);
-  if (!new_conds.empty())
-  {
-    new_conds.push_back(n);
-    n = nodeManager()->mkNode(Kind::OR, new_conds);
-  }
-  return n;
+  return computeProcessTerms2(q, args, body, cache, iteLiftMode);
 }
 
 Node QuantifiersRewriter::computeProcessTerms2(
@@ -743,7 +736,6 @@ Node QuantifiersRewriter::computeProcessTerms2(
     const std::vector<Node>& args,
     Node body,
     std::map<Node, Node>& cache,
-    std::vector<Node>& new_conds,
     options::IteLiftQuantMode iteLiftMode) const
 {
   NodeManager* nm = nodeManager();
@@ -786,7 +778,7 @@ Node QuantifiersRewriter::computeProcessTerms2(
   for (const Node& bc : body)
   {
     // do the recursive call on children
-    Node nn = computeProcessTerms2(q, args, bc, cache, new_conds, iteLiftMode);
+    Node nn = computeProcessTerms2(q, args, bc, cache, iteLiftMode);
     children.push_back(nn);
     changed = changed || nn != bc;
   }

@@ -262,24 +262,21 @@ class QuantifiersRewriter : public TheoryRewriter
                              Node n,
                              Node ipl);
   /**
-   * It may introduce new conditions C into new_conds. It returns a node retBody
-   * such that q of the form
+   * Returns a node retBody such that q of the form
    *   forall args. body
    * is equivalent to:
-   *   forall args. ( C V retBody )
+   *   forall args. retBody
    *
    * @param q The original quantified formula we are processing
    * @param args The bound variables of q
    * @param body The subformula of the body of q we are processing
    * @param cache Cache from terms to their processed form
-   * @param new_conds New conditions to add as disjunctions to the return
    * @param iteLiftMode The mode for lifting ITEs from body.
    */
   Node computeProcessTerms2(const Node& q,
                             const std::vector<Node>& args,
                             Node body,
                             std::map<Node, Node>& cache,
-                            std::vector<Node>& new_conds,
                             options::IteLiftQuantMode iteLiftMode) const;
   void computeDtTesterIteSplit(Node n,
                                std::map<Node, Node>& pcons,
