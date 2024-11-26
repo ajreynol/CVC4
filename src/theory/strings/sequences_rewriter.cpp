@@ -3192,31 +3192,28 @@ Node SequencesRewriter::rewriteReplace(Node node)
     }
   }
 
-  // FIXME: is this right?
-  if (!cmp_conr.isNull())
+  if (d_stringsEntail.checkNonEmpty(node[1]))
   {
-    if (d_stringsEntail.checkNonEmpty(node[1]))
+    // pull endpoints that can be stripped
+    // for example,
+    //   str.replace( str.++( "b", x, "b" ), "a", y ) --->
+    //   str.++( "b", str.replace( x, "a", y ), "b" )
+    std::vector<Node> cb;
+    std::vector<Node> ce;
+    if (d_stringsEntail.stripConstantEndpoints(children0, children1, cb, ce))
     {
-      // pull endpoints that can be stripped
-      // for example,
-      //   str.replace( str.++( "b", x, "b" ), "a", y ) --->
-      //   str.++( "b", str.replace( x, "a", y ), "b" )
-      std::vector<Node> cb;
-      std::vector<Node> ce;
-      if (d_stringsEntail.stripConstantEndpoints(children0, children1, cb, ce))
-      {
-        std::vector<Node> cc;
-        cc.insert(cc.end(), cb.begin(), cb.end());
-        cc.push_back(nodeManager()->mkNode(Kind::STRING_REPLACE,
-                                           utils::mkConcat(children0, stype),
-                                           node[1],
-                                           node[2]));
-        cc.insert(cc.end(), ce.begin(), ce.end());
-        Node ret = utils::mkConcat(cc, stype);
-        return returnRewrite(node, ret, Rewrite::RPL_PULL_ENDPT);
-      }
+      std::vector<Node> cc;
+      cc.insert(cc.end(), cb.begin(), cb.end());
+      cc.push_back(nodeManager()->mkNode(Kind::STRING_REPLACE,
+                                          utils::mkConcat(children0, stype),
+                                          node[1],
+                                          node[2]));
+      cc.insert(cc.end(), ce.begin(), ce.end());
+      Node ret = utils::mkConcat(cc, stype);
+      return returnRewrite(node, ret, Rewrite::RPL_PULL_ENDPT);
     }
   }
+  
 
   children1.clear();
   utils::getConcat(node[1], children1);
