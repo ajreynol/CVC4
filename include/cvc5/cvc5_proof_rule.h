@@ -3047,10 +3047,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(SETS_INSERT_ELIM),
   // RARE rules
   // ${rules}$
-  /** Auto-generated from RARE rule arith-mul-one */
-  EVALUE(ARITH_MUL_ONE),
-  /** Auto-generated from RARE rule arith-mul-zero */
-  EVALUE(ARITH_MUL_ZERO),
   /** Auto-generated from RARE rule arith-div-total-real */
   EVALUE(ARITH_DIV_TOTAL_REAL),
   /** Auto-generated from RARE rule arith-div-total-int */
@@ -3107,8 +3103,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_PLUS_FLATTEN),
   /** Auto-generated from RARE rule arith-mult-flatten */
   EVALUE(ARITH_MULT_FLATTEN),
-  /** Auto-generated from RARE rule arith-mult-dist */
-  EVALUE(ARITH_MULT_DIST),
   /** Auto-generated from RARE rule arith-abs-elim-int */
   EVALUE(ARITH_ABS_ELIM_INT),
   /** Auto-generated from RARE rule arith-abs-elim-real */
@@ -3197,6 +3191,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BOOL_IMPLIES_DE_MORGAN),
   /** Auto-generated from RARE rule bool-and-de-morgan */
   EVALUE(BOOL_AND_DE_MORGAN),
+  /** Auto-generated from RARE rule bool-or-and-distrib */
+  EVALUE(BOOL_OR_AND_DISTRIB),
   /** Auto-generated from RARE rule bool-xor-refl */
   EVALUE(BOOL_XOR_REFL),
   /** Auto-generated from RARE rule bool-xor-nrefl */
