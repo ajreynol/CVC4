@@ -456,12 +456,9 @@ bool InferProofCons::convert(Env& env,
       }
       Trace("strings-ipc-core")
           << "Main equality after subs " << pmainEq << std::endl;
-      std::vector<Node> childrenSRew;
-      childrenSRew.push_back(pmainEq);
-      childrenSRew.insert(childrenSRew.end(), pcsr.begin(), pcsr.end());
       // now, conclude the proper equality
       Node mainEqSRew =
-          psb.tryStep(ProofRule::MACRO_SR_PRED_ELIM, childrenSRew, {});
+          psb.applyPredElim(pmainEq, pcsr);
       if (mainEqSRew == conc)
       {
         Trace("strings-ipc-core") << "...success after rewrite!" << std::endl;
