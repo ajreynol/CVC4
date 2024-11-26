@@ -245,17 +245,6 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
     }
   }
 
-  // ( len( s ) != len( t ) ) => ( s == t ---> false )
-  // This covers cases like str.++( x, x ) == "a" ---> false
-  Node len0 = nodeManager()->mkNode(Kind::STRING_LENGTH, node[0]);
-  Node len1 = nodeManager()->mkNode(Kind::STRING_LENGTH, node[1]);
-  Node len_eq = len0.eqNode(len1);
-  len_eq = d_rr->rewrite(len_eq);
-  if (len_eq.isConst() && !len_eq.getConst<bool>())
-  {
-    return returnRewrite(node, len_eq, Rewrite::EQ_LEN_DEQ);
-  }
-
   std::vector<Node> c[2];
   for (unsigned i = 0; i < 2; i++)
   {
