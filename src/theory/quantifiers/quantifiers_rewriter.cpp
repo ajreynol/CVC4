@@ -38,6 +38,7 @@
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/uf/theory_uf_rewriter.h"
 #include "util/rational.h"
+#include "proof/conv_proof_generator.h"
 
 using namespace std;
 using namespace cvc5::internal::kind;
@@ -736,7 +737,8 @@ Node QuantifiersRewriter::computeProcessTerms2(
     const std::vector<Node>& args,
     Node body,
     std::map<Node, Node>& cache,
-    options::IteLiftQuantMode iteLiftMode) const
+    options::IteLiftQuantMode iteLiftMode,
+    TConvProofGenerator* pg) const
 {
   NodeManager* nm = nodeManager();
   Trace("quantifiers-rewrite-term-debug2")
@@ -744,34 +746,6 @@ Node QuantifiersRewriter::computeProcessTerms2(
   std::map< Node, Node >::iterator iti = cache.find( body );
   if( iti!=cache.end() ){
     return iti->second;
-  }
-  if (body.isClosure())
-  {
-    // Ensure no shadowing. If this term is a closure quantifying a variable
-    // in args, then we introduce fresh variable(s) and replace this closure
-    // to be over the fresh variables instead.
-    std::vector<Node> oldVars;
-    std::vector<Node> newVars;
-    for (size_t i = 0, nvars = body[0].getNumChildren(); i < nvars; i++)
-    {
-      const Node& v = body[0][i];
-      if (std::find(args.begin(), args.end(), v) != args.end())
-      {
-        Trace("quantifiers-rewrite-unshadow")
-            << "Found shadowed variable " << v << " in " << q << std::endl;
-        oldVars.push_back(v);
-        Node nv = ElimShadowNodeConverter::getElimShadowVar(q, body, i);
-        newVars.push_back(nv);
-      }
-    }
-    if (!oldVars.empty())
-    {
-      Assert(oldVars.size() == newVars.size());
-      Node sbody = body.substitute(
-          oldVars.begin(), oldVars.end(), newVars.begin(), newVars.end());
-      cache[body] = sbody;
-      return sbody;
-    }
   }
   bool changed = false;
   std::vector<Node> children;
@@ -798,10 +772,38 @@ Node QuantifiersRewriter::computeProcessTerms2(
     ret = body;
   }
 
+  Node retOrig = ret;
   Trace("quantifiers-rewrite-term-debug2")
       << "Returning " << ret << " for " << body << std::endl;
   // do context-independent rewriting
-  if (ret.getKind() == Kind::EQUAL
+  if (ret.isClosure())
+  {
+    // Ensure no shadowing. If this term is a closure quantifying a variable
+    // in args, then we introduce fresh variable(s) and replace this closure
+    // to be over the fresh variables instead.
+    std::vector<Node> oldVars;
+    std::vector<Node> newVars;
+    for (size_t i = 0, nvars = ret[0].getNumChildren(); i < nvars; i++)
+    {
+      const Node& v = ret[0][i];
+      if (std::find(args.begin(), args.end(), v) != args.end())
+      {
+        Trace("quantifiers-rewrite-unshadow")
+            << "Found shadowed variable " << v << " in " << q << std::endl;
+        oldVars.push_back(v);
+        Node nv = ElimShadowNodeConverter::getElimShadowVar(q, ret, i);
+        newVars.push_back(nv);
+      }
+    }
+    if (!oldVars.empty())
+    {
+      Assert(oldVars.size() == newVars.size());
+      Node sbody = ret.substitute(
+          oldVars.begin(), oldVars.end(), newVars.begin(), newVars.end());
+      ret = sbody;
+    }
+  }
+  else if (ret.getKind() == Kind::EQUAL
       && iteLiftMode != options::IteLiftQuantMode::NONE)
   {
     for (size_t i = 0; i < 2; i++)
@@ -861,6 +863,14 @@ Node QuantifiersRewriter::computeProcessTerms2(
     if (!fullApp.isNull())
     {
       ret = fullApp;
+    }
+  }
+  if (pg!=nullptr)
+  {
+    if (retOrig!=ret)
+    {
+      pg->addRewriteStep(
+          retOrig, ret, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
     }
   }
   cache[body] = ret;
