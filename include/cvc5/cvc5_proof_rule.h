@@ -3147,6 +3147,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARRAY_STORE_OVERWRITE),
   /** Auto-generated from RARE rule array-store-self */
   EVALUE(ARRAY_STORE_SELF),
+  /** Auto-generated from RARE rule array-read-over-write-split */
+  EVALUE(ARRAY_READ_OVER_WRITE_SPLIT),
   /** Auto-generated from RARE rule bool-double-not-elim */
   EVALUE(BOOL_DOUBLE_NOT_ELIM),
   /** Auto-generated from RARE rule bool-not-true */
