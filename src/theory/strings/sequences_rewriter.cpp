@@ -43,7 +43,6 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
     : TheoryRewriter(nm),
       d_statistics(statistics),
       d_rr(r),
-      d_arithEntail(r),
       d_stringsEntail(d_arithEntail, this)
 {
   d_sigmaStar = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
@@ -87,7 +86,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       // Rewrite without using the rewriter as a subutility, which ensures
       // that we can reconstruct the reasoning in a proof.
       Rewrite rule;
-      ArithEntail ae(nullptr);
+      ArithEntail ae;
       StringsEntail sent(ae, nullptr);
       return rewriteViaMacroSubstrStripSymLength(n, rule, sent);
     }

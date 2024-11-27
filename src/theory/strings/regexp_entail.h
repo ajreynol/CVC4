@@ -35,7 +35,7 @@ namespace strings {
 class RegExpEntail
 {
  public:
-  RegExpEntail(Rewriter* r);
+  RegExpEntail();
   /** simple regular expression consume
    *
    * This method is called when we are rewriting a membership of the form

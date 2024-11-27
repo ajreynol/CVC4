@@ -29,7 +29,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace strings {
 
-RegExpEntail::RegExpEntail(Rewriter* r) : d_aent(r)
+RegExpEntail::RegExpEntail()
 {
   d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
   d_one = NodeManager::currentNM()->mkConstInt(Rational(1));

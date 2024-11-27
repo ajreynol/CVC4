@@ -40,11 +40,7 @@ namespace strings {
 class ArithEntail
 {
  public:
-  /**
-   * @param r The rewriter, used for rewriting arithmetic terms. If none
-   * is provided, we rely on the ArithPolyNorm utility.
-   */
-  ArithEntail(Rewriter* r);
+  ArithEntail();
   /**
    * Returns the rewritten form of a term, which must be an integer term.
    * This method invokes the rewriter, if one is provided, and uses the
@@ -285,8 +281,6 @@ class ArithEntail
    * computed. Used for getConstantBound and getConstantBoundLength.
    */
   static bool getConstantBoundCache(TNode n, bool isLower, Node& c);
-  /** The underlying rewriter, if one exists */
-  Rewriter* d_rr;
   /** Constant zero */
   Node d_zero;
   Node d_one;
