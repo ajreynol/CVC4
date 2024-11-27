@@ -90,9 +90,10 @@ Node ArithEntail::rewriteArith(Node a)
 {
   AlwaysAssert(a.getType().isInteger())
       << "Bad term: " << a << " " << a.getType();
+  Node an = rewriteLengthIntro(a);
   // Use the poly norm utility. This is important since the rewrite
   // must be justified by ARITH_POLY_NORM when in proof mode.
-  Node an = arith::PolyNorm::getPolyNorm(a);
+  an = arith::PolyNorm::getPolyNorm(an);
   return an;
 }
 
