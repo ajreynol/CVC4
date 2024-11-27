@@ -30,10 +30,9 @@ namespace cvc5::internal {
 namespace theory {
 namespace strings {
 
-StringsEntail::StringsEntail(Rewriter* r,
-                             ArithEntail& aent,
+StringsEntail::StringsEntail(ArithEntail& aent,
                              SequencesRewriter* rewriter)
-    : d_rr(r), d_arithEntail(aent), d_rewriter(rewriter)
+    : d_arithEntail(aent), d_rewriter(rewriter)
 {
 }
 
@@ -672,32 +671,21 @@ bool StringsEntail::stripConstantEndpoints(std::vector<Node>& n1,
   return changed;
 }
 
-Node StringsEntail::checkContains(Node a, Node b, bool fullRewriter)
+Node StringsEntail::checkContains(Node a, Node b)
 {
   NodeManager* nm = NodeManager::currentNM();
   Node ctn = nm->mkNode(Kind::STRING_CONTAINS, a, b);
 
-  if (fullRewriter)
+  if (d_rewriter == nullptr)
   {
-    if (d_rr == nullptr)
-    {
-      return Node::null();
-    }
-    ctn = d_rr->rewrite(ctn);
+    return Node::null();
   }
-  else
+  Node prev;
+  do
   {
-    if (d_rewriter == nullptr)
-    {
-      return Node::null();
-    }
-    Node prev;
-    do
-    {
-      prev = ctn;
-      ctn = d_rewriter->rewriteContains(ctn);
-    } while (prev != ctn && ctn.getKind() == Kind::STRING_CONTAINS);
-  }
+    prev = ctn;
+    ctn = d_rewriter->rewriteContains(ctn);
+  } while (prev != ctn && ctn.getKind() == Kind::STRING_CONTAINS);
 
   Assert(ctn.getType().isBoolean());
   return ctn.isConst() ? ctn : Node::null();
