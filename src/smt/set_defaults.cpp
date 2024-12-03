@@ -140,6 +140,14 @@ void SetDefaults::setDefaultsPre(Options& opts)
     // enabled by default later
     SET_AND_NOTIFY_IF_NOT_USER(fp, fpExp, false, "safe options");
     SET_AND_NOTIFY_IF_NOT_USER(sets, setsExp, false, "safe options");
+    if (opts.arith.nlCov)
+    {
+      std::stringstream ss;
+      ss << "Cannot use --" << options::arith::longName::nlCov
+         << " when safe options are enabled.";
+      throw OptionException(ss.str());
+    }
+    SET_AND_NOTIFY_IF_NOT_USER(arith, nlCov, false, "safe options");
   }
   // implied options
   if (opts.smt.debugCheckModels)
@@ -920,37 +928,24 @@ void SetDefaults::setDefaultsPost(const LogicInfo& logic, Options& opts) const
   }
 
 #ifdef CVC5_USE_POLY
-  if (opts.base.safeOptions)
+  if (logic == LogicInfo("QF_UFNRA"))
   {
-    if (opts.arith.nlCov)
+    if (!opts.arith.nlCov && !opts.arith.nlCovWasSetByUser)
     {
-      std::stringstream ss;
-      ss << "Cannot use --" << options::arith::longName::nlCov
-         << " when safe options are enabled.";
-      throw OptionException(ss.str());
+      SET_AND_NOTIFY(arith, nlCov, true, "QF_UFNRA");
+      SET_AND_NOTIFY_IF_NOT_USER_VAL_SYM(
+          arith, nlExt, options::NlExtMode::LIGHT, "QF_UFNRA");
     }
   }
-  else
+  else if (logic.isQuantified() && logic.isTheoryEnabled(theory::THEORY_ARITH)
+            && logic.areRealsUsed() && !logic.areIntegersUsed()
+            && !logic.areTranscendentalsUsed())
   {
-    if (logic == LogicInfo("QF_UFNRA"))
+    if (!opts.arith.nlCov && !opts.arith.nlCovWasSetByUser)
     {
-      if (!opts.arith.nlCov && !opts.arith.nlCovWasSetByUser)
-      {
-        SET_AND_NOTIFY(arith, nlCov, true, "QF_UFNRA");
-        SET_AND_NOTIFY_IF_NOT_USER_VAL_SYM(
-            arith, nlExt, options::NlExtMode::LIGHT, "QF_UFNRA");
-      }
-    }
-    else if (logic.isQuantified() && logic.isTheoryEnabled(theory::THEORY_ARITH)
-             && logic.areRealsUsed() && !logic.areIntegersUsed()
-             && !logic.areTranscendentalsUsed())
-    {
-      if (!opts.arith.nlCov && !opts.arith.nlCovWasSetByUser)
-      {
-        SET_AND_NOTIFY(arith, nlCov, true, "logic with reals");
-        SET_AND_NOTIFY_IF_NOT_USER_VAL_SYM(
-            arith, nlExt, options::NlExtMode::LIGHT, "logic with reals");
-      }
+      SET_AND_NOTIFY(arith, nlCov, true, "logic with reals");
+      SET_AND_NOTIFY_IF_NOT_USER_VAL_SYM(
+          arith, nlExt, options::NlExtMode::LIGHT, "logic with reals");
     }
   }
 #else
