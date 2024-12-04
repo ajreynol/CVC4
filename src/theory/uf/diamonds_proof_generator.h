@@ -20,8 +20,8 @@
 
 #include "proof/method_id.h"
 #include "proof/proof_generator.h"
-#include "smt/env_obj.h"
 #include "proof/trust_node.h"
+#include "smt/env_obj.h"
 
 namespace cvc5::internal {
 
@@ -40,7 +40,7 @@ class DiamondsProofGenerator : protected EnvObj, public ProofGenerator
    */
   DiamondsProofGenerator(Env& env);
   virtual ~DiamondsProofGenerator();
-  /** 
+  /**
    */
   void ppStaticLearn(TNode n, std::vector<TrustNode>& learned);
   /**

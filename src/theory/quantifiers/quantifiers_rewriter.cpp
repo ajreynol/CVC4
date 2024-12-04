@@ -1058,12 +1058,12 @@ Node QuantifiersRewriter::computeCondSplit(Node body,
     if (do_split)
     {
       std::vector<Node> split_children;
-      if (split_index!=0)
+      if (split_index != 0)
       {
         split_children.push_back(body[split_index]);
-        for (size_t i=0; i<size; i++)
+        for (size_t i = 0; i < size; i++)
         {
-          if (i!=split_index)
+          if (i != split_index)
           {
             split_children.push_back(body[i]);
           }

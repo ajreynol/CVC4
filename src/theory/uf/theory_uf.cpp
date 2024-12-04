@@ -440,7 +440,7 @@ void TheoryUF::presolve() {
 void TheoryUF::ppStaticLearn(TNode n, std::vector<TrustNode>& learned)
 {
   //TimerStat::CodeTimer codeTimer(d_staticLearningTimer);
-  
+
   // Use the diamonds utility
   d_dpfgen.ppStaticLearn(n, learned);
 

@@ -23,13 +23,15 @@ DiamondsProofGenerator::DiamondsProofGenerator(Env& env) : EnvObj(env) {}
 
 DiamondsProofGenerator::~DiamondsProofGenerator() {}
 
-void DiamondsProofGenerator::ppStaticLearn(TNode n, std::vector<TrustNode>& learned)
+void DiamondsProofGenerator::ppStaticLearn(TNode n,
+                                           std::vector<TrustNode>& learned)
 {
   std::vector<TNode> workList;
   workList.push_back(n);
   std::unordered_set<TNode> processed;
 
-  while(!workList.empty()) {
+  while (!workList.empty())
+  {
     n = workList.back();
 
     if (n.isClosure())
@@ -41,21 +43,25 @@ void DiamondsProofGenerator::ppStaticLearn(TNode n, std::vector<TrustNode>& lear
     }
 
     bool unprocessedChildren = false;
-    for(TNode::iterator i = n.begin(), iend = n.end(); i != iend; ++i) {
-      if(processed.find(*i) == processed.end()) {
+    for (TNode::iterator i = n.begin(), iend = n.end(); i != iend; ++i)
+    {
+      if (processed.find(*i) == processed.end())
+      {
         // unprocessed child
         workList.push_back(*i);
         unprocessedChildren = true;
       }
     }
 
-    if(unprocessedChildren) {
+    if (unprocessedChildren)
+    {
       continue;
     }
 
     workList.pop_back();
     // has node n been processed in the meantime ?
-    if(processed.find(n) != processed.end()) {
+    if (processed.find(n) != processed.end())
+    {
       continue;
     }
     processed.insert(n);
@@ -78,26 +84,32 @@ void DiamondsProofGenerator::ppStaticLearn(TNode n, std::vector<TrustNode>& lear
 
       Trace("diamonds") << "has form of a diamond!" << std::endl;
 
-      TNode
-        a = n[0][0][0], b = n[0][0][1],
-        c = n[0][1][0], d = n[0][1][1],
-        e = n[1][0][0], f = n[1][0][1],
-        g = n[1][1][0], h = n[1][1][1];
+      TNode a = n[0][0][0], b = n[0][0][1], c = n[0][1][0], d = n[0][1][1],
+            e = n[1][0][0], f = n[1][0][1], g = n[1][1][0], h = n[1][1][1];
 
       // test that one of {a, b} = one of {c, d}, and make "b" the
       // shared node (i.e. put in the form (a = b && b = d))
       // note we don't actually care about the shared ones, so the
       // "swaps" below are one-sided, ignoring b and c
-      if(a == c) {
+      if (a == c)
+      {
         a = b;
-      } else if(a == d) {
+      }
+      else if (a == d)
+      {
         a = b;
         d = c;
-      } else if(b == c) {
+      }
+      else if (b == c)
+      {
         // nothing to do
-      } else if(b == d) {
+      }
+      else if (b == d)
+      {
         d = c;
-      } else {
+      }
+      else
+      {
         // condition not satisfied
         Trace("diamonds") << "+ A fails" << std::endl;
         continue;
@@ -107,16 +119,25 @@ void DiamondsProofGenerator::ppStaticLearn(TNode n, std::vector<TrustNode>& lear
 
       // same: one of {e, f} = one of {g, h}, and make "f" the
       // shared node (i.e. put in the form (e = f && f = h))
-      if(e == g) {
+      if (e == g)
+      {
         e = f;
-      } else if(e == h) {
+      }
+      else if (e == h)
+      {
         e = f;
         h = g;
-      } else if(f == g) {
+      }
+      else if (f == g)
+      {
         // nothing to do
-      } else if(f == h) {
+      }
+      else if (f == h)
+      {
         h = g;
-      } else {
+      }
+      else
+      {
         // condition not satisfied
         Trace("diamonds") << "+ B fails" << std::endl;
         continue;
@@ -126,8 +147,8 @@ void DiamondsProofGenerator::ppStaticLearn(TNode n, std::vector<TrustNode>& lear
 
       // now we have (a = b && b = d) || (e = f && f = h)
       // test that {a, d} == {e, h}
-      if( (a == e && d == h) ||
-          (a == h && d == e) ) {
+      if ((a == e && d == h) || (a == h && d == e))
+      {
         // learn: n implies a == d
         Trace("diamonds") << "+ C holds" << std::endl;
         Node newEquality = a.eqNode(d);
@@ -135,13 +156,15 @@ void DiamondsProofGenerator::ppStaticLearn(TNode n, std::vector<TrustNode>& lear
         Node lem = n.impNode(newEquality);
         TrustNode trn = TrustNode::mkTrustLemma(lem, this);
         learned.emplace_back(trn);
-      } else {
+      }
+      else
+      {
         Trace("diamonds") << "+ C fails" << std::endl;
       }
     }
   }
 }
-  
+
 std::shared_ptr<ProofNode> DiamondsProofGenerator::getProofFor(Node fact)
 {
   Trace("valid-witness") << "Prove " << fact << std::endl;
