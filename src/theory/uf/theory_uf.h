@@ -82,7 +82,7 @@ private:
   /** the conversions solver */
   std::unique_ptr<ConversionsSolver> d_csolver;
   /** Diamonds proof generator */
-  std::unique_ptr<DiamondsProofGenerator> d_dpfgen;
+  DiamondsProofGenerator d_dpfgen;
 
   /** node for true */
   Node d_true;
