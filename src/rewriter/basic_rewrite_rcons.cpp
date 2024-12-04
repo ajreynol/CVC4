@@ -35,7 +35,6 @@
 #include "theory/strings/strings_entail.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "util/rational.h"
-#include "expr/term_context.h"
 
 using namespace cvc5::internal::kind;
 
@@ -79,43 +78,6 @@ bool BasicRewriteRCons::prove(CDProof* cdp,
   {
     Trace("trewrite-rcons") << "...EVALUATE" << std::endl;
     return true;
-  }
-  // alpha equivalence?
-  if (a.isClosure() && a.getKind() == b.getKind())
-  {
-    size_t nchild = a[0].getNumChildren();
-    if (nchild == b[0].getNumChildren())
-    {
-      bool success = true;
-      std::vector<Node> vars;
-      std::vector<Node> subs;
-      for (size_t i = 0; i < nchild; i++)
-      {
-        if (a[0][i] != b[0][i])
-        {
-          if (a[0][i].getType() != b[0][i].getType())
-          {
-            success = false;
-            break;
-          }
-          vars.emplace_back(a[0][i]);
-          subs.emplace_back(b[0][i]);
-        }
-      }
-      if (success && !vars.empty())
-      {
-        NodeManager* nm = nodeManager();
-        std::vector<Node> pfArgs;
-        pfArgs.push_back(a);
-        pfArgs.push_back(nm->mkNode(Kind::SEXPR, vars));
-        pfArgs.push_back(nm->mkNode(Kind::SEXPR, subs));
-        if (tryRule(cdp, eq, ProofRule::ALPHA_EQUIV, pfArgs))
-        {
-          Trace("trewrite-rcons") << "...ALPHA_EQUIV" << std::endl;
-          return true;
-        }
-      }
-    }
   }
 
   // try theory rewrite (pre-rare)
