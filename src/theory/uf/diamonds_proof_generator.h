@@ -15,8 +15,8 @@
 
 #include "cvc5_private.h"
 
-#ifndef CVC5__PROOF__DIAMONDS_PROOF_GENERATOR_H
-#define CVC5__PROOF__DIAMONDS_PROOF_GENERATOR_H
+#ifndef CVC5__THEORY__UF__DIAMONDS_PROOF_GENERATOR_H
+#define CVC5__THEORY__UF__DIAMONDS_PROOF_GENERATOR_H
 
 #include "proof/method_id.h"
 #include "proof/proof_generator.h"

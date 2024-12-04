@@ -10,10 +10,10 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Valid witness proof generator utility.
+ * Diamonds proof generator utility.
  */
 
-#include "proof/diamonds_proof_generator.h"
+#include "theory/uf/diamonds_proof_generator.h"
 
 #include "proof/proof.h"
 
