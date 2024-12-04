@@ -1757,7 +1757,7 @@ Node QuantifiersRewriter::computePrenex(Node q,
         else
         {
           // not specific to a quantified formula, use normal
-          vv = nm->mkBoundVar(vt);
+          vv = NodeManager::mkBoundVar(vt);
         }
         subs.push_back(vv);
       }
