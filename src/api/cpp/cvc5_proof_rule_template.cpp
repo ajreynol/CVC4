@@ -247,6 +247,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-arrays-distinct-arrays";
     case ProofRewriteRule::EXISTS_ELIM: return "exists-elim";
     case ProofRewriteRule::QUANT_UNUSED_VARS: return "quant-unused-vars";
+    case ProofRewriteRule::MACRO_QUANT_MERGE_PRENEX:
+      return "macro-quant-merge-prenex";
     case ProofRewriteRule::QUANT_MERGE_PRENEX: return "quant-merge-prenex";
     case ProofRewriteRule::QUANT_PRENEX: return "quant-prenex";
     case ProofRewriteRule::MACRO_QUANT_MINISCOPE:
@@ -266,6 +268,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::MACRO_QUANT_SOLVE_FUN_DEF:
       return "macro-quant-solve-fun-def";
     case ProofRewriteRule::QUANT_SOLVE_FUN_DEF: return "quant-solve-fun-def";
+    case ProofRewriteRule::MACRO_QUANT_REWRITE_BODY:
+      return "macro-quant-rewrite-body";
     case ProofRewriteRule::DT_INST: return "dt-inst";
     case ProofRewriteRule::DT_COLLAPSE_SELECTOR: return "dt-collapse-selector";
     case ProofRewriteRule::DT_COLLAPSE_TESTER: return "dt-collapse-tester";

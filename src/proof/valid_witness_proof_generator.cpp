@@ -19,9 +19,7 @@
 
 namespace cvc5::internal {
 
-ValidWitnessProofGenerator::ValidWitnessProofGenerator(Env& env) : EnvObj(env)
-{
-}
+ValidWitnessProofGenerator::ValidWitnessProofGenerator(Env& env) : EnvObj(env) {}
 
 ValidWitnessProofGenerator::~ValidWitnessProofGenerator() {}
 
@@ -34,9 +32,7 @@ std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact)
   return cdp.getProofFor(fact);
 }
 
-std::string ValidWitnessProofGenerator::identify() const
-{
-  return "ValidWitnessProofGenerator";
-}
+std::string ValidWitnessProofGenerator::identify() const { return "ValidWitnessProofGenerator"; }
 
 }  // namespace cvc5::internal
+

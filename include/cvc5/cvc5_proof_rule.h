@@ -2331,7 +2331,14 @@ enum ENUM(ProofRewriteRule)
    * **Builtin -- Distinct elimination**
    *
    * .. math::
-   *   \texttt{distinct}(t_1, \ldots, tn) = \bigwedge_{i \neq j} t_i \neq t_j
+   *   \texttt{distinct}(t_1, t_2) = \neg (t_1 = t2)
+   *
+   * if :math:`n = 2`, or
+   * 
+   * .. math::
+   *   \texttt{distinct}(t_1, \ldots, tn) = \bigwedge_{i=1}^n \bigwedge_{j=i+1}^n t_i \neq t_j
+   *
+   * if :math:`n > 2`
    *
    * \endverbatim
    */
@@ -2459,7 +2466,7 @@ enum ENUM(ProofRewriteRule)
    * **Arithmetic -- power elimination**
    *
    * .. math::
-   *   (^ x c) = (x \cdot \ldots \cdot x)
+   *   (x ^ c) = (x \cdot \ldots \cdot x)
    *
    * where :math:`c` is a non-negative integer.
    *
@@ -2541,11 +2548,25 @@ enum ENUM(ProofRewriteRule)
    * .. math::
    *   \forall X.\> F = \forall X_1.\> F
    *
-   * where :math:`X_1` is the subset of :math:`X` that appear free in :math:`F`.
+   * where :math:`X_1` is the subset of :math:`X` that appear free in :math:`F`
+   * and :math:`X_1` does not contain duplicate variables.
    *
    * \endverbatim
    */
   EVALUE(QUANT_UNUSED_VARS),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Macro merge prenex**
+   *
+   * .. math::
+   *   \forall X_1.\> \ldots \forall X_n.\> F = \forall X.\> F
+   *
+   * where :math:`X_1 \ldots X_n` are lists of variables and :math:`X` is the
+   * result of removing duplicates from :math:`X_1 \ldots X_n`.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_QUANT_MERGE_PRENEX),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Quantifiers -- Merge prenex**
