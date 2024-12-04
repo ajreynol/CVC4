@@ -262,8 +262,6 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-quant-var-elim-eq";
     case ProofRewriteRule::MACRO_QUANT_VAR_ELIM_INEQ:
       return "macro-quant-var-elim-ineq";
-    case ProofRewriteRule::MACRO_QUANT_REWRITE_BODY:
-      return "macro-quant-rewrite-body";
     case ProofRewriteRule::QUANT_VAR_ELIM_EQ: return "quant-var-elim-eq";
     case ProofRewriteRule::MACRO_QUANT_SOLVE_FUN_DEF:
       return "macro-quant-solve-fun-def";
