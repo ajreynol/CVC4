@@ -151,7 +151,7 @@ enum class TrustId : uint32_t
   ARITH_NL_COMPARE_LIT_TRANSFORM,
   /** */
   BV_BITBLAST_CONFLICT,
-  /** Diamonds */
+  /** Diamonds preprocessing in TheoryUf::ppStaticLearn */
   DIAMONDS,
   /** An extended theory rewrite */
   EXT_THEORY_REWRITE,

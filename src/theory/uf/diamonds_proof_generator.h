@@ -29,8 +29,8 @@ class ProofNode;
 class ProofNodeManager;
 
 /**
- * Proof generator expected to prove (exists x. P) for all witness terms
- * (witness x. P) introduced.
+ * Proof generator implementing the "diamonds" preprocessing step, performed 
+ * by TheoryUF.
  */
 class DiamondsProofGenerator : protected EnvObj, public ProofGenerator
 {
@@ -41,10 +41,14 @@ class DiamondsProofGenerator : protected EnvObj, public ProofGenerator
   DiamondsProofGenerator(Env& env);
   virtual ~DiamondsProofGenerator();
   /**
+   * Performs ppStaticLearn for theory UF.
+   * @param n The asserted formula.
+   * @param learned A list of lemmas to add to, if applicable.
    */
   void ppStaticLearn(TNode n, std::vector<TrustNode>& learned);
   /**
-   * Get proof for fact.
+   * Get proof for fact. Called on fact that were added to learned by
+   * the above method.
    */
   std::shared_ptr<ProofNode> getProofFor(Node fact) override;
   /** identify */
