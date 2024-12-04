@@ -34,6 +34,7 @@
 #include "theory/strings/strings_entail.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "util/rational.h"
+#include "expr/term_context.h"
 
 using namespace cvc5::internal::kind;
 
