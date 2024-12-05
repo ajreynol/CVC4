@@ -2522,6 +2522,13 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_ARRAYS_DISTINCT_ARRAYS),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Arrays -- Macro normalize constant**
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_ARRAYS_NORMALIZE_CONSTANT),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Arrays -- Expansion of array range equality**
    *
    * .. math::
@@ -2579,7 +2586,16 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(QUANT_MERGE_PRENEX),
-  EVALUE(QUANT_PRENEX),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Macro prenex**
+   *
+   * .. math::
+   *   \forall X.\> F_1 \vee \forall Y.\> F_i \vee F_n = \forall X Y.\> F_1 \vee \ldots \vee F_n
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_QUANT_PRENEX),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Quantifiers -- Macro miniscoping**

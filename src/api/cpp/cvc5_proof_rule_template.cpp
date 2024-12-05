@@ -245,12 +245,14 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "arrays-eq-range-expand";
     case ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS:
       return "macro-arrays-distinct-arrays";
+    case ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_CONSTANT:
+      return "macro-arrays-normalize-constant";
     case ProofRewriteRule::EXISTS_ELIM: return "exists-elim";
     case ProofRewriteRule::QUANT_UNUSED_VARS: return "quant-unused-vars";
     case ProofRewriteRule::MACRO_QUANT_MERGE_PRENEX:
       return "macro-quant-merge-prenex";
     case ProofRewriteRule::QUANT_MERGE_PRENEX: return "quant-merge-prenex";
-    case ProofRewriteRule::QUANT_PRENEX: return "quant-prenex";
+    case ProofRewriteRule::MACRO_QUANT_PRENEX: return "macro-quant-prenex";
     case ProofRewriteRule::MACRO_QUANT_MINISCOPE:
       return "macro-quant-miniscope";
     case ProofRewriteRule::QUANT_MINISCOPE: return "quant-miniscope";

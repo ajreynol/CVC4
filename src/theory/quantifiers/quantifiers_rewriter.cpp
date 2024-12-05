@@ -108,7 +108,7 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
   // MACRO_QUANT_MERGE_PRENEX
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_MERGE_PRENEX,
                            TheoryRewriteCtx::PRE_DSL);
-  registerProofRewriteRule(ProofRewriteRule::QUANT_PRENEX,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_PRENEX,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_MINISCOPE,
                            TheoryRewriteCtx::PRE_DSL);
@@ -182,7 +182,7 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::QUANT_PRENEX:
+    case ProofRewriteRule::MACRO_QUANT_PRENEX:
     {
       if (n.getKind() == Kind::FORALL)
       {
