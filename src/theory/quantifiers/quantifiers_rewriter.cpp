@@ -1057,6 +1057,9 @@ Node QuantifiersRewriter::computeCondSplit(Node body,
     }
     if (do_split)
     {
+      // For the sake of proofs, if we are not splitting the first child,
+      // we first rearrange so that it is first, which can be proven by
+      // ACI_NORM.
       std::vector<Node> split_children;
       if (split_index != 0)
       {
@@ -1070,6 +1073,7 @@ Node QuantifiersRewriter::computeCondSplit(Node body,
         }
         return nm->mkNode(Kind::OR, split_children);
       }
+      // This is expected to be proven by the RARE rule bool-or-and-distrib.
       std::vector<Node> children;
       for (TNode bc : body)
       {

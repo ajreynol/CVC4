@@ -23,7 +23,7 @@ ValidWitnessProofGenerator::ValidWitnessProofGenerator(Env& env) : EnvObj(env) {
 
 ValidWitnessProofGenerator::~ValidWitnessProofGenerator() {}
 
-std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact)
+std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact) 
 {
   Trace("valid-witness") << "Prove " << fact << std::endl;
   // proofs not yet supported
