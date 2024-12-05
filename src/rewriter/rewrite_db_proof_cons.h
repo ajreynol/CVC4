@@ -173,7 +173,8 @@ class RewriteDbProofCons : protected EnvObj
   };
   /**
    * Prove and store the proof of eq with internal form eqi in cdp if possible,
-   * return true if successful.
+   * return true if successful. Tries the basic utility and all recursion depths
+   * up to recLimit.
    *
    * @param cdp The object to add the proof of eq to.
    * @param eq The equality we are trying to prove.
@@ -195,7 +196,7 @@ class RewriteDbProofCons : protected EnvObj
     TheoryRewriteMode tmode);
   /**
    * Prove and store the proof of eq with internal form eqi in cdp if possible,
-   * return true if successful.
+   * return true if successful. Tries a single recursion depth.
    *
    * @param cdp The object to add the proof of eq to.
    * @param eq The equality we are trying to prove.

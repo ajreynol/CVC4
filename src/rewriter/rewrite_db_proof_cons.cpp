@@ -95,16 +95,17 @@ bool RewriteDbProofCons::prove(
       }
     } while (!eqp.isNull() && eqp[0].isClosure());
   }
-  Trace("rpc-debug") << "- prove basic" << std::endl;
-  // first, try with the basic utility
+  ++d_statTotalInputs;
   bool success = false;
+  // first try unconverted
+  Node eqi;
   if (proveStratified(cdp, eq, eq, recLimit, stepLimit, subgoals, tmode))
   {
     success = true;
   }
   else
   {
-    Node eqi = d_rdnc.convert(eq);
+    eqi = d_rdnc.convert(eq);
     // if converter didn't make a difference, don't try to prove again
     if (eqi != eq)
     {
@@ -147,21 +148,20 @@ bool RewriteDbProofCons::proveStratified(CDProof* cdp,
               std::vector<std::shared_ptr<ProofNode>>& subgoals,
     TheoryRewriteMode tmode)
 {
+  // first, try the basic utility
   if (d_trrc.prove(cdp, eqi[0], eqi[1], subgoals, tmode))
   {
     Trace("rpc") << "...success (basic)" << std::endl;
     return true;
   }
-  else
+  // prove the equality
+  for (int64_t i = 0; i <= recLimit; i++)
   {
-    // prove the equality
-    for (int64_t i = 0; i <= recLimit; i++)
+    Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
+    if (proveEq(cdp, eq, eqi, i, stepLimit, subgoals))
     {
-      Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
-      if (proveEq(cdp, eq, eqi, i, stepLimit, subgoals))
-      {
-        return true;
-      }
+      Trace("rpc") << "...success" << std::endl;
+      return true;
     }
   }
   return false;
