@@ -98,41 +98,25 @@ bool RewriteDbProofCons::prove(
   Trace("rpc-debug") << "- prove basic" << std::endl;
   // first, try with the basic utility
   bool success = false;
-  if (d_trrc.prove(cdp, eq[0], eq[1], subgoals, tmode))
+  if (proveStratified(cdp, eq, eq, recLimit, stepLimit, subgoals, tmode))
   {
-    Trace("rpc") << "...success (basic)" << std::endl;
     success = true;
   }
   else
   {
-    ++d_statTotalInputs;
-    Trace("rpc-debug") << "- convert to internal" << std::endl;
-    // prove the equality
-    for (int64_t i = 0; i <= recLimit; i++)
+    Node eqi = d_rdnc.convert(eq);
+    // if converter didn't make a difference, don't try to prove again
+    if (eqi != eq)
     {
-      Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
-      if (proveEq(cdp, eq, eq, i, stepLimit, subgoals))
+      Trace("rpc-debug") << "...now try converted" << std::endl;
+      if (proveStratified(cdp, eq, eqi, recLimit, stepLimit, subgoals, tmode))
       {
         success = true;
-        break;
       }
     }
-    if (!success)
+    else
     {
-      Node eqi = d_rdnc.convert(eq);
-      // if converter didn't make a difference, don't try to prove again
-      if (eqi != eq)
-      {
-        for (int64_t i = 0; i <= recLimit; i++)
-        {
-          Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
-          if (proveEq(cdp, eq, eqi, i, stepLimit, subgoals))
-          {
-            success = true;
-            break;
-          }
-        }
-      }
+      Trace("rpc-debug") << "...do not try converted, did not change" << std::endl;
     }
   }
   if (!success)
@@ -153,6 +137,34 @@ bool RewriteDbProofCons::prove(
     Trace("rpc") << "...success" << std::endl;
   }
   return success;
+}
+
+bool RewriteDbProofCons::proveStratified(CDProof* cdp,
+              const Node& eq,
+              const Node& eqi,
+              int64_t recLimit,
+              int64_t stepLimit,
+              std::vector<std::shared_ptr<ProofNode>>& subgoals,
+    TheoryRewriteMode tmode)
+{
+  if (d_trrc.prove(cdp, eqi[0], eqi[1], subgoals, tmode))
+  {
+    Trace("rpc") << "...success (basic)" << std::endl;
+    return true;
+  }
+  else
+  {
+    // prove the equality
+    for (int64_t i = 0; i <= recLimit; i++)
+    {
+      Trace("rpc-debug") << "* Try recursion depth " << i << std::endl;
+      if (proveEq(cdp, eq, eqi, i, stepLimit, subgoals))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 Node RewriteDbProofCons::preprocessClosureEq(CDProof* cdp,
