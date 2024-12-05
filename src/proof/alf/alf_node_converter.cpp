@@ -146,7 +146,7 @@ Node AlfNodeConverter::postConvert(Node n)
     // must ensure we print higher-order function applications with "_"
     if (!n.getOperator().isVar())
     {
-    TypeNode tn = n.getType();
+      TypeNode tn = n.getType();
       std::vector<Node> args;
       args.push_back(n.getOperator());
       args.insert(args.end(), n.begin(), n.end());

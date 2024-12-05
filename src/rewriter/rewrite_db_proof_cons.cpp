@@ -117,7 +117,8 @@ bool RewriteDbProofCons::prove(
     }
     else
     {
-      Trace("rpc-debug") << "...do not try converted, did not change" << std::endl;
+      Trace("rpc-debug") << "...do not try converted, did not change"
+                         << std::endl;
     }
   }
   if (!success)
@@ -140,12 +141,13 @@ bool RewriteDbProofCons::prove(
   return success;
 }
 
-bool RewriteDbProofCons::proveStratified(CDProof* cdp,
-              const Node& eq,
-              const Node& eqi,
-              int64_t recLimit,
-              int64_t stepLimit,
-              std::vector<std::shared_ptr<ProofNode>>& subgoals,
+bool RewriteDbProofCons::proveStratified(
+    CDProof* cdp,
+    const Node& eq,
+    const Node& eqi,
+    int64_t recLimit,
+    int64_t stepLimit,
+    std::vector<std::shared_ptr<ProofNode>>& subgoals,
     TheoryRewriteMode tmode)
 {
   // first, try the basic utility
