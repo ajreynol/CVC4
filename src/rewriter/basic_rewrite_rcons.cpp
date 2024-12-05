@@ -199,6 +199,12 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
+    case ProofRewriteRule::MACRO_QUANT_PRENEX:
+      if (ensureProofMacroQuantPrenex(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
     case ProofRewriteRule::MACRO_QUANT_PARTITION_CONNECTED_FV:
       if (ensureProofMacroQuantPartitionConnectedFv(cdp, eq))
       {
@@ -606,6 +612,26 @@ bool BasicRewriteRCons::ensureProofMacroQuantMergePrenex(CDProof* cdp,
   }
   cdp->addStep(eq, ProofRule::TRANS, transEq, {});
   return true;
+}
+
+bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp, const Node& eq)
+{
+  NodeManager* nm = nodeManager();
+  Trace("brc-macro") << "Expand macro quant prenex for " << eq
+                     << std::endl;
+  Assert (eq[0].getKind()==Kind::FORALL);
+  Assert (eq[1].getKind()==Kind::FORALL);
+  Node body1 = eq[0][1];
+  Node body2 = eq[1][1];
+  // take the prenexed variables
+  size_t nvars1 = eq[0][0].getNumChildren();
+  std::vector<Node> newVars(eq[1][0].begin()+nvars1, eq[1][0].end());
+  Assert (!newVars.empty());
+  Node bvl = nm->mkNode(Kind::BOUND_VAR_LIST, newVars);
+  body2 = nm->mkNode(Kind::FORALL, bvl, body2);
+  //AlwaysAssert(false) << "MACRO NEEDED";
+  
+  return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroQuantPartitionConnectedFv(
