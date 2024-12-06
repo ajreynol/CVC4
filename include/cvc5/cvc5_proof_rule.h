@@ -2591,7 +2591,7 @@ enum ENUM(ProofRewriteRule)
    * **Quantifiers -- Macro prenex**
    *
    * .. math::
-   *   \forall X.\> F_1 \vee \forall Y.\> F_i \vee F_n = \forall X Y.\> F_1 \vee \ldots \vee F_n
+   *   \forall X.\> F_1 \vee \forall Y.\> F_i \vee F_n = \forall X Z.\> F_1 \vee \ldots \vee F_n \{ Y \mapsto Z \}
    *
    * \endverbatim
    */

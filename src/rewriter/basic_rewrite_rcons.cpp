@@ -658,18 +658,14 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
   Trace("brc-macro") << "Remains to prove: " << body1 << " == " << body2
                      << std::endl;
   Node body2ms = rr->rewriteViaRule(
-      ProofRewriteRule::MACRO_QUANT_PARTITION_CONNECTED_FV, body2);
+      ProofRewriteRule::QUANT_MINISCOPE_FV, body2);
   if (body2ms.isNull())
   {
     Assert(false) << "Failed miniscope";
     return false;
   }
   Node eqqm = body2.eqNode(body2ms);
-  // Note that we have shown eqqm is provable by a theory rewrite
-  // MACRO_QUANT_PARTITION_CONNECTED_FV, but we don't introduce it here,
-  // since then it would end up in the final proof. Instead we introduce a
-  // trust step which will be filled based on the macro rule and elaborated.
-  cdp->addTrustedStep(eqqm, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+  cdp->addTheoryRewriteStep(eqqm, ProofRewriteRule::QUANT_MINISCOPE_FV);
   Node eqqrs = body2.eqNode(body1);
   if (body2ms != body1)
   {
@@ -692,6 +688,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       }
       else
       {
+        Trace("brc-macro") << "...subgoal " << eqc << std::endl;
         // otherwise just add subgoal, likely alpha equivalence
         cdp->addTrustedStep(
             eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
