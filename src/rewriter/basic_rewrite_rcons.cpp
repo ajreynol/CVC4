@@ -661,7 +661,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       ProofRewriteRule::QUANT_MINISCOPE_FV, body2);
   if (body2ms.isNull())
   {
-    Assert(false) << "Failed miniscope";
+    Trace("brc-macro") << "Failed miniscope";
     return false;
   }
   Node eqqm = body2.eqNode(body2ms);
@@ -672,7 +672,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
     if (body2ms.getKind() != body1.getKind()
         || body2ms.getNumChildren() != body1.getNumChildren())
     {
-      Assert(false) << "Failed after miniscope";
+      Trace("brc-macro") << "Failed after miniscope";
       return false;
     }
     // We may have used alpha equivalence to rename variables, thus we

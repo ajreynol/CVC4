@@ -167,7 +167,7 @@ void DiamondsProofGenerator::ppStaticLearn(TNode n,
 
 std::shared_ptr<ProofNode> DiamondsProofGenerator::getProofFor(Node fact)
 {
-  Trace("valid-witness") << "Prove " << fact << std::endl;
+  Trace("diamonds-proof") << "Prove " << fact << std::endl;
   // proofs not yet supported
   CDProof cdp(d_env);
   cdp.addTrustedStep(fact, TrustId::DIAMONDS, {}, {});
