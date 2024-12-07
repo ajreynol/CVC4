@@ -226,6 +226,7 @@ std::shared_ptr<ProofNode> DiamondsProofGenerator::getProofFor(Node fact)
     }
     else
     {
+      // if failed we add a trust step
       cdp.addTrustedStep(c, TrustId::DIAMONDS, {}, {});
     }
   }
