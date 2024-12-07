@@ -167,10 +167,74 @@ void DiamondsProofGenerator::ppStaticLearn(TNode n,
 
 std::shared_ptr<ProofNode> DiamondsProofGenerator::getProofFor(Node fact)
 {
-  Trace("diamonds-proof") << "Prove " << fact << std::endl;
-  // proofs not yet supported
+  NodeManager * nm = nodeManager();
   CDProof cdp(d_env);
-  cdp.addTrustedStep(fact, TrustId::DIAMONDS, {}, {});
+  Trace("diamonds-proof") << "Prove " << fact << std::endl;
+  Assert (fact.getKind()==Kind::IMPLIES);
+  Node antec = fact[0];
+  Assert (antec.getKind()==Kind::AND);
+  Node conc = fact[1];
+  Assert (conc.getKind()==Kind::EQUAL);
+  std::vector<Node> children(fact.begin(),fact.end());
+  std::vector<Node> conj;
+  for (size_t i=0, nchild=antec.getNumChildren(); i<nchild; i++)
+  {
+    children[0] = antec[i];
+    conj.push_back(nm->mkNode(Kind::IMPLIES, children));
+  }
+  Trace("diamonds-proof") << "Conjunction to prove " << conj << std::endl;
+  for (const Node& c : conj)
+  {
+    Assert (c.getKind()==Kind::IMPLIES);
+    Assert (c[0].getKind()==Kind::AND);
+    Assert (c[1]==conc);
+    // must use another CDProof since we will prove conc multiple times
+    CDProof cdpi(d_env);
+    // give a proof in terms of scope and trans
+    std::vector<Node> acc(c[0].begin(), c[0].end());
+    bool success = false;
+    for (size_t i=0; i<2; i++)
+    {
+      Assert (acc[i].getKind()==Kind::EQUAL);
+      for (size_t j=0; j<2; j++)
+      {
+        if (acc[i][j]==conc[0])
+        {
+          Node aco = acc[i][1-j];
+          std::vector<Node> transEq;
+          transEq.push_back(acc[i][j].eqNode(aco));
+          size_t jo = aco==acc[1-i][0] ? 0 : 1;
+          Assert (acc[1-i][jo]==aco);
+          transEq.push_back(acc[1-i][jo].eqNode(acc[1-i][1-jo]));
+          Assert (acc[1-i][jo]==conc[1]);
+          cdpi.addStep(conc, ProofRule::TRANS, transEq, {});
+          success = true;
+          break;
+        }
+      }
+      if (success)
+      {
+        break;
+      }
+    }
+    if (success)
+    {
+      // close with scope
+      cdpi.addStep(c, ProofRule::SCOPE, {conc}, acc);
+      // add to main proof
+      cdp.addProof(cdpi.getProofFor(c));
+    }
+    else
+    {
+      cdp.addTrustedStep(c, TrustId::DIAMONDS, {}, {});
+    }
+  }
+  Node cc = nm->mkAnd(conj);
+  cdp.addStep(cc, ProofRule::AND_INTRO, conj, {});
+  Node eqc = cc.eqNode(fact);
+  // this rewrite should be reconstructable via RARE rule bool-implies-or-distrib
+  cdp.addTrustedStep(eqc, TrustId::DIAMONDS, {}, {});
+  cdp.addStep(fact, ProofRule::EQ_RESOLVE, {cc, eqc}, {});
   return cdp.getProofFor(fact);
 }
 
