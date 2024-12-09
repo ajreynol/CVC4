@@ -1077,9 +1077,7 @@ ProofPostprocess::ProofPostprocess(Env& env,
     : EnvObj(env),
       d_cb(env, updateScopedAssumptions),
       // the update merges subproofs
-      d_updater(env, d_cb, options().proof.proofPpMerge),
-      d_finalCb(env),
-      d_finalizer(env, d_finalCb)
+      d_updater(env, d_cb, options().proof.proofPpMerge)
 {
   if (rdb != nullptr)
   {
@@ -1127,25 +1125,6 @@ void ProofPostprocess::process(std::shared_ptr<ProofNode> pf,
     {
       d_ppdsl->reconstruct(tproofs);
     }
-  }
-
-  // determine if we need to run finalize
-  bool runFinalize = options().base.statisticsInternal || options().proof.checkProofSteps
-      || isOutputOn(OutputTag::TRUSTED_PROOF_STEPS);
-  if (runFinalize)
-  {
-    // take stats and check pedantic
-    d_finalCb.initializeUpdate();
-    d_finalizer.process(pf);
-  }
-
-  std::stringstream serr;
-  bool wasPedanticFailure = d_finalCb.wasPedanticFailure(serr);
-  if (wasPedanticFailure)
-  {
-    AlwaysAssert(!wasPedanticFailure)
-        << "ProofPostprocess::process: pedantic failure:" << std::endl
-        << serr.str();
   }
 }
 

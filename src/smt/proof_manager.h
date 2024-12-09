@@ -22,6 +22,7 @@
 #include "expr/node.h"
 #include "options/proof_options.h"
 #include "smt/env_obj.h"
+#include "smt/proof_final_callback.h"
 
 namespace cvc5::internal {
 
@@ -179,6 +180,13 @@ class PfManager : protected EnvObj
   std::unique_ptr<smt::ProofPostprocess> d_pfpp;
   /** The preprocess proof generator. */
   std::unique_ptr<PreprocessProofGenerator> d_pppg;
+  /** The post process callback for finalization */
+  ProofFinalCallback d_finalCb;
+  /**
+   * The finalizer, which is responsible for taking stats and checking for
+   * (lazy) pedantic failures.
+   */
+  ProofNodeUpdater d_finalizer;
 }; /* class SolverEngine */
 
 }  // namespace smt

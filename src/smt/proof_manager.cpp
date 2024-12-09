@@ -46,7 +46,9 @@ PfManager::PfManager(Env& env)
       d_pchecker(nullptr),
       d_pnm(nullptr),
       d_pfpp(nullptr),
-      d_pppg(nullptr)
+      d_pppg(nullptr),
+      d_finalCb(env),
+      d_finalizer(env, d_finalCb)
 {
   // construct the rewrite db only if DSL rewrites are enabled
   if (options().proof.proofGranularityMode
@@ -270,6 +272,18 @@ std::shared_ptr<ProofNode> PfManager::connectProofToAssertions(
 void PfManager::checkProof(
     std::shared_ptr<ProofNode> pfn)
 {
+  // take stats and check pedantic
+  d_finalCb.initializeUpdate();
+  d_finalizer.process(pfn);
+
+  std::stringstream serr;
+  bool wasPedanticFailure = d_finalCb.wasPedanticFailure(serr);
+  if (wasPedanticFailure)
+  {
+    AlwaysAssert(!wasPedanticFailure)
+        << "ProofPostprocess::process: pedantic failure:" << std::endl
+        << serr.str();
+  }
 }
 
 void PfManager::printProof(std::ostream& out,
