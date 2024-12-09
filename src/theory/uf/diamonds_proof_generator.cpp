@@ -16,6 +16,8 @@
 #include "theory/uf/diamonds_proof_generator.h"
 
 #include "proof/proof.h"
+#include "smt/env.h"
+#include "proof/proof_node_manager.h"
 
 namespace cvc5::internal {
 
@@ -220,9 +222,10 @@ std::shared_ptr<ProofNode> DiamondsProofGenerator::getProofFor(Node fact)
     if (success)
     {
       // close with scope
-      cdpi.addStep(c, ProofRule::SCOPE, {conc}, acc);
+      std::shared_ptr<ProofNode> pfn = cdpi.getProofFor(conc);
+      pfn = d_env.getProofNodeManager()->mkScope(pfn, acc);
       // add to main proof
-      cdp.addProof(cdpi.getProofFor(c));
+      cdp.addProof(pfn);
     }
     else
     {
