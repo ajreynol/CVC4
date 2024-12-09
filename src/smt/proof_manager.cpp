@@ -267,6 +267,11 @@ std::shared_ptr<ProofNode> PfManager::connectProofToAssertions(
   }
 }
 
+void PfManager::checkProof(
+    std::shared_ptr<ProofNode> pfn)
+{
+}
+
 void PfManager::printProof(std::ostream& out,
                            std::shared_ptr<ProofNode> fp,
                            options::ProofFormatMode mode,
