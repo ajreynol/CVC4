@@ -31,6 +31,7 @@
 #include "theory/strings/infer_proof_cons.h"
 #include "theory/theory.h"
 #include "util/rational.h"
+#include "options/base_options.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory;
@@ -1128,9 +1129,15 @@ void ProofPostprocess::process(std::shared_ptr<ProofNode> pf,
     }
   }
 
-  // take stats and check pedantic
-  d_finalCb.initializeUpdate();
-  d_finalizer.process(pf);
+  // determine if we need to run finalize
+  bool runFinalize = options().base.statisticsInternal || options().proof.checkProofSteps
+      || isOutputOn(OutputTag::TRUSTED_PROOF_STEPS);
+  if (runFinalize)
+  {
+    // take stats and check pedantic
+    d_finalCb.initializeUpdate();
+    d_finalizer.process(pf);
+  }
 
   std::stringstream serr;
   bool wasPedanticFailure = d_finalCb.wasPedanticFailure(serr);
