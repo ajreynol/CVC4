@@ -272,8 +272,9 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::ARRAYS_SELECT_CONST:
     case ProofRewriteRule::DT_INST:
     case ProofRewriteRule::QUANT_MERGE_PRENEX:
-    case ProofRewriteRule::QUANT_MINISCOPE:
-    case ProofRewriteRule::QUANT_MINISCOPE_FV:
+    case ProofRewriteRule::QUANT_MINISCOPE_AND:
+    case ProofRewriteRule::QUANT_MINISCOPE_OR:
+    case ProofRewriteRule::QUANT_MINISCOPE_ITE:
     case ProofRewriteRule::QUANT_VAR_ELIM_EQ:
     case ProofRewriteRule::RE_LOOP_ELIM:
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
@@ -281,9 +282,12 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::STR_IN_RE_SIGMA:
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR:
     case ProofRewriteRule::STR_IN_RE_CONSUME:
-    case ProofRewriteRule::STR_CTN_MULTISET_SUBSET:
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
     case ProofRewriteRule::BV_BITWISE_SLICING: return true;
+    case ProofRewriteRule::STR_CTN_MULTISET_SUBSET:
+      // only strings are supported, since it is non-trivial to show
+      // distinctness of sequence characters.
+      return n[0][0].getType().isString();
     case ProofRewriteRule::STR_IN_RE_EVAL:
       Assert(n[0].getKind() == Kind::STRING_IN_REGEXP && n[0][0].isConst());
       return canEvaluateRegExp(n[0][1]);

@@ -112,7 +112,7 @@ QuantifiersRewriter::QuantifiersRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_MINISCOPE,
                            TheoryRewriteCtx::PRE_DSL);
-  // QUANT_MINISCOPE is part of the reconstruction for MACRO_QUANT_MINISCOPE
+  // QUANT_MINISCOPE_OR is part of the reconstruction for MACRO_QUANT_MINISCOPE
   registerProofRewriteRule(ProofRewriteRule::MACRO_QUANT_PARTITION_CONNECTED_FV,
                            TheoryRewriteCtx::PRE_DSL);
   // note ProofRewriteRule::QUANT_DT_SPLIT is done by a module dynamically with
@@ -214,7 +214,7 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return nret;
     }
     break;
-    case ProofRewriteRule::QUANT_MINISCOPE:
+    case ProofRewriteRule::QUANT_MINISCOPE_AND:
     {
       if (n.getKind() != Kind::FORALL || n[1].getKind() != Kind::AND)
       {
@@ -252,7 +252,7 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::QUANT_MINISCOPE_FV:
+    case ProofRewriteRule::QUANT_MINISCOPE_OR:
     {
       if (n.getKind() != Kind::FORALL || n[1].getKind() != Kind::OR)
       {
@@ -303,6 +303,11 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         }
       }
       return ret;
+    }
+    break;
+    case ProofRewriteRule::QUANT_MINISCOPE_ITE:
+    {
+      // TODO
     }
     break;
     case ProofRewriteRule::QUANT_DT_SPLIT:

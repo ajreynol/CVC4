@@ -65,8 +65,6 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::SEQ_LENGTH_EVAL,
-                           TheoryRewriteCtx::DSL_SUBCALL);
   registerProofRewriteRule(ProofRewriteRule::STR_CTN_MULTISET_SUBSET,
                            TheoryRewriteCtx::DSL_SUBCALL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY_PREFIX,
@@ -99,29 +97,6 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       StringsEntail sent(nullptr, ae, nullptr);
       return rewriteViaMacroSubstrStripSymLength(n, rule, sent);
     }
-    case ProofRewriteRule::SEQ_LENGTH_EVAL:
-    {
-      if (n.getKind() == Kind::STRING_LENGTH)
-      {
-        if (n[0].getKind() == Kind::CONST_SEQUENCE)
-        {
-          return nodeManager()->mkConstInt(Rational(Word::getLength(n[0])));
-        }
-        // maybe after converting to its node form
-        if (n[0].getKind() == Kind::STRING_CONCAT)
-        {
-          for (const Node& nc : n[0])
-          {
-            if (nc.getKind() != Kind::SEQ_UNIT)
-            {
-              return Node::null();
-            }
-          }
-          return nodeManager()->mkConstInt(Rational(n[0].getNumChildren()));
-        }
-      }
-    }
-    break;
     case ProofRewriteRule::STR_CTN_MULTISET_SUBSET:
     {
       if (n.getKind() == Kind::STRING_CONTAINS)
