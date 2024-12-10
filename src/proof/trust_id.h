@@ -154,14 +154,10 @@ enum class TrustId : uint32_t
   ARITH_NL_COMPARE_LIT_TRANSFORM,
   /** A lemma from the DIO solver */
   ARITH_DIO_LEMMA,
-  /**
-   * A conversion between a literal used in the inference id lemma
-   * InferenceId::ARITH_NL_COMPARISON and a relation between absolute
-   * values as used by ProofRule::ARITH_MULT_ABS_COMPARISON.
-   */
-  ARITH_NL_COMPARE_LIT_TRANSFORM,
-  /** */
+  /** A conflict coming from the bitblast solver */
   BV_BITBLAST_CONFLICT,
+  /** A step from BvPpAssert utility */
+  BV_PP_ASSERT,
   /** Diamonds preprocessing in TheoryUf::ppStaticLearn */
   DIAMONDS,
   /** An extended theory rewrite */
@@ -191,8 +187,6 @@ enum class TrustId : uint32_t
    * eliminations.
    */
   RE_ELIM,
-  /** A step from BvPpAssert utility */
-  BV_PP_ASSERT,
   /** A quantifiers preprocessing step that was given without a proof */
   QUANTIFIERS_PREPROCESS,
   /** */
