@@ -649,7 +649,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       rr->rewriteViaRule(ProofRewriteRule::QUANT_MERGE_PRENEX, umergeq);
   if (mergeq != eq[1])
   {
-    Assert(false) << "Failed merge step";
+    Trace("brc-macro") << "Failed merge step";
     return false;
   }
   Node eqq2 = umergeq.eqNode(mergeq);
@@ -657,10 +657,14 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
   cdp->addStep(eq, ProofRule::TRANS, {eqq, eqq2}, {});
   Trace("brc-macro") << "Remains to prove: " << body1 << " == " << body2
                      << std::endl;
-  Node body2ms = rr->rewriteViaRule(
-      ProofRewriteRule::QUANT_MINISCOPE_FV, body2);
+  Node body2ms =
+      rr->rewriteViaRule(ProofRewriteRule::QUANT_MINISCOPE_FV, body2);
   if (body2ms.isNull())
   {
+    // currently fails if we are doing
+    //   forall x. ite(C, forall Y. t, s) =
+    //   forall xy. ite(C, t, s)
+    // since we don't miniscope over ITE.
     Trace("brc-macro") << "Failed miniscope";
     return false;
   }
@@ -690,6 +694,9 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       {
         Trace("brc-macro") << "...subgoal " << eqc << std::endl;
         // otherwise just add subgoal, likely alpha equivalence
+        // Some of these goals cannot be currently proven since they involve
+        // multiple nested steps of miniscoping, combined with alpha
+        // equivalence.
         cdp->addTrustedStep(
             eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
       }
@@ -701,8 +708,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
     cdp->addStep(eqqb, cr, cpremises, cargs);
     cdp->addStep(eqqrs, ProofRule::TRANS, {eqqm, eqqb}, {});
   }
-  Node eqqr = body1.eqNode(body2);
-  cdp->addStep(eqqr, ProofRule::SYMM, {eqqrs}, {});
+  cdp->addStep(beq, ProofRule::SYMM, {eqqrs}, {});
   return true;
 }
 
