@@ -193,17 +193,8 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
             {
               ret = ret.notNode();
             }
-          Trace("arith-rewriter-proof") << "...rewrites to " << ret << std::endl;
             return ret;
           }
-          else
-          {
-            Trace("arith-rewriter-proof") << "...c is integral" << std::endl;
-          }
-        }
-        else
-        {
-          Trace("arith-rewriter-proof") << "...not integral" << std::endl;
         }
       }
     }
