@@ -1506,6 +1506,7 @@ set(regress_0_tests
   regress0/quantifiers/matching-lia-1arg.smt2
   regress0/quantifiers/mbqi-simple.smt2
   regress0/quantifiers/merge-shadow.smt2
+  regress0/quantifiers/miniscope-ite.smt2
   regress0/quantifiers/mix-complete-strat.smt2
   regress0/quantifiers/mix-match.smt2
   regress0/quantifiers/mix-simp.smt2
