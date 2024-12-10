@@ -192,7 +192,7 @@
   :conclusion (= (Q x F) G)
 )
 
-;;;;; ProofRewriteRule::QUANT_MINISCOPE
+;;;;; ProofRewriteRule::QUANT_MINISCOPE_AND
 
 ; program: $mk_quant_miniscope_and
 ; args:
@@ -221,7 +221,7 @@
   :conclusion (= (forall x F) G)
 )
 
-;;;;; ProofRewriteRule::QUANT_MINISCOPE_FV
+;;;;; ProofRewriteRule::QUANT_MINISCOPE_FV_OR
 
 ; program: $is_quant_miniscope_or
 ; args:
@@ -258,6 +258,22 @@
   :args ((= (forall x F) G))
   :requires ((($is_quant_miniscope_or x F G) true))
   :conclusion (= (forall x F) G)
+)
+
+;;;;; ProofRewriteRule::QUANT_MINISCOPE_ITE
+
+; rule: quant-miniscope-ite
+; implements: ProofRewriteRule::QUANT_MINISCOPE_ITE
+; args:
+; - eq Bool: The equality whose left hand side is a quantified formula.
+; requires: >
+;   The right hand side of the equality is the result of miniscoping the
+;   left hand side.
+; conclusion: The given equality.
+(declare-rule quant-miniscope-ite ((x @List) (A Bool) (F1 Bool) (F2 Bool) (G Bool))
+  :args ((= (forall x (ite A F1 F2)) (ite A (forall x F1) (forall x F2))))
+  :requires ((($contains_subterm_list A x) false))
+  :conclusion (= (forall x (ite A F1 F2)) (ite A (forall x F1) (forall x F2)))
 )
 
 ;;;;; ProofRewriteRule::QUANT_VAR_ELIM_EQ

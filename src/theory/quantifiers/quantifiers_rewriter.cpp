@@ -2036,6 +2036,7 @@ Node QuantifiersRewriter::computeMiniscoping(Node q,
     bool doRewrite = miniscopeConj;
     if (k == Kind::ITE)
     {
+      // ITE miniscoping is only valid if condition contains no variables
       if (expr::hasSubterm(body[0], args))
       {
         doRewrite = false;
@@ -2048,7 +2049,7 @@ Node QuantifiersRewriter::computeMiniscoping(Node q,
       BoundVarManager* bvm = nm->getBoundVarManager();
       // Break apart the quantifed formula
       // forall x. P1 ^ ... ^ Pn ---> forall x. P1 ^ ... ^ forall x. Pn
-      NodeBuilder t(nm, Kind::AND);
+      NodeBuilder t(nm, k);
       std::vector<Node> argsc;
       for (size_t i = 0, nchild = body.getNumChildren(); i < nchild; i++)
       {
