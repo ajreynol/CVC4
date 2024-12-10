@@ -976,10 +976,12 @@ bool BasicRewriteRCons::ensureProofMacroQuantMiniscope(CDProof* cdp,
   Node q = eq[0];
   Assert(q.getKind() == Kind::FORALL);
   NodeManager* nm = nodeManager();
+  Assert (q[1].getKind()==Kind::AND || q[1].getKind()==Kind::ITE);
+  ProofRewriteRule prr = q[1].getKind()==Kind::AND ? ProofRewriteRule::QUANT_MINISCOPE_AND : ProofRewriteRule::QUANT_MINISCOPE_ITE;
   theory::Rewriter* rr = d_env.getRewriter();
-  Node mq = rr->rewriteViaRule(ProofRewriteRule::QUANT_MINISCOPE_AND, q);
+  Node mq = rr->rewriteViaRule(prr, q);
   Node equiv = q.eqNode(mq);
-  cdp->addTheoryRewriteStep(equiv, ProofRewriteRule::QUANT_MINISCOPE_AND);
+  cdp->addTheoryRewriteStep(equiv, prr);
   if (mq == eq[1])
   {
     return true;
@@ -1032,7 +1034,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantMiniscope(CDProof* cdp,
     Assert(false) << "Failed ensureProofMacroQuantMiniscope " << eq;
     return false;
   }
-  // add the CONG step to conclude AND terms are equal
+  // add the CONG step to conclude AND or ITE terms are equal
   std::vector<Node> cargs;
   ProofRule cr = expr::getCongRule(mq, cargs);
   cdp->addStep(equiv2, cr, premises, cargs);

@@ -201,7 +201,12 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_QUANT_MINISCOPE:
     {
-      if (n.getKind() != Kind::FORALL || n[1].getKind() != Kind::AND)
+      if (n.getKind() != Kind::FORALL)
+      {
+        return Node::null();
+      }
+      Kind k = n[1].getKind();
+      if (k != Kind::AND && k != Kind::ITE)
       {
         return Node::null();
       }
@@ -307,7 +312,16 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::QUANT_MINISCOPE_ITE:
     {
-      // TODO
+      if (n.getKind() != Kind::FORALL || n[1].getKind() != Kind::ITE)
+      {
+        return Node::null();
+      }
+      std::vector<Node> args(n[0].begin(), n[0].end());
+      Node body = n[1];
+      if (!expr::hasSubterm(body[0], args))
+      {
+        return d_nm->mkNode(Kind::ITE, body[0], d_nm->mkNode(Kind::FORALL, n[0], body[1]), d_nm->mkNode(Kind::FORALL, n[0], body[2]));
+      }
     }
     break;
     case ProofRewriteRule::QUANT_DT_SPLIT:
@@ -2016,11 +2030,20 @@ Node QuantifiersRewriter::computeMiniscoping(Node q,
   NodeManager* nm = nodeManager();
   std::vector<Node> args(q[0].begin(), q[0].end());
   Node body = q[1];
-  if (body.getKind() == Kind::AND)
+  Kind k = body.getKind();
+  if (k == Kind::AND || k == Kind::ITE)
   {
+    bool doRewrite = miniscopeConj;
+    if (k == Kind::ITE)
+    {
+      if (expr::hasSubterm(body[0], args))
+      {
+        doRewrite = false;
+      }
+    }
     // aggressive miniscoping implies that structural miniscoping should
     // be applied first
-    if (miniscopeConj)
+    if (doRewrite)
     {
       BoundVarManager* bvm = nm->getBoundVarManager();
       // Break apart the quantifed formula
