@@ -162,8 +162,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::ARITH_INT_EQ_CONFLICT:
     {
-      if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger()
-          && n[0] != n[1])
+      if (n.getKind() == Kind::EQUAL && n[0] != n[1])
       {
         Node a = n[0].getKind()==Kind::TO_REAL ? n[0][0] : n[0];
         Node b = n[1].getKind()==Kind::TO_REAL ? n[1][0] : n[1];
