@@ -169,6 +169,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN:
     {
+      Trace("arith-rewriter-proof") << "Rewrite " << n << "?" << std::endl;
       if (n.getKind() == Kind::GEQ && n[0] != n[1])
       {
         Node a = n[0].getKind() == Kind::TO_REAL ? n[0][0] : n[0];
@@ -179,14 +180,30 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         if (rewriter::isIntegral(sum))
         {
           // decompose the sum into a non-constant and constant part
-          std::pair<Node, Node> p = decomposeSum(d_nm, std::move(sum));
+          bool negated = false;
+          std::pair<Node, Node> p = decomposeSum(d_nm, std::move(sum), negated, true);
           Rational c = p.second.getConst<Rational>();
+          Trace("arith-rewriter-proof") << "Decomposed to " << p.first << " + " << p.second << std::endl;
           if (!c.isIntegral())
           {
             c = -c;
             c = c.ceiling();
-            return d_nm->mkNode(Kind::GEQ, p.first, d_nm->mkConstInt(c));
+            Node ret = d_nm->mkNode(Kind::GEQ, p.first, d_nm->mkConstInt(c));
+            if (negated)
+            {
+              ret = ret.notNode();
+            }
+          Trace("arith-rewriter-proof") << "...rewrites to " << ret << std::endl;
+            return ret;
           }
+          else
+          {
+            Trace("arith-rewriter-proof") << "...c is integral" << std::endl;
+          }
+        }
+        else
+        {
+          Trace("arith-rewriter-proof") << "...not integral" << std::endl;
         }
       }
     }
