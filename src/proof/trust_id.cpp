@@ -86,6 +86,8 @@ const char* toString(TrustId id)
     case TrustId::ARITH_NL_COVERING_DIRECT: return "ARITH_NL_COVERING_DIRECT";
     case TrustId::ARITH_NL_COVERING_RECURSIVE:
       return "ARITH_NL_COVERING_RECURSIVE";
+    case TrustId::ARITH_NL_COMPARE_LIT_TRANSFORM:
+      return "ARITH_NL_COMPARE_LIT_TRANSFORM";
     case TrustId::ARITH_DIO_LEMMA: return "ARITH_DIO_LEMMA";
     case TrustId::ARITH_NL_COMPARE_LIT_TRANSFORM:
       return "ARITH_NL_COMPARE_LIT_TRANSFORM";

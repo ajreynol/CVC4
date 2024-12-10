@@ -78,7 +78,7 @@ class ArithNlCompareProofGenerator : protected EnvObj, public ProofGenerator
       NodeManager* nm, Node olit, Kind k, const Node& a, const Node& b);
   /**
    * Get the literal that was marked by the above method for olit, if the
-   * null node if not applicable.
+   * null node is not applicable.
    */
   static Node getCompareLit(const Node& olit);
   /**

@@ -29,6 +29,7 @@ ArithNlCompareProofGenerator::ArithNlCompareProofGenerator(Env& env)
     : EnvObj(env)
 {
 }
+
 ArithNlCompareProofGenerator::~ArithNlCompareProofGenerator() {}
 
 std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
@@ -144,6 +145,11 @@ std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
       else if (i == 1)
       {
         // both non-empty, take min
+        // Note that in theory it is possible to construct a lemma where this
+        // would be incorrect, e.g. x>a ^ x>b ^ y>a => xxy > aab, although
+        // lemmas of this form are not generated. In particular, we consider
+        // premises where monomials on RHS/LHS occur in consecutive premises,
+        // as they are ordered by model value in the MonomialCheck solver.
         Node a = eprod[0][0];
         Node b = eprod[1][0];
         size_t na = mexp[0][a];
@@ -269,6 +275,7 @@ Node ArithNlCompareProofGenerator::mkLit(NodeManager* nm,
 struct ArithNlCompareLitAttributeId
 {
 };
+
 using ArithNlCompareLitAttribute =
     expr::Attribute<ArithNlCompareLitAttributeId, Node>;
 
