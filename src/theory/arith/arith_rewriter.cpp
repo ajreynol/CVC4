@@ -55,11 +55,11 @@ ArithRewriter::ArithRewriter(NodeManager* nm,
 {
   registerProofRewriteRule(ProofRewriteRule::ARITH_POW_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
-  registerProofRewriteRule(ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM,
-                           TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL,
                            TheoryRewriteCtx::DSL_SUBCALL);
-  registerProofRewriteRule(ProofRewriteRule::ARITH_INT_EQ_CONFLICT,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT,
+                           TheoryRewriteCtx::DSL_SUBCALL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN,
                            TheoryRewriteCtx::DSL_SUBCALL);
 
   // we don't register ARITH_STRING_PRED_ENTAIL or
@@ -79,20 +79,6 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         if (!nx.isNull())
         {
           return nx;
-        }
-      }
-    }
-    break;
-    case ProofRewriteRule::ARITH_DIV_BY_CONST_ELIM:
-    {
-      if (n.getKind() == Kind::DIVISION && n[1].isConst())
-      {
-        Rational r = n[1].getConst<Rational>();
-        if (r.sgn() != 0)
-        {
-          Rational rinv = Rational(1) / r;
-          NodeManager* nm = nodeManager();
-          return nm->mkNode(Kind::MULT, n[0], nm->mkConstReal(rinv));
         }
       }
     }
@@ -160,7 +146,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::ARITH_INT_EQ_CONFLICT:
+    case ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT:
     {
       if (n.getKind() == Kind::EQUAL && n[0] != n[1])
       {
@@ -169,9 +155,38 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         rewriter::Sum sum;
         rewriter::addToSum(sum, a, false);
         rewriter::addToSum(sum, b, true);
-        if (rewriter::isIntConflictGCDLCM(std::move(sum)))
+        if (rewriter::isIntegral(sum))
         {
-          return nodeManager()->mkConst(false);
+          std::pair<Node, Node> p = decomposeSum(d_nm, std::move(sum));
+          Rational c = p.second.getConst<Rational>();
+          if (!c.isIntegral())
+          {
+            return d_nm->mkConst(false);
+          }
+        }
+      }
+    }
+    break;
+    case ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN:
+    {
+      if (n.getKind() == Kind::GEQ && n[0] != n[1])
+      {
+        Node a = n[0].getKind() == Kind::TO_REAL ? n[0][0] : n[0];
+        Node b = n[1].getKind() == Kind::TO_REAL ? n[1][0] : n[1];
+        rewriter::Sum sum;
+        rewriter::addToSum(sum, a, false);
+        rewriter::addToSum(sum, b, true);
+        if (rewriter::isIntegral(sum))
+        {
+          // decompose the sum into a non-constant and constant part
+          std::pair<Node, Node> p = decomposeSum(d_nm, std::move(sum));
+          Rational c = p.second.getConst<Rational>();
+          if (!c.isIntegral())
+          {
+            c = -c;
+            c = c.ceiling();
+            return d_nm->mkNode(Kind::GEQ, p.first, d_nm->mkConstInt(c));
+          }
         }
       }
     }

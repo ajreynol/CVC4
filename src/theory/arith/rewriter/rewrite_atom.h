@@ -94,6 +94,11 @@ Node buildRealInequality(Sum&& sum, Kind k);
  */
 bool isIntConflictGCDLCM(Sum&& sum);
 
+/**
+ * Return true if the given sum is a conflict.
+ */
+std::pair<Node, Node> decomposeSum(NodeManager * nm, Sum&& sum);
+
 }  // namespace rewriter
 }  // namespace arith
 }  // namespace theory

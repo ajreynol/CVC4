@@ -274,6 +274,16 @@ bool isIntConflictGCDLCM(Sum&& sum)
   return false;
 }
 
+std::pair<Node, Node> decomposeSum(NodeManager * nm, Sum&& sum)
+{
+  normalizeGCDLCM(sum);
+  RealAlgebraicNumber constant = removeConstant(sum);
+  Assert(constant.isRational());
+  Node c = nm->mkConstReal(constant.toRational());
+  Node t = collectSum(sum);
+  return std::pair<Node, Node>(t,c);
+}
+
 Node buildIntegerEquality(Sum&& sum)
 {
   Trace("arith-rewriter") << "building integer equality from " << sum
