@@ -2940,8 +2940,10 @@ enum ENUM(ProofRewriteRule)
    * .. math::
    *    contains(s,t) = \bot
    *
-   * where the multiset abstraction of :math:`t` can be proven to be
-   * not a subset of the multiset abstraction of :math:`s`.
+   * where the multiset overapproximation of :math:`s` can be shown to not
+   * contain the multiset abstraction of :math:`t` based on the reasoning
+   * described in the paper Reynolds et al, CAV 2019, "High-Level Abstractions
+   * for Simplifying Extended String Constraints in SMT".
    * \endverbatim
    */
   EVALUE(STR_CTN_MULTISET_SUBSET),
@@ -2964,7 +2966,7 @@ enum ENUM(ProofRewriteRule)
    * **Strings -- String equality length unify**
    *
    * .. math::
-   *    (\mathit{str}.\text{++}(s_1, \ldots, s_n) = \mathit{str}.\text{++}(t_1, \ldots, t_m)) = 
+   *    (\mathit{str}.\text{++}(s_1, \ldots, s_n) = \mathit{str}.\text{++}(t_1, \ldots, t_m)) =
    *    (r_1 = u_1 \wedge \ldots r_k = u_k)
    *
    * where for each :math:`i = 1, \ldots, k`, we can show the length of
