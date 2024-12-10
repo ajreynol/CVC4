@@ -164,8 +164,8 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     {
       if (n.getKind() == Kind::EQUAL && n[0] != n[1])
       {
-        Node a = n[0].getKind()==Kind::TO_REAL ? n[0][0] : n[0];
-        Node b = n[1].getKind()==Kind::TO_REAL ? n[1][0] : n[1];
+        Node a = n[0].getKind() == Kind::TO_REAL ? n[0][0] : n[0];
+        Node b = n[1].getKind() == Kind::TO_REAL ? n[1][0] : n[1];
         rewriter::Sum sum;
         rewriter::addToSum(sum, a, false);
         rewriter::addToSum(sum, b, true);
