@@ -174,7 +174,7 @@ std::shared_ptr<ProofNode> DiamondsProofGenerator::getProofFor(Node fact)
   Trace("diamonds-proof") << "Prove " << fact << std::endl;
   Assert(fact.getKind() == Kind::IMPLIES);
   Node antec = fact[0];
-  Assert(antec.getKind() == Kind::AND);
+  Assert(antec.getKind() == Kind::OR);
   Node conc = fact[1];
   Assert(conc.getKind() == Kind::EQUAL);
   std::vector<Node> children(fact.begin(), fact.end());
@@ -208,7 +208,7 @@ std::shared_ptr<ProofNode> DiamondsProofGenerator::getProofFor(Node fact)
           size_t jo = aco == acc[1 - i][0] ? 0 : 1;
           Assert(acc[1 - i][jo] == aco);
           transEq.push_back(acc[1 - i][jo].eqNode(acc[1 - i][1 - jo]));
-          Assert(acc[1 - i][jo] == conc[1]);
+          Assert(acc[1 - i][1 - jo] == conc[1]);
           cdpi.addStep(conc, ProofRule::TRANS, transEq, {});
           success = true;
           break;
