@@ -28,6 +28,7 @@
 #include "smt/env.h"
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/arith/arith_proof_utilities.h"
+#include "theory/arith/rewriter/rewrite_atom.h"
 #include "theory/booleans/theory_bool_rewriter.h"
 #include "theory/bv/theory_bv_rewrite_rules.h"
 #include "theory/quantifiers/quantifiers_rewriter.h"
@@ -36,7 +37,6 @@
 #include "theory/strings/strings_entail.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "util/rational.h"
-#include "theory/arith/rewriter/rewrite_atom.h"
 
 using namespace cvc5::internal::kind;
 
@@ -287,21 +287,25 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp,
+                                                           const Node& eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);
   Trace("brc-macro") << "Expand int eq conflict for " << eq << std::endl;
   NodeManager* nm = nodeManager();
-  std::pair<Node, Node> p = theory::arith::rewriter::decomposeRelation(nm, eq[0][0], eq[0][1]);
+  std::pair<Node, Node> p =
+      theory::arith::rewriter::decomposeRelation(nm, eq[0][0], eq[0][1]);
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArithIntGeqTighten(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroArithIntGeqTighten(CDProof* cdp,
+                                                           const Node& eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);
   Trace("brc-macro") << "Expand int geq tighten for " << eq << std::endl;
   NodeManager* nm = nodeManager();
-  std::pair<Node, Node> p = theory::arith::rewriter::decomposeRelation(nm, eq[0][0], eq[0][1]);
+  std::pair<Node, Node> p =
+      theory::arith::rewriter::decomposeRelation(nm, eq[0][0], eq[0][1]);
   return false;
 }
 

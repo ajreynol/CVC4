@@ -377,7 +377,6 @@ Node buildRealInequality(Sum&& sum, Kind k)
   return buildRelation(k, collectSum(sum), rhs);
 }
 
-
 std::pair<Node, Node> decomposeSum(NodeManager* nm,
                                    Sum&& sum,
                                    bool& negated,
@@ -397,7 +396,9 @@ std::pair<Node, Node> decomposeSum(NodeManager* nm, Sum&& sum)
   return decomposeSum(nm, std::move(sum), negated, false);
 }
 
-std::pair<Node, Node> decomposeRelation(NodeManager* nm, const Node& a, const Node& b)
+std::pair<Node, Node> decomposeRelation(NodeManager* nm,
+                                        const Node& a,
+                                        const Node& b)
 {
   Node ar = a.getKind() == Kind::TO_REAL ? a[0] : a;
   Node br = b.getKind() == Kind::TO_REAL ? b[0] : b;
