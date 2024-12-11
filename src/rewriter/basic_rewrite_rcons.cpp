@@ -184,13 +184,8 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
       }
       break;
     case ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT:
-      if (ensureProofMacroArithIntEqConflict(cdp, eq))
-      {
-        handledMacro = true;
-      }
-      break;
     case ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN:
-      if (ensureProofMacroArithIntGeqTighten(cdp, eq))
+      if (ensureProofMacroArithIntRelation(cdp, eq))
       {
         handledMacro = true;
       }
@@ -287,37 +282,39 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp,
+bool BasicRewriteRCons::ensureProofMacroArithIntRelation(CDProof* cdp,
                                                            const Node& eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);
-  Trace("brc-macro") << "Expand int eq conflict for " << eq << std::endl;
+  Trace("brc-macro") << "Expand int relation for " << eq << std::endl;
   NodeManager* nm = nodeManager();
-  Assert(eq[0].getKind() == Kind::EQUAL);
-  Node rewEq = eq[0];
+  Kind rk = eq[0].getKind();
+  Assert(rk == Kind::EQUAL || rk == Kind::GEQ);
+  Node rewRel = eq[0];
   std::vector<Node> transEq;
-  if (rewEq[0].getType().isInteger())
+  if (rewRel[0].getType().isInteger() && rk ==Kind::EQUAL)
   {
     // if we are starting from an integer equality, we should convert to
     // a real equality first to ensure the ARITH_POLY_NORM_REL step will
     // work below.
-    Node rer = nm->mkNode(Kind::EQUAL,
-                          nm->mkNode(Kind::TO_REAL, rewEq[0]),
-                          nm->mkNode(Kind::TO_REAL, rewEq[1]));
-    Node eqq = rewEq.eqNode(rer);
+    Node rer = nm->mkNode(rk,
+                          nm->mkNode(Kind::TO_REAL, rewRel[0]),
+                          nm->mkNode(Kind::TO_REAL, rewRel[1]));
+    Node eqq = rewRel.eqNode(rer);
     cdp->addTrustedStep(
         eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     transEq.push_back(eqq);
-    rewEq = rer;
+    rewRel = rer;
   }
+  // construct the setup equality
   std::pair<Node, Node> p =
-      theory::arith::rewriter::decomposeRelation(nm, rewEq[0], rewEq[1]);
+      theory::arith::rewriter::decomposeRelation(nm, rewRel[0], rewRel[1]);
   Assert(p.second.isConst());
   Assert(p.second.getConst<Rational>().isIntegral());
   Node rew =
-      nm->mkNode(Kind::EQUAL, nm->mkNode(Kind::TO_REAL, p.first), p.second);
+      nm->mkNode(rk, nm->mkNode(Kind::TO_REAL, p.first), p.second);
   Trace("brc-macro") << "...setup relation is " << rew << std::endl;
-  Node eqq = rewEq.eqNode(rew);
+  Node eqq = rewRel.eqNode(rew);
   transEq.push_back(eqq);
   // should be able to show the equivalence by ARITH_POLY_NORM_REL
   if (!ensureProofArithPolyNormRel(cdp, eqq))
@@ -325,26 +322,28 @@ bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp,
     Trace("brc-macro") << "...failed arith poly rel" << std::endl;
     return false;
   }
-  // the second
-  eqq = rew.eqNode(eq[1]);
+  Node tgt = eq[1];
+  // if GEQ, we rewrite the right hand side to match the RARE rule
+  // arith-int-geq-tighten verbatim
+  if (rk==Kind::GEQ)
+  {
+    Node cceil = nm->mkConstInt(p.second.getConst<Rational>().ceiling());
+    tgt = nm->mkNode(rk, p.first,cceil);
+  }
+  // the last step can be shown by the RARE rules
+  // arith-int-eq-conflict or arith-int-geq-tighten
+  eqq = rew.eqNode(tgt);
   cdp->addTrustedStep(eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
   transEq.push_back(eqq);
+  if (tgt != eq[1])
+  {
+    eqq = tgt.eqNode(eq[1]);
+    cdp->addTrustedStep(eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    transEq.push_back(eqq);
+  }
   // connect with transitive
   cdp->addStep(eq, ProofRule::TRANS, transEq, {});
   return true;
-}
-
-bool BasicRewriteRCons::ensureProofMacroArithIntGeqTighten(CDProof* cdp,
-                                                           const Node& eq)
-{
-  Assert(eq.getKind() == Kind::EQUAL);
-  Trace("brc-macro") << "Expand int geq tighten for " << eq << std::endl;
-  NodeManager* nm = nodeManager();
-  std::pair<Node, Node> p =
-      theory::arith::rewriter::decomposeRelation(nm, eq[0][0], eq[0][1]);
-  Assert(p.second.isConst());
-  Assert(p.second.getConst<Rational>().isIntegral());
-  return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,

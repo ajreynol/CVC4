@@ -142,24 +142,16 @@ class BasicRewriteRCons : protected EnvObj
   bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& eq);
   /**
    * Elaborate a rewrite eq that was proven by
-   * ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT.
-   *
-   * @param cdp The proof to add to.
-   * @param eq The rewrite proven by
-   * ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT.
-   * @return true if added a closed proof of eq to cdp.
-   */
-  bool ensureProofMacroArithIntEqConflict(CDProof* cdp, const Node& eq);
-  /**
-   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT or
    * ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN.
    *
    * @param cdp The proof to add to.
    * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT or
    * ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN.
    * @return true if added a closed proof of eq to cdp.
    */
-  bool ensureProofMacroArithIntGeqTighten(CDProof* cdp, const Node& eq);
+  bool ensureProofMacroArithIntRelation(CDProof* cdp, const Node& eq);
   /**
    * Elaborate a rewrite eq that was proven by
    * ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL.
