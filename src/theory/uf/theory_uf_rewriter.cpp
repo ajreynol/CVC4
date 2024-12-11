@@ -78,6 +78,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
       if (lambdaRew != node.getOperator())
       {
         Node ret = getHoApplyForApplyUf(node);
+        Trace("uf-ho-beta") << "Lift " << node << " to HO " << ret << std::endl;
         return RewriteResponse(REWRITE_AGAIN_FULL, ret);
       }
       Trace("uf-ho-beta") << "uf-ho-beta : beta-reducing all args of : "
@@ -140,13 +141,8 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
       expr::getFreeVariables(arg, fvs);
       if (!fvs.empty())
       {
-        Node prev = new_body;
         ElimShadowNodeConverter esnc(nodeManager(), node, fvs);
         new_body = esnc.convert(new_body);
-        if (new_body != prev)
-        {
-          Trace("ajr-temp") << "Elim shadwed!" << std::endl;
-        }
       }
       TNode var = lambda[0][0];
       new_body = new_body.substitute(var, arg);
