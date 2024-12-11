@@ -649,7 +649,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       rr->rewriteViaRule(ProofRewriteRule::QUANT_MERGE_PRENEX, umergeq);
   if (mergeq != eq[1])
   {
-    Trace("brc-macro") << "Failed merge step";
+    Trace("brc-macro") << "Failed merge step" << std::endl;
     return false;
   }
   Node eqq2 = umergeq.eqNode(mergeq);
@@ -657,26 +657,24 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
   cdp->addStep(eq, ProofRule::TRANS, {eqq, eqq2}, {});
   Trace("brc-macro") << "Remains to prove: " << body1 << " == " << body2
                      << std::endl;
+  Assert (body2.getKind()==Kind::FORALL);
+  ProofRewriteRule prr = body2[1].getKind()==Kind::ITE ? ProofRewriteRule::QUANT_MINISCOPE_ITE: ProofRewriteRule::QUANT_MINISCOPE_OR;
   Node body2ms =
-      rr->rewriteViaRule(ProofRewriteRule::QUANT_MINISCOPE_OR, body2);
+      rr->rewriteViaRule(prr, body2);
   if (body2ms.isNull())
   {
-    // currently fails if we are doing
-    //   forall x. ite(C, forall Y. t, s) =
-    //   forall xy. ite(C, t, s)
-    // since we don't miniscope over ITE.
-    Trace("brc-macro") << "Failed miniscope";
+    Trace("brc-macro") << "Failed miniscope" << std::endl;
     return false;
   }
   Node eqqm = body2.eqNode(body2ms);
-  cdp->addTheoryRewriteStep(eqqm, ProofRewriteRule::QUANT_MINISCOPE_OR);
+  cdp->addTheoryRewriteStep(eqqm, prr);
   Node eqqrs = body2.eqNode(body1);
   if (body2ms != body1)
   {
     if (body2ms.getKind() != body1.getKind()
         || body2ms.getNumChildren() != body1.getNumChildren())
     {
-      Trace("brc-macro") << "Failed after miniscope";
+      Trace("brc-macro") << "Failed after miniscope" << std::endl;
       return false;
     }
     // We may have used alpha equivalence to rename variables, thus we
