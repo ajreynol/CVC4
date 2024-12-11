@@ -298,6 +298,9 @@ bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp,
   std::vector<Node> transEq;
   if (rewEq[0].getType().isInteger())
   {
+    // if we are starting from an integer equality, we should convert to
+    // a real equality first to ensure the ARITH_POLY_NORM_REL step will
+    // work below.
     Node rer = nm->mkNode(Kind::EQUAL, nm->mkNode(Kind::TO_REAL, rewEq[0]), nm->mkNode(Kind::TO_REAL, rewEq[1]));
     Node eqq = rewEq.eqNode(rer);
     cdp->addTrustedStep(
