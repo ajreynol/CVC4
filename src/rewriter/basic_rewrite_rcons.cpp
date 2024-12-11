@@ -182,6 +182,18 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
+    case ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT:
+      if (ensureProofMacroArithIntEqConflict(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN:
+      if (ensureProofMacroArithIntGeqTighten(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
       if (ensureProofMacroArithStringPredEntail(cdp, eq))
       {
@@ -272,6 +284,24 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
   Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
   cdp->addProof(pfn);
   return true;
+}
+
+bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp, const Node& eq)
+{
+  Assert(eq.getKind() == Kind::EQUAL);
+  Trace("brc-macro") << "Expand int eq conflict for " << eq << std::endl;
+  NodeManager* nm = nodeManager();
+  std::pair<Node, Node> p = arith::rewriter::decomposeSum(nm, eq[0][0], eq[0][1]);
+  return false;
+}
+
+bool BasicRewriteRCons::ensureProofMacroArithIntGeqTighten(CDProof* cdp, const Node& eq)
+{
+  Assert(eq.getKind() == Kind::EQUAL);
+  Trace("brc-macro") << "Expand int geq tighten for " << eq << std::endl;
+  NodeManager* nm = nodeManager();
+  std::pair<Node, Node> p = arith::rewriter::decomposeSum(nm, eq[0][0], eq[0][1]);
+  return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,

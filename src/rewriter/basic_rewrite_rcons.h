@@ -142,6 +142,26 @@ class BasicRewriteRCons : protected EnvObj
   bool ensureProofMacroBoolNnfNorm(CDProof* cdp, const Node& eq);
   /**
    * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroArithIntEqConflict(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroArithIntGeqTighten(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
    * ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL.
    *
    * This takes an equality of the form (r t1 t2) = c, where r is an arithmetic
