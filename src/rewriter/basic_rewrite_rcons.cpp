@@ -658,10 +658,11 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
   cdp->addStep(eq, ProofRule::TRANS, {eqq, eqq2}, {});
   Trace("brc-macro") << "Remains to prove: " << body1 << " == " << body2
                      << std::endl;
-  Assert (body2.getKind()==Kind::FORALL);
-  ProofRewriteRule prr = body2[1].getKind()==Kind::ITE ? ProofRewriteRule::QUANT_MINISCOPE_ITE: ProofRewriteRule::QUANT_MINISCOPE_OR;
-  Node body2ms =
-      rr->rewriteViaRule(prr, body2);
+  Assert(body2.getKind() == Kind::FORALL);
+  ProofRewriteRule prr = body2[1].getKind() == Kind::ITE
+                             ? ProofRewriteRule::QUANT_MINISCOPE_ITE
+                             : ProofRewriteRule::QUANT_MINISCOPE_OR;
+  Node body2ms = rr->rewriteViaRule(prr, body2);
   if (body2ms.isNull())
   {
     Trace("brc-macro") << "Failed miniscope" << std::endl;
@@ -978,8 +979,10 @@ bool BasicRewriteRCons::ensureProofMacroQuantMiniscope(CDProof* cdp,
   Assert(q.getKind() == Kind::FORALL);
   NodeManager* nm = nodeManager();
   Kind bk = q[1].getKind();
-  Assert (bk==Kind::AND || bk==Kind::ITE);
-  ProofRewriteRule prr = bk==Kind::AND ? ProofRewriteRule::QUANT_MINISCOPE_AND : ProofRewriteRule::QUANT_MINISCOPE_ITE;
+  Assert(bk == Kind::AND || bk == Kind::ITE);
+  ProofRewriteRule prr = bk == Kind::AND
+                             ? ProofRewriteRule::QUANT_MINISCOPE_AND
+                             : ProofRewriteRule::QUANT_MINISCOPE_ITE;
   theory::Rewriter* rr = d_env.getRewriter();
   Node mq = rr->rewriteViaRule(prr, q);
   Node equiv = q.eqNode(mq);

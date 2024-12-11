@@ -97,8 +97,11 @@ bool isIntConflictGCDLCM(Sum&& sum);
 /**
  * Return true if the given sum is a conflict.
  */
-std::pair<Node, Node> decomposeSum(NodeManager * nm, Sum&& sum, bool& negated, bool followLCoeffSign);
-std::pair<Node, Node> decomposeSum(NodeManager * nm, Sum&& sum);
+std::pair<Node, Node> decomposeSum(NodeManager* nm,
+                                   Sum&& sum,
+                                   bool& negated,
+                                   bool followLCoeffSign);
+std::pair<Node, Node> decomposeSum(NodeManager* nm, Sum&& sum);
 
 }  // namespace rewriter
 }  // namespace arith

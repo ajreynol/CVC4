@@ -274,17 +274,20 @@ bool isIntConflictGCDLCM(Sum&& sum)
   return false;
 }
 
-std::pair<Node, Node> decomposeSum(NodeManager * nm, Sum&& sum, bool& negated, bool followLCoeffSign)
+std::pair<Node, Node> decomposeSum(NodeManager* nm,
+                                   Sum&& sum,
+                                   bool& negated,
+                                   bool followLCoeffSign)
 {
   negated = normalizeGCDLCM(sum, followLCoeffSign);
   RealAlgebraicNumber constant = removeConstant(sum);
   Assert(constant.isRational());
   Node c = nm->mkConstReal(constant.toRational());
   Node t = collectSum(sum);
-  return std::pair<Node, Node>(t,c);
+  return std::pair<Node, Node>(t, c);
 }
 
-std::pair<Node, Node> decomposeSum(NodeManager * nm, Sum&& sum)
+std::pair<Node, Node> decomposeSum(NodeManager* nm, Sum&& sum)
 {
   bool negated = false;
   return decomposeSum(nm, std::move(sum), negated, false);

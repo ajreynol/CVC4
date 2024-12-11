@@ -181,9 +181,11 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         {
           // decompose the sum into a non-constant and constant part
           bool negated = false;
-          std::pair<Node, Node> p = decomposeSum(d_nm, std::move(sum), negated, true);
+          std::pair<Node, Node> p =
+              decomposeSum(d_nm, std::move(sum), negated, true);
           Rational c = p.second.getConst<Rational>();
-          Trace("arith-rewriter-proof") << "Decomposed to " << p.first << " + " << p.second << std::endl;
+          Trace("arith-rewriter-proof")
+              << "Decomposed to " << p.first << " + " << p.second << std::endl;
           if (!c.isIntegral())
           {
             c = -c;
