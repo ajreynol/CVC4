@@ -283,7 +283,7 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
 }
 
 bool BasicRewriteRCons::ensureProofMacroArithIntRelation(CDProof* cdp,
-                                                           const Node& eq)
+                                                         const Node& eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);
   Trace("brc-macro") << "Expand int relation for " << eq << std::endl;
@@ -292,7 +292,7 @@ bool BasicRewriteRCons::ensureProofMacroArithIntRelation(CDProof* cdp,
   Assert(rk == Kind::EQUAL || rk == Kind::GEQ);
   Node rewRel = eq[0];
   std::vector<Node> transEq;
-  if (rewRel[0].getType().isInteger() && rk ==Kind::EQUAL)
+  if (rewRel[0].getType().isInteger() && rk == Kind::EQUAL)
   {
     // if we are starting from an integer equality, we should convert to
     // a real equality first to ensure the ARITH_POLY_NORM_REL step will
@@ -311,8 +311,7 @@ bool BasicRewriteRCons::ensureProofMacroArithIntRelation(CDProof* cdp,
       theory::arith::rewriter::decomposeRelation(nm, rewRel[0], rewRel[1]);
   Assert(p.second.isConst());
   Assert(p.second.getConst<Rational>().isIntegral());
-  Node rew =
-      nm->mkNode(rk, nm->mkNode(Kind::TO_REAL, p.first), p.second);
+  Node rew = nm->mkNode(rk, nm->mkNode(Kind::TO_REAL, p.first), p.second);
   Trace("brc-macro") << "...setup relation is " << rew << std::endl;
   Node eqq = rewRel.eqNode(rew);
   transEq.push_back(eqq);
@@ -325,10 +324,10 @@ bool BasicRewriteRCons::ensureProofMacroArithIntRelation(CDProof* cdp,
   Node tgt = eq[1];
   // if GEQ, we rewrite the right hand side to match the RARE rule
   // arith-int-geq-tighten verbatim
-  if (rk==Kind::GEQ)
+  if (rk == Kind::GEQ)
   {
     Node cceil = nm->mkConstInt(p.second.getConst<Rational>().ceiling());
-    tgt = nm->mkNode(rk, p.first,cceil);
+    tgt = nm->mkNode(rk, p.first, cceil);
   }
   // the last step can be shown by the RARE rules
   // arith-int-eq-conflict or arith-int-geq-tighten
@@ -338,7 +337,8 @@ bool BasicRewriteRCons::ensureProofMacroArithIntRelation(CDProof* cdp,
   if (tgt != eq[1])
   {
     eqq = tgt.eqNode(eq[1]);
-    cdp->addTrustedStep(eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    cdp->addTrustedStep(
+        eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     transEq.push_back(eqq);
   }
   // connect with transitive
