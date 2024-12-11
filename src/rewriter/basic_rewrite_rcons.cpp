@@ -293,7 +293,7 @@ bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp,
   Assert(eq.getKind() == Kind::EQUAL);
   Trace("brc-macro") << "Expand int eq conflict for " << eq << std::endl;
   NodeManager* nm = nodeManager();
-  Assert (eq[0].getKind()==Kind::EQUAL);
+  Assert(eq[0].getKind() == Kind::EQUAL);
   Node rewEq = eq[0];
   std::vector<Node> transEq;
   if (rewEq[0].getType().isInteger())
@@ -301,7 +301,9 @@ bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp,
     // if we are starting from an integer equality, we should convert to
     // a real equality first to ensure the ARITH_POLY_NORM_REL step will
     // work below.
-    Node rer = nm->mkNode(Kind::EQUAL, nm->mkNode(Kind::TO_REAL, rewEq[0]), nm->mkNode(Kind::TO_REAL, rewEq[1]));
+    Node rer = nm->mkNode(Kind::EQUAL,
+                          nm->mkNode(Kind::TO_REAL, rewEq[0]),
+                          nm->mkNode(Kind::TO_REAL, rewEq[1]));
     Node eqq = rewEq.eqNode(rer);
     cdp->addTrustedStep(
         eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
@@ -310,9 +312,10 @@ bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp,
   }
   std::pair<Node, Node> p =
       theory::arith::rewriter::decomposeRelation(nm, rewEq[0], rewEq[1]);
-  Assert (p.second.isConst());
-  Assert (p.second.getConst<Rational>().isIntegral());
-  Node rew = nm->mkNode(Kind::EQUAL, nm->mkNode(Kind::TO_REAL, p.first), p.second);
+  Assert(p.second.isConst());
+  Assert(p.second.getConst<Rational>().isIntegral());
+  Node rew =
+      nm->mkNode(Kind::EQUAL, nm->mkNode(Kind::TO_REAL, p.first), p.second);
   Trace("brc-macro") << "...setup relation is " << rew << std::endl;
   Node eqq = rewEq.eqNode(rew);
   transEq.push_back(eqq);
@@ -322,10 +325,9 @@ bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp,
     Trace("brc-macro") << "...failed arith poly rel" << std::endl;
     return false;
   }
-  // the second 
+  // the second
   eqq = rew.eqNode(eq[1]);
-  cdp->addTrustedStep(
-      eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+  cdp->addTrustedStep(eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
   transEq.push_back(eqq);
   // connect with transitive
   cdp->addStep(eq, ProofRule::TRANS, transEq, {});
@@ -340,8 +342,8 @@ bool BasicRewriteRCons::ensureProofMacroArithIntGeqTighten(CDProof* cdp,
   NodeManager* nm = nodeManager();
   std::pair<Node, Node> p =
       theory::arith::rewriter::decomposeRelation(nm, eq[0][0], eq[0][1]);
-  Assert (p.second.isConst());
-  Assert (p.second.getConst<Rational>().isIntegral());
+  Assert(p.second.isConst());
+  Assert(p.second.getConst<Rational>().isIntegral());
   return false;
 }
 
