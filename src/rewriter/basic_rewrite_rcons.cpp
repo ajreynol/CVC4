@@ -36,6 +36,7 @@
 #include "theory/strings/strings_entail.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "util/rational.h"
+#include "theory/arith/rewriter/rewrite_atom.h"
 
 using namespace cvc5::internal::kind;
 
@@ -291,7 +292,7 @@ bool BasicRewriteRCons::ensureProofMacroArithIntEqConflict(CDProof* cdp, const N
   Assert(eq.getKind() == Kind::EQUAL);
   Trace("brc-macro") << "Expand int eq conflict for " << eq << std::endl;
   NodeManager* nm = nodeManager();
-  std::pair<Node, Node> p = arith::rewriter::decomposeSum(nm, eq[0][0], eq[0][1]);
+  std::pair<Node, Node> p = theory::arith::rewriter::decomposeRelation(nm, eq[0][0], eq[0][1]);
   return false;
 }
 
@@ -300,7 +301,7 @@ bool BasicRewriteRCons::ensureProofMacroArithIntGeqTighten(CDProof* cdp, const N
   Assert(eq.getKind() == Kind::EQUAL);
   Trace("brc-macro") << "Expand int geq tighten for " << eq << std::endl;
   NodeManager* nm = nodeManager();
-  std::pair<Node, Node> p = arith::rewriter::decomposeSum(nm, eq[0][0], eq[0][1]);
+  std::pair<Node, Node> p = theory::arith::rewriter::decomposeRelation(nm, eq[0][0], eq[0][1]);
   return false;
 }
 

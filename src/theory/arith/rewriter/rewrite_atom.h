@@ -120,7 +120,7 @@ std::pair<Node, Node> decomposeSum(NodeManager* nm, Sum&& sum);
   * @return a pair p such that p.first <> p.second is equivalent to a <> b and
   * p.first does not contain constant sums and p.second is constant.
   */
-std::pair<Node, Node> decomposeRelation(const Node& a, const Node& b);
+std::pair<Node, Node> decomposeRelation(NodeManager* nm, const Node& a, const Node& b);
   
 }  // namespace rewriter
 }  // namespace arith
