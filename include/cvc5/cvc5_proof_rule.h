@@ -2516,6 +2516,12 @@ enum ENUM(ProofRewriteRule)
    * \verbatim embed:rst:leading-asterisk
    * **Arrays -- Macro normalize constant**
    *
+   * .. math::
+   *   A = B
+   *
+   * where :math:`B` is the result of normalizing the array value :math:`A`
+   * into a canonical form.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_ARRAYS_NORMALIZE_CONSTANT),
