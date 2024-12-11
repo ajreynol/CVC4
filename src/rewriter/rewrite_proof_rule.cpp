@@ -46,7 +46,7 @@ void RewriteProofRule::init(ProofRewriteRule id,
     if (!expr::getListVarContext(c, d_listVarCtx))
     {
       Unhandled()
-          << "Ambiguous context for list variables in condition of rule " << id;
+          << "Ambiguous or illegal context for list variables in condition of rule " << id;
     }
     d_cond.push_back(c);
     if (c.getKind() == Kind::EQUAL && c[0].getKind() == Kind::BOUND_VARIABLE)
@@ -58,7 +58,7 @@ void RewriteProofRule::init(ProofRewriteRule id,
   d_context = context;
   if (!expr::getListVarContext(conc, d_listVarCtx))
   {
-    Unhandled() << "Ambiguous context for list variables in conclusion of rule "
+    Unhandled() << "Ambiguous or illegal context for list variables in conclusion of rule "
                 << id;
   }
 
