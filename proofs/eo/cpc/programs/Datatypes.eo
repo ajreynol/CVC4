@@ -68,3 +68,18 @@
     (eo::typeof s)
     (((-> D1 T1) D1))))
 
+; define: $dt_arg_nth
+; args:
+; - t T: The term to inspect, expected to be a constructor application.
+; - n Int: The index of the argument to get.
+; return: >
+;   The nth argument of t.
+(program $dt_arg_nth ((T Type) (U Type) (V Type) (W Type) (t T) (n Int) (t1 V) (t2 W :list))
+  (T Int) U
+  (
+    ; for tuples, use nth on tuple as an n-ary constructor
+    (($dt_arg_nth (tuple t1 t2) n)  (eo::list_nth tuple (tuple t1 t2) n))
+    ; otherwise we get the argument list
+    (($dt_arg_nth t n)              (eo::list_nth @list ($get_arg_list t) n))
+  )
+)

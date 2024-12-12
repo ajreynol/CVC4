@@ -388,12 +388,6 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
   {
     return RewriteProofStatus::ARITH_POLY_NORM;
   }
-  // alpha equivalence
-  if (proveWithRule(
-          RewriteProofStatus::ALPHA_EQUIV, eqi, {}, {}, false, false, true))
-  {
-    return RewriteProofStatus::ALPHA_EQUIV;
-  }
   // Maybe holds via a THEORY_REWRITE that has been marked with
   // TheoryRewriteCtx::DSL_SUBCALL.
   if (d_tmode==TheoryRewriteMode::STANDARD)
