@@ -36,6 +36,7 @@ namespace quantifiers {
 class QuantifiersState;
 class QuantifiersInferenceManager;
 class QuantifiersRegistry;
+class DeqCongProofGenerator;
 
 /** Context-dependent list of nodes */
 class DbList
@@ -263,6 +264,8 @@ class TermDb : public QuantifiersUtil {
    * of equality engine (for higher-order).
    */
   std::map<TypeNode, Node> d_ho_type_match_pred;
+  /** A proof generator for disequal congruent terms */
+  std::shared_ptr<DeqCongProofGenerator> d_dcproof;
   //----------------------------- implementation-specific
   /**
    * Finish reset internal, called at the end of reset(e). Returning false will
