@@ -96,6 +96,31 @@
 
 ;;;;; ProofRewriteRule::DT_COLLAPSE_SELECTOR
 
+(declare-rule dt-collapse-selector ((D Type) (T Type) (s (-> D T)) (t D) (ti T))
+  :args ((= (s t) ti))
+  :requires (((eo::define ((f ($get_fun t)))
+              (eo::define ((args ($get_arg_list t)))
+              (eo::define ((cs ($dt_get_constructors ($dt_of_sel s))))
+              (eo::define ((index (eo::list_find eo::List::cons cs f)))
+                (eo::list_nth @list args index))))) ti))
+  :conclusion (= (s t) ti)
+)
+
 ;;;;; ProofRewriteRule::DT_COLLAPSE_TESTER
 
+(declare-rule dt-collapse-tester ((D Type) (T Type) (c T) (t D) (b Bool))
+  :args ((= (is c t) b))
+  :requires (((eo::define ((f ($get_fun t)))
+              (eo::ite b 
+                (eo::is_eq f c) 
+                (eo::and ($dt_is_cons f) (eo::not (eo::is_eq f c))))) true))
+  :conclusion (= (is c t) true)
+)
+
 ;;;;; ProofRewriteRule::DT_COLLAPSE_TESTER_SINGLETON
+
+(declare-rule dt-collapse-tester-singleton ((D Type) (T Type) (c T) (t D))
+  :args ((= (is c t) true))
+  :requires (((eo::list_len eo::List::cons ($dt_get_constructors (eo::typeof t))) 1))
+  :conclusion (= (is c t) true)
+)
