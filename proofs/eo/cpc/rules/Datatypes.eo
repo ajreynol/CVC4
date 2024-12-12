@@ -96,7 +96,15 @@
 
 ;;;;; ProofRewriteRule::DT_COLLAPSE_SELECTOR
 
-
+; rule: dt-collapse-selector
+; implements: ProofRewriteRule::DT_COLLAPSE_SELECTOR.
+; args:
+; - eq Bool: The equality to prove.
+; requires: >
+;   We require that the index^th argument of the term t we are selecting from
+;   is the right hand side of the equality, where index is the index of the
+;   selector in the constructor of t.
+; conclusion: The given equality.
 (declare-rule dt-collapse-selector ((D Type) (T Type) (s (-> D T)) (t D) (ti T))
   :args ((= (s t) ti))
   :requires (((eo::define ((c ($get_fun t)))
@@ -109,6 +117,16 @@
 
 ;;;;; ProofRewriteRule::DT_COLLAPSE_TESTER
 
+; rule: dt-collapse-tester
+; implements: ProofRewriteRule::DT_COLLAPSE_TESTER.
+; args:
+; - eq Bool: The equality to prove.
+; requires: >
+;   If the right hand side is true, then the function head of the term we are
+;   testing must be the constructor. If the right hand side is false, then the
+;   function head of the term we are testing must be the constructor that is
+;   not the constructor we are testing.
+; conclusion: The given equality.
 (declare-rule dt-collapse-tester ((D Type) (T Type) (c T) (t D) (b Bool))
   :args ((= (is c t) b))
   :requires (((eo::define ((f ($get_fun t)))
@@ -120,6 +138,13 @@
 
 ;;;;; ProofRewriteRule::DT_COLLAPSE_TESTER_SINGLETON
 
+; rule: dt-collapse-tester-singleton
+; implements: ProofRewriteRule::DT_COLLAPSE_TESTER_SINGLETON.
+; args:
+; - eq Bool: The equality to prove.
+; requires: >
+;   The number of constructors of the type of the term we are testing is one.
+; conclusion: The given equality.
 (declare-rule dt-collapse-tester-singleton ((D Type) (T Type) (c T) (t D))
   :args ((= (is c t) true))
   :requires (((eo::list_len eo::List::cons ($dt_get_constructors (eo::typeof t))) 1))
