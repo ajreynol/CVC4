@@ -2533,9 +2533,10 @@ enum ENUM(ProofRewriteRule)
    * **Arrays -- Macro distinct arrays**
    *
    * .. math::
-   *   (A=B) = \bot
+   *   (A = B) = \bot
    *
-   * where :math:`A` and :math:`B` are distinct array values.
+   * where :math:`A` and :math:`B` are distinct array values, that is,
+   * the Node::isConst method returns true for both.
    *
    * \endverbatim
    */
@@ -2548,7 +2549,8 @@ enum ENUM(ProofRewriteRule)
    *   A = B
    *
    * where :math:`B` is the result of normalizing the array value :math:`A`
-   * into a canonical form.
+   * into a canonical form, using the internal method
+   * TheoryArraysRewriter::normalizeConstant.
    *
    * \endverbatim
    */
@@ -2631,7 +2633,12 @@ enum ENUM(ProofRewriteRule)
    *   G_1 \wedge \cdots \wedge G_n
    *
    * where each :math:`G_i` is semantically equivalent to
-   * :math:`\forall X.\> F_i`.
+   * :math:`\forall X.\> F_i`, or alternatively
+   *
+   * .. math::
+   *   \forall X.\> \ite{C}{F_1}{F_2} = \ite{C}{G_1}{G_2}
+   *
+   * where :math:`C` does not have any free variable in :math:`X`.
    *
    * \endverbatim
    */
@@ -2665,7 +2672,7 @@ enum ENUM(ProofRewriteRule)
    * **Quantifiers -- Miniscoping ite**
    *
    * .. math::
-   *   \forall X.\> ite( C, F_1, F_2) = ite( C, \forall X.\> F_1, \forall X.\> F_2)
+   *   \forall X.\> \ite{C}{F_1}{F_2} = \ite{C}{\forall X.\> F_1}{\forall X.\> F_2}
    * 
    * where :math:`C` does not have any free variable in :math:`X`.
    *
