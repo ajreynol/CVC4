@@ -3152,7 +3152,20 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_SUBSTR_STRIP_SYM_LENGTH),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Sets -- sets intersection evaluation**
+   * **Sets -- distinct sets**
+   *
+   * .. math::
+   *   (A = B) = \bot
+   *
+   * where :math:`A` and :math:`B` are distinct set values, that is,
+   * the Node::isConst method returns true for both.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_SETS_DISTINCT_SETS),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Sets -- sets intersection normalize**
    *
    * .. math::
    *   \mathit{set.inter}(t_1, t_2) = t
@@ -3167,7 +3180,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_SETS_INTER_NORM),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Sets -- sets intersection evaluation**
+   * **Sets -- sets minus normalize**
    *
    * .. math::
    *   \mathit{set.minus}(t_1, t_2) = t
@@ -3182,7 +3195,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_SETS_MINUS_NORM),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Sets -- sets union evaluation**
+   * **Sets -- sets union normalize**
    *
    * .. math::
    *   \mathit{set.union}(t_1, t_2) = t

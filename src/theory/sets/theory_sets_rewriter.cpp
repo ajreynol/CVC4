@@ -46,6 +46,8 @@ TheorySetsRewriter::TheorySetsRewriter(NodeManager* nm,
                            TheoryRewriteCtx::DSL_SUBCALL);
   registerProofRewriteRule(ProofRewriteRule::SETS_INSERT_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_DISTINCT_SETS,
+                           TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_INTER_NORM,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_MINUS_NORM,
@@ -80,6 +82,16 @@ Node TheorySetsRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
           elems = nm->mkNode(Kind::SET_UNION, singleton, elems);
         }
         return elems;
+      }
+    }
+    break;
+    case ProofRewriteRule::MACRO_SETS_DISTINCT_SETS:
+    {
+      if (n.getKind() == Kind::EQUAL && n[0].isConst() && n[1].isConst()
+          && n[0] != n[1])
+      {
+        Assert(n[0].getType().isSet());
+        return d_nm->mkConst(false);
       }
     }
     break;

@@ -306,6 +306,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR: return "str-in-re-sigma-star";
     case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
       return "macro-substr-strip-sym-length";
+    case ProofRewriteRule::MACRO_SETS_DISTINCT_SETS:
+      return "macro-sets-distinct-sets";
     case ProofRewriteRule::MACRO_SETS_INTER_NORM:
       return "macro-sets-inter-norm";
     case ProofRewriteRule::MACRO_SETS_MINUS_NORM:
