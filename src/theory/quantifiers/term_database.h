@@ -282,8 +282,8 @@ class TermDb : public QuantifiersUtil {
    * This method is called when terms a and b are indexed by the same operator,
    * and have equivalent arguments. This method checks if we are in conflict,
    * which is the case if a and b are disequal in the equality engine.
-   * If so, it adds the set of literals that are implied but do not hold, e.g.
-   * the equality (= a b).
+   * If so, it adds any additional arguments that explain why a = b, e.g. the
+   * equivalence of their operators if their operators are different.
    */
   virtual bool checkCongruentDisequal(TNode a, TNode b, std::vector<Node>& exp);
   //----------------------------- end implementation-specific
