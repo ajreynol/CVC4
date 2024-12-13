@@ -267,6 +267,7 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::LAMBDA_ELIM:
     case ProofRewriteRule::ARITH_STRING_PRED_ENTAIL:
     case ProofRewriteRule::ARITH_STRING_PRED_SAFE_APPROX:
+    case ProofRewriteRule::ARITH_POW_ELIM:
     case ProofRewriteRule::EXISTS_ELIM:
     case ProofRewriteRule::QUANT_UNUSED_VARS:
     case ProofRewriteRule::ARRAYS_SELECT_CONST:
@@ -281,11 +282,13 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::QUANT_VAR_ELIM_EQ:
     case ProofRewriteRule::RE_LOOP_ELIM:
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
+    case ProofRewriteRule::SETS_INSERT_ELIM:
     case ProofRewriteRule::STR_IN_RE_CONCAT_STAR_CHAR:
     case ProofRewriteRule::STR_IN_RE_SIGMA:
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR:
     case ProofRewriteRule::STR_IN_RE_CONSUME:
     case ProofRewriteRule::RE_INTER_UNION_INCLUSION:
+    case ProofRewriteRule::BV_REPEAT_ELIM:
     case ProofRewriteRule::BV_BITWISE_SLICING: return true;
     case ProofRewriteRule::STR_CTN_MULTISET_SUBSET:
       // only strings are supported, since it is non-trivial to show

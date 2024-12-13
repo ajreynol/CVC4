@@ -61,7 +61,6 @@
 
 ;;;;; ProofRewriteRule::SETS_INSERT_ELIM
 
-
 ; program: $set_eval_insert
 ; args:
 ; - es @List: The list of elements
