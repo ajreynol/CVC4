@@ -749,7 +749,7 @@ Node TheoryArraysRewriter::mkEqNode(const Node& a, const Node& b) const
   Node eq = a.eqNode(b);
   return d_rewriter->rewrite(eq);
 }
-  
+
 }  // namespace arrays
 }  // namespace theory
 }  // namespace cvc5::internal

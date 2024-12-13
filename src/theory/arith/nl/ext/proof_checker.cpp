@@ -61,25 +61,25 @@ Node ExtProofRuleChecker::checkInternal(ProofRule id,
     std::vector<Node> vars;
     for (const auto& v : mon)
     {
-      if (vars.empty() || v!=vars.back())
+      if (vars.empty() || v != vars.back())
       {
         vars.push_back(v);
       }
       exps[v]++;
     }
     // unique variables must equal the number of given premises
-    if (vars.size()!=premise.size())
+    if (vars.size() != premise.size())
     {
       return Node::null();
     }
     std::map<Node, int> signs;
-    for (size_t i=0, nprem=premise.size(); i<nprem; i++)
+    for (size_t i = 0, nprem = premise.size(); i < nprem; i++)
     {
       const Node& f = premise[i];
       if (f.getKind() == Kind::NOT)
       {
         // variables must be in order
-        if (f[0][0]!=vars[i])
+        if (f[0][0] != vars[i])
         {
           return Node::null();
         }
@@ -90,7 +90,7 @@ Node ExtProofRuleChecker::checkInternal(ProofRule id,
         continue;
       }
       // variables must be in order
-      if (f[0]!=vars[i])
+      if (f[0] != vars[i])
       {
         return Node::null();
       }
@@ -103,7 +103,7 @@ Node ExtProofRuleChecker::checkInternal(ProofRule id,
     for (const auto& ve : exps)
     {
       auto sit = signs.find(ve.first);
-      Assert (sit != signs.end());
+      Assert(sit != signs.end());
       if (ve.second % 2 == 0)
       {
         Assert(sit->second == 0);

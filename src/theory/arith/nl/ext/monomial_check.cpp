@@ -312,16 +312,16 @@ int MonomialCheck::compareSign(
       std::map<Node, Node> varToExp;
       for (const Node& e : exp)
       {
-        Node v = e.getKind()==Kind::NOT ? e[0][0] : e[0];
+        Node v = e.getKind() == Kind::NOT ? e[0][0] : e[0];
         varToExp[v] = e;
       }
       std::vector<Node> expo;
       Node vc;
       for (const Node& v : oa)
       {
-        if (v!=vc)
+        if (v != vc)
         {
-          Assert (varToExp.find(v)!=varToExp.end());
+          Assert(varToExp.find(v) != varToExp.end());
           expo.push_back(varToExp[v]);
           vc = v;
         }
