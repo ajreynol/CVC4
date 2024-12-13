@@ -25,6 +25,8 @@
 #include "options/uf_options.h"
 #include "proof/proof.h"
 #include "proof/proof_generator.h"
+#include "proof/proof_node_algorithm.h"
+#include "proof/proof_node_manager.h"
 #include "theory/quantifiers/ematching/trigger_term_info.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
@@ -32,8 +34,6 @@
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_util.h"
 #include "theory/rewriter.h"
-#include "proof/proof_node_algorithm.h"
-#include "proof/proof_node_manager.h"
 #include "theory/uf/equality_engine.h"
 
 using namespace cvc5::internal::kind;
@@ -55,12 +55,12 @@ class DeqCongProofGenerator : protected EnvObj, public ProofGenerator
    */
   std::shared_ptr<ProofNode> getProofFor(Node fact) override
   {
-    Assert (fact.getKind()==Kind::IMPLIES);
-    Assert (fact[1].getKind()==Kind::EQUAL);
+    Assert(fact.getKind() == Kind::IMPLIES);
+    Assert(fact[1].getKind() == Kind::EQUAL);
     Node a = fact[1][0];
     Node b = fact[1][1];
     std::vector<Node> assumps;
-    if (fact[0].getKind()==Kind::AND)
+    if (fact[0].getKind() == Kind::AND)
     {
       assumps.insert(assumps.end(), fact[0].begin(), fact[0].end());
     }
@@ -69,21 +69,21 @@ class DeqCongProofGenerator : protected EnvObj, public ProofGenerator
       assumps.push_back(fact[0]);
     }
     CDProof cdp(d_env);
-    if (a.getOperator()!=b.getOperator())
+    if (a.getOperator() != b.getOperator())
     {
       cdp.addTrustedStep(fact, TrustId::QUANTIFIERS_PREPROCESS, {}, {});
       return cdp.getProofFor(fact);
     }
-    Assert (a.getNumChildren()==b.getNumChildren());
+    Assert(a.getNumChildren() == b.getNumChildren());
     std::vector<Node> cargs;
     ProofRule cr = expr::getCongRule(a, cargs);
     size_t nchild = a.getNumChildren();
     std::vector<Node> premises;
-    for (size_t i=0; i<nchild; i++)
+    for (size_t i = 0; i < nchild; i++)
     {
       Node eq = a[i].eqNode(b[i]);
       premises.push_back(eq);
-      if (a[i]==b[i])
+      if (a[i] == b[i])
       {
         cdp.addStep(eq, ProofRule::REFL, {}, {a[i]});
       }
