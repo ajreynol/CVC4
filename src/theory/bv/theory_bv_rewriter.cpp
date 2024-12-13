@@ -23,6 +23,7 @@
 #include "theory/bv/theory_bv_rewrite_rules_operator_elimination.h"
 #include "theory/bv/theory_bv_rewrite_rules_simplification.h"
 #include "theory/theory.h"
+#include "theory/arith/arith_poly_norm.h"
 
 using namespace cvc5::internal;
 using namespace cvc5::internal::theory;
@@ -31,6 +32,8 @@ using namespace cvc5::internal::theory::bv;
 TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
 {
   initializeRewrites();
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_EQ_SOLVE,
+                           TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::BV_UMULO_ELIMINATE,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::BV_SMULO_ELIMINATE,
@@ -85,6 +88,19 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;                                                       \
   }                                                              \
     /* end of macro */
+    case ProofRewriteRule::MACRO_BV_EQ_SOLVE:
+    {
+      if (n.getKind()==Kind::EQUAL && n[0]!=n[1])
+      {
+        Node ns = d_nm->mkNode(Kind::BITVECTOR_SUB, n[0], n[1]);
+        Node nsn = arith::PolyNorm::getPolyNorm(ns);
+        if (nsn.isConst())
+        {
+          return d_nm->mkConst(nsn.getConst<BitVector>().toInteger().isZero());
+        }
+      }
+    }
+      break;
     case ProofRewriteRule::BV_UMULO_ELIMINATE:
       BV_PROOF_REWRITE_CASE(UmuloEliminate)
     case ProofRewriteRule::BV_SMULO_ELIMINATE:

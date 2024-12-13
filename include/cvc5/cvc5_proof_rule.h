@@ -2917,6 +2917,24 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DT_MATCH_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Extract negations from multiplicands**
+   *
+   * .. math::
+   *    (a = b) = \bot
+   * 
+   * where :math:`bvsub(a,b)` normalizes to a non-zero constant, or
+   * alternatively
+   *
+   * .. math::
+   *    (a = b) = \bot
+   * 
+   * where :math:`bvsub(a,b)` normalizes to zero.
+   * 
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_EQ_SOLVE),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Unsigned multiplication overflow detection elimination**
 
    *
