@@ -10,7 +10,7 @@
 ; conclusion: the equality between a and b.
 (declare-rule bv-repeat-elim ((k1 Int) (k2 Int) (n Int) (a (BitVec k1)) (b (BitVec k2)))
   :args ((= (repeat n a) b))
-  :requires ((($bv_unfold_repeat n a) b))
+  :requires ((($singleton_elim ($bv_unfold_repeat n a)) b))
   :conclusion (= (repeat n a) b)
 )
 
