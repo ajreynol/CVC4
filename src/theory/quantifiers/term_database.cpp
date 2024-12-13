@@ -23,6 +23,10 @@
 #include "options/smt_options.h"
 #include "options/theory_options.h"
 #include "options/uf_options.h"
+#include "proof/proof.h"
+#include "proof/proof_generator.h"
+#include "proof/proof_node_algorithm.h"
+#include "proof/proof_node_manager.h"
 #include "theory/quantifiers/ematching/trigger_term_info.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
@@ -31,8 +35,6 @@
 #include "theory/quantifiers/term_util.h"
 #include "theory/rewriter.h"
 #include "theory/uf/equality_engine.h"
-#include "proof/proof_generator.h"
-#include "proof/proof.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::context;
@@ -40,7 +42,7 @@ using namespace cvc5::context;
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
-  
+
 /**
  * A proof generator for proving simple congruence lemmas discovered by TermDb.
  */
@@ -53,9 +55,42 @@ class DeqCongProofGenerator : protected EnvObj, public ProofGenerator
    */
   std::shared_ptr<ProofNode> getProofFor(Node fact) override
   {
+    Assert(fact.getKind() == Kind::IMPLIES);
+    Assert(fact[1].getKind() == Kind::EQUAL);
+    Node a = fact[1][0];
+    Node b = fact[1][1];
+    std::vector<Node> assumps;
+    if (fact[0].getKind() == Kind::AND)
+    {
+      assumps.insert(assumps.end(), fact[0].begin(), fact[0].end());
+    }
+    else
+    {
+      assumps.push_back(fact[0]);
+    }
     CDProof cdp(d_env);
-    cdp.addTrustedStep(fact, TrustId::QUANTIFIERS_PREPROCESS, {}, {});
-    return cdp.getProofFor(fact);
+    if (a.getOperator() != b.getOperator())
+    {
+      cdp.addTrustedStep(fact, TrustId::QUANTIFIERS_PREPROCESS, {}, {});
+      return cdp.getProofFor(fact);
+    }
+    Assert(a.getNumChildren() == b.getNumChildren());
+    std::vector<Node> cargs;
+    ProofRule cr = expr::getCongRule(a, cargs);
+    size_t nchild = a.getNumChildren();
+    std::vector<Node> premises;
+    for (size_t i = 0; i < nchild; i++)
+    {
+      Node eq = a[i].eqNode(b[i]);
+      premises.push_back(eq);
+      if (a[i] == b[i])
+      {
+        cdp.addStep(eq, ProofRule::REFL, {}, {a[i]});
+      }
+    }
+    cdp.addStep(fact[1], cr, premises, cargs);
+    std::shared_ptr<ProofNode> pfn = cdp.getProofFor(fact[1]);
+    return d_env.getProofNodeManager()->mkScope(pfn, assumps);
   }
   /** identify */
   std::string identify() const override { return "DeqCongProofGenerator"; }
@@ -72,7 +107,7 @@ TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
       d_opMap(context()),
       d_inactive_map(context()),
       d_dcproof(options().smt.produceProofs ? new DeqCongProofGenerator(d_env)
-                                          : nullptr)
+                                            : nullptr)
 {
   d_true = nodeManager()->mkConst(true);
   d_false = nodeManager()->mkConst(false);
@@ -414,19 +449,19 @@ void TermDb::computeUfTerms( TNode f ) {
         congruentCount++;
         continue;
       }
-      std::vector<Node> lits;
-      if (checkCongruentDisequal(at, n, lits))
+      std::vector<Node> antec;
+      if (checkCongruentDisequal(at, n, antec))
       {
         Assert(at.getNumChildren() == n.getNumChildren());
         for (size_t k = 0, size = at.getNumChildren(); k < size; k++)
         {
           if (at[k] != n[k])
           {
-            lits.push_back(nm->mkNode(Kind::EQUAL, at[k], n[k]).negate());
+            antec.push_back(nm->mkNode(Kind::EQUAL, at[k], n[k]));
             Assert(d_qstate.areEqual(at[k], n[k]));
           }
         }
-        Node lem = nm->mkOr(lits);
+        Node lem = nm->mkNode(Kind::IMPLIES, nm->mkAnd(antec), at.eqNode(n));
         if (TraceIsOn("term-db-lemma"))
         {
           Trace("term-db-lemma") << "Disequal congruent terms : " << at << " "
@@ -439,7 +474,10 @@ void TermDb::computeUfTerms( TNode f ) {
           }
           Trace("term-db-lemma") << "  add lemma : " << lem << std::endl;
         }
-        d_qim->addPendingLemma(lem, InferenceId::QUANTIFIERS_TDB_DEQ_CONG, LemmaProperty::NONE, d_dcproof.get());
+        d_qim->addPendingLemma(lem,
+                               InferenceId::QUANTIFIERS_TDB_DEQ_CONG,
+                               LemmaProperty::NONE,
+                               d_dcproof.get());
         d_qstate.notifyInConflict();
         return;
       }

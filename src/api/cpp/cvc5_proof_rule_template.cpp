@@ -281,6 +281,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::DT_COLLAPSE_UPDATER: return "dt-collapse-updater";
     case ProofRewriteRule::DT_UPDATER_ELIM: return "dt-updater-elim";
     case ProofRewriteRule::DT_MATCH_ELIM: return "dt-match-elim";
+    case ProofRewriteRule::MACRO_BV_EQ_SOLVE: return "macro-bv-eq-solve";
     case ProofRewriteRule::BV_UMULO_ELIMINATE: return "bv-umulo-eliminate";
     case ProofRewriteRule::BV_SMULO_ELIMINATE: return "bv-smulo-eliminate";
     case ProofRewriteRule::BV_ADD_COMBINE_LIKE_TERMS:
@@ -305,6 +306,11 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR: return "str-in-re-sigma-star";
     case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
       return "macro-substr-strip-sym-length";
+    case ProofRewriteRule::MACRO_SETS_INTER_NORM:
+      return "macro-sets-inter-norm";
+    case ProofRewriteRule::MACRO_SETS_MINUS_NORM:
+      return "macro-sets-minus-norm";
+    case ProofRewriteRule::SETS_UNION_NORM: return "sets-union-norm";
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
       return "sets-is-empty-eval";
     case ProofRewriteRule::SETS_INSERT_ELIM:
