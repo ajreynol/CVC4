@@ -3134,6 +3134,52 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_SUBSTR_STRIP_SYM_LENGTH),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Sets -- sets intersection evaluation**
+   *
+   * .. math::
+   *   \mathit{set.inter}(t_1, t_2) = t
+   *
+   * where :math:`t_1` and :math:`t_2` are set values, that is,
+   * the Node::isConst method returns true for both, and
+   * where :math:`t` is an intersection of the component elements of
+   * :math:`t_1` and :math:`t_2`.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_SETS_INTER_NORM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Sets -- sets intersection evaluation**
+   *
+   * .. math::
+   *   \mathit{set.minus}(t_1, t_2) = t
+   *
+   * where :math:`t_1` and :math:`t_2` are set values, that is,
+   * the Node::isConst method returns true for both, and
+   * where :math:`t` is the difference of the component elements of
+   * :math:`t_1` and :math:`t_2`.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_SETS_MINUS_NORM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Sets -- sets union evaluation**
+   *
+   * .. math::
+   *   \mathit{set.union}(t_1, t_2) = t
+   * 
+   * where :math:`t` is a union of the component elements of
+   * :math:`t_1` and :math:`t_2`.
+   * 
+   * Note we use this rule only when :math:`t_1` and :math:`t_2` are set values,
+   * that is, the Node::isConst method returns true for both.
+   *
+   * \endverbatim
+   */
+  EVALUE(SETS_UNION_NORM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Sets -- empty tester evaluation**
    *
    * .. math::
@@ -3142,7 +3188,7 @@ enum ENUM(ProofRewriteRule)
    * where :math:`\epsilon` is the empty set, or alternatively:
    *
    * .. math::
-   *   \mathit{sets.is\_empty}(c) = \bot
+   *   \mathit{set.is\_empty}(c) = \bot
    *
    * where :math:`c` is a constant set that is not the empty set.
    *
@@ -3154,7 +3200,7 @@ enum ENUM(ProofRewriteRule)
    * **Sets -- sets insert elimination**
    *
    * .. math::
-   *   \mathit{sets.insert}(t_1, \ldots, t_n, S) = \texttt{set.union}(\texttt{sets.singleton}(t_1), \ldots, \texttt{sets.singleton}(t_n), S)
+   *   \mathit{set.insert}(t_1, \ldots, t_n, S) = \texttt{set.union}(\texttt{sets.singleton}(t_1), \ldots, \texttt{sets.singleton}(t_n), S)
    *
    * \endverbatim
    */

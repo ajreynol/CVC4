@@ -46,6 +46,12 @@ TheorySetsRewriter::TheorySetsRewriter(NodeManager* nm,
                            TheoryRewriteCtx::DSL_SUBCALL);
   registerProofRewriteRule(ProofRewriteRule::SETS_INSERT_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_INTER_NORM,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_MINUS_NORM,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::SETS_UNION_NORM,
+                           TheoryRewriteCtx::POST_DSL);
 }
 
 Node TheorySetsRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -74,6 +80,60 @@ Node TheorySetsRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
           elems = nm->mkNode(Kind::SET_UNION, singleton, elems);
         }
         return elems;
+      }
+    }
+    break;
+    case ProofRewriteRule::MACRO_SETS_INTER_NORM:
+    {
+      if (n.getKind()==Kind::SET_INTER && n[0].isConst() && n[1].isConst())
+      {
+        std::set<Node> left =
+            NormalForm::getElementsFromNormalConstant(n[0]);
+        std::set<Node> right =
+            NormalForm::getElementsFromNormalConstant(n[1]);
+        std::set<Node> newSet;
+        std::set_intersection(left.begin(),
+                              left.end(),
+                              right.begin(),
+                              right.end(),
+                              std::inserter(newSet, newSet.begin()));
+        return NormalForm::elementsToSet(newSet, n.getType());
+      }
+    }
+    break;
+    case ProofRewriteRule::MACRO_SETS_MINUS_NORM:
+    {
+      if (n.getKind()==Kind::SET_MINUS && n[0].isConst() && n[1].isConst())
+      {
+        std::set<Node> left =
+            NormalForm::getElementsFromNormalConstant(n[0]);
+        std::set<Node> right =
+            NormalForm::getElementsFromNormalConstant(n[1]);
+        std::set<Node> newSet;
+        std::set_difference(left.begin(),
+                            left.end(),
+                            right.begin(),
+                            right.end(),
+                            std::inserter(newSet, newSet.begin()));
+        return NormalForm::elementsToSet(newSet, n.getType());
+      }
+    }
+    break;
+    case ProofRewriteRule::SETS_UNION_NORM:
+    {
+      if (n.getKind()==Kind::SET_UNION && n[0].isConst() && n[1].isConst())
+      {
+        std::set<Node> left =
+            NormalForm::getElementsFromNormalConstant(n[0]);
+        std::set<Node> right =
+            NormalForm::getElementsFromNormalConstant(n[1]);
+        std::set<Node> newSet;
+        std::set_union(left.begin(),
+                       left.end(),
+                       right.begin(),
+                       right.end(),
+                       std::inserter(newSet, newSet.begin()));
+        return NormalForm::elementsToSet(newSet, n.getType());
       }
     }
     break;
@@ -204,17 +264,7 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
       }
       else if (node[0].isConst() && node[1].isConst())
       {
-        std::set<Node> left =
-            NormalForm::getElementsFromNormalConstant(node[0]);
-        std::set<Node> right =
-            NormalForm::getElementsFromNormalConstant(node[1]);
-        std::set<Node> newSet;
-        std::set_difference(left.begin(),
-                            left.end(),
-                            right.begin(),
-                            right.end(),
-                            std::inserter(newSet, newSet.begin()));
-        Node newNode = NormalForm::elementsToSet(newSet, node.getType());
+        Node newNode = rewriteViaRule(ProofRewriteRule::MACRO_SETS_MINUS_NORM, node);
         Assert(newNode.isConst());
         Trace("sets-postrewrite")
             << "Sets::postRewrite returning " << newNode << std::endl;
@@ -241,17 +291,7 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
       }
       else if (node[0].isConst() && node[1].isConst())
       {
-        std::set<Node> left =
-            NormalForm::getElementsFromNormalConstant(node[0]);
-        std::set<Node> right =
-            NormalForm::getElementsFromNormalConstant(node[1]);
-        std::set<Node> newSet;
-        std::set_intersection(left.begin(),
-                              left.end(),
-                              right.begin(),
-                              right.end(),
-                              std::inserter(newSet, newSet.begin()));
-        Node newNode = NormalForm::elementsToSet(newSet, node.getType());
+        Node newNode = rewriteViaRule(ProofRewriteRule::MACRO_SETS_INTER_NORM, node);
         Assert(newNode.isConst() && newNode.getType() == node.getType());
         Trace("sets-postrewrite")
             << "Sets::postRewrite returning " << newNode << std::endl;
@@ -285,17 +325,7 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
       }
       else if (node[0].isConst() && node[1].isConst())
       {
-        std::set<Node> left =
-            NormalForm::getElementsFromNormalConstant(node[0]);
-        std::set<Node> right =
-            NormalForm::getElementsFromNormalConstant(node[1]);
-        std::set<Node> newSet;
-        std::set_union(left.begin(),
-                       left.end(),
-                       right.begin(),
-                       right.end(),
-                       std::inserter(newSet, newSet.begin()));
-        Node newNode = NormalForm::elementsToSet(newSet, node.getType());
+        Node newNode = rewriteViaRule(ProofRewriteRule::SETS_UNION_NORM, node);
         Assert(newNode.isConst());
         Trace("sets-rewrite")
             << "Sets::rewrite: UNION_CONSTANT_MERGE: " << newNode << std::endl;
