@@ -740,17 +740,18 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
   {
     Node currEq = toProcess.back();
     toProcess.pop_back();
-    if (processed.find(currEq)!=processed.end())
+    if (processed.find(currEq) != processed.end())
     {
       continue;
     }
     processed.insert(currEq);
     Assert(currEq[0].getKind() == Kind::FORALL);
     Kind bk = currEq[0][1].getKind();
-    ProofRewriteRule prr = bk == Kind::ITE
-                              ? ProofRewriteRule::QUANT_MINISCOPE_ITE :
-                            ( bk == Kind::OR ?
-                              ProofRewriteRule::QUANT_MINISCOPE_OR :ProofRewriteRule::QUANT_MINISCOPE_AND);
+    ProofRewriteRule prr =
+        bk == Kind::ITE
+            ? ProofRewriteRule::QUANT_MINISCOPE_ITE
+            : (bk == Kind::OR ? ProofRewriteRule::QUANT_MINISCOPE_OR
+                              : ProofRewriteRule::QUANT_MINISCOPE_AND);
     Node body2ms = rr->rewriteViaRule(prr, currEq[0]);
     if (body2ms.isNull())
     {
@@ -771,7 +772,8 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       // introduce a CONG step where children that are disequal are given as
       // subgoals.
       std::vector<Node> cpremises;
-      for (size_t i = 0, nchildren = body2ms.getNumChildren(); i < nchildren; i++)
+      for (size_t i = 0, nchildren = body2ms.getNumChildren(); i < nchildren;
+           i++)
       {
         Node eqc = body2ms[i].eqNode(currEq[1][i]);
         cpremises.push_back(eqc);
@@ -780,7 +782,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
           cdp->addStep(eqc, ProofRule::REFL, {}, {eqc[0]});
           continue;
         }
-        if (eqc[1].getKind()==Kind::FORALL)
+        if (eqc[1].getKind() == Kind::FORALL)
         {
           // just add subgoal, likely alpha equivalence
           cdp->addTrustedStep(
@@ -788,8 +790,9 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
           continue;
         }
         // maybe the result of QUANT_UNUSED_VARS?
-        Node buv = rr->rewriteViaRule(ProofRewriteRule::QUANT_UNUSED_VARS, eqc[0]);
-        if (buv==eqc[1])
+        Node buv =
+            rr->rewriteViaRule(ProofRewriteRule::QUANT_UNUSED_VARS, eqc[0]);
+        if (buv == eqc[1])
         {
           cdp->addTheoryRewriteStep(eqc, ProofRewriteRule::QUANT_UNUSED_VARS);
           continue;

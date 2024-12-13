@@ -23,6 +23,8 @@
 #include "options/smt_options.h"
 #include "options/theory_options.h"
 #include "options/uf_options.h"
+#include "proof/proof.h"
+#include "proof/proof_generator.h"
 #include "theory/quantifiers/ematching/trigger_term_info.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
@@ -31,8 +33,6 @@
 #include "theory/quantifiers/term_util.h"
 #include "theory/rewriter.h"
 #include "theory/uf/equality_engine.h"
-#include "proof/proof_generator.h"
-#include "proof/proof.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::context;
@@ -40,7 +40,7 @@ using namespace cvc5::context;
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
-  
+
 /**
  * A proof generator for proving simple congruence lemmas discovered by TermDb.
  */
@@ -72,7 +72,7 @@ TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
       d_opMap(context()),
       d_inactive_map(context()),
       d_dcproof(options().smt.produceProofs ? new DeqCongProofGenerator(d_env)
-                                          : nullptr)
+                                            : nullptr)
 {
   d_true = nodeManager()->mkConst(true);
   d_false = nodeManager()->mkConst(false);
@@ -439,7 +439,10 @@ void TermDb::computeUfTerms( TNode f ) {
           }
           Trace("term-db-lemma") << "  add lemma : " << lem << std::endl;
         }
-        d_qim->addPendingLemma(lem, InferenceId::QUANTIFIERS_TDB_DEQ_CONG, LemmaProperty::NONE, d_dcproof.get());
+        d_qim->addPendingLemma(lem,
+                               InferenceId::QUANTIFIERS_TDB_DEQ_CONG,
+                               LemmaProperty::NONE,
+                               d_dcproof.get());
         d_qstate.notifyInConflict();
         return;
       }
