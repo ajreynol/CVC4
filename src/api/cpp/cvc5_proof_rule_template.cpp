@@ -309,8 +309,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-sets-inter-norm";
     case ProofRewriteRule::MACRO_SETS_MINUS_NORM:
       return "macro-sets-minus-norm";
-    case ProofRewriteRule::SETS_UNION_NORM:
-      return "sets-union-norm";
+    case ProofRewriteRule::SETS_UNION_NORM: return "sets-union-norm";
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
       return "sets-is-empty-eval";
     case ProofRewriteRule::SETS_INSERT_ELIM:
