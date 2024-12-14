@@ -39,7 +39,15 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
     // so that the form of the quantified formula is preserved for the
     // introduction below.
     Node psan = theory::quantifiers::QuantAttributes::mkAttrPreserveStructure();
-    Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, psan);
+    std::vector<Node> pats;
+    // carry annotations of the witness, which may include its justification
+    if (n.getNumChildren()==3)
+    {
+      Assert (n[2].getKind()==Kind::INST_PATTERN_LIST);
+      pats.insert(pats.end(), n[2].begin(), n[2].end());
+    }
+    pats.push_back(psan);
+    Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, pats);
     nchildren.push_back(ipl);
     // make the quantified formula
     Node q = nm->mkNode(Kind::FORALL, nchildren);
