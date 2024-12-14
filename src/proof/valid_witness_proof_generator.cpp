@@ -21,6 +21,8 @@
 #include "proof/proof.h"
 #include "proof/proof_rule_checker.h"
 #include "util/string.h"
+#include "theory/builtin/proof_checker.h"
+#include "proof/proof_node_algorithm.h"
 
 namespace cvc5::internal {
 
@@ -32,7 +34,7 @@ Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
   // store as uint32_t
   sargs.push_back(nm->mkConstInt(Rational(static_cast<uint32_t>(r))));
   sargs.insert(sargs.end(), args.begin(), args.end());
-  pfspec.push_back(nm->mkNode(Kind::SEXPR, args));
+  pfspec.push_back(nm->mkNode(Kind::SEXPR, sargs));
   return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
 }
 
@@ -62,21 +64,42 @@ ValidWitnessProofGenerator::~ValidWitnessProofGenerator() {}
 
 std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact) 
 {
+  bool success = false;
+  CDProof cdp(d_env);
   Trace("valid-witness") << "Prove " << fact << std::endl;
-  if (fact.getKind()==Kind::NOT && fact[0].getKind()==Kind::FORALL && fact[0].getNumChildren()==2)
+  if (fact.getKind()==Kind::NOT && fact[0].getKind()==Kind::FORALL && fact[0].getNumChildren()==3)
   {
     Node attr = fact[0][2][0];
+    Trace("valid-witness") << "...check spec " << attr << std::endl;
     // should be constructed via mkProofSpec
     ProofRule r;
     std::vector<Node> args;
     if (getProofSpec(attr, r, args))
     {
-      Node ex = mkExists(nodeManager(), r, args);
+      Trace("valid-witness") << "...got spec " << r << " " << args << std::endl;
+      Node exp = mkExists(nodeManager(), r, args);
+      // must remove annotation
+      Node ex = theory::builtin::BuiltinProofRuleChecker::getEncodeEqIntro(nodeManager(), fact[0]).notNode();
+      if (ex==exp)
+      {
+        cdp.addStep(ex, r, {}, args);
+        Node eq = fact[0].eqNode(ex[0]);
+        cdp.addStep(eq, ProofRule::ENCODE_EQ_INTRO, {}, {fact[0]});
+        Node eqs = ex[0].eqNode(fact[0]);
+        std::vector<Node> cargs;
+        ProofRule cr = expr::getCongRule(ex, cargs);
+        Node eqsc = ex.eqNode(fact);
+        cdp.addStep(eqsc, cr, {eqs}, cargs);
+        cdp.addStep(fact, ProofRule::EQ_RESOLVE, {ex, eqsc}, {});
+        success = true;
+      }
     }
   }
-  // proof failed
-  CDProof cdp(d_env);
-  cdp.addTrustedStep(fact, TrustId::VALID_WITNESS, {}, {});
+  if (!success)
+  {
+    // proof failed
+    cdp.addTrustedStep(fact, TrustId::VALID_WITNESS, {}, {});
+  }
   return cdp.getProofFor(fact);
 }
 
