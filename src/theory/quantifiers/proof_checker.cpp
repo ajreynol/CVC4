@@ -17,9 +17,9 @@
 
 #include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
+#include "proof/valid_witness_proof_generator.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/quantifiers/skolemize.h"
-#include "proof/valid_witness_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
@@ -151,7 +151,8 @@ Node QuantifiersProofRuleChecker::checkInternal(
     }
     return eq;
   }
-  else if (id==ProofRule::EXISTS_STRING_LENGTH || id==ProofRule::EXISTS_INVERTIBILITY_CONDITION)
+  else if (id == ProofRule::EXISTS_STRING_LENGTH
+           || id == ProofRule::EXISTS_INVERTIBILITY_CONDITION)
   {
     Node exists = ValidWitnessProofGenerator::mkExists(nodeManager(), id, args);
     return exists;

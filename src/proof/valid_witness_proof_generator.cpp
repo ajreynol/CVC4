@@ -17,12 +17,11 @@
 
 #include "expr/attribute.h"
 #include "expr/bound_var_manager.h"
+#include "expr/sort_to_term.h"
 #include "proof/proof.h"
 #include "util/string.h"
-#include "expr/sort_to_term.h"
 
 namespace cvc5::internal {
-
 
 ValidWitnessProofGenerator::ValidWitnessProofGenerator(Env& env) : EnvObj(env) {}
 
@@ -39,7 +38,7 @@ std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact)
 
 std::string ValidWitnessProofGenerator::identify() const { return "ValidWitnessProofGenerator"; }
 
-Node mkProofSpec(NodeManager * nm, ProofRule r, const std::vector<Node>& args)
+Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
 {
   std::vector<Node> pfspec;
   pfspec.push_back(nm->mkConst(String("witness")));
@@ -51,18 +50,21 @@ Node mkProofSpec(NodeManager * nm, ProofRule r, const std::vector<Node>& args)
   return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
 }
 
-Node ValidWitnessProofGenerator::mkWitness(NodeManager * nm, ProofRule r, const std::vector<Node>& args)
+Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
+                                           ProofRule r,
+                                           const std::vector<Node>& args)
 {
   Node exists = mkExists(nm, r, args);
   if (exists.isNull())
   {
     return Node::null();
   }
-  Assert (exists.getKind()==Kind::NOT && exists[0].getKind()==Kind::FORALL);
+  Assert(exists.getKind() == Kind::NOT && exists[0].getKind() == Kind::FORALL);
   std::vector<Node> children;
   children.push_back(exists[0][0]);
   children.push_back(exists[0][1].negate());
-  children.push_back(nm->mkNode(Kind::INST_PATTERN_LIST, mkProofSpec(nm, r, args)));
+  children.push_back(
+      nm->mkNode(Kind::INST_PATTERN_LIST, mkProofSpec(nm, r, args)));
   return nm->mkNode(Kind::WITNESS, children);
 }
 
@@ -72,25 +74,26 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager * nm, ProofRule r, const 
 struct ValidWitnessVarAttributeId
 {
 };
-using ValidWitnessVarAttribute = expr::Attribute<ValidWitnessVarAttributeId, Node>;
+using ValidWitnessVarAttribute =
+    expr::Attribute<ValidWitnessVarAttributeId, Node>;
 
-Node ValidWitnessProofGenerator::mkExists(NodeManager * nm, ProofRule r, const std::vector<Node>& args)
+Node ValidWitnessProofGenerator::mkExists(NodeManager* nm,
+                                          ProofRule r,
+                                          const std::vector<Node>& args)
 {
   // first compute the desired type based on the rule and arguments
   TypeNode tn;
   switch (r)
   {
     case ProofRule::EXISTS_STRING_LENGTH:
-      Assert (args.size()==2);
-      if (args[0].getKind()==Kind::SORT_TO_TERM)
+      Assert(args.size() == 2);
+      if (args[0].getKind() == Kind::SORT_TO_TERM)
       {
         tn = args[0].getConst<SortToTerm>().getType();
       }
       break;
-    case ProofRule::EXISTS_INVERTIBILITY_CONDITION:
-      break;
-    default:
-      break;
+    case ProofRule::EXISTS_INVERTIBILITY_CONDITION: break;
+    default: break;
   }
   if (tn.isNull())
   {
@@ -104,16 +107,15 @@ Node ValidWitnessProofGenerator::mkExists(NodeManager * nm, ProofRule r, const s
   switch (r)
   {
     case ProofRule::EXISTS_STRING_LENGTH:
-      Assert (args.size()==2);
-      if (args[1].getKind()==Kind::CONST_INTEGER && args[1].getConst<Rational>().getNumerator().sgn()>=0)
+      Assert(args.size() == 2);
+      if (args[1].getKind() == Kind::CONST_INTEGER
+          && args[1].getConst<Rational>().getNumerator().sgn() >= 0)
       {
         pred = nm->mkNode(Kind::STRING_LENGTH, v).eqNode(args[1]);
       }
       break;
-    case ProofRule::EXISTS_INVERTIBILITY_CONDITION:
-      break;
-    default:
-      break;
+    case ProofRule::EXISTS_INVERTIBILITY_CONDITION: break;
+    default: break;
   }
   if (!pred.isNull())
   {

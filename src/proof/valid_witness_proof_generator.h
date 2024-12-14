@@ -47,9 +47,13 @@ class ValidWitnessProofGenerator : protected EnvObj, public ProofGenerator
   /** identify */
   std::string identify() const override;
   /** Make witness */
-  static Node mkWitness(NodeManager * nm, ProofRule r, const std::vector<Node>& args);
+  static Node mkWitness(NodeManager* nm,
+                        ProofRule r,
+                        const std::vector<Node>& args);
   /** Make exists */
-  static Node mkExists(NodeManager * nm, ProofRule r, const std::vector<Node>& args);
+  static Node mkExists(NodeManager* nm,
+                       ProofRule r,
+                       const std::vector<Node>& args);
 };
 
 }  // namespace cvc5::internal
