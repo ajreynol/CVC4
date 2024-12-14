@@ -19,24 +19,10 @@
 #include "expr/bound_var_manager.h"
 #include "expr/sort_to_term.h"
 #include "proof/proof.h"
+#include "proof/proof_rule_checker.h"
 #include "util/string.h"
 
 namespace cvc5::internal {
-
-ValidWitnessProofGenerator::ValidWitnessProofGenerator(Env& env) : EnvObj(env) {}
-
-ValidWitnessProofGenerator::~ValidWitnessProofGenerator() {}
-
-std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact) 
-{
-  Trace("valid-witness") << "Prove " << fact << std::endl;
-  // proofs not yet supported
-  CDProof cdp(d_env);
-  cdp.addTrustedStep(fact, TrustId::VALID_WITNESS, {}, {});
-  return cdp.getProofFor(fact);
-}
-
-std::string ValidWitnessProofGenerator::identify() const { return "ValidWitnessProofGenerator"; }
 
 Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
 {
@@ -49,6 +35,52 @@ Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
   pfspec.push_back(nm->mkNode(Kind::SEXPR, args));
   return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
 }
+
+bool getProofSpec(const Node& attr, ProofRule& r, std::vector<Node>& args)
+{
+  if (attr.getKind()==Kind::INST_ATTRIBUTE && attr.getNumChildren()==2)
+  {
+    std::string str = attr[0].getConst<String>().toString();
+    if (str=="witness" && attr[1].getKind()==Kind::SEXPR && attr[1].getNumChildren()>0)
+    {
+      Node rn = attr[1][0];
+      uint32_t rval;
+      if (ProofRuleChecker::getUInt32(rn, rval))
+      {
+        r = static_cast<ProofRule>(rval);
+        args.insert(args.end(), attr[1].begin()+1, attr[1].end());
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+ValidWitnessProofGenerator::ValidWitnessProofGenerator(Env& env) : EnvObj(env) {}
+
+ValidWitnessProofGenerator::~ValidWitnessProofGenerator() {}
+
+std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact) 
+{
+  Trace("valid-witness") << "Prove " << fact << std::endl;
+  if (fact.getKind()==Kind::NOT && fact[0].getKind()==Kind::FORALL && fact[0].getNumChildren()==2)
+  {
+    Node attr = fact[0][2][0];
+    // should be constructed via mkProofSpec
+    ProofRule r;
+    std::vector<Node> args;
+    if (getProofSpec(attr, r, args))
+    {
+      Node ex = mkExists(nodeManager(), r, args);
+    }
+  }
+  // proof failed
+  CDProof cdp(d_env);
+  cdp.addTrustedStep(fact, TrustId::VALID_WITNESS, {}, {});
+  return cdp.getProofFor(fact);
+}
+
+std::string ValidWitnessProofGenerator::identify() const { return "ValidWitnessProofGenerator"; }
 
 Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
                                            ProofRule r,
@@ -119,7 +151,8 @@ Node ValidWitnessProofGenerator::mkExists(NodeManager* nm,
   }
   if (!pred.isNull())
   {
-    return nm->mkNode(Kind::FORALL, pred.negate()).notNode();
+    Node bvl = nm->mkNode(Kind::BOUND_VAR_LIST, v);
+    return nm->mkNode(Kind::FORALL, bvl, pred.negate()).notNode();
   }
   return Node::null();
 }

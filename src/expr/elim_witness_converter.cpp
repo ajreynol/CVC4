@@ -33,14 +33,15 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
     Trace("elim-witness") << "Eliminate " << n << std::endl;
     NodeManager* nm = nodeManager();
     SkolemManager* skm = nm->getSkolemManager();
-    std::vector<Node> nchildren(n.begin(), n.end());
-    nchildren[1] = nchildren[1].notNode();
+    std::vector<Node> nchildren;
+    nchildren.push_back(n[0]);
+    nchildren.push_back(n[1].notNode());
     // must mark that the quantified formula cannot be eliminated by rewriting,
     // so that the form of the quantified formula is preserved for the
     // introduction below.
     Node psan = theory::quantifiers::QuantAttributes::mkAttrPreserveStructure();
     std::vector<Node> pats;
-    // carry annotations of the witness, which may include its justification
+    // carry annotations of the witness, which may include its proof information
     if (n.getNumChildren()==3)
     {
       Assert (n[2].getKind()==Kind::INST_PATTERN_LIST);
