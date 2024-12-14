@@ -927,15 +927,18 @@ RewriteResponse ArithRewriter::rewriteExtIntegerOp(TNode t)
     Node ret = isPred ? nm->mkConst(true) : Node(t[0]);
     return returnRewrite(t, ret, Rewrite::INT_EXT_INT);
   }
-  if (t[0].getKind() == Kind::PI)
-  {
-    Node ret = isPred ? nm->mkConst(false) : nm->mkConstInt(Rational(3));
-    return returnRewrite(t, ret, Rewrite::INT_EXT_PI);
-  }
-  else if (t[0].getKind() == Kind::TO_REAL)
+  if (t[0].getKind() == Kind::TO_REAL)
   {
     Node ret = nm->mkNode(t.getKind(), t[0][0]);
     return returnRewrite(t, ret, Rewrite::INT_EXT_TO_REAL);
+  }
+  if (d_expertEnabled)
+  {
+    if (t[0].getKind() == Kind::PI)
+    {
+      Node ret = isPred ? nm->mkConst(false) : nm->mkConstInt(Rational(3));
+      return returnRewrite(t, ret, Rewrite::INT_EXT_PI);
+    }
   }
   return RewriteResponse(REWRITE_DONE, t);
 }
