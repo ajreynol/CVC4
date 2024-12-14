@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "context/cdhashmap.h"
+#include "cvc5/cvc5_proof_rule.h"
 #include "expr/node.h"
 #include "proof/proof_generator.h"
 #include "proof/proof_step_buffer.h"

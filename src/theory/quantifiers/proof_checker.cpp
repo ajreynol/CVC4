@@ -19,6 +19,7 @@
 #include "expr/skolem_manager.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/quantifiers/skolemize.h"
+#include "proof/valid_witness_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
@@ -39,6 +40,8 @@ void QuantifiersProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::INSTANTIATE, this);
   pc->registerChecker(ProofRule::ALPHA_EQUIV, this);
   pc->registerChecker(ProofRule::QUANT_VAR_REORDERING, this);
+  pc->registerChecker(ProofRule::EXISTS_STRING_LENGTH, this);
+  pc->registerChecker(ProofRule::EXISTS_INVERTIBILITY_CONDITION, this);
 }
 
 Node QuantifiersProofRuleChecker::checkInternal(
@@ -147,6 +150,11 @@ Node QuantifiersProofRuleChecker::checkInternal(
       return Node::null();
     }
     return eq;
+  }
+  else if (id==ProofRule::EXISTS_STRING_LENGTH || id==ProofRule::EXISTS_INVERTIBILITY_CONDITION)
+  {
+    Node exists = ValidWitnessProofGenerator::mkExists(nodeManager(), id, args);
+    return exists;
   }
 
   // no rule

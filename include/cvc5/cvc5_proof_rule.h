@@ -1353,6 +1353,23 @@ enum ENUM(ProofRule)
   EVALUE(QUANT_VAR_REORDERING),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Exists string length**
+   *
+   * .. math::
+   *
+   *   \inferrule{-\mid n}{}
+   * \endverbatim
+   */
+  EVALUE(EXISTS_STRING_LENGTH),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Exists invertibility condition**
+   *
+   * \endverbatim
+   */
+  EVALUE(EXISTS_INVERTIBILITY_CONDITION),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Sets -- Singleton injectivity**
    *
    * .. math::

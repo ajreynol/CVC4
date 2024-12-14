@@ -18,6 +18,7 @@
 #ifndef CVC5__PROOF__VALID_WITNESS_PROOF_GENERATOR_H
 #define CVC5__PROOF__VALID_WITNESS_PROOF_GENERATOR_H
 
+#include "cvc5/cvc5_proof_rule.h"
 #include "proof/method_id.h"
 #include "proof/proof_generator.h"
 #include "smt/env_obj.h"
@@ -45,6 +46,10 @@ class ValidWitnessProofGenerator : protected EnvObj, public ProofGenerator
   std::shared_ptr<ProofNode> getProofFor(Node fact) override;
   /** identify */
   std::string identify() const override;
+  /** Make witness */
+  static Node mkWitness(NodeManager * nm, ProofRule r, const std::vector<Node>& args);
+  /** Make exists */
+  static Node mkExists(NodeManager * nm, ProofRule r, const std::vector<Node>& args);
 };
 
 }  // namespace cvc5::internal
