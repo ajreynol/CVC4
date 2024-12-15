@@ -439,6 +439,7 @@ bool InferProofCons::convert(Env& env,
       for (size_t i = 0; i < mainEqIndex; i++)
       {
         Node s = ps.d_children[i];
+        Trace("strings-ipc-core") << "--- rewrite " << s << std::endl;
         Assert(s.getKind() == Kind::EQUAL);
         tconv.addRewriteStep(s[0], s[1], pf);
       }
@@ -451,7 +452,7 @@ bool InferProofCons::convert(Env& env,
         Trace("strings-ipc-core") << "Rewrites: " << res << std::endl;
         pf->addProof(pfn);
         psb.tryStep(
-            ProofRule::EQ_RESOLVE, {pmainEq, res[1].eqNode(res[0])}, {});
+            ProofRule::EQ_RESOLVE, {pmainEq, res[0].eqNode(res[1])}, {});
         pmainEq = res[1];
       }
       Trace("strings-ipc-core")
@@ -479,6 +480,10 @@ bool InferProofCons::convert(Env& env,
       {
         // fail
         break;
+      }
+      if (mainEqSRew==mainEqCeq)
+      {
+        psb.popStep();
       }
       // get the heads of the equality
       std::vector<Node> tvec;
