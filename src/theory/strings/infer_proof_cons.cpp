@@ -220,17 +220,32 @@ bool InferProofCons::convert(Env& env,
             {
               Trace("strings-ipc-core")
                   << "...failed to show " << seq << std::endl;
-              return false;
             }
           }
-          if (s1 != extt[1])
+          else
           {
-            transEq.push_back(s2.eqNode(extt[1]));
+            useBuffer = true;
           }
-          if (transEq.size() > 1)
+          if (useBuffer)
           {
-            psb.addStep(ProofRule::TRANS, transEq, {}, conc);
+            if (s1 != extt[1])
+            {
+              transEq.push_back(s2.eqNode(extt[1]));
+            }
+            if (transEq.size() > 1)
+            {
+              psb.addStep(ProofRule::TRANS, transEq, {}, conc);
+            }
           }
+        }
+        else if (extt.getKind()==Kind::NOT)
+        {
+          Node s = applySubsToArgs(env, tconv, extt[0], pf, psb);
+          Node resn = extt[0].eqNode(s);
+          std::vector<Node> cargs;
+          ProofRule cr = expr::getCongRule(extt[0], cargs);
+          res = extt.eqNode(s.notNode());
+          psb.addStep(cr, {resn}, cargs, res);
         }
         else
         {
@@ -258,6 +273,10 @@ bool InferProofCons::convert(Env& env,
                       {},
                       res[0]);
         }
+      }
+      else
+      {
+        Trace("strings-ipc-core") << "...failed to get result" << std::endl;
       }
     }
     break;
@@ -1212,6 +1231,7 @@ bool InferProofCons::convert(Env& env,
         Trace("strings-ipc-fail") << "    e: " << ec << std::endl;
       }
     }
+    //AlwaysAssert(false) << "STRINGS-IPC-FAIL: " << infer << std::endl;
     // untrustworthy conversion, the argument of THEORY_INFERENCE is its
     // conclusion
     ps.d_args.clear();
