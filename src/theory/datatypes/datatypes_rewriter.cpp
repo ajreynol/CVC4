@@ -1044,7 +1044,7 @@ Node DatatypesRewriter::expandApplySelector(Node n, bool sharedSel)
   return utils::applySelector(c, selectorIndex, true, n[0]);
 }
 
-TrustNode DatatypesRewriter::expandDefinition(Node n)
+Node DatatypesRewriter::expandDefinition(Node n)
 {
   Node ret;
   switch (n.getKind())
@@ -1069,9 +1069,9 @@ TrustNode DatatypesRewriter::expandDefinition(Node n)
   }
   if (!ret.isNull() && n != ret)
   {
-    return TrustNode::mkTrustRewrite(n, ret, nullptr);
+    return ret;
   }
-  return TrustNode::null();
+  return Node::null();
 }
 
 Node DatatypesRewriter::expandUpdater(const Node& n)
@@ -1085,7 +1085,7 @@ Node DatatypesRewriter::expandUpdater(const Node& n)
   size_t updateIndex = utils::indexOf(op);
   size_t cindex = utils::cindexOf(op);
   const DTypeConstructor& dc = dt[cindex];
-  NodeBuilder b(Kind::APPLY_CONSTRUCTOR);
+  NodeBuilder b(nm, Kind::APPLY_CONSTRUCTOR);
   if (tn.isParametricDatatype())
   {
     b << dc.getInstantiatedConstructor(n[0].getType());

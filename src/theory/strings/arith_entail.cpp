@@ -224,7 +224,7 @@ bool ArithEntail::check(Node a, Node b, bool strict, bool isSimple)
   {
     return !strict;
   }
-  Node diff = NodeManager::currentNM()->mkNode(Kind::SUB, a, b);
+  Node diff = NodeManager::mkNode(Kind::SUB, a, b);
   return check(diff, strict, isSimple);
 }
 
@@ -234,7 +234,7 @@ bool ArithEntail::check(Node a, bool strict, bool isSimple)
   {
     return a.getConst<Rational>().sgn() >= (strict ? 1 : 0);
   }
-  Node ar = strict ? NodeManager::currentNM()->mkNode(Kind::SUB, a, d_one) : a;
+  Node ar = strict ? NodeManager::mkNode(Kind::SUB, a, d_one) : a;
   ar = rewriteArith(ar);
   // if simple, just call the checkSimple routine.
   if (isSimple)
@@ -860,7 +860,7 @@ bool ArithEntail::checkWithAssumption(Node assumption,
       y = assumption[0][0];
     }
 
-    Node s = nm->mkBoundVar("slackVal", nm->stringType());
+    Node s = NodeManager::mkBoundVar("slackVal", nm->stringType());
     Node slen = nm->mkNode(Kind::STRING_LENGTH, s);
     Node sleny = nm->mkNode(Kind::ADD, y, slen);
     Node rr = rewriteArith(nm->mkNode(Kind::SUB, x, sleny));
