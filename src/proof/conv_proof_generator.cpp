@@ -189,7 +189,7 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofFor(Node f)
   if (f[0] == f[1])
   {
     // assertion failure in debug
-    //Assert(false) << "TConvProofGenerator::getProofFor: " << identify()
+    // Assert(false) << "TConvProofGenerator::getProofFor: " << identify()
     //              << ": don't ask for trivial proofs";
     lpf.addStep(f, ProofRule::REFL, {}, {f[0]});
   }
