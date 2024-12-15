@@ -1176,9 +1176,39 @@ bool InferProofCons::convert(Env& env,
       }
     }
     break;
+    case InferenceId::STRINGS_I_CYCLE_E:
+    {
+      Assert (ps.d_children.size()==1);
+      Node concE = psb.applyPredElim(ps.d_children[0],
+                                     {},
+                                     MethodId::SB_DEFAULT,
+                                     MethodId::SBA_SEQUENTIAL,
+                                     MethodId::RW_EXT_REWRITE);
+      Trace("strings-ipc-debug") << "... elim to " << concE << std::endl;
+      if (concE!=conc)
+      {
+        if (concE.getKind()==Kind::AND)
+        {
+          for (size_t i=0, nchild = concE.getNumChildren(); i<nchild; i++)
+          {
+            if (concE[i]==conc)
+            {
+              Node ni = nm->mkConstInt(Rational(i));
+              psb.addStep(ProofRule::AND_ELIM, {concE}, {ni}, conc);
+              useBuffer = true;
+              break;
+            }
+          }
+        }
+      }
+      else
+      {
+        useBuffer = true;
+      }
+    }
+      break;
     // ========================== unknown and currently unsupported
     case InferenceId::STRINGS_CARDINALITY:
-    case InferenceId::STRINGS_I_CYCLE_E:
     case InferenceId::STRINGS_I_CYCLE:
     case InferenceId::STRINGS_INFER_EMP:
     case InferenceId::STRINGS_RE_DELTA:
