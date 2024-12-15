@@ -171,7 +171,7 @@ class InferProofCons : protected EnvObj, public ProofGenerator
   static Node applySubsToArgs(Env& env,
                               TConvProofGenerator& tconv,
                               const Node& n,
-                              CDProof* pf);
+                              CDProof* pf, TheoryProofStepBuffer& psb);
 
   /** The lazy fact map */
   NodeInferInfoMap d_lazyFactMap;

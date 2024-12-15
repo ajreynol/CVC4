@@ -981,8 +981,8 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       if (theory::strings::InferProofCons::convert(
               d_env, iid, isRev, conc, exp, cdp))
       {
-        Trace("check") << "Here: " << std::endl;
-        pfgEnsureClosedWrt(options(), conc, cdp, exp, "check", "check");
+        //Trace("check") << "Here: " << std::endl;
+        //pfgEnsureClosedWrt(options(), conc, cdp, exp, "check", "check");
         return conc;
       }
     }

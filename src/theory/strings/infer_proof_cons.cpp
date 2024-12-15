@@ -159,8 +159,8 @@ bool InferProofCons::convert(Env& env,
   for (const Node& ec : ps.d_children)
   {
     Trace("strings-ipc-debug") << "Explicit add " << ec << std::endl;
-   // psb.addStep(ProofRule::ASSUME, {}, {ec}, ec);
-    pf->addStep(ec, ProofRule::ASSUME, {}, {ec});
+    psb.addStep(ProofRule::ASSUME, {}, {ec}, ec);
+    //pf->addStep(ec, ProofRule::ASSUME, {}, {ec});
   }
   NodeManager* nm = NodeManager::currentNM();
   Node nodeIsRev = nm->mkConst(isRev);
@@ -176,7 +176,7 @@ bool InferProofCons::convert(Env& env,
     case InferenceId::STRINGS_NORMAL_FORM:
     case InferenceId::STRINGS_CODE_PROXY:
     {
-      CDProof assumps(env);
+      CDProof assumps(env, nullptr, "assumps", false);
       StringCoreTermContext sctc;
       TConvProofGenerator tconv(env,
                                 nullptr,
@@ -186,8 +186,9 @@ bool InferProofCons::convert(Env& env,
                                 &sctc);
       for (const Node& s : ps.d_children)
       {
+        Trace("strings-ipc-core") << "---rewrite " << s << std::endl;
         Assert(s.getKind() == Kind::EQUAL);
-        tconv.addRewriteStep(s[0], s[1], pf);
+        tconv.addRewriteStep(s[0], s[1], &assumps);
       }
       Node res;
       std::shared_ptr<ProofNode> pfn;
@@ -197,8 +198,8 @@ bool InferProofCons::convert(Env& env,
         Node extt = conc;
         if (extt.getKind() == Kind::EQUAL)
         {
-          Node s1 = applySubsToArgs(env, tconv, extt[0], pf);
-          Node s2 = applySubsToArgs(env, tconv, extt[1], pf);
+          Node s1 = applySubsToArgs(env, tconv, extt[0], pf, psb);
+          Node s2 = applySubsToArgs(env, tconv, extt[1], pf, psb);
           std::vector<Node> transEq;
           if (extt[0] != s1)
           {
@@ -228,12 +229,12 @@ bool InferProofCons::convert(Env& env,
           }
           if (transEq.size() > 1)
           {
-            pf->addStep(conc, ProofRule::TRANS, transEq, {});
+            psb.addStep(ProofRule::TRANS, transEq, {}, conc);
           }
         }
         else
         {
-          Node s = applySubsToArgs(env, tconv, extt, pf);
+          Node s = applySubsToArgs(env, tconv, extt, pf, psb);
           res = extt.eqNode(s);
         }
       }
@@ -242,6 +243,7 @@ bool InferProofCons::convert(Env& env,
         pfn = tconv.getProofForRewriting(conc);
         pf->addProof(pfn);
         res = pfn->getResult();
+        psb.addStep(ProofRule::ASSUME, {}, {res}, res);
       }
       if (!res.isNull())
       {
@@ -435,13 +437,13 @@ bool InferProofCons::convert(Env& env,
                                 TConvCachePolicy::NEVER,
                                 "StrTConv",
                                 &sctc);
-      CDProof assumps(env);
+      CDProof assumps(env, nullptr, "assumps", false);
       for (size_t i = 0; i < mainEqIndex; i++)
       {
         Node s = ps.d_children[i];
         Trace("strings-ipc-core") << "--- rewrite " << s << std::endl;
         Assert(s.getKind() == Kind::EQUAL);
-        tconv.addRewriteStep(s[0], s[1], pf);
+        tconv.addRewriteStep(s[0], s[1], &assumps);
       }
       std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(mainEq);
       Node res = pfn->getResult();
@@ -451,15 +453,15 @@ bool InferProofCons::convert(Env& env,
       {
         Trace("strings-ipc-core") << "Rewrites: " << res << std::endl;
         pf->addProof(pfn);
-        psb.tryStep(
-            ProofRule::EQ_RESOLVE, {pmainEq, res[0].eqNode(res[1])}, {});
+        psb.addStep(ProofRule::ASSUME, {}, {res}, res);
+        psb.addStep(
+            ProofRule::EQ_RESOLVE, {pmainEq, res[0].eqNode(res[1])}, {}, res[1]);
         pmainEq = res[1];
       }
       Trace("strings-ipc-core")
           << "Main equality after subs " << pmainEq << std::endl;
       // now, conclude the proper equality
-      Node mainEqSRew =
-          psb.applyPredElim(pmainEq, pcsr);
+      Node mainEqSRew = psb.applyPredElim(pmainEq, pcsr);
       if (mainEqSRew == conc)
       {
         Trace("strings-ipc-core") << "...success after rewrite!" << std::endl;
@@ -480,10 +482,6 @@ bool InferProofCons::convert(Env& env,
       {
         // fail
         break;
-      }
-      if (mainEqSRew==mainEqCeq)
-      {
-        psb.popStep();
       }
       // get the heads of the equality
       std::vector<Node> tvec;
@@ -1365,7 +1363,7 @@ std::string InferProofCons::identify() const
 Node InferProofCons::applySubsToArgs(Env& env,
                                      TConvProofGenerator& tconv,
                                      const Node& n,
-                                     CDProof* pf)
+                                     CDProof* pf, TheoryProofStepBuffer& psb)
 {
   Trace("strings-ipc-debug") << "Apply substitution to " << n << std::endl;
   std::shared_ptr<ProofNode> pfn;
@@ -1374,7 +1372,8 @@ Node InferProofCons::applySubsToArgs(Env& env,
     pfn = tconv.getProofForRewriting(n);
     pf->addProof(pfn);
     Node res = pfn->getResult();
-    return res[0];
+    psb.addStep(ProofRule::ASSUME, {}, {res}, res);
+    return res[1];
   }
   // apply substitution to the arguments of the extended function
   std::vector<std::shared_ptr<ProofNode>> cpfs;
@@ -1385,7 +1384,9 @@ Node InferProofCons::applySubsToArgs(Env& env,
     pf->addProof(pfn);
     Trace("strings-ipc-debug") << "...proof arg " << *pfn.get() << std::endl;
     cpfs.push_back(pfn);
-    cpremises.push_back(pfn->getResult());
+    Node res = pfn->getResult();
+    psb.addStep(ProofRule::ASSUME, {}, {res}, res);
+    cpremises.push_back(res);
   }
   std::vector<Node> cargs;
   ProofRule cr = expr::getCongRule(n, cargs);
@@ -1393,7 +1394,9 @@ Node InferProofCons::applySubsToArgs(Env& env,
   pfn = pnm->mkNode(cr, cpfs, cargs);
   pf->addProof(pfn);
   Trace("strings-ipc-debug") << "...proof conc " << *pfn.get() << std::endl;
-  return pfn->getResult()[1];
+  Node res = pfn->getResult();
+  psb.addStep(ProofRule::ASSUME, {}, {res}, res);
+  return res[1];
 }
 
 }  // namespace strings
