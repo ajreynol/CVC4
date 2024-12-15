@@ -188,7 +188,7 @@ bool InferProofCons::convert(Env& env,
       {
         Trace("strings-ipc-core") << "---rewrite " << s << std::endl;
         Assert(s.getKind() == Kind::EQUAL);
-        tconv.addRewriteStep(s[0], s[1], &assumps);
+        tconv.addRewriteStep(s[0], s[1], pf);
       }
       Node res;
       std::shared_ptr<ProofNode> pfn;
@@ -443,7 +443,7 @@ bool InferProofCons::convert(Env& env,
         Node s = ps.d_children[i];
         Trace("strings-ipc-core") << "--- rewrite " << s << std::endl;
         Assert(s.getKind() == Kind::EQUAL);
-        tconv.addRewriteStep(s[0], s[1], &assumps);
+        tconv.addRewriteStep(s[0], s[1], pf);
       }
       std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(mainEq);
       Node res = pfn->getResult();
