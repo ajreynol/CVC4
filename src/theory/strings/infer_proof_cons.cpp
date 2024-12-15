@@ -243,7 +243,7 @@ bool InferProofCons::convert(Env& env,
           Node s = applySubsToArgs(env, tconv, extt[0], pf, psb);
           Node resn = extt[0].eqNode(s);
           std::vector<Node> cargs;
-          ProofRule cr = expr::getCongRule(extt[0], cargs);
+          ProofRule cr = expr::getCongRule(extt, cargs);
           res = extt.eqNode(s.notNode());
           psb.addStep(cr, {resn}, cargs, res);
         }
