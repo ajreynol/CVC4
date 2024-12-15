@@ -160,7 +160,7 @@ bool InferProofCons::convert(Env& env,
   {
     Trace("strings-ipc-debug") << "Explicit add " << ec << std::endl;
     psb.addStep(ProofRule::ASSUME, {}, {ec}, ec);
-    //pf->addStep(ec, ProofRule::ASSUME, {}, {ec});
+    // pf->addStep(ec, ProofRule::ASSUME, {}, {ec});
   }
   NodeManager* nm = NodeManager::currentNM();
   Node nodeIsRev = nm->mkConst(isRev);
@@ -238,7 +238,7 @@ bool InferProofCons::convert(Env& env,
             }
           }
         }
-        else if (extt.getKind()==Kind::NOT)
+        else if (extt.getKind() == Kind::NOT)
         {
           Node s = applySubsToArgs(env, tconv, extt[0], pf, psb);
           Node resn = extt[0].eqNode(s);
@@ -473,8 +473,10 @@ bool InferProofCons::convert(Env& env,
         Trace("strings-ipc-core") << "Rewrites: " << res << std::endl;
         pf->addProof(pfn);
         psb.addStep(ProofRule::ASSUME, {}, {res}, res);
-        psb.addStep(
-            ProofRule::EQ_RESOLVE, {pmainEq, res[0].eqNode(res[1])}, {}, res[1]);
+        psb.addStep(ProofRule::EQ_RESOLVE,
+                    {pmainEq, res[0].eqNode(res[1])},
+                    {},
+                    res[1]);
         pmainEq = res[1];
       }
       Trace("strings-ipc-core")
@@ -1231,9 +1233,9 @@ bool InferProofCons::convert(Env& env,
         Trace("strings-ipc-fail") << "    e: " << ec << std::endl;
       }
     }
-    //AlwaysAssert(false) << "STRINGS-IPC-FAIL: " << infer << std::endl;
-    // untrustworthy conversion, the argument of THEORY_INFERENCE is its
-    // conclusion
+    // AlwaysAssert(false) << "STRINGS-IPC-FAIL: " << infer << std::endl;
+    //  untrustworthy conversion, the argument of THEORY_INFERENCE is its
+    //  conclusion
     ps.d_args.clear();
     ps.d_args.push_back(mkTrustId(TrustId::THEORY_INFERENCE_STRINGS));
     ps.d_args.push_back(conc);
@@ -1383,7 +1385,8 @@ std::string InferProofCons::identify() const
 Node InferProofCons::applySubsToArgs(Env& env,
                                      TConvProofGenerator& tconv,
                                      const Node& n,
-                                     CDProof* pf, TheoryProofStepBuffer& psb)
+                                     CDProof* pf,
+                                     TheoryProofStepBuffer& psb)
 {
   Trace("strings-ipc-debug") << "Apply substitution to " << n << std::endl;
   std::shared_ptr<ProofNode> pfn;

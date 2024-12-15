@@ -19,10 +19,10 @@
 #include "expr/bound_var_manager.h"
 #include "expr/sort_to_term.h"
 #include "proof/proof.h"
-#include "proof/proof_rule_checker.h"
-#include "util/string.h"
-#include "theory/builtin/proof_checker.h"
 #include "proof/proof_node_algorithm.h"
+#include "proof/proof_rule_checker.h"
+#include "theory/builtin/proof_checker.h"
+#include "util/string.h"
 
 namespace cvc5::internal {
 
@@ -40,17 +40,18 @@ Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
 
 bool getProofSpec(const Node& attr, ProofRule& r, std::vector<Node>& args)
 {
-  if (attr.getKind()==Kind::INST_ATTRIBUTE && attr.getNumChildren()==2)
+  if (attr.getKind() == Kind::INST_ATTRIBUTE && attr.getNumChildren() == 2)
   {
     std::string str = attr[0].getConst<String>().toString();
-    if (str=="witness" && attr[1].getKind()==Kind::SEXPR && attr[1].getNumChildren()>0)
+    if (str == "witness" && attr[1].getKind() == Kind::SEXPR
+        && attr[1].getNumChildren() > 0)
     {
       Node rn = attr[1][0];
       uint32_t rval;
       if (ProofRuleChecker::getUInt32(rn, rval))
       {
         r = static_cast<ProofRule>(rval);
-        args.insert(args.end(), attr[1].begin()+1, attr[1].end());
+        args.insert(args.end(), attr[1].begin() + 1, attr[1].end());
         return true;
       }
     }
@@ -67,7 +68,8 @@ std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact)
   bool success = false;
   CDProof cdp(d_env);
   Trace("valid-witness") << "Prove " << fact << std::endl;
-  if (fact.getKind()==Kind::NOT && fact[0].getKind()==Kind::FORALL && fact[0].getNumChildren()==3)
+  if (fact.getKind() == Kind::NOT && fact[0].getKind() == Kind::FORALL
+      && fact[0].getNumChildren() == 3)
   {
     Node attr = fact[0][2][0];
     Trace("valid-witness") << "...check spec " << attr << std::endl;
@@ -79,8 +81,10 @@ std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact)
       Trace("valid-witness") << "...got spec " << r << " " << args << std::endl;
       Node exp = mkExists(nodeManager(), r, args);
       // must remove annotation
-      Node ex = theory::builtin::BuiltinProofRuleChecker::getEncodeEqIntro(nodeManager(), fact[0]).notNode();
-      if (ex==exp)
+      Node ex = theory::builtin::BuiltinProofRuleChecker::getEncodeEqIntro(
+                    nodeManager(), fact[0])
+                    .notNode();
+      if (ex == exp)
       {
         cdp.addStep(ex, r, {}, args);
         Node eq = fact[0].eqNode(ex[0]);

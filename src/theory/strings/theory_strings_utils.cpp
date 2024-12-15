@@ -19,10 +19,11 @@
 
 #include "expr/attribute.h"
 #include "expr/bound_var_manager.h"
-#include "expr/sort_to_term.h"
 #include "expr/sequence.h"
 #include "expr/skolem_manager.h"
+#include "expr/sort_to_term.h"
 #include "options/strings_options.h"
+#include "proof/valid_witness_proof_generator.h"
 #include "theory/quantifiers/fmf/bounded_integers.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/rewriter.h"
@@ -32,7 +33,6 @@
 #include "util/rational.h"
 #include "util/regexp.h"
 #include "util/string.h"
-#include "proof/valid_witness_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
@@ -496,7 +496,8 @@ Node mkAbstractStringValueForLength(Node n, Node len, size_t id)
 {
   NodeManager* nm = NodeManager::currentNM();
   Node tn = nm->mkConst(SortToTerm(n.getType()));
-  Node w = ValidWitnessProofGenerator::mkWitness(nm, ProofRule::EXISTS_STRING_LENGTH, {tn, len});
+  Node w = ValidWitnessProofGenerator::mkWitness(
+      nm, ProofRule::EXISTS_STRING_LENGTH, {tn, len});
   Trace("ajr-temp") << "Made " << w << std::endl;
   return w;
   BoundVarManager* bvm = nm->getBoundVarManager();

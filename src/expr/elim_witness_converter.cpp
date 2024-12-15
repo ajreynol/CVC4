@@ -42,9 +42,9 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
     Node psan = theory::quantifiers::QuantAttributes::mkAttrPreserveStructure();
     std::vector<Node> pats;
     // carry annotations of the witness, which may include its proof information
-    if (n.getNumChildren()==3)
+    if (n.getNumChildren() == 3)
     {
-      Assert (n[2].getKind()==Kind::INST_PATTERN_LIST);
+      Assert(n[2].getKind() == Kind::INST_PATTERN_LIST);
       pats.insert(pats.end(), n[2].begin(), n[2].end());
     }
     pats.push_back(psan);
