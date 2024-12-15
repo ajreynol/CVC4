@@ -176,7 +176,6 @@ bool InferProofCons::convert(Env& env,
     case InferenceId::STRINGS_NORMAL_FORM:
     case InferenceId::STRINGS_CODE_PROXY:
     {
-      CDProof assumps(env, nullptr, "assumps", false);
       StringCoreTermContext sctc;
       TConvProofGenerator tconv(env,
                                 nullptr,
@@ -186,14 +185,15 @@ bool InferProofCons::convert(Env& env,
                                 &sctc);
       for (const Node& s : ps.d_children)
       {
-        Trace("strings-ipc-core") << "---rewrite " << s << std::endl;
+        Trace("strings-ipc-core") << "--- rewrite " << s << std::endl;
         Assert(s.getKind() == Kind::EQUAL);
         tconv.addRewriteStep(s[0], s[1], pf);
       }
       Node res;
       std::shared_ptr<ProofNode> pfn;
       if (infer == InferenceId::STRINGS_EXTF
-          || infer == InferenceId::STRINGS_EXTF_N)
+          || infer == InferenceId::STRINGS_EXTF_N
+          || infer == InferenceId::STRINGS_LEN_NORM)
       {
         Node extt = conc;
         if (extt.getKind() == Kind::EQUAL)
@@ -456,7 +456,6 @@ bool InferProofCons::convert(Env& env,
                                 TConvCachePolicy::NEVER,
                                 "StrTConv",
                                 &sctc);
-      CDProof assumps(env, nullptr, "assumps", false);
       for (size_t i = 0; i < mainEqIndex; i++)
       {
         Node s = ps.d_children[i];
@@ -1233,6 +1232,7 @@ bool InferProofCons::convert(Env& env,
         Trace("strings-ipc-fail") << "    e: " << ec << std::endl;
       }
     }
+    //Warning() << "STRINGS-IPC-FAIL: " << infer << std::endl;
     // AlwaysAssert(false) << "STRINGS-IPC-FAIL: " << infer << std::endl;
     //  untrustworthy conversion, the argument of THEORY_INFERENCE is its
     //  conclusion
