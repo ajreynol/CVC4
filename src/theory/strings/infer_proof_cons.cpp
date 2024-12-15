@@ -635,6 +635,13 @@ bool InferProofCons::convert(Env& env,
         }
         else if (infer == InferenceId::STRINGS_SSPLIT_VAR)
         {
+          // may have to flip
+          Assert (conc.getKind()==Kind::AND && conc[0].getKind()==Kind::OR && conc[0][0].getKind()==Kind::EQUAL);
+          if (conc[0][0][0]!=t0)
+          {
+            applySym = true;
+            std::swap(t0, s0);
+          }
           // it should be the case that lenConstraint => lenReq
           lenReq = nm->mkNode(Kind::STRING_LENGTH, t0)
                        .eqNode(nm->mkNode(Kind::STRING_LENGTH, s0))
@@ -1232,7 +1239,7 @@ bool InferProofCons::convert(Env& env,
         Trace("strings-ipc-fail") << "    e: " << ec << std::endl;
       }
     }
-    //Warning() << "STRINGS-IPC-FAIL: " << infer << std::endl;
+    // Warning() << "STRINGS-IPC-FAIL: " << infer << std::endl;
     // AlwaysAssert(false) << "STRINGS-IPC-FAIL: " << infer << std::endl;
     //  untrustworthy conversion, the argument of THEORY_INFERENCE is its
     //  conclusion
