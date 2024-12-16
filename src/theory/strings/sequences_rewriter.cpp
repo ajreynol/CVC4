@@ -2554,8 +2554,7 @@ Node SequencesRewriter::rewriteContains(Node node)
       if (!ctnConst.isNull() && !ctnConst.getConst<bool>())
       {
         Node res = nm->mkConst(false);
-        //return returnRewrite(node, res, Rewrite::CTN_CONCAT_COM_NON_CTN);
-        return returnRewrite(node, res, Rewrite::CTN_RPL_NON_CTN);
+        return returnRewrite(node, res, Rewrite::CTN_CONCAT_COM_NON_CTN);
       }
     }
     if (n.getKind() == Kind::STRING_REPLACE)
@@ -2756,8 +2755,7 @@ Node SequencesRewriter::rewriteContains(Node node)
     if (!s.isNumber())
     {
       Node ret = nm->mkConst(false);
-      //return returnRewrite(node, ret, Rewrite::CTN_ITOS_NON_DIGIT);
-      return returnRewrite(node, ret, Rewrite::CTN_REPL_SIMP_REPL);
+      return returnRewrite(node, ret, Rewrite::CTN_ITOS_NON_DIGIT);
     }
   }
 

@@ -590,6 +590,7 @@ void ExtfSolver::checkExtfInference(Node n,
         std::vector<Node> children;
         children.push_back(nr[0]);
         children.push_back(nr[1]);
+        // NOTE: this reasoning should be subsumed by the rewrite CTN_CONCAT_COM_NON_CTN
         for (const Node& nrc : nr[index])
         {
           children[index] = nrc;
