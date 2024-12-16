@@ -35,6 +35,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
   Trace("arith-proof-rcons") << "ArithProofRCons: prove " << fact << std::endl;
   CDProof cdp(d_env);
   bool success = false;
+  // ARITH_DIO_LEMMA can typically be reconstructed via substitution+rewriting.
   if (d_id == TrustId::ARITH_DIO_LEMMA)
   {
     Assert(fact.getKind() == Kind::NOT);
