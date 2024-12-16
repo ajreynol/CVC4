@@ -2548,6 +2548,18 @@ Node SequencesRewriter::rewriteContains(Node node)
 
   for (const Node& n : nc2)
   {
+    /*
+    if (nc2.size()>1)
+    {
+      Node ctnConst = d_stringsEntail.checkContains(node[0], n);
+      if (!ctnConst.isNull() && !ctnConst.getConst<bool>())
+      {
+        Node res = nm->mkConst(false);
+        //return returnRewrite(node, res, Rewrite::CTN_CONCAT_COM_NON_CTN);
+        return returnRewrite(node, res, Rewrite::CTN_RPL_NON_CTN);
+      }
+    }
+    */
     if (n.getKind() == Kind::STRING_REPLACE)
     {
       // (str.contains x (str.replace y z w)) --> false
