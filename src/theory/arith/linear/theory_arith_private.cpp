@@ -43,6 +43,7 @@
 #include "proof/proof_generator.h"
 #include "proof/proof_node_manager.h"
 #include "smt/logic_exception.h"
+#include "theory/arith/arith_proof_rcons.h"
 #include "theory/arith/arith_proof_utilities.h"
 #include "theory/arith/arith_rewriter.h"
 #include "theory/arith/arith_utilities.h"
@@ -73,7 +74,6 @@
 #include "util/rational.h"
 #include "util/result.h"
 #include "util/statistics_stats.h"
-#include "theory/arith/arith_proof_rcons.h"
 
 using namespace std;
 using namespace cvc5::internal::kind;

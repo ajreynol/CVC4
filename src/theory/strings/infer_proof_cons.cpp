@@ -636,8 +636,9 @@ bool InferProofCons::convert(Env& env,
         else if (infer == InferenceId::STRINGS_SSPLIT_VAR)
         {
           // may have to flip
-          Assert (conc.getKind()==Kind::AND && conc[0].getKind()==Kind::OR && conc[0][0].getKind()==Kind::EQUAL);
-          if (conc[0][0][0]!=t0)
+          Assert(conc.getKind() == Kind::AND && conc[0].getKind() == Kind::OR
+                 && conc[0][0].getKind() == Kind::EQUAL);
+          if (conc[0][0][0] != t0)
           {
             applySym = true;
             std::swap(t0, s0);
@@ -1178,20 +1179,20 @@ bool InferProofCons::convert(Env& env,
     break;
     case InferenceId::STRINGS_I_CYCLE_E:
     {
-      Assert (ps.d_children.size()==1);
+      Assert(ps.d_children.size() == 1);
       Node concE = psb.applyPredElim(ps.d_children[0],
                                      {},
                                      MethodId::SB_DEFAULT,
                                      MethodId::SBA_SEQUENTIAL,
                                      MethodId::RW_EXT_REWRITE);
       Trace("strings-ipc-debug") << "... elim to " << concE << std::endl;
-      if (concE!=conc)
+      if (concE != conc)
       {
-        if (concE.getKind()==Kind::AND)
+        if (concE.getKind() == Kind::AND)
         {
-          for (size_t i=0, nchild = concE.getNumChildren(); i<nchild; i++)
+          for (size_t i = 0, nchild = concE.getNumChildren(); i < nchild; i++)
           {
-            if (concE[i]==conc)
+            if (concE[i] == conc)
             {
               Node ni = nm->mkConstInt(Rational(i));
               psb.addStep(ProofRule::AND_ELIM, {concE}, {ni}, conc);
@@ -1206,7 +1207,7 @@ bool InferProofCons::convert(Env& env,
         useBuffer = true;
       }
     }
-      break;
+    break;
     // ========================== unknown and currently unsupported
     case InferenceId::STRINGS_CARDINALITY:
     case InferenceId::STRINGS_I_CYCLE:

@@ -16,14 +16,15 @@
 #include "theory/arith/arith_proof_rcons.h"
 
 #include "proof/proof.h"
-#include "theory/arith/arith_subs.h"
 #include "theory/arith/arith_msum.h"
+#include "theory/arith/arith_subs.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace arith {
 
-ArithProofRCons::ArithProofRCons(Env& env, TrustId id) : EnvObj(env), d_id(id) {
+ArithProofRCons::ArithProofRCons(Env& env, TrustId id) : EnvObj(env), d_id(id)
+{
   d_false = nodeManager()->mkConst(false);
 }
 
@@ -34,11 +35,11 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
   Trace("arith-proof-rcons") << "ArithProofRCons: prove " << fact << std::endl;
   CDProof cdp(d_env);
   bool success = false;
-  if (d_id==TrustId::ARITH_DIO_LEMMA)
+  if (d_id == TrustId::ARITH_DIO_LEMMA)
   {
-    Assert (fact.getKind()==Kind::NOT);
+    Assert(fact.getKind() == Kind::NOT);
     std::vector<Node> assumps;
-    if (fact[0].getKind()==Kind::AND)
+    if (fact[0].getKind() == Kind::AND)
     {
       assumps.insert(assumps.end(), fact[0].begin(), fact[0].end());
     }
@@ -54,7 +55,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
     for (const Node& a : assumps)
     {
       Trace("arith-proof-rcons") << "Assumption: " << a << std::endl;
-      if (a.getKind()!=Kind::EQUAL)
+      if (a.getKind() != Kind::EQUAL)
       {
         Trace("arith-proof-rcons") << "...not solved" << std::endl;
         assumpsNoSolve.push_back(a);
@@ -62,14 +63,16 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
       }
       Node as = asubs.applyArith(a);
       as = rewrite(as);
-      Trace("arith-proof-rcons") << "...under subs+rewrite: " << as << std::endl;
-      if (as==d_false)
+      Trace("arith-proof-rcons")
+          << "...under subs+rewrite: " << as << std::endl;
+      if (as == d_false)
       {
         Trace("arith-proof-rcons") << "...success!" << std::endl;
         std::vector<Node> pargs;
         pargs.push_back(a);
         pargs.insert(pargs.end(), assumpsSolve.begin(), assumpsSolve.end());
-        cdp.addStep(d_false, ProofRule::MACRO_SR_PRED_TRANSFORM, pargs, {d_false});
+        cdp.addStep(
+            d_false, ProofRule::MACRO_SR_PRED_TRANSFORM, pargs, {d_false});
         success = true;
         break;
       }
@@ -88,7 +91,8 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
           if (ires != 0 && veq_c.isNull())
           {
             solved = true;
-            Trace("arith-proof-rcons") << "...solved " << m.first << " = " << val << std::endl;
+            Trace("arith-proof-rcons")
+                << "...solved " << m.first << " = " << val << std::endl;
             Node eq = m.first.eqNode(val);
             std::vector<Node> pargs;
             pargs.push_back(a);
@@ -122,12 +126,8 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
   return cdp.getProofFor(fact);
 }
 
-std::string ArithProofRCons::identify() const
-{
-  return "ArithProofRCons";
-}
+std::string ArithProofRCons::identify() const { return "ArithProofRCons"; }
 
-
-}
-}
+}  // namespace arith
+}  // namespace theory
 }  // namespace cvc5::internal

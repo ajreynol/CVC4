@@ -18,11 +18,11 @@
 #ifndef CVC5__THEORY__ARITH__ARITH_PROOF_RCONS_H
 #define CVC5__THEORY__ARITH__ARITH_PROOF_RCONS_H
 
-#include "proof/proof_generator.h"
-#include "proof/trust_node.h"
-#include "proof/trust_id.h"
-#include "smt/env_obj.h"
 #include "expr/node.h"
+#include "proof/proof_generator.h"
+#include "proof/trust_id.h"
+#include "proof/trust_node.h"
+#include "smt/env_obj.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -47,15 +47,16 @@ class ArithProofRCons : protected EnvObj, public ProofGenerator
   std::shared_ptr<ProofNode> getProofFor(Node fact) override;
   /** identify */
   std::string identify() const override;
-private:
+
+ private:
   /** The trust id to use if the proof reconstruction fails. */
   TrustId d_id;
   /** False node */
   Node d_false;
 };
 
-}
-}
+}  // namespace arith
+}  // namespace theory
 }  // namespace cvc5::internal
 
 #endif /* CVC5__THEORY__ARITH__ARITH_PROOF_RCONS_H */
