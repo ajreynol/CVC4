@@ -243,6 +243,8 @@ enum ENUM(SkolemId)
    * - Sort: The type of the variable referenced by the second index.
    */
   EVALUE(QUANTIFIERS_SKOLEMIZE),
+  EVALUE(WITNESS_STRING_LENGTH),
+  EVALUE(WITNESS_INV_CONDITION),
   /**
    * An integer corresponding to the number of times a string occurs in another
    * string. This is used to reason about str.replace_all.

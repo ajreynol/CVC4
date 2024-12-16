@@ -1367,7 +1367,7 @@ enum ENUM(ProofRule)
    *
    * \endverbatim
    */
-  EVALUE(EXISTS_INVERTIBILITY_CONDITION),
+  EVALUE(EXISTS_INV_CONDITION),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Sets -- Singleton injectivity**

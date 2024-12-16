@@ -41,7 +41,7 @@ void QuantifiersProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::ALPHA_EQUIV, this);
   pc->registerChecker(ProofRule::QUANT_VAR_REORDERING, this);
   pc->registerChecker(ProofRule::EXISTS_STRING_LENGTH, this);
-  pc->registerChecker(ProofRule::EXISTS_INVERTIBILITY_CONDITION, this);
+  pc->registerChecker(ProofRule::EXISTS_INV_CONDITION, this);
 }
 
 Node QuantifiersProofRuleChecker::checkInternal(
@@ -152,9 +152,9 @@ Node QuantifiersProofRuleChecker::checkInternal(
     return eq;
   }
   else if (id == ProofRule::EXISTS_STRING_LENGTH
-           || id == ProofRule::EXISTS_INVERTIBILITY_CONDITION)
+           || id == ProofRule::EXISTS_INV_CONDITION)
   {
-    Node exists = ValidWitnessProofGenerator::mkExists(nodeManager(), id, args);
+    Node exists = ValidWitnessProofGenerator::mkAxiom(nodeManager(), id, args);
     return exists;
   }
 

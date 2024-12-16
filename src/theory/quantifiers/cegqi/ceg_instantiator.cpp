@@ -1015,7 +1015,7 @@ bool CegInstantiator::doAddInstantiation(std::vector<Node>& vars,
   // construct the final instantiation by eliminating witness terms
   bool isQElim = d_qreg.getQuantAttributes().isQuantElim(d_quant);
   std::vector<Node> svec;
-  std::vector<Node> exists;
+  std::vector<Node> axioms;
   for (const Node& s : subs)
   {
     if (expr::hasSubtermKind(Kind::WITNESS, s))
@@ -1028,8 +1028,8 @@ bool CegInstantiator::doAddInstantiation(std::vector<Node>& vars,
       }
       PreprocessElimWitnessNodeConverter ewc(d_env, d_qstate.getValuation());
       Node sc = ewc.convert(s);
-      const std::vector<Node>& wexists = ewc.getExistentials();
-      exists.insert(exists.end(), wexists.begin(), wexists.end());
+      const std::vector<Node>& waxioms = ewc.getAxioms();
+      axioms.insert(axioms.end(), waxioms.begin(), waxioms.end());
       svec.push_back(sc);
     }
     else
@@ -1056,8 +1056,8 @@ bool CegInstantiator::doAddInstantiation(std::vector<Node>& vars,
                                   Node::null(),
                                   usedVts))
   {
-    // add the existentials, if any witness term was eliminated
-    for (const Node& q : exists)
+    // add the axioms, if any witness term was eliminated
+    for (const Node& q : axioms)
     {
       d_qim.addPendingLemma(q,
                             InferenceId::QUANTIFIERS_CEGQI_WITNESS,

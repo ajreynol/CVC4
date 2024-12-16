@@ -21,10 +21,27 @@
 #include "proof/proof.h"
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_rule_checker.h"
-#include "theory/builtin/proof_checker.h"
 #include "util/string.h"
+#include "expr/skolem_manager.h"
 
 namespace cvc5::internal {
+
+/**
+ * Mapping from predicates to the arguments used in mkAxiom
+ */
+struct ValidWitnessAxiomAttributeId
+{
+};
+using ValidWitnessAxiomAttribute =
+    expr::Attribute<ValidWitnessAxiomAttributeId, Node>;
+/**
+ * Mapping to the variable used for binding the witness term.
+ */
+struct ValidWitnessVarAttributeId
+{
+};
+using ValidWitnessVarAttribute =
+    expr::Attribute<ValidWitnessVarAttributeId, Node>;
 
 Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
 {
@@ -38,7 +55,7 @@ Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
   return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
 }
 
-bool getProofSpec(const Node& attr, ProofRule& r, std::vector<Node>& args)
+bool ValidWitnessProofGenerator::getProofSpec(const Node& attr, ProofRule& r, std::vector<Node>& args)
 {
   if (attr.getKind() == Kind::INST_ATTRIBUTE && attr.getNumChildren() == 2)
   {
@@ -68,35 +85,16 @@ std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact)
   bool success = false;
   CDProof cdp(d_env);
   Trace("valid-witness") << "Prove " << fact << std::endl;
-  if (fact.getKind() == Kind::NOT && fact[0].getKind() == Kind::FORALL
-      && fact[0].getNumChildren() == 3)
+  ValidWitnessAxiomAttribute vwa;
+  if (fact.hasAttribute(vwa))
   {
-    Node attr = fact[0][2][0];
-    Trace("valid-witness") << "...check spec " << attr << std::endl;
-    // should be constructed via mkProofSpec
+    Node spec = fact.getAttribute(vwa);
     ProofRule r;
     std::vector<Node> args;
-    if (getProofSpec(attr, r, args))
+    if (!spec.isNull() && getProofSpec(spec, r, args))
     {
-      Trace("valid-witness") << "...got spec " << r << " " << args << std::endl;
-      Node exp = mkExists(nodeManager(), r, args);
-      // must remove annotation
-      Node ex = theory::builtin::BuiltinProofRuleChecker::getEncodeEqIntro(
-                    nodeManager(), fact[0])
-                    .notNode();
-      if (ex == exp)
-      {
-        cdp.addStep(ex, r, {}, args);
-        Node eq = fact[0].eqNode(ex[0]);
-        cdp.addStep(eq, ProofRule::ENCODE_EQ_INTRO, {}, {fact[0]});
-        Node eqs = ex[0].eqNode(fact[0]);
-        std::vector<Node> cargs;
-        ProofRule cr = expr::getCongRule(ex, cargs);
-        Node eqsc = ex.eqNode(fact);
-        cdp.addStep(eqsc, cr, {eqs}, cargs);
-        cdp.addStep(fact, ProofRule::EQ_RESOLVE, {ex, eqsc}, {});
-        success = true;
-      }
+      success = true;
+      cdp.addStep(fact, r, {}, args);
     }
   }
   if (!success)
@@ -113,75 +111,83 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
                                            ProofRule r,
                                            const std::vector<Node>& args)
 {
-  Node exists = mkExists(nm, r, args);
-  if (exists.isNull())
+  Node k = mkSkolem(nm, r, args);
+  if (k.isNull())
   {
-    return Node::null();
+    return k;
   }
-  Assert(exists.getKind() == Kind::NOT && exists[0].getKind() == Kind::FORALL);
+  BoundVarManager* bvm = nm->getBoundVarManager();
+  Node v = bvm->mkBoundVar<ValidWitnessVarAttribute>(k, "@var.witness", k.getType());
+  Node ax = mkAxiom(nm, r, args);
+  TNode tk = k;
+  TNode tv = v;
+  ax = ax.substitute(tk,tv);
   std::vector<Node> children;
-  children.push_back(exists[0][0]);
-  children.push_back(exists[0][1].negate());
+  children.push_back(nm->mkNode(Kind::BOUND_VAR_LIST, v));
+  children.push_back(ax);
   children.push_back(
       nm->mkNode(Kind::INST_PATTERN_LIST, mkProofSpec(nm, r, args)));
   return nm->mkNode(Kind::WITNESS, children);
 }
 
-/**
- * Mapping to the variable used for binding the witness term.
- */
-struct ValidWitnessVarAttributeId
-{
-};
-using ValidWitnessVarAttribute =
-    expr::Attribute<ValidWitnessVarAttributeId, Node>;
-
-Node ValidWitnessProofGenerator::mkExists(NodeManager* nm,
+Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
                                           ProofRule r,
                                           const std::vector<Node>& args)
 {
-  // first compute the desired type based on the rule and arguments
-  TypeNode tn;
-  switch (r)
+  // get the skolem we are supposed to use
+  Node v = mkSkolem(nm, r, args);
+  if (v.isNull())
   {
-    case ProofRule::EXISTS_STRING_LENGTH:
-      Assert(args.size() == 2);
-      if (args[0].getKind() == Kind::SORT_TO_TERM)
-      {
-        tn = args[0].getConst<SortToTerm>().getType();
-      }
-      break;
-    case ProofRule::EXISTS_INVERTIBILITY_CONDITION: break;
-    default: break;
+    return v;
   }
-  if (tn.isNull())
-  {
-    return Node::null();
-  }
-  Node spec = mkProofSpec(nm, r, args);
-  BoundVarManager* bvm = nm->getBoundVarManager();
-  Node v = bvm->mkBoundVar<ValidWitnessVarAttribute>(spec, "@var.witness", tn);
   // then construct the predicate
   Node pred;
   switch (r)
   {
     case ProofRule::EXISTS_STRING_LENGTH:
-      Assert(args.size() == 2);
+      Assert(args.size() == 3);
+      // only applicable for non-negative constants (for now)
       if (args[1].getKind() == Kind::CONST_INTEGER
           && args[1].getConst<Rational>().getNumerator().sgn() >= 0)
       {
         pred = nm->mkNode(Kind::STRING_LENGTH, v).eqNode(args[1]);
       }
       break;
-    case ProofRule::EXISTS_INVERTIBILITY_CONDITION: break;
+    case ProofRule::EXISTS_INV_CONDITION:
+      // TODO
+      break;
     default: break;
   }
+  // mark the attribute, to remember proof reconstruction
   if (!pred.isNull())
   {
-    Node bvl = nm->mkNode(Kind::BOUND_VAR_LIST, v);
-    return nm->mkNode(Kind::FORALL, bvl, pred.negate()).notNode();
+    Node spec = mkProofSpec(nm, r, args);
+    ValidWitnessAxiomAttribute vwa;
+    pred.setAttribute(vwa, spec);
   }
-  return Node::null();
+  return pred;
+}
+
+Node ValidWitnessProofGenerator::mkSkolem(NodeManager* nm,
+                                          ProofRule r,
+                                          const std::vector<Node>& args)
+{
+  SkolemId id = SkolemId::NONE;
+  switch (r)
+  {
+    case ProofRule::EXISTS_STRING_LENGTH:
+      id = SkolemId::WITNESS_STRING_LENGTH;
+      break;
+    case ProofRule::EXISTS_INV_CONDITION:
+      id = SkolemId::WITNESS_INV_CONDITION;
+      break;
+    default: break;
+  }
+  if (id==SkolemId::NONE)
+  {
+    return Node::null();
+  }
+  return nm->getSkolemManager()->mkSkolemFunction(id, args);
 }
 
 }  // namespace cvc5::internal

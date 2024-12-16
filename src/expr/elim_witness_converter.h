@@ -41,9 +41,9 @@ class ElimWitnessNodeConverter : protected EnvObj, public NodeConverter
    */
   Node postConvert(Node n) override;
   /**
-   * Get the existentials
+   * Get the axioms
    */
-  const std::vector<Node>& getExistentials() const;
+  const std::vector<Node>& getAxioms() const;
 
   /**
    * Get the normal form of a quantified formula for which we are introducing
@@ -52,8 +52,8 @@ class ElimWitnessNodeConverter : protected EnvObj, public NodeConverter
   virtual Node getNormalFormFor(const Node& q);
 
  private:
-  /** The list of existentials introduced by eliminating witness */
-  std::vector<Node> d_exists;
+  /** The list of axioms introduced by eliminating witness */
+  std::vector<Node> d_axioms;
 };
 
 }  // namespace cvc5::internal

@@ -51,9 +51,15 @@ class ValidWitnessProofGenerator : protected EnvObj, public ProofGenerator
                         ProofRule r,
                         const std::vector<Node>& args);
   /** Make exists */
-  static Node mkExists(NodeManager* nm,
+  static Node mkAxiom(NodeManager* nm,
+                      ProofRule r,
+                      const std::vector<Node>& args);
+  /** Make skolem */
+  static Node mkSkolem(NodeManager* nm,
                        ProofRule r,
                        const std::vector<Node>& args);
+  /** Get proof spec from attribute */
+  static bool getProofSpec(const Node& attr, ProofRule& r, std::vector<Node>& args);
 };
 
 }  // namespace cvc5::internal

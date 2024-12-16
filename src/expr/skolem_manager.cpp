@@ -456,6 +456,20 @@ TypeNode SkolemManager::getTypeFor(SkolemId id,
       return cacheVals[0][0][i].getType();
     }
     break;
+    case SkolemId::WITNESS_STRING_LENGTH:
+    {
+      Assert(cacheVals.size() == 3);
+      Assert(cacheVals[1].getKind() == Kind::CONST_INTEGER);
+      Assert(cacheVals[2].getKind() == Kind::CONST_INTEGER);
+      TypeNode t = cacheVals[0].getConst<SortToTerm>().getType();
+      return t;
+    }
+    break;
+    case SkolemId::WITNESS_INV_CONDITION:
+    {
+      //TODO
+    }
+    break;
     // skolems that return the set element type
     case SkolemId::BAGS_DEQ_DIFF:
     case SkolemId::SETS_DEQ_DIFF:

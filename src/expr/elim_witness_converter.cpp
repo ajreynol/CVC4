@@ -18,6 +18,7 @@
 #include "expr/skolem_manager.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "util/rational.h"
+#include "proof/valid_witness_proof_generator.h"
 
 namespace cvc5::internal {
 
@@ -33,33 +34,48 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
     Trace("elim-witness") << "Eliminate " << n << std::endl;
     NodeManager* nm = nodeManager();
     SkolemManager* skm = nm->getSkolemManager();
-    std::vector<Node> nchildren;
-    nchildren.push_back(n[0]);
-    nchildren.push_back(n[1].notNode());
-    // must mark that the quantified formula cannot be eliminated by rewriting,
-    // so that the form of the quantified formula is preserved for the
-    // introduction below.
-    Node psan = theory::quantifiers::QuantAttributes::mkAttrPreserveStructure();
     std::vector<Node> pats;
     // carry annotations of the witness, which may include its proof information
+    Node k;
     if (n.getNumChildren() == 3)
     {
       Assert(n[2].getKind() == Kind::INST_PATTERN_LIST);
-      pats.insert(pats.end(), n[2].begin(), n[2].end());
+      ProofRule r;
+      std::vector<Node> args;
+      if (ValidWitnessProofGenerator::getProofSpec(n[2][0], r, args))
+      {
+        k = ValidWitnessProofGenerator::mkSkolem(nm, r, args);
+        d_axioms.push_back(ValidWitnessProofGenerator::mkAxiom(nm, r, args));
+      }
+      else
+      {
+        pats.insert(pats.end(), n[2].begin(), n[2].end());
+      }
     }
-    pats.push_back(psan);
-    Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, pats);
-    nchildren.push_back(ipl);
-    // make the quantified formula
-    Node q = nm->mkNode(Kind::FORALL, nchildren);
-    Node qn = getNormalFormFor(q);
-    // should still be a FORALL due to above
-    Assert(qn.getKind() == Kind::FORALL);
-    Node k = skm->mkSkolemFunction(SkolemId::QUANTIFIERS_SKOLEMIZE,
-                                   {qn, nm->mkConstInt(Rational(0))});
-    // save the non-normalized version, which makes it easier to e.g.
-    // track proofs
-    d_exists.push_back(q.notNode());
+    if (k.isNull())
+    {
+      std::vector<Node> nchildren;
+      nchildren.push_back(n[0]);
+      nchildren.push_back(n[1].notNode());
+      // must mark that the quantified formula cannot be eliminated by rewriting,
+      // so that the form of the quantified formula is preserved for the
+      // introduction below.
+      Node psan = theory::quantifiers::QuantAttributes::mkAttrPreserveStructure();
+      // this is deprecated
+      pats.push_back(psan);
+      Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, pats);
+      nchildren.push_back(ipl);
+      // make the quantified formula
+      Node q = nm->mkNode(Kind::FORALL, nchildren);
+      Node qn = getNormalFormFor(q);
+      // should still be a FORALL due to above
+      Assert(qn.getKind() == Kind::FORALL);
+      k = skm->mkSkolemFunction(SkolemId::QUANTIFIERS_SKOLEMIZE,
+                                    {qn, nm->mkConstInt(Rational(0))});
+      // save the non-normalized version, which makes it easier to e.g.
+      // track proofs
+      d_axioms.push_back(q.notNode());
+    }
     return k;
   }
   return n;
@@ -67,9 +83,9 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
 
 Node ElimWitnessNodeConverter::getNormalFormFor(const Node& q) { return q; }
 
-const std::vector<Node>& ElimWitnessNodeConverter::getExistentials() const
+const std::vector<Node>& ElimWitnessNodeConverter::getAxioms() const
 {
-  return d_exists;
+  return d_axioms;
 }
 
 }  // namespace cvc5::internal

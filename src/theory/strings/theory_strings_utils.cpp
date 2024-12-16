@@ -496,20 +496,10 @@ Node mkAbstractStringValueForLength(Node n, Node len, size_t id)
 {
   NodeManager* nm = NodeManager::currentNM();
   Node tn = nm->mkConst(SortToTerm(n.getType()));
+  Node idn = nm->mkConstInt(Rational(id));
   Node w = ValidWitnessProofGenerator::mkWitness(
-      nm, ProofRule::EXISTS_STRING_LENGTH, {tn, len});
-  Trace("ajr-temp") << "Made " << w << std::endl;
+      nm, ProofRule::EXISTS_STRING_LENGTH, {tn, len, idn});
   return w;
-  BoundVarManager* bvm = nm->getBoundVarManager();
-  Node cacheVal = BoundVarManager::getCacheValue(n, len);
-  Node v = bvm->mkBoundVar<StringValueForLengthVarAttribute>(
-      cacheVal, "s", n.getType());
-  Node pred = nm->mkNode(Kind::STRING_LENGTH, v).eqNode(len);
-  // return (witness ((v String)) (= (str.len v) len))
-  Node bvl = nm->mkNode(Kind::BOUND_VAR_LIST, v);
-  std::stringstream ss;
-  ss << "w" << id;
-  return quantifiers::mkNamedQuant(Kind::WITNESS, bvl, pred, ss.str());
 }
 
 Node mkCodeRange(Node t, uint32_t alphaCard)
