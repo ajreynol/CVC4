@@ -29,8 +29,9 @@ namespace theory {
 namespace arith {
 
 /**
- * Proof generator implementing the "diamonds" preprocessing step, performed
- * by TheoryUF.
+ * Proof generator that is used for reconstructing lemmas coming from
+ * arithmetic that do not have proof tracking. This includes:
+ * - ARITH_DIO_LEMMA, lemmas coming from the dio solver.
  */
 class ArithProofRCons : protected EnvObj, public ProofGenerator
 {
@@ -42,12 +43,11 @@ class ArithProofRCons : protected EnvObj, public ProofGenerator
   ArithProofRCons(Env& env, TrustId id);
   virtual ~ArithProofRCons();
   /**
-   * Get proof for an arithmetic lemma
+   * Get proof for an arithmetic lemma.
    */
   std::shared_ptr<ProofNode> getProofFor(Node fact) override;
   /** identify */
   std::string identify() const override;
-
  private:
   /** The trust id to use if the proof reconstruction fails. */
   TrustId d_id;
