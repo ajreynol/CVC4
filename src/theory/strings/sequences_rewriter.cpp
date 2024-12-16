@@ -2548,7 +2548,6 @@ Node SequencesRewriter::rewriteContains(Node node)
 
   for (const Node& n : nc2)
   {
-    /*
     if (nc2.size()>1)
     {
       Node ctnConst = d_stringsEntail.checkContains(node[0], n);
@@ -2559,7 +2558,6 @@ Node SequencesRewriter::rewriteContains(Node node)
         return returnRewrite(node, res, Rewrite::CTN_RPL_NON_CTN);
       }
     }
-    */
     if (n.getKind() == Kind::STRING_REPLACE)
     {
       // (str.contains x (str.replace y z w)) --> false
@@ -2750,6 +2748,16 @@ Node SequencesRewriter::rewriteContains(Node node)
             node[1]);
         return returnRewrite(node, ret, Rewrite::CTN_REPL_SIMP_REPL);
       }
+    }
+  }
+  else if (node[0].getKind()==Kind::STRING_ITOS && node[1].isConst())
+  {
+    String s = node[1].getConst<String>();
+    if (!s.isNumber())
+    {
+      Node ret = nm->mkConst(false);
+      //return returnRewrite(node, ret, Rewrite::CTN_ITOS_NON_DIGIT);
+      return returnRewrite(node, ret, Rewrite::CTN_REPL_SIMP_REPL);
     }
   }
 
