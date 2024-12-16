@@ -504,7 +504,6 @@ bool TermDb::checkCongruentDisequal(TNode a, TNode b, std::vector<Node>& exp)
 {
   if (d_qstate.areDisequal(a, b))
   {
-    exp.push_back(a.eqNode(b));
     return true;
   }
   return false;
