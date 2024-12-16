@@ -77,6 +77,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
         success = true;
         break;
       }
+      // see if there is a variable to solve for
       std::map<Node, Node> msum;
       bool solved = false;
       if (ArithMSum::getMonomialSumLit(as, msum))
