@@ -73,6 +73,7 @@
 #include "util/rational.h"
 #include "util/result.h"
 #include "util/statistics_stats.h"
+#include "theory/arith/arith_proof_rcons.h"
 
 using namespace std;
 using namespace cvc5::internal::kind;
@@ -3407,12 +3408,9 @@ bool TheoryArithPrivate::postCheck(Theory::Effort effortLevel)
           {
             assump.push_back(possibleConflict);
           }
-          Node falsen = nodeManager()->mkConst(false);
-          CDProof cdp(d_env);
-          cdp.addTrustedStep(falsen, TrustId::ARITH_DIO_LEMMA, assump, {});
           Node npc = possibleConflict.notNode();
-          cdp.addStep(npc, ProofRule::SCOPE, {falsen}, assump);
-          pf = cdp.getProofFor(npc);
+          ArithProofRCons arc(d_env, TrustId::ARITH_DIO_LEMMA);
+          pf = arc.getProofFor(npc);
         }
         raiseBlackBoxConflict(possibleConflict, pf);
         outputConflicts();
