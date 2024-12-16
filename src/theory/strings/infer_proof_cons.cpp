@@ -41,17 +41,17 @@ uint32_t StringCoreTermContext::computeValue(TNode t,
                                              uint32_t tval,
                                              size_t index) const
 {
-  if (tval == 0)
+  if (tval < 2)
   {
     Kind k = t.getKind();
     // kinds we wish to substitute beneath
-    if (k == Kind::EQUAL || k == Kind::STRING_CONCAT)
+    if (k ==Kind::NOT || k == Kind::EQUAL || k == Kind::STRING_CONCAT)
     {
-      return 0;
+      return tval;
     }
-    return 1;
+    return tval+1;
   }
-  return tval;
+  return 2;
 }
 
 InferProofCons::InferProofCons(Env& env,
@@ -176,6 +176,8 @@ bool InferProofCons::convert(Env& env,
     case InferenceId::STRINGS_NORMAL_FORM:
     case InferenceId::STRINGS_CODE_PROXY:
     {
+      // Use a string core term context, which counts the nesting of non-core
+      // string applications.
       StringCoreTermContext sctc;
       TConvProofGenerator tconv(env,
                                 nullptr,
@@ -183,83 +185,35 @@ bool InferProofCons::convert(Env& env,
                                 TConvCachePolicy::NEVER,
                                 "StrTConv",
                                 &sctc);
-      for (const Node& s : ps.d_children)
-      {
-        Trace("strings-ipc-core") << "--- rewrite " << s << std::endl;
-        Assert(s.getKind() == Kind::EQUAL);
-        tconv.addRewriteStep(s[0], s[1], pf);
-      }
-      Node res;
-      std::shared_ptr<ProofNode> pfn;
+      size_t idMax = 0;
+      // These three inference assume the substitution is applied to the
+      // *arguments* of extended functions and the length function, so we
+      // will allow the substitutions to fire in term context value one.
       if (infer == InferenceId::STRINGS_EXTF
           || infer == InferenceId::STRINGS_EXTF_N
           || infer == InferenceId::STRINGS_LEN_NORM)
       {
-        Node extt = conc;
-        if (extt.getKind() == Kind::EQUAL)
-        {
-          Node s1 = applySubsToArgs(env, tconv, extt[0], pf, psb);
-          Node s2 = applySubsToArgs(env, tconv, extt[1], pf, psb);
-          std::vector<Node> transEq;
-          if (extt[0] != s1)
-          {
-            transEq.push_back(extt[0].eqNode(s1));
-          }
-          if (s1 != s2)
-          {
-            Node seq = s1.eqNode(s2);
-            Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
-            Trace("strings-ipc-core") << "- " << conc << std::endl;
-            Trace("strings-ipc-core") << "- to " << seq << std::endl;
-            if (psb.applyPredIntro(seq, {}))
-            {
-              transEq.push_back(seq);
-              useBuffer = true;
-            }
-            else
-            {
-              Trace("strings-ipc-core")
-                  << "...failed to show " << seq << std::endl;
-            }
-          }
-          else
-          {
-            useBuffer = true;
-          }
-          if (useBuffer)
-          {
-            if (s1 != extt[1])
-            {
-              transEq.push_back(s2.eqNode(extt[1]));
-            }
-            if (transEq.size() > 1)
-            {
-              psb.addStep(ProofRule::TRANS, transEq, {}, conc);
-            }
-          }
-        }
-        else if (extt.getKind() == Kind::NOT)
-        {
-          Node s = applySubsToArgs(env, tconv, extt[0], pf, psb);
-          Node resn = extt[0].eqNode(s);
-          std::vector<Node> cargs;
-          ProofRule cr = expr::getCongRule(extt, cargs);
-          res = extt.eqNode(s.notNode());
-          psb.addStep(cr, {resn}, cargs, res);
-        }
-        else
-        {
-          Node s = applySubsToArgs(env, tconv, extt, pf, psb);
-          res = extt.eqNode(s);
-        }
+        idMax = 1;
       }
-      else
+      // add the rewrites for nested contexts up to idMax.
+      for (size_t i=0; i<=idMax; i++)
       {
-        pfn = tconv.getProofForRewriting(conc);
-        pf->addProof(pfn);
-        res = pfn->getResult();
-        psb.addStep(ProofRule::ASSUME, {}, {res}, res);
+        for (const Node& s : ps.d_children)
+        {
+          Trace("strings-ipc-core") << "--- rewrite " << s << ", id " << i << std::endl;
+          Assert(s.getKind() == Kind::EQUAL);
+          tconv.addRewriteStep(s[0], s[1], pf, false,TrustId::NONE, false, i);
+        }
       }
+      Node res;
+      std::shared_ptr<ProofNode> pfn;
+      pfn = tconv.getProofForRewriting(conc);
+      pf->addProof(pfn);
+      res = pfn->getResult();
+      // the proof step buffer is tracking unique conclusions, we (dummy) mark
+      // that we have a proof of res via the proof above to ensure we do not
+      // reprove it in the following.
+      psb.addStep(ProofRule::ASSUME, {}, {res}, res);
       if (!res.isNull())
       {
         Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
@@ -471,6 +425,9 @@ bool InferProofCons::convert(Env& env,
       {
         Trace("strings-ipc-core") << "Rewrites: " << res << std::endl;
         pf->addProof(pfn);
+        // Similar to above, the proof step buffer is tracking unique conclusions, we (dummy) mark
+        // that we have a proof of res via the proof above to ensure we do not
+        // reprove it in the following.
         psb.addStep(ProofRule::ASSUME, {}, {res}, res);
         psb.addStep(ProofRule::EQ_RESOLVE,
                     {pmainEq, res[0].eqNode(res[1])},
@@ -1418,46 +1375,6 @@ std::shared_ptr<ProofNode> InferProofCons::getProofFor(Node fact)
 std::string InferProofCons::identify() const
 {
   return "strings::InferProofCons";
-}
-
-Node InferProofCons::applySubsToArgs(Env& env,
-                                     TConvProofGenerator& tconv,
-                                     const Node& n,
-                                     CDProof* pf,
-                                     TheoryProofStepBuffer& psb)
-{
-  Trace("strings-ipc-debug") << "Apply substitution to " << n << std::endl;
-  std::shared_ptr<ProofNode> pfn;
-  if (n.getNumChildren() == 0)
-  {
-    pfn = tconv.getProofForRewriting(n);
-    pf->addProof(pfn);
-    Node res = pfn->getResult();
-    psb.addStep(ProofRule::ASSUME, {}, {res}, res);
-    return res[1];
-  }
-  // apply substitution to the arguments of the extended function
-  std::vector<std::shared_ptr<ProofNode>> cpfs;
-  std::vector<Node> cpremises;
-  for (const Node& extc : n)
-  {
-    pfn = tconv.getProofForRewriting(extc);
-    pf->addProof(pfn);
-    Trace("strings-ipc-debug") << "...proof arg " << *pfn.get() << std::endl;
-    cpfs.push_back(pfn);
-    Node res = pfn->getResult();
-    psb.addStep(ProofRule::ASSUME, {}, {res}, res);
-    cpremises.push_back(res);
-  }
-  std::vector<Node> cargs;
-  ProofRule cr = expr::getCongRule(n, cargs);
-  ProofNodeManager* pnm = env.getProofNodeManager();
-  pfn = pnm->mkNode(cr, cpfs, cargs);
-  pf->addProof(pfn);
-  Trace("strings-ipc-debug") << "...proof conc " << *pfn.get() << std::endl;
-  Node res = pfn->getResult();
-  psb.addStep(ProofRule::ASSUME, {}, {res}, res);
-  return res[1];
 }
 
 }  // namespace strings

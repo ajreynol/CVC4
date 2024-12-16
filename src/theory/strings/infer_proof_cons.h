@@ -166,13 +166,6 @@ class InferProofCons : protected EnvObj, public ProofGenerator
    * conclusion, or null if we were not able to construct a TRANS step.
    */
   static Node convertTrans(Node eqa, Node eqb, TheoryProofStepBuffer& psb);
-  /**
-   */
-  static Node applySubsToArgs(Env& env,
-                              TConvProofGenerator& tconv,
-                              const Node& n,
-                              CDProof* pf,
-                              TheoryProofStepBuffer& psb);
 
   /** The lazy fact map */
   NodeInferInfoMap d_lazyFactMap;
