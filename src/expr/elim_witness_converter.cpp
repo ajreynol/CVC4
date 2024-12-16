@@ -16,9 +16,9 @@
 #include "expr/elim_witness_converter.h"
 
 #include "expr/skolem_manager.h"
+#include "proof/valid_witness_proof_generator.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "util/rational.h"
-#include "proof/valid_witness_proof_generator.h"
 
 namespace cvc5::internal {
 
@@ -57,10 +57,11 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
       std::vector<Node> nchildren;
       nchildren.push_back(n[0]);
       nchildren.push_back(n[1].notNode());
-      // must mark that the quantified formula cannot be eliminated by rewriting,
-      // so that the form of the quantified formula is preserved for the
-      // introduction below.
-      Node psan = theory::quantifiers::QuantAttributes::mkAttrPreserveStructure();
+      // must mark that the quantified formula cannot be eliminated by
+      // rewriting, so that the form of the quantified formula is preserved for
+      // the introduction below.
+      Node psan =
+          theory::quantifiers::QuantAttributes::mkAttrPreserveStructure();
       // this is deprecated
       pats.push_back(psan);
       Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, pats);
@@ -71,7 +72,7 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
       // should still be a FORALL due to above
       Assert(qn.getKind() == Kind::FORALL);
       k = skm->mkSkolemFunction(SkolemId::QUANTIFIERS_SKOLEMIZE,
-                                    {qn, nm->mkConstInt(Rational(0))});
+                                {qn, nm->mkConstInt(Rational(0))});
       // save the non-normalized version, which makes it easier to e.g.
       // track proofs
       d_axioms.push_back(q.notNode());

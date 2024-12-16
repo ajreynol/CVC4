@@ -17,12 +17,12 @@
 
 #include "expr/attribute.h"
 #include "expr/bound_var_manager.h"
+#include "expr/skolem_manager.h"
 #include "expr/sort_to_term.h"
 #include "proof/proof.h"
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_rule_checker.h"
 #include "util/string.h"
-#include "expr/skolem_manager.h"
 
 namespace cvc5::internal {
 
@@ -55,7 +55,9 @@ Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
   return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
 }
 
-bool ValidWitnessProofGenerator::getProofSpec(const Node& attr, ProofRule& r, std::vector<Node>& args)
+bool ValidWitnessProofGenerator::getProofSpec(const Node& attr,
+                                              ProofRule& r,
+                                              std::vector<Node>& args)
 {
   if (attr.getKind() == Kind::INST_ATTRIBUTE && attr.getNumChildren() == 2)
   {
@@ -117,11 +119,12 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
     return k;
   }
   BoundVarManager* bvm = nm->getBoundVarManager();
-  Node v = bvm->mkBoundVar<ValidWitnessVarAttribute>(k, "@var.witness", k.getType());
+  Node v =
+      bvm->mkBoundVar<ValidWitnessVarAttribute>(k, "@var.witness", k.getType());
   Node ax = mkAxiom(nm, r, args);
   TNode tk = k;
   TNode tv = v;
-  ax = ax.substitute(tk,tv);
+  ax = ax.substitute(tk, tv);
   std::vector<Node> children;
   children.push_back(nm->mkNode(Kind::BOUND_VAR_LIST, v));
   children.push_back(ax);
@@ -131,8 +134,8 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
 }
 
 Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
-                                          ProofRule r,
-                                          const std::vector<Node>& args)
+                                         ProofRule r,
+                                         const std::vector<Node>& args)
 {
   // get the skolem we are supposed to use
   Node v = mkSkolem(nm, r, args);
@@ -183,7 +186,7 @@ Node ValidWitnessProofGenerator::mkSkolem(NodeManager* nm,
       break;
     default: break;
   }
-  if (id==SkolemId::NONE)
+  if (id == SkolemId::NONE)
   {
     return Node::null();
   }

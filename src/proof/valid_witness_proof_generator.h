@@ -59,7 +59,9 @@ class ValidWitnessProofGenerator : protected EnvObj, public ProofGenerator
                        ProofRule r,
                        const std::vector<Node>& args);
   /** Get proof spec from attribute */
-  static bool getProofSpec(const Node& attr, ProofRule& r, std::vector<Node>& args);
+  static bool getProofSpec(const Node& attr,
+                           ProofRule& r,
+                           std::vector<Node>& args);
 };
 
 }  // namespace cvc5::internal

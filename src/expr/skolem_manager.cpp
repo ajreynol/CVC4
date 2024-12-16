@@ -467,7 +467,7 @@ TypeNode SkolemManager::getTypeFor(SkolemId id,
     break;
     case SkolemId::WITNESS_INV_CONDITION:
     {
-      //TODO
+      // TODO
     }
     break;
     // skolems that return the set element type
