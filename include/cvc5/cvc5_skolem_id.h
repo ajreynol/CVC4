@@ -243,7 +243,22 @@ enum ENUM(SkolemId)
    * - Sort: The type of the variable referenced by the second index.
    */
   EVALUE(QUANTIFIERS_SKOLEMIZE),
+  /**
+   * A witness for a string or sequence of a given length. Skolems in this family can
+   * be assumed to be distinct if their identifiers (given by their third index) are
+   * distinct modulo :math:`A` to the power of their length (given by their second index),
+   * where :math:`A` is the cardinality of the characters of their sort.
+   *
+   * - Number of skolem indices: ``1``
+   *   - ``1:`` A term that represents the sort of the term.
+   *   - ``2:`` The assumed length of this term, expected to be a non-negative integer.
+   *   - ``3:`` A numeral identifier.
+   * - Sort: The sort given by the first index.
+   */
   EVALUE(WITNESS_STRING_LENGTH),
+  /**
+   * A witness for an invertibility condition.
+   */
   EVALUE(WITNESS_INV_CONDITION),
   /**
    * An integer corresponding to the number of times a string occurs in another
