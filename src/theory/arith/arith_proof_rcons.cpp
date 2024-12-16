@@ -112,7 +112,39 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
     }
     if (!success)
     {
-      // TODO
+      Trace("arith-proof-rcons") << "Not solved by rewriting single literal" << std::endl;
+      // check if two unsolved literals rewrite to the negation of one another
+      std::vector<Node> sassumps;
+      std::map<Node, bool> pols;
+      std::map<Node, bool>::iterator itp;
+      for (const Node& a : assumpsNoSolve)
+      {
+        Node as = asubs.applyArith(a);
+        as = rewrite(as);
+        Trace("arith-proof-rcons") << "...have " << as << std::endl;
+        std::vector<Node> pargs;
+        pargs.push_back(a);
+        pargs.insert(pargs.end(), assumpsSolve.begin(), assumpsSolve.end());
+        cdp.addStep(as, ProofRule::MACRO_SR_PRED_TRANSFORM, pargs, {as});
+        bool pol = as.getKind()!=Kind::NOT;
+        Node aslit = pol ? as : as[0];
+        itp = pols.find(aslit);
+        if (itp!=pols.end())
+        {
+          if (itp->second!=pol)
+          {
+            Node asn = aslit.notNode();
+            cdp.addStep(d_false, ProofRule::CONTRA, {aslit, asn}, {});
+            success = true;
+            Trace("arith-proof-rcons") << "......contradiction" << std::endl;
+            break;
+          }
+        }
+        else
+        {
+          pols[aslit] = pol;
+        }
+      }
     }
     if (success)
     {
