@@ -139,7 +139,14 @@ class BvInverter
    * This function will return the null node if the BvInverterQuery m provided
    * to this call is null.
    */
-  Node getInversionNode(Node cond, TypeNode tn, BvInverterQuery* m);
+  Node getInversionNode(Node cond, Node annot, TypeNode tn, BvInverterQuery* m);
+  /**
+   */
+  static Node mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Node svt, unsigned index);
+  static Node mkAnnotationBase(NodeManager * nm, Kind litk, bool pol, Node t);
+  /**
+   */
+  static Node mkExistsForAnnotation(NodeManager * nm, const Node& v, const Node& n);
   /** Reference to options */
   const Options& d_opts;
   /** Pointer to node manager */

@@ -62,17 +62,20 @@ bool ValidWitnessProofGenerator::getProofSpec(const Node& attr,
 {
   if (attr.getKind() == Kind::INST_ATTRIBUTE && attr.getNumChildren() == 2)
   {
-    std::string str = attr[0].getConst<String>().toString();
-    if (str == "witness" && attr[1].getKind() == Kind::SEXPR
+    if (attr[0].getKind()==Kind::CONST_STRING && attr[1].getKind() == Kind::SEXPR
         && attr[1].getNumChildren() > 0)
     {
-      Node rn = attr[1][0];
-      uint32_t rval;
-      if (ProofRuleChecker::getUInt32(rn, rval))
+      std::string str = attr[0].getConst<String>().toString();
+      if (str=="witness")
       {
-        r = static_cast<ProofRule>(rval);
-        args.insert(args.end(), attr[1].begin() + 1, attr[1].end());
-        return true;
+        Node rn = attr[1][0];
+        uint32_t rval;
+        if (ProofRuleChecker::getUInt32(rn, rval))
+        {
+          r = static_cast<ProofRule>(rval);
+          args.insert(args.end(), attr[1].begin() + 1, attr[1].end());
+          return true;
+        }
       }
     }
   }

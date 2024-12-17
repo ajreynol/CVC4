@@ -26,6 +26,9 @@
 #include "theory/quantifiers/term_util.h"
 #include "theory/rewriter.h"
 #include "util/bitvector.h"
+#include "proof/proof_rule_checker.h"
+#include "util/rational.h"
+#include "util/string.h"
 
 using namespace cvc5::internal::kind;
 
@@ -54,7 +57,7 @@ Node BvInverter::getSolveVariable(TypeNode tn)
 
 /*---------------------------------------------------------------------------*/
 
-Node BvInverter::getInversionNode(Node cond, TypeNode tn, BvInverterQuery* m)
+Node BvInverter::getInversionNode(Node cond, Node annot, TypeNode tn, BvInverterQuery* m)
 {
   TNode solve_var = getSolveVariable(tn);
 
@@ -95,8 +98,10 @@ Node BvInverter::getInversionNode(Node cond, TypeNode tn, BvInverterQuery* m)
     {
       Node x = m->getBoundVariable(tn);
       Node ccond = new_cond.substitute(solve_var, x);
+      Assert (!annot.isNull());
+      Node ipl = NodeManager::mkNode(Kind::INST_PATTERN_LIST, annot);
       c = NodeManager::mkNode(
-          Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond);
+          Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond, ipl);
       Trace("cegqi-bv-skvinv")
           << "SKVINV : Make " << c << " for " << new_cond << std::endl;
     }
@@ -417,7 +422,8 @@ Node BvInverter::solveBvLit(Node sv,
       litk = Kind::EQUAL;
       pol = true;
       /* t = fresh skolem constant */
-      t = getInversionNode(ic, solve_tn, m);
+      Node annot = mkAnnotation(d_nm, litk, pol, t, sv_t, index);
+      t = getInversionNode(ic, annot, solve_tn, m);
       if (t.isNull())
       {
         return t;
@@ -447,21 +453,23 @@ Node BvInverter::solveBvLit(Node sv,
     Trace("bv-invert") << "Add SC_" << litk << "(" << x << "): " << ic
                        << std::endl;
   }
-
-  return ic.isNull() ? t : getInversionNode(ic, solve_tn, m);
+  if (ic.isNull())
+  {
+    return t;
+  }
+  Node annot = mkAnnotationBase(d_nm, litk, pol, t);
+  return getInversionNode(ic, annot, solve_tn, m);
 }
 
-Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& f)
+Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
 {
-  Trace("ajr-temp") << "Make invertibility condition for " << x << " " << f
+  Trace("ajr-temp") << "Make invertibility condition for " << x << " " << exists
                     << std::endl;
-  Assert(f.getKind() == Kind::NOT);
-  Node exists = f[0];
-  Assert(exists.getKind() == Kind::FORALL);
+  Assert(exists.getKind() == Kind::EXISTS);
   Assert(exists[0].getNumChildren() == 1);
   Node v = exists[0][0];
   Assert(x.getType() == v.getType());
-  Node body = exists[1].negate();
+  Node body = exists[1];
   bool pol = body.getKind() != Kind::NOT;
   body = pol ? body : body[0];
   Assert(body.getNumChildren() == 2);
@@ -556,6 +564,34 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& f)
     }
   }
   return ic;
+}
+
+Node BvInverter::mkAnnotationBase(NodeManager * nm, Kind litk, bool pol,Node t)
+{
+  Node svt;
+  return mkAnnotation(nm, litk, pol, t, svt, 0);
+}
+
+Node BvInverter::mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Node svt, unsigned index)
+{
+  std::vector<Node> sargs;
+  sargs.push_back(ProofRuleChecker::mkKindNode(litk));
+  sargs.push_back(nm->mkConst(pol));
+  sargs.push_back(t);
+  if (!svt.isNull())
+  {
+    sargs.push_back(svt);
+    sargs.push_back(nm->mkConstInt(Rational(index)));
+  }
+  std::vector<Node> pfspec;
+  pfspec.push_back(nm->mkConst(String("witness-inv-condition")));
+  pfspec.push_back(nm->mkNode(Kind::SEXPR, sargs));
+  return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
+}
+
+Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& v, const Node& n)
+{
+  return Node::null();
 }
 
 }  // namespace quantifiers

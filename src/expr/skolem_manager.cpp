@@ -469,10 +469,9 @@ TypeNode SkolemManager::getTypeFor(SkolemId id,
     case SkolemId::WITNESS_INV_CONDITION:
     {
       Assert(cacheVals.size() == 1);
-      Assert(cacheVals[0].getKind() == Kind::NOT);
-      Assert(cacheVals[0][0].getKind() == Kind::FORALL);
-      Assert(cacheVals[0][0][0].getNumChildren() == 1);
-      return cacheVals[0][0][0][0].getType();
+      Assert(cacheVals[0].getKind() == Kind::EXISTS);
+      Assert(cacheVals[0][0].getNumChildren() == 1);
+      return cacheVals[0][0][0].getType();
     }
     break;
     // skolems that return the set element type
