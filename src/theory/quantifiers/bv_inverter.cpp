@@ -451,6 +451,109 @@ Node BvInverter::solveBvLit(Node sv,
 
 /*---------------------------------------------------------------------------*/
 
+Node BvInverter::mkAxiom(const Node& x, const std::vector<Node>& args)
+{
+  Assert (args.size()==1);
+  Assert (args[0].getKind()==Kind::EXISTS);
+  Assert (args[0][0].getNumChildren()==1);
+  Node v = args[0][0][0];
+  Node body = args[0][1];
+  bool pol = body.getKind()!=Kind::NOT;
+  body = pol ? body : body[0];
+  Assert (body.getNumChildren()==2);
+  Kind litk = body.getKind();
+  Node t = body[1];
+  bool isBase = (body[0]==v);
+  Node ic;
+  if (isBase)
+  {
+    if (litk == Kind::BITVECTOR_ULT || litk == Kind::BITVECTOR_UGT)
+    {
+      ic = utils::getICBvUltUgt(pol, litk, x, t);
+    }
+    else if (litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_SGT)
+    {
+      ic = utils::getICBvSltSgt(pol, litk, x, t);
+    }
+    else if (pol == false)
+    {
+      Assert(litk == Kind::EQUAL);
+      ic = NodeManager::mkNode(Kind::DISTINCT, x, t);
+    }
+  }
+  else
+  {
+    Kind k = body[0].getKind();
+    Node sv_t = body[0];
+    unsigned index;
+    bool success = false;
+    for (size_t i=0, nchild = body[0].getNumChildren(); i<nchild; i++)
+    {
+      if (body[0][i]==v)
+      {
+        index = i;
+        success = true;
+        break;
+      }
+    }
+    if (!success)
+    {
+      return Node::null();
+    }
+    Node s = dropChild(sv_t, index);
+    if (k == Kind::BITVECTOR_MULT)
+    {
+      ic = utils::getICBvMult(pol, litk, k, index, x, s, t);
+    }
+    else if (k == Kind::BITVECTOR_SHL)
+    {
+      ic = utils::getICBvShl(pol, litk, k, index, x, s, t);
+    }
+    else if (k == Kind::BITVECTOR_UREM)
+    {
+      ic = utils::getICBvUrem(pol, litk, k, index, x, s, t);
+    }
+    else if (k == Kind::BITVECTOR_UDIV)
+    {
+      ic = utils::getICBvUdiv(pol, litk, k, index, x, s, t);
+    }
+    else if (k == Kind::BITVECTOR_AND || k == Kind::BITVECTOR_OR)
+    {
+      ic = utils::getICBvAndOr(pol, litk, k, index, x, s, t);
+    }
+    else if (k == Kind::BITVECTOR_LSHR)
+    {
+      ic = utils::getICBvLshr(pol, litk, k, index, x, s, t);
+    }
+    else if (k == Kind::BITVECTOR_ASHR)
+    {
+      ic = utils::getICBvAshr(pol, litk, k, index, x, s, t);
+    }
+    else if (k == Kind::BITVECTOR_CONCAT)
+    {
+      ic = utils::getICBvConcat(pol, litk, index, x, sv_t, t);
+    }
+    else if (k == Kind::BITVECTOR_SIGN_EXTEND)
+    {
+      ic = utils::getICBvSext(pol, litk, index, x, sv_t, t);
+    }
+    else if (litk == Kind::BITVECTOR_ULT || litk == Kind::BITVECTOR_UGT)
+    {
+      ic = utils::getICBvUltUgt(pol, litk, x, t);
+    }
+    else if (litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_SGT)
+    {
+      ic = utils::getICBvSltSgt(pol, litk, x, t);
+    }
+    else if (pol == false)
+    {
+      Assert(litk == Kind::EQUAL);
+      ic = NodeManager::mkNode(Kind::DISTINCT, x, t);
+    }
+  }
+  return ic;
+}
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

@@ -100,7 +100,10 @@ class BvInverter
                   Node lit,
                   std::vector<unsigned>& path,
                   BvInverterQuery* m);
-
+  
+  /**
+   */
+  static Node mkAxiom(const Node& v, const std::vector<Node>& args);
  private:
   /** Helper function for getPathToPv */
   Node getPathToPv(Node lit,

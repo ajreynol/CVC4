@@ -23,6 +23,7 @@
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_rule_checker.h"
 #include "util/string.h"
+#include "theory/quantifiers/bv_inverter.h"
 
 namespace cvc5::internal {
 
@@ -157,7 +158,7 @@ Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
       }
       break;
     case ProofRule::EXISTS_INV_CONDITION:
-      // TODO
+      pred = theory::quantifiers::BvInverter::mkAxiom(v, args);
       break;
     default: break;
   }
