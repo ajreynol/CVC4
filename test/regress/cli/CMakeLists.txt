@@ -1818,6 +1818,8 @@ set(regress_0_tests
   regress0/strings/code-perf.smt2
   regress0/strings/code-sat-neg-one.smt2
   regress0/strings/complement-simple.smt2
+  regress0/strings/ctn-decompose-3-sym.smt2
+  regress0/strings/dd_issue6913-str-inf.smt2
   regress0/strings/delta-trust-subs.smt2
   regress0/strings/denghan-instance56567.smt2
   regress0/strings/distinct-witness-id.smt2
