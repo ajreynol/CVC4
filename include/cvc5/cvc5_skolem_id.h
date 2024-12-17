@@ -258,6 +258,11 @@ enum ENUM(SkolemId)
   EVALUE(WITNESS_STRING_LENGTH),
   /**
    * A witness for an invertibility condition.
+   *
+   * - Number of skolem indices: ``1``
+   *   - ``1:`` A formula of the form ``(exists x. (x <op> s) <rel> t)``
+   *            or ``(exists x. x <rel> t)``.
+   * - Sort: The sort of x in given by the formula in the first index.
    */
   EVALUE(WITNESS_INV_CONDITION),
   /**
