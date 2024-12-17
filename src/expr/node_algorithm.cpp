@@ -805,7 +805,7 @@ void getMatchConditions(Node n1, Node n2, std::vector<Node>& eqs)
         for (size_t i = 0, n = curr.first.getNumChildren(); i < n; ++i)
         {
           // if there is a type mismatch, we can't unify
-          if (curr.first[i].getType()!=curr.second[i].getType())
+          if (curr.first[i].getType() != curr.second[i].getType())
           {
             stack.resize(prevSize);
             rec = false;
