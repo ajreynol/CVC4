@@ -158,7 +158,9 @@ Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
       }
       break;
     case ProofRule::EXISTS_INV_CONDITION:
-      pred = theory::quantifiers::BvInverter::mkAxiom(v, args);
+      Assert (args.size()==1);
+      pred = theory::quantifiers::BvInverter::mkInvertibilityCondition(v, args[0]);
+      AlwaysAssert(!pred.isNull());
       break;
     default: break;
   }

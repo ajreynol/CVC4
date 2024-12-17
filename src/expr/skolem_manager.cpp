@@ -459,6 +459,7 @@ TypeNode SkolemManager::getTypeFor(SkolemId id,
     case SkolemId::WITNESS_STRING_LENGTH:
     {
       Assert(cacheVals.size() == 3);
+      Assert(cacheVals[0].getKind() == Kind::SORT_TO_TERM);
       Assert(cacheVals[1].getKind() == Kind::CONST_INTEGER);
       Assert(cacheVals[2].getKind() == Kind::CONST_INTEGER);
       TypeNode t = cacheVals[0].getConst<SortToTerm>().getType();
@@ -467,7 +468,11 @@ TypeNode SkolemManager::getTypeFor(SkolemId id,
     break;
     case SkolemId::WITNESS_INV_CONDITION:
     {
-      // TODO
+      Assert(cacheVals.size() == 1);
+      Assert(cacheVals[0].getKind() == Kind::NOT);
+      Assert(cacheVals[0][0].getKind() == Kind::FORALL);
+      Assert(cacheVals[0][0][0].getNumChildren()==1);
+      return cacheVals[0][0][0][0].getType();
     }
     break;
     // skolems that return the set element type

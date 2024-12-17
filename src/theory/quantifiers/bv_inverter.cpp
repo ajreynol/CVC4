@@ -18,12 +18,14 @@
 #include <algorithm>
 
 #include "expr/skolem_manager.h"
+#include "expr/node_algorithm.h"
 #include "options/quantifiers_options.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "theory/quantifiers/bv_inverter_utils.h"
 #include "theory/quantifiers/term_util.h"
 #include "theory/rewriter.h"
 #include "util/bitvector.h"
+#include "proof/valid_witness_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
@@ -31,8 +33,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-BvInverter::BvInverter(const Options& opts, Rewriter* r)
-    : d_opts(opts), d_rewriter(r)
+BvInverter::BvInverter(const Options& opts, NodeManager * nm, Rewriter* r)
+    : d_opts(opts), d_nm(nm), d_rewriter(r)
 {
 }
 
@@ -449,15 +451,16 @@ Node BvInverter::solveBvLit(Node sv,
   return ic.isNull() ? t : getInversionNode(ic, solve_tn, m);
 }
 
-/*---------------------------------------------------------------------------*/
-
-Node BvInverter::mkAxiom(const Node& x, const std::vector<Node>& args)
+Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& f)
 {
-  Assert (args.size()==1);
-  Assert (args[0].getKind()==Kind::EXISTS);
-  Assert (args[0][0].getNumChildren()==1);
-  Node v = args[0][0][0];
-  Node body = args[0][1];
+  Trace("ajr-temp") << "Make invertibility condition for " << x << " " << f << std::endl;
+  Assert (f.getKind()==Kind::NOT);
+  Node exists = f[0];
+  Assert (exists.getKind()==Kind::FORALL);
+  Assert (exists[0].getNumChildren()==1);
+  Node v = exists[0][0];
+  Assert (x.getType()==v.getType());
+  Node body = exists[1].negate();
   bool pol = body.getKind()!=Kind::NOT;
   body = pol ? body : body[0];
   Assert (body.getNumChildren()==2);

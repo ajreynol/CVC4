@@ -56,7 +56,7 @@ class BvInverterQuery
 class BvInverter
 {
  public:
-  BvInverter(const Options& opts, Rewriter* r = nullptr);
+  BvInverter(const Options& opts, NodeManager * nm, Rewriter* r = nullptr);
   ~BvInverter() {}
   /** get dummy fresh variable of type tn, used as argument for sv */
   Node getSolveVariable(TypeNode tn);
@@ -102,8 +102,16 @@ class BvInverter
                   BvInverterQuery* m);
   
   /**
+   * This is the main entry point for constructing invertibility conditions.
+   * 
+   * @param v A term to witness the invertbility condition.
+   * @param exists A formula of the form (exists x (<rel> (<op> ... x ...) t))
+   * or (exists x (<rel> x t)).
+   * @return The invertibility condition for exists, witnessed by v. In
+   * particular, if v is a bound variable, then (exists v R) is equivalent
+   * to exists, where R is the formula returned by this method.
    */
-  static Node mkAxiom(const Node& v, const std::vector<Node>& args);
+  static Node mkInvertibilityCondition(const Node& v, const Node& exists);
  private:
   /** Helper function for getPathToPv */
   Node getPathToPv(Node lit,
@@ -133,6 +141,8 @@ class BvInverter
   Node getInversionNode(Node cond, TypeNode tn, BvInverterQuery* m);
   /** Reference to options */
   const Options& d_opts;
+  /** Pointer to node manager */
+  NodeManager * d_nm;
   /** (Optional) rewriter used as helper in getInversionNode */
   Rewriter* d_rewriter;
   /** Dummy variables for each type */
