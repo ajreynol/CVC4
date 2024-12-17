@@ -77,7 +77,7 @@ Node TheorySetsRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         Node elems = n[setNodeIndex];
         for (size_t i = 0; i < setNodeIndex; ++i)
         {
-          size_t ii = (setNodeIndex - i) - 1;
+          size_t ii = (setNodeIndex-i)-1;
           Node singleton = nm->mkNode(Kind::SET_SINGLETON, n[ii]);
           elems = nm->mkNode(Kind::SET_UNION, singleton, elems);
         }
