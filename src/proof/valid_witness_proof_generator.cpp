@@ -22,8 +22,8 @@
 #include "proof/proof.h"
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_rule_checker.h"
-#include "util/string.h"
 #include "theory/quantifiers/bv_inverter.h"
+#include "util/string.h"
 
 namespace cvc5::internal {
 
@@ -158,8 +158,9 @@ Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
       }
       break;
     case ProofRule::EXISTS_INV_CONDITION:
-      Assert (args.size()==1);
-      pred = theory::quantifiers::BvInverter::mkInvertibilityCondition(v, args[0]);
+      Assert(args.size() == 1);
+      pred =
+          theory::quantifiers::BvInverter::mkInvertibilityCondition(v, args[0]);
       AlwaysAssert(!pred.isNull());
       break;
     default: break;

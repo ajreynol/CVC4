@@ -2548,7 +2548,7 @@ Node SequencesRewriter::rewriteContains(Node node)
 
   for (const Node& n : nc2)
   {
-    if (nc2.size()>1)
+    if (nc2.size() > 1)
     {
       Node ctnConst = d_stringsEntail.checkContains(node[0], n);
       if (!ctnConst.isNull() && !ctnConst.getConst<bool>())
@@ -2749,7 +2749,7 @@ Node SequencesRewriter::rewriteContains(Node node)
       }
     }
   }
-  else if (node[0].getKind()==Kind::STRING_ITOS && node[1].isConst())
+  else if (node[0].getKind() == Kind::STRING_ITOS && node[1].isConst())
   {
     String s = node[1].getConst<String>();
     if (!s.isNumber())

@@ -114,7 +114,8 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
     }
     if (!success)
     {
-      Trace("arith-proof-rcons") << "Not solved by rewriting single literal" << std::endl;
+      Trace("arith-proof-rcons")
+          << "Not solved by rewriting single literal" << std::endl;
       // check if two unsolved literals rewrite to the negation of one another
       std::vector<Node> sassumps;
       std::map<Node, bool> pols;
@@ -128,12 +129,12 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
         pargs.push_back(a);
         pargs.insert(pargs.end(), assumpsSolve.begin(), assumpsSolve.end());
         cdp.addStep(as, ProofRule::MACRO_SR_PRED_TRANSFORM, pargs, {as});
-        bool pol = as.getKind()!=Kind::NOT;
+        bool pol = as.getKind() != Kind::NOT;
         Node aslit = pol ? as : as[0];
         itp = pols.find(aslit);
-        if (itp!=pols.end())
+        if (itp != pols.end())
         {
-          if (itp->second!=pol)
+          if (itp->second != pol)
           {
             Node asn = aslit.notNode();
             cdp.addStep(d_false, ProofRule::CONTRA, {aslit, asn}, {});

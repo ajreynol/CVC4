@@ -17,15 +17,15 @@
 
 #include <algorithm>
 
-#include "expr/skolem_manager.h"
 #include "expr/node_algorithm.h"
+#include "expr/skolem_manager.h"
 #include "options/quantifiers_options.h"
+#include "proof/valid_witness_proof_generator.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "theory/quantifiers/bv_inverter_utils.h"
 #include "theory/quantifiers/term_util.h"
 #include "theory/rewriter.h"
 #include "util/bitvector.h"
-#include "proof/valid_witness_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
@@ -33,7 +33,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-BvInverter::BvInverter(const Options& opts, NodeManager * nm, Rewriter* r)
+BvInverter::BvInverter(const Options& opts, NodeManager* nm, Rewriter* r)
     : d_opts(opts), d_nm(nm), d_rewriter(r)
 {
 }
@@ -453,20 +453,21 @@ Node BvInverter::solveBvLit(Node sv,
 
 Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& f)
 {
-  Trace("ajr-temp") << "Make invertibility condition for " << x << " " << f << std::endl;
-  Assert (f.getKind()==Kind::NOT);
+  Trace("ajr-temp") << "Make invertibility condition for " << x << " " << f
+                    << std::endl;
+  Assert(f.getKind() == Kind::NOT);
   Node exists = f[0];
-  Assert (exists.getKind()==Kind::FORALL);
-  Assert (exists[0].getNumChildren()==1);
+  Assert(exists.getKind() == Kind::FORALL);
+  Assert(exists[0].getNumChildren() == 1);
   Node v = exists[0][0];
-  Assert (x.getType()==v.getType());
+  Assert(x.getType() == v.getType());
   Node body = exists[1].negate();
-  bool pol = body.getKind()!=Kind::NOT;
+  bool pol = body.getKind() != Kind::NOT;
   body = pol ? body : body[0];
-  Assert (body.getNumChildren()==2);
+  Assert(body.getNumChildren() == 2);
   Kind litk = body.getKind();
   Node t = body[1];
-  bool isBase = (body[0]==v);
+  bool isBase = (body[0] == v);
   Node ic;
   if (isBase)
   {
@@ -490,9 +491,9 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& f)
     Node sv_t = body[0];
     unsigned index;
     bool success = false;
-    for (size_t i=0, nchild = body[0].getNumChildren(); i<nchild; i++)
+    for (size_t i = 0, nchild = body[0].getNumChildren(); i < nchild; i++)
     {
-      if (body[0][i]==v)
+      if (body[0][i] == v)
       {
         index = i;
         success = true;

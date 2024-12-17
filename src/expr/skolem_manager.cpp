@@ -471,7 +471,7 @@ TypeNode SkolemManager::getTypeFor(SkolemId id,
       Assert(cacheVals.size() == 1);
       Assert(cacheVals[0].getKind() == Kind::NOT);
       Assert(cacheVals[0][0].getKind() == Kind::FORALL);
-      Assert(cacheVals[0][0][0].getNumChildren()==1);
+      Assert(cacheVals[0][0][0].getNumChildren() == 1);
       return cacheVals[0][0][0][0].getType();
     }
     break;
