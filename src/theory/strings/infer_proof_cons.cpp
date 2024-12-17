@@ -15,6 +15,7 @@
 
 #include "theory/strings/infer_proof_cons.h"
 
+#include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
 #include "options/smt_options.h"
 #include "options/strings_options.h"
@@ -927,16 +928,50 @@ bool InferProofCons::convert(Env& env,
       Trace("strings-ipc-red") << "Reduction : " << red << std::endl;
       if (!red.isNull())
       {
-        // either equal or rewrites to it
-        std::vector<Node> cexp;
-        if (psb.applyPredTransform(red, conc, cexp))
+        if (red==conc)
         {
           Trace("strings-ipc-red") << "...success!" << std::endl;
           useBuffer = true;
         }
         else
         {
-          Trace("strings-ipc-red") << "...failed to reduce" << std::endl;
+          /*
+          std::vector<Node> matchConds;
+          expr::getMatchConditions(red, conc, matchConds);
+          Trace("strings-ipc-red") << "...need to prove " << matchConds << std::endl;
+          //CDProof eqp(d_env);
+          ProofChecker * pc = env.getProofNodeManager()->getChecker();
+          for (const Node& mc : matchConds)
+          {
+            std::vector<Node> mcc(mc.begin(), mc.end());
+            for (size_t i=0; i<2; i++)
+            {
+              mcc[i] = SkolemManager::getUnpurifiedForm(mcc[i]);
+            }
+            Node mcr = mcc[0].eqNode(mcc[1]);
+            Node mcpr = pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, {}, {mcr});
+            if (mcpr!=mcr)
+            {
+              AlwaysAssert(false) << "Cannot prove " << mcr << std::endl;
+            }
+            Node mcp = pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, {}, {mc});
+            if (mcp!=mc)
+            {
+              AlwaysAssert(false) << "Cannot prove " << std::endl << mc << std::endl << mcr << std::endl;
+            }
+          }
+          */
+          // either equal or rewrites to it
+          std::vector<Node> cexp;
+          if (psb.applyPredTransform(red, conc, cexp))
+          {
+            Trace("strings-ipc-red") << "...success!" << std::endl;
+            useBuffer = true;
+          }
+          else
+          {
+            Trace("strings-ipc-red") << "...failed to reduce" << std::endl;
+          }
         }
       }
     }

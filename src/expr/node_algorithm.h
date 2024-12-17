@@ -257,6 +257,17 @@ void getComponentTypes(TypeNode t, std::unordered_set<TypeNode>& types);
  */
 bool match(Node n1, Node n2, std::unordered_map<Node, Node>& subs);
 
+/**
+ * For each subterm of n1 and n2 at the same position that have different
+ * operators, we add the corresponding equality to eqs.
+ *
+ * @param n1 the term (containing free vars) to compare an instance term
+ * against
+ * @param n2 the instance term in question
+ * @param eqs The list of equalities we are populating.
+ */
+void getMatchConditions(Node n1, Node n2, std::vector<Node>& eqs);
+
 /** Is the top symbol of cur a Boolean connective? */
 bool isBooleanConnective(TNode cur);
 
