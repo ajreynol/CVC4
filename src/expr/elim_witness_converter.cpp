@@ -45,7 +45,12 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
       if (ValidWitnessProofGenerator::getProofSpec(nm, n[2][0], r, args))
       {
         k = ValidWitnessProofGenerator::mkSkolem(nm, r, args);
-        d_axioms.push_back(ValidWitnessProofGenerator::mkAxiom(nm, k, r, args));
+        Node ax = ValidWitnessProofGenerator::mkAxiom(nm, k, r, args);
+        Assert (!ax.isNull());
+        if (!ax.isNull())
+        {
+          d_axioms.push_back(ax);
+        }
       }
       else
       {

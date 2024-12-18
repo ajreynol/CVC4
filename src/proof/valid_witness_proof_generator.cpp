@@ -208,6 +208,7 @@ Node ValidWitnessProofGenerator::mkSkolem(NodeManager* nm,
       Node exists = theory::quantifiers::BvInverter::mkExistsForAnnotation(nm, args[0]);
       if (exists.isNull())
       {
+        Assert (false) << "Failed to get exists from " << args[0] << std::endl;
         return Node::null();
       }
       return nm->getSkolemManager()->mkSkolemFunction(SkolemId::WITNESS_INV_CONDITION, {exists});

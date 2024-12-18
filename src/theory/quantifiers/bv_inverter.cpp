@@ -100,11 +100,14 @@ Node BvInverter::getInversionNode(Node cond, Node annot, TypeNode tn, BvInverter
       Node x = m->getBoundVariable(tn);
       Node ccond = new_cond.substitute(solve_var, x);
       Assert (!annot.isNull());
-      //Node ipl = NodeManager::mkNode(Kind::INST_PATTERN_LIST, annot);
-      //c = NodeManager::mkNode(
-      //    Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond, ipl);
+#if 1
+      Node ipl = NodeManager::mkNode(Kind::INST_PATTERN_LIST, annot);
+      c = NodeManager::mkNode(
+          Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond, ipl);
+#else
       c = NodeManager::mkNode(
           Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond);
+#endif
       Trace("cegqi-bv-skvinv")
           << "SKVINV : Make " << c << " for " << new_cond << std::endl;
     }
@@ -418,14 +421,14 @@ Node BvInverter::solveBvLit(Node sv,
 
     if (!ic.isNull())
     {
+      /* t = fresh skolem constant */
+      Node annot = mkAnnotation(d_nm, litk, pol, t, sv_t, index);
       /* We generate a witness term (witness x0. ic => x0 <k> s <litk> t) for
        * x <k> s <litk> t. When traversing down, this witness term determines
        * the value for x <k> s = (witness x0. ic => x0 <k> s <litk> t), i.e.,
        * from here on, the propagated literal is a positive equality. */
       litk = Kind::EQUAL;
       pol = true;
-      /* t = fresh skolem constant */
-      Node annot = mkAnnotation(d_nm, litk, pol, t, sv_t, index);
       t = getInversionNode(ic, annot, solve_tn, m);
       if (t.isNull())
       {
@@ -585,7 +588,17 @@ Node BvInverter::mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Nod
   sargs.push_back(t);
   if (!svt.isNull())
   {
-    sargs.push_back(svt);
+    if (svt.getMetaKind() == metakind::PARAMETERIZED)
+    {
+      sargs.push_back(svt);
+    }
+    else
+    {
+      std::vector<Node> ss;
+      ss.push_back(ProofRuleChecker::mkKindNode(svt.getKind()));
+      ss.insert(ss.end(), svt.begin(), svt.end());
+      sargs.push_back(nm->mkNode(Kind::SEXPR, ss));
+    }
     sargs.push_back(nm->mkConstInt(Rational(index)));
   }
   Node sexpr = nm->mkNode(Kind::SEXPR, sargs);
@@ -634,7 +647,18 @@ Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
     {
       return Node::null();
     }
-    std::vector<Node> sargs(n[3].begin(), n[3].end());
+    Kind k;
+    std::vector<Node> sargs;
+    if (n[3].getMetaKind()== metakind::PARAMETERIZED)
+    {
+      k = n[3].getKind();
+      sargs.push_back(n[3].getOperator());
+      index = index+1;
+    }
+    else if (n[3].getKind()==Kind::SEXPR && n[3].getNumChildren()>=2 &&ProofRuleChecker::getKind(n[3][0], k))
+    {
+      sargs.insert(sargs.end(), n[3].begin()+1, n[3].end());
+    }
     if (index>=sargs.size())
     {
       return Node::null();
@@ -642,7 +666,7 @@ Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
     v =
       bvm->mkBoundVar<BviAnnotToVarAttribute>(n, "@var.inv_cond", sargs[index].getType());
     sargs[index] = v;
-    s = nm->mkNode(n[3].getKind(), sargs);
+    s = nm->mkNode(k, sargs);
   }
   if (s.isNull())
   {
