@@ -588,17 +588,10 @@ Node BvInverter::mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Nod
   sargs.push_back(t);
   if (!svt.isNull())
   {
-    if (svt.getMetaKind() == metakind::PARAMETERIZED)
-    {
-      sargs.push_back(svt);
-    }
-    else
-    {
-      std::vector<Node> ss;
-      ss.push_back(ProofRuleChecker::mkKindNode(svt.getKind()));
-      ss.insert(ss.end(), svt.begin(), svt.end());
-      sargs.push_back(nm->mkNode(Kind::SEXPR, ss));
-    }
+    std::vector<Node> ss;
+    ss.push_back(svt.getOperator());
+    ss.insert(ss.end(), svt.begin(), svt.end());
+    sargs.push_back(nm->mkNode(Kind::SEXPR, ss));
     sargs.push_back(nm->mkConstInt(Rational(index)));
   }
   Node sexpr = nm->mkNode(Kind::SEXPR, sargs);
@@ -616,6 +609,9 @@ using BviAnnotToVarAttribute =
 
 Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
 {
+  // this method unpacks the information constructed by mkAnnotation or
+  // mkAnnotationBase and returns an existential of the form expected for
+  // mkInvertibilityCondition
   if (n.getKind()!=Kind::SEXPR || n.getNumChildren()<3)
   {
     return Node::null();
@@ -647,16 +643,11 @@ Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
     {
       return Node::null();
     }
-    Kind k;
     std::vector<Node> sargs;
-    if (n[3].getMetaKind()== metakind::PARAMETERIZED)
+    Node op;
+    if (n[3].getKind()==Kind::SEXPR && n[3].getNumChildren()>=1)
     {
-      k = n[3].getKind();
-      sargs.push_back(n[3].getOperator());
-      index = index+1;
-    }
-    else if (n[3].getKind()==Kind::SEXPR && n[3].getNumChildren()>=2 &&ProofRuleChecker::getKind(n[3][0], k))
-    {
+      op = n[3][0];
       sargs.insert(sargs.end(), n[3].begin()+1, n[3].end());
     }
     if (index>=sargs.size())
@@ -666,7 +657,7 @@ Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
     v =
       bvm->mkBoundVar<BviAnnotToVarAttribute>(n, "@var.inv_cond", sargs[index].getType());
     sargs[index] = v;
-    s = nm->mkNode(k, sargs);
+    s = nm->mkNode(op, sargs);
   }
   if (s.isNull())
   {

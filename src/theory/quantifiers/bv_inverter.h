@@ -102,7 +102,8 @@ class BvInverter
                   BvInverterQuery* m);
 
   /**
-   * This is the main entry point for constructing invertibility conditions.
+   * This is the main entry point for constructing invertibility conditions
+   * in proofs.
    *
    * @param v A term to witness the invertbility condition.
    * @param exists A formula of the form (exists x (<rel> (<op> ... x ...) t))
@@ -115,9 +116,9 @@ class BvInverter
 
   /**
    * @param n An s-expression denoting a list of arguments for specifying an
-   * invertbility condition, e.g. (EQUAL, true, t, (bvmul s1 s2), 0).
+   * invertbility condition, e.g. (EQUAL, true, t, (SEXPR bvudiv s1 s2), 0).
    * @return The existential formula which can be used as the input the
-   * mkInvertibilityCondition method, e.g. (exists x (= (bvmul x s2) t)).
+   * mkInvertibilityCondition method, e.g. (exists x (= (bvudiv x s2) t)).
    */
   static Node mkExistsForAnnotation(NodeManager * nm, const Node& n);
  private:
