@@ -229,6 +229,10 @@ Node ExtProofRuleChecker::checkInternal(ProofRule id,
           }
         }
       }
+      else
+      {
+        return Node::null();
+      }
       Assert(ck == Kind::EQUAL || ck == Kind::GT);
       if (lit[0].getKind() != Kind::ABS || lit[1].getKind() != Kind::ABS)
       {
