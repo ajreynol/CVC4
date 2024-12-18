@@ -108,9 +108,10 @@ class BvInverter
    * @param v A term to witness the invertbility condition.
    * @param exists A formula of the form (exists x (<rel> (<op> ... x ...) t))
    * or (exists x (<rel> x t)).
-   * @return The invertibility condition for exists, witnessed by v. In
-   * particular, if v is a bound variable, then (exists v R) is equivalent
-   * to exists, where R is the formula returned by this method.
+   * @return The invertibility condition for exists, witnessed by v. This
+   * method returns a formula of the form (C => R[v]) where R[x] is the
+   * body of the existential above. If v is a bound variable, then 
+   * (exists v C => R[v]) is a valid formula.
    */
   static Node mkInvertibilityCondition(const Node& v, const Node& exists);
 

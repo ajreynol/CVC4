@@ -583,7 +583,7 @@ Node BvInverter::mkAnnotationBase(NodeManager * nm, Kind litk, bool pol,Node t)
 Node BvInverter::mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Node svt, unsigned index)
 {
   std::vector<Node> sargs;
-  sargs.push_back(ProofRuleChecker::mkKindNode(litk));
+  sargs.push_back(ProofRuleChecker::mkKindNode(nm, litk));
   sargs.push_back(nm->mkConst(pol));
   sargs.push_back(t);
   if (!svt.isNull())

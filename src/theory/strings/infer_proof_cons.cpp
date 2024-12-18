@@ -564,7 +564,8 @@ bool InferProofCons::convert(Env& env,
         // above. Notice we need both in sequence since ext equality rewriting
         // is not recursive.
         std::vector<Node> argsERew;
-        addMethodIds(argsERew,
+        addMethodIds(nm,
+                     argsERew,
                      MethodId::SB_DEFAULT,
                      MethodId::SBA_SEQUENTIAL,
                      MethodId::RW_REWRITE_EQ_EXT);
@@ -1293,7 +1294,7 @@ bool InferProofCons::convert(Env& env,
     //  untrustworthy conversion, the argument of THEORY_INFERENCE is its
     //  conclusion
     ps.d_args.clear();
-    ps.d_args.push_back(mkTrustId(TrustId::THEORY_INFERENCE_STRINGS));
+    ps.d_args.push_back(mkTrustId(nm, TrustId::THEORY_INFERENCE_STRINGS));
     ps.d_args.push_back(conc);
     Node t = builtin::BuiltinProofRuleChecker::mkTheoryIdNode(THEORY_STRINGS);
     ps.d_args.push_back(t);
