@@ -203,6 +203,7 @@ std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
     }
     AlwaysAssert(expc[0].getKind() == Kind::GT);
     std::map<Node, Node>::iterator itd;
+    bool expSuccess = true;
     for (size_t i = 0, nexp = expc.size(); i < nexp; i++)
     {
       Node e = expc[i];
@@ -211,21 +212,41 @@ std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
         // needs to have a disequal to zero explanation
         std::vector<Node> eprod[2];
         decomposeCompareLit(e, eprod[0], eprod[1]);
-        if (eprod[0].size() != 1)
+        Node deqAssump;
+        if (eprod[0].size() == 0)
         {
-          Assert(false) << "ArithNlCompareProofGenerator failed explain";
-          return nullptr;
+          Assert (eprod[1].size()==1);
+          Node one = nm->mkConstRealOrInt(eprod[1][0].getType(), Rational(1));
+          Node zero = nm->mkConstRealOrInt(eprod[1][0].getType(), Rational(0));
+          // case where we require showing 1 != 0
+          Node ceq = one.eqNode(zero);
+          Node ceqf = ceq.eqNode(nm->mkConst(false));
+          cdp.addStep(ceqf, ProofRule::EVALUATE, {}, {ceq});
+          deqAssump = ceq.notNode();
+          cdp.addStep(deqAssump, ProofRule::FALSE_ELIM, {ceqf}, {});
+          Trace("arith-nl-compare") << "Prove by evaluation: " << deqAssump << std::endl;
         }
-        itd = deq.find(eprod[0][0]);
-        if (itd == deq.end())
+        else
         {
-          Assert(false) << "ArithNlCompareProofGenerator failed explain deq";
-          return nullptr;
+          itd = deq.find(eprod[0][0]);
+          if (itd == deq.end())
+          {
+            Assert(false) << "ArithNlCompareProofGenerator failed explain deq";
+            expSuccess = false;
+            break;
+          }
+          deqAssump = itd->second;
         }
-        Node guardEq = nm->mkNode(Kind::AND, e, itd->second);
-        cdp.addStep(guardEq, ProofRule::AND_INTRO, {e, itd->second}, {});
+        Node guardEq = nm->mkNode(Kind::AND, e, deqAssump);
+        cdp.addStep(guardEq, ProofRule::AND_INTRO, {e, deqAssump}, {});
         expc[i] = guardEq;
       }
+    }
+    // if we failed, add a trust step
+    if (!expSuccess)
+    {
+      cdp.addTrustedStep(fact, TrustId::ARITH_NL_COMPARE_LEMMA, {}, {});
+      return cdp.getProofFor(fact);
     }
   }
   Assert(eexp.size() == expc.size());
