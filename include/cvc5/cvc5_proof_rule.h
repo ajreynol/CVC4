@@ -1394,7 +1394,7 @@ enum ENUM(ProofRule)
    * .. math::
    *   \inferrule{-\mid s} {C \rightarrow R[k]}
    * 
-   * where :math:`s` is the internal representation of an existential
+   * where :math:`s` is the internal specification of an existential
    * :math:`\exists x.\> R[x]`.
    *
    * \endverbatim
