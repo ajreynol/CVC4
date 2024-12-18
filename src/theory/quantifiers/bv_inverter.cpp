@@ -530,9 +530,7 @@ Node BvInverter::mkAnnotation(
     sargs.push_back(nm->mkNode(Kind::SEXPR, ss));
     sargs.push_back(nm->mkConstInt(Rational(index)));
   }
-  Node sexpr = nm->mkNode(Kind::SEXPR, sargs);
-  return ValidWitnessProofGenerator::mkProofSpec(
-      nm, ProofRule::MACRO_EXISTS_INV_CONDITION, {sexpr});
+  return nm->mkNode(Kind::SEXPR, sargs);
 }
 
 /**
