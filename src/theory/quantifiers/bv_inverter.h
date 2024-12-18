@@ -110,7 +110,7 @@ class BvInverter
    * or (exists x (<rel> x t)).
    * @return The invertibility condition for exists, witnessed by v. This
    * method returns a formula of the form (C => R[v]) where R[x] is the
-   * body of the existential above. If v is a bound variable, then 
+   * body of the existential above. If v is a bound variable, then
    * (exists v C => R[v]) is a valid formula.
    */
   static Node mkInvertibilityCondition(const Node& v, const Node& exists);
@@ -121,7 +121,8 @@ class BvInverter
    * @return The existential formula which can be used as the input the
    * mkInvertibilityCondition method, e.g. (exists x (= (bvudiv x s2) t)).
    */
-  static Node mkExistsForAnnotation(NodeManager * nm, const Node& n);
+  static Node mkExistsForAnnotation(NodeManager* nm, const Node& n);
+
  private:
   /** Helper function for getPathToPv */
   Node getPathToPv(Node lit,
@@ -130,7 +131,7 @@ class BvInverter
                    std::vector<unsigned>& path,
                    std::unordered_set<TNode>& visited);
 
-  /** 
+  /**
    * This expects an annotation of the form returned by mkAnnotation
    * or mkAnnotationBase. This returns a witness term to be used internally
    * in CEGQI, in particular one that has been annotated with the given
@@ -148,13 +149,14 @@ class BvInverter
    * of s, as it is important that <index> denotes a valid position in s that
    * we are solving for.
    */
-  static Node mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Node s, unsigned index);
+  static Node mkAnnotation(
+      NodeManager* nm, Kind litk, bool pol, Node t, Node s, unsigned index);
   /**
    * Same as above, but used for the base case of invertibility conditions.
    * This method returns an s-expression of the form
    * (SEXPR <litk> <pol> t).
    */
-  static Node mkAnnotationBase(NodeManager * nm, Kind litk, bool pol, Node t);
+  static Node mkAnnotationBase(NodeManager* nm, Kind litk, bool pol, Node t);
   /** Reference to options */
   const Options& d_opts;
   /** Pointer to node manager */

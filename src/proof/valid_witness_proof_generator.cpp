@@ -44,7 +44,9 @@ struct ValidWitnessVarAttributeId
 using ValidWitnessVarAttribute =
     expr::Attribute<ValidWitnessVarAttributeId, Node>;
 
-Node ValidWitnessProofGenerator::mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
+Node ValidWitnessProofGenerator::mkProofSpec(NodeManager* nm,
+                                             ProofRule r,
+                                             const std::vector<Node>& args)
 {
   std::vector<Node> pfspec;
   pfspec.push_back(nm->mkConst(String("witness")));
@@ -56,18 +58,18 @@ Node ValidWitnessProofGenerator::mkProofSpec(NodeManager* nm, ProofRule r, const
   return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
 }
 
-bool ValidWitnessProofGenerator::getProofSpec(NodeManager * nm,
+bool ValidWitnessProofGenerator::getProofSpec(NodeManager* nm,
                                               const Node& attr,
                                               ProofRule& r,
                                               std::vector<Node>& args)
 {
   if (attr.getKind() == Kind::INST_ATTRIBUTE && attr.getNumChildren() == 2)
   {
-    if (attr[0].getKind()==Kind::CONST_STRING && attr[1].getKind() == Kind::SEXPR
-        && attr[1].getNumChildren() > 0)
+    if (attr[0].getKind() == Kind::CONST_STRING
+        && attr[1].getKind() == Kind::SEXPR && attr[1].getNumChildren() > 0)
     {
       std::string str = attr[0].getConst<String>().toString();
-      if (str=="witness")
+      if (str == "witness")
       {
         Node rn = attr[1][0];
         uint32_t rval;
@@ -143,7 +145,7 @@ Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
                                          ProofRule r,
                                          const std::vector<Node>& args)
 {
-  Assert (!v.isNull());
+  Assert(!v.isNull());
   // then construct the predicate
   Node pred;
   Node spec = mkProofSpec(nm, r, args);
@@ -166,8 +168,9 @@ Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
       break;
     case ProofRule::MACRO_EXISTS_INV_CONDITION:
     {
-      Assert (args.size()==1);
-      Node exists = theory::quantifiers::BvInverter::mkExistsForAnnotation(nm, args[0]);
+      Assert(args.size() == 1);
+      Node exists =
+          theory::quantifiers::BvInverter::mkExistsForAnnotation(nm, args[0]);
       if (exists.isNull())
       {
         return Node::null();
@@ -175,9 +178,8 @@ Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
       spec = mkProofSpec(nm, ProofRule::EXISTS_INV_CONDITION, {exists});
       pred =
           theory::quantifiers::BvInverter::mkInvertibilityCondition(v, exists);
-
     }
-      break;
+    break;
     default: break;
   }
   // mark the attribute, to remember proof reconstruction
@@ -204,14 +206,16 @@ Node ValidWitnessProofGenerator::mkSkolem(NodeManager* nm,
       break;
     case ProofRule::MACRO_EXISTS_INV_CONDITION:
     {
-      Assert (args.size()==1);
-      Node exists = theory::quantifiers::BvInverter::mkExistsForAnnotation(nm, args[0]);
+      Assert(args.size() == 1);
+      Node exists =
+          theory::quantifiers::BvInverter::mkExistsForAnnotation(nm, args[0]);
       if (exists.isNull())
       {
-        Assert (false) << "Failed to get exists from " << args[0] << std::endl;
+        Assert(false) << "Failed to get exists from " << args[0] << std::endl;
         return Node::null();
       }
-      return nm->getSkolemManager()->mkSkolemFunction(SkolemId::WITNESS_INV_CONDITION, {exists});
+      return nm->getSkolemManager()->mkSkolemFunction(
+          SkolemId::WITNESS_INV_CONDITION, {exists});
     }
     default: break;
   }

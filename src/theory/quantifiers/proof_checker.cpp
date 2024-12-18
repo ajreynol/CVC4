@@ -155,7 +155,8 @@ Node QuantifiersProofRuleChecker::checkInternal(
            || id == ProofRule::EXISTS_INV_CONDITION)
   {
     Node k = ValidWitnessProofGenerator::mkSkolem(nodeManager(), id, args);
-    Node exists = ValidWitnessProofGenerator::mkAxiom(nodeManager(), k, id, args);
+    Node exists =
+        ValidWitnessProofGenerator::mkAxiom(nodeManager(), k, id, args);
     return exists;
   }
 

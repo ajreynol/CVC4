@@ -60,7 +60,9 @@ class ValidWitnessProofGenerator : protected EnvObj, public ProofGenerator
                        ProofRule r,
                        const std::vector<Node>& args);
 
-  static Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args);
+  static Node mkProofSpec(NodeManager* nm,
+                          ProofRule r,
+                          const std::vector<Node>& args);
   /** Get proof spec from attribute */
   static bool getProofSpec(NodeManager* nm,
                            const Node& attr,

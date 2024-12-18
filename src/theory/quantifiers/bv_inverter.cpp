@@ -21,13 +21,13 @@
 #include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
 #include "options/quantifiers_options.h"
+#include "proof/proof_rule_checker.h"
 #include "proof/valid_witness_proof_generator.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "theory/quantifiers/bv_inverter_utils.h"
 #include "theory/quantifiers/term_util.h"
 #include "theory/rewriter.h"
 #include "util/bitvector.h"
-#include "proof/proof_rule_checker.h"
 #include "util/rational.h"
 #include "util/string.h"
 
@@ -60,15 +60,15 @@ Node BvInverter::getSolveVariable(TypeNode tn)
 
 Node BvInverter::mkWitness(const Node& annot)
 {
-  Node w = ValidWitnessProofGenerator::mkWitness(d_nm, ProofRule::MACRO_EXISTS_INV_CONDITION, {annot});
+  Node w = ValidWitnessProofGenerator::mkWitness(
+      d_nm, ProofRule::MACRO_EXISTS_INV_CONDITION, {annot});
   if (d_rewriter != nullptr)
   {
     Node neww = d_rewriter->rewrite(w);
     if (neww != w)
     {
       Trace("cegqi-bv-skvinv-debug")
-          << "Witness " << neww << " was rewritten to " << w
-          << std::endl;
+          << "Witness " << neww << " was rewritten to " << w << std::endl;
     }
   }
   return w;
@@ -392,7 +392,9 @@ Node BvInverter::solveBvLit(Node sv,
 
   /* Base case  */
   Assert(sv_t == sv);
-  if (litk == Kind::BITVECTOR_ULT || litk == Kind::BITVECTOR_UGT || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_SGT || pol == false)
+  if (litk == Kind::BITVECTOR_ULT || litk == Kind::BITVECTOR_UGT
+      || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_SGT
+      || pol == false)
   {
     Node annot = mkAnnotationBase(d_nm, litk, pol, t);
     return mkWitness(annot);
@@ -402,8 +404,8 @@ Node BvInverter::solveBvLit(Node sv,
 
 Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
 {
-  Trace("mk-inv-cond") << "Make invertibility condition for " << x << " " << exists
-                    << std::endl;
+  Trace("mk-inv-cond") << "Make invertibility condition for " << x << " "
+                       << exists << std::endl;
   Assert(exists.getKind() == Kind::EXISTS);
   Assert(exists[0].getNumChildren() == 1);
   Node v = exists[0][0];
@@ -507,13 +509,14 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
   return ic;
 }
 
-Node BvInverter::mkAnnotationBase(NodeManager * nm, Kind litk, bool pol,Node t)
+Node BvInverter::mkAnnotationBase(NodeManager* nm, Kind litk, bool pol, Node t)
 {
   Node svt;
   return mkAnnotation(nm, litk, pol, t, svt, 0);
 }
 
-Node BvInverter::mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Node svt, unsigned index)
+Node BvInverter::mkAnnotation(
+    NodeManager* nm, Kind litk, bool pol, Node t, Node svt, unsigned index)
 {
   std::vector<Node> sargs;
   sargs.push_back(ProofRuleChecker::mkKindNode(nm, litk));
@@ -528,7 +531,8 @@ Node BvInverter::mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Nod
     sargs.push_back(nm->mkConstInt(Rational(index)));
   }
   Node sexpr = nm->mkNode(Kind::SEXPR, sargs);
-  return ValidWitnessProofGenerator::mkProofSpec(nm, ProofRule::MACRO_EXISTS_INV_CONDITION, {sexpr});
+  return ValidWitnessProofGenerator::mkProofSpec(
+      nm, ProofRule::MACRO_EXISTS_INV_CONDITION, {sexpr});
 }
 
 /**
@@ -537,15 +541,14 @@ Node BvInverter::mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Nod
 struct BviAnnotToVarAttributeId
 {
 };
-using BviAnnotToVarAttribute =
-    expr::Attribute<BviAnnotToVarAttributeId, Node>;
+using BviAnnotToVarAttribute = expr::Attribute<BviAnnotToVarAttributeId, Node>;
 
-Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
+Node BvInverter::mkExistsForAnnotation(NodeManager* nm, const Node& n)
 {
   // this method unpacks the information constructed by mkAnnotation or
   // mkAnnotationBase and returns an existential of the form expected for
   // mkInvertibilityCondition
-  if (n.getKind()!=Kind::SEXPR || n.getNumChildren()<3)
+  if (n.getKind() != Kind::SEXPR || n.getNumChildren() < 3)
   {
     return Node::null();
   }
@@ -554,7 +557,7 @@ Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
   {
     return Node::null();
   }
-  if (n[1].getKind()!=Kind::CONST_BOOLEAN)
+  if (n[1].getKind() != Kind::CONST_BOOLEAN)
   {
     return Node::null();
   }
@@ -563,13 +566,13 @@ Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
   Node s;
   Node v;
   BoundVarManager* bvm = nm->getBoundVarManager();
-  if (n.getNumChildren()==3)
+  if (n.getNumChildren() == 3)
   {
-    v =
-      bvm->mkBoundVar<BviAnnotToVarAttribute>(n, "@var.inv_cond", t.getType());
+    v = bvm->mkBoundVar<BviAnnotToVarAttribute>(
+        n, "@var.inv_cond", t.getType());
     s = v;
   }
-  else if (n.getNumChildren()==5)
+  else if (n.getNumChildren() == 5)
   {
     uint32_t index;
     if (!ProofRuleChecker::getUInt32(n[4], index))
@@ -578,17 +581,17 @@ Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
     }
     std::vector<Node> sargs;
     Node op;
-    if (n[3].getKind()==Kind::SEXPR && n[3].getNumChildren()>=1)
+    if (n[3].getKind() == Kind::SEXPR && n[3].getNumChildren() >= 1)
     {
       op = n[3][0];
-      sargs.insert(sargs.end(), n[3].begin()+1, n[3].end());
+      sargs.insert(sargs.end(), n[3].begin() + 1, n[3].end());
     }
-    if (index>=sargs.size())
+    if (index >= sargs.size())
     {
       return Node::null();
     }
-    v =
-      bvm->mkBoundVar<BviAnnotToVarAttribute>(n, "@var.inv_cond", sargs[index].getType());
+    v = bvm->mkBoundVar<BviAnnotToVarAttribute>(
+        n, "@var.inv_cond", sargs[index].getType());
     sargs[index] = v;
     s = nm->mkNode(op, sargs);
   }

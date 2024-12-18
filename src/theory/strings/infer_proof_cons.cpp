@@ -929,7 +929,7 @@ bool InferProofCons::convert(Env& env,
       Trace("strings-ipc-red") << "Reduction : " << red << std::endl;
       if (!red.isNull())
       {
-        if (red==conc)
+        if (red == conc)
         {
           Trace("strings-ipc-red") << "...success!" << std::endl;
           useBuffer = true;
@@ -939,7 +939,8 @@ bool InferProofCons::convert(Env& env,
           /*
           std::vector<Node> matchConds;
           expr::getMatchConditions(red, conc, matchConds);
-          Trace("strings-ipc-red") << "...need to prove " << matchConds << std::endl;
+          Trace("strings-ipc-red") << "...need to prove " << matchConds <<
+          std::endl;
           //CDProof eqp(d_env);
           ProofChecker * pc = env.getProofNodeManager()->getChecker();
           for (const Node& mc : matchConds)
@@ -950,15 +951,16 @@ bool InferProofCons::convert(Env& env,
               mcc[i] = SkolemManager::getUnpurifiedForm(mcc[i]);
             }
             Node mcr = mcc[0].eqNode(mcc[1]);
-            Node mcpr = pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, {}, {mcr});
-            if (mcpr!=mcr)
+            Node mcpr = pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, {},
+          {mcr}); if (mcpr!=mcr)
             {
               AlwaysAssert(false) << "Cannot prove " << mcr << std::endl;
             }
             Node mcp = pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, {}, {mc});
             if (mcp!=mc)
             {
-              AlwaysAssert(false) << "Cannot prove " << std::endl << mc << std::endl << mcr << std::endl;
+              AlwaysAssert(false) << "Cannot prove " << std::endl << mc <<
+          std::endl << mcr << std::endl;
             }
           }
           */
