@@ -2865,27 +2865,6 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(DT_COLLAPSE_TESTER_SINGLETON),
-
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Datatypes -- Macro constructor equality**
-   *
-   * .. math::
-   *   (t = s) = (t_1 = s_1 \wedge \ldots \wedge t_n = s_n)
-   *
-   * where :math:`t_1, \ldots, t_n` and :math:`s_1, \ldots, s_n` are subterms
-   * of :math:`t` and :math:`s` that occur at the same position respectively
-   * (beneath constructor applications), or alternatively
-   *
-   * .. math::
-   *   (t = s) = false
-   * 
-   * where :math:`t` and :math:`s` have subterms that occur in the same
-   * position (beneath constructor applications) that are distinct.
-   *
-   * \endverbatim
-   */
-  EVALUE(MACRO_DT_CONS_EQ),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Datatypes -- Macro constructor equality**
