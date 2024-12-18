@@ -52,14 +52,18 @@ class ValidWitnessProofGenerator : protected EnvObj, public ProofGenerator
                         const std::vector<Node>& args);
   /** Make exists */
   static Node mkAxiom(NodeManager* nm,
+                      const Node& v,
                       ProofRule r,
                       const std::vector<Node>& args);
   /** Make skolem */
   static Node mkSkolem(NodeManager* nm,
                        ProofRule r,
                        const std::vector<Node>& args);
+
+  static Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args);
   /** Get proof spec from attribute */
-  static bool getProofSpec(const Node& attr,
+  static bool getProofSpec(NodeManager* nm,
+                           const Node& attr,
                            ProofRule& r,
                            std::vector<Node>& args);
 };

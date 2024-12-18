@@ -42,10 +42,10 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
       Assert(n[2].getKind() == Kind::INST_PATTERN_LIST);
       ProofRule r;
       std::vector<Node> args;
-      if (ValidWitnessProofGenerator::getProofSpec(n[2][0], r, args))
+      if (ValidWitnessProofGenerator::getProofSpec(nm, n[2][0], r, args))
       {
         k = ValidWitnessProofGenerator::mkSkolem(nm, r, args);
-        d_axioms.push_back(ValidWitnessProofGenerator::mkAxiom(nm, r, args));
+        d_axioms.push_back(ValidWitnessProofGenerator::mkAxiom(nm, k, r, args));
       }
       else
       {

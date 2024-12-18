@@ -1374,6 +1374,7 @@ enum ENUM(ProofRule)
    * \endverbatim
    */
   EVALUE(EXISTS_INV_CONDITION),
+  EVALUE(MACRO_EXISTS_INV_CONDITION),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Sets -- Singleton injectivity**

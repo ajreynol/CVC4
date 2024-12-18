@@ -113,6 +113,13 @@ class BvInverter
    */
   static Node mkInvertibilityCondition(const Node& v, const Node& exists);
 
+  /**
+   * @param n An s-expression denoting a list of arguments for specifying an
+   * invertbility condition, e.g. (EQUAL, true, t, (bvmul s1 s2), 0).
+   * @return The existential formula which can be used as the input the
+   * mkInvertibilityCondition method, e.g. (exists x (= (bvmul x s2) t)).
+   */
+  static Node mkExistsForAnnotation(NodeManager * nm, const Node& n);
  private:
   /** Helper function for getPathToPv */
   Node getPathToPv(Node lit,
@@ -144,9 +151,6 @@ class BvInverter
    */
   static Node mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Node svt, unsigned index);
   static Node mkAnnotationBase(NodeManager * nm, Kind litk, bool pol, Node t);
-  /**
-   */
-  static Node mkExistsForAnnotation(NodeManager * nm, const Node& v, const Node& n);
   /** Reference to options */
   const Options& d_opts;
   /** Pointer to node manager */

@@ -44,7 +44,7 @@ struct ValidWitnessVarAttributeId
 using ValidWitnessVarAttribute =
     expr::Attribute<ValidWitnessVarAttributeId, Node>;
 
-Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
+Node ValidWitnessProofGenerator::mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
 {
   std::vector<Node> pfspec;
   pfspec.push_back(nm->mkConst(String("witness")));
@@ -56,7 +56,8 @@ Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
   return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
 }
 
-bool ValidWitnessProofGenerator::getProofSpec(const Node& attr,
+bool ValidWitnessProofGenerator::getProofSpec(NodeManager * nm,
+                                              const Node& attr,
                                               ProofRule& r,
                                               std::vector<Node>& args)
 {
@@ -97,7 +98,7 @@ std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact)
     Node spec = fact.getAttribute(vwa);
     ProofRule r;
     std::vector<Node> args;
-    if (!spec.isNull() && getProofSpec(spec, r, args))
+    if (!spec.isNull() && getProofSpec(nodeManager(), spec, r, args))
     {
       success = true;
       cdp.addStep(fact, r, {}, args);
@@ -125,7 +126,7 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
   BoundVarManager* bvm = nm->getBoundVarManager();
   Node v =
       bvm->mkBoundVar<ValidWitnessVarAttribute>(k, "@var.witness", k.getType());
-  Node ax = mkAxiom(nm, r, args);
+  Node ax = mkAxiom(nm, k, r, args);
   TNode tk = k;
   TNode tv = v;
   ax = ax.substitute(tk, tv);
@@ -138,17 +139,14 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
 }
 
 Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
+                                         const Node& v,
                                          ProofRule r,
                                          const std::vector<Node>& args)
 {
-  // get the skolem we are supposed to use
-  Node v = mkSkolem(nm, r, args);
-  if (v.isNull())
-  {
-    return v;
-  }
+  Assert (!v.isNull());
   // then construct the predicate
   Node pred;
+  Node spec = mkProofSpec(nm, r, args);
   switch (r)
   {
     case ProofRule::EXISTS_STRING_LENGTH:
@@ -164,14 +162,27 @@ Node ValidWitnessProofGenerator::mkAxiom(NodeManager* nm,
       Assert(args.size() == 1);
       pred =
           theory::quantifiers::BvInverter::mkInvertibilityCondition(v, args[0]);
-      AlwaysAssert(!pred.isNull());
+      Assert(!pred.isNull());
+      break;
+    case ProofRule::MACRO_EXISTS_INV_CONDITION:
+    {
+      Assert (args.size()==1);
+      Node exists = theory::quantifiers::BvInverter::mkExistsForAnnotation(nm, args[0]);
+      if (exists.isNull())
+      {
+        return Node::null();
+      }
+      spec = mkProofSpec(nm, ProofRule::EXISTS_INV_CONDITION, {exists});
+      pred =
+          theory::quantifiers::BvInverter::mkInvertibilityCondition(v, exists);
+
+    }
       break;
     default: break;
   }
   // mark the attribute, to remember proof reconstruction
   if (!pred.isNull())
   {
-    Node spec = mkProofSpec(nm, r, args);
     ValidWitnessAxiomAttribute vwa;
     pred.setAttribute(vwa, spec);
   }
@@ -191,6 +202,16 @@ Node ValidWitnessProofGenerator::mkSkolem(NodeManager* nm,
     case ProofRule::EXISTS_INV_CONDITION:
       id = SkolemId::WITNESS_INV_CONDITION;
       break;
+    case ProofRule::MACRO_EXISTS_INV_CONDITION:
+    {
+      Assert (args.size()==1);
+      Node exists = theory::quantifiers::BvInverter::mkExistsForAnnotation(nm, args[0]);
+      if (exists.isNull())
+      {
+        return Node::null();
+      }
+      return nm->getSkolemManager()->mkSkolemFunction(SkolemId::WITNESS_INV_CONDITION, {exists});
+    }
     default: break;
   }
   if (id == SkolemId::NONE)

@@ -154,7 +154,8 @@ Node QuantifiersProofRuleChecker::checkInternal(
   else if (id == ProofRule::EXISTS_STRING_LENGTH
            || id == ProofRule::EXISTS_INV_CONDITION)
   {
-    Node exists = ValidWitnessProofGenerator::mkAxiom(nodeManager(), id, args);
+    Node k = ValidWitnessProofGenerator::mkSkolem(nodeManager(), id, args);
+    Node exists = ValidWitnessProofGenerator::mkAxiom(nodeManager(), k, id, args);
     return exists;
   }
 

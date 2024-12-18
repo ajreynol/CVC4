@@ -17,6 +17,7 @@
 
 #include <algorithm>
 
+#include "expr/bound_var_manager.h"
 #include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
 #include "options/quantifiers_options.h"
@@ -99,9 +100,11 @@ Node BvInverter::getInversionNode(Node cond, Node annot, TypeNode tn, BvInverter
       Node x = m->getBoundVariable(tn);
       Node ccond = new_cond.substitute(solve_var, x);
       Assert (!annot.isNull());
-      Node ipl = NodeManager::mkNode(Kind::INST_PATTERN_LIST, annot);
+      //Node ipl = NodeManager::mkNode(Kind::INST_PATTERN_LIST, annot);
+      //c = NodeManager::mkNode(
+      //    Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond, ipl);
       c = NodeManager::mkNode(
-          Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond, ipl);
+          Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond);
       Trace("cegqi-bv-skvinv")
           << "SKVINV : Make " << c << " for " << new_cond << std::endl;
     }
@@ -463,7 +466,7 @@ Node BvInverter::solveBvLit(Node sv,
 
 Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
 {
-  Trace("ajr-temp") << "Make invertibility condition for " << x << " " << exists
+  Trace("mk-inv-cond") << "Make invertibility condition for " << x << " " << exists
                     << std::endl;
   Assert(exists.getKind() == Kind::EXISTS);
   Assert(exists[0].getNumChildren() == 1);
@@ -497,7 +500,7 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
   {
     Kind k = body[0].getKind();
     Node sv_t = body[0];
-    unsigned index;
+    unsigned index = 0;
     bool success = false;
     for (size_t i = 0, nchild = body[0].getNumChildren(); i < nchild; i++)
     {
@@ -510,6 +513,7 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
     }
     if (!success)
     {
+      Trace("mk-inv-cond") << "...failed to find child" << std::endl;
       return Node::null();
     }
     Node s = dropChild(sv_t, index);
@@ -563,6 +567,7 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
       ic = NodeManager::mkNode(Kind::DISTINCT, x, t);
     }
   }
+  Trace("mk-inv-cond") << "...returns " << ic << std::endl;
   return ic;
 }
 
@@ -583,15 +588,72 @@ Node BvInverter::mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Nod
     sargs.push_back(svt);
     sargs.push_back(nm->mkConstInt(Rational(index)));
   }
-  std::vector<Node> pfspec;
-  pfspec.push_back(nm->mkConst(String("witness-inv-condition")));
-  pfspec.push_back(nm->mkNode(Kind::SEXPR, sargs));
-  return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
+  Node sexpr = nm->mkNode(Kind::SEXPR, sargs);
+  return ValidWitnessProofGenerator::mkProofSpec(nm, ProofRule::MACRO_EXISTS_INV_CONDITION, {sexpr});
 }
 
-Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& v, const Node& n)
+/**
+ * Mapping to the variable used for binding the witness term.
+ */
+struct BviAnnotToVarAttributeId
 {
-  return Node::null();
+};
+using BviAnnotToVarAttribute =
+    expr::Attribute<BviAnnotToVarAttributeId, Node>;
+
+Node BvInverter::mkExistsForAnnotation(NodeManager * nm, const Node& n)
+{
+  if (n.getKind()!=Kind::SEXPR || n.getNumChildren()<3)
+  {
+    return Node::null();
+  }
+  Kind litk;
+  if (!ProofRuleChecker::getKind(n[0], litk))
+  {
+    return Node::null();
+  }
+  if (n[1].getKind()!=Kind::CONST_BOOLEAN)
+  {
+    return Node::null();
+  }
+  bool pol = n[1].getConst<bool>();
+  Node t = n[2];
+  Node s;
+  Node v;
+  BoundVarManager* bvm = nm->getBoundVarManager();
+  if (n.getNumChildren()==3)
+  {
+    v =
+      bvm->mkBoundVar<BviAnnotToVarAttribute>(n, "@var.inv_cond", t.getType());
+    s = v;
+  }
+  else if (n.getNumChildren()==5)
+  {
+    uint32_t index;
+    if (!ProofRuleChecker::getUInt32(n[4], index))
+    {
+      return Node::null();
+    }
+    std::vector<Node> sargs(n[3].begin(), n[3].end());
+    if (index>=sargs.size())
+    {
+      return Node::null();
+    }
+    v =
+      bvm->mkBoundVar<BviAnnotToVarAttribute>(n, "@var.inv_cond", sargs[index].getType());
+    sargs[index] = v;
+    s = nm->mkNode(n[3].getKind(), sargs);
+  }
+  if (s.isNull())
+  {
+    return Node::null();
+  }
+  Node body = nm->mkNode(litk, s, t);
+  if (!pol)
+  {
+    body = body.notNode();
+  }
+  return nm->mkNode(Kind::EXISTS, nm->mkNode(Kind::BOUND_VAR_LIST, v), body);
 }
 
 }  // namespace quantifiers
