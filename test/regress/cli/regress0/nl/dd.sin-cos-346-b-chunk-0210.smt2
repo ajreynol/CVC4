@@ -1,4 +1,5 @@
-; EXPECT: unsat
+; COMMAND-LINE: --no-nl-cov
+; EXPECT: sat
 (set-logic ALL)
 (declare-const x Real)
 (declare-fun s () Real)
