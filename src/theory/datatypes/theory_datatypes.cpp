@@ -770,7 +770,7 @@ void TheoryDatatypes::addTester(
           Assert(testerIndex != -1);
           //we must explain why each term in the set of testers for this equivalence class is equal
           std::vector< Node > eq_terms;
-          NodeBuilder nb(NodeManager::currentNM(), Kind::AND);
+          NodeBuilder nb(nodeManager(), Kind::AND);
           for (unsigned i = 0; i < n_lbl; i++)
           {
             Node ti = d_labels_data[n][i];
@@ -1705,7 +1705,7 @@ void TheoryDatatypes::checkSplit()
         Trace("dt-split") << "*************Split for possible constructor "
                           << dt[consIndex] << " for " << n << endl;
         test = rewrite(test);
-        NodeBuilder nb(NodeManager::currentNM(), Kind::OR);
+        NodeBuilder nb(nodeManager(), Kind::OR);
         nb << test << test.notNode();
         Node lemma = nb;
         d_im.lemma(lemma, InferenceId::DATATYPES_BINARY_SPLIT);
