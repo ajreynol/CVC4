@@ -117,6 +117,7 @@ std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
   std::vector<Node> cprodt[2];
   for (const Node& e : expc)
   {
+    Trace("arith-nl-compare") << "- Explanation: " << e << std::endl;
     std::vector<Node> eprod[2];
     decomposeCompareLit(e, eprod[0], eprod[1]);
     Assert(eprod[0].size() <= 1 && eprod[1].size() <= 1);
@@ -139,6 +140,7 @@ std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
           cprodt[ii].push_back(a);
         }
         mexp[ii][a] -= n;
+        Trace("arith-nl-compare") << "...use " << n << std::endl;
         eexp.emplace_back(n);
         break;
       }
@@ -165,6 +167,7 @@ std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
           mexp[j][c] -= n;
         }
         eexp.emplace_back(n);
+        Trace("arith-nl-compare") << "...use " << n << std::endl;
       }
     }
   }
@@ -173,6 +176,7 @@ std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
   {
     if (m.second > 0)
     {
+      Trace("arith-nl-compare") << "- Leftover: " << m.first << std::endl;
       for (size_t k = 0; k < m.second; k++)
       {
         cprodt[0].push_back(m.first);
@@ -183,6 +187,7 @@ std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
       cdp.addStep(veq, ProofRule::REFL, {}, {v});
       expc.emplace_back(veq);
       eexp.push_back(m.second);
+      Trace("arith-nl-compare") << "...use leftover " << m.second << std::endl;
     }
   }
   // if strict version, we go back and guard zeroes
