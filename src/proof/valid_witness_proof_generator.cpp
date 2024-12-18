@@ -132,7 +132,6 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
   Node k = mkSkolem(nm, r, args);
   if (k.isNull())
   {
-    Assert(false) << "No skolem for " << r << " " << args << std::endl;
     return k;
   }
   // construct the bound variable based on the type of the skolem
@@ -141,6 +140,10 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
       bvm->mkBoundVar<ValidWitnessVarAttribute>(k, "@var.witness", k.getType());
   // make the axiom
   Node ax = mkAxiom(nm, k, r, args);
+  if (ax.isNull())
+  {
+    return ax;
+  }
   TNode tk = k;
   TNode tv = v;
   ax = ax.substitute(tk, tv);

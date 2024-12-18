@@ -110,8 +110,8 @@ class BvInverter
    * or (exists x (<rel> x t)).
    * @return The invertibility condition for exists, witnessed by v. This
    * method returns a formula of the form (C => R[v]) where R[x] is the
-   * body of the existential above. If v is a bound variable, then
-   * (exists v C => R[v]) is a valid formula.
+   * body of the existential above. Furthermore, note that
+   * (exists x C => R[x]) is a valid formula.
    */
   static Node mkInvertibilityCondition(const Node& v, const Node& exists);
 
@@ -139,7 +139,7 @@ class BvInverter
    * @param annot The annotation.
    * @return The witness term.
    */
-  Node mkWitness(const Node& annot);
+  Node mkWitness(const Node& annot) const;
   /**
    * Returns an annotation used for the (internal) proof rule
    * MACRO_EXISTS_INV_CONDITION. In particular, this method returns an

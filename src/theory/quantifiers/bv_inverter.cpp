@@ -58,8 +58,10 @@ Node BvInverter::getSolveVariable(TypeNode tn)
 
 /*---------------------------------------------------------------------------*/
 
-Node BvInverter::mkWitness(const Node& annot)
+Node BvInverter::mkWitness(const Node& annot) const
 {
+  // use the valid witness proof generator utility to construct the proper
+  // witness term based on the annotation
   Node w = ValidWitnessProofGenerator::mkWitness(
       d_nm, ProofRule::MACRO_EXISTS_INV_CONDITION, {annot});
   Trace("bv-invert-witness")
@@ -258,19 +260,19 @@ Node BvInverter::solveBvLit(Node sv,
     TypeNode solve_tn = sv_t[index].getType();
     Node x = getSolveVariable(solve_tn);
     Node ic;
-
+    Node tnext;
     if (litk == Kind::EQUAL
         && (k == Kind::BITVECTOR_NOT || k == Kind::BITVECTOR_NEG))
     {
-      t = NodeManager::mkNode(k, t);
+      tnext = NodeManager::mkNode(k, t);
     }
     else if (litk == Kind::EQUAL && k == Kind::BITVECTOR_ADD)
     {
-      t = NodeManager::mkNode(Kind::BITVECTOR_SUB, t, s);
+      tnext = NodeManager::mkNode(Kind::BITVECTOR_SUB, t, s);
     }
     else if (litk == Kind::EQUAL && k == Kind::BITVECTOR_XOR)
     {
-      t = NodeManager::mkNode(Kind::BITVECTOR_XOR, t, s);
+      tnext = NodeManager::mkNode(Kind::BITVECTOR_XOR, t, s);
     }
     else if (litk == Kind::EQUAL && k == Kind::BITVECTOR_MULT && s.isConst()
              && bv::utils::getBit(s, 0))
@@ -283,35 +285,7 @@ Node BvInverter::solveBvLit(Node sv,
       Integer inv_val = s_val.modInverse(mod_val);
       Trace("bv-invert-debug") << "Inverse : " << inv_val << std::endl;
       Node inv = bv::utils::mkConst(w, inv_val);
-      t = NodeManager::mkNode(Kind::BITVECTOR_MULT, inv, t);
-    }
-    else if (k == Kind::BITVECTOR_MULT)
-    {
-      ic = utils::getICBvMult(pol, litk, k, index, x, s, t);
-    }
-    else if (k == Kind::BITVECTOR_SHL)
-    {
-      ic = utils::getICBvShl(pol, litk, k, index, x, s, t);
-    }
-    else if (k == Kind::BITVECTOR_UREM)
-    {
-      ic = utils::getICBvUrem(pol, litk, k, index, x, s, t);
-    }
-    else if (k == Kind::BITVECTOR_UDIV)
-    {
-      ic = utils::getICBvUdiv(pol, litk, k, index, x, s, t);
-    }
-    else if (k == Kind::BITVECTOR_AND || k == Kind::BITVECTOR_OR)
-    {
-      ic = utils::getICBvAndOr(pol, litk, k, index, x, s, t);
-    }
-    else if (k == Kind::BITVECTOR_LSHR)
-    {
-      ic = utils::getICBvLshr(pol, litk, k, index, x, s, t);
-    }
-    else if (k == Kind::BITVECTOR_ASHR)
-    {
-      ic = utils::getICBvAshr(pol, litk, k, index, x, s, t);
+      tnext = NodeManager::mkNode(Kind::BITVECTOR_MULT, inv, t);
     }
     else if (k == Kind::BITVECTOR_CONCAT)
     {
@@ -341,55 +315,27 @@ Node BvInverter::solveBvLit(Node sv,
             lower += bv::utils::getSize(sv_t[i]);
           }
         }
-        t = bv::utils::mkExtract(t, upper, lower);
-      }
-      else
-      {
-        ic = utils::getICBvConcat(pol, litk, index, x, sv_t, t);
+        tnext = bv::utils::mkExtract(t, upper, lower);
       }
     }
-    else if (k == Kind::BITVECTOR_SIGN_EXTEND)
-    {
-      ic = utils::getICBvSext(pol, litk, index, x, sv_t, t);
-    }
-    else if (litk == Kind::BITVECTOR_ULT || litk == Kind::BITVECTOR_UGT)
-    {
-      ic = utils::getICBvUltUgt(pol, litk, x, t);
-    }
-    else if (litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_SGT)
-    {
-      ic = utils::getICBvSltSgt(pol, litk, x, t);
-    }
-    else if (pol == false)
-    {
-      Assert(litk == Kind::EQUAL);
-      ic = NodeManager::mkNode(Kind::DISTINCT, x, t);
-      Trace("bv-invert") << "Add SC_" << litk << "(" << x << "): " << ic
-                         << std::endl;
-    }
-    else
-    {
-      Trace("bv-invert") << "bv-invert : Unknown kind " << k
-                         << " for bit-vector term " << sv_t << std::endl;
-      return Node::null();
-    }
-
-    if (!ic.isNull())
+    // if we didn't solve for t directly, we use a witness term 
+    if (tnext.isNull())
     {
       /* t = fresh skolem constant */
       Node annot = mkAnnotation(d_nm, litk, pol, t, sv_t, index);
-      t = mkWitness(annot);
+      tnext = mkWitness(annot);
       /* We generate a witness term (witness x0. ic => x0 <k> s <litk> t) for
        * x <k> s <litk> t. When traversing down, this witness term determines
        * the value for x <k> s = (witness x0. ic => x0 <k> s <litk> t), i.e.,
        * from here on, the propagated literal is a positive equality. */
       litk = Kind::EQUAL;
       pol = true;
-      if (t.isNull())
+      if (tnext.isNull())
       {
-        return t;
+        return tnext;
       }
     }
+    t = tnext;
 
     sv_t = sv_t[index];
   }
@@ -458,6 +404,9 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
       Trace("mk-inv-cond") << "...failed to find child" << std::endl;
       return Node::null();
     }
+    /* Note: All n-ary kinds except for CONCAT (i.e., BITVECTOR_AND,
+     *       BITVECTOR_OR, MULT, ADD) are commutative (no case split
+     *       based on index). */
     Node s = dropChild(sv_t, index);
     if (k == Kind::BITVECTOR_MULT)
     {
