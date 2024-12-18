@@ -52,7 +52,7 @@ Node ElimWitnessNodeConverter::postConvert(Node n)
         }
       }
     }
-    Assert (!k.isNull());
+    Assert(!k.isNull());
     return k;
   }
   return n;

@@ -48,9 +48,7 @@ using ValidWitnessVarAttribute =
  * Makes an instantiation attribute whose value is an s-expression
  * corresponding to the application of a proof rule.
  */
-Node mkProofSpec(NodeManager* nm,
-                                             ProofRule r,
-                                             const std::vector<Node>& args)
+Node mkProofSpec(NodeManager* nm, ProofRule r, const std::vector<Node>& args)
 {
   std::vector<Node> pfspec;
   pfspec.push_back(nm->mkConst(String("witness")));
@@ -150,7 +148,7 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
   children.push_back(nm->mkNode(Kind::BOUND_VAR_LIST, v));
   children.push_back(ax);
   // Store a marking to remember the origin of the witness. This ensures we
-  // have a way to recognize 
+  // have a way to recognize
   children.push_back(
       nm->mkNode(Kind::INST_PATTERN_LIST, mkProofSpec(nm, r, args)));
   return nm->mkNode(Kind::WITNESS, children);

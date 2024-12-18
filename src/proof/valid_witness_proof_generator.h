@@ -50,7 +50,7 @@ class ValidWitnessProofGenerator : protected EnvObj, public ProofGenerator
   static Node mkWitness(NodeManager* nm,
                         ProofRule r,
                         const std::vector<Node>& args);
-  /** 
+  /**
    * Make the conclusion of proof rule r with the given arguments.
    * @param nm Pointer to the node manager.
    * @param v The variable to instantiate the axiom with.
@@ -62,7 +62,7 @@ class ValidWitnessProofGenerator : protected EnvObj, public ProofGenerator
                       const Node& v,
                       ProofRule r,
                       const std::vector<Node>& args);
-  /** 
+  /**
    * Make the skolem that witnesses the conclusion of proof rule r with
    * the given arguments.
    * @param nm Pointer to the node manager.

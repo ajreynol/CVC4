@@ -62,8 +62,9 @@ Node BvInverter::mkWitness(const Node& annot)
 {
   Node w = ValidWitnessProofGenerator::mkWitness(
       d_nm, ProofRule::MACRO_EXISTS_INV_CONDITION, {annot});
-  Trace("bv-invert-witness") << "...returned " << w << " for " << annot << std::endl;
-  Assert (!w.isNull());
+  Trace("bv-invert-witness")
+      << "...returned " << w << " for " << annot << std::endl;
+  Assert(!w.isNull());
   if (d_rewriter != nullptr)
   {
     Node neww = d_rewriter->rewrite(w);
@@ -525,9 +526,9 @@ Node mkDummyOperator(const Node& op)
 
 Node getDummyOperator(const Node& op)
 {
-  Assert (op.getSkolemId()==SkolemId::PURIFY);
+  Assert(op.getSkolemId() == SkolemId::PURIFY);
   std::vector<Node> indices = op.getSkolemIndices();
-  Assert (indices.size()==1);
+  Assert(indices.size() == 1);
   return indices[0];
 }
 
@@ -546,7 +547,7 @@ Node BvInverter::mkAnnotation(
     ss.push_back(mkDummyOperator(svt.getOperator()));
     ss.insert(ss.end(), svt.begin(), svt.end());
     Node s = nm->mkNode(Kind::SEXPR, ss);
-    Assert(s.getKind()==Kind::SEXPR);
+    Assert(s.getKind() == Kind::SEXPR);
     sargs.push_back(s);
     sargs.push_back(nm->mkConstInt(Rational(index)));
   }
@@ -603,7 +604,7 @@ Node BvInverter::mkExistsForAnnotation(NodeManager* nm, const Node& n)
     Node op;
     if (n[3].getKind() == Kind::SEXPR && n[3].getNumChildren() >= 1)
     {
-      sargs.insert(sargs.end(), n[3].begin()+1, n[3].end());
+      sargs.insert(sargs.end(), n[3].begin() + 1, n[3].end());
       op = getDummyOperator(n[3][0]);
     }
     if (index >= sargs.size())
