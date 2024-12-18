@@ -949,34 +949,6 @@ bool CegInstantiator::constructInstantiationInc(Node pv,
   }
 }
 
-/**
- * A class for eliminating witness terms. We require overriding the method of
- * the base class to ensure that quantified formulas have been run through
- * theory preprocessing. This ensures that the skolem variables introduced
- * align exactly with the quantified formula we will assert in the corresponding
- * QUANTIFIERS_CEGQI_WITNESS lemma.
- */
-class PreprocessElimWitnessNodeConverter : public ElimWitnessNodeConverter
-{
- public:
-  PreprocessElimWitnessNodeConverter(Env& env, Valuation& val)
-      : ElimWitnessNodeConverter(env), d_val(val)
-  {
-  }
-  /**
-   * Get the normal form for quantified formula q, which must perform theory
-   * preprocessing.
-   */
-  Node getNormalFormFor(const Node& q) override
-  {
-    return d_val.getPreprocessedTerm(q);
-  }
-
- private:
-  /** Reference to a valuation */
-  Valuation& d_val;
-};
-
 bool CegInstantiator::doAddInstantiation(std::vector<Node>& vars,
                                          std::vector<Node>& subs)
 {
@@ -1026,7 +998,7 @@ bool CegInstantiator::doAddInstantiation(std::vector<Node>& vars,
         // not allowed to use witness if doing quantifier elimination
         return false;
       }
-      PreprocessElimWitnessNodeConverter ewc(d_env, d_qstate.getValuation());
+      ElimWitnessNodeConverter ewc(d_env);
       Node sc = ewc.convert(s);
       const std::vector<Node>& waxioms = ewc.getAxioms();
       axioms.insert(axioms.end(), waxioms.begin(), waxioms.end());

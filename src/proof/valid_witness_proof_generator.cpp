@@ -44,7 +44,7 @@ struct ValidWitnessVarAttributeId
 using ValidWitnessVarAttribute =
     expr::Attribute<ValidWitnessVarAttributeId, Node>;
 
-Node ValidWitnessProofGenerator::mkProofSpec(NodeManager* nm,
+Node mkProofSpec(NodeManager* nm,
                                              ProofRule r,
                                              const std::vector<Node>& args)
 {
@@ -123,6 +123,7 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
   Node k = mkSkolem(nm, r, args);
   if (k.isNull())
   {
+    Assert(false) << "No skolem for " << r << " " << args << std::endl;
     return k;
   }
   BoundVarManager* bvm = nm->getBoundVarManager();
