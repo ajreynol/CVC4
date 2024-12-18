@@ -44,6 +44,10 @@ struct ValidWitnessVarAttributeId
 using ValidWitnessVarAttribute =
     expr::Attribute<ValidWitnessVarAttributeId, Node>;
 
+/**
+ * Makes an instantiation attribute whose value is an s-expression
+ * corresponding to the application of a proof rule.
+ */
 Node mkProofSpec(NodeManager* nm,
                                              ProofRule r,
                                              const std::vector<Node>& args)
@@ -58,6 +62,10 @@ Node mkProofSpec(NodeManager* nm,
   return nm->mkNode(Kind::INST_ATTRIBUTE, pfspec);
 }
 
+/**
+ * The inverse operation for mkProofSpec, if possible extracts the proof
+ * rule and args from a given instantiation attribute attr.
+ */
 bool ValidWitnessProofGenerator::getProofSpec(NodeManager* nm,
                                               const Node& attr,
                                               ProofRule& r,
@@ -91,9 +99,11 @@ ValidWitnessProofGenerator::~ValidWitnessProofGenerator() {}
 
 std::shared_ptr<ProofNode> ValidWitnessProofGenerator::getProofFor(Node fact) 
 {
+  Trace("valid-witness") << "ValidWitness: Prove " << fact << std::endl;
   bool success = false;
   CDProof cdp(d_env);
-  Trace("valid-witness") << "Prove " << fact << std::endl;
+  // if it was constructed via mkAxiom, we should have marked it with the
+  // given attribute.
   ValidWitnessAxiomAttribute vwa;
   if (fact.hasAttribute(vwa))
   {
@@ -120,15 +130,18 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
                                            ProofRule r,
                                            const std::vector<Node>& args)
 {
+  // must make the skolem to know what type the rule expects
   Node k = mkSkolem(nm, r, args);
   if (k.isNull())
   {
     Assert(false) << "No skolem for " << r << " " << args << std::endl;
     return k;
   }
+  // construct the bound variable based on the type of the skolem
   BoundVarManager* bvm = nm->getBoundVarManager();
   Node v =
       bvm->mkBoundVar<ValidWitnessVarAttribute>(k, "@var.witness", k.getType());
+  // make the axiom
   Node ax = mkAxiom(nm, k, r, args);
   TNode tk = k;
   TNode tv = v;
@@ -136,6 +149,8 @@ Node ValidWitnessProofGenerator::mkWitness(NodeManager* nm,
   std::vector<Node> children;
   children.push_back(nm->mkNode(Kind::BOUND_VAR_LIST, v));
   children.push_back(ax);
+  // Store a marking to remember the origin of the witness. This ensures we
+  // have a way to recognize 
   children.push_back(
       nm->mkNode(Kind::INST_PATTERN_LIST, mkProofSpec(nm, r, args)));
   return nm->mkNode(Kind::WITNESS, children);

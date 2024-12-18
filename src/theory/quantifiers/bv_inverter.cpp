@@ -541,6 +541,8 @@ Node BvInverter::mkAnnotation(
   if (!svt.isNull())
   {
     std::vector<Node> ss;
+    // Must store a dummy operator for the operator, since otherwise the
+    // SEXPR would become an application of that operator.
     ss.push_back(mkDummyOperator(svt.getOperator()));
     ss.insert(ss.end(), svt.begin(), svt.end());
     Node s = nm->mkNode(Kind::SEXPR, ss);
