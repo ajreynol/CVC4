@@ -130,28 +130,30 @@ class BvInverter
                    std::vector<unsigned>& path,
                    std::unordered_set<TNode>& visited);
 
-  /** Helper function for getInv.
-   *
-   * This expects a condition cond where:
-   *   (exists x. cond)
-   * is a BV tautology where x is getSolveVariable( tn ).
-   *
-   * It returns a term of the form:
-   *   (witness y. cond { x -> y })
-   * where y is a bound variable and x is getSolveVariable( tn ).
-   *
-   * In some cases, we may return a term t if cond implies an equality on
-   * the solve variable. For example, if cond is x = t where x is
-   * getSolveVariable(tn), then we return t instead of introducing the choice
-   * function.
-   *
-   * This function will return the null node if the BvInverterQuery m provided
-   * to this call is null.
+  /** 
+   * This expects an annotation of the form returned by mkAnnotation
+   * or mkAnnotationBase. This returns a witness term to be used internally
+   * in CEGQI, in particular one that has been annotated with the given
+   * annotation for the purposes of tracking proofs.
+   * @param annot The annotation.
+   * @return The witness term.
    */
-  Node getInversionNode(Node cond, Node annot, TypeNode tn, BvInverterQuery* m);
+  Node mkWitness(const Node& annot);
   /**
+   * Returns an annotation used for the (internal) proof rule
+   * MACRO_EXISTS_INV_CONDITION. In particular, this method returns an
+   * s-expression (SEXPR <litk> <pol> t (SEXPR op s1 ... sn) <index>)
+   * where each of these arguments are stored as nodes. We store s as an
+   * s-expression because we do not want the rewriter to change the structure
+   * of s, as it is important that <index> denotes a valid position in s that
+   * we are solving for.
    */
-  static Node mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Node svt, unsigned index);
+  static Node mkAnnotation(NodeManager * nm, Kind litk, bool pol, Node t, Node s, unsigned index);
+  /**
+   * Same as above, but used for the base case of invertibility conditions.
+   * This method returns an s-expression of the form
+   * (SEXPR <litk> <pol> t).
+   */
   static Node mkAnnotationBase(NodeManager * nm, Kind litk, bool pol, Node t);
   /** Reference to options */
   const Options& d_opts;

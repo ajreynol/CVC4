@@ -58,69 +58,20 @@ Node BvInverter::getSolveVariable(TypeNode tn)
 
 /*---------------------------------------------------------------------------*/
 
-Node BvInverter::getInversionNode(Node cond, Node annot, TypeNode tn, BvInverterQuery* m)
+Node BvInverter::mkWitness(const Node& annot)
 {
-  TNode solve_var = getSolveVariable(tn);
-
-  // condition should be rewritten
-  Node new_cond = cond;
+  Node w = ValidWitnessProofGenerator::mkWitness(d_nm, ProofRule::MACRO_EXISTS_INV_CONDITION, {annot});
   if (d_rewriter != nullptr)
   {
-    new_cond = d_rewriter->rewrite(cond);
-    if (new_cond != cond)
+    Node neww = d_rewriter->rewrite(w);
+    if (neww != w)
     {
       Trace("cegqi-bv-skvinv-debug")
-          << "Condition " << cond << " was rewritten to " << new_cond
+          << "Witness " << neww << " was rewritten to " << w
           << std::endl;
     }
   }
-  // optimization : if condition is ( x = solve_var ) should just return
-  // solve_var and not introduce a Skolem this can happen when we ask for
-  // the multiplicative inversion with bv1
-  Node c;
-  if (new_cond.getKind() == Kind::EQUAL)
-  {
-    for (unsigned i = 0; i < 2; i++)
-    {
-      if (new_cond[i] == solve_var)
-      {
-        c = new_cond[1 - i];
-        Trace("cegqi-bv-skvinv")
-            << "SKVINV : " << c << " is trivially associated with conditon "
-            << new_cond << std::endl;
-        break;
-      }
-    }
-  }
-
-  if (c.isNull())
-  {
-    if (m)
-    {
-      Node x = m->getBoundVariable(tn);
-      Node ccond = new_cond.substitute(solve_var, x);
-      Assert (!annot.isNull());
-#if 1
-      Node ipl = NodeManager::mkNode(Kind::INST_PATTERN_LIST, annot);
-      c = NodeManager::mkNode(
-          Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond, ipl);
-#else
-      c = NodeManager::mkNode(
-          Kind::WITNESS, NodeManager::mkNode(Kind::BOUND_VAR_LIST, x), ccond);
-#endif
-      Trace("cegqi-bv-skvinv")
-          << "SKVINV : Make " << c << " for " << new_cond << std::endl;
-    }
-    else
-    {
-      Trace("bv-invert") << "...fail for " << cond << " : no inverter query!"
-                         << std::endl;
-    }
-  }
-  // currently shouldn't cache since
-  // the return value depends on the
-  // state of m (which bound variable is returned).
-  return c;
+  return w;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -423,13 +374,13 @@ Node BvInverter::solveBvLit(Node sv,
     {
       /* t = fresh skolem constant */
       Node annot = mkAnnotation(d_nm, litk, pol, t, sv_t, index);
+      t = mkWitness(annot);
       /* We generate a witness term (witness x0. ic => x0 <k> s <litk> t) for
        * x <k> s <litk> t. When traversing down, this witness term determines
        * the value for x <k> s = (witness x0. ic => x0 <k> s <litk> t), i.e.,
        * from here on, the propagated literal is a positive equality. */
       litk = Kind::EQUAL;
       pol = true;
-      t = getInversionNode(ic, annot, solve_tn, m);
       if (t.isNull())
       {
         return t;
@@ -441,30 +392,12 @@ Node BvInverter::solveBvLit(Node sv,
 
   /* Base case  */
   Assert(sv_t == sv);
-  TypeNode solve_tn = sv.getType();
-  Node x = getSolveVariable(solve_tn);
-  Node ic;
-  if (litk == Kind::BITVECTOR_ULT || litk == Kind::BITVECTOR_UGT)
+  if (litk == Kind::BITVECTOR_ULT || litk == Kind::BITVECTOR_UGT || litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_SGT || pol == false)
   {
-    ic = utils::getICBvUltUgt(pol, litk, x, t);
+    Node annot = mkAnnotationBase(d_nm, litk, pol, t);
+    return mkWitness(annot);
   }
-  else if (litk == Kind::BITVECTOR_SLT || litk == Kind::BITVECTOR_SGT)
-  {
-    ic = utils::getICBvSltSgt(pol, litk, x, t);
-  }
-  else if (pol == false)
-  {
-    Assert(litk == Kind::EQUAL);
-    ic = NodeManager::mkNode(Kind::DISTINCT, x, t);
-    Trace("bv-invert") << "Add SC_" << litk << "(" << x << "): " << ic
-                       << std::endl;
-  }
-  if (ic.isNull())
-  {
-    return t;
-  }
-  Node annot = mkAnnotationBase(d_nm, litk, pol, t);
-  return getInversionNode(ic, annot, solve_tn, m);
+  return t;
 }
 
 Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
