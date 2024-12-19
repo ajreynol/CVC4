@@ -467,7 +467,7 @@ bool InferProofCons::convert(Env& env,
       Trace("strings-ipc-core")
           << "Main equality after subs " << pmainEq << std::endl;
       // now, conclude the proper equality
-      Node mainEqSRew = psb.applyPredElim(pmainEq, pcsr);
+      Node mainEqSRew = psb.applyPredElim(pmainEq, {});
       if (mainEqSRew == conc)
       {
         Trace("strings-ipc-core") << "...success after rewrite!" << std::endl;
