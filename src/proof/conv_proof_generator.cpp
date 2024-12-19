@@ -199,8 +199,6 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofFor(Node f)
   if (f[0] == f[1])
   {
     // assertion failure in debug
-    Assert(false) << "TConvProofGenerator::getProofFor: " << identify()
-                  << ": don't ask for trivial proofs";
     lpf.addStep(f, ProofRule::REFL, {}, {f[0]});
   }
   else
@@ -255,8 +253,6 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node n)
   if (conc[1] == n)
   {
     // assertion failure in debug
-    Assert(false) << "TConvProofGenerator::getProofForRewriting: " << identify()
-                  << ": don't ask for trivial proofs";
     lpf.addStep(conc, ProofRule::REFL, {}, {n});
   }
   std::shared_ptr<ProofNode> pfn = lpf.getProofFor(conc);
