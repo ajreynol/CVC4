@@ -92,7 +92,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
       {
         ElimShadowNodeConverter esnc(nodeManager(), node, fvs);
         Node les = esnc.convert(lambda);
-        if (les!=lambda)
+        if (les != lambda)
         {
           Trace("uf-ho-beta")
               << "... elim shadow lambda is " << les << std::endl;
@@ -105,7 +105,8 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
       }
       else
       {
-        Trace("uf-ho-beta") << "... no free vars in substitution for " << subs << std::endl;
+        Trace("uf-ho-beta")
+            << "... no free vars in substitution for " << subs << std::endl;
       }
       Trace("uf-ho-beta") << "uf-ho-beta : beta-reducing all args of : "
                           << lambda << " for " << node << "\n";
@@ -137,7 +138,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
       {
         ElimShadowNodeConverter esnc(nodeManager(), node, fvs);
         Node les = esnc.convert(lambda);
-        if (les!=lambda)
+        if (les != lambda)
         {
           Node ret = nodeManager()->mkNode(Kind::HO_APPLY, les, node[1]);
           return RewriteResponse(REWRITE_AGAIN_FULL, ret);
