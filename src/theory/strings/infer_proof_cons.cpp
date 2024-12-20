@@ -1227,6 +1227,34 @@ bool InferProofCons::convert(Env& env,
     }
     break;
     // ========================== unknown and currently unsupported
+    case InferenceId::STRINGS_CTN_DECOMPOSE:
+    {
+      if (ps.d_children.size()!=2)
+      {
+        break;
+      }
+      Node ctn = ps.d_children[0];
+      if (ctn.getKind()!=Kind::STRING_CONTAINS)
+      {
+        break;
+      }
+      Node pconc = psb.tryStep(ProofRule::STRING_EAGER_REDUCTION, {}, {ctn});
+      Trace("strings-ipc-cons") << "Eager reduction: " << pconc << std::endl;
+      Node pelim = psb.applyPredElim(pconc, {ctn}, MethodId::SB_LITERAL);
+      Trace("strings-ipc-cons") << "After rewriting: " << pelim << std::endl;
+      if (pelim.getKind()!=Kind::EQUAL)
+      {
+        break;
+      }
+      Node tgt = ps.d_children[1];
+      Node pelim2 = psb.applyPredElim(tgt, {pelim});
+      Trace("strings-ipc-cons") << "After elim: " << pelim << std::endl;
+      if (pelim2==conc)
+      {
+        useBuffer = true;
+      }
+    }
+      break;
     case InferenceId::STRINGS_CARDINALITY:
     case InferenceId::STRINGS_I_CYCLE:
     case InferenceId::STRINGS_INFER_EMP:
@@ -1237,7 +1265,6 @@ bool InferProofCons::convert(Env& env,
     case InferenceId::STRINGS_FLOOP_CONFLICT:
     case InferenceId::STRINGS_DEQ_NORM_EMP:
     case InferenceId::STRINGS_CTN_TRANS:
-    case InferenceId::STRINGS_CTN_DECOMPOSE:
     default:
       // do nothing, these will be converted to THEORY_INFERENCE_STRINGS below
       // since the rule is unknown.
