@@ -194,6 +194,11 @@
   (str.contains (str.++ xs z zs) y)
   true)
 
+(define-cond-rule str-contains-concat-find-contra ((xs ?Seq :list) (z ?Seq) (y ?Seq) (zs ?Seq :list))
+  (not (str.contains y z))
+  (str.contains y (str.++ xs z zs))
+  false)
+
 (define-cond-rule str-contains-split-char ((x ?Seq) (y ?Seq) (z ?Seq :list) (w ?Seq))
   (= (str.len w) 1)
   (str.contains (str.++ x y z) w)
@@ -347,6 +352,11 @@
 (define-rule str-lt-elim ((s String) (t String))
   (str.< s t)
   (and (not (= s t)) (str.<= s t)))
+
+(define-cond-rule str-from-int-no-ctn-nondigit ((n Int) (s String))
+  (and (not (= s "")) (= (str.to_int s) (- 1)))
+  (str.contains (str.from_int n) s)
+  false)
 
 ; =============== Regular expression rules
 

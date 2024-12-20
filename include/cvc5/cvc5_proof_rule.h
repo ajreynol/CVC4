@@ -3982,6 +3982,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_CONTAINS_REFL),
   /** Auto-generated from RARE rule str-contains-concat-find */
   EVALUE(STR_CONTAINS_CONCAT_FIND),
+  /** Auto-generated from RARE rule str-contains-concat-find-contra */
+  EVALUE(STR_CONTAINS_CONCAT_FIND_CONTRA),
   /** Auto-generated from RARE rule str-contains-split-char */
   EVALUE(STR_CONTAINS_SPLIT_CHAR),
   /** Auto-generated from RARE rule str-contains-lt-len */
@@ -4048,6 +4050,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_LEQ_CONCAT_TRUE),
   /** Auto-generated from RARE rule str-lt-elim */
   EVALUE(STR_LT_ELIM),
+  /** Auto-generated from RARE rule str-from-int-no-ctn-nondigit */
+  EVALUE(STR_FROM_INT_NO_CTN_NONDIGIT),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
