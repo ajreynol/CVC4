@@ -436,24 +436,9 @@ RewriteResponse ArithRewriter::postRewriteTerm(TNode t){
       case Kind::ADD: return postRewritePlus(t);
       case Kind::MULT:
       case Kind::NONLINEAR_MULT: return postRewriteMult(t);
-      case Kind::IAND: return postRewriteIAnd(t);
       case Kind::POW2: return postRewritePow2(t);
       case Kind::INTS_ISPOW2: return postRewriteIntsIsPow2(t);
       case Kind::INTS_LOG2: return postRewriteIntsLog2(t);
-      case Kind::EXPONENTIAL:
-      case Kind::SINE:
-      case Kind::COSINE:
-      case Kind::TANGENT:
-      case Kind::COSECANT:
-      case Kind::SECANT:
-      case Kind::COTANGENT:
-      case Kind::ARCSINE:
-      case Kind::ARCCOSINE:
-      case Kind::ARCTANGENT:
-      case Kind::ARCCOSECANT:
-      case Kind::ARCSECANT:
-      case Kind::ARCCOTANGENT:
-      case Kind::SQRT: return postRewriteTranscendental(t);
       case Kind::INTS_DIVISION:
       case Kind::INTS_MODULUS: return rewriteIntsDivMod(t, false);
       case Kind::INTS_DIVISION_TOTAL:
@@ -471,10 +456,53 @@ RewriteResponse ArithRewriter::postRewriteTerm(TNode t){
         return RewriteResponse(REWRITE_DONE, t);
       }
       case Kind::PI: return RewriteResponse(REWRITE_DONE, t);
+      // expert cases
+      case Kind::EXPONENTIAL:
+      case Kind::SINE:
+      case Kind::COSINE:
+      case Kind::TANGENT:
+      case Kind::COSECANT:
+      case Kind::SECANT:
+      case Kind::COTANGENT:
+      case Kind::ARCSINE:
+      case Kind::ARCCOSINE:
+      case Kind::ARCTANGENT:
+      case Kind::ARCCOSECANT:
+      case Kind::ARCSECANT:
+      case Kind::ARCCOTANGENT:
+      case Kind::SQRT:
+      case Kind::IAND: return postRewriteExpert(t);
       default: Unreachable();
     }
   }
 }
+RewriteResponse ArithRewriter::postRewriteExpert(TNode t)
+{
+  if (!d_expertEnabled)
+  {
+    return RewriteResponse(REWRITE_DONE, t);
+  }
+  switch(t.getKind())
+  {
+    case Kind::EXPONENTIAL:
+    case Kind::SINE:
+    case Kind::COSINE:
+    case Kind::TANGENT:
+    case Kind::COSECANT:
+    case Kind::SECANT:
+    case Kind::COTANGENT:
+    case Kind::ARCSINE:
+    case Kind::ARCCOSINE:
+    case Kind::ARCTANGENT:
+    case Kind::ARCCOSECANT:
+    case Kind::ARCSECANT:
+    case Kind::ARCCOTANGENT:
+    case Kind::SQRT: return postRewriteTranscendental(t);
+    case Kind::IAND: return postRewriteIAnd(t);
+    default: Unreachable();
+  }
+}
+      
 
 RewriteResponse ArithRewriter::rewriteRAN(TNode t)
 {
@@ -945,10 +973,6 @@ RewriteResponse ArithRewriter::rewriteExtIntegerOp(TNode t)
 
 RewriteResponse ArithRewriter::postRewriteIAnd(TNode t)
 {
-  if (!d_expertEnabled)
-  {
-    return RewriteResponse(REWRITE_DONE, t);
-  }
   Assert(t.getKind() == Kind::IAND);
   uint32_t bsize = t.getOperator().getConst<IntAnd>().d_size;
   NodeManager* nm = nodeManager();
@@ -1057,10 +1081,6 @@ RewriteResponse ArithRewriter::postRewriteIntsLog2(TNode t)
 
 RewriteResponse ArithRewriter::postRewriteTranscendental(TNode t)
 {
-  if (!d_expertEnabled)
-  {
-    return RewriteResponse(REWRITE_DONE, t);
-  }
   Trace("arith-tf-rewrite")
       << "Rewrite transcendental function : " << t << std::endl;
   Assert(t.getTypeOrNull(true).isReal());

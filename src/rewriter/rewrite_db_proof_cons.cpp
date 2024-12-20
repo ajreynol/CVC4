@@ -285,6 +285,7 @@ Node RewriteDbProofCons::preprocessClosureEq(CDProof* cdp,
   }
   else
   {
+    // maybe there are unused variables?
     return Node::null();
   }
   std::vector<Node> transEq;
