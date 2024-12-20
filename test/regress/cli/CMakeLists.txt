@@ -81,6 +81,7 @@ set(regress_0_tests
   regress0/arith/miplib2.cvc.smt2
   regress0/arith/miplib4.cvc.smt2
   regress0/arith/miplibtrick.smtv1.smt2
+  regress0/arith/mod-neg-rewrite.smt2
   regress0/arith/mod-simp.smt2
   regress0/arith/mod.01.smt2
   regress0/arith/mult.01.smt2
