@@ -3330,12 +3330,16 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_INT_DIV_TOTAL_ONE),
   /** Auto-generated from RARE rule arith-int-div-total-zero */
   EVALUE(ARITH_INT_DIV_TOTAL_ZERO),
+  /** Auto-generated from RARE rule arith-int-div-total-neg */
+  EVALUE(ARITH_INT_DIV_TOTAL_NEG),
   /** Auto-generated from RARE rule arith-int-mod-total */
   EVALUE(ARITH_INT_MOD_TOTAL),
   /** Auto-generated from RARE rule arith-int-mod-total-one */
   EVALUE(ARITH_INT_MOD_TOTAL_ONE),
   /** Auto-generated from RARE rule arith-int-mod-total-zero */
   EVALUE(ARITH_INT_MOD_TOTAL_ZERO),
+  /** Auto-generated from RARE rule arith-int-mod-total-neg */
+  EVALUE(ARITH_INT_MOD_TOTAL_NEG),
   /** Auto-generated from RARE rule arith-elim-gt */
   EVALUE(ARITH_ELIM_GT),
   /** Auto-generated from RARE rule arith-elim-lt */
