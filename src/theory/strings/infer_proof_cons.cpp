@@ -1226,7 +1226,6 @@ bool InferProofCons::convert(Env& env,
       }
     }
     break;
-    // ========================== unknown and currently unsupported
     case InferenceId::STRINGS_CTN_DECOMPOSE:
     {
       if (ps.d_children.size()!=2)
@@ -1255,6 +1254,7 @@ bool InferProofCons::convert(Env& env,
       }
     }
       break;
+    // ========================== unknown and currently unsupported
     case InferenceId::STRINGS_CARDINALITY:
     case InferenceId::STRINGS_I_CYCLE:
     case InferenceId::STRINGS_INFER_EMP:

@@ -14,3 +14,8 @@
 
 (define-rule array-read-over-write-split ((t ?Array) (i ?) (e ?) (j ?))
   (select (store t j e) i) (ite (= i j) e (select t i)))
+
+(define-cond-rule array-store-swap ((t ?Array) (i ?) (j ?) (e ?) (f ?))
+  (not (= i j)) 
+  (store (store t i e) j f)
+  (store (store t j f) i e))
