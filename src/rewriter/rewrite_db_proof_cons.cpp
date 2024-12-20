@@ -293,6 +293,8 @@ Node RewriteDbProofCons::preprocessClosureEq(CDProof* cdp,
       Assert(aiu != ai);
       Node eqq = ai.eqNode(aiu);
       cdp->addTheoryRewriteStep(eqq, ProofRewriteRule::QUANT_UNUSED_VARS);
+      // remains to prove the result of removing variables is equal to
+      // the right hand side.
       eq = aiu.eqNode(bi);
       cdp->addStep(eqConv, ProofRule::TRANS, {eqq, eq}, {});
     }
