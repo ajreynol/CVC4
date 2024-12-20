@@ -213,9 +213,10 @@ Node RewriteDbProofCons::preprocessClosureEq(CDProof* cdp,
   }
   Node eq;
   Node eqConv = ai.eqNode(bi);
+  theory::Rewriter * rr = d_env.getRewriter();
   if (ai[0] == bi[0])
   {
-    ProofRewriteRule prid = d_env.getRewriter()->findRule(
+    ProofRewriteRule prid = rr->findRule(
         ai, bi, theory::TheoryRewriteCtx::PRE_DSL);
     if (prid != ProofRewriteRule::NONE)
     {
@@ -283,9 +284,25 @@ Node RewriteDbProofCons::preprocessClosureEq(CDProof* cdp,
       return Node::null();
     }
   }
+  else if (ai[0].getNumChildren() > bi[0].getNumChildren())
+  {
+    // maybe unused variables on the left hand side
+    Node aiu =  rr->rewriteViaRule(ProofRewriteRule::QUANT_UNUSED_VARS, ai);
+    if (!aiu.isNull())
+    {
+      Assert (aiu!=ai);
+      Node eqq = ai.eqNode(aiu);
+      cdp->addTheoryRewriteStep(eqq, ProofRewriteRule::QUANT_UNUSED_VARS);
+      eq = aiu.eqNode(bi);
+      cdp->addStep(eqConv, ProofRule::TRANS, {eqq, eq}, {});
+    }
+    else
+    {
+      return Node::null();
+    }
+  }
   else
   {
-    // maybe there are unused variables?
     return Node::null();
   }
   std::vector<Node> transEq;
