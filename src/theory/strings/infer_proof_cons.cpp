@@ -937,9 +937,19 @@ bool InferProofCons::convert(Env& env,
         else
         {
           std::vector<Node> cexp;
+          // get the equalities where the reduction is different
           std::vector<Node> matchConds;
           expr::getMatchConditions(red, conc, matchConds);
           Trace("strings-ipc-red") << "...need to prove " << matchConds << std::endl;
+          // To simplify the proof transformation step below, we manually
+          // unpurify skolems from the concluded reduction. This
+          // make it more likely the applyPredTransform step does not have to
+          // resort to original forms. In particular, the strings rewriter
+          // currently does not respect the property that if
+          // t ---> c for constant c, then getOriginalForm(t) ---> c. This
+          // means we should attempt to replay the term which was used by the
+          // strings skolem cache to justify k = c, which is its unpurified
+          // form t, not its original form.
           for (const Node& mc : matchConds)
           {
             Node mcu = SkolemManager::getUnpurifiedForm(mc[0]);
