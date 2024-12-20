@@ -48,9 +48,9 @@ TheorySetsRewriter::TheorySetsRewriter(NodeManager* nm,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_DISTINCT_SETS,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_INTER_NORM,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_INTER_EVAL,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_MINUS_NORM,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_SETS_MINUS_EVAL,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::SETS_UNION_NORM,
                            TheoryRewriteCtx::POST_DSL);
@@ -95,7 +95,7 @@ Node TheorySetsRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::MACRO_SETS_INTER_NORM:
+    case ProofRewriteRule::MACRO_SETS_INTER_EVAL:
     {
       if (n.getKind() == Kind::SET_INTER && n[0].isConst() && n[1].isConst())
       {
@@ -111,7 +111,7 @@ Node TheorySetsRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::MACRO_SETS_MINUS_NORM:
+    case ProofRewriteRule::MACRO_SETS_MINUS_EVAL:
     {
       if (n.getKind() == Kind::SET_MINUS && n[0].isConst() && n[1].isConst())
       {
@@ -271,7 +271,7 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
       else if (node[0].isConst() && node[1].isConst())
       {
         Node newNode =
-            rewriteViaRule(ProofRewriteRule::MACRO_SETS_MINUS_NORM, node);
+            rewriteViaRule(ProofRewriteRule::MACRO_SETS_MINUS_EVAL, node);
         Assert(newNode.isConst());
         Trace("sets-postrewrite")
             << "Sets::postRewrite returning " << newNode << std::endl;
@@ -299,7 +299,7 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
       else if (node[0].isConst() && node[1].isConst())
       {
         Node newNode =
-            rewriteViaRule(ProofRewriteRule::MACRO_SETS_INTER_NORM, node);
+            rewriteViaRule(ProofRewriteRule::MACRO_SETS_INTER_EVAL, node);
         Assert(newNode.isConst() && newNode.getType() == node.getType());
         Trace("sets-postrewrite")
             << "Sets::postRewrite returning " << newNode << std::endl;

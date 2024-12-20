@@ -314,10 +314,10 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-substr-strip-sym-length";
     case ProofRewriteRule::MACRO_SETS_DISTINCT_SETS:
       return "macro-sets-distinct-sets";
-    case ProofRewriteRule::MACRO_SETS_INTER_NORM:
-      return "macro-sets-inter-norm";
-    case ProofRewriteRule::MACRO_SETS_MINUS_NORM:
-      return "macro-sets-minus-norm";
+    case ProofRewriteRule::MACRO_SETS_INTER_EVAL:
+      return "macro-sets-inter-eval";
+    case ProofRewriteRule::MACRO_SETS_MINUS_EVAL:
+      return "macro-sets-minus-eval";
     case ProofRewriteRule::SETS_UNION_NORM: return "sets-union-norm";
     case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
       return "sets-is-empty-eval";

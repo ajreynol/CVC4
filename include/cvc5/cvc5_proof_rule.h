@@ -3243,7 +3243,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_SETS_DISTINCT_SETS),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Sets -- sets intersection normalize**
+   * **Sets -- sets intersection evaluate**
    *
    * .. math::
    *   \mathit{set.inter}(t_1, t_2) = t
@@ -3255,10 +3255,10 @@ enum ENUM(ProofRewriteRule)
    *
    * \endverbatim
    */
-  EVALUE(MACRO_SETS_INTER_NORM),
+  EVALUE(MACRO_SETS_INTER_EVAL),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Sets -- sets minus normalize**
+   * **Sets -- sets minus evaluate**
    *
    * .. math::
    *   \mathit{set.minus}(t_1, t_2) = t
@@ -3270,7 +3270,7 @@ enum ENUM(ProofRewriteRule)
    *
    * \endverbatim
    */
-  EVALUE(MACRO_SETS_MINUS_NORM),
+  EVALUE(MACRO_SETS_MINUS_EVAL),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Sets -- sets union normalize**
