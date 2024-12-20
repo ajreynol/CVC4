@@ -470,7 +470,7 @@ RewriteResponse ArithRewriter::postRewriteTerm(TNode t){
       case Kind::ARCSECANT:
       case Kind::ARCCOTANGENT:
       case Kind::SQRT:
-      case Kind::IAND: 
+      case Kind::IAND:
       case Kind::POW2: return postRewriteExpert(t);
       default: Unreachable();
     }
@@ -482,7 +482,7 @@ RewriteResponse ArithRewriter::postRewriteExpert(TNode t)
   {
     return RewriteResponse(REWRITE_DONE, t);
   }
-  switch(t.getKind())
+  switch (t.getKind())
   {
     case Kind::EXPONENTIAL:
     case Kind::SINE:
@@ -503,7 +503,6 @@ RewriteResponse ArithRewriter::postRewriteExpert(TNode t)
     default: Unreachable();
   }
 }
-      
 
 RewriteResponse ArithRewriter::rewriteRAN(TNode t)
 {
