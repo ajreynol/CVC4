@@ -1139,7 +1139,7 @@ bool SetDefaults::incompatibleWithProofs(Options& opts,
   if (opts.smt.proofMode == options::ProofMode::FULL_STRICT)
   {
     // symmetry breaking does not have proof support
-    SET_AND_NOTIFY_VAL_SYM(uf, ufSymmetryBreaker, false, "full strict proofs");
+    SET_AND_NOTIFY(uf, ufSymmetryBreaker, false, "full strict proofs");
     // CEGQI with deltas and infinities is not supported
     SET_AND_NOTIFY(quantifiers, cegqiMidpoint, true, "full strict proofs");
     SET_AND_NOTIFY(quantifiers, cegqiUseInfInt, false, "full strict proofs");

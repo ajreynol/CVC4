@@ -727,6 +727,7 @@ set(regress_0_tests
   regress0/datatypes/pair-real-bool.smt2
   regress0/datatypes/par-updater-type-rule.smt2
   regress0/datatypes/parametric-alt-list.cvc.smt2
+  regress0/datatypes/pf-v2l60078.smt2
   regress0/datatypes/proj-issue172.smt2
   regress0/datatypes/proj-issue474-app-cons-value.smt2
   regress0/datatypes/proj-issue578-clash-pf.smt2
@@ -1468,6 +1469,7 @@ set(regress_0_tests
   regress0/quantifiers/dd_german169_semi_eval.smt2
   regress0/quantifiers/dd_spark2014-pat.smt2
   regress0/quantifiers/dd_TwoSquares.z3.611901.smt2
+  regress0/quantifiers/dd_SA10-027-dt-ipc.smt2
   regress0/quantifiers/dd.german169-ieval.smt2
   regress0/quantifiers/dd.german169-lemma-inp.smt2
   regress0/quantifiers/dd.ho-matching-enum.smt2
@@ -2890,6 +2892,7 @@ set(regress_1_tests
   regress1/quantifiers/nra-interleave-inst.smt2
   regress1/quantifiers/opisavailable-12.smt2
   regress1/quantifiers/parametric-lists.smt2
+  regress1/quantifiers/pivc-deq-cong.smt2
   regress1/quantifiers/pool-decidable-arrays-1.smt2
   regress1/quantifiers/pool-example.smt2
   regress1/quantifiers/pool-tuple.smt2
