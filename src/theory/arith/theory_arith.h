@@ -196,6 +196,8 @@ class TheoryArith : public Theory {
   bool d_arithModelCacheSet;
   /** Checks the proof rules of this theory. */
   ArithProofRuleChecker d_checker;
+  /** True if we had pending lemmas at the end of full check */
+  bool d_hadNlPendingLemmas;
 
 };/* class TheoryArith */
 

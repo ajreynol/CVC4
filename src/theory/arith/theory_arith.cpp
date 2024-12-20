@@ -52,7 +52,8 @@ TheoryArith::TheoryArith(Env& env, OutputChannel& out, Valuation valuation)
       d_arithPreproc(env, d_im, d_opElim),
       d_rewriter(nodeManager(), d_opElim),
       d_arithModelCacheSet(false),
-      d_checker(nodeManager())
+      d_checker(nodeManager()),
+      d_hadNlPendingLemmas(false)
 {
 #ifdef CVC5_USE_COCOA
   // must be initialized before using CoCoA.
@@ -273,6 +274,7 @@ void TheoryArith::postCheck(Effort level)
       // Check at full effort. This may either send lemmas or otherwise
       // buffer lemmas that we send at last call.
       d_nonlinearExtension->checkFullEffort(d_arithModelCache, termSet);
+      d_hadNlPendingLemmas = d_im.hasPendingLemma();
       // if we already sent a lemma, we are done
       if (d_im.hasSent())
       {
@@ -356,7 +358,7 @@ bool TheoryArith::collectModelInfo(TheoryModel* m,
   // arbitrary values can be used for arithmetic terms. Hence, we just return
   // false here. The buffered lemmas will be sent immediately when asking if
   // a LAST_CALL effort should be performed (see needsCheckLastEffort).
-  if (d_im.hasPendingLemma())
+  if (d_hadNlPendingLemmas)
   {
     return false;
   }
