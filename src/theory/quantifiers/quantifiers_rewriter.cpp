@@ -1793,7 +1793,7 @@ Node QuantifiersRewriter::computePrenex(Node q,
             Node cacheVal = nm->mkNode(Kind::SEXPR, {q, body, v, ii});
             vv = bvm->mkBoundVar<QRewPrenexAttribute>(cacheVal, vt);
             index++;
-          }while (std::find(argVec.begin(), argVec.end(), vv)!=argVec.end());
+          } while (std::find(argVec.begin(), argVec.end(), vv) != argVec.end());
         }
         else
         {

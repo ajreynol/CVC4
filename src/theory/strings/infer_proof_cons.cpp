@@ -940,7 +940,8 @@ bool InferProofCons::convert(Env& env,
           // get the equalities where the reduction is different
           std::vector<Node> matchConds;
           expr::getMatchConditions(red, conc, matchConds);
-          Trace("strings-ipc-red") << "...need to prove " << matchConds << std::endl;
+          Trace("strings-ipc-red")
+              << "...need to prove " << matchConds << std::endl;
           // To simplify the proof transformation step below, we manually
           // unpurify skolems from the concluded reduction. This
           // make it more likely the applyPredTransform step does not have to
@@ -953,7 +954,7 @@ bool InferProofCons::convert(Env& env,
           for (const Node& mc : matchConds)
           {
             Node mcu = SkolemManager::getUnpurifiedForm(mc[0]);
-            if (mcu!=mc[0])
+            if (mcu != mc[0])
             {
               Node mceq = mc[0].eqNode(mcu);
               psb.addStep(ProofRule::SKOLEM_INTRO, {}, {mc[0]}, mceq);
@@ -1228,12 +1229,12 @@ bool InferProofCons::convert(Env& env,
     break;
     case InferenceId::STRINGS_CTN_DECOMPOSE:
     {
-      if (ps.d_children.size()!=2)
+      if (ps.d_children.size() != 2)
       {
         break;
       }
       Node ctn = ps.d_children[0];
-      if (ctn.getKind()!=Kind::STRING_CONTAINS)
+      if (ctn.getKind() != Kind::STRING_CONTAINS)
       {
         break;
       }
@@ -1241,19 +1242,19 @@ bool InferProofCons::convert(Env& env,
       Trace("strings-ipc-cons") << "Eager reduction: " << pconc << std::endl;
       Node pelim = psb.applyPredElim(pconc, {ctn}, MethodId::SB_LITERAL);
       Trace("strings-ipc-cons") << "After rewriting: " << pelim << std::endl;
-      if (pelim.getKind()!=Kind::EQUAL)
+      if (pelim.getKind() != Kind::EQUAL)
       {
         break;
       }
       Node tgt = ps.d_children[1];
       Node pelim2 = psb.applyPredElim(tgt, {pelim});
       Trace("strings-ipc-cons") << "After elim: " << pelim << std::endl;
-      if (pelim2==conc)
+      if (pelim2 == conc)
       {
         useBuffer = true;
       }
     }
-      break;
+    break;
     // ========================== unknown and currently unsupported
     case InferenceId::STRINGS_CARDINALITY:
     case InferenceId::STRINGS_I_CYCLE:
