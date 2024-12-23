@@ -62,10 +62,10 @@ TermRegistry::TermRegistry(Env& env,
                                        : nullptr),
       d_inFullEffortCheck(false)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   d_zero = nm->mkConstInt(Rational(0));
   d_one = nm->mkConstInt(Rational(1));
-  d_negOne = NodeManager::currentNM()->mkConstInt(Rational(-1));
+  d_negOne = nm->mkConstInt(Rational(-1));
   Assert(options().strings.stringsAlphaCard <= String::num_codes());
   d_alphaCard = options().strings.stringsAlphaCard;
 }
@@ -371,7 +371,7 @@ void TermRegistry::registerType(TypeNode tn)
 TrustNode TermRegistry::getRegisterTermLemma(Node n)
 {
   Assert(n.getType().isStringLike());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   // register length information:
   //  for variables, split on empty vs positive length
   //  for concat/const/replace, introduce proxy var and state length relation
@@ -486,7 +486,7 @@ bool TermRegistry::isHandledUpdateOrSubstr(Node n)
 {
   Assert(n.getKind() == Kind::STRING_UPDATE
          || n.getKind() == Kind::STRING_SUBSTR);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node lenN = n[2];
   if (n.getKind() == Kind::STRING_UPDATE)
   {
@@ -516,7 +516,7 @@ TrustNode TermRegistry::getRegisterTermAtomicLemma(
     return TrustNode::null();
   }
   Assert(n.getType().isStringLike());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node n_len = nm->mkNode(Kind::STRING_LENGTH, n);
   Node emp = Word::mkEmptyWord(n.getType());
   if (s == LENGTH_GEQ_ONE)
@@ -615,7 +615,7 @@ Node TermRegistry::getSymbolicDefinition(Node n, std::vector<Node>& exp) const
       }
     }
   }
-  return NodeManager::currentNM()->mkNode(n.getKind(), children);
+  return nodeManager()->mkNode(n.getKind(), children);
 }
 
 Node TermRegistry::getProxyVariableFor(Node n) const
