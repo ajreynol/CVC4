@@ -441,9 +441,10 @@
   (str.++ (str.rev z) _))
 
 
-(define-rule str-eq-repl-self-emp ((x ?Seq) (y ?Seq))
-  (= (str.replace x y x) (@seq.empty_of_type (@type_of x)))
-  (= x (@seq.empty_of_type (@type_of x))))
+(define-cond-rule str-eq-repl-self-emp ((x ?Seq) (y ?Seq) (emp ?Seq))
+  (= emp (@seq.empty_of_type (@type_of x)))
+  (= (str.replace x y x) emp)
+  (= x emp))
 
 (define-cond-rule str-eq-repl-no-change ((x ?Seq) (y ?Seq) (z ?Seq))
   (not (= y z))
