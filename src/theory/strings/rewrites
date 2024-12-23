@@ -451,6 +451,12 @@
   (str.substr (str.++ s2 s3) (- n (str.len s1)) m)
 )
 
+(define-cond-rule str-substr-len-norm ((s ?Seq) (n Int) (m Int))
+  (>= m (str.len s))
+  (str.substr s n m)
+  (str.substr s n (str.len s))
+)
+
 (define-rule seq-len-rev ((x ?Seq))
   (str.len (str.rev x))
   (str.len x))
