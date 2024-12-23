@@ -1469,6 +1469,7 @@ set(regress_0_tests
   regress0/quantifiers/dd_german169_semi_eval.smt2
   regress0/quantifiers/dd_quick_sort-q-rew.smt2
   regress0/quantifiers/dd_spark2014-pat.smt2
+  regress0/quantifiers/dd_sym_sat_9_array_rew.smt2
   regress0/quantifiers/dd_TwoSquares.z3.611901.smt2
   regress0/quantifiers/dd_SA10-027-dt-ipc.smt2
   regress0/quantifiers/dd.german169-ieval.smt2
@@ -1944,6 +1945,9 @@ set(regress_0_tests
   regress0/strings/str_unsound_ext_rew_eq.smt2
   regress0/strings/str-in-re-mixed-include.smt2
   regress0/strings/str-pred-small-rw_429.smt2
+  regress0/strings/str-pred-small-rw_538.smt2
+  regress0/strings/str-pred-small-rw_593.smt2
+  regress0/strings/str-pred-small-rw_831.smt2
   regress0/strings/str-rev-simple.smt2
   regress0/strings/str003.smt2
   regress0/strings/str004.smt2
