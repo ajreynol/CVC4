@@ -20,8 +20,8 @@
 
 #include "proof/method_id.h"
 #include "proof/proof_generator.h"
-#include "smt/env_obj.h"
 #include "proof/trust_id.h"
+#include "smt/env_obj.h"
 
 namespace cvc5::internal {
 
@@ -40,7 +40,7 @@ class TrustProofGenerator : protected EnvObj, public ProofGenerator
    * @param args The proof arguments (if any).
    */
   TrustProofGenerator(Env& env, TrustId id, const std::vector<Node>& args);
-  virtual ~TrustProofGenerator ();
+  virtual ~TrustProofGenerator();
   /**
    * Get proof for fact. We return a single step proving fact from d_tid.
    */

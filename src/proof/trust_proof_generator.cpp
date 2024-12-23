@@ -19,9 +19,14 @@
 
 namespace cvc5::internal {
 
-TrustProofGenerator::TrustProofGenerator(Env& env, TrustId id, const std::vector<Node>& args) : EnvObj(env), d_tid(id), d_pargs(args){}
+TrustProofGenerator::TrustProofGenerator(Env& env,
+                                         TrustId id,
+                                         const std::vector<Node>& args)
+    : EnvObj(env), d_tid(id), d_pargs(args)
+{
+}
 
-TrustProofGenerator::~TrustProofGenerator () {}
+TrustProofGenerator::~TrustProofGenerator() {}
 
 std::shared_ptr<ProofNode> TrustProofGenerator::getProofFor(Node fact)
 {
@@ -30,7 +35,9 @@ std::shared_ptr<ProofNode> TrustProofGenerator::getProofFor(Node fact)
   return cdp.getProofFor(fact);
 }
 
-std::string TrustProofGenerator::identify() const { return "TrustProofGenerator"; }
+std::string TrustProofGenerator::identify() const
+{
+  return "TrustProofGenerator";
+}
 
 }  // namespace cvc5::internal
-
