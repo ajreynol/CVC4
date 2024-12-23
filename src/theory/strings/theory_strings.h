@@ -48,6 +48,7 @@
 #include "theory/strings/term_registry.h"
 #include "theory/theory.h"
 #include "theory/uf/equality_engine.h"
+#include "proof/trust_proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -306,6 +307,8 @@ class TheoryStrings : public Theory {
   size_t d_strGapModelCounter;
   /** The care pair argument callback, used for theory combination */
   CarePairArgumentCallback d_cpacb;
+  /** For proof of ppStaticRewrite */
+  std::shared_ptr<TrustProofGenerator> d_psrewPg;
 };/* class TheoryStrings */
 
 }  // namespace strings
