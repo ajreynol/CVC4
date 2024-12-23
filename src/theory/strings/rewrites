@@ -441,14 +441,14 @@
   (str.++ (str.rev z) _))
 
 
-;(define-rule str-eq-repl-self-emp ((x ?Seq) (y ?Seq))
-;  (= (str.replace x y x) (@seq.empty_of_type (@type_of x)))
-;  (= x (@seq.empty_of_type (@type_of x))))
+(define-rule str-eq-repl-self-emp ((x ?Seq) (y ?Seq))
+  (= (str.replace x y x) (@seq.empty_of_type (@type_of x)))
+  (= x (@seq.empty_of_type (@type_of x))))
 
-;(define-cond-rule str-eq-repl-no-change ((x ?Seq) (y ?Seq) (z ?Seq))
-;  (not (= y z))
-;  (= (str.replace x y z) x)
-;  (not (str.contains x y)))
+(define-cond-rule str-eq-repl-no-change ((x ?Seq) (y ?Seq) (z ?Seq))
+  (not (= y z))
+  (= (str.replace x y z) x)
+  (not (str.contains x y)))
 
 ; =============== Sequences-specific rules
 
