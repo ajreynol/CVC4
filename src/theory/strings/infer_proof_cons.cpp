@@ -439,9 +439,35 @@ bool InferProofCons::convert(Env& env,
                                   TConvCachePolicy::NEVER,
                                   "StrTConv",
                                   &sctc);
+        // Compute which equalities we want to flip their substitution.
+        // Currently this is only an issue if e.g. (= (str.++ a a) (str.++ b c))
+        // where we conclude (= a c) from an explanation (= a b) via
+        // STRINGS_F_UNIFY, which would otherwise conclude (= b c) if a -> b
+        // was processed as a substitution.
+        // In contrast, normal form inferences are truly processed as
+        // substitutions in the strings core solver, whereas flat form
+        // inferences simply consider unification without substituting, leading
+        // to issues like the one above.
+        std::unordered_set<size_t> reorientIndices;
+        if (infer==InferenceId::STRINGS_F_UNIFY)
+        {
+          Assert (conc.getKind()==Kind::EQUAL);
+          // maybe reorient?
+          for (size_t i = 0; i < mainEqIndex; i++)
+          {
+            if (ps.d_children[i][0]==conc[0] || ps.d_children[i][0]==conc[1])
+            {
+              reorientIndices.insert(i);
+            }
+          }
+        }
         for (size_t i = 0; i < mainEqIndex; i++)
         {
           Node s = ps.d_children[i];
+          if (reorientIndices.find(i)!=reorientIndices.end())
+          {
+            s = s[1].eqNode(s[0]);
+          }
           Trace("strings-ipc-core") << "--- rewrite " << s << std::endl;
           Assert(s.getKind() == Kind::EQUAL);
           tconv.addRewriteStep(s[0], s[1], pf);
