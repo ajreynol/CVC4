@@ -1837,6 +1837,7 @@ set(regress_0_tests
   regress0/strings/delta-trust-subs.smt2
   regress0/strings/denghan-instance56567.smt2
   regress0/strings/distinct-witness-id.smt2
+  regress0/strings/eager-red-str-to-int.smt2
   regress0/strings/escchar_25.smt2
   regress0/strings/escchar.smt2
   regress0/strings/foreign-theory-rew-simple.smt2

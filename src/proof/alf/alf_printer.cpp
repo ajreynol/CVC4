@@ -239,7 +239,7 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
         return opts.strings.stringsAlphaCard == String::num_codes();
       }
       return k == Kind::STRING_CONTAINS || k == Kind::STRING_INDEXOF
-             || k == Kind::STRING_INDEXOF_RE || k == Kind::STRING_IN_REGEXP;
+             || k == Kind::STRING_INDEXOF_RE || k == Kind::STRING_IN_REGEXP || k == Kind::STRING_STOI;
     }
     break;
     //
