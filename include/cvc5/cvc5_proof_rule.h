@@ -2579,6 +2579,19 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARRAYS_SELECT_CONST),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Arrays -- Macro normalize operation**
+   *
+   * .. math::
+   *   A = B
+   *
+   * where :math:`B` is the result of normalizing the array operation :math:`A`
+   * into a canonical form.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_ARRAYS_NORMALIZE_OP),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Arrays -- Macro distinct arrays**
    *
    * .. math::

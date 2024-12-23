@@ -295,6 +295,12 @@ bool InferProofCons::convert(Env& env,
             useBuffer = psb.applyPredTransform(psrc, psrco, {});
           }
         }
+        // Maybe involves AND_ELIM?
+        if (!useBuffer)
+        {
+          Node res = psb.applyPredElim(psrc, exps);
+          useBuffer = convertAndElim(nm, res, conc, psb);
+        }
       }
       else
       {

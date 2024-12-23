@@ -208,6 +208,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
   }
   if (!success)
   {
+    Trace("arith-proof-rcons") << "...failed!" << std::endl;
     cdp.addTrustedStep(fact, d_id, {}, {});
   }
   return cdp.getProofFor(fact);
