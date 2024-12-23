@@ -2192,9 +2192,13 @@ Node SequencesRewriter::rewriteSubstr(Node node)
 
   Node slenRew =
       d_arithEntail.rewriteArith(nm->mkNode(Kind::STRING_LENGTH, node[0]));
-  if (node[2] != slenRew)
+  // normalize the existing value, which is important for avoid infinite
+  // loops due to the arithmetic rewriter further normalizing slenRew.
+  Node scurrRew =
+      d_arithEntail.rewriteArith(node[2]);
+  if (scurrRew != slenRew)
   {
-    if (d_arithEntail.check(node[2], slenRew))
+    if (d_arithEntail.check(scurrRew, slenRew))
     {
       // end point beyond end point of string, map to slenRew
       Node ret = nm->mkNode(Kind::STRING_SUBSTR, node[0], node[1], slenRew);
