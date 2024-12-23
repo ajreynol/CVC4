@@ -340,7 +340,8 @@ bool InferProofCons::convert(Env& env,
                                            MethodId::RW_REWRITE_EQ_EXT);
       Trace("strings-ipc-core")
           << "...after extended equality rewrite: " << mainEqSRew2 << std::endl;
-      if (mainEqSRew2 == conc)
+      // it may have rewritten to an AND, in which case we get the conjunct
+      if (convertAndElim(nm, mainEqSRew2,conc, psb))
       {
         useBuffer = true;
         break;
@@ -1342,6 +1343,7 @@ bool InferProofCons::convert(Env& env,
         Trace("strings-ipc-fail") << "    e: " << ec << std::endl;
       }
     }
+    //AlwaysAssert(false);
     // untrustworthy conversion, the argument of THEORY_INFERENCE_STRINGS is its
     // conclusion
     ps.d_args.clear();
@@ -1451,6 +1453,27 @@ Node InferProofCons::convertTrans(Node eqa,
   return Node::null();
 }
 
+bool InferProofCons::convertAndElim(NodeManager *nm, const Node& src, const Node& tgt, TheoryProofStepBuffer& psb)
+{
+  if (src==tgt)
+  {
+    return true;
+  }
+  if (src.getKind()==Kind::AND)
+  {
+    for (size_t i=0, nchild=src.getNumChildren(); i<nchild; i++)
+    {
+      if (src[i]==tgt)
+      {
+        Node ni = nm->mkConstInt(Rational(i));
+        psb.addStep(ProofRule::AND_ELIM, {src}, {ni}, tgt);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+  
 std::shared_ptr<ProofNode> InferProofCons::getProofFor(Node fact)
 {
   // get the inference

@@ -149,6 +149,9 @@ class InferProofCons : protected EnvObj, public ProofGenerator
    * conclusion, or null if we were not able to construct a TRANS step.
    */
   static Node convertTrans(Node eqa, Node eqb, TheoryProofStepBuffer& psb);
+  /**
+   */
+  static bool convertAndElim(NodeManager *nm, const Node& src, const Node& tgt, TheoryProofStepBuffer& psb);
 
   /** The lazy fact map */
   NodeInferInfoMap d_lazyFactMap;
