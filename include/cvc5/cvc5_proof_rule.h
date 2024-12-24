@@ -2565,6 +2565,7 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(LAMBDA_ELIM),
+  EVALUE(MACRO_LAMBDA_ELIM_SHADOW),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Arrays -- Constant array select**
@@ -3098,6 +3099,9 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(STR_CTN_MULTISET_SUBSET),
+  EVALUE(STR_INDEXOF_RE_EVAL),
+  EVALUE(STR_REPLACE_RE_EVAL),
+  EVALUE(STR_REPLACE_RE_ALL_EVAL),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- String equality length unify prefix**

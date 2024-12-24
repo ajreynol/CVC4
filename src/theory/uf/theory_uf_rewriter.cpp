@@ -267,6 +267,10 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
+    case ProofRewriteRule::MACRO_LAMBDA_ELIM_SHADOW:
+    {
+    }
+    break;
     default: break;
   }
   return Node::null();
