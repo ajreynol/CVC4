@@ -300,13 +300,13 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
           Node lambdac;
           if (k==Kind::HO_APPLY && lambda[0].getNumChildren()>1)
           {
-            Assert (lambdac.getKind()==Kind::LAMBDA);
+            Assert (bodyc.getKind()==Kind::LAMBDA);
             std::vector<Node> nvars;
             nvars.push_back(lambda[0][0]);
-            nvars.insert(nvars.end(), lambdac[0].begin(), lambdac[0].end());
+            nvars.insert(nvars.end(), bodyc[0].begin(), bodyc[0].end());
             std::vector<Node> largs;
             largs.push_back(nm->mkNode(Kind::BOUND_VAR_LIST, nvars));
-            largs.push_back(body);
+            largs.push_back(bodyc[1]);
             lambdac = nm->mkNode(Kind::LAMBDA, largs);
           }
           else
