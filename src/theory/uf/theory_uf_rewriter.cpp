@@ -276,6 +276,16 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
+      Node body = lambda[1];
+      NodeManager * nm = nodeManager();
+      if (k==Kind::HO_APPLY && lambda[0].getNumChildren()>1)
+      {
+        std::vector<Node> nvars(lambda[0].begin()+1, lambda[0].end());
+        std::vector<Node> largs;
+        largs.push_back(nm->mkNode(Kind::BOUND_VAR_LIST, nvars));
+        largs.push_back(body);
+        body = nm->mkNode(Kind::LAMBDA, largs);
+      }
       std::unordered_set<Node> fvs;
       for (TNode a : args)
       {
@@ -283,14 +293,33 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
       if (!fvs.empty())
       {
-        ElimShadowNodeConverter esnc(nodeManager(), n, fvs);
-        Node lambdac = esnc.convert(lambda);
-        if (lambdac!=lambda)
+        ElimShadowNodeConverter esnc(nm, n, fvs);
+        Node bodyc = esnc.convert(body);
+        if (bodyc!=body)
         {
+          Node lambdac;
+          if (k==Kind::HO_APPLY && lambda[0].getNumChildren()>1)
+          {
+            Assert (lambdac.getKind()==Kind::LAMBDA);
+            std::vector<Node> nvars;
+            nvars.push_back(lambda[0][0]);
+            nvars.insert(nvars.end(), lambdac[0].begin(), lambdac[0].end());
+            std::vector<Node> largs;
+            largs.push_back(nm->mkNode(Kind::BOUND_VAR_LIST, nvars));
+            largs.push_back(body);
+            lambdac = nm->mkNode(Kind::LAMBDA, largs);
+          }
+          else
+          {
+            lambdac = nm->mkNode(Kind::LAMBDA, lambda[0], bodyc);
+          }
+          Assert (lambdac!=lambda);
           std::vector<Node> aargs;
           aargs.push_back(lambdac);
           aargs.insert(aargs.end(), args.begin(), args.end());
-          return nodeManager()->mkNode(k, aargs);
+          Node ret = nm->mkNode(k, aargs);
+          Trace("uf-elim-shadow") << "Elim shadow " << n << " to " << ret << std::endl;
+          return ret;
         }
       }
     }
