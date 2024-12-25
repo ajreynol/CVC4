@@ -40,7 +40,9 @@ TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm, Rewriter* rr)
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::INT_TO_BV_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_ELIM_SHADOW,
+  registerProofRewriteRule(ProofRewriteRule::LAMBDA_ELIM_SHADOW,
+                           TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW,
                            TheoryRewriteCtx::PRE_DSL);
 }
 
@@ -84,7 +86,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
         return RewriteResponse(REWRITE_AGAIN_FULL, ret);
       }
       // see if we need to eliminate shadowing
-      Node nes = rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_ELIM_SHADOW, node);
+      Node nes = rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW, node);
       if (!nes.isNull())
       {
         return RewriteResponse(REWRITE_AGAIN_FULL, nes);
@@ -114,7 +116,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
                           << lambda << " with " << node[1] << "\n";
 
       // see if we need to eliminate shadowing
-      Node nes = rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_ELIM_SHADOW, node);
+      Node nes = rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW, node);
       if (!nes.isNull())
       {
         return RewriteResponse(REWRITE_AGAIN_FULL, nes);
@@ -257,7 +259,35 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::MACRO_LAMBDA_ELIM_SHADOW:
+    case ProofRewriteRule::LAMBDA_ELIM_SHADOW:
+    {
+      if (n.getKind()!=Kind::LAMBDA)
+      {
+        return Node::null();
+      }
+      NodeManager * nm = nodeManager();
+      std::unordered_set<Node> vars;
+      std::vector<Node> vlist(n[0].begin(), n[0].end());
+      bool changed = false;
+      for (size_t i=0, nvars = vlist.size(); i<nvars; i++)
+      {
+        size_t ii = (nvars-i)-1;
+        Node v = vlist[ii];
+        if (vars.find(v)!=vars.end())
+        {
+          vlist[ii] = ElimShadowNodeConverter::getElimShadowVar(n, n, ii);
+          changed = true;
+        }
+        vars.insert(v);
+      }
+      if (changed)
+      {
+        Node vl = nm->mkNode(Kind::BOUND_VAR_LIST, vlist);
+        return nm->mkNode(Kind::LAMBDA, vl, n[1]);
+      }
+    }
+    break;
+    case ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW:
     {
       Kind k = n.getKind();
       Node lambda;
@@ -387,6 +417,7 @@ Node TheoryUfRewriter::rewriteLambda(Node node)
   Node retElimShadow = ElimShadowNodeConverter::eliminateShadow(node);
   if (retElimShadow != node)
   {
+    Trace("builtin-rewrite") << "...rewrites to " << retElimShadow << std::endl;
     return retElimShadow;
   }
   Node anode = FunctionConst::toArrayConst(node);

@@ -95,19 +95,21 @@ Node ElimShadowNodeConverter::eliminateShadow(const Node& q)
   // eliminate shadowing in all children
   std::vector<Node> children;
   // drop duplicate variables
-  std::vector<Node> vars;
+  std::unordered_set<Node> vset;
+  std::vector<Node> vars(q[0].begin(), q[0].end());
   bool childChanged = false;
   for (size_t i = 0, nvars = q[0].getNumChildren(); i < nvars; i++)
   {
-    const Node& v = q[0][i];
-    if (std::find(vars.begin(), vars.end(), v) == vars.end())
+    size_t ii = nvars-i-1;
+    const Node& v = q[0][ii];
+    if (vset.find(v)==vset.end())
     {
-      vars.push_back(v);
+      vset.insert(v);
     }
     else
     {
-      Node vn = getElimShadowVar(q, q, i);
-      vars.push_back(vn);
+      Node vn = getElimShadowVar(q, q, ii);
+      vars[ii] = vn;
       childChanged = true;
     }
   }

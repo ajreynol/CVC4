@@ -2565,7 +2565,17 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(LAMBDA_ELIM),
-  EVALUE(MACRO_LAMBDA_ELIM_SHADOW),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Equality -- Lambda elim shadow**
+   *
+   * .. math::
+   *   (\lambda x_1 \ldots x_n.\> t = (\lambda x_1 \ldots x_n.\> t
+   *
+   * \endverbatim
+   */
+  EVALUE(LAMBDA_ELIM_SHADOW),
+  EVALUE(MACRO_LAMBDA_APP_ELIM_SHADOW),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Arrays -- Constant array select**
