@@ -1330,9 +1330,11 @@ set(regress_0_tests
   regress0/proofs/dd_alpha_eq_qpattern.smt2
   regress0/proofs/dd_bug787_beta_reduce.smt2
   regress0/proofs/dd_fv-bvl.smt2
+  regress0/proofs/dd_ic_macro-elim-shadow.smt2
   regress0/proofs/dd_ic_pf_764.smt2
   regress0/proofs/dd_pf_739.smt2
   regress0/proofs/dd_spark_nnf_pf.smt2
+  regress0/proofs/dd.int_check_bvugt_bvadd_ltr_inv_g.smt2
   regress0/proofs/define-fun-shadow.smt2
   regress0/proofs/dsl-cong-eval-cr.smt2
   regress0/proofs/dsl-no-eval.smt2
