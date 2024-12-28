@@ -201,15 +201,6 @@ bool InferProofCons::convert(Env& env,
     case InferenceId::STRINGS_NORMAL_FORM:
     case InferenceId::STRINGS_CODE_PROXY:
     {
-      // Use a string core term context, which counts the nesting of non-core
-      // string applications.
-      StringCoreTermContext sctc;
-      TConvProofGenerator tconv(env,
-                                nullptr,
-                                TConvPolicy::FIXPOINT,
-                                TConvCachePolicy::NEVER,
-                                "StrTConv",
-                                &sctc);
       size_t idMax = 0;
       // These three inference assume the substitution is applied to the
       // *arguments* of extended functions and the length function, so we
@@ -220,44 +211,16 @@ bool InferProofCons::convert(Env& env,
       {
         idMax = 1;
       }
-      //Node concr = convertCoreSubs(env, pf, psb, conc, ps.d_children, 0, idMax, true);
-      // add the rewrites for nested contexts up to idMax.
-      for (size_t i = 0; i <= idMax; i++)
+      // apply the substitution to conclude conc = conc', where conc' is the
+      // result of applying the substitution to conc'. This method further
+      // concludes conc from conc'. It then remains to prove conc' below.
+      Node concr = convertCoreSubs(env, pf, psb, conc, ps.d_children, 0, idMax, true);
+      Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
+      Trace("strings-ipc-core") << "- " << conc << std::endl;
+      Trace("strings-ipc-core") << "- to " << concr << std::endl;
+      if (psb.applyPredIntro(concr, {}))
       {
-        for (const Node& s : ps.d_children)
-        {
-          Trace("strings-ipc-core")
-              << "--- rewrite " << s << ", id " << i << std::endl;
-          Assert(s.getKind() == Kind::EQUAL);
-          tconv.addRewriteStep(s[0], s[1], pf, false, TrustId::NONE, false, i);
-        }
-      }
-      Node res;
-      std::shared_ptr<ProofNode> pfn;
-      pfn = tconv.getProofForRewriting(conc);
-      pf->addProof(pfn);
-      res = pfn->getResult();
-      // the proof step buffer is tracking unique conclusions, we (dummy) mark
-      // that we have a proof of res via the proof above to ensure we do not
-      // reprove it in the following.
-      psb.addStep(ProofRule::ASSUME, {}, {res}, res);
-      if (!res.isNull())
-      {
-        Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
-        Trace("strings-ipc-core") << "- " << res[0] << std::endl;
-        Trace("strings-ipc-core") << "- to " << res[1] << std::endl;
-        if (psb.applyPredIntro(res[1], {}))
-        {
-          useBuffer = true;
-          psb.addStep(ProofRule::EQ_RESOLVE,
-                      {res[1], res[1].eqNode(res[0])},
-                      {},
-                      res[0]);
-        }
-      }
-      else
-      {
-        Trace("strings-ipc-core") << "...failed to get result" << std::endl;
+        useBuffer = true;
       }
     }
     break;

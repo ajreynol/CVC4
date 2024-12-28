@@ -150,6 +150,13 @@ class InferProofCons : protected EnvObj, public ProofGenerator
    */
   static Node convertTrans(Node eqa, Node eqb, TheoryProofStepBuffer& psb);
   /**
+   * Helper method for convert. Concludes tgt from src, using AND_ELIM
+   * if necessary.
+   * @param nm Pointer to the node manager.
+   * @param src The source predicate, assumed to have a proof in psb.
+   * @param tgt The target predicate.
+   * @param psb The proof step buffer.
+   * @return true if we guarantee psb has a proof of tgt.
    */
   static bool convertAndElim(NodeManager* nm,
                              const Node& src,
