@@ -220,6 +220,7 @@ bool InferProofCons::convert(Env& env,
       {
         idMax = 1;
       }
+      //Node concr = convertCoreSubs(env, pf, psb, conc, ps.d_children, 0, idMax, true);
       // add the rewrites for nested contexts up to idMax.
       for (size_t i = 0; i <= idMax; i++)
       {
@@ -315,23 +316,16 @@ bool InferProofCons::convert(Env& env,
     {
       // the last child is the predicate we are operating on, move to front
       Node src = ps.d_children[ps.d_children.size() - 1];
-#if 1
       Trace("strings-ipc-core")
           << "Generate proof for STRINGS_EXTF_EQ_REW, starting with " << src
           << std::endl;
+      // apply the substitution using the proper contextual information
+      // using the utility method
       std::vector<Node> expe(ps.d_children.begin(), ps.d_children.end() - 1);
       Node mainEqSRew = convertCoreSubs(env, pf, psb, src, expe, 1, 1);
       Trace("strings-ipc-core")
           << "...after subs: " << mainEqSRew << std::endl;
       mainEqSRew = psb.applyPredElim(mainEqSRew, {});
-#else
-      std::vector<Node> expe(ps.d_children.begin(), ps.d_children.end() - 1);
-      // start with a default rewrite
-      Trace("strings-ipc-core")
-          << "Generate proof for STRINGS_EXTF_EQ_REW, starting with " << src
-          << std::endl;
-      Node mainEqSRew = psb.applyPredElim(src, expe);
-#endif
       Trace("strings-ipc-core")
           << "...after pred elim: " << mainEqSRew << std::endl;
       if (mainEqSRew == conc)
@@ -450,13 +444,6 @@ bool InferProofCons::convert(Env& env,
       // if there are substitutions to apply
       if (mainEqIndex > 0)
       {
-        StringCoreTermContext sctc;
-        TConvProofGenerator tconv(env,
-                                  nullptr,
-                                  TConvPolicy::FIXPOINT,
-                                  TConvCachePolicy::NEVER,
-                                  "StrTConv",
-                                  &sctc);
         // Compute which equalities we want to flip their substitution.
         // Currently this is only an issue if e.g. (= (str.++ a a) (str.++ b c))
         // where we conclude (= a c) from an explanation (= a b) via
@@ -481,29 +468,8 @@ bool InferProofCons::convert(Env& env,
             }
           }
         }
-        for (const Node& s : rexp)
-        {
-          Trace("strings-ipc-core") << "--- rewrite " << s << std::endl;
-          Assert(s.getKind() == Kind::EQUAL);
-          tconv.addRewriteStep(s[0], s[1], pf);
-        }
-        std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(mainEq);
-        Node res = pfn->getResult();
-        Assert(res.getKind() == Kind::EQUAL);
-        if (res[0] != res[1])
-        {
-          Trace("strings-ipc-core") << "Rewrites: " << res << std::endl;
-          pf->addProof(pfn);
-          // Similar to above, the proof step buffer is tracking unique
-          // conclusions, we (dummy) mark that we have a proof of res via the
-          // proof above to ensure we do not reprove it in the following.
-          psb.addStep(ProofRule::ASSUME, {}, {res}, res);
-          psb.addStep(ProofRule::EQ_RESOLVE,
-                      {pmainEq, res[0].eqNode(res[1])},
-                      {},
-                      res[1]);
-          pmainEq = res[1];
-        }
+        // apply substitution using the util method below
+        pmainEq = convertCoreSubs(env, pf, psb, mainEq, rexp, 0, 0);
       }
       Trace("strings-ipc-core")
           << "Main equality after subs " << pmainEq << std::endl;
@@ -1497,7 +1463,8 @@ Node InferProofCons::convertCoreSubs(Env& env,
                                      const Node& src,
                                      const std::vector<Node>& exp,
                                      size_t minIndex,
-                                     size_t maxIndex)
+                                     size_t maxIndex,
+                                     bool proveSrc)
 {
   // set up the conversion proof generator with string core term context
   StringCoreTermContext sctc;
@@ -1523,14 +1490,23 @@ Node InferProofCons::convertCoreSubs(Env& env,
   Assert(res.getKind() == Kind::EQUAL);
   if (res[0] != res[1])
   {
+    Assert (res[0]==src);
     Trace("strings-ipc-subs") << "Substitutes: " << res << std::endl;
     pf->addProof(pfn);
-    // Similar to above, the proof step buffer is tracking unique
-    // conclusions, we (dummy) mark that we have a proof of res via the
-    // proof above to ensure we do not reprove it in the following.
+    // The proof step buffer is tracking unique conclusions, we (dummy) mark
+    // that we have a proof of res via the proof above to ensure we do not
+    // reprove it.
     psb.addStep(ProofRule::ASSUME, {}, {res}, res);
-    psb.addStep(
-        ProofRule::EQ_RESOLVE, {src, res[0].eqNode(res[1])}, {}, res[1]);
+    if (proveSrc)
+    {
+      psb.addStep(
+          ProofRule::EQ_RESOLVE, {res[1], res[1].eqNode(src)}, {}, src);
+    }
+    else
+    {
+      psb.addStep(
+          ProofRule::EQ_RESOLVE, {src, res}, {}, res[1]);
+    }
     return res[1];
   }
   return src;
