@@ -139,6 +139,17 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         if (arr[1]==index)
         {
+          // process being equal:
+          // if store, we are redundant, remove and break
+          // if select, we return the element directly
+          if (k==Kind::STORE)
+          {
+            arr = arr[0];
+          }
+          else
+          {
+            return arr[2];
+          }
           break;
         }
         // store orders indices only

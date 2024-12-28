@@ -44,6 +44,8 @@ TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm, Rewriter* rr)
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW,
                            TheoryRewriteCtx::PRE_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM,
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
@@ -284,6 +286,23 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         Node vl = nm->mkNode(Kind::BOUND_VAR_LIST, vlist);
         return nm->mkNode(Kind::LAMBDA, vl, n[1]);
+      }
+    }
+    break;
+    case ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM:
+    {
+      if (n.getKind()==Kind::LAMBDA)
+      {
+        Node anode = FunctionConst::toArrayConst(n);
+        if (!anode.isNull() && anode.isConst())
+        {
+          Assert(anode.getType().isArray());
+          Node retNode =
+              nodeManager()->mkConst(FunctionArrayConst(n.getType(), anode));
+          // convert back to lambda immediately
+          retNode = uf::FunctionConst::toLambda(retNode);
+          return retNode;
+        }
       }
     }
     break;

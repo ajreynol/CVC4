@@ -2575,6 +2575,7 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(LAMBDA_ELIM_SHADOW),
+  EVALUE(MACRO_LAMBDA_VALUE_NORM),
   EVALUE(MACRO_LAMBDA_APP_ELIM_SHADOW),
   /**
    * \verbatim embed:rst:leading-asterisk

@@ -245,6 +245,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";
     case ProofRewriteRule::LAMBDA_ELIM: return "lambda-elim";
     case ProofRewriteRule::LAMBDA_ELIM_SHADOW: return "lambda-elim-shadow";
+    case ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM: return "macro-lambda-value-norm";
     case ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW: return "macro-lambda-app-elim-shadow";
     case ProofRewriteRule::ARRAYS_SELECT_CONST: return "arrays-select-const";
     case ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP: return "macro-arrays-normalize-op";

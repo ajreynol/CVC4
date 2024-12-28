@@ -1333,6 +1333,8 @@ set(regress_0_tests
   regress0/proofs/dd_fv-bvl.smt2
   regress0/proofs/dd_ic_macro-elim-shadow.smt2
   regress0/proofs/dd_ic_pf_764.smt2
+  regress0/proofs/dd_M301_array_norm_op.smt2
+  regress0/proofs/dd_N627_fun_const.smt2
   regress0/proofs/dd_pf_739.smt2
   regress0/proofs/dd_spark_nnf_pf.smt2
   regress0/proofs/dd.int_check_bvugt_bvadd_ltr_inv_g.smt2
