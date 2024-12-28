@@ -315,12 +315,49 @@ bool InferProofCons::convert(Env& env,
     {
       // the last child is the predicate we are operating on, move to front
       Node src = ps.d_children[ps.d_children.size() - 1];
+#if 0
+      StringCoreTermContext sctc;
+      TConvProofGenerator tconv(env,
+                                nullptr,
+                                TConvPolicy::FIXPOINT,
+                                TConvCachePolicy::NEVER,
+                                "StrTConv",
+                                &sctc);
+      for (size_t i=0, nchild = ps.d_children.size()-1; i<nchild; i++)
+      {
+        Node s = ps.d_children[i];
+        tconv.addRewriteStep(s[0], s[1], pf, false, TrustId::NONE, false, 1);
+      }
+      // start with a default rewrite
+      Trace("strings-ipc-core")
+          << "Generate proof for STRINGS_EXTF_EQ_REW, starting with " << src
+          << std::endl;
+      std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(src);
+      Node res = pfn->getResult();
+      Assert(res.getKind() == Kind::EQUAL);
+      Node mainEqSRew = src;
+      if (res[0] != res[1])
+      {
+        Trace("strings-ipc-core") << "Rewrites: " << res << std::endl;
+        pf->addProof(pfn);
+        // Similar to above, the proof step buffer is tracking unique
+        // conclusions, we (dummy) mark that we have a proof of res via the
+        // proof above to ensure we do not reprove it in the following.
+        psb.addStep(ProofRule::ASSUME, {}, {res}, res);
+        psb.addStep(ProofRule::EQ_RESOLVE,
+                    {src, res[0].eqNode(res[1])},
+                    {},
+                    res[1]);
+        mainEqSRew = res[1];
+      }
+#else
       std::vector<Node> expe(ps.d_children.begin(), ps.d_children.end() - 1);
       // start with a default rewrite
       Trace("strings-ipc-core")
           << "Generate proof for STRINGS_EXTF_EQ_REW, starting with " << src
           << std::endl;
       Node mainEqSRew = psb.applyPredElim(src, expe);
+#endif
       Trace("strings-ipc-core")
           << "...after pred elim: " << mainEqSRew << std::endl;
       if (mainEqSRew == conc)
@@ -456,25 +493,22 @@ bool InferProofCons::convert(Env& env,
         // inferences simply consider unification without substituting, leading
         // to issues like the one above.
         std::unordered_set<size_t> reorientIndices;
+        std::vector<Node> rexp(ps.d_children.begin(), ps.d_children.begin()+mainEqIndex);
         if (infer==InferenceId::STRINGS_F_UNIFY)
         {
           Assert (conc.getKind()==Kind::EQUAL);
           // maybe reorient?
           for (size_t i = 0; i < mainEqIndex; i++)
           {
-            if (ps.d_children[i][0]==conc[0] || ps.d_children[i][0]==conc[1])
+            Assert (rexp[i].getKind()==Kind::EQUAL);
+            if (rexp[i][0]==conc[0] || rexp[i][0]==conc[1])
             {
-              reorientIndices.insert(i);
+              rexp[i] = rexp[i][1].eqNode(rexp[i][0]);
             }
           }
         }
-        for (size_t i = 0; i < mainEqIndex; i++)
+        for (const Node& s : rexp)
         {
-          Node s = ps.d_children[i];
-          if (reorientIndices.find(i)!=reorientIndices.end())
-          {
-            s = s[1].eqNode(s[0]);
-          }
           Trace("strings-ipc-core") << "--- rewrite " << s << std::endl;
           Assert(s.getKind() == Kind::EQUAL);
           tconv.addRewriteStep(s[0], s[1], pf);
