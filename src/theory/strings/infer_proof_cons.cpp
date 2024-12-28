@@ -315,41 +315,15 @@ bool InferProofCons::convert(Env& env,
     {
       // the last child is the predicate we are operating on, move to front
       Node src = ps.d_children[ps.d_children.size() - 1];
-#if 0
-      StringCoreTermContext sctc;
-      TConvProofGenerator tconv(env,
-                                nullptr,
-                                TConvPolicy::FIXPOINT,
-                                TConvCachePolicy::NEVER,
-                                "StrTConv",
-                                &sctc);
-      for (size_t i=0, nchild = ps.d_children.size()-1; i<nchild; i++)
-      {
-        Node s = ps.d_children[i];
-        tconv.addRewriteStep(s[0], s[1], pf, false, TrustId::NONE, false, 1);
-      }
-      // start with a default rewrite
+#if 1
       Trace("strings-ipc-core")
           << "Generate proof for STRINGS_EXTF_EQ_REW, starting with " << src
           << std::endl;
-      std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(src);
-      Node res = pfn->getResult();
-      Assert(res.getKind() == Kind::EQUAL);
-      Node mainEqSRew = src;
-      if (res[0] != res[1])
-      {
-        Trace("strings-ipc-core") << "Rewrites: " << res << std::endl;
-        pf->addProof(pfn);
-        // Similar to above, the proof step buffer is tracking unique
-        // conclusions, we (dummy) mark that we have a proof of res via the
-        // proof above to ensure we do not reprove it in the following.
-        psb.addStep(ProofRule::ASSUME, {}, {res}, res);
-        psb.addStep(ProofRule::EQ_RESOLVE,
-                    {src, res[0].eqNode(res[1])},
-                    {},
-                    res[1]);
-        mainEqSRew = res[1];
-      }
+      std::vector<Node> expe(ps.d_children.begin(), ps.d_children.end() - 1);
+      Node mainEqSRew = convertCoreSubs(env, pf, psb, src, expe, 1, 1);
+      Trace("strings-ipc-core")
+          << "...after subs: " << mainEqSRew << std::endl;
+      mainEqSRew = psb.applyPredElim(mainEqSRew, {});
 #else
       std::vector<Node> expe(ps.d_children.begin(), ps.d_children.end() - 1);
       // start with a default rewrite
