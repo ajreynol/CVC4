@@ -152,7 +152,9 @@ class InferProofCons : protected EnvObj, public ProofGenerator
   /**
    */
   static bool convertAndElim(NodeManager *nm, const Node& src, const Node& tgt, TheoryProofStepBuffer& psb);
-
+  /**
+   */
+  static Node convertCoreSubs(Env& env, CDProof * pf, TheoryProofStepBuffer& psb, const Node& src, const std::vector<Node>& exp, size_t minIndex = 0, size_t maxIndex = 0);
   /** The lazy fact map */
   NodeInferInfoMap d_lazyFactMap;
   /** Reference to the statistics for the theory of strings/sequences. */

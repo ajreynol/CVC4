@@ -490,9 +490,8 @@ bool InferProofCons::convert(Env& env,
         // was processed as a substitution.
         // In contrast, normal form inferences are truly processed as
         // substitutions in the strings core solver, whereas flat form
-        // inferences simply consider unification without substituting, leading
+        // inferences simply consider unification without substitutions, leading
         // to issues like the one above.
-        std::unordered_set<size_t> reorientIndices;
         std::vector<Node> rexp(ps.d_children.begin(), ps.d_children.begin()+mainEqIndex);
         if (infer==InferenceId::STRINGS_F_UNIFY)
         {
@@ -1513,7 +1512,48 @@ bool InferProofCons::convertAndElim(NodeManager *nm, const Node& src, const Node
   }
   return false;
 }
-  
+
+Node InferProofCons::convertCoreSubs(Env& env, CDProof * pf, TheoryProofStepBuffer& psb, const Node& src, const std::vector<Node>& exp, size_t minIndex, size_t maxIndex)
+{
+  // set up the conversion proof generator with string core term context
+  StringCoreTermContext sctc;
+  TConvProofGenerator tconv(env,
+                            nullptr,
+                            TConvPolicy::FIXPOINT,
+                            TConvCachePolicy::NEVER,
+                            "StrTConv",
+                            &sctc);
+  // add the rewrites for nested contexts up to idMax.
+  for (size_t i = minIndex; i <= maxIndex; i++)
+  {
+    for (const Node& s : exp)
+    {
+      Trace("strings-ipc-subs")
+          << "--- rewrite " << s << ", id " << i << std::endl;
+      Assert(s.getKind() == Kind::EQUAL);
+      tconv.addRewriteStep(s[0], s[1], pf, false, TrustId::NONE, false, i);
+    }
+  }
+  std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(src);
+  Node res = pfn->getResult();
+  Assert(res.getKind() == Kind::EQUAL);
+  if (res[0] != res[1])
+  {
+    Trace("strings-ipc-subs") << "Substitutes: " << res << std::endl;
+    pf->addProof(pfn);
+    // Similar to above, the proof step buffer is tracking unique
+    // conclusions, we (dummy) mark that we have a proof of res via the
+    // proof above to ensure we do not reprove it in the following.
+    psb.addStep(ProofRule::ASSUME, {}, {res}, res);
+    psb.addStep(ProofRule::EQ_RESOLVE,
+                {src, res[0].eqNode(res[1])},
+                {},
+                res[1]);
+    return res[1];
+  }
+  return src;
+}
+
 std::shared_ptr<ProofNode> InferProofCons::getProofFor(Node fact)
 {
   // get the inference
