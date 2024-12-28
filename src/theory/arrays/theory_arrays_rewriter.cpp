@@ -125,7 +125,7 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP:
     {
       Kind k = n.getKind();
-      if (k != Kind::SELECT && k!=Kind::STORE)
+      if (k != Kind::SELECT && k != Kind::STORE)
       {
         return Node::null();
       }
@@ -135,14 +135,14 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       std::vector<Node> indices;
       std::vector<Node> elems;
       bool success = false;
-      while (arr.getKind()==Kind::STORE)
+      while (arr.getKind() == Kind::STORE)
       {
-        if (arr[1]==index)
+        if (arr[1] == index)
         {
           // process being equal:
           // if store, we are redundant, remove and break
           // if select, we return the element directly
-          if (k==Kind::STORE)
+          if (k == Kind::STORE)
           {
             arr = arr[0];
           }
@@ -153,7 +153,7 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
           break;
         }
         // store orders indices only
-        if (k==Kind::STORE && arr[1]<index)
+        if (k == Kind::STORE && arr[1] < index)
         {
           break;
         }
@@ -179,9 +179,9 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      NodeManager * nm = nodeManager();
+      NodeManager* nm = nodeManager();
       Node ret;
-      if (k==Kind::STORE)
+      if (k == Kind::STORE)
       {
         ret = nm->mkNode(Kind::STORE, arr, n[1], n[2]);
         // add back those we traversed over
@@ -194,7 +194,7 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
       else
       {
-        Assert (k==Kind::SELECT);
+        Assert(k == Kind::SELECT);
         ret = nm->mkNode(Kind::SELECT, arr, n[1]);
       }
       return ret;

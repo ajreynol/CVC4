@@ -100,9 +100,9 @@ Node ElimShadowNodeConverter::eliminateShadow(const Node& q)
   bool childChanged = false;
   for (size_t i = 0, nvars = q[0].getNumChildren(); i < nvars; i++)
   {
-    size_t ii = nvars-i-1;
+    size_t ii = nvars - i - 1;
     const Node& v = q[0][ii];
-    if (vset.find(v)==vset.end())
+    if (vset.find(v) == vset.end())
     {
       vset.insert(v);
     }

@@ -384,7 +384,7 @@ bool InferProofCons::convert(Env& env,
       Trace("strings-ipc-core")
           << "...after extended equality rewrite: " << mainEqSRew2 << std::endl;
       // it may have rewritten to an AND, in which case we get the conjunct
-      if (convertAndElim(nm, mainEqSRew2,conc, psb))
+      if (convertAndElim(nm, mainEqSRew2, conc, psb))
       {
         useBuffer = true;
         break;
@@ -492,15 +492,16 @@ bool InferProofCons::convert(Env& env,
         // substitutions in the strings core solver, whereas flat form
         // inferences simply consider unification without substitutions, leading
         // to issues like the one above.
-        std::vector<Node> rexp(ps.d_children.begin(), ps.d_children.begin()+mainEqIndex);
-        if (infer==InferenceId::STRINGS_F_UNIFY)
+        std::vector<Node> rexp(ps.d_children.begin(),
+                               ps.d_children.begin() + mainEqIndex);
+        if (infer == InferenceId::STRINGS_F_UNIFY)
         {
-          Assert (conc.getKind()==Kind::EQUAL);
+          Assert(conc.getKind() == Kind::EQUAL);
           // maybe reorient?
           for (size_t i = 0; i < mainEqIndex; i++)
           {
-            Assert (rexp[i].getKind()==Kind::EQUAL);
-            if (rexp[i][0]==conc[0] || rexp[i][0]==conc[1])
+            Assert(rexp[i].getKind() == Kind::EQUAL);
+            if (rexp[i][0] == conc[0] || rexp[i][0] == conc[1])
             {
               rexp[i] = rexp[i][1].eqNode(rexp[i][0]);
             }
@@ -1382,9 +1383,9 @@ bool InferProofCons::convert(Env& env,
         Trace("strings-ipc-fail") << "    e: " << ec << std::endl;
       }
     }
-    //AlwaysAssert(false);
-    // untrustworthy conversion, the argument of THEORY_INFERENCE_STRINGS is its
-    // conclusion
+    // AlwaysAssert(false);
+    //  untrustworthy conversion, the argument of THEORY_INFERENCE_STRINGS is
+    //  its conclusion
     ps.d_args.clear();
     ps.d_args.push_back(mkTrustId(nm, TrustId::THEORY_INFERENCE_STRINGS));
     ps.d_args.push_back(conc);
@@ -1492,17 +1493,20 @@ Node InferProofCons::convertTrans(Node eqa,
   return Node::null();
 }
 
-bool InferProofCons::convertAndElim(NodeManager *nm, const Node& src, const Node& tgt, TheoryProofStepBuffer& psb)
+bool InferProofCons::convertAndElim(NodeManager* nm,
+                                    const Node& src,
+                                    const Node& tgt,
+                                    TheoryProofStepBuffer& psb)
 {
-  if (src==tgt)
+  if (src == tgt)
   {
     return true;
   }
-  if (src.getKind()==Kind::AND)
+  if (src.getKind() == Kind::AND)
   {
-    for (size_t i=0, nchild=src.getNumChildren(); i<nchild; i++)
+    for (size_t i = 0, nchild = src.getNumChildren(); i < nchild; i++)
     {
-      if (src[i]==tgt)
+      if (src[i] == tgt)
       {
         Node ni = nm->mkConstInt(Rational(i));
         psb.addStep(ProofRule::AND_ELIM, {src}, {ni}, tgt);
@@ -1513,7 +1517,13 @@ bool InferProofCons::convertAndElim(NodeManager *nm, const Node& src, const Node
   return false;
 }
 
-Node InferProofCons::convertCoreSubs(Env& env, CDProof * pf, TheoryProofStepBuffer& psb, const Node& src, const std::vector<Node>& exp, size_t minIndex, size_t maxIndex)
+Node InferProofCons::convertCoreSubs(Env& env,
+                                     CDProof* pf,
+                                     TheoryProofStepBuffer& psb,
+                                     const Node& src,
+                                     const std::vector<Node>& exp,
+                                     size_t minIndex,
+                                     size_t maxIndex)
 {
   // set up the conversion proof generator with string core term context
   StringCoreTermContext sctc;
@@ -1545,10 +1555,8 @@ Node InferProofCons::convertCoreSubs(Env& env, CDProof * pf, TheoryProofStepBuff
     // conclusions, we (dummy) mark that we have a proof of res via the
     // proof above to ensure we do not reprove it in the following.
     psb.addStep(ProofRule::ASSUME, {}, {res}, res);
-    psb.addStep(ProofRule::EQ_RESOLVE,
-                {src, res[0].eqNode(res[1])},
-                {},
-                res[1]);
+    psb.addStep(
+        ProofRule::EQ_RESOLVE, {src, res[0].eqNode(res[1])}, {}, res[1]);
     return res[1];
   }
   return src;

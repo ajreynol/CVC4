@@ -88,7 +88,8 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
         return RewriteResponse(REWRITE_AGAIN_FULL, ret);
       }
       // see if we need to eliminate shadowing
-      Node nes = rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW, node);
+      Node nes =
+          rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW, node);
       if (!nes.isNull())
       {
         return RewriteResponse(REWRITE_AGAIN_FULL, nes);
@@ -118,7 +119,8 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
                           << lambda << " with " << node[1] << "\n";
 
       // see if we need to eliminate shadowing
-      Node nes = rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW, node);
+      Node nes =
+          rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW, node);
       if (!nes.isNull())
       {
         return RewriteResponse(REWRITE_AGAIN_FULL, nes);
@@ -263,19 +265,19 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::LAMBDA_ELIM_SHADOW:
     {
-      if (n.getKind()!=Kind::LAMBDA)
+      if (n.getKind() != Kind::LAMBDA)
       {
         return Node::null();
       }
-      NodeManager * nm = nodeManager();
+      NodeManager* nm = nodeManager();
       std::unordered_set<Node> vars;
       std::vector<Node> vlist(n[0].begin(), n[0].end());
       bool changed = false;
-      for (size_t i=0, nvars = vlist.size(); i<nvars; i++)
+      for (size_t i = 0, nvars = vlist.size(); i < nvars; i++)
       {
-        size_t ii = (nvars-i)-1;
+        size_t ii = (nvars - i) - 1;
         Node v = vlist[ii];
-        if (vars.find(v)!=vars.end())
+        if (vars.find(v) != vars.end())
         {
           vlist[ii] = ElimShadowNodeConverter::getElimShadowVar(n, n, ii);
           changed = true;
@@ -291,7 +293,7 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM:
     {
-      if (n.getKind()==Kind::LAMBDA)
+      if (n.getKind() == Kind::LAMBDA)
       {
         Node anode = FunctionConst::toArrayConst(n);
         if (!anode.isNull() && anode.isConst())
@@ -326,10 +328,10 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         return Node::null();
       }
       Node body = lambda[1];
-      NodeManager * nm = nodeManager();
-      if (k==Kind::HO_APPLY && lambda[0].getNumChildren()>1)
+      NodeManager* nm = nodeManager();
+      if (k == Kind::HO_APPLY && lambda[0].getNumChildren() > 1)
       {
-        std::vector<Node> nvars(lambda[0].begin()+1, lambda[0].end());
+        std::vector<Node> nvars(lambda[0].begin() + 1, lambda[0].end());
         std::vector<Node> largs;
         largs.push_back(nm->mkNode(Kind::BOUND_VAR_LIST, nvars));
         largs.push_back(body);
@@ -344,12 +346,12 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         ElimShadowNodeConverter esnc(nm, n, fvs);
         Node bodyc = esnc.convert(body);
-        if (bodyc!=body)
+        if (bodyc != body)
         {
           Node lambdac;
-          if (k==Kind::HO_APPLY && lambda[0].getNumChildren()>1)
+          if (k == Kind::HO_APPLY && lambda[0].getNumChildren() > 1)
           {
-            Assert (bodyc.getKind()==Kind::LAMBDA);
+            Assert(bodyc.getKind() == Kind::LAMBDA);
             std::vector<Node> nvars;
             nvars.push_back(lambda[0][0]);
             nvars.insert(nvars.end(), bodyc[0].begin(), bodyc[0].end());
@@ -362,12 +364,13 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
           {
             lambdac = nm->mkNode(Kind::LAMBDA, lambda[0], bodyc);
           }
-          Assert (lambdac!=lambda);
+          Assert(lambdac != lambda);
           std::vector<Node> aargs;
           aargs.push_back(lambdac);
           aargs.insert(aargs.end(), args.begin(), args.end());
           Node ret = nm->mkNode(k, aargs);
-          Trace("uf-elim-shadow") << "Elim shadow " << n << " to " << ret << std::endl;
+          Trace("uf-elim-shadow")
+              << "Elim shadow " << n << " to " << ret << std::endl;
           return ret;
         }
       }

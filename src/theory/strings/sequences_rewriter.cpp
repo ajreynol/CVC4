@@ -1552,13 +1552,14 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
 
 Node SequencesRewriter::rewriteViaStrIndexofReEval(const Node& n)
 {
-  if (n.getKind()==Kind::STRING_INDEXOF_RE && n[0].isConst() && n[2].isConst() && RegExpEntail::isConstRegExp(n[1]))
+  if (n.getKind() == Kind::STRING_INDEXOF_RE && n[0].isConst() && n[2].isConst()
+      && RegExpEntail::isConstRegExp(n[1]))
   {
     NodeManager* nm = nodeManager();
     Rational nrat = n[2].getConst<Rational>();
     String s = n[0].getConst<String>();
     Rational rsize(s.size());
-    if (nrat > rsize && nrat.sgn()<0)
+    if (nrat > rsize && nrat.sgn() < 0)
     {
       Node negone = nm->mkConstInt(Rational(-1));
       return negone;
@@ -1568,8 +1569,8 @@ Node SequencesRewriter::rewriteViaStrIndexofReEval(const Node& n)
     std::pair<size_t, size_t> match = firstMatch(rem, n[1]);
     Node ret = nm->mkConstInt(
         Rational(match.first == string::npos
-                      ? -1
-                      : static_cast<int64_t>(start + match.first)));
+                     ? -1
+                     : static_cast<int64_t>(start + match.first)));
     return ret;
   }
   return Node::null();
@@ -1577,7 +1578,8 @@ Node SequencesRewriter::rewriteViaStrIndexofReEval(const Node& n)
 
 Node SequencesRewriter::rewriteViaStrReplaceReEval(const Node& n)
 {
-  if (n.getKind()==Kind::STRING_REPLACE_RE && n[0].isConst() && RegExpEntail::isConstRegExp(n[1]))
+  if (n.getKind() == Kind::STRING_REPLACE_RE && n[0].isConst()
+      && RegExpEntail::isConstRegExp(n[1]))
   {
     NodeManager* nm = nodeManager();
     // str.replace_re("ZABCZ", re.++("A", _*, "C"), y) ---> "Z" ++ y ++ "Z"
@@ -1598,17 +1600,19 @@ Node SequencesRewriter::rewriteViaStrReplaceReEval(const Node& n)
 
 Node SequencesRewriter::rewriteViaStrReplaceReAllEval(const Node& n)
 {
-  if (n.getKind()==Kind::STRING_REPLACE_RE_ALL && n[0].isConst() && RegExpEntail::isConstRegExp(n[1]))
+  if (n.getKind() == Kind::STRING_REPLACE_RE_ALL && n[0].isConst()
+      && RegExpEntail::isConstRegExp(n[1]))
   {
     NodeManager* nm = nodeManager();
     // str.replace_re_all("ZABCZAB", re.++("A", _*, "C"), y) --->
     //   "Z" ++ y ++ "Z" ++ y
     TypeNode t = n[0].getType();
-    Assert (t.isString());
+    Assert(t.isString());
     Node emp = Word::mkEmptyWord(t);
     Node yp = nm->mkNode(Kind::REGEXP_INTER,
-                            n[1],
-                            nm->mkNode(Kind::REGEXP_COMPLEMENT, nm->mkNode(Kind::STRING_TO_REGEXP, emp)));
+                         n[1],
+                         nm->mkNode(Kind::REGEXP_COMPLEMENT,
+                                    nm->mkNode(Kind::STRING_TO_REGEXP, emp)));
     std::vector<Node> res;
     String rem = n[0].getConst<String>();
     std::pair<size_t, size_t> match(0, 0);
