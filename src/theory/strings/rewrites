@@ -378,8 +378,13 @@
   (str.contains (str.from_int n) s)
   false)
 
-(define-rule str-substr-ctn ((s String) (n Int) (m Int))
+(define-rule str-substr-ctn ((s ?Seq) (n Int) (m Int))
   (str.contains s (str.substr s n m))
+  true)
+
+(define-cond-rule str-replace-dual-ctn ((s ?Seq) (t ?Seq) (r ?Seq) (u ?Seq))
+  (and (str.contains s u) (str.contains r u))
+  (str.contains (str.replace s t r) u)
   true)
 
 ; =============== Regular expression rules
@@ -417,6 +422,8 @@
 (define-rule* re-inter-dup ((xs RegLan :list) (b RegLan) (ys RegLan :list) (zs RegLan :list)) (re.inter xs b ys b zs) (re.inter xs b ys zs))
 
 (define-rule re-star-none () (re.* re.none) (str.to_re ""))
+
+(define-rule re-star-star ((x RegLan)) (re.* (re.* x)) (re.* x))
 
 (define-cond-rule re-loop-neg ((n Int) (m Int) (r RegLan))
   (> n m)

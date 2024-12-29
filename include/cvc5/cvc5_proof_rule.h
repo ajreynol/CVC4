@@ -4092,6 +4092,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_FROM_INT_NO_CTN_NONDIGIT),
   /** Auto-generated from RARE rule str-substr-ctn */
   EVALUE(STR_SUBSTR_CTN),
+  /** Auto-generated from RARE rule str-replace-dual-ctn */
+  EVALUE(STR_REPLACE_DUAL_CTN),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
@@ -4130,6 +4132,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_INTER_DUP),
   /** Auto-generated from RARE rule re-star-none */
   EVALUE(RE_STAR_NONE),
+  /** Auto-generated from RARE rule re-star-star */
+  EVALUE(RE_STAR_STAR),
   /** Auto-generated from RARE rule re-loop-neg */
   EVALUE(RE_LOOP_NEG),
   /** Auto-generated from RARE rule re-inter-cstring */
@@ -4248,6 +4252,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_IN_RE_TEST_UNFOLD),
   /** Auto-generated from RARE rule str-in-re-test-unfold-rev */
   EVALUE(STR_IN_RE_TEST_UNFOLD_REV),
+  /** Auto-generated from RARE rule str-in-re-concat-emp */
+  EVALUE(STR_IN_RE_CONCAT_EMP),
   /** Auto-generated from RARE rule eq-refl */
   EVALUE(EQ_REFL),
   /** Auto-generated from RARE rule eq-symm */
