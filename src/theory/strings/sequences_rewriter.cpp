@@ -77,6 +77,8 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL,
                            TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS,
+                           TheoryRewriteCtx::POST_DSL);
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -144,6 +146,11 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL:
     {
       return rewriteViaStrReplaceReAllEval(n);
+    }
+    break;
+    case ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS:
+    {
+      return rewriteViaMacroStrStripEndpoints(n);
     }
     break;
     default: break;
@@ -1548,6 +1555,67 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
   std::vector<Node> ch1;
   std::vector<Node> ch2;
   return sent.rewriteViaMacroSubstrStripSymLength(node, rule, ch1, ch2);
+}
+
+
+Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
+{
+  Kind k = n.getKind();
+  if (k==Kind::STRING_INDEXOF)
+  {
+    // must start at zero
+    if (!n[2].isConst() || n[2].getConst<Rational>().sgn() != 0)
+    {
+      return Node::null();
+    }
+  }
+  else if (k!=Kind::STRING_CONTAINS && k!=Kind::STRING_REPLACE)
+  {
+    return Node::null();
+  }
+  std::vector<Node> nc1;
+  utils::getConcat(n[0], nc1);
+  std::vector<Node> nc2;
+  utils::getConcat(n[1], nc2);
+  if (nc2.empty())
+  {
+    return Node::null();
+  }
+  // strip endpoints
+  std::vector<Node> nb;
+  std::vector<Node> ne;
+  if (d_stringsEntail.stripConstantEndpoints(nc1, nc2, nb, ne))
+  {
+    NodeManager * nm = nodeManager();
+    TypeNode stype = n[0].getType();
+    Node rem = utils::mkConcat(nc1, stype);
+    switch (k)
+    {
+      case Kind::STRING_CONTAINS:
+      {
+        return nm->mkNode(
+          Kind::STRING_CONTAINS, rem, n[1]);
+      }
+      case Kind::STRING_REPLACE:
+      {
+        std::vector<Node> cc;
+        cc.insert(cc.end(), nb.begin(), nb.end());
+        cc.push_back(nm->mkNode(Kind::STRING_REPLACE,
+                                           rem,
+                                           n[1],
+                                           n[2]));
+        cc.insert(cc.end(), ne.begin(), ne.end());
+        return utils::mkConcat(cc, stype);
+      }
+      case Kind::STRING_INDEXOF:
+      {
+        return nm->mkNode(Kind::STRING_INDEXOF, rem, n[1], n[2]);
+      }
+      default:
+        break;
+    }
+  }
+  return Node::null();
 }
 
 Node SequencesRewriter::rewriteViaStrIndexofReEval(const Node& n)

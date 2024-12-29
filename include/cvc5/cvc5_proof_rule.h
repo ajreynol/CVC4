@@ -3110,9 +3110,6 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(STR_CTN_MULTISET_SUBSET),
-  EVALUE(STR_INDEXOF_RE_EVAL),
-  EVALUE(STR_REPLACE_RE_EVAL),
-  EVALUE(STR_REPLACE_RE_ALL_EVAL),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- String equality length unify prefix**
@@ -3142,6 +3139,10 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(MACRO_STR_EQ_LEN_UNIFY),
+  EVALUE(MACRO_STR_STRIP_ENDPOINTS),
+  EVALUE(STR_INDEXOF_RE_EVAL),
+  EVALUE(STR_REPLACE_RE_EVAL),
+  EVALUE(STR_REPLACE_RE_ALL_EVAL),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- regular expression loop elimination**
