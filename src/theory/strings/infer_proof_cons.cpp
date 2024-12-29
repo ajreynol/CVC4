@@ -214,7 +214,8 @@ bool InferProofCons::convert(Env& env,
       // apply the substitution to conclude conc = conc', where conc' is the
       // result of applying the substitution to conc'. This method further
       // concludes conc from conc'. It then remains to prove conc' below.
-      Node concr = convertCoreSubs(env, pf, psb, conc, ps.d_children, 0, idMax, true);
+      Node concr =
+          convertCoreSubs(env, pf, psb, conc, ps.d_children, 0, idMax, true);
       Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
       Trace("strings-ipc-core") << "- " << conc << std::endl;
       Trace("strings-ipc-core") << "- to " << concr << std::endl;
@@ -286,8 +287,7 @@ bool InferProofCons::convert(Env& env,
       // using the utility method
       std::vector<Node> expe(ps.d_children.begin(), ps.d_children.end() - 1);
       Node mainEqSRew = convertCoreSubs(env, pf, psb, src, expe, 1, 1);
-      Trace("strings-ipc-core")
-          << "...after subs: " << mainEqSRew << std::endl;
+      Trace("strings-ipc-core") << "...after subs: " << mainEqSRew << std::endl;
       mainEqSRew = psb.applyPredElim(mainEqSRew, {});
       Trace("strings-ipc-core")
           << "...after pred elim: " << mainEqSRew << std::endl;
@@ -1453,7 +1453,7 @@ Node InferProofCons::convertCoreSubs(Env& env,
   Assert(res.getKind() == Kind::EQUAL);
   if (res[0] != res[1])
   {
-    Assert (res[0]==src);
+    Assert(res[0] == src);
     Trace("strings-ipc-subs") << "Substitutes: " << res << std::endl;
     pf->addProof(pfn);
     // The proof step buffer is tracking unique conclusions, we (dummy) mark
@@ -1462,13 +1462,11 @@ Node InferProofCons::convertCoreSubs(Env& env,
     psb.addStep(ProofRule::ASSUME, {}, {res}, res);
     if (proveSrc)
     {
-      psb.addStep(
-          ProofRule::EQ_RESOLVE, {res[1], res[1].eqNode(src)}, {}, src);
+      psb.addStep(ProofRule::EQ_RESOLVE, {res[1], res[1].eqNode(src)}, {}, src);
     }
     else
     {
-      psb.addStep(
-          ProofRule::EQ_RESOLVE, {src, res}, {}, res[1]);
+      psb.addStep(ProofRule::EQ_RESOLVE, {src, res}, {}, res[1]);
     }
     return res[1];
   }

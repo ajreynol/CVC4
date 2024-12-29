@@ -1557,11 +1557,10 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
   return sent.rewriteViaMacroSubstrStripSymLength(node, rule, ch1, ch2);
 }
 
-
 Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
 {
   Kind k = n.getKind();
-  if (k==Kind::STRING_INDEXOF)
+  if (k == Kind::STRING_INDEXOF)
   {
     // must start at zero
     if (!n[2].isConst() || n[2].getConst<Rational>().sgn() != 0)
@@ -1569,7 +1568,7 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
       return Node::null();
     }
   }
-  else if (k!=Kind::STRING_CONTAINS && k!=Kind::STRING_REPLACE)
+  else if (k != Kind::STRING_CONTAINS && k != Kind::STRING_REPLACE)
   {
     return Node::null();
   }
@@ -1586,24 +1585,20 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
   std::vector<Node> ne;
   if (d_stringsEntail.stripConstantEndpoints(nc1, nc2, nb, ne))
   {
-    NodeManager * nm = nodeManager();
+    NodeManager* nm = nodeManager();
     TypeNode stype = n[0].getType();
     Node rem = utils::mkConcat(nc1, stype);
     switch (k)
     {
       case Kind::STRING_CONTAINS:
       {
-        return nm->mkNode(
-          Kind::STRING_CONTAINS, rem, n[1]);
+        return nm->mkNode(Kind::STRING_CONTAINS, rem, n[1]);
       }
       case Kind::STRING_REPLACE:
       {
         std::vector<Node> cc;
         cc.insert(cc.end(), nb.begin(), nb.end());
-        cc.push_back(nm->mkNode(Kind::STRING_REPLACE,
-                                           rem,
-                                           n[1],
-                                           n[2]));
+        cc.push_back(nm->mkNode(Kind::STRING_REPLACE, rem, n[1], n[2]));
         cc.insert(cc.end(), ne.begin(), ne.end());
         return utils::mkConcat(cc, stype);
       }
@@ -1611,8 +1606,7 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
       {
         return nm->mkNode(Kind::STRING_INDEXOF, rem, n[1], n[2]);
       }
-      default:
-        break;
+      default: break;
     }
   }
   return Node::null();
