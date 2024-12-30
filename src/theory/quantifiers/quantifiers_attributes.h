@@ -135,8 +135,8 @@ struct QAttributes
   bool d_sygus;
   /** the oracle, which stores an implementation */
   Node d_oracle;
-  /** side condition for sygus conjectures */
-  Node d_sygusSideCondition;
+  /** side condition(s) for sygus conjectures */
+  std::vector<Node> d_sygusSideConditions;
   /** stores the maximum instantiation level allowed for this quantified formula
    * (-1 means allow any) */
   int64_t d_qinstLevel;

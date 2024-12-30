@@ -286,10 +286,10 @@ class SynthConjecture : protected EnvObj
   /** the asserted (negated) conjecture */
   Node d_quant;
   /**
-   * The side condition for solving the conjecture, after conversion to deep
+   * The side conditions for solving the conjecture, after conversion to deep
    * embedding.
    */
-  Node d_embedSideCondition;
+  std::vector<Node> d_embedSideConditions;
   /** (negated) conjecture after simplification */
   Node d_simp_quant;
   /** (negated) conjecture after simplification, conversion to deep embedding */

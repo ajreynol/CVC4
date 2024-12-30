@@ -132,10 +132,10 @@ void SynthConjecture::assign(Node q)
   QAttributes qa;
   QuantAttributes::computeQuantAttributes(q, qa);
 
-  Node sc = qa.d_sygusSideCondition;
+  std::vector<Node>& scs = qa.d_sygusSideConditions;
   // we check whether the conjecture is single invocation if we are marked
   // with the sygus attribute and don't have a side condition
-  bool checkSingleInvocation = qa.d_sygus && sc.isNull();
+  bool checkSingleInvocation = qa.d_sygus && scs.empty();
 
   std::map<Node, Node> templates;
   std::map<Node, Node> templates_arg;
@@ -170,47 +170,50 @@ void SynthConjecture::assign(Node q)
   Trace("cegqi") << "SynthConjecture : converted to embedding : "
                  << d_embed_quant << std::endl;
 
-  if (!sc.isNull())
+  if (!scs.empty())
   {
-    Trace("cegqi-debug") << "Side condition is: " << sc << std::endl;
-    // Immediately check if unsat, use lambda returning true for functions
-    // to synthesize.
-    std::vector<Node> vars;
-    std::vector<Node> subs;
-    for (const Node& v : q[0])
+    for (const Node& sc : scs)
     {
-      vars.push_back(v);
-      TypeNode vtype = v.getType();
-      Assert(vtype.isBoolean()
-             || (vtype.isFunction() && vtype.getRangeType().isBoolean()));
-      Node s = nm->mkConst(true);
-      if (vtype.isFunction())
+      Trace("cegqi-debug") << "Side condition is: " << sc << std::endl;
+      // Immediately check if unsat, use lambda returning true for functions
+      // to synthesize.
+      std::vector<Node> vars;
+      std::vector<Node> subs;
+      for (const Node& v : q[0])
       {
-        std::vector<TypeNode> atypes = vtype.getArgTypes();
-        std::vector<Node> lvars;
-        for (const TypeNode& tn : atypes)
+        vars.push_back(v);
+        TypeNode vtype = v.getType();
+        Assert(vtype.isBoolean()
+              || (vtype.isFunction() && vtype.getRangeType().isBoolean()));
+        Node s = nm->mkConst(true);
+        if (vtype.isFunction())
         {
-          lvars.push_back(NodeManager::mkBoundVar(tn));
+          std::vector<TypeNode> atypes = vtype.getArgTypes();
+          std::vector<Node> lvars;
+          for (const TypeNode& tn : atypes)
+          {
+            lvars.push_back(NodeManager::mkBoundVar(tn));
+          }
+          s = nm->mkNode(
+              Kind::LAMBDA, nm->mkNode(Kind::BOUND_VAR_LIST, lvars), s);
         }
-        s = nm->mkNode(
-            Kind::LAMBDA, nm->mkNode(Kind::BOUND_VAR_LIST, lvars), s);
+        subs.push_back(s);
       }
-      subs.push_back(s);
+      Node ksc =
+          sc.substitute(vars.begin(), vars.end(), subs.begin(), subs.end());
+      Result r = d_verify.verify(ksc);
+      // if infeasible, we are done
+      if (r.getStatus() == Result::UNSAT)
+      {
+        d_qim.lemma(d_quant.negate(),
+                    InferenceId::QUANTIFIERS_SYGUS_SC_INFEASIBLE);
+        return;
+      }
+      // convert to deep embedding
+      d_embedSideConditions.push_back(d_embConv->convertToEmbedding(sc));
+      Trace("cegqi") << "SynthConjecture : side condition : "
+                    << d_embedSideConditions.back() << std::endl;
     }
-    Node ksc =
-        sc.substitute(vars.begin(), vars.end(), subs.begin(), subs.end());
-    Result r = d_verify.verify(ksc);
-    // if infeasible, we are done
-    if (r.getStatus() == Result::UNSAT)
-    {
-      d_qim.lemma(d_quant.negate(),
-                  InferenceId::QUANTIFIERS_SYGUS_SC_INFEASIBLE);
-      return;
-    }
-    // convert to deep embedding
-    d_embedSideCondition = d_embConv->convertToEmbedding(sc);
-    Trace("cegqi") << "SynthConjecture : side condition : "
-                   << d_embedSideCondition << std::endl;
   }
 
   // we now finalize the single invocation module, based on the syntax
@@ -663,23 +666,21 @@ bool SynthConjecture::doCheck()
 
 bool SynthConjecture::checkSideCondition(const std::vector<Node>& cvals)
 {
-  if (d_embedSideCondition.isNull())
+  for (const Node& sc : d_embedSideConditions)
   {
-    return true;
-  }
-  Node sc = d_embedSideCondition;
-  if (!cvals.empty())
-  {
-    sc = sc.substitute(
-        d_candidates.begin(), d_candidates.end(), cvals.begin(), cvals.end());
-  }
-  Trace("sygus-engine") << "Check side condition..." << std::endl;
-  Result r = d_verify.verify(sc);
-  Trace("sygus-engine") << "...result of check side condition : " << r
-                        << std::endl;
-  if (r == Result::UNSAT)
-  {
-    return false;
+    if (!cvals.empty())
+    {
+      sc = sc.substitute(
+          d_candidates.begin(), d_candidates.end(), cvals.begin(), cvals.end());
+    }
+    Trace("sygus-engine") << "Check side condition..." << std::endl;
+    Result r = d_verify.verify(sc);
+    Trace("sygus-engine") << "...result of check side condition : " << r
+                          << std::endl;
+    if (r == Result::UNSAT)
+    {
+      return false;
+    }
   }
   Trace("sygus-engine") << "...passed side condition" << std::endl;
   return true;

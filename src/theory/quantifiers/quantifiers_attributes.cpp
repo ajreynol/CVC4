@@ -268,8 +268,8 @@ void QuantAttributes::computeQuantAttributes( Node q, QAttributes& qa ){
         }
         if (avar.hasAttribute(SygusSideConditionAttribute()))
         {
-          qa.d_sygusSideCondition =
-              avar.getAttribute(SygusSideConditionAttribute());
+          qa.d_sygusSideConditions.push_back(
+              avar.getAttribute(SygusSideConditionAttribute()));
           Trace("quant-attr")
               << "Attribute : sygus side condition : "
               << qa.d_sygusSideCondition << " : " << q << std::endl;
