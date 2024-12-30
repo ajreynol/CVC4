@@ -2004,39 +2004,30 @@ Node SequencesRewriter::rewriteMembership(TNode node)
     {
       std::vector<Node> mchildren;
       utils::getConcat(x, mchildren);
-      bool success = true;
-      while (success)
+      std::vector<Node> children;
+      utils::getConcat(r[0], children);
+      Node scn = RegExpEntail::simpleRegexpConsume(mchildren, children, dir);
+      if (!scn.isNull())
       {
-        success = false;
-        std::vector<Node> children;
-        utils::getConcat(r[0], children);
-        Node scn = RegExpEntail::simpleRegexpConsume(mchildren, children, dir);
-        if (!scn.isNull())
+        Trace("regexp-ext-rewrite")
+            << "Regexp star : const conflict : " << node << std::endl;
+        return returnRewrite(node, scn, Rewrite::RE_CONSUME_S_CCONF);
+      }
+      else if (children.empty())
+      {
+        // fully consumed one copy of the STAR
+        if (mchildren.empty())
         {
           Trace("regexp-ext-rewrite")
-              << "Regexp star : const conflict : " << node << std::endl;
-          return returnRewrite(node, scn, Rewrite::RE_CONSUME_S_CCONF);
+              << "Regexp star : full consume : " << node << std::endl;
+          Node ret = nodeManager()->mkConst(true);
+          return returnRewrite(node, ret, Rewrite::RE_CONSUME_S_FULL);
         }
-        else if (children.empty())
+        else
         {
-          // fully consumed one copy of the STAR
-          if (mchildren.empty())
-          {
-            Trace("regexp-ext-rewrite")
-                << "Regexp star : full consume : " << node << std::endl;
-            Node ret = nodeManager()->mkConst(true);
-            return returnRewrite(node, ret, Rewrite::RE_CONSUME_S_FULL);
-          }
-          else
-          {
-            Node prev = retNode;
-            retNode = nm->mkNode(
-                Kind::STRING_IN_REGEXP, utils::mkConcat(mchildren, stype), r);
-            // Iterate again if the node changed. It may not have changed if
-            // nothing was consumed from mchildren (e.g. if the body of the
-            // re.* accepts the empty string.
-            success = (retNode != prev);
-          }
+          // otherwise remember the progress
+          retNode = nm->mkNode(
+              Kind::STRING_IN_REGEXP, utils::mkConcat(mchildren, stype), r);
         }
       }
       if (retNode != node)
