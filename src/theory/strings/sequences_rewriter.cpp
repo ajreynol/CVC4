@@ -1775,7 +1775,10 @@ Node SequencesRewriter::rewriteViaStrInReConsume(const Node& node)
     return Node::null();
   }
   std::vector<Node> children;
-  utils::getConcat(node[1], children);
+  // if star, we consider the body of the star
+  bool isStar = (node[1].getKind()==Kind::REGEXP_STAR);
+  Node r = isStar ? node[1][0] : node[1];
+  utils::getConcat(r, children);
   std::vector<Node> mchildren;
   utils::getConcat(node[0], mchildren);
   Node scn = RegExpEntail::simpleRegexpConsume(mchildren, children);
@@ -1783,17 +1786,19 @@ Node SequencesRewriter::rewriteViaStrInReConsume(const Node& node)
   {
     return scn;
   }
-  else
+  else if (!isStar || children.empty())
   {
     // Given a membership (str.++ x1 ... xn) in (re.++ r1 ... rm),
     // above, we strip components to construct an equivalent membership:
     // (str.++ xi .. xj) in (re.++ rk ... rl).
     Node xn = utils::mkConcat(mchildren, node[0].getType());
+    // if we considered the body of the star, we revert to the original RE
+    Node rn = isStar ? node[1] : utils::mkConcat(children, node[1].getType());
     // construct the updated regular expression
     Node newMem =
         nodeManager()->mkNode(Kind::STRING_IN_REGEXP,
                               xn,
-                              utils::mkConcat(children, node[1].getType()));
+                              rn);
     if (newMem != node)
     {
       return newMem;
@@ -1997,56 +2002,12 @@ Node SequencesRewriter::rewriteMembership(TNode node)
   }
 
   // do simple consumes
-  Node retNode = node;
-  if (r.getKind() == Kind::REGEXP_STAR)
+  Node retNode = rewriteViaStrInReConsume(node);
+  if (!retNode.isNull())
   {
-    for (unsigned dir = 0; dir <= 1; dir++)
-    {
-      std::vector<Node> mchildren;
-      utils::getConcat(x, mchildren);
-      std::vector<Node> children;
-      utils::getConcat(r[0], children);
-      Node scn = RegExpEntail::simpleRegexpConsume(mchildren, children, dir);
-      if (!scn.isNull())
-      {
-        Trace("regexp-ext-rewrite")
-            << "Regexp star : const conflict : " << node << std::endl;
-        return returnRewrite(node, scn, Rewrite::RE_CONSUME_S_CCONF);
-      }
-      else if (children.empty())
-      {
-        // fully consumed one copy of the STAR
-        if (mchildren.empty())
-        {
-          Trace("regexp-ext-rewrite")
-              << "Regexp star : full consume : " << node << std::endl;
-          Node ret = nodeManager()->mkConst(true);
-          return returnRewrite(node, ret, Rewrite::RE_CONSUME_S_FULL);
-        }
-        else
-        {
-          // otherwise remember the progress
-          retNode = nm->mkNode(
-              Kind::STRING_IN_REGEXP, utils::mkConcat(mchildren, stype), r);
-        }
-      }
-      if (retNode != node)
-      {
-        Trace("regexp-ext-rewrite") << "Regexp star : rewrite " << node
-                                    << " -> " << retNode << std::endl;
-        return returnRewrite(node, retNode, Rewrite::RE_CONSUME_S);
-      }
-    }
-  }
-  else
-  {
-    retNode = rewriteViaStrInReConsume(node);
-    if (!retNode.isNull())
-    {
-      Trace("regexp-ext-rewrite")
-          << "Regexp : rewrite : " << node << " -> " << retNode << std::endl;
-      return returnRewrite(node, retNode, Rewrite::RE_SIMPLE_CONSUME);
-    }
+    Trace("regexp-ext-rewrite")
+        << "Regexp : rewrite : " << node << " -> " << retNode << std::endl;
+    return returnRewrite(node, retNode, Rewrite::RE_SIMPLE_CONSUME);
   }
   // check regular expression inclusion
   // This makes a regular expression that contains all possible model values
