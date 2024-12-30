@@ -4113,6 +4113,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_CONCAT_STAR_SWAP),
   /** Auto-generated from RARE rule re-concat-star-repeat */
   EVALUE(RE_CONCAT_STAR_REPEAT),
+  /** Auto-generated from RARE rule re-concat-star-subsume1 */
+  EVALUE(RE_CONCAT_STAR_SUBSUME1),
+  /** Auto-generated from RARE rule re-concat-star-subsume2 */
+  EVALUE(RE_CONCAT_STAR_SUBSUME2),
   /** Auto-generated from RARE rule re-concat-merge */
   EVALUE(RE_CONCAT_MERGE),
   /** Auto-generated from RARE rule re-union-all */
@@ -4133,8 +4137,12 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_INTER_DUP),
   /** Auto-generated from RARE rule re-star-none */
   EVALUE(RE_STAR_NONE),
+  /** Auto-generated from RARE rule re-star-emp */
+  EVALUE(RE_STAR_EMP),
   /** Auto-generated from RARE rule re-star-star */
   EVALUE(RE_STAR_STAR),
+  /** Auto-generated from RARE rule re-star-union-drop-emp */
+  EVALUE(RE_STAR_UNION_DROP_EMP),
   /** Auto-generated from RARE rule re-loop-neg */
   EVALUE(RE_LOOP_NEG),
   /** Auto-generated from RARE rule re-inter-cstring */
