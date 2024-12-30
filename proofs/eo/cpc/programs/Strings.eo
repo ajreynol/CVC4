@@ -1561,8 +1561,8 @@
     (eo::match ((s1 String))
         ($str_re_consume_process s r)
         (
-          (false false)
-          ((str.in_re s1 @re.empty) (str.in_re s1 (re.* r)))
+          (false                    false)  ; conflict
+          ((str.in_re s1 @re.empty) (str.in_re s1 (re.* r))) ; one full copy
         )
     ))
   (($str_re_consume s r) ($str_re_consume_process s r))
