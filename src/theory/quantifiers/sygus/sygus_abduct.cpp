@@ -36,12 +36,15 @@ namespace quantifiers {
 
 SygusAbduct::SygusAbduct() {}
 
-Node SygusAbduct::mkAbductionConjecture(NodeManager* nm,
+Node SygusAbduct::mkAbductionConjecture(const Options& opts,
+                                        NodeManager* nm,
                                         const std::string& name,
-                                        const std::vector<Node>& asserts,
+                                        const Node& conj,
                                         const std::vector<Node>& axioms,
                                         TypeNode abdGType)
 {
+  std::vector<Node> asserts(axioms.begin(), axioms.end());
+  asserts.push_back(conj);
   std::unordered_set<Node> symset;
   for (size_t i = 0, size = asserts.size(); i < size; i++)
   {
@@ -141,8 +144,7 @@ Node SygusAbduct::mkAbductionConjecture(NodeManager* nm,
   Trace("sygus-abduct-debug") << "...finish" << std::endl;
 
   Trace("sygus-abduct-debug") << "Make conjecture body..." << std::endl;
-  Node input =
-      asserts.size() == 1 ? asserts[0] : nm->mkNode(Kind::AND, asserts);
+  Node input = nm->mkAnd(asserts);
   input = input.substitute(syms.begin(), syms.end(), vars.begin(), vars.end());
   // A(x) => ~input( x )
   input = nm->mkNode(Kind::OR, abdApp.negate(), input.negate());
@@ -157,10 +159,7 @@ Node SygusAbduct::mkAbductionConjecture(NodeManager* nm,
     res = nm->mkNode(Kind::EXISTS, bvl, res);
   }
   // sygus attribute
-  Node aconj =
-      axioms.size() == 0
-          ? nm->mkConst(true)
-          : (axioms.size() == 1 ? axioms[0] : nm->mkNode(Kind::AND, axioms));
+  Node aconj = nm->mkAnd(axioms);
   aconj = aconj.substitute(syms.begin(), syms.end(), vars.begin(), vars.end());
   Trace("sygus-abduct") << "---> Assumptions: " << aconj << std::endl;
   Node sc = nm->mkNode(Kind::AND, aconj, abdApp);
@@ -169,16 +168,33 @@ Node SygusAbduct::mkAbductionConjecture(NodeManager* nm,
     Node vbvl = nm->mkNode(Kind::BOUND_VAR_LIST, vars);
     sc = nm->mkNode(Kind::EXISTS, vbvl, sc);
   }
-  Node sygusScVar = NodeManager::mkDummySkolem("sygus_sc", nm->booleanType());
+  Node sygusScVar = NodeManager::mkDummySkolem("sc", nm->booleanType());
   sygusScVar.setAttribute(theory::SygusSideConditionAttribute(), sc);
   Node instAttr = nm->mkNode(Kind::INST_ATTRIBUTE, sygusScVar);
   // build in the side condition
   //   exists x. A( x ) ^ input_axioms( x )
   // as an additional annotation on the sygus conjecture. In other words,
   // the abducts A we procedure must be consistent with our axioms.
-
+  std::vector<Node> annots;
+  annots.push_back(instAttr);
+  if (opts.quantifiers.abductNoOrthogonal)
+  {
+    // if the abduct should not imply the goal by itself, we add the side
+    // condition 
+    //   exists x. A( x ) ^ conj( x )
+    sc = nm->mkNode(Kind::AND, conj, abdApp);
+    if (!vars.empty())
+    {
+      Node vbvl = nm->mkNode(Kind::BOUND_VAR_LIST, vars);
+      sc = nm->mkNode(Kind::EXISTS, vbvl, sc);
+    }
+    sygusScVar = NodeManager::mkDummySkolem("sc_no_ortho", nm->booleanType());
+    sygusScVar.setAttribute(theory::SygusSideConditionAttribute(), sc);
+    instAttr = nm->mkNode(Kind::INST_ATTRIBUTE, sygusScVar);
+    annots.push_back(instAttr);
+  }
   // forall A. exists x. ~( A( x ) => ~input( x ) )
-  res = SygusUtils::mkSygusConjecture(nm, {abd}, res, {instAttr});
+  res = SygusUtils::mkSygusConjecture(nm, {abd}, res, annots);
   Trace("sygus-abduct-debug") << "...finish" << std::endl;
 
   Trace("sygus-abduct") << "Generate: " << res << std::endl;

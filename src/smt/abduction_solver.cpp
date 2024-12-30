@@ -56,17 +56,15 @@ bool AbductionSolver::getAbduct(const std::vector<Node>& axioms,
   {
     axiomsn.emplace_back(tls.apply(ax));
   }
-  std::vector<Node> asserts(axiomsn.begin(), axiomsn.end());
   // must expand definitions
   Node conjn = tls.apply(goal);
   conjn = rewrite(conjn);
   // now negate
   conjn = conjn.negate();
   d_abdConj = conjn;
-  asserts.push_back(conjn);
   std::string name("__internal_abduct");
   Node aconj = quantifiers::SygusAbduct::mkAbductionConjecture(
-      nodeManager(), name, asserts, axiomsn, grammarType);
+      options(), nodeManager(), name, conjn, axiomsn, grammarType);
   // should be a quantified conjecture with one function-to-synthesize
   Assert(aconj.getKind() == Kind::FORALL && aconj[0].getNumChildren() == 1);
   // remember the abduct-to-synthesize

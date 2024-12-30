@@ -61,26 +61,27 @@ class SygusAbduct
 
   /**
    * Returns the sygus conjecture corresponding to the abduction problem for
-   * input problem (F above) given by asserts, and axioms (Fa above) given by
-   * axioms. Note that axioms is expected to be a subset of asserts.
+   * input problem (F above) given by conj, and axioms (Fa above) given by
+   * axioms.
    *
    * The argument name is the name for the abduct-to-synthesize.
    *
    * The type abdGType (if non-null) is a sygus datatype type that encodes the
    * grammar that should be used for solutions of the abduction conjecture.
    *
-   * The relationship between the free variables of asserts and the formal
+   * The relationship between the free variables of conj+axioms and the formal
    * rgument list of the abduct-to-synthesize are tracked by the attribute
    * SygusVarToTermAttribute.
    *
    * In particular, solutions to the synthesis conjecture will be in the form
    * of a closed term (lambda varlist. t). The intended solution, which is a
-   * term whose free variables are a subset of asserts, is the term
+   * term whose free variables are a subset of conj+axioms, is the term
    * t * { varlist -> SygusVarToTermAttribute(varlist) }.
    */
-  static Node mkAbductionConjecture(NodeManager* nm,
+  static Node mkAbductionConjecture(const Options& opts, 
+                                    NodeManager* nm,
                                     const std::string& name,
-                                    const std::vector<Node>& asserts,
+                                    const Node& conj,
                                     const std::vector<Node>& axioms,
                                     TypeNode abdGType);
 };

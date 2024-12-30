@@ -1080,6 +1080,14 @@ name   = "Quantifiers"
   help       = "use unsat core analysis to construct Boolean connective to sygus conjectures"
 
 [[option]]
+  name       = "abductNoOrthogonal"
+  category   = "regular"
+  long       = "abduct-no-orthogonal"
+  type       = "bool"
+  default    = "false"
+  help       = "ensure the produced abducts do not imply the goal by themselves"
+
+[[option]]
   name       = "sygusRepairConstTimeout"
   category   = "expert"
   long       = "sygus-repair-const-timeout=N"
