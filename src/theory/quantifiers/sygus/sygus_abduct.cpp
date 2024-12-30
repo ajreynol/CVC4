@@ -182,7 +182,8 @@ Node SygusAbduct::mkAbductionConjecture(const Options& opts,
     // if the abduct should not imply the goal by itself, we add the side
     // condition 
     //   exists x. A( x ) ^ conj( x )
-    sc = nm->mkNode(Kind::AND, conj, abdApp);
+    aconj = conj.substitute(syms.begin(), syms.end(), vars.begin(), vars.end());
+    sc = nm->mkNode(Kind::AND, aconj, abdApp);
     if (!vars.empty())
     {
       Node vbvl = nm->mkNode(Kind::BOUND_VAR_LIST, vars);

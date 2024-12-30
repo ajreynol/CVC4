@@ -121,9 +121,10 @@ bool CegisCoreConnective::processInitialize(Node conj,
   // side condition?
   QAttributes qa;
   QuantAttributes::computeQuantAttributes(conj, qa);
-  Node sc = qa.d_sygusSideCondition;
-  if (!sc.isNull())
+  std::vector<Node>& scs = qa.d_sygusSideConditions;
+  for (const Node& s : scs)
   {
+    Node sc = s;
     Trace("sygus-ccore-init") << "  side condition: " << sc << std::endl;
     if (sc.getKind() == Kind::EXISTS)
     {
@@ -165,6 +166,7 @@ bool CegisCoreConnective::processInitialize(Node conj,
       // d_vars are those introduced by the TransitionInference utility
       // for normalization.
       d_sc = scPost;
+      break; // FIXME
     }
   }
 

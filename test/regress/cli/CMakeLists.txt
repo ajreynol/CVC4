@@ -2194,6 +2194,7 @@ set(regress_1_tests
   regress1/abduction/abduct-apply-uf.smt2
   regress1/abduction/abduct-dt.smt2
   regress1/abduction/abduct-false-sc.smt2
+  regress1/abduction/abd-no-ortho.smt2
   regress1/abduction/abd-real-const.smt2
   regress1/abduction/abd-simple-conj-4.smt2
   regress1/abduction/arjun-global-dec.smt2

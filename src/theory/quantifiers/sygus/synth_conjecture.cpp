@@ -170,51 +170,49 @@ void SynthConjecture::assign(Node q)
   Trace("cegqi") << "SynthConjecture : converted to embedding : "
                  << d_embed_quant << std::endl;
 
-  if (!scs.empty())
+  for (const Node& sc : scs)
   {
-    for (const Node& sc : scs)
+    Trace("cegqi-debug") << "Side condition is: " << sc << std::endl;
+    // Immediately check if unsat, use lambda returning true for functions
+    // to synthesize.
+    std::vector<Node> vars;
+    std::vector<Node> subs;
+    for (const Node& v : q[0])
     {
-      Trace("cegqi-debug") << "Side condition is: " << sc << std::endl;
-      // Immediately check if unsat, use lambda returning true for functions
-      // to synthesize.
-      std::vector<Node> vars;
-      std::vector<Node> subs;
-      for (const Node& v : q[0])
+      vars.push_back(v);
+      TypeNode vtype = v.getType();
+      Assert(vtype.isBoolean()
+            || (vtype.isFunction() && vtype.getRangeType().isBoolean()));
+      Node s = nm->mkConst(true);
+      if (vtype.isFunction())
       {
-        vars.push_back(v);
-        TypeNode vtype = v.getType();
-        Assert(vtype.isBoolean()
-              || (vtype.isFunction() && vtype.getRangeType().isBoolean()));
-        Node s = nm->mkConst(true);
-        if (vtype.isFunction())
+        std::vector<TypeNode> atypes = vtype.getArgTypes();
+        std::vector<Node> lvars;
+        for (const TypeNode& tn : atypes)
         {
-          std::vector<TypeNode> atypes = vtype.getArgTypes();
-          std::vector<Node> lvars;
-          for (const TypeNode& tn : atypes)
-          {
-            lvars.push_back(NodeManager::mkBoundVar(tn));
-          }
-          s = nm->mkNode(
-              Kind::LAMBDA, nm->mkNode(Kind::BOUND_VAR_LIST, lvars), s);
+          lvars.push_back(NodeManager::mkBoundVar(tn));
         }
-        subs.push_back(s);
+        s = nm->mkNode(
+            Kind::LAMBDA, nm->mkNode(Kind::BOUND_VAR_LIST, lvars), s);
       }
-      Node ksc =
-          sc.substitute(vars.begin(), vars.end(), subs.begin(), subs.end());
-      Result r = d_verify.verify(ksc);
-      // if infeasible, we are done
-      if (r.getStatus() == Result::UNSAT)
-      {
-        d_qim.lemma(d_quant.negate(),
-                    InferenceId::QUANTIFIERS_SYGUS_SC_INFEASIBLE);
-        return;
-      }
-      // convert to deep embedding
-      d_embedSideConditions.push_back(d_embConv->convertToEmbedding(sc));
-      Trace("cegqi") << "SynthConjecture : side condition : "
-                    << d_embedSideConditions.back() << std::endl;
+      subs.push_back(s);
     }
+    Node ksc =
+        sc.substitute(vars.begin(), vars.end(), subs.begin(), subs.end());
+    Result r = d_verify.verify(ksc);
+    // if infeasible, we are done
+    if (r.getStatus() == Result::UNSAT)
+    {
+      d_qim.lemma(d_quant.negate(),
+                  InferenceId::QUANTIFIERS_SYGUS_SC_INFEASIBLE);
+      return;
+    }
+    // convert to deep embedding
+    d_embedSideConditions.push_back(d_embConv->convertToEmbedding(sc));
+    Trace("cegqi") << "SynthConjecture : side condition : "
+                  << d_embedSideConditions.back() << std::endl;
   }
+
 
   // we now finalize the single invocation module, based on the syntax
   // restrictions
@@ -256,10 +254,13 @@ void SynthConjecture::assign(Node q)
   }
   d_checkBody = bsubs.apply(d_checkBody);
   d_checkBody = d_tds->rewriteNode(d_checkBody);
-  if (!d_embedSideCondition.isNull() && !vars.empty())
+  if (!vars.empty())
   {
-    d_embedSideCondition = d_embedSideCondition.substitute(
+    for (Node& sc : d_embedSideConditions)
+    {
+      sc = sc.substitute(
         vars.begin(), vars.end(), d_candidates.begin(), d_candidates.end());
+    }
   }
   Trace("cegqi") << "Base instantiation is :      " << d_base_inst << std::endl;
 
@@ -284,10 +285,13 @@ void SynthConjecture::assign(Node q)
   // that may satisfy the side condition based on equivalence-up-to-examples
   // with solutions that do not.
   Node conjForExamples = d_base_inst;
+  // FIXME
+  /*
   if (!d_embedSideCondition.isNull())
   {
     conjForExamples = nm->mkNode(Kind::AND, d_embedSideCondition, d_base_inst);
   }
+  */
   if (d_exampleInfer!=nullptr && !d_exampleInfer->initialize(conjForExamples, d_candidates))
   {
     // there is a contradictory example pair, the conjecture is infeasible.
@@ -666,8 +670,9 @@ bool SynthConjecture::doCheck()
 
 bool SynthConjecture::checkSideCondition(const std::vector<Node>& cvals)
 {
-  for (const Node& sc : d_embedSideConditions)
+  for (const Node& s : d_embedSideConditions)
   {
+    Node sc = s;
     if (!cvals.empty())
     {
       sc = sc.substitute(
