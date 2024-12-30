@@ -227,7 +227,7 @@
 (define-rule str-at-elim ((x ?Seq) (n Int)) (str.at x n) (str.substr x n 1))
 
 ; not effective since due to not proving inequalities on length
-;(define-cond-rule str-replace-self ((t ?Seq) (s ?Seq)) 
+;(define-cond-rule str-replace-all-to-self ((t ?Seq) (s ?Seq)) 
 ;  (>= (str.len s) (str.len t))
 ;  (str.replace t s t)
 ;  t)
