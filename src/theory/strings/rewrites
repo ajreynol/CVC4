@@ -406,6 +406,14 @@
 
 (define-rule re-concat-star-repeat ((xs RegLan :list) (r RegLan) (ys RegLan :list)) (re.++ xs (re.* r) (re.* r) ys) (re.++ xs (re.* r) ys))
 
+(define-rule re-concat-star-subsume1 ((xs RegLan :list) (r RegLan) (ys RegLan :list))
+  (re.++ xs (re.* r) (re.* re.allchar) ys)
+  (re.++ xs (re.* re.allchar) ys))
+
+(define-rule re-concat-star-subsume2 ((xs RegLan :list) (r RegLan) (ys RegLan :list))
+  (re.++ xs (re.* re.allchar) (re.* r) ys)
+  (re.++ xs (re.* re.allchar) ys))
+
 (define-rule* re-concat-merge ((xs RegLan :list) (s String) (t String) (ys RegLan :list)) 
   (re.++ xs (str.to_re s) (str.to_re t) ys)
   (re.++ xs (str.to_re (str.++ s t)) ys)
@@ -423,7 +431,13 @@
 
 (define-rule re-star-none () (re.* re.none) (str.to_re ""))
 
+(define-rule re-star-emp () (re.* (str.to_re "")) (str.to_re ""))
+
 (define-rule re-star-star ((x RegLan)) (re.* (re.* x)) (re.* x))
+
+(define-rule re-star-union-drop-emp ((x RegLan :list) (y RegLan :list))
+  (re.* (re.union x (str.to_re "") y))
+  (re.* (re.union x y)))
 
 (define-cond-rule re-loop-neg ((n Int) (m Int) (r RegLan))
   (> n m)
