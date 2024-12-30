@@ -373,7 +373,7 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
           {
             CVC5_UNUSED bool ret =
                 ArithMSum::getMonomialSum(aa, approxMsums[aa]);
-            Assert(ret);
+            Assert(ret) << "Could not find sum " << aa;
           }
         }
         changed = true;
