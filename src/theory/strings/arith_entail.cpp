@@ -338,11 +338,8 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
           }
           else if (isSimple)
           {
-            // don't re-approximate
-            for (const Node& ca : currApprox)
-            {
-              approx.push_back(rewriteArith(ca));
-            }
+            // don't rewrite or re-approximate
+            approx = currApprox;
           }
           else
           {
@@ -374,8 +371,10 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
         {
           if (approxMsums.find(aa) == approxMsums.end())
           {
+            // ensure rewritten, which makes a difference if isSimple is true
+            Node aar = rewriteArith(aa);
             CVC5_UNUSED bool ret =
-                ArithMSum::getMonomialSum(aa, approxMsums[aa]);
+                ArithMSum::getMonomialSum(aar, approxMsums[aa]);
             Assert(ret) << "Could not find sum " << aa;
           }
         }
