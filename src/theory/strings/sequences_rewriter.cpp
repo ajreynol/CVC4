@@ -1621,7 +1621,7 @@ Node SequencesRewriter::rewriteViaStrIndexofReEval(const Node& n)
     Rational nrat = n[2].getConst<Rational>();
     String s = n[0].getConst<String>();
     Rational rsize(s.size());
-    if (nrat > rsize && nrat.sgn() < 0)
+    if (nrat > rsize || nrat.sgn() < 0)
     {
       Node negone = nm->mkConstInt(Rational(-1));
       return negone;

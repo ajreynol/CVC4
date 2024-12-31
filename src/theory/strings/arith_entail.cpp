@@ -338,8 +338,11 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
           }
           else if (isSimple)
           {
-            // don't rewrite or re-approximate
-            approx = currApprox;
+            // don't re-approximate
+            for (const Node& ca : currApprox)
+            {
+              approx.push_back(rewriteArith(ca));
+            }
           }
           else
           {
