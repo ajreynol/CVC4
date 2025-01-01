@@ -1560,6 +1560,7 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
 Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
 {
   Kind k = n.getKind();
+  int dir = 0;
   if (k == Kind::STRING_INDEXOF)
   {
     // must start at zero
@@ -1567,6 +1568,8 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
     {
       return Node::null();
     }
+    // only strip off the end
+    dir = -1;
   }
   else if (k != Kind::STRING_CONTAINS && k != Kind::STRING_REPLACE)
   {
@@ -1583,7 +1586,7 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
   // strip endpoints
   std::vector<Node> nb;
   std::vector<Node> ne;
-  if (d_stringsEntail.stripConstantEndpoints(nc1, nc2, nb, ne))
+  if (d_stringsEntail.stripConstantEndpoints(nc1, nc2, nb, ne, dir))
   {
     NodeManager* nm = nodeManager();
     TypeNode stype = n[0].getType();

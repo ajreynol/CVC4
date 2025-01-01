@@ -297,11 +297,6 @@
   (str.indexof_re t re.none n)
   (- 1))
 
-(define-cond-rule str-indexof-re-no-ctn ((t ?Seq) (r RegLan) (n Int))
-  (not (str.in_re (str.substr t n (str.len t)) (re.++ (re.* re.allchar) r (re.* re.allchar))))
-  (str.indexof_re t r n)
-  (- 1))
-
 (define-rule* str-to-lower-concat ((s1 String) (s2 String) (s3 String :list))
   (str.to_lower (str.++ s1 s2 s3)) 
   (str.to_lower (str.++ s2 s3))

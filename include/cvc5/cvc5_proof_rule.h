@@ -3101,7 +3101,7 @@ enum ENUM(ProofRewriteRule)
    * **Strings -- String contains multiset subset**
    *
    * .. math::
-   *    contains(s,t) = \bot
+   *    \mathit{str}.contains(s,t) = \bot
    *
    * where the multiset overapproximation of :math:`s` can be shown to not
    * contain the multiset abstraction of :math:`t` based on the reasoning
@@ -3139,9 +3139,55 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(MACRO_STR_EQ_LEN_UNIFY),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- String strip endpoints**
+   *
+   * .. math::
+   *    s = t
+   *
+   * \endverbatim
+   */
   EVALUE(MACRO_STR_STRIP_ENDPOINTS),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- string indexof regex evaluation**
+   *
+   * .. math::
+   *   str.indexof\_re(s,r,n) = m
+   *
+   * where :math:`s` is a string values, :math:`n` is an integer value, :math:`r` is a
+   * ground regular expression and :math:`m` is the result of evaluating the left hand
+   * side.
+   *
+   * \endverbatim
+   */
   EVALUE(STR_INDEXOF_RE_EVAL),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- string replace regex evaluation**
+   *
+   * .. math::
+   *   str.replace\_re(s,r,t) = u
+   *
+   * where :math:`s,t` are string values, :math:`r` is a ground regular expression
+   * and :math:`u` is the result of evaluating the left hand side.
+   *
+   * \endverbatim
+   */
   EVALUE(STR_REPLACE_RE_EVAL),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- string replace regex all evaluation**
+   *
+   * .. math::
+   *   str.replace\_re\_all(s,r,t) = u
+   *
+   * where :math:`s,t` are string values, :math:`r` is a ground regular expression
+   * and :math:`u` is the result of evaluating the left hand side.
+   *
+   * \endverbatim
+   */
   EVALUE(STR_REPLACE_RE_ALL_EVAL),
   /**
    * \verbatim embed:rst:leading-asterisk
