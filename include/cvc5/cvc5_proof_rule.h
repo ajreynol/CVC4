@@ -4101,8 +4101,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_INDEXOF_FIND),
   /** Auto-generated from RARE rule str-indexof-re-none */
   EVALUE(STR_INDEXOF_RE_NONE),
-  /** Auto-generated from RARE rule str-indexof-re-no-ctn */
-  EVALUE(STR_INDEXOF_RE_NO_CTN),
   /** Auto-generated from RARE rule str-to-lower-concat */
   EVALUE(STR_TO_LOWER_CONCAT),
   /** Auto-generated from RARE rule str-to-upper-concat */
