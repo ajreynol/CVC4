@@ -2597,7 +2597,7 @@ enum ENUM(ProofRewriteRule)
    *   A = B
    *
    * where :math:`B` is the result of normalizing the array operation :math:`A`
-   * into a canonical form.
+   * into a canonical form, based on commutativity of disjoint indices.
    *
    * \endverbatim
    */
