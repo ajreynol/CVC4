@@ -600,7 +600,7 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
   std::vector<Node> ch1;
   std::vector<Node> ch2;
   Node rhs = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule, ch1, ch2);
-  Trace("brc-macro") << "...was via string rewrite rule " << rule << std::endl;
+  Trace("brc-macro") << "...was via string rewrite rule " << rule << ", ret " << rhs << " " << ch1 << " " << ch2 << std::endl;
   Assert(rhs == eq[1]);
   TypeNode stype = lhs.getType();
   Node cm1 = theory::strings::utils::mkConcat(ch1, stype);
@@ -615,14 +615,14 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
   {
     cm = nm->mkNode(Kind::STRING_CONCAT, cm2, cm1);
   }
-  if (cm == lhs[0])
-  {
-    return false;
-  }
   Node eq1 = nm->mkNode(Kind::EQUAL, lhs[0], cm);
+  if (cm==lhs[0])
+  {
+    cdp->addStep(eq1, ProofRule::REFL, {}, {lhs[0]});
+  }
   // It is likely provable by ACI_NORM. However, if it involves splitting
   // word constants, we require going through the rewrite term converter.
-  if (expr::isACINorm(lhs[0], cm))
+  else if (expr::isACINorm(lhs[0], cm))
   {
     cdp->addStep(eq1, ProofRule::ACI_NORM, {}, {eq1});
     Trace("brc-macro") << "- via ACI_NORM " << eq1 << std::endl;
@@ -640,6 +640,7 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
     Assert(eq1t.getKind() == Kind::EQUAL);
     if (eq1t[0] != eq1t[1])
     {
+      Assert(false);
       return false;
     }
     Node equiv = eq1.eqNode(eq1t);
