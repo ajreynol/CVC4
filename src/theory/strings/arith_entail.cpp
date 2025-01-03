@@ -90,6 +90,8 @@ Node ArithEntail::rewriteArith(Node a)
 {
   AlwaysAssert(a.getType().isInteger())
       << "Bad term: " << a << " " << a.getType();
+  // First apply length intro rewrites, which evaluates str.len and distributes it over concatenation terms.
+  // Note this approximates the behavior of the full rewriter, without using the rewriter as an oracle, which makes the code non-circular and simplifies proofs.
   Node an = rewriteLengthIntro(a);
   // Use the poly norm utility. This is important since the rewrite
   // must be justified by ARITH_POLY_NORM when in proof mode.
@@ -178,9 +180,14 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
         std::vector<Node> sum;
         for (const Node& c : cc)
         {
+          // note we evaluate both string and sequence values here
           if (c.isConst())
           {
             sum.push_back(nm->mkConstInt(Rational(Word::getLength(c))));
+          }
+          else if (c.getKind()==Kind::SEQ_UNIT)
+          {
+            sum.push_back(nm->mkConstInt(Rational(1)));
           }
           else
           {
@@ -235,6 +242,7 @@ bool ArithEntail::check(Node a, bool strict, bool isSimple)
     return a.getConst<Rational>().sgn() >= (strict ? 1 : 0);
   }
   Node ar = strict ? NodeManager::mkNode(Kind::SUB, a, d_one) : a;
+  // if simple, we do not call rewriteArith, which also does length intro rewrites
   ar = isSimple ? arith::PolyNorm::getPolyNorm(ar) : rewriteArith(ar);
   // if simple, just call the checkSimple routine.
   if (isSimple)

@@ -270,8 +270,8 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_nth)
     // (seq.nth (seq.++ (seq.unit x) (seq.unit y) (seq.unit z)) 0)
     //
     // x
-    //Node n = d_nodeManager->mkNode(Kind::SEQ_NTH, xyz, one);
-    //sameNormalForm(n, y);
+    Node n = d_nodeManager->mkNode(Kind::SEQ_NTH, xyz, one);
+    sameNormalForm(n, y);
   }
 
   {
@@ -454,7 +454,7 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_update)
     //
     // (seq.unit w)
     Node n = d_nodeManager->mkNode(Kind::STRING_UPDATE, sx, zero, sw);
-    //sameNormalForm(n, sw);
+    sameNormalForm(n, sw);
   }
 
   {
@@ -468,7 +468,7 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_update)
     // (seq.++ (seq.unit w) (seq.unit y) (seq.unit z))
     Node n = d_nodeManager->mkNode(Kind::STRING_UPDATE, xyz, zero, sw);
     Node wyz = d_nodeManager->mkNode(Kind::STRING_CONCAT, sw, sy, sz);
-    //sameNormalForm(n, wyz);
+    sameNormalForm(n, wyz);
   }
 
   {
@@ -482,7 +482,7 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_update)
     // (seq.++ (seq.unit x) (seq.unit w) (seq.unit z))
     Node n = d_nodeManager->mkNode(Kind::STRING_UPDATE, xyz, one, sw);
     Node xwz = d_nodeManager->mkNode(Kind::STRING_CONCAT, sx, sw, sz);
-    //sameNormalForm(n, xwz);
+    sameNormalForm(n, xwz);
   }
 
   {
@@ -496,7 +496,7 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_update)
     // (seq.++ (seq.unit x) (seq.unit w) (seq.unit v))
     Node n = d_nodeManager->mkNode(Kind::STRING_UPDATE, xyz, one, wv);
     Node xwv = d_nodeManager->mkNode(Kind::STRING_CONCAT, sx, sw, sv);
-    //sameNormalForm(n, xwv);
+    sameNormalForm(n, xwv);
   }
 
   {
@@ -522,7 +522,7 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_update)
     //
     //  (seq.++ (seq.unit x) (seq.unit y) (seq.unit z))
     Node n = d_nodeManager->mkNode(Kind::STRING_UPDATE, xyz, three, sw);
-    //sameNormalForm(n, xyz);
+    sameNormalForm(n, xyz);
   }
 }
 
