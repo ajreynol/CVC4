@@ -178,7 +178,7 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
         std::vector<Node> sum;
         for (const Node& c : cc)
         {
-          if (c.isConst())
+          if (c.isConst() && c.getType().isString())
           {
             sum.push_back(nm->mkConstInt(Rational(Word::getLength(c))));
           }
