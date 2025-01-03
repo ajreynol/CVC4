@@ -1579,7 +1579,7 @@
   (Int String) Bool
   (
   (($str_from_int_eval_rec n s) (eo::ite (eo::is_eq n 0)
-                                  s
+                                  (eo::ite (eo::is_eq s "") "0" s)
                                   ($str_from_int_eval_rec
                                     (eo::zdiv n 10)
                                     (eo::concat (eo::to_str (eo::zmod n 10)) s))))
@@ -1626,6 +1626,8 @@
 ;   or the term `(str.to_int s)` otherwise.
 (define $str_to_int_eval ((s String))
   (eo::ite (eo::is_str s)
-    ; consider characters in reverse order
-    ($str_to_int_eval_rec ($str_to_flat_form s true) 1 0)
+    (eo::ite (eo::is_eq s "")
+      -1
+      ; consider characters in reverse order
+      ($str_to_int_eval_rec ($str_to_flat_form s true) 1 0))
     (str.to_int s)))
