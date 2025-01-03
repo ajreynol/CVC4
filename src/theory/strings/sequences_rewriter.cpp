@@ -2032,7 +2032,6 @@ Node SequencesRewriter::rewriteSeqNth(Node node)
         Node ret = suffix[0][0];
         return returnRewrite(node, ret, Rewrite::SEQ_NTH_EVAL_SYM);
       }
-      // TODO: STRING_UNIT?
     }
   }
 
