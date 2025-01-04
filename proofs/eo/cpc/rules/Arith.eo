@@ -285,6 +285,15 @@
                      (and (<= x a) (r2 y b))
                      (and (>= x a) (r1 y b))))))))
 
+;;;;; ProofRule::ARITH_MULT_SIGN
+
+
+
+
+;;;;; ProofRule::ARITH_MULT_ABS_COMPARISON
+
+
+
 ;;;;; ProofRule::ARITH_REDUCTION
 
 ; define: $arith_to_int_reduction
