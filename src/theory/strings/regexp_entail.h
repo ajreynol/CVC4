@@ -35,7 +35,7 @@ namespace strings {
 class RegExpEntail
 {
  public:
-  RegExpEntail();
+  RegExpEntail(NodeManager * nm);
   /** simple regular expression consume
    *
    * This method is called when we are rewriting a membership of the form
@@ -153,6 +153,8 @@ class RegExpEntail
    * computed. Used for getConstantBoundLengthForRegexp.
    */
   static bool getConstantBoundCache(TNode n, bool isLower, Node& c);
+  /** Pointer to node manager */
+  NodeManager * d_nm;
   /** Arithmetic entailment module */
   ArithEntail d_aent;
   /** Common constants */

@@ -29,10 +29,10 @@ namespace cvc5::internal {
 namespace theory {
 namespace strings {
 
-RegExpEntail::RegExpEntail()
+RegExpEntail::RegExpEntail(NodeManager * nm) : d_nm(nm), d_aent(nm)
 {
-  d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
-  d_one = NodeManager::currentNM()->mkConstInt(Rational(1));
+  d_zero = nm->mkConstInt(Rational(0));
+  d_one = nm->mkConstInt(Rational(1));
 }
 
 Node RegExpEntail::simpleRegexpConsume(std::vector<Node>& mchildren,

@@ -28,7 +28,9 @@ namespace strings {
 EagerSolver::EagerSolver(Env& env, SolverState& state, TermRegistry& treg)
     : EnvObj(env),
       d_state(state),
-      d_treg(treg)
+      d_treg(treg),
+      d_aent(nodeManager()),
+      d_rent(nodeManager())
 {
 }
 

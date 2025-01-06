@@ -86,7 +86,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       // Note that we do *not* pass a rewriter here, since the proof rule
       // cannot depend on the rewriter. This makes this rule capture most
       // but not all cases of this kind of reasoning.
-      theory::strings::ArithEntail ae;
+      theory::strings::ArithEntail ae(d_nm);
       Node tgt;
       if (n.getKind() == Kind::EQUAL)
       {
@@ -127,7 +127,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         // Note that we do *not* pass a rewriter here, since the proof rule
         // cannot depend on the rewriter.
-        theory::strings::ArithEntail ae;
+        theory::strings::ArithEntail ae(d_nm);
         // must only use simple checks when computing the approximations
         Node approx = ae.findApprox(n[0], true);
         if (approx != n[0])

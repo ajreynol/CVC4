@@ -100,7 +100,7 @@ Node ForeignTheoryRewriter::foreignRewrite(Node n)
   if ((n.getKind() == Kind::GEQ || n.getKind() == Kind::EQUAL)
       && n[0].getType().isInteger())
   {
-    theory::strings::ArithEntail ae;
+    theory::strings::ArithEntail ae(nodeManager());
     Node r = ae.rewritePredViaEntailment(n);
     if (!r.isNull())
     {

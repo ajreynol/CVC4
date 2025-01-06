@@ -372,7 +372,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
 {
   Assert(eq.getKind() == Kind::EQUAL);
   Trace("brc-macro") << "Expand entailment for " << eq << std::endl;
-  theory::strings::ArithEntail ae;
+  theory::strings::ArithEntail ae(nodeManager());
   Node lhs = eq[0];
   Node eqi = eq;
   // First normalize LT/GT/LEQ to GEQ.
@@ -595,8 +595,8 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
   Assert(lhs.getKind() == Kind::STRING_SUBSTR);
   theory::strings::Rewrite rule;
   // call the same utility that proved it
-  theory::strings::ArithEntail ae;
-  theory::strings::StringsEntail sent(ae, nullptr);
+  theory::strings::ArithEntail ae(nm);
+  theory::strings::StringsEntail sent(nm, ae, nullptr);
   std::vector<Node> ch1;
   std::vector<Node> ch2;
   Node rhs = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule, ch1, ch2);

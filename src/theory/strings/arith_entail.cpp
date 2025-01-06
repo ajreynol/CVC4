@@ -33,10 +33,10 @@ namespace cvc5::internal {
 namespace theory {
 namespace strings {
 
-ArithEntail::ArithEntail()
+ArithEntail::ArithEntail(NodeManager * nm) : d_nm(nm)
 {
-  d_one = NodeManager::currentNM()->mkConstInt(Rational(1));
-  d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
+  d_one = d_nm->mkConstInt(Rational(1));
+  d_zero = d_nm->mkConstInt(Rational(0));
 }
 
 Node ArithEntail::rewritePredViaEntailment(const Node& n, bool isSimple)
@@ -181,18 +181,7 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
         for (const Node& c : cc)
         {
           // note we evaluate both string and sequence values here
-          if (c.isConst())
-          {
-            sum.push_back(nm->mkConstInt(Rational(Word::getLength(c))));
-          }
-          else if (c.getKind()==Kind::SEQ_UNIT)
-          {
-            sum.push_back(nm->mkConstInt(Rational(1)));
-          }
-          else
-          {
-            sum.push_back(nm->mkNode(Kind::STRING_LENGTH, c));
-          }
+          sum.push_back(rewriteLengthOf(c));
         }
         Assert(!sum.empty());
         Node rret = sum.size() == 1 ? sum[0] : nm->mkNode(Kind::ADD, sum);
@@ -212,6 +201,19 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
   Assert(visited.find(n) != visited.end());
   Assert(!visited.find(n)->second.isNull());
   return visited[n];
+}
+
+Node ArithEntail::rewriteLengthOf(const Node& n) const
+{
+  if (n.isConst())
+  {
+    return d_nm->mkConstInt(Rational(Word::getLength(n)));
+  }
+  else if (n.getKind()==Kind::SEQ_UNIT)
+  {
+    return d_nm->mkConstInt(Rational(1));
+  }
+  return d_nm->mkNode(Kind::STRING_LENGTH, n);
 }
 
 bool ArithEntail::checkEq(Node a, Node b)
