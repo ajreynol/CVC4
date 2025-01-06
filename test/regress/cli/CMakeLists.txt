@@ -1902,6 +1902,7 @@ set(regress_0_tests
   regress0/strings/quad-138-4-2-unsat.smt2
   regress0/strings/re-consume-bi-dir.smt2
   regress0/strings/re-consume-inter.smt2
+  regress0/strings/re-consume-star.smt2
   regress0/strings/re-consume-sym.smt2
   regress0/strings/re-consume-sym-sigma.smt2
   regress0/strings/re-include-union.smt2
@@ -1950,6 +1951,7 @@ set(regress_0_tests
   regress0/sygus/cegqi-si-string-triv-2fun.sy
   regress0/sygus/cegqi-si-string-triv.sy
   regress0/sygus/check-generic-red.sy
+  regress0/sygus/constval-infeasible.sy
   regress0/sygus/const-var-test.sy
   regress0/sygus/declare-var-grammar-err.sy
   regress0/sygus/dt-no-syntax.sy
