@@ -1730,7 +1730,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   Kind k = node.getKind();
   if (k == Kind::EQUAL)
   {
-    strings::SequencesRewriter sr(d_nm, nullptr);
+    strings::SequencesRewriter sr(d_nm, &d_rew, nullptr);
     return sr.rewriteEqualityExt(node);
   }
   else if (k == Kind::STRING_SUBSTR)

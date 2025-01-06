@@ -38,9 +38,11 @@ namespace theory {
 namespace strings {
 
 SequencesRewriter::SequencesRewriter(NodeManager* nm,
+                                     Rewriter * rr,
                                      HistogramStat<Rewrite>* statistics)
     : TheoryRewriter(nm),
       d_statistics(statistics),
+      d_rr(rr),
       d_arithEntail(nm),
       d_stringsEntail(nm, d_arithEntail, this)
 {
@@ -2098,17 +2100,16 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     return returnRewrite(node, ret, Rewrite::SS_LEN_ONE_Z_Z);
   }
 
-  Node slenRew =
-      d_arithEntail.rewriteArith(nm->mkNode(Kind::STRING_LENGTH, node[0]));
-  // normalize the existing value, which is important for avoid infinite
-  // loops due to the arithmetic rewriter further normalizing slenRew.
-  Node scurrRew = d_arithEntail.rewriteArith(node[2]);
-  if (scurrRew != slenRew)
+  Node slen = nm->mkNode(Kind::STRING_LENGTH, node[0]);
+  Node scurr = node[2];
+  if (d_arithEntail.check(scurr, slen))
   {
-    if (d_arithEntail.check(scurrRew, slenRew))
+    // normalize the existing value, which is important for avoid infinite
+    // loops due to the arithmetic rewriter further normalizing slenRew.
+    if (d_rr->rewrite(slen) != scurr)
     {
       // end point beyond end point of string, map to slenRew
-      Node ret = nm->mkNode(Kind::STRING_SUBSTR, node[0], node[1], slenRew);
+      Node ret = nm->mkNode(Kind::STRING_SUBSTR, node[0], node[1], slen);
       return returnRewrite(node, ret, Rewrite::SS_END_PT_NORM);
     }
   }

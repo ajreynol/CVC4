@@ -34,7 +34,7 @@ namespace strings {
 class SequencesRewriter : public TheoryRewriter
 {
  public:
-  SequencesRewriter(NodeManager* nm, HistogramStat<Rewrite>* statistics);
+  SequencesRewriter(NodeManager* nm, Rewriter * rr, HistogramStat<Rewrite>* statistics);
   /** The underlying entailment utilities */
   ArithEntail& getArithEntail();
   StringsEntail& getStringsEntail();
@@ -328,6 +328,10 @@ class SequencesRewriter : public TheoryRewriter
 
   /** Reference to the rewriter statistics. */
   HistogramStat<Rewrite>* d_statistics;
+  /**
+   * Pointer to the rewriter, which is used only as an oracle in rare cases.
+   */
+  Rewriter* d_rr;
   /** The arithmetic entailment module */
   ArithEntail d_arithEntail;
   /** Instance of the entailment checker for strings. */

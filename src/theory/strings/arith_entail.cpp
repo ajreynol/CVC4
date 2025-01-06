@@ -220,7 +220,8 @@ Node ArithEntail::rewriteAtomicLengthOf(const Node& n) const
            || k == Kind::STRING_REV || k == Kind::STRING_UPDATE)
   {
     // length preserving operators
-    return rewriteLengthOf(n[0]);
+    // note we do not recursively rewrite length of n[0]
+    return d_nm->mkNode(Kind::STRING_LENGTH, n[0]);
   }
   else if (k == Kind::SEQ_UNIT || k == Kind::STRING_UNIT)
   {
@@ -234,7 +235,8 @@ Node ArithEntail::rewriteAtomicLengthOf(const Node& n) const
     if (checkEq(len1, len2))
     {
       // len( y ) == len( z ) => len( str.replace( x, y, z ) ) ---> len( x )
-      return rewriteLengthOf(n[0]);
+      // note we do not recursively rewrite length of n[0]
+      return d_nm->mkNode(Kind::STRING_LENGTH, n[0]);
     }
   }
   return d_nm->mkNode(Kind::STRING_LENGTH, n);
