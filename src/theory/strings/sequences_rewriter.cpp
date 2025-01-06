@@ -3681,7 +3681,6 @@ Node SequencesRewriter::rewritePrefixSuffix(Node n)
 
 Node SequencesRewriter::lengthPreserveRewrite(Node n)
 {
-  NodeManager* nm = nodeManager();
   Node lenr = d_arithEntail.rewriteLengthOf(n);
   Node res = canonicalStrForSymbolicLength(lenr, n.getType());
   return res.isNull() ? n : res;
