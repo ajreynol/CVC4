@@ -33,7 +33,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace strings {
 
-ArithEntail::ArithEntail(NodeManager * nm) : d_nm(nm)
+ArithEntail::ArithEntail(NodeManager* nm) : d_nm(nm)
 {
   d_one = d_nm->mkConstInt(Rational(1));
   d_zero = d_nm->mkConstInt(Rational(0));
@@ -90,8 +90,10 @@ Node ArithEntail::rewriteArith(Node a)
 {
   AlwaysAssert(a.getType().isInteger())
       << "Bad term: " << a << " " << a.getType();
-  // First apply length intro rewrites, which evaluates str.len and distributes it over concatenation terms.
-  // Note this approximates the behavior of the full rewriter, without using the rewriter as an oracle, which makes the code non-circular and simplifies proofs.
+  // First apply length intro rewrites, which evaluates str.len and distributes
+  // it over concatenation terms. Note this approximates the behavior of the
+  // full rewriter, without using the rewriter as an oracle, which makes the
+  // code non-circular and simplifies proofs.
   Node an = rewriteLengthIntro(a);
   // Use the poly norm utility. This is important since the rewrite
   // must be justified by ARITH_POLY_NORM when in proof mode.
@@ -209,7 +211,7 @@ Node ArithEntail::rewriteLengthOf(const Node& n) const
   {
     return d_nm->mkConstInt(Rational(Word::getLength(n)));
   }
-  else if (n.getKind()==Kind::SEQ_UNIT)
+  else if (n.getKind() == Kind::SEQ_UNIT)
   {
     return d_nm->mkConstInt(Rational(1));
   }
@@ -244,7 +246,8 @@ bool ArithEntail::check(Node a, bool strict, bool isSimple)
     return a.getConst<Rational>().sgn() >= (strict ? 1 : 0);
   }
   Node ar = strict ? NodeManager::mkNode(Kind::SUB, a, d_one) : a;
-  // if simple, we do not call rewriteArith, which also does length intro rewrites
+  // if simple, we do not call rewriteArith, which also does length intro
+  // rewrites
   ar = isSimple ? arith::PolyNorm::getPolyNorm(ar) : rewriteArith(ar);
   // if simple, just call the checkSimple routine.
   if (isSimple)
@@ -328,7 +331,8 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
       {
         Node curr = toProcess.back();
         Trace("strings-ent-approx-debug") << "  process " << curr << std::endl;
-        curr = isSimple ? arith::PolyNorm::getPolyNorm(curr) : rewriteArith(curr);
+        curr =
+            isSimple ? arith::PolyNorm::getPolyNorm(curr) : rewriteArith(curr);
         toProcess.pop_back();
         if (visited.find(curr) == visited.end())
         {
@@ -361,9 +365,8 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
         if (v != approx[0])
         {
           changed = true;
-          Trace("strings-ent-approx")
-              << "- Propagate (" << isSimple
-              << ") " << v << " = " << approx[0] << std::endl;
+          Trace("strings-ent-approx") << "- Propagate (" << isSimple << ") "
+                                      << v << " = " << approx[0] << std::endl;
           approxMap.add(v, approx[0]);
         }
         Node mn = ArithMSum::mkCoeffTerm(c, approx[0]);
@@ -469,7 +472,8 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
             if (!cr.isNull())
             {
               ci = ci.isNull() ? cr
-                               : nm->mkConstInt(cr.getConst<Rational>()*ci.getConst<Rational>());
+                               : nm->mkConstInt(cr.getConst<Rational>()
+                                                * ci.getConst<Rational>());
             }
             Trace("strings-ent-approx-debug") << ci << "*" << ti << " ";
             int ciSgn = ci.isNull() ? 1 : ci.getConst<Rational>().sgn();
@@ -517,8 +521,8 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
           break;
         }
       }
-      Trace("strings-ent-approx") << "- Decide "
-                                  << v << " = " << vapprox << std::endl;
+      Trace("strings-ent-approx")
+          << "- Decide " << v << " = " << vapprox << std::endl;
       // we incorporate v approximated by vapprox into the overall approximation
       // for ar
       Assert(!v.isNull() && !vapprox.isNull());

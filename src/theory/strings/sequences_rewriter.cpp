@@ -2150,8 +2150,7 @@ Node SequencesRewriter::rewriteSubstr(Node node)
       d_arithEntail.rewriteArith(nm->mkNode(Kind::STRING_LENGTH, node[0]));
   // normalize the existing value, which is important for avoid infinite
   // loops due to the arithmetic rewriter further normalizing slenRew.
-  Node scurrRew =
-      d_arithEntail.rewriteArith(node[2]);
+  Node scurrRew = d_arithEntail.rewriteArith(node[2]);
   if (scurrRew != slenRew)
   {
     if (d_arithEntail.check(scurrRew, slenRew))
@@ -3027,7 +3026,7 @@ Node SequencesRewriter::rewriteReplace(Node node)
   Node cmp_conr = d_stringsEntail.checkContains(node[0], node[1]);
   if (!cmp_conr.isNull())
   {
-    Assert (cmp_conr.isConst());
+    Assert(cmp_conr.isConst());
     if (cmp_conr.getConst<bool>())
     {
       // component-wise containment
@@ -3139,15 +3138,14 @@ Node SequencesRewriter::rewriteReplace(Node node)
       std::vector<Node> cc;
       cc.insert(cc.end(), cb.begin(), cb.end());
       cc.push_back(nodeManager()->mkNode(Kind::STRING_REPLACE,
-                                          utils::mkConcat(children0, stype),
-                                          node[1],
-                                          node[2]));
+                                         utils::mkConcat(children0, stype),
+                                         node[1],
+                                         node[2]));
       cc.insert(cc.end(), ce.begin(), ce.end());
       Node ret = utils::mkConcat(cc, stype);
       return returnRewrite(node, ret, Rewrite::RPL_PULL_ENDPT);
     }
   }
-  
 
   children1.clear();
   utils::getConcat(node[1], children1);
@@ -3543,10 +3541,10 @@ Node SequencesRewriter::rewriteReplaceReAll(Node node)
       //   "Z" ++ y ++ "Z" ++ y
       TypeNode t = x.getType();
       Node emp = Word::mkEmptyWord(t);
-      Node yp =
-      nm->mkNode(Kind::REGEXP_INTER,
-                            y,
-                            nm->mkNode(Kind::REGEXP_COMPLEMENT, nm->mkNode(Kind::STRING_TO_REGEXP, emp)));
+      Node yp = nm->mkNode(Kind::REGEXP_INTER,
+                           y,
+                           nm->mkNode(Kind::REGEXP_COMPLEMENT,
+                                      nm->mkNode(Kind::STRING_TO_REGEXP, emp)));
       std::vector<Node> res;
       String rem = x.getConst<String>();
       std::pair<size_t, size_t> match(0, 0);

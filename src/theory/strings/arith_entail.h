@@ -40,7 +40,7 @@ namespace strings {
 class ArithEntail
 {
  public:
-  ArithEntail(NodeManager * nm);
+  ArithEntail(NodeManager* nm);
   /**
    * Returns the rewritten form of a term, which must be an integer term.
    * This method invokes the rewriter, if one is provided, and uses the
@@ -70,7 +70,7 @@ class ArithEntail
   Node rewriteLengthIntro(const Node& n,
                           TConvProofGenerator* pg = nullptr) const;
   /**
-    */
+   */
   Node rewriteLengthOf(const Node& n) const;
   /** check arithmetic entailment equal
    * Returns true if it is always the case that a = b.
@@ -285,7 +285,7 @@ class ArithEntail
    */
   static bool getConstantBoundCache(TNode n, bool isLower, Node& c);
   /** Pointer to node manager */
-  NodeManager * d_nm;
+  NodeManager* d_nm;
   /** Constant zero */
   Node d_zero;
   Node d_one;

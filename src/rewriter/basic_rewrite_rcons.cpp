@@ -461,7 +461,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
     if (approxGeqi != approxGeq)
     {
       Trace("brc-macro") << "- proved " << approxGeqi << " via length intro"
-                        << std::endl;
+                         << std::endl;
       Node equiv = approxGeq.eqNode(approxGeqi);
       std::shared_ptr<ProofNode> pfn = tcpga.getProofFor(equiv);
       cdp->addProof(pfn);
@@ -600,7 +600,8 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
   std::vector<Node> ch1;
   std::vector<Node> ch2;
   Node rhs = sent.rewriteViaMacroSubstrStripSymLength(lhs, rule, ch1, ch2);
-  Trace("brc-macro") << "...was via string rewrite rule " << rule << ", ret " << rhs << " " << ch1 << " " << ch2 << std::endl;
+  Trace("brc-macro") << "...was via string rewrite rule " << rule << ", ret "
+                     << rhs << " " << ch1 << " " << ch2 << std::endl;
   Assert(rhs == eq[1]);
   TypeNode stype = lhs.getType();
   Node cm1 = theory::strings::utils::mkConcat(ch1, stype);
@@ -616,7 +617,7 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
     cm = nm->mkNode(Kind::STRING_CONCAT, cm2, cm1);
   }
   Node eq1 = nm->mkNode(Kind::EQUAL, lhs[0], cm);
-  if (cm==lhs[0])
+  if (cm == lhs[0])
   {
     cdp->addStep(eq1, ProofRule::REFL, {}, {lhs[0]});
   }

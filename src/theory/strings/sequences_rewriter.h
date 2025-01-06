@@ -34,8 +34,7 @@ namespace strings {
 class SequencesRewriter : public TheoryRewriter
 {
  public:
-  SequencesRewriter(NodeManager* nm,
-                    HistogramStat<Rewrite>* statistics);
+  SequencesRewriter(NodeManager* nm, HistogramStat<Rewrite>* statistics);
   /** The underlying entailment utilities */
   ArithEntail& getArithEntail();
   StringsEntail& getStringsEntail();

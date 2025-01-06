@@ -41,7 +41,9 @@ class SequencesRewriter;
 class StringsEntail
 {
  public:
-  StringsEntail(NodeManager* nm, ArithEntail& aent, SequencesRewriter* rewriter);
+  StringsEntail(NodeManager* nm,
+                ArithEntail& aent,
+                SequencesRewriter* rewriter);
 
   /** can constant contain list
    * return true if constant c can contain the list l in order
@@ -405,8 +407,8 @@ class StringsEntail
   static Node getMultisetApproximation(Node a);
 
  private:
-   /** Pointer to node manager */
-  NodeManager * d_nm;
+  /** Pointer to node manager */
+  NodeManager* d_nm;
   /** The arithmetic entailment module */
   ArithEntail& d_arithEntail;
   /**
