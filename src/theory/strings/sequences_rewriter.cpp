@@ -3682,8 +3682,7 @@ Node SequencesRewriter::rewritePrefixSuffix(Node n)
 Node SequencesRewriter::lengthPreserveRewrite(Node n)
 {
   NodeManager* nm = nodeManager();
-  Node len = nm->mkNode(Kind::STRING_LENGTH, n);
-  Node lenr = d_arithEntail.rewriteLengthIntro(len);
+  Node lenr = d_arithEntail.rewriteLengthOf(n);
   Node res = canonicalStrForSymbolicLength(lenr, n.getType());
   return res.isNull() ? n : res;
 }

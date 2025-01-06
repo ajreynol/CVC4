@@ -669,12 +669,11 @@ bool StringsEntail::stripConstantEndpoints(std::vector<Node>& n1,
 
 Node StringsEntail::checkContains(Node a, Node b)
 {
-  Node ctn = NodeManager::mkNode(Kind::STRING_CONTAINS, a, b);
-
   if (d_rewriter == nullptr)
   {
     return Node::null();
   }
+  Node ctn = NodeManager::mkNode(Kind::STRING_CONTAINS, a, b);
   Node prev;
   do
   {
