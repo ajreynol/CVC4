@@ -676,13 +676,14 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_indexOf)
                             three);
   sameNormalForm(idof_abcd, idof_aaad);
 
-  // (str.indexof (str.substr x 1 i) "A" i) ---> -1
+  // (str.indexof x "A" (+ (str.len x) 1)) ---> -1
   Node idof_substr = d_nodeManager->mkNode(
       Kind::STRING_INDEXOF,
-      d_nodeManager->mkNode(Kind::STRING_SUBSTR, x, one, i),
+      x,
       a,
-      i);
-  // sameNormalForm(idof_substr, negOne);
+      d_nodeManager->mkNode(Kind::ADD,
+      d_nodeManager->mkNode(Kind::STRING_LENGTH, x), one));
+  sameNormalForm(idof_substr, negOne);
 
   {
     // Same normal form for:
