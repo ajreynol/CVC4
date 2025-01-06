@@ -69,6 +69,11 @@
   (str.len (str.replace t s r))
   (str.len t))
 
+(define-cond-rule str-len-replace-all-inv ((t ?Seq) (s ?Seq) (r ?Seq))
+  (= (str.len s) (str.len r))
+  (str.len (str.replace_all t s r))
+  (str.len t))
+
 (define-rule str-len-update-inv ((t ?Seq) (n Int) (r ?Seq)) 
   (str.len (str.update t n r))
   (str.len t))

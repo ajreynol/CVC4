@@ -86,7 +86,7 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n,
   return Node::null();
 }
 
-Node ArithEntail::rewriteArith(Node a)
+Node ArithEntail::rewriteArith(Node a) const
 {
   AlwaysAssert(a.getType().isInteger())
       << "Bad term: " << a << " " << a.getType();
@@ -174,20 +174,8 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
       }
       if (k == Kind::STRING_LENGTH)
       {
-        std::vector<Node> cc;
-        for (const Node& c : children)
-        {
-          utils::getConcat(c, cc);
-        }
-        std::vector<Node> sum;
-        for (const Node& c : cc)
-        {
-          // note we evaluate both string and sequence values here
-          sum.push_back(rewriteLengthOf(c));
-        }
-        Assert(!sum.empty());
-        Node rret = sum.size() == 1 ? sum[0] : nm->mkNode(Kind::ADD, sum);
-        if (pg != nullptr)
+        Node rret = rewriteLengthOf(ret[0]);
+        if (pg != nullptr && ret!=rret)
         {
           pg->addRewriteStep(ret,
                              rret,
@@ -207,18 +195,52 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
 
 Node ArithEntail::rewriteLengthOf(const Node& n) const
 {
+  std::vector<Node> cc;
+  utils::getConcat(n, cc);
+  std::vector<Node> sum;
+  for (const Node& c : cc)
+  {
+    // note we evaluate both string and sequence values here
+    sum.push_back(rewriteAtomicLengthOf(c));
+  }
+  Assert(!sum.empty());
+  return sum.size() == 1 ? sum[0] : d_nm->mkNode(Kind::ADD, sum);
+}
+
+Node ArithEntail::rewriteAtomicLengthOf(const Node& n) const
+{
+  // concat should be handled separately
+  Assert (n.getKind()!=Kind::STRING_CONCAT);
   if (n.isConst())
   {
     return d_nm->mkConstInt(Rational(Word::getLength(n)));
   }
-  else if (n.getKind() == Kind::SEQ_UNIT)
+  Kind k = n.getKind();
+  if (k == Kind::STRING_TO_LOWER || k == Kind::STRING_TO_UPPER
+           || k == Kind::STRING_REV || k == Kind::STRING_UPDATE)
+  {
+    // length preserving operators
+    return rewriteLengthOf(n[0]);
+  }
+  else if (k == Kind::SEQ_UNIT || k == Kind::STRING_UNIT)
   {
     return d_nm->mkConstInt(Rational(1));
+  }
+  else if (k == Kind::STRING_REPLACE || k == Kind::STRING_REPLACE_ALL)
+  {
+    // length preserving if 1st and 2nd operators are same length
+    Node len1 = rewriteLengthOf(n[1]);
+    Node len2 = rewriteLengthOf(n[2]);
+    if (checkEq(len1, len2))
+    {
+      // len( y ) == len( z ) => len( str.replace( x, y, z ) ) ---> len( x )
+      return rewriteLengthOf(n[0]);
+    }
   }
   return d_nm->mkNode(Kind::STRING_LENGTH, n);
 }
 
-bool ArithEntail::checkEq(Node a, Node b)
+bool ArithEntail::checkEq(Node a, Node b) const
 {
   if (a == b)
   {

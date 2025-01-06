@@ -46,7 +46,7 @@ class ArithEntail
    * This method invokes the rewriter, if one is provided, and uses the
    * ArithPolyNorm utility (arith/arith_poly_norm.h) otherwise.
    */
-  Node rewriteArith(Node a);
+  Node rewriteArith(Node a) const;
   /**
    * Normalize the integer relation n to a GEQ, if possible.
    * For example, (> t s) becomes (>= t (+ s 1)). Returns null if n is
@@ -70,12 +70,15 @@ class ArithEntail
   Node rewriteLengthIntro(const Node& n,
                           TConvProofGenerator* pg = nullptr) const;
   /**
+   * Return the result of rewriting (str.len n) one step.
+   * @param n The string or sequence term.
+   * @return the result of rewriting (str.len n) one step.
    */
   Node rewriteLengthOf(const Node& n) const;
   /** check arithmetic entailment equal
    * Returns true if it is always the case that a = b.
    */
-  bool checkEq(Node a, Node b);
+  bool checkEq(Node a, Node b) const;
   /** check arithmetic entailment
    * @param a The first term.
    * @param b The second term
@@ -284,6 +287,10 @@ class ArithEntail
    * computed. Used for getConstantBound and getConstantBoundLength.
    */
   static bool getConstantBoundCache(TNode n, bool isLower, Node& c);
+  /**
+   * Helper for rewriteLengthOf, should be applied to non-concatenation terms.
+   */
+  Node rewriteAtomicLengthOf(const Node& n) const;
   /** Pointer to node manager */
   NodeManager* d_nm;
   /** Constant zero */

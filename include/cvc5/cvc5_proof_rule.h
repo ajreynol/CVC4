@@ -3690,6 +3690,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_SUBSTR_EQ_EMPTY),
   /** Auto-generated from RARE rule str-len-replace-inv */
   EVALUE(STR_LEN_REPLACE_INV),
+  /** Auto-generated from RARE rule str-len-replace-all-inv */
+  EVALUE(STR_LEN_REPLACE_ALL_INV),
   /** Auto-generated from RARE rule str-len-update-inv */
   EVALUE(STR_LEN_UPDATE_INV),
   /** Auto-generated from RARE rule str-len-substr-in-range */

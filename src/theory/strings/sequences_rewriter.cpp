@@ -628,59 +628,11 @@ Node SequencesRewriter::rewriteArithEqualityExt(Node node)
 Node SequencesRewriter::rewriteLength(Node node)
 {
   Assert(node.getKind() == Kind::STRING_LENGTH);
-  NodeManager* nm = nodeManager();
-  Kind nk0 = node[0].getKind();
-  if (node[0].isConst())
+  // use the arithmetic utility
+  Node lnorm = d_arithEntail.rewriteLengthOf(node[0]);
+  if (lnorm!=node[0])
   {
-    Node retNode = nm->mkConstInt(Rational(Word::getLength(node[0])));
-    return returnRewrite(node, retNode, Rewrite::LEN_EVAL);
-  }
-  else if (nk0 == Kind::STRING_CONCAT)
-  {
-    Node tmpNode = node[0];
-    if (tmpNode.getKind() == Kind::STRING_CONCAT)
-    {
-      std::vector<Node> node_vec;
-      for (unsigned int i = 0; i < tmpNode.getNumChildren(); ++i)
-      {
-        if (tmpNode[i].isConst())
-        {
-          node_vec.push_back(
-              nm->mkConstInt(Rational(Word::getLength(tmpNode[i]))));
-        }
-        else
-        {
-          node_vec.push_back(
-              nodeManager()->mkNode(Kind::STRING_LENGTH, tmpNode[i]));
-        }
-      }
-      Node retNode = nodeManager()->mkNode(Kind::ADD, node_vec);
-      return returnRewrite(node, retNode, Rewrite::LEN_CONCAT);
-    }
-  }
-  else if (nk0 == Kind::STRING_REPLACE || nk0 == Kind::STRING_REPLACE_ALL)
-  {
-    Node len1 = nm->mkNode(Kind::STRING_LENGTH, node[0][1]);
-    Node len2 = nm->mkNode(Kind::STRING_LENGTH, node[0][2]);
-    if (d_arithEntail.checkEq(len1, len2))
-    {
-      // len( y ) == len( z ) => len( str.replace( x, y, z ) ) ---> len( x )
-      Node retNode = nm->mkNode(Kind::STRING_LENGTH, node[0][0]);
-      return returnRewrite(node, retNode, Rewrite::LEN_REPL_INV);
-    }
-  }
-  else if (nk0 == Kind::STRING_TO_LOWER || nk0 == Kind::STRING_TO_UPPER
-           || nk0 == Kind::STRING_REV || nk0 == Kind::STRING_UPDATE)
-  {
-    // len( f( x ) ) == len( x ) where f is to_lower, to_upper, or rev.
-    // len( update( x, n, y ) ) = len( x )
-    Node retNode = nm->mkNode(Kind::STRING_LENGTH, node[0][0]);
-    return returnRewrite(node, retNode, Rewrite::LEN_CONV_INV);
-  }
-  else if (nk0 == Kind::SEQ_UNIT || nk0 == Kind::STRING_UNIT)
-  {
-    Node retNode = nm->mkConstInt(Rational(1));
-    return returnRewrite(node, retNode, Rewrite::LEN_SEQ_UNIT);
+    return returnRewrite(node, lnorm, Rewrite::LEN_REWRITE);
   }
   return node;
 }

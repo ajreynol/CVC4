@@ -224,11 +224,7 @@ const char* toString(Rewrite r)
     case Rewrite::RE_OPT_ELIM: return "RE_OPT_ELIM";
     case Rewrite::RE_PLUS_ELIM: return "RE_PLUS_ELIM";
     case Rewrite::RE_DIFF_ELIM: return "RE_DIFF_ELIM";
-    case Rewrite::LEN_EVAL: return "LEN_EVAL";
-    case Rewrite::LEN_CONCAT: return "LEN_CONCAT";
-    case Rewrite::LEN_REPL_INV: return "LEN_REPL_INV";
-    case Rewrite::LEN_CONV_INV: return "LEN_CONV_INV";
-    case Rewrite::LEN_SEQ_UNIT: return "LEN_SEQ_UNIT";
+    case Rewrite::LEN_REWRITE: return "LEN_REWRITE";
     case Rewrite::CHARAT_ELIM: return "CHARAT_ELIM";
     case Rewrite::SEQ_UNIT_EVAL: return "SEQ_UNIT_EVAL";
     case Rewrite::SEQ_NTH_EVAL: return "SEQ_NTH_EVAL";
