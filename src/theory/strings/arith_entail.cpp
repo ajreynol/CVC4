@@ -175,7 +175,7 @@ Node ArithEntail::rewriteLengthIntro(const Node& n,
       if (k == Kind::STRING_LENGTH)
       {
         Node rret = rewriteLengthOf(ret[0]);
-        if (pg != nullptr && ret!=rret)
+        if (pg != nullptr && ret != rret)
         {
           pg->addRewriteStep(ret,
                              rret,
@@ -210,14 +210,14 @@ Node ArithEntail::rewriteLengthOf(const Node& n) const
 Node ArithEntail::rewriteAtomicLengthOf(const Node& n) const
 {
   // concat should be handled separately
-  Assert (n.getKind()!=Kind::STRING_CONCAT);
+  Assert(n.getKind() != Kind::STRING_CONCAT);
   if (n.isConst())
   {
     return d_nm->mkConstInt(Rational(Word::getLength(n)));
   }
   Kind k = n.getKind();
   if (k == Kind::STRING_TO_LOWER || k == Kind::STRING_TO_UPPER
-           || k == Kind::STRING_REV || k == Kind::STRING_UPDATE)
+      || k == Kind::STRING_REV || k == Kind::STRING_UPDATE)
   {
     // length preserving operators
     // note we do not recursively rewrite length of n[0]

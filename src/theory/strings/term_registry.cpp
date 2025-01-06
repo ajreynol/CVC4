@@ -57,10 +57,12 @@ TermRegistry::TermRegistry(Env& env,
       d_proxyVar(userContext()),
       d_proxyVarToLength(userContext()),
       d_lengthLemmaTermsCache(userContext()),
-      d_epg(
-          env.isTheoryProofProducing() ? new EagerProofGenerator(
-              env, userContext(), "strings::TermRegistry::EagerProofGenerator")
-                                       : nullptr),
+      d_epg(env.isTheoryProofProducing()
+                ? new EagerProofGenerator(
+                      env,
+                      userContext(),
+                      "strings::TermRegistry::EagerProofGenerator")
+                : nullptr),
       d_inFullEffortCheck(false)
 {
   NodeManager* nm = nodeManager();

@@ -38,7 +38,7 @@ namespace theory {
 namespace strings {
 
 SequencesRewriter::SequencesRewriter(NodeManager* nm,
-                                     Rewriter * rr,
+                                     Rewriter* rr,
                                      HistogramStat<Rewrite>* statistics)
     : TheoryRewriter(nm),
       d_statistics(statistics),
@@ -632,7 +632,7 @@ Node SequencesRewriter::rewriteLength(Node node)
   Assert(node.getKind() == Kind::STRING_LENGTH);
   // use the arithmetic utility
   Node lnorm = d_arithEntail.rewriteLengthOf(node[0]);
-  if (lnorm!=node[0])
+  if (lnorm != node[0])
   {
     return returnRewrite(node, lnorm, Rewrite::LEN_REWRITE);
   }
