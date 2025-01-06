@@ -856,7 +856,8 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
             : (bk == Kind::OR ? ProofRewriteRule::QUANT_MINISCOPE_OR
                               : ProofRewriteRule::QUANT_MINISCOPE_AND);
     Node body2ms = rr->rewriteViaRule(prr, currEq[0]);
-    Trace("brc-macro") << "Rewrite " << currEq[0] << " by " << prr << " returns " << body2ms << std::endl;
+    Trace("brc-macro") << "Rewrite " << currEq[0] << " by " << prr
+                       << " returns " << body2ms << std::endl;
     Node eqqm;
     if (body2ms.isNull())
     {
@@ -868,7 +869,8 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       if (!ceuv.isNull())
       {
         body2ms = rr->rewriteViaRule(prr, ceuv);
-        Trace("brc-macro") << "Rewrite " << currEq[0] << " by " << prr << " returns " << body2ms << std::endl;
+        Trace("brc-macro") << "Rewrite " << currEq[0] << " by " << prr
+                           << " returns " << body2ms << std::endl;
       }
       if (body2ms.isNull())
       {
@@ -880,8 +882,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       Node eqqm1 = ceuv.eqNode(body2ms);
       cdp->addTheoryRewriteStep(eqqm1, prr);
       eqqm = currEq[0].eqNode(body2ms);
-      cdp->addStep(
-          eqqm, ProofRule::TRANS, {eqce, eqqm1}, {});
+      cdp->addStep(eqqm, ProofRule::TRANS, {eqce, eqqm1}, {});
     }
     else
     {

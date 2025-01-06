@@ -51,13 +51,13 @@ Node ExtProofRuleChecker::checkInternal(ProofRule id,
   if (id == ProofRule::ARITH_MULT_SIGN)
   {
     Assert(children.empty());
-    Assert(args.size() ==2);
+    Assert(args.size() == 2);
     Node mon = args[1];
     std::map<Node, int> exps;
     std::vector<Node> premise;
-    if (args[0].getKind()==Kind::AND)
+    if (args[0].getKind() == Kind::AND)
     {
-      premise.insert(premise.end(),args[0].begin(), args[0].end());
+      premise.insert(premise.end(), args[0].begin(), args[0].end());
     }
     else
     {
