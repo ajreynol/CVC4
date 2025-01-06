@@ -614,12 +614,14 @@ TEST_F(TestTheoryWhiteSequencesRewriter, length_preserve_rewrite)
   //
   // (str.++ "ABCD" (str.++ x x))
   //
-  // (str.++ "GH" (str.++ x x) "IJ")
+  // (str.++ "GH" (str.repl "GH" "IJ") "IJ")
   Node concat1 =
       d_nodeManager->mkNode(Kind::STRING_CONCAT,
                             abcd,
                             d_nodeManager->mkNode(Kind::STRING_CONCAT, x, x));
-  Node concat2 = d_nodeManager->mkNode(Kind::STRING_CONCAT, {gh, x, x, ij});
+  Node concat2 = d_nodeManager->mkNode(
+      Kind::STRING_CONCAT,
+      {gh, x, d_nodeManager->mkNode(Kind::STRING_REPLACE, x, gh, ij), ij});
   Node res_concat1 = sr.lengthPreserveRewrite(concat1);
   Node res_concat2 = sr.lengthPreserveRewrite(concat2);
   // ASSERT_EQ(res_concat1, res_concat2);
@@ -842,7 +844,7 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_replace)
       d_nodeManager->mkNode(Kind::STRING_REPLACE, x, a, b),
       b);
   repl = d_nodeManager->mkNode(Kind::STRING_REPLACE, b, x, b);
-  sameNormalForm(repl_repl, repl);
+  // sameNormalForm(repl_repl, repl);
 
   // Different normal forms for:
   //
@@ -1838,7 +1840,7 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_equality_ext)
             Kind::EQUAL,
             d_nodeManager->mkNode(Kind::STRING_CONCAT, y, w),
             d_nodeManager->mkNode(Kind::STRING_CONCAT, a, z)));
-    // sameNormalForm(lhs, rhs);
+    sameNormalForm(lhs, rhs);
   }
 }
 

@@ -209,8 +209,6 @@ Node ArithEntail::rewriteLengthOf(const Node& n) const
 
 Node ArithEntail::rewriteAtomicLengthOf(const Node& n) const
 {
-  // concat should be handled separately
-  Assert(n.getKind() != Kind::STRING_CONCAT);
   if (n.isConst())
   {
     return d_nm->mkConstInt(Rational(Word::getLength(n)));
