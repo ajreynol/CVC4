@@ -35,7 +35,6 @@ class SequencesRewriter : public TheoryRewriter
 {
  public:
   SequencesRewriter(NodeManager* nm,
-                    Rewriter* r,
                     HistogramStat<Rewrite>* statistics);
   /** The underlying entailment utilities */
   ArithEntail& getArithEntail();
@@ -330,11 +329,6 @@ class SequencesRewriter : public TheoryRewriter
 
   /** Reference to the rewriter statistics. */
   HistogramStat<Rewrite>* d_statistics;
-  /**
-   * Pointer to the rewriter. NOTE this is a cyclic dependency, and should
-   * be removed.
-   */
-  Rewriter* d_rr;
   /** The arithmetic entailment module */
   ArithEntail d_arithEntail;
   /** Instance of the entailment checker for strings. */

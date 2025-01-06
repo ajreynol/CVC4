@@ -38,11 +38,9 @@ namespace theory {
 namespace strings {
 
 SequencesRewriter::SequencesRewriter(NodeManager* nm,
-                                     Rewriter* r,
                                      HistogramStat<Rewrite>* statistics)
     : TheoryRewriter(nm),
       d_statistics(statistics),
-      d_rr(r),
       d_stringsEntail(d_arithEntail, this)
 {
   d_sigmaStar = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
@@ -3060,31 +3058,6 @@ Node SequencesRewriter::rewriteReplace(Node node)
     if (d_arithEntail.check(l1, l0))
     {
       return returnRewrite(node, node[0], Rewrite::RPL_RPL_LEN_ID);
-    }
-
-    // (str.replace x y x) ---> (str.replace x (str.++ y1 ... yn) x)
-    // if 1 >= (str.len x) and (= y "") ---> (= y1 "") ... (= yn "")
-    if (d_stringsEntail.checkLengthOne(node[0]))
-    {
-      Node empty = Word::mkEmptyWord(stype);
-      Node rn1 = d_rr->rewrite(
-          rewriteEqualityExt(nm->mkNode(Kind::EQUAL, node[1], empty)));
-      if (rn1 != node[1])
-      {
-        std::vector<Node> emptyNodes;
-        bool allEmptyEqs;
-        std::tie(allEmptyEqs, emptyNodes) = utils::collectEmptyEqs(rn1);
-
-        if (allEmptyEqs)
-        {
-          Node nn1 = utils::mkConcat(emptyNodes, stype);
-          if (node[1] != nn1)
-          {
-            Node ret = nm->mkNode(Kind::STRING_REPLACE, node[0], nn1, node[2]);
-            return returnRewrite(node, ret, Rewrite::RPL_X_Y_X_SIMP);
-          }
-        }
-      }
     }
   }
 

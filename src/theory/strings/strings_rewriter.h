@@ -33,7 +33,6 @@ class StringsRewriter : public SequencesRewriter
 {
  public:
   StringsRewriter(NodeManager* nm,
-                  Rewriter* r,
                   HistogramStat<Rewrite>* statistics,
                   uint32_t alphaCard = 196608);
 

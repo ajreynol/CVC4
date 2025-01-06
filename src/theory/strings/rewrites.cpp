@@ -129,7 +129,6 @@ const char* toString(Rewrite r)
     case Rewrite::RPL_REPLACE: return "RPL_REPLACE";
     case Rewrite::RPL_RPL_EMPTY: return "RPL_RPL_EMPTY";
     case Rewrite::RPL_RPL_LEN_ID: return "RPL_RPL_LEN_ID";
-    case Rewrite::RPL_X_Y_X_SIMP: return "RPL_X_Y_X_SIMP";
     case Rewrite::REPLACE_RE_EVAL: return "REPLACE_RE_EVAL";
     case Rewrite::REPLACE_RE_NONE: return "REPLACE_RE_NONE";
     case Rewrite::REPLACE_RE_ALL_EVAL: return "REPLACE_RE_ALL_EVAL";
