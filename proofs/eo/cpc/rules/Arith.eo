@@ -288,19 +288,59 @@
 ;;;;; ProofRule::ARITH_MULT_SIGN
 
 
+(program $strip_even_exponent ((T Type) (t T) (U Type) (m U :list))
+  (T U) U
+  (
+  (($strip_even_exponent t (* t t m)) ($strip_even_exponent t m))
+  (($strip_even_exponent t m)         m)
+  )
+)
 
+(program $mk_arith_mult_sign_rel ((T Type) (U Type) (F Bool :list) (l Bool) (t T) (z T) (m T :list) (sgn Bool))
+  (Bool Bool T) (-> T U Bool)
+  (
+  (($mk_arith_mult_sign_rel sgn (and (not (= t z)) F) (* t t m))
+      (eo::requires (eo::to_z z) 0
+        ($mk_arith_mult_sign_rel sgn F ($strip_even_exponent t m))))
+  (($mk_arith_mult_sign_rel sgn (and (> t z) F) (* t m))
+      (eo::requires (eo::to_z z) 0
+        ($mk_arith_mult_sign_rel sgn F ($strip_even_exponent t m))))
+  (($mk_arith_mult_sign_rel sgn (and (< t z) F) (* t m))
+      (eo::requires (eo::to_z z) 0
+        ($mk_arith_mult_sign_rel (eo::not sgn) F ($strip_even_exponent t m))))
+  ; base case
+  (($mk_arith_mult_sign_rel sgn true 1)   (eo::ite sgn > <))  
+  ; handles the singleton antecedant case
+  (($mk_arith_mult_sign_rel sgn l m)      ($mk_arith_mult_sign_rel sgn (eo::cons and l true) m))
+  )
+)
+
+; rule: arith_mult_sign
+; implements: ProofRule::ARITH_MULT_SIGN
+; args:
+; - F Bool: A conjunction of arithmetic relations.
+; - m T: A monomial.
+; conclusion: >
+;   F implies the arithmetic relation over m that is implied by reasoning about
+;   the sign of the variables in m.
+(declare-rule arith_mult_sign ((T Type) (F Bool) (m T))
+  :args (F m)
+  :conclusion (=> F
+                (eo::define ((r ($mk_arith_mult_sign_rel true F m)))
+                  (r m ($arith_mk_zero (eo::typeof m)))))
+)
 
 ;;;;; ProofRule::ARITH_MULT_ABS_COMPARISON
 
 ; program: $mk_arith_mult_abs_comparison_lhs
 ; args:
-; - r (-> T U S): The relation.
+; - r (-> T U Bool): The relation.
 ; - F Bool: A conjunction of the remaining premises we have left to process.
 ; return: >
 ;   The left hand side of the equality proven by arith_mult_abs_comparison for
 ;   r and the remaining premises F.
-(program $mk_arith_mult_abs_comparison_lhs ((T Type) (U Type) (S Type) (r (-> T U S)) (t T) (u U) (z T) (B Bool :list))
-  ((-> T U S) Bool) Bool
+(program $mk_arith_mult_abs_comparison_lhs ((T Type) (U Type) (r (-> T U Bool)) (t T) (u U) (z T) (B Bool :list))
+  ((-> T U Bool) Bool) Bool
   (
     (($mk_arith_mult_abs_comparison_lhs = (and (= (abs t) (abs u)) B))  (eo::cons * t ($mk_arith_mult_abs_comparison_lhs = B)))
     (($mk_arith_mult_abs_comparison_lhs > (and (> (abs t) (abs u)) B))  (eo::cons * t ($mk_arith_mult_abs_comparison_lhs > B)))
@@ -313,14 +353,14 @@
 
 ; program: $mk_arith_mult_abs_comparison_rhs
 ; args:
-; - r (-> T U S): The relation.
+; - r (-> T U Bool): The relation.
 ; - F Bool: A conjunction of the remaining premises we have left to process.
 ; return: >
 ;   The right hand side of the equality proven by arith_mult_abs_comparison for
 ;   r and the remaining premises F.
 ; note: This program is analogous to $mk_arith_mult_abs_comparison_lhs.
-(program $mk_arith_mult_abs_comparison_rhs ((T Type) (U Type) (S Type) (r (-> T U S)) (t T) (u U) (z T) (B Bool :list))
-  ((-> T U S) Bool) Bool
+(program $mk_arith_mult_abs_comparison_rhs ((T Type) (U Type) (r (-> T U Bool)) (t T) (u U) (z T) (B Bool :list))
+  ((-> T U Bool) Bool) Bool
   (
     (($mk_arith_mult_abs_comparison_rhs = (and (= (abs t) (abs u)) B))  (eo::cons * u ($mk_arith_mult_abs_comparison_rhs = B)))
     (($mk_arith_mult_abs_comparison_rhs > (and (> (abs t) (abs u)) B))  (eo::cons * u ($mk_arith_mult_abs_comparison_rhs > B)))
@@ -331,7 +371,7 @@
   )
 )
 
-; rule: arith_sum_ub
+; rule: arith_mult_abs_comparison
 ; implements: ProofRule::ARITH_MULT_ABS_COMPARISON
 ; premises:
 ; - F Bool: A conjunction of arithmetic relations involving absolute value.
