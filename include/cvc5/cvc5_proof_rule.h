@@ -1891,7 +1891,7 @@ enum ENUM(ProofRule)
    *
    * If :math:`\diamond` is :math:`>`, then
    * each :math:`F_i` is either :math:`\left| t_i \right| > \left| s_i \right|` or
-   * :math:`\left| t_i \right| = \left| s_i \right| \land \left| t_i \right| \neq 0`,
+   * :math:`\left| t_i \right| = \left| s_i \right| \land t_i \neq 0`,
    * and :math:`F_1` is of the former form.
    *
    * \endverbatim
