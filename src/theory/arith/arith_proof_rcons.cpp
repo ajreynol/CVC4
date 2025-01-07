@@ -81,7 +81,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
     ArithSubsTermContext astc;
     TConvProofGenerator tcnv(d_env,
                              nullptr,
-                             TConvPolicy::ONCE,
+                             TConvPolicy::FIXPOINT,
                              TConvCachePolicy::NEVER,
                              "ArithRConsTConv",
                              &astc);
@@ -144,6 +144,14 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
             if (as != eq)
             {
               cdp.addStep(eq, ProofRule::MACRO_SR_PRED_TRANSFORM, {as}, {eq});
+            }
+            // to ensure a fixed point substitution, we apply the current
+            // substitution to the range of previous substitutions
+            if (!asubs.empty())
+            {
+              Subs stmp;
+              stmp.add(m.first, val);
+              asubs.applyToRange(stmp);
             }
             asubs.add(m.first, val);
             tcnv.addRewriteStep(m.first, val, &cdp);
