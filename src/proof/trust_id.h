@@ -157,6 +157,8 @@ enum class TrustId : uint32_t
   ARITH_NL_COMPARE_LIT_TRANSFORM,
   /** A lemma from the DIO solver */
   ARITH_DIO_LEMMA,
+  /** A lemma from the ArithStaticLearner utility */
+  ARITH_STATIC_LEARN,
   /** A nonlinear comparison lemma that failed to explain */
   ARITH_NL_COMPARE_LEMMA,
   /** A conflict coming from the bitblast solver */
