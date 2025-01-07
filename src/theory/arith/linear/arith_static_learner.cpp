@@ -400,7 +400,7 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
       if (ita != amap.end())
       {
         // after lifting, the branch may be an antecedant
-        if (ita->second==b)
+        if (ita->second == b)
         {
           cdp.addStep(eq, ProofRule::TRUE_INTRO, {ita->second}, {});
           continue;
