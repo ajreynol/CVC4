@@ -381,14 +381,14 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
     Trace("arith-static-pf") << "(Flipped) min/max term..." << std::endl;
     // flip relation, likely a min/max term.
     // the transformation below turns e.g.
-    // (>= (ite (< s t) t s) .) into (>= (ite (>= s t) s t) .)
+    // (>= (ite (< s t) t s) t) into (>= (ite (>= s t) s t) t)
     Kind crk = negateKind(cond.getKind());
     Node iteFlip = nm->mkNode(
         Kind::ITE, nm->mkNode(crk, cond[0], cond[1]), conc[0][2], conc[0][1]);
     Node iteFlipN =
         nm->mkNode(Kind::ITE, cond.negate(), conc[0][2], conc[0][1]);
     Node eq1 = conc[0].eqNode(iteFlipN);
-    // shown by RARE rule
+    // shown by RARE rule ite-not-cond
     cdp.addTrustedStep(eq1, TrustId::ARITH_STATIC_LEARN, {}, {});
     Trace("arith-static-pf") << "- subgoal " << eq1 << std::endl;
     Node eq2 = iteFlipN.eqNode(iteFlip);
@@ -397,6 +397,10 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
       // shown by rewriting
       cdp.addStep(eq2, ProofRule::MACRO_SR_PRED_INTRO, {}, {eq2});
       Node eqt = conc[0].eqNode(iteFlip);
+      // ------------------------------------ ite-not-cond, MACRO_SR_PRED_INTRO
+      // (ite (< s t) t s) = (ite (not (< s t)) s t) = (ite (>= s t) s t)
+      // ---------------------------------------------------------------- TRANS
+      // (ite (< s t) t s) = (ite (>= s t) s t)
       cdp.addStep(eqt, ProofRule::TRANS, {eq1, eq2}, {});
       Node eqrefl = conc[1].eqNode(conc[1]);
       cdp.addStep(eqrefl, ProofRule::REFL, {}, {conc[1]});
@@ -407,11 +411,22 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
       std::vector<Node> cargs;
       ProofRule cr = expr::getCongRule(conc, cargs);
       Node equiv = conc.eqNode(npred);
+      // ------------------------------------- from above  ------ REFL
+      // (ite (< s t) t s) = (ite (>= s t) s t)             t = t
+      // -------------------------------------------------------- CONG
+      // (>= (ite (< s t) t s) t) = (>= (ite (>= s t) s t) t)
       cdp.addStep(equiv, cr, congPremises, cargs);
       Node equivs = npred.eqNode(conc);
       cdp.addStep(equivs, ProofRule::SYMM, {equiv}, {});
-      // npred should be shown
+      // npred can be shown by a RARE rule arith-{min,max}-*
       cdp.addTrustedStep(npred, TrustId::ARITH_STATIC_LEARN, {}, {});
+      //                          -------------------------- from above
+      //                          (>= (ite (< s t) t s) t) = (>= I t)
+      // ------ arith-{min,max}-* ----------------------------------- SYMM
+      // (>= I t)                 (>= I t) = (>= (ite (< s t) t s) t)
+      // ---------------------------------------------------- EQ_RESOLVE
+      // (>= (ite (< s t) t s) t)
+      // where I is (ite (>= s t) s t).
       Trace("arith-static-pf") << "- subgoal " << npred << std::endl;
       cdp.addStep(conc, ProofRule::EQ_RESOLVE, {npred, equivs}, {});
     }
