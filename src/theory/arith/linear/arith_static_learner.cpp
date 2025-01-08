@@ -179,7 +179,8 @@ void ArithStaticLearner::iteMinMax(TNode n, std::vector<TrustNode>& learned)
       {  // (ite (<= x y) x y)
         Node nLeqX = NodeBuilder(nm, Kind::LEQ) << n << t;
         Node nLeqY = NodeBuilder(nm, Kind::LEQ) << n << e;
-        Trace("arith::static") << n << "is a min =>" << nLeqX << " " << nLeqY << endl;
+        Trace("arith::static")
+            << n << "is a min =>" << nLeqX << " " << nLeqY << endl;
         addLearnedLemma(nLeqX, learned);
         addLearnedLemma(nLeqY, learned);
         ++(d_statistics.d_iteMinMaxApplications);
@@ -190,7 +191,8 @@ void ArithStaticLearner::iteMinMax(TNode n, std::vector<TrustNode>& learned)
       {  // (ite (>= x y) x y)
         Node nGeqX = NodeBuilder(nm, Kind::GEQ) << n << t;
         Node nGeqY = NodeBuilder(nm, Kind::GEQ) << n << e;
-        Trace("arith::static") << n << "is a max =>" << nGeqX << " " << nGeqY << endl;
+        Trace("arith::static")
+            << n << "is a max =>" << nGeqX << " " << nGeqY << endl;
         addLearnedLemma(nGeqX, learned);
         addLearnedLemma(nGeqY, learned);
         ++(d_statistics.d_iteMinMaxApplications);
@@ -373,21 +375,24 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
   CDProof cdp(d_env);
   Node cond = conc[0][0];
   Node truen = nm->mkConst(true);
-  if (cond[0]==conc[0][2] && cond[1]==conc[0][1] && (conc[1]==conc[0][1] || conc[1]==conc[0][2]))
+  if (cond[0] == conc[0][2] && cond[1] == conc[0][1]
+      && (conc[1] == conc[0][1] || conc[1] == conc[0][2]))
   {
     Trace("arith-static-pf") << "(Flipped) min/max term..." << std::endl;
     // flip relation, likely a min/max term.
     // the transformation below turns e.g.
     // (>= (ite (< s t) t s) .) into (>= (ite (>= s t) s t) .)
     Kind crk = negateKind(cond.getKind());
-    Node iteFlip = nm->mkNode(Kind::ITE, nm->mkNode(crk, cond[0], cond[1]), conc[0][2], conc[0][1]);
-    Node iteFlipN = nm->mkNode(Kind::ITE, cond.negate(), conc[0][2], conc[0][1]);
+    Node iteFlip = nm->mkNode(
+        Kind::ITE, nm->mkNode(crk, cond[0], cond[1]), conc[0][2], conc[0][1]);
+    Node iteFlipN =
+        nm->mkNode(Kind::ITE, cond.negate(), conc[0][2], conc[0][1]);
     Node eq1 = conc[0].eqNode(iteFlipN);
     // shown by RARE rule
     cdp.addTrustedStep(eq1, TrustId::ARITH_STATIC_LEARN, {}, {});
     Trace("arith-static-pf") << "- subgoal " << eq1 << std::endl;
     Node eq2 = iteFlipN.eqNode(iteFlip);
-    if (rewrite(eq2)==truen)
+    if (rewrite(eq2) == truen)
     {
       // shown by rewriting
       cdp.addStep(eq2, ProofRule::MACRO_SR_PRED_INTRO, {}, {eq2});
@@ -417,7 +422,8 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
       return cdp.getProofFor(fact);
     }
   }
-  else if (cond[0]==conc[0][1] && cond[1]==conc[0][2] && (conc[1]==conc[0][1] || conc[1]==conc[0][2]))
+  else if (cond[0] == conc[0][1] && cond[1] == conc[0][2]
+           && (conc[1] == conc[0][1] || conc[1] == conc[0][2]))
   {
     Trace("arith-static-pf") << "Min/max term..." << std::endl;
     cdp.addTrustedStep(conc, TrustId::ARITH_STATIC_LEARN, {}, {});
@@ -462,8 +468,8 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
           // c + (n1-n2) >= n1
           // ------------------ MACRO_SR_PRED_TRANSFORM
           // (c >= n2) = true
-          // where n1, n2 are numeral constants such that n1 >= n2. The same goes
-          // for the other relations.
+          // where n1, n2 are numeral constants such that n1 >= n2. The same
+          // goes for the other relations.
           Node diff = nm->mkNode(Kind::SUB, ita->second[1], b[1]);
           Node diffRel = nm->mkNode(
               ck, diff, nm->mkConstRealOrInt(diff.getType(), Rational(0)));
@@ -514,7 +520,7 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
     Node concEqTrue = conc.eqNode(truen);
     cdp.addStep(concEqTrue, ProofRule::TRANS, {equiv, equiv2, equiv3}, {});
     cdp.addStep(conc, ProofRule::TRUE_ELIM, {concEqTrue}, {});
-  }    
+  }
   if (!antec.empty())
   {
     cdp.addStep(fact, ProofRule::SCOPE, {conc}, antec);
