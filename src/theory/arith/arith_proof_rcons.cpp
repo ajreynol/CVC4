@@ -137,7 +137,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
             if (a != as)
             {
               std::shared_ptr<ProofNode> pfn = tcnv.getProofForRewriting(a);
-              Assert(pfn->getResult()[1] == as);
+              Assert(pfn->getResult()[1] == as) << "got " << pfn->getResult()[1] << ", expected " << as;
               cdp.addProof(pfn);
               cdp.addStep(as, ProofRule::EQ_RESOLVE, {a, a.eqNode(as)}, {});
             }
@@ -181,7 +181,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
         if (a != as)
         {
           std::shared_ptr<ProofNode> pfn = tcnv.getProofForRewriting(a);
-          Assert(pfn->getResult()[1] == as);
+          Assert(pfn->getResult()[1] == as) << "no-solve: got " << pfn->getResult()[1] << ", expected " << as;
           cdp.addProof(pfn);
           cdp.addStep(as, ProofRule::EQ_RESOLVE, {a, a.eqNode(as)}, {});
         }

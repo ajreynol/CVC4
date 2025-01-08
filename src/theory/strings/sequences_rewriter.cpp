@@ -1778,7 +1778,6 @@ Node SequencesRewriter::rewriteViaStrInReConsume(const Node& node)
   {
     return Node::null();
   }
-  std::vector<Node> children;
   // if star, we consider the body of the star
   bool isStar = (node[1].getKind()==Kind::REGEXP_STAR);
   size_t numIter = isStar ? 2 : 1;
@@ -1786,6 +1785,7 @@ Node SequencesRewriter::rewriteViaStrInReConsume(const Node& node)
   {
     int dir = isStar ? (i==0 ? 0 : 1) : -1;
     Node r = isStar ? node[1][0] : node[1];
+    std::vector<Node> children;
     utils::getConcat(r, children);
     std::vector<Node> mchildren;
     utils::getConcat(node[0], mchildren);
