@@ -180,7 +180,7 @@ void ArithStaticLearner::iteMinMax(TNode n, std::vector<TrustNode>& learned)
         Node nLeqX = NodeBuilder(nm, Kind::LEQ) << n << t;
         Node nLeqY = NodeBuilder(nm, Kind::LEQ) << n << e;
         Trace("arith::static")
-            << n << "is a min =>" << nLeqX << " " << nLeqY << endl;
+            << n << " is a min =>" << nLeqX << " " << nLeqY << endl;
         addLearnedLemma(nLeqX, learned);
         addLearnedLemma(nLeqY, learned);
         ++(d_statistics.d_iteMinMaxApplications);
@@ -192,7 +192,7 @@ void ArithStaticLearner::iteMinMax(TNode n, std::vector<TrustNode>& learned)
         Node nGeqX = NodeBuilder(nm, Kind::GEQ) << n << t;
         Node nGeqY = NodeBuilder(nm, Kind::GEQ) << n << e;
         Trace("arith::static")
-            << n << "is a max =>" << nGeqX << " " << nGeqY << endl;
+            << n << " is a max =>" << nGeqX << " " << nGeqY << endl;
         addLearnedLemma(nGeqX, learned);
         addLearnedLemma(nGeqY, learned);
         ++(d_statistics.d_iteMinMaxApplications);
@@ -396,7 +396,7 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
     {
       // shown by rewriting
       cdp.addStep(eq2, ProofRule::MACRO_SR_PRED_INTRO, {}, {eq2});
-      Node eqt = iteFlipN.eqNode(iteFlip);
+      Node eqt = conc[0].eqNode(iteFlip);
       cdp.addStep(eqt, ProofRule::TRANS, {eq1, eq2}, {});
       Node eqrefl = conc[1].eqNode(conc[1]);
       cdp.addStep(eqrefl, ProofRule::REFL, {}, {conc[1]});
