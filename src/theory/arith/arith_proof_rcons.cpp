@@ -106,7 +106,8 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
         if (a != as)
         {
           std::shared_ptr<ProofNode> pfn = tcnv.getProofForRewriting(a);
-          Assert(pfn->getResult()[1] == as);
+          Assert(pfn->getResult()[1] == as)
+              << "got " << pfn->getResult()[1] << ", expected " << as;
           cdp.addProof(pfn);
           cdp.addStep(as, ProofRule::EQ_RESOLVE, {a, a.eqNode(as)}, {});
         }
@@ -150,9 +151,12 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
             // substitution to the range of previous substitutions
             if (!asubs.empty())
             {
-              Subs stmp;
+              ArithSubs stmp;
               stmp.add(m.first, val);
-              asubs.applyToRange(stmp);
+              for (size_t i = 0, ns = asubs.d_subs.size(); i < ns; i++)
+              {
+                asubs.d_subs[i] = stmp.applyArith(asubs.d_subs[i]);
+              }
             }
             asubs.add(m.first, val);
             tcnv.addRewriteStep(m.first, val, &cdp);
