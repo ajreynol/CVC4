@@ -31,6 +31,7 @@ set(regress_0_tests
   regress0/arith/bug547.2.smt2
   regress0/arith/bug549.cvc.smt2
   regress0/arith/bug569.smt2
+  regress0/arith/dd_59_static_learn.smt2
   regress0/arith/delta-minimized-row-vector-bug.smtv1.smt2
   regress0/arith/div-chainable.smt2
   regress0/arith/div.01.smt2
