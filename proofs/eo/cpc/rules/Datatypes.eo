@@ -153,6 +153,13 @@
 
 ;;;;; ProofRewriteRule::DT_CONS_EQ
 
+(program $mk_dt_cons_eq ((T Type) (t T) (s T) (ts @List :list) (ss @List :list))
+  (@List @List) Bool
+  (
+  (($mk_dt_cons_eq (@list t ts) (@list s ss)) (eo::cons and (= t s) ($mk_dt_cons_eq ts ss)))
+  (($mk_dt_cons_eq @list.nil @list.nil)       true)
+  )
+)
 ; rule: dt-cons-eq
 ; implements: ProofRewriteRule::DT_CONS_EQ
 ; args:
@@ -162,8 +169,9 @@
 ;   the arguments of the terms in the equality on the left hand side, which
 ;   are applications of constructors.
 ; conclusion: The given equality.
-;(declare-rule dt-cons-eq ((D Type) (t D) (s D) (B Bool))
-;  :args ((= (= t s) B))
-;  :requires ((($mk_dt_cons_eq t s) B))
-;  :conclusion (= (= t s) B)
-;)
+(declare-rule dt-cons-eq ((D Type) (t D) (s D) (B Bool))
+  :args ((= (= t s) B))
+  :requires (((eo::define ((c ($get_fun t))) (eo::and ($dt_is_cons c) (eo::is_eq c ($get_fun s)))) true)
+             (($singleton_elim ($mk_dt_cons_eq ($dt_arg_list t) ($dt_arg_list s))) B))
+  :conclusion (= (= t s) B)
+)
