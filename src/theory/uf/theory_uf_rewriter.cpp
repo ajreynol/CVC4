@@ -40,8 +40,6 @@ TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm, Rewriter* rr)
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::INT_TO_BV_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
-  registerProofRewriteRule(ProofRewriteRule::LAMBDA_ELIM_SHADOW,
-                           TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM,
@@ -260,34 +258,6 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       if (n.getKind() == Kind::INT_TO_BITVECTOR)
       {
         return arith::eliminateInt2Bv(n);
-      }
-    }
-    break;
-    case ProofRewriteRule::LAMBDA_ELIM_SHADOW:
-    {
-      if (n.getKind() != Kind::LAMBDA)
-      {
-        return Node::null();
-      }
-      NodeManager* nm = nodeManager();
-      std::unordered_set<Node> vars;
-      std::vector<Node> vlist(n[0].begin(), n[0].end());
-      bool changed = false;
-      for (size_t i = 0, nvars = vlist.size(); i < nvars; i++)
-      {
-        size_t ii = (nvars - i) - 1;
-        Node v = vlist[ii];
-        if (vars.find(v) != vars.end())
-        {
-          vlist[ii] = ElimShadowNodeConverter::getElimShadowVar(n, n, ii);
-          changed = true;
-        }
-        vars.insert(v);
-      }
-      if (changed)
-      {
-        Node vl = nm->mkNode(Kind::BOUND_VAR_LIST, vlist);
-        return nm->mkNode(Kind::LAMBDA, vl, n[1]);
       }
     }
     break;

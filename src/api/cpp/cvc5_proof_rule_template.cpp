@@ -244,7 +244,6 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::ARITH_POW_ELIM: return "arith-pow-elim";
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";
     case ProofRewriteRule::LAMBDA_ELIM: return "lambda-elim";
-    case ProofRewriteRule::LAMBDA_ELIM_SHADOW: return "lambda-elim-shadow";
     case ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM:
       return "macro-lambda-value-norm";
     case ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW:
