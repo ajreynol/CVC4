@@ -83,7 +83,7 @@ Node AlfNodeConverter::postConvert(Node n)
     // dummy node, return it
     return n;
   }
-  if (k == Kind::SKOLEM || k == Kind::DUMMY_SKOLEM || k == Kind::INST_CONSTANT)
+  if (k == Kind::SKOLEM || k == Kind::DUMMY_SKOLEM || k == Kind::INST_CONSTANT || k==Kind::DT_SYGUS_EVAL)
   {
     TypeNode tn = n.getType();
     // constructors/selectors are represented by skolems, which are defined
