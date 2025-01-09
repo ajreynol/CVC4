@@ -17,7 +17,7 @@
 )
 
 ; rule: dt_split
-; implements: ProofRule::DT_SPLIT.
+; implements: ProofRule::DT_SPLIT
 ; args:
 ; - x D: The datatype term to split on.
 ; conclusion: >
@@ -81,7 +81,7 @@
 )
 
 ; rule: dt-inst
-; implements: ProofRewriteRule::DT_INST.
+; implements: ProofRewriteRule::DT_INST
 ; args:
 ; - eq Bool: The equality to prove.
 ; requires: >
@@ -97,7 +97,7 @@
 ;;;;; ProofRewriteRule::DT_COLLAPSE_SELECTOR
 
 ; rule: dt-collapse-selector
-; implements: ProofRewriteRule::DT_COLLAPSE_SELECTOR.
+; implements: ProofRewriteRule::DT_COLLAPSE_SELECTOR
 ; args:
 ; - eq Bool: The equality to prove.
 ; requires: >
@@ -118,7 +118,7 @@
 ;;;;; ProofRewriteRule::DT_COLLAPSE_TESTER
 
 ; rule: dt-collapse-tester
-; implements: ProofRewriteRule::DT_COLLAPSE_TESTER.
+; implements: ProofRewriteRule::DT_COLLAPSE_TESTER
 ; args:
 ; - eq Bool: The equality to prove.
 ; requires: >
@@ -150,3 +150,20 @@
   :requires (((eo::list_len eo::List::cons ($dt_get_constructors (eo::typeof t))) 1))
   :conclusion (= (is c t) true)
 )
+
+;;;;; ProofRewriteRule::DT_CONS_EQ
+
+; rule: dt-cons-eq
+; implements: ProofRewriteRule::DT_CONS_EQ
+; args:
+; - eq Bool: The equality to prove.
+; requires: >
+;   The right hand side of the equality is the conjunction of equalities
+;   the arguments of the terms in the equality on the left hand side, which
+;   are applications of constructors.
+; conclusion: The given equality.
+;(declare-rule dt-cons-eq ((D Type) (t D) (s D) (B Bool))
+;  :args ((= (= t s) B))
+;  :requires ((($mk_dt_cons_eq t s) B))
+;  :conclusion (= (= t s) B)
+;)
