@@ -202,7 +202,7 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofFor(Node f)
   }
   else
   {
-    Node conc = getProofForRewriting(f[0], lpff, d_tcontext);
+    Node conc = getProofForRewriting(f[0], lpf, d_tcontext);
     if (conc != f)
     {
       bool debugTraceEnabled = TraceIsOn("tconv-pf-gen-debug");
