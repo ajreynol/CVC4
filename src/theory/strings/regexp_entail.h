@@ -91,7 +91,8 @@ class RegExpEntail
    *   "bb" ++ x  in ( "b" ++ ("a")* )*
    * is equivalent to false.
    */
-  static Node simpleRegexpConsume(std::vector<Node>& mchildren,
+  static Node simpleRegexpConsume(NodeManager* nm,
+                                  std::vector<Node>& mchildren,
                                   std::vector<Node>& children,
                                   int dir = -1);
   /**
