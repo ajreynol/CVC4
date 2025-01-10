@@ -1414,21 +1414,24 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp,
+                                                          const Node& eq)
 {
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp,
+                                                             const Node& eq)
 {
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArraysNormalizeConstant(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroArraysNormalizeConstant(CDProof* cdp,
+                                                                const Node& eq)
 {
   return false;
 }
-  
+
 bool BasicRewriteRCons::ensureProofMacroSetsDistinctSets(CDProof* cdp,
                                                          const Node& eq)
 {
