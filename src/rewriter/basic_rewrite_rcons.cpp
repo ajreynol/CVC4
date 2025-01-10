@@ -208,6 +208,24 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
+    case ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY_PREFIX:
+      if (ensureProofMacroStrEqLenUnifyPrefix(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY:
+      if (ensureProofMacroStrEqLenUnify(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS:
+      if (ensureProofMacroStrStripEndpoints(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
     case ProofRewriteRule::MACRO_QUANT_MERGE_PRENEX:
       if (ensureProofMacroQuantMergePrenex(cdp, eq))
       {
@@ -246,6 +264,30 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
       break;
     case ProofRewriteRule::MACRO_BV_EQ_SOLVE:
       if (ensureProofMacroBvEqSolve(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW:
+      if (ensureProofMacroLambdaAppElimShadow(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_SETS_DISTINCT_SETS:
+      if (ensureProofMacroSetsDistinctSets(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_SETS_INTER_EVAL:
+      if (ensureProofMacroSetsInterEval(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_SETS_MINUS_EVAL:
+      if (ensureProofMacroSetsMinusEval(cdp, eq))
       {
         handledMacro = true;
       }
@@ -733,6 +775,18 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
   Trace("brc-macro") << "- rely on rewrite " << eqm << std::endl;
   cdp->addStep(eq, ProofRule::TRANS, {eqLhs, eqm}, {});
   return true;
+}
+
+bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp, const Node& eq){
+  return false;
+}
+
+bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp, const Node& eq){
+  return false;
+}
+
+bool BasicRewriteRCons::ensureProofMacroStrStripEndpoints(CDProof* cdp, const Node& eq) {
+  return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroQuantMergePrenex(CDProof* cdp,
@@ -1328,6 +1382,20 @@ bool BasicRewriteRCons::ensureProofMacroBvEqSolve(CDProof* cdp, const Node& eq)
   }
   cdp->addStep(eq, ProofRule::TRANS, {equiv, equiv2}, {});
   return true;
+}
+
+
+  bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp, const Node& eq) {
+  return false;
+}
+  bool BasicRewriteRCons::ensureProofMacroSetsDistinctSets(CDProof* cdp, const Node& eq) {
+  return false;
+}
+  bool BasicRewriteRCons::ensureProofMacroSetsInterEval(CDProof* cdp, const Node& eq) {
+  return false;
+}
+  bool BasicRewriteRCons::ensureProofMacroSetsMinusEval(CDProof* cdp, const Node& eq) {
+  return false;
 }
 
 bool BasicRewriteRCons::ensureProofArithPolyNormRel(CDProof* cdp,

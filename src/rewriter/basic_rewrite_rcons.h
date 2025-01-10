@@ -191,6 +191,37 @@ class BasicRewriteRCons : protected EnvObj
    * @return true if added a closed proof of eq to cdp.
    */
   bool ensureProofMacroSubstrStripSymLength(CDProof* cdp, const Node& eq);
+
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY_PREFIX.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY_PREFIX.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroStrEqLenUnify(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroStrStripEndpoints(CDProof* cdp, const Node& eq);
   /**
    * Elaborate a rewrite eq that was proven by
    * ProofRewriteRule::MACRO_QUANT_MERGE_PRENEX.
@@ -261,6 +292,46 @@ class BasicRewriteRCons : protected EnvObj
    * @return true if added a closed proof of eq to cdp.
    */
   bool ensureProofMacroBvEqSolve(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroLambdaAppElimShadow(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_SETS_DISTINCT_SETS.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_SETS_DISTINCT_SETS.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroSetsDistinctSets(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_SETS_INTER_EVAL.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_SETS_INTER_EVAL.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroSetsInterEval(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_SETS_MINUS_EVAL.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_SETS_MINUS_EVAL.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroSetsMinusEval(CDProof* cdp, const Node& eq);
   /**
    * @param cdp The proof to add to.
    * @param eq The rewrite that can be proven by ProofRule::ARITH_POLY_NORM_REL.
