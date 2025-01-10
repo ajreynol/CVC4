@@ -4117,6 +4117,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPLACE_PREFIX),
   /** Auto-generated from RARE rule str-replace-no-contains */
   EVALUE(STR_REPLACE_NO_CONTAINS),
+  /** Auto-generated from RARE rule str-replace-find-base */
+  EVALUE(STR_REPLACE_FIND_BASE),
+  /** Auto-generated from RARE rule str-replace-find-first-concat */
+  EVALUE(STR_REPLACE_FIND_FIRST_CONCAT),
   /** Auto-generated from RARE rule str-replace-empty */
   EVALUE(STR_REPLACE_EMPTY),
   /** Auto-generated from RARE rule str-replace-contains-pre */

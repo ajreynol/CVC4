@@ -250,6 +250,16 @@
   (str.replace t s r)
   t)
 
+(define-cond-rule str-replace-find-base ((t ?Seq) (s ?Seq) (r ?Seq) (n Int)) 
+  (and (= n (str.indexof t s 0)) (>= n 0))
+  (str.replace t s r)
+  (str.++ (str.substr t 0 n) r (str.substr t (+ n (str.len s)) (str.len t))))
+
+(define-cond-rule str-replace-find-first-concat ((t ?Seq) (ts ?Seq :list) (s ?Seq) (r ?Seq) (n Int)) 
+  (and (= n (str.indexof t s 0)) (>= n 0))
+  (str.replace (str.++ t ts) s r)
+  (str.++ (str.substr t 0 n) r (str.substr t (+ n (str.len s)) (str.len t)) ts))
+
 (define-cond-rule str-replace-empty ((t ?Seq) (s ?Seq) (r ?Seq))
   (= r (@seq.empty_of_type (@type_of r)))
   (str.replace t r s)
