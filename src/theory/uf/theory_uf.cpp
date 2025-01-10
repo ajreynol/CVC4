@@ -381,22 +381,6 @@ void TheoryUF::preRegisterFunctionTerm(TNode node)
   d_functionsTerms.push_back(node);
 }
 
-void TheoryUF::preRegisterFunctionTerm(TNode node)
-{
-  // Maybe it's a predicate
-  if (node.getType().isBoolean())
-  {
-    d_state.addEqualityEngineTriggerPredicate(node);
-  }
-  else
-  {
-    // Function applications/predicates
-    d_equalityEngine->addTerm(node);
-  }
-  // Remember the function and predicate terms
-  d_functionsTerms.push_back(node);
-}
-
 void TheoryUF::explain(TNode literal, Node& exp)
 {
   Trace("uf") << "TheoryUF::explain(" << literal << ")" << std::endl;

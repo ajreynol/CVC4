@@ -2549,8 +2549,7 @@ enum ENUM(ProofRewriteRule)
    * **Equality -- Beta reduction**
    *
    * .. math::
-   *   ((\lambda x_1 \ldots x_n.\> t) \ t_1 \ldots t_n) = t\{x_1 \mapsto t_1,
-   *   \ldots, x_n \mapsto t_n\}
+   *   ((\lambda x_1 \ldots x_n.\> t) \ t_1 \ldots t_n) = t\{x_1 \mapsto t_1, \ldots, x_n \mapsto t_n\}
    *
    * or alternatively
    *
@@ -2587,6 +2586,13 @@ enum ENUM(ProofRewriteRule)
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Equality -- Macro lambda application eliminate shadow**
+   * 
+   * .. math::
+   *   ((\lambda x_1 \ldots x_n.\> t) \ t_1 \ldots t_n) = ((\lambda y_1 \ldots y_n.\> t \sigma) \ t_1 \ldots t_n)
+   * 
+   * where :math:`\sigma` replaces :math:`x_1, \dots, x_n` by
+   * :math:`y_1, \dots, y_n`. The terms may either be of kind
+   * `cvc5::Kind::APPLY_UF` or `cvc5::Kind::HO_APPLY`.
    *
    * \endverbatim
    */
