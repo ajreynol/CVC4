@@ -74,22 +74,27 @@
     (eo::typeof s)
     (((-> D1 T1) D1))))
 
+; program: $dt_arg_list
+; args:
+; - t T: The term to inspect, expected to be a constructor application.
+; return: >
+;   The list of arguments of the constructor application t.
+(program $dt_arg_list ((T Type) (U Type) (V Type) (W Type) (t T) (n Int) (t1 V) (t2 W :list))
+  (T) U
+  (
+    ; for tuples, we manually accumulate the list.
+    (($dt_arg_list (tuple t1 t2))  (eo::cons @list t1 ($dt_arg_list t2)))
+    ; otherwise we get the argument list using the utility method
+    (($dt_arg_list t)              ($get_arg_list t))
+  )
+)
+
 ; define: $dt_arg_nth
 ; args:
 ; - t T: The term to inspect, expected to be a constructor application.
 ; - n Int: The index of the argument to get.
 ; return: >
 ;   The nth argument of t.
-(program $dt_arg_list ((T Type) (U Type) (V Type) (W Type) (t T) (n Int) (t1 V) (t2 W :list))
-  (T) U
-  (
-    ; for tuples, use nth on tuple as an n-ary constructor
-    (($dt_arg_list (tuple t1 t2))  (eo::cons @list t1 ($dt_arg_list t2)))
-    ; otherwise we get the argument list
-    (($dt_arg_list t)              ($get_arg_list t))
-  )
-)
-
 (define $dt_arg_nth ((T Type :implicit) (t T) (n Int))
   (eo::list_nth @list ($dt_arg_list t) n)
 )
