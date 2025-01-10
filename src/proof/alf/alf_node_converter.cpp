@@ -54,7 +54,9 @@ BaseAlfNodeConverter::BaseAlfNodeConverter(NodeManager* nm) : NodeConverter(nm)
 
 AlfNodeConverter::AlfNodeConverter(NodeManager* nm) : BaseAlfNodeConverter(nm)
 {
-  d_sortType = nm->mkSort("sortType");
+  // use builtin operator type as the type of sorts, which makes a difference
+  // e.g. for converting terms of kind SORT_TO_TERM.
+  d_sortType = nm->builtinOperatorType();
 }
 
 AlfNodeConverter::~AlfNodeConverter() {}
@@ -302,6 +304,10 @@ Node AlfNodeConverter::postConvert(Node n)
     // https://github.com/cvc5/cvc5-wishues/issues/156: if the smt2 printer
     // is refactored to silently ignore this kind, this case can be deleted.
     return n[0];
+  }
+  else if (k == Kind::SORT_TO_TERM)
+  {
+    return typeAsNode(n.getConst<SortToTerm>().getType());
   }
   else if (GenericOp::isIndexedOperatorKind(k))
   {
@@ -727,7 +733,8 @@ bool AlfNodeConverter::isHandledSkolemId(SkolemId id)
     case SkolemId::BAGS_DISTINCT_ELEMENTS_SIZE:
     case SkolemId::BAGS_MAP_SUM:
     case SkolemId::TABLES_GROUP_PART:
-    case SkolemId::TABLES_GROUP_PART_ELEMENT: return true;
+    case SkolemId::TABLES_GROUP_PART_ELEMENT:
+    case SkolemId::WITNESS_STRING_LENGTH:return true;
     default: break;
   }
   return false;
