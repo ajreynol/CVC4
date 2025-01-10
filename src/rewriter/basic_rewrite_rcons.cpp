@@ -798,18 +798,21 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
                                                             const Node& eq)
 {
+  // TODO
   return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
                                                       const Node& eq)
 {
+  // TODO
   return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroStrStripEndpoints(CDProof* cdp,
                                                           const Node& eq)
 {
+  // TODO
   return false;
 }
 
@@ -1411,40 +1414,47 @@ bool BasicRewriteRCons::ensureProofMacroBvEqSolve(CDProof* cdp, const Node& eq)
 bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
                                                             const Node& eq)
 {
+  // TODO
   return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp,
                                                           const Node& eq)
 {
+  // TODO
   return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp,
                                                              const Node& eq)
 {
+  // TODO
   return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArraysNormalizeConstant(CDProof* cdp,
                                                                 const Node& eq)
 {
+  // TODO
   return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroSetsDistinctSets(CDProof* cdp,
                                                          const Node& eq)
 {
+  // TODO
   return false;
 }
 bool BasicRewriteRCons::ensureProofMacroSetsInterEval(CDProof* cdp,
                                                       const Node& eq)
 {
+  // TODO
   return false;
 }
 bool BasicRewriteRCons::ensureProofMacroSetsMinusEval(CDProof* cdp,
                                                       const Node& eq)
 {
+  // TODO
   return false;
 }
 
