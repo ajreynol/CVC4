@@ -249,8 +249,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW:
       return "macro-lambda-app-elim-shadow";
     case ProofRewriteRule::ARRAYS_SELECT_CONST: return "arrays-select-const";
-    case ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP:
-      return "macro-arrays-normalize-op";
+    case ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP: return "macro-arrays-normalize-op";
     case ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS:
       return "macro-arrays-distinct-arrays";
     case ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_CONSTANT:
