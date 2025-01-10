@@ -304,6 +304,36 @@ class BasicRewriteRCons : protected EnvObj
   bool ensureProofMacroLambdaAppElimShadow(CDProof* cdp, const Node& eq);
   /**
    * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroArraysNormalizeOp(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroArraysDistinctArrays(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_CONSTANT.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_CONSTANT.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroArraysNormalizeConstant(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
    * ProofRewriteRule::MACRO_SETS_DISTINCT_SETS.
    *
    * @param cdp The proof to add to.

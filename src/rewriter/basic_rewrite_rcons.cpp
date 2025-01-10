@@ -274,6 +274,24 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
+    case ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP:
+      if (ensureProofMacroArraysNormalizeOp(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS:
+      if (ensureProofMacroArraysDistinctArrays(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_CONSTANT:
+      if (ensureProofMacroArraysNormalizeConstant(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
     case ProofRewriteRule::MACRO_SETS_DISTINCT_SETS:
       if (ensureProofMacroSetsDistinctSets(cdp, eq))
       {
@@ -1395,6 +1413,22 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
 {
   return false;
 }
+
+bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp, const Node& eq)
+{
+  return false;
+}
+
+bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp, const Node& eq)
+{
+  return false;
+}
+
+bool BasicRewriteRCons::ensureProofMacroArraysNormalizeConstant(CDProof* cdp, const Node& eq)
+{
+  return false;
+}
+  
 bool BasicRewriteRCons::ensureProofMacroSetsDistinctSets(CDProof* cdp,
                                                          const Node& eq)
 {
