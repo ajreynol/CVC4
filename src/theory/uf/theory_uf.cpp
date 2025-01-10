@@ -285,9 +285,6 @@ void TheoryUF::preRegisterTerm(TNode node)
     d_thss->preRegisterTerm(node);
   }
 
-  // we always use APPLY_UF if not higher-order, HO_APPLY if higher-order
-  Assert(node.getKind() != Kind::HO_APPLY || logicInfo().isHigherOrder());
-
   Kind k = node.getKind();
   switch (k)
   {
@@ -345,20 +342,43 @@ void TheoryUF::preRegisterTerm(TNode node)
     default:
       // Variables etc
       d_equalityEngine->addTerm(node);
+      if (logicInfo().isHigherOrder())
+      {
+        // When using lazy lambda handling, if node is a lambda function, it must
+        // be marked as a shared term. This is to ensure we split on the equality
+        // of lambda functions with other functions when doing care graph
+        // based theory combination.
+        if (d_lambdaLift->isLambdaFunction(node))
+        {
+          addSharedTerm(node);
+        }
+      }
+      else if (node.getType().isFunction())
+      {
+        std::stringstream ss;
+        ss << "Function terms are only supported with higher-order logic. Try "
+              "adding the logic prefix HO_.";
+        throw LogicException(ss.str());
+      }
       break;
   }
 
-  if (logicInfo().isHigherOrder())
+}
+
+void TheoryUF::preRegisterFunctionTerm(TNode node)
+{
+  // Maybe it's a predicate
+  if (node.getType().isBoolean())
   {
-    // When using lazy lambda handling, if node is a lambda function, it must
-    // be marked as a shared term. This is to ensure we split on the equality
-    // of lambda functions with other functions when doing care graph
-    // based theory combination.
-    if (d_lambdaLift->isLambdaFunction(node))
-    {
-      addSharedTerm(node);
-    }
+    d_state.addEqualityEngineTriggerPredicate(node);
   }
+  else
+  {
+    // Function applications/predicates
+    d_equalityEngine->addTerm(node);
+  }
+  // Remember the function and predicate terms
+  d_functionsTerms.push_back(node);
 }
 
 void TheoryUF::preRegisterFunctionTerm(TNode node)
