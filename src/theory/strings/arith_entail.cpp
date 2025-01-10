@@ -53,12 +53,12 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n,
   if (n.getKind() == Kind::EQUAL && n[0].getType().isInteger())
   {
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[0], n[1]), d_one);
-    if (!findApprox(rewriteArith(exp), isSimple).isNull())
+    if (!findApprox(arith::PolyNorm::getPolyNorm(exp), isSimple).isNull())
     {
       return nm->mkConst(false);
     }
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
-    if (!findApprox(rewriteArith(exp), isSimple).isNull())
+    if (!findApprox(arith::PolyNorm::getPolyNorm(exp), isSimple).isNull())
     {
       return nm->mkConst(false);
     }
@@ -72,12 +72,12 @@ Node ArithEntail::rewritePredViaEntailment(const Node& n,
   else if (n.getKind() == Kind::GEQ)
   {
     exp = nm->mkNode(Kind::SUB, n[0], n[1]);
-    if (!findApprox(rewriteArith(exp), isSimple).isNull())
+    if (!findApprox(arith::PolyNorm::getPolyNorm(exp), isSimple).isNull())
     {
       return nm->mkConst(true);
     }
     exp = nm->mkNode(Kind::SUB, nm->mkNode(Kind::SUB, n[1], n[0]), d_one);
-    if (!findApprox(rewriteArith(exp), isSimple).isNull())
+    if (!findApprox(arith::PolyNorm::getPolyNorm(exp), isSimple).isNull())
     {
       return nm->mkConst(false);
     }
