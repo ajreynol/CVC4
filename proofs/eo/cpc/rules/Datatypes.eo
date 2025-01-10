@@ -153,6 +153,12 @@
 
 ;;;;; ProofRewriteRule::DT_CONS_EQ
 
+; define: $mk_dt_cons_eq
+; args:
+; - ts @List: The list of arguments to the left hand side of the equality.
+; - ss @List: The list of arguments to the right hand side of the equality.
+; return: >
+;   The conjunction of equalities between the arguments of ts and ss.
 (program $mk_dt_cons_eq ((T Type) (t T) (s T) (ts @List :list) (ss @List :list))
   (@List @List) Bool
   (
@@ -190,7 +196,7 @@
     (eo::ite (eo::is_eq ct cs)
       ; recurse on each argument
       ($dt_cons_eq_find_clash_list ($dt_arg_list t) ($dt_arg_list s))
-      ; otherwise conflicting if cs is also a constructor
+      ; otherwise conflicting only if cs is also a constructor
       ($dt_is_cons cs))
     false)))
 )
