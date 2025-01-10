@@ -777,15 +777,21 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp, const Node& eq){
+bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
+                                                            const Node& eq)
+{
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp, const Node& eq){
+bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
+                                                      const Node& eq)
+{
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroStrStripEndpoints(CDProof* cdp, const Node& eq) {
+bool BasicRewriteRCons::ensureProofMacroStrStripEndpoints(CDProof* cdp,
+                                                          const Node& eq)
+{
   return false;
 }
 
@@ -1384,17 +1390,24 @@ bool BasicRewriteRCons::ensureProofMacroBvEqSolve(CDProof* cdp, const Node& eq)
   return true;
 }
 
-
-  bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp, const Node& eq) {
+bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
+                                                            const Node& eq)
+{
   return false;
 }
-  bool BasicRewriteRCons::ensureProofMacroSetsDistinctSets(CDProof* cdp, const Node& eq) {
+bool BasicRewriteRCons::ensureProofMacroSetsDistinctSets(CDProof* cdp,
+                                                         const Node& eq)
+{
   return false;
 }
-  bool BasicRewriteRCons::ensureProofMacroSetsInterEval(CDProof* cdp, const Node& eq) {
+bool BasicRewriteRCons::ensureProofMacroSetsInterEval(CDProof* cdp,
+                                                      const Node& eq)
+{
   return false;
 }
-  bool BasicRewriteRCons::ensureProofMacroSetsMinusEval(CDProof* cdp, const Node& eq) {
+bool BasicRewriteRCons::ensureProofMacroSetsMinusEval(CDProof* cdp,
+                                                      const Node& eq)
+{
   return false;
 }
 
