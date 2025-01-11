@@ -690,10 +690,6 @@ Node StringsEntail::checkContains(Node a, Node b, bool fullRewriter)
     {
       prev = ctn;
       ctn = d_rewriter->rewriteContains(ctn);
-      if (ctn != prev)
-      {
-        ctn = d_rewriter->postProcessRewrite(prev, ctn);
-      }
     } while (prev != ctn && ctn.getKind() == Kind::STRING_CONTAINS);
   }
 

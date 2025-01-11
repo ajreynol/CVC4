@@ -2176,9 +2176,6 @@ RewriteResponse SequencesRewriter::postRewrite(TNode node)
       << std::endl;
   if (node != retNode)
   {
-    // also post process the rewrite, which may apply extended rewriting to
-    // equalities, if we rewrite to an equality from a non-equality
-    retNode = postProcessRewrite(node, retNode);
     Trace("strings-rewrite-debug") << "Strings::SequencesRewriter::postRewrite "
                                    << node << " to " << retNode << std::endl;
     return RewriteResponse(REWRITE_AGAIN_FULL, retNode);
@@ -3976,50 +3973,6 @@ Node SequencesRewriter::returnRewrite(Node node, Node ret, Rewrite r)
   if (d_statistics != nullptr)
   {
     (*d_statistics) << r;
-  }
-  return ret;
-}
-
-Node SequencesRewriter::postProcessRewrite(Node node, Node ret)
-{
-  NodeManager* nm = nodeManager();
-  // standard post-processing
-  // We rewrite (string) equalities immediately here. This allows us to forego
-  // the standard invariant on equality rewrites (that s=t must rewrite to one
-  // of { s=t, t=s, true, false } ).
-  Kind retk = ret.getKind();
-  if (retk == Kind::OR || retk == Kind::AND)
-  {
-    std::vector<Node> children;
-    bool childChanged = false;
-    for (const Node& cret : ret)
-    {
-      Node creter = cret;
-      if (cret.getKind() == Kind::EQUAL)
-      {
-        creter = rewriteEqualityExt(cret);
-      }
-      else if (cret.getKind() == Kind::NOT && cret[0].getKind() == Kind::EQUAL)
-      {
-        creter = nm->mkNode(Kind::NOT, rewriteEqualityExt(cret[0]));
-      }
-      childChanged = childChanged || cret != creter;
-      children.push_back(creter);
-    }
-    if (childChanged)
-    {
-      ret = nm->mkNode(retk, children);
-    }
-  }
-  else if (retk == Kind::NOT && ret[0].getKind() == Kind::EQUAL)
-  {
-    ret = nm->mkNode(Kind::NOT, rewriteEqualityExt(ret[0]));
-  }
-  else if (retk == Kind::EQUAL && node.getKind() != Kind::EQUAL)
-  {
-    Trace("strings-rewrite")
-        << "Apply extended equality rewrite on " << ret << std::endl;
-    ret = rewriteEqualityExt(ret);
   }
   return ret;
 }
