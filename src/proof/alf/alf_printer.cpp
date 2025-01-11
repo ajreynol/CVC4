@@ -396,6 +396,8 @@ bool AlfPrinter::canEvaluate(Node n)
         case Kind::BITVECTOR_MULT:
         case Kind::BITVECTOR_UDIV:
         case Kind::BITVECTOR_UREM:
+        case Kind::BITVECTOR_SHL:
+        case Kind::BITVECTOR_ASHR:
         case Kind::BITVECTOR_AND:
         case Kind::BITVECTOR_OR:
         case Kind::BITVECTOR_XOR:
