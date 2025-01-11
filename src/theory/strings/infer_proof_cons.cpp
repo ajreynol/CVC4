@@ -1411,10 +1411,14 @@ bool InferProofCons::convertAndElim(NodeManager* nm,
   {
     for (size_t i = 0, nchild = src.getNumChildren(); i < nchild; i++)
     {
-      if (src[i] == tgt)
+      if (CDProof::isSame(src[i], tgt))
       {
         Node ni = nm->mkConstInt(Rational(i));
-        psb.addStep(ProofRule::AND_ELIM, {src}, {ni}, tgt);
+        psb.addStep(ProofRule::AND_ELIM, {src}, {ni}, src[i]);
+        if (src[i]!=tgt)
+        {
+          psb.addStep(ProofRule::SYMM, {src[i]}, {}, tgt);
+        }
         return true;
       }
     }
