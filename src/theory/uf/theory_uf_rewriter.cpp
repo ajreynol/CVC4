@@ -29,8 +29,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace uf {
 
-TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm, Rewriter* rr)
-    : TheoryRewriter(nm), d_rr(rr)
+TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm)
+    : TheoryRewriter(nm)
 {
   registerProofRewriteRule(ProofRewriteRule::BETA_REDUCE,
                            TheoryRewriteCtx::PRE_DSL);
@@ -73,13 +73,17 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
     {
       // Note that the rewriter does not rewrite inside of operators, so the
       // lambda we receive here may not be in rewritten form, and thus may
-      // contain variable shadowing. We first check if the lambda can be
-      // rewritten.
-      Node lambdaRew = d_rr->rewrite(lambda);
+      // contain variable shadowing.
       // We compare against the original operator, if it is different, then
       // we convert to its HO_APPLY form, after which the lambda will occur
       // in an ordinary term position and thus will be rewritten.
-      if (lambdaRew != node.getOperator())
+      Node lambdaElimShadow = ElimShadowNodeConverter::eliminateShadow(lambda);
+      // Note that a more comprehensive test here would be to check if the
+      // lambda rewrites at all. This is not necessary as we only need to
+      // be sure that the topmost variables are not shadowed. Moreover,
+      // we avoid "value normalization" for lambdas in first-order logics
+      // by allowing beta reduction to apply to non-rewritten lambdas.
+      if (lambdaElimShadow != lambda)
       {
         Node ret = getHoApplyForApplyUf(node);
         Trace("uf-ho-beta") << "Lift " << node << " to HO " << ret << std::endl;
