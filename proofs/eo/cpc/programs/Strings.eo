@@ -700,12 +700,12 @@
 ;   The result of "flattening" all children of t. For example, given
 ;   (str.++ "AB" x "CD"), this returns the term
 ;   (str.++ "A" (str.++ "B" (str.++ x (str.++ "C" (str.++ "D" ""))))).
-(program $str_flatten ((U Type) (t (Seq U)) (tail (Seq U) :list) (tail2 (Seq U) :list))
+(program $str_flatten ((U Type) (t (Seq U)) (e U) (tail (Seq U) :list) (tail2 (Seq U) :list))
   ((Seq U)) (Seq U)
   (
     ; required for sequences
-    (($str_flatten (str.++ (str.++ t tail2) tail)) 
-        ($str_concat (str.++ t tail2) ($str_flatten tail)))
+    (($str_flatten (str.++ (str.++ (seq.unit e) tail2) tail))
+        ($str_concat (str.++ (seq.unit e) tail2) ($str_flatten tail)))
     (($str_flatten (str.++ t tail))
         ; otherwise, check whether t is a word constant of length greater than one
         (eo::ite ($str_check_len_gt_one t)
