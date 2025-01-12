@@ -140,6 +140,7 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
 
 Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator* pg) const
 {
+  NodeManager* nm = nodeManager();
   Kind k = n.getKind();
   Assert (k == Kind::SELECT || k == Kind::STORE);
   Node index = n[1];
@@ -148,6 +149,12 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator
   std::vector<Node> indices;
   std::vector<Node> elems;
   bool success = false;
+  std::vector<Node> ctermc;
+  Node currTerm = n;
+  if (pg!=nullptr)
+  {
+    ctermc.insert(ctermc.begin(), n.begin(), n.end());
+  }
   while (arr.getKind() == Kind::STORE)
   {
     if (arr[1] == index)
@@ -155,13 +162,23 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator
       // process being equal:
       // if store, we are redundant, remove and break
       // if select, we return the element directly
+      Node ret = k==Kind::STORE ? arr[0] : arr[2];
+      if (pg!=nullptr)
+      {
+        // proven by RARE rule array-store-overwrite or array-read-over-write
+        pg->addRewriteStep(currTerm,
+                          ret,
+                          nullptr,
+                          false,
+                          TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+      }
       if (k == Kind::STORE)
       {
-        arr = arr[0];
+        arr = ret;
       }
       else
       {
-        return arr[2];
+        return ret;
       }
       break;
     }
@@ -186,6 +203,18 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator
       indices.push_back(arr[1]);
       elems.push_back(arr[2]);
       arr = arr[0];
+      if (pg!=nullptr)
+      {
+        ctermc[0] = arr;
+        // proven by RARE rule array-read-over-write2 or array-store-swap
+        Node prevTerm = currTerm;
+        currTerm = nm->mkNode(k, ctermc);
+        pg->addRewriteStep(prevTerm,
+                          currTerm,
+                          nullptr,
+                          false,
+                          TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+      }
     }
     else
     {
@@ -196,7 +225,6 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator
   {
     return Node::null();
   }
-  NodeManager* nm = nodeManager();
   Node ret;
   if (k == Kind::STORE)
   {

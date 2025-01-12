@@ -26,6 +26,7 @@
 #include "rewriter/rewrite_db_term_process.h"
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
+#include "theory/arrays/theory_arrays_rewriter.h"
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/arith/arith_proof_utilities.h"
 #include "theory/arith/rewriter/rewrite_atom.h"
@@ -1542,8 +1543,16 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp,
                                                           const Node& eq)
 {
-  // TODO
-  return false;
+  Trace("brc-macro") << "Expand arrays normalize op " << eq << std::endl;
+  TConvProofGenerator tcpg(d_env,
+                           nullptr,
+                           TConvPolicy::FIXPOINT);
+  theory::arrays::TheoryArraysRewriter arew(nodeManager(), d_env.getRewriter());
+  Node nr = arew.computeNormalizeOp(eq[0], &tcpg);
+  std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);
+  Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
+  cdp->addProof(pfn);
+  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp,
