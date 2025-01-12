@@ -232,6 +232,7 @@ class QuantifiersRewriter : public TheoryRewriter
    * @param q The quantified formula to rewrite.
    * @param pg If provided, stores a set of small step rewrites that suffice
    * to show that q rewrites to the returned quantified formula.
+   * @return the result of rewriting q.
    */
   Node computeRewriteBody(const Node& q,
                           TConvProofGenerator* pg = nullptr) const;

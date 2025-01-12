@@ -26,6 +26,7 @@
 #include "theory/arrays/skolem_cache.h"
 #include "theory/type_enumerator.h"
 #include "util/cardinality.h"
+#include "proof/conv_proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -129,84 +130,91 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      Node index = n[1];
-      bool iconst = index.isConst();
-      Node arr = n[0];
-      std::vector<Node> indices;
-      std::vector<Node> elems;
-      bool success = false;
-      while (arr.getKind() == Kind::STORE)
-      {
-        if (arr[1] == index)
-        {
-          // process being equal:
-          // if store, we are redundant, remove and break
-          // if select, we return the element directly
-          if (k == Kind::STORE)
-          {
-            arr = arr[0];
-          }
-          else
-          {
-            return arr[2];
-          }
-          break;
-        }
-        // store orders indices only
-        if (k == Kind::STORE && arr[1] < index)
-        {
-          break;
-        }
-        // success if we can move past
-        success = false;
-        if (iconst)
-        {
-          success = arr[1].isConst();
-        }
-        else
-        {
-          Node eq = mkEqNode(arr[1], index);
-          success = (eq.isConst() && !eq.getConst<bool>());
-        }
-        if (success)
-        {
-          indices.push_back(arr[1]);
-          elems.push_back(arr[2]);
-          arr = arr[0];
-        }
-        else
-        {
-          break;
-        }
-      }
-      if (indices.empty())
-      {
-        return Node::null();
-      }
-      NodeManager* nm = nodeManager();
-      Node ret;
-      if (k == Kind::STORE)
-      {
-        ret = nm->mkNode(Kind::STORE, arr, n[1], n[2]);
-        // add back those we traversed over
-        while (!indices.empty())
-        {
-          ret = nm->mkNode(Kind::STORE, ret, indices.back(), elems.back());
-          indices.pop_back();
-          elems.pop_back();
-        }
-      }
-      else
-      {
-        Assert(k == Kind::SELECT);
-        ret = nm->mkNode(Kind::SELECT, arr, n[1]);
-      }
-      return ret;
+      return computeNormalizeOp(n);
     }
     break;
     default: break;
   }
   return Node::null();
+}
+
+Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator* pg) const
+{
+  Kind k = n.getKind();
+  Assert (k == Kind::SELECT || k == Kind::STORE);
+  Node index = n[1];
+  bool iconst = index.isConst();
+  Node arr = n[0];
+  std::vector<Node> indices;
+  std::vector<Node> elems;
+  bool success = false;
+  while (arr.getKind() == Kind::STORE)
+  {
+    if (arr[1] == index)
+    {
+      // process being equal:
+      // if store, we are redundant, remove and break
+      // if select, we return the element directly
+      if (k == Kind::STORE)
+      {
+        arr = arr[0];
+      }
+      else
+      {
+        return arr[2];
+      }
+      break;
+    }
+    // store orders indices only
+    if (k == Kind::STORE && arr[1] < index)
+    {
+      break;
+    }
+    // success if we can move past
+    success = false;
+    if (iconst)
+    {
+      success = arr[1].isConst();
+    }
+    else
+    {
+      Node eq = mkEqNode(arr[1], index);
+      success = (eq.isConst() && !eq.getConst<bool>());
+    }
+    if (success)
+    {
+      indices.push_back(arr[1]);
+      elems.push_back(arr[2]);
+      arr = arr[0];
+    }
+    else
+    {
+      break;
+    }
+  }
+  if (indices.empty())
+  {
+    return Node::null();
+  }
+  NodeManager* nm = nodeManager();
+  Node ret;
+  if (k == Kind::STORE)
+  {
+    ret = nm->mkNode(Kind::STORE, arr, n[1], n[2]);
+    // add back those we traversed over
+    while (!indices.empty())
+    {
+      ret = nm->mkNode(Kind::STORE, ret, indices.back(), elems.back());
+      indices.pop_back();
+      elems.pop_back();
+    }
+  }
+  else
+  {
+    Assert(k == Kind::SELECT);
+    ret = nm->mkNode(Kind::SELECT, arr, n[1]);
+  }
+  return ret;
 }
 
 Node TheoryArraysRewriter::normalizeConstant(NodeManager* nm, TNode node)
