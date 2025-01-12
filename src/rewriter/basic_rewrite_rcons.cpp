@@ -889,7 +889,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   Node equivSetup = eq[0].eqNode(ceq);
   cargs.clear();
   ccr = expr::getCongRule(eq[0], cargs);
-  cdp->addStep(equivSetup, ccr, {eqs1, eqs2}, {});
+  cdp->addStep(equivSetup, ccr, {eqs1, eqs2}, cargs);
 
   cdp->addStep(eq, ProofRule::TRANS, {equivSetup, eqfinal}, {});
   return true;
