@@ -1035,8 +1035,8 @@
 
 ; define: $str_is_prefix
 ; args:
-; - s U: The first string.
-; - s1 U: The second string.
+; - s (Seq U): The first string.
+; - s1 (Seq U): The second string.
 ; - rev Bool: Whether the two arguments should be reversed.
 ; return:
 ;   true if s1 is a prefix of s, taking into account flattening, and reversing
@@ -1046,8 +1046,9 @@
   (eo::define ((sf1 ($str_to_flat_form s1 rev)))
   (eo::define ((T (eo::typeof s)))
   (eo::define ((emp ($mk_emptystr T)))
-  (eo::ite (eo::and (eo::not rev) ($nary_is_prefix str.++ emp (str.++ s1) sf))
-    true  ; it may just be the first child, moreover this is required if we are looking for a term (str.++ (str.++ ...) ...)
+  ; first, it may just be the first child, moreover this is required if we are looking for a term (str.++ (str.++ ...) ...)
+  (eo::ite ($nary_is_prefix str.++ emp (str.++ s1) sf)
+    true
     ($nary_is_prefix str.++ emp sf1 sf))))))
 )
 
