@@ -1337,6 +1337,7 @@ set(regress_0_tests
   regress0/proofs/dd_fv-bvl.smt2
   regress0/proofs/dd_ic_macro-elim-shadow.smt2
   regress0/proofs/dd_ic_pf_764.smt2
+  regress0/proofs/dd_issue3481_beta_red.smt2
   regress0/proofs/dd_M301_array_norm_op.smt2
   regress0/proofs/dd_N627_fun_const.smt2
   regress0/proofs/dd_pf_739.smt2
