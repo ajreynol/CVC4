@@ -52,7 +52,6 @@ const char* toString(Rewrite r)
     case Rewrite::CTN_SPLIT_ONES: return "CTN_SPLIT_ONES";
     case Rewrite::CTN_STRIP_ENDPT: return "CTN_STRIP_ENDPT";
     case Rewrite::CTN_SUBSTR: return "CTN_SUBSTR";
-    case Rewrite::EQ_LEN_DEQ: return "EQ_LEN_DEQ";
     case Rewrite::EQ_NCTN: return "EQ_NCTN";
     case Rewrite::EQ_NFIX: return "EQ_NFIX";
     case Rewrite::FROM_CODE_EVAL: return "FROM_CODE_EVAL";
@@ -119,10 +118,8 @@ const char* toString(Rewrite r)
     case Rewrite::REPLALL_EMPTY_FIND: return "REPLALL_EMPTY_FIND";
     case Rewrite::RPL_CCTN: return "RPL_CCTN";
     case Rewrite::RPL_CCTN_RPL: return "RPL_CCTN_RPL";
-    case Rewrite::RPL_CNTS_SUBSTS: return "RPL_CNTS_SUBSTS";
     case Rewrite::RPL_CONST_FIND: return "RPL_CONST_FIND";
     case Rewrite::RPL_CONST_NFIND: return "RPL_CONST_NFIND";
-    case Rewrite::RPL_EMP_CNTS_SUBSTS: return "RPL_EMP_CNTS_SUBSTS";
     case Rewrite::RPL_ID: return "RPL_ID";
     case Rewrite::RPL_NCTN: return "RPL_NCTN";
     case Rewrite::RPL_PULL_ENDPT: return "RPL_PULL_ENDPT";
