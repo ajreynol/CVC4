@@ -29,8 +29,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace uf {
 
-TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm)
-    : TheoryRewriter(nm)
+TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm) : TheoryRewriter(nm)
 {
   registerProofRewriteRule(ProofRewriteRule::BETA_REDUCE,
                            TheoryRewriteCtx::PRE_DSL);
@@ -94,8 +93,8 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
           rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW, node);
       if (!nes.isNull())
       {
-        Trace("uf-ho-beta") << "uf-ho-beta : eliminate shadowing : "
-                            << nes << " for " << node << "\n";
+        Trace("uf-ho-beta") << "uf-ho-beta : eliminate shadowing : " << nes
+                            << " for " << node << "\n";
         return RewriteResponse(REWRITE_AGAIN_FULL, nes);
       }
       Trace("uf-ho-beta") << "uf-ho-beta : beta-reducing all args of : "

@@ -247,7 +247,7 @@ class QuantifiersRewriter : public TheoryRewriter
    * @param index The index of the variable which we split on.
    * @return The (possibly rewritten) form of q.
    */
-  static Node computeDtVarExpand(NodeManager *nm, const Node& q, size_t& index);
+  static Node computeDtVarExpand(NodeManager* nm, const Node& q, size_t& index);
 
  private:
   /**

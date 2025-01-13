@@ -26,14 +26,14 @@
 #include "rewriter/rewrite_db_term_process.h"
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
-#include "theory/arrays/theory_arrays_rewriter.h"
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/arith/arith_proof_utilities.h"
 #include "theory/arith/rewriter/rewrite_atom.h"
+#include "theory/arrays/theory_arrays_rewriter.h"
 #include "theory/booleans/theory_bool_rewriter.h"
 #include "theory/bv/theory_bv_rewrite_rules.h"
-#include "theory/quantifiers/quantifiers_rewriter.h"
 #include "theory/quantifiers/quant_split.h"
+#include "theory/quantifiers/quantifiers_rewriter.h"
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
 #include "theory/strings/strings_entail.h"
@@ -813,9 +813,8 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
                                                       const Node& eq)
 {
   NodeManager* nm = nodeManager();
-  Trace("brc-macro") << "Expand macro str eq len unify for " << eq
-                     << std::endl;
-  Assert (eq[1].getKind()==Kind::AND && eq[1].getNumChildren()==1);
+  Trace("brc-macro") << "Expand macro str eq len unify for " << eq << std::endl;
+  Assert(eq[1].getKind() == Kind::AND && eq[1].getNumChildren() == 1);
   // This proves e.g. (= (= (str.++ x y) (str.++ z w)) (and (= x z) (= y w))).
   // We prove this in two phases
   Node falsen = nodeManager()->mkConst(false);
@@ -824,7 +823,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   std::vector<Node> cpremises(eq[1].begin(), eq[1].end());
   for (const Node& eq1e : cpremises)
   {
-    Assert (eq1e.getKind()==Kind::EQUAL && eq1e[0].getType().isString());
+    Assert(eq1e.getKind() == Kind::EQUAL && eq1e[0].getType().isString());
     elhs.push_back(eq1e[0]);
     erhs.push_back(eq1e[1]);
   }
@@ -867,8 +866,10 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
 
   // reverse proof is easy
   CDProof cdrev(d_env);
-  cdrev.addStep(cpremises[0], ProofRule::AND_ELIM, {eq[1]}, {nm->mkConstInt(0)});
-  cdrev.addStep(cpremises[1], ProofRule::AND_ELIM, {eq[1]}, {nm->mkConstInt(1)});
+  cdrev.addStep(
+      cpremises[0], ProofRule::AND_ELIM, {eq[1]}, {nm->mkConstInt(0)});
+  cdrev.addStep(
+      cpremises[1], ProofRule::AND_ELIM, {eq[1]}, {nm->mkConstInt(1)});
   cargs.clear();
   ccr = expr::getCongRule(ceq[0], cargs);
   cdrev.addStep(ceq, ccr, cpremises, cargs);
@@ -887,7 +888,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   cdp->addStep(eqfinal, ProofRule::EQ_RESOLVE, {dualImpl, dualImplEq}, {});
 
   // prove eq[0] is equal to the grouped concatenation terms
-  Assert (eq[0]!=ceq);
+  Assert(eq[0] != ceq);
   Node eqs1 = eq[0][0].eqNode(clhs);
   Trace("brc-macro") << "- subgoal " << eqs1 << std::endl;
   cdp->addTrustedStep(eqs1, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
@@ -1373,18 +1374,21 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroDtVarExpand(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroDtVarExpand(CDProof* cdp,
+                                                    const Node& eq)
 {
-  Trace("brc-macro") << "Expand macro dt var expand " << eq
-                     << std::endl;
+  Trace("brc-macro") << "Expand macro dt var expand " << eq << std::endl;
   // just need to find the index
   size_t index;
-  Node qn = theory::quantifiers::QuantifiersRewriter::computeDtVarExpand(nodeManager(), eq[0], index);
-  if (qn==eq[1])
+  Node qn = theory::quantifiers::QuantifiersRewriter::computeDtVarExpand(
+      nodeManager(), eq[0], index);
+  if (qn == eq[1])
   {
     // use the utility to get the proof
-    std::shared_ptr<ProofNode> pfn = theory::quantifiers::QuantDSplit::getQuantDtSplitProof(d_env, eq[0], index);
-    Assert (pfn->getResult()==eq);
+    std::shared_ptr<ProofNode> pfn =
+        theory::quantifiers::QuantDSplit::getQuantDtSplitProof(
+            d_env, eq[0], index);
+    Assert(pfn->getResult() == eq);
     cdp->addProof(pfn);
     return true;
   }
@@ -1531,14 +1535,14 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
   Node eqf;
   Kind k = eq[0].getKind();
   // get the equality between operators
-  if (k==Kind::APPLY_UF)
+  if (k == Kind::APPLY_UF)
   {
-    Assert (eq[1].getKind()==Kind::APPLY_UF);
+    Assert(eq[1].getKind() == Kind::APPLY_UF);
     eqf = eq[0].getOperator().eqNode(eq[1].getOperator());
   }
   else
   {
-    Assert (k==Kind::HO_APPLY);
+    Assert(k == Kind::HO_APPLY);
     eqf = eq[0][0].eqNode(eq[1][0]);
   }
   // use conversion proof, must rewrite ops
@@ -1547,7 +1551,8 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
                            TConvPolicy::ONCE,
                            TConvCachePolicy::NEVER,
                            "MacroLambdaAppElimShadow",
-                           nullptr, true);
+                           nullptr,
+                           true);
   // the step eqf should be shown by alpha-equivalance
   tcpg.addRewriteStep(eqf[0],
                       eqf[1],
@@ -1556,12 +1561,12 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
                       TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
   std::shared_ptr<ProofNode> pfn = tcpg.getProofForRewriting(eq[0]);
   Node res = pfn->getResult();
-  if (res[1]==eq[1])
+  if (res[1] == eq[1])
   {
     cdp->addProof(pfn);
     return true;
   }
-  Assert (false);
+  Assert(false);
   return false;
 }
 
@@ -1569,9 +1574,7 @@ bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp,
                                                           const Node& eq)
 {
   Trace("brc-macro") << "Expand arrays normalize op " << eq << std::endl;
-  TConvProofGenerator tcpg(d_env,
-                           nullptr,
-                           TConvPolicy::FIXPOINT);
+  TConvProofGenerator tcpg(d_env, nullptr, TConvPolicy::FIXPOINT);
   theory::arrays::TheoryArraysRewriter arew(nodeManager(), d_env.getRewriter());
   Node nr = arew.computeNormalizeOp(eq[0], &tcpg);
   std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(eq);

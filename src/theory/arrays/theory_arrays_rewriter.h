@@ -81,7 +81,6 @@ class TheoryArraysRewriter : public TheoryRewriter
    */
   static Node normalizeConstant(NodeManager* nm, TNode node);
 
-
   /**
    * @param n The term to rewrite, expected to be a store or select whose
    * index can be "pushed" beneath indices on the first argument.
@@ -91,6 +90,7 @@ class TheoryArraysRewriter : public TheoryRewriter
    */
   Node computeNormalizeOp(const Node& n,
                           TConvProofGenerator* pg = nullptr) const;
+
  private:
   /**
    * Pointer to the rewriter. NOTE this is a cyclic dependency, and should

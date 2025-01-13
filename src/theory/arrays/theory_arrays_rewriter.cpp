@@ -26,7 +26,6 @@
 #include "theory/arrays/skolem_cache.h"
 #include "theory/type_enumerator.h"
 #include "util/cardinality.h"
-#include "proof/conv_proof_generator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -138,11 +137,12 @@ Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   return Node::null();
 }
 
-Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator* pg) const
+Node TheoryArraysRewriter::computeNormalizeOp(const Node& n,
+                                              TConvProofGenerator* pg) const
 {
   NodeManager* nm = nodeManager();
   Kind k = n.getKind();
-  Assert (k == Kind::SELECT || k == Kind::STORE);
+  Assert(k == Kind::SELECT || k == Kind::STORE);
   Node index = n[1];
   bool iconst = index.isConst();
   Node arr = n[0];
@@ -151,7 +151,7 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator
   bool success = false;
   std::vector<Node> ctermc;
   Node currTerm = n;
-  if (pg!=nullptr)
+  if (pg != nullptr)
   {
     ctermc.insert(ctermc.begin(), n.begin(), n.end());
   }
@@ -162,15 +162,15 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator
       // process being equal:
       // if store, we are redundant, remove and break
       // if select, we return the element directly
-      Node ret = k==Kind::STORE ? arr[0] : arr[2];
-      if (pg!=nullptr)
+      Node ret = k == Kind::STORE ? arr[0] : arr[2];
+      if (pg != nullptr)
       {
         // proven by RARE rule array-store-overwrite or array-read-over-write
         pg->addRewriteStep(currTerm,
-                          ret,
-                          nullptr,
-                          false,
-                          TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+                           ret,
+                           nullptr,
+                           false,
+                           TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
       }
       if (k == Kind::STORE)
       {
@@ -203,17 +203,17 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n, TConvProofGenerator
       indices.push_back(arr[1]);
       elems.push_back(arr[2]);
       arr = arr[0];
-      if (pg!=nullptr)
+      if (pg != nullptr)
       {
         ctermc[0] = arr;
         // proven by RARE rule array-read-over-write2 or array-store-swap
         Node prevTerm = currTerm;
         currTerm = nm->mkNode(k, ctermc);
         pg->addRewriteStep(prevTerm,
-                          currTerm,
-                          nullptr,
-                          false,
-                          TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+                           currTerm,
+                           nullptr,
+                           false,
+                           TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
       }
     }
     else

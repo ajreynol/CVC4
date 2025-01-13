@@ -345,8 +345,8 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         return Node::null();
       }
       size_t index;
-      Node nn = computeDtVarExpand(nodeManager(),n,index);
-      if (nn!=n)
+      Node nn = computeDtVarExpand(nodeManager(), n, index);
+      if (nn != n)
       {
         return nn;
       }
@@ -1673,8 +1673,7 @@ Node QuantifiersRewriter::computeVarElimination(Node body,
                                                 std::vector<Node>& args,
                                                 QAttributes& qa) const
 {
-  if (!d_opts.quantifiers.varElimQuant
-      && !d_opts.quantifiers.varIneqElimQuant)
+  if (!d_opts.quantifiers.varElimQuant && !d_opts.quantifiers.varIneqElimQuant)
   {
     return body;
   }
@@ -1711,10 +1710,12 @@ Node QuantifiersRewriter::computeVarElimination(Node body,
   return body;
 }
 
-Node QuantifiersRewriter::computeDtVarExpand(NodeManager *nm, const Node& q, size_t& index)
+Node QuantifiersRewriter::computeDtVarExpand(NodeManager* nm,
+                                             const Node& q,
+                                             size_t& index)
 {
   std::vector<Node> lits;
-  if (q[1].getKind()==Kind::OR)
+  if (q[1].getKind() == Kind::OR)
   {
     lits.insert(lits.end(), q[1].begin(), q[1].end());
   }
@@ -1724,13 +1725,12 @@ Node QuantifiersRewriter::computeDtVarExpand(NodeManager *nm, const Node& q, siz
   }
   for (const Node& lit : lits)
   {
-    if (lit.getKind()==Kind::NOT &&
-      lit[0].getKind() == Kind::APPLY_TESTER
-      && lit[0][0].getKind() == Kind::BOUND_VARIABLE)
+    if (lit.getKind() == Kind::NOT && lit[0].getKind() == Kind::APPLY_TESTER
+        && lit[0][0].getKind() == Kind::BOUND_VARIABLE)
     {
-      for (size_t i=0, nvars = q[0].getNumChildren(); i<nvars; i++)
+      for (size_t i = 0, nvars = q[0].getNumChildren(); i < nvars; i++)
       {
-        if (q[0][i]==lit[0][0])
+        if (q[0][i] == lit[0][0])
         {
           index = i;
           // quant dt split for the given variable
@@ -2333,13 +2333,11 @@ bool QuantifiersRewriter::doOperation(Node q,
   }
   else if (computeOption == COMPUTE_VAR_ELIMINATION)
   {
-    return d_opts.quantifiers.varElimQuant
-           && is_std && !is_strict_trigger;
+    return d_opts.quantifiers.varElimQuant && is_std && !is_strict_trigger;
   }
   else if (computeOption == COMPUTE_DT_VAR_EXPAND)
   {
-    return d_opts.quantifiers.dtVarExpandQuant
-           && is_std && !is_strict_trigger;
+    return d_opts.quantifiers.dtVarExpandQuant && is_std && !is_strict_trigger;
   }
   else
   {

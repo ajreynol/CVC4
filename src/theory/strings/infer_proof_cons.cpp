@@ -419,9 +419,11 @@ bool InferProofCons::convert(Env& env,
         // to issues like the one above.
         std::vector<Node> rexp(ps.d_children.begin(),
                                ps.d_children.begin() + mainEqIndex);
-        if (infer == InferenceId::STRINGS_F_UNIFY || infer == InferenceId::STRINGS_F_ENDPOINT_EQ)
+        if (infer == InferenceId::STRINGS_F_UNIFY
+            || infer == InferenceId::STRINGS_F_ENDPOINT_EQ)
         {
-          Trace("strings-ipc-core") << "...check reorient substitution" << std::endl;
+          Trace("strings-ipc-core")
+              << "...check reorient substitution" << std::endl;
           Assert(conc.getKind() == Kind::EQUAL);
           // maybe reorient?
           for (size_t i = 0; i < mainEqIndex; i++)
@@ -430,7 +432,8 @@ bool InferProofCons::convert(Env& env,
             if (rexp[i][0] == conc[0] || rexp[i][0] == conc[1])
             {
               rexp[i] = rexp[i][1].eqNode(rexp[i][0]);
-              Trace("strings-ipc-core") << "...reorient to " << rexp[i] << std::endl;
+              Trace("strings-ipc-core")
+                  << "...reorient to " << rexp[i] << std::endl;
             }
           }
         }
@@ -1415,7 +1418,7 @@ bool InferProofCons::convertAndElim(NodeManager* nm,
       {
         Node ni = nm->mkConstInt(Rational(i));
         psb.addStep(ProofRule::AND_ELIM, {src}, {ni}, src[i]);
-        if (src[i]!=tgt)
+        if (src[i] != tgt)
         {
           psb.addStep(ProofRule::SYMM, {src[i]}, {}, tgt);
         }
