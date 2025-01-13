@@ -4276,6 +4276,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_EQ_REPL_NO_CHANGE),
   /** Auto-generated from RARE rule str-eq-repl-len-one-emp-prefix */
   EVALUE(STR_EQ_REPL_LEN_ONE_EMP_PREFIX),
+  /** Auto-generated from RARE rule str-eq-repl-emp-tgt-nemp */
+  EVALUE(STR_EQ_REPL_EMP_TGT_NEMP),
+  /** Auto-generated from RARE rule str-eq-repl-nemp-src-emp */
+  EVALUE(STR_EQ_REPL_NEMP_SRC_EMP),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */

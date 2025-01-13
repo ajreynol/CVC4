@@ -536,6 +536,17 @@
   (= (str.replace x y emp) emp)
   (str.prefixof x y))
 
+(define-cond-rule str-eq-repl-emp-tgt-nemp ((x ?Seq) (y ?Seq) (z ?Seq) (emp ?Seq))
+  (and (= emp (@seq.empty_of_type (@type_of x))) (not (= z emp)))
+  (= (str.replace x y z) emp)
+  (and (= x emp) (not (= y emp))))
+
+
+(define-cond-rule str-eq-repl-nemp-src-emp ((x ?Seq) (y ?Seq) (z ?Seq) (emp ?Seq))
+  (and (= emp (@seq.empty_of_type (@type_of x))) (not (= z emp)))
+  (= (str.replace emp x y) z)
+  (and (= x emp) (= y z)))
+
 ; =============== Sequences-specific rules
 
 (define-rule seq-len-unit ((x ?)) (str.len (seq.unit x)) 1)

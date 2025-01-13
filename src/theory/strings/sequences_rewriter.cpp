@@ -494,13 +494,10 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
       Node repl = node[i];
       Node x = node[1 - i];
 
-      // (= "A" (str.replace "" x y)) ---> (= "" (str.replace "A" y x))
+      // (= "A" (str.replace "" x y)) ---> (and (= x "") (= y "A"))
       if (d_stringsEntail.checkNonEmpty(x) && repl[0] == empty)
       {
-        Node ret =
-            nm->mkNode(Kind::EQUAL,
-                       empty,
-                       nm->mkNode(Kind::STRING_REPLACE, x, repl[2], repl[1]));
+        Node ret = nm->mkNode(Kind::AND, repl[1].eqNode(empty), repl[2].eqNode(x));
         return returnRewrite(node, ret, Rewrite::STR_EQ_REPL_EMP);
       }
 

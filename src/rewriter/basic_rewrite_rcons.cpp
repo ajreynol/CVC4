@@ -1547,6 +1547,7 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
   for (const Node& mc : matchConds)
   {
     Assert(mc.getKind() == Kind::EQUAL);
+    Trace("brc-macro") << "- subgoal " << mc << std::endl;
     // the step should be shown by alpha-equivalance
     tcpg.addRewriteStep(mc[0],
                         mc[1],

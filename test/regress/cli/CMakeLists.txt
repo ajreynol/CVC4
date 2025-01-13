@@ -1845,6 +1845,7 @@ set(regress_0_tests
   regress0/strings/ctn-decompose-3-sym.smt2
   regress0/strings/ctn-decompose-3-sym-nf.smt2
   regress0/strings/dd_67_str_at_eval.smt2
+  regress0/strings/dd_a1d_static_rewrite.smt2
   regress0/strings/dd_dd_norn_235_f_endpoint_eq.smt2
   regress0/strings/dd_issue6913-str-inf.smt2
   regress0/strings/dd_norn_235_extf_d.smt2
@@ -1960,6 +1961,7 @@ set(regress_0_tests
   regress0/strings/rewrites-re-concat.smt2
   regress0/strings/rewrites-v2.smt2
   regress0/strings/rw_545.smt2 
+  regress0/strings/rw_555.smt2
   regress0/strings/sigma-star-mod-3.smt2
   regress0/strings/simple-include-mem.smt2
   regress0/strings/simple-include-subrange.smt2
