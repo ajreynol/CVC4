@@ -1532,8 +1532,6 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
 {
   Trace("brc-macro") << "Expand macro lambda app elim shadow for " << eq
                      << std::endl;
-  Node eqf;
-  Kind k = eq[0].getKind();
   std::vector<Node> matchConds;
   expr::getMatchConditions(eq[0], eq[1], matchConds, true);
   // use conversion proof, must rewrite ops
@@ -1547,7 +1545,7 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
   for (const Node& mc : matchConds)
   {
     Assert (mc.getKind()==Kind::EQUAL);
-    // the step eqf should be shown by alpha-equivalance
+    // the step should be shown by alpha-equivalance
     tcpg.addRewriteStep(mc[0],
                         mc[1],
                         nullptr,

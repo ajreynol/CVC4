@@ -1844,6 +1844,7 @@ set(regress_0_tests
   regress0/strings/complement-simple.smt2
   regress0/strings/ctn-decompose-3-sym.smt2
   regress0/strings/ctn-decompose-3-sym-nf.smt2
+  regress0/strings/dd_67_str_at_eval.smt2
   regress0/strings/dd_dd_norn_235_f_endpoint_eq.smt2
   regress0/strings/dd_issue6913-str-inf.smt2
   regress0/strings/dd_norn_235_extf_d.smt2
