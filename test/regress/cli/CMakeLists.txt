@@ -1411,6 +1411,7 @@ set(regress_0_tests
   regress0/proofs/trust-subs-eq-open.smt2
   regress0/proofs/unused-def1.smt2
   regress0/proofs/unused-def2.smt2
+  regress0/proofs/var-eq-elim-tester-simple.smt2
   regress0/prop/cadical_bug1.smt2
   regress0/prop/cadical_bug2.smt2
   regress0/prop/cadical_bug3.smt2
@@ -1477,6 +1478,7 @@ set(regress_0_tests
   regress0/quantifiers/cond-var-elim-binary.smt2
   regress0/quantifiers/dd_german169_semi_eval.smt2
   regress0/quantifiers/dd_quick_sort-q-rew.smt2
+  regress0/quantifiers/dd_rts-quant-elim-eq-tester.smt2
   regress0/quantifiers/dd_spark2014-pat.smt2
   regress0/quantifiers/dd_sym_sat_9_array_rew.smt2
   regress0/quantifiers/dd_TwoSquares.z3.611901.smt2
