@@ -1,3 +1,4 @@
+; EXPECT: unsat
 (set-logic ALL)
 (declare-datatype List ((cons (head Int) (tail List)) (nil)))
 (declare-fun P (List List) Bool)

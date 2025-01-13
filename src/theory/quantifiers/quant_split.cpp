@@ -325,6 +325,19 @@ Node QuantDSplit::split(NodeManager* nm, const Node& q, size_t index)
   return nm->mkAnd(cons);
 }
 
+std::shared_ptr<ProofNode> QuantDSplit::getQuantDtSplitProof(Env& env, const Node& q, size_t index)
+{
+  Node qs = split(env.getNodeManager(), q, index);
+  if (qs.isNull())
+  {
+    return nullptr;
+  }
+  Node eq = q.eqNode(qs);
+  QuantDSplitProofGenerator pg(env);
+  pg.notifyLemma(eq, index);
+  return pg.getProofFor(eq);
+}
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
