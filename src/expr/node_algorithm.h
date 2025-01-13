@@ -265,8 +265,11 @@ bool match(Node n1, Node n2, std::unordered_map<Node, Node>& subs);
  * against
  * @param n2 the instance term in question
  * @param eqs The list of equalities we are populating.
+ * @param isHo If true, we consider matching on operators. This means that
+ * an APPLY_UF with distinct operators with the same type will be added as
+ * a match condition.
  */
-void getMatchConditions(Node n1, Node n2, std::vector<Node>& eqs);
+void getMatchConditions(Node n1, Node n2, std::vector<Node>& eqs, bool isHo=false);
 
 /** Is the top symbol of cur a Boolean connective? */
 bool isBooleanConnective(TNode cur);

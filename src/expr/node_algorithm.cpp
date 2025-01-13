@@ -769,7 +769,7 @@ bool match(Node x, Node y, std::unordered_map<Node, Node>& subs)
   return true;
 }
 
-void getMatchConditions(Node n1, Node n2, std::vector<Node>& eqs)
+void getMatchConditions(Node n1, Node n2, std::vector<Node>& eqs, bool isHo)
 {
   std::unordered_set<std::pair<TNode, TNode>, TNodePairHashFunction> visited;
   std::unordered_set<std::pair<TNode, TNode>, TNodePairHashFunction>::iterator
@@ -786,6 +786,7 @@ void getMatchConditions(Node n1, Node n2, std::vector<Node>& eqs)
       // holds trivially
       continue;
     }
+    Assert (curr.first.getType()==curr.second.getType());
     it = visited.find(curr);
     if (it != visited.end())
     {
@@ -794,13 +795,23 @@ void getMatchConditions(Node n1, Node n2, std::vector<Node>& eqs)
     }
     visited.insert(curr);
     bool rec = false;
-    if (curr.first.getNumChildren() > 0)
+    if (curr.first.getNumChildren() > 0 && curr.first.getNumChildren() == curr.second.getNumChildren())
     {
-      if (curr.first.getNumChildren() == curr.second.getNumChildren()
-          && curr.first.getOperator() == curr.second.getOperator())
+      size_t prevSize = stack.size();
+      if (curr.first.getOperator() == curr.second.getOperator())
       {
         rec = true;
-        size_t prevSize = stack.size();
+      }
+      else if (isHo && curr.first.getKind()==Kind::APPLY_UF && curr.second.getKind()==Kind::APPLY_UF)
+      {
+        rec = true;
+        // if isHo, we recurse on distinct operators with the same type
+        // note that it is redundant to check type here, as we check the
+        // types of arguments below and undo if necessary
+        stack.emplace_back(curr.first.getOperator(), curr.second.getOperator());
+      }
+      if (rec)
+      {
         // recurse on children
         for (size_t i = 0, n = curr.first.getNumChildren(); i < n; ++i)
         {
