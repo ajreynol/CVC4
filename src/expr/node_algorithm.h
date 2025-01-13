@@ -260,6 +260,12 @@ bool match(Node n1, Node n2, std::unordered_map<Node, Node>& subs);
 /**
  * For each subterm of n1 and n2 at the same position that have different
  * operators, we add the corresponding equality to eqs.
+ * 
+ * Additionally, we use an isHo flag to determine if we are considering
+ * HO matching. As an example of the difference:
+ * Given n1 = (f (g a) b), n2 = (f (h b) c),
+ * If isHo is false, we return eqs = { b = c, (g a) = (h b) }.
+ * If isHo is true, we return eqs = { b = c, g = h, a = b }.
  *
  * @param n1 the term (containing free vars) to compare an instance term
  * against
