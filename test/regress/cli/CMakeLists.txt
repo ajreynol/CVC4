@@ -710,6 +710,7 @@ set(regress_0_tests
   regress0/datatypes/dt-param-2.6-print.smt2
   regress0/datatypes/dt-param-2.6.smt2
   regress0/datatypes/dt-param-card4-bool-sat.smt2
+  regress0/datatypes/dt-param-simple-unsat.smt2
   regress0/datatypes/dt-sel-2.6.smt2
   regress0/datatypes/empty_tuprec.cvc.smt2
   regress0/datatypes/eq-clash-rec-find.smt2 
