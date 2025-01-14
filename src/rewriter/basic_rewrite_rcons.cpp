@@ -390,6 +390,7 @@ bool BasicRewriteRCons::ensureProofMacroDtConsEq(CDProof* cdp, const Node& eq)
     for (size_t i=0, npath = path.size(); i<npath; i++)
     {
       Trace("brc-macro") << "- unify eq " << currEq << std::endl;
+      // e.g C(t1...tn)=C(s1...sn) = (and (t1=s1) ... (tn=sn))
       Node currConj = rr->rewriteViaRule(ProofRewriteRule::DT_CONS_EQ, currEq);
       Assert (!currConj.isNull());
       tcpg.addTheoryRewriteStep(
@@ -399,6 +400,8 @@ bool BasicRewriteRCons::ensureProofMacroDtConsEq(CDProof* cdp, const Node& eq)
       Assert (p<currEq[1].getNumChildren());
       if (currConj.getKind()==Kind::AND)
       {
+        // (and (t1=s1) ... false .... (tn=sn)) = false
+        // should be proven by a RARE rule.
         std::vector<Node> cc(currConj.begin(), currConj.end());
         cc[p] = falsen;
         Node currConjf = nm->mkAnd(cc);
@@ -411,6 +414,8 @@ bool BasicRewriteRCons::ensureProofMacroDtConsEq(CDProof* cdp, const Node& eq)
       // recurse
       currEq = currEq[0][p].eqNode(currEq[1][p]);
     }
+    // base case, we have a conflicting value.
+    // should be proven by evaluation or by an ad-hoc rewrite.
     Trace("brc-macro") << "- conflicting values " << currEq << std::endl;
     Assert (currEq[0].isConst() && currEq[1].isConst() && currEq[0]!=currEq[1]);
     tcpg.addRewriteStep(currEq,
