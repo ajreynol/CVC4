@@ -283,11 +283,14 @@
   (str.replace (str.++ t1 t2) s r)
   (str.++ (str.replace t1 s r) t2))
 
-
 (define-cond-rule str-replace-one-pre ((t ?Seq) (s ?Seq) (r ?Seq) (ts ?Seq :list) (ss ?Seq :list))
   (= (str.len s) 1)
   (str.replace (str.++ ts t ss t) s r)
   (str.++ (str.replace (str.++ ts t ss) s r) t))
+
+(define-rule str-replace-find-pre ((t ?Seq) (r ?Seq) (ts ?Seq :list) (ss ?Seq :list))
+  (str.replace (str.++ ts t ss) t r)
+  (str.++ (str.replace (str.++ ts t) t r) ss))
 
 (define-cond-rule str-replace-all-no-contains ((t ?Seq) (s ?Seq) (r ?Seq))
   (not (str.contains t s))
