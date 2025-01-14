@@ -1600,8 +1600,8 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
   size_t i = 0;
   while (i < matchConds.size())
   {
-    Assert(mc.getKind() == Kind::EQUAL);
     Node mc = matchConds[i];
+    Assert(mc.getKind() == Kind::EQUAL);
     i++;
     if (mc[0].getKind() == mc[1].getKind() && mc[0].isClosure())
     {
