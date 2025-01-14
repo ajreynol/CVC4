@@ -3184,6 +3184,7 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(MACRO_STR_STRIP_ENDPOINTS),
+  EVALUE(MACRO_STR_SPLIT_CTN),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- string indexof regex evaluation**

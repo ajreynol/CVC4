@@ -1848,6 +1848,7 @@ set(regress_0_tests
   regress0/strings/complement-simple.smt2
   regress0/strings/ctn-decompose-3-sym.smt2
   regress0/strings/ctn-decompose-3-sym-nf.smt2
+  regress0/strings/ctn-split-no-overlap.smt2
   regress0/strings/dd_67_str_at_eval.smt2
   regress0/strings/dd_a1d_static_rewrite.smt2
   regress0/strings/dd_dd_norn_235_f_endpoint_eq.smt2
@@ -1855,6 +1856,7 @@ set(regress_0_tests
   regress0/strings/dd_norn_235_extf_d.smt2
   regress0/strings/dd_norn_675.smt2
   regress0/strings/dd_rw_984.smt2
+  regress0/strings/dd_slog_2087_ctn_split.smt2
   regress0/strings/delta-trust-subs.smt2
   regress0/strings/denghan-instance56567.smt2
   regress0/strings/distinct-witness-id.smt2
