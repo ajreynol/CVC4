@@ -4205,6 +4205,12 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_SUBSTR_CTN),
   /** Auto-generated from RARE rule str-replace-dual-ctn */
   EVALUE(STR_REPLACE_DUAL_CTN),
+  /** Auto-generated from RARE rule str-replace-dual-ctn-false */
+  EVALUE(STR_REPLACE_DUAL_CTN_FALSE),
+  /** Auto-generated from RARE rule str-contains-repl-char */
+  EVALUE(STR_CONTAINS_REPL_CHAR),
+  /** Auto-generated from RARE rule str-contains-repl-self */
+  EVALUE(STR_CONTAINS_REPL_SELF),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */

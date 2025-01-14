@@ -416,6 +416,20 @@
   (str.contains (str.replace s t r) u)
   true)
 
+(define-cond-rule str-replace-dual-ctn-false ((s ?Seq) (t ?Seq) (r ?Seq) (u ?Seq))
+  (and (not (str.contains s t)) (not (str.contains s u)))
+  (str.contains s (str.replace t r u))
+  false)
+
+(define-cond-rule str-contains-repl-char ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
+  (and (= (str.len w) 1) (not (str.contains w y)))
+  (str.contains (str.replace x y z) w)
+  (or (str.contains x w) (and (str.contains x y) (str.contains z w))))
+
+(define-rule str-contains-repl-self ((x ?Seq) (y ?Seq))
+  (str.contains (str.replace x y x) y)
+  (str.contains x y))
+
 ; =============== Regular expression rules
 
 (define-rule re-all-elim () re.all (re.* re.allchar))

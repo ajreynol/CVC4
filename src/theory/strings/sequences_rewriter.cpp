@@ -153,7 +153,6 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS:
       return rewriteViaMacroStrStripEndpoints(n);
     case ProofRewriteRule::MACRO_STR_SPLIT_CTN:
-      AlwaysAssert(rewriteViaMacroStrSplitCtn(n).isNull());
       return rewriteViaMacroStrSplitCtn(n);
     default: break;
   }

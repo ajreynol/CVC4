@@ -1848,6 +1848,7 @@ set(regress_0_tests
   regress0/strings/complement-simple.smt2
   regress0/strings/ctn-decompose-3-sym.smt2
   regress0/strings/ctn-decompose-3-sym-nf.smt2
+  regress0/strings/ctn-repl-to-ctn.smt2 
   regress0/strings/ctn-split-no-overlap.smt2
   regress0/strings/dd_67_str_at_eval.smt2
   regress0/strings/dd_a1d_static_rewrite.smt2
@@ -1976,6 +1977,7 @@ set(regress_0_tests
   regress0/strings/simple-include-subrange.smt2
   regress0/strings/simple-nth-fail.smt2
   regress0/strings/slent_dio_lemma.smt2
+  regress0/strings/small_pymongo_repl_char.smt2
   regress0/strings/std2.6.1.smt2
   regress0/strings/str_unsound_ext_rew_eq.smt2
   regress0/strings/str-in-re-mixed-include.smt2
