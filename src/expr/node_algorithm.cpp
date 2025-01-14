@@ -804,7 +804,7 @@ void getMatchConditions(Node n1, Node n2, std::vector<Node>& eqs, bool isHo)
         if (curr.first.isClosure())
         {
           // only recurse if equal variable lists
-          rec = (curr.first[0]==curr.second[0]);
+          rec = (curr.first[0] == curr.second[0]);
         }
         else
         {

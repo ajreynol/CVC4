@@ -166,11 +166,12 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n,
       if (pg != nullptr)
       {
         Node rewTerm = ret;
-        if (k==Kind::STORE)
+        if (k == Kind::STORE)
         {
           rewTerm = nm->mkNode(Kind::STORE, rewTerm, n[1], n[2]);
         }
-        Trace("array-norm-op-rcons") << "- rewrite " << currTerm << " -> " << rewTerm << std::endl;
+        Trace("array-norm-op-rcons")
+            << "- rewrite " << currTerm << " -> " << rewTerm << std::endl;
         // proven by RARE rule array-store-overwrite or array-read-over-write
         pg->addRewriteStep(currTerm,
                            rewTerm,
@@ -217,11 +218,13 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n,
         currTerm = nm->mkNode(k, ctermc);
         // the rewrite for the store is a swap, temporarily construct the rhs
         Node rewTerm = currTerm;
-        if (k==Kind::STORE)
+        if (k == Kind::STORE)
         {
-          rewTerm = nm->mkNode(Kind::STORE, rewTerm, prevTerm[0][1], prevTerm[0][2]);
+          rewTerm =
+              nm->mkNode(Kind::STORE, rewTerm, prevTerm[0][1], prevTerm[0][2]);
         }
-        Trace("array-norm-op-rcons") << "- rewrite " << prevTerm << " -> " << rewTerm << std::endl;
+        Trace("array-norm-op-rcons")
+            << "- rewrite " << prevTerm << " -> " << rewTerm << std::endl;
         pg->addRewriteStep(prevTerm,
                            rewTerm,
                            nullptr,

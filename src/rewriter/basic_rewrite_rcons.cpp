@@ -960,7 +960,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantMergePrenex(CDProof* cdp,
     cdp->addStep(equiv3s, ProofRule::SYMM, {equiv3}, {});
     transEq.push_back(equiv3s);
   }
-  if (transEq.size()>1)
+  if (transEq.size() > 1)
   {
     cdp->addStep(eq, ProofRule::TRANS, transEq, {});
   }
@@ -1580,7 +1580,7 @@ bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp,
   theory::arrays::TheoryArraysRewriter arew(nodeManager(), d_env.getRewriter());
   Node nr = arew.computeNormalizeOp(eq[0], &tcpg);
   std::shared_ptr<ProofNode> pfn = tcpg.getProofForRewriting(eq[0]);
-  if (pfn->getResult()==eq)
+  if (pfn->getResult() == eq)
   {
     Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
     cdp->addProof(pfn);

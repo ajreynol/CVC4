@@ -310,8 +310,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-str-eq-len-unify";
     case ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS:
       return "macro-str-strip-endpoints";
-    case ProofRewriteRule::MACRO_STR_SPLIT_CTN:
-      return "macro-str-split-ctn";
+    case ProofRewriteRule::MACRO_STR_SPLIT_CTN: return "macro-str-split-ctn";
     case ProofRewriteRule::STR_INDEXOF_RE_EVAL: return "str-indexof-re-eval";
     case ProofRewriteRule::STR_REPLACE_RE_EVAL: return "str-replace-re-eval";
     case ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL:

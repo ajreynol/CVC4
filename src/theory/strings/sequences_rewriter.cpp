@@ -498,7 +498,8 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
       // (= "A" (str.replace "" x y)) ---> (and (= x "") (= y "A"))
       if (d_stringsEntail.checkNonEmpty(x) && repl[0] == empty)
       {
-        Node ret = nm->mkNode(Kind::AND, repl[1].eqNode(empty), repl[2].eqNode(x));
+        Node ret =
+            nm->mkNode(Kind::AND, repl[1].eqNode(empty), repl[2].eqNode(x));
         return returnRewrite(node, ret, Rewrite::STR_EQ_REPL_EMP);
       }
 
@@ -1615,7 +1616,8 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
 
 Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
 {
-  if (node.getKind()!=Kind::STRING_CONTAINS || node[0].getKind()!=Kind::STRING_CONCAT || !node[1].isConst())
+  if (node.getKind() != Kind::STRING_CONTAINS
+      || node[0].getKind() != Kind::STRING_CONCAT || !node[1].isConst())
   {
     return Node::null();
   }
@@ -1625,7 +1627,7 @@ Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
   // Notice that if the first or last components had no
   // overlap, these would have been removed by strip
   // constant endpoints. Hence, we consider only the inner children.
-  for (size_t i = 1, iend =(node[0].getNumChildren() - 1); i < iend; i++)
+  for (size_t i = 1, iend = (node[0].getNumChildren() - 1); i < iend; i++)
   {
     // constant contains
     if (node[0][i].isConst())
@@ -1642,9 +1644,8 @@ Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
         TypeNode stype = node[0].getType();
         Node ret = nodeManager()->mkNode(
             Kind::OR,
-            nodeManager()->mkNode(Kind::STRING_CONTAINS,
-                                  utils::mkConcat(spl[0], stype),
-                                  node[1]),
+            nodeManager()->mkNode(
+                Kind::STRING_CONTAINS, utils::mkConcat(spl[0], stype), node[1]),
             nodeManager()->mkNode(Kind::STRING_CONTAINS,
                                   utils::mkConcat(spl[1], stype),
                                   node[1]));
@@ -2806,7 +2807,7 @@ Node SequencesRewriter::rewriteContains(Node node)
   // splitting
   if (node[0].getKind() == Kind::STRING_CONCAT)
   {
-    // e.g. (str.contains (str.++ x "AB" y) "C") --> 
+    // e.g. (str.contains (str.++ x "AB" y) "C") -->
     // (or (str.contains x "C") (str.contains y "C")
     Node ret = rewriteViaMacroStrSplitCtn(node);
     if (!ret.isNull())
