@@ -113,6 +113,8 @@ set(regress_0_tests
   regress0/arrays/constarr.smt2
   regress0/arrays/constarr2.cvc.smt2
   regress0/arrays/constarr2.smt2
+  regress0/arrays/dd_ios_t1_norm_op.smt2
+  regress0/arrays/dd_storecomm_norm_op.smt2
   regress0/arrays/incorrect1.smtv1.smt2
   regress0/arrays/incorrect10.smtv1.smt2
   regress0/arrays/incorrect11.smtv1.smt2
@@ -1931,6 +1933,7 @@ set(regress_0_tests
   regress0/strings/nterm-pc-zalig.smt2
   regress0/strings/parser-syms.cvc.smt2
   regress0/strings/prefix-simple-no-pf.smt2
+  regress0/strings/prefix-suffix-eval.smt2
   regress0/strings/proj-issue316-regexp-ite.smt2
   regress0/strings/proj-issue390-update-rev-rewrite.smt2
   regress0/strings/proj-issue409-re-loop-none.smt2
@@ -1960,6 +1963,7 @@ set(regress_0_tests
   regress0/strings/replaceall-eval.smt2
   regress0/strings/rewrites-re-concat.smt2
   regress0/strings/rewrites-v2.smt2
+  regress0/strings/rw_508_suffixof.smt2
   regress0/strings/rw_545.smt2 
   regress0/strings/rw_555.smt2
   regress0/strings/sigma-star-mod-3.smt2

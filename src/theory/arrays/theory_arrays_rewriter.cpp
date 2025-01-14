@@ -75,7 +75,7 @@ TheoryArraysRewriter::TheoryArraysRewriter(NodeManager* nm, Rewriter* r)
   registerProofRewriteRule(ProofRewriteRule::ARRAYS_EQ_RANGE_EXPAND,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP,
-                           TheoryRewriteCtx::POST_DSL);
+                           TheoryRewriteCtx::PRE_DSL);
 }
 
 Node TheoryArraysRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -165,9 +165,15 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n,
       Node ret = k == Kind::STORE ? arr[0] : arr[2];
       if (pg != nullptr)
       {
+        Node rewTerm = ret;
+        if (k==Kind::STORE)
+        {
+          rewTerm = nm->mkNode(Kind::STORE, rewTerm, n[1], n[2]);
+        }
+        Trace("array-norm-op-rcons") << "- rewrite " << currTerm << " -> " << rewTerm << std::endl;
         // proven by RARE rule array-store-overwrite or array-read-over-write
         pg->addRewriteStep(currTerm,
-                           ret,
+                           rewTerm,
                            nullptr,
                            false,
                            TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
@@ -209,8 +215,15 @@ Node TheoryArraysRewriter::computeNormalizeOp(const Node& n,
         // proven by RARE rule array-read-over-write2 or array-store-swap
         Node prevTerm = currTerm;
         currTerm = nm->mkNode(k, ctermc);
+        // the rewrite for the store is a swap, temporarily construct the rhs
+        Node rewTerm = currTerm;
+        if (k==Kind::STORE)
+        {
+          rewTerm = nm->mkNode(Kind::STORE, rewTerm, prevTerm[0][1], prevTerm[0][2]);
+        }
+        Trace("array-norm-op-rcons") << "- rewrite " << prevTerm << " -> " << rewTerm << std::endl;
         pg->addRewriteStep(prevTerm,
-                           currTerm,
+                           rewTerm,
                            nullptr,
                            false,
                            TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);

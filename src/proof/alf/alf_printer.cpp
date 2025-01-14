@@ -385,6 +385,7 @@ bool AlfPrinter::canEvaluate(Node n)
         case Kind::STRING_TO_CODE:
         case Kind::STRING_FROM_CODE:
         case Kind::STRING_PREFIX:
+        case Kind::STRING_SUFFIX:
         case Kind::STRING_ITOS:
         case Kind::STRING_STOI:
         case Kind::STRING_TO_LOWER:
