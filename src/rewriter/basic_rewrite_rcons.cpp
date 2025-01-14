@@ -1597,18 +1597,18 @@ bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
                            "MacroLambdaAppElimShadow",
                            nullptr,
                            true);
-  size_t i=0;
-  while (i<matchConds.size())
+  size_t i = 0;
+  while (i < matchConds.size())
   {
     Assert(mc.getKind() == Kind::EQUAL);
     Node mc = matchConds[i];
     i++;
-    if (mc[0].getKind()==mc[1].getKind() && mc[0].isClosure())
+    if (mc[0].getKind() == mc[1].getKind() && mc[0].isClosure())
     {
       Subs s;
-      for (size_t v=0, nvars=mc[0][0].getNumChildren(); v<nvars; v++)
+      for (size_t v = 0, nvars = mc[0][0].getNumChildren(); v < nvars; v++)
       {
-        if (mc[0][0][v]!=mc[1][0][v])
+        if (mc[0][0][v] != mc[1][0][v])
         {
           s.add(mc[0][0][v], mc[1][0][v]);
         }
