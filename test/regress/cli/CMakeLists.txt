@@ -1339,6 +1339,7 @@ set(regress_0_tests
   regress0/proofs/dd_fv-bvl.smt2
   regress0/proofs/dd_ic_macro-elim-shadow.smt2
   regress0/proofs/dd_ic_pf_764.smt2
+  regress0/proofs/dd_int_check_bvnot_lam_value_norm.smt2
   regress0/proofs/dd_issue3481_beta_red.smt2
   regress0/proofs/dd_M301_array_norm_op.smt2
   regress0/proofs/dd_N627_fun_const.smt2
@@ -1483,6 +1484,7 @@ set(regress_0_tests
   regress0/quantifiers/dd_rts-quant-elim-eq-tester.smt2
   regress0/quantifiers/dd_spark2014-pat.smt2
   regress0/quantifiers/dd_sym_sat_9_array_rew.smt2
+  regress0/quantifiers/dd_O512_prefix_sum_var_elim.smt2
   regress0/quantifiers/dd_TwoSquares.z3.611901.smt2
   regress0/quantifiers/dd_SA10-027-dt-ipc.smt2
   regress0/quantifiers/dd.german169-ieval.smt2

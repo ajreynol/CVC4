@@ -919,13 +919,17 @@ bool BasicRewriteRCons::ensureProofMacroQuantMergePrenex(CDProof* cdp,
   theory::Rewriter* rr = d_env.getRewriter();
   Node qm = rr->rewriteViaRule(ProofRewriteRule::QUANT_MERGE_PRENEX, eq[0]);
   Trace("brc-macro") << "...non-macro to " << qm << std::endl;
-  if (qm.isNull())
+  std::vector<Node> transEq;
+  if (!qm.isNull())
   {
-    Assert(false);
-    return false;
+    Node equiv = eq[0].eqNode(qm);
+    cdp->addTheoryRewriteStep(equiv, ProofRewriteRule::QUANT_MERGE_PRENEX);
+    transEq.push_back(equiv);
   }
-  Node equiv = eq[0].eqNode(qm);
-  cdp->addTheoryRewriteStep(equiv, ProofRewriteRule::QUANT_MERGE_PRENEX);
+  else
+  {
+    qm = eq[0];
+  }
   if (qm == eq[1])
   {
     return true;
@@ -939,8 +943,6 @@ bool BasicRewriteRCons::ensureProofMacroQuantMergePrenex(CDProof* cdp,
   }
   Node equiv2 = qm.eqNode(qmu);
   cdp->addTheoryRewriteStep(equiv2, ProofRewriteRule::QUANT_UNUSED_VARS);
-  std::vector<Node> transEq;
-  transEq.push_back(equiv);
   transEq.push_back(equiv2);
   if (qmu != eq[1])
   {
@@ -958,7 +960,10 @@ bool BasicRewriteRCons::ensureProofMacroQuantMergePrenex(CDProof* cdp,
     cdp->addStep(equiv3s, ProofRule::SYMM, {equiv3}, {});
     transEq.push_back(equiv3s);
   }
-  cdp->addStep(eq, ProofRule::TRANS, transEq, {});
+  if (transEq.size()>1)
+  {
+    cdp->addStep(eq, ProofRule::TRANS, transEq, {});
+  }
   return true;
 }
 
@@ -1323,21 +1328,22 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
     for (size_t i = 0, nchild = body1r.getNumChildren(); i < nchild; i++)
     {
       Node eql = body1r[i].eqNode(body1re[i]);
-      // must ensure that this is indeed an equivalence, otherwise this trust
-      // step will be unsound. this is the case e.g. when
-      // a != (str.++ b x) is turned into x != (str.substr a (str.len b) ...)
-      // where the latter implies the former, but they are not equivalent
-      if (extendedRewrite(body1r[i]) != extendedRewrite(body1re[i]))
-      {
-        Trace("brc-macro") << "...failed to rewrite" << std::endl;
-        return false;
-      }
       if (body1r[i] == body1re[i])
       {
         cdp->addStep(eql, ProofRule::REFL, {}, {eql[0]});
       }
       else
       {
+        // must ensure that this is indeed an equivalence, otherwise this trust
+        // step will be unsound. this is the case e.g. when
+        // a != (str.++ b x) is turned into x != (str.substr a (str.len b) ...)
+        // where the latter implies the former, but they are not equivalent
+        Node eqlextr = extendedRewrite(eql);
+        if (!eqlextr.isConst() || !eqlextr.getConst<bool>())
+        {
+          Trace("brc-macro") << "...failed to rewrite" << std::endl;
+          return false;
+        }
         cdp->addTrustedStep(
             eql, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
       }

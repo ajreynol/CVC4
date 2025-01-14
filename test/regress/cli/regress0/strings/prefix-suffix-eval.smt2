@@ -1,3 +1,4 @@
+; EXPECT: unsat
 (set-logic ALL)
 
 (assert (or
