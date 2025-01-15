@@ -861,7 +861,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
 {
   NodeManager* nm = nodeManager();
   Trace("brc-macro") << "Expand macro str eq len unify for " << eq << std::endl;
-  Assert(eq[1].getKind() == Kind::AND && eq[1].getNumChildren() == 1);
+  Assert(eq[1].getKind() == Kind::AND && eq[1].getNumChildren() == 2);
   // This proves e.g. (= (= (str.++ x y) (str.++ z w)) (and (= x z) (= y w))).
   // We prove this in two phases
   Node falsen = nodeManager()->mkConst(false);
