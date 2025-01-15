@@ -26,6 +26,8 @@
 #include "smt/env.h"
 #include "theory/trust_substitutions.h"
 #include "util/result.h"
+#include "proof/lazy_proof.h"
+#include "proof/proof_node_algorithm.h"
 
 using namespace cvc5::internal::theory;
 using namespace cvc5::internal::kind;
@@ -120,12 +122,37 @@ void Assertions::addFormula(TNode n,
   if (isFunDef)
   {
     // if a non-recursive define-fun, just add as a top-level substitution
-    if (n.getKind() == Kind::EQUAL && n[0].isVar())
+    if (n.getKind() == Kind::EQUAL && n[0].isVar() && n[1].getKind()==Kind::LAMBDA)
     {
-      // A define-fun is an assumption in the overall proof, thus
-      // we justify the substitution with ASSUME here.
+      Trace("smt-define-fun") << "Define fun: " << n[0] << " = " << n[1] << std::endl;
+      NodeManager * nm = nodeManager();
+      TrustSubstitutionMap& tsm = d_env.getTopLevelSubstitutions();
+      TrustNode defRewBody = tsm.applyTrusted(n[1][1], d_env.getRewriter());
+      Node defRew = defRewBody.isNull() ? Node(n[1]) : nm->mkNode(Kind::LAMBDA, n[1][0], defRewBody.getNode());
+      if (d_env.isProofProducing())
+      {
+        if (d_defFunRewPf==nullptr)
+        {
+          d_defFunRewPf = std::make_shared<LazyCDProof>(d_env);
+        }
+        if (defRew!=n[1])
+        {
+          // A define-fun is an assumption in the overall proof, thus
+          // we justify the substitution with ASSUME here.
+          d_defFunRewPf->addStep(n, ProofRule::ASSUME, {}, {n});
+          Node eqBody = defRewBody.getProven();
+          d_defFunRewPf->addLazyStep(eqBody, defRewBody.getGenerator());
+          Node eqRew = n[1].eqNode(defRew);
+          std::vector<Node> cargs;
+          ProofRule cr = expr::getCongRule(n[1], cargs);
+          d_defFunRewPf->addStep(eqRew, cr, {eqBody}, cargs);
+          Node eqFinal = n[0].eqNode(defRew);
+          d_defFunRewPf->addStep(eqFinal, ProofRule::TRANS, {n, eqRew}, {});
+        }
+      }
+      Trace("smt-define-fun") << "...rewritten to " << defRew << std::endl;
       d_env.getTopLevelSubstitutions().addSubstitution(
-          n[0], n[1], ProofRule::ASSUME, {}, {n});
+          n[0], defRew, d_defFunRewPf.get());
       return;
     }
   }
