@@ -23,11 +23,11 @@
 #include "options/expr_options.h"
 #include "options/language.h"
 #include "options/smt_options.h"
+#include "proof/lazy_proof.h"
+#include "proof/proof_node_algorithm.h"
 #include "smt/env.h"
 #include "theory/trust_substitutions.h"
 #include "util/result.h"
-#include "proof/lazy_proof.h"
-#include "proof/proof_node_algorithm.h"
 
 using namespace cvc5::internal::theory;
 using namespace cvc5::internal::kind;
@@ -122,20 +122,25 @@ void Assertions::addFormula(TNode n,
   if (isFunDef)
   {
     // if a non-recursive define-fun, just add as a top-level substitution
-    if (n.getKind() == Kind::EQUAL && n[0].isVar() && n[1].getKind()==Kind::LAMBDA)
+    if (n.getKind() == Kind::EQUAL && n[0].isVar()
+        && n[1].getKind() == Kind::LAMBDA)
     {
-      Trace("smt-define-fun") << "Define fun: " << n[0] << " = " << n[1] << std::endl;
-      NodeManager * nm = nodeManager();
+      Trace("smt-define-fun")
+          << "Define fun: " << n[0] << " = " << n[1] << std::endl;
+      NodeManager* nm = nodeManager();
       TrustSubstitutionMap& tsm = d_env.getTopLevelSubstitutions();
       TrustNode defRewBody = tsm.applyTrusted(n[1][1], d_env.getRewriter());
-      Node defRew = defRewBody.isNull() ? Node(n[1]) : nm->mkNode(Kind::LAMBDA, n[1][0], defRewBody.getNode());
+      Node defRew =
+          defRewBody.isNull()
+              ? Node(n[1])
+              : nm->mkNode(Kind::LAMBDA, n[1][0], defRewBody.getNode());
       if (d_env.isProofProducing())
       {
-        if (d_defFunRewPf==nullptr)
+        if (d_defFunRewPf == nullptr)
         {
           d_defFunRewPf = std::make_shared<LazyCDProof>(d_env);
         }
-        if (defRew!=n[1])
+        if (defRew != n[1])
         {
           // A define-fun is an assumption in the overall proof, thus
           // we justify the substitution with ASSUME here.
