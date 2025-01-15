@@ -122,21 +122,28 @@ void Assertions::addFormula(TNode n,
   if (isFunDef)
   {
     // if a non-recursive define-fun, just add as a top-level substitution
-    if (n.getKind() == Kind::EQUAL && n[0].isVar()
-        && n[1].getKind() == Kind::LAMBDA)
+    if (n.getKind() == Kind::EQUAL && n[0].isVar())
     {
       Trace("smt-define-fun")
           << "Define fun: " << n[0] << " = " << n[1] << std::endl;
+      bool isLambda = n[1].getKind()==Kind::LAMBDA;
       NodeManager* nm = nodeManager();
       TrustSubstitutionMap& tsm = d_env.getTopLevelSubstitutions();
-      TrustNode defRewBody = tsm.applyTrusted(n[1][1], d_env.getRewriter());
-      Node defRew =
-          defRewBody.isNull()
-              ? Node(n[1])
-              : nm->mkNode(Kind::LAMBDA, n[1][0], defRewBody.getNode());
+      // If it is a lambda, we rewrite the body, otherwise we rewrite itself.
+      // For lambdas, we prefer rewriting only the body since we don't want
+      // higher-order rewrites (e.g. value normalization) to apply by default.
+      TrustNode defRewBody = tsm.applyTrusted(isLambda ? n[1][1] : n[1], d_env.getRewriter());
+      Node defRew = n[1];
+      if (!defRewBody.isNull())
+      {
+        defRew = defRewBody.getNode();
+        defRew = isLambda ? nm->mkNode(Kind::LAMBDA, n[1][0], defRew) : defRew;
+      }
+      // if we need to track proofs
       if (d_env.isProofProducing())
       {
-        if (d_defFunRewPf == nullptr)
+        // initialize the proof generator if not already done so
+        if (d_defFunRewPf==nullptr)
         {
           d_defFunRewPf = std::make_shared<LazyCDProof>(d_env);
         }
@@ -148,9 +155,25 @@ void Assertions::addFormula(TNode n,
           Node eqBody = defRewBody.getProven();
           d_defFunRewPf->addLazyStep(eqBody, defRewBody.getGenerator());
           Node eqRew = n[1].eqNode(defRew);
-          std::vector<Node> cargs;
-          ProofRule cr = expr::getCongRule(n[1], cargs);
-          d_defFunRewPf->addStep(eqRew, cr, {eqBody}, cargs);
+          if (isLambda)
+          {
+            // congruence over the binder
+            std::vector<Node> cargs;
+            ProofRule cr = expr::getCongRule(n[1], cargs);
+            d_defFunRewPf->addStep(eqRew, cr, {eqBody}, cargs);
+          }
+          else
+          {
+            Assert (eqRew==eqBody);
+          }
+          // Proof is:
+          //                            ------ from tsm
+          //                            t = t'
+          // ------------------ ASSUME  -------------------------- CONG
+          // n = lambda x. t            lambda x. t = lambda x. t'
+          // ------------------------------------------------------ TRANS
+          // n = lambda x. t'
+          // where the CONG step is unecessary if not a lambda (i.e. a defined constant).
           Node eqFinal = n[0].eqNode(defRew);
           d_defFunRewPf->addStep(eqFinal, ProofRule::TRANS, {n, eqRew}, {});
         }

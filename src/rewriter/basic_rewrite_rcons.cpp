@@ -935,6 +935,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   cdp->addStep(eqfinal, ProofRule::EQ_RESOLVE, {dualImpl, dualImplEq}, {});
 
   // prove eq[0] is equal to the grouped concatenation terms
+  // FIXME: doesn't hold always
   Assert(eq[0] != ceq);
   Node eqs1 = eq[0][0].eqNode(clhs);
   Trace("brc-macro") << "- subgoal " << eqs1 << std::endl;
