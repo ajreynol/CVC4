@@ -870,7 +870,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   std::vector<Node> cpremises(eq[1].begin(), eq[1].end());
   for (const Node& eq1e : cpremises)
   {
-    Assert(eq1e.getKind() == Kind::EQUAL && eq1e[0].getType().isString());
+    Assert(eq1e.getKind() == Kind::EQUAL && eq1e[0].getType().isStringLike());
     elhs.push_back(eq1e[0]);
     erhs.push_back(eq1e[1]);
   }
