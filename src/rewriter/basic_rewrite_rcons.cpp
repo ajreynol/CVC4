@@ -1552,7 +1552,10 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
     cpremises.push_back(mq[1].eqNode(mq[1]));
     // immediately call this method again, which should not make any further
     // recursive call.
-    ensureProofMacroQuantVarElimIneq(cdp, cpremises[0]);
+    if (!ensureProofMacroQuantVarElimIneq(cdp, cpremises[0]))
+    {
+      return false;
+    }
     cdp->addStep(cpremises[1], ProofRule::REFL, {}, {mq[1]});
     Node mqf = nm->mkNode(Kind::OR, qvi, mq[1]);
     std::vector<Node> cargs;
