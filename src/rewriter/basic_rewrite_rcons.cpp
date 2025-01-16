@@ -17,6 +17,7 @@
 #include "rewriter/basic_rewrite_rcons.h"
 
 #include "expr/aci_norm.h"
+#include "theory/arith/arith_msum.h"
 #include "expr/nary_term_util.h"
 #include "expr/node_algorithm.h"
 #include "expr/term_context.h"
@@ -1609,8 +1610,43 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
     return true;
   }
 
+  // find the instantiation term
+  Node iterm;
+  for(const Node& lit : elimLits)
+  {
+    Trace("brc-macro") << "process elim lit: " << lit << std::endl;
+    bool pol = lit.getKind()!=Kind::NOT;
+    Node atom = pol ? lit : lit[0];
+    // isolate
+    std::map<Node, Node> msum;
+    if (!theory::ArithMSum::getMonomialSumLit(atom, msum))
+    {
+      return false;
+    }
+    // store that this literal is upper/lower bound for itm->first
+    Kind k = atom.getKind();
+    Node veq_c;
+    Node val;
+    int ires =
+        theory::ArithMSum::isolate(elimVar, msum, veq_c, val, k);
+    if (ires == 0 || !veq_c.isNull())
+    {
+      Trace("brc-macro")  << "...failed isolate" << std::endl;
+      return false;
+    }
+    Trace("brc-macro") << "... processes to " << elimVar << " <> " << val << std::endl;
+    Node nlit;
+    if (k==Kind::GEQ)
+    {
+      bool is_upper = pol != (ires == 1);
+      Trace("brc-macro") << "...is_upper = " << is_upper << std::endl;
+    }
+    else
+    {
+      Assert (k==Kind::EQUAL);
+    }
+  }
   // TODO
-
   return false;
 }
 
