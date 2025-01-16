@@ -404,7 +404,7 @@ Node QuantifiersRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
       else
       {
-        Assert (id==ProofRewriteRule::MACRO_QUANT_VAR_ELIM_INEQ);
+        Assert(id == ProofRewriteRule::MACRO_QUANT_VAR_ELIM_INEQ);
         // assume empty attribute
         QAttributes qa;
         Node ret = getVarElimIneq(n[1], args, qa);
@@ -1472,7 +1472,7 @@ Node QuantifiersRewriter::getVarElimIneq(Node body,
   std::unordered_set<Node> ineligVars;
   // compute the entailed literals
   std::vector<Node> lits;
-  if (body.getKind()==Kind::OR)
+  if (body.getKind() == Kind::OR)
   {
     lits.insert(lits.begin(), body.begin(), body.end());
   }
@@ -1483,7 +1483,7 @@ Node QuantifiersRewriter::getVarElimIneq(Node body,
   for (const Node& l : lits)
   {
     // an inequality that is entailed with a given polarity
-    bool pol = l.getKind()==Kind::NOT;
+    bool pol = l.getKind() == Kind::NOT;
     Node lit = pol ? l[0] : l;
     Trace("var-elim-quant-debug") << "Process inequality bounds : " << lit
                                   << ", pol = " << pol << "..." << std::endl;
@@ -1562,7 +1562,7 @@ Node QuantifiersRewriter::getVarElimIneq(Node body,
   for (const std::pair<const Node, std::map<int, std::map<Node, bool>>>& nb :
        num_bounds)
   {
-    if (ineligVars.find(nb.first)!=ineligVars.end())
+    if (ineligVars.find(nb.first) != ineligVars.end())
     {
       continue;
     }
@@ -1615,8 +1615,8 @@ Node QuantifiersRewriter::getVarElimIneq(Node body,
   std::vector<Node> remLits;
   for (const Node& l : lits)
   {
-    Node atom = l.getKind()==Kind::NOT ? l[0] : l;
-    if (boundLits.find(atom)==boundLits.end())
+    Node atom = l.getKind() == Kind::NOT ? l[0] : l;
+    if (boundLits.find(atom) == boundLits.end())
     {
       remLits.push_back(l);
     }
