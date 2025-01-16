@@ -1436,22 +1436,175 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
 }
 
 bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
-                                                       const Node& eq)
+                                                         const Node& eq)
 {
   Trace("brc-macro") << "Expand macro quant var elim ineq " << eq << std::endl;
+  // get info on the right hand side
+  std::unordered_set<Node> varsRhs;
+  std::vector<Node> litsRhs;
+  Node body;
+  if (eq[1].getKind()==Kind::FORALL)
+  {
+    varsRhs.insert(eq[1][0].begin(), eq[1][0].end());
+    body = eq[1][1];
+  }
+  if (body.getKind()==Kind::OR)
+  {
+    litsRhs.insert(litsRhs.end(), body.begin(), body.end());
+  }
+  else if (!body.isConst())
+  {
+    litsRhs.push_back(body);
+  }
+  // determine the variable that was eliminated
   Assert (eq[0].getKind()==Kind::FORALL);
-  std::vector<Node> lits;
+  Node elimVar;
+  for (const Node& v : eq[0][0])
+  {
+    if (varsRhs.find(v)==varsRhs.end())
+    {
+      elimVar = v;
+      break;
+    }
+  }
+  if (elimVar.isNull())
+  {
+    return false;
+  }
+  std::vector<Node> elimLits;
+  std::vector<Node> keepLits;
   if (eq[0][1].getKind()==Kind::OR)
   {
-    lits.insert(lits.end(), eq[0][1].begin(), eq[0][1].end());
+    for (const Node& lit : eq[0][1])
+    {
+      if (std::find(litsRhs.begin(), litsRhs.end(), lit)==litsRhs.end())
+      {
+        elimLits.push_back(lit);
+      }
+      else
+      {
+        keepLits.push_back(lit);
+      }
+    }
   }
   else
   {
-    lits.push_back(eq[0][1]);
+    Assert (litsRhs.empty());
+    elimLits.push_back(eq[0][1]);
   }
-  // determine the variable that was eliminated
+  Assert (!elimLits.empty());
+  Trace("brc-macro") << "Eliminated variable: " << elimVar << std::endl;
+  Trace("brc-macro") << "Eliminated lits: " << elimLits << std::endl;
+  Trace("brc-macro") << "Keep lits: " << keepLits << std::endl;
+  NodeManager * nm = nodeManager();
+  if (!keepLits.empty())
+  {
+    Node kdisj = nm->mkOr(keepLits);
+    Node edisj = nm->mkOr(elimLits);
+    Node bvle = nm->mkNode(Kind::BOUND_VAR_LIST, elimVar);
+    Node lhsq = nm->mkNode(Kind::FORALL, bvle, eq[0][1]);
+    Trace("brc-macro") << "...Start with " << lhsq << std::endl;
+    Node por = nm->mkNode(Kind::OR, edisj, kdisj);
+    std::vector<Node> transEq;
+    Node lhsqg = lhsq;
+    if (eq[0][1]!=por)
+    {
+      Node equiv = eq[0][1].eqNode(por);
+      if (!expr::isACINorm(eq[0][1], por))
+      {
+        return false;
+      }
+      cdp->addStep(equiv, ProofRule::ACI_NORM, {}, {equiv});
+      Node rhsq = nm->mkNode(Kind::FORALL, bvle, por);
+      Node equivc = lhsq.eqNode(rhsq);
+      std::vector<Node> cargs;
+      ProofRule cr = expr::getCongRule(lhsq, cargs);
+      cdp->addStep(equivc, cr, {equiv}, cargs);
+      transEq.push_back(equivc);
+      lhsqg = rhsq;
+      Trace("brc-macro") << "...ACI_NORM to " << lhsq << std::endl;
+    }
+    theory::Rewriter* rr = d_env.getRewriter();
+    Node mq = rr->rewriteViaRule(ProofRewriteRule::QUANT_MINISCOPE_OR, lhsqg);
+    if (mq.isNull())
+    {
+      return false;
+    }
+    Assert (mq!=lhsqg);
+    Node equiv = lhsqg.eqNode(mq);
+    cdp->addTheoryRewriteStep(equiv, ProofRewriteRule::QUANT_MINISCOPE_OR);
+    transEq.push_back(equiv);
+    Trace("brc-macro") << "...miniscope to " << mq << std::endl;
+    if (mq.getKind()!=Kind::OR || mq.getNumChildren()!=2)
+    {
+      return false;
+    }
+    std::vector<Node> corPremises;
+    Node qvi = rr->rewriteViaRule(ProofRewriteRule::MACRO_QUANT_VAR_ELIM_INEQ, mq[0]);
+    if (qvi.isNull() || !qvi.isConst())
+    {
+      return false;
+    }
+    Assert (!qvi.getConst<bool>());
+    std::vector<Node> cpremises;
+    cpremises.push_back(mq[0].eqNode(qvi));
+    cpremises.push_back(mq[1].eqNode(mq[1]));
+    // immediately call this method again, which should not make any further
+    // recursive call.
+    ensureProofMacroQuantVarElimIneq(cdp, cpremises[0]);
+    cdp->addStep(cpremises[1], ProofRule::REFL, {}, {mq[1]});
+    Node mqf = nm->mkNode(Kind::OR, qvi, mq[1]);
+    std::vector<Node> cargs;
+    ProofRule cr = expr::getCongRule(mq, cargs);
+    equiv = mq.eqNode(mqf);
+    cdp->addStep(equiv, cr, cpremises, cargs);
+    transEq.push_back(equiv);
+    Trace("brc-macro") << "...rewrite ineq (again) to " << mqf << std::endl;
+    equiv = mqf.eqNode(mq[1]);
+    cdp->addTrustedStep(
+        equiv, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    transEq.push_back(equiv);
+    Trace("brc-macro") << "...rewrite (simple) to " << mq[1] << std::endl;
+    Node eqBody = lhsq.eqNode(mq[1]);
+    cdp->addStep(eqBody, ProofRule::TRANS, transEq, {});
+    transEq.clear();
+    Assert (eq[1].getKind()==Kind::FORALL);
+    
+    // now add back outermost variables
+    Node bcLhs = nm->mkNode(Kind::FORALL, eq[1][0], eqBody[0]);
+    Node bcLhsm = rr->rewriteViaRule(ProofRewriteRule::QUANT_MERGE_PRENEX, bcLhs);
+    if (bcLhsm!=eq[0])
+    {
+      // likely reorder?
+      equiv = eq[0].eqNode(bcLhsm);
+      if (!cdp->addStep(equiv, ProofRule::QUANT_VAR_REORDERING, {}, {equiv}))
+      {
+        Trace("brc-macro") << "...failed eq lhs" << std::endl;
+        return false;
+      }
+      transEq.push_back(equiv);
+    }
+    equiv = bcLhs.eqNode(bcLhsm);
+    cdp->addTheoryRewriteStep(equiv, ProofRewriteRule::QUANT_MERGE_PRENEX);
+    equiv = bcLhsm.eqNode(bcLhs);
+    cdp->addStep(equiv, ProofRule::SYMM, {equiv}, {});
+    transEq.push_back(equiv);
+    Node bcRhs = nm->mkNode(Kind::FORALL, eq[1][0], eqBody[1]);
+    if (bcRhs!=eq[1])
+    {
+      Trace("brc-macro") << "...failed eq rhs" << std::endl;
+      return false;
+    }
+    cargs.clear();
+    cr = expr::getCongRule(bcLhs, cargs);
+    equiv = bcLhs.eqNode(bcRhs);
+    cdp->addStep(equiv, cr, {eqBody}, cargs);
+    transEq.push_back(equiv);
+    cdp->addStep(eq, ProofRule::TRANS, transEq, {});
+    return true;
+  }
   
-  
+  // TODO
   
   
   return false;
