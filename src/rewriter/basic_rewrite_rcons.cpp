@@ -1438,6 +1438,22 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
                                                        const Node& eq)
 {
+  Trace("brc-macro") << "Expand macro quant var elim ineq " << eq << std::endl;
+  Assert (eq[0].getKind()==Kind::FORALL);
+  std::vector<Node> lits;
+  if (eq[0][1].getKind()==Kind::OR)
+  {
+    lits.insert(lits.end(), eq[0][1].begin(), eq[0][1].end());
+  }
+  else
+  {
+    lits.push_back(eq[0][1]);
+  }
+  // determine the variable that was eliminated
+  
+  
+  
+  
   return false;
 }
 

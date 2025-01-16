@@ -1854,6 +1854,7 @@ set(regress_0_tests
   regress0/strings/ctn-decompose-3-sym-nf.smt2
   regress0/strings/ctn-repl-to-ctn.smt2 
   regress0/strings/ctn-split-no-overlap.smt2
+  regress0/strings/dd_1302_str_rewrite.smt2
   regress0/strings/dd_67_str_at_eval.smt2
   regress0/strings/dd_a1d_static_rewrite.smt2
   regress0/strings/dd_a68_pp_static.smt2
