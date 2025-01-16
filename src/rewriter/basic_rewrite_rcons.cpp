@@ -1440,6 +1440,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
                                                          const Node& eq)
 {
+  return false;
   Trace("brc-macro") << "Expand macro quant var elim ineq " << eq << std::endl;
   // get info on the right hand side
   std::unordered_set<Node> varsRhs;
@@ -1660,7 +1661,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
       {
         k = Kind::LEQ;
       }
-      k = pol ? k : theory::arith::negateKind(k);
+      k = pol ? theory::arith::negateKind(k) : k;
       nlit = nm->mkNode(k, elimVar, val);
     }
     else
@@ -1683,16 +1684,20 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
                           TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
     }
   }
-  Node negBody = eq[0][1].notNode();
+  // TODO: not necessary if single literal
+  Node negBody = eq[0][1].negate();
   Node negPremise = nm->mkAnd(negLits);
-  Trace("brc-macro") << "- rewrite " << negBody << " -> " << negPremise
-                     << std::endl;
-  // by de-morgan
-  tcpg.addRewriteStep(negBody,
-                      negPremise,
-                      nullptr,
-                      true,
-                      TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+  if (negBody!=negPremise)
+  {
+    Trace("brc-macro") << "- rewrite " << negBody << " -> " << negPremise
+                      << std::endl;
+    // by de-morgan
+    tcpg.addRewriteStep(negBody,
+                        negPremise,
+                        nullptr,
+                        true,
+                        TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+  }
   Node negRew = nm->mkNode(Kind::IMPLIES, negBody, nm->mkConst(false));
   // F = (=> (not F) false)
   Trace("brc-macro") << "- rewrite " << eq[0][1] << " -> " << negRew
@@ -1708,8 +1713,69 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
   Trace("brc-macro") << "...normalized to " << qnorm << std::endl;
   // Now have upper set. note if all disequalities we don't care about the
   // value of isUpper
+  std::reverse(normLits.begin(), normLits.end());
+  // make the max or min of all terms based on isUpper
+  Node iterm;
+  for (const Node& nl : normLits)
+  {
+    Node atom = nl.getKind()==Kind::NOT ? nl[0] : nl;
+    Trace("brc-macro") << "...process normalized atom " << atom << std::endl;
+    Kind k = atom.getKind();
+    Node itc = atom[1];
+    if (k!=Kind::GEQ && k!=Kind::LEQ) 
+    {
+      itc = nm->mkNode(Kind::ADD, itc, nm->mkConstRealOrInt(itc.getType(), Rational(isUpper ? 1 : -1)));
+    }
+    if (iterm.isNull())
+    {
+      iterm = itc;
+    }
+    else
+    {
+      iterm = nm->mkNode(Kind::ITE, nm->mkNode(isUpper ? Kind::GEQ : Kind::LT, itc, iterm), itc, iterm);
+    }
+  }
+  // TODO: ensure type correct??
+  Trace("brc-macro") << "Instantiation term is: " << iterm << std::endl;
+  // instantiate
+  ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
+  Node iarg = nm->mkNode(Kind::SEXPR, iterm);
+  Node inst = pc->checkDebug(ProofRule::INSTANTIATE, {qnorm}, {iarg});
+  cdp->addStep(inst, ProofRule::INSTANTIATE, {qnorm}, {iarg});
+  Trace("brc-macro") << "Have instantiation: " << inst << std::endl;
+  Node falsen = nm->mkConst(false);
+  Assert (inst.getKind()==Kind::IMPLIES && inst[1]==falsen);
+  Node ipremise = inst[0];
+  Node currTerm = iterm;
+  size_t index=0;
+  do
+  {
+    Trace("brc-macro") << "Must prove " << 
+    if (currTerm.getKind()==Kind::ITE)
+    {
+      Node p1 = nm->mkNode(isUpper ? Kind::GEQ : Kind::LEQ, currTerm, currTerm[1]);
+      Trace("brc-macro") << "...have " << p1 << std::endl;
+      Node p2 = nm->mkNode(isUpper ? Kind::GEQ : Kind::LEQ, currTerm, currTerm[2]);
+      Trace("brc-macro") << "...have " << p2 << std::endl;
+      currTerm = currTerm[2];
+      if (currTerm!=iterm)
+      {
+        // must prove iterm <= currTerm[2]
+      }
+    }
+    else
+    {
+      Trace("brc-macro") << "...base term " << currTerm << std::endl;
+      currTerm = Node::null();
+    }
+  }
+  while (!currTerm.isNull());
+  cdp->addStep(falsen, ProofRule::MODUS_PONENS, {ipremise, inst}, {});
+  cdp->addStep(qnorm.notNode(), ProofRule::SCOPE, {falsen}, {qnorm});
+  Node qneqf = qnorm.eqNode(falsen);
+  cdp->addStep(eq, ProofRule::FALSE_INTRO, {qnorm.notNode()}, {});
 
-  // TODO
+
   return false;
 }
 
