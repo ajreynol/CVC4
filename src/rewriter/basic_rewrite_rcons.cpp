@@ -253,6 +253,12 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
+    case ProofRewriteRule::MACRO_QUANT_VAR_ELIM_INEQ:
+      if (ensureProofMacroQuantVarElimIneq(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
     case ProofRewriteRule::MACRO_QUANT_DT_VAR_EXPAND:
       if (ensureProofMacroDtVarExpand(cdp, eq))
       {
@@ -1286,13 +1292,14 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
       nodeManager(), d_env.getRewriter(), options());
   if (!qrew.getVarElim(q[1], args, vars, subs, lits))
   {
+    // should be able to replay the variable elimination
+    Assert(false);
     return false;
   }
   if (args.size() != q[0].getNumChildren() - 1)
   {
-    // a rare case of MACRO_QUANT_VAR_ELIM_EQ does "datatype tester expansion"
-    // e.g. forall x. is-cons(x) => P(x) ----> forall yz. P(cons(y,z))
-    // This is not handled currently.
+    // should have eliminated exactly one variable
+    Assert(false);
     return false;
   }
   Assert(vars.size() == 1);
@@ -1426,6 +1433,12 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
   Node beq = body1.eqNode(body2);
   cdp->addStep(beq, ProofRule::TRANS, finalTransEq, {});
   return true;
+}
+
+bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
+                                                       const Node& eq)
+{
+  return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroDtVarExpand(CDProof* cdp,
