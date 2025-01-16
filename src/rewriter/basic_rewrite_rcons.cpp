@@ -17,7 +17,6 @@
 #include "rewriter/basic_rewrite_rcons.h"
 
 #include "expr/aci_norm.h"
-#include "theory/arith/arith_msum.h"
 #include "expr/nary_term_util.h"
 #include "expr/node_algorithm.h"
 #include "expr/term_context.h"
@@ -27,9 +26,10 @@
 #include "rewriter/rewrite_db_term_process.h"
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
+#include "theory/arith/arith_msum.h"
 #include "theory/arith/arith_poly_norm.h"
-#include "theory/arith/arith_utilities.h"
 #include "theory/arith/arith_proof_utilities.h"
+#include "theory/arith/arith_utilities.h"
 #include "theory/arith/rewriter/rewrite_atom.h"
 #include "theory/arrays/theory_arrays_rewriter.h"
 #include "theory/booleans/theory_bool_rewriter.h"
@@ -1617,12 +1617,12 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
   bool isUpperSet = false;
   TConvProofGenerator tcpg(d_env);
   std::vector<Node> negLits;
-  for(const Node& lit : elimLits)
+  for (const Node& lit : elimLits)
   {
     Trace("brc-macro") << "process elim lit: " << lit << std::endl;
     Node negLit = lit.negate();
     negLits.push_back(negLit);
-    bool pol = lit.getKind()!=Kind::NOT;
+    bool pol = lit.getKind() != Kind::NOT;
     Node atom = pol ? lit : lit[0];
     // isolate
     std::map<Node, Node> msum;
@@ -1634,29 +1634,29 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
     Kind k = atom.getKind();
     Node veq_c;
     Node val;
-    int ires =
-        theory::ArithMSum::isolate(elimVar, msum, veq_c, val, k);
+    int ires = theory::ArithMSum::isolate(elimVar, msum, veq_c, val, k);
     if (ires == 0 || !veq_c.isNull())
     {
-      Trace("brc-macro")  << "...failed isolate" << std::endl;
+      Trace("brc-macro") << "...failed isolate" << std::endl;
       return false;
     }
-    Trace("brc-macro") << "... processes to " << elimVar << " <> " << val << std::endl;
+    Trace("brc-macro") << "... processes to " << elimVar << " <> " << val
+                       << std::endl;
     // rewrite it, should be provable with ARITH_POLY_NORM since monomials
     // should be already rewritten.
     val = rewrite(val);
     Node nlit;
-    if (k==Kind::GEQ)
+    if (k == Kind::GEQ)
     {
       bool isUpperCurr = pol == (ires == 1);
-      if (isUpperSet && isUpper!=isUpperCurr)
+      if (isUpperSet && isUpper != isUpperCurr)
       {
         return false;
       }
       isUpper = isUpperCurr;
       isUpperSet = true;
       Trace("brc-macro") << "...is_upper = " << isUpperCurr << std::endl;
-      if (ires<0)
+      if (ires < 0)
       {
         k = Kind::LEQ;
       }
@@ -1665,15 +1665,16 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
     }
     else
     {
-      Assert (k==Kind::EQUAL && pol);
+      Assert(k == Kind::EQUAL && pol);
       nlit = nm->mkNode(Kind::EQUAL, elimVar, val).notNode();
     }
     Trace("brc-macro") << "...nlit is " << nlit << std::endl;
     Trace("brc-macro") << "......from " << negLit << std::endl;
     normLits.push_back(nlit);
-    if (negLit!=nlit)
+    if (negLit != nlit)
     {
-      Trace("brc-macro") << "- rewrite " << negLit << " -> " << nlit << std::endl;
+      Trace("brc-macro") << "- rewrite " << negLit << " -> " << nlit
+                         << std::endl;
       // should be provable by REFL or ARITH_POLY_NORM_REL
       tcpg.addRewriteStep(negLit,
                           nlit,
@@ -1684,7 +1685,8 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
   }
   Node negBody = eq[0][1].notNode();
   Node negPremise = nm->mkAnd(negLits);
-  Trace("brc-macro") << "- rewrite " << negBody << " -> " << negPremise << std::endl;
+  Trace("brc-macro") << "- rewrite " << negBody << " -> " << negPremise
+                     << std::endl;
   // by de-morgan
   tcpg.addRewriteStep(negBody,
                       negPremise,
@@ -1693,7 +1695,8 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
                       TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
   Node negRew = nm->mkNode(Kind::IMPLIES, negBody, nm->mkConst(false));
   // F = (=> (not F) false)
-  Trace("brc-macro") << "- rewrite " << eq[0][1] << " -> " << negRew << std::endl;
+  Trace("brc-macro") << "- rewrite " << eq[0][1] << " -> " << negRew
+                     << std::endl;
   tcpg.addRewriteStep(eq[0][1],
                       negRew,
                       nullptr,

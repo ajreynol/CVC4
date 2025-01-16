@@ -1621,7 +1621,10 @@ TEST_F(TestTheoryWhiteSequencesRewriter, rewrite_equality_ext)
   // (and (= y "") (= x "A"))
   //
   // (= "A" (str.replace "" y x))
-  Node empty_repl_axy = d_nodeManager->mkNode(Kind::AND, d_nodeManager->mkNode(Kind::EQUAL, y, empty), d_nodeManager->mkNode(Kind::EQUAL, x, a));
+  Node empty_repl_axy =
+      d_nodeManager->mkNode(Kind::AND,
+                            d_nodeManager->mkNode(Kind::EQUAL, y, empty),
+                            d_nodeManager->mkNode(Kind::EQUAL, x, a));
   Node eq_a_repl = d_nodeManager->mkNode(
       Kind::EQUAL, a, d_nodeManager->mkNode(Kind::STRING_REPLACE, empty, y, x));
   sameNormalForm(empty_repl_axy, eq_a_repl);
