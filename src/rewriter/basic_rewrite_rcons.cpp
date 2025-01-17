@@ -1443,9 +1443,39 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
 
 Node BasicRewriteRCons::proveTransIneq(CDProof* cdp, const Node& leq1, const Node& leq2)
 {
+  Assert (leq1.getKind()==Kind::LEQ || leq1.getKind()==Kind::GEQ);
+  Assert (leq1.getKind()==leq2.getKind());
+  Assert (leq1[1]==leq2[0]);
+  bool isLeq = leq1.getKind()==Kind::LEQ;
   NodeManager * nm = nodeManager();
+  // always want this conclusion
   Node conc = nm->mkNode(leq1.getKind(), leq1[0], leq2[1]);
-  cdp->addTrustedStep(conc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {leq1, leq2}, {});
+  // must flip
+  Node leq1n = leq1;
+  if (!isLeq)
+  {
+    leq1n = nm->mkNode(Kind::LEQ, leq1[1], leq1[0]);
+    Node eq1 = leq1.eqNode(leq1n);
+    cdp->addTrustedStep(eq1, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    cdp->addStep(leq1n, ProofRule::EQ_RESOLVE, {leq1, eq1}, {});
+  }
+  Node negone = nm->mkConstRealOrInt(leq2[1].getType(), Rational(-1));
+  Node leq2n = nm->mkNode(Kind::LEQ, nm->mkNode(Kind::MULT, negone, leq2[isLeq ? 1 : 0]), nm->mkNode(Kind::MULT, negone, leq2[isLeq ? 0 : 1]));
+  Node eq2 = leq2.eqNode(leq2n);
+  cdp->addTrustedStep(eq2, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+  cdp->addStep(leq2n, ProofRule::EQ_RESOLVE, {leq2, eq2}, {});
+
+  // sum the inequalities
+  ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
+  Node sumLeq = pc->checkDebug(ProofRule::ARITH_SUM_UB, {leq1n, leq2n}, {});
+  Assert (!sumLeq.isNull());
+  Assert (sumLeq!=conc);
+  cdp->addStep(sumLeq, ProofRule::ARITH_SUM_UB, {leq1n, leq2n}, {});
+
+  Node eqc = sumLeq.eqNode(conc);
+  cdp->addTrustedStep(eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+  cdp->addStep(conc, ProofRule::EQ_RESOLVE, {sumLeq, eqc}, {});
+  //cdp->addTrustedStep(conc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {leq1, leq2}, {});
   return conc;
 }
 
