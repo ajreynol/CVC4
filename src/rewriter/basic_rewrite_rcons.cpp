@@ -959,7 +959,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   }
   else
   {
-    Assert (eqfinal==eq);
+    Assert(eqfinal == eq);
   }
   return true;
 }
@@ -1441,13 +1441,15 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
   return true;
 }
 
-Node BasicRewriteRCons::proveTransIneq(CDProof* cdp, const Node& leq1, const Node& leq2)
+Node BasicRewriteRCons::proveTransIneq(CDProof* cdp,
+                                       const Node& leq1,
+                                       const Node& leq2)
 {
-  Assert (leq1.getKind()==Kind::LEQ || leq1.getKind()==Kind::GEQ);
-  Assert (leq1.getKind()==leq2.getKind());
-  Assert (leq1[1]==leq2[0]);
-  bool isLeq = leq1.getKind()==Kind::LEQ;
-  NodeManager * nm = nodeManager();
+  Assert(leq1.getKind() == Kind::LEQ || leq1.getKind() == Kind::GEQ);
+  Assert(leq1.getKind() == leq2.getKind());
+  Assert(leq1[1] == leq2[0]);
+  bool isLeq = leq1.getKind() == Kind::LEQ;
+  NodeManager* nm = nodeManager();
   // always want this conclusion
   Node conc = nm->mkNode(leq1.getKind(), leq1[0], leq2[1]);
   // must flip
@@ -1456,11 +1458,14 @@ Node BasicRewriteRCons::proveTransIneq(CDProof* cdp, const Node& leq1, const Nod
   {
     leq1n = nm->mkNode(Kind::LEQ, leq1[1], leq1[0]);
     Node eq1 = leq1.eqNode(leq1n);
-    cdp->addTrustedStep(eq1, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    cdp->addTrustedStep(
+        eq1, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     cdp->addStep(leq1n, ProofRule::EQ_RESOLVE, {leq1, eq1}, {});
   }
   Node negone = nm->mkConstRealOrInt(leq2[1].getType(), Rational(-1));
-  Node leq2n = nm->mkNode(Kind::LEQ, nm->mkNode(Kind::MULT, negone, leq2[isLeq ? 1 : 0]), nm->mkNode(Kind::MULT, negone, leq2[isLeq ? 0 : 1]));
+  Node leq2n = nm->mkNode(Kind::LEQ,
+                          nm->mkNode(Kind::MULT, negone, leq2[isLeq ? 1 : 0]),
+                          nm->mkNode(Kind::MULT, negone, leq2[isLeq ? 0 : 1]));
   Node eq2 = leq2.eqNode(leq2n);
   cdp->addTrustedStep(eq2, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
   cdp->addStep(leq2n, ProofRule::EQ_RESOLVE, {leq2, eq2}, {});
@@ -1468,14 +1473,15 @@ Node BasicRewriteRCons::proveTransIneq(CDProof* cdp, const Node& leq1, const Nod
   // sum the inequalities
   ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
   Node sumLeq = pc->checkDebug(ProofRule::ARITH_SUM_UB, {leq1n, leq2n}, {});
-  Assert (!sumLeq.isNull());
-  Assert (sumLeq!=conc);
+  Assert(!sumLeq.isNull());
+  Assert(sumLeq != conc);
   cdp->addStep(sumLeq, ProofRule::ARITH_SUM_UB, {leq1n, leq2n}, {});
 
   Node eqc = sumLeq.eqNode(conc);
   cdp->addTrustedStep(eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
   cdp->addStep(conc, ProofRule::EQ_RESOLVE, {sumLeq, eqc}, {});
-  //cdp->addTrustedStep(conc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {leq1, leq2}, {});
+  // cdp->addTrustedStep(conc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE,
+  // {leq1, leq2}, {});
   return conc;
 }
 
@@ -1727,15 +1733,15 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
   }
   Node eqnorm;
   Node qnorm;
-  if (normLits.size()>1)
+  if (normLits.size() > 1)
   {
     // TODO: not necessary if single literal
     Node negBody = eq[0][1].negate();
     Node negPremise = nm->mkAnd(negLits);
-    if (negBody!=negPremise)
+    if (negBody != negPremise)
     {
-      Trace("brc-macro") << "- rewrite de-morgan " << negBody << " -> " << negPremise
-                        << std::endl;
+      Trace("brc-macro") << "- rewrite de-morgan " << negBody << " -> "
+                         << negPremise << std::endl;
       // by de-morgan
       tcpg.addRewriteStep(negBody,
                           negPremise,
@@ -1745,8 +1751,8 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
     }
     Node negRew = nm->mkNode(Kind::IMPLIES, negBody, nm->mkConst(false));
     // F = (=> (not F) false)
-    Trace("brc-macro") << "- rewrite impl intro " << eq[0][1] << " -> " << negRew
-                      << std::endl;
+    Trace("brc-macro") << "- rewrite impl intro " << eq[0][1] << " -> "
+                       << negRew << std::endl;
     tcpg.addRewriteStep(eq[0][1],
                         negRew,
                         nullptr,
@@ -1770,13 +1776,16 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
   Node iterm;
   for (const Node& nl : normLits)
   {
-    Node atom = nl.getKind()==Kind::NOT ? nl[0] : nl;
+    Node atom = nl.getKind() == Kind::NOT ? nl[0] : nl;
     Trace("brc-macro") << "...process normalized atom " << atom << std::endl;
     Kind k = atom.getKind();
     Node itc = atom[1];
-    if (k!=Kind::GEQ && k!=Kind::LEQ) 
+    if (k != Kind::GEQ && k != Kind::LEQ)
     {
-      itc = rewrite(nm->mkNode(Kind::ADD, itc, nm->mkConstRealOrInt(itc.getType(), Rational(isUpper ? -1 : 1))));
+      itc = rewrite(nm->mkNode(
+          Kind::ADD,
+          itc,
+          nm->mkConstRealOrInt(itc.getType(), Rational(isUpper ? -1 : 1))));
     }
     if (iterm.isNull())
     {
@@ -1784,7 +1793,10 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
     }
     else
     {
-      iterm = nm->mkNode(Kind::ITE, nm->mkNode(isUpper ? Kind::LT : Kind::GEQ, itc, iterm), itc, iterm);
+      iterm = nm->mkNode(Kind::ITE,
+                         nm->mkNode(isUpper ? Kind::LT : Kind::GEQ, itc, iterm),
+                         itc,
+                         iterm);
     }
   }
   // TODO: ensure type correct??
@@ -1796,10 +1808,10 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
   cdp->addStep(inst, ProofRule::INSTANTIATE, {qnorm}, {iarg});
   Trace("brc-macro") << "Have instantiation: " << inst << std::endl;
   Node falsen = nm->mkConst(false);
-  if (normLits.size()>1)
+  if (normLits.size() > 1)
   {
-    Assert (inst.getKind()==Kind::IMPLIES && inst[1]==falsen);
-    Assert (inst[0].getKind()==Kind::AND);
+    Assert(inst.getKind() == Kind::IMPLIES && inst[1] == falsen);
+    Assert(inst[0].getKind() == Kind::AND);
     std::vector<Node> ipremises(inst[0].begin(), inst[0].end());
     Node currTerm = iterm;
     // always have proven iterm >= currTerm
@@ -1808,20 +1820,26 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
     do
     {
       Node next;
-      if (currTerm.getKind()==Kind::ITE)
+      if (currTerm.getKind() == Kind::ITE)
       {
-        Node p1 = nm->mkNode(isUpper ? Kind::LEQ : Kind::GEQ, currTerm, currTerm[1]);
+        Node p1 =
+            nm->mkNode(isUpper ? Kind::LEQ : Kind::GEQ, currTerm, currTerm[1]);
         Trace("brc-macro") << "...have " << p1 << std::endl;
-        Node p2 = nm->mkNode(isUpper ? Kind::LEQ : Kind::GEQ, currTerm, currTerm[2]);
-        cdp->addTrustedStep(p1, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+        Node p2 =
+            nm->mkNode(isUpper ? Kind::LEQ : Kind::GEQ, currTerm, currTerm[2]);
+        cdp->addTrustedStep(
+            p1, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
         Trace("brc-macro") << "...have " << p2 << std::endl;
-        cdp->addTrustedStep(p2, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
-        if (currTerm!=iterm)
+        cdp->addTrustedStep(
+            p2, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+        if (currTerm != iterm)
         {
-          Assert (!src.isNull());
-          // must prove iterm <= currTerm[2], for proving transitivity to the next literals
+          Assert(!src.isNull());
+          // must prove iterm <= currTerm[2], for proving transitivity to the
+          // next literals
           next = proveTransIneq(cdp, src, p2);
-          // must prove iterm <= currTerm[1], for proving the current literal below
+          // must prove iterm <= currTerm[1], for proving the current literal
+          // below
           src = proveTransIneq(cdp, src, p1);
         }
         else
@@ -1839,16 +1857,16 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
       // prove
       Node tgt = ipremises[index];
       index++;
-      Assert (!src.isNull());
-      if (src!=tgt)
+      Assert(!src.isNull());
+      if (src != tgt)
       {
         Node impl = src.isNull() ? tgt : nm->mkNode(Kind::IMPLIES, src, tgt);
         Trace("brc-macro") << "Prove: " << impl << std::endl;
-        cdp->addTrustedStep(tgt, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {src}, {});
+        cdp->addTrustedStep(
+            tgt, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {src}, {});
       }
       src = next;
-    }
-    while (!src.isNull());
+    } while (!src.isNull());
     cdp->addStep(inst[0], ProofRule::AND_INTRO, ipremises, {});
     cdp->addStep(falsen, ProofRule::MODUS_PONENS, {inst[0], inst}, {});
   }
@@ -1856,20 +1874,21 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
   {
     Node ief = inst.eqNode(falsen);
     Trace("brc-macro") << "Prove (base): " << ief << std::endl;
-    cdp->addTrustedStep(ief, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    cdp->addTrustedStep(
+        ief, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     cdp->addStep(falsen, ProofRule::EQ_RESOLVE, {inst, ief}, {});
   }
   cdp->addStep(qnorm.notNode(), ProofRule::SCOPE, {falsen}, {qnorm});
   Node qneqf = qnorm.eqNode(falsen);
   cdp->addStep(qneqf, ProofRule::FALSE_INTRO, {qnorm.notNode()}, {});
-  Assert (eq[1]==falsen);
+  Assert(eq[1] == falsen);
   if (!eqnorm.isNull())
   {
     cdp->addStep(eq, ProofRule::TRANS, {eqnorm, qneqf}, {});
   }
   else
   {
-    Assert (qneqf==eq);
+    Assert(qneqf == eq);
   }
   return true;
 }
