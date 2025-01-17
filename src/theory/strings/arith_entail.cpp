@@ -274,7 +274,7 @@ Node ArithEntail::findApprox(Node ar, bool isSimple)
 Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
 {
   // FIXME
-  // isSimple = true;
+  isSimple = true;
   Assert(rewriteArith(ar) == ar)
       << "Not rewritten " << ar << ", got " << rewriteArith(ar);
   NodeManager* nm = NodeManager::currentNM();
