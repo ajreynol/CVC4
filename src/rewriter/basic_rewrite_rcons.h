@@ -388,6 +388,7 @@ class BasicRewriteRCons : protected EnvObj
    * @return true if added a closed proof of eq to cdp.
    */
   bool ensureProofArithPolyNormRel(CDProof* cdp, const Node& eq);
+  Node proveTransIneq(CDProof* cdp, const Node& leq1, const Node& leq2);
   /**
    * Try THEORY_REWRITE with theory::TheoryRewriteCtx ctx.
    */
