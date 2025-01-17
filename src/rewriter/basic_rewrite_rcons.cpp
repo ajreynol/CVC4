@@ -1526,8 +1526,8 @@ bool BasicRewriteRCons::proveIneqWeaken(CDProof* cdp,
   }
   else if (tgt.getKind()==Kind::NOT && tgt[0].getKind()==Kind::EQUAL && tgt[0][0]==src[0])
   {
-    /*
     CDProof cds(d_env);
+    cds.addProof(cdp->getProofFor(src));
     Node srcc = nm->mkNode(src.getKind(), tgt[0][1], src[1]);
     Node equiv = src.eqNode(srcc);
     std::vector<Node> cargs;
@@ -1542,15 +1542,16 @@ bool BasicRewriteRCons::proveIneqWeaken(CDProof* cdp,
     cds.addTrustedStep(eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     cds.addStep(falsen, ProofRule::EQ_RESOLVE, {srcc, eqq}, {});
     cds.addStep(tgt, ProofRule::SCOPE, {falsen}, {tgt[0]});
+    
+    Trace("brc-macro") << "Subproof " << *cds.getProofFor(tgt).get() << std::endl;
     cdp->addProof(cds.getProofFor(tgt));
-    */
-    cdp->addTrustedStep(
-        tgt, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {src}, {});
   }
   else
   {
     return false;
   }
+  //cdp->addTrustedStep(
+  //    tgt, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {src}, {});
   return true;
 }
 
