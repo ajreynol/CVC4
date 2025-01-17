@@ -60,7 +60,9 @@ std::ostream& operator<<(std::ostream& os, TheoryRewriteMode tm)
   return os;
 }
 
-BasicRewriteRCons::BasicRewriteRCons(Env& env) : EnvObj(env)
+BasicRewriteRCons::BasicRewriteRCons(Env& env) : EnvObj(env),
+      d_theoryRewriteMacroExpand(statisticsRegistry().registerHistogram<ProofRewriteRule>(
+          "BasicRewriteRCons::macroExpandCount"))
 {
 
 }
@@ -331,6 +333,7 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
   }
   if (handledMacro)
   {
+    d_theoryRewriteMacroExpand << id;
     std::shared_ptr<ProofNode> pfn = cdp->getProofFor(eq);
     Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
     expr::getSubproofRule(pfn, ProofRule::TRUST, subgoals);

@@ -397,6 +397,11 @@ class BasicRewriteRCons : protected EnvObj
                         const Node& eq,
                         theory::TheoryRewriteCtx ctx,
                         std::vector<std::shared_ptr<ProofNode>>& subgoals);
+  /**
+   * Counts number of proof nodes for each kind of THEORY_REWRITE that were
+   * expanded in macro elimination by this class.
+   */
+  HistogramStat<ProofRewriteRule> d_theoryRewriteMacroExpand;
 };
 
 }  // namespace rewriter
