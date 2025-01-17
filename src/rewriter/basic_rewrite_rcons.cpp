@@ -942,21 +942,25 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   cdp->addTrustedStep(dualImplEq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
   cdp->addStep(eqfinal, ProofRule::EQ_RESOLVE, {dualImpl, dualImplEq}, {});
 
-  // prove eq[0] is equal to the grouped concatenation terms
-  // FIXME: doesn't hold always
-  Assert(eq[0] != ceq);
-  Node eqs1 = eq[0][0].eqNode(clhs);
-  Trace("brc-macro") << "- subgoal " << eqs1 << std::endl;
-  cdp->addTrustedStep(eqs1, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
-  Node eqs2 = eq[0][1].eqNode(crhs);
-  Trace("brc-macro") << "- subgoal " << eqs2 << std::endl;
-  cdp->addTrustedStep(eqs2, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
-  Node equivSetup = eq[0].eqNode(ceq);
-  cargs.clear();
-  ccr = expr::getCongRule(eq[0], cargs);
-  cdp->addStep(equivSetup, ccr, {eqs1, eqs2}, cargs);
-
-  cdp->addStep(eq, ProofRule::TRANS, {equivSetup, eqfinal}, {});
+  // prove eq[0] is equal to the grouped concatenation terms, if necessary
+  if (eq[0] != ceq)
+  {
+    Node eqs1 = eq[0][0].eqNode(clhs);
+    Trace("brc-macro") << "- subgoal " << eqs1 << std::endl;
+    cdp->addTrustedStep(eqs1, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+    Node eqs2 = eq[0][1].eqNode(crhs);
+    Trace("brc-macro") << "- subgoal " << eqs2 << std::endl;
+    cdp->addTrustedStep(eqs2, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+    Node equivSetup = eq[0].eqNode(ceq);
+    cargs.clear();
+    ccr = expr::getCongRule(eq[0], cargs);
+    cdp->addStep(equivSetup, ccr, {eqs1, eqs2}, cargs);
+    cdp->addStep(eq, ProofRule::TRANS, {equivSetup, eqfinal}, {});
+  }
+  else
+  {
+    Assert (eqfinal==eq);
+  }
   return true;
 }
 
@@ -1785,8 +1789,9 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
         if (currTerm!=iterm)
         {
           Assert (!src.isNull());
-          // must prove iterm <= currTerm[2]
+          // must prove iterm <= currTerm[2], for proving transitivity to the next literals
           next = proveTransIneq(cdp, src, p2);
+          // must prove iterm <= currTerm[1], for proving the current literal below
           src = proveTransIneq(cdp, src, p1);
         }
         else
@@ -1799,17 +1804,13 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
       else
       {
         Trace("brc-macro") << "...base term " << currTerm << std::endl;
-        currTerm = Node::null();
+        // src should already be set and entail the target below
       }
       // prove
       Node tgt = ipremises[index];
       index++;
-      if (src.isNull())
-      {
-        Trace("brc-macro") << "Prove: " << tgt << std::endl;
-        cdp->addTrustedStep(tgt, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
-      }
-      else if (src!=tgt)
+      Assert (!src.isNull());
+      if (src!=tgt)
       {
         Node impl = src.isNull() ? tgt : nm->mkNode(Kind::IMPLIES, src, tgt);
         Trace("brc-macro") << "Prove: " << impl << std::endl;
