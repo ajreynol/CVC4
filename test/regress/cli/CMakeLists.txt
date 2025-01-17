@@ -1484,6 +1484,7 @@ set(regress_0_tests
   regress0/quantifiers/clock-3.smt2
   regress0/quantifiers/cond-var-elim-binary.smt2
   regress0/quantifiers/dd_german169_semi_eval.smt2
+  regress0/quantifiers/dd_psyco_186-ineq-elim.smt2
   regress0/quantifiers/dd_quick_sort-q-rew.smt2
   regress0/quantifiers/dd_rts-quant-elim-eq-tester.smt2
   regress0/quantifiers/dd_spark2014-pat.smt2

@@ -1900,8 +1900,9 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
     do
     {
       Node next;
-      if (currTerm.getKind() == Kind::ITE)
+      if (index+1<ipremises.size())
       {
+        Assert (currTerm.getKind() == Kind::ITE);
         Node p1 =
             nm->mkNode(isUpper ? Kind::LEQ : Kind::GEQ, currTerm, currTerm[1]);
         Trace("brc-macro") << "...have " << p1 << std::endl;
