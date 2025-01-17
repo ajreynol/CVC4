@@ -17,6 +17,7 @@
 
 #include "proof/proof.h"
 #include "proof/proof_checker.h"
+#include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
@@ -190,7 +191,9 @@ void InferProofCons::convert(InferenceId infer, TNode conc, TNode exp, CDProof* 
         // s(exp[0]) = r
         Node asn = ProofRuleChecker::mkKindNode(nm, Kind::APPLY_SELECTOR);
         Node seq = sl.eqNode(sr);
-        cdp->addStep(seq, ProofRule::CONG, {exp}, {asn, sop});
+        std::vector<Node> cargs;
+        ProofRule cr = expr::getCongRule(sl, cargs);
+        cdp->addStep(seq, cr, {exp}, cargs);
         Node sceq = sr.eqNode(concEq[1]);
         tryRewriteRule(
             sr, concEq[1], ProofRewriteRule::DT_COLLAPSE_SELECTOR, cdp);
