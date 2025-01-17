@@ -82,7 +82,8 @@ Node QuantifiersProofRuleChecker::checkInternal(
     {
       return Node::null();
     }
-    if (args[0].getKind()!=Kind::SEXPR || args[0].getNumChildren()!=children[0][0].getNumChildren())
+    if (args[0].getKind() != Kind::SEXPR
+        || args[0].getNumChildren() != children[0][0].getNumChildren())
     {
       return Node::null();
     }

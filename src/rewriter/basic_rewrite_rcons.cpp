@@ -1486,8 +1486,8 @@ Node BasicRewriteRCons::proveTransIneq(CDProof* cdp,
 }
 
 bool BasicRewriteRCons::proveIneqWeaken(CDProof* cdp,
-                                       const Node& src,
-                                       const Node& tgt)
+                                        const Node& src,
+                                        const Node& tgt)
 {
   Assert(src.getKind() == Kind::LEQ || src.getKind() == Kind::GEQ);
   NodeManager* nm = nodeManager();
@@ -1495,40 +1495,41 @@ bool BasicRewriteRCons::proveIneqWeaken(CDProof* cdp,
   Trace("brc-macro") << "Prove: " << impl << std::endl;
   // normalize the inequality
   Node srcn = src;
-  if (src.getKind()==Kind::GEQ)
+  if (src.getKind() == Kind::GEQ)
   {
     srcn = nm->mkNode(Kind::LEQ, src[1], src[0]);
     Node eq = src.eqNode(srcn);
-    cdp->addTrustedStep(
-        eq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    cdp->addTrustedStep(eq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     cdp->addStep(srcn, ProofRule::EQ_RESOLVE, {src, eq}, {});
   }
   TypeNode tn = srcn[0].getType();
-  Node wineq = nm->mkNode(Kind::LT, nm->mkConstRealOrInt(tn, Rational(0)), nm->mkConstRealOrInt(tn, Rational(1)));
-  cdp->addTrustedStep(wineq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+  Node wineq = nm->mkNode(Kind::LT,
+                          nm->mkConstRealOrInt(tn, Rational(0)),
+                          nm->mkConstRealOrInt(tn, Rational(1)));
+  cdp->addTrustedStep(
+      wineq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
   ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
   Node sumLeq = pc->checkDebug(ProofRule::ARITH_SUM_UB, {srcn, wineq}, {});
   Assert(!sumLeq.isNull());
   cdp->addStep(sumLeq, ProofRule::ARITH_SUM_UB, {srcn, wineq}, {});
   impl = nm->mkNode(Kind::IMPLIES, sumLeq, tgt);
   Trace("brc-macro") << "Normalized prove: " << impl << std::endl;
-  if (tgt.getKind()==Kind::LT || tgt.getKind()==Kind::GT)
+  if (tgt.getKind() == Kind::LT || tgt.getKind() == Kind::GT)
   {
     // should be equivalent
     Node eq = sumLeq.eqNode(tgt);
-    cdp->addTrustedStep(
-        eq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    cdp->addTrustedStep(eq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     cdp->addStep(tgt, ProofRule::EQ_RESOLVE, {sumLeq, eq}, {});
   }
   else
   {
     // TODO
     cdp->addTrustedStep(
-      tgt, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {src}, {});
+        tgt, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {src}, {});
   }
   return true;
 }
-        
+
 bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
                                                          const Node& eq)
 {
@@ -1591,7 +1592,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
   Trace("brc-macro") << "Eliminated lits: " << elimLits << std::endl;
   Trace("brc-macro") << "Keep lits: " << keepLits << std::endl;
   NodeManager* nm = nodeManager();
-  if (eq[0][0].getNumChildren()>1)
+  if (eq[0][0].getNumChildren() > 1)
   {
     // note that keepLits may be empty, e.g. for
     // forall xy. x > y ---> forall y. false
@@ -1856,7 +1857,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
   // instantiate
   ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
   Node iarg = nm->mkNode(Kind::SEXPR, iterm);
-  Assert (qnorm[0].getNumChildren()==1);
+  Assert(qnorm[0].getNumChildren() == 1);
   Trace("brc-macro") << "Instantiate: " << qnorm << " / " << iarg << std::endl;
   Node inst = pc->checkDebug(ProofRule::INSTANTIATE, {qnorm}, {iarg});
   cdp->addStep(inst, ProofRule::INSTANTIATE, {qnorm}, {iarg});
