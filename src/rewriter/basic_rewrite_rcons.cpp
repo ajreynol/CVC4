@@ -904,7 +904,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   elhs[0] = erhs[0];
   Node clhs2 = nm->mkNode(Kind::STRING_CONCAT, elhs);
   std::vector<Node> cargs;
-  ProofRule ccr = expr::getCongRule(clhs, cargs);
+  ProofRule ccr = expr::getCongRule(clhs2, cargs);
   Node equiv = clhs2.eqNode(clhs);
   Node cp0s = cpremises[0][1].eqNode(cpremises[0][0]);
   Node reflEq = elhs[1].eqNode(elhs[1]);
