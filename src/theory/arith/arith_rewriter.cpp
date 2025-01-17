@@ -86,7 +86,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
     {
       // only matters if n contains strings
-      if (!expr::hasSubtermKinds({Kind::STRING_LENGTH}, n))
+      if (!expr::hasSubtermKinds({Kind::STRING_LENGTH, Kind::STRING_INDEXOF, Kind::STRING_STOI}, n))
       {
         return Node::null();
       }
