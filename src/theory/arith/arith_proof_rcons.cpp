@@ -119,12 +119,15 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
       // see if there is a variable to solve for
       std::map<Node, Node> msum;
       bool solved = false;
-      if (ArithMSum::getMonomialSumLit(as, msum))
+      // Use rewritten form to get the monomial, we will prove a = as by tcnv
+      // and as = (v = val) by MACRO_SR_PRED_TRANSFORM below.
+      if (ArithMSum::getMonomialSumLit(asr, msum))
       {
         for (const std::pair<const Node, Node>& m : msum)
         {
           if (m.first.isNull() || !m.second.isNull())
           {
+            Trace("arith-proof-rcons") << "......nonfactor " << m.first << " (" << m.second << ")" << std::endl;
             continue;
           }
           Node veq_c, val;
@@ -162,7 +165,15 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
             tcnv.addRewriteStep(m.first, val, &cdp);
             break;
           }
+          else
+          {
+            Trace("arith-proof-rcons") << "......no isolate " << m.first << std::endl;
+          }
         }
+      }
+      else
+      {
+        Trace("arith-proof-rcons") << "......failed msum" << std::endl;
       }
       if (!solved)
       {
