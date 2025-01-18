@@ -305,7 +305,7 @@
 )
 
 ; rule: quant-var-elim-eq
-; implements: QUANT_VAR_ELIM_EQ
+; implements: ProofRewriteRule::QUANT_VAR_ELIM_EQ
 ; args:
 ; - eq Bool: The equality whose left hand side is a quantified formula.
 ; requires: >
@@ -320,6 +320,16 @@
 
 ;;;;; ProofRewriteRule::QUANT_DT_SPLIT
 
+; program: $is_quant_dt_split_conj
+; args:
+; - x T: The variable we are eliminating.
+; - c C: The constructor term we are substituting x with.
+; - ys @List: The remaining list of variables of the left hand side we have yet to process.
+; - F Bool: The body of the left hand side of the equality.
+; - G Bool: The conjunct we are testing.
+; return: >
+;    The true iff G corresponds to a conjunct expected in the rule
+;    quant-dt-split for the current constructor.
 (program $is_quant_dt_split_conj ((T Type) (U Type) (C Type) (x T) (c C) (y U) (ys @List :list) (zs @List :list) (F Bool) (G Bool))
   (T C @List Bool Bool) Bool
   (
@@ -332,6 +342,16 @@
   )
 )
 
+; program: $is_quant_dt_split
+; args:
+; - x T: The variable we are eliminating.
+; - cs eo::List: The list of constructors for x we have left to process.
+; - ys @List: The remaining list of variables of the left hand side.
+; - F Bool: The body of the left hand side of the equality.
+; - G Bool: The remaining conjuncts on the right hand side of the equality we have yet to process.
+; return: >
+;    The true iff splitting (forall (@list x ys) F) for the constructors
+;    remaining in cs is equal to the remaining conjuncts in G.
 (program $is_quant_dt_split ((T Type) (x T) (C Type) (c C) (cs eo::List :list) (ys @List) (F Bool) (g Bool) (G Bool :list))
   (T eo::List @List Bool Bool) Bool
   (
@@ -343,8 +363,18 @@
   )
 )
 
+; rule: quant-dt-split
+; implements: ProofRewriteRule::QUANT_DT_SPLIT
+; args:
+; - eq Bool: The equality whose left hand side is a quantified formula.
+; requires: >
+;   The right hand side of the equality is the result of a legal application
+;   of quantified datatypes splitting. In particular, G is a conjunction of
+;   quantified formulas obtained by taking the possible cases of constructors
+;   for x.
+; conclusion: The given equality.
 (declare-rule quant-dt-split ((T Type) (x T) (F Bool) (G Bool) (ys @List :list))
   :args ((= (forall (@list x ys) F) G))
   :requires ((($is_quant_dt_split x ($dt_get_constructors (eo::typeof x)) ys F G) true))
-  :conclusion (= (forall (@list x) F) G)
+  :conclusion (= (forall (@list x ys) F) G)
 )
