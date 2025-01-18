@@ -323,8 +323,10 @@
 (program $is_quant_dt_split_conj ((T Type) (U Type) (C Type) (x T) (c C) (y U) (ys @List :list) (zs @List :list) (F Bool) (G Bool))
   (T C @List Bool Bool) Bool
   (
-    (($is_quant_dt_split_conj x c (@list y ys) F (forall (@list y zs) G)) ($is_quant_dt_split_conj x c ys F (forall zs G)))
-    (($is_quant_dt_split_conj x c @list.nil F (forall (@list y zs) G))    ($is_quant_dt_split_conj x (c y) @list.nil F (forall zs G)))
+    (($is_quant_dt_split_conj x c (@list y ys) F (forall (@list y zs) G)) (eo::requires ($contains_subterm zs y) false  ; ensure no shadowing
+                                                                            ($is_quant_dt_split_conj x c ys F (forall zs G))))
+    (($is_quant_dt_split_conj x c @list.nil F (forall (@list y zs) G))    (eo::requires ($contains_subterm zs y) false  ; ensure no shadowing
+                                                                            ($is_quant_dt_split_conj x (c y) @list.nil F (forall zs G))))
     (($is_quant_dt_split_conj x c @list.nil F (forall @list.nil G))       ($is_quant_dt_split_conj x c @list.nil F G))
     (($is_quant_dt_split_conj x c @list.nil F G)                          (eo::is_eq ($substitute x c F) G))
   )
@@ -337,6 +339,7 @@
                                                                     ($is_quant_dt_split_conj x c ys F g) true
                                                                     ($is_quant_dt_split x cs ys F G)))
     (($is_quant_dt_split x eo::List::nil ys F true)              true)
+    (($is_quant_dt_split x cs ys F g)                            ($is_quant_dt_split x cs ys F (and g)))  ; singleton case
   )
 )
 
