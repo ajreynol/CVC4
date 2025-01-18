@@ -60,9 +60,11 @@ std::ostream& operator<<(std::ostream& os, TheoryRewriteMode tm)
   return os;
 }
 
-BasicRewriteRCons::BasicRewriteRCons(Env& env) : EnvObj(env),
-      d_theoryRewriteMacroExpand(statisticsRegistry().registerHistogram<ProofRewriteRule>(
-          "BasicRewriteRCons::macroExpandCount"))
+BasicRewriteRCons::BasicRewriteRCons(Env& env)
+    : EnvObj(env),
+      d_theoryRewriteMacroExpand(
+          statisticsRegistry().registerHistogram<ProofRewriteRule>(
+              "BasicRewriteRCons::macroExpandCount"))
 {
 
 }
@@ -1504,7 +1506,8 @@ bool BasicRewriteRCons::proveIneqWeaken(CDProof* cdp,
     {
       srcn = nm->mkNode(Kind::LEQ, src[1], src[0]);
       Node eq = src.eqNode(srcn);
-      cdp->addTrustedStep(eq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+      cdp->addTrustedStep(
+          eq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
       cdp->addStep(srcn, ProofRule::EQ_RESOLVE, {src, eq}, {});
     }
     TypeNode tn = srcn[0].getType();
@@ -1524,7 +1527,8 @@ bool BasicRewriteRCons::proveIneqWeaken(CDProof* cdp,
     cdp->addTrustedStep(eq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     cdp->addStep(tgt, ProofRule::EQ_RESOLVE, {sumLeq, eq}, {});
   }
-  else if (tgt.getKind()==Kind::NOT && tgt[0].getKind()==Kind::EQUAL && tgt[0][0]==src[0])
+  else if (tgt.getKind() == Kind::NOT && tgt[0].getKind() == Kind::EQUAL
+           && tgt[0][0] == src[0])
   {
     CDProof cds(d_env);
     cds.addProof(cdp->getProofFor(src));
@@ -1542,16 +1546,17 @@ bool BasicRewriteRCons::proveIneqWeaken(CDProof* cdp,
     cds.addTrustedStep(eqq, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     cds.addStep(falsen, ProofRule::EQ_RESOLVE, {srcc, eqq}, {});
     cds.addStep(tgt, ProofRule::SCOPE, {falsen}, {tgt[0]});
-    
-    Trace("brc-macro") << "Subproof " << *cds.getProofFor(tgt).get() << std::endl;
+
+    Trace("brc-macro") << "Subproof " << *cds.getProofFor(tgt).get()
+                       << std::endl;
     cdp->addProof(cds.getProofFor(tgt));
   }
   else
   {
     return false;
   }
-  //cdp->addTrustedStep(
-  //    tgt, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {src}, {});
+  // cdp->addTrustedStep(
+  //     tgt, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {src}, {});
   return true;
 }
 
@@ -1900,9 +1905,9 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
     do
     {
       Node next;
-      if (index+1<ipremises.size())
+      if (index + 1 < ipremises.size())
       {
-        Assert (currTerm.getKind() == Kind::ITE);
+        Assert(currTerm.getKind() == Kind::ITE);
         Node p1 =
             nm->mkNode(isUpper ? Kind::LEQ : Kind::GEQ, currTerm, currTerm[1]);
         Trace("brc-macro") << "...have " << p1 << std::endl;

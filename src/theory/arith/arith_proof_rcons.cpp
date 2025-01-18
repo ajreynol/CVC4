@@ -127,7 +127,8 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
         {
           if (m.first.isNull() || !m.second.isNull())
           {
-            Trace("arith-proof-rcons") << "......nonfactor " << m.first << " (" << m.second << ")" << std::endl;
+            Trace("arith-proof-rcons") << "......nonfactor " << m.first << " ("
+                                       << m.second << ")" << std::endl;
             continue;
           }
           Node veq_c, val;
@@ -167,7 +168,8 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
           }
           else
           {
-            Trace("arith-proof-rcons") << "......no isolate " << m.first << std::endl;
+            Trace("arith-proof-rcons")
+                << "......no isolate " << m.first << std::endl;
           }
         }
       }
