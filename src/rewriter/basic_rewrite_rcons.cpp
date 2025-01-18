@@ -2189,8 +2189,74 @@ bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp,
                                                              const Node& eq)
 {
-  // TODO
+  // FIXME
   return false;
+  Trace("brc-macro") << "Ensure arrays distinct arrays " << eq << std::endl;
+  Node arrayEq = eq[0];
+  NodeManager * nm = nodeManager();
+  Node distinctIndex;
+  Node deq;
+  std::unordered_set<Node> indices;
+  Node alhs = arrayEq[0];
+  while (alhs.getKind()==Kind::STORE)
+  {
+    Node e2 = rewrite(nm->mkNode(Kind::SELECT, eq[1], alhs[1]));
+    Assert (e2.isConst());
+    Assert (alhs[2].isConst());
+    indices.insert(alhs[1]);
+    if (alhs[2]!=e2)
+    {
+      deq = nm->mkNode(Kind::EQUAL, alhs[2], e2);
+      distinctIndex = eq[1];
+      break;
+    }
+    alhs = alhs[0];
+  }
+  if (distinctIndex.isNull())
+  {
+    TypeNode itn = alhs.getType().getArrayIndexType();
+    if (!itn.isClosedEnumerable())
+    {
+      return false;
+    }
+    theory::TypeEnumerator te(itn);
+    return false;
+  }
+  Trace("brc-macro") << "...found witness distinct index " << distinctIndex << std::endl;
+  Node sel1 = nm->mkNode(Kind::SELECT, arrayEq[0], distinctIndex);
+  Node sel2 = nm->mkNode(Kind::SELECT, arrayEq[1], distinctIndex);
+
+  theory::Rewriter* rr = d_env.getRewriter();
+  Node v1 = rr->rewriteViaRule(ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP, sel1);
+  Node v2 = rr->rewriteViaRule(ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP, sel2);
+  if (v1==v2 || !v1.isConst() || !v2.isConst())
+  {
+    return false;
+  }
+  Node eq1 = sel1.eqNode(v1);
+  cdp->addTheoryRewriteStep(eq1, ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP);
+  Node eq2 = sel2.eqNode(v2);
+  cdp->addTheoryRewriteStep(eq2, ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP);
+  Node falsen = nm->mkConst(false);
+  std::vector<Node> cargs;
+  ProofRule cr = expr::getCongRule(sel1, cargs);
+  Node eqsel = sel1.eqNode(sel2);
+  Node indexEq = distinctIndex.eqNode(distinctIndex);
+  cdp->addStep(indexEq, ProofRule::REFL, {}, {distinctIndex});
+  cdp->addStep(eqsel, cr, {arrayEq, indexEq}, cargs);
+  Node eq1s = v1.eqNode(sel1);
+  cdp->addStep(eq1s, ProofRule::SYMM, {eq1}, {});
+  Node veq = v1.eqNode(v2);
+  cdp->addStep(veq, ProofRule::TRANS, {eq1s, eqsel, eq2}, {});
+
+  Node eqc = veq.eqNode(falsen);
+  cdp->addTrustedStep(
+        eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+  cdp->addStep(falsen, ProofRule::EQ_RESOLVE, {veq, eqc}, {});
+  Node arrayDeq = arrayEq.notNode();
+  cdp->addStep(arrayDeq, ProofRule::SCOPE, {falsen}, {arrayEq});
+  cdp->addStep(eq, ProofRule::FALSE_INTRO, {arrayDeq}, {});
+  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArraysNormalizeConstant(CDProof* cdp,
