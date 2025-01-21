@@ -4095,6 +4095,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_PREFIXOF_ELIM),
   /** Auto-generated from RARE rule str-suffixof-elim */
   EVALUE(STR_SUFFIXOF_ELIM),
+  /** Auto-generated from RARE rule str-prefixof-eq */
+  EVALUE(STR_PREFIXOF_EQ),
+  /** Auto-generated from RARE rule str-suffixof-eq */
+  EVALUE(STR_SUFFIXOF_EQ),
   /** Auto-generated from RARE rule str-prefixof-one */
   EVALUE(STR_PREFIXOF_ONE),
   /** Auto-generated from RARE rule str-suffixof-one */
@@ -4135,6 +4139,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_AT_ELIM),
   /** Auto-generated from RARE rule str-replace-self */
   EVALUE(STR_REPLACE_SELF),
+  /** Auto-generated from RARE rule str-replace-id */
+  EVALUE(STR_REPLACE_ID),
   /** Auto-generated from RARE rule str-replace-prefix */
   EVALUE(STR_REPLACE_PREFIX),
   /** Auto-generated from RARE rule str-replace-no-contains */
@@ -4213,6 +4219,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_CONTAINS_REPL_CHAR),
   /** Auto-generated from RARE rule str-contains-repl-self */
   EVALUE(STR_CONTAINS_REPL_SELF),
+  /** Auto-generated from RARE rule str-contains-repl-tgt */
+  EVALUE(STR_CONTAINS_REPL_TGT),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
@@ -4291,6 +4299,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_EQ_REPL_EMP_TGT_NEMP),
   /** Auto-generated from RARE rule str-eq-repl-nemp-src-emp */
   EVALUE(STR_EQ_REPL_NEMP_SRC_EMP),
+  /** Auto-generated from RARE rule str-eq-repl-self-src */
+  EVALUE(STR_EQ_REPL_SELF_SRC),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */

@@ -149,6 +149,16 @@
   (str.suffixof s t)
   (= s (str.substr t (- (str.len t) (str.len s)) (str.len s))))
 
+(define-cond-rule str-prefixof-eq ((s ?Seq) (t ?Seq))
+  (>= (str.len s) (str.len t))
+  (str.prefixof s t)
+  (= s t))
+
+(define-cond-rule str-suffixof-eq ((s ?Seq) (t ?Seq))
+  (>= (str.len s) (str.len t))
+  (str.suffixof s t)
+  (= s t))
+
 (define-cond-rule str-prefixof-one ((s ?Seq) (t ?Seq))
   (= (str.len t) 1)
   (str.prefixof s t)
@@ -247,6 +257,10 @@
 (define-rule str-replace-self ((t ?Seq) (s ?Seq))
   (str.replace t t s)
   s)
+
+(define-rule str-replace-id ((t ?Seq) (s ?Seq))
+  (str.replace t s s)
+  t)
 
 (define-rule str-replace-prefix ((t ?Seq) (r ?Seq :list) (s ?Seq))
   (str.replace (str.++ t r) t s)
@@ -433,6 +447,10 @@
   (str.contains (str.replace x y x) y)
   (str.contains x y))
 
+(define-rule str-contains-repl-tgt ((x ?Seq) (y ?Seq) (z ?Seq))
+  (str.contains (str.replace x y z) z)
+  (or (str.contains x y) (str.contains x z)))
+
 ; =============== Regular expression rules
 
 (define-rule re-all-elim () re.all (re.* re.allchar))
@@ -563,6 +581,10 @@
   (and (= emp (@seq.empty_of_type (@type_of x))) (not (= z emp)))
   (= (str.replace emp x y) z)
   (and (= x emp) (= y z)))
+
+(define-rule str-eq-repl-self-src ((x ?Seq) (y ?Seq))
+  (= (str.replace x y x) y)
+  (= x y))
 
 ; =============== Sequences-specific rules
 
