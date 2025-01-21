@@ -417,7 +417,7 @@ name   = "SMT Layer"
 
 [[option]]
   name       = "solveIntAsBV"
-  category   = "expert"
+  category   = "regular"
   long       = "solve-int-as-bv=N"
   type       = "uint64_t"
   default    = "0"
