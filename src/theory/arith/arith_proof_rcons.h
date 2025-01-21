@@ -60,10 +60,16 @@ class ArithProofRCons : protected EnvObj, public ProofGenerator
    * (3) Apply the substitution x --> t to the range of asubs and add x --> t
    * to it.
    */
-  bool solveEquality(CDProof& cdp, TConvProofGenerator& tconv, ArithSubs& asubs, const Node& as);
+  bool solveEquality(CDProof& cdp,
+                     TConvProofGenerator& tconv,
+                     ArithSubs& asubs,
+                     const Node& as);
 
   Node applySR(ArithSubs& asubs, const Node& a);
-  Node applySR(CDProof& cdp, TConvProofGenerator& tcnv, ArithSubs& asubs, const Node& a);
+  Node applySR(CDProof& cdp,
+               TConvProofGenerator& tcnv,
+               ArithSubs& asubs,
+               const Node& a);
   /** The trust id to use if the proof reconstruction fails. */
   TrustId d_id;
   /** False node */
