@@ -1,0 +1,14 @@
+; EXPECT: unsat
+(set-logic ALL)
+(assert (or
+
+(not (= (str.update "ABC" 0 "") "ABC"))
+(not (= (str.update "ABC" 4 "DEF") "ABC"))
+(not (= (str.update "ABC" 2 "DEF") "ABD"))
+(not (= (str.update "ABC" (- 1) "D") "ABC"))
+(not (= (str.update "ABCDEF" 2 "AA") "ABAAEF"))
+(not (= (str.update "ABCDEF" 1000 "AA") "ABCDEF"))
+(not (= (str.update "ABCDEF" 5 "AA") "ABCDEA"))
+
+))
+(check-sat)
