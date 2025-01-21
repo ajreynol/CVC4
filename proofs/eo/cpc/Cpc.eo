@@ -200,6 +200,17 @@
                                              ($str_to_upper_eval ex)))
       (($run_evaluate (str.rev x))         (eo::define ((ex ($run_evaluate x)))
                                              ($str_rev_eval ex)))
+      (($run_evaluate (str.update x n y))  (eo::define ((ex ($run_evaluate x)))
+                                           (eo::define ((en ($run_evaluate n)))
+                                           (eo::define ((exl (eo::len ex)))
+                                           (eo::ite (eo::or (eo::gt 0 en) (eo::gt en exl))
+                                             ex
+                                             (eo::define ((ey ($run_evaluate y)))
+                                             (eo::define ((rc (eo::add (eo::neg en) exl)))
+                                             (eo::concat
+                                               (eo::extract ex 0 (eo::add en -1))
+                                               (eo::extract ey 0 (eo::add rc -1))
+                                               (eo::extract ex (eo::add en (eo::len ey)) exl)))))))))
 
       ; bitvectors
       (($run_evaluate (bvnot xb))          (eo::not ($run_evaluate xb)))
