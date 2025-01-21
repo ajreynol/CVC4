@@ -1970,6 +1970,7 @@ set(regress_0_tests
   regress0/strings/re-mem-eval-large.smt2
   regress0/strings/re-mem-include-rewrite.smt2
   regress0/strings/re-none-rewrites.smt2
+  regress0/strings/re-str-inference-missing.smt2
   regress0/strings/re-syntax.smt2
   regress0/strings/re.all.smt2
   regress0/strings/regexp_inclusion_reduction.smt2
