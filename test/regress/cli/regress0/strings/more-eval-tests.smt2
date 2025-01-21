@@ -10,5 +10,11 @@
 (not (= (str.update "ABCDEF" 1000 "AA") "ABCDEF"))
 (not (= (str.update "ABCDEF" 5 "AA") "ABCDEA"))
 
+(not (= (str.<= "ABC" "A") false))
+(not (= (str.<= "" "A") true))
+(not (= (str.<= "AAA" "AAAA") true))
+(not (= (str.<= "AAB" "AAC") true))
 ))
+
+
 (check-sat)

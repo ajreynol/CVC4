@@ -1943,6 +1943,7 @@ set(regress_0_tests
   regress0/strings/model-code-point.smt2
   regress0/strings/model-friendly.smt2
   regress0/strings/model001.smt2
+  regress0/strings/more-eval-tests.smt2
   regress0/strings/ncontrib-rewrites.smt2
   regress0/strings/norn-31.smt2
   regress0/strings/norn-benchmark-489.smt2
@@ -2015,7 +2016,6 @@ set(regress_0_tests
   regress0/strings/unicode-esc.smt2
   regress0/strings/unsound-0908.smt2
   regress0/strings/unsound-repl-rewrite.smt2
-  regress0/strings/update-eval-tests.smt2
   regress0/strings/update-rewrites-simple.smt2
   regress0/sygus/abduct-pponly.smt2
   regress0/sygus/assume-simple.sy
