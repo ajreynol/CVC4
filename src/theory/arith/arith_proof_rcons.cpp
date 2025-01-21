@@ -171,57 +171,10 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
                              TConvCachePolicy::NEVER,
                              "ArithRConsTConv",
                              &astc);
-    Node tgtAssump;
-    // prove false
-    for (const Node& a : assumps)
-    {
-      Trace("arith-proof-rcons") << "Assumption: " << a << std::endl;
-      if (a.getKind() != Kind::EQUAL)
-      {
-        Trace("arith-proof-rcons") << "...not solved" << std::endl;
-        assumpsNoSolve.push_back(a);
-        continue;
-      }
-      Node as = asubs.applyArith(a);
-      Node asr = rewrite(as);
-      std::shared_ptr<ProofNode> pfn;
-      if (a != as)
-      {
-        pfn = tcnv.getProofForRewriting(a);
-      }
-      if (asr == d_false)
-      {
-        Trace("arith-proof-rcons") << "...success!" << std::endl;
-        if (pfn != nullptr)
-        {
-          Assert(pfn->getResult()[1] == as)
-              << "got " << pfn->getResult()[1] << ", expected " << as;
-          cdp.addProof(pfn);
-          cdp.addStep(as, ProofRule::EQ_RESOLVE, {a, a.eqNode(as)}, {});
-        }
-        cdp.addStep(
-            d_false, ProofRule::MACRO_SR_PRED_TRANSFORM, {as}, {d_false});
-        success = true;
-        break;
-      }
-      // see if we can solve the equality
-      if (solveEquality(cdp, tcnv, asubs, as))
-      {
-        if (pfn != nullptr)
-        {
-          cdp.addProof(pfn);
-          cdp.addStep(as, ProofRule::EQ_RESOLVE, {a, a.eqNode(as)}, {});
-        }
-      }
-      else
-      {
-        Trace("arith-proof-rcons") << "...not solved" << std::endl;
-        assumpsNoSolve.push_back(a);
-      }
-    }
     // if we have not yet found a contradiction, we look for contradictions, or
     // further entailed equalities.
     bool addedSubs = true;
+    std::unordered_set<Node> solved;
     while (!success && addedSubs)
     {
       addedSubs = false;
@@ -232,13 +185,47 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
       std::map<Node, Node> psrc;
       std::map<Node, bool>::iterator itp;
       std::map<Node, Node> boundingLits[2];
-      for (const Node& a : assumpsNoSolve)
+      for (const Node& a : assumps)
       {
+        if (solved.find(a)!=solved.end())
+        {
+          // already solved
+          continue;
+        }
         Node as = asubs.applyArith(a);
         Node asr = rewrite(as);
+        if (asr == d_false)
+        {
+          Trace("arith-proof-rcons") << "...success!" << std::endl;
+          // apply substitution + rewriting again, with proofs
+          applySR(cdp, tcnv, asubs, a);
+          success = true;
+          break;
+        }
+        // if its an equality, try to turn it into a substitution
+        if (a.getKind()==Kind::EQUAL)
+        {
+          // must remember the proof prior to changing the substitution
+          std::shared_ptr<ProofNode> pfn;
+          if (a != as)
+          {
+            pfn = tcnv.getProofForRewriting(a);
+          }
+          if (solveEquality(cdp, tcnv, asubs, as))
+          {
+            solved.insert(a);
+            if (pfn != nullptr)
+            {
+              cdp.addProof(pfn);
+              cdp.addStep(as, ProofRule::EQ_RESOLVE, {a, a.eqNode(as)}, {});
+            }
+          }
+          continue;
+        }
         bool pol = asr.getKind() != Kind::NOT;
         Node aslit = pol ? asr : asr[0];
         itp = pols.find(aslit);
+        // look for conflicting atoms
         if (itp != pols.end())
         {
           if (itp->second != pol)
@@ -260,6 +247,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
           pols[aslit] = pol;
           psrc[aslit] = a;
         }
+        // otherwise remember bounds
         if (aslit.getKind() == Kind::GEQ)
         {
           boundingLits[pol ? 0 : 1][aslit[0]] = a;
@@ -312,8 +300,13 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
             cdp.addStep(eq, ProofRule::ARITH_TRICHOTOMY, {l1, l2strict}, {});
             Trace("arith-proof-rcons")
                 << ".......solves to " << eq << " by trichotomy" << std::endl;
-            addedSubs = solveEquality(cdp, tcnv, asubs, eq);
-            break;
+            if (solveEquality(cdp, tcnv, asubs, eq))
+            {
+              addedSubs = true;
+              solved.insert(bl.second);
+              solved.insert(itb->second);
+              break;
+            }
           }
           else if (c1 > c2m1)
           {
