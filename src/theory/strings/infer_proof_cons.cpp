@@ -1410,21 +1410,51 @@ bool InferProofCons::convertAndElim(NodeManager* nm,
   {
     return true;
   }
-  if (src.getKind() == Kind::AND)
+  Trace("strings-ipc-debug") << "AND_ELIM " << src << " => " << tgt << "?" << std::endl;
+  Node stgt;
+  if (src.getKind() == Kind::NOT && src[0].getKind()==Kind::OR)
   {
+    // handles case of ~(L1 or ... or Ln) where tgt is ~Li.
+    for (size_t i = 0, nchild = src[0].getNumChildren(); i < nchild; i++)
+    {
+      Node sn = src[0][i].negate();
+      if (CDProof::isSame(sn, tgt))
+      {
+        Node snn = src[0][i].notNode();
+        Node ni = nm->mkConstInt(Rational(i));
+        psb.addStep(ProofRule::NOT_OR_ELIM, {src}, {ni}, snn);
+        // double negation elimination if necessary
+        if (snn!=sn)
+        {
+          psb.addStep(ProofRule::NOT_NOT_ELIM, {snn}, {}, sn);
+        }
+        stgt = sn;
+        break;
+      }
+    }
+  }
+  else if (src.getKind() == Kind::AND)
+  {
+    // otherwise check case of (L1 and ... and Ln) => Li
     for (size_t i = 0, nchild = src.getNumChildren(); i < nchild; i++)
     {
       if (CDProof::isSame(src[i], tgt))
       {
         Node ni = nm->mkConstInt(Rational(i));
         psb.addStep(ProofRule::AND_ELIM, {src}, {ni}, src[i]);
-        if (src[i] != tgt)
-        {
-          psb.addStep(ProofRule::SYMM, {src[i]}, {}, tgt);
-        }
-        return true;
+        stgt = src[i];
+        break;
       }
     }
+  }
+  if (!stgt.isNull())
+  {
+    Assert (CDProof::isSame(stgt, tgt));
+    if (stgt != tgt)
+    {
+      psb.addStep(ProofRule::SYMM, {stgt}, {}, tgt);
+    }
+    return true;
   }
   return false;
 }
