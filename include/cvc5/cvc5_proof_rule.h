@@ -4115,6 +4115,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_SUBSTR_CONCAT1),
   /** Auto-generated from RARE rule str-substr-concat2 */
   EVALUE(STR_SUBSTR_CONCAT2),
+  /** Auto-generated from RARE rule str-substr-replace */
+  EVALUE(STR_SUBSTR_REPLACE),
   /** Auto-generated from RARE rule str-substr-full */
   EVALUE(STR_SUBSTR_FULL),
   /** Auto-generated from RARE rule str-substr-full-eq */
