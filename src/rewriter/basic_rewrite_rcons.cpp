@@ -289,8 +289,8 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
-    case ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW:
-      if (ensureProofMacroLambdaAppElimShadow(cdp, eq))
+    case ProofRewriteRule::MACRO_LAMBDA_CAPTURE_AVOID:
+      if (ensureProofMacroLambdaCaptureAvoid(cdp, eq))
       {
         handledMacro = true;
       }
@@ -2129,15 +2129,16 @@ bool BasicRewriteRCons::ensureProofMacroBvEqSolve(CDProof* cdp, const Node& eq)
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroLambdaAppElimShadow(CDProof* cdp,
-                                                            const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroLambdaCaptureAvoid(CDProof* cdp,
+                                                           const Node& eq)
+
 {
   Trace("brc-macro") << "Expand macro lambda app elim shadow for " << eq
                      << std::endl;
   // Get equalities between subterms that are disequal in LHS/RHS. These will
   // be added as rewrite steps below.
   std::vector<Node> matchConds;
-  expr::getMatchConditions(eq[0], eq[1], matchConds, true);
+  expr::getConversionConditions(eq[0], eq[1], matchConds, true);
   // use conversion proof, must rewrite ops
   TConvProofGenerator tcpg(d_env,
                            nullptr,

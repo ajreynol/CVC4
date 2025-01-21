@@ -39,7 +39,7 @@ TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm) : TheoryRewriter(nm)
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::INT_TO_BV_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_CAPTURE_AVOID,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM,
                            TheoryRewriteCtx::PRE_DSL);
@@ -72,7 +72,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
     {
       // see if we need to eliminate shadowing
       Node nes =
-          rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW, node);
+          rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_CAPTURE_AVOID, node);
       if (!nes.isNull())
       {
         Trace("uf-ho-beta") << "uf-ho-beta : eliminate shadowing : " << nes
@@ -105,7 +105,7 @@ RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
 
       // see if we need to eliminate shadowing
       Node nes =
-          rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW, node);
+          rewriteViaRule(ProofRewriteRule::MACRO_LAMBDA_CAPTURE_AVOID, node);
       if (!nes.isNull())
       {
         return RewriteResponse(REWRITE_AGAIN_FULL, nes);
@@ -265,8 +265,17 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::MACRO_LAMBDA_APP_ELIM_SHADOW:
+    case ProofRewriteRule::MACRO_LAMBDA_CAPTURE_AVOID:
     {
+      // This ensures we won't have variable capturing during beta reduction.
+      // Examples of this rule:
+      // (_ (lambda x. forall x. P(x)) a) ---> (_ (lambda y. forall x. P(x)) a).
+      // (_ (lambda y. forall x. P(y)) (f x)) --->
+      //   (_ (lambda y. forall z. P(y)) (f x)).
+      // (_ (lambda y. forall xu. P(y, u)) (f x)) --->
+      //   (_ (lambda y. forall zu. P(y, u)) (f x)).
+      // (_ (lambda y. forall x. P(y) ^ forall x. Q(y)) (f x)) --->
+      //   (_ (lambda y. forall u. P(y) ^ forall v. Q(y)) (f x)).
       Kind k = n.getKind();
       Node lambda;
       std::vector<TNode> args;
@@ -278,15 +287,18 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         // First, see if we need to eliminate shadowing in the lambda itself
         if (!lambda.isNull())
         {
-          // We compare against the original operator, if it is different, then
-          // we convert to its HO_APPLY form, after which the lambda will occur
-          // in an ordinary term position and thus will be rewritten.
+          // We compare against the original lambda, if it is different, then
+          // we use the version (lambdaElimS) where shadowing is eliminated.
           Node lambdaElimS = ElimShadowNodeConverter::eliminateShadow(lambda);
           // Note that a more comprehensive test here would be to check if the
-          // lambda rewrites at all. This is not necessary as we only need to
-          // be sure that the topmost variables are not shadowed. Moreover,
-          // we avoid "value normalization" for lambdas in first-order logics
-          // by allowing beta reduction to apply to non-rewritten lambdas.
+          // lambda rewrites at all and convert to HO_APPLY for uniformity.
+          // This is not necessary as we only need to be sure that the topmost
+          // variables are not shadowed. Moreover, we avoid "value
+          // normalization" for lambdas in first-order logics by allowing beta
+          // reduction to apply to non-rewritten lambdas. This makes solving
+          // and proofs more complex, as it rewrites user provided define-fun
+          // in unintuitive ways e.g. lambda x. (or (= x 0) (= x 1)) -->
+          // lambda x. (ite (and (= x 0) (= x 1)) true false).
           if (lambdaElimS != lambda)
           {
             std::vector<Node> newChildren;
@@ -310,26 +322,33 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       Node body = lambda[1];
       if (k == Kind::HO_APPLY && lambda[0].getNumChildren() > 1)
       {
+        // compute the partial beta reduction
         std::vector<Node> nvars(lambda[0].begin() + 1, lambda[0].end());
         std::vector<Node> largs;
         largs.push_back(nm->mkNode(Kind::BOUND_VAR_LIST, nvars));
         largs.push_back(body);
         body = nm->mkNode(Kind::LAMBDA, largs);
       }
+      // get the free variables of the arguments
       std::unordered_set<Node> fvs;
       for (TNode a : args)
       {
         expr::getFreeVariables(a, fvs);
       }
+      // if any free variables, see if we need to eliminate shadowing in the
+      // lambda.
       if (!fvs.empty())
       {
         ElimShadowNodeConverter esnc(nm, n, fvs);
         Node bodyc = esnc.convert(body);
+        // if shadow elimination was necessary for the body of the lambda
         if (bodyc != body)
         {
           Node lambdac;
           if (k == Kind::HO_APPLY && lambda[0].getNumChildren() > 1)
           {
+            // body was a partial beta reduction computed above, reconstruct
+            // the original lambda.
             Assert(bodyc.getKind() == Kind::LAMBDA);
             std::vector<Node> nvars;
             nvars.push_back(lambda[0][0]);

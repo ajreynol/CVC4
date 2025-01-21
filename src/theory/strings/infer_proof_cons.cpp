@@ -915,7 +915,7 @@ bool InferProofCons::convert(Env& env,
           std::vector<Node> cexp;
           // get the equalities where the reduction is different
           std::vector<Node> matchConds;
-          expr::getMatchConditions(red, conc, matchConds);
+          expr::getConversionConditions(red, conc, matchConds);
           Trace("strings-ipc-red")
               << "...need to prove " << matchConds << std::endl;
           // To simplify the proof transformation step below, we manually
