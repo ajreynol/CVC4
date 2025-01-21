@@ -443,10 +443,20 @@
   (str.contains s (str.replace t r u))
   false)
 
+(define-cond-rule str-substr-char-start-eq-len ((x ?Seq) (n Int) (emp ?Seq))
+  (and (= (str.len x) 1) (= emp (@seq.empty_of_type (@type_of x))))
+  (str.substr x n n)
+  emp)
+
 (define-cond-rule str-contains-repl-char ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
   (and (= (str.len w) 1) (not (str.contains w y)))
   (str.contains (str.replace x y z) w)
   (or (str.contains x w) (and (str.contains x y) (str.contains z w))))
+
+(define-cond-rule str-contains-repl-self-tgt-char ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
+  (= (str.len w) 1)
+  (str.contains (str.replace x y x) w)
+  (str.contains x w))
 
 (define-rule str-contains-repl-self ((x ?Seq) (y ?Seq))
   (str.contains (str.replace x y x) y)
