@@ -2193,18 +2193,18 @@ bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp,
   return false;
   Trace("brc-macro") << "Ensure arrays distinct arrays " << eq << std::endl;
   Node arrayEq = eq[0];
-  NodeManager * nm = nodeManager();
+  NodeManager* nm = nodeManager();
   Node distinctIndex;
   Node deq;
   std::unordered_set<Node> indices;
   Node alhs = arrayEq[0];
-  while (alhs.getKind()==Kind::STORE)
+  while (alhs.getKind() == Kind::STORE)
   {
     Node e2 = rewrite(nm->mkNode(Kind::SELECT, eq[1], alhs[1]));
-    Assert (e2.isConst());
-    Assert (alhs[2].isConst());
+    Assert(e2.isConst());
+    Assert(alhs[2].isConst());
     indices.insert(alhs[1]);
-    if (alhs[2]!=e2)
+    if (alhs[2] != e2)
     {
       deq = nm->mkNode(Kind::EQUAL, alhs[2], e2);
       distinctIndex = eq[1];
@@ -2222,14 +2222,17 @@ bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp,
     theory::TypeEnumerator te(itn);
     return false;
   }
-  Trace("brc-macro") << "...found witness distinct index " << distinctIndex << std::endl;
+  Trace("brc-macro") << "...found witness distinct index " << distinctIndex
+                     << std::endl;
   Node sel1 = nm->mkNode(Kind::SELECT, arrayEq[0], distinctIndex);
   Node sel2 = nm->mkNode(Kind::SELECT, arrayEq[1], distinctIndex);
 
   theory::Rewriter* rr = d_env.getRewriter();
-  Node v1 = rr->rewriteViaRule(ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP, sel1);
-  Node v2 = rr->rewriteViaRule(ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP, sel2);
-  if (v1==v2 || !v1.isConst() || !v2.isConst())
+  Node v1 =
+      rr->rewriteViaRule(ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP, sel1);
+  Node v2 =
+      rr->rewriteViaRule(ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_OP, sel2);
+  if (v1 == v2 || !v1.isConst() || !v2.isConst())
   {
     return false;
   }
@@ -2250,8 +2253,7 @@ bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp,
   cdp->addStep(veq, ProofRule::TRANS, {eq1s, eqsel, eq2}, {});
 
   Node eqc = veq.eqNode(falsen);
-  cdp->addTrustedStep(
-        eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+  cdp->addTrustedStep(eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
   cdp->addStep(falsen, ProofRule::EQ_RESOLVE, {veq, eqc}, {});
   Node arrayDeq = arrayEq.notNode();
   cdp->addStep(arrayDeq, ProofRule::SCOPE, {falsen}, {arrayEq});

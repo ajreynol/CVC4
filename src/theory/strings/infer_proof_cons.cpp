@@ -1410,9 +1410,10 @@ bool InferProofCons::convertAndElim(NodeManager* nm,
   {
     return true;
   }
-  Trace("strings-ipc-debug") << "AND_ELIM " << src << " => " << tgt << "?" << std::endl;
+  Trace("strings-ipc-debug")
+      << "AND_ELIM " << src << " => " << tgt << "?" << std::endl;
   Node stgt;
-  if (src.getKind() == Kind::NOT && src[0].getKind()==Kind::OR)
+  if (src.getKind() == Kind::NOT && src[0].getKind() == Kind::OR)
   {
     // handles case of ~(L1 or ... or Ln) where tgt is ~Li.
     for (size_t i = 0, nchild = src[0].getNumChildren(); i < nchild; i++)
@@ -1424,7 +1425,7 @@ bool InferProofCons::convertAndElim(NodeManager* nm,
         Node ni = nm->mkConstInt(Rational(i));
         psb.addStep(ProofRule::NOT_OR_ELIM, {src}, {ni}, snn);
         // double negation elimination if necessary
-        if (snn!=sn)
+        if (snn != sn)
         {
           psb.addStep(ProofRule::NOT_NOT_ELIM, {snn}, {}, sn);
         }
@@ -1449,7 +1450,7 @@ bool InferProofCons::convertAndElim(NodeManager* nm,
   }
   if (!stgt.isNull())
   {
-    Assert (CDProof::isSame(stgt, tgt));
+    Assert(CDProof::isSame(stgt, tgt));
     if (stgt != tgt)
     {
       psb.addStep(ProofRule::SYMM, {stgt}, {}, tgt);
