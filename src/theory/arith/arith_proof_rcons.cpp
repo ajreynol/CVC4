@@ -92,7 +92,7 @@ bool ArithProofRCons::solveEquality(CDProof& cdp,
       continue;
     }
     Trace("arith-proof-rcons")
-        << "...solved " << m.first << " = " << val << std::endl;
+        << "SUBS: " << m.first << " = " << val << std::endl;
     Node eq = m.first.eqNode(val);
     if (as != eq)
     {
@@ -113,6 +113,7 @@ bool ArithProofRCons::solveEquality(CDProof& cdp,
     tcnv.addRewriteStep(m.first, val, &cdp);
     return true;
   }
+  Trace("arith-proof-rcons") << "...failed solve equality (no factor)" << std::endl;
   return false;
 }
 
@@ -177,9 +178,8 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
     std::unordered_set<Node> solved;
     while (!success && addedSubs)
     {
+      Trace("arith-proof-rcons") << "==== Iterate" << std::endl;
       addedSubs = false;
-      Trace("arith-proof-rcons")
-          << "Not solved by rewriting single literal" << std::endl;
       // check if two unsolved literals rewrite to the negation of one another
       std::map<Node, bool> pols;
       std::map<Node, Node> psrc;
@@ -192,8 +192,10 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
           // already solved
           continue;
         }
+        Trace("arith-proof-rcons") << "- process " << a << std::endl;
         Node as = asubs.applyArith(a);
         Node asr = rewrite(as);
+        Trace("arith-proof-rcons") << "  - SR to " << asr << std::endl;
         if (asr == d_false)
         {
           Trace("arith-proof-rcons") << "...success!" << std::endl;
@@ -213,6 +215,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
           }
           if (solveEquality(cdp, tcnv, asubs, as))
           {
+            addedSubs = true;
             solved.insert(a);
             if (pfn != nullptr)
             {
