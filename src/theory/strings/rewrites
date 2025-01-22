@@ -495,6 +495,21 @@
   (str.replace x (str.replace y x z) x)
   (str.replace x y x))
 
+
+(define-rule str-repl-repl-dual-self ((x ?Seq) (y ?Seq))
+  (str.replace x (str.replace x y x) x)
+  x)
+
+(define-cond-rule str-repl-repl-dual-ite1 ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
+  (not (str.contains x z))
+  (str.replace x (str.replace x y z) w)
+  (ite (str.contains x y) x w))
+
+(define-cond-rule str-repl-repl-dual-ite2 ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
+  (and (not (str.contains y z)) (not (str.contains z y)))
+  (str.replace x (str.replace x y z) w)
+  (ite (str.contains x y) x w))
+
 ; =============== Regular expression rules
 
 (define-rule re-all-elim () re.all (re.* re.allchar))
