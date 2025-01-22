@@ -166,6 +166,10 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
     ArithSubs asubs;
     std::vector<Node> assumpsNoSolve;
     ArithSubsTermContext astc;
+    // This proof generator is intended to provide proofs for asubs.applyArith.
+    // In particular, we maintain the invariant that if
+    // asubs.applyArith(a) = as, then tcnv.getProofForRewriting(a) returns a
+    // proof of (= a as).
     TConvProofGenerator tcnv(d_env,
                              nullptr,
                              TConvPolicy::FIXPOINT,
@@ -311,10 +315,9 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
               break;
             }
           }
-          else if (c1 > c2m1)
-          {
-            // if c1 > c2-1, this implies a contradiction
-          }
+          // NOTE: otherwise if c1 > c2-1, this implies a contradiction,
+          // although it appears that this case does not happen in DIO lemmas.
+          // If it did, we would fail with a proof hole here.
         }
       }
     }
