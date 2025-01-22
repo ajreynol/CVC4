@@ -33,7 +33,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace strings {
 
-ArithEntail::ArithEntail(Rewriter* r) : d_rr(r)
+ArithEntail::ArithEntail(Rewriter* r, bool recApprox)
+    : d_rr(r), d_recApprox(recApprox)
 {
   d_one = NodeManager::currentNM()->mkConstInt(Rational(1));
   d_zero = NodeManager::currentNM()->mkConstInt(Rational(0));
@@ -273,8 +274,11 @@ Node ArithEntail::findApprox(Node ar, bool isSimple)
 
 Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
 {
-  // FIXME
-  isSimple = true;
+  // if not using recursive approximations, we always set isSimple to true
+  if (!d_recApprox)
+  {
+    isSimple = true;
+  }
   Assert(rewriteArith(ar) == ar)
       << "Not rewritten " << ar << ", got " << rewriteArith(ar);
   NodeManager* nm = NodeManager::currentNM();
