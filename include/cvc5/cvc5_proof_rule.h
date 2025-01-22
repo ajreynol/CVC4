@@ -4057,6 +4057,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_SUBSTR_EMPTY_START_NEG),
   /** Auto-generated from RARE rule str-substr-eq-empty */
   EVALUE(STR_SUBSTR_EQ_EMPTY),
+  /** Auto-generated from RARE rule str-substr-eq-empty-leq-len */
+  EVALUE(STR_SUBSTR_EQ_EMPTY_LEQ_LEN),
   /** Auto-generated from RARE rule str-len-replace-inv */
   EVALUE(STR_LEN_REPLACE_INV),
   /** Auto-generated from RARE rule str-len-replace-all-inv */
@@ -4299,6 +4301,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_EQ_REPL_SELF_EMP),
   /** Auto-generated from RARE rule str-eq-repl-no-change */
   EVALUE(STR_EQ_REPL_NO_CHANGE),
+  /** Auto-generated from RARE rule str-eq-repl-tgt-eq-len */
+  EVALUE(STR_EQ_REPL_TGT_EQ_LEN),
   /** Auto-generated from RARE rule str-eq-repl-len-one-emp-prefix */
   EVALUE(STR_EQ_REPL_LEN_ONE_EMP_PREFIX),
   /** Auto-generated from RARE rule str-eq-repl-emp-tgt-nemp */
