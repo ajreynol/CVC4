@@ -1279,7 +1279,12 @@ Node SequencesRewriter::rewriteViaStrEqLenUnifyPrefix(const Node& node)
       newRet = d_stringsEntail.inferEqsFromContains(node[i], node[1 - i]);
       if (!newRet.isNull())
       {
-        return newRet;
+        // don't rewrite if just returning a (flipped) equality
+        Node eq = i==0 ? node : node[i].eqNode(node[1-i]);
+        if (newRet!=eq)
+        {
+          return newRet;
+        }
       }
     }
   }

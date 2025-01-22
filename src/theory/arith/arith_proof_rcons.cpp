@@ -205,7 +205,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
           break;
         }
         // if its an equality, try to turn it into a substitution
-        if (a.getKind()==Kind::EQUAL)
+        if (asr.getKind()==Kind::EQUAL)
         {
           // must remember the proof prior to changing the substitution
           std::shared_ptr<ProofNode> pfn;

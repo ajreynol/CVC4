@@ -64,8 +64,16 @@ class ArithProofRCons : protected EnvObj, public ProofGenerator
                      TConvProofGenerator& tconv,
                      ArithSubs& asubs,
                      const Node& as);
-
+  /**
+   * Returns the result of applying asubs to a and then rewriting.
+   */
   Node applySR(ArithSubs& asubs, const Node& a);
+  /**
+   * Returns the result of applying asubs to a and then rewriting, where a
+   * is a predicate. Furthermore ensures that a proof of the returned predicate
+   * is added to cdp with free assumption a. Note that if we return a unchanged,
+   * then no proof is added to cdp.
+   */
   Node applySR(CDProof& cdp,
                TConvProofGenerator& tcnv,
                ArithSubs& asubs,
