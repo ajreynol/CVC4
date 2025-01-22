@@ -92,6 +92,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
+      Trace("macro-arith-str-pred") << "Check entailment " << n << std::endl;
       // Note that we do *not* pass a rewriter here, since the proof rule
       // cannot depend on the rewriter. This makes this rule capture most
       // but not all cases of this kind of reasoning.

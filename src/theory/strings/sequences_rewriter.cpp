@@ -2874,6 +2874,7 @@ Node SequencesRewriter::rewriteContains(Node node)
     // (str.contains (str.replace x y z) w) --->
     //   (str.contains (str.replace x y "") w)
     // if (str.contains z w) ---> false and (str.len w) = 1
+    // FIXME: remove?
     if (d_stringsEntail.checkLengthOne(node[1]))
     {
       Node ctn = d_stringsEntail.checkContains(node[0][2], node[1]);

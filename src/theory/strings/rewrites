@@ -448,6 +448,11 @@
   (str.contains s (str.replace t r u))
   false)
 
+(define-cond-rule str-replace-emp-ctn-src ((s ?Seq) (t ?Seq) (emp ?Seq))
+  (= emp (@seq.empty_of_type (@type_of s)))
+  (str.contains s (str.replace emp s t))
+  (= emp (str.replace emp s t)))
+
 (define-cond-rule str-substr-char-start-eq-len ((x ?Seq) (n Int) (emp ?Seq))
   (and (= (str.len x) 1) (= emp (@seq.empty_of_type (@type_of x))))
   (str.substr x n n)

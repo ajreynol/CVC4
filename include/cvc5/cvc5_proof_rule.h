@@ -4219,6 +4219,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPLACE_DUAL_CTN),
   /** Auto-generated from RARE rule str-replace-dual-ctn-false */
   EVALUE(STR_REPLACE_DUAL_CTN_FALSE),
+  /** Auto-generated from RARE rule str-replace-emp-ctn-src */
+  EVALUE(STR_REPLACE_EMP_CTN_SRC),
   /** Auto-generated from RARE rule str-substr-char-start-eq-len */
   EVALUE(STR_SUBSTR_CHAR_START_EQ_LEN),
   /** Auto-generated from RARE rule str-contains-repl-char */
