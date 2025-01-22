@@ -4231,6 +4231,14 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_CONTAINS_REPL_SELF),
   /** Auto-generated from RARE rule str-contains-repl-tgt */
   EVALUE(STR_CONTAINS_REPL_TGT),
+  /** Auto-generated from RARE rule str-repl-repl-src-tgt-no-ctn */
+  EVALUE(STR_REPL_REPL_SRC_TGT_NO_CTN),
+  /** Auto-generated from RARE rule str-repl-repl-src-self */
+  EVALUE(STR_REPL_REPL_SRC_SELF),
+  /** Auto-generated from RARE rule str-repl-repl-src-inv-no-ctn1 */
+  EVALUE(STR_REPL_REPL_SRC_INV_NO_CTN1),
+  /** Auto-generated from RARE rule str-repl-repl-src-inv-no-ctn2 */
+  EVALUE(STR_REPL_REPL_SRC_INV_NO_CTN2),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */

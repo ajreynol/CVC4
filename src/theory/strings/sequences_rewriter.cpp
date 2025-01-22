@@ -724,6 +724,7 @@ Node SequencesRewriter::rewriteConcat(Node node)
   //
   // E.g.: (str.++ ... (str.replace "A" x "") "A" (str.substr "A" 0 z) ...) -->
   // (str.++ ... [sort those 3 arguments] ... )
+  /*
   size_t lastIdx = 0;
   Node lastX;
   for (size_t i = 0, nsize = node_vec.size(); i < nsize; i++)
@@ -743,6 +744,7 @@ Node SequencesRewriter::rewriteConcat(Node node)
     }
   }
   std::sort(node_vec.begin() + lastIdx, node_vec.end());
+  */
 
   TypeNode tn = node.getType();
   Node retNode = utils::mkConcat(node_vec, tn);

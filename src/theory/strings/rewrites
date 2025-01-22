@@ -476,6 +476,25 @@
   (str.contains (str.replace x y z) z)
   (or (str.contains x y) (str.contains x z)))
 
+(define-cond-rule str-repl-repl-src-tgt-no-ctn ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
+  (not (str.contains z w))
+  (str.replace x w (str.replace z x y))
+  (str.replace x w z))
+
+(define-rule str-repl-repl-src-self ((x ?Seq) (y ?Seq) (z ?Seq))
+  (str.replace x (str.replace y x y) z)
+  (str.replace x y z))
+
+(define-cond-rule str-repl-repl-src-inv-no-ctn1 ((x ?Seq) (y ?Seq) (z ?Seq))
+  (not (str.contains y z))
+  (str.replace x (str.replace y x z) y)
+  (str.replace x y y))
+
+(define-cond-rule str-repl-repl-src-inv-no-ctn2 ((x ?Seq) (y ?Seq) (z ?Seq))
+  (not (str.contains y z))
+  (str.replace x (str.replace y x z) x)
+  (str.replace x y x))
+
 ; =============== Regular expression rules
 
 (define-rule re-all-elim () re.all (re.* re.allchar))
