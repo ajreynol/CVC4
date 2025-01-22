@@ -86,7 +86,8 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
     {
       // only matters if n contains strings
-      if (!expr::hasSubtermKinds(
+      if (n.getType().isBoolean() &&
+        !expr::hasSubtermKinds(
               {Kind::STRING_LENGTH, Kind::STRING_INDEXOF, Kind::STRING_STOI},
               n))
       {
@@ -113,6 +114,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       // first do basic length intro, which rewrites (str.len (str.++ x y))
       // to (+ (str.len x) (str.len y))
       Node nexp = ae.rewriteLengthIntro(tgt);
+      Trace("macro-arith-str-pred") << "...setup to " << nexp << std::endl;
       // Also must make this a "simple" check (isSimple = true).
       Node ret = ae.rewritePredViaEntailment(nexp, true);
       return ret;
