@@ -495,7 +495,6 @@
   (str.replace x (str.replace y x z) x)
   (str.replace x y x))
 
-
 (define-rule str-repl-repl-dual-self ((x ?Seq) (y ?Seq))
   (str.replace x (str.replace x y x) x)
   x)
