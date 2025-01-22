@@ -97,6 +97,7 @@ Node ArithEntail::rewriteArith(Node a)
   }
   else
   {
+    // NOTE: this may be out of sync with proof elaborators!!!
     a = rewriteLengthIntro(a);
   }
   // Otherwise, use the poly norm utility. This is important since the rewrite
