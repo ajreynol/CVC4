@@ -794,6 +794,7 @@ set(regress_0_tests
   regress0/deep-restart/dd.issue4735.smt2
   regress0/deep-restart/dd.wrong-sat-020322.smt2
   regress0/define-fun-model.smt2
+  regress0/define-fun-rec-shadow.smt2
   regress0/difficulty-simple.smt2
   regress0/difficulty-model-ex.smt2
   regress0/distinct.smtv1.smt2
@@ -1180,6 +1181,7 @@ set(regress_0_tests
   regress0/parser/dd.define-named.smt2
   regress0/parser/declarefun-emptyset-uf.smt2
   regress0/parser/define_sort.smt2
+  regress0/parser/define-fun-shadow-dec.smt2
   regress0/parser/double-bind.smt2
   regress0/parser/fp_value.smt2
   regress0/parser/force_logic_set_logic.smt2
@@ -1703,6 +1705,7 @@ set(regress_0_tests
   regress0/seq/proj-issue642-cycle-irr.smt2
   regress0/seq/proj-issue653.smt2
   regress0/seq/proj-issue747-cmi-len-split.smt2
+  regress0/seq/proj-issue753-ae.smt2
   regress0/seq/quant_len_trigger.smt2
   regress0/seq/query0-subtype-skel.smt2
   regress0/seq/query1-subtype.smt2
@@ -2862,6 +2865,7 @@ set(regress_1_tests
   regress1/quantifiers/choice-move-delta-relt.smt2
   regress1/quantifiers/const.cvc.smt2
   regress1/quantifiers/constfunc.cvc.smt2
+  regress1/quantifiers/dd_verisec-dt-sygus.smt2
   regress1/quantifiers/dd.binary_trees.adb_1105_16_loop_invariant_init_1.smt2
   regress1/quantifiers/dd.bug812-ieval.smt2
   regress1/quantifiers/dd_ghc_macro_quant_prenex.smt2

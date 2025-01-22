@@ -85,6 +85,12 @@ Node AlfNodeConverter::postConvert(Node n)
     // dummy node, return it
     return n;
   }
+  // case for skolems, unhandled variables, and other unhandled terms
+  // These should print as @const, or otherwise be printed as a skolem,
+  // which may need further processing below. In the case of unhandled
+  // terms (e.g. DT_SYGUS_EVAL), we prefer printing them as @const instead
+  // of using their smt2 printer, which would lead to undeclared identifiers in
+  // the proof.
   if (k == Kind::SKOLEM || k == Kind::DUMMY_SKOLEM || k == Kind::INST_CONSTANT
       || k == Kind::DT_SYGUS_EVAL)
   {
@@ -113,7 +119,7 @@ Node AlfNodeConverter::postConvert(Node n)
     // is used as (var N T) throughout.
     Node index = d_nm->mkConstInt(Rational(getOrAssignIndexForConst(n)));
     Node tc = typeAsNode(tn);
-    return mkInternalApp("const", {index, tc}, tn);
+    return mkInternalApp("@const", {index, tc}, tn);
   }
   else if (k == Kind::BOUND_VARIABLE)
   {
@@ -130,7 +136,8 @@ Node AlfNodeConverter::postConvert(Node n)
       ss << n;
       sname = ss.str();
     }
-    // A variable x of type T can unambiguously referred to as (eo::var "x" T).
+    // A variable x of type T can unambiguously referred to as (@var "x" T),
+    // which is a macro for (eo::var "x" T) in the cpc signature.
     // We convert to this representation here, which will often be letified.
     TypeNode tn = n.getType();
     std::vector<Node> args;
@@ -138,7 +145,7 @@ Node AlfNodeConverter::postConvert(Node n)
     args.push_back(nn);
     Node tnn = typeAsNode(tn);
     args.push_back(tnn);
-    return mkInternalApp("eo::var", args, tn);
+    return mkInternalApp("@var", args, tn);
   }
   else if (k == Kind::VARIABLE)
   {
