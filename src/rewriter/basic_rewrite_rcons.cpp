@@ -866,6 +866,28 @@ bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
 bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
                                                             const Node& eq)
 {
+  Trace("brc-macro") << "Expand macro str eq len unify prefix " << eq << std::endl;
+  NodeManager* nm = nodeManager();
+  theory::strings::ArithEntail ae(nullptr);
+  theory::strings::StringsEntail sent(nullptr, ae, nullptr);
+  Node eqsrc = eq[0];
+  Node ret = sent.inferEqsFromContains(eqsrc[0], eqsrc[1]);
+  if (ret!=eq[1])
+  {
+    Trace("brc-macro") << "...failed " << ret << ", try flip" << std::endl;
+    eqsrc = eq[0][1].eqNode(eq[0][0]);
+    ret = sent.inferEqsFromContains(eqsrc[0], eqsrc[1]);
+    if (ret!=eq[1])
+    {
+      Trace("brc-macro") << "... failed to replicate " << ret << std::endl;
+      return false;
+    }
+  }
+  Node len1 = nm->mkNode(Kind::STRING_LENGTH, eqsrc[0]);
+  Node len2 = nm->mkNode(Kind::STRING_LENGTH, eqsrc[1]);
+  Node len1i = ae.rewriteLengthIntro(len1);
+  Node len2i = ae.rewriteLengthIntro(len2);
+  Trace("brc-macro") << "...length: " << len1i << " == " << len2i << std::endl;
   return false;
 }
 
