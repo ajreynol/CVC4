@@ -453,7 +453,7 @@
   (str.contains (str.replace x y z) w)
   (or (str.contains x w) (and (str.contains x y) (str.contains z w))))
 
-(define-cond-rule str-contains-repl-self-tgt-char ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
+(define-cond-rule str-contains-repl-self-tgt-char ((x ?Seq) (y ?Seq) (w ?Seq))
   (= (str.len w) 1)
   (str.contains (str.replace x y x) w)
   (str.contains x w))
