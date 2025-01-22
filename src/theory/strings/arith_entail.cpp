@@ -95,6 +95,10 @@ Node ArithEntail::rewriteArith(Node a)
   {
     return d_rr->rewrite(a);
   }
+  else
+  {
+    a = rewriteLengthIntro(a);
+  }
   // Otherwise, use the poly norm utility. This is important since the rewrite
   // must be justified by ARITH_POLY_NORM when in proof mode (when d_rr is
   // null).

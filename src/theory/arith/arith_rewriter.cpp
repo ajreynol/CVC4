@@ -117,6 +117,7 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       Trace("macro-arith-str-pred") << "...setup to " << nexp << std::endl;
       // Also must make this a "simple" check (isSimple = true).
       Node ret = ae.rewritePredViaEntailment(nexp, true);
+      Trace("macro-arith-str-pred") << "...result = " << ret << std::endl;
       return ret;
     }
     break;
