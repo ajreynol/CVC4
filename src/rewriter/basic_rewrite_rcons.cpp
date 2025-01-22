@@ -663,6 +663,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
     //=== new
     // since rewriteArith applies length intro, in rare cases we may need
     // to apply length intro to the resulting approximation.
+    /*
     TConvProofGenerator tcpga(d_env, nullptr);
     Node approxGeqi = ae.rewriteLengthIntro(approxGeq, &tcpga);
     if (approxGeqi != approxGeq)
@@ -675,6 +676,7 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
       transEq.push_back(equiv);
       approxGeq = approxGeqi;
     }
+    */
     //=== new
     Node areq = approxGeq.eqNode(approxRewGeq);
     Trace("brc-macro") << "- prove " << areq << " via arith-poly-norm"
