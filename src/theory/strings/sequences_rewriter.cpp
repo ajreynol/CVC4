@@ -2430,16 +2430,12 @@ Node SequencesRewriter::rewriteSubstr(Node node)
     return returnRewrite(node, ret, Rewrite::SS_LEN_ONE_Z_Z);
   }
 
-  Node slenRew =
-      d_arithEntail.rewriteArith(nm->mkNode(Kind::STRING_LENGTH, node[0]));
-  if (node[2] != slenRew)
+  Node slenRew = nm->mkNode(Kind::STRING_LENGTH, node[0]);
+  if (d_arithEntail.check(node[2], slenRew, true))
   {
-    if (d_arithEntail.check(node[2], slenRew))
-    {
-      // end point beyond end point of string, map to slenRew
-      Node ret = nm->mkNode(Kind::STRING_SUBSTR, node[0], node[1], slenRew);
-      return returnRewrite(node, ret, Rewrite::SS_END_PT_NORM);
-    }
+    // end point beyond end point of string, map to slenRew
+    Node ret = nm->mkNode(Kind::STRING_SUBSTR, node[0], node[1], slenRew);
+    return returnRewrite(node, ret, Rewrite::SS_END_PT_NORM);
   }
 
   // Rewrite based on symbolic length analysis, using the strings entailment
@@ -2466,8 +2462,7 @@ Node SequencesRewriter::rewriteSubstr(Node node)
 
       // the length of a string from the inner substr subtracts the start point
       // of the outer substr
-      Node len_from_inner = d_arithEntail.rewriteArith(
-          nm->mkNode(Kind::SUB, node[0][2], start_outer));
+      Node len_from_inner = nm->mkNode(Kind::SUB, node[0][2], start_outer);
       Node len_from_outer = node[2];
       Node new_len;
       // take quantity that is for sure smaller than the other
