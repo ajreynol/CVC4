@@ -4177,10 +4177,14 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_INDEXOF_SELF),
   /** Auto-generated from RARE rule str-indexof-no-contains */
   EVALUE(STR_INDEXOF_NO_CONTAINS),
+  /** Auto-generated from RARE rule str-indexof-oob */
+  EVALUE(STR_INDEXOF_OOB),
   /** Auto-generated from RARE rule str-indexof-contains-pre */
   EVALUE(STR_INDEXOF_CONTAINS_PRE),
   /** Auto-generated from RARE rule str-indexof-find */
   EVALUE(STR_INDEXOF_FIND),
+  /** Auto-generated from RARE rule str-indexof-eq-irr */
+  EVALUE(STR_INDEXOF_EQ_IRR),
   /** Auto-generated from RARE rule str-indexof-re-none */
   EVALUE(STR_INDEXOF_RE_NONE),
   /** Auto-generated from RARE rule str-to-lower-concat */

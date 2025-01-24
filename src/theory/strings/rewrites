@@ -355,6 +355,11 @@
   (str.indexof t s n)
   (- 1))
 
+(define-cond-rule str-indexof-oob ((t ?Seq) (s ?Seq) (n Int))
+  (> n (str.len t))
+  (str.indexof t s n)
+  (- 1))
+
 (define-cond-rule str-indexof-contains-pre ((t1 ?Seq) (t2 ?Seq :list) (s ?Seq) (n Int))
   (str.contains (str.substr t1 n (str.len t1)) s)
   (str.indexof (str.++ t1 t2) s n)
@@ -364,6 +369,11 @@
   (str.prefixof s (str.substr t n (str.len t)))
   (str.indexof t s n)
   n)
+
+(define-cond-rule str-indexof-eq-irr ((t ?Seq) (s ?Seq) (r ?Seq) (n Int))
+  (= (str.substr t n (str.len t)) (str.substr r n (str.len r)))
+  (= (str.indexof t s n) (str.indexof r s n))
+  true)
 
 (define-rule str-indexof-re-none ((t ?Seq) (n Int))
   (str.indexof_re t re.none n)

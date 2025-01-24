@@ -345,6 +345,8 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
   }
 
   // ------- homogeneous constants
+  // FIXME: maybe make this entire thing an extended rewrite??
+  /*
   for (unsigned i = 0; i < 2; i++)
   {
     Node cn = d_stringsEntail.checkHomogeneousString(node[i]);
@@ -363,7 +365,7 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
         // Sort the operands of the concats on both sides of the equality
         // (since both sides may only contain one char, the order does not
         // matter)
-        //std::sort(c[j].begin(), c[j].end());
+        std::sort(c[j].begin(), c[j].end());
         for (const Node& cc : c[j])
         {
           if (cc.isConst())
@@ -423,6 +425,7 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
       }
     }
   }
+  */
 
   // ------- rewrites for (= "" _)
   Node empty = Word::mkEmptyWord(stype);
