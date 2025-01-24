@@ -212,7 +212,7 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "eMatching"
-  category   = "regular"
+  category   = "common"
   long       = "e-matching"
   type       = "bool"
   default    = "true"
@@ -515,7 +515,7 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "fullSaturateQuant"
-  category   = "regular"
+  category   = "common"
   long       = "full-saturate-quant"
   type       = "bool"
   default    = "false"
@@ -523,7 +523,7 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "enumInst"
-  category   = "regular"
+  category   = "common"
   long       = "enum-inst"
   type       = "bool"
   default    = "false"
