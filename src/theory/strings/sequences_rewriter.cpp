@@ -3866,6 +3866,15 @@ Node SequencesRewriter::rewritePrefixSuffix(Node n)
   }
   Node lens = nodeManager()->mkNode(Kind::STRING_LENGTH, n[0]);
   Node lent = nodeManager()->mkNode(Kind::STRING_LENGTH, n[1]);
+  
+  // Check if we can turn the prefix/suffix into an equality by showing that the
+  // prefix/suffix is at least as long as the string
+  if (d_arithEntail.check(lens, lent))
+  {
+    Node retNode = n[0].eqNode(n[1]);
+    return returnRewrite(n, retNode, Rewrite::SUF_PREFIX_TO_EQS);
+  }
+  
   Node val;
   if (isPrefix)
   {
@@ -3876,13 +3885,6 @@ Node SequencesRewriter::rewritePrefixSuffix(Node n)
     val = nodeManager()->mkNode(Kind::SUB, lent, lens);
   }
 
-  // Check if we can turn the prefix/suffix into equalities by showing that the
-  // prefix/suffix is at least as long as the string
-  Node eqs = d_stringsEntail.inferEqsFromContains(n[1], n[0]);
-  if (!eqs.isNull())
-  {
-    return returnRewrite(n, eqs, Rewrite::SUF_PREFIX_TO_EQS);
-  }
 
   // general reduction to equality + substr
   Node retNode =
