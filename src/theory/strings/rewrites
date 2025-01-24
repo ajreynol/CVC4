@@ -69,6 +69,11 @@
   (= (str.substr s n m) r)
   (= s r))
 
+(define-cond-rule str-substr-z-eq-empty-leq ((s ?Seq) (r ?Seq) (m Int))
+  (and (not (= s (@seq.empty_of_type (@type_of s)))) (= r (@seq.empty_of_type (@type_of s))))
+  (= (str.substr s 0 m) r)
+  (<= m 0))
+
 (define-cond-rule str-substr-eq-empty-leq-len ((s ?Seq) (emp ?Seq) (n Int) (m Int))
   (and (>= n 0) (> m 0) (= emp (@seq.empty_of_type (@type_of emp))))
   (= (str.substr s n m) emp)
@@ -505,6 +510,11 @@
 (define-rule str-contains-repl-tgt ((x ?Seq) (y ?Seq) (z ?Seq))
   (str.contains (str.replace x y z) z)
   (or (str.contains x y) (str.contains x z)))
+
+(define-cond-rule str-repl-repl-len-id ((x ?Seq) (y ?Seq))
+  (>= (str.len y) (str.len x))
+  (str.replace x y x)
+  x)
 
 (define-cond-rule str-repl-repl-src-tgt-no-ctn ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
   (not (str.contains z w))
