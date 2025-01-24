@@ -661,9 +661,9 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   if (approx != approxRew)
   {
     //=== new
+    /*
     // since rewriteArith applies length intro, in rare cases we may need
     // to apply length intro to the resulting approximation.
-    /*
     TConvProofGenerator tcpga(d_env, nullptr);
     Node approxGeqi = ae.rewriteLengthIntro(approxGeq, &tcpga);
     if (approxGeqi != approxGeq)
