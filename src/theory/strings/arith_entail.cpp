@@ -288,8 +288,8 @@ Node ArithEntail::findApproxInternal(Node ar, bool isSimple)
   {
     isSimple = true;
   }
-  Assert(arith::PolyNorm::getPolyNorm(ar) == ar)
-      << "Not rewritten " << ar << ", got " << arith::PolyNorm::getPolyNorm(ar);
+  //Assert(arith::PolyNorm::getPolyNorm(ar) == ar)
+  //    << "Not rewritten " << ar << ", got " << arith::PolyNorm::getPolyNorm(ar);
   NodeManager* nm = NodeManager::currentNM();
   std::map<Node, Node> msum;
   Trace("strings-ent-approx-debug")

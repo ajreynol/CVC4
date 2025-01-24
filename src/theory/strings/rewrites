@@ -256,6 +256,11 @@
   (str.contains x y)
   (= x y))
 
+(define-cond-rule str-contains-char ((x ?Seq) (y ?Seq))
+  (= (str.len x) 1)
+  (str.contains x y)
+  (or (= (@seq.empty_of_type (@type_of x)) y) (= x y)))
+
 (define-rule str-at-elim ((x ?Seq) (n Int)) (str.at x n) (str.substr x n 1))
 
 ; not effective since due to not proving inequalities on length
@@ -434,6 +439,11 @@
   (str.contains (str.from_int n) s)
   false)
 
+(define-cond-rule str-substr-ctn-contra ((t ?Seq) (s ?Seq) (n Int) (m Int))
+  (not (str.contains t s))
+  (str.contains (str.substr t n m) s)
+  false)
+
 (define-rule str-substr-ctn ((s ?Seq) (n Int) (m Int))
   (str.contains s (str.substr s n m))
   true)
@@ -453,10 +463,10 @@
   (str.contains s (str.replace emp s t))
   (= emp (str.replace emp s t)))
 
-(define-cond-rule str-substr-char-start-eq-len ((x ?Seq) (n Int) (emp ?Seq))
-  (and (= (str.len x) 1) (= emp (@seq.empty_of_type (@type_of x))))
+(define-cond-rule str-substr-char-start-eq-len ((x ?Seq) (n Int))
+  (= (str.len x) 1)
   (str.substr x n n)
-  emp)
+  (@seq.empty_of_type (@type_of x)))
 
 (define-cond-rule str-contains-repl-char ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
   (and (= (str.len w) 1) (not (str.contains w y)))

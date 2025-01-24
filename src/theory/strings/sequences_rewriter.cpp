@@ -2877,6 +2877,7 @@ Node SequencesRewriter::rewriteContains(Node node)
     //   (str.contains (str.replace x y "") w)
     // if (str.contains z w) ---> false and (str.len w) = 1
     // FIXME: remove?
+    /*
     if (d_stringsEntail.checkLengthOne(node[1]))
     {
       Node ctn = d_stringsEntail.checkContains(node[0][2], node[1]);
@@ -2890,6 +2891,7 @@ Node SequencesRewriter::rewriteContains(Node node)
         return returnRewrite(node, ret, Rewrite::CTN_REPL_SIMP_REPL);
       }
     }
+    */
   }
   else if (node[0].getKind() == Kind::STRING_ITOS && node[1].isConst())
   {
