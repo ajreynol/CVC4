@@ -333,7 +333,7 @@ name   = "SMT Layer"
 
 [[option]]
   name       = "sortInference"
-  category   = "regular"
+  category   = "expert"
   long       = "sort-inference"
   type       = "bool"
   default    = "false"
