@@ -344,89 +344,6 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
     }
   }
 
-  // ------- homogeneous constants
-  // FIXME: maybe make this entire thing an extended rewrite??
-  /*
-  for (unsigned i = 0; i < 2; i++)
-  {
-    Node cn = d_stringsEntail.checkHomogeneousString(node[i]);
-    if (!cn.isNull() && !Word::isEmpty(cn))
-    {
-      Assert(cn.isConst());
-      Assert(Word::getLength(cn) == 1);
-
-      // The operands of the concat on each side of the equality without
-      // constant strings
-      std::vector<Node> trimmed[2];
-      // Counts the number of `cn`s on each side
-      size_t numCns[2] = {0, 0};
-      for (size_t j = 0; j < 2; j++)
-      {
-        // Sort the operands of the concats on both sides of the equality
-        // (since both sides may only contain one char, the order does not
-        // matter)
-        std::sort(c[j].begin(), c[j].end());
-        for (const Node& cc : c[j])
-        {
-          if (cc.isConst())
-          {
-            // Count the number of `cn`s in the string constant and make
-            // sure that all chars are `cn`s
-            std::vector<Node> veccc = Word::getChars(cc);
-            for (const Node& cv : veccc)
-            {
-              if (cv != cn)
-              {
-                // This conflict case should mostly should be taken care of by
-                // multiset reasoning in the strings rewriter, but we recognize
-                // this conflict just in case.
-                new_ret = nm->mkConst(false);
-                return returnRewrite(
-                    node, new_ret, Rewrite::STR_EQ_CONST_NHOMOG);
-              }
-              numCns[j]++;
-            }
-          }
-          else
-          {
-            trimmed[j].push_back(cc);
-          }
-        }
-      }
-
-      // We have to remove the same number of `cn`s from both sides, so the
-      // side with less `cn`s determines how many we can remove
-      size_t trimmedConst = std::min(numCns[0], numCns[1]);
-      for (size_t j = 0; j < 2; j++)
-      {
-        size_t diff = numCns[j] - trimmedConst;
-        if (diff != 0)
-        {
-          // Add a constant string to the side with more `cn`s to restore
-          // the difference in number of `cn`s
-          std::vector<Node> vec(diff, cn);
-          trimmed[j].push_back(Word::mkWordFlatten(vec));
-        }
-      }
-
-      Node lhs = utils::mkConcat(trimmed[i], stype);
-      Node ss = utils::mkConcat(trimmed[1 - i], stype);
-      if (lhs != node[i] || ss != node[1 - i])
-      {
-        // e.g.
-        //  "AA" = y ++ x ---> "AA" = x ++ y if x < y
-        //  "AAA" = y ++ "A" ++ z ---> "AA" = y ++ z
-        //
-        // We generally don't apply the extended equality rewriter if the
-        // original node was an equality but we may be able to do additional
-        // rewriting here.
-        new_ret = lhs.eqNode(ss);
-        return returnRewrite(node, new_ret, Rewrite::STR_EQ_HOMOG_CONST);
-      }
-    }
-  }
-  */
-
   // ------- rewrites for (= "" _)
   Node empty = Word::mkEmptyWord(stype);
   for (size_t i = 0; i < 2; i++)
@@ -721,33 +638,6 @@ Node SequencesRewriter::rewriteConcat(Node node)
   {
     node_vec.push_back(preNode);
   }
-
-  // Sort adjacent operands in str.++ that all result in the same string or the
-  // empty string.
-  //
-  // E.g.: (str.++ ... (str.replace "A" x "") "A" (str.substr "A" 0 z) ...) -->
-  // (str.++ ... [sort those 3 arguments] ... )
-  /*
-  size_t lastIdx = 0;
-  Node lastX;
-  for (size_t i = 0, nsize = node_vec.size(); i < nsize; i++)
-  {
-    Node s = d_stringsEntail.getStringOrEmpty(node_vec[i]);
-    bool nextX = false;
-    if (s != lastX)
-    {
-      nextX = true;
-    }
-
-    if (nextX)
-    {
-      std::sort(node_vec.begin() + lastIdx, node_vec.begin() + i);
-      lastX = s;
-      lastIdx = i;
-    }
-  }
-  std::sort(node_vec.begin() + lastIdx, node_vec.end());
-  */
 
   TypeNode tn = node.getType();
   Node retNode = utils::mkConcat(node_vec, tn);
@@ -2753,7 +2643,7 @@ Node SequencesRewriter::rewriteContains(Node node)
       // (str.contains x (str.++ w (str.replace x y x) z)) --->
       //   (and (= w "") (= x (str.replace x y x)) (= z ""))
       //
-      // TODO: Remove with under-/over-approximation
+      // FIXME: make extended
       /*
       if (node[0] == n[0] && node[0] == n[2])
       {

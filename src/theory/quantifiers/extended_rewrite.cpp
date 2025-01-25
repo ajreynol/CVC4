@@ -248,15 +248,7 @@ Node ExtendedRewriter::extendedRewrite(Node n) const
       }
       else if (tret.isStringLike())
       {
-        Node len0 = d_nm->mkNode(Kind::STRING_LENGTH, ret[0]);
-        Node len1 = d_nm->mkNode(Kind::STRING_LENGTH, ret[1]);
-        Node len_eq = len0.eqNode(len1);
-        len_eq = d_rew.rewrite(len_eq);
-        if (len_eq.isConst() && !len_eq.getConst<bool>())
-        {
-          new_ret = len_eq;
-          debugExtendedRewrite(ret, new_ret, "String EQUAL len entailment");
-        }
+        new_ret = extendedRewriteStrings(ret);
       }
     }
   }
@@ -1749,8 +1741,151 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   {
     // allow recursive approximations
     strings::ArithEntail ae(&d_rew, true);
+    theory::strings::StringsEntail se(&d_rew, ae, nullptr);
     strings::SequencesRewriter sr(d_nm, &d_rew, ae, nullptr);
-    return sr.rewriteEqualityExt(node);
+    // we invoke the extended equality rewriter, which does standard
+    // rewrites, which notice are only invoked at preprocessing
+    // and not during Rewriter::rewrite.
+    Node ret = sr.rewriteEqualityExt(node);
+    if (ret!=node)
+    {
+      debugExtendedRewrite(node, ret, "STR_EXT_EQ_REWRITE");
+      return ret;
+    }
+
+    // ------- length entailment
+    Node len0 = d_nm->mkNode(Kind::STRING_LENGTH, node[0]);
+    Node len1 = d_nm->mkNode(Kind::STRING_LENGTH, node[1]);
+    Node len_eq = len0.eqNode(len1);
+    len_eq = d_rew.rewrite(len_eq);
+    if (len_eq==d_false)
+    {
+      debugExtendedRewrite(node, d_false, "String EQUAL len entailment");
+      return d_false;
+    }
+
+    TypeNode stype = node[0].getType();
+    std::vector<Node> c[2];
+    for (unsigned i = 0; i < 2; i++)
+    {
+      theory::strings::utils::getConcat(node[i], c[i]);
+    }
+
+    // ------- homogeneous constants
+    for (unsigned i = 0; i < 2; i++)
+    {
+      Node cn = se.checkHomogeneousString(node[i]);
+      if (!cn.isNull() && !theory::strings::Word::isEmpty(cn))
+      {
+        Assert(cn.isConst());
+        Assert(theory::strings::Word::getLength(cn) == 1);
+
+        // The operands of the concat on each side of the equality without
+        // constant strings
+        std::vector<Node> trimmed[2];
+        // Counts the number of `cn`s on each side
+        size_t numCns[2] = {0, 0};
+        for (size_t j = 0; j < 2; j++)
+        {
+          // Sort the operands of the concats on both sides of the equality
+          // (since both sides may only contain one char, the order does not
+          // matter)
+          std::sort(c[j].begin(), c[j].end());
+          for (const Node& cc : c[j])
+          {
+            if (cc.isConst())
+            {
+              // Count the number of `cn`s in the string constant and make
+              // sure that all chars are `cn`s
+              std::vector<Node> veccc = theory::strings::Word::getChars(cc);
+              for (const Node& cv : veccc)
+              {
+                if (cv != cn)
+                {
+                  // This conflict case should mostly should be taken care of by
+                  // multiset reasoning in the strings rewriter, but we recognize
+                  // this conflict just in case.
+                  debugExtendedRewrite(node, d_false, "STR_EQ_CONST_NHOMOG");
+                  return d_false;
+                }
+                numCns[j]++;
+              }
+            }
+            else
+            {
+              trimmed[j].push_back(cc);
+            }
+          }
+        }
+
+        // We have to remove the same number of `cn`s from both sides, so the
+        // side with less `cn`s determines how many we can remove
+        size_t trimmedConst = std::min(numCns[0], numCns[1]);
+        for (size_t j = 0; j < 2; j++)
+        {
+          size_t diff = numCns[j] - trimmedConst;
+          if (diff != 0)
+          {
+            // Add a constant string to the side with more `cn`s to restore
+            // the difference in number of `cn`s
+            std::vector<Node> vec(diff, cn);
+            trimmed[j].push_back(theory::strings::Word::mkWordFlatten(vec));
+          }
+        }
+
+        Node lhs = theory::strings::utils::mkConcat(trimmed[i], stype);
+        Node ss = theory::strings::utils::mkConcat(trimmed[1 - i], stype);
+        if (lhs != node[i] || ss != node[1 - i])
+        {
+          // e.g.
+          //  "AA" = y ++ x ---> "AA" = x ++ y if x < y
+          //  "AAA" = y ++ "A" ++ z ---> "AA" = y ++ z
+          //
+          // We generally don't apply the extended equality rewriter if the
+          // original node was an equality but we may be able to do additional
+          // rewriting here.
+          Node new_ret = lhs.eqNode(ss);
+          debugExtendedRewrite(node, new_ret, "STR_EQ_CONST_NHOMOG");
+          return new_ret;
+        }
+      }
+    }
+  }
+  else if (k == Kind::STRING_CONCAT)
+  {
+    // Sort adjacent operands in str.++ that all result in the same string or the
+    // empty string.
+    //
+    // E.g.: (str.++ ... (str.replace "A" x "") "A" (str.substr "A" 0 z) ...) -->
+    // (str.++ ... [sort those 3 arguments] ... )
+    strings::ArithEntail ae(&d_rew, true);
+    theory::strings::StringsEntail se(&d_rew, ae, nullptr);
+    std::vector<Node> vec(node.begin(), node.end());
+    size_t lastIdx = 0;
+    Node lastX;
+    for (size_t i = 0, nsize = vec.size(); i < nsize; i++)
+    {
+      Node s = se.getStringOrEmpty(vec[i]);
+      bool nextX = false;
+      if (s != lastX)
+      {
+        nextX = true;
+      }
+      if (nextX)
+      {
+        std::sort(vec.begin() + lastIdx, vec.begin() + i);
+        lastX = s;
+        lastIdx = i;
+      }
+    }
+    std::sort(vec.begin() + lastIdx, vec.end());
+    TypeNode tn = node.getType();
+    Node retNode = theory::strings::utils::mkConcat(vec, tn);
+    if (retNode != node)
+    {
+      debugExtendedRewrite(node, retNode, "CONCAT_NORM_SORT");
+      return retNode;
+    }
   }
   else if (k == Kind::STRING_SUBSTR)
   {
