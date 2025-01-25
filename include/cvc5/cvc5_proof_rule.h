@@ -3189,6 +3189,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_STR_CONST_NCTN_CONCAT),
   EVALUE(MACRO_STR_IN_RE_INCLUSION),
   EVALUE(MACRO_RE_INTER_UNION_CONST_ELIM),
+  EVALUE(MACRO_SEQ_EVAL_OP),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- string indexof regex evaluation**

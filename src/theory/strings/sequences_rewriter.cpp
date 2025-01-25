@@ -90,6 +90,9 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM,
                            TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_SEQ_EVAL_OP,
+                           TheoryRewriteCtx::POST_DSL);
+
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -198,6 +201,28 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return rewriteViaMacroStrInReInclusion(n);
     case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM:
       return rewriteViaMacroReInterUnionConstElim(n);
+    case ProofRewriteRule::MACRO_SEQ_EVAL_OP:
+    {
+      // this is a catchall rule for evaluation of operations on constant sequences
+      TypeNode tn = utils::getOwnerStringType(n);
+      if (tn.isSequence())
+      {
+        for (const Node& nc : n)
+        {
+          if (!nc.isConst())
+          {
+            return Node::null();
+          }
+        }
+        RewriteResponse response = postRewrite(n);
+        Node ret = response.d_node;
+        if (ret.isConst())
+        {
+          return ret;
+        }
+      }
+    }
+      break;
     default: break;
   }
   return Node::null();

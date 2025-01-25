@@ -315,6 +315,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT: return "macro-str-const-nctn-concat";
     case ProofRewriteRule::MACRO_STR_IN_RE_INCLUSION: return "macro-str-in-re-inclusion";
     case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM: return "macro-re-inter-union-const-elim";
+    case ProofRewriteRule::MACRO_SEQ_EVAL_OP: return "macro-seq-eval-op";
     case ProofRewriteRule::STR_INDEXOF_RE_EVAL: return "str-indexof-re-eval";
     case ProofRewriteRule::STR_REPLACE_RE_EVAL: return "str-replace-re-eval";
     case ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL:

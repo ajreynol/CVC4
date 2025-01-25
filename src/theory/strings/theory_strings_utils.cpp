@@ -454,8 +454,6 @@ TypeNode getOwnerStringType(Node n)
   {
     tn = n.getType();
   }
-  AlwaysAssert(tn.isStringLike())
-      << "Unexpected term in getOwnerStringType : " << n << ", type " << tn;
   return tn;
 }
 
