@@ -1736,13 +1736,14 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   Trace("q-ext-rewrite-debug")
       << "Extended rewrite strings : " << node << std::endl;
 
+  // allow recursive approximations
+  strings::ArithEntail ae(&d_rew, true);
+  strings::StringsEntail se(&d_rew, ae, nullptr);
+  strings::SequencesRewriter sr(d_nm, &d_rew, ae, nullptr);
+
   Kind k = node.getKind();
   if (k == Kind::EQUAL)
   {
-    // allow recursive approximations
-    strings::ArithEntail ae(&d_rew, true);
-    strings::StringsEntail se(&d_rew, ae, nullptr);
-    strings::SequencesRewriter sr(d_nm, &d_rew, ae, nullptr);
     // we invoke the extended equality rewriter, which does standard
     // rewrites, which notice are only invoked at preprocessing
     // and not during Rewriter::rewrite.
@@ -1858,8 +1859,6 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
     //
     // E.g.: (str.++ ... (str.replace "A" x "") "A" (str.substr "A" 0 z) ...) -->
     // (str.++ ... [sort those 3 arguments] ... )
-    strings::ArithEntail ae(&d_rew, true);
-    strings::StringsEntail se(&d_rew, ae, nullptr);
     std::vector<Node> vec(node.begin(), node.end());
     size_t lastIdx = 0;
     Node lastX;
@@ -1891,10 +1890,9 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   {
     NodeManager* nm = d_nm;
     Node tot_len = d_rew.rewrite(nm->mkNode(Kind::STRING_LENGTH, node[0]));
-    strings::ArithEntail aent(&d_rew);
     // (str.substr s x y) --> "" if x < len(s) |= 0 >= y
     Node n1_lt_tot_len = d_rew.rewrite(nm->mkNode(Kind::LT, node[1], tot_len));
-    if (aent.checkWithAssumption(n1_lt_tot_len, d_intZero, node[2], false))
+    if (ae.checkWithAssumption(n1_lt_tot_len, d_intZero, node[2], false))
     {
       Node ret = strings::Word::mkEmptyWord(node.getType());
       debugExtendedRewrite(node, ret, "SS_START_ENTAILS_ZERO_LEN");
@@ -1903,7 +1901,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
 
     // (str.substr s x y) --> "" if 0 < y |= x >= str.len(s)
     Node non_zero_len = d_rew.rewrite(nm->mkNode(Kind::LT, d_intZero, node[2]));
-    if (aent.checkWithAssumption(non_zero_len, node[1], tot_len, false))
+    if (ae.checkWithAssumption(non_zero_len, node[1], tot_len, false))
     {
       Node ret = strings::Word::mkEmptyWord(node.getType());
       debugExtendedRewrite(node, ret, "SS_NON_ZERO_LEN_ENTAILS_OOB");
@@ -1912,7 +1910,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
     // (str.substr s x y) --> "" if x >= 0 |= 0 >= str.len(s)
     Node geq_zero_start =
         d_rew.rewrite(nm->mkNode(Kind::GEQ, node[1], d_intZero));
-    if (aent.checkWithAssumption(geq_zero_start, d_intZero, tot_len, false))
+    if (ae.checkWithAssumption(geq_zero_start, d_intZero, tot_len, false))
     {
       Node ret = strings::Word::mkEmptyWord(node.getType());
       debugExtendedRewrite(node, ret, "SS_GEQ_ZERO_START_ENTAILS_EMP_S");
@@ -1923,8 +1921,6 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   {
     if (node[0] == node[2])
     {
-      strings::ArithEntail ae(&d_rew);
-      strings::StringsEntail se(&d_rew, ae, nullptr);
       // (str.replace x y x) ---> (str.replace x (str.++ y1 ... yn) x)
       // if 1 >= (str.len x) and (= y "") ---> (= y1 "") ... (= yn "")
       if (se.checkLengthOne(node[0]))
@@ -1953,7 +1949,9 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
       }
     }
     Node cmp_con = d_nm->mkNode(Kind::STRING_CONTAINS, node[0], node[1]);
-    Node cmp_conr = d_rew.rewrite(cmp_con);
+    // note we make a full recursive call to extended rewrite here, which should
+    // be fine since the term we are rewriting is simpler than the current one.
+    Node cmp_conr = extendedRewrite(cmp_con);
     if (cmp_conr.getKind() == Kind::EQUAL || cmp_conr.getKind() == Kind::AND)
     {
       TypeNode stype = node.getType();
@@ -2012,8 +2010,6 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   {
     if (node[0].getKind() == Kind::STRING_REPLACE)
     {
-      strings::ArithEntail ae(&d_rew);
-      strings::StringsEntail se(&d_rew, ae, nullptr);
       // (str.contains (str.replace x y z) w) --->
       //   (str.contains (str.replace x y "") w)
       // if (str.contains z w) ---> false and (str.len w) = 1
@@ -2047,6 +2043,14 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
         return ret;
       }
     }
+  }
+  // otherwise, the use of recursive approximations and rewriting via
+  // the entailment utilities may make a standard conditional rewrite
+  // applicable.
+  RewriteResponse rr = sr.postRewrite(node);
+  if (rr.d_node!=node)
+  {
+    return rr.d_node;
   }
 
   return Node::null();
