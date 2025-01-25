@@ -239,7 +239,7 @@ Node ExtendedRewriter::extendedRewrite(Node n) const
       TypeNode tret = ret[0].getType();
       if (tret.isInteger())
       {
-        theory::strings::ArithEntail ae(&d_rew);
+        strings::ArithEntail ae(&d_rew);
         new_ret = ae.rewritePredViaEntailment(ret);
         if (!new_ret.isNull())
         {
@@ -256,7 +256,7 @@ Node ExtendedRewriter::extendedRewrite(Node n) const
   {
     if (ret[0].getType().isInteger())
     {
-      theory::strings::ArithEntail ae(&d_rew);
+      strings::ArithEntail ae(&d_rew);
       new_ret = ae.rewritePredViaEntailment(ret);
       if (!new_ret.isNull())
       {
@@ -1741,7 +1741,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   {
     // allow recursive approximations
     strings::ArithEntail ae(&d_rew, true);
-    theory::strings::StringsEntail se(&d_rew, ae, nullptr);
+    strings::StringsEntail se(&d_rew, ae, nullptr);
     strings::SequencesRewriter sr(d_nm, &d_rew, ae, nullptr);
     // we invoke the extended equality rewriter, which does standard
     // rewrites, which notice are only invoked at preprocessing
@@ -1768,17 +1768,17 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
     std::vector<Node> c[2];
     for (unsigned i = 0; i < 2; i++)
     {
-      theory::strings::utils::getConcat(node[i], c[i]);
+      strings::utils::getConcat(node[i], c[i]);
     }
 
     // ------- homogeneous constants
     for (unsigned i = 0; i < 2; i++)
     {
       Node cn = se.checkHomogeneousString(node[i]);
-      if (!cn.isNull() && !theory::strings::Word::isEmpty(cn))
+      if (!cn.isNull() && !strings::Word::isEmpty(cn))
       {
         Assert(cn.isConst());
-        Assert(theory::strings::Word::getLength(cn) == 1);
+        Assert(strings::Word::getLength(cn) == 1);
 
         // The operands of the concat on each side of the equality without
         // constant strings
@@ -1797,7 +1797,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
             {
               // Count the number of `cn`s in the string constant and make
               // sure that all chars are `cn`s
-              std::vector<Node> veccc = theory::strings::Word::getChars(cc);
+              std::vector<Node> veccc = strings::Word::getChars(cc);
               for (const Node& cv : veccc)
               {
                 if (cv != cn)
@@ -1829,12 +1829,12 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
             // Add a constant string to the side with more `cn`s to restore
             // the difference in number of `cn`s
             std::vector<Node> vec(diff, cn);
-            trimmed[j].push_back(theory::strings::Word::mkWordFlatten(vec));
+            trimmed[j].push_back(strings::Word::mkWordFlatten(vec));
           }
         }
 
-        Node lhs = theory::strings::utils::mkConcat(trimmed[i], stype);
-        Node ss = theory::strings::utils::mkConcat(trimmed[1 - i], stype);
+        Node lhs = strings::utils::mkConcat(trimmed[i], stype);
+        Node ss = strings::utils::mkConcat(trimmed[1 - i], stype);
         if (lhs != node[i] || ss != node[1 - i])
         {
           // e.g.
@@ -1859,7 +1859,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
     // E.g.: (str.++ ... (str.replace "A" x "") "A" (str.substr "A" 0 z) ...) -->
     // (str.++ ... [sort those 3 arguments] ... )
     strings::ArithEntail ae(&d_rew, true);
-    theory::strings::StringsEntail se(&d_rew, ae, nullptr);
+    strings::StringsEntail se(&d_rew, ae, nullptr);
     std::vector<Node> vec(node.begin(), node.end());
     size_t lastIdx = 0;
     Node lastX;
@@ -1880,7 +1880,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
     }
     std::sort(vec.begin() + lastIdx, vec.end());
     TypeNode tn = node.getType();
-    Node retNode = theory::strings::utils::mkConcat(vec, tn);
+    Node retNode = strings::utils::mkConcat(vec, tn);
     if (retNode != node)
     {
       debugExtendedRewrite(node, retNode, "CONCAT_NORM_SORT");
@@ -1923,8 +1923,8 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   {
     if (node[0] == node[2])
     {
-      theory::strings::ArithEntail ae(&d_rew);
-      theory::strings::StringsEntail se(&d_rew, ae, nullptr);
+      strings::ArithEntail ae(&d_rew);
+      strings::StringsEntail se(&d_rew, ae, nullptr);
       // (str.replace x y x) ---> (str.replace x (str.++ y1 ... yn) x)
       // if 1 >= (str.len x) and (= y "") ---> (= y1 "") ... (= yn "")
       if (se.checkLengthOne(node[0]))
@@ -2005,6 +2005,46 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
           debugExtendedRewrite(node, res, "RPL_CNTS_SUBSTS");
           return res;
         }
+      }
+    }
+  }
+  else if (k ==Kind::STRING_CONTAINS)
+  {
+    if (node[0].getKind() == Kind::STRING_REPLACE)
+    {
+      strings::ArithEntail ae(&d_rew);
+      strings::StringsEntail se(&d_rew, ae, nullptr);
+      // (str.contains (str.replace x y z) w) --->
+      //   (str.contains (str.replace x y "") w)
+      // if (str.contains z w) ---> false and (str.len w) = 1
+      if (se.checkLengthOne(node[1]))
+      {
+        Node ctn = se.checkContains(node[0][2], node[1]);
+        if (!ctn.isNull() && !ctn.getConst<bool>())
+        {
+          TypeNode stype = node[0].getType();
+          Node empty = strings::Word::mkEmptyWord(stype);
+          Node ret = d_nm->mkNode(
+              Kind::STRING_CONTAINS,
+              d_nm->mkNode(Kind::STRING_REPLACE, node[0][0], node[0][1], empty),
+              node[1]);
+          debugExtendedRewrite(node, ret, "CTN_REPL_SIMP_REPL");
+          return ret;
+        }
+      }
+    }
+    std::vector<Node> nc2;
+    strings::utils::getConcat(node[1], nc2);
+    for (const Node& n : nc2)
+    {
+      // (str.contains x (str.++ w (str.replace x y x) z)) --->
+      //   (= x (str.++ w (str.replace x y x) z))
+      //
+      if (n.getKind()==Kind::STRING_REPLACE && node[0] == n[0] && node[0] == n[2])
+      {
+        Node ret = d_nm->mkNode(Kind::EQUAL, node[0], node[1]);
+        debugExtendedRewrite(node, ret, "CTN_REPL_SELF");
+        return ret;
       }
     }
   }

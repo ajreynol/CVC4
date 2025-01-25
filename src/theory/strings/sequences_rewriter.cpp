@@ -2639,18 +2639,6 @@ Node SequencesRewriter::rewriteContains(Node node)
           return returnRewrite(node, res, Rewrite::CTN_RPL_NON_CTN);
         }
       }
-
-      // (str.contains x (str.++ w (str.replace x y x) z)) --->
-      //   (and (= w "") (= x (str.replace x y x)) (= z ""))
-      //
-      // FIXME: make extended
-      /*
-      if (node[0] == n[0] && node[0] == n[2])
-      {
-        Node ret = nm->mkNode(Kind::EQUAL, node[0], node[1]);
-        return returnRewrite(node, ret, Rewrite::CTN_REPL_SELF);
-      }
-      */
     }
   }
 
@@ -2746,26 +2734,6 @@ Node SequencesRewriter::rewriteContains(Node node)
                      nm->mkNode(Kind::STRING_CONTAINS, node[0][0], node[0][2]));
       return returnRewrite(node, ret, Rewrite::CTN_REPL_TO_CTN_DISJ);
     }
-
-    // (str.contains (str.replace x y z) w) --->
-    //   (str.contains (str.replace x y "") w)
-    // if (str.contains z w) ---> false and (str.len w) = 1
-    // FIXME: remove?
-    /*
-    if (d_stringsEntail.checkLengthOne(node[1]))
-    {
-      Node ctn = d_stringsEntail.checkContains(node[0][2], node[1]);
-      if (!ctn.isNull() && !ctn.getConst<bool>())
-      {
-        Node empty = Word::mkEmptyWord(stype);
-        Node ret = nm->mkNode(
-            Kind::STRING_CONTAINS,
-            nm->mkNode(Kind::STRING_REPLACE, node[0][0], node[0][1], empty),
-            node[1]);
-        return returnRewrite(node, ret, Rewrite::CTN_REPL_SIMP_REPL);
-      }
-    }
-    */
   }
   else if (node[0].getKind() == Kind::STRING_ITOS && node[1].isConst())
   {
