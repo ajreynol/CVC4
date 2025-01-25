@@ -4307,6 +4307,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_UNION_FLATTEN),
   /** Auto-generated from RARE rule re-union-dup */
   EVALUE(RE_UNION_DUP),
+  /** Auto-generated from RARE rule re-union-const-elim */
+  EVALUE(RE_UNION_CONST_ELIM),
   /** Auto-generated from RARE rule re-inter-all */
   EVALUE(RE_INTER_ALL),
   /** Auto-generated from RARE rule re-inter-none */
@@ -4315,6 +4317,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_INTER_FLATTEN),
   /** Auto-generated from RARE rule re-inter-dup */
   EVALUE(RE_INTER_DUP),
+  /** Auto-generated from RARE rule re-inter-const-elim */
+  EVALUE(RE_INTER_CONST_ELIM),
+  /** Auto-generated from RARE rule re-inter-const-conflict */
+  EVALUE(RE_INTER_CONST_CONFLICT),
   /** Auto-generated from RARE rule re-star-none */
   EVALUE(RE_STAR_NONE),
   /** Auto-generated from RARE rule re-star-emp */
