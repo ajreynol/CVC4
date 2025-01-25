@@ -380,9 +380,14 @@
   (= (str.indexof t s n) (str.indexof r s n))
   true)
 
-(define-rule str-indexof-re-none ((t ?Seq) (n Int))
+(define-rule str-indexof-re-none ((t String) (n Int))
   (str.indexof_re t re.none n)
   (- 1))
+
+(define-cond-rule str-indexof-re-emp-re ((t String) (r RegLan) (n Int))
+  (and (str.in_re "" r) (>= (str.len t) n))
+  (str.indexof_re t r n)
+  n)
 
 (define-rule* str-to-lower-concat ((s1 String) (s2 String) (s3 String :list))
   (str.to_lower (str.++ s1 s2 s3)) 

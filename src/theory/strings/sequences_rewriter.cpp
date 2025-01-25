@@ -82,6 +82,10 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_SPLIT_CTN,
                            TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_COMPONENT_CTN,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT,
+                           TheoryRewriteCtx::POST_DSL);
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -155,6 +159,37 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return rewriteViaMacroStrStripEndpoints(n);
     case ProofRewriteRule::MACRO_STR_SPLIT_CTN:
       return rewriteViaMacroStrSplitCtn(n);
+    case ProofRewriteRule::MACRO_STR_COMPONENT_CTN:
+    {
+      if (n.getKind()==Kind::STRING_CONTAINS)
+      {
+        std::vector<Node> nc1;
+        utils::getConcat(n[0], nc1);
+        std::vector<Node> nc2;
+        utils::getConcat(n[1], nc2);
+        // component-wise containment
+        std::vector<Node> nc1rb;
+        std::vector<Node> nc1re;
+        if (d_stringsEntail.componentContains(nc1, nc2, nc1rb, nc1re) != -1)
+        {
+          return nodeManager()->mkConst(true);
+        }
+      }
+    }
+    break;
+    case ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT:
+    {
+      if (n.getKind()==Kind::STRING_CONTAINS && n[1].getKind()==Kind::STRING_CONCAT)
+      {
+        int firstc, lastc;
+        if (!d_stringsEntail.canConstantContainConcat(
+                n[0], n[1], firstc, lastc))
+        {
+          return nodeManager()->mkConst(false);
+        }
+      }
+    }
+    break;
     default: break;
   }
   return Node::null();

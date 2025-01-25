@@ -3185,6 +3185,8 @@ enum ENUM(ProofRewriteRule)
    */
   EVALUE(MACRO_STR_STRIP_ENDPOINTS),
   EVALUE(MACRO_STR_SPLIT_CTN),
+  EVALUE(MACRO_STR_COMPONENT_CTN),
+  EVALUE(MACRO_STR_CONST_NCTN_CONCAT),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- string indexof regex evaluation**
@@ -4189,6 +4191,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_INDEXOF_EQ_IRR),
   /** Auto-generated from RARE rule str-indexof-re-none */
   EVALUE(STR_INDEXOF_RE_NONE),
+  /** Auto-generated from RARE rule str-indexof-re-emp-re */
+  EVALUE(STR_INDEXOF_RE_EMP_RE),
   /** Auto-generated from RARE rule str-to-lower-concat */
   EVALUE(STR_TO_LOWER_CONCAT),
   /** Auto-generated from RARE rule str-to-upper-concat */
