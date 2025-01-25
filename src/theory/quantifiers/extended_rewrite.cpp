@@ -1748,7 +1748,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
     // rewrites, which notice are only invoked at preprocessing
     // and not during Rewriter::rewrite.
     Node ret = sr.rewriteEqualityExt(node);
-    if (ret!=node)
+    if (ret != node)
     {
       debugExtendedRewrite(node, ret, "STR_EXT_EQ_REWRITE");
       return ret;
@@ -1759,7 +1759,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
     Node len1 = d_nm->mkNode(Kind::STRING_LENGTH, node[1]);
     Node len_eq = len0.eqNode(len1);
     len_eq = d_rew.rewrite(len_eq);
-    if (len_eq==d_false)
+    if (len_eq == d_false)
     {
       debugExtendedRewrite(node, d_false, "String EQUAL len entailment");
       return d_false;
@@ -1804,8 +1804,8 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
                 if (cv != cn)
                 {
                   // This conflict case should mostly should be taken care of by
-                  // multiset reasoning in the strings rewriter, but we recognize
-                  // this conflict just in case.
+                  // multiset reasoning in the strings rewriter, but we
+                  // recognize this conflict just in case.
                   debugExtendedRewrite(node, d_false, "STR_EQ_CONST_NHOMOG");
                   return d_false;
                 }
@@ -1854,11 +1854,11 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   }
   else if (k == Kind::STRING_CONCAT)
   {
-    // Sort adjacent operands in str.++ that all result in the same string or the
-    // empty string.
+    // Sort adjacent operands in str.++ that all result in the same string or
+    // the empty string.
     //
-    // E.g.: (str.++ ... (str.replace "A" x "") "A" (str.substr "A" 0 z) ...) -->
-    // (str.++ ... [sort those 3 arguments] ... )
+    // E.g.: (str.++ ... (str.replace "A" x "") "A" (str.substr "A" 0 z) ...)
+    // --> (str.++ ... [sort those 3 arguments] ... )
     std::vector<Node> vec(node.begin(), node.end());
     size_t lastIdx = 0;
     Node lastX;
@@ -2006,7 +2006,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
       }
     }
   }
-  else if (k ==Kind::STRING_CONTAINS)
+  else if (k == Kind::STRING_CONTAINS)
   {
     if (node[0].getKind() == Kind::STRING_REPLACE)
     {
@@ -2036,7 +2036,8 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
       // (str.contains x (str.++ w (str.replace x y x) z)) --->
       //   (= x (str.++ w (str.replace x y x) z))
       //
-      if (n.getKind()==Kind::STRING_REPLACE && node[0] == n[0] && node[0] == n[2])
+      if (n.getKind() == Kind::STRING_REPLACE && node[0] == n[0]
+          && node[0] == n[2])
       {
         Node ret = d_nm->mkNode(Kind::EQUAL, node[0], node[1]);
         debugExtendedRewrite(node, ret, "CTN_REPL_SELF");
@@ -2048,7 +2049,7 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
   // the entailment utilities may make a standard conditional rewrite
   // applicable.
   RewriteResponse rr = sr.postRewrite(node);
-  if (rr.d_node!=node)
+  if (rr.d_node != node)
   {
     return rr.d_node;
   }

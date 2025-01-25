@@ -57,7 +57,9 @@ TheoryStrings::TheoryStrings(Env& env, OutputChannel& out, Valuation valuation)
       d_statistics(statisticsRegistry()),
       d_state(env, d_valuation),
       d_termReg(env, *this, d_state, d_statistics),
-      d_arithEntail(options().strings.stringRecArithApprox ? env.getRewriter() : nullptr, options().strings.stringRecArithApprox),
+      d_arithEntail(
+          options().strings.stringRecArithApprox ? env.getRewriter() : nullptr,
+          options().strings.stringRecArithApprox),
       d_rewriter(env.getNodeManager(),
                  env.getRewriter(),
                  d_arithEntail,
@@ -103,10 +105,9 @@ TheoryStrings::TheoryStrings(Env& env, OutputChannel& out, Valuation valuation)
       d_absModelCounter(0),
       d_strGapModelCounter(0),
       d_cpacb(*this),
-      d_psrewPg(env.isTheoryProofProducing()
-                    ? new TrustProofGenerator(
-                          env, TrustId::STRINGS_PP_STATIC_REWRITE, {})
-                    : nullptr)
+      d_psrewPg(env.isTheoryProofProducing() ? new TrustProofGenerator(
+                    env, TrustId::STRINGS_PP_STATIC_REWRITE, {})
+                                             : nullptr)
 {
   d_termReg.finishInit(&d_im);
 
@@ -1104,7 +1105,8 @@ void TheoryStrings::computeCareGraph()
     if( has_trigger_arg ){
       TypeNode ft = utils::getOwnerStringType(f1);
       AlwaysAssert(ft.isStringLike())
-          << "Unexpected term in getOwnerStringType : " << f1 << ", type " << ft;
+          << "Unexpected term in getOwnerStringType : " << f1 << ", type "
+          << ft;
       std::pair<TypeNode, Node> ikey = std::pair<TypeNode, Node>(ft, op);
       index[ikey].addTerm(f1, reps);
       arity[op] = reps.size();

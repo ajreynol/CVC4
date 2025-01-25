@@ -113,7 +113,8 @@ bool ArithProofRCons::solveEquality(CDProof& cdp,
     tcnv.addRewriteStep(m.first, val, &cdp);
     return true;
   }
-  Trace("arith-proof-rcons") << "...failed solve equality (no factor)" << std::endl;
+  Trace("arith-proof-rcons")
+      << "...failed solve equality (no factor)" << std::endl;
   return false;
 }
 
@@ -191,7 +192,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
       std::map<Node, Node> boundingLits[2];
       for (const Node& a : assumps)
       {
-        if (solved.find(a)!=solved.end())
+        if (solved.find(a) != solved.end())
         {
           // already solved
           continue;
@@ -209,7 +210,7 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
           break;
         }
         // if its an equality, try to turn it into a substitution
-        if (asr.getKind()==Kind::EQUAL)
+        if (asr.getKind() == Kind::EQUAL)
         {
           // must remember the proof prior to changing the substitution
           std::shared_ptr<ProofNode> pfn;

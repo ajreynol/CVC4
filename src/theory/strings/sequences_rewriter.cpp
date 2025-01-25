@@ -92,7 +92,6 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_SEQ_EVAL_OP,
                            TheoryRewriteCtx::POST_DSL);
-
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -168,7 +167,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return rewriteViaMacroStrSplitCtn(n);
     case ProofRewriteRule::MACRO_STR_COMPONENT_CTN:
     {
-      if (n.getKind()==Kind::STRING_CONTAINS)
+      if (n.getKind() == Kind::STRING_CONTAINS)
       {
         std::vector<Node> nc1;
         utils::getConcat(n[0], nc1);
@@ -186,7 +185,8 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT:
     {
-      if (n.getKind()==Kind::STRING_CONTAINS && n[1].getKind()==Kind::STRING_CONCAT)
+      if (n.getKind() == Kind::STRING_CONTAINS
+          && n[1].getKind() == Kind::STRING_CONCAT)
       {
         int firstc, lastc;
         if (!d_stringsEntail.canConstantContainConcat(
@@ -203,7 +203,8 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return rewriteViaMacroReInterUnionConstElim(n);
     case ProofRewriteRule::MACRO_SEQ_EVAL_OP:
     {
-      // this is a catchall rule for evaluation of operations on constant sequences
+      // this is a catchall rule for evaluation of operations on constant
+      // sequences
       TypeNode tn = utils::getOwnerStringType(n);
       if (tn.isSequence())
       {
@@ -222,7 +223,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         }
       }
     }
-      break;
+    break;
     default: break;
   }
   return Node::null();
@@ -1109,7 +1110,8 @@ Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
     {
       if (nk == Kind::REGEXP_INTER)
       {
-        retNode = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
+        retNode =
+            nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
       }
       else
       {
@@ -1185,8 +1187,8 @@ Node SequencesRewriter::rewriteViaStrEqLenUnifyPrefix(const Node& node)
       if (!newRet.isNull())
       {
         // don't rewrite if just returning a (flipped) equality
-        Node eq = i==0 ? node : node[i].eqNode(node[1-i]);
-        if (newRet!=eq)
+        Node eq = i == 0 ? node : node[i].eqNode(node[1 - i]);
+        if (newRet != eq)
         {
           return newRet;
         }
@@ -1569,7 +1571,7 @@ Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
 
 Node SequencesRewriter::rewriteViaMacroStrInReInclusion(const Node& n)
 {
-  if (n.getKind()!=Kind::STRING_IN_REGEXP)
+  if (n.getKind() != Kind::STRING_IN_REGEXP)
   {
     return Node::null();
   }
@@ -1610,7 +1612,7 @@ Node SequencesRewriter::rewriteViaMacroStrInReInclusion(const Node& n)
 Node SequencesRewriter::rewriteViaMacroReInterUnionConstElim(const Node& n)
 {
   Kind k = n.getKind();
-  if (k!=Kind::REGEXP_INTER && k!=Kind::REGEXP_UNION)
+  if (k != Kind::REGEXP_INTER && k != Kind::REGEXP_UNION)
   {
     return Node::null();
   }
@@ -1622,9 +1624,9 @@ Node SequencesRewriter::rewriteViaMacroReInterUnionConstElim(const Node& n)
     {
       continue;
     }
-    if (nc.getKind()==Kind::STRING_TO_REGEXP)
+    if (nc.getKind() == Kind::STRING_TO_REGEXP)
     {
-      Assert (nc[0].isConst());
+      Assert(nc[0].isConst());
       constStrRe.push_back(nc);
     }
     else
@@ -1641,12 +1643,11 @@ Node SequencesRewriter::rewriteViaMacroReInterUnionConstElim(const Node& n)
   std::unordered_set<Node> toRemove;
   for (const Node& c : constStrRe)
   {
-    Assert(c.getKind() == Kind::STRING_TO_REGEXP
-          && c[0].isConst());
+    Assert(c.getKind() == Kind::STRING_TO_REGEXP && c[0].isConst());
     String s = c[0].getConst<String>();
     for (const Node& r : otherRe)
     {
-      Assert (RegExpEntail::isConstRegExp(r));
+      Assert(RegExpEntail::isConstRegExp(r));
       Trace("strings-rewrite-debug")
           << "Check " << c << " vs " << r << std::endl;
       // skip if already removing, or not constant
@@ -1696,8 +1697,8 @@ Node SequencesRewriter::rewriteViaMacroReInterUnionConstElim(const Node& n)
         vec.push_back(nc);
       }
     }
-    Assert (!vec.empty());
-    return vec.size()==1 ? vec[0] : nodeManager()->mkNode(k, vec);
+    Assert(!vec.empty());
+    return vec.size() == 1 ? vec[0] : nodeManager()->mkNode(k, vec);
   }
 
   return Node::null();
@@ -3830,7 +3831,7 @@ Node SequencesRewriter::rewritePrefixSuffix(Node n)
   }
   Node lens = nodeManager()->mkNode(Kind::STRING_LENGTH, n[0]);
   Node lent = nodeManager()->mkNode(Kind::STRING_LENGTH, n[1]);
-  
+
   // Check if we can turn the prefix/suffix into an equality by showing that the
   // prefix/suffix is at least as long as the string
   if (d_arithEntail.check(lens, lent))
@@ -3838,7 +3839,7 @@ Node SequencesRewriter::rewritePrefixSuffix(Node n)
     Node retNode = n[0].eqNode(n[1]);
     return returnRewrite(n, retNode, Rewrite::SUF_PREFIX_TO_EQS);
   }
-  
+
   Node val;
   if (isPrefix)
   {
@@ -3848,7 +3849,6 @@ Node SequencesRewriter::rewritePrefixSuffix(Node n)
   {
     val = nodeManager()->mkNode(Kind::SUB, lent, lens);
   }
-
 
   // general reduction to equality + substr
   Node retNode =
