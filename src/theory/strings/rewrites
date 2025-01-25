@@ -544,6 +544,11 @@
   (str.replace x (str.replace y x z) x)
   (str.replace x y x))
 
+(define-cond-rule str-repl-repl-src-inv-no-ctn3 ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq) (u ?Seq))
+  (and (not (str.contains x z)) (not (str.contains x w)))
+  (str.replace x (str.replace y z w) u)
+  (str.replace x y u))
+
 (define-rule str-repl-repl-dual-self ((x ?Seq) (y ?Seq))
   (str.replace x (str.replace x y x) x)
   x)

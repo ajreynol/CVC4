@@ -4259,6 +4259,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPL_REPL_SRC_INV_NO_CTN1),
   /** Auto-generated from RARE rule str-repl-repl-src-inv-no-ctn2 */
   EVALUE(STR_REPL_REPL_SRC_INV_NO_CTN2),
+  /** Auto-generated from RARE rule str-repl-repl-src-inv-no-ctn3 */
+  EVALUE(STR_REPL_REPL_SRC_INV_NO_CTN3),
   /** Auto-generated from RARE rule str-repl-repl-dual-self */
   EVALUE(STR_REPL_REPL_DUAL_SELF),
   /** Auto-generated from RARE rule str-repl-repl-dual-ite1 */
