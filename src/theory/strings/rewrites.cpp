@@ -42,8 +42,6 @@ const char* toString(Rewrite r)
     case Rewrite::CTN_REPL_CNSTS_TO_CTN: return "CTN_REPL_CNSTS_TO_CTN";
     case Rewrite::CTN_REPL_EMPTY: return "CTN_REPL_EMPTY";
     case Rewrite::CTN_REPL_LEN_ONE_TO_CTN: return "CTN_REPL_LEN_ONE_TO_CTN";
-    case Rewrite::CTN_REPL_SELF: return "CTN_REPL_SELF";
-    case Rewrite::CTN_REPL_SIMP_REPL: return "CTN_REPL_SIMP_REPL";
     case Rewrite::CTN_REPL_TO_CTN: return "CTN_REPL_TO_CTN";
     case Rewrite::CTN_REPL_TO_CTN_DISJ: return "CTN_REPL_TO_CTN_DISJ";
     case Rewrite::CTN_RHS_EMPTYSTR: return "CTN_RHS_EMPTYSTR";
@@ -81,6 +79,7 @@ const char* toString(Rewrite r)
     case Rewrite::RE_ALL_ELIM: return "RE_ALL_ELIM";
     case Rewrite::RE_AND_EMPTY: return "RE_AND_EMPTY";
     case Rewrite::RE_ANDOR_FLATTEN: return "RE_ANDOR_FLATTEN";
+    case Rewrite::RE_ANDOR_CONST_REMOVE: return "RE_ANDOR_CONST_REMOVE";
     case Rewrite::RE_ANDOR_INC_CONFLICT: return "RE_ANDOR_INC_CONFLICT";
     case Rewrite::RE_INTER_CONST_CONST_CONFLICT:
       return "RE_INTER_CONST_CONST_CONFLICT";
@@ -179,8 +178,6 @@ const char* toString(Rewrite r)
     case Rewrite::STR_EMP_SUBSTR_LEQ_LEN: return "STR_EMP_SUBSTR_LEQ_LEN";
     case Rewrite::STR_EMP_SUBSTR_LEQ_Z: return "STR_EMP_SUBSTR_LEQ_Z";
     case Rewrite::STR_EQ_CONJ_LEN_ENTAIL: return "STR_EQ_CONJ_LEN_ENTAIL";
-    case Rewrite::STR_EQ_CONST_NHOMOG: return "STR_EQ_CONST_NHOMOG";
-    case Rewrite::STR_EQ_HOMOG_CONST: return "STR_EQ_HOMOG_CONST";
     case Rewrite::STR_EQ_REPL_EMP: return "STR_EQ_REPL_EMP";
     case Rewrite::STR_EQ_REPL_NOT_CTN: return "STR_EQ_REPL_NOT_CTN";
     case Rewrite::STR_EQ_REPL_TO_DIS: return "STR_EQ_REPL_TO_DIS";
