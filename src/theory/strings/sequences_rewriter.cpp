@@ -196,7 +196,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_STR_IN_RE_INCLUSION:
       return rewriteViaMacroStrInReInclusion(n);
-    case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM,
+    case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM:
       return rewriteViaMacroReInterUnionConstElim(n);
     default: break;
   }
@@ -1620,11 +1620,45 @@ Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
 
 Node SequencesRewriter::rewriteViaMacroStrInReInclusion(const Node& n)
 {
-  // TODO
+  if (n.getKind()!=Kind::STRING_IN_REGEXP)
+  {
+    return Node::null();
+  }
+  // check regular expression inclusion
+  // This makes a regular expression that contains all possible model values
+  // for x, and checks whether r includes this regular expression. If so,
+  // the membership rewrites to true.
+  std::vector<Node> mchildren;
+  utils::getConcat(n[0], mchildren);
+  Assert(!mchildren.empty());
+  bool hasConstant = false;
+  for (Node& m : mchildren)
+  {
+    if (m.isConst())
+    {
+      m = nodeManager()->mkNode(Kind::STRING_TO_REGEXP, m);
+      hasConstant = true;
+    }
+    else
+    {
+      m = d_sigmaStar;
+    }
+  }
+  // only chance of success is if there was at least one constant
+  if (hasConstant)
+  {
+    Node reForX = mchildren.size() == 1
+                      ? mchildren[0]
+                      : nodeManager()->mkNode(Kind::REGEXP_CONCAT, mchildren);
+    if (RegExpEntail::regExpIncludes(n[1], reForX))
+    {
+      return d_true;
+    }
+  }
   return Node::null();
 }
 
-Node rewriteViaMacroReInterUnionConstElim(const Node& n)
+Node SequencesRewriter::rewriteViaMacroReInterUnionConstElim(const Node& n)
 {
   // TODO
   return Node::null();
