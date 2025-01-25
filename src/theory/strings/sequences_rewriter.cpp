@@ -86,6 +86,10 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT,
                            TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_IN_RE_INCLUSION,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM,
+                           TheoryRewriteCtx::POST_DSL);
 }
 
 Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
@@ -190,6 +194,10 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
+    case ProofRewriteRule::MACRO_STR_IN_RE_INCLUSION:
+      return rewriteViaMacroStrInReInclusion(n);
+    case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM,
+      return rewriteViaMacroReInterUnionConstElim(n);
     default: break;
   }
   return Node::null();
@@ -1607,6 +1615,18 @@ Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
       }
     }
   }
+  return Node::null();
+}
+
+Node SequencesRewriter::rewriteViaMacroStrInReInclusion(const Node& n)
+{
+  // TODO
+  return Node::null();
+}
+
+Node rewriteViaMacroReInterUnionConstElim(const Node& n)
+{
+  // TODO
   return Node::null();
 }
 
