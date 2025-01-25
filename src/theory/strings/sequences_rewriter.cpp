@@ -1015,8 +1015,6 @@ Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
   std::vector<Node> node_vec;
   // list of constant string regular expressions (str.to_re c)
   std::vector<Node> constStrRe;
-  // list of all other regular expressions
-  std::vector<Node> otherRe;
   bool changed = false;
   for (const Node& ni : node)
   {
@@ -1071,10 +1069,6 @@ Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
         }
         constStrRe.push_back(ni);
       }
-      else
-      {
-        otherRe.push_back(ni);
-      }
       node_vec.push_back(ni);
     }
     else
@@ -1082,112 +1076,46 @@ Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
       changed = true;
     }
   }
-  Rewrite rule = Rewrite::RE_ANDOR_FLATTEN;
   // if we already changed due to flattening, return already
-  if (!changed)
+  if (changed)
   {
-    Trace("strings-rewrite-debug")
-        << "Partition constant components " << constStrRe.size() << " / "
-        << otherRe.size() << std::endl;
-    // go back and process constant strings against the others
-    std::unordered_set<Node> toRemove;
-    if (!constStrRe.empty())
+    Node retNode = node;
+    if (node_vec.empty())
     {
-      for (const Node& c : constStrRe)
+      if (nk == Kind::REGEXP_INTER)
       {
-        Assert(c.getKind() == Kind::STRING_TO_REGEXP
-              && c[0].getKind() == Kind::CONST_STRING);
-        cvc5::internal::String s = c[0].getConst<String>();
-        for (const Node& r : otherRe)
-        {
-          Trace("strings-rewrite-debug")
-              << "Check " << c << " vs " << r << std::endl;
-          // skip if already removing, or not constant
-          if (!RegExpEntail::isConstRegExp(r)
-              || toRemove.find(r) != toRemove.end())
-          {
-            Trace("strings-rewrite-debug") << "...skip" << std::endl;
-            continue;
-          }
-          // test whether c from (str.to_re c) is in r
-          if (RegExpEntail::testConstStringInRegExp(s, r))
-          {
-            Trace("strings-rewrite-debug") << "...included" << std::endl;
-            if (nk == Kind::REGEXP_INTER)
-            {
-              // (re.inter .. (str.to_re c) .. R ..) --->
-              // (re.inter .. (str.to_re c) .. ..) when c in R
-              toRemove.insert(r);
-            }
-            else
-            {
-              // (re.union .. (str.to_re c) .. R ..) --->
-              // (re.union .. .. R ..) when c in R
-              toRemove.insert(c);
-              break;
-            }
-          }
-          else
-          {
-            Trace("strings-rewrite-debug") << "...not included" << std::endl;
-            if (nk == Kind::REGEXP_INTER)
-            {
-              // (re.inter .. (str.to_re c) .. R ..) ---> re.none
-              // if c is not a member of R.
-              Node ret = nm->mkNode(Kind::REGEXP_NONE);
-              return returnRewrite(
-                  node, ret, Rewrite::RE_INTER_CONST_RE_CONFLICT);
-            }
-          }
-        }
+        retNode = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
       }
-    }
-    if (!toRemove.empty())
-    {
-      rule = Rewrite::RE_ANDOR_CONST_REMOVE;
-      std::vector<Node> nodeVecTmp;
-      node_vec.swap(nodeVecTmp);
-      for (const Node& nvt : nodeVecTmp)
+      else
       {
-        if (toRemove.find(nvt) == toRemove.end())
-        {
-          node_vec.push_back(nvt);
-        }
+        retNode = nm->mkNode(Kind::REGEXP_NONE);
       }
     }
     else
     {
-      // use inclusion tests
-      Node retNode = rewriteViaReInterUnionInclusion(node);
-      if (!retNode.isNull())
-      {
-        return returnRewrite(node, retNode, Rewrite::RE_ANDOR_INC_CONFLICT);
-      }
-      // otherwise there is no change
-      return node;
+      retNode = node_vec.size() == 1 ? node_vec[0] : nm->mkNode(nk, node_vec);
     }
-  }
-  Node retNode = node;
-  if (node_vec.empty())
-  {
-    if (nk == Kind::REGEXP_INTER)
+    if (retNode != node)
     {
-      retNode = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
-    }
-    else
-    {
-      retNode = nm->mkNode(Kind::REGEXP_NONE);
+      // flattening and removing children, based on loop above
+      return returnRewrite(node, retNode, Rewrite::RE_ANDOR_FLATTEN);
     }
   }
-  else
+  // try to eliminate components via constant membership tests
+  Node retNode = rewriteViaMacroReInterUnionConstElim(node);
+  if (!retNode.isNull())
   {
-    retNode = node_vec.size() == 1 ? node_vec[0] : nm->mkNode(nk, node_vec);
+    return returnRewrite(node, retNode, Rewrite::RE_ANDOR_CONST_REMOVE);
   }
-  if (retNode != node)
+
+  // use inclusion tests
+  retNode = rewriteViaReInterUnionInclusion(node);
+  if (!retNode.isNull())
   {
-    // flattening and removing children, based on loop above
-    return returnRewrite(node, retNode, rule);
+    return returnRewrite(node, retNode, Rewrite::RE_ANDOR_INC_CONFLICT);
   }
+
+  // otherwise there is no change
   return node;
 }
 
