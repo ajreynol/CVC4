@@ -489,7 +489,7 @@
   (= emp (str.replace emp s t)))
 
 (define-cond-rule str-substr-char-start-eq-len ((x ?Seq) (n Int))
-  (= (str.len x) 1)
+  (>= 1 (str.len x))
   (str.substr x n n)
   (@seq.empty_of_type (@type_of x)))
 
@@ -521,6 +521,15 @@
   (str.replace x w (str.replace z x y))
   (str.replace x w z))
 
+(define-rule str-repl-repl-tgt-self ((x ?Seq) (y ?Seq))
+  (str.replace x y (str.replace y x y))
+  x)
+
+(define-cond-rule str-repl-repl-tgt-no-ctn ((x ?Seq) (y ?Seq) (z ?Seq) (w ?Seq))
+  (not (str.contains x z))
+  (str.replace x y (str.replace y z w))
+  x)
+
 (define-rule str-repl-repl-src-self ((x ?Seq) (y ?Seq) (z ?Seq))
   (str.replace x (str.replace y x y) z)
   (str.replace x y z))
@@ -548,6 +557,11 @@
   (and (not (str.contains y z)) (not (str.contains z y)))
   (str.replace x (str.replace x y z) w)
   (ite (str.contains x y) x w))
+
+(define-cond-rule str-repl-repl-lookahead-id-simp ((y ?Seq) (z ?Seq) (w ?Seq))
+  (and (not (= w z)) (>= (str.len w) (str.len z)))
+  (str.replace (str.replace y w y) y z)
+  (str.replace (str.replace y w z) y z))
 
 ; =============== Regular expression rules
 

@@ -2754,32 +2754,13 @@ Node SequencesRewriter::rewriteContains(Node node)
       //   (and (= w "") (= x (str.replace x y x)) (= z ""))
       //
       // TODO: Remove with under-/over-approximation
+      /*
       if (node[0] == n[0] && node[0] == n[2])
       {
-        Node ret;
-        if (nc2.size() > 1)
-        {
-          Node emp = Word::mkEmptyWord(stype);
-          NodeBuilder nb2(nodeManager(), Kind::AND);
-          for (const Node& n2 : nc2)
-          {
-            if (n2 == n)
-            {
-              nb2 << nm->mkNode(Kind::EQUAL, node[0], node[1]);
-            }
-            else
-            {
-              nb2 << nm->mkNode(Kind::EQUAL, emp, n2);
-            }
-          }
-          ret = nb2.constructNode();
-        }
-        else
-        {
-          ret = nm->mkNode(Kind::EQUAL, node[0], node[1]);
-        }
+        Node ret = nm->mkNode(Kind::EQUAL, node[0], node[1]);
         return returnRewrite(node, ret, Rewrite::CTN_REPL_SELF);
       }
+      */
     }
   }
 

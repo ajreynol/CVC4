@@ -4249,6 +4249,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPL_REPL_LEN_ID),
   /** Auto-generated from RARE rule str-repl-repl-src-tgt-no-ctn */
   EVALUE(STR_REPL_REPL_SRC_TGT_NO_CTN),
+  /** Auto-generated from RARE rule str-repl-repl-tgt-self */
+  EVALUE(STR_REPL_REPL_TGT_SELF),
+  /** Auto-generated from RARE rule str-repl-repl-tgt-no-ctn */
+  EVALUE(STR_REPL_REPL_TGT_NO_CTN),
   /** Auto-generated from RARE rule str-repl-repl-src-self */
   EVALUE(STR_REPL_REPL_SRC_SELF),
   /** Auto-generated from RARE rule str-repl-repl-src-inv-no-ctn1 */
@@ -4261,6 +4265,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPL_REPL_DUAL_ITE1),
   /** Auto-generated from RARE rule str-repl-repl-dual-ite2 */
   EVALUE(STR_REPL_REPL_DUAL_ITE2),
+  /** Auto-generated from RARE rule str-repl-repl-lookahead-id-simp */
+  EVALUE(STR_REPL_REPL_LOOKAHEAD_ID_SIMP),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
