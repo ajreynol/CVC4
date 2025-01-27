@@ -1963,6 +1963,7 @@ set(regress_0_tests
   regress0/strings/norn-simp-rew.smt2
   regress0/strings/nterm-pc-zalig.smt2
   regress0/strings/parser-syms.cvc.smt2
+  regress0/strings/prefix-multi-var.smt2
   regress0/strings/prefix-simple-no-pf.smt2
   regress0/strings/prefix-suffix-eval.smt2
   regress0/strings/proj-issue316-regexp-ite.smt2

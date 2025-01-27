@@ -979,6 +979,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   }
   Node pnEq2 = lcc.eqNode(diffneqz[1]);
   cdp->addStep(pnEq2, ProofRule::TRANS, {lcceq, pnEq, diffneqz}, {});
+  // now have proven (str.len (str.++ t1 ... tn)) = 0, need t1 = "" ^ ... ^ tn = ""
   Trace("brc-macro") << "...have " << pnEq2 << std::endl;
 
 
