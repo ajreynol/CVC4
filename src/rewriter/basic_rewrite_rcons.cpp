@@ -941,7 +941,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   }
   Trace("brc-macro") << "...length: " << li[0] << " == " << li[1] << std::endl;
   // based on swapping above, we should have len1i >= len2i
-  Node diff = nm->mkNode(Kind::SUB, li[0], li[1]);
+  Node diff = nm->mkNode(Kind::SUB, li[1], li[0]);
   Node diffn = theory::arith::PolyNorm::getPolyNorm(diff);
   Trace("brc-macro") << "...norm diff " << diffn << std::endl;
   Node diffneqz = diffn.eqNode(nm->mkConstInt(Rational(0)));
@@ -951,7 +951,35 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
     Trace("brc-macro") << "... failed poly norm rel" << std::endl;
     return false;
   }
+  cdp->addStep(diffneqz, ProofRule::EQ_RESOLVE, {leneqi, equiv}, {});
   Trace("brc-macro") << "...have " << diffneqz << std::endl;
+
+  // get the concatenation term corresponding to the components equated to empty
+  std::vector<Node> concat;
+  Assert (eq[1].getKind()==Kind::AND);
+  for (size_t i=1, nconj = eq[1].getNumChildren(); i<nconj; i++)
+  {
+    Assert (eq[1][i].getKind()==Kind::EQUAL && eq[1][i][0].getType().isStringLike());
+    concat.push_back(eq[1][i][0]);
+  }
+  TypeNode stype = concat[0].getType();
+  Node cc = theory::strings::utils::mkConcat(concat, stype);
+  Node lcc = nm->mkNode(Kind::STRING_LENGTH, cc);
+  TConvProofGenerator tcpg(d_env, nullptr);
+  Node lcci = ae.rewriteLengthIntro(lcc, &tcpg);
+  Trace("brc-macro") << "...normalized concat length " << lcci << std::endl;
+  Node lcceq = lcc.eqNode(lcci);
+  std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(lcceq);
+
+  Node pnEq = lcci.eqNode(diffneqz[0]);
+  if (!cdp->addStep(pnEq, ProofRule::ARITH_POLY_NORM, {}, {pnEq}))
+  {
+    Trace("brc-macro") << "...fail poly norm " << pnEq << std::endl;
+    return false;
+  }
+  Node pnEq2 = lcc.eqNode(diffneqz[1]);
+  cdp->addStep(pnEq2, ProofRule::TRANS, {lcceq, pnEq, diffneqz}, {});
+  Trace("brc-macro") << "...have " << pnEq2 << std::endl;
 
 
 
