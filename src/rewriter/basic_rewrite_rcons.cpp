@@ -901,12 +901,60 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
       Trace("brc-macro") << "... failed to replicate " << ret << std::endl;
       return false;
     }
+    cdp->addStep(eqsrc, ProofRule::SYMM, {eq[0]}, {});
   }
   Node len1 = nm->mkNode(Kind::STRING_LENGTH, eqsrc[0]);
   Node len2 = nm->mkNode(Kind::STRING_LENGTH, eqsrc[1]);
-  Node len1i = ae.rewriteLengthIntro(len1);
-  Node len2i = ae.rewriteLengthIntro(len2);
-  Trace("brc-macro") << "...length: " << len1i << " == " << len2i << std::endl;
+  Node leneq = len1.eqNode(len2);
+  std::vector<Node> cargs;
+  ProofRule cr = expr::getCongRule(len1, cargs);
+  cdp->addStep(leneq, cr, {eqsrc}, cargs);
+  Node li[2];
+  std::vector<Node> eqi;
+  for (size_t i=0; i<2; i++)
+  {
+    Node l = i==0 ? len1 : len2;
+    TConvProofGenerator tcpg(d_env, nullptr);
+    li[i] = ae.rewriteLengthIntro(l, &tcpg);
+    if (li[i]!=l)
+    {
+      Node equiv = l.eqNode(li[i]);
+      std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(equiv);
+      cdp->addProof(pfn);
+      eqi.push_back(pfn->getResult());
+    }
+    else
+    {
+      Node refl = l.eqNode(l);
+      eqi.push_back(refl);
+      cdp->addStep(refl, ProofRule::REFL, {}, {l});
+    }
+  }
+  Node leneqi = li[0].eqNode(li[1]);
+  if (leneqi!=leneq)
+  {
+    cargs.clear();
+    cr = expr::getCongRule(leneq, cargs);
+    Node equiv = leneq.eqNode(leneqi);
+    cdp->addStep(equiv, cr, eqi, cargs);
+    cdp->addStep(leneqi, ProofRule::EQ_RESOLVE, {leneq, equiv}, {});
+  }
+  Trace("brc-macro") << "...length: " << li[0] << " == " << li[1] << std::endl;
+  // based on swapping above, we should have len1i >= len2i
+  Node diff = nm->mkNode(Kind::SUB, li[0], li[1]);
+  Node diffn = theory::arith::PolyNorm::getPolyNorm(diff);
+  Trace("brc-macro") << "...norm diff " << diffn << std::endl;
+  Node diffneqz = diffn.eqNode(nm->mkConstInt(Rational(0)));
+  Node equiv = leneqi.eqNode(diffneqz);
+  if (!ensureProofArithPolyNormRel(cdp, equiv))
+  {
+    Trace("brc-macro") << "... failed poly norm rel" << std::endl;
+    return false;
+  }
+  Trace("brc-macro") << "...have " << diffneqz << std::endl;
+
+
+
   return false;
 }
 
