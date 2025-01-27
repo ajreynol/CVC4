@@ -1185,9 +1185,9 @@ Node SequencesRewriter::rewriteViaStrEqLenUnifyPrefix(const Node& node)
     {
       newRet = d_stringsEntail.inferEqsFromContains(node[i], node[1 - i]);
       // don't rewrite if just returning a (flipped) equality
-      if (!newRet.isNull() && newRet.getKind()==Kind::AND)
+      if (!newRet.isNull() && newRet.getKind() == Kind::AND)
       {
-        if (i==1)
+        if (i == 1)
         {
           // flip the first equality back
           std::vector<Node> nc(newRet.begin(), newRet.end());

@@ -395,7 +395,9 @@ class BasicRewriteRCons : protected EnvObj
    * Assuming cdp has proofs of (=> A B) and (=> B A), this ensures we
    * have a proof of (= A B).
    */
-  Node proveDualImplication(CDProof * cdp, const Node& impl, const Node& implRev);
+  Node proveDualImplication(CDProof* cdp,
+                            const Node& impl,
+                            const Node& implRev);
   /**
    * Try THEORY_REWRITE with theory::TheoryRewriteCtx ctx.
    */
