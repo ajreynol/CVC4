@@ -1184,14 +1184,17 @@ Node SequencesRewriter::rewriteViaStrEqLenUnifyPrefix(const Node& node)
     if (node[1 - i].getKind() == Kind::STRING_CONCAT)
     {
       newRet = d_stringsEntail.inferEqsFromContains(node[i], node[1 - i]);
-      if (!newRet.isNull())
+      // don't rewrite if just returning a (flipped) equality
+      if (!newRet.isNull() && newRet.getKind()==Kind::AND)
       {
-        // don't rewrite if just returning a (flipped) equality
-        Node eq = i == 0 ? node : node[i].eqNode(node[1 - i]);
-        if (newRet != eq)
+        if (i==1)
         {
-          return newRet;
+          // flip the first equality back
+          std::vector<Node> nc(newRet.begin(), newRet.end());
+          nc[0] = nc[0][1].eqNode(nc[0][0]);
+          newRet = nodeManager()->mkNode(Kind::AND, nc);
         }
+        return newRet;
       }
     }
   }

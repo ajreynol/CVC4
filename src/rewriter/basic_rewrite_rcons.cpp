@@ -896,12 +896,12 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   Node ret = sent.inferEqsFromContains(eqsrc[0], eqsrc[1]);
   Trace("brc-macro") << "[1] setup forward implication" << std::endl;
   bool eqFlipped = false;
-  if (ret != eq[1])
+  if (ret.isNull())
   {
     Trace("brc-macro") << "...failed " << ret << ", try flip" << std::endl;
     eqsrc = eq[0][1].eqNode(eq[0][0]);
     ret = sent.inferEqsFromContains(eqsrc[0], eqsrc[1]);
-    if (ret != eq[1])
+    if (ret.isNull())
     {
       Trace("brc-macro") << "... failed to replicate " << ret << std::endl;
       return false;
@@ -1023,7 +1023,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   }
   Trace("brc-macro") << "...cong to " << cres[1] << std::endl;
   cdmid.addStep(cres, cr, eqe, cargs);
-  Node tgtRew = eq[1][0][eqFlipped ? 1 : 0];
+  Node tgtRew = eq[1][0][eqFlipped ? 0 : 1];
   Trace("brc-macro") << "...target is " << tgtRew << std::endl;
 
   Node eqacin = cres[1].eqNode(tgtRew);
