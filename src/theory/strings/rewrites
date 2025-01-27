@@ -350,6 +350,15 @@
   (str.len (str.++ s2 s3))
   (+ (str.len s1) _))
 
+(define-rule* str-len-eq-zero-concat-rec ((s1 ?Seq) (s2 ?Seq) (s3 ?Seq :list))
+  (= (str.len (str.++ s1 s2 s3)) 0)
+  (= (str.len (str.++ s2 s3)) 0)
+  (and (= s1 (@seq.empty_of_type (@type_of s1))) _))
+
+(define-rule str-len-eq-zero-base ((s1 ?Seq))
+  (= (str.len s1) 0)
+  (= s1 (@seq.empty_of_type (@type_of s1))))
+
 (define-rule str-indexof-self ((t ?Seq) (n Int))
   (def (emp (@seq.empty_of_type (@type_of t))))
   (str.indexof t t n)

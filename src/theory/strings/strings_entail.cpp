@@ -979,21 +979,18 @@ Node StringsEntail::inferEqsFromContains(Node x, Node y)
     cs.push_back(yiLen[0]);
   }
 
-  NodeBuilder nb(nm, Kind::AND);
   // (= x (str.++ y1' ... ym'))
-  if (!cs.empty())
-  {
-    nb << nm->mkNode(Kind::EQUAL, x, utils::mkConcat(cs, stype));
-  }
+  std::vector<Node> eqs;
+  Node mainEq = nm->mkNode(Kind::EQUAL, x, utils::mkConcat(cs, stype));
+  eqs.push_back(mainEq);
   // (= y1'' "") ... (= yk'' "")
   for (const Node& zeroLen : zeroLens)
   {
     Assert(std::find(y.begin(), y.end(), zeroLen[0]) != y.end());
-    nb << nm->mkNode(Kind::EQUAL, zeroLen[0], emp);
+    eqs.push_back(nm->mkNode(Kind::EQUAL, zeroLen[0], emp));
   }
-
   // (and (= x (str.++ y1' ... ym')) (= y1'' "") ... (= yk'' ""))
-  return nb.constructNode();
+  return nm->mkAnd(eqs);
 }
 
 Node StringsEntail::rewriteViaMacroSubstrStripSymLength(const Node& node,

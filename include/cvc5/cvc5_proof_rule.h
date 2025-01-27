@@ -4180,6 +4180,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPLACE_RE_ALL_NONE),
   /** Auto-generated from RARE rule str-len-concat-rec */
   EVALUE(STR_LEN_CONCAT_REC),
+  /** Auto-generated from RARE rule str-len-eq-zero-concat-rec */
+  EVALUE(STR_LEN_EQ_ZERO_CONCAT_REC),
+  /** Auto-generated from RARE rule str-len-eq-zero-base */
+  EVALUE(STR_LEN_EQ_ZERO_BASE),
   /** Auto-generated from RARE rule str-indexof-self */
   EVALUE(STR_INDEXOF_SELF),
   /** Auto-generated from RARE rule str-indexof-no-contains */
