@@ -904,6 +904,10 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
     Node eqg = eq1p.eqNode(eq[1]);
     cdp->addStep(eqg, ProofRule::ACI_NORM, {}, {eqg});
   }
+  else
+  {
+    empeqs.push_back(eq[1][1]);
+  }
 
   // prove eq[0] => eq1p in cdfwd
   CDProof cdfwd(d_env);
@@ -1075,7 +1079,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
     }
   }
   cargs.clear();
-  cr = expr::getCongRule(eqqeq, cargs);
+  cr = expr::getCongRule(eq[0], cargs);
   cdmid.addStep(eqqeq, cr, eqee, cargs);
   Node implMid = nm->mkNode(Kind::IMPLIES, eq1p[1], eqqeq);
   cdmid.addStep(implMid, ProofRule::SCOPE, {eqqeq}, empeqs);
