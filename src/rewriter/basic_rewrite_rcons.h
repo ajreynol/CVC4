@@ -390,6 +390,12 @@ class BasicRewriteRCons : protected EnvObj
   bool ensureProofArithPolyNormRel(CDProof* cdp, const Node& eq);
   Node proveTransIneq(CDProof* cdp, const Node& leq1, const Node& leq2);
   bool proveIneqWeaken(CDProof* cdp, const Node& src, const Node& tgt);
+
+  /**
+   * Assuming cdp has proofs of (=> A B) and (=> B A), this ensures we
+   * have a proof of (= A B).
+   */
+  Node proveDualImplication(CDProof * cdp, const Node& impl, const Node& implRev);
   /**
    * Try THEORY_REWRITE with theory::TheoryRewriteCtx ctx.
    */

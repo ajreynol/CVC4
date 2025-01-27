@@ -889,8 +889,13 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   NodeManager* nm = nodeManager();
   theory::strings::ArithEntail ae(nullptr);
   theory::strings::StringsEntail sent(nullptr, ae, nullptr);
+
+  // prove eq[0] => eq[1] in cdfwd
+  CDProof cdfwd(d_env);
   Node eqsrc = eq[0];
   Node ret = sent.inferEqsFromContains(eqsrc[0], eqsrc[1]);
+  Trace("brc-macro") << "[1] setup forward implication" << std::endl;
+  bool eqFlipped = false;
   if (ret != eq[1])
   {
     Trace("brc-macro") << "...failed " << ret << ", try flip" << std::endl;
@@ -901,14 +906,15 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
       Trace("brc-macro") << "... failed to replicate " << ret << std::endl;
       return false;
     }
-    cdp->addStep(eqsrc, ProofRule::SYMM, {eq[0]}, {});
+    eqFlipped = true;
+    cdfwd.addStep(eqsrc, ProofRule::SYMM, {eq[0]}, {});
   }
   Node len1 = nm->mkNode(Kind::STRING_LENGTH, eqsrc[0]);
   Node len2 = nm->mkNode(Kind::STRING_LENGTH, eqsrc[1]);
   Node leneq = len1.eqNode(len2);
   std::vector<Node> cargs;
   ProofRule cr = expr::getCongRule(len1, cargs);
-  cdp->addStep(leneq, cr, {eqsrc}, cargs);
+  cdfwd.addStep(leneq, cr, {eqsrc}, cargs);
   Node li[2];
   std::vector<Node> eqi;
   for (size_t i=0; i<2; i++)
@@ -920,14 +926,14 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
     {
       Node equiv = l.eqNode(li[i]);
       std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(equiv);
-      cdp->addProof(pfn);
+      cdfwd.addProof(pfn);
       eqi.push_back(pfn->getResult());
     }
     else
     {
       Node refl = l.eqNode(l);
       eqi.push_back(refl);
-      cdp->addStep(refl, ProofRule::REFL, {}, {l});
+      cdfwd.addStep(refl, ProofRule::REFL, {}, {l});
     }
   }
   Node leneqi = li[0].eqNode(li[1]);
@@ -936,8 +942,8 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
     cargs.clear();
     cr = expr::getCongRule(leneq, cargs);
     Node equiv = leneq.eqNode(leneqi);
-    cdp->addStep(equiv, cr, eqi, cargs);
-    cdp->addStep(leneqi, ProofRule::EQ_RESOLVE, {leneq, equiv}, {});
+    cdfwd.addStep(equiv, cr, eqi, cargs);
+    cdfwd.addStep(leneqi, ProofRule::EQ_RESOLVE, {leneq, equiv}, {});
   }
   Trace("brc-macro") << "...length: " << li[0] << " == " << li[1] << std::endl;
   // based on swapping above, we should have len1i >= len2i
@@ -946,21 +952,23 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   Trace("brc-macro") << "...norm diff " << diffn << std::endl;
   Node diffneqz = diffn.eqNode(nm->mkConstInt(Rational(0)));
   Node equiv = leneqi.eqNode(diffneqz);
-  if (!ensureProofArithPolyNormRel(cdp, equiv))
+  if (!ensureProofArithPolyNormRel(&cdfwd, equiv))
   {
     Trace("brc-macro") << "... failed poly norm rel" << std::endl;
     return false;
   }
-  cdp->addStep(diffneqz, ProofRule::EQ_RESOLVE, {leneqi, equiv}, {});
+  cdfwd.addStep(diffneqz, ProofRule::EQ_RESOLVE, {leneqi, equiv}, {});
   Trace("brc-macro") << "...have " << diffneqz << std::endl;
 
   // get the concatenation term corresponding to the components equated to empty
   std::vector<Node> concat;
+  std::map<Node, Node> empMap;
   Assert (eq[1].getKind()==Kind::AND);
   for (size_t i=1, nconj = eq[1].getNumChildren(); i<nconj; i++)
   {
     Assert (eq[1][i].getKind()==Kind::EQUAL && eq[1][i][0].getType().isStringLike());
     concat.push_back(eq[1][i][0]);
+    empMap[eq[1][i][0]] = eq[1][i];
   }
   TypeNode stype = concat[0].getType();
   Node cc = theory::strings::utils::mkConcat(concat, stype);
@@ -972,17 +980,88 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   std::shared_ptr<ProofNode> pfn = tcpg.getProofFor(lcceq);
 
   Node pnEq = lcci.eqNode(diffneqz[0]);
-  if (!cdp->addStep(pnEq, ProofRule::ARITH_POLY_NORM, {}, {pnEq}))
+  if (!cdfwd.addStep(pnEq, ProofRule::ARITH_POLY_NORM, {}, {pnEq}))
   {
     Trace("brc-macro") << "...fail poly norm " << pnEq << std::endl;
     return false;
   }
   Node pnEq2 = lcc.eqNode(diffneqz[1]);
-  cdp->addStep(pnEq2, ProofRule::TRANS, {lcceq, pnEq, diffneqz}, {});
+  cdfwd.addStep(pnEq2, ProofRule::TRANS, {lcceq, pnEq, diffneqz}, {});
   // now have proven (str.len (str.++ t1 ... tn)) = 0, need t1 = "" ^ ... ^ tn = ""
   Trace("brc-macro") << "...have " << pnEq2 << std::endl;
 
 
+  // proves (=> (and t="") (= (= (str.++ s t) r) (= s r)))
+  CDProof cdmid(d_env);
+  Node srcRew = eqsrc[1];
+  Trace("brc-macro") << "[2] source term to rewrite " << srcRew << std::endl;
+  Assert (srcRew.getKind()==Kind::STRING_CONCAT);
+  std::vector<Node> eqe;
+  std::map<Node, Node>::iterator it;
+  for (const Node& tc : srcRew)
+  {
+    it = empMap.find(tc);
+    if (it!=empMap.end())
+    {
+      eqe.push_back(it->second);
+    }
+    else
+    {
+      Node refl = tc.eqNode(tc);
+      cdmid.addStep(refl, ProofRule::REFL, {}, {tc});
+      eqe.push_back(refl);
+    }
+  }
+  cargs.clear();
+  cr = expr::getCongRule(srcRew, cargs);
+  ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
+  Node cres = pc->checkDebug(cr, eqe, cargs);
+  if (cres.isNull())
+  {
+    Trace("brc-macro") << "...fail cong" << std::endl;
+    return false;
+  }
+  Trace("brc-macro") << "...cong to " << cres[1] << std::endl;
+  cdmid.addStep(cres, cr, eqe, cargs);
+  Node tgtRew = eq[1][0][eqFlipped ? 1 : 0];
+  Trace("brc-macro") << "...target is " << tgtRew << std::endl;
+
+  Node eqacin = cres[1].eqNode(tgtRew);
+  if (!cdmid.addStep(eqacin, ProofRule::ACI_NORM, {}, {eqacin}))
+  {
+    Trace("brc-macro") << "...fail aci norm" << std::endl;
+    return false;
+  }
+
+  Node eqqeq = eq[0].eqNode(eq[1][0]);
+  std::vector<Node> eqee;
+  for (size_t i=0; i<2; i++)
+  {
+    eqee.push_back(eq[0][i].eqNode(eq[1][0][i]));
+    if (eq[0][i]==eq[1][0][i])
+    {
+      Node refl = eq[0][i].eqNode(eq[0][i]);
+      cdmid.addStep(refl, ProofRule::REFL, {}, {eq[0][i]});
+    }
+  }
+  cargs.clear();
+  cr = expr::getCongRule(eqqeq, cargs);
+  cdmid.addStep(eqqeq, cr, eqee, cargs);
+  std::vector<Node> empeqs(eq[1].begin()+1, eq[1].end());
+  Node implMid = nm->mkNode(Kind::IMPLIES, nm->mkAnd(empeqs), eqqeq);
+  cdmid.addStep(implMid, ProofRule::SCOPE, {eqqeq}, empeqs);
+  Trace("brc-macro") << "...intermediate result: " << implMid << std::endl;
+
+
+
+
+
+  return false;
+
+  Node impl = nm->mkNode(Kind::IMPLIES, eq[0], eq[1]);
+
+  Node implrev = nm->mkNode(Kind::IMPLIES, eq[1], eq[0]);
+  proveDualImplication(cdp, impl, implrev);
 
   return false;
 }
@@ -1057,13 +1136,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   cdp->addProof(cdrev.getProofFor(implrev));
 
   // now prove dual implication is the same as equality
-  Node dualImpl = nm->mkNode(Kind::AND, impl, implrev);
-  cdp->addStep(dualImpl, ProofRule::AND_INTRO, {impl, implrev}, {});
-  Node eqfinal = ceq.eqNode(eq[1]);
-  Node dualImplEq = nm->mkNode(Kind::EQUAL, dualImpl, eqfinal);
-  Trace("brc-macro") << "- subgoal " << dualImplEq << std::endl;
-  cdp->addTrustedStep(dualImplEq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
-  cdp->addStep(eqfinal, ProofRule::EQ_RESOLVE, {dualImpl, dualImplEq}, {});
+  Node eqfinal = proveDualImplication(cdp, impl, implrev);
 
   // prove eq[0] is equal to the grouped concatenation terms, if necessary
   if (eq[0] != ceq)
@@ -1085,6 +1158,20 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
     Assert(eqfinal == eq);
   }
   return true;
+}
+
+Node BasicRewriteRCons::proveDualImplication(CDProof * cdp, const Node& impl, const Node& implrev)
+{
+  Assert (impl.getKind()==Kind::IMPLIES && implrev.getKind()==Kind::IMPLIES && impl[0]==implrev[1] && impl[1]==implrev[0]);
+  NodeManager * nm = nodeManager();
+  Node dualImpl = nm->mkNode(Kind::AND, impl, implrev);
+  cdp->addStep(dualImpl, ProofRule::AND_INTRO, {impl, implrev}, {});
+  Node eqfinal = impl[0].eqNode(impl[1]);
+  Node dualImplEq = nm->mkNode(Kind::EQUAL, dualImpl, eqfinal);
+  Trace("brc-macro") << "- dual implication subgoal " << dualImplEq << std::endl;
+  cdp->addTrustedStep(dualImplEq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+  cdp->addStep(eqfinal, ProofRule::EQ_RESOLVE, {dualImpl, dualImplEq}, {});
+  return eqfinal;
 }
 
 bool BasicRewriteRCons::ensureProofMacroStrStripEndpoints(CDProof* cdp,
