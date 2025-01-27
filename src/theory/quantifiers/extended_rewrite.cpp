@@ -1738,8 +1738,8 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
 
   // allow recursive approximations
   strings::ArithEntail ae(&d_rew, true);
-  strings::StringsEntail se(&d_rew, ae, nullptr);
-  strings::SequencesRewriter sr(d_nm, &d_rew, ae, nullptr);
+  strings::StringsEntail se(&d_rew, ae);
+  strings::SequencesRewriter sr(d_nm, ae, se, nullptr);
 
   Kind k = node.getKind();
   if (k == Kind::EQUAL)

@@ -323,6 +323,7 @@
   (str.replace (str.++ t1 t2) s r)
   (str.++ (str.replace t1 s r) t2))
 
+
 (define-cond-rule str-replace-one-pre ((t ?Seq) (s ?Seq) (r ?Seq) (ts ?Seq :list) (ss ?Seq :list))
   (= (str.len s) 1)
   (str.replace (str.++ ts t ss t) s r)
@@ -380,8 +381,13 @@
   (str.indexof t1 s n))
 
 (define-cond-rule str-indexof-find ((t ?Seq) (s ?Seq) (n Int))
-  (str.prefixof s (str.substr t n (str.len t)))
+  (and (not (= s (@seq.empty_of_type (@type_of t)))) (str.prefixof s (str.substr t n (str.len t))))
   (str.indexof t s n)
+  n)
+
+(define-cond-rule str-indexof-find-emp ((t ?Seq) (emp ?Seq) (n Int))
+  (and (= emp (@seq.empty_of_type (@type_of t))) (>= (str.len t) n))
+  (str.indexof t emp n)
   n)
 
 (define-cond-rule str-indexof-eq-irr ((t ?Seq) (s ?Seq) (r ?Seq) (n Int))
@@ -469,6 +475,7 @@
   (str.< s t)
   (and (not (= s t)) (str.<= s t)))
 
+; if t contains only digits, it cannot contain a string s containing a non-digit
 (define-cond-rule str-from-int-no-ctn-nondigit ((n Int) (s String))
   (and (not (= s "")) (= (str.to_int s) (- 1)))
   (str.contains (str.from_int n) s)
