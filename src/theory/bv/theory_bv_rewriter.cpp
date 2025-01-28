@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Liana Hadarean, Aina Niemetz, Andres Noetzli
+ *   Leni Aniva, Liana Hadarean, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -101,10 +101,9 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
   return Node::null();
 }
 
-TrustNode TheoryBVRewriter::expandDefinition(Node node)
+Node TheoryBVRewriter::expandDefinition(Node node)
 {
-  Node expanded = eliminateOverflows(node);
-  return TrustNode::mkTrustRewrite(node, expanded, nullptr);
+  return eliminateOverflows(node);
 }
 
 Node TheoryBVRewriter::eliminateOverflows(Node node)

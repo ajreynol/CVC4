@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -186,8 +186,8 @@ class AlfPrinter : protected EnvObj
   std::string d_termLetPrefix;
   /** The false node */
   Node d_false;
-  /** List node converter */
-  AlfListNodeConverter d_ltproc;
+  /** */
+  TypeNode d_absType;
   /** Pointer to the rewrite database */
   rewriter::RewriteDb* d_rdb;
   /** The empty vector */
@@ -198,6 +198,8 @@ class AlfPrinter : protected EnvObj
   LetBinding* d_lbindUse;
   /** The letification channel. */
   AlfPrintChannelPre d_aletify;
+  /** A cache for explicit type-of variables, for printing DSL_REWRITE steps */
+  std::map<ProofRewriteRule, std::vector<Node>> d_explicitTypeOf;
 };
 
 }  // namespace proof
