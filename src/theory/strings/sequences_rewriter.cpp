@@ -1863,7 +1863,7 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
     {
       if (k != Kind::STRING_INDEXOF || n[0].getNumChildren() != 2
-          || n[1].getNumChildren() != 2 || n[2].isConst()
+          || n[1].getNumChildren() != 2 || !n[2].isConst()
           || n[2].getConst<Rational>().sgn() != 0)
       {
         return Node::null();

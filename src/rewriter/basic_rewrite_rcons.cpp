@@ -1247,7 +1247,7 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
   Trace("brc-macro") << "Expand macro overlap (" << id << ") for " << eq
                      << std::endl;
   NodeManager* nm = nodeManager();
-  Assert(eq[0].getNumChildren() > 2 && eq[0][1].isConst());
+  Assert(eq[0].getNumChildren() >= 2);
   Node concat = eq[0][0];
   Assert(concat.getKind() == Kind::STRING_CONCAT);
   TypeNode stype = concat.getType();
