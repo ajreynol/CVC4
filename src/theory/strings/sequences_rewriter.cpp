@@ -1799,13 +1799,13 @@ Node SequencesRewriter::rewriteViaStrReplaceReAllEval(const Node& n)
 
 Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
 {
-  if (n.getNumChildren() < 2 || !n[1].isConst())
+  if (n.getNumChildren() < 2)
   {
     return Node::null();
   }
   // get the list of overlaps to check, based on the rule, which will be passed
   // to Word::noOverlapWith below.
-  std::vector<std::pair<Node, int>> overlap;
+  std::vector<std::tuple<Node, Node, int>> overlap;
   Kind k = n.getKind();
   switch (id)
   {
@@ -1815,50 +1815,52 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      overlap.emplace_back(n[0][1], 0);
+      overlap.emplace_back(n[0][1], n[1], 0);
     }
     break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
     {
-      if (k != Kind::STRING_CONTAINS || n[0].getNumChildren() != 3)
+      if (k != Kind::STRING_CONTAINS || n[0].getNumChildren() != 3 || n[1].getNumChildren()!=3)
       {
         return Node::null();
       }
-      overlap.emplace_back(n[0][0], 1);
-      overlap.emplace_back(n[0][2], -1);
+      overlap.emplace_back(n[0][0], n[1][0], 1);
+      overlap.emplace_back(n[0][2], n[1][2], -1);
     }
     break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
     {
-      if (k != Kind::STRING_INDEXOF || n[0].getNumChildren() != 2
+      if (k != Kind::STRING_INDEXOF || n[0].getNumChildren() != 2 || n[1].getNumChildren()!=2
           || n[2].isConst() || n[2].getConst<Rational>().sgn() != 0)
       {
         return Node::null();
       }
-      overlap.emplace_back(n[0][1], -1);
+      overlap.emplace_back(n[0][1], n[1][1], -1);
     }
     break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE:
     {
-      if (k != Kind::STRING_REPLACE || n[0].getNumChildren() != 3)
+      if (k != Kind::STRING_REPLACE || n[0].getNumChildren() != 3  || n[1].getNumChildren()!=3)
       {
         return Node::null();
       }
-      overlap.emplace_back(n[0][0], 1);
-      overlap.emplace_back(n[0][2], -1);
+      overlap.emplace_back(n[0][0], n[1][0], 1);
+      overlap.emplace_back(n[0][2], n[1][2], -1);
     }
     break;
     default: return Node::null();
   }
-  for (const std::pair<Node, int>& f : overlap)
+  for (const std::tuple<Node, Node, int>& f : overlap)
   {
+    const Node& c1 = std::get<0>(f);
+    const Node& c2 = std::get<1>(f);
     // ensure it is a constant
-    if (!f.first.isConst())
+    if (!c1.isConst() || !c2.isConst())
     {
       return Node::null();
     }
     // check if no overlap
-    if (!Word::noOverlapWith(f.first, n[1]))
+    if (!Word::noOverlapWith(c1, c2, std::get<2>(f)))
     {
       return Node::null();
     }

@@ -1251,6 +1251,7 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id, CDProof* cd
   Node emp = theory::strings::Word::mkEmptyWord(stype);
   size_t nchildpre = 0;
   ProofRewriteRule rule;
+  Node cgroup;
   if (id==ProofRewriteRule::MACRO_STR_SPLIT_CTN)
   {
     rule = ProofRewriteRule::STR_OVERLAP_SPLIT_CTN;
@@ -1263,40 +1264,96 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id, CDProof* cd
     {
       nchildpre = 1;
     }
-  }
-  else
-  {
-    Assert (id==ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS);
-    return false;
-  }
-  // partition into two or three children
-  Node input = eq[0];
-  std::vector<Node> groupedChildren;
-  if (rule!=ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF)
-  {
+    // partition into two or three children
     std::vector<Node> childpre(concat.begin(), concat.begin()+nchildpre);
     Node cpre = theory::strings::utils::mkConcat(childpre, stype);
-    groupedChildren.push_back(cpre);
-  }
-  groupedChildren.push_back(concat[nchildpre]);
-  std::vector<Node> childpost(concat.begin()+nchildpre+1, concat.end());
-  Node cpost = theory::strings::utils::mkConcat(childpost, stype);
-  groupedChildren.push_back(cpost);
-  // grouped concatenation should be shown equal by ACI_NORM
-  Node crew = nm->mkNode(Kind::STRING_CONCAT, groupedChildren);
-  std::vector<Node> transEq;
-  if (crew!=concat)
-  {
-    Node eqc = concat.eqNode(crew);
+    Node cmid = concat[nchildpre];
+    std::vector<Node> childpost(concat.begin()+nchildpre+1, concat.end());
+    Node cpost = theory::strings::utils::mkConcat(childpost, stype);
+    cgroup = nm->mkNode(Kind::STRING_CONCAT, cpre, cmid, cpost);
+    Node eqc = concat.eqNode(cgroup);
     if (!cdp->addStep(eqc, ProofRule::ACI_NORM, {}, {eqc}))
     {
       Assert(false);
       return false;
     }
+  }
+  else
+  {
+    Assert (id==ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS);
+    std::vector<Node> nc1;
+    theory::strings::utils::getConcat(eq[0][0], nc1);
+    std::vector<Node> nc2;
+    theory::strings::utils::getConcat(eq[0][1], nc2);
+    theory::strings::ArithEntail ae(nullptr);
+    theory::strings::StringsEntail se(nullptr, ae);
+    // replay the strip endpoint operation
+    Kind k = eq[0].getKind();
+    int dir = k==Kind::STRING_INDEXOF ? -1 : 0;
+    std::vector<Node> nb;
+    std::vector<Node> ne;
+    if (!se.stripConstantEndpoints(nc1, nc2, nb, ne, dir))
+    {
+      Assert (false);
+      return false;
+    }
+    Trace("brc-macro") << "Stripped to : " << eq[0][0] << " == " << nb << " " << nc1 << " " << ne << std::endl;
+    std::vector<Node> g2[2];
+    for (size_t i=0; i<2; i++)
+    {
+      std::vector<Node>& vec = i==0 ? nb : ne;
+      if (i==0 && k==Kind::STRING_INDEXOF)
+      {
+        Assert (vec.empty());
+        continue;
+      }
+      if (vec.empty())
+      {
+        vec.push_back(emp);
+        g2[i].push_back(emp);
+        continue;
+      }
+      if (vec.size()!=1)
+      {
+        Trace("brc-macro") << "...fail due to multiple stripped components" << std::endl;
+        Assert (false);
+        return false;
+      }
+      // if we split a constant
+      Node src = nc1[i==0 ? 0 : nc1.size()-1];
+      if (vec[0]!=src)
+      {
+        // FIXME
+        Trace("brc-macro") << "...fail due to split constant" << std::endl;
+        return false;
+      }
+      size_t index2 = (i==0 ? 0 : nc2.size()-1);
+      if (i == 0)
+      {
+        g2[i].push_back(nc2[index2]);
+        nc2.erase(nc2.begin(), nc2.begin() + 1);
+      }
+      else
+      {
+        g2[i].push_back(nc2[index2]);
+        nc2.pop_back();
+      }
+    }
+    Trace("brc-macro") << "Target stripped to : " << eq[0][0] << " == " << g2[0] << " " << nc2 << " " << g2[1] << std::endl;
+    
+    return false;
+  }
+  // cgroup is now the proper version of concat and we have proved (if necessary)
+  // that concat = cgroup.
+  Node input = eq[0];
+  // grouped concatenation should be shown equal by ACI_NORM
+  std::vector<Node> transEq;
+  if (cgroup!=concat)
+  {
     std::vector<Node> premises;
     std::vector<Node> newChildren;
-    premises.push_back(eqc);
-    newChildren.push_back(crew);
+    premises.push_back(concat.eqNode(cgroup));
+    newChildren.push_back(cgroup);
     for (size_t i=1, nchild = eq[0].getNumChildren(); i<nchild; i++)
     {
       Node refl = eq[0][1].eqNode(eq[0][i]);
