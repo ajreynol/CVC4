@@ -489,7 +489,7 @@ bool StringsEntail::stripConstantEndpoints(std::vector<Node>& n1,
                                            std::vector<Node>& nb,
                                            std::vector<Node>& ne,
                                            int dir,
-                                     bool isSimple)
+                                           bool isSimple)
 {
   Assert(nb.empty());
   Assert(ne.empty());

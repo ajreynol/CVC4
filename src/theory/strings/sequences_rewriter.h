@@ -141,7 +141,7 @@ class SequencesRewriter : public TheoryRewriter
    */
   Node returnRewrite(Node node, Node ret, Rewrite r);
   //-------------------- ProofRewriteRule
-public:
+ public:
   /** Rewrite based on STR_EQ_LEN_UNIFY_PREFIX */
   Node rewriteViaStrEqLenUnifyPrefix(const Node& n);
   /** Rewrite based on STR_EQ_LEN_UNIFY */
@@ -166,9 +166,9 @@ public:
                                            StringsEntail& sent);
   /** Rewrite based on MACRO_STR_STRIP_ENDPOINTS */
   Node rewriteViaMacroStrStripEndpoints(const Node& n,
-                                                         std::vector<Node>& nb,
-                                                         std::vector<Node>& nrem,
-                                                         std::vector<Node>& ne);
+                                        std::vector<Node>& nb,
+                                        std::vector<Node>& nrem,
+                                        std::vector<Node>& ne);
   /** Rewrite based on MACRO_STR_SPLIT_CTN */
   Node rewriteViaMacroStrSplitCtn(const Node& n);
   /** Rewrite based on MACRO_STR_IN_RE_INCLUSION */

@@ -1481,10 +1481,11 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
   return sent.rewriteViaMacroSubstrStripSymLength(node, rule, ch1, ch2);
 }
 
-Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n,
-                                                         std::vector<Node>& nb,
-                                                         std::vector<Node>& nrem,
-                                                         std::vector<Node>& ne)
+Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(
+    const Node& n,
+    std::vector<Node>& nb,
+    std::vector<Node>& nrem,
+    std::vector<Node>& ne)
 {
   Kind k = n.getKind();
   std::vector<int> dirs;
@@ -1516,7 +1517,7 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n,
   {
     return Node::null();
   }
-    
+
   std::vector<Node> nc2;
   utils::getConcat(n[1], nc2);
   if (nc2.empty())
@@ -1850,7 +1851,8 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
     {
-      if (k != Kind::STRING_CONTAINS || n[0].getNumChildren() != 3 || n[1].getNumChildren()!=3)
+      if (k != Kind::STRING_CONTAINS || n[0].getNumChildren() != 3
+          || n[1].getNumChildren() != 3)
       {
         return Node::null();
       }
@@ -1860,8 +1862,9 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
     {
-      if (k != Kind::STRING_INDEXOF || n[0].getNumChildren() != 2 || n[1].getNumChildren()!=2
-          || n[2].isConst() || n[2].getConst<Rational>().sgn() != 0)
+      if (k != Kind::STRING_INDEXOF || n[0].getNumChildren() != 2
+          || n[1].getNumChildren() != 2 || n[2].isConst()
+          || n[2].getConst<Rational>().sgn() != 0)
       {
         return Node::null();
       }
@@ -1870,7 +1873,8 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE:
     {
-      if (k != Kind::STRING_REPLACE || n[0].getNumChildren() != 3  || n[1].getNumChildren()!=3)
+      if (k != Kind::STRING_REPLACE || n[0].getNumChildren() != 3
+          || n[1].getNumChildren() != 3)
       {
         return Node::null();
       }
@@ -2853,7 +2857,8 @@ Node SequencesRewriter::rewriteContains(Node node)
   TypeNode stype = node[0].getType();
 
   // strip endpoints
-  Node retStr = rewriteViaRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS, node);
+  Node retStr =
+      rewriteViaRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS, node);
   if (!retStr.isNull())
   {
     return returnRewrite(node, retStr, Rewrite::CTN_STRIP_ENDPT);
@@ -3238,7 +3243,8 @@ Node SequencesRewriter::rewriteIndexof(Node node)
 
   if (node[2].isConst() && node[2].getConst<Rational>().sgn() == 0)
   {
-    Node retStr = rewriteViaRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS, node);
+    Node retStr =
+        rewriteViaRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS, node);
     if (!retStr.isNull())
     {
       // For example:
@@ -3417,7 +3423,8 @@ Node SequencesRewriter::rewriteReplace(Node node)
     // for example,
     //   str.replace( str.++( "b", x, "b" ), "a", y ) --->
     //   str.++( "b", str.replace( x, "a", y ), "b" )
-    Node retStr = rewriteViaRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS, node);
+    Node retStr =
+        rewriteViaRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS, node);
     if (!retStr.isNull())
     {
       return returnRewrite(node, retStr, Rewrite::RPL_PULL_ENDPT);
