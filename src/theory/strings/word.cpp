@@ -388,8 +388,8 @@ bool Word::noOverlapWith(TNode x, TNode y, int dir)
     switch (dir)
     {
       case 0: return sx.noOverlapWith(sy);
-      case -1: return sx.find(sy) == std::string::npos && sx.roverlap(sy) == 0;
-      case 1: return sx.find(sy) == std::string::npos && sx.overlap(sy) == 0;
+      case -1: return sx.empty() || (sx.find(sy) == std::string::npos && sx.roverlap(sy) == 0);
+      case 1: return sx.empty() || (sx.find(sy) == std::string::npos && sx.overlap(sy) == 0);
       default: break;
     }
   }
@@ -401,8 +401,8 @@ bool Word::noOverlapWith(TNode x, TNode y, int dir)
     switch (dir)
     {
       case 0: return sx.noOverlapWith(sy);
-      case -1: return sx.find(sy) == std::string::npos && sx.roverlap(sy) == 0;
-      case 1: return sx.find(sy) == std::string::npos && sx.overlap(sy) == 0;
+      case -1: return sx.empty() || (sx.find(sy)==std::string::npos && sx.roverlap(sy)==0);
+      case 1: return sx.empty() || (sx.find(sy)==std::string::npos && sx.overlap(sy)==0);
       default: break;
     }
   }

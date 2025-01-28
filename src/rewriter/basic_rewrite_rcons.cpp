@@ -1346,9 +1346,44 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id, CDProof* cd
     newChildren[1][remIndex] = theory::strings::utils::mkConcat(nc2, stype);
     Trace("brc-macro") << "First child processed to : " << eq[0][0] << " == " << newChildren[0] << std::endl;
     Trace("brc-macro") << "Second child processed to : " << eq[0][1] << " == " << newChildren[1] << std::endl;
-    
-    
-    return false;
+    // now, check if the children changed, if so add to premises
+    Node g1 = theory::strings::utils::mkConcat(newChildren[0], stype);
+    Node g2 = theory::strings::utils::mkConcat(newChildren[1], stype);
+    // the first may involve more than ACI_NORM, we use a subgoal
+    if (g1!=eq[0][0])
+    {
+      Node eqc = eq[0][0].eqNode(g1);
+      cdp->addTrustedStep(
+              eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+      premises.push_back(eqc);
+    }
+    // the second should just be ACI_NORM
+    if (g2!=eq[0][1])
+    {
+      // add the REFL step if we didnt change above
+      if (g1==eq[0][0])
+      {
+        Node refl = eq[0][0].eqNode(eq[0][0]);
+        cdp->addStep(refl, ProofRule::REFL, {}, {eq[0][0]});
+        premises.push_back(refl);
+      }
+      Node eqc = eq[0][1].eqNode(g2);
+      if (!cdp->addStep(eqc, ProofRule::ACI_NORM, {}, {eqc}))
+      {
+        Assert(false);
+        Trace("brc-macro") << "...failed ACI_NORM" << std::endl;
+        return false;
+      }
+      premises.push_back(eqc);
+    }
+    switch (k)
+    {
+      case Kind::STRING_CONTAINS: rule = ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN;break;
+      case Kind::STRING_INDEXOF: rule = ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF;break;
+      case Kind::STRING_REPLACE: rule = ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE;break;
+      default:
+        return false;
+    }
   }
   // cgroup is now the proper version of concat and we have proved (if necessary)
   // that concat = cgroup.
@@ -1380,20 +1415,33 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id, CDProof* cd
     transEq.push_back(ceq);
     input = inputRew;
   }
+  Trace("brc-macro") << "Run " << rule << " on " << input << std::endl;
   theory::Rewriter* rr = d_env.getRewriter();
   Node ret = rr->rewriteViaRule(rule, input);
-  if (ret==eq[1])
+  if (ret.isNull())
   {
-    Node equiv = input.eqNode(ret);
-    cdp->addTheoryRewriteStep(equiv, rule);
-    if (!transEq.empty())
-    {
-      transEq.push_back(equiv);
-      cdp->addStep(eq, ProofRule::TRANS, transEq, {});
-    }
-    return true;
+    Trace("brc-macro") << "...failed rewrite" << std::endl;
+    return false;
   }
-  return false;
+  // add the rewrite
+  Node equiv = input.eqNode(ret);
+  cdp->addTheoryRewriteStep(equiv, rule);
+  transEq.push_back(equiv);
+  if (ret!=eq[1])
+  {
+    // should rewrite e.g. via ACI_NORM
+    Node eqpost = ret.eqNode(eq[1]);
+    Trace("brc-macro") << "- post-process subgoal " << eqpost << std::endl;
+    cdp->addTrustedStep(
+              eqpost, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    transEq.push_back(eqpost);
+  }
+  // apply transitivity if necessary
+  if (transEq.size()>1)
+  {
+    cdp->addStep(eq, ProofRule::TRANS, transEq, {});
+  }
+  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroQuantMergePrenex(CDProof* cdp,
