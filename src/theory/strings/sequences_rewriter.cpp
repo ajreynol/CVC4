@@ -1799,7 +1799,7 @@ Node SequencesRewriter::rewriteViaStrReplaceReAllEval(const Node& n)
 
 Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
 {
-  if (n.getNumChildren()<2 || !n[1].isConst())
+  if (n.getNumChildren() < 2 || !n[1].isConst())
   {
     return Node::null();
   }
@@ -1809,44 +1809,44 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
   {
     case ProofRewriteRule::STR_OVERLAP_SPLIT_CTN:
     {
-      if (k!=Kind::STRING_CONTAINS || n[0].getNumChildren()!=3)
+      if (k != Kind::STRING_CONTAINS || n[0].getNumChildren() != 3)
       {
         return Node::null();
       }
       overlap.emplace_back(n[0][1], 0);
     }
-      break;
+    break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
     {
-      if (k!=Kind::STRING_CONTAINS || n[0].getNumChildren()!=3)
+      if (k != Kind::STRING_CONTAINS || n[0].getNumChildren() != 3)
       {
         return Node::null();
       }
       overlap.emplace_back(n[0][0], 1);
       overlap.emplace_back(n[0][2], -1);
     }
-      break;
+    break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
     {
-      if (k!=Kind::STRING_INDEXOF || n[0].getNumChildren()!=2 || n[2].isConst() || n[2].getConst<Rational>().sgn()!=0)
+      if (k != Kind::STRING_INDEXOF || n[0].getNumChildren() != 2
+          || n[2].isConst() || n[2].getConst<Rational>().sgn() != 0)
       {
         return Node::null();
       }
       overlap.emplace_back(n[0][1], -1);
     }
-      break;
+    break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE:
     {
-      if (k!=Kind::STRING_REPLACE || n[0].getNumChildren()!=3)
+      if (k != Kind::STRING_REPLACE || n[0].getNumChildren() != 3)
       {
         return Node::null();
       }
       overlap.emplace_back(n[0][0], 1);
       overlap.emplace_back(n[0][2], -1);
     }
-      break;
-    default:
-      return Node::null();
+    break;
+    default: return Node::null();
   }
   for (const std::pair<Node, int>& f : overlap)
   {
@@ -1861,20 +1861,23 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
       return Node::null();
     }
   }
-  
-  NodeManager * nm = nodeManager();
+
+  NodeManager* nm = nodeManager();
   switch (id)
   {
     case ProofRewriteRule::STR_OVERLAP_SPLIT_CTN:
-      return nm->mkNode(Kind::OR, nm->mkNode(k, n[0][0], n[1]), nm->mkNode(k, n[0][2], n[1]));
+      return nm->mkNode(
+          Kind::OR, nm->mkNode(k, n[0][0], n[1]), nm->mkNode(k, n[0][2], n[1]));
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
       return nm->mkNode(k, n[0][1], n[1]);
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
       return nm->mkNode(k, n[0][0], n[1], n[2]);
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE:
-      return nm->mkNode(Kind::STRING_CONCAT, n[0][0], nm->mkNode(k, n[0][1], n[1], n[2]), n[0][2]);
-    default:
-      break;
+      return nm->mkNode(Kind::STRING_CONCAT,
+                        n[0][0],
+                        nm->mkNode(k, n[0][1], n[1], n[2]),
+                        n[0][2]);
+    default: break;
   }
   return Node::null();
 }

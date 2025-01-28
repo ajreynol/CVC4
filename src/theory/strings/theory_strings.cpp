@@ -59,7 +59,7 @@ TheoryStrings::TheoryStrings(Env& env, OutputChannel& out, Valuation valuation)
       d_termReg(env, *this, d_state, d_statistics),
       d_arithEntail(
           options().strings.stringRecArithApprox ? env.getRewriter() : nullptr,
-                    options().strings.stringRecArithApprox),
+          options().strings.stringRecArithApprox),
       d_strEntail(d_env.getRewriter(), d_arithEntail),
       d_rewriter(env.getNodeManager(),
                  d_arithEntail,

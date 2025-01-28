@@ -311,10 +311,14 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS:
       return "macro-str-strip-endpoints";
     case ProofRewriteRule::MACRO_STR_SPLIT_CTN: return "macro-str-split-ctn";
-    case ProofRewriteRule::STR_OVERLAP_SPLIT_CTN: return "str-overlap-split-ctn";
-    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN: return "str-overlap-endpoints-ctn";
-    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF: return "str-overlap-endpoints-indexof";
-    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE: return "str-overlap-endpoints-replace";
+    case ProofRewriteRule::STR_OVERLAP_SPLIT_CTN:
+      return "str-overlap-split-ctn";
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
+      return "str-overlap-endpoints-ctn";
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
+      return "str-overlap-endpoints-indexof";
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE:
+      return "str-overlap-endpoints-replace";
     case ProofRewriteRule::MACRO_STR_COMPONENT_CTN:
       return "macro-str-component-ctn";
     case ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT:

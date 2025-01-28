@@ -889,16 +889,16 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   NodeManager* nm = nodeManager();
   theory::strings::ArithEntail ae(nullptr);
   theory::strings::StringsEntail sent(nullptr, ae);
-  
-  Assert (eq[1].getKind()==Kind::AND);
+
+  Assert(eq[1].getKind() == Kind::AND);
   Node eq1p = eq[1];
   // get the equations equal empty
   // we group (and (= s t) (= t1 "") ... (= tn "")) to
   // (and (= s t) (and (= t1 "") ... (= tn ""))) and store in eq1p.
   std::vector<Node> empeqs;
-  if (eq[1].getNumChildren()>2)
+  if (eq[1].getNumChildren() > 2)
   {
-    empeqs.insert(empeqs.end(), eq[1].begin()+1, eq[1].end());
+    empeqs.insert(empeqs.end(), eq[1].begin() + 1, eq[1].end());
     Node eq1g = nm->mkAnd(empeqs);
     eq1p = nm->mkNode(Kind::AND, eq[1][0], eq1g);
     Node eqg = eq1p.eqNode(eq[1]);
@@ -979,15 +979,13 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   cdfwd.addStep(diffneqz, ProofRule::EQ_RESOLVE, {leneqi, equiv}, {});
   Trace("brc-macro") << "...have " << diffneqz << std::endl;
 
-
   // get the concatenation term corresponding to the components equated to empty
   std::vector<Node> concat;
   std::map<Node, Node> empMap;
-  Assert(eq1p.getKind() == Kind::AND && eq1p.getNumChildren()==2);
+  Assert(eq1p.getKind() == Kind::AND && eq1p.getNumChildren() == 2);
   for (const Node& ee : empeqs)
   {
-    Assert(ee.getKind() == Kind::EQUAL
-           && ee[0].getType().isStringLike());
+    Assert(ee.getKind() == Kind::EQUAL && ee[0].getType().isStringLike());
     concat.push_back(ee[0]);
     empMap[ee[0]] = ee;
   }
@@ -1085,39 +1083,40 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   cdmid.addStep(implMid, ProofRule::SCOPE, {eqqeq}, empeqs);
   Trace("brc-macro") << "...intermediate result: " << implMid << std::endl;
   std::shared_ptr<ProofNode> pfmid = cdmid.getProofFor(implMid);
-  Assert (implMid[1][0]==eq[0]);
-  Assert (implMid[1][1]==eq1p[0]);
-  
+  Assert(implMid[1][0] == eq[0]);
+  Assert(implMid[1][1] == eq1p[0]);
+
   // finish the forward proof
   cdfwd.addProof(pfmid);
   cdfwd.addStep(implMid[1], ProofRule::MODUS_PONENS, {eq1p[1], implMid}, {});
   cdfwd.addStep(eq1p[0], ProofRule::EQ_RESOLVE, {eq[0], implMid[1]}, {});
-  cdfwd.addStep(eq1p, ProofRule::AND_INTRO, {eq1p[0], eq1p[1]}, {});  
+  cdfwd.addStep(eq1p, ProofRule::AND_INTRO, {eq1p[0], eq1p[1]}, {});
   Node impl = nm->mkNode(Kind::IMPLIES, eq[0], eq1p);
   cdfwd.addStep(impl, ProofRule::SCOPE, {eq1p}, {eq[0]});
   cdp->addProof(cdfwd.getProofFor(impl));
-  
+
   // reverse proof is easy
   CDProof cdrev(d_env);
   cdrev.addProof(pfmid);
   cdrev.addStep(implMid[1], ProofRule::MODUS_PONENS, {eq1p[1], implMid}, {});
   Node equivs = implMid[1][1].eqNode(implMid[1][0]);
   cdrev.addStep(equivs, ProofRule::SYMM, {implMid[1]}, {});
-  cdrev.addStep(implMid[1][0], ProofRule::EQ_RESOLVE, {implMid[1][1], equivs}, {});
+  cdrev.addStep(
+      implMid[1][0], ProofRule::EQ_RESOLVE, {implMid[1][1], equivs}, {});
   Node implrev = nm->mkNode(Kind::IMPLIES, eq1p, eq[0]);
   cdrev.addStep(implrev, ProofRule::SCOPE, {eq[0]}, {eq1p[0], eq1p[1]});
   cdp->addProof(cdrev.getProofFor(implrev));
-  
+
   // dual implication
   Node eqfinal = proveDualImplication(cdp, impl, implrev);
-  
+
   // if we grouped the empty equations, we close with a transitive step
   // which we added via ACI_NORM above
-  if (eq1p!=eq[1])
+  if (eq1p != eq[1])
   {
     cdp->addStep(eq, ProofRule::TRANS, {eqfinal, eq1p.eqNode(eq[1])}, {});
   }
-  
+
   return true;
 }
 
