@@ -1882,6 +1882,7 @@ set(regress_0_tests
   regress0/strings/dd_norn_675.smt2
   regress0/strings/dd_rw_984.smt2
   regress0/strings/dd_slog_2087_ctn_split.smt2
+  regress0/strings/dd_slog_stranger_2020.smt2
   regress0/strings/delta-trust-subs.smt2
   regress0/strings/denghan-instance56567.smt2
   regress0/strings/distinct-witness-id.smt2

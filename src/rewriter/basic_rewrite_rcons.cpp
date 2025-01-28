@@ -41,6 +41,7 @@
 #include "theory/strings/arith_entail.h"
 #include "theory/strings/strings_entail.h"
 #include "theory/strings/theory_strings_utils.h"
+#include "theory/strings/sequences_rewriter.h"
 #include "theory/strings/word.h"
 #include "util/rational.h"
 
@@ -1241,7 +1242,7 @@ Node BasicRewriteRCons::proveDualImplication(CDProof* cdp,
 
 bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id, CDProof* cdp, const Node& eq)
 {
-  Trace("brc-macro") << "Expand macro overlap for " << eq
+  Trace("brc-macro") << "Expand macro overlap (" << id << ") for " << eq
                      << std::endl;
   NodeManager * nm = nodeManager();
   Assert (eq[0].getNumChildren()>2 && eq[0][1].isConst());
@@ -1285,22 +1286,20 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id, CDProof* cd
   else
   {
     Assert (id==ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS);
-    std::vector<Node> nc1;
-    theory::strings::utils::getConcat(eq[0][0], nc1);
-    std::vector<Node> nc2;
-    theory::strings::utils::getConcat(eq[0][1], nc2);
     theory::strings::ArithEntail ae(nullptr);
     theory::strings::StringsEntail se(nullptr, ae);
+    theory::strings::SequencesRewriter srew(nm, ae, se, nullptr);
+    std::vector<Node> nb, nc1, ne;
     // replay the strip endpoint operation
     Kind k = eq[0].getKind();
-    int dir = k==Kind::STRING_INDEXOF ? -1 : 0;
-    std::vector<Node> nb;
-    std::vector<Node> ne;
-    if (!se.stripConstantEndpoints(nc1, nc2, nb, ne, dir))
+    Node res = srew.rewriteViaMacroStrStripEndpoints(eq[0], nb, nc1, ne);
+    if (res!=eq[1])
     {
       Assert (false);
       return false;
     }
+    std::vector<Node> nc2;
+    theory::strings::utils::getConcat(eq[0][1], nc2);
     std::vector<Node> newChildren[2];
     for (size_t i=0; i<2; i++)
     {
@@ -1329,6 +1328,9 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id, CDProof* cd
         return false;
       }
       newChildren[0].push_back(vec[0]);
+      // should be the case since we don't rewrite from both sides if
+      // the second term is a constant.
+      Assert(!nc2.empty());
       size_t index2 = (i==0 ? 0 : nc2.size()-1);
       if (i == 0)
       {

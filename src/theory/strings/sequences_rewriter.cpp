@@ -163,7 +163,10 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     }
     break;
     case ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS:
-      return rewriteViaMacroStrStripEndpoints(n);
+    {
+      std::vector<Node> nb, nrem, ne;
+      return rewriteViaMacroStrStripEndpoints(n, nb, nrem, ne);
+    }
     case ProofRewriteRule::MACRO_STR_SPLIT_CTN:
       return rewriteViaMacroStrSplitCtn(n);
     case ProofRewriteRule::MACRO_STR_COMPONENT_CTN:
@@ -187,7 +190,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT:
     {
       if (n.getKind() == Kind::STRING_CONTAINS
-          && n[1].getKind() == Kind::STRING_CONCAT)
+          && n[1].getKind() == Kind::STRING_CONCAT && n[0].isConst())
       {
         int firstc, lastc;
         if (!d_stringsEntail.canConstantContainConcat(
@@ -1478,10 +1481,13 @@ Node SequencesRewriter::rewriteViaMacroSubstrStripSymLength(const Node& node,
   return sent.rewriteViaMacroSubstrStripSymLength(node, rule, ch1, ch2);
 }
 
-Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
+Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n,
+                                                         std::vector<Node>& nb,
+                                                         std::vector<Node>& nrem,
+                                                         std::vector<Node>& ne)
 {
   Kind k = n.getKind();
-  int dir = 0;
+  std::vector<int> dirs;
   if (k == Kind::STRING_INDEXOF)
   {
     // must start at zero
@@ -1490,14 +1496,27 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
       return Node::null();
     }
     // only strip off the end
-    dir = -1;
+    dirs.push_back(-1);
   }
-  else if (k != Kind::STRING_CONTAINS && k != Kind::STRING_REPLACE)
+  else if (k == Kind::STRING_CONTAINS || k == Kind::STRING_REPLACE)
+  {
+    if (n[1].isConst())
+    {
+      // if constant, we strip from one direction at a time, to ease proof
+      // reconstruction
+      dirs.push_back(-1);
+      dirs.push_back(1);
+    }
+    else
+    {
+      dirs.push_back(0);
+    }
+  }
+  else
   {
     return Node::null();
   }
-  std::vector<Node> nc1;
-  utils::getConcat(n[0], nc1);
+    
   std::vector<Node> nc2;
   utils::getConcat(n[1], nc2);
   if (nc2.empty())
@@ -1505,13 +1524,24 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(const Node& n)
     return Node::null();
   }
   // strip endpoints
-  std::vector<Node> nb;
-  std::vector<Node> ne;
-  if (d_stringsEntail.stripConstantEndpoints(nc1, nc2, nb, ne, dir))
+  bool success = false;
+  for (int dir : dirs)
+  {
+    nrem.clear();
+    utils::getConcat(n[0], nrem);
+    nb.clear();
+    ne.clear();
+    if (d_stringsEntail.stripConstantEndpoints(nrem, nc2, nb, ne, dir))
+    {
+      success = true;
+      break;
+    }
+  }
+  if (success)
   {
     NodeManager* nm = nodeManager();
     TypeNode stype = n[0].getType();
-    Node rem = utils::mkConcat(nc1, stype);
+    Node rem = utils::mkConcat(nrem, stype);
     switch (k)
     {
       case Kind::STRING_CONTAINS:
@@ -2823,13 +2853,10 @@ Node SequencesRewriter::rewriteContains(Node node)
   TypeNode stype = node[0].getType();
 
   // strip endpoints
-  std::vector<Node> nb;
-  std::vector<Node> ne;
-  if (d_stringsEntail.stripConstantEndpoints(nc1, nc2, nb, ne))
+  Node retStr = rewriteViaRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS, node);
+  if (!retStr.isNull())
   {
-    Node ret = nodeManager()->mkNode(
-        Kind::STRING_CONTAINS, utils::mkConcat(nc1, stype), node[1]);
-    return returnRewrite(node, ret, Rewrite::CTN_STRIP_ENDPT);
+    return returnRewrite(node, retStr, Rewrite::CTN_STRIP_ENDPT);
   }
 
   for (const Node& n : nc2)
@@ -3211,16 +3238,12 @@ Node SequencesRewriter::rewriteIndexof(Node node)
 
   if (node[2].isConst() && node[2].getConst<Rational>().sgn() == 0)
   {
-    std::vector<Node> cb;
-    std::vector<Node> ce;
-    if (d_stringsEntail.stripConstantEndpoints(
-            children0, children1, cb, ce, -1))
+    Node retStr = rewriteViaRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS, node);
+    if (!retStr.isNull())
     {
-      Node ret = utils::mkConcat(children0, stype);
-      ret = nm->mkNode(Kind::STRING_INDEXOF, ret, node[1], node[2]);
       // For example:
       // str.indexof( str.++( x, "A" ), "B", 0 ) ---> str.indexof( x, "B", 0 )
-      return returnRewrite(node, ret, Rewrite::RPL_PULL_ENDPT);
+      return returnRewrite(node, retStr, Rewrite::RPL_PULL_ENDPT);
     }
   }
 
@@ -3394,19 +3417,10 @@ Node SequencesRewriter::rewriteReplace(Node node)
     // for example,
     //   str.replace( str.++( "b", x, "b" ), "a", y ) --->
     //   str.++( "b", str.replace( x, "a", y ), "b" )
-    std::vector<Node> cb;
-    std::vector<Node> ce;
-    if (d_stringsEntail.stripConstantEndpoints(children0, children1, cb, ce))
+    Node retStr = rewriteViaRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS, node);
+    if (!retStr.isNull())
     {
-      std::vector<Node> cc;
-      cc.insert(cc.end(), cb.begin(), cb.end());
-      cc.push_back(nodeManager()->mkNode(Kind::STRING_REPLACE,
-                                         utils::mkConcat(children0, stype),
-                                         node[1],
-                                         node[2]));
-      cc.insert(cc.end(), ce.begin(), ce.end());
-      Node ret = utils::mkConcat(cc, stype);
-      return returnRewrite(node, ret, Rewrite::RPL_PULL_ENDPT);
+      return returnRewrite(node, retStr, Rewrite::RPL_PULL_ENDPT);
     }
   }
 
