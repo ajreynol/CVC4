@@ -830,6 +830,26 @@
 (define $str_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)))
   ($str_overlap_rec ($mk_emptystr (eo::typeof s)) s t))
 
+
+(program $str_has_overlap_rec ((U Type) (s (Seq U)) (s1 (Seq U) :list) (t (Seq U)) (nil (Seq U)))
+  ((Seq U) (Seq U) (Seq U)) Bool
+  (
+  (($str_has_overlap_rec nil (str.++ s s1) t) (eo::ite ($nary_is_compatible str.++ nil (str.++ s s1) t)
+                                                true
+                                                ($str_has_overlap_rec nil s1 t)))
+  (($str_has_overlap_rec nil s t)             false)
+  )
+)
+
+(define $str_has_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)))
+  (eo::define ((emp ($mk_emptystr (eo::typeof s))))
+  (eo::ite (eo::is_eq t emp)
+    false
+    ($str_has_overlap_rec emp s t))))
+
+(define $str_has_roverlap ((U Type :implicit) (s (Seq U)) (t (Seq U)))
+  ($str_has_overlap ($str_rev s true) ($str_rev t true)))
+
 ; program: $str_mk_re_loop_elim_rec
 ; args:
 ; - n Int: The minimum number of iterations for a re.loop term.
