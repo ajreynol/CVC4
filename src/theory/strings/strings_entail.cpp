@@ -511,10 +511,7 @@ bool StringsEntail::stripConstantEndpoints(std::vector<Node>& n1,
 
       std::vector<Node> sss;
       std::vector<Node> sls;
-      if (!isSimple)
-      {
-        n1cmp = utils::decomposeSubstrChain(n1cmp, sss, sls);
-      }
+      n1cmp = utils::decomposeSubstrChain(n1cmp, sss, sls);
       Trace("strings-rewrite-debug2")
           << "stripConstantEndpoints : Compare " << n1cmp << " " << n2[index1]
           << ", dir = " << r << ", sss/sls=" << sss << "/" << sls << std::endl;
@@ -596,7 +593,7 @@ bool StringsEntail::stripConstantEndpoints(std::vector<Node>& n1,
           }
         }
       }
-      else if (n1cmp.getKind() == Kind::STRING_ITOS && !isSimple)
+      else if (n1cmp.getKind() == Kind::STRING_ITOS)
       {
         if (n2[index1].isConst())
         {
