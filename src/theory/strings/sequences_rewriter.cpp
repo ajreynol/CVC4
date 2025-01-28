@@ -1803,6 +1803,8 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
   {
     return Node::null();
   }
+  // get the list of overlaps to check, based on the rule, which will be passed
+  // to Word::noOverlapWith below.
   std::vector<std::pair<Node, int>> overlap;
   Kind k = n.getKind();
   switch (id)
@@ -1862,6 +1864,7 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
     }
   }
 
+  // checks succeeded, make the appropriate rewritten term
   NodeManager* nm = nodeManager();
   switch (id)
   {

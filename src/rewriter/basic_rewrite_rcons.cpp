@@ -41,6 +41,7 @@
 #include "theory/strings/arith_entail.h"
 #include "theory/strings/strings_entail.h"
 #include "theory/strings/theory_strings_utils.h"
+#include "theory/strings/word.h"
 #include "util/rational.h"
 
 using namespace cvc5::internal::kind;
@@ -235,6 +236,17 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
+    case ProofRewriteRule::MACRO_STR_SPLIT_CTN:
+      if (ensureProofMacroStrSplitCtn(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    //EVALUE(MACRO_STR_COMPONENT_CTN),
+    //EVALUE(MACRO_STR_CONST_NCTN_CONCAT),
+    //EVALUE(MACRO_STR_IN_RE_INCLUSION),
+    //EVALUE(MACRO_RE_INTER_UNION_CONST_ELIM),
+    //EVALUE(MACRO_SEQ_EVAL_OP),
     case ProofRewriteRule::MACRO_QUANT_MERGE_PRENEX:
       if (ensureProofMacroQuantMergePrenex(cdp, eq))
       {
@@ -1236,6 +1248,70 @@ bool BasicRewriteRCons::ensureProofMacroStrStripEndpoints(CDProof* cdp,
                                                           const Node& eq)
 {
   // TODO
+  return false;
+}
+
+bool BasicRewriteRCons::ensureProofMacroStrSplitCtn(CDProof* cdp, const Node& eq)
+{
+  Trace("brc-macro") << "Expand macro str split ctn for " << eq
+                     << std::endl;
+  NodeManager * nm = nodeManager();
+  Assert (eq[0].getKind()==Kind::STRING_CONTAINS);
+  Node concat = eq[0][0];
+  Assert (concat.getKind()==Kind::STRING_CONCAT);
+  Assert (eq[1].getKind()==Kind::OR && eq[1][0].getKind()==Kind::STRING_CONTAINS);
+  TypeNode stype = concat.getType();
+  Node emp = theory::strings::Word::mkEmptyWord(stype);
+  size_t nchildpre = 0;
+  if (eq[1][0][0].getKind()==Kind::STRING_CONCAT)
+  {
+    nchildpre = eq[1][0][0].getNumChildren();
+  }
+  else if (eq[1][0][0]!=emp)
+  {
+    nchildpre = 1;
+  }
+  Node ctnSplit = eq[0];
+  // partition into three children
+  std::vector<Node> childpre(concat.begin(), concat.begin()+nchildpre);
+  Node cpre = theory::strings::utils::mkConcat(childpre, stype);
+  Node cmid = concat[nchildpre];
+  std::vector<Node> childpost(concat.begin()+nchildpre+1, concat.end());
+  Node cpost = theory::strings::utils::mkConcat(childpost, stype);
+  // grouped concatenation should be shown equal by ACI_NORM
+  Node crew = nm->mkNode(Kind::STRING_CONCAT, cpre, cmid, cpost);
+  std::vector<Node> transEq;
+  if (crew!=concat)
+  {
+    Node eqc = concat.eqNode(crew);
+    if (!cdp->addStep(eqc, ProofRule::ACI_NORM, {}, {eqc}))
+    {
+      Assert(false);
+      return false;
+    }
+    Node ctnSplitRew = nm->mkNode(Kind::STRING_CONTAINS, crew, eq[0][1]);
+    Node refl = eq[0][1].eqNode(eq[0][1]);
+    cdp->addStep(refl, ProofRule::REFL, {}, {eq[0][1]});
+    std::vector<Node> cargs;
+    ProofRule cr = expr::getCongRule(ctnSplit, cargs);
+    Node ceq = ctnSplit.eqNode(ctnSplitRew);
+    cdp->addStep(ceq, cr, {eqc, refl}, cargs);
+    transEq.push_back(ceq);
+    ctnSplit = ctnSplitRew;
+  }
+  theory::Rewriter* rr = d_env.getRewriter();
+  Node ret = rr->rewriteViaRule(ProofRewriteRule::STR_OVERLAP_SPLIT_CTN, ctnSplit);
+  if (ret==eq[1])
+  {
+    Node equiv = ctnSplit.eqNode(ret);
+    cdp->addTheoryRewriteStep(equiv, ProofRewriteRule::STR_OVERLAP_SPLIT_CTN);
+    if (!transEq.empty())
+    {
+      transEq.push_back(equiv);
+      cdp->addStep(eq, ProofRule::TRANS, transEq, {});
+    }
+    return true;
+  }
   return false;
 }
 

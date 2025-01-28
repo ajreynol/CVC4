@@ -224,6 +224,16 @@ class BasicRewriteRCons : protected EnvObj
   bool ensureProofMacroStrStripEndpoints(CDProof* cdp, const Node& eq);
   /**
    * Elaborate a rewrite eq that was proven by
+   * ProofRewriteRule::MACRO_STR_SPLIT_CTN.
+   *
+   * @param cdp The proof to add to.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_STR_SPLIT_CTN.
+   * @return true if added a closed proof of eq to cdp.
+   */
+  bool ensureProofMacroStrSplitCtn(CDProof* cdp, const Node& eq);
+  /**
+   * Elaborate a rewrite eq that was proven by
    * ProofRewriteRule::MACRO_QUANT_MERGE_PRENEX.
    *
    * @param cdp The proof to add to.
