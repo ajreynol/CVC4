@@ -231,13 +231,8 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
       }
       break;
     case ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS:
-      if (ensureProofMacroStrStripEndpoints(cdp, eq))
-      {
-        handledMacro = true;
-      }
-      break;
     case ProofRewriteRule::MACRO_STR_SPLIT_CTN:
-      if (ensureProofMacroStrSplitCtn(cdp, eq))
+      if (ensureProofMacroOverlap(id, cdp, eq))
       {
         handledMacro = true;
       }
@@ -1244,42 +1239,51 @@ Node BasicRewriteRCons::proveDualImplication(CDProof* cdp,
   return eqfinal;
 }
 
-bool BasicRewriteRCons::ensureProofMacroStrStripEndpoints(CDProof* cdp,
-                                                          const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id, CDProof* cdp, const Node& eq)
 {
-  // TODO
-  return false;
-}
-
-bool BasicRewriteRCons::ensureProofMacroStrSplitCtn(CDProof* cdp, const Node& eq)
-{
-  Trace("brc-macro") << "Expand macro str split ctn for " << eq
+  Trace("brc-macro") << "Expand macro overlap for " << eq
                      << std::endl;
   NodeManager * nm = nodeManager();
-  Assert (eq[0].getKind()==Kind::STRING_CONTAINS);
+  Assert (eq[0].getNumChildren()>2 && eq[0][1].isConst());
   Node concat = eq[0][0];
   Assert (concat.getKind()==Kind::STRING_CONCAT);
-  Assert (eq[1].getKind()==Kind::OR && eq[1][0].getKind()==Kind::STRING_CONTAINS);
   TypeNode stype = concat.getType();
   Node emp = theory::strings::Word::mkEmptyWord(stype);
   size_t nchildpre = 0;
-  if (eq[1][0][0].getKind()==Kind::STRING_CONCAT)
+  ProofRewriteRule rule;
+  if (id==ProofRewriteRule::MACRO_STR_SPLIT_CTN)
   {
-    nchildpre = eq[1][0][0].getNumChildren();
+    rule = ProofRewriteRule::STR_OVERLAP_SPLIT_CTN;
+    Assert (eq[1].getKind()==Kind::OR && eq[1][0].getKind()==Kind::STRING_CONTAINS);
+    if (eq[1][0][0].getKind()==Kind::STRING_CONCAT)
+    {
+      nchildpre = eq[1][0][0].getNumChildren();
+    }
+    else if (eq[1][0][0]!=emp)
+    {
+      nchildpre = 1;
+    }
   }
-  else if (eq[1][0][0]!=emp)
+  else
   {
-    nchildpre = 1;
+    Assert (id==ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS);
+    return false;
   }
-  Node ctnSplit = eq[0];
-  // partition into three children
-  std::vector<Node> childpre(concat.begin(), concat.begin()+nchildpre);
-  Node cpre = theory::strings::utils::mkConcat(childpre, stype);
-  Node cmid = concat[nchildpre];
+  // partition into two or three children
+  Node input = eq[0];
+  std::vector<Node> groupedChildren;
+  if (rule!=ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF)
+  {
+    std::vector<Node> childpre(concat.begin(), concat.begin()+nchildpre);
+    Node cpre = theory::strings::utils::mkConcat(childpre, stype);
+    groupedChildren.push_back(cpre);
+  }
+  groupedChildren.push_back(concat[nchildpre]);
   std::vector<Node> childpost(concat.begin()+nchildpre+1, concat.end());
   Node cpost = theory::strings::utils::mkConcat(childpost, stype);
+  groupedChildren.push_back(cpost);
   // grouped concatenation should be shown equal by ACI_NORM
-  Node crew = nm->mkNode(Kind::STRING_CONCAT, cpre, cmid, cpost);
+  Node crew = nm->mkNode(Kind::STRING_CONCAT, groupedChildren);
   std::vector<Node> transEq;
   if (crew!=concat)
   {
@@ -1289,22 +1293,30 @@ bool BasicRewriteRCons::ensureProofMacroStrSplitCtn(CDProof* cdp, const Node& eq
       Assert(false);
       return false;
     }
-    Node ctnSplitRew = nm->mkNode(Kind::STRING_CONTAINS, crew, eq[0][1]);
-    Node refl = eq[0][1].eqNode(eq[0][1]);
-    cdp->addStep(refl, ProofRule::REFL, {}, {eq[0][1]});
+    std::vector<Node> premises;
+    std::vector<Node> newChildren;
+    premises.push_back(eqc);
+    newChildren.push_back(crew);
+    for (size_t i=1, nchild = eq[0].getNumChildren(); i<nchild; i++)
+    {
+      Node refl = eq[0][1].eqNode(eq[0][i]);
+      cdp->addStep(refl, ProofRule::REFL, {}, {eq[0][i]});
+      premises.push_back(refl);
+    }
+    Node inputRew = nm->mkNode(eq[0].getKind(), newChildren);
     std::vector<Node> cargs;
-    ProofRule cr = expr::getCongRule(ctnSplit, cargs);
-    Node ceq = ctnSplit.eqNode(ctnSplitRew);
-    cdp->addStep(ceq, cr, {eqc, refl}, cargs);
+    ProofRule cr = expr::getCongRule(input, cargs);
+    Node ceq = input.eqNode(inputRew);
+    cdp->addStep(ceq, cr, premises, cargs);
     transEq.push_back(ceq);
-    ctnSplit = ctnSplitRew;
+    input = inputRew;
   }
   theory::Rewriter* rr = d_env.getRewriter();
-  Node ret = rr->rewriteViaRule(ProofRewriteRule::STR_OVERLAP_SPLIT_CTN, ctnSplit);
+  Node ret = rr->rewriteViaRule(rule, input);
   if (ret==eq[1])
   {
-    Node equiv = ctnSplit.eqNode(ret);
-    cdp->addTheoryRewriteStep(equiv, ProofRewriteRule::STR_OVERLAP_SPLIT_CTN);
+    Node equiv = input.eqNode(ret);
+    cdp->addTheoryRewriteStep(equiv, rule);
     if (!transEq.empty())
     {
       transEq.push_back(equiv);
