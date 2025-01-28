@@ -665,19 +665,19 @@
 )
 
 
-(declare-rule str-overlap-endpoint-ctn ((T Type) (c1 (Seq T)) (s (Seq T)) (c2 (Seq T)) (d (Seq T)))
+(declare-rule str-overlap-endpoints-ctn ((T Type) (c1 (Seq T)) (s (Seq T)) (c2 (Seq T)) (d (Seq T)))
   :args ((= (str.contains (str.++ c1 s c2) d) (str.contains s d)))
   :requires ((($str_has_overlap c1 d) false) (($str_has_roverlap c2 d) false))
   :conclusion (= (str.contains (str.++ c1 s c2) d) (str.contains s d))
 )
 
-(declare-rule str-overlap-endpoint-indexof ((T Type) (s (Seq T)) (c (Seq T)) (d (Seq T)))
+(declare-rule str-overlap-endpoints-indexof ((T Type) (s (Seq T)) (c (Seq T)) (d (Seq T)))
   :args ((= (str.indexof (str.++ s c) d 0) (str.indexof s d 0)))
   :requires ((($str_has_roverlap c d) false))
   :conclusion (= (str.indexof (str.++ s c) d 0) (str.indexof s d 0))
 )
 
-(declare-rule str-overlap-endpoint-replace ((T Type) (c1 (Seq T)) (s (Seq T)) (c2 (Seq T)) (d (Seq T)) (t (Seq T)))
+(declare-rule str-overlap-endpoints-replace ((T Type) (c1 (Seq T)) (s (Seq T)) (c2 (Seq T)) (d (Seq T)) (t (Seq T)))
   :args ((= (str.replace (str.++ c1 s c2) d t) (str.++ c1 (str.replace s d t) c2)))
   :requires ((($str_has_overlap c1 d) false) (($str_has_roverlap c2 d) false))
   :conclusion (= (str.replace (str.++ c1 s c2) d t) (str.++ c1 (str.replace s d t) c2))

@@ -114,9 +114,10 @@ class Word
    *
    * @param x The first string
    * @param y The second string
+   * @param dir The direction
    * @return True if there is an overlap, false otherwise
    */
-  static bool noOverlapWith(TNode x, TNode y);
+  static bool noOverlapWith(TNode x, TNode y, int dir = 0);
 
   /** overlap
    *

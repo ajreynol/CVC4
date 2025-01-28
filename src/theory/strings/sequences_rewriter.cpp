@@ -225,6 +225,11 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
+    case ProofRewriteRule::STR_OVERLAP_SPLIT_CTN:
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE:
+      return rewriteViaOverlap(id, n);
     default: break;
   }
   return Node::null();
@@ -1788,6 +1793,88 @@ Node SequencesRewriter::rewriteViaStrReplaceReAllEval(const Node& n)
     res.push_back(nm->mkConst(rem));
     Node ret = utils::mkConcat(res, t);
     return ret;
+  }
+  return Node::null();
+}
+
+Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
+{
+  if (n.getNumChildren()<2 || !n[1].isConst())
+  {
+    return Node::null();
+  }
+  std::vector<std::pair<Node, int>> overlap;
+  Kind k = n.getKind();
+  switch (id)
+  {
+    case ProofRewriteRule::STR_OVERLAP_SPLIT_CTN:
+    {
+      if (k!=Kind::STRING_CONTAINS || n[0].getNumChildren()!=3)
+      {
+        return Node::null();
+      }
+      overlap.emplace_back(n[0][1], 0);
+    }
+      break;
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
+    {
+      if (k!=Kind::STRING_CONTAINS || n[0].getNumChildren()!=3)
+      {
+        return Node::null();
+      }
+      overlap.emplace_back(n[0][0], 1);
+      overlap.emplace_back(n[0][2], -1);
+    }
+      break;
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
+    {
+      if (k!=Kind::STRING_INDEXOF || n[0].getNumChildren()!=2 || n[2].isConst() || n[2].getConst<Rational>().sgn()!=0)
+      {
+        return Node::null();
+      }
+      overlap.emplace_back(n[0][1], -1);
+    }
+      break;
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE:
+    {
+      if (k!=Kind::STRING_REPLACE || n[0].getNumChildren()!=3)
+      {
+        return Node::null();
+      }
+      overlap.emplace_back(n[0][0], 1);
+      overlap.emplace_back(n[0][2], -1);
+    }
+      break;
+    default:
+      return Node::null();
+  }
+  for (const std::pair<Node, int>& f : overlap)
+  {
+    // ensure it is a constant
+    if (!f.first.isConst())
+    {
+      return Node::null();
+    }
+    // check if no overlap
+    if (!Word::noOverlapWith(f.first, n[1]))
+    {
+      return Node::null();
+    }
+  }
+  
+  NodeManager * nm = nodeManager();
+  switch (id)
+  {
+    case ProofRewriteRule::STR_OVERLAP_SPLIT_CTN:
+      return nm->mkNode(Kind::OR, nm->mkNode(k, n[0][0], n[1]), nm->mkNode(k, n[0][2], n[1]));
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
+      return nm->mkNode(k, n[0][1], n[1]);
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
+      return nm->mkNode(k, n[0][0], n[1], n[2]);
+    case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE:
+      return nm->mkNode(Kind::STRING_CONCAT, n[0][0], nm->mkNode(k, n[0][1], n[1], n[2]), n[0][2]);
+    default:
+      break;
   }
   return Node::null();
 }
