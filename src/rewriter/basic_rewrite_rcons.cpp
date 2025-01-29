@@ -1898,7 +1898,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
         Node bsubsr = extendedRewrite(bsubs);
         if (!bsubsr.isConst() || bsubsr.getConst<bool>())
         {
-          Trace("brc-macro") << "...failed to rewrite " << bsubsr << " from "
+          Trace("brc-macro") << "...failed variable elimination was equivalence preserving " << bsubsr;
                              << body1r[i] << ", " << eqLit << std::endl;
           //Assert(false) << "Failed to show variable elimination was "
           //                 "equivalence preserving "
