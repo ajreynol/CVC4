@@ -250,6 +250,14 @@ Node ExtendedRewriter::extendedRewrite(Node n) const
       {
         new_ret = extendedRewriteStrings(ret);
       }
+      else if (tret.isBitVector())
+      {
+        new_ret = d_rew.rewriteViaRule(ProofRewriteRule::MACRO_BV_EQ_SOLVE, ret);
+        if (!new_ret.isNull())
+        {
+          debugExtendedRewrite(ret, new_ret, "MACRO_BV_EQ_SOLVE");
+        }
+      }
     }
   }
   else if (ret.getKind() == Kind::GEQ)
