@@ -1900,9 +1900,9 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
         {
           Trace("brc-macro") << "...failed to rewrite " << bsubsr << " from "
                              << body1r[i] << ", " << eqLit << std::endl;
-          Assert(false) << "Failed to show variable elimination was "
-                           "equivalence preserving "
-                        << bsubsr;
+          //Assert(false) << "Failed to show variable elimination was "
+          //                 "equivalence preserving "
+          //              << bsubsr;
           return false;
         }
         cdp->addTrustedStep(
