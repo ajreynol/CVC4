@@ -252,7 +252,8 @@ Node ExtendedRewriter::extendedRewrite(Node n) const
       }
       else if (tret.isBitVector())
       {
-        new_ret = d_rew.rewriteViaRule(ProofRewriteRule::MACRO_BV_EQ_SOLVE, ret);
+        new_ret =
+            d_rew.rewriteViaRule(ProofRewriteRule::MACRO_BV_EQ_SOLVE, ret);
         if (!new_ret.isNull())
         {
           debugExtendedRewrite(ret, new_ret, "MACRO_BV_EQ_SOLVE");
