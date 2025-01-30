@@ -2023,6 +2023,7 @@ set(regress_0_tests
   regress0/strings/str003.smt2
   regress0/strings/str004.smt2
   regress0/strings/str005.smt2
+  regress0/strings/string-endpoint-rewrite-test.smt2
   regress0/strings/strings-charat.cvc.smt2
   regress0/strings/strings-ext.smt2
   regress0/strings/strings-native-simple.cvc.smt2
