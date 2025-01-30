@@ -39,7 +39,6 @@ const char* toString(Rewrite r)
     case Rewrite::CTN_NCONST_CTN_CONCAT: return "CTN_NCONST_CTN_CONCAT";
     case Rewrite::CTN_REPL: return "CTN_REPL";
     case Rewrite::CTN_REPL_CHAR: return "CTN_REPL_CHAR";
-    case Rewrite::CTN_REPL_CNSTS_TO_CTN: return "CTN_REPL_CNSTS_TO_CTN";
     case Rewrite::CTN_REPL_EMPTY: return "CTN_REPL_EMPTY";
     case Rewrite::CTN_REPL_LEN_ONE_TO_CTN: return "CTN_REPL_LEN_ONE_TO_CTN";
     case Rewrite::CTN_REPL_TO_CTN: return "CTN_REPL_TO_CTN";
