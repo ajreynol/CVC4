@@ -3176,43 +3176,105 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_STR_EQ_LEN_UNIFY),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings -- Macro string strip endpoints**
-   *
-   * One of the following three versions:
+   * **Strings -- Macro string split contains**
    *
    * .. math::
-   *    str.
+   *   \mathit{str.contains}(t, s) =
+   *   \mathit{str.contains}(t_1, s) \vee \mathit{str.contains}(t_2, s)
+   *
+   * where :math:`t_1` and :math:`t_2` are substrings of :math:`t`. This
+   * rule is elaborated using
+   * :cpp:enumerator:`STR_OVERLAP_SPLIT_CTN <cvc5::ProofRewriteRule::STR_OVERLAP_SPLIT_CTN>`.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_STR_SPLIT_CTN),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Macro string strip endpoints**
+   *
+   * One of the following forms:
+   *
+   * .. math::
+   *   \mathit{str.contains}(t, s) = \mathit{str.contains}(t_2, s)
+   *
+   * .. math::
+   *   \mathit{str.indexof}(t, s, n) = \mathit{str.indexof}(t_2, s, n)
+   *
+   * .. math::
+   *   \mathit{str.replace}(t, s, r) =
+   *   \mathit{str.++}(t_1, \mathit{str.replace}(t_2, s, r) t_3)
+   *
+   * where in each case we reason about removing portions of :math:`t`
+   * that are irrelevant to the evaluation of the term. This rule
+   * is elaborated  using
+   * :cpp:enumerator:`STR_OVERLAP_ENDPOINTS_CTN <cvc5::ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN>`,
+   * :cpp:enumerator:`STR_OVERLAP_ENDPOINTS_INDEXOF <cvc5::ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF>` and
+   * :cpp:enumerator:`STR_OVERLAP_ENDPOINTS_REPLACE <cvc5::ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE>`.
    *
    * \endverbatim
    */
   EVALUE(MACRO_STR_STRIP_ENDPOINTS),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings -- Macro string split contains**
-   * \endverbatim
-   */
-  EVALUE(MACRO_STR_SPLIT_CTN),
-  /**
-   * \verbatim embed:rst:leading-asterisk
    * **Strings -- Strings overlap split contains**
+   *
+   * .. math::
+   *   \mathit{str.contains}(\mathit{str.++}(t_1, t_2, t_3), s) =
+   *   \mathit{str.contains}(t_1, s) \vee \mathit{str.contains}(t_3, s)
+   *
+   * :math:`s` has no forward or reverse overlap with :math:`t_2`.
+   * For details see :math:`\texttt{Word::noOverlapWith}` in
+   * :cvc5src:`theory/strings/word.h`.
    * \endverbatim
    */
   EVALUE(STR_OVERLAP_SPLIT_CTN),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Strings overlap endpoints contains**
+   *
+   * .. math::
+   *   \mathit{str.contains}(\mathit{str.++}(t_1, t_2, t_3), s) =
+   *   \mathit{str.contains}(t_2, s)
+   *
+   * where :math:`s` is `:math:\mathit{str.++}(s_1, s_2, s_3)`,
+   * :math:`s_1` has no forward overlap with :math:`t_1` and
+   * :math:`s_3` has no reverse overlap with :math:`t_3`.
+   * For details see :math:`\texttt{Word::noOverlapWith}` in
+   * :cvc5src:`theory/strings/word.h`.
+   *
    * \endverbatim
    */
   EVALUE(STR_OVERLAP_ENDPOINTS_CTN),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Strings overlap endpoints indexof**
+   *
+   * .. math::
+   *   \mathit{str.indexof}(\mathit{str.++}(t_1, t_2), s, n) =
+   *   \mathit{str.indexof}(t_1, s, n)
+   *
+   * where :math:`s` is `:math:\mathit{str.++}(s_1, s_2)` and
+   * :math:`s_2` has no reverse overlap with :math:`t_2`.
+   * For details see :math:`\texttt{Word::noOverlapWith}` in
+   * :cvc5src:`theory/strings/word.h`.
    * \endverbatim
    */
   EVALUE(STR_OVERLAP_ENDPOINTS_INDEXOF),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Strings overlap endpoints replace**
+   *
+   * .. math::
+   *   \mathit{str.replace}(\mathit{str.++}(t_1, t_2, t_3), s, r) =
+   *   \mathit{str.++}(t_1, \mathit{str.replace}(t_2, s, r) t_3)
+   *
+   * where :math:`s` is `:math:\mathit{str.++}(s_1, s_2, s_3)`,
+   * :math:`s_1` has no forward overlap with :math:`t_1` and
+   * :math:`s_3` has no reverse overlap with :math:`t_3`.
+   * For details see :math:`\texttt{Word::noOverlapWith}` in
+   * :cvc5src:`theory/strings/word.h`.
+   *
    * \endverbatim
    */
   EVALUE(STR_OVERLAP_ENDPOINTS_REPLACE),
@@ -3231,14 +3293,42 @@ enum ENUM(ProofRewriteRule)
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Macro string in regular expression inclusion**
+   *
+   * .. math::
+   *   \mathit{str.in_re}(s, R) = \top
+   *
+   * where :math:`R` includes the regular expression :math:`R_s`
+   * which (overapproximates) the possible values of string :math:`s`.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_STR_IN_RE_INCLUSION),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Macro regular expression intersection/union constant elimination**
+   *
+   * One of the following forms:
+   *
    * .. math::
-   *   \mathit{re.inter}(R)
+   *   \mathit{re.union}(R) = \mathit{re.union}(R')
+   *
+   * where :math:`R` is a list of regular expressions containing :math:`R_i`
+   * and :math:`\mathit{str.to_re(c)}` where :math:`c` is a string in :math:`R_i`
+   * and :math:`R'` is the result of removing :math:`\mathit{str.to_re(c)}` from :math:`R`.
+   *
+   * .. math::
+   *   \mathit{re.inter}(R) = \mathit{re.inter}(R')
+   *
+   * where :math:`R` is a list of regular expressions containing :math:`R_i`
+   * and :math:`\mathit{str.to_re(c)}` where :math:`c` is a string in :math:`R_i`
+   * and :math:`R'` is the result of removing :math:`R_i` from :math:`R`.
+   *
+   * .. math::
+   *   \mathit{re.inter}(R) = \mathit{re.none}
+   *
+   * where :math:`R` is a list of regular expressions containing :math:`R_i`
+   * and :math:`\mathit{str.to_re(c)}` where :math:`c` is a string not in :math:`R_i`.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_RE_INTER_UNION_CONST_ELIM),
