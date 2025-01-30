@@ -110,7 +110,12 @@ class Word
   /**
    * Checks if there is any overlap between word x and another word y. This
    * corresponds to checking whether one string contains the other and whether a
-   * substring/subsequence of one is a prefix of the other and vice-versa.
+   * substring/subsequence of one is a prefix of the other and/or vice-versa.
+   * In particular, this method returns true if x is empty, or:
+   * 
+   * If dir=1, if x contains y, or a non-empty suffix of x is a prefix of y.
+   * If dir=-1, if x contains y, or a non-empty prefix of x is a suffix of y.
+   * 
    *
    * @param x The first string
    * @param y The second string

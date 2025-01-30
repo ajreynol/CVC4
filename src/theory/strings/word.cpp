@@ -384,16 +384,21 @@ bool Word::noOverlapWith(TNode x, TNode y, int dir)
   {
     Assert(y.getKind() == Kind::CONST_STRING);
     String sx = x.getConst<String>();
+    if (sx.empty())
+    {
+      // by convention, the empty string has no overlap (including with the
+      // empty string)
+      return true;
+    }
     String sy = y.getConst<String>();
     switch (dir)
     {
-      case 0: return sx.noOverlapWith(sy);
+      case 0: 
+        return sx.noOverlapWith(sy);
       case -1:
-        return sx.empty()
-               || (sx.find(sy) == std::string::npos && sx.roverlap(sy) == 0);
+        return (sx.find(sy) == std::string::npos && sx.roverlap(sy) == 0);
       case 1:
-        return sx.empty()
-               || (sx.find(sy) == std::string::npos && sx.overlap(sy) == 0);
+        return (sx.find(sy) == std::string::npos && sx.overlap(sy) == 0);
       default: break;
     }
   }
@@ -401,16 +406,20 @@ bool Word::noOverlapWith(TNode x, TNode y, int dir)
   {
     Assert(y.getKind() == Kind::CONST_SEQUENCE);
     const Sequence& sx = x.getConst<Sequence>();
+    if (sx.empty())
+    {
+      // by convention, the empty string has no overlap (including with the
+      // empty string)
+      return true;
+    }
     const Sequence& sy = y.getConst<Sequence>();
     switch (dir)
     {
       case 0: return sx.noOverlapWith(sy);
       case -1:
-        return sx.empty()
-               || (sx.find(sy) == std::string::npos && sx.roverlap(sy) == 0);
+        return (sx.find(sy) == std::string::npos && sx.roverlap(sy) == 0);
       case 1:
-        return sx.empty()
-               || (sx.find(sy) == std::string::npos && sx.overlap(sy) == 0);
+        return (sx.find(sy) == std::string::npos && sx.overlap(sy) == 0);
       default: break;
     }
   }
