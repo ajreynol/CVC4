@@ -1602,7 +1602,9 @@
 ; - s (Seq U): The first string, expected to be in flattened form.
 ; - t (Seq U): The second string, expected to be non-empty and in flattened form.
 ; return: >
-;   True if s contains t, or a non-empty suffix of s is a prefix of t.
+;   True if t is non-empty and either s contains t, or
+;   a non-empty suffix of s is a prefix of t if rev is false, or
+;   a non-empty prefix of s is a suffix of t if rev is true.
 (define $str_has_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)) (rev Bool))
   (eo::requires (eo::is_str s) true
   (eo::requires (eo::is_str t) true

@@ -3223,8 +3223,8 @@ enum ENUM(ProofRewriteRule)
    *   \mathit{str.contains}(\mathit{str.++}(t_1, t_2, t_3), s) =
    *   \mathit{str.contains}(t_1, s) \vee \mathit{str.contains}(t_3, s)
    *
-   * :math:`s` has no forward or reverse overlap with :math:`t_2`.
-   * For details see :math:`\texttt{Word::noOverlapWith}` in
+   * :math:`t_2` is non-empty and has no forward or reverse overlap with
+   * :math:`s`. For details see :math:`\texttt{Word::noOverlapWith}` in
    * :cvc5src:`theory/strings/word.h`.
    * \endverbatim
    */
@@ -3238,8 +3238,8 @@ enum ENUM(ProofRewriteRule)
    *   \mathit{str.contains}(t_2, s)
    *
    * where :math:`s` is `:math:\mathit{str.++}(s_1, s_2, s_3)`,
-   * :math:`s_1` has no forward overlap with :math:`t_1` and
-   * :math:`s_3` has no reverse overlap with :math:`t_3`.
+   * :math:`t_1` has no forward overlap with :math:`s_1` and
+   * :math:`t_3` has no reverse overlap with :math:`s_3`.
    * For details see :math:`\texttt{Word::noOverlapWith}` in
    * :cvc5src:`theory/strings/word.h`.
    *
@@ -3255,7 +3255,7 @@ enum ENUM(ProofRewriteRule)
    *   \mathit{str.indexof}(t_1, s, n)
    *
    * where :math:`s` is `:math:\mathit{str.++}(s_1, s_2)` and
-   * :math:`s_2` has no reverse overlap with :math:`t_2`.
+   * :math:`t_2` has no reverse overlap with :math:`s_2`.
    * For details see :math:`\texttt{Word::noOverlapWith}` in
    * :cvc5src:`theory/strings/word.h`.
    * \endverbatim
@@ -3270,8 +3270,8 @@ enum ENUM(ProofRewriteRule)
    *   \mathit{str.++}(t_1, \mathit{str.replace}(t_2, s, r) t_3)
    *
    * where :math:`s` is `:math:\mathit{str.++}(s_1, s_2, s_3)`,
-   * :math:`s_1` has no forward overlap with :math:`t_1` and
-   * :math:`s_3` has no reverse overlap with :math:`t_3`.
+   * :math:`t_1` has no forward overlap with :math:`s_1` and
+   * :math:`t_3` has no reverse overlap with :math:`s_3`.
    * For details see :math:`\texttt{Word::noOverlapWith}` in
    * :cvc5src:`theory/strings/word.h`.
    *
