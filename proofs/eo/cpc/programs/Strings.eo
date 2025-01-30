@@ -1604,10 +1604,12 @@
 ; return: >
 ;   True if s contains t, or a non-empty suffix of s is a prefix of t.
 (define $str_has_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)) (rev Bool))
+  (eo::requires (eo::is_str s) true
+  (eo::requires (eo::is_str t) true
   (eo::define ((emp ($mk_emptystr (eo::typeof s))))
   (eo::ite (eo::is_eq t emp)
     false
-    ($str_has_overlap_rec emp ($str_to_flat_form s rev) ($str_to_flat_form t rev)))))
+    ($str_has_overlap_rec emp ($str_to_flat_form s rev) ($str_to_flat_form t rev)))))))
 
 ;;;;; evaluation utils
 
