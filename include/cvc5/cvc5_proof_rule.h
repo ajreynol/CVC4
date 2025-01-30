@@ -3224,7 +3224,7 @@ enum ENUM(ProofRewriteRule)
    *   \mathit{str.contains}(t_1, s) \vee \mathit{str.contains}(t_3, s)
    *
    * :math:`t_2` is non-empty and has no forward or reverse overlap with
-   * :math:`s`. For details see :math:`\texttt{Word::noOverlapWith}` in
+   * :math:`s`. For details see :math:`\texttt{Word::hasOverlap}` in
    * :cvc5src:`theory/strings/word.h`.
    * \endverbatim
    */
@@ -3240,7 +3240,7 @@ enum ENUM(ProofRewriteRule)
    * where :math:`s` is `:math:\mathit{str.++}(s_1, s_2, s_3)`,
    * :math:`t_1` has no forward overlap with :math:`s_1` and
    * :math:`t_3` has no reverse overlap with :math:`s_3`.
-   * For details see :math:`\texttt{Word::noOverlapWith}` in
+   * For details see :math:`\texttt{Word::hasOverlap}` in
    * :cvc5src:`theory/strings/word.h`.
    *
    * \endverbatim
@@ -3256,7 +3256,7 @@ enum ENUM(ProofRewriteRule)
    *
    * where :math:`s` is `:math:\mathit{str.++}(s_1, s_2)` and
    * :math:`t_2` has no reverse overlap with :math:`s_2`.
-   * For details see :math:`\texttt{Word::noOverlapWith}` in
+   * For details see :math:`\texttt{Word::hasOverlap}` in
    * :cvc5src:`theory/strings/word.h`.
    * \endverbatim
    */
@@ -3272,7 +3272,7 @@ enum ENUM(ProofRewriteRule)
    * where :math:`s` is `:math:\mathit{str.++}(s_1, s_2, s_3)`,
    * :math:`t_1` has no forward overlap with :math:`s_1` and
    * :math:`t_3` has no reverse overlap with :math:`s_3`.
-   * For details see :math:`\texttt{Word::noOverlapWith}` in
+   * For details see :math:`\texttt{Word::hasOverlap}` in
    * :cvc5src:`theory/strings/word.h`.
    *
    * \endverbatim
@@ -3281,12 +3281,27 @@ enum ENUM(ProofRewriteRule)
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Macro string component contains**
+   *
+   * .. math::
+   *   \mathit{str.contains}(t, s) = \top
+   *
+   * where a substring of :math:`t` can be inferred to be a superstring of
+   * :math:`s` based on iterating on components of string concatenation terms
+   * as well as prefix and suffix reasoning.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_STR_COMPONENT_CTN),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Macro string constant no contains concatenation**
+   *
+   * .. math::
+   *   \mathit{str.contains}(c, \mathit{str.++}(t_1, \ldots, t_n)) = \top
+   *
+   * where :math:`t_1, \ldots, t_n` contain constants that cannot be found
+   * in the constant :math:`c` in order.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_STR_CONST_NCTN_CONCAT),
@@ -3298,7 +3313,7 @@ enum ENUM(ProofRewriteRule)
    *   \mathit{str.in_re}(s, R) = \top
    *
    * where :math:`R` includes the regular expression :math:`R_s`
-   * which (overapproximates) the possible values of string :math:`s`.
+   * which overapproximates the possible values of string :math:`s`.
    *
    * \endverbatim
    */
