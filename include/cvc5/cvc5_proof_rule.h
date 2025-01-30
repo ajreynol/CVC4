@@ -3339,7 +3339,7 @@ enum ENUM(ProofRewriteRule)
    * .. math::
    *    f(s_1, \ldots, s_n) = t
    *
-   * where :math:`f` is an operator on sequences and :math:`s_1, \ldots, sn`
+   * where :math:`f` is an operator on sequences and :math:`s_1, \ldots, s_n`
    * are sequence values, that is, the Node::isConst method returns true
    * for each, and :math:`t` is the result of evaluating :math:`f` on them.
    * \endverbatim
