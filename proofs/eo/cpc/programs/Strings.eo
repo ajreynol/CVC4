@@ -1585,7 +1585,8 @@
 ; - s (Seq U): The first string, expected to be in flattened form.
 ; - t (Seq U): The second string, expected to be non-empty and in flattened form.
 ; return: >
-;   True if s contains t, or a non-empty suffix of s is a prefix of t.
+;   Assuming t is non-empty, this method returns true if s contains t, or a
+;   non-empty suffix of s is a prefix of t.
 (program $str_has_overlap_rec ((U Type) (s (Seq U)) (s1 (Seq U) :list) (t (Seq U)) (nil (Seq U)))
   ((Seq U) (Seq U) (Seq U)) Bool
   (
@@ -1609,7 +1610,7 @@
   (eo::requires (eo::is_str s) true
   (eo::requires (eo::is_str t) true
   (eo::define ((emp ($mk_emptystr (eo::typeof s))))
-  (eo::ite (eo::is_eq t emp)
+  (eo::ite (eo::is_eq t emp)  ; redundant to check if s is empty due to above
     false
     ($str_has_overlap_rec emp ($str_to_flat_form s rev) ($str_to_flat_form t rev)))))))
 
