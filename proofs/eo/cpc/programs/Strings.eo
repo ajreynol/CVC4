@@ -1579,7 +1579,7 @@
 
 
 
-; program: $str_overlap_rec
+; program: $str_has_overlap_rec
 ; args:
 ; - nil (Seq U): The empty string.
 ; - s (Seq U): The first string, expected to be in flattened form.
@@ -1596,6 +1596,13 @@
   )
 )
 
+
+; program: $str_has_overlap
+; args:
+; - s (Seq U): The first string, expected to be in flattened form.
+; - t (Seq U): The second string, expected to be non-empty and in flattened form.
+; return: >
+;   True if s contains t, or a non-empty suffix of s is a prefix of t.
 (define $str_has_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)) (rev Bool))
   (eo::define ((emp ($mk_emptystr (eo::typeof s))))
   (eo::ite (eo::is_eq t emp)

@@ -1586,7 +1586,7 @@ Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
     if (node[0][i].isConst())
     {
       // if no overlap, we can split into disjunction
-      if (Word::noOverlapWith(node[0][i], node[1]))
+      if (!Word::hasBidirectionalOverlap(node[0][i], node[1]))
       {
         std::vector<Node> nc0;
         utils::getConcat(node[0], nc0);
@@ -1835,7 +1835,7 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
     return Node::null();
   }
   // get the list of overlaps to check, based on the rule, which will be passed
-  // to Word::noOverlapWith below.
+  // to Word::hasOverlap below.
   std::vector<std::tuple<Node, Node, int>> overlap;
   Kind k = n.getKind();
   switch (id)
@@ -1846,7 +1846,8 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      overlap.emplace_back(n[0][1], n[1], 0);
+      overlap.emplace_back(n[0][1], n[1], false);
+      overlap.emplace_back(n[1], n[0][1], false);
     }
     break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
@@ -1856,8 +1857,8 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      overlap.emplace_back(n[0][0], n[1][0], 1);
-      overlap.emplace_back(n[0][2], n[1][2], -1);
+      overlap.emplace_back(n[0][0], n[1][0], false);
+      overlap.emplace_back(n[0][2], n[1][2], true);
     }
     break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
@@ -1868,7 +1869,7 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      overlap.emplace_back(n[0][1], n[1][1], -1);
+      overlap.emplace_back(n[0][1], n[1][1], true);
     }
     break;
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_REPLACE:
@@ -1878,8 +1879,8 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
       {
         return Node::null();
       }
-      overlap.emplace_back(n[0][0], n[1][0], 1);
-      overlap.emplace_back(n[0][2], n[1][2], -1);
+      overlap.emplace_back(n[0][0], n[1][0], false);
+      overlap.emplace_back(n[0][2], n[1][2], true);
     }
     break;
     default: return Node::null();
@@ -1894,7 +1895,7 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
       return Node::null();
     }
     // check if no overlap
-    if (!Word::noOverlapWith(c1, c2, std::get<2>(f)))
+    if (Word::hasOverlap(c1, c2, std::get<2>(f)))
     {
       return Node::null();
     }
@@ -2951,8 +2952,8 @@ Node SequencesRewriter::rewriteContains(Node node)
   {
     if (node[1].isConst() && node[0][1].isConst() && node[0][2].isConst())
     {
-      if (Word::noOverlapWith(node[1], node[0][1])
-          && Word::noOverlapWith(node[1], node[0][2]))
+      if (!Word::hasBidirectionalOverlap(node[1], node[0][1])
+          && !Word::hasBidirectionalOverlap(node[1], node[0][2]))
       {
         // (str.contains (str.replace x c1 c2) c3) ---> (str.contains x c3)
         // if there is no overlap between c1 and c3 and none between c2 and c3

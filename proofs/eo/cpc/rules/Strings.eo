@@ -666,14 +666,15 @@
 ; args:
 ; - eq Bool: The equality between a contains predicate and a disjunction.
 ; requires: >
-;   The middle component of the first argument to contains has no forward or 
-;   reverse overlap with the second argument.
+;   The middle component of the first argument to contains has no forward
+;   overlap with the second argument, nor does the second argument contain
+;   a forward overlap with the middle component.
 ; conclusion: The given equality.
 (declare-rule str-overlap-split-ctn ((T Type) (t (Seq T)) (s (Seq T)) (c (Seq T)) (d (Seq T)) (emp (Seq T) :list))
   :args ((= (str.contains (str.++ t c s emp) d)
             (or (str.contains t d) (str.contains s d))))
-  :requires ((($str_has_overlap c d false) false) 
-             (($str_has_overlap c d true) false) 
+  :requires ((($str_has_overlap c d false) false)
+             (($str_has_overlap d c false) false)
              (($str_is_empty emp) true))
   :conclusion (= (str.contains (str.++ t c s emp) d)
                  (or (str.contains t d) (str.contains s d)))

@@ -377,7 +377,7 @@ Node Word::suffix(TNode x, std::size_t i)
   return Node::null();
 }
 
-bool Word::noOverlapWith(TNode x, TNode y, int dir)
+bool Word::hasOverlap(TNode x, TNode y, bool rev)
 {
   Kind k = x.getKind();
   if (k == Kind::CONST_STRING)
@@ -388,18 +388,16 @@ bool Word::noOverlapWith(TNode x, TNode y, int dir)
     {
       // by convention, the empty string has no overlap (including with the
       // empty string)
-      return true;
+      return false;
     }
     String sy = y.getConst<String>();
-    switch (dir)
+    if (rev)
     {
-      case 0: 
-        return sx.noOverlapWith(sy);
-      case -1:
-        return (sx.find(sy) == std::string::npos && sx.roverlap(sy) == 0);
-      case 1:
-        return (sx.find(sy) == std::string::npos && sx.overlap(sy) == 0);
-      default: break;
+      return (sx.find(sy) != std::string::npos || sx.roverlap(sy) != 0);
+    }
+    else
+    {
+      return (sx.find(sy) == std::string::npos || sx.overlap(sy) != 0);
     }
   }
   else if (k == Kind::CONST_SEQUENCE)
@@ -408,23 +406,26 @@ bool Word::noOverlapWith(TNode x, TNode y, int dir)
     const Sequence& sx = x.getConst<Sequence>();
     if (sx.empty())
     {
-      // by convention, the empty string has no overlap (including with the
-      // empty string)
-      return true;
+      // same as above
+      return false;
     }
     const Sequence& sy = y.getConst<Sequence>();
-    switch (dir)
+    if (rev)
     {
-      case 0: return sx.noOverlapWith(sy);
-      case -1:
-        return (sx.find(sy) == std::string::npos && sx.roverlap(sy) == 0);
-      case 1:
-        return (sx.find(sy) == std::string::npos && sx.overlap(sy) == 0);
-      default: break;
+      return (sx.find(sy) != std::string::npos || sx.roverlap(sy) != 0);
+    }
+    else
+    {
+      return (sx.find(sy) == std::string::npos || sx.overlap(sy) != 0);
     }
   }
   Unimplemented();
   return false;
+}
+
+bool Word::hasBidirectionalOverlap(TNode x, TNode y)
+{
+  return hasOverlap(x,y,false) || hasOverlap(y,x,false);
 }
 
 std::size_t Word::overlap(TNode x, TNode y)
