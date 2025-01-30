@@ -3176,23 +3176,84 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_STR_EQ_LEN_UNIFY),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings -- String strip endpoints**
+   * **Strings -- Macro string strip endpoints**
+   *
+   * One of the following three versions:
    *
    * .. math::
-   *    s = t
+   *    str.
    *
    * \endverbatim
    */
   EVALUE(MACRO_STR_STRIP_ENDPOINTS),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Macro string split contains**
+   * \endverbatim
+   */
   EVALUE(MACRO_STR_SPLIT_CTN),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Strings overlap split contains**
+   * \endverbatim
+   */
   EVALUE(STR_OVERLAP_SPLIT_CTN),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Strings overlap endpoints contains**
+   * \endverbatim
+   */
   EVALUE(STR_OVERLAP_ENDPOINTS_CTN),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Strings overlap endpoints indexof**
+   * \endverbatim
+   */
   EVALUE(STR_OVERLAP_ENDPOINTS_INDEXOF),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Strings overlap endpoints replace**
+   * \endverbatim
+   */
   EVALUE(STR_OVERLAP_ENDPOINTS_REPLACE),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Macro string component contains**
+   * \endverbatim
+   */
   EVALUE(MACRO_STR_COMPONENT_CTN),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Macro string constant no contains concatenation**
+   * \endverbatim
+   */
   EVALUE(MACRO_STR_CONST_NCTN_CONCAT),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Macro string in regular expression inclusion**
+   * \endverbatim
+   */
   EVALUE(MACRO_STR_IN_RE_INCLUSION),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Macro regular expression intersection/union constant elimination**
+   * .. math::
+   *   \mathit{re.inter}(R)
+   * \endverbatim
+   */
   EVALUE(MACRO_RE_INTER_UNION_CONST_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- Macro sequence evaluate operator**
+   *
+   * .. math::
+   *    f(s_1, \ldots, s_n) = t
+   *
+   * where :math:`f` is an operator on sequences and :math:`s_1, \ldots, sn`
+   * are sequence values, that is, the Node::isConst method returns true
+   * for each, and :math:`t` is the result of evaluating :math:`f` on them.
+   * \endverbatim
+   */
   EVALUE(MACRO_SEQ_EVAL_OP),
   /**
    * \verbatim embed:rst:leading-asterisk
@@ -3251,7 +3312,7 @@ enum ENUM(ProofRewriteRule)
    * **Strings -- regular expression intersection/union inclusion**
    *
    * .. math::
-   *   (re.inter\ R) = \mathit{re.inter}(\mathit{re.none}, R_0)
+   *   \mathit{re.inter}(R) = \mathit{re.inter}(\mathit{re.none}, R_0)
    *
    * where :math:`R` is a list of regular expressions containing `r_1`,
    * `re.comp(r_2)` and the list :math:`R_0` where `r_2` is a superset of
