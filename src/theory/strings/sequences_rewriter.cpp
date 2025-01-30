@@ -1901,7 +1901,7 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
     {
       return Node::null();
     }
-    // check if no overlap
+    // if it has an overlap
     if (Word::hasOverlap(c1, c2, std::get<2>(f)))
     {
       return Node::null();
