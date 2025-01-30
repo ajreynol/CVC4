@@ -123,7 +123,7 @@ class Word
    *   "abc", "b" -> true
    *   "abc", "abcd" -> true
    *   "abc", "aab" -> false
-   * 
+   *
    * If rev=true, this method returns true if y is non-empty, and either
    * x contains y, or a non-empty prefix of x is a suffix of y.
    * Examples:

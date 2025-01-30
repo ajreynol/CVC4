@@ -1570,7 +1570,8 @@ Node SequencesRewriter::rewriteViaMacroStrStripEndpoints(
 Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
 {
   if (node.getKind() != Kind::STRING_CONTAINS
-      || node[0].getKind() != Kind::STRING_CONCAT || !node[1].isConst() || Word::getLength(node[1])==0)
+      || node[0].getKind() != Kind::STRING_CONCAT || !node[1].isConst()
+      || Word::getLength(node[1]) == 0)
   {
     return Node::null();
   }
@@ -1583,10 +1584,11 @@ Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
   for (size_t i = 1, iend = (node[0].getNumChildren() - 1); i < iend; i++)
   {
     // constant contains
-    if (node[0][i].isConst() && Word::getLength(node[0][i])!=0)
+    if (node[0][i].isConst() && Word::getLength(node[0][i]) != 0)
     {
       // if no overlap, we can split into disjunction
-      if (!Word::hasOverlap(node[0][i], node[1], false) && !Word::hasOverlap(node[0][i], node[1], true))
+      if (!Word::hasOverlap(node[0][i], node[1], false)
+          && !Word::hasOverlap(node[0][i], node[1], true))
       {
         std::vector<Node> nc0;
         utils::getConcat(node[0], nc0);
@@ -1847,7 +1849,7 @@ Node SequencesRewriter::rewriteViaOverlap(ProofRewriteRule id, const Node& n)
         return Node::null();
       }
       // middle component must be non-empty
-      if (!n[0][1].isConst() || Word::getLength(n[0][1])==0)
+      if (!n[0][1].isConst() || Word::getLength(n[0][1]) == 0)
       {
         return Node::null();
       }

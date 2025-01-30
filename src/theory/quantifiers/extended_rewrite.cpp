@@ -2014,8 +2014,8 @@ Node ExtendedRewriter::extendedRewriteStrings(const Node& node) const
       Node empty = strings::Word::mkEmptyWord(stype);
       if (node[1].isConst() && node[0][1].isConst() && node[0][2].isConst())
       {
-        if (node[1]!=empty && node[0][1]!=empty && node[0][2]!=empty &&
-            !strings::Word::hasBidirectionalOverlap(node[1], node[0][1])
+        if (node[1] != empty && node[0][1] != empty && node[0][2] != empty
+            && !strings::Word::hasBidirectionalOverlap(node[1], node[0][1])
             && !strings::Word::hasBidirectionalOverlap(node[1], node[0][2]))
         {
           // (str.contains (str.replace x c1 c2) c3) ---> (str.contains x c3)
