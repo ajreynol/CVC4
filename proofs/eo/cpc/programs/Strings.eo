@@ -209,6 +209,64 @@
     ($str_eval_str_in_re_rec s 0 r @re.null)
     (str.in_re s r)))
 
+
+; define: $str_first_match_rec_smallest
+; args:
+; - s String: The string to inspect.
+; - r RegLan: The regular expression to inspect, assumed to contain s.
+; - m Int: The current prefix size of s we are considering.
+; - lens Int: The length of s.
+; return: >
+;   The size of the smallest prefix of s that is contained in r.
+(program $str_first_match_rec_smallest ((s String) (r RegLan) (n Int) (m Int) (lens Int))
+  (String RegLan Int Int) Int
+  (
+    (($str_first_match_rec_smallest s r m lens)   (eo::define ((ss (eo::extract s 0 m)))
+                                                  (eo::ite ($str_eval_str_in_re ss r)
+                                                    m
+                                                    (eo::requires (eo::is_eq m lens) false
+                                                      ($str_first_match_rec_smallest s r (eo::add m 1) lens)))))
+  )
+)
+
+; define: $str_first_match_rec
+; args:
+; - s String: The string to inspect.
+; - r RegLan: The regular expression to inspect.
+; - n Int: The position of the original string we are searching.
+; - lens Int: The length of s.
+; return: >
+;   A pair of the form (n+n', n+m') where the first shortest match of r in s is
+;   at start position n' and end position m', or (-1, -1) if r does not match
+;   any substring of s.
+(program $str_first_match_rec ((s String) (r RegLan) (n Int) (lens Int))
+  (String RegLan Int Int) (@Pair Int Int)
+  (
+    (($str_first_match_rec s r n lens)  (eo::ite ($str_eval_str_in_re s r)
+                                          ; found match, now find the smallest
+                                          (@pair n (eo::add n ($str_first_match_rec_smallest s r 0 lens)))
+                                          (eo::ite (eo::is_eq lens 0)
+                                            ; we are at the end of s, did not find a match
+                                            (@pair -1 -1)
+                                            ; move to the next position in s
+                                            (eo::define ((lsm1 (eo::add lens -1)))
+                                              ($str_first_match_rec (eo::extract s 1 lsm1) r (eo::add n 1) lsm1)))))
+  )
+)
+
+; define: $str_first_match
+; args:
+; - s String: The string to inspect.
+; - r RegLan: The regular expression to inspect.
+; return: >
+;   A pair of the form (n, m) where the first shortest match of r in s is at
+;   start position n and end position m, or (-1, -1) if r does not match any
+;   substring of s.
+(define $str_first_match ((s String) (r RegLan))
+  (eo::define ((lens (eo::len s)))
+  (eo::requires (eo::is_str s) true
+    ($str_first_match_rec s r 0 lens))))
+
 ;;-------------------- Skolem terms
 
 ; The following side conditions are used for computing terms that define
@@ -1577,7 +1635,7 @@
   )
 )
 
-
+;;;;; overlap utils
 
 ; program: $str_has_overlap_rec
 ; args:
@@ -1606,6 +1664,9 @@
 ;   True if s is non-empty and contains t, or
 ;   a non-empty suffix of s is a prefix of t if rev is false, or
 ;   a non-empty prefix of s is a suffix of t if rev is true.
+; note: >
+;   This method is equivalent to theory::strings::Word::hasOverlap in cvc5,
+;   see theory/strings/word.h.
 (define $str_has_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)) (rev Bool))
   (eo::requires (eo::is_str s) true
   (eo::requires (eo::is_str t) true
