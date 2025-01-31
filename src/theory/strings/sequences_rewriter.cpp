@@ -1823,6 +1823,7 @@ Node SequencesRewriter::rewriteViaStrReplaceReAllEval(const Node& n)
       res.push_back(n[2]);
       rem = rem.substr(match.second);
     }
+    // only concatenate remainder if non-empty
     if (rem.size()!=0)
     {
       res.push_back(nm->mkConst(rem));
