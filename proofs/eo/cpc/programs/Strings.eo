@@ -209,6 +209,7 @@
     ($str_eval_str_in_re_rec s 0 r @re.null)
     (str.in_re s r)))
 
+;;;;; first match utilities
 
 ; define: $str_first_match_rec_smallest
 ; args:

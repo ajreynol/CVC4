@@ -739,7 +739,13 @@
 
 ;;;;; ProofRewriteRule::STR_INDEXOF_RE_EVAL
 
-
+; define: $str_eval_indexof_re
+; args:
+; - s String: A string.
+; - r RegLan: A regular expression to match.
+; - n Int: A start position.
+; return: >
+;   The result of evaluating (str.indexof_re s r n).
 (define $str_eval_indexof_re ((s String) (r RegLan) (n Int))
   (eo::ite (eo::or (eo::gt n (eo::len s)) (eo::is_neg n))
     -1
@@ -766,7 +772,15 @@
 
 ;;;;; ProofRewriteRule::STR_REPLACE_RE_EVAL
 
-
+; define: $str_eval_indexof_re
+; args:
+; - s String: A string.
+; - r RegLan: A regular expression.
+; - t String: A string to replace with.
+; return: >
+;   The result of evaluating (str.replace_re s r t), which is either s or a
+;   concatenation of the prefix of s before the match, t and the suffix of s
+;   after the match.
 (define $str_eval_replace_re ((s String) (r RegLan) (t String))
   (eo::match ((sp Int) (ep Int))
     ($str_first_match s r)
@@ -789,9 +803,16 @@
   :conclusion (= (str.replace_re s r t) u)
 )
 
-
 ;;;;; ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL
 
+; program: $str_eval_replace_re_all_rec
+; args:
+; - s String: A string.
+; - r RegLan: A regular expression not containing the empty string.
+; - t String: A string to replace with.
+; - p @Pair: The result of finding the first match of r in s.
+; return: >
+;   The result of evaluating (str.replace_re_all s r t), which is a concatenation.
 (program $str_eval_replace_re_all_rec ((s String) (r RegLan) (t String) (sp Int) (ep Int))
   (String RegLan String (@Pair Int Int)) String
   (
@@ -804,6 +825,13 @@
   )
 )
 
+; define: $str_eval_replace_re_all
+; args:
+; - s String: A string.
+; - r RegLan: A regular expression.
+; - t String: A string to replace with.
+; return: >
+;   The result of evaluating (str.replace_re_all s r t).
 (define $str_eval_replace_re_all ((s String) (r RegLan) (t String))
   (eo::define ((rnemp (re.inter r (re.comp (str.to_re ""))))) ; looking for non-empty matches
   ($singleton_elim ($str_eval_replace_re_all_rec s rnemp t ($str_first_match s r)))))
