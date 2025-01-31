@@ -1,0 +1,29 @@
+(include "../theories/ArithBvConv.eo")
+
+;;;;; ProofRewriteRule::BV_TO_NAT_ELIM
+
+; rule: bv-to-nat-elim
+; implements: ProofRewriteRule::BV_TO_NAT_ELIM
+; args:
+; - eq Bool: The equality between a bv2nat term and an integer term.
+; requires: >
+;   Reducing the left hand side to an integer term results in the right hand side.
+; conclusion: The given equality.
+(declare-rule bv-to-nat-elim ((n Int) (b (BitVec n)) (m Int))
+  :args ((= (bv2nat b) m))
+  :conclusion (= (bv2nat b) m)
+)
+
+;;;;; ProofRewriteRule::INT_TO_BV_ELIM
+
+; rule: int-to-bv-elim
+; implements: ProofRewriteRule::INT_TO_BV_ELIM
+; args:
+; - eq Bool: The equality between a bv2nat term and an integer term.
+; requires: >
+;   Reducing the left hand side to an integer term results in the right hand side.
+; conclusion: The given equality.
+(declare-rule int-to-bv-elim ((n Int) (b (BitVec n)) (m Int))
+  :args ((= (int2bv n m) b))
+  :conclusion (= (int2bv n m) b)
+)
