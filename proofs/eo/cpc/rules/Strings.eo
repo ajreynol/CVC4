@@ -739,15 +739,24 @@
 
 ;;;;; ProofRewriteRule::STR_INDEXOF_RE_EVAL
 
-(define $str_eval_indexof_re ((s String) (r RegLan) (n Int))
-  true)
 
-; rule: str-
+(define $str_eval_indexof_re ((s String) (r RegLan) (n Int))
+  (eo::ite (eo::or (eo::gt n (eo::len s)) (eo::is_neg n))
+    -1
+    (eo::match ((sp Int) (ep Int))
+      ($str_first_match (eo::extract s n (eo::len s)) r)
+      (
+      ((@pair -1 -1) -1)
+      ((@pair sp ep) (eo::add n sp))
+      ))))
+
+
+; rule: str-indexof-re-eval
 ; implements: ProofRewriteRule::STR_INDEXOF_RE_EVAL
 ; args:
 ; - eq Bool: The equality between a indexof_re term and an integer.
 ; requires: >
-;   Evalu
+;   Evaluating the left hand side gives the right hand side.
 ; conclusion: The given equality.
 (declare-rule str-indexof-re-eval ((s String) (r RegLan) (n Int) (m Int))
   :args ((= (str.indexof_re s r n) m))
@@ -757,15 +766,22 @@
 
 ;;;;; ProofRewriteRule::STR_REPLACE_RE_EVAL
 
-(define $str_eval_replace_re ((s String) (r RegLan) (t String))
-  true)
 
-; rule: str-
+(define $str_eval_replace_re ((s String) (r RegLan) (t String))
+  (eo::match ((sp Int) (ep Int))
+    ($str_first_match s r)
+    (
+    ((@pair -1 -1) s)
+    ; note that t does not need to be a constant, so the returned term is a concat term
+    ((@pair sp ep) (str.++ (eo::extract s 0 (eo::add sp -1)) t (eo::extract s ep (eo::len s))))
+    )))
+
+; rule: str-replace-re-eval
 ; implements: ProofRewriteRule::STR_REPLACE_RE_EVAL
 ; args:
-; - eq Bool: The equality between a indexof_re term and an integer.
+; - eq Bool: The equality between a replace_re term and a string.
 ; requires: >
-;   Evalu
+;   Evaluating the left hand side gives the right hand side.
 ; conclusion: The given equality.
 (declare-rule str-replace-re-eval ((s String) (r RegLan) (t String) (u String))
   :args ((= (str.replace_re s r t) u))
@@ -776,18 +792,31 @@
 
 ;;;;; ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL
 
-(define $str_eval_replace_re_all ((s String) (r RegLan) (t String))
-  true)
+(program $str_eval_replace_re_all_rec ((s String) (r RegLan) (t String) (sp Int) (ep Int))
+  (String RegLan String (@Pair Int Int)) String
+  (
+  (($str_eval_replace_re_all_rec "" r t (@pair -1 -1))  "")
+  (($str_eval_replace_re_all_rec s r t (@pair -1 -1))   (eo::cons str.++ s ""))
+  (($str_eval_replace_re_all_rec s r t (@pair sp ep))   (eo::define ((snext (eo::extract s ep (eo::len s))))
+                                                        (eo::cons str.++ (eo::extract s 0 (eo::add sp -1))
+                                                        (eo::cons str.++ t
+                                                          ($str_eval_replace_re_all_rec snext r t ($str_first_match snext r))))))
+  )
+)
 
-; rule: str-
+(define $str_eval_replace_re_all ((s String) (r RegLan) (t String))
+  (eo::define ((rnemp (re.inter r (re.comp (str.to_re ""))))) ; looking for non-empty matches
+  ($singleton_elim ($str_eval_replace_re_all_rec s rnemp t ($str_first_match s r)))))
+
+; rule: str-replace-re-all-eval
 ; implements: ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL
 ; args:
-; - eq Bool: The equality between a indexof_re term and an integer.
+; - eq Bool: The equality between a replace_re_all term and a string.
 ; requires: >
-;   Evalu
+;   Evaluating the left hand side gives the right hand side.
 ; conclusion: The given equality.
 (declare-rule str-replace-re-all-eval ((s String) (r RegLan) (t String) (u String))
-  :args ((= (str.replace_re s r t) u))
+  :args ((= (str.replace_re_all s r t) u))
   :requires ((($str_eval_replace_re_all s r t) u))
   :conclusion (= (str.replace_re_all s r t) u)
 )

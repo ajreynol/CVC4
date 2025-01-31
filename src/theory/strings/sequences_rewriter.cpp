@@ -1823,7 +1823,10 @@ Node SequencesRewriter::rewriteViaStrReplaceReAllEval(const Node& n)
       res.push_back(n[2]);
       rem = rem.substr(match.second);
     }
-    res.push_back(nm->mkConst(rem));
+    if (rem.size()!=0)
+    {
+      res.push_back(nm->mkConst(rem));
+    }
     Node ret = utils::mkConcat(res, t);
     return ret;
   }
