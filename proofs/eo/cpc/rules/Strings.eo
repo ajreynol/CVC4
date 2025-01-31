@@ -657,8 +657,6 @@
   :conclusion (= (str.contains t s) false)
 )
 
-
-
 ;;;;; ProofRewriteRule::STR_OVERLAP_SPLIT_CTN
 
 ; rule: str-overlap-split-ctn
@@ -679,13 +677,12 @@
                  (or (str.contains t d) (str.contains s d)))
 )
 
-
 ;;;;; ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN
 
 ; rule: str-overlap-endpoints-ctn
 ; implements: ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN
 ; args:
-; - eq Bool: The equality between a contains predicate and a stripped version.
+; - eq Bool: The equality between a contains predicate and a miniscoped version.
 ; requires: >
 ;   The contains predicate can be shown false by multiset reasoning
 ; conclusion: The given equality.
@@ -705,29 +702,29 @@
 ; rule: str-overlap-endpoints-indexof
 ; implements: ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF
 ; args:
-; - eq Bool: The equality between a contains predicate and 
+; - eq Bool: The equality between a indexof term and miniscoped one.
 ; requires: >
 ;   The contains predicate can be shown false by multiset reasoning
 ; conclusion: The given equality.
 (declare-rule str-overlap-endpoints-indexof ((T Type) (s (Seq T)) (c (Seq T)) (t (Seq T)) (d (Seq T)) (emp (Seq T) :list))
   :args ((= (str.indexof (str.++ s c emp) (str.++ t d emp) 0)
             (str.indexof s (str.++ t d emp) 0)))
-  :requires ((($str_has_overlap c d true) false) 
+  :requires ((($str_has_overlap c d true) false)
              (($str_is_empty emp) true))
   :conclusion (= (str.indexof (str.++ s c emp) (str.++ t d emp) 0)
                  (str.indexof s (str.++ t d emp) 0))
 )
 
-;;;;; ProofRewriteRule::STR_OVERLAP
+;;;;; ProofRewriteRule::STR_OVERLAP_REPLACE
 
 ; rule: str-overlap-endpoints-replace
-; implements: ProofRewriteRule::STR_OVERLAP
+; implements: ProofRewriteRule::STR_OVERLAP_REPLACE
 ; args:
-; - eq Bool: The equality between a contains predicate and 
+; - eq Bool: The equality between a replace term and a miniscoped one.
 ; requires: >
 ;   The contains predicate can be shown false by multiset reasoning
 ; conclusion: The given equality.
-(declare-rule str-overlap-endpoints-replace ((T Type) (c1 (Seq T)) (s (Seq T)) (c2 (Seq T)) 
+(declare-rule str-overlap-endpoints-replace ((T Type) (c1 (Seq T)) (s (Seq T)) (c2 (Seq T))
                                              (d1 (Seq T)) (t (Seq T)) (d2 (Seq T)) (emp (Seq T) :list) (r (Seq T)))
   :args ((= (str.replace (str.++ c1 s c2 emp) (str.++ d1 t d2 emp) r)
             (str.++ c1 (str.replace s (str.++ d1 t d2 emp) r) c2 emp)))
