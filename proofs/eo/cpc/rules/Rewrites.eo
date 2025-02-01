@@ -2,10 +2,10 @@
 (include "../theories/Arrays.eo")
 (include "../theories/Arith.eo")
 (include "../theories/Reals.eo")
-(include "../theories/Transcendentals.eo")
 (include "../theories/BitVectors.eo")
 (include "../theories/Strings.eo")
 (include "../theories/Sets.eo")
+(include "../expert/theories/Transcendentals.eo")
 
 (declare-rule arith-div-total-real ((@T0 Type) (t1 @T0) (s1 Real))
   :premises ((= (= s1 0/1) false))
