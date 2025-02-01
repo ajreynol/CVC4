@@ -70,16 +70,9 @@
 (include "./rules/ArithBvConv.eo")
 (include "./rules/Rewrites.eo")
 
-(include "./expert/theories/Arith.eo")
-(include "./expert/theories/Bags.eo")
-(include "./expert/theories/Builtin.eo")
-(include "./expert/theories/FloatingPoints.eo")
-(include "./expert/theories/FiniteFields.eo")
-(include "./expert/theories/SepLogic.eo")
-(include "./expert/rules/Transcendentals.eo")
-(include "./expert/rules/Sets.eo")
-
 (include "./programs/PolyNorm.eo")
+
+(include "./expert/Expert.eo")
 
 ; disclaimer: >
 ;   All symbols prefixed by @ are not part of the SMT-LIB standard
@@ -98,7 +91,7 @@
 ; program: $run_evaluate
 ; args:
 ; - t S: The term to evaluate.
-; conclusion: The result of evaluating t.
+; return: The result of evaluating t.
 (program $run_evaluate ((T Type) (S Type) 
                        (x T) (y T) (z S) (ys S :list)
                        (b Bool) (n Int) (m Int)
