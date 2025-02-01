@@ -1469,13 +1469,15 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
 
 bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp, const Node& eq)
 {
+  return false;
   Trace("brc-macro") << "Expand macro str in re inclusion for " << eq
                      << std::endl;
   Assert (eq[0].getKind()==Kind::STRING_IN_REGEXP);
   NodeManager * nm = nodeManager();
+  Node truen = eq[1];
+  Assert (truen.isConst() && truen.getConst<bool>());
   // proof by contradiction
 
-  Node rst = nm->mkNode(Kind::STRING_TO_REGEXP, eq[0][0]);
   std::vector<Node> cc;
   theory::strings::utils::getConcat(eq[0][0], cc);
   std::vector<Node> rchildren;
@@ -1484,23 +1486,74 @@ bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp, const Nod
     rchildren.push_back(nm->mkNode(Kind::STRING_TO_REGEXP, nc));
   }
   Node rs = nm->mkNode(Kind::REGEXP_CONCAT, rchildren);
-  Node rsr = rewrite(rs);
-  Trace("brc-macro") << "Rewritten sym regex: " << rs << " ---> " << rsr << std::endl;
+  Node rst = nm->mkNode(Kind::STRING_TO_REGEXP, eq[0][0]);
+  Node req = rs.eqNode(rst);
+  Trace("brc-macro") << "Subgoal, sym regex: " << req << std::endl;
+  cdp->addTrustedStep(req, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+
+  Node trivMem = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], rst);
+  Node tmeq = trivMem.eqNode(truen);
+  Trace("brc-macro") << "Subgoal, trivial membership: " << tmeq << std::endl;
+  cdp->addTrustedStep(tmeq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+
+  Node trivMemc = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], rs);
+  std::vector<Node> cargs;
+  ProofRule cr = expr::getCongRule(trivMemc, cargs);
+  Node refl = eq[0][0].eqNode(eq[0][0]);
+  cdp->addStep(refl, ProofRule::REFL, {}, {eq[0][0]});
+  Node congEq = trivMemc.eqNode(trivMem);
+  cdp->addStep(congEq, cr, {refl, req}, cargs);
+
+  Node tteq = trivMemc.eqNode(truen);
+  cdp->addStep(tteq, ProofRule::TRANS, {congEq, tmeq}, {});
+  cdp->addStep(trivMemc, ProofRule::TRUE_ELIM, {tteq}, {});
 
   Node comp =  nm->mkNode(Kind::REGEXP_COMPLEMENT, eq[0][1]);
-
   Node inter = nm->mkNode(Kind::REGEXP_INTER, rs, comp);
   Trace("brc-macro") << "Rewrite inclusion: " << inter << std::endl;
   theory::Rewriter* rr = d_env.getRewriter();
   Node res = rr->rewriteViaRule(ProofRewriteRule::RE_INTER_UNION_INCLUSION, inter);
   Trace("brc-macro") << "...returned " << res << std::endl;
-
+  if (res.isNull())
+  {
+    Assert (false);
+    return false;
+  }
+  Node inclusionEq = inter.eqNode(res);
+  cdp->addTheoryRewriteStep(inclusionEq, ProofRewriteRule::RE_INTER_UNION_INCLUSION);
 
   Node memNeg = eq[0].notNode();
-  Node memComp = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0], comp);
-  //Node req = comp.eqNode(negEq);
+  Node memComp = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], comp);
+  Node compEq = memNeg.eqNode(memComp);
+  cdp->addTrustedStep(compEq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+  cdp->addStep(memComp, ProofRule::EQ_RESOLVE, {memNeg, compEq}, {});
 
-  return false;
+
+  Node imem = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], inter);
+  cdp->addStep(imem, ProofRule::RE_INTER, {trivMemc, memComp}, {});
+
+  Node noneMem = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], res);
+  cargs.clear();
+  cr = expr::getCongRule(imem, cargs);
+  Node meq = imem.eqNode(noneMem);
+  cdp->addStep(meq, cr, {refl, inclusionEq}, cargs);
+
+  Node falsen = nm->mkConst(false);
+  Node noneFalseEq = noneMem.eqNode(falsen);
+  cdp->addTrustedStep(noneFalseEq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+
+  Node imemFalse = imem.eqNode(falsen);
+  cdp->addStep(imemFalse, ProofRule::TRANS, {meq, noneFalseEq}, {});
+  cdp->addStep(falsen, ProofRule::EQ_RESOLVE, {imem, imemFalse}, {});
+
+  Node memDoubleNeg = memNeg.notNode();
+  cdp->addStep(memDoubleNeg, ProofRule::SCOPE, {falsen}, {memNeg});
+
+  Node deq = memDoubleNeg.eqNode(eq[0]);
+  cdp->addTrustedStep(deq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+  cdp->addStep(eq[0], ProofRule::EQ_RESOLVE, {memDoubleNeg, deq}, {});
+  cdp->addStep(eq, ProofRule::TRUE_INTRO, {eq[0]}, {});
+  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroReInterUnionConstElim(CDProof* cdp, const Node& eq)
