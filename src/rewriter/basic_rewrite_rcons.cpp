@@ -240,8 +240,13 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
       break;
     // EVALUE(MACRO_STR_COMPONENT_CTN),
     // EVALUE(MACRO_STR_CONST_NCTN_CONCAT),
-    // EVALUE(MACRO_STR_IN_RE_INCLUSION),
     // EVALUE(MACRO_SEQ_EVAL_OP),
+    case ProofRewriteRule::MACRO_STR_IN_RE_INCLUSION:
+      if (ensureProofMacroStrInReInclusion(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
     case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM:
       if (ensureProofMacroReInterUnionConstElim(cdp, eq))
       {
@@ -1462,6 +1467,42 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
   return true;
 }
 
+bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp, const Node& eq)
+{
+  Trace("brc-macro") << "Expand macro str in re inclusion for " << eq
+                     << std::endl;
+  Assert (eq[0].getKind()==Kind::STRING_IN_REGEXP);
+  NodeManager * nm = nodeManager();
+  // proof by contradiction
+
+  Node rst = nm->mkNode(Kind::STRING_TO_REGEXP, eq[0][0]);
+  std::vector<Node> cc;
+  theory::strings::utils::getConcat(eq[0][0], cc);
+  std::vector<Node> rchildren;
+  for (const Node& nc : cc)
+  {
+    rchildren.push_back(nm->mkNode(Kind::STRING_TO_REGEXP, nc));
+  }
+  Node rs = nm->mkNode(Kind::REGEXP_CONCAT, rchildren);
+  Node rsr = rewrite(rs);
+  Trace("brc-macro") << "Rewritten sym regex: " << rs << " ---> " << rsr << std::endl;
+
+  Node comp =  nm->mkNode(Kind::REGEXP_COMPLEMENT, eq[0][1]);
+
+  Node inter = nm->mkNode(Kind::REGEXP_INTER, rs, comp);
+  Trace("brc-macro") << "Rewrite inclusion: " << inter << std::endl;
+  theory::Rewriter* rr = d_env.getRewriter();
+  Node res = rr->rewriteViaRule(ProofRewriteRule::RE_INTER_UNION_INCLUSION, inter);
+  Trace("brc-macro") << "...returned " << res << std::endl;
+
+
+  Node memNeg = eq[0].notNode();
+  Node memComp = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0], comp);
+  //Node req = comp.eqNode(negEq);
+
+  return false;
+}
+
 bool BasicRewriteRCons::ensureProofMacroReInterUnionConstElim(CDProof* cdp, const Node& eq)
 {
   Trace("brc-macro") << "Expand macro re inter union const elim for " << eq
@@ -1471,7 +1512,7 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionConstElim(CDProof* cdp, cons
     // RARE should suffice to show the intersection case
     // via rules re-inter-cstring or re-inter-cstring-neg
     // Note these may require calling membership evaluation as a subcall,
-    // so we mark this non-simple
+    // so we mark this non-simple.
     cdp->addTrustedStep(
         eq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
     return true;
