@@ -1,6 +1,22 @@
 (include "../theories/ArithBvConv.eo")
 
+(include "../programs/Arith.eo")
+(include "../programs/Utils.eo")
+
 ;;;;; ProofRewriteRule::BV_TO_NAT_ELIM
+
+
+(program $abconv_bv_to_nat_elim ((n Int) (b (BitVec n)) (w Int) (p Int))
+  ((BitVec n) Int Int) Int
+  (
+    (($abconv_bv_to_nat_elim b 0 p) 0)
+    (($abconv_bv_to_nat_elim b w p) (eo::define ((wm1 (eo::add w -1)))
+                                    (eo::define ((pd2 (eo::zdiv p 2)))
+                                    (eo::cons +
+                                      (ite (= (extract b wm1 wm1) #b1) pd2 0)
+                                      ($abconv_bv_to_nat_elim b wm1 pd2)))))
+  )
+)
 
 ; rule: bv-to-nat-elim
 ; implements: ProofRewriteRule::BV_TO_NAT_ELIM
@@ -11,10 +27,24 @@
 ; conclusion: The given equality.
 (declare-rule bv-to-nat-elim ((n Int) (b (BitVec n)) (m Int))
   :args ((= (bv2nat b) m))
+  :requires (((eo::define ((w ($bv_bitwidth (eo::typeof b))))
+                ($singleton_elim ($abconv_bv_to_nat_elim b w ($arith_eval_int_pow_2 w)))) m))
   :conclusion (= (bv2nat b) m)
 )
 
 ;;;;; ProofRewriteRule::INT_TO_BV_ELIM
+
+(program $abconv_int_to_bv_elim ((n Int) (m Int) (p Int))
+  (Int Int Int) (BitVec n)
+  (
+    (($abconv_int_to_bv_elim n 0 p) @bv_empty)
+    (($abconv_int_to_bv_elim n m p) (eo::define ((wm1 (eo::add m -1)))
+                                    (eo::define ((pd2 (eo::zdiv p 2)))
+                                    (eo::cons concat
+                                      (ite (>= (mod n p) pd2) #b1 #b0)
+                                      ($abconv_int_to_bv_elim n wm1 pd2)))))
+  )
+)
 
 ; rule: int-to-bv-elim
 ; implements: ProofRewriteRule::INT_TO_BV_ELIM
@@ -23,7 +53,8 @@
 ; requires: >
 ;   Reducing the left hand side to an integer term results in the right hand side.
 ; conclusion: The given equality.
-(declare-rule int-to-bv-elim ((n Int) (b (BitVec n)) (m Int))
-  :args ((= (int2bv n m) b))
-  :conclusion (= (int2bv n m) b)
+(declare-rule int-to-bv-elim ((n Int) (b (BitVec n)) (w Int))
+  :args ((= (int2bv w n) b))
+  :requires ((($singleton_elim ($abconv_int_to_bv_elim n w ($arith_eval_int_pow_2 w))) b))
+  :conclusion (= (int2bv w n) b)
 )
