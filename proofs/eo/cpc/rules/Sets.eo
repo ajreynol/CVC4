@@ -59,6 +59,37 @@
   :conclusion (not (= (set.member (@sets_deq_diff a b) a) (set.member (@sets_deq_diff a b) b)))
 )
 
+;;;;; ProofRewriteRule::SETS_UNION_NORM
+
+; program: $set_union_to_list
+; args:
+; - s (Set T): The set to process.
+; return: >
+;   A list of sets, whose union is equal to s.
+(program $set_union_to_list ((T Type) (s (Set T)) (t (Set T)))
+  ((Set T)) @List
+  (
+    (($set_union_to_list (set.union s t))     (eo::list_concat @list ($set_union_to_list s) ($set_union_to_list t)))
+    (($set_union_to_list (set.empty (Set T))) @list.nil)
+    (($set_union_to_list s)                   (eo::cons @list s @list.nil))
+  )
+)
+
+; rule: sets-union-norm
+; implements: ProofRewriteRule::SETS_UNION_NORM
+; args:
+; - eq Bool: The equality to prove with this rule between sets (set.union a b) and c.
+; requires: >
+;   The union of the elements of a and b is equivalent to the elements of c.
+; conclusion: The given equality.
+(declare-rule sets-union-norm ((T Type) (a (Set T)) (b (Set T)) (c (Set T)))
+  :args ((= (set.union a b) c))
+  :requires ((($nary_is_eq_set @list @list.nil
+                (eo::list_concat @list ($set_union_to_list a) ($set_union_to_list b))
+                ($set_union_to_list c)) true))
+  :conclusion (= (set.union a b) c)
+)
+
 ;;;;; ProofRewriteRule::SETS_INSERT_ELIM
 
 ; program: $set_eval_insert
