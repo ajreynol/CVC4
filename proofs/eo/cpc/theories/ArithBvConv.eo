@@ -1,3 +1,5 @@
+(include "../theories/BitVectors.eo")
+(include "../theories/Ints.eo")
 
 ; disclaimer: >
 ;   This function is not a function in SMT-LIB. Although it is used

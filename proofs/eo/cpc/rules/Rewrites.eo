@@ -5,6 +5,8 @@
 (include "../theories/BitVectors.eo")
 (include "../theories/Strings.eo")
 (include "../theories/Sets.eo")
+
+(include "../expert/theories/Sets.eo")
 (include "../expert/theories/Transcendentals.eo")
 
 (declare-rule arith-div-total-real ((@T0 Type) (t1 @T0) (s1 Real))

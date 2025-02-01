@@ -20,6 +20,8 @@ cat << EOF > $REWRITE_SIG
 (include "../theories/BitVectors.eo")
 (include "../theories/Strings.eo")
 (include "../theories/Sets.eo")
+
+(include "../expert/theories/Sets.eo")
 (include "../expert/theories/Transcendentals.eo")
 
 EOF
