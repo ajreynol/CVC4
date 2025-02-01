@@ -72,7 +72,7 @@
 
 (include "./programs/PolyNorm.eo")
 
-(include "./expert/Expert.eo")
+(include "./expert/CpcExpert.eo")
 
 ; disclaimer: >
 ;   All symbols prefixed by @ are not part of the SMT-LIB standard
