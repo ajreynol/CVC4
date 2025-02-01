@@ -2,8 +2,13 @@
 ;
 ; This is porition of CPC that is not supported under cvc5's safe options. It
 ; should *not* be included in proofs emitted by safe builds of cvc5 or when
-; --safe-options is enabled. All proofs emitted in such cases should never
+; --safe-options is enabled. All proofs emitted in such cases will never
 ; reference any of the symbols or proof rules defined in this subdirectory.
+;
+; Note the theory definitions in this subdirectory are intended to cover *all* of
+; the experimental theory symbols that cvc5 supports. It also may contain proof
+; rules that are supported when experimental features are enabled, or definitions
+; that are works in progress.
 ;
 ; =============================================================================
 
