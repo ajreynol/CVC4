@@ -75,6 +75,7 @@
 (include "./expert/theories/FiniteFields.eo")
 (include "./expert/theories/SepLogic.eo")
 (include "./expert/rules/Transcendentals.eo")
+(include "./expert/rules/Sets.eo")
 
 (include "./programs/PolyNorm.eo")
 
