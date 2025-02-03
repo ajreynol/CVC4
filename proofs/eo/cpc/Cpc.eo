@@ -65,9 +65,9 @@
 (include "./rules/BitVectors.eo")
 (include "./rules/Strings.eo")
 (include "./rules/Sets.eo")
+(include "./rules/ArithBvConv.eo")
 (include "./rules/Quantifiers.eo")
 (include "./rules/Datatypes.eo")
-(include "./rules/ArithBvConv.eo")
 (include "./rules/Rewrites.eo")
 
 (include "./programs/PolyNorm.eo")
