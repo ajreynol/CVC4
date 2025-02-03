@@ -620,7 +620,21 @@
     ; str.replace_re
     (($str_reduction_pred (str.replace_re x r z))
         (eo::define ((k (@purify (str.replace_re x r z))))
-          false))
+        (eo::define ((k1 (@re_first_match_pre x r)))
+        (eo::define ((k2 (@re_first_match x r)))
+        (eo::define ((k3 (@re_first_match_post x r)))
+        (ite (= (str.indexof_re x r 0) -1)
+          (= k x)
+          (and (= x (str.++ k1 k2 k3))
+               (= (str.len k1) (str.indexof_re x r 0))
+               (forall ((@var.str_length Int))
+                  (or
+                    (not (>= @var.str_length 0))
+                    (not (< @var.str_length (str.len k2)))
+                    (not (str.in_re (str.substr k2 0 @var.str_length) r))))
+               (str.in_re k2 r)
+               (= k (str.++ k1 z k3)))))))))
+
     ; str.replace_re_all
     (($str_reduction_pred (str.replace_re_all x r z))
         (eo::define ((k (@purify (str.replace_re_all x r z))))

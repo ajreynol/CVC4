@@ -737,12 +737,10 @@ Node StringsPreprocess::reduce(Node t,
     Node k1Len = nm->mkNode(Kind::STRING_LENGTH, k1).eqNode(idx);
     Node l = SkolemCache::mkLengthVar(nm, t);
     Node bvll = nm->mkNode(Kind::BOUND_VAR_LIST, l);
-    Node bound = nm->mkNode(Kind::AND,
-                            nm->mkNode(Kind::LEQ, zero, l),
-                            nm->mkNode(Kind::LT, l, k2Len));
     Node body =
         nm->mkNode(Kind::OR,
-                   bound.negate(),
+                   nm->mkNode(Kind::GEQ, l, zero).notNode(),
+                   nm->mkNode(Kind::LT, l, k2Len).notNode(),
                    nm->mkNode(Kind::STRING_IN_REGEXP,
                               nm->mkNode(Kind::STRING_SUBSTR, k2, zero, l),
                               y)
