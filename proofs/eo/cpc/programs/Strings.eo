@@ -578,7 +578,6 @@
                    (= (str.len k1) n)
                    (= (str.len k2) (- (str.len x) (+ n 1)))))))))
   
-    ; TODO:
     ; str.update
     (($str_reduction_pred (str.update x n y))
         (eo::define ((k (@purify (str.update x n y))))
@@ -595,22 +594,58 @@
                (= (str.len ys) (str.len k3)))))))
           (= k x))))
     ; str.replace_all
-    (($str_reduction_pred (str.replace_all x y z)) false)
+    (($str_reduction_pred (str.replace_all x y z))
+        (eo::define ((k (@purify (str.replace_all x y z))))
+        (eo::define ((numOcc (@strings_num_occur x y)))
+        (eo::define ((result (@strings_replace_all_result (str.replace_all x y z))))
+        (eo::define ((occIndex (@strings_occur_index x y)))
+        (ite (= y ($mk_emptystr (eo::typeof x)))
+          (= k x)
+          (and (>= numOcc 0)
+               (= k (result 0))
+               (= (result numOcc) (str.substr x (occIndex numOcc) (str.len x)))
+               (= (occIndex 0) 0)
+               (= (str.indexof x y (occIndex numOcc)) -1)
+               (forall ((@var.str_index Int))
+                  (or
+                    (not (>= @var.str_index 0))
+                    (not (< @var.str_index numOcc))
+                    (eo::define ((ii (str.indexof x y (occIndex @var.str_index))))
+                    (eo::define ((oi (occIndex @var.str_index)))
+                      (and (not (= ii -1))
+                           (= (result @var.str_index)
+                              (str.++ (str.substr x oi (- ii oi)) z (result (+ @var.str_index 1))))
+                           (= (occIndex (+ @var.str_index 1)) (+ ii (str.len y)))))))))))))))
+    ; TODO:
     ; str.replace_re
-    (($str_reduction_pred (str.replace_re x r z)) false)
+    (($str_reduction_pred (str.replace_re x r z))
+        (eo::define ((k (@purify (str.replace_re x r z))))
+          false))
     ; str.replace_re_all
-    (($str_reduction_pred (str.replace_re_all x r z)) false)
+    (($str_reduction_pred (str.replace_re_all x r z))
+        (eo::define ((k (@purify (str.replace_re_all x r z))))
+          false))
     ; str.indexof_re
-    (($str_reduction_pred (str.indexof_re x r n)) false)
+    (($str_reduction_pred (str.indexof_re x r n))
+        (eo::define ((k (@purify (str.indexof_re x r n))))
+          false))
     ; str.<=
-    (($str_reduction_pred (str.<= x y)) false)
+    (($str_reduction_pred (str.<= x y))
+        (eo::define ((k (@purify (str.<= x y))))
+          false))
 
     ; str.to_lower
     (($str_reduction_pred (str.to_lower x)) false)
     ; str.to_upper
     (($str_reduction_pred (str.to_upper x)) false)
     ; str.rev
-    (($str_reduction_pred (str.rev x)) false)
+    (($str_reduction_pred (str.rev x))
+        (eo::define ((k (@purify (str.rev x))))
+          false))
+    ; str.contains
+    (($str_reduction_pred (str.contains x y))
+        (eo::define ((k (@purify (str.contains x y))))
+          false))
   )
 )
 ; program: $mk_str_eager_reduction

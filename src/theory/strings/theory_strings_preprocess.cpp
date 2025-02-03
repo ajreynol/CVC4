@@ -662,9 +662,6 @@ Node StringsPreprocess::reduce(Node t,
 
     Node i = SkolemCache::mkIndexVar(nm, t);
     Node bvli = nm->mkNode(Kind::BOUND_VAR_LIST, i);
-    Node bound = nm->mkNode(Kind::AND,
-                            nm->mkNode(Kind::GEQ, i, zero),
-                            nm->mkNode(Kind::LT, i, numOcc));
     Node ufi = nm->mkNode(Kind::APPLY_UF, uf, i);
     Node ufip1 = nm->mkNode(Kind::APPLY_UF, uf, nm->mkNode(Kind::ADD, i, one));
     Node ii = nm->mkNode(Kind::STRING_INDEXOF, x, y, ufi);
@@ -681,7 +678,10 @@ Node StringsPreprocess::reduce(Node t,
         nm->mkNode(Kind::ADD, ii, nm->mkNode(Kind::STRING_LENGTH, y))));
 
     Node body =
-        nm->mkNode(Kind::OR, bound.negate(), nm->mkNode(Kind::AND, flem));
+        nm->mkNode(Kind::OR, 
+                            nm->mkNode(Kind::GEQ, i, zero).notNode(),
+                            nm->mkNode(Kind::LT, i, numOcc).notNode(),
+                            nm->mkNode(Kind::AND, flem));
     Node q = utils::mkForallInternal(nm, bvli, body);
     lem.push_back(q);
 
