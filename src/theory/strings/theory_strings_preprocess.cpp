@@ -136,7 +136,7 @@ Node StringsPreprocess::reduce(Node t,
     // substr(r,0,|s|-n)
     Node lens = nm->mkNode(Kind::STRING_LENGTH, s);
     Node rs;
-    if (r.isConst() && Word::getLength(r) == 1)
+    if ((r.isConst() && Word::getLength(r) == 1) || r.getKind()==Kind::SEQ_UNIT)
     {
       // optimization: don't need to take substring for single characters, due
       // to guard on where it is used in the reduction below.

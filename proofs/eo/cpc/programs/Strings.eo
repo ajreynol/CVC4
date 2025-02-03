@@ -1,9 +1,9 @@
 (include "../theories/Arith.eo")
 (include "../theories/Builtin.eo")
+(include "../theories/Quantifiers.eo")
 (include "../theories/Strings.eo")
 (include "../programs/Nary.eo")
 (include "../programs/PolyNorm.eo")
-
 
 ; This signature is used for both strings and sequences, where we often
 ; write "string" in the documentation to refer to a string or sequence,
@@ -434,6 +434,18 @@
 
 ;;-------------------- Reductions
 
+; define: $str_check_length_one_or_unit
+; args:
+; - s (Seq T): The sequence term.
+; return: true if s is a constant-like string of length one.
+(program $str_check_length_one_or_unit ((T Type) (s (Seq T)) (t T))
+  ((Seq T)) Bool
+  (
+    (($str_check_length_one_or_unit (seq.unit t))  true)
+    (($str_check_length_one_or_unit s)             (eo::is_eq (eo::len s) 1))
+  )
+)
+
 ; In the following, a "reduction predicate" refers to a formula that is used
 ; to axiomatize an extended string program in terms of (simpler) programs.
 
@@ -499,7 +511,7 @@
 ; return: the reduction predicate for term t of sort s.
 ; note: >
 ;   The operators listed in comments are missing from the signature currently.
-(program $str_reduction_pred ((T Type) (U Type) (x (Seq U)) (y (Seq U)) (z (Seq U)) (n Int) (m Int) (s String))
+(program $str_reduction_pred ((T Type) (U Type) (x (Seq U)) (y (Seq U)) (z (Seq U)) (n Int) (m Int) (s String) (r RegLan))
   (T) Bool
   (
     (($str_reduction_pred (str.substr x n m)) ($str_reduction_substr x n m))
@@ -565,19 +577,42 @@
               (and (= x (str.++ k1 (seq.unit k) k2))
                    (= (str.len k1) n)
                    (= (str.len k2) (- (str.len x) (+ n 1)))))))))
-
+  
+    ; TODO:
     ; str.update
-    ; str.to_int
-    ; str.replaceall
+    (($str_reduction_pred (str.update x n y))
+        (eo::define ((k (@purify (str.update x n y))))
+        (ite (and (>= n 0) (> (str.len x) n))
+          (eo::define ((k1 (@purify ($str_prefix x n))))
+          (eo::define ((ys (eo::ite ($str_check_length_one_or_unit y) ; optimization for single characters
+                              y
+                              (str.substr y 0 (- (str.len x) n)))))
+          (eo::define ((k2 (@purify ($str_suffix_rem x (+ n (str.len ys))))))
+          (eo::define ((k3 (@purify (str.substr x n (str.len ys)))))
+          (and (= k (str.++ k1 ys k2))
+               (= x (str.++ k1 k3 k2))
+               (= (str.len k1) n)
+               (= (str.len ys) (str.len k3)))))))
+          (= k x))))
+    ; str.replace_all
+    (($str_reduction_pred (str.replace_all x y z)) false)
     ; str.replace_re
+    (($str_reduction_pred (str.replace_re x r z)) false)
     ; str.replace_re_all
+    (($str_reduction_pred (str.replace_re_all x r z)) false)
+    ; str.indexof_re
+    (($str_reduction_pred (str.indexof_re x r n)) false)
+    ; str.<=
+    (($str_reduction_pred (str.<= x y)) false)
+
     ; str.to_lower
+    (($str_reduction_pred (str.to_lower x)) false)
     ; str.to_upper
+    (($str_reduction_pred (str.to_upper x)) false)
     ; str.rev
-    ; str.leq
+    (($str_reduction_pred (str.rev x)) false)
   )
 )
-
 ; program: $mk_str_eager_reduction
 ; args:
 ; - t U: The term to process.
