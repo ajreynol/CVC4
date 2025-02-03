@@ -244,6 +244,16 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(bool connectCnf)
   std::shared_ptr<ProofNode> conflictProof;
   // take proof from SAT solver as is
   conflictProof = d_satSolver->getProof();
+  
+  if (pmode == options::PropProofMode::SAT_EXTERNAL_PROVE)
+  {
+    std::vector<Node> fassumps;
+    expr::getFreeAssumptions(conflictProof.get(), fassumps);
+    CDProof cdp(d_env);
+    Node falsen = nodeManager()->mkConst(false);
+    cdp.addStep(falsen, ProofRule::SAT_EXTERNAL_PROVE, fassumps, {});
+    conflictProof = cdp.getProofFor(falsen);
+  }
 
   Assert(conflictProof);
   if (TraceIsOn("sat-proof"))
