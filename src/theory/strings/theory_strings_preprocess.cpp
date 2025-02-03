@@ -136,7 +136,8 @@ Node StringsPreprocess::reduce(Node t,
     // substr(r,0,|s|-n)
     Node lens = nm->mkNode(Kind::STRING_LENGTH, s);
     Node rs;
-    if ((r.isConst() && Word::getLength(r) == 1) || r.getKind()==Kind::SEQ_UNIT)
+    if ((r.isConst() && Word::getLength(r) == 1)
+        || r.getKind() == Kind::SEQ_UNIT)
     {
       // optimization: don't need to take substring for single characters, due
       // to guard on where it is used in the reduction below.
@@ -677,11 +678,10 @@ Node StringsPreprocess::reduce(Node t,
     flem.push_back(ufip1.eqNode(
         nm->mkNode(Kind::ADD, ii, nm->mkNode(Kind::STRING_LENGTH, y))));
 
-    Node body =
-        nm->mkNode(Kind::OR, 
-                            nm->mkNode(Kind::GEQ, i, zero).notNode(),
-                            nm->mkNode(Kind::LT, i, numOcc).notNode(),
-                            nm->mkNode(Kind::AND, flem));
+    Node body = nm->mkNode(Kind::OR,
+                           nm->mkNode(Kind::GEQ, i, zero).notNode(),
+                           nm->mkNode(Kind::LT, i, numOcc).notNode(),
+                           nm->mkNode(Kind::AND, flem));
     Node q = utils::mkForallInternal(nm, bvli, body);
     lem.push_back(q);
 
@@ -846,10 +846,10 @@ Node StringsPreprocess::reduce(Node t,
                                pfxMatch,
                                z,
                                nm->mkNode(Kind::APPLY_UF, us, ip1))));
-    Node body =
-        nm->mkNode(Kind::OR, 
-                            nm->mkNode(Kind::GEQ, i, zero).notNode(),
-                            nm->mkNode(Kind::LT, i, numOcc).notNode(), nm->mkNode(Kind::AND, flem));
+    Node body = nm->mkNode(Kind::OR,
+                           nm->mkNode(Kind::GEQ, i, zero).notNode(),
+                           nm->mkNode(Kind::LT, i, numOcc).notNode(),
+                           nm->mkNode(Kind::AND, flem));
     Node forall = utils::mkForallInternal(nm, bvli, body);
     lemmas.push_back(forall);
 

@@ -1467,15 +1467,16 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp,
+                                                         const Node& eq)
 {
   return false;
   Trace("brc-macro") << "Expand macro str in re inclusion for " << eq
                      << std::endl;
-  Assert (eq[0].getKind()==Kind::STRING_IN_REGEXP);
-  NodeManager * nm = nodeManager();
+  Assert(eq[0].getKind() == Kind::STRING_IN_REGEXP);
+  NodeManager* nm = nodeManager();
   Node truen = eq[1];
-  Assert (truen.isConst() && truen.getConst<bool>());
+  Assert(truen.isConst() && truen.getConst<bool>());
   // proof by contradiction
 
   std::vector<Node> cc;
@@ -1508,26 +1509,27 @@ bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp, const Nod
   cdp->addStep(tteq, ProofRule::TRANS, {congEq, tmeq}, {});
   cdp->addStep(trivMemc, ProofRule::TRUE_ELIM, {tteq}, {});
 
-  Node comp =  nm->mkNode(Kind::REGEXP_COMPLEMENT, eq[0][1]);
+  Node comp = nm->mkNode(Kind::REGEXP_COMPLEMENT, eq[0][1]);
   Node inter = nm->mkNode(Kind::REGEXP_INTER, rs, comp);
   Trace("brc-macro") << "Rewrite inclusion: " << inter << std::endl;
   theory::Rewriter* rr = d_env.getRewriter();
-  Node res = rr->rewriteViaRule(ProofRewriteRule::RE_INTER_UNION_INCLUSION, inter);
+  Node res =
+      rr->rewriteViaRule(ProofRewriteRule::RE_INTER_UNION_INCLUSION, inter);
   Trace("brc-macro") << "...returned " << res << std::endl;
   if (res.isNull())
   {
-    Assert (false);
+    Assert(false);
     return false;
   }
   Node inclusionEq = inter.eqNode(res);
-  cdp->addTheoryRewriteStep(inclusionEq, ProofRewriteRule::RE_INTER_UNION_INCLUSION);
+  cdp->addTheoryRewriteStep(inclusionEq,
+                            ProofRewriteRule::RE_INTER_UNION_INCLUSION);
 
   Node memNeg = eq[0].notNode();
   Node memComp = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], comp);
   Node compEq = memNeg.eqNode(memComp);
   cdp->addTrustedStep(compEq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
   cdp->addStep(memComp, ProofRule::EQ_RESOLVE, {memNeg, compEq}, {});
-
 
   Node imem = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], inter);
   cdp->addStep(imem, ProofRule::RE_INTER, {trivMemc, memComp}, {});
@@ -1556,24 +1558,24 @@ bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp, const Nod
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroReInterUnionConstElim(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroReInterUnionConstElim(CDProof* cdp,
+                                                              const Node& eq)
 {
   Trace("brc-macro") << "Expand macro re inter union const elim for " << eq
                      << std::endl;
-  if (eq[0].getKind()==Kind::REGEXP_INTER)
+  if (eq[0].getKind() == Kind::REGEXP_INTER)
   {
     // RARE should suffice to show the intersection case
     // via rules re-inter-cstring or re-inter-cstring-neg
     // Note these may require calling membership evaluation as a subcall,
     // so we mark this non-simple.
-    cdp->addTrustedStep(
-        eq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+    cdp->addTrustedStep(eq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
     return true;
   }
-  Assert(eq[1].getKind()==Kind::REGEXP_UNION);
+  Assert(eq[1].getKind() == Kind::REGEXP_UNION);
   std::vector<Node> ch1(eq[0].begin(), eq[0].end());
   std::vector<Node> ch2;
-  if (eq[1].getKind()==Kind::REGEXP_UNION)
+  if (eq[1].getKind() == Kind::REGEXP_UNION)
   {
     ch2.insert(ch2.end(), eq[1].begin(), eq[1].end());
   }
@@ -1583,9 +1585,9 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionConstElim(CDProof* cdp, cons
   }
   std::vector<Node> diff;
   size_t i2 = 0;
-  for (size_t i1=0, nchild=ch1.size(); i1<nchild; i1++)
+  for (size_t i1 = 0, nchild = ch1.size(); i1 < nchild; i1++)
   {
-    if (i2<ch2.size() && ch1[i1]==ch2[i2])
+    if (i2 < ch2.size() && ch1[i1] == ch2[i2])
     {
       i2++;
     }
@@ -1596,21 +1598,20 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionConstElim(CDProof* cdp, cons
   }
   Node curr = eq[1];
   std::vector<Node> transEq;
-  NodeManager * nm = nodeManager();
-  for (size_t i=0, ndiff=diff.size(); i<ndiff; i++)
+  NodeManager* nm = nodeManager();
+  for (size_t i = 0, ndiff = diff.size(); i < ndiff; i++)
   {
-    size_t ii = (ndiff-i-1);
+    size_t ii = (ndiff - i - 1);
     Node next = nm->mkNode(Kind::REGEXP_UNION, diff[ii], curr);
     Node eqc = next.eqNode(curr);
     // RARE rule re-union-const-elim should suffice
     // Note these may require calling membership evaluation as a subcall,
     // so we mark this non-simple
-    cdp->addTrustedStep(
-        eqc, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+    cdp->addTrustedStep(eqc, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
     transEq.push_back(eqc);
     curr = next;
   }
-  if (eq[0]!=curr)
+  if (eq[0] != curr)
   {
     Node eqa = eq[0].eqNode(curr);
     if (!cdp->addStep(eqa, ProofRule::ACI_NORM, {}, {eqa}))
@@ -1620,7 +1621,7 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionConstElim(CDProof* cdp, cons
     }
     transEq.push_back(eqa);
   }
-  if (transEq.size()>1)
+  if (transEq.size() > 1)
   {
     std::reverse(transEq.begin(), transEq.end());
     cdp->addStep(eq, ProofRule::TRANS, transEq, {});

@@ -1573,7 +1573,7 @@ Node SequencesRewriter::rewriteViaMacroStrSplitCtn(const Node& node)
 {
   if (node.getKind() != Kind::STRING_CONTAINS
       || node[0].getKind() != Kind::STRING_CONCAT || !node[1].isConst()
-      || Word::getLength(node[1]) == 0) // don't bother if empty string
+      || Word::getLength(node[1]) == 0)  // don't bother if empty string
   {
     return Node::null();
   }

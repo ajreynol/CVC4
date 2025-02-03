@@ -244,7 +244,7 @@ std::shared_ptr<ProofNode> PropPfManager::getProof(bool connectCnf)
   std::shared_ptr<ProofNode> conflictProof;
   // take proof from SAT solver as is
   conflictProof = d_satSolver->getProof();
-  
+
   if (pmode == options::PropProofMode::SAT_EXTERNAL_PROVE)
   {
     std::vector<Node> fassumps;
