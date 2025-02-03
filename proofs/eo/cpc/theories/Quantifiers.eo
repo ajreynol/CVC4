@@ -1,5 +1,7 @@
 (include "../programs/Utils.eo")
 
+(include "../theories/Arith.eo")
+
 ; disclaimer: >
 ;   This function is a builtin function symbol of SMT-LIB denoting
 ;   universal quantification. We represent it as an ordinary function taking a
