@@ -222,6 +222,7 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
         case Kind::STRING_REPLACE:
         case Kind::STRING_REPLACE_ALL:
         case Kind::STRING_REPLACE_RE:
+        case Kind::STRING_REPLACE_RE_ALL:
         case Kind::STRING_STOI:
         case Kind::STRING_ITOS:
         case Kind::SEQ_NTH:
