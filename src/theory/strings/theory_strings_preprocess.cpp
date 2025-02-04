@@ -989,32 +989,31 @@ Node StringsPreprocess::reduce(Node t,
         nm->booleanType(), t, SkolemCache::SK_PURIFY, "ltp");
     Node k = SkolemCache::mkIndexVar(nm, t);
 
-    std::vector<Node> conj;
-    conj.push_back(nm->mkNode(Kind::GEQ, k, zero));
+    std::vector<Node> disj;
+    disj.push_back(nm->mkNode(Kind::GEQ, k, zero).notNode());
     Node substr[2];
     Node code[2];
     for (unsigned r = 0; r < 2; r++)
     {
       Node ta = t[r];
-      Node tb = t[1 - r];
       substr[r] = nm->mkNode(Kind::STRING_SUBSTR, ta, zero, k);
       code[r] = nm->mkNode(Kind::STRING_TO_CODE,
                            nm->mkNode(Kind::STRING_SUBSTR, ta, k, one));
-      conj.push_back(
-          nm->mkNode(Kind::LEQ, k, nm->mkNode(Kind::STRING_LENGTH, ta)));
+      disj.push_back(
+          nm->mkNode(Kind::LEQ, k, nm->mkNode(Kind::STRING_LENGTH, ta)).notNode());
     }
-    conj.push_back(substr[0].eqNode(substr[1]));
+    disj.push_back(substr[0].eqNode(substr[1]).notNode());
     std::vector<Node> ite_ch;
     ite_ch.push_back(ltp);
     for (unsigned r = 0; r < 2; r++)
     {
-      ite_ch.push_back(nm->mkNode(Kind::LT, code[r], code[1 - r]));
+      ite_ch.push_back(nm->mkNode(Kind::GEQ, code[r], code[1 - r]));
     }
-    conj.push_back(nm->mkNode(Kind::ITE, ite_ch));
+    disj.push_back(nm->mkNode(Kind::ITE, ite_ch));
 
     Node conjn = utils::mkForallInternal(nm,
                                          nm->mkNode(Kind::BOUND_VAR_LIST, k),
-                                         nm->mkNode(Kind::AND, conj).negate())
+                                         nm->mkNode(Kind::OR, disj))
                      .negate();
     // Intuitively, the reduction says either x and y are equal, or they have
     // some (maximal) common prefix after which their characters at position k
