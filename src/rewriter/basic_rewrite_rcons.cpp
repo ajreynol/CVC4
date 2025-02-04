@@ -1572,7 +1572,7 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionConstElim(CDProof* cdp,
     cdp->addTrustedStep(eq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
     return true;
   }
-  Assert(eq[1].getKind() == Kind::REGEXP_UNION);
+  Assert(eq[0].getKind() == Kind::REGEXP_UNION);
   std::vector<Node> ch1(eq[0].begin(), eq[0].end());
   std::vector<Node> ch2;
   if (eq[1].getKind() == Kind::REGEXP_UNION)
