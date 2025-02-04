@@ -286,36 +286,30 @@ Node StringsPreprocess::reduce(Node t,
     Node i = SkolemCache::mkIndexVar(nm, t);
     Node l = SkolemCache::mkLengthVar(nm, t);
     Node bvl = nm->mkNode(Kind::BOUND_VAR_LIST, i, l);
-    Node bound = nm->mkNode(
-        Kind::AND,
-        {
-            nm->mkNode(Kind::GEQ, i, n),
-            nm->mkNode(
-                Kind::LT, i, nm->mkNode(Kind::ITE, retNegOne, sLen, skk)),
-            nm->mkNode(Kind::GT, l, zero),
-            nm->mkNode(Kind::LEQ, l, nm->mkNode(Kind::SUB, sLen, i)),
-        });
     Node body = nm->mkNode(Kind::OR,
-                           bound.negate(),
+                           {
+            nm->mkNode(Kind::GEQ, i, n).notNode(),
+            nm->mkNode(
+                Kind::LT, i, nm->mkNode(Kind::ITE, retNegOne, sLen, skk)).notNode(),
+            nm->mkNode(Kind::GT, l, zero).notNode(),
+            nm->mkNode(Kind::LEQ, l, nm->mkNode(Kind::SUB, sLen, i)).notNode(),
                            nm->mkNode(Kind::STRING_IN_REGEXP,
                                       nm->mkNode(Kind::STRING_SUBSTR, s, i, l),
                                       r)
-                               .negate());
+                               .notNode()});
     // forall il.
     //   n <= i < ite(skk = -1, len(s), skk) ^ 0 < l <= len(s) - i =>
     //     ~in_re(substr(s, i, l), r)
     Node firstMatch = utils::mkForallInternal(nm, bvl, body);
     Node bvll = nm->mkNode(Kind::BOUND_VAR_LIST, l);
-    Node validLen =
-        nm->mkNode(Kind::AND,
-                   nm->mkNode(Kind::GEQ, l, zero),
-                   nm->mkNode(Kind::LEQ, l, nm->mkNode(Kind::SUB, sLen, skk)));
     Node matchBody =
-        nm->mkNode(Kind::AND,
-                   validLen,
+        nm->mkNode(Kind::OR,
+                   {
+                   nm->mkNode(Kind::GEQ, l, zero).notNode(),
+                   nm->mkNode(Kind::LEQ, l, nm->mkNode(Kind::SUB, sLen, skk)).notNode(),
                    nm->mkNode(Kind::STRING_IN_REGEXP,
                               nm->mkNode(Kind::STRING_SUBSTR, s, skk, l),
-                              r));
+                              r).notNode()});
     // skk != -1 =>
     //   skk >= n ^ exists l. (0 <= l < len(s) - skk) ^ in_re(substr(s, skk, l),
     //   r))
@@ -325,7 +319,7 @@ Node StringsPreprocess::reduce(Node t,
         nm->mkNode(
             Kind::AND,
             nm->mkNode(Kind::GEQ, skk, n),
-            utils::mkForallInternal(nm, bvll, matchBody.negate()).negate()));
+            utils::mkForallInternal(nm, bvll, matchBody).negate()));
 
     // assert:
     // IF:   n > len(s) OR 0 > n

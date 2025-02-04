@@ -219,6 +219,7 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
       {
         case Kind::STRING_SUBSTR:
         case Kind::STRING_INDEXOF:
+        case Kind::STRING_INDEXOF_RE:
         case Kind::STRING_REPLACE:
         case Kind::STRING_REPLACE_ALL:
         case Kind::STRING_REPLACE_RE:
