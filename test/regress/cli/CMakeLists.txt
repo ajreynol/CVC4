@@ -2882,6 +2882,7 @@ set(regress_1_tests
   regress1/quantifiers/dd.bug812-ieval.smt2
   regress1/quantifiers/dd_ghc_macro_quant_prenex.smt2
   regress1/quantifiers/dd_full_xor-rcons-open.smt2
+  regress1/quantifiers/dd_RNDPRE_4_28-subtype-elim.smt2
   regress1/quantifiers/ddatv-delta2.smt2
   regress1/quantifiers/dt-tc-opt-small.smt2
   regress1/quantifiers/dump-inst-i.smt2
