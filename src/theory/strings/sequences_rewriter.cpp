@@ -1045,28 +1045,28 @@ Node SequencesRewriter::rewriteViaMacroReInterUnionInclusion(const Node& node)
   return Node::null();
 }
 
-Node SequencesRewriter::rewriteViaReInterUnionInclusion(ProofRewriteRule id, const Node& n)
+Node SequencesRewriter::rewriteViaReInterUnionInclusion(ProofRewriteRule id,
+                                                        const Node& n)
 {
-  if (n.getNumChildren()!=2 || n[1].getKind()!=Kind::REGEXP_COMPLEMENT)
+  if (n.getNumChildren() != 2 || n[1].getKind() != Kind::REGEXP_COMPLEMENT)
   {
     return Node::null();
   }
   Kind k = n.getKind();
-  if (id==ProofRewriteRule::RE_INTER_INCLUSION)
+  if (id == ProofRewriteRule::RE_INTER_INCLUSION)
   {
-    if (k==Kind::REGEXP_INTER && RegExpEntail::regExpIncludes(n[1][0], n[0]))
+    if (k == Kind::REGEXP_INTER && RegExpEntail::regExpIncludes(n[1][0], n[0]))
     {
       return nodeManager()->mkNode(Kind::REGEXP_NONE);
     }
   }
   else
   {
-    Assert (id==ProofRewriteRule::RE_UNION_INCLUSION);
-    if (k==Kind::REGEXP_UNION && RegExpEntail::regExpIncludes(n[0], n[1][0]))
+    Assert(id == ProofRewriteRule::RE_UNION_INCLUSION);
+    if (k == Kind::REGEXP_UNION && RegExpEntail::regExpIncludes(n[0], n[1][0]))
     {
-      NodeManager * nm = nodeManager();
-      return nm->mkNode(Kind::REGEXP_STAR,
-                                        nm->mkNode(Kind::REGEXP_ALLCHAR));
+      NodeManager* nm = nodeManager();
+      return nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
     }
   }
   return Node::null();

@@ -828,19 +828,20 @@ bool BasicRewriteRCons::ensureProofMacroArithStringPredEntail(CDProof* cdp,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
+                                                              const Node& eq)
 {
   NodeManager* nm = nodeManager();
   Trace("brc-macro") << "Expand re inter union inclusion " << eq << std::endl;
   std::vector<Node> diff;
   std::vector<Node> rem;
   Kind k = eq[0].getKind();
-  if (k==eq[1].getKind())
+  if (k == eq[1].getKind())
   {
-    size_t i1=1;
-    for (size_t i=0, nchild = eq[0].getNumChildren(); i<nchild; i++)
+    size_t i1 = 1;
+    for (size_t i = 0, nchild = eq[0].getNumChildren(); i < nchild; i++)
     {
-      if (i1>=eq[1].getNumChildren() || eq[0][i]!=eq[1][i1])
+      if (i1 >= eq[1].getNumChildren() || eq[0][i] != eq[1][i1])
       {
         diff.push_back(eq[0][i]);
       }
@@ -850,19 +851,19 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, cons
       }
     }
     // ignore the first child
-    rem.insert(rem.end(), eq[1].begin()+1, eq[1].end());
+    rem.insert(rem.end(), eq[1].begin() + 1, eq[1].end());
   }
   else
   {
     diff.insert(diff.end(), eq[0].begin(), eq[0].end());
   }
-  if (diff.size()!=2)
+  if (diff.size() != 2)
   {
     Trace("brc-macro") << "...fail diff " << diff << std::endl;
     Assert(false);
     return false;
   }
-  if (diff[0].getKind()==Kind::REGEXP_COMPLEMENT)
+  if (diff[0].getKind() == Kind::REGEXP_COMPLEMENT)
   {
     Node tmp = diff[0];
     diff[0] = diff[1];
@@ -871,10 +872,12 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, cons
   Node d = nm->mkNode(k, diff);
   Trace("brc-macro") << "...input difference " << d << std::endl;
   // use simpler form of rule
-  ProofRewriteRule rule = k==Kind::REGEXP_INTER ? ProofRewriteRule::RE_INTER_INCLUSION : ProofRewriteRule::RE_UNION_INCLUSION;
+  ProofRewriteRule rule = k == Kind::REGEXP_INTER
+                              ? ProofRewriteRule::RE_INTER_INCLUSION
+                              : ProofRewriteRule::RE_UNION_INCLUSION;
   theory::Rewriter* rr = d_env.getRewriter();
   Node ret = rr->rewriteViaRule(rule, d);
-  if (ret.isNull() || (ret!=eq[1] && ret!=eq[1][0]))
+  if (ret.isNull() || (ret != eq[1] && ret != eq[1][0]))
   {
     Trace("brc-macro") << "...fail target " << ret << std::endl;
     Assert(false);
@@ -886,11 +889,11 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, cons
   Node r = d;
   if (!rem.empty())
   {
-    Node remr = rem.size()==1 ? rem[0] : nm->mkNode(k, rem);
+    Node remr = rem.size() == 1 ? rem[0] : nm->mkNode(k, rem);
     r = nm->mkNode(k, d, remr);
   }
   std::vector<Node> transEq;
-  if (eq[0]!=r)
+  if (eq[0] != r)
   {
     Node eqa = eq[0].eqNode(r);
     if (!cdp->addStep(eqa, ProofRule::ACI_NORM, {}, {eqa}))
@@ -921,7 +924,7 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, cons
     cdp->addTrustedStep(eqt, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
   }
   cdp->addStep(eq, ProofRule::TRANS, transEq, {});
-  return true;  
+  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroSubstrStripSymLength(CDProof* cdp,
@@ -1578,12 +1581,14 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroStrComponentCtn(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroStrComponentCtn(CDProof* cdp,
+                                                        const Node& eq)
 {
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroStrConstNCtnConcat(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroStrConstNCtnConcat(CDProof* cdp,
+                                                           const Node& eq)
 {
   return false;
 }
@@ -1633,8 +1638,7 @@ bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp,
   Node inter = nm->mkNode(Kind::REGEXP_INTER, rs, comp);
   Trace("brc-macro") << "Rewrite inclusion: " << inter << std::endl;
   theory::Rewriter* rr = d_env.getRewriter();
-  Node res =
-      rr->rewriteViaRule(ProofRewriteRule::RE_INTER_INCLUSION, inter);
+  Node res = rr->rewriteViaRule(ProofRewriteRule::RE_INTER_INCLUSION, inter);
   Trace("brc-macro") << "...returned " << res << std::endl;
   if (res.isNull())
   {
@@ -1642,8 +1646,7 @@ bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp,
     return false;
   }
   Node inclusionEq = inter.eqNode(res);
-  cdp->addTheoryRewriteStep(inclusionEq,
-                            ProofRewriteRule::RE_INTER_INCLUSION);
+  cdp->addTheoryRewriteStep(inclusionEq, ProofRewriteRule::RE_INTER_INCLUSION);
 
   Node memNeg = eq[0].notNode();
   Node memComp = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], comp);

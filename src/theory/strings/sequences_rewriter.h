@@ -141,7 +141,7 @@ class SequencesRewriter : public TheoryRewriter
    */
   Node returnRewrite(Node node, Node ret, Rewrite r);
   //-------------------- ProofRewriteRule
-public:
+ public:
   /** Rewrite based on STR_EQ_LEN_UNIFY_PREFIX */
   Node rewriteViaStrEqLenUnifyPrefix(const Node& n);
   /** Rewrite based on STR_EQ_LEN_UNIFY */
