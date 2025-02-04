@@ -29,6 +29,7 @@ const char* toString(ProofRule rule)
     case ProofRule::SUBS: return "SUBS";
     case ProofRule::MACRO_REWRITE: return "MACRO_REWRITE";
     case ProofRule::EVALUATE: return "EVALUATE";
+    case ProofRule::DISTINCT_VALUES: return "DISTINCT_VALUES";
     case ProofRule::ACI_NORM: return "ACI_NORM";
     case ProofRule::MACRO_SR_EQ_INTRO: return "MACRO_SR_EQ_INTRO";
     case ProofRule::MACRO_SR_PRED_INTRO: return "MACRO_SR_PRED_INTRO";
@@ -327,7 +328,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-str-in-re-inclusion";
     case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM:
       return "macro-re-inter-union-const-elim";
-    case ProofRewriteRule::MACRO_SEQ_EVAL_OP: return "macro-seq-eval-op";
+    case ProofRewriteRule::SEQ_EVAL_OP: return "seq-eval-op";
     case ProofRewriteRule::STR_INDEXOF_RE_EVAL: return "str-indexof-re-eval";
     case ProofRewriteRule::STR_REPLACE_RE_EVAL: return "str-replace-re-eval";
     case ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL:

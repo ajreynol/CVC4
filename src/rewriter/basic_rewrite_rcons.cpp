@@ -92,6 +92,15 @@ bool BasicRewriteRCons::prove(CDProof* cdp,
     Trace("trewrite-rcons") << "...EVALUATE" << std::endl;
     return true;
   }
+  // if (= (= c1 c2) false) where c1, c2 are distinct values
+  if (a.getKind()==Kind::EQUAL && a[0].isConst() && a[1].isConst() && b.isConst() && !b.getConst<bool>())
+  {
+    Node neq = a.eqNode(b).notNode();
+    cdp->addStep(neq, ProofRule::DISTINCT_VALUES, {}, {a[0], a[1]});
+    cdp->addStep(eq, ProofRule::FALSE_INTRO, {neq}, {});
+    Trace("trewrite-rcons") << "...DISTINCT_VALUES" << std::endl;
+    return true;
+  }
 
   // try theory rewrite (pre-rare)
   if (tmode == TheoryRewriteMode::STANDARD)

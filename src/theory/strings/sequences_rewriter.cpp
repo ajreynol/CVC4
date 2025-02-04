@@ -91,7 +91,7 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
   // as it is partly subsumed by RARE rewrites for intersection.
   registerProofRewriteRule(ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_SEQ_EVAL_OP,
+  registerProofRewriteRule(ProofRewriteRule::SEQ_EVAL_OP,
                            TheoryRewriteCtx::POST_DSL);
   // make back pointer to this (for rewriting contains)
   se.d_rewriter = this;
@@ -210,7 +210,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       return rewriteViaMacroStrInReInclusion(n);
     case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM:
       return rewriteViaMacroReInterUnionConstElim(n);
-    case ProofRewriteRule::MACRO_SEQ_EVAL_OP:
+    case ProofRewriteRule::SEQ_EVAL_OP:
     {
       // this is a catchall rule for evaluation of operations on constant
       // sequences

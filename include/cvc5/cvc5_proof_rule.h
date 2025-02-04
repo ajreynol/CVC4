@@ -174,6 +174,18 @@ enum ENUM(ProofRule)
   EVALUE(EVALUATE),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Builtin theory -- Distinct values**
+   *
+   * .. math::
+   *   \inferrule{- \mid t, s}{\neg t = s}
+   *
+   * where :math:`t` and :math:`s` are distinct values, that is,
+   * the Node::isConst method returns true for both.
+   * \endverbatim
+   */
+  EVALUE(DISTINCT_VALUES),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Builtin theory -- associative/commutative/idempotency/identity normalization**
    *
    * .. math::
@@ -3359,7 +3371,7 @@ enum ENUM(ProofRewriteRule)
    * for each, and :math:`t` is the result of evaluating :math:`f` on them.
    * \endverbatim
    */
-  EVALUE(MACRO_SEQ_EVAL_OP),
+  EVALUE(SEQ_EVAL_OP),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- string indexof regex evaluation**

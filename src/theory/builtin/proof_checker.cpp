@@ -48,6 +48,7 @@ void BuiltinProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::SCOPE, this);
   pc->registerChecker(ProofRule::SUBS, this);
   pc->registerChecker(ProofRule::EVALUATE, this);
+  pc->registerChecker(ProofRule::DISTINCT_VALUES, this);
   pc->registerChecker(ProofRule::ACI_NORM, this);
   pc->registerChecker(ProofRule::ITE_EQ, this);
   pc->registerChecker(ProofRule::ENCODE_EQ_INTRO, this);
@@ -281,6 +282,16 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
       return Node::null();
     }
     return args[0].eqNode(res);
+  }
+  else if (id == ProofRule::DISTINCT_VALUES)
+  {
+    Assert(children.empty());
+    Assert(args.size() == 2);
+    if(args[0].isConst() && args[1].isConst())
+    {
+      Assert (args[0].getType()==args[1].getType());
+      return args[0].eqNode(args[1]).notNode();
+    }
   }
   else if (id == ProofRule::ACI_NORM)
   {
