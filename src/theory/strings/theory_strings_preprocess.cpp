@@ -973,15 +973,19 @@ Node StringsPreprocess::reduce(Node t,
     Node b1 = SkolemCache::mkIndexVar(nm, t);
     Node b1v = NodeManager::mkNode(Kind::BOUND_VAR_LIST, b1);
     Node body = NodeManager::mkNode(
-        Kind::AND,
-        NodeManager::mkNode(Kind::LEQ, zero, b1),
+        Kind::OR,
+        NodeManager::mkNode(Kind::GEQ, b1, zero).notNode(),
         NodeManager::mkNode(
-            Kind::LEQ, b1, NodeManager::mkNode(Kind::SUB, lenx, lens)),
+            Kind::LEQ, b1, NodeManager::mkNode(Kind::SUB, lenx, lens)).notNode(),
         NodeManager::mkNode(
             Kind::EQUAL,
             NodeManager::mkNode(Kind::STRING_SUBSTR, x, b1, lens),
-            s));
-    retNode = utils::mkForallInternal(nm, b1v, body.negate()).negate();
+            s).notNode());
+    Node k = sc->mkTypedSkolemCached(
+        nm->booleanType(), t, SkolemCache::SK_PURIFY, "ctn");
+    Node actn = utils::mkForallInternal(nm, b1v, body).negate();
+    asserts.push_back(k.eqNode(actn));
+    retNode = k;    
   }
   else if (t.getKind() == Kind::STRING_LEQ)
   {

@@ -217,6 +217,7 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
       Kind k = pargs[0].getKind();
       switch (k)
       {
+        case Kind::STRING_CONTAINS:
         case Kind::STRING_SUBSTR:
         case Kind::STRING_INDEXOF:
         case Kind::STRING_INDEXOF_RE:
