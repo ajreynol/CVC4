@@ -151,7 +151,7 @@ public:
   /** Rewrite based on MACRO_RE_INTER_UNION_INCLUSION */
   Node rewriteViaMacroReInterUnionInclusion(const Node& n);
   /**
-   * Rewrite based on  RE_INTER_INCLUSION, or RE_UNION_INCLUSION.
+   * Rewrite based on RE_INTER_INCLUSION, or RE_UNION_INCLUSION.
    */
   Node rewriteViaReInterUnionInclusion(ProofRewriteRule id, const Node& n);
   /** Rewrite based on STR_IN_RE_EVAL */

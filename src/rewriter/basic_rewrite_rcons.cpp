@@ -244,9 +244,18 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
-    // EVALUE(MACRO_STR_COMPONENT_CTN),
-    // EVALUE(MACRO_STR_CONST_NCTN_CONCAT),
-    // EVALUE(MACRO_SEQ_EVAL_OP),
+    case ProofRewriteRule::MACRO_STR_COMPONENT_CTN:
+      if (ensureProofMacroStrComponentCtn(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
+    case ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT:
+      if (ensureProofMacroStrConstNCtnConcat(cdp, eq))
+      {
+        handledMacro = true;
+      }
+      break;
     case ProofRewriteRule::MACRO_STR_IN_RE_INCLUSION:
       if (ensureProofMacroStrInReInclusion(cdp, eq))
       {
@@ -850,6 +859,7 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, cons
   if (diff.size()!=2)
   {
     Trace("brc-macro") << "...fail diff " << diff << std::endl;
+    Assert(false);
     return false;
   }
   if (diff[0].getKind()==Kind::REGEXP_COMPLEMENT)
@@ -867,6 +877,7 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, cons
   if (ret.isNull() || (ret!=eq[1] && ret!=eq[1][0]))
   {
     Trace("brc-macro") << "...fail target " << ret << std::endl;
+    Assert(false);
     return false;
   }
   Node equiv = d.eqNode(ret);
@@ -885,6 +896,7 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp, cons
     if (!cdp->addStep(eqa, ProofRule::ACI_NORM, {}, {eqa}))
     {
       Trace("brc-macro") << "...fail aci norm " << eqa << std::endl;
+      Assert(false);
       return false;
     }
     Trace("brc-macro") << "...aci norm " << eqa << std::endl;
@@ -1566,10 +1578,19 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
   return true;
 }
 
+bool BasicRewriteRCons::ensureProofMacroStrComponentCtn(CDProof* cdp, const Node& eq)
+{
+  return false;
+}
+
+bool BasicRewriteRCons::ensureProofMacroStrConstNCtnConcat(CDProof* cdp, const Node& eq)
+{
+  return false;
+}
+
 bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp,
                                                          const Node& eq)
 {
-  return false;
   Trace("brc-macro") << "Expand macro str in re inclusion for " << eq
                      << std::endl;
   Assert(eq[0].getKind() == Kind::STRING_IN_REGEXP);
