@@ -3434,7 +3434,31 @@ enum ENUM(ProofRewriteRule)
    *
    * \endverbatim
    */
-  EVALUE(RE_INTER_UNION_INCLUSION),
+  EVALUE(MACRO_RE_INTER_UNION_INCLUSION),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- regular expression intersection inclusion**
+   *
+   * .. math::
+   *   \mathit{re.inter}(r_1, re.comp(r_2)) = \mathit{re.none}
+   *
+   * where :math:`r_2` is a superset of :math:`r_1`.
+   *
+   * \endverbatim
+   */
+  EVALUE(RE_INTER_INCLUSION),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Strings -- regular expression union inclusion**
+   *
+   * .. math::
+   *   \mathit{re.union}(r_1, re.comp(r_2)) = \mathit{re}.\text{*}(\mathit{re.allchar})
+   *
+   * where :math:`r_1` is a superset of :math:`r_2`.
+   *
+   * \endverbatim
+   */
+  EVALUE(RE_UNION_INCLUSION),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- regular expression membership evaluation**
