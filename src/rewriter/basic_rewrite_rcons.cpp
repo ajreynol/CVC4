@@ -1382,7 +1382,6 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
   NodeManager* nm = nodeManager();
   Assert(eq[0].getNumChildren() >= 2);
   Node concat = eq[0][0];
-  Assert(concat.getKind() == Kind::STRING_CONCAT);
   TypeNode stype = concat.getType();
   Node emp = theory::strings::Word::mkEmptyWord(stype);
   size_t nchildpre = 0;
@@ -1390,6 +1389,7 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
   std::vector<Node> premises;
   if (id == ProofRewriteRule::MACRO_STR_SPLIT_CTN)
   {
+    Assert(concat.getKind() == Kind::STRING_CONCAT);
     rule = ProofRewriteRule::STR_OVERLAP_SPLIT_CTN;
     Assert(eq[1].getKind() == Kind::OR
            && eq[1][0].getKind() == Kind::STRING_CONTAINS);
