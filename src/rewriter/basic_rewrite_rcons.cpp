@@ -2987,25 +2987,6 @@ bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp,
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp,
-                                                          const Node& eq)
-{
-  Trace("brc-macro") << "Expand arrays normalize op " << eq << std::endl;
-  TConvProofGenerator tcpg(d_env, nullptr, TConvPolicy::FIXPOINT);
-  theory::arrays::TheoryArraysRewriter arew(nodeManager(), d_env.getRewriter());
-  Node nr = arew.computeNormalizeOp(eq[0], &tcpg);
-  std::shared_ptr<ProofNode> pfn = tcpg.getProofForRewriting(eq[0]);
-  if (pfn->getResult() == eq)
-  {
-    Trace("brc-macro") << "...proof is " << *pfn.get() << std::endl;
-    cdp->addProof(pfn);
-    return true;
-  }
-  Trace("brc-macro") << "...failed, got " << pfn->getResult()[1] << std::endl;
-  Assert(false);
-  return false;
-}
-
 bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp,
                                                              const Node& eq)
 {
