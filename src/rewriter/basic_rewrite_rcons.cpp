@@ -842,6 +842,8 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
 {
   NodeManager* nm = nodeManager();
   Trace("brc-macro") << "Expand re inter union inclusion " << eq << std::endl;
+  // partition eq[0] in the portion responsible for the rewrite which was
+  // removed from eq[1] (diff) and the remainder (rem).
   std::vector<Node> diff;
   std::vector<Node> rem;
   Kind k = eq[0].getKind();
@@ -866,12 +868,14 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
   {
     diff.insert(diff.end(), eq[0].begin(), eq[0].end());
   }
+  // should have found 2 regular expressions in the difference
   if (diff.size() != 2)
   {
     Trace("brc-macro") << "...fail diff " << diff << std::endl;
     Assert(false);
     return false;
   }
+  // reorient so complement is second
   if (diff[0].getKind() == Kind::REGEXP_COMPLEMENT)
   {
     Node tmp = diff[0];
@@ -880,7 +884,7 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
   }
   Node d = nm->mkNode(k, diff);
   Trace("brc-macro") << "...input difference " << d << std::endl;
-  // use simpler form of rule
+  // use simpler form of rule on diff.
   ProofRewriteRule rule = k == Kind::REGEXP_INTER
                               ? ProofRewriteRule::RE_INTER_INCLUSION
                               : ProofRewriteRule::RE_UNION_INCLUSION;
@@ -895,6 +899,7 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
   Node equiv = d.eqNode(ret);
   Trace("brc-macro") << "... successfully proven " << equiv << std::endl;
   cdp->addTheoryRewriteStep(equiv, rule);
+  // prove we can group eq[0] into (<op> diff rem).
   Node r = d;
   if (!rem.empty())
   {
@@ -914,6 +919,8 @@ bool BasicRewriteRCons::ensureProofMacroReInterUnionInclusion(CDProof* cdp,
     Trace("brc-macro") << "...aci norm " << eqa << std::endl;
     transEq.push_back(eqa);
   }
+  // finally, prove that the result of (<op> diff' rem) is eq[1], where
+  // diff' is the result of applying rule.
   if (rem.empty())
   {
     transEq.push_back(equiv);
