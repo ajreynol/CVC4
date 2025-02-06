@@ -32,6 +32,7 @@
   (
   (($set_is_not_subset (set.empty (Set T)) s)                                 false)
   (($set_is_not_subset (set.singleton e1) (set.empty (Set T)))                true)
+  (($set_is_not_subset (set.singleton e1) (set.singleton e2))                 ($are_distinct_terms e1 e2))
   (($set_is_not_subset (set.singleton e1) (set.union (set.singleton e2) ss))  (eo::ite ($are_distinct_terms e1 e2)
                                                                                 ($set_is_not_subset (set.singleton e1) ss)
                                                                                 false))
@@ -106,7 +107,7 @@
   (T @List Type) Bool
   (
   (($are_distinct_terms_list_rec t (@list s xs) T)  (eo::ite ($are_distinct_terms_type t s T)
-                                                      ($are_distinct_terms_list_rec t xs)
+                                                      ($are_distinct_terms_list_rec t xs T)
                                                       false))
   (($are_distinct_terms_list_rec t @list.nil T)     true)
   )
@@ -117,7 +118,7 @@
   (
   (($are_distinct_terms_list @list.nil T)     true)
   (($are_distinct_terms_list (@list t xs) T)  (eo::ite ($are_distinct_terms_list_rec t xs T)
-                                                ($are_distinct_terms_list xs)
+                                                ($are_distinct_terms_list xs T)
                                                 false))
   )
 )

@@ -311,7 +311,7 @@
 ; - s U: The second term.
 ; requires: Showing that t and s are distinct terms based on reasoning about values.
 ; conclusion: The term t is not equal to s.
-(declare-rule evaluate ((U Type) (t U))
+(declare-rule distinct_values ((U Type) (t U) (s U))
   :args (t s)
   :requires ((($are_distinct_terms t s) true))
   :conclusion (not (= t s))
