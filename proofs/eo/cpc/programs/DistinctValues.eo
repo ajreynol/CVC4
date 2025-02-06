@@ -13,9 +13,22 @@
 ; note: This is a forward declaration of $are_distinct_terms_list below.
 (program $are_distinct_terms_list () (@List Type) Bool)
 
+; define: $are_distinct_terms
+; args:
+; - t T: The first term.
+; - s T: The second term.
+; return: >
+;   True if we can shown that t and s are semantically distinct, e.g. (not (= t s)) holds.
 (define $are_distinct_terms ((T Type :implicit) (t T) (s T))
   (eo::ite (eo::is_eq t s) false ($are_distinct_terms_list (@list t s) (eo::typeof t))))
 
+; program: $some_pairwise_distinct_term
+; args:
+; - ts T: The first list of terms.
+; - ss T: The second list of terms.
+; return: >
+;   True if there is some term in ts and ss at the same position which can be shown to be semantically distinct.
+;   This program expects ts and ss to be of the same length.
 (program $some_pairwise_distinct_term ((U Type) (t U) (s U) (ts @List :list) (ss @List :list))
   (@List @List) Bool
   (
@@ -27,6 +40,14 @@
   )
 )
 
+;;;;; Theory of sets
+
+; program: $set_is_not_subset
+; args:
+; - t (Set T): The first set terms.
+; - s (Set T): The second set terms.
+; return: >
+;   True if we can show that t is not a subset of s based on reasoning about values.
 (program $set_is_not_subset ((T Type) (t (Set T)) (ts (Set T) :list) (s (Set T)) (ss (Set T) :list) (e1 T) (e2 T))
   ((Set T) (Set T)) Bool
   (
@@ -43,10 +64,12 @@
   )
 )
 
+;;;;; Theory of sequences
+
 ; define: $seq_distinct_terms
 ; args:
-; - t T: The left hand side of the equality.
-; - s T: The right hand side of the equality.
+; - t (Seq T): The first term.
+; - s (Seq T): The second term.
 ; return: >
 ;   True if we can derive that t and s are distinct based on their length,
 ;   or by a character prefix that can be shown distinct.
@@ -61,13 +84,16 @@
   )
 )
 
+;;;;; Theory of datatypes
+
 ; define: $dt_distinct_terms
 ; args:
-; - t T: The left hand side of the equality.
-; - s T: The right hand side of the equality.
+; - t T: The first term, expected to be of datatype type.
+; - s T: The second term, expected to be of datatype type.
 ; return: >
-;   True if we can derive a conflict based on finding subterms (beneath
-;   constructor applications) that have denote distinct terms.
+;   True if we can show that t and s denote distinct terms. This is true
+;   if t and s are distinct constructor applications, or are applications
+;   of the same constructor and one of their arguments can be shown distinct.
 (define $dt_distinct_terms ((T Type :implicit) (t T) (s T))
   (eo::define ((ct ($get_fun t)))
   (eo::define ((cs ($get_fun s)))
@@ -80,13 +106,16 @@
     false)))
 )
 
-;(program $array_distinct_terms ((U Type) (W Type) (a (Array U W)) (b (Array U W)))
-;  ((Array U W) (Array U W)) Bool
-;  (
-;  (($array_distinct_terms a b) false)
-;  )
-;)
 
+;;;;; Definitions
+
+; define: $are_distinct_terms_type
+; args:
+; - t T: The first term.
+; - s T: The second term.
+; - T Type: The type of the arguments.
+; return: >
+;   True if we can shown that t and s are semantically distinct, e.g. (not (= t s)) holds.
 (program $are_distinct_terms_type ((T Type) (t T) (s T) (U Type) (W Type) (n Int))
   (T T Type) Bool
   (
@@ -98,11 +127,17 @@
   (($are_distinct_terms_type t s Bool)        (eo::and (eo::is_bool t) (eo::is_bool s)))
   (($are_distinct_terms_type t s (Set U))     (eo::or ($set_is_not_subset t s) ($set_is_not_subset s t)))
   (($are_distinct_terms_type t s (Seq U))     ($seq_distinct_terms ($str_to_flat_form t false) ($str_to_flat_form s false)))
-  ;(($are_distinct_terms_type t s (Array U W)) ($array_distinct_terms t s))
   (($are_distinct_terms_type t s T)           ($dt_distinct_terms t s)) ; otherwise assume we are a user datatype
   )
 )
 
+; define: $are_distinct_terms_list_rec
+; args:
+; - t T: The term.
+; - xs @List: A list of terms, each expected to be of type T.
+; - T Type: The type of the arguments.
+; return: >
+;   True if t can be shown to be disequal from all terms in xs.
 (program $are_distinct_terms_list_rec ((T Type) (t T) (s T) (xs @List :list))
   (T @List Type) Bool
   (
@@ -113,6 +148,12 @@
   )
 )
 
+; define: $are_distinct_terms_list_rec
+; args:
+; - xs @List: A list of terms, each expected to be of type T.
+; - T Type: The type of the terms in the list.
+; return: >
+;   True if each pair of terms in xs can be shown to be pairwise disequal.
 (program $are_distinct_terms_list ((T Type) (t T) (xs @List :list))
   (@List Type) Bool
   (
