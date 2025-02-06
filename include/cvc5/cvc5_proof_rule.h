@@ -179,8 +179,10 @@ enum ENUM(ProofRule)
    * .. math::
    *   \inferrule{- \mid t, s}{\neg t = s}
    *
-   * where :math:`t` and :math:`s` are distinct values, that is,
-   * the Node::isConst method returns true for both.
+   * where :math:`t` and :math:`s` are distinct values.
+   *
+   * Internally, this means the Node::isConst method returns true for both,
+   * indicating that are canonical representations of values of their sort.
    * \endverbatim
    */
   EVALUE(DISTINCT_VALUES),
