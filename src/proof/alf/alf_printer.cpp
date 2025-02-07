@@ -320,7 +320,7 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::BV_REPEAT_ELIM:
     case ProofRewriteRule::BV_BITWISE_SLICING: return true;
     case ProofRewriteRule::SETS_EVAL_OP:
-      return n[0][0].getKind()==Kind::SET_UNION;
+      return n[0].getKind()==Kind::SET_UNION;
     case ProofRewriteRule::STR_OVERLAP_SPLIT_CTN:
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_CTN:
     case ProofRewriteRule::STR_OVERLAP_ENDPOINTS_INDEXOF:
