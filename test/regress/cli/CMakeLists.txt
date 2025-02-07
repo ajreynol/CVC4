@@ -1964,6 +1964,7 @@ set(regress_0_tests
   regress0/strings/more-eval-tests.smt2
   regress0/strings/ncontrib-rewrites.smt2
   regress0/strings/nctn-concat.smt2
+  regress0/strings/nctn-concat-eq.smt2
   regress0/strings/norn-31.smt2
   regress0/strings/norn-benchmark-489.smt2
   regress0/strings/norn-simp-rew.smt2
