@@ -1582,12 +1582,28 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
 bool BasicRewriteRCons::ensureProofMacroStrComponentCtn(CDProof* cdp,
                                                         const Node& eq)
 {
+  Trace("brc-macro") << "Expand macro str component ctn " << eq
+                     << std::endl;
+  Assert (eq[0].getKind()==Kind::STRING_CONTAINS);
+  theory::strings::ArithEntail ae(nullptr);
+  theory::strings::StringsEntail se(nullptr, ae);
+  std::vector<Node> nc1, nc2;
+  theory::strings::utils::getConcat(eq[0][0], nc1);
+  theory::strings::utils::getConcat(eq[0][1], nc2);
+  std::vector<Node> nc1rb, nc1re;
+  if (se.componentContains(nc1, nc2, nc1rb, nc1re,true) == -1)
+  {
+    return false;
+  }
+  Trace("brc-macro") << "...paritioned to " << nc1rb << " " << nc1 << " " << nc1re << std::endl;
   return false;
 }
 
 bool BasicRewriteRCons::ensureProofMacroStrConstNCtnConcat(CDProof* cdp,
                                                            const Node& eq)
 {
+  Trace("brc-macro") << "Expand macro str const nctn concat " << eq
+                     << std::endl;
   return false;
 }
 
