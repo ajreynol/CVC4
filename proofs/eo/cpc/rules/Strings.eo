@@ -168,57 +168,26 @@
 ;   An equality involving the given child of t. In particular, we infer what
 ;   portion of the prefix (resp. suffix) it is entailed to be based on
 ;   reasoning about adjacent constants.
-;(declare-rule concat_cprop ((U Type) (t (Seq U)) (tc (Seq U)) (s (Seq U)) (rev Bool))
-;  :premises ((= t s) (not (= (str.len tc) 0)))
-;  :args (rev)
-;  :conclusion
-;    (eo::define ((tn ($str_to_nary_form t rev)))
-;    (eo::define ((t1 ($str_head tn)))
-;    (eo::define ((t2 (eo::list_nth str.++ tn 1))) ; get the second component
-;    (eo::define ((s1 ($str_head ($str_to_nary_form s rev))))
-;      (eo::requires t1 tc
-;      (eo::define ((s1len (eo::len s1)))
-;      (eo::define ((s1s (eo::ite rev (eo::extract s1 0 (eo::add s1len -2)) (eo::extract s1 1 s1len))))  ; remove one character from s1
-;      (eo::requires ($str_has_overlap s1s t2 rev) false   ; no overlap
-;        (= tc
-;          (eo::ite rev
-;            (str.++ (@purify ($str_prefix tc ($arith_mk_binary_minus (str.len tc) (str.len s1)))) s1)
-;            (str.++ s1 (@purify ($str_suffix_rem tc (str.len s1))))))))))))))
-;)
-
-
-; rule: concat_cprop
-; implements: ProofRule::CONCAT_CPROP
-; premises:
-; - eq: An equality between strings t and s.
-; - ldeq: A disequality stating the first (resp. last) child of t is non-empty.
-; args:
-; - rev Bool: Whether we are reasoning about the end of strings t and s.
-; conclusion: >
-;   An equality involving the given child of t. In particular, we infer what
-;   portion of the prefix (resp. suffix) it is entailed to be based on
-;   reasoning about adjacent constants.
 (declare-rule concat_cprop ((U Type) (t (Seq U)) (tc (Seq U)) (s (Seq U)) (rev Bool))
   :premises ((= t s) (not (= (str.len tc) 0)))
   :args (rev)
   :conclusion
-    (eo::match ((t1 (Seq U)) (t2 (Seq U)) (t3 (Seq U) :list))
-      ($str_rev rev t)
-      (((str.++ t1 t2 t3)
-        (eo::requires t1 tc
-          (eo::match ((s1 (Seq U)) (s2 (Seq U) :list))
-            ($str_rev rev ($str_nary_intro s))  ; must do nary intro when s is just a constant
-            (((str.++ s1 s2)
-                (eo::define ((sc ($str_to_flat_form s1 rev)))
-                (eo::define ((v (eo::add 1 ($str_overlap ($tail sc) ($str_to_flat_form t2 rev)))))
-                  (= tc
-                    (eo::ite rev
-                      (eo::define ((oc ($str_suffix s1 v)))
-                      (str.++ (@purify ($str_prefix tc ($arith_mk_binary_minus (str.len tc) (str.len oc)))) oc))
-                      (eo::define ((oc ($str_prefix s1 v)))
-                      (str.++ oc (@purify ($str_suffix_rem tc (str.len oc)))))))
-                )))))))))
+    (eo::define ((tn ($str_to_nary_form t rev)))
+    (eo::define ((t1 ($str_head tn)))
+    (eo::define ((t2 (eo::list_nth str.++ tn 1))) ; get the second component
+    (eo::define ((s1 ($str_head ($str_to_nary_form s rev))))
+    (eo::define ((s1len (eo::len s1)))
+    (eo::define ((s1s (eo::ite rev (eo::extract s1 0 (eo::add s1len -2)) (eo::extract s1 1 s1len))))  ; remove one character from s1
+    (eo::define ((v (eo::add 1 ($str_overlap s1s t2 rev)))) ; get the overlap, plus one
+      (eo::requires t1 tc
+          (= tc
+            (eo::ite rev
+              (eo::define ((oc ($str_suffix s1 v)))
+              (str.++ (@purify ($str_prefix tc ($arith_mk_binary_minus (str.len tc) (str.len oc)))) oc))
+              (eo::define ((oc ($str_prefix s1 v)))
+              (str.++ oc (@purify ($str_suffix_rem tc (str.len oc)))))))))))))))
 )
+
 ; rule: concat_conflict
 ; implements: ProofRule::CONCAT_CONFLICT
 ; premises:
