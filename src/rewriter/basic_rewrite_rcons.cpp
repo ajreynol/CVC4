@@ -1596,7 +1596,40 @@ bool BasicRewriteRCons::ensureProofMacroStrComponentCtn(CDProof* cdp,
     return false;
   }
   Trace("brc-macro") << "...paritioned to " << nc1rb << " " << nc1 << " " << nc1re << std::endl;
-  return false;
+  // group the LHS so that it contains the RHS verbatim as the middle child
+  // for example (str.contains (str.++ x y z w) (str.++ y z)) --->
+  // (str.contains (str.++ x (str.++ y z) w) (str.++ y z))
+  TypeNode stype = eq[0][0].getType();
+  NodeManager * nm = nodeManager();
+  std::vector<Node> cc;
+  if (!nc1rb.empty())
+  {
+    cc.push_back(theory::strings::utils::mkConcat(nc1rb, stype));
+  }
+  if (!nc1.empty())
+  {
+    cc.push_back(theory::strings::utils::mkConcat(nc1, stype));
+  }
+  if (!nc1re.empty())
+  {
+    cc.push_back( theory::strings::utils::mkConcat(nc1re, stype));
+  }
+  Node cg = theory::strings::utils::mkConcat(cc, stype);
+  Node equiv = eq[0][0].eqNode(cg);
+  cdp->addTrustedStep(
+      equiv, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+  std::vector<Node> cargs;
+  ProofRule cr = expr::getCongRule(eq[0], cargs);
+  Node refl = eq[0][1].eqNode(eq[0][1]);
+  Node ctng = nm->mkNode(Kind::STRING_CONTAINS, cg, eq[0][1]);
+  Node eq1 = eq[0].eqNode(ctng);
+  cdp->addStep(refl, ProofRule::REFL, {}, {eq[0][1]});
+  cdp->addStep(eq1, cr, {equiv, refl}, cargs);  
+  Node eq2 = ctng.eqNode(eq[1]);
+  cdp->addTrustedStep(
+      eq2, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+  cdp->addStep(eq, ProofRule::TRANS, {eq1, eq2}, {});
+  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroStrConstNCtnConcat(CDProof* cdp,
@@ -1604,6 +1637,42 @@ bool BasicRewriteRCons::ensureProofMacroStrConstNCtnConcat(CDProof* cdp,
 {
   Trace("brc-macro") << "Expand macro str const nctn concat " << eq
                      << std::endl;
+  Assert (eq[0].getKind()==Kind::STRING_CONTAINS);
+  Node c = eq[0][0];
+  Node curr = eq[0][1];
+  Assert (curr.getKind()==Kind::STRING_CONCAT);
+  TypeNode stype = c.getType();
+  Node emp = theory::strings::Word::mkEmptyWord(stype);
+  /*
+  bool success = false;
+  do
+  {
+    size_t start = 0;
+    if (curr[start].isConst())
+    {
+      std::size_t i = Word::find(c, curr[start], 0);
+      if (i==std::string::npos)
+      {
+        Node equiv = nm->mkNode(Kind::STRING_CONTAINS, c, curr).eqNode(eq[1]);
+        cdp->addStep(equiv, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+        success = true;
+      }
+      else if (i==0)
+      {
+      }
+      else
+      {
+        // otherwise strip contains?
+        Node s = nm->mkNode(Kind::STRING_CONCAT, theory::strings::Word::prefix(c,i), theory::strings::Word::suffix(c,
+      }
+    }
+  }
+  while (!success);
+  */
+  
+  
+                     
+                     
   return false;
 }
 
