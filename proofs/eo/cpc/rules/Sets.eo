@@ -1,38 +1,5 @@
 (include "../theories/Sets.eo")
 
-;;;;; ProofRewriteRule::SETS_IS_EMPTY_EVAL
-
-; define: $set_is_empty_eval
-; args:
-; - t (Set T): The set to check.
-; return: >
-;   true if we can determine that t is the empty set, false if we can
-;   determine t is not empty. Otherwise this method returns an unevaluated term.
-(define $set_is_empty_eval ((T Type :implicit) (t (Set T)))
-  (eo::match ((U Type) (x U) (s (Set U)))
-    t
-    (
-    ((set.empty U) true)
-    ((set.singleton x) false)
-    ((set.union (set.singleton x) s) false)
-    )
-  )
-)
-
-; rule: sets-is-empty-eval
-; implements: ProofRewriteRule::SETS_IS_EMPTY_EVAL
-; args:
-; - eq Bool: The equality to prove, whose left hand side is an application of set.is_empty.
-; requires: >
-;   showing that the set that set.is_empty is applied to is (or is not) the
-;   empty set, as denoted by the right hand side of eq.
-; conclusion: The given equality.
-(declare-rule sets-is-empty-eval ((T Type) (t (Set T)) (b Bool))
-  :args ((= (set.is_empty t) b))
-  :requires ((($set_is_empty_eval t) b))
-  :conclusion (= (set.is_empty t) b)
-)
-
 ;;;;; ProofRule::SETS_SINGLETON_INJ
 
 ; rule: sets_singleton_inj
@@ -59,35 +26,42 @@
   :conclusion (not (= (set.member (@sets_deq_diff a b) a) (set.member (@sets_deq_diff a b) b)))
 )
 
-;;;;; ProofRewriteRule::SETS_UNION_NORM
+;;;;; ProofRewriteRule::SETS_EVAL_OP
 
 ; program: $set_union_to_list
 ; args:
 ; - s (Set T): The set to process.
 ; return: >
 ;   A list of sets, whose union is equal to s.
-(program $set_union_to_list ((T Type) (s (Set T)) (t (Set T)))
+(program $set_union_to_list ((T Type) (s (Set T)) (t (Set T)) (e T))
   ((Set T)) @List
   (
     (($set_union_to_list (set.union s t))     (eo::list_concat @list ($set_union_to_list s) ($set_union_to_list t)))
     (($set_union_to_list (set.empty (Set T))) @list.nil)
-    (($set_union_to_list s)                   (eo::cons @list s @list.nil))
+    (($set_union_to_list (set.singleton e))   (eo::cons @list e @list.nil))
   )
 )
 
-; rule: sets-union-norm
-; implements: ProofRewriteRule::SETS_UNION_NORM
+(program $eval_sets_op ((T Type) (s (Set T)) (t (Set T)) (r (Set T)))
+  ((Set T)) @List
+  (
+    (($eval_sets_op (set.union s t)) (eo::list_concat @list ($set_union_to_list s) ($set_union_to_list t)))
+  )
+)
+
+; rule: sets-eval-op
+; implements: ProofRewriteRule::SETS_EVAL_OP
 ; args:
-; - eq Bool: The equality to prove with this rule between sets (set.union a b) and c.
+; - eq Bool: The equality to prove with this rule between sets a and b.
 ; requires: >
-;   The union of the elements of a and b is equivalent to the elements of c.
+;   The elements in the result of evaluating a are equivalent to those in b.
 ; conclusion: The given equality.
-(declare-rule sets-union-norm ((T Type) (a (Set T)) (b (Set T)) (c (Set T)))
-  :args ((= (set.union a b) c))
+(declare-rule sets-eval-op ((T Type) (a (Set T)) (b (Set T)))
+  :args ((= a b))
   :requires ((($nary_is_eq_set @list @list.nil
-                (eo::list_concat @list ($set_union_to_list a) ($set_union_to_list b))
-                ($set_union_to_list c)) true))
-  :conclusion (= (set.union a b) c)
+                ($eval_sets_op a)
+                ($set_union_to_list b)) true))
+  :conclusion (= a b)
 )
 
 ;;;;; ProofRewriteRule::SETS_INSERT_ELIM

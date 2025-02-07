@@ -355,24 +355,6 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(
         handledMacro = true;
       }
       break;
-    case ProofRewriteRule::MACRO_SETS_DISTINCT_SETS:
-      if (ensureProofMacroSetsDistinctSets(cdp, eq))
-      {
-        handledMacro = true;
-      }
-      break;
-    case ProofRewriteRule::MACRO_SETS_INTER_EVAL:
-      if (ensureProofMacroSetsInterEval(cdp, eq))
-      {
-        handledMacro = true;
-      }
-      break;
-    case ProofRewriteRule::MACRO_SETS_MINUS_EVAL:
-      if (ensureProofMacroSetsMinusEval(cdp, eq))
-      {
-        handledMacro = true;
-      }
-      break;
     default: break;
   }
   if (handledMacro)
@@ -3071,25 +3053,6 @@ bool BasicRewriteRCons::ensureProofMacroArraysDistinctArrays(CDProof* cdp,
 
 bool BasicRewriteRCons::ensureProofMacroArraysNormalizeConstant(CDProof* cdp,
                                                                 const Node& eq)
-{
-  // TODO
-  return false;
-}
-
-bool BasicRewriteRCons::ensureProofMacroSetsDistinctSets(CDProof* cdp,
-                                                         const Node& eq)
-{
-  // TODO
-  return false;
-}
-bool BasicRewriteRCons::ensureProofMacroSetsInterEval(CDProof* cdp,
-                                                      const Node& eq)
-{
-  // TODO
-  return false;
-}
-bool BasicRewriteRCons::ensureProofMacroSetsMinusEval(CDProof* cdp,
-                                                      const Node& eq)
 {
   // TODO
   return false;

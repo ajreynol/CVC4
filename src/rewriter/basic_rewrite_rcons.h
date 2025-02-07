@@ -408,36 +408,6 @@ class BasicRewriteRCons : protected EnvObj
    */
   bool ensureProofMacroArraysNormalizeConstant(CDProof* cdp, const Node& eq);
   /**
-   * Elaborate a rewrite eq that was proven by
-   * ProofRewriteRule::MACRO_SETS_DISTINCT_SETS.
-   *
-   * @param cdp The proof to add to.
-   * @param eq The rewrite proven by
-   * ProofRewriteRule::MACRO_SETS_DISTINCT_SETS.
-   * @return true if added a closed proof of eq to cdp.
-   */
-  bool ensureProofMacroSetsDistinctSets(CDProof* cdp, const Node& eq);
-  /**
-   * Elaborate a rewrite eq that was proven by
-   * ProofRewriteRule::MACRO_SETS_INTER_EVAL.
-   *
-   * @param cdp The proof to add to.
-   * @param eq The rewrite proven by
-   * ProofRewriteRule::MACRO_SETS_INTER_EVAL.
-   * @return true if added a closed proof of eq to cdp.
-   */
-  bool ensureProofMacroSetsInterEval(CDProof* cdp, const Node& eq);
-  /**
-   * Elaborate a rewrite eq that was proven by
-   * ProofRewriteRule::MACRO_SETS_MINUS_EVAL.
-   *
-   * @param cdp The proof to add to.
-   * @param eq The rewrite proven by
-   * ProofRewriteRule::MACRO_SETS_MINUS_EVAL.
-   * @return true if added a closed proof of eq to cdp.
-   */
-  bool ensureProofMacroSetsMinusEval(CDProof* cdp, const Node& eq);
-  /**
    * @param cdp The proof to add to.
    * @param eq The rewrite that can be proven by ProofRule::ARITH_POLY_NORM_REL.
    * @return true if added a closed proof of eq to cdp.
