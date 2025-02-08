@@ -4,6 +4,7 @@
 (include "../theories/Strings.eo")
 (include "../programs/Nary.eo")
 (include "../programs/PolyNorm.eo")
+(include "../programs/SeqToString.eo")
 
 ; This signature is used for both strings and sequences, where we often
 ; write "string" in the documentation to refer to a string or sequence,
@@ -1742,7 +1743,9 @@
 (define $str_has_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)) (rev Bool))
   ; Note that $str_overlap with always return a value <= the length of s.
   ; There is overlap only when it is strictly less than the length of s.
-  (eo::gt (eo::len s) ($str_overlap s t rev)))
+  (eo::define ((sts ($seq_to_string s)))
+  (eo::define ((tts ($seq_to_string t)))
+  (eo::gt (eo::len sts) ($str_overlap sts tts rev)))))
 
 ;;;;; evaluation utils
 

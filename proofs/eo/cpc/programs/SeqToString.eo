@@ -1,12 +1,12 @@
 (include "../theories/Datatypes.eo")
 
-(include "Strings.eo")
 (include "DistinctValues.eo")
-(include "Quantifiers.eo")
 
-(program $seq_to_string_rec ((T Type) (t T) (ss (Seq T) :list) (s String) (units @List :list) (chars @List :list) (n Int))
+(program $seq_to_string_rec ((T Type) (t T) (ss (Seq T) :list) (s String) (units @List) (chars @List) (n Int))
   ((Seq T) String @List @List Int) (Tuple String @List @List)
   (
+    (($seq_to_string_rec (seq.unit t) s units chars n)              (eo::define ((u (seq.unit t)))
+                                                                    ($seq_to_string_rec (eo::cons seq.++ u (@seq.empty (eo::typeof u))) s units chars n)))
     (($seq_to_string_rec (seq.++ (seq.unit t) ss) s units chars n)  (eo::define ((u (seq.unit t)))
                                                                     (eo::define ((id (eo::list_find @list units u)))
                                                                     (eo::ite (eo::is_neg id)
@@ -25,14 +25,20 @@
                                                                         ($seq_to_string_rec
                                                                           ss
                                                                           (eo::concat nchar s)
-                                                                          (@list u units)
-                                                                          (@list nchar chars)
+                                                                          (eo::cons @list u units)
+                                                                          (eo::cons @list nchar chars)
                                                                           (eo::add n 1))))))))
     (($seq_to_string_rec (@seq.empty T) s units chars n)            (tuple s units chars))
   )
 )
 
-(define $seq_to_string ((T Type) (s (Seq T))) ($seq_to_string_rec s "" @list.nil @list.nil 0))
+(define $seq_to_string ((T Type :implicit) (s (Seq T)))
+  (eo::ite (eo::is_str s)
+    s   ; may already be a string
+    (eo::match ((ss String) (nunits @List) (nchars @List))
+      ($seq_to_string_rec s "" @list.nil @list.nil 0)
+      (((tuple ss nunits nchars) ss)))))
+
 
 (program $seq_to_string_op_rec ((U Type) (T Type) (f (-> T U)) (a T) (units @List) (chars @List))
   (T @List @List) (Tuple T @List @List)
@@ -49,6 +55,7 @@
   )
 )
 
-(define $string_to_seq ((s String) (units @List) (chars @List))
-  ($substitute_list ($str_flatten_word s) chars units))
-
+;(include "Strings.eo")
+;(include "Quantifiers.eo")
+;(define $string_to_seq ((s String) (units @List) (chars @List))
+;  ($substitute_list ($str_flatten_word s) chars units))
