@@ -1869,7 +1869,9 @@ set(regress_0_tests
   regress0/strings/code-eval.smt2
   regress0/strings/code-perf.smt2
   regress0/strings/code-sat-neg-one.smt2
+  regress0/strings/com-ctn.smt2
   regress0/strings/complement-simple.smt2
+  regress0/strings/cprop-splice.smt2
   regress0/strings/ctn-decompose-3-sym.smt2
   regress0/strings/ctn-decompose-3-sym-nf.smt2
   regress0/strings/ctn-repl-to-ctn.smt2 
@@ -1961,6 +1963,8 @@ set(regress_0_tests
   regress0/strings/model001.smt2
   regress0/strings/more-eval-tests.smt2
   regress0/strings/ncontrib-rewrites.smt2
+  regress0/strings/nctn-concat.smt2
+  regress0/strings/nctn-concat-eq.smt2
   regress0/strings/norn-31.smt2
   regress0/strings/norn-benchmark-489.smt2
   regress0/strings/norn-simp-rew.smt2

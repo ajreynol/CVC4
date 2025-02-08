@@ -84,7 +84,7 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_COMPONENT_CTN,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT,
-                           TheoryRewriteCtx::POST_DSL);
+                           TheoryRewriteCtx::DSL_SUBCALL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_IN_RE_INCLUSION,
                            TheoryRewriteCtx::POST_DSL);
   // MACRO_RE_INTER_UNION_CONST_ELIM should always be called at post-dsl
