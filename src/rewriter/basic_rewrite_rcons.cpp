@@ -1797,38 +1797,14 @@ bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp,
   Assert(truen.isConst() && truen.getConst<bool>());
   // proof by contradiction
 
-  std::vector<Node> cc;
-  theory::strings::utils::getConcat(eq[0][0], cc);
-  std::vector<Node> rchildren;
-  for (const Node& nc : cc)
-  {
-    rchildren.push_back(nm->mkNode(Kind::STRING_TO_REGEXP, nc));
-  }
-  Node rs = nm->mkNode(Kind::REGEXP_CONCAT, rchildren);
-  Node rst = nm->mkNode(Kind::STRING_TO_REGEXP, eq[0][0]);
-  Node req = rs.eqNode(rst);
-  Trace("brc-macro") << "Subgoal, sym regex: " << req << std::endl;
-  cdp->addTrustedStep(req, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+  // start by proving e.g.
+  // (str.in_re (str.++ x "A" y) (re.++ Sigma* (str.to_re "A") Sigma*))
+  Node trivMemc = proveGeneralReMembership(cdp, eq[0][0]);
+  Trace("brc-macro") << "Trivial membership: " << trivMemc << std::endl;
 
-  Node trivMem = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], rst);
-  Node tmeq = trivMem.eqNode(truen);
-  Trace("brc-macro") << "Subgoal, trivial membership: " << tmeq << std::endl;
-  cdp->addTrustedStep(tmeq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
-
-  Node trivMemc = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], rs);
-  std::vector<Node> cargs;
-  ProofRule cr = expr::getCongRule(trivMemc, cargs);
-  Node refl = eq[0][0].eqNode(eq[0][0]);
-  cdp->addStep(refl, ProofRule::REFL, {}, {eq[0][0]});
-  Node congEq = trivMemc.eqNode(trivMem);
-  cdp->addStep(congEq, cr, {refl, req}, cargs);
-
-  Node tteq = trivMemc.eqNode(truen);
-  cdp->addStep(tteq, ProofRule::TRANS, {congEq, tmeq}, {});
-  cdp->addStep(trivMemc, ProofRule::TRUE_ELIM, {tteq}, {});
-
+  // then take intersection with the complement of the RE given in the LHS
   Node comp = nm->mkNode(Kind::REGEXP_COMPLEMENT, eq[0][1]);
-  Node inter = nm->mkNode(Kind::REGEXP_INTER, rs, comp);
+  Node inter = nm->mkNode(Kind::REGEXP_INTER, trivMemc[1], comp);
   Trace("brc-macro") << "Rewrite inclusion: " << inter << std::endl;
   theory::Rewriter* rr = d_env.getRewriter();
   Node res = rr->rewriteViaRule(ProofRewriteRule::RE_INTER_INCLUSION, inter);
@@ -1838,6 +1814,7 @@ bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp,
     Assert(false);
     return false;
   }
+  // should have an RE inclusion
   Node inclusionEq = inter.eqNode(res);
   cdp->addTheoryRewriteStep(inclusionEq, ProofRewriteRule::RE_INTER_INCLUSION);
 
@@ -1850,11 +1827,9 @@ bool BasicRewriteRCons::ensureProofMacroStrInReInclusion(CDProof* cdp,
   Node imem = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], inter);
   cdp->addStep(imem, ProofRule::RE_INTER, {trivMemc, memComp}, {});
 
-  Node noneMem = nm->mkNode(Kind::STRING_IN_REGEXP, eq[0][0], res);
-  cargs.clear();
-  cr = expr::getCongRule(imem, cargs);
-  Node meq = imem.eqNode(noneMem);
-  cdp->addStep(meq, cr, {refl, inclusionEq}, cargs);
+  Node meq = proveCong(cdp, imem, {Node::null(), inclusionEq});
+  Assert (!meq.isNull());
+  Node noneMem = meq[1];
 
   Node falsen = nm->mkConst(false);
   Node noneFalseEq = noneMem.eqNode(falsen);
