@@ -1344,6 +1344,43 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   return true;
 }
 
+Node BasicRewriteRCons::proveGeneralReMembership(CDProof* cdp, const Node& n)
+{
+  NodeManager * nm = nodeManager();
+  std::vector<Node> ncs;
+  if (n.getKind()==Kind::STRING_CONCAT)
+  {
+    ncs.insert(ncs.end(), n.begin(), n.end());
+  }
+  else
+  {
+    ncs.push_back(n);
+  }
+  Node sigmaStar = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
+  std::vector<Node> premises;
+  for (const Node& nc : ncs)
+  {
+    Node re;
+    if (nc.isConst())
+    {
+      re = nm->mkNode(Kind::STRING_TO_REGEXP, nc);
+    }
+    else
+    {
+      re = sigmaStar;
+    }
+    Node mem = nm->mkNode(Kind::STRING_IN_REGEXP, nc, re);
+    cdp->addTrustedStep(mem, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
+    premises.push_back(mem);
+  }
+  if (premises.size()==1)
+  {
+    return premises[0];
+  }
+  ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
+  return pc->checkDebug(ProofRule::RE_CONCAT, premises, {});
+}
+
 Node BasicRewriteRCons::proveDualImplication(CDProof* cdp,
                                              const Node& impl,
                                              const Node& implrev)
