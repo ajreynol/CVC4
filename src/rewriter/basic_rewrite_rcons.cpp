@@ -39,6 +39,7 @@
 #include "theory/quantifiers/quantifiers_rewriter.h"
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
+#include "theory/strings/regexp_entail.h"
 #include "theory/strings/sequences_rewriter.h"
 #include "theory/strings/strings_entail.h"
 #include "theory/strings/theory_strings_utils.h"
@@ -1341,37 +1342,25 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
 Node BasicRewriteRCons::proveGeneralReMembership(CDProof* cdp, const Node& n)
 {
   NodeManager * nm = nodeManager();
-  std::vector<Node> ncs;
+  theory::strings::RegExpEntail re(nm, nullptr);
+  Node gre = re.getGeneralizedConstRegExp(n);
+  std::vector<Node> ncs,rcs;
   if (n.getKind()==Kind::STRING_CONCAT)
   {
+    Assert (gre.getKind()==Kind::REGEXP_CONCAT);
     ncs.insert(ncs.end(), n.begin(), n.end());
+    rcs.insert(rcs.end(), gre.begin(), gre.end());
   }
   else
   {
     ncs.push_back(n);
+    rcs.push_back(gre);
   }
-  Node sigmaStar = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
+  Assert (ncs.size()==rcs.size());
   std::vector<Node> premises;
-  for (const Node& nc : ncs)
+  for (size_t i=0, nchild=rcs.size(); i<nchild; i++)
   {
-    Node re = sigmaStar;
-    if (nc.isConst())
-    {
-      re = nm->mkNode(Kind::STRING_TO_REGEXP, nc);
-    }
-    else if (nc.getKind()==Kind::STRING_ITOS)
-    {
-      // maybe non-empty digit range?
-      // relies on RARE rule str-in-re-from-int-dig-range to prove
-      theory::strings::ArithEntail ae(nullptr);
-      if (ae.check(nc[0]))
-      {
-        Node digRange = nm->mkNode(Kind::REGEXP_RANGE, nm->mkConst(String("0")), nm->mkConst(String("9")));
-        re = nm->mkNode(
-          Kind::REGEXP_CONCAT, digRange, nm->mkNode(Kind::REGEXP_STAR, digRange));
-      }
-    }
-    Node mem = nm->mkNode(Kind::STRING_IN_REGEXP, nc, re);
+    Node mem = nm->mkNode(Kind::STRING_IN_REGEXP, ncs[i], rcs[i]);
     cdp->addTrustedStep(mem, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
     premises.push_back(mem);
   }

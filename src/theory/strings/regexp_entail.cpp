@@ -1012,6 +1012,46 @@ bool RegExpEntail::regExpIncludes(Node r1, Node r2)
   return regExpIncludes(r1, r2, cache);
 }
 
+
+Node RegExpEntail::getGeneralizedConstRegExp(const Node& n) const
+{
+  Assert (n.getType().isString());
+  NodeManager* nm = NodeManager::currentNM();
+  std::vector<Node> ncs;
+  if (n.getKind()==Kind::STRING_CONCAT)
+  {
+    ncs.insert(ncs.end(), n.begin(), n.end());
+  }
+  else
+  {
+    ncs.push_back(n);
+  }
+  Node sigmaStar = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
+  std::vector<Node> rs;
+  for (const Node& nc : ncs)
+  {
+    Node re = sigmaStar;
+    if (nc.isConst())
+    {
+      re = nm->mkNode(Kind::STRING_TO_REGEXP, nc);
+    }
+    else if (nc.getKind()==Kind::STRING_ITOS)
+    {
+      // maybe non-empty digit range?
+      // relies on RARE rule str-in-re-from-int-dig-range to prove
+      theory::strings::ArithEntail ae(nullptr);
+      if (ae.check(nc[0]))
+      {
+        Node digRange = nm->mkNode(Kind::REGEXP_RANGE, nm->mkConst(String("0")), nm->mkConst(String("9")));
+        re = nm->mkNode(
+          Kind::REGEXP_CONCAT, digRange, nm->mkNode(Kind::REGEXP_STAR, digRange));
+      }
+    }
+    rs.push_back(re);
+  }
+  return rs.size()==1 ? rs[0] : nm->mkNode(Kind::REGEXP_CONCAT, rs);
+}
+
 struct RegExpEntailConstantBoundLowerId
 {
 };
