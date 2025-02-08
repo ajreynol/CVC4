@@ -422,6 +422,9 @@ class BasicRewriteRCons : protected EnvObj
    */
   Node proveGeneralReMembership(CDProof* cdp, const Node& n);
 
+  Node proveSymm(CDProof* cdp, const Node& eq);
+  Node proveCong(CDProof* cdp, const Node& n, const std::vector<Node>& premises);
+
   /**
    * Assuming cdp has proofs of (=> A B) and (=> B A), this ensures we
    * have a proof of (= A B).
