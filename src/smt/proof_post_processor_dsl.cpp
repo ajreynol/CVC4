@@ -136,8 +136,7 @@ bool ProofPostprocessDsl::update(Node res,
   // Attempt to reconstruct the proof of the equality into cdp using the
   // rewrite database proof reconstructor.
   // We record the subgoals in d_subgoals.
-  std::vector<std::shared_ptr<ProofNode>> sg;
-  if (d_rdbPc.prove(cdp, res[0], res[1], recLimit, stepLimit, sg, tm))
+  if (d_rdbPc.prove(cdp, res[0], res[1], recLimit, stepLimit, tm))
   {
     // we will update this again, in case the elaboration introduced
     // new trust steps
@@ -154,9 +153,8 @@ bool ProofPostprocessDsl::update(Node res,
     return true;
   }
   // clean up traversing, since we are setting continueUpdate to false
-  Assert(!d_traversing.empty());
-  Trace("pp-dsl-process") << "...pop due to fail " << d_traversing.back().get()
-                          << std::endl;
+  Assert (!d_traversing.empty());
+  Trace("pp-dsl-process") << "...pop due to fail " << d_traversing.back().get() << std::endl;
   d_traversing.pop_back();
   // otherwise no update
   return false;
