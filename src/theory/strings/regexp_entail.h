@@ -145,8 +145,9 @@ class RegExpEntail
    * that is constant and contains the string.
    * For example, given (str.++ x "A" y), this method returns
    * (re.++ Sigma* (str.to_re "A") Sigma*).
+   * If the regular expression is equivalent to Sigma*, the null node is returned.
    */
-  Node getGeneralizedConstRegExp(const Node& n) const;
+  Node getGeneralizedConstRegExp(const Node& n);
  private:
   /**
    * Does the substring of s starting at index_start occur in constant regular

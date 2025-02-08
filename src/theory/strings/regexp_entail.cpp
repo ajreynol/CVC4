@@ -1013,7 +1013,7 @@ bool RegExpEntail::regExpIncludes(Node r1, Node r2)
 }
 
 
-Node RegExpEntail::getGeneralizedConstRegExp(const Node& n) const
+Node RegExpEntail::getGeneralizedConstRegExp(const Node& n)
 {
   Assert (n.getType().isString());
   NodeManager* nm = NodeManager::currentNM();
@@ -1026,6 +1026,7 @@ Node RegExpEntail::getGeneralizedConstRegExp(const Node& n) const
   {
     ncs.push_back(n);
   }
+  bool nonTrivial = false;
   Node sigmaStar = nm->mkNode(Kind::REGEXP_STAR, nm->mkNode(Kind::REGEXP_ALLCHAR));
   std::vector<Node> rs;
   for (const Node& nc : ncs)
@@ -1033,15 +1034,16 @@ Node RegExpEntail::getGeneralizedConstRegExp(const Node& n) const
     Node re = sigmaStar;
     if (nc.isConst())
     {
+      nonTrivial = true;
       re = nm->mkNode(Kind::STRING_TO_REGEXP, nc);
     }
     else if (nc.getKind()==Kind::STRING_ITOS)
     {
       // maybe non-empty digit range?
       // relies on RARE rule str-in-re-from-int-dig-range to prove
-      theory::strings::ArithEntail ae(nullptr);
-      if (ae.check(nc[0]))
+      if (d_aent.check(nc[0]))
       {
+        nonTrivial = true;
         Node digRange = nm->mkNode(Kind::REGEXP_RANGE, nm->mkConst(String("0")), nm->mkConst(String("9")));
         re = nm->mkNode(
           Kind::REGEXP_CONCAT, digRange, nm->mkNode(Kind::REGEXP_STAR, digRange));
@@ -1049,7 +1051,11 @@ Node RegExpEntail::getGeneralizedConstRegExp(const Node& n) const
     }
     rs.push_back(re);
   }
-  return rs.size()==1 ? rs[0] : nm->mkNode(Kind::REGEXP_CONCAT, rs);
+  if (nonTrivial)
+  {
+    return rs.size()==1 ? rs[0] : nm->mkNode(Kind::REGEXP_CONCAT, rs);
+  }
+  return Node::null();
 }
 
 struct RegExpEntailConstantBoundLowerId

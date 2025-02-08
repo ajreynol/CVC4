@@ -1344,6 +1344,7 @@ Node BasicRewriteRCons::proveGeneralReMembership(CDProof* cdp, const Node& n)
   NodeManager * nm = nodeManager();
   theory::strings::RegExpEntail re(nm, nullptr);
   Node gre = re.getGeneralizedConstRegExp(n);
+  Assert (!gre.isNull());
   std::vector<Node> ncs,rcs;
   if (n.getKind()==Kind::STRING_CONCAT)
   {
@@ -1720,6 +1721,7 @@ bool BasicRewriteRCons::ensureProofMacroStrConstNCtnConcat(CDProof* cdp,
   if (eqi.isNull())
   {
     Trace("brc-macro") << "...failed cong" << std::endl;
+    Assert(false);
     return false;
   }
   Trace("brc-macro") << "...cong " << eqi << std::endl;
@@ -1743,6 +1745,7 @@ bool BasicRewriteRCons::ensureProofMacroStrConstNCtnConcat(CDProof* cdp,
   Node eqa = concat.eqNode(cf);
   if (!cdp->addStep(eqa, ProofRule::ACI_NORM, {}, {eqa}))
   {
+    Trace("brc-macro") << "...failed ACI" << std::endl;
     Assert(false);
     return false;
   }
@@ -1761,6 +1764,8 @@ bool BasicRewriteRCons::ensureProofMacroStrConstNCtnConcat(CDProof* cdp,
   Node res = rr->rewriteViaRule(ProofRewriteRule::STR_IN_RE_EVAL, memc[1]);
   if (res.isNull() || res!=eq[1])
   {
+    Trace("brc-macro") << "...failed str in eval" << std::endl;
+    Assert(false);
     return false;
   }
   Node eqf = memc[1].eqNode(res);
