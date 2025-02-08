@@ -23,20 +23,20 @@
   )
 )
 
-(program $str_is_const_like ((T Type) (t (Seq T)) (n T))
-    ((Seq T)) Bool
-    (
-      (($str_is_const_like (seq.unit n))  true)
-      (($str_is_const_like t)             (eo::is_str t))
-    )
-)
-
-(program $str_all_is_const_like ((T Type) (s (Seq T)) (ss (Seq T) :list))
-    ((Seq T)) Bool
-    (
-      (($str_all_is_const_like (str.++ s ss)) (eo::ite ($str_is_const_like s) ($str_all_is_const_like ss) false))
-      (($str_all_is_const_like s)             true)
-    )
+; define: $str_value_len
+; args:
+; - s (Seq T): The sequence term.
+; return: >
+;   The length of s, if it denotes a "value-like" sequence, that
+;   is, either a string literal or a concatentation of sequence units.
+(program $str_value_len ((T Type) (s (Seq T)) (e T) (ss (Seq T) :list))
+  ((Seq T)) Int
+  (
+    (($str_value_len (seq.++ (seq.unit e) ss))  (eo::add 1 ($str_value_len ss)))
+    (($str_value_len (@seq.empty (Seq T)))      0)
+    (($str_value_len (seq.unit e))              1)
+    (($str_value_len s)                         (eo::requires (eo::is_str s) true (eo::len s)))
+  )
 )
 
 ; define: $char_type_of
@@ -441,18 +441,6 @@
 
 ;;-------------------- Reductions
 
-; define: $str_check_length_one_or_unit
-; args:
-; - s (Seq T): The sequence term.
-; return: true if s is a constant-like string of length one.
-(program $str_check_length_one_or_unit ((T Type) (s (Seq T)) (t T))
-  ((Seq T)) Bool
-  (
-    (($str_check_length_one_or_unit (seq.unit t))  true)
-    (($str_check_length_one_or_unit s)             (eo::is_eq (eo::len s) 1))
-  )
-)
-
 ; In the following, a "reduction predicate" refers to a formula that is used
 ; to axiomatize an extended string program in terms of (simpler) programs.
 
@@ -564,7 +552,7 @@
         (eo::define ((k (@purify (str.update x n y))))
         (ite (and (>= n 0) (> (str.len x) n))
           (eo::define ((k1 (@purify ($str_prefix x n))))
-          (eo::define ((ys (eo::ite ($str_check_length_one_or_unit y) ; optimization for single characters
+          (eo::define ((ys (eo::ite (eo::is_eq ($str_value_len y) 1) ; optimization for single characters
                               y
                               (str.substr y 0 (- (str.len x) n)))))
           (eo::define ((k2 (@purify ($str_suffix_rem x (+ n (str.len ys))))))
@@ -1743,9 +1731,7 @@
 (define $str_has_overlap ((U Type :implicit) (s (Seq U)) (t (Seq U)) (rev Bool))
   ; Note that $str_overlap with always return a value <= the length of s.
   ; There is overlap only when it is strictly less than the length of s.
-  (eo::define ((sts ($seq_to_string s)))
-  (eo::define ((tts ($seq_to_string t)))
-  (eo::gt (eo::len sts) ($str_overlap sts tts rev)))))
+  (eo::gt ($str_value_len s) ($str_overlap s t rev)))
 
 ;;;;; evaluation utils
 

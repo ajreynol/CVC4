@@ -1,6 +1,7 @@
-(include "../theories/Datatypes.eo")
-
+(include "Utils.eo")
 (include "DistinctValues.eo")
+
+(include "../theories/Datatypes.eo")
 
 (program $seq_to_string_rec ((T Type) (t T) (ss (Seq T) :list) (s String) (units @List) (chars @List) (n Int))
   ((Seq T) String @List @List Int) (Tuple String @List @List)
@@ -54,6 +55,13 @@
   (($seq_to_string_op_rec a units chars)      a)
   )
 )
+
+(define $seq_to_string_pair ((T Type :implicit) (s (Seq T)) (t (Seq T)))
+  (eo::ite (eo::is_str s)
+    (eo::requires (eo::is_str t) (@pair s t))
+    (eo::match ((ss String) (ts String) (nunits @List) (nchars @List))
+      ($seq_to_string_op_rec (@pair s t) @list.nil @list.nil)
+      (((tuple (@pair ss ts) nunits nchars) (@pair ss ts))))))
 
 ;(include "Strings.eo")
 ;(include "Quantifiers.eo")
