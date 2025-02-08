@@ -11,15 +11,7 @@
     (($seq_to_string_rec (seq.++ (seq.unit t) ss) s units chars n)  (eo::define ((u (seq.unit t)))
                                                                     (eo::define ((id (eo::list_find @list units u)))
                                                                     (eo::ite (eo::is_neg id)
-                                                                      ; already allocated
-                                                                      (eo::define ((nchar (eo::to_str id)))
-                                                                      ($seq_to_string_rec
-                                                                        ss
-                                                                        (eo::concat nchar s)
-                                                                        units
-                                                                        chars
-                                                                        n))
-                                                                      ; else, allocate new
+                                                                      ; allocate new
                                                                       ; requires proving that the current character is distinct from all others
                                                                       (eo::requires ($are_distinct_terms_list_rec u units (eo::typeof u)) true
                                                                         (eo::define ((nchar (eo::to_str n)))
@@ -28,7 +20,15 @@
                                                                           (eo::concat nchar s)
                                                                           (eo::cons @list u units)
                                                                           (eo::cons @list nchar chars)
-                                                                          (eo::add n 1))))))))
+                                                                          (eo::add n 1))))
+                                                                      ; already allocated
+                                                                      (eo::define ((nchar (eo::to_str id)))
+                                                                      ($seq_to_string_rec
+                                                                        ss
+                                                                        (eo::concat nchar s)
+                                                                        units
+                                                                        chars
+                                                                        n))))))
     (($seq_to_string_rec (@seq.empty T) s units chars n)            (tuple s units chars))
   )
 )
@@ -41,15 +41,15 @@
       (((tuple ss nunits nchars) ss)))))
 
 
-(program $seq_to_string_op_rec ((U Type) (T Type) (f (-> T U)) (a T) (units @List) (chars @List))
-  (T @List @List) (Tuple T @List @List)
+(program $seq_to_string_op_rec ((U Type) (T Type) (f (-> T U)) (a T) (units @List) (chars @List) (S Type))
+  (T @List @List) S
   (
   (($seq_to_string_op_rec (f a) units chars)  (eo::match ((U Type))
                                                   (eo::typeof a)
                                                   (
                                                     ((Seq U) (eo::match ((s String) (nunits @List) (nchars @List))
-                                                              ($seq_to_string_rec a "" units chars (eo::list_len @list units))
-                                                              (((tuple s nunits nchars)  (_ ($seq_to_string_op_rec f nunits nchars) s)))))
+                                                               ($seq_to_string_rec a "" units chars (eo::list_len @list units))
+                                                               (((tuple s nunits nchars)  (_ ($seq_to_string_op_rec f nunits nchars) s)))))
                                                     (U       (_ ($seq_to_string_op_rec f units chars) a))
                                                   )))
   (($seq_to_string_op_rec a units chars)      a)
@@ -58,10 +58,8 @@
 
 (define $seq_to_string_pair ((T Type :implicit) (s (Seq T)) (t (Seq T)))
   (eo::ite (eo::is_str s)
-    (eo::requires (eo::is_str t) (@pair s t))
-    (eo::match ((ss String) (ts String) (nunits @List) (nchars @List))
-      ($seq_to_string_op_rec (@pair s t) @list.nil @list.nil)
-      (((tuple (@pair ss ts) nunits nchars) (@pair ss ts))))))
+    (eo::requires (eo::is_str t) true (@pair s t))
+    ($seq_to_string_op_rec (@pair s t) @list.nil @list.nil)))
 
 ;(include "Strings.eo")
 ;(include "Quantifiers.eo")
