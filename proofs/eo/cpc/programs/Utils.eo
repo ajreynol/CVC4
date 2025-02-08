@@ -92,8 +92,9 @@
 ; return: >
 ;   The head of x, where x is expected to be an application of an n-ary
 ;   function marked :right-assoc-nil.
+; return: the head of x, where x is expected to be a function application.
 (define $head ((S Type :implicit) (x S))
-  (eo::match ((T Type) (f (-> T T T)) (x1 T) (x2 T :list))
+  (eo::match ((T Type) (U Type) (f (-> T U U)) (x1 T) (x2 U :list))
     x
     (((f x1 x2) x1)))
 )

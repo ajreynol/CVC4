@@ -1882,8 +1882,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
     if (body2ms.isNull())
     {
       // May have to remove unused variables. This is in rare cases where
-      // we are simultaneously prenex variables from different branches of an
-      // ITE.
+      // we simultaneously prenex variables from different branches of an ITE.
       Node ceuv =
           rr->rewriteViaRule(ProofRewriteRule::QUANT_UNUSED_VARS, currEq[0]);
       if (!ceuv.isNull())
@@ -1902,7 +1901,8 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       Node eqqm1 = ceuv.eqNode(body2ms);
       cdp->addTheoryRewriteStep(eqqm1, prr);
       eqqm = currEq[0].eqNode(body2ms);
-      cdp->addStep(eqqm, ProofRule::TRANS, {eqce, eqqm1}, {});
+      cdp->addStep(
+          eqqm, ProofRule::TRANS, {eqce, eqqm1}, {});
     }
     else
     {
