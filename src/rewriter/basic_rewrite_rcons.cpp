@@ -44,6 +44,7 @@
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/strings/word.h"
 #include "util/rational.h"
+#include "util/string.h"
 
 using namespace cvc5::internal::kind;
 
@@ -1353,14 +1354,22 @@ Node BasicRewriteRCons::proveGeneralReMembership(CDProof* cdp, const Node& n)
   std::vector<Node> premises;
   for (const Node& nc : ncs)
   {
-    Node re;
+    Node re = sigmaStar;
     if (nc.isConst())
     {
       re = nm->mkNode(Kind::STRING_TO_REGEXP, nc);
     }
-    else
+    else if (nc.getKind()==Kind::STRING_ITOS)
     {
-      re = sigmaStar;
+      // maybe non-empty digit range?
+      // relies on RARE rule str-in-re-from-int-dig-range to prove
+      theory::strings::ArithEntail ae(nullptr);
+      if (ae.check(nc[0]))
+      {
+        Node digRange = nm->mkNode(Kind::REGEXP_RANGE, nm->mkConst(String("0")), nm->mkConst(String("9")));
+        re = nm->mkNode(
+          Kind::REGEXP_CONCAT, digRange, nm->mkNode(Kind::REGEXP_STAR, digRange));
+      }
     }
     Node mem = nm->mkNode(Kind::STRING_IN_REGEXP, nc, re);
     cdp->addTrustedStep(mem, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
