@@ -1,8 +1,36 @@
+; =============================================================================
+;
+; This file defines a compilation of sequence values to strings, where a sequence
+; value is a concatenation of sequence characters (seq.unit c). This compilation
+; is done is such a way that we prove that each sequence character
+;   (seq.unit c1) ... (seq.unit cn)
+; are such that c1 ... cn denote provably distinct terms (see DistinctValues.eo).
+; If this is not the case, then the side conditions below will not evaluate.
+;
+; The mapping from sequence characters to string characters is arbitrary, in
+; particular, the first sequence character is assigned the code point 0, the
+; second 1, and so on. This mapping can be tracked as a pair of parallel lists
+; e.g. if it is necessary to convert from the string back to its corresponding
+; sequence.
+;
+; =============================================================================
+
+
 (include "Utils.eo")
 (include "DistinctValues.eo")
 
 (include "../theories/Datatypes.eo")
 
+; program: $seq_to_string_rec
+; args:
+; - t (Seq T): a sequence term, expected to be a sequence value.
+; - s String: the accumulated string we have converted so far.
+; - units @List: an accumulated list of sequence characters we have converted.
+; - chars @List: an accumulated list of string literals of size one corresponding to the conversion of units.
+; - n Int: the length of units/chars.
+; return: >
+;   A tuple containing the result of converting t, and the substitution
+;   (units and chars) that was used to convert it.
 (program $seq_to_string_rec ((T Type) (t T) (ss (Seq T) :list) (s String) (units @List) (chars @List) (n Int))
   ((Seq T) String @List @List Int) (Tuple String @List @List)
   (
@@ -17,22 +45,26 @@
                                                                         (eo::define ((nchar (eo::to_str n)))
                                                                         ($seq_to_string_rec
                                                                           ss
-                                                                          (eo::concat nchar s)
+                                                                          (eo::concat s nchar)
                                                                           (eo::cons @list u units)
                                                                           (eo::cons @list nchar chars)
                                                                           (eo::add n 1))))
                                                                       ; already allocated
-                                                                      (eo::define ((nchar (eo::to_str id)))
                                                                       ($seq_to_string_rec
                                                                         ss
-                                                                        (eo::concat nchar s)
+                                                                        (eo::concat s (eo::to_str id))
                                                                         units
                                                                         chars
-                                                                        n))))))
+                                                                        n)))))
     (($seq_to_string_rec (@seq.empty T) s units chars n)            (tuple s units chars))
   )
 )
 
+; program: $seq_to_string
+; args:
+; - t (Seq T): a sequence term, expected to be a sequence value.
+; return: >
+;   The result of converting t to a string based on the above method.
 (define $seq_to_string ((T Type :implicit) (s (Seq T)))
   (eo::ite (eo::is_str s)
     s   ; may already be a string
@@ -41,6 +73,12 @@
       (((tuple ss nunits nchars) ss)))))
 
 
+; program: $seq_to_string_op_rec
+; args:
+; - t (Seq T): a term, expected to contain arguments that are sequence values.
+; - units @List: an accumulated list of sequence characters we have converted.
+; - chars @List: an accumulated list of string literals of size one corresponding to the conversion of units.
+; return:
 (program $seq_to_string_op_rec ((U Type) (T Type) (f (-> T U)) (a T) (units @List) (chars @List) (S Type))
   (T @List @List) S
   (

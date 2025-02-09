@@ -619,6 +619,8 @@
 ; return: >
 ;   The multiset over-approximation of s, which is a (flattened) list of
 ;   terms which represents an overapproximation of what s may contain.
+;   In particular, note that all string literals are broken up into string
+;   literals of size one.
 (program $str_multiset_overapprox ((T Type) (s (Seq T)) (ss (Seq T) :list) (t (Seq T)) (r (Seq T)) (n Int) (m Int))
     ((Seq T)) @List
     (
@@ -638,13 +640,13 @@
 
 ; program: $str_is_multiset_subset_strict
 ; args:
-; - s (Seq T): the multiset approximation of a string term.
+; - s (Seq T): a string term, expected to be in flattened form.
 ; - xs @List: the multiset (over)approximation of a string term.
-; - b Bool: whether we have found that a character from s was not contained in t.
+; - nr @List: the accumulated list of previously processed terms from s that were not removed from xs.
 ; return: >
 ;   True if the string approximated by s is definitely not contained in the string
 ;   approximated by t. We compute this by iteratively removing the components of
-;   s from t, remembering if we have removed a character.
+;   s from t, and then checking if a term in nr is provably distinct from the final xs.
 (program $str_is_multiset_subset_strict ((T Type :implicit) (emp (Seq T)) (s (Seq T)) (ss (Seq T) :list) (xs @List) (nr @List :list))
     ((Seq T) @List @List) Bool
     (
