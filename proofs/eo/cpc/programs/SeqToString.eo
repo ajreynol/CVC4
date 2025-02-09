@@ -1,8 +1,9 @@
 ; =============================================================================
 ;
-; This file defines a compilation of sequence values to strings, where a sequence
-; value is a concatenation of sequence characters (seq.unit c). This compilation
-; is done is such a way that we prove that each sequence character
+; This file defines a compilation of sequence values to strings. A sequence
+; value is a concatenation of sequence characters (seq.unit c) where c is itself
+; a value. Each sequence character is mapped to unique string character. This
+; mapping is done is such a way that each sequence character
 ;   (seq.unit c1) ... (seq.unit cn)
 ; are such that c1 ... cn denote provably distinct terms (see DistinctValues.eo).
 ; If this is not the case, then the side conditions below will not evaluate.
@@ -13,7 +14,7 @@
 ; e.g. if it is necessary to convert from the string back to its corresponding
 ; sequence.
 ;
-; It is also important to note that these methos will not evaluate if the term
+; It is also important to note that these methods will not evaluate if the term
 ; to convert contains a number of sequence characters more than the number of
 ; code points allowed by SMT-LIB string literals (196608).
 ;
