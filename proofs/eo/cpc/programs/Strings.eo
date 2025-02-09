@@ -840,7 +840,7 @@
 
 ; program: $str_flatten_word
 ; args:
-; - t String: A string term, assumed to be a non-empty word constant.
+; - t String: A string term, assumed to be a string literal.
 ; return: >
 ;   The result of "flattening" t, for example given "AB", this returns the term
 ;   (str.++ "A" (str.++ "B" "")).
@@ -854,9 +854,9 @@
 
 ; program: $str_collect_word
 ; args:
-; - t String: A string term, assumed to be a concatenation of characters.
+; - t String: A string term, assumed to be a concatenation of string characters.
 ; return: >
-;   The result of "collect" t, for example given (str.++ "A" (str.++ "B" "")),
+;   The result of "collecting" t, for example given (str.++ "A" (str.++ "B" "")),
 ;   this returns the term "AB".
 (program $str_collect_word ((t String) (ts String :list))
   (String) String
