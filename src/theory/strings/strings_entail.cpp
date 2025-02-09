@@ -841,11 +841,11 @@ Node StringsEntail::checkHomogeneousString(Node a)
 Node StringsEntail::getMultisetApproximation(Node a)
 {
   NodeManager* nm = NodeManager::currentNM();
-  if (a.getKind() == Kind::STRING_SUBSTR)
+  while (a.getKind() == Kind::STRING_SUBSTR)
   {
-    return a[0];
+    a = a[0];
   }
-  else if (a.getKind() == Kind::STRING_REPLACE)
+  if (a.getKind() == Kind::STRING_REPLACE)
   {
     return getMultisetApproximation(
         nm->mkNode(Kind::STRING_CONCAT, a[0], a[2]));
