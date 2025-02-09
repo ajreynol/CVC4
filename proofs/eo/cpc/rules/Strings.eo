@@ -617,42 +617,47 @@
 ; args:
 ; - s (Seq T): the term.
 ; return: >
-;   The multiset over-approximation of s, which is a (flattened) concatenation
-;   term whose components represent an overapproximation of what s may contain.
+;   The multiset over-approximation of s, which is a (flattened) list of
+;   terms which represents an overapproximation of what s may contain.
 (program $str_multiset_overapprox ((T Type) (s (Seq T)) (ss (Seq T) :list) (t (Seq T)) (r (Seq T)) (n Int) (m Int))
-    ((Seq T)) (Seq T)
+    ((Seq T)) @List
     (
-      (($str_multiset_overapprox (str.++ s ss))        (eo::list_concat str.++ ($str_multiset_overapprox s) ($str_multiset_overapprox ss)))
+      (($str_multiset_overapprox (str.++ s ss))        (eo::list_concat @list ($str_multiset_overapprox s) ($str_multiset_overapprox ss)))
       (($str_multiset_overapprox (str.substr s n m))   ($str_multiset_overapprox s))
-      (($str_multiset_overapprox (str.replace s t r))  (eo::list_concat str.++ ($str_multiset_overapprox s) ($str_multiset_overapprox r)))
-      (($str_multiset_overapprox s)                    (eo::ite (eo::is_str s)
-                                                          ($str_flatten_word s)
-                                                          (str.++ s)))
+      (($str_multiset_overapprox (str.replace s t r))  (eo::list_concat @list ($str_multiset_overapprox s) ($str_multiset_overapprox r)))
+      (($str_multiset_overapprox s)                    (eo::ite ($str_is_empty s)
+                                                          @list.nil
+                                                          (eo::ite (eo::is_str s)
+                                                            (eo::ite (eo::gt (eo::len s) 1)
+                                                              ; if a string constant of size > 1, flatten to characters and add to list
+                                                              ($str_multiset_overapprox ($str_flatten_word s))
+                                                              (@list s))
+                                                            (@list s))))
     )
 )
 
 ; program: $str_is_multiset_subset_strict
 ; args:
 ; - s (Seq T): the multiset approximation of a string term.
-; - t (Seq T): the multiset (over)approximation of a string term.
+; - xs @List: the multiset (over)approximation of a string term.
 ; - b Bool: whether we have found that a character from s was not contained in t.
 ; return: >
 ;   True if the string approximated by s is definitely not contained in the string
 ;   approximated by t. We compute this by iteratively removing the components of
 ;   s from t, remembering if we have removed a character.
-; note: This method only supports strings currently.
-(program $str_is_multiset_subset_strict ((T Type :implicit) (emp (Seq T)) (s (Seq T)) (ss (Seq T) :list) (t (Seq T)) (b Bool))
-    ((Seq T) (Seq T) (Seq T) Bool) Bool
+(program $str_is_multiset_subset_strict ((T Type :implicit) (emp (Seq T)) (s (Seq T)) (ss (Seq T) :list) (xs @List) (nr @List :list))
+    ((Seq T) @List @List) Bool
     (
-      (($str_is_multiset_subset_strict emp (str.++ s ss) t b) (eo::define ((tr ($nary_remove str.++ emp s t)))
-                                                              (eo::define ((nrem (eo::is_eq t tr)))
-                                                                ($str_is_multiset_subset_strict emp ss tr
-                                                                  ; we update b to true if we successfully remove a character from s
-                                                                  (eo::ite b true (eo::ite nrem (eo::is_str s) false))))))
-      (($str_is_multiset_subset_strict emp emp t b)           (eo::ite b
-                                                                ; remaining characters in t must be constants only
-                                                                (eo::is_str ($str_collect_word t))
-                                                                false))
+      (($str_is_multiset_subset_strict (str.++ s ss) xs nr) (eo::define ((xsr ($nary_remove @list @list.nil s xs)))
+                                                            (eo::define ((nrem (eo::is_eq xs xsr)))
+                                                              ($str_is_multiset_subset_strict ss xsr
+                                                                ; we add s to the accumulated list if it was not removed from xs
+                                                                (eo::ite nrem (@list s nr) nr)))))
+      (($str_is_multiset_subset_strict emp xs (@list s nr)) (eo::ite ($are_distinct_terms_list_rec s xs (eo::typeof s))
+                                                              ; if something was in s that is provably distinct from the remainder of t, we succeed
+                                                              true
+                                                              ($str_is_multiset_subset_strict emp xs nr)))
+      (($str_is_multiset_subset_strict emp xs nr)           false)
     )
 )
 
@@ -665,9 +670,9 @@
 ; conclusion: The given equality.
 (declare-rule str-ctn-multiset-subset ((T Type) (t (Seq T)) (s (Seq T)))
   :args ((= (str.contains t s) false))
-  :requires ((($str_is_multiset_subset_strict ($mk_emptystr (eo::typeof t))
+  :requires ((($str_is_multiset_subset_strict
                 ($str_to_flat_form s false)
-                ($str_multiset_overapprox t) false) true))
+                ($str_multiset_overapprox t) @list.nil) true))
   :conclusion (= (str.contains t s) false)
 )
 

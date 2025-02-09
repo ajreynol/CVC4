@@ -848,9 +848,7 @@
   (String) String
   (
     (($str_flatten_word "") "")
-    (($str_flatten_word t)  ($str_cons
-                              (eo::extract t 0 0)
-                              ($str_flatten_word (eo::extract t 1 (eo::len t)))))
+    (($str_flatten_word t)  ($str_cons (eo::extract t 0 0) ($str_flatten_word (eo::extract t 1 (eo::len t)))))
   )
 )
 
