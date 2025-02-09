@@ -12,7 +12,7 @@
 (declare-rule instantiate ((F Bool) (xs @List) (ts @List))
   :premises ((forall xs F))
   :args (ts)
-  :conclusion ($substitute_list xs ts F))
+  :conclusion ($substitute_simul F xs ts))
 
 ; program: $mk_skolems
 ; args:
@@ -39,7 +39,7 @@
 ;   introduced via $mk_skolems.
 (declare-rule skolemize ((x @List) (G Bool))
   :premises ((not (forall x G)))
-  :conclusion ($substitute_list x ($mk_skolems x (forall x G) 0) (not G))
+  :conclusion ($substitute_simul (not G) x ($mk_skolems x (forall x G) 0))
 )
 
 ; rule: skolem_intro
@@ -67,7 +67,7 @@
 (declare-rule alpha_equiv ((B Bool) (vs @List) (ts @List))
   :args (B vs ts)
   :requires ((($contains_subterm_list B ts) false))
-  :conclusion (= B ($substitute_list vs ts B))
+  :conclusion (= B ($substitute_simul B vs ts))
 )
 
 ; rule: beta-reduce

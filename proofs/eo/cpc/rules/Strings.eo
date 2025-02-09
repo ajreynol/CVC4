@@ -883,8 +883,6 @@
 
 ;;;;; ProofRewriteRule::SEQ_EVAL_OP
 
-
-
 ; program: $seq_eval
 ; args:
 ; - t T: the term to evaluate, expected to be an operator applied to values, including at least one sequence value.
@@ -905,7 +903,6 @@
                                                           (eo::cons @list (@seq.empty (eo::typeof t)) units)))))))
   )
 )
-
 
 ; rule: seq-eval-op
 ; implements: ProofRewriteRule::SEQ_EVAL_OP

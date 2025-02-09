@@ -17,23 +17,6 @@
   )
 )
 
-; program: $substitute_list
-; args:
-; - arg1 @List: The list of domains of the substitution.
-; - arg2 @List: The list of ranges of the substitution.
-; - arg3 U: The term to process.
-; return: >
-;   The result of applying the substitutions specified by arg1
-;   and arg2 in order to arg3. In particular, the first element in the lists arg1
-;   and arg2 are processed first.
-(program $substitute_list ((T Type) (U Type) (F U) (x T) (xs @List :list) (t T) (ts @List :list))
-  (@List @List U) U
-  (
-    (($substitute_list (@list x xs) (@list t ts) F) ($substitute_list xs ts ($substitute x t F)))
-    (($substitute_list @list.nil @list.nil F)       F)
-  )
-)
-
 ; program: $contains_subterm
 ; args:
 ; - arg1 S: The term to process.
@@ -62,7 +45,6 @@
   )
 )
 
-
 ; program: $substitute_simul
 ; args:
 ; - s S: The term to substitute into.
@@ -74,11 +56,8 @@
   (S @List @List) S
   (
   (($substitute_simul (f a) xs ss)                  (_ ($substitute_simul f xs ss) ($substitute_simul a xs ss)))
-  (($substitute_simul x @list.nil @list.nil)        x)
-  (($substitute_simul x (@list x xs) (@list s ss))  s)  ; note that we do not substitute further since this is a simultaneous substitution.
-  (($substitute_simul x (@list y xs) (@list s ss))  ($substitute_simul x xs ss))
-  ;(($substitute_simul x xs ss)                      (eo::define ((i (eo::list_find @list xs x)))
-  ;                                                    (eo::ite (eo::is_neg i) x (eo::list_nth @list ss i))))
+  (($substitute_simul x xs ss)                      (eo::define ((i (eo::list_find @list xs x)))
+                                                      (eo::ite (eo::is_neg i) x (eo::list_nth @list ss i))))
   )
 )
 
