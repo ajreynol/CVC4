@@ -13,6 +13,10 @@
 ; e.g. if it is necessary to convert from the string back to its corresponding
 ; sequence.
 ;
+; It is also important to note that these methos will not evaluate if the term
+; to convert contains a number of sequence characters more than the number of
+; code points allowed by SMT-LIB string literals (196608).
+;
 ; =============================================================================
 
 
@@ -106,8 +110,3 @@
   (eo::ite (eo::is_str s)
     (eo::requires (eo::is_str t) true (@pair s t))  ; if s and t are already strings, return them.
     (eo::list_nth tuple ($seq_to_string_op_rec (@pair s t) @list.nil @list.nil) 0)))
-
-;(include "Strings.eo")
-;(include "Quantifiers.eo")
-;(define $string_to_seq ((s String) (units @List) (chars @List))
-;  ($substitute_list ($str_flatten_word s) chars units))

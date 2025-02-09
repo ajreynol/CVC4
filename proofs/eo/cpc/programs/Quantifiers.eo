@@ -77,6 +77,8 @@
   (($substitute_simul x @list.nil @list.nil)        x)
   (($substitute_simul x (@list x xs) (@list s ss))  s)  ; note that we do not substitute further since this is a simultaneous substitution.
   (($substitute_simul x (@list y xs) (@list s ss))  ($substitute_simul x xs ss))
+  ;(($substitute_simul x xs ss)                      (eo::define ((i (eo::list_find @list xs x)))
+  ;                                                    (eo::ite (eo::is_neg i) x (eo::list_nth @list ss i))))
   )
 )
 
