@@ -2344,13 +2344,31 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
       }
       else
       {
-        // we assume that this is indeed an equivalence, otherwise this trust
-        // step will be unsound. This is the case when the variable
-        // elimination is based on entailment and not equivalence. For example,
-        // when the option varEntEqElimQuant is enabled, the quantifiers
-        // rewrite may reason that a = (str.++ b x) implies the elimination
-        // x = (str.substr a (str.len b) ...)
-        // where the latter implies the former, but they are not equivalent.
+        // must ensure that this is indeed an equivalence, otherwise this trust
+        // step will be unsound. this is the case e.g. when
+        // a != (str.++ b x) is turned into x != (str.substr a (str.len b) ...)
+        // where the latter implies the former, but they are not equivalent
+        Assert(i == 0 && body1re[i] == eqLit);
+        // To test equivalence, we apply the substitution to the original
+        // literal and see if it rewrites to true. It is correct to do general
+        // substitution since the solved variable shouldn't appear beneath any
+        // subterms that were irrelevant for solving it. For example in
+        // arithmetic it is wrong to test (x - f(x) = 0) is equivalent to
+        // (x = f(x)) via substitution x -> f(x). However this would not be a
+        // legal elimination as required by the rule we are elaborating.
+        Node bsubs = body1r[i].substitute(
+            vars.begin(), vars.end(), subs.begin(), subs.end());
+        Node bsubsr = extendedRewrite(bsubs);
+        if (!bsubsr.isConst() || bsubsr.getConst<bool>())
+        {
+          Trace("brc-macro")
+              << "...failed variable elimination was equivalence preserving "
+              << bsubsr << " " << body1r[i] << ", " << eqLit << std::endl;
+          // Assert(false) << "Failed to show variable elimination was "
+          //                  "equivalence preserving "
+          //               << bsubsr;
+          return false;
+        }
         cdp->addTrustedStep(
             eql, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
       }
