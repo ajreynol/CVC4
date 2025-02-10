@@ -406,14 +406,17 @@ class BasicRewriteRCons : protected EnvObj
   Node proveTransIneq(CDProof* cdp, const Node& leq1, const Node& leq2);
   bool proveIneqWeaken(CDProof* cdp, const Node& src, const Node& tgt);
   /**
-   * Prove that any string term is in a regular expression that characterizes it.
-   * Return the proven regular expression. For example, given (str.++ x "A" y),
-   * this method returns (str.in_re (str.++ x "A" y) (re.++ Sigma* (str.to_re "A") Sigma*)).
+   * Prove that any string term is in a regular expression that characterizes
+   * it. Return the proven regular expression. For example, given (str.++ x "A"
+   * y), this method returns (str.in_re (str.++ x "A" y) (re.++ Sigma*
+   * (str.to_re "A") Sigma*)).
    */
   Node proveGeneralReMembership(CDProof* cdp, const Node& n);
 
   Node proveSymm(CDProof* cdp, const Node& eq);
-  Node proveCong(CDProof* cdp, const Node& n, const std::vector<Node>& premises);
+  Node proveCong(CDProof* cdp,
+                 const Node& n,
+                 const std::vector<Node>& premises);
 
   /**
    * Assuming cdp has proofs of (=> A B) and (=> B A), this ensures we

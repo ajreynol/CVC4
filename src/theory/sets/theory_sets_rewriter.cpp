@@ -71,7 +71,7 @@ Node TheorySetsRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::SETS_EVAL_OP:
     {
-      if (n.getNumChildren()!=2 || !n[0].isConst() || !n[1].isConst())
+      if (n.getNumChildren() != 2 || !n[0].isConst() || !n[1].isConst())
       {
         return Node::null();
       }
@@ -241,8 +241,7 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
       }
       else if (node[0].isConst() && node[1].isConst())
       {
-        Node newNode =
-            rewriteViaRule(ProofRewriteRule::SETS_EVAL_OP, node);
+        Node newNode = rewriteViaRule(ProofRewriteRule::SETS_EVAL_OP, node);
         Assert(newNode.isConst());
         Trace("sets-postrewrite")
             << "Sets::postRewrite returning " << newNode << std::endl;
@@ -269,8 +268,7 @@ RewriteResponse TheorySetsRewriter::postRewrite(TNode node) {
       }
       else if (node[0].isConst() && node[1].isConst())
       {
-        Node newNode =
-            rewriteViaRule(ProofRewriteRule::SETS_EVAL_OP, node);
+        Node newNode = rewriteViaRule(ProofRewriteRule::SETS_EVAL_OP, node);
         Assert(newNode.isConst() && newNode.getType() == node.getType());
         Trace("sets-postrewrite")
             << "Sets::postRewrite returning " << newNode << std::endl;
