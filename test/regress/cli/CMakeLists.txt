@@ -295,6 +295,7 @@ set(regress_0_tests
   regress0/bv/bv-int-collapse1.smt2
   regress0/bv/bv-int-collapse2.smt2
   regress0/bv/bv-options4.smt2
+  regress0/bv/bv-term-small-rw-228.smt2
   regress0/bv/bv-to-bool1.smtv1.smt2
   regress0/bv/bv-to-bool2.smt2
   regress0/bv/bv2nat-ground-c.smt2

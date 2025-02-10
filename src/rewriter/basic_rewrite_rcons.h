@@ -412,12 +412,21 @@ class BasicRewriteRCons : protected EnvObj
    * (str.to_re "A") Sigma*)).
    */
   Node proveGeneralReMembership(CDProof* cdp, const Node& n);
-
+  /**
+   * Prove symmetry of equality eq, in particular this proves eq[1] == eq[0]
+   * where eq is an equality and adds it to cdp.
+   */
   Node proveSymm(CDProof* cdp, const Node& eq);
+  /**
+   * Prove congruence for left hand side term n.
+   * If n is a term of the form (f t1 ... tn), this proves (f s1 .... sn)
+   * where ti != si iff premises[i] is non-null and the equality (= ti si).
+   * Note that we permit providing null premises[i] in which case si is ti
+   * and we prove (= ti ti) by REFL.
+   */
   Node proveCong(CDProof* cdp,
                  const Node& n,
                  const std::vector<Node>& premises);
-
   /**
    * Assuming cdp has proofs of (=> A B) and (=> B A), this ensures we
    * have a proof of (= A B).
