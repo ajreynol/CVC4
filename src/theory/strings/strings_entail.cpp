@@ -232,9 +232,31 @@ int StringsEntail::componentContains(std::vector<Node>& n1,
                                      bool computeRemainder,
                                      int remainderDir)
 {
+  return componentContainsInternal(false, n1, n2, nb, ne, computeRemainder, remainderDir);
+}
+
+int StringsEntail::componentContainsExt(std::vector<Node>& n1,
+                      std::vector<Node>& n2,
+                      std::vector<Node>& nb,
+                      std::vector<Node>& ne,
+                      bool computeRemainder,
+                      int remainderDir)
+{
+  return componentContainsInternal(true, n1, n2, nb, ne, computeRemainder, remainderDir);
+}
+
+int StringsEntail::componentContainsInternal(bool isExt,
+                              std::vector<Node>& n1,
+                      std::vector<Node>& n2,
+                      std::vector<Node>& nb,
+                      std::vector<Node>& ne,
+                      bool computeRemainder,
+                      int remainderDir)
+{
   Assert(nb.empty());
   Assert(ne.empty());
   Trace("strings-entail") << "Component contains: " << std::endl;
+  Trace("strings-entail") << "isExt = " << isExt << std::endl;
   Trace("strings-entail") << "n1 = " << n1 << std::endl;
   Trace("strings-entail") << "n2 = " << n2 << std::endl;
   // if n2 is a singleton, we can do optimized version here
@@ -244,7 +266,7 @@ int StringsEntail::componentContains(std::vector<Node>& n1,
     {
       Node n1rb;
       Node n1re;
-      if (componentContainsBase(n1[i], n2[0], n1rb, n1re, 0, computeRemainder))
+      if (componentContainsBase(isExt, n1[i], n2[0], n1rb, n1re, 0, computeRemainder))
       {
         if (computeRemainder)
         {
@@ -288,7 +310,8 @@ int StringsEntail::componentContains(std::vector<Node>& n1,
       Node n1rb_first;
       Node n1re_first;
       // first component of n2 must be a suffix
-      if (componentContainsBase(n1[i],
+      if (componentContainsBase(isExt,
+                                n1[i],
                                 n2[0],
                                 n1rb_first,
                                 n1re_first,
@@ -304,7 +327,8 @@ int StringsEntail::componentContains(std::vector<Node>& n1,
             Node n1rb_last;
             Node n1re_last;
             // last component of n2 must be a prefix
-            if (componentContainsBase(n1[i + j],
+            if (componentContainsBase(isExt,
+              n1[i + j],
                                       n2[j],
                                       n1rb_last,
                                       n1re_last,
@@ -361,7 +385,7 @@ int StringsEntail::componentContains(std::vector<Node>& n1,
 }
 
 bool StringsEntail::componentContainsBase(
-    Node n1, Node n2, Node& n1rb, Node& n1re, int dir, bool computeRemainder)
+    bool isExt, Node n1, Node n2, Node& n1rb, Node& n1re, int dir, bool computeRemainder)
 {
   Assert(n1rb.isNull());
   Assert(n1re.isNull());
@@ -421,7 +445,7 @@ bool StringsEntail::componentContainsBase(
         }
       }
     }
-    else if (computeRemainder)
+    else if (!isExt || computeRemainder)
     {
       // Note the cases below would require constructing new terms
       // as part of the remainder components. Thus, this is only checked

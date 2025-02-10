@@ -3321,10 +3321,11 @@ enum ENUM(ProofRewriteRule)
    * **Strings -- Macro string constant no contains concatenation**
    *
    * .. math::
-   *   \mathit{str.contains}(c, \mathit{str.++}(t_1, \ldots, t_n)) = \top
+   *   \mathit{str.contains}(c, \mathit{str.++}(t_1, \ldots, t_n)) = \bot
    *
-   * where :math:`t_1, \ldots, t_n` contain constants that cannot be found
-   * in the constant :math:`c` in order.
+   * where :math:`c` is not contained in :math:`R_t`, where
+   * the regular expression :math:`R_t` overapproximates the possible
+   * values of :math:`\mathit{str.++}(t_1, \ldots, t_n)`.
    *
    * \endverbatim
    */
@@ -4619,6 +4620,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_IN_RE_TEST_UNFOLD_REV),
   /** Auto-generated from RARE rule str-in-re-concat-emp */
   EVALUE(STR_IN_RE_CONCAT_EMP),
+  /** Auto-generated from RARE rule str-in-re-from-int-nemp-dig-range */
+  EVALUE(STR_IN_RE_FROM_INT_NEMP_DIG_RANGE),
   /** Auto-generated from RARE rule str-in-re-from-int-dig-range */
   EVALUE(STR_IN_RE_FROM_INT_DIG_RANGE),
   /** Auto-generated from RARE rule eq-refl */

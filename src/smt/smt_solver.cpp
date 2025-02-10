@@ -162,6 +162,10 @@ void SmtSolver::preprocess(preprocessing::AssertionPipeline& ap)
       {
         std::stringstream ss;
         ss << "ERROR: cannot handle assertion with term of kind " << k << " in this configuration";
+        if (k==Kind::STORE_ALL)
+        {
+          ss << ", unless --arrays-exp is enabled";
+        }
         throw LogicException(ss.str());
       }
     }
