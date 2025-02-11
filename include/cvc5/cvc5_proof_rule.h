@@ -1754,7 +1754,7 @@ enum ENUM(ProofRule)
    *
    * .. math::
    *
-   *   \inferrule{t_1\in R_1,\,\ldots,\,t_n\in R_n\mid -}{\text{re.++}(t_1, \ldots, t_n)\in \text{re.++}(R_1, \ldots, R_n)}
+   *   \inferrule{t_1\in R_1,\,\ldots,\,t_n\in R_n\mid -}{\text{str.++}(t_1, \ldots, t_n)\in \text{re.++}(R_1, \ldots, R_n)}
    * \endverbatim
    */
   EVALUE(RE_CONCAT),
