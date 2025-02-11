@@ -536,7 +536,7 @@ Node AlfNodeConverter::getOperatorOfTerm(Node n)
           std::vector<Node> args;
           args.push_back(d_nm->mkConstInt(cindex));
           Node ssym = mkInternalApp(
-              "tuple.select", args, dt[cindex][index].getSelector().getType());
+              "tuple.update", args, dt[cindex][index].getSelector().getType());
           indices.push_back(ssym);
         }
         else
