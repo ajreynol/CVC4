@@ -298,9 +298,7 @@
 
 ;;;;; ProofRewriteRule::DT_COLLAPSE_UPDATER
 
-;;;;; ProofRewriteRule::DT_UPDATER_ELIM
-
-; program: $mk_dt_updater_elim
+; program: $mk_dt_collapse_updater
 ; args:
 ; - c U: The remaining term to process.
 ; - a T: The value to replace as an argument of t.
