@@ -298,8 +298,6 @@
 
 ;;;;; ProofRewriteRule::DT_COLLAPSE_UPDATER
 
-
-
 ; rule: dt-collapse-updater
 ; implements: ProofRewriteRule::DT_COLLAPSE_UPDATER
 ; args:
@@ -325,17 +323,35 @@
 
 ;;;;; ProofRewriteRule::DT_UPDATER_ELIM
 
-(program $mk_dt_upater_elim ((D Type) (T Type) (s (-> D T)) (t D) (a T) (ss eo::List))
-  ((-> D T) D T eo::List) D
+; program: $mk_dt_upater_elim
+; args:
+; - s (-> D T): the selector specifying the field.
+; - D t: The datatype term we are updating.
+; - a T: The value to replace at the s field of t.
+; - ss eo::List: The remaining selector fields to process.
+; - c U: The result of updating t we have accumulated so far.
+; return: >
+;   The result of updating the field specified by s in t.
+(program $mk_dt_upater_elim ((D Type) (T Type) (U Type) (s (-> D T)) (s1 (-> D T)) (t D) (a T) (ss eo::List :list) (c U))
+  ((-> D T) D T eo::List U) D
   (
-    (($mk_dt_upater_elim s t a ss)  t)
+    (($mk_dt_upater_elim s t a (eo::List::cons s ss) c)   ($mk_dt_upater_elim s t a ss (c a)))
+    (($mk_dt_upater_elim s t a (eo::List::cons s1 ss) c)  ($mk_dt_upater_elim s t a ss (c (s1 t))))
+    (($mk_dt_upater_elim s t a eo::List::nil c)           c)
   )
 )
 
-(declare-rule dt-updater-elim ((D Type) (T Type) (s (-> D T)) (t D) (a T) (tr D))
-  :args ((= (update s t a) tr))
-  :requires (((eo::define ((c ($get_fun t)))
-              (eo::define ((ss ($dt_get_selectors (eo::typeof t) c)))
-                ($mk_dt_upater_elim s t a ss))) tr))
-  :conclusion (= (update s t a) tr)
+; rule: dt-collapse-updater
+; implements: ProofRewriteRule::DT_COLLAPSE_UPDATER
+; args:
+; - eq Bool: The equality to prove.
+; requires: >
+;   We require that the right hand side is an ITE where the then branch is
+;   obtained by updating the proper field of t.
+; conclusion: The given equality.
+(declare-rule dt-updater-elim ((D Type) (T Type) (U Type) (s (-> D T)) (t D) (a T) (tr D) (c U))
+  :args ((= (update s t a) (ite (is c t) tr t)))
+  :requires (((eo::define ((ss ($dt_get_selectors (eo::typeof t) c)))
+                ($mk_dt_upater_elim s t a ss ($dt_inst_cons_of (eo::typeof t) c))) tr))  ; ensure the constructor is annotated
+  :conclusion (= (update s t a) (ite (is c t) tr t))
 )
