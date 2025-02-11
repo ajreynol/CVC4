@@ -298,6 +298,23 @@
 
 ;;;;; ProofRewriteRule::DT_COLLAPSE_UPDATER
 
+;;;;; ProofRewriteRule::DT_UPDATER_ELIM
+
+; program: $mk_dt_updater_elim
+; args:
+; - c U: The remaining term to process.
+; - a T: The value to replace as an argument of t.
+; - n Int: The argument position (from the end) which a should be placed.
+; return: >
+;   The result of updating the n^th argument from the end in t.
+(program $mk_dt_collapse_updater ((U Type) (T Type) (f (-> T U)) (x T) (a T) (n Int))
+  (U T Int) U
+  (
+    (($mk_dt_collapse_updater (f x) a 0)  (f a))
+    (($mk_dt_collapse_updater (f x) a n)  (_ ($mk_dt_collapse_updater f a (eo::add n -1)) x))
+  )
+)
+
 ; rule: dt-collapse-updater
 ; implements: ProofRewriteRule::DT_COLLAPSE_UPDATER
 ; args:
@@ -311,33 +328,31 @@
   :args ((= (update s t a) tr))
   :requires (((eo::define ((c ($get_fun t)))
               (eo::define ((ss ($dt_get_selectors (eo::typeof t) c)))
-              ; note that s must be a selector of the constructor of t, or else
-              ; index will be negative
               (eo::define ((index (eo::list_find eo::List::cons ss s)))
-              (eo::requires (eo::is_neg index) false
-                ; FIXME
-                t))))
+                (eo::ite (eo::is_neg index)
+                  t ; unchanged if not correct constructor
+                  ($mk_dt_collapse_updater t a (eo::add (eo::len ss) index -1))))))
                   tr))
   :conclusion (= (update s t a) tr)
 )
 
 ;;;;; ProofRewriteRule::DT_UPDATER_ELIM
 
-; program: $mk_dt_upater_elim
+; program: $mk_dt_updater_elim
 ; args:
-; - s (-> D T): the selector specifying the field.
+; - s (-> D T): the selector specifying the argument.
 ; - D t: The datatype term we are updating.
-; - a T: The value to replace at the s field of t.
-; - ss eo::List: The remaining selector fields to process.
+; - a T: The value to replace at the s argument of t.
+; - ss eo::List: The remaining selector arguments to process.
 ; - c U: The result of updating t we have accumulated so far.
 ; return: >
-;   The result of updating the field specified by s in t.
-(program $mk_dt_upater_elim ((D Type) (T Type) (U Type) (s (-> D T)) (s1 (-> D T)) (t D) (a T) (ss eo::List :list) (c U))
+;   The result of updating the argument specified by s in t.
+(program $mk_dt_updater_elim ((D Type) (T Type) (U Type) (s (-> D T)) (s1 (-> D T)) (t D) (a T) (ss eo::List :list) (c U))
   ((-> D T) D T eo::List U) D
   (
-    (($mk_dt_upater_elim s t a (eo::List::cons s ss) c)   ($mk_dt_upater_elim s t a ss (c a)))
-    (($mk_dt_upater_elim s t a (eo::List::cons s1 ss) c)  ($mk_dt_upater_elim s t a ss (c (s1 t))))
-    (($mk_dt_upater_elim s t a eo::List::nil c)           c)
+    (($mk_dt_updater_elim s t a (eo::List::cons s ss) c)   ($mk_dt_updater_elim s t a ss (c a)))
+    (($mk_dt_updater_elim s t a (eo::List::cons s1 ss) c)  ($mk_dt_updater_elim s t a ss (c (s1 t))))
+    (($mk_dt_updater_elim s t a eo::List::nil c)           c)
   )
 )
 
@@ -347,11 +362,11 @@
 ; - eq Bool: The equality to prove.
 ; requires: >
 ;   We require that the right hand side is an ITE where the then branch is
-;   obtained by updating the proper field of t.
+;   obtained by updating the proper argument of t.
 ; conclusion: The given equality.
 (declare-rule dt-updater-elim ((D Type) (T Type) (U Type) (s (-> D T)) (t D) (a T) (tr D) (c U))
   :args ((= (update s t a) (ite (is c t) tr t)))
   :requires (((eo::define ((ss ($dt_get_selectors (eo::typeof t) c)))
-                ($mk_dt_upater_elim s t a ss ($dt_inst_cons_of (eo::typeof t) c))) tr))  ; ensure the constructor is annotated
+                ($mk_dt_updater_elim s t a ss ($dt_inst_cons_of (eo::typeof t) c))) tr))  ; ensure the constructor is annotated
   :conclusion (= (update s t a) (ite (is c t) tr t))
 )

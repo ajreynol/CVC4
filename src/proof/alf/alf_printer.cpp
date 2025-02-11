@@ -303,6 +303,7 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
     case ProofRewriteRule::DT_CONS_EQ:
     case ProofRewriteRule::DT_CONS_EQ_CLASH:
     case ProofRewriteRule::DT_CYCLE:
+    case ProofRewriteRule::DT_COLLAPSE_UPDATER:
     case ProofRewriteRule::DT_UPDATER_ELIM:
     case ProofRewriteRule::QUANT_MERGE_PRENEX:
     case ProofRewriteRule::QUANT_MINISCOPE_AND:
