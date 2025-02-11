@@ -454,7 +454,6 @@
                               (s String) (r RegLan) (t String))
   (T) Bool
   (
-    ; str.contains
     (($str_reduction_pred (str.contains x y))
       (eo::define ((k (@purify (str.contains x y))))
       (= k (not (forall ((@var.str_index Int))
