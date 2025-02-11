@@ -521,6 +521,7 @@ bool PolyNorm::isArithPolyNormRel(TNode a, TNode b, Rational& ca, Rational& cb)
     // bitvector inequalities.
     return false;
   }
+  Trace("arith-poly-norm-rel") << "Poly norm rel? " << a << " " << b << std::endl;
   // k is a handled binary relation, i.e. one that permits normalization
   // via subtracting the right side from the left.
   PolyNorm pa = PolyNorm::mkDiff(a[0], a[1]);
@@ -528,9 +529,42 @@ bool PolyNorm::isArithPolyNormRel(TNode a, TNode b, Rational& ca, Rational& cb)
   // if a non-arithmetic equality
   if (k == Kind::EQUAL && !eqtn.isRealOrInt())
   {
-    // pa and pb must be equal with no scaling factors.
     ca = Rational(1);
     cb = Rational(1);
+    Trace("arith-poly-norm-rel") << "...determine multiply factor" << std::endl;
+    for (const std::pair<const Node, Rational>& m : pa.d_polyNorm)
+    {
+      std::map<Node, Rational>::iterator itb = pb.d_polyNorm.find(m.first);
+      if (itb==pb.d_polyNorm.end())
+      {
+        // a monomial in a is not in b
+        return false;
+      }
+      if (m.second==itb->second)
+      {
+        // coefficients are equal, we should just try one
+        break;
+      }
+      // if this factor is odd
+      bool oddA = m.second.getNumerator().testBit(0);
+      bool oddB = itb->second.getNumerator().testBit(0);
+      if (oddA!=oddB)
+      {
+        // an odd with an even
+        return false;
+      }
+      else if (oddA && oddB)
+      {
+        // coefficients are both odd but not equal, multiply either side
+        cb = m.second;
+        ca = itb->second;
+        break;
+      }
+      // even with even is inconclusive
+    }
+    Trace("arith-poly-norm") << "...try " << ca << " / " << cb << std::endl;
+    pa.mulCoeffs(ca);
+    pb.mulCoeffs(cb);
     // Check for equality, taking modulo 2^w on coefficients.
     return areEqualPolyNormTyped(eqtn, pa, pb);
   }
