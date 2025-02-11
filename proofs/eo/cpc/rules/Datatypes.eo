@@ -295,3 +295,47 @@
   :requires ((($dt_find_cycle t (@list s)) true)) 
   :conclusion (= (= s t) false)
 )
+
+;;;;; ProofRewriteRule::DT_COLLAPSE_UPDATER
+
+
+
+; rule: dt-collapse-updater
+; implements: ProofRewriteRule::DT_COLLAPSE_UPDATER
+; args:
+; - eq Bool: The equality to prove.
+; requires: >
+;   We require that the index^th argument of the term t we are selecting from
+;   is the right hand side of the equality, where index is the index of the
+;   selector in the constructor of t.
+; conclusion: The given equality.
+(declare-rule dt-collapse-updater ((D Type) (T Type) (s (-> D T)) (t D) (a T) (tr D))
+  :args ((= (update s t a) tr))
+  :requires (((eo::define ((c ($get_fun t)))
+              (eo::define ((ss ($dt_get_selectors (eo::typeof t) c)))
+              ; note that s must be a selector of the constructor of t, or else
+              ; index will be negative
+              (eo::define ((index (eo::list_find eo::List::cons ss s)))
+              (eo::requires (eo::is_neg index) false
+                ; FIXME
+                t))))
+                  tr))
+  :conclusion (= (update s t a) tr)
+)
+
+;;;;; ProofRewriteRule::DT_UPDATER_ELIM
+
+(program $mk_dt_upater_elim ((D Type) (T Type) (s (-> D T)) (t D) (a T) (ss eo::List))
+  ((-> D T) D T eo::List) D
+  (
+    (($mk_dt_upater_elim s t a ss)  t)
+  )
+)
+
+(declare-rule dt-updater-elim ((D Type) (T Type) (s (-> D T)) (t D) (a T) (tr D))
+  :args ((= (update s t a) tr))
+  :requires (((eo::define ((c ($get_fun t)))
+              (eo::define ((ss ($dt_get_selectors (eo::typeof t) c)))
+                ($mk_dt_upater_elim s t a ss))) tr))
+  :conclusion (= (update s t a) tr)
+)
