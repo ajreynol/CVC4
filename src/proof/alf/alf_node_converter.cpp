@@ -530,17 +530,14 @@ Node AlfNodeConverter::getOperatorOfTerm(Node n)
         size_t index = DType::indexOf(op);
         const DType& dt = DType::datatypeOf(op);
         size_t cindex = DType::cindexOf(op);
-        opName << "update";
         if (dt.isTuple())
         {
-          std::vector<Node> args;
-          args.push_back(d_nm->mkConstInt(cindex));
-          Node ssym = mkInternalApp(
-              "tuple.update", args, dt[cindex][index].getSelector().getType());
-          indices.push_back(ssym);
+          opName << "tuple.update";
+          indices.push_back(d_nm->mkConstInt(index));
         }
         else
         {
+          opName << "update";
           indices.push_back(dt[cindex][index].getSelector());
         }
       }
