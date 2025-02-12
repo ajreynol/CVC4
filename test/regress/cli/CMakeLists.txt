@@ -2029,6 +2029,7 @@ set(regress_0_tests
   regress0/strings/str-pred-small-rw_831.smt2
   regress0/strings/str-repl-find-pre.smt2
   regress0/strings/str-rev-simple.smt2
+  regress0/strings/str-term-small-rw_1005.smt2
   regress0/strings/str-term-small-rw_593.smt2
   regress0/strings/str003.smt2
   regress0/strings/str004.smt2
