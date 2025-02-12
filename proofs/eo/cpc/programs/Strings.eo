@@ -1197,25 +1197,6 @@
   ($re_nary_elim ($str_rev rev ($re_str_from_flat_form rev r)))
 )
 
-; define: $str_is_prefix
-; args:
-; - s (Seq U): The first string.
-; - s1 (Seq U): The second string.
-; - rev Bool: Whether the two arguments should be reversed.
-; return:
-;   true if s1 is a prefix of s, taking into account flattening, and reversing
-;   the strings if rev is true.
-(define $str_is_prefix ((U Type :implicit) (s (Seq U)) (s1 (Seq U)) (rev Bool))
-  (eo::define ((sf ($str_to_flat_form s rev)))
-  (eo::define ((sf1 ($str_to_flat_form s1 rev)))
-  (eo::define ((T (eo::typeof s)))
-  (eo::define ((emp ($mk_emptystr T)))
-  ; first, it may just be the first child, moreover this is required if we are looking for a term (str.++ (str.++ ...) ...)
-  (eo::ite ($nary_is_prefix str.++ emp (str.++ s1) sf)
-    true
-    ($nary_is_prefix str.++ emp sf1 sf))))))
-)
-
 ; note: This is a forward declaration of $str_re_includes below.
 (program $str_re_includes () (RegLan RegLan) Bool)
 
