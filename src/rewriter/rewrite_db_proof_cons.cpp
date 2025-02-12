@@ -667,6 +667,15 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
   }
   else if (id == RewriteProofStatus::ANNIHILATE)
   {
+    if (!target[1].isConst())
+    {
+      return false;
+    }
+    Node zero = expr::getZeroElement(nodeManager(), target[0].getKind(), target[0].getType());
+    if (zero!=target[1])
+    {
+      return false;
+    }
     if (!expr::isAnnihilate(target[0], target[1]))
     {
       return false;
