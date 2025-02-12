@@ -105,16 +105,6 @@
   (str.len (str.substr s n m))
   m)
 
-(define-cond-rule str-len-substr-ub1 ((s ?Seq) (n Int) (m Int) (k Int))
-  (and (>= k 0) (>= k m))
-  (>= k (str.len (str.substr s n m)))
-  true)
-
-(define-cond-rule str-len-substr-ub2 ((s ?Seq) (n Int) (m Int) (k Int))
-  (and (>= k 0) (>= k (- (str.len s) n)))
-  (>= k (str.len (str.substr s n m)))
-  true)
-
 (define-cond-rule str-concat-clash ((s1 ?Seq) (s2 ?Seq :list) (t1 ?Seq) (t2 ?Seq :list))
   (and (not (= s1 t1)) (= (str.len s1) (str.len t1)))
   (= (str.++ s1 s2) (str.++ t1 t2))

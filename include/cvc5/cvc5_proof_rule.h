@@ -3717,22 +3717,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_INT_EQ_CONFLICT),
   /** Auto-generated from RARE rule arith-int-geq-tighten */
   EVALUE(ARITH_INT_GEQ_TIGHTEN),
-  /** Auto-generated from RARE rule arith-sine-zero */
-  EVALUE(ARITH_SINE_ZERO),
-  /** Auto-generated from RARE rule arith-sine-pi2 */
-  EVALUE(ARITH_SINE_PI2),
-  /** Auto-generated from RARE rule arith-cosine-elim */
-  EVALUE(ARITH_COSINE_ELIM),
-  /** Auto-generated from RARE rule arith-tangent-elim */
-  EVALUE(ARITH_TANGENT_ELIM),
-  /** Auto-generated from RARE rule arith-secent-elim */
-  EVALUE(ARITH_SECENT_ELIM),
-  /** Auto-generated from RARE rule arith-cosecent-elim */
-  EVALUE(ARITH_COSECENT_ELIM),
-  /** Auto-generated from RARE rule arith-cotangent-elim */
-  EVALUE(ARITH_COTANGENT_ELIM),
-  /** Auto-generated from RARE rule arith-pi-not-int */
-  EVALUE(ARITH_PI_NOT_INT),
   /** Auto-generated from RARE rule arith-abs-eq */
   EVALUE(ARITH_ABS_EQ),
   /** Auto-generated from RARE rule arith-abs-int-gt */
@@ -4229,14 +4213,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(SETS_UNION_MEMBER),
   /** Auto-generated from RARE rule sets-choose-singleton */
   EVALUE(SETS_CHOOSE_SINGLETON),
-  /** Auto-generated from RARE rule sets-card-singleton */
-  EVALUE(SETS_CARD_SINGLETON),
-  /** Auto-generated from RARE rule sets-card-union */
-  EVALUE(SETS_CARD_UNION),
-  /** Auto-generated from RARE rule sets-card-minus */
-  EVALUE(SETS_CARD_MINUS),
-  /** Auto-generated from RARE rule sets-card-emp */
-  EVALUE(SETS_CARD_EMP),
   /** Auto-generated from RARE rule sets-minus-self */
   EVALUE(SETS_MINUS_SELF),
   /** Auto-generated from RARE rule sets-is-empty-elim */
@@ -4281,10 +4257,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_UPDATE_IN_FIRST_CONCAT),
   /** Auto-generated from RARE rule str-len-substr-in-range */
   EVALUE(STR_LEN_SUBSTR_IN_RANGE),
-  /** Auto-generated from RARE rule str-len-substr-ub1 */
-  EVALUE(STR_LEN_SUBSTR_UB1),
-  /** Auto-generated from RARE rule str-len-substr-ub2 */
-  EVALUE(STR_LEN_SUBSTR_UB2),
   /** Auto-generated from RARE rule str-concat-clash */
   EVALUE(STR_CONCAT_CLASH),
   /** Auto-generated from RARE rule str-concat-clash-rev */
@@ -4693,6 +4665,30 @@ enum ENUM(ProofRewriteRule)
   EVALUE(UF_INT2BV_BVULT_EQUIV),
   /** Auto-generated from RARE rule uf-int2bv-bvule-equiv */
   EVALUE(UF_INT2BV_BVULE_EQUIV),
+  /** Auto-generated from RARE rule arith-sine-zero */
+  EVALUE(ARITH_SINE_ZERO),
+  /** Auto-generated from RARE rule arith-sine-pi2 */
+  EVALUE(ARITH_SINE_PI2),
+  /** Auto-generated from RARE rule arith-cosine-elim */
+  EVALUE(ARITH_COSINE_ELIM),
+  /** Auto-generated from RARE rule arith-tangent-elim */
+  EVALUE(ARITH_TANGENT_ELIM),
+  /** Auto-generated from RARE rule arith-secent-elim */
+  EVALUE(ARITH_SECENT_ELIM),
+  /** Auto-generated from RARE rule arith-cosecent-elim */
+  EVALUE(ARITH_COSECENT_ELIM),
+  /** Auto-generated from RARE rule arith-cotangent-elim */
+  EVALUE(ARITH_COTANGENT_ELIM),
+  /** Auto-generated from RARE rule arith-pi-not-int */
+  EVALUE(ARITH_PI_NOT_INT),
+  /** Auto-generated from RARE rule sets-card-singleton */
+  EVALUE(SETS_CARD_SINGLETON),
+  /** Auto-generated from RARE rule sets-card-union */
+  EVALUE(SETS_CARD_UNION),
+  /** Auto-generated from RARE rule sets-card-minus */
+  EVALUE(SETS_CARD_MINUS),
+  /** Auto-generated from RARE rule sets-card-emp */
+  EVALUE(SETS_CARD_EMP),
 // ${rules}$
 #ifdef CVC5_API_USE_C_ENUMS
   // must be last entry
