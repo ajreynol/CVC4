@@ -521,7 +521,8 @@ bool PolyNorm::isArithPolyNormRel(TNode a, TNode b, Rational& ca, Rational& cb)
     // bitvector inequalities.
     return false;
   }
-  Trace("arith-poly-norm-rel") << "Poly norm rel? " << a << " " << b << std::endl;
+  Trace("arith-poly-norm-rel")
+      << "Poly norm rel? " << a << " " << b << std::endl;
   // k is a handled binary relation, i.e. one that permits normalization
   // via subtracting the right side from the left.
   PolyNorm pa = PolyNorm::mkDiff(a[0], a[1]);
@@ -529,19 +530,19 @@ bool PolyNorm::isArithPolyNormRel(TNode a, TNode b, Rational& ca, Rational& cb)
   // if a non-arithmetic equality
   if (k == Kind::EQUAL && !eqtn.isRealOrInt())
   {
-    Assert (eqtn.isBitVector());
+    Assert(eqtn.isBitVector());
     ca = Rational(1);
     cb = Rational(1);
     Trace("arith-poly-norm-rel") << "...determine multiply factor" << std::endl;
     for (const std::pair<const Node, Rational>& m : pa.d_polyNorm)
     {
       std::map<Node, Rational>::iterator itb = pb.d_polyNorm.find(m.first);
-      if (itb==pb.d_polyNorm.end())
+      if (itb == pb.d_polyNorm.end())
       {
         // a monomial in a is not in b
         return false;
       }
-      if (m.second==itb->second)
+      if (m.second == itb->second)
       {
         // coefficients are equal, we should just try one
         break;
@@ -549,7 +550,7 @@ bool PolyNorm::isArithPolyNormRel(TNode a, TNode b, Rational& ca, Rational& cb)
       // if this factor is odd
       bool oddA = m.second.getNumerator().testBit(0);
       bool oddB = itb->second.getNumerator().testBit(0);
-      if (oddA!=oddB)
+      if (oddA != oddB)
       {
         // an odd with an even
         return false;

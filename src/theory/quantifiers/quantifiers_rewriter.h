@@ -148,7 +148,7 @@ class QuantifiersRewriter : public TheoryRewriter
    *
    * For simplicity, this method will only add a single element to
    * vars/subs/lits.
-   * 
+   *
    * note: for the sake of proofs, we require that lits[0] is *equivalent*
    * to (= vars[0] subs[0]).
    */

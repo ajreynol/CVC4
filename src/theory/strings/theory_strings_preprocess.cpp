@@ -910,7 +910,10 @@ Node StringsPreprocess::reduce(Node t,
                           nm->mkNode(Kind::ADD, ci, offset),
                           ci);
 
-    Node body = nm->mkNode(Kind::OR, nm->mkNode(Kind::GEQ, i, zero).notNode(), nm->mkNode(Kind::LT, i, lenr).notNode(), ri.eqNode(res));
+    Node body = nm->mkNode(Kind::OR,
+                           nm->mkNode(Kind::GEQ, i, zero).notNode(),
+                           nm->mkNode(Kind::LT, i, lenr).notNode(),
+                           ri.eqNode(res));
     Node rangeA = utils::mkForallInternal(nm, bvi, body);
 
     // upper 65 ... 90
@@ -944,7 +947,10 @@ Node StringsPreprocess::reduce(Node t,
     Node ssr = nm->mkNode(Kind::STRING_SUBSTR, r, i, one);
     Node ssx = nm->mkNode(Kind::STRING_SUBSTR, x, revi, one);
 
-    Node body = nm->mkNode(Kind::OR, nm->mkNode(Kind::GEQ, i, zero).notNode(), nm->mkNode(Kind::LT, i, lenr).notNode(), ssr.eqNode(ssx));
+    Node body = nm->mkNode(Kind::OR,
+                           nm->mkNode(Kind::GEQ, i, zero).notNode(),
+                           nm->mkNode(Kind::LT, i, lenr).notNode(),
+                           ssr.eqNode(ssx));
     Node rangeA = utils::mkForallInternal(nm, bvi, body);
     // assert:
     //   len(r) = len(x) ^

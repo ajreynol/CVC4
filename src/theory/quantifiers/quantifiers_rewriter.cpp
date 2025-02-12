@@ -1227,7 +1227,7 @@ Node QuantifiersRewriter::getVarElimEqBv(Node lit,
     // (concat x y) = z is not equivalent to x = ((_ extract n m) z)
     disallowedKinds.insert(Kind::BITVECTOR_CONCAT);
   }
-  
+
   // compute a subset active_args of the bound variables args that occur in lit
   std::vector<Node> active_args;
   computeArgVec(args, active_args, lit);
@@ -1243,15 +1243,15 @@ Node QuantifiersRewriter::getVarElimEqBv(Node lit,
     if (!disallowedKinds.empty())
     {
       Node curr = lit;
-      for (size_t i=0, npath = path.size(); i<npath; i++)
+      for (size_t i = 0, npath = path.size(); i < npath; i++)
       {
         Trace("quant-velim-bv") << "On path: " << curr << std::endl;
-        if (disallowedKinds.find(curr.getKind())!=disallowedKinds.end())
+        if (disallowedKinds.find(curr.getKind()) != disallowedKinds.end())
         {
           slit = Node::null();
           break;
         }
-        unsigned p = path[npath-i-1];
+        unsigned p = path[npath - i - 1];
         curr = curr[p];
       }
     }
