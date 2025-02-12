@@ -134,7 +134,9 @@ const char* toString(Rewrite r)
     case Rewrite::SPLIT_EQ: return "SPLIT_EQ";
     case Rewrite::SPLIT_EQ_STRIP_L: return "SPLIT_EQ_STRIP_L";
     case Rewrite::SPLIT_EQ_STRIP_R: return "SPLIT_EQ_STRIP_R";
-    case Rewrite::SS_COMBINE: return "SS_COMBINE";
+    case Rewrite::SS_COMBINE_EQ: return "SS_COMBINE_EQ";
+    case Rewrite::SS_COMBINE_GEQ_INNER: return "SS_COMBINE_GEQ_INNER";
+    case Rewrite::SS_COMBINE_GEQ_OUTER: return "SS_COMBINE_GEQ_OUTER";
     case Rewrite::SS_CONST_END_OOB: return "SS_CONST_END_OOB";
     case Rewrite::SS_CONST_LEN_MAX_OOB: return "SS_CONST_LEN_MAX_OOB";
     case Rewrite::SS_CONST_LEN_NON_POS: return "SS_CONST_LEN_NON_POS";

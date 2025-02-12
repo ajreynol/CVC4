@@ -2644,25 +2644,29 @@ Node SequencesRewriter::rewriteSubstr(Node node)
       Node len_from_inner = nm->mkNode(Kind::SUB, node[0][2], start_outer);
       Node len_from_outer = node[2];
       Node new_len;
+      Rewrite rule = Rewrite::NONE;
       // take quantity that is for sure smaller than the other
       if (len_from_inner == len_from_outer)
       {
         new_len = len_from_inner;
+        rule = Rewrite::SS_COMBINE_EQ;
       }
       else if (d_arithEntail.check(len_from_inner, len_from_outer))
       {
         new_len = len_from_outer;
+        rule = Rewrite::SS_COMBINE_GEQ_INNER;
       }
       else if (d_arithEntail.check(len_from_outer, len_from_inner))
       {
         new_len = len_from_inner;
+        rule = Rewrite::SS_COMBINE_GEQ_OUTER;
       }
       if (!new_len.isNull())
       {
         Node new_start = nm->mkNode(Kind::ADD, start_inner, start_outer);
         Node ret =
             nm->mkNode(Kind::STRING_SUBSTR, node[0][0], new_start, new_len);
-        return returnRewrite(node, ret, Rewrite::SS_COMBINE);
+        return returnRewrite(node, ret, rule);
       }
     }
   }
