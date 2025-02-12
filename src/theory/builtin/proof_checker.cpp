@@ -319,7 +319,8 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     {
       return Node::null();
     }
-    if (expr::getZeroElement(nm, args[0][0].getKind(), args[0][0].getType())!=args[0][1])
+    if (expr::getZeroElement(nm, args[0][0].getKind(), args[0][0].getType())
+        != args[0][1])
     {
       return Node::null();
     }

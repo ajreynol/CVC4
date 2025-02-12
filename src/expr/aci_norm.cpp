@@ -236,11 +236,10 @@ bool isACINorm(Node a, Node b)
   return (a == bn) || (an == b);
 }
 
-
 Node getZeroElement(NodeManager* nm, Kind k, TypeNode tn)
 {
   Node zeroTerm;
-  switch(k)
+  switch (k)
   {
     case Kind::OR: zeroTerm = nm->mkConst(true); break;
     case Kind::AND:
@@ -301,12 +300,12 @@ bool isAnnihilate(Node a, const Node& zero)
     bool isAnnil = false;
     for (const Node& ac : a)
     {
-      if (ac==zero)
+      if (ac == zero)
       {
         isAnnil = true;
         break;
       }
-      if (ac.getKind()==k && isAnnihilate(ac, zero))
+      if (ac.getKind() == k && isAnnihilate(ac, zero))
       {
         isAnnil = true;
         break;

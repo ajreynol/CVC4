@@ -66,7 +66,6 @@ Node getACINormalForm(Node a);
  */
 bool isACINorm(Node a, Node b);
 
-
 bool isAnnihilate(Node a, const Node& zero);
 
 Node getZeroElement(NodeManager* nm, Kind k, TypeNode tn);

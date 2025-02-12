@@ -671,8 +671,9 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
     {
       return false;
     }
-    Node zero = expr::getZeroElement(nodeManager(), target[0].getKind(), target[0].getType());
-    if (zero!=target[1])
+    Node zero = expr::getZeroElement(
+        nodeManager(), target[0].getKind(), target[0].getType());
+    if (zero != target[1])
     {
       return false;
     }
