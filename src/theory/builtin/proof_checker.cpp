@@ -51,6 +51,7 @@ void BuiltinProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::EVALUATE, this);
   pc->registerChecker(ProofRule::DISTINCT_VALUES, this);
   pc->registerChecker(ProofRule::ACI_NORM, this);
+  pc->registerChecker(ProofRule::ANNIHILATE, this);
   pc->registerChecker(ProofRule::ITE_EQ, this);
   pc->registerChecker(ProofRule::ENCODE_EQ_INTRO, this);
   pc->registerChecker(ProofRule::DSL_REWRITE, this);
