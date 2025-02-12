@@ -310,6 +310,24 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     }
     return args[0];
   }
+  else if (id == ProofRule::ANNIHILATE)
+  {
+    Assert(children.empty());
+    Assert(args.size() == 1);
+    if (args[0].getKind() != Kind::EQUAL)
+    {
+      return Node::null();
+    }
+    if (expr::getZeroElement(nm, args[0][0].getKind(), args[0][0].getType())!=args[0][1])
+    {
+      return Node::null();
+    }
+    if (!expr::isAnnihilate(args[0][0], args[0][1]))
+    {
+      return Node::null();
+    }
+    return args[0];
+  }
   else if (id == ProofRule::MACRO_SR_EQ_INTRO)
   {
     Assert(1 <= args.size() && args.size() <= 4);

@@ -217,6 +217,7 @@ enum ENUM(ProofRule)
    * \endverbatim
    */
   EVALUE(ACI_NORM),
+  EVALUE(ANNIHILATE),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Builtin theory -- Substitution + Rewriting equality introduction**
