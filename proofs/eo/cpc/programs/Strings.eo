@@ -444,12 +444,27 @@
 ; In the following, a "reduction predicate" refers to a formula that is used
 ; to axiomatize an extended string program in terms of (simpler) programs.
 
+; define: $str_reduction_pred_case_conv
+; args:
+; - k String: The purification skolem.
+; - x String: The string term argument.
+; - isLower Bool: Whether we are considering str.to_lower (resp. str.to_upper).
+; return: the reduction predicate for term for str.to_lower/str.to_upper applied to x.
+(define $str_reduction_pred_case_conv ((k String) (x String) (isLower Bool))
+  (and (= (str.len x) (str.len k))
+       (forall ((@var.str_index Int))
+         (or (not (>= @var.str_index 0))
+             (not (< @var.str_index (str.len k)))
+             (= (str.to_code (str.substr k @var.str_index 1))
+                (eo::define ((ci (str.to_code (str.substr x @var.str_index 1))))
+                (eo::ite isLower
+                  (ite (and (<= 65 ci) (<= ci 90)) (+ ci 32) ci)
+                  (ite (and (<= 97 ci) (<= ci 122)) (+ ci -32) ci))))))))
+
 ; program: $str_reduction_pred
 ; args:
 ; - t (Seq U): The string term.
 ; return: the reduction predicate for term t of sort s.
-; note: >
-;   The operators listed in comments are missing from the signature currently.
 (program $str_reduction_pred ((T Type) (U Type) (x (Seq U)) (y (Seq U)) (z (Seq U)) (n Int) (m Int)
                               (s String) (r RegLan) (t String))
   (T) Bool
@@ -666,15 +681,16 @@
                 (>= (str.to_code (str.substr s @var.str_index 1)) (str.to_code (str.substr t @var.str_index 1)))
                 (>= (str.to_code (str.substr t @var.str_index 1)) (str.to_code (str.substr s @var.str_index 1)))
             )))))))
-
-    ; str.to_lower
-    (($str_reduction_pred (str.to_lower x)) false)
-    ; str.to_upper
-    (($str_reduction_pred (str.to_upper x)) false)
-    ; str.rev
+    (($str_reduction_pred (str.to_lower x)) ($str_reduction_pred_case_conv (@purify (str.to_lower x)) x true))
+    (($str_reduction_pred (str.to_upper x)) ($str_reduction_pred_case_conv (@purify (str.to_upper x)) x false))
     (($str_reduction_pred (str.rev x))
         (eo::define ((k (@purify (str.rev x))))
-          false))
+          (and (= (str.len x) (str.len k))
+              (forall ((@var.str_index Int))
+                (or
+                  (not (>= @var.str_index 0))
+                  (not (< @var.str_index (str.len k)))
+                  (= (str.substr k @var.str_index 1) (str.substr x (- (str.len x) (+ @var.str_index 1)) 1)))))))
   )
 )
 ; program: $mk_str_eager_reduction
