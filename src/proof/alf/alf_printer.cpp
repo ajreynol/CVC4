@@ -274,7 +274,7 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
       if (isHandledDistinctValues(pargs[0])
           && isHandledDistinctValues(pargs[1]))
       {
-        Trace("alf-printer-debug") << "Can distinct values " << pargs[0] << " "
+        Trace("alf-printer-debug") << "Can distinguish values " << pargs[0] << " "
                                    << pargs[1] << std::endl;
         return true;
       }
@@ -490,6 +490,8 @@ bool AlfPrinter::isHandledDistinctValues(const Node& n)
     if (visited.find(cur) == visited.end())
     {
       visited.insert(cur);
+      // Note we don't currently handle constants in expert theories
+      // or array constants.
       switch (cur.getKind())
       {
         case Kind::CONST_BOOLEAN:

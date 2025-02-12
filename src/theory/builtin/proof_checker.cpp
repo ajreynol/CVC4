@@ -293,13 +293,8 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     {
       return Node::null();
     }
-    Node ret = args[0].eqNode(args[1]).notNode();
-    // we should never assume the existence of uninterpreted sorts
-    if (expr::hasSubtermKind(Kind::UNINTERPRETED_SORT_VALUE, ret))
-    {
-      return Node::null();
-    }
-    return ret;
+    // note we don't check for illegal (non-first-class) types here
+    return args[0].eqNode(args[1]).notNode();
   }
   else if (id == ProofRule::ACI_NORM)
   {
