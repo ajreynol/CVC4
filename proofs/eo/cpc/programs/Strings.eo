@@ -693,6 +693,7 @@
                   (= (str.substr k @var.str_index 1) (str.substr x (- (str.len x) (+ @var.str_index 1)) 1)))))))
   )
 )
+
 ; program: $mk_str_eager_reduction
 ; args:
 ; - t U: The term to process.

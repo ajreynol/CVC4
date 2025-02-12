@@ -542,11 +542,6 @@ bool PolyNorm::isArithPolyNormRel(TNode a, TNode b, Rational& ca, Rational& cb)
         // a monomial in a is not in b
         return false;
       }
-      if (m.second == itb->second)
-      {
-        // coefficients are equal, we should just try one
-        break;
-      }
       // if this factor is odd
       bool oddA = m.second.getNumerator().testBit(0);
       bool oddB = itb->second.getNumerator().testBit(0);
@@ -557,9 +552,17 @@ bool PolyNorm::isArithPolyNormRel(TNode a, TNode b, Rational& ca, Rational& cb)
       }
       else if (oddA && oddB)
       {
-        // coefficients are both odd but not equal, multiply either side
-        cb = m.second;
-        ca = itb->second;
+        // Coefficients are both odd but not equal, multiply either side.
+        // Ensure that we take them modulo the bitwidth here.
+        Integer w = Integer(2).pow(eqtn.getBitVectorSize());
+        Integer ai = m.second.getNumerator().euclidianDivideRemainder(w);
+        Integer bi = itb->second.getNumerator().euclidianDivideRemainder(w);
+        if (ai != bi)
+        {
+          ca = Rational(bi);
+          cb = Rational(ai);
+        }
+        // else, coefficients are equal, we should just try 1 / 1
         break;
       }
       // even with even is inconclusive
