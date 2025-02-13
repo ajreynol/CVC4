@@ -1,6 +1,7 @@
 (include "../programs/Quantifiers.eo")
 (include "../programs/Datatypes.eo")
 (include "../theories/Quantifiers.eo")
+(include "../theories/BitVectors.eo")
 
 ; rule: instantiate
 ; implements: ProofRule::INSTANTIATE.
@@ -377,4 +378,25 @@
   :args ((= (forall (@list x ys) F) G))
   :requires ((($is_quant_dt_split x ($dt_get_constructors (eo::typeof x)) ys F G) true))
   :conclusion (= (forall (@list x ys) F) G)
+)
+
+;;;;; ProofRule::EXISTS_INV_CONDITION
+
+(program $mk_invertibility_condition ((n Int) (x (BitVec n)) (R Bool))
+  ((BitVec n) Bool) Bool
+  (
+  (($mk_invertibility_condition x R) R)
+  )
+)
+
+; rule: exists_inv_condition
+; implements: ProofRule::EXISTS_INV_CONDITION
+; args:
+; - B Bool: An existential for which the invertibility condition is based on.
+; conclusion: >
+;   The invertibility condition implies that the body of the existential has a solution,
+;   as given by the @witness_inv_condition skolem.
+(declare-rule exists_inv_condition ((n Int) (x (BitVec n)) (R Bool))
+  :args ((exists (@list x) R))
+  :conclusion (=> ($mk_invertibility_condition x R) (R (@witness_inv_condition (exists (@list x) R))))
 )
