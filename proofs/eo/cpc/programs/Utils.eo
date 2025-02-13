@@ -262,3 +262,40 @@
     (($result_combine b1 b2)           @result.invalid)
   )
 )
+;; =============== for pairwise
+
+; program: $is_pairwise
+; args:
+; - f (-> T T U): The pairwise operator, e.g. distinct.
+; - op (-> U U U): The combining operator, e.g. and for distinct.
+; - a T: The current LHS element we are checking.
+; - bs @List: The list of RHS elements that should be related to a next.
+; - B U: The term that is potentially a pairwise application of f for the given elements.
+; - rem @List: The list of elements we have yet to process on the LHS.
+; return: True if B is a pairwise application of f for the given arguments.
+(program $is_pairwise ((T Type) (U Type) (f (-> T T U)) (op (-> U U U)) (a T) (b T) (bs T :list) (B U :list) (rem @List :list))
+  ((-> T T U) (-> U U U) T @List U @List) Bool
+  (
+  (($is_pairwise f op a (@list b bs) (op (f a b) B) rem) ($is_pairwise f op a bs B rem))
+  (($is_pairwise f op a @list.nil B (@list b rem))       ($is_pairwise f op b rem B rem))
+  (($is_pairwise f op a @list.nil true @list.nil)        true)
+  )
+)
+
+(program $extract_pairwise_args_rec ((T Type) (U Type) (f (-> T T U)) (op (-> U U U)) (a T) (b T) (c T) (B U :list))
+  ((-> T T U) (-> U U U) T U) @List
+  (
+  (($extract_pairwise_args_rec f op a (op (f a c) B)) (eo::cons @list c ($extract_pairwise_args_rec f op a B)))
+  (($extract_pairwise_args_rec f op a (op (f b c) B)) @list.nil)
+  )
+)
+
+(program $extract_pairwise_args ((T Type) (U Type) (f (-> T T U)) (op (-> U U U)) (a T) (b T) (B U :list))
+  ((-> T T U) (-> U U U) U) @List
+  (
+  (($extract_pairwise_args f op (op (f a b) B)) (eo::define ((D (op (f a b) B)))
+                                                (eo::define ((elems ($extract_pairwise_args_rec f op a D)))
+                                                  (eo::requires ($is_pairwise f op a elems D elems) true (eo::cons @list a elems)))))
+  (($extract_pairwise_args f op (f a b))        (@list a b))
+  )
+)
