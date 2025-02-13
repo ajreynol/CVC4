@@ -54,10 +54,12 @@
   (and (=> y1 zs) _))
 
 (define-rule bool-xor-refl ((x Bool)) (xor x x) false)
-(define-rule bool-xor-nrefl ((x Bool)) (xor x (not x)) true)
-(define-rule bool-xor-false ((x Bool)) (xor x false) x)
-(define-rule bool-xor-true ((x Bool)) (xor x true) (not x))
-(define-rule bool-xor-comm ((x Bool) (y Bool)) (xor x y) (xor y x))
+(define-rule bool-xor-nrefl1 ((x Bool)) (xor x (not x)) true)
+(define-rule bool-xor-false1 ((x Bool)) (xor x false) x)
+(define-rule bool-xor-true1 ((x Bool)) (xor x true) (not x))
+(define-rule bool-xor-nrefl2 ((x Bool)) (xor (not x) x) true)
+(define-rule bool-xor-false2 ((x Bool)) (xor false x) x)
+(define-rule bool-xor-true2 ((x Bool)) (xor true x) (not x))
 (define-rule bool-xor-elim ((x Bool) (y Bool)) (xor x y) (= (not x) y))
 (define-rule bool-not-xor-elim ((x Bool) (y Bool)) (not (xor x y)) (= x y))
 

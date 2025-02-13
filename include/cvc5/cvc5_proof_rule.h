@@ -3831,14 +3831,18 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BOOL_IMPLIES_OR_DISTRIB),
   /** Auto-generated from RARE rule bool-xor-refl */
   EVALUE(BOOL_XOR_REFL),
-  /** Auto-generated from RARE rule bool-xor-nrefl */
-  EVALUE(BOOL_XOR_NREFL),
-  /** Auto-generated from RARE rule bool-xor-false */
-  EVALUE(BOOL_XOR_FALSE),
-  /** Auto-generated from RARE rule bool-xor-true */
-  EVALUE(BOOL_XOR_TRUE),
-  /** Auto-generated from RARE rule bool-xor-comm */
-  EVALUE(BOOL_XOR_COMM),
+  /** Auto-generated from RARE rule bool-xor-nrefl1 */
+  EVALUE(BOOL_XOR_NREFL1),
+  /** Auto-generated from RARE rule bool-xor-false1 */
+  EVALUE(BOOL_XOR_FALSE1),
+  /** Auto-generated from RARE rule bool-xor-true1 */
+  EVALUE(BOOL_XOR_TRUE1),
+  /** Auto-generated from RARE rule bool-xor-nrefl2 */
+  EVALUE(BOOL_XOR_NREFL2),
+  /** Auto-generated from RARE rule bool-xor-false2 */
+  EVALUE(BOOL_XOR_FALSE2),
+  /** Auto-generated from RARE rule bool-xor-true2 */
+  EVALUE(BOOL_XOR_TRUE2),
   /** Auto-generated from RARE rule bool-xor-elim */
   EVALUE(BOOL_XOR_ELIM),
   /** Auto-generated from RARE rule bool-not-xor-elim */
