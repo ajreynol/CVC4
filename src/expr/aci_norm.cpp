@@ -290,6 +290,21 @@ struct AnnihilateComputedTag
 typedef expr::Attribute<AnnihilateTag, bool> AnnihilateAttr;
 typedef expr::Attribute<AnnihilateComputedTag, bool> AnnihilateComputedAttr;
 
+bool isAnnihilate(Kind k)
+{
+  switch (k)
+  {
+    case Kind::OR:
+    case Kind::AND:
+    case Kind::REGEXP_UNION:
+    case Kind::REGEXP_INTER:
+    case Kind::BITVECTOR_AND:
+    case Kind::BITVECTOR_OR: return true;
+    default: break;
+  }
+  return false;
+}
+
 bool isAnnihilate(Node a, const Node& zero)
 {
   AnnihilateAttr aa;
@@ -298,17 +313,20 @@ bool isAnnihilate(Node a, const Node& zero)
   {
     Kind k = a.getKind();
     bool isAnnil = false;
-    for (const Node& ac : a)
+    if (isAnnihilate(k))
     {
-      if (ac == zero)
+      for (const Node& ac : a)
       {
-        isAnnil = true;
-        break;
-      }
-      if (ac.getKind() == k && isAnnihilate(ac, zero))
-      {
-        isAnnil = true;
-        break;
+        if (ac == zero)
+        {
+          isAnnil = true;
+          break;
+        }
+        if (ac.getKind() == k && isAnnihilate(ac, zero))
+        {
+          isAnnil = true;
+          break;
+        }
       }
     }
     a.setAttribute(aa, isAnnil);
