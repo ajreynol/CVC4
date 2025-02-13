@@ -244,6 +244,6 @@
 
 (define-cond-rule bv-nego-eliminate
   ((x ?BitVec) (n Int))
-  (= (+ n 1) (@bvsize x))
+  (= n (- (@bvsize x) 1))
   (bvnego x)
   (= x (concat (@bv 1 1) (@bv 0 n))))
