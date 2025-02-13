@@ -364,14 +364,13 @@
   )
 (define-cond-rule bv-merge-sign-extend-2
   ((x ?BitVec) (i Int) (j Int) (k Int))
-  (and (> j 1) (= k (+ i j)))
+  (and (> j 0) (= k (+ i j)))
   (sign_extend i (zero_extend j x))
   (zero_extend k x)
   )
-(define-cond-rule bv-merge-sign-extend-3
-  ((x ?BitVec) (i Int) (n0 Int))
-  (= n0 0)
-  (sign_extend i (zero_extend n0 x))
+(define-rule bv-merge-sign-extend-3
+  ((x ?BitVec) (i Int))
+  (sign_extend i (zero_extend 0 x))
   (sign_extend i x)
   )
 (define-cond-rule bv-sign-extend-eq-const-1

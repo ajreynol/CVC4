@@ -3159,6 +3159,13 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_EXTRACT_CONCAT),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro extract sign extend **
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_EXTRACT_SIGN_EXTEND),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Extract negations from multiplicands**
    *
    * .. math::
