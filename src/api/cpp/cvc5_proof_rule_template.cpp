@@ -301,6 +301,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::DT_MATCH_ELIM: return "dt-match-elim";
     case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT: return "macro-bv-extract-concat";
     case ProofRewriteRule::MACRO_BV_EXTRACT_SIGN_EXTEND: return "macro-bv-extract-sign-extend";
+    case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST: return "macro-bv-ashr-by-const";
     case ProofRewriteRule::MACRO_BV_EQ_SOLVE: return "macro-bv-eq-solve";
     case ProofRewriteRule::BV_UMULO_ELIMINATE: return "bv-umulo-eliminate";
     case ProofRewriteRule::BV_SMULO_ELIMINATE: return "bv-smulo-eliminate";
