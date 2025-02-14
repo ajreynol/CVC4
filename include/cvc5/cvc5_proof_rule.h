@@ -3187,6 +3187,13 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_AND_OR_XOR_CONCAT_PULLUP),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro multiply signed less than multiply **
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_MULT_SLT_MULT),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro equality solve**
    *
    * .. math::
@@ -3224,22 +3231,6 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(BV_SMULO_ELIMINATE),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Bitvectors -- Combine like terms during addition by counting terms**
-   * \endverbatim
-   */
-  EVALUE(BV_ADD_COMBINE_LIKE_TERMS),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Bitvectors -- Extract negations from multiplicands**
-   *
-   * .. math::
-   *    bvmul(bvneg(a),\ b,\ c) = bvneg(bvmul(a,\ b,\ c))
-   *
-   * \endverbatim
-   */
-  EVALUE(BV_MULT_SIMPLIFY),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Extract continuous substrings of bitvectors**

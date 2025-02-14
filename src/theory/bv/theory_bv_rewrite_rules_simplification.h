@@ -2302,7 +2302,10 @@ Node RewriteRule<MultSltMult>::apply(TNode node)
   nb << a.eqNode(zero_a).notNode();
   nb << nm->mkNode(k, addxt, x)
             .eqNode(nm->mkNode(Kind::BITVECTOR_SGT, a, zero_a));
-  return nb.constructNode();
+  Node ret = nb.constructNode();
+  Trace("bv-rewrite") << "RewriteRule<MultSltMult>(" << ret << ")"
+                      << std::endl;
+  return ret;
 }
 
 /* -------------------------------------------------------------------------- */
