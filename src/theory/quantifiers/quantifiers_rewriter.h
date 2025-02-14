@@ -26,6 +26,7 @@ namespace cvc5::internal {
 
 class Options;
 class TConvProofGenerator;
+class CDProof;
 
 namespace theory {
 
@@ -109,11 +110,13 @@ class QuantifiersRewriter : public TheoryRewriter
                      bool pol,
                      std::vector<Node>& args,
                      std::vector<Node>& vars,
-                     std::vector<Node>& subs) const;
+                     std::vector<Node>& subs,
+                  CDProof* cdp = nullptr) const;
   /**
    * Get variable eliminate for an equality based on theory-specific reasoning.
    */
-  Node getVarElimEq(Node lit, const std::vector<Node>& args, Node& var) const;
+  Node getVarElimEq(Node lit, const std::vector<Node>& args, Node& var,
+                  CDProof* cdp = nullptr) const;
   /** variable eliminate for real equalities
    *
    * If this returns a non-null value ret, then var is updated to a member of
@@ -121,13 +124,15 @@ class QuantifiersRewriter : public TheoryRewriter
    */
   Node getVarElimEqReal(Node lit,
                         const std::vector<Node>& args,
-                        Node& var) const;
+                        Node& var,
+                  CDProof* cdp = nullptr) const;
   /** variable eliminate for bit-vector equalities
    *
    * If this returns a non-null value ret, then var is updated to a member of
    * args, lit is equivalent to ( var = ret ).
    */
-  Node getVarElimEqBv(Node lit, const std::vector<Node>& args, Node& var) const;
+  Node getVarElimEqBv(Node lit, const std::vector<Node>& args, Node& var,
+                  CDProof* cdp = nullptr) const;
   /** variable eliminate for string equalities
    *
    * If this returns a non-null value ret, then var is updated to a member of
@@ -135,7 +140,8 @@ class QuantifiersRewriter : public TheoryRewriter
    */
   Node getVarElimEqString(Node lit,
                           const std::vector<Node>& args,
-                          Node& var) const;
+                          Node& var,
+                  CDProof* cdp = nullptr) const;
   /** get variable elimination
    *
    * If there exists an n with some polarity in body, and entails a literal that
@@ -156,7 +162,8 @@ class QuantifiersRewriter : public TheoryRewriter
                   std::vector<Node>& args,
                   std::vector<Node>& vars,
                   std::vector<Node>& subs,
-                  std::vector<Node>& lits) const;
+                  std::vector<Node>& lits,
+                  CDProof* cdp = nullptr) const;
   /** has variable elimination
    *
    * Returns true if n asserted with polarity pol entails a literal for
@@ -273,7 +280,8 @@ class QuantifiersRewriter : public TheoryRewriter
                           std::vector<Node>& args,
                           std::vector<Node>& vars,
                           std::vector<Node>& subs,
-                          std::vector<Node>& lits) const;
+                          std::vector<Node>& lits,
+                  CDProof* cdp = nullptr) const;
   static void computeArgs(const std::vector<Node>& args,
                           std::map<Node, bool>& activeMap,
                           Node n,

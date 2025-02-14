@@ -61,6 +61,8 @@ class TheoryBoolRewriter : public TheoryRewriter
                              const Node& n,
                              TConvProofGenerator* pg = nullptr);
 
+  static Node getBvInvertSolve(NodeManager * nm, const Node& lit, const Node& var, 
+  std::unordered_set<Kind>& disallowedKinds);
  protected:
   /**
    * Helper method for computeNnfNorm.

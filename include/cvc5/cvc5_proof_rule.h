@@ -2535,6 +2535,7 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(MACRO_BOOL_NNF_NORM),
+  EVALUE(MACRO_BOOL_BV_INVERT_SOLVE),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Arithmetic -- Integer equality conflict**

@@ -25,6 +25,7 @@
 #include "expr/node_value.h"
 #include "proof/conv_proof_generator.h"
 #include "util/cardinality.h"
+#include "theory/quantifiers/bv_inverter.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -35,6 +36,8 @@ TheoryBoolRewriter::TheoryBoolRewriter(NodeManager* nm) : TheoryRewriter(nm)
   d_true = nm->mkConst(true);
   d_false = nm->mkConst(false);
   registerProofRewriteRule(ProofRewriteRule::MACRO_BOOL_NNF_NORM,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE,
                            TheoryRewriteCtx::POST_DSL);
 }
 
@@ -48,6 +51,28 @@ Node TheoryBoolRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       if (nn != n)
       {
         return nn;
+      }
+    }
+    break;
+    case ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE:
+    {
+      if (n.getKind()!=Kind::EQUAL || n[0].getKind()!=Kind::EQUAL || n[1].getKind()!=Kind::EQUAL)
+      {
+        return Node::null();
+      }
+      Node v = n[1][0];
+      TypeNode tn = v.getType();
+      if (!v.isVar() || !tn.isBitVector())
+      {
+        return Node::null();
+      }
+      std::unordered_set<Kind> disallowedKinds;
+      disallowedKinds.insert(Kind::BITVECTOR_CONCAT);
+      NodeManager * nm = nodeManager();
+      Node slv = getBvInvertSolve(nm, n[0], v, disallowedKinds);
+      if (slv==n[1][1])
+      {
+        return nm->mkConst(true);
       }
     }
     break;
@@ -278,6 +303,37 @@ Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm,
   Assert(visited.find(n) != visited.end());
   Assert(!visited.find(n)->second.isNull());
   return visited[n];
+}
+
+Node TheoryBoolRewriter::getBvInvertSolve(NodeManager * nm, const Node& lit, const Node& var, 
+  std::unordered_set<Kind>& disallowedKinds)
+{
+  quantifiers::BvInverter binv(nm);
+  // solve for the variable on this path using the inverter
+  std::vector<unsigned> path;
+  Node slit = binv.getPathToPv(lit, var, path);
+  // check if the path had a kind that does not preserve equivalence of the
+  // overall literal
+  if (!disallowedKinds.empty())
+  {
+    Node curr = lit;
+    for (size_t i = 0, npath = path.size(); i < npath; i++)
+    {
+      Trace("quant-velim-bv") << "On path: " << curr << std::endl;
+      if (disallowedKinds.find(curr.getKind()) != disallowedKinds.end())
+      {
+        slit = Node::null();
+        break;
+      }
+      unsigned p = path[npath - i - 1];
+      curr = curr[p];
+    }
+  }
+  if (!slit.isNull())
+  {
+    return binv.solveBvLit(var, lit, path, nullptr);
+  }
+  return Node::null();
 }
 
 RewriteResponse TheoryBoolRewriter::postRewrite(TNode node) {
