@@ -40,6 +40,8 @@ TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_ASHR_BY_CONST,
                            TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY,
+                           TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::BV_UMULO_ELIMINATE,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::BV_SMULO_ELIMINATE,
@@ -113,6 +115,8 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       BV_PROOF_REWRITE_CASE(ExtractSignExtend)
     case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST:
       BV_PROOF_REWRITE_CASE(AshrByConst)
+    case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:
+      BV_PROOF_REWRITE_CASE(XorSimplify)
     case ProofRewriteRule::BV_UMULO_ELIMINATE:
       BV_PROOF_REWRITE_CASE(UmuloEliminate)
     case ProofRewriteRule::BV_SMULO_ELIMINATE:

@@ -3173,6 +3173,13 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_ASHR_BY_CONST),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro xor simplify **
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_XOR_SIMPLIFY),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro equality solve**
    *
    * .. math::
