@@ -32,9 +32,9 @@
 #include "proof/proof_node_to_sexpr.h"
 #include "rewriter/rewrite_db.h"
 #include "smt/print_benchmark.h"
+#include "theory/builtin/generic_op.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "util/string.h"
-#include "theory/builtin/generic_op.h"
 
 namespace cvc5::internal {
 
@@ -381,7 +381,7 @@ bool AlfPrinter::canEvaluate(Node n)
     {
       visited.insert(cur);
       Kind k = cur.getKind();
-      if (k==Kind::APPLY_INDEXED_SYMBOLIC)
+      if (k == Kind::APPLY_INDEXED_SYMBOLIC)
       {
         k = cur.getOperator().getConst<GenericOp>().getKind();
       }

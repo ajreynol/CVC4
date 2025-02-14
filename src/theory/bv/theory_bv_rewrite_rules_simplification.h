@@ -2268,7 +2268,8 @@ bool RewriteRule<MultSltMult>::applies(TNode node)
 template<> inline
 Node RewriteRule<MultSltMult>::apply(TNode node)
 {
-  Trace("bv-rewrite") << "RewriteRule<MultSltMult>(" << node << ")" << std::endl;
+  Trace("bv-rewrite") << "RewriteRule<MultSltMult>(" << node << ")"
+                      << std::endl;
   bool is_sext;
   TNode ml[2], mr[2];
 

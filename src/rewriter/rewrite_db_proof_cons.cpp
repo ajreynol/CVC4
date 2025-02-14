@@ -1007,7 +1007,8 @@ bool RewriteDbProofCons::proveInternalBase(const Node& eqi,
   for (size_t i = 0; i < 2; i++)
   {
     ev[i] = doEvaluate(eqi[i]);
-    Trace("rpc-debug2")  << "...evaluate " << eqi[i] << " to " << ev[i] << std::endl;
+    Trace("rpc-debug2") << "...evaluate " << eqi[i] << " to " << ev[i]
+                        << std::endl;
     if (ev[i].isNull())
     {
       // does not evaluate

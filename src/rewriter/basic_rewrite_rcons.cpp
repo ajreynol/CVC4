@@ -2071,8 +2071,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantPrenex(CDProof* cdp,
       Node eqqm1 = ceuv.eqNode(body2ms);
       cdp->addTheoryRewriteStep(eqqm1, prr);
       eqqm = currEq[0].eqNode(body2ms);
-      cdp->addStep(
-          eqqm, ProofRule::TRANS, {eqce, eqqm1}, {});
+      cdp->addStep(eqqm, ProofRule::TRANS, {eqce, eqqm1}, {});
     }
     else
     {

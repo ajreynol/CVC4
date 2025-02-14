@@ -379,7 +379,7 @@ RewriteResponse TheoryBVRewriter::RewriteConcat(TNode node, bool prerewrite)
   if (RewriteRule<ConcatFlatten>::applies(node))
   {
     Node resultNode = RewriteRule<ConcatFlatten>::run<false>(node);
-    if (resultNode!=node)
+    if (resultNode != node)
     {
       return RewriteResponse(REWRITE_AGAIN, resultNode);
     }

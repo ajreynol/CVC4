@@ -17,9 +17,9 @@
 
 #include <math.h>
 
+#include "theory/builtin/theory_builtin_rewriter.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "theory/rewriter.h"
-#include "theory/builtin/theory_builtin_rewriter.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/theory.h"
 #include "theory/uf/function_const.h"
@@ -243,7 +243,7 @@ EvalResult Evaluator::evalInternal(
           doEval = false;
         }
       }
-      else if (currNode.getKind()==Kind::APPLY_INDEXED_SYMBOLIC)
+      else if (currNode.getKind() == Kind::APPLY_INDEXED_SYMBOLIC)
       {
         // we require special handling below to deal with symbolic indexed
         // operators.
@@ -312,15 +312,17 @@ EvalResult Evaluator::evalInternal(
             // if we are able to turn it into a valid EvalResult.
             currNodeVal = d_rr->rewrite(currNodeVal);
           }
-          else if (currNodeVal.getKind()==Kind::APPLY_INDEXED_SYMBOLIC)
+          else if (currNodeVal.getKind() == Kind::APPLY_INDEXED_SYMBOLIC)
           {
             // To evaluate a symbolic indexed application, we reconstruct
             // the node here, and verify that all its arguments are constant
             // using rewriteApplyIndexedSymbolic.
             // If successful, we evaluate the result in a separate recursive
             // call, which will only recurse once.
-            Node rr = builtin::TheoryBuiltinRewriter::rewriteApplyIndexedSymbolic(currNodeVal);
-            if (rr!=currNodeVal)
+            Node rr =
+                builtin::TheoryBuiltinRewriter::rewriteApplyIndexedSymbolic(
+                    currNodeVal);
+            if (rr != currNodeVal)
             {
               Node rre = eval(rr, args, vals);
               // only take value if we successfully evaluated, otherwise
@@ -1158,9 +1160,8 @@ EvalResult Evaluator::evalInternal(
         case Kind::BITVECTOR_REPEAT:
         {
           BitVector res = results[currNode[0]].d_bv;
-          unsigned amount = currNode.getOperator()
-                                .getConst<BitVectorRepeat>()
-                                .d_repeatAmount;
+          unsigned amount =
+              currNode.getOperator().getConst<BitVectorRepeat>().d_repeatAmount;
           for (size_t i = 1; i < amount; i++)
           {
             res = res.concat(res);
