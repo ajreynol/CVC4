@@ -3166,6 +3166,13 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_EXTRACT_SIGN_EXTEND),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro arithmetic shift right by constant **
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_ASHR_BY_CONST),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Extract negations from multiplicands**
    *
    * .. math::
@@ -4221,12 +4228,20 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_ZERO_EXTEND_EQ_CONST_1),
   /** Auto-generated from RARE rule bv-zero-extend-eq-const-2 */
   EVALUE(BV_ZERO_EXTEND_EQ_CONST_2),
-  /** Auto-generated from RARE rule bv-sign-extend-ult-const-1 */
-  EVALUE(BV_SIGN_EXTEND_ULT_CONST_1),
+  /** Auto-generated from RARE rule bv-zero-extend-ult-const-1 */
+  EVALUE(BV_ZERO_EXTEND_ULT_CONST_1),
+  /** Auto-generated from RARE rule bv-zero-extend-ult-const-2 */
+  EVALUE(BV_ZERO_EXTEND_ULT_CONST_2),
+  /** Auto-generated from RARE rule bv-sign-extend-ult-const-1a */
+  EVALUE(BV_SIGN_EXTEND_ULT_CONST_1A),
+  /** Auto-generated from RARE rule bv-sign-extend-ult-const-1b */
+  EVALUE(BV_SIGN_EXTEND_ULT_CONST_1B),
   /** Auto-generated from RARE rule bv-sign-extend-ult-const-2 */
   EVALUE(BV_SIGN_EXTEND_ULT_CONST_2),
-  /** Auto-generated from RARE rule bv-sign-extend-ult-const-3 */
-  EVALUE(BV_SIGN_EXTEND_ULT_CONST_3),
+  /** Auto-generated from RARE rule bv-sign-extend-ult-const-3a */
+  EVALUE(BV_SIGN_EXTEND_ULT_CONST_3A),
+  /** Auto-generated from RARE rule bv-sign-extend-ult-const-3b */
+  EVALUE(BV_SIGN_EXTEND_ULT_CONST_3B),
   /** Auto-generated from RARE rule bv-sign-extend-ult-const-4 */
   EVALUE(BV_SIGN_EXTEND_ULT_CONST_4),
   /** Auto-generated from RARE rule sets-eq-singleton-emp */

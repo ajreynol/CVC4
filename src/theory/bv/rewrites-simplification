@@ -423,6 +423,29 @@
   (and
     (= chi (@bv 0 m))
     (= x clo)))
+
+(define-cond-rule bv-zero-extend-ult-const-1
+  ((x ?BitVec) (m Int) (c Int) (nm Int))
+  (def
+    (n (@bvsize x))
+    (clo (extract (- n 1) 0 (@bv c nm)))
+    (chi (extract (- nm 1) n (@bv c nm)))
+  )
+  (= chi (@bv 0 m))
+  (bvult (zero_extend m x) (@bv c nm))
+  (bvult x clo))
+
+(define-cond-rule bv-zero-extend-ult-const-2
+  ((x ?BitVec) (m Int) (c Int) (nm Int))
+  (def
+    (n (@bvsize x))
+    (clo (extract (- n 1) 0 (@bv c nm)))
+    (chi (extract (- nm 1) n (@bv c nm)))
+  )
+  (= chi (@bv 0 m))
+  (bvult (@bv c nm) (zero_extend m x))
+  (bvult clo x))
+
 (define-cond-rule bv-sign-extend-ult-const-1a
   ((x ?BitVec) (m Int) (c Int) (nm Int) (nm1 Int))
   (def
