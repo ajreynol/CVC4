@@ -3180,6 +3180,13 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_XOR_SIMPLIFY),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro and/or/xor concat pullup **
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_AND_OR_XOR_CONCAT_PULLUP),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro equality solve**
    *
    * .. math::

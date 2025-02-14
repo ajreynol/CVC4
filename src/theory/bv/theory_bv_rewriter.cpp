@@ -42,6 +42,8 @@ TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY,
                            TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP,
+                           TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::BV_UMULO_ELIMINATE,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::BV_SMULO_ELIMINATE,
@@ -117,6 +119,8 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       BV_PROOF_REWRITE_CASE(AshrByConst)
     case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:
       BV_PROOF_REWRITE_CASE(XorSimplify)
+    case ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP:
+      BV_PROOF_REWRITE_CASE(AndOrXorConcatPullUp)
     case ProofRewriteRule::BV_UMULO_ELIMINATE:
       BV_PROOF_REWRITE_CASE(UmuloEliminate)
     case ProofRewriteRule::BV_SMULO_ELIMINATE:
@@ -349,9 +353,13 @@ RewriteResponse TheoryBVRewriter::RewriteExtract(TNode node, bool prerewrite)
     return RewriteResponse(REWRITE_AGAIN_FULL, resultNode);
   }
 
+  if (!prerewrite && RewriteRule<ExtractExtract>::applies(node))
+  {
+    resultNode = RewriteRule<ExtractExtract>::run<false>(node);
+    return RewriteResponse(REWRITE_AGAIN_FULL, resultNode);
+  }
+
   resultNode = LinearRewriteStrategy<
-      // We could have an extract over extract
-      RewriteRule<ExtractExtract>,
       // The extract may cover the whole bit-vector
       RewriteRule<ExtractWhole>,
       // Rewrite extracts over wide multiplications
@@ -368,9 +376,15 @@ RewriteResponse TheoryBVRewriter::RewriteExtract(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteConcat(TNode node, bool prerewrite)
 {
+  if (RewriteRule<ConcatFlatten>::applies(node))
+  {
+    Node resultNode = RewriteRule<ConcatFlatten>::run<false>(node);
+    if (resultNode!=node)
+    {
+      return RewriteResponse(REWRITE_AGAIN, resultNode);
+    }
+  }
   Node resultNode = LinearRewriteStrategy<
-      // Flatten the top level concatenations
-      RewriteRule<ConcatFlatten>,
       // Merge the adjacent extracts on non-constants
       RewriteRule<ConcatExtractMerge>,
       // Remove extracts that have no effect

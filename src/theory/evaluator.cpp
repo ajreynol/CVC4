@@ -322,7 +322,13 @@ EvalResult Evaluator::evalInternal(
             Node rr = builtin::TheoryBuiltinRewriter::rewriteApplyIndexedSymbolic(currNodeVal);
             if (rr!=currNodeVal)
             {
-              currNodeVal = eval(rr, args, vals);
+              Node rre = eval(rr, args, vals);
+              // only take value if we successfully evaluated, otherwise
+              // it will remain APPLY_INDEXED_SYMBOLIC and fail below.
+              if (!rre.isNull())
+              {
+                currNodeVal = rre;
+              }
             }
           }
         }
@@ -1149,6 +1155,19 @@ EvalResult Evaluator::evalInternal(
           results[currNode] = EvalResult(b);
           break;
         }
+        case Kind::BITVECTOR_REPEAT:
+        {
+          BitVector res = results[currNode[0]].d_bv;
+          unsigned amount = currNode.getOperator()
+                                .getConst<BitVectorRepeat>()
+                                .d_repeatAmount;
+          for (size_t i = 1; i < amount; i++)
+          {
+            res = res.concat(res);
+          }
+          results[currNode] = EvalResult(res);
+          break;
+        }
         case Kind::BITVECTOR_SIGN_EXTEND:
         {
           BitVector res = results[currNode[0]].d_bv;
@@ -1337,6 +1356,7 @@ Node Evaluator::reconstruct(TNode n,
       // could not evaluate this child, look in the node cache
       itn = evalAsNode.find(currNodeChild);
       Assert(itn != evalAsNode.end());
+      Assert(!itn->second.isNull());
       echildren.push_back(itn->second);
     }
     else
