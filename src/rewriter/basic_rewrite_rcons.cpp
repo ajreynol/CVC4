@@ -2348,8 +2348,19 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
         // step will be unsound. this is the case e.g. when
         // a != (str.++ b x) is turned into x != (str.substr a (str.len b) ...)
         // where the latter implies the former, but they are not equivalent
-        cdp->addTrustedStep(
-            eql, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+        if (eql[0].getKind()==Kind::NOT && eql[1].getKind()==Kind::NOT)
+        {
+          // nearly always of the form (= (not (= x1 y1)) (not (= x2 y2))).
+          Node eqls = eql[0][0].eqNode(eql[1][0]);
+          cdp->addTrustedStep(
+              eqls, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+          proveCong(cdp, eql[0], {eqls});
+        }
+        else
+        {
+          cdp->addTrustedStep(
+              eql, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+        }
       }
       cprems.emplace_back(eql);
     }
