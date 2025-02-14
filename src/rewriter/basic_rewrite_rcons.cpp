@@ -2341,7 +2341,7 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
     proveCong(cdp, litdn, {litEquiv});
     litEquiv = litdn.eqNode(eqLit);
     // handle double negation
-    if (litdn!=lit)
+    if (litdn != lit)
     {
       Node eqdn = lit.eqNode(litdn);
       cdp->addTrustedStep(

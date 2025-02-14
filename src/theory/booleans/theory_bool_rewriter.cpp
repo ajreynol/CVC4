@@ -24,8 +24,8 @@
 #include "expr/algorithm/flatten.h"
 #include "expr/node_value.h"
 #include "proof/conv_proof_generator.h"
-#include "util/cardinality.h"
 #include "theory/quantifiers/bv_inverter.h"
+#include "util/cardinality.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -56,7 +56,8 @@ Node TheoryBoolRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE:
     {
-      if (n.getKind()!=Kind::EQUAL || n[0].getKind()!=Kind::EQUAL || n[1].getKind()!=Kind::EQUAL)
+      if (n.getKind() != Kind::EQUAL || n[0].getKind() != Kind::EQUAL
+          || n[1].getKind() != Kind::EQUAL)
       {
         return Node::null();
       }
@@ -68,9 +69,9 @@ Node TheoryBoolRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
       std::unordered_set<Kind> disallowedKinds;
       disallowedKinds.insert(Kind::BITVECTOR_CONCAT);
-      NodeManager * nm = nodeManager();
+      NodeManager* nm = nodeManager();
       Node slv = getBvInvertSolve(nm, n[0], v, disallowedKinds);
-      if (slv==n[1][1])
+      if (slv == n[1][1])
       {
         return nm->mkConst(true);
       }
@@ -305,8 +306,11 @@ Node TheoryBoolRewriter::computeNnfNorm(NodeManager* nm,
   return visited[n];
 }
 
-Node TheoryBoolRewriter::getBvInvertSolve(NodeManager * nm, const Node& lit, const Node& var, 
-  std::unordered_set<Kind>& disallowedKinds)
+Node TheoryBoolRewriter::getBvInvertSolve(
+    NodeManager* nm,
+    const Node& lit,
+    const Node& var,
+    std::unordered_set<Kind>& disallowedKinds)
 {
   quantifiers::BvInverter binv(nm);
   // solve for the variable on this path using the inverter

@@ -22,11 +22,11 @@
 #include "expr/elim_shadow_converter.h"
 #include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
-#include "theory/arith/arith_poly_norm.h"
 #include "options/quantifiers_options.h"
-#include "proof/proof.h"
 #include "proof/conv_proof_generator.h"
+#include "proof/proof.h"
 #include "theory/arith/arith_msum.h"
+#include "theory/arith/arith_poly_norm.h"
 #include "theory/booleans/theory_bool_rewriter.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
 #include "theory/quantifiers/ematching/trigger.h"
@@ -1073,7 +1073,7 @@ Node QuantifiersRewriter::computeCondSplit(Node body,
         std::vector<Node> tmpArgs = args;
         for (unsigned j = 0, bsize = b.getNumChildren(); j < bsize; j++)
         {
-          bool pol = b[j].getKind()==Kind::NOT;
+          bool pol = b[j].getKind() == Kind::NOT;
           Node batom = pol ? b[j][0] : b[j];
           if (getVarElimLit(body, batom, pol, tmpArgs, vars, subs))
           {
@@ -1151,7 +1151,7 @@ bool QuantifiersRewriter::isVarElim(Node v, Node s)
 Node QuantifiersRewriter::getVarElimEq(Node lit,
                                        const std::vector<Node>& args,
                                        Node& var,
-                  CDProof* cdp) const
+                                       CDProof* cdp) const
 {
   Assert(lit.getKind() == Kind::EQUAL);
   Node slv;
@@ -1174,7 +1174,7 @@ Node QuantifiersRewriter::getVarElimEq(Node lit,
 Node QuantifiersRewriter::getVarElimEqReal(Node lit,
                                            const std::vector<Node>& args,
                                            Node& var,
-                  CDProof* cdp) const
+                                           CDProof* cdp) const
 {
   // for arithmetic, solve the equality
   std::map<Node, Node> msum;
@@ -1199,7 +1199,7 @@ Node QuantifiersRewriter::getVarElimEqReal(Node lit,
       if (ires != 0 && veq_c.isNull() && isVarElim(itm->first, val))
       {
         var = itm->first;
-        if (cdp!=nullptr)
+        if (cdp != nullptr)
         {
           Node eq = var.eqNode(val);
           Node eqslv = lit.eqNode(eq);
@@ -1216,7 +1216,7 @@ Node QuantifiersRewriter::getVarElimEqReal(Node lit,
 Node QuantifiersRewriter::getVarElimEqBv(Node lit,
                                          const std::vector<Node>& args,
                                          Node& var,
-                  CDProof* cdp) const
+                                         CDProof* cdp) const
 {
   if (TraceIsOn("quant-velim-bv"))
   {
@@ -1240,7 +1240,7 @@ Node QuantifiersRewriter::getVarElimEqBv(Node lit,
     // (concat x y) = z is not equivalent to x = ((_ extract n m) z)
     disallowedKinds.insert(Kind::BITVECTOR_CONCAT);
   }
-  else if (cdp!=nullptr)
+  else if (cdp != nullptr)
   {
     // does not support proofs
     return Node::null();
@@ -1252,7 +1252,8 @@ Node QuantifiersRewriter::getVarElimEqBv(Node lit,
 
   for (const Node& cvar : active_args)
   {
-    Node slv = booleans::TheoryBoolRewriter::getBvInvertSolve(d_nm, lit, cvar, disallowedKinds);
+    Node slv = booleans::TheoryBoolRewriter::getBvInvertSolve(
+        d_nm, lit, cvar, disallowedKinds);
     if (!slv.isNull())
     {
       // if this is a proper variable elimination, that is, var = slv where
@@ -1262,7 +1263,7 @@ Node QuantifiersRewriter::getVarElimEqBv(Node lit,
       {
         var = cvar;
         // If we require a proof...
-        if (cdp!=nullptr)
+        if (cdp != nullptr)
         {
           Node eq = var.eqNode(slv);
           Node eqslv = lit.eqNode(eq);
@@ -1300,13 +1301,13 @@ Node QuantifiersRewriter::getVarElimEqBv(Node lit,
 Node QuantifiersRewriter::getVarElimEqString(Node lit,
                                              const std::vector<Node>& args,
                                              Node& var,
-                  CDProof* cdp) const
+                                             CDProof* cdp) const
 {
   Assert(lit.getKind() == Kind::EQUAL);
   // The reasoning below involves equality entailment as
   // (= (str.++ s x t) r) entails (= x (str.substr r (str.len s) _)),
   // but these equalities are not equivalent.
-  if (!d_opts.quantifiers.varEntEqElimQuant || cdp!=nullptr)
+  if (!d_opts.quantifiers.varEntEqElimQuant || cdp != nullptr)
   {
     return Node::null();
   }
@@ -1359,9 +1360,9 @@ bool QuantifiersRewriter::getVarElimLit(Node body,
                                         std::vector<Node>& args,
                                         std::vector<Node>& vars,
                                         std::vector<Node>& subs,
-                  CDProof* cdp) const
+                                        CDProof* cdp) const
 {
-  AlwaysAssert (lit.getKind() != Kind::NOT);
+  AlwaysAssert(lit.getKind() != Kind::NOT);
   Trace("var-elim-quant-debug")
       << "Eliminate : " << lit << ", pol = " << pol << "?" << std::endl;
   // all eliminations below guarded by varElimQuant()
@@ -1398,14 +1399,15 @@ bool QuantifiersRewriter::getVarElimLit(Node body,
             Trace("var-elim-quant")
                 << "Variable eliminate based on equality : " << v_slv << " -> "
                 << slv << std::endl;
-            if (cdp!=nullptr)
+            if (cdp != nullptr)
             {
               Node eq = v_slv.eqNode(slv);
               Node litn = pol ? lit : lit.notNode();
               Node eqslv = litn.eqNode(eq);
               cdp->addTrustedStep(
                   eqslv, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
-              Trace("var-elim-quant") << "...add trusted step " << eqslv << std::endl;
+              Trace("var-elim-quant")
+                  << "...add trusted step " << eqslv << std::endl;
             }
             vars.push_back(v_slv);
             subs.push_back(slv);
@@ -1422,7 +1424,7 @@ bool QuantifiersRewriter::getVarElimLit(Node body,
     if( ita!=args.end() ){
       Trace("var-elim-bool") << "Variable eliminate : " << lit << std::endl;
       Node c = nodeManager()->mkConst(pol);
-      if (cdp!=nullptr)
+      if (cdp != nullptr)
       {
         // x = (x=true) or (not x) = (x = false)
         Node eq = lit.eqNode(c);
@@ -1466,7 +1468,7 @@ bool QuantifiersRewriter::getVarElim(Node body,
                                      std::vector<Node>& vars,
                                      std::vector<Node>& subs,
                                      std::vector<Node>& lits,
-                  CDProof* cdp) const
+                                     CDProof* cdp) const
 {
   return getVarElimInternal(body, body, false, args, vars, subs, lits, cdp);
 }
@@ -1478,7 +1480,7 @@ bool QuantifiersRewriter::getVarElimInternal(Node body,
                                              std::vector<Node>& vars,
                                              std::vector<Node>& subs,
                                              std::vector<Node>& lits,
-                  CDProof* cdp) const
+                                             CDProof* cdp) const
 {
   Kind nk = n.getKind();
   while (nk == Kind::NOT)
