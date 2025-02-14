@@ -137,6 +137,7 @@ bool isAssoc(Kind k)
 {
   switch (k)
   {
+    case Kind::BITVECTOR_CONCAT:
     case Kind::STRING_CONCAT:
     case Kind::REGEXP_CONCAT: return true;
     default: break;

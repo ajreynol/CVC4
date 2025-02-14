@@ -4232,16 +4232,12 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_ZERO_EXTEND_ULT_CONST_1),
   /** Auto-generated from RARE rule bv-zero-extend-ult-const-2 */
   EVALUE(BV_ZERO_EXTEND_ULT_CONST_2),
-  /** Auto-generated from RARE rule bv-sign-extend-ult-const-1a */
-  EVALUE(BV_SIGN_EXTEND_ULT_CONST_1A),
-  /** Auto-generated from RARE rule bv-sign-extend-ult-const-1b */
-  EVALUE(BV_SIGN_EXTEND_ULT_CONST_1B),
+  /** Auto-generated from RARE rule bv-sign-extend-ult-const-1 */
+  EVALUE(BV_SIGN_EXTEND_ULT_CONST_1),
   /** Auto-generated from RARE rule bv-sign-extend-ult-const-2 */
   EVALUE(BV_SIGN_EXTEND_ULT_CONST_2),
-  /** Auto-generated from RARE rule bv-sign-extend-ult-const-3a */
-  EVALUE(BV_SIGN_EXTEND_ULT_CONST_3A),
-  /** Auto-generated from RARE rule bv-sign-extend-ult-const-3b */
-  EVALUE(BV_SIGN_EXTEND_ULT_CONST_3B),
+  /** Auto-generated from RARE rule bv-sign-extend-ult-const-3 */
+  EVALUE(BV_SIGN_EXTEND_ULT_CONST_3),
   /** Auto-generated from RARE rule bv-sign-extend-ult-const-4 */
   EVALUE(BV_SIGN_EXTEND_ULT_CONST_4),
   /** Auto-generated from RARE rule sets-eq-singleton-emp */
