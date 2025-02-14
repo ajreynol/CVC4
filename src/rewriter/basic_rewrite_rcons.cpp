@@ -3229,8 +3229,7 @@ bool BasicRewriteRCons::ensureProofArithPolyNormRel(CDProof* cdp,
     Trace("brc-macro") << "...fail premise" << std::endl;
     return false;
   }
-  ProofRule rrule =
-      isBv ? ProofRule::BV_POLY_NORM_EQ : ProofRule::ARITH_POLY_NORM_REL;
+  ProofRule rrule = isBv ? ProofRule::BV_POLY_NORM_EQ : ProofRule::ARITH_POLY_NORM_REL;
   if (!cdp->addStep(eq, rrule, {premise}, {eq}))
   {
     Trace("brc-macro") << "...fail application" << std::endl;

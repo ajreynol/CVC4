@@ -3173,19 +3173,19 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_ASHR_BY_CONST),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Bitvectors -- Extract negations from multiplicands**
+   * **Bitvectors -- Macro equality solve**
    *
    * .. math::
    *    (a = b) = \bot
-   * 
+   *
    * where :math:`bvsub(a,b)` normalizes to a non-zero constant, or
    * alternatively
    *
    * .. math::
-   *    (a = b) = \bot
-   * 
+   *    (a = b) = \top
+   *
    * where :math:`bvsub(a,b)` normalizes to zero.
-   * 
+   *
    * \endverbatim
    */
   EVALUE(MACRO_BV_EQ_SOLVE),
