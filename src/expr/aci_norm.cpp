@@ -326,19 +326,19 @@ bool isAnnihilate(Node a, const Node& zero)
   do
   {
     cur = visit.back();
-    Assert (cur.getKind()==k);
+    Assert(cur.getKind() == k);
     if (cur.getAttribute(aca))
     {
       visit.pop_back();
       continue;
     }
     it = visited.find(cur);
-    if (it==visited.end())
+    if (it == visited.end())
     {
       visited.insert(cur);
       for (const Node& cc : cur)
       {
-        if (cc.getKind()==k)
+        if (cc.getKind() == k)
         {
           visit.push_back(cc);
         }
@@ -349,8 +349,9 @@ bool isAnnihilate(Node a, const Node& zero)
     bool isAnnil = false;
     for (const Node& cc : cur)
     {
-      // only annihilates if the child is zero or has the same kind and annihilates
-      if (cc==zero || (cc.getKind()==k && cc.getAttribute(aa)))
+      // only annihilates if the child is zero or has the same kind and
+      // annihilates
+      if (cc == zero || (cc.getKind() == k && cc.getAttribute(aa)))
       {
         isAnnil = true;
         break;
