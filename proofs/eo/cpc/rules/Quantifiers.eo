@@ -382,12 +382,21 @@
 
 ;;;;; ProofRule::EXISTS_INV_CONDITION
 
-(program $mk_invertibility_condition ((n Int) (x (BitVec n)) (R Bool))
+; program: $is_quant_dt_split
+; args:
+; - x (BitVec n): A bitvector variable to solve for.
+; - R Bool: A relation involving x.
+; return: >
+;    The invertibility condition for x in R. This is a quantifier-free formula that is
+;    equivalent to (exists x. R).
+(program $mk_invertibility_condition ((n Int) (x (BitVec n)) (s (BitVec n)) (t (BitVec n)) (R Bool))
   ((BitVec n) Bool) Bool
   (
-  (($mk_invertibility_condition x R) R)
+  (($mk_invertibility_condition x (= (bvurem x s) t)) (bvuge (bvnot (bvneg s)) t))
+  ; ...
   )
 )
+
 
 ; rule: exists_inv_condition
 ; implements: ProofRule::EXISTS_INV_CONDITION
@@ -398,5 +407,5 @@
 ;   as given by the @witness_inv_condition skolem.
 (declare-rule exists_inv_condition ((n Int) (x (BitVec n)) (R Bool))
   :args ((exists (@list x) R))
-  :conclusion (=> ($mk_invertibility_condition x R) (R (@witness_inv_condition (exists (@list x) R))))
+  :conclusion (=> ($mk_invertibility_condition x R) ($substitute x (@witness_inv_condition (exists (@list x) R)) R))
 )

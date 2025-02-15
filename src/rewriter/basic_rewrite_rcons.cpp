@@ -2246,8 +2246,8 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimEq(CDProof* cdp,
       nodeManager(), d_env.getRewriter(), options());
   if (!qrew.getVarElim(q[1], args, vars, subs, lits, cdp))
   {
-    // should be able to replay the variable elimination
-    Assert(false);
+    // if we fail here, the variable elimination may have corresponded
+    // to one where proofs cannot be replayed, e.g. if varElimEntEq is true.
     return false;
   }
   if (args.size() != q[0].getNumChildren() - 1)

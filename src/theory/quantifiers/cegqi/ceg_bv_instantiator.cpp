@@ -141,6 +141,12 @@ Node BvInstantiator::hasProcessAssertion(CegInstantiator* ci,
     // always use model values at full effort
     return Node::null();
   }
+  return processAssertionInternal(ci, lit);
+}
+
+Node BvInstantiator::processAssertionInternal(CegInstantiator* ci,
+                                         Node lit)
+{
   Node atom = lit.getKind() == Kind::NOT ? lit[0] : lit;
   bool pol = lit.getKind() != Kind::NOT;
   Kind k = atom.getKind();
@@ -528,6 +534,8 @@ Node BvInstantiator::rewriteAssertionForSolvePv(CegInstantiator* ci,
       }
     } while (!trace_visit.empty());
   }
+  // process again
+  result = processAssertionInternal(ci, result);
 
   return result;
 }

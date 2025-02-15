@@ -156,6 +156,8 @@ class BvInstantiator : public Instantiator
                       Node lit,
                       Node alit,
                       CegInstEffort effort);
+  /** */
+  Node processAssertionInternal(CegInstantiator* ci, Node lit);
 };
 
 /** Bitvector instantiator preprocess
