@@ -193,8 +193,30 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
     case ProofRule::BV_POLY_NORM:
     case ProofRule::BV_POLY_NORM_EQ:
     case ProofRule::EXISTS_STRING_LENGTH:
-    case ProofRule::EXISTS_INV_CONDITION:
     case ProofRule::DSL_REWRITE: return true;
+    case ProofRule::EXISTS_INV_CONDITION:
+    {
+      Assert (pfn->getArguments()[0].getKind()==Kind::EXISTS);
+      Node eq = pfn->getArguments()[0][1];
+      if (eq.getKind()==Kind::EQUAL)
+      {
+        switch (eq[0].getKind())
+        {
+          case Kind::BITVECTOR_MULT:
+          case Kind::BITVECTOR_UREM:
+          case Kind::BITVECTOR_UDIV:
+          case Kind::BITVECTOR_ASHR:
+          case Kind::BITVECTOR_SHL:
+          case Kind::BITVECTOR_LSHR:
+          //case Kind::BITVECTOR_AND:
+          //case Kind::BITVECTOR_OR:
+            return true;
+          default:
+            break;
+        }
+      }
+      return false;
+    }
     case ProofRule::BV_BITBLAST_STEP:
     {
       return isHandledBitblastStep(pfn->getArguments()[0]);
