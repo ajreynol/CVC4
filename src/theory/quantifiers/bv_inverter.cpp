@@ -285,7 +285,7 @@ Node BvInverter::solveBvLit(Node sv,
       Integer inv_val = s_val.modInverse(mod_val);
       Trace("bv-invert-debug") << "Inverse : " << inv_val << std::endl;
       Node inv = bv::utils::mkConst(w, inv_val);
-      tnext = NodeManager::mkNode(Kind::BITVECTOR_MULT, inv, t);
+      tnext = NodeManager::mkNode(Kind::BITVECTOR_MULT, t, inv);
     }
     else if (k == Kind::BITVECTOR_CONCAT)
     {

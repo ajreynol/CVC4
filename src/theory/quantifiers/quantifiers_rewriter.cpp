@@ -1285,8 +1285,9 @@ Node QuantifiersRewriter::getVarElimEqBv(Node lit,
             // e.g. (= t (bvxor x s)) = (= x (bvxor t s)).
             Node truen = nodeManager()->mkConst(true);
             Node eqslvti = eqslv.eqNode(truen);
-            cdp->addTheoryRewriteStep(
-                eqslvti, ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE);
+            // use trusted step, will elaborate
+            cdp->addTrustedStep(
+                eqslvti, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
             cdp->addStep(eqslv, ProofRule::TRUE_ELIM, {eqslvti}, {});
           }
         }

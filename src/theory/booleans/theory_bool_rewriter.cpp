@@ -23,6 +23,7 @@
 
 #include "expr/algorithm/flatten.h"
 #include "expr/node_value.h"
+#include "proof/proof.h"
 #include "proof/conv_proof_generator.h"
 #include "theory/quantifiers/bv_inverter.h"
 #include "util/cardinality.h"
@@ -310,7 +311,8 @@ Node TheoryBoolRewriter::getBvInvertSolve(
     NodeManager* nm,
     const Node& lit,
     const Node& var,
-    std::unordered_set<Kind>& disallowedKinds)
+    std::unordered_set<Kind>& disallowedKinds,
+                               CDProof * cdp)
 {
   quantifiers::BvInverter binv(nm);
   // solve for the variable on this path using the inverter
@@ -333,11 +335,20 @@ Node TheoryBoolRewriter::getBvInvertSolve(
       curr = curr[p];
     }
   }
-  if (!slit.isNull())
+  if (slit.isNull())
   {
-    return binv.solveBvLit(var, lit, path, nullptr);
+    return Node::null();
   }
-  return Node::null();
+  Node ret = binv.solveBvLit(var, lit, path, nullptr);
+  if (cdp!=nullptr)
+  {
+    Trace("quant-velim-bv") << "Prove source: " << lit << std::endl;
+    Trace("quant-velim-bv") << "Prove target: " << var << " = " << ret << std::endl;
+    for (size_t i = 0, npath = path.size(); i < npath; i++)
+    {
+    }
+  }
+  return ret;
 }
 
 RewriteResponse TheoryBoolRewriter::postRewrite(TNode node) {
