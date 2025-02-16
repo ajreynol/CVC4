@@ -208,8 +208,8 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
           case Kind::BITVECTOR_ASHR:
           case Kind::BITVECTOR_SHL:
           case Kind::BITVECTOR_LSHR:
-          //case Kind::BITVECTOR_AND:
-          //case Kind::BITVECTOR_OR:
+          case Kind::BITVECTOR_AND:
+          case Kind::BITVECTOR_OR:
             return true;
           default:
             break;

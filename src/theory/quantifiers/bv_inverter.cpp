@@ -322,6 +322,16 @@ Node BvInverter::solveBvLit(Node sv,
     if (tnext.isNull())
     {
       /* t = fresh skolem constant */
+      if (k==Kind::BITVECTOR_MULT || k==Kind::BITVECTOR_AND || k==Kind::BITVECTOR_OR)
+      {
+        // commutative, always use index 0
+        if (index!=0)
+        {
+          Assert (index==1);
+          index = 0;
+          sv_t = d_nm->mkNode(k, sv_t[1], sv_t[0]);
+        }
+      }
       Node annot = mkAnnotation(d_nm, litk, pol, t, sv_t, index);
       tnext = mkWitness(annot);
       /* We generate a witness term (witness x0. ic => x0 <k> s <litk> t) for
@@ -410,7 +420,8 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
     Node s = dropChild(sv_t, index);
     if (k == Kind::BITVECTOR_MULT)
     {
-      ic = utils::getICBvMult(pol, litk, k, index, x, s, t);
+      Assert (index==0);
+      ic = utils::getICBvMult(pol, litk, k, x, s, t);
     }
     else if (k == Kind::BITVECTOR_SHL)
     {
@@ -426,7 +437,8 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
     }
     else if (k == Kind::BITVECTOR_AND || k == Kind::BITVECTOR_OR)
     {
-      ic = utils::getICBvAndOr(pol, litk, k, index, x, s, t);
+      Assert (index==0);
+      ic = utils::getICBvAndOr(pol, litk, k, x, s, t);
     }
     else if (k == Kind::BITVECTOR_LSHR)
     {

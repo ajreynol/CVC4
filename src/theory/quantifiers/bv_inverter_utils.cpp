@@ -134,7 +134,7 @@ Node getICBvSltSgt(bool pol, Kind k, Node x, Node t)
 }
 
 Node getICBvMult(
-    bool pol, Kind litk, Kind k, unsigned idx, Node x, Node s, Node t)
+    bool pol, Kind litk, Kind k, Node x, Node s, Node t)
 {
   Assert(k == Kind::BITVECTOR_MULT);
   Assert(litk == Kind::EQUAL || litk == Kind::BITVECTOR_ULT
@@ -277,7 +277,7 @@ Node getICBvMult(
   }
 
   Node scr =
-      nm->mkNode(litk, idx == 0 ? nm->mkNode(k, x, s) : nm->mkNode(k, s, x), t);
+      nm->mkNode(litk, nm->mkNode(k, x, s), t);
   Node ic = nm->mkNode(Kind::IMPLIES, scl, pol ? scr : scr.notNode());
   Trace("bv-invert") << "Add SC_" << k << "(" << x << "): " << ic << std::endl;
   return ic;
@@ -990,7 +990,7 @@ Node getICBvUdiv(
 }
 
 Node getICBvAndOr(
-    bool pol, Kind litk, Kind k, unsigned idx, Node x, Node s, Node t)
+    bool pol, Kind litk, Kind k, Node x, Node s, Node t)
 {
   Assert(k == Kind::BITVECTOR_AND || k == Kind::BITVECTOR_OR);
   Assert(litk == Kind::EQUAL || litk == Kind::BITVECTOR_ULT
