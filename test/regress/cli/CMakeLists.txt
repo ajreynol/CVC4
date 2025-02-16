@@ -1504,6 +1504,7 @@ set(regress_0_tests
   regress0/quantifiers/clock-3.smt2
   regress0/quantifiers/cond-var-elim-binary.smt2
   regress0/quantifiers/dd_check-cc_bvxor.smt2
+  regress0/quantifiers/dd_check-cc_bvxor-mpath.smt2
   regress0/quantifiers/dd_check_eq_bvnot_32bit.smt2
   regress0/quantifiers/dd_german169_semi_eval.smt2
   regress0/quantifiers/dd_p15_dio_lemma.smt2
