@@ -397,16 +397,18 @@
 ; return: >
 ;    The invertibility condition for x in R. This is a quantifier-free formula that is
 ;    equivalent to (exists x. R).
-(program $mk_invertibility_condition ((n Int) (x (BitVec n)) (s (BitVec n)) (t (BitVec n)) (R Bool) (nil (BitVec n) :list))
+(program $mk_invertibility_condition ((n Int) (x (BitVec n)) (s (BitVec n)) (ss (BitVec n) :list) (t (BitVec n))
+                                       (nil (BitVec n) :list))
   ((BitVec n) Bool) Bool
   (
-  (($mk_invertibility_condition x (= (bvmul x s nil) t))  (= (bvand (bvor (bvneg s) s) t) t))
+  (($mk_invertibility_condition x (= (bvmul x s nil) t))  (eo::requires (eo::to_z nil) 1
+                                                            (= (bvand (bvor (bvneg s) s) t) t)))
   (($mk_invertibility_condition x (= (bvudiv x s) t))     (= (bvudiv (bvmul s t) s) t))
   (($mk_invertibility_condition x (= (bvudiv s x) t))     (= (bvudiv s (bvudiv s t)) t))
   (($mk_invertibility_condition x (= (bvurem x s) t))     (bvuge (bvnot (bvneg s)) t))
   (($mk_invertibility_condition x (= (bvurem s x) t))     (bvuge (bvand (bvsub (bvadd t t) s) s) t))
-  (($mk_invertibility_condition x (= (bvor x s nil) t))   (= t (bvor t s)))
-  (($mk_invertibility_condition x (= (bvand x s nil) t))  (= t (bvand t s)))
+  (($mk_invertibility_condition x (= (bvor x ss) t))      (= t (bvor t ss)))
+  (($mk_invertibility_condition x (= (bvand x ss) t))     (= t (bvand t ss)))
   (($mk_invertibility_condition x (= (bvashr x s) t))     (eo::define ((w ($bv_bitwidth (eo::typeof x))))
                                                           (eo::define ((k (eo::to_bin w w)))
                                                           (eo::define ((u (bvult s k)))
