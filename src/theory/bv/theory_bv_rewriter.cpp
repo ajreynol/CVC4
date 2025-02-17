@@ -29,6 +29,16 @@ using namespace cvc5::internal;
 using namespace cvc5::internal::theory;
 using namespace cvc5::internal::theory::bv;
 
+#define TRY_REWRITE(rule)                               \
+  if (RewriteRule<rule>::applies(node))                 \
+  {                                                     \
+    Node nrew = RewriteRule<rule>::run<false>(node);    \
+    if (nrew != node)                                   \
+    {                                                   \
+      return RewriteResponse(REWRITE_AGAIN_FULL, nrew); \
+    }                                                   \
+  }
+  
 TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
 {
   initializeRewrites();
@@ -39,6 +49,10 @@ TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_EXTRACT_SIGN_EXTEND,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_ASHR_BY_CONST,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_OR_SIMPLIFY,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_AND_SIMPLIFY,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY,
                            TheoryRewriteCtx::POST_DSL);
@@ -115,6 +129,10 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       BV_PROOF_REWRITE_CASE(ExtractSignExtend)
     case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST:
       BV_PROOF_REWRITE_CASE(AshrByConst)
+    case ProofRewriteRule::MACRO_BV_OR_SIMPLIFY:
+      BV_PROOF_REWRITE_CASE(OrSimplify)
+    case ProofRewriteRule::MACRO_BV_AND_SIMPLIFY:
+      BV_PROOF_REWRITE_CASE(AndSimplify)
     case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:
       BV_PROOF_REWRITE_CASE(XorSimplify)
     case ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP:
@@ -397,71 +415,42 @@ RewriteResponse TheoryBVRewriter::RewriteConcat(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteAnd(TNode node, bool prerewrite)
 {
-  Node resultNode = node;
-  resultNode =
-      LinearRewriteStrategy<RewriteRule<FlattenAssocCommutNoDuplicates>,
-                            RewriteRule<AndSimplify>,
-                            RewriteRule<AndOrXorConcatPullUp>>::apply(node);
+  TRY_REWRITE(FlattenAssocCommutNoDuplicates)
+  TRY_REWRITE(AndSimplify)
+  TRY_REWRITE(AndOrXorConcatPullUp)
   if (!prerewrite)
   {
-    resultNode =
-        LinearRewriteStrategy<RewriteRule<BitwiseSlicing>>::apply(resultNode);
-
-    if (resultNode.getKind() != node.getKind())
-    {
-      return RewriteResponse(REWRITE_AGAIN_FULL, resultNode);
-    }
+    TRY_REWRITE(BitwiseSlicing)
   }
-
-  return RewriteResponse(REWRITE_DONE, resultNode);
+  return RewriteResponse(REWRITE_DONE, node);
 }
 
 RewriteResponse TheoryBVRewriter::RewriteOr(TNode node, bool prerewrite)
 {
-  Node resultNode = node;
-  resultNode =
-      LinearRewriteStrategy<RewriteRule<FlattenAssocCommutNoDuplicates>,
-                            RewriteRule<OrSimplify>,
-                            RewriteRule<AndOrXorConcatPullUp>>::apply(node);
-
+  TRY_REWRITE(FlattenAssocCommutNoDuplicates)
+  TRY_REWRITE(OrSimplify)
+  TRY_REWRITE(AndOrXorConcatPullUp)
   if (!prerewrite)
   {
-    resultNode =
-        LinearRewriteStrategy<RewriteRule<BitwiseSlicing>>::apply(resultNode);
-
-    if (resultNode.getKind() != node.getKind())
-    {
-      return RewriteResponse(REWRITE_AGAIN_FULL, resultNode);
-    }
+    TRY_REWRITE(BitwiseSlicing)
   }
-
-  return RewriteResponse(REWRITE_DONE, resultNode);
+  return RewriteResponse(REWRITE_DONE, node);
 }
 
 RewriteResponse TheoryBVRewriter::RewriteXor(TNode node, bool prerewrite)
 {
-  Node resultNode = node;
-  resultNode = LinearRewriteStrategy<
-      RewriteRule<FlattenAssocCommut>,  // flatten the expression
-      RewriteRule<XorSimplify>,         // simplify duplicates and constants
-      RewriteRule<XorZero>,  // checks if the constant part is zero and
-                             // eliminates it
-      RewriteRule<AndOrXorConcatPullUp>,
-      RewriteRule<BitwiseSlicing>>::apply(node);
+  TRY_REWRITE(FlattenAssocCommut) // flatten the expression
+  TRY_REWRITE(XorSimplify) // simplify duplicates and constants
+  TRY_REWRITE(XorZero) // checks if the constant part is zero and eliminates it
+  TRY_REWRITE(AndOrXorConcatPullUp)
 
   if (!prerewrite)
   {
-    resultNode =
-        LinearRewriteStrategy<RewriteRule<XorOnes>,
-                              RewriteRule<BitwiseSlicing>>::apply(resultNode);
-
-    if (resultNode.getKind() != node.getKind())
-    {
-      return RewriteResponse(REWRITE_AGAIN_FULL, resultNode);
-    }
+    TRY_REWRITE(XorOnes)
+    TRY_REWRITE(BitwiseSlicing)
   }
 
-  return RewriteResponse(REWRITE_DONE, resultNode);
+  return RewriteResponse(REWRITE_DONE, node);
 }
 
 RewriteResponse TheoryBVRewriter::RewriteXnor(TNode node, bool prerewrite)
@@ -524,27 +513,17 @@ RewriteResponse TheoryBVRewriter::RewriteEagerAtom(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteMult(TNode node, bool prerewrite)
 {
-  Node resultNode = node;
-  resultNode = LinearRewriteStrategy<
-      RewriteRule<FlattenAssocCommut>,  // flattens and sorts
-      RewriteRule<MultSimplify>,  // multiplies constant part and checks for 0
-      RewriteRule<MultPow2>  // replaces multiplication by a power of 2 by a
-                             // shift
-      >::apply(resultNode);
+  TRY_REWRITE(FlattenAssocCommut) // flattens and sorts
+  TRY_REWRITE(MultSimplify) // multiplies constant part and checks for 0
 
   // only apply if every subterm was already rewritten
   if (!prerewrite)
   {
-    resultNode =
-        LinearRewriteStrategy<RewriteRule<MultDistribConst>,
-                              RewriteRule<MultDistrib>>::apply(resultNode);
+    TRY_REWRITE(MultPow2) // replaces multiplication by a power of 2 by a shift
+    TRY_REWRITE(MultDistribConst)
+    TRY_REWRITE(MultDistrib)
   }
-
-  if (resultNode == node)
-  {
-    return RewriteResponse(REWRITE_DONE, resultNode);
-  }
-  return RewriteResponse(REWRITE_AGAIN_FULL, resultNode);
+  return RewriteResponse(REWRITE_DONE, node);
 }
 
 RewriteResponse TheoryBVRewriter::RewriteAdd(TNode node, bool prerewrite)

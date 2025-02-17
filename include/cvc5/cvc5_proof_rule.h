@@ -3186,6 +3186,20 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_ASHR_BY_CONST),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro or simplify **
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_OR_SIMPLIFY),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro and simplify **
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_AND_SIMPLIFY),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro xor simplify **
    *
    * \endverbatim
