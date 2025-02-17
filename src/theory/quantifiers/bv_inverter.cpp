@@ -421,7 +421,7 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
     if (k == Kind::BITVECTOR_MULT)
     {
       Assert (index==0);
-      ic = utils::getICBvMult(pol, litk, k, x, s, t);
+      ic = utils::getICBvMult(pol, litk, k, index, x, s, t);
     }
     else if (k == Kind::BITVECTOR_SHL)
     {
@@ -438,7 +438,7 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
     else if (k == Kind::BITVECTOR_AND || k == Kind::BITVECTOR_OR)
     {
       Assert (index==0);
-      ic = utils::getICBvAndOr(pol, litk, k, x, s, t);
+      ic = utils::getICBvAndOr(pol, litk, k, index, x, s, t);
     }
     else if (k == Kind::BITVECTOR_LSHR)
     {

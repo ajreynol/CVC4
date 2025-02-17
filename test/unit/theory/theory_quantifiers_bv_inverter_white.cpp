@@ -282,19 +282,9 @@ TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_mult_eq_true0)
   runTest(true, Kind::EQUAL, Kind::BITVECTOR_MULT, 0, getICBvMult);
 }
 
-TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_mult_eq_trueu)
-{
-  runTest(true, Kind::EQUAL, Kind::BITVECTOR_MULT, 1, getICBvMult);
-}
-
 TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_mult_eq_false0)
 {
   runTest(false, Kind::EQUAL, Kind::BITVECTOR_MULT, 0, getICBvMult);
-}
-
-TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_mult_eq_false1)
-{
-  runTest(false, Kind::EQUAL, Kind::BITVECTOR_MULT, 1, getICBvMult);
 }
 
 /* Urem */
@@ -348,19 +338,9 @@ TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_and_eq_true0)
   runTest(true, Kind::EQUAL, Kind::BITVECTOR_AND, 0, getICBvAndOr);
 }
 
-TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_and_eq_true1)
-{
-  runTest(true, Kind::EQUAL, Kind::BITVECTOR_AND, 1, getICBvAndOr);
-}
-
 TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_and_eq_false0)
 {
   runTest(false, Kind::EQUAL, Kind::BITVECTOR_AND, 0, getICBvAndOr);
-}
-
-TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_and_eq_false1)
-{
-  runTest(false, Kind::EQUAL, Kind::BITVECTOR_AND, 1, getICBvAndOr);
 }
 
 /* Or */
@@ -370,19 +350,9 @@ TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_or_eq_true0)
   runTest(true, Kind::EQUAL, Kind::BITVECTOR_OR, 0, getICBvAndOr);
 }
 
-TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_or_eq_true1)
-{
-  runTest(true, Kind::EQUAL, Kind::BITVECTOR_OR, 1, getICBvAndOr);
-}
-
 TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_or_eq_false0)
 {
   runTest(false, Kind::EQUAL, Kind::BITVECTOR_OR, 0, getICBvAndOr);
-}
-
-TEST_F(TestTheoryWhiteQuantifiersBvInverter, getIC_bv_or_eq_false1)
-{
-  runTest(false, Kind::EQUAL, Kind::BITVECTOR_OR, 1, getICBvAndOr);
 }
 
 /* Lshr */
