@@ -1616,26 +1616,9 @@ bool BasicRewriteRCons::ensureProofMacroOverlap(ProofRewriteRule id,
   std::vector<Node> transEq;
   if (!premises.empty())
   {
-    std::vector<Node> newChildren;
-    for (size_t i = 0, nchild = eq[0].getNumChildren(); i < nchild; i++)
-    {
-      if (i < premises.size())
-      {
-        newChildren.push_back(premises[i][1]);
-      }
-      else
-      {
-        Node refl = eq[0][i].eqNode(eq[0][i]);
-        cdp->addStep(refl, ProofRule::REFL, {}, {eq[0][i]});
-        premises.push_back(refl);
-        newChildren.push_back(eq[0][i]);
-      }
-    }
-    Node inputRew = nm->mkNode(eq[0].getKind(), newChildren);
-    std::vector<Node> cargs;
-    ProofRule cr = expr::getCongRule(input, cargs);
+    // prove input = inputRew by congruence given the premises
+    Node inputRew = proveCong(cdp, input, premises);
     Node ceq = input.eqNode(inputRew);
-    cdp->addStep(ceq, cr, premises, cargs);
     transEq.push_back(ceq);
     input = inputRew;
   }
