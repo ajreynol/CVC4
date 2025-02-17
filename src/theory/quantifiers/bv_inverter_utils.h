@@ -33,7 +33,7 @@ Node getICBvSltSgt(bool pol, Kind k, Node x, Node t);
 
 /* Get invertibility condition for BITVECTOR_MUL. */
 Node getICBvMult(
-    bool pol, Kind litk, Kind k, Node x, Node s, Node t);
+    bool pol, Kind litk, Kind k, unsigned idx, Node x, Node s, Node t);
 
 /* Get invertibility condition for BITVECTOR_UREM. */
 Node getICBvUrem(
@@ -45,7 +45,7 @@ Node getICBvUdiv(
 
 /* Get invertibility condition for BITVECTOR_AND and BITVECTOR_OR. */
 Node getICBvAndOr(
-    bool pol, Kind litk, Kind k, Node x, Node s, Node t);
+    bool pol, Kind litk, Kind k, unsigned idx, Node x, Node s, Node t);
 
 /* Get invertibility condition for BITVECTOR_LSHR. */
 Node getICBvLshr(
