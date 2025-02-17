@@ -4050,6 +4050,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_SUB_ELIMINATE),
   /** Auto-generated from RARE rule bv-ite-width-one */
   EVALUE(BV_ITE_WIDTH_ONE),
+  /** Auto-generated from RARE rule bv-eq-xor-solve */
+  EVALUE(BV_EQ_XOR_SOLVE),
+  /** Auto-generated from RARE rule bv-eq-not-solve */
+  EVALUE(BV_EQ_NOT_SOLVE),
   /** Auto-generated from RARE rule bv-ugt-eliminate */
   EVALUE(BV_UGT_ELIMINATE),
   /** Auto-generated from RARE rule bv-uge-eliminate */

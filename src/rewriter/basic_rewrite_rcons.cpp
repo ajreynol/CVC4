@@ -411,7 +411,7 @@ bool BasicRewriteRCons::ensureProofMacroBoolBvInvertSolve(CDProof* cdp, const No
   theory::booleans::TheoryBoolRewriter::getBvInvertSolve(nodeManager(), eq[0][0], eq[0][1][0], disallowedKinds, cdp);
   // finish proof
   cdp->addStep(eq, ProofRule::TRUE_INTRO, {eq[0]}, {});
-  return false;
+  return true;
 }
 
 bool BasicRewriteRCons::ensureProofMacroArithIntRelation(CDProof* cdp,

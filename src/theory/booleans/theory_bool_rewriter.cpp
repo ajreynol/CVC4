@@ -334,18 +334,62 @@ Node TheoryBoolRewriter::getBvInvertSolve(
       unsigned p = path[npath - i - 1];
       curr = curr[p];
     }
+    Assert (curr==var);
   }
   if (slit.isNull())
   {
     return Node::null();
   }
+  std::vector<Node> ts;
+  if (cdp!=nullptr)
+  {
+    Node curr = lit;
+    for (size_t i = 0, npath = path.size(); i < npath; i++)
+    {
+      unsigned p = path[npath - i - 1];
+      curr = curr[p];
+      ts.push_back(curr);
+    }
+    Assert (ts.back()==var);
+    ts.pop_back();
+    std::reverse(ts.begin(), ts.end());
+  }
   Node ret = binv.solveBvLit(var, lit, path, nullptr);
   if (cdp!=nullptr)
   {
+    Node slvEq = var.eqNode(ret);
     Trace("quant-velim-bv") << "Prove source: " << lit << std::endl;
-    Trace("quant-velim-bv") << "Prove target: " << var << " = " << ret << std::endl;
-    for (size_t i = 0, npath = path.size(); i < npath; i++)
+    Trace("quant-velim-bv") << "Prove target: " << slvEq << std::endl;
+    Trace("quant-velim-bv") << "Terms: " << ts << std::endl;
+    Node curr = slvEq;
+    std::vector<Node> transEq;
+    for (const Node& t : ts)
     {
+      Node next = t.eqNode(curr[1][0]);
+      Trace("quant-velim-bv") << "- " << curr << " == " << next << std::endl;
+      Node eqc = next.eqNode(curr);
+      transEq.push_back(eqc);
+      cdp->addTrustedStep(
+          eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+      curr = next;
+    }
+    if (curr!=lit)
+    {
+      // likely symmetry
+      Node eqc = lit.eqNode(curr);
+      transEq.push_back(eqc);
+      cdp->addTrustedStep(
+          eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    }
+    Node eqf = lit.eqNode(slvEq);
+    if (transEq.size()>1)
+    {
+      std::reverse(transEq.begin(), transEq.end());
+      cdp->addStep(eqf, ProofRule::TRANS, transEq, {});
+    }
+    else
+    {
+      Assert (transEq[0]==eqf);
     }
   }
   return ret;
