@@ -38,6 +38,8 @@ namespace cvc5::internal {
 namespace preprocessing {
 namespace passes {
 
+class AckermannProofGenerator;
+
 using TNodeSet = std::unordered_set<TNode>;
 using FunctionToArgsMap = std::unordered_map<TNode, TNodeSet>;
 using USortToBVSizeMap = std::unordered_map<TypeNode, size_t>;
@@ -77,6 +79,8 @@ class Ackermann : public PreprocessingPass
   /* Map each uninterpreted sort to the number of variables in this sort. */
   USortToBVSizeMap d_usortCardinality;
   LogicInfo d_logic;
+  /** A proof generator */
+  std::shared_ptr<AckermannProofGenerator> d_apg;
 };
 
 }  // namespace passes
