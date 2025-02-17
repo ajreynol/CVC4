@@ -276,9 +276,8 @@ Node getICBvMult(
     }
   }
 
-  // for uniformity, always use x at first index
   Node scr =
-      nm->mkNode(litk, nm->mkNode(k, x, s), t);
+      nm->mkNode(litk, idx == 0 ? nm->mkNode(k, x, s) : nm->mkNode(k, s, x), t);
   Node ic = nm->mkNode(Kind::IMPLIES, scl, pol ? scr : scr.notNode());
   Trace("bv-invert") << "Add SC_" << k << "(" << x << "): " << ic << std::endl;
   return ic;
@@ -1212,8 +1211,7 @@ Node getICBvAndOr(
       }
     }
   }
-  // for uniformity, always use x at first index
-  Node scr = nm->mkNode(litk, nm->mkNode(k, x, s), t);
+  Node scr = nm->mkNode(litk, idx == 0 ? nm->mkNode(k, x, s) : nm->mkNode(k, s, x), t);
   Node ic = nm->mkNode(Kind::IMPLIES, scl, pol ? scr : scr.notNode());
   Trace("bv-invert") << "Add SC_" << k << "(" << x << "): " << ic << std::endl;
   return ic;
