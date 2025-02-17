@@ -368,10 +368,10 @@ RewriteResponse TheoryBVRewriter::RewriteExtract(TNode node, bool prerewrite)
     return RewriteResponse(REWRITE_AGAIN_FULL, resultNode);
   }
 
-  if (!prerewrite && RewriteRule<ExtractExtract>::applies(node))
+  if (!prerewrite)
   {
-    resultNode = RewriteRule<ExtractExtract>::run<false>(node);
-    return RewriteResponse(REWRITE_AGAIN_FULL, resultNode);
+    // We could have an extract over extract
+    TRY_REWRITE(ExtractExtract)
   }
 
   resultNode = LinearRewriteStrategy<
@@ -391,14 +391,7 @@ RewriteResponse TheoryBVRewriter::RewriteExtract(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteConcat(TNode node, bool prerewrite)
 {
-  if (RewriteRule<ConcatFlatten>::applies(node))
-  {
-    Node resultNode = RewriteRule<ConcatFlatten>::run<false>(node);
-    if (resultNode != node)
-    {
-      return RewriteResponse(REWRITE_AGAIN, resultNode);
-    }
-  }
+  TRY_REWRITE(ConcatFlatten)
   Node resultNode = LinearRewriteStrategy<
       // Merge the adjacent extracts on non-constants
       RewriteRule<ConcatExtractMerge>,
