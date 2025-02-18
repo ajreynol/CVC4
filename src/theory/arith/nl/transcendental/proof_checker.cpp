@@ -201,7 +201,7 @@ Node TranscendentalProofRuleChecker::checkInternal(
     Assert(args[2].getType().isRealOrInt());
     std::uint64_t d =
         args[0].getConst<Rational>().getNumerator().toUnsignedInt();
-    Node c = args[1];
+    Node c = args[1]; // can be positive or negative
     Node t = args[2];
     TaylorGenerator tg(nm);
     TaylorGenerator::ApproximationBounds bounds;

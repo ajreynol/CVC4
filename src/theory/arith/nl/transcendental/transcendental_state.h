@@ -133,7 +133,7 @@ class TranscendentalState : protected EnvObj
    * @param upper Right secant point
    * @param concavity Concavity of the current regions
    * @param tf Current transcendental term
-   * @param splane Secant plane as computed by mkSecantPlane()
+   * @param actual_d The d value that was used
    */
   NlLemma mkSecantLemma(TNode lower,
                         TNode upper,
@@ -142,7 +142,6 @@ class TranscendentalState : protected EnvObj
                         int csign,
                         Convexity convexity,
                         TNode tf,
-                        TNode splane,
                         unsigned actual_d);
 
   /**

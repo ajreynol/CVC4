@@ -320,11 +320,11 @@ NlLemma TranscendentalState::mkSecantLemma(TNode lower,
                                            int csign,
                                            Convexity convexity,
                                            TNode tf,
-                                           TNode splane,
                                            unsigned actual_d)
 {
   Assert(lower.isConst() && upper.isConst());
   Assert(lower.getConst<Rational>() < upper.getConst<Rational>());
+  Node splane = mkSecantPlane(tf[0], lower, upper, lapprox, uapprox);
   NodeManager* nm = nodeManager();
   // With respect to Figure 3, this is slightly different.
   // In particular, we chose b to be the model value of bounds[s],
@@ -430,9 +430,8 @@ void TranscendentalState::doSecantLemmas(const std::pair<Node, Node>& bounds,
     // Figure 3 : P(l), P(u), for s = 0
     Node lval =
         rewrite(poly_approx.substitute(d_taylor.getTaylorVariable(), lower));
-    Node splane = mkSecantPlane(tf[0], lower, center, lval, cval);
     NlLemma nlem = mkSecantLemma(
-        lower, center, lval, cval, csign, convexity, tf, splane, actual_d);
+        lower, center, lval, cval, csign, convexity, tf, actual_d);
     // The side effect says that if lem is added, then we should add the
     // secant point c for (tf,d).
     nlem.d_secantPoint.push_back(std::make_tuple(tf, d, center));
@@ -449,9 +448,8 @@ void TranscendentalState::doSecantLemmas(const std::pair<Node, Node>& bounds,
     // Figure 3 : P(l), P(u), for s = 1
     Node uval =
         rewrite(poly_approx.substitute(d_taylor.getTaylorVariable(), upper));
-    Node splane = mkSecantPlane(tf[0], center, upper, cval, uval);
     NlLemma nlem = mkSecantLemma(
-        center, upper, cval, uval, csign, convexity, tf, splane, actual_d);
+        center, upper, cval, uval, csign, convexity, tf, actual_d);
     // The side effect says that if lem is added, then we should add the
     // secant point c for (tf,d).
     nlem.d_secantPoint.push_back(std::make_tuple(tf, d, center));
