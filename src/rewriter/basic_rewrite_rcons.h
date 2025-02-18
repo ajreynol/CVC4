@@ -388,16 +388,6 @@ class BasicRewriteRCons : protected EnvObj
   bool ensureProofMacroArraysNormalizeOp(CDProof* cdp, const Node& eq);
   /**
    * Elaborate a rewrite eq that was proven by
-   * ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS.
-   *
-   * @param cdp The proof to add to.
-   * @param eq The rewrite proven by
-   * ProofRewriteRule::MACRO_ARRAYS_DISTINCT_ARRAYS.
-   * @return true if added a closed proof of eq to cdp.
-   */
-  bool ensureProofMacroArraysDistinctArrays(CDProof* cdp, const Node& eq);
-  /**
-   * Elaborate a rewrite eq that was proven by
    * ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_CONSTANT.
    *
    * @param cdp The proof to add to.
