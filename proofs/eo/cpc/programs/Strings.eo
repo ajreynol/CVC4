@@ -6,6 +6,7 @@
 (include "../programs/PolyNorm.eo")
 (include "../programs/SeqToString.eo")
 
+
 ; This signature is used for both strings and sequences, where we often
 ; write "string" in the documentation to refer to a string or sequence,
 ; or "string-like type" to refer to a string or sequence type.
@@ -53,8 +54,13 @@
 ; - y (Seq T): The second string.
 ; return: the concatenation of strings x and y, treated as lists.
 (define $str_concat ((T Type :implicit) (x (Seq T)) (y (Seq T)))
-  (eo::list_concat str.++ x y)
-)
+  (eo::list_concat str.++ x y))
+
+; define: $str_head
+; args:
+; - x (Seq T): The string, expected to be a non-empty concatentation.
+; return: the head (first child) of x.
+(define $str_head ((T Type :implicit) (x (Seq T))) (eo::list_nth str.++ x 0))
 
 ; define: $str_head
 ; args:
@@ -1111,6 +1117,20 @@
   ($str_rev rev ($str_nary_intro s))
 )
 
+; define: $str_to_nary_form
+; args:
+; - s (Seq U): The string term.
+; - rev Bool: Whether to reverse s.
+; return: >
+;   Converts a str.++ application into "nary form" so that we are ready to
+;   process its prefix. This consists of the following steps:
+;   (1) convert s to n-ary form if it is not already a str.++ application,
+;   (2) (optionally) reverse.
+(define $str_to_nary_form ((U Type :implicit) (s (Seq U)) (rev Bool))
+  ; intro, reverse
+  ($str_rev rev ($str_nary_intro s))
+)
+
 ; program: $re_str_to_flat_form
 ; args:
 ; - rev Bool: Whether to reverse the strings that occur in r.
@@ -1675,7 +1695,6 @@
 
 ; program: $str_overlap_rec
 ; args:
-; - nil (Seq U): The empty string.
 ; - s (Seq U): The first string, expected to be in flattened form.
 ; - t (Seq U): The second string, expected to be in flattened form.
 ; return: >
@@ -1693,8 +1712,8 @@
 
 ; define: $str_overlap
 ; args:
-; - s (Seq U): The first string, expected to be a string literal.
-; - t (Seq U): The second string, expected to be a string literal.
+; - s (Seq U): The first string, expected to be a string or sequence value.
+; - t (Seq U): The second string, expected to be a string or sequence value.
 ; return: >
 ;   The minimum number of characters that must be skipped in s before
 ;   string t can be compatible with it. For example:
@@ -1715,8 +1734,8 @@
 
 ; program: $str_has_overlap
 ; args:
-; - s (Seq U): The first string, expected to be a string literal.
-; - t (Seq U): The second string, expected to be a string literal.
+; - s (Seq U): The first string, expected to be a string or sequence value.
+; - t (Seq U): The second string, expected to be a string or sequence value.
 ; return: >
 ;   True if s is non-empty and contains t, or
 ;   a non-empty suffix of s is a prefix of t if rev is false, or
