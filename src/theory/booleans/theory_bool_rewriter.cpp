@@ -334,7 +334,7 @@ Node TheoryBoolRewriter::getBvInvertSolve(
       unsigned p = path[npath - i - 1];
       curr = curr[p];
     }
-    Assert (curr==var);
+    Assert (slit.isNull() || curr==var);
   }
   if (slit.isNull())
   {
