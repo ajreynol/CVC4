@@ -2732,19 +2732,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_ARRAYS_NORMALIZE_OP),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Arrays -- Macro distinct arrays**
-   *
-   * .. math::
-   *   (A = B) = \bot
-   *
-   * where :math:`A` and :math:`B` are distinct array values, that is,
-   * the Node::isConst method returns true for both.
-   *
-   * \endverbatim
-   */
-  EVALUE(MACRO_ARRAYS_DISTINCT_ARRAYS),
-  /**
-   * \verbatim embed:rst:leading-asterisk
    * **Arrays -- Macro normalize constant**
    *
    * .. math::
