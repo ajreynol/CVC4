@@ -2295,9 +2295,12 @@ enum ENUM(ProofRule)
    * upper bounds on :math:`t` (possibly containing :math:`\pi`). Let :math:`p`
    * be the :math:`d`'th taylor polynomial at zero (also called the Maclaurin
    * series) of the sine function. :math:`\texttt{lower}(\sin, c)` denotes the
-   * lower bound on :math:`\sin(c)` given by :math:`p` and :math:`lb,up` such
+   * lower bound on :math:`\sin(c)` given by :math:`p` and :math:`lb,ub` such
    * that :math:`\sin(t)` is the minimum of the sine function on
-   * :math:`(lb,ub)`. \endverbatim
+   * :math:`(lb,ub)`.
+   * 
+   * This rule requires that :math:`c` is in the interval :math:`[0, pi)`.
+   * \endverbatim
    */
   EVALUE(ARITH_TRANS_SINE_APPROX_BELOW_NEG),
   /**

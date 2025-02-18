@@ -71,6 +71,10 @@ class TranscendentalProofRuleChecker : public ProofRuleChecker
    * @return The formula of the form above.
    */
   Node mkSecant(TNode t, TNode l, TNode u, TNode evall, TNode evalu);
+  /**
+   * Get region.
+   */
+  size_t getRegion(TNode c) const;
 };
 
 }  // namespace transcendental

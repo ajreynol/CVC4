@@ -370,6 +370,7 @@ Node TranscendentalProofRuleChecker::checkInternal(
         args[0].getConst<Rational>().getNumerator().toUnsignedInt();
     Node t = args[1];
     Node c = args[2];
+    Assert (c.getConst<Rational>().sgn()==1);
     Node lb = args[3];
     Node ub = args[4];
     TaylorGenerator tg(nm);
@@ -382,6 +383,11 @@ Node TranscendentalProofRuleChecker::checkInternal(
                       nm->mkNode(Kind::GEQ, nm->mkNode(Kind::SINE, t), evalc));
   }
   return Node::null();
+}
+
+size_t TranscendentalProofRuleChecker::getRegion(TNode c) const
+{
+  return 0;
 }
 
 }  // namespace transcendental
