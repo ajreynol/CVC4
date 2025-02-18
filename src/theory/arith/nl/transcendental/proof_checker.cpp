@@ -19,6 +19,7 @@
 #include "theory/arith/arith_utilities.h"
 #include "theory/arith/nl/transcendental/sine_solver.h"
 #include "theory/arith/nl/transcendental/taylor_generator.h"
+#include "theory/arith/nl/transcendental/transcendental_state.h"
 #include "theory/evaluator.h"
 
 using namespace cvc5::internal::kind;
@@ -292,6 +293,7 @@ Node TranscendentalProofRuleChecker::checkInternal(
     Node ub = args[3];
     Node l = args[4];
     Node u = args[5];
+    AlwaysAssert(getRegion(l)==getRegion(u)) << l << " " << u;
     TaylorGenerator tg(nm);
     TaylorGenerator::ApproximationBounds bounds;
     tg.getPolynomialApproximationBounds(Kind::SINE, d / 2, bounds);
@@ -345,6 +347,7 @@ Node TranscendentalProofRuleChecker::checkInternal(
     Node ub = args[3];
     Node l = args[4];
     Node u = args[5];
+    AlwaysAssert(getRegion(lb)==getRegion(ub)) << lb << " " << ub;
     TaylorGenerator tg(nm);
     TaylorGenerator::ApproximationBounds bounds;
     tg.getPolynomialApproximationBounds(Kind::SINE, d / 2, bounds);
@@ -385,9 +388,29 @@ Node TranscendentalProofRuleChecker::checkInternal(
   return Node::null();
 }
 
-size_t TranscendentalProofRuleChecker::getRegion(TNode c) const
+int TranscendentalProofRuleChecker::getRegion(TNode c) const
 {
-  return 0;
+  Assert (c.getKind()==Kind::CONST_RATIONAL);
+  Rational cr = c.getConst<Rational>();
+  Rational upper = TranscendentalState::getPiInitialLowerBound();
+  Rational lower = TranscendentalState::getPiInitialUpperBound();
+  Rational two(2);
+  int coeff = 2;
+  for (int region=0; region<5; region++)
+  {
+    Rational uc = upper * Rational(coeff)/two;
+    Rational lc = lower * Rational(coeff)/two;
+    if (cr>uc)
+    {
+      return region;
+    }
+    else if (cr>lc)
+    {
+      return -1;
+    }
+    coeff--;
+  }
+  return -1;
 }
 
 }  // namespace transcendental

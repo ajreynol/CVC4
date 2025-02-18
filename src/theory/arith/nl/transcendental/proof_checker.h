@@ -74,7 +74,7 @@ class TranscendentalProofRuleChecker : public ProofRuleChecker
   /**
    * Get region.
    */
-  size_t getRegion(TNode c) const;
+  int getRegion(TNode c) const;
 };
 
 }  // namespace transcendental
