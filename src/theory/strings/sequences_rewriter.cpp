@@ -3319,11 +3319,6 @@ Node SequencesRewriter::rewriteReplace(Node node)
   Assert(node.getKind() == Kind::STRING_REPLACE);
   NodeManager* nm = nodeManager();
 
-  if (node[1].isConst() && Word::isEmpty(node[1]))
-  {
-    Node ret = nm->mkNode(Kind::STRING_CONCAT, node[2], node[0]);
-    return returnRewrite(node, ret, Rewrite::RPL_RPL_EMPTY);
-  }
   // the string type
   TypeNode stype = node.getType();
 
@@ -3357,9 +3352,24 @@ Node SequencesRewriter::rewriteReplace(Node node)
         children.push_back(s3);
       }
       children.insert(children.end(), children0.begin() + 1, children0.end());
-      Node ret = utils::mkConcat(children, stype);
+      Node ret;
+      if (children0.size() == 1 && node[2].isConst())
+      {
+        // evaluate the constant
+        ret = Word::mkWordFlatten(children);
+      }
+      else
+      {
+        ret = utils::mkConcat(children, stype);
+      }
       return returnRewrite(node, ret, Rewrite::RPL_CONST_FIND);
     }
+  }
+
+  if (node[1].isConst() && Word::isEmpty(node[1]))
+  {
+    Node ret = nm->mkNode(Kind::STRING_CONCAT, node[2], node[0]);
+    return returnRewrite(node, ret, Rewrite::RPL_RPL_EMPTY);
   }
 
   // rewrites that apply to both replace and replaceall
