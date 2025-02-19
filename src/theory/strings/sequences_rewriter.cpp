@@ -92,7 +92,7 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
   registerProofRewriteRule(ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::SEQ_EVAL_OP,
-                           TheoryRewriteCtx::POST_DSL);
+                           TheoryRewriteCtx::PRE_DSL);
   // make back pointer to this (for rewriting contains)
   se.d_rewriter = this;
 }
@@ -126,7 +126,9 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     }
     case ProofRewriteRule::STR_CTN_MULTISET_SUBSET:
     {
-      if (n.getKind() == Kind::STRING_CONTAINS)
+      // don't use this just for evaluation
+      if (n.getKind() == Kind::STRING_CONTAINS
+          && (!n[0].isConst() || !n[1].isConst()))
       {
         if (d_stringsEntail.checkMultisetSubset(n[0], n[1]))
         {
