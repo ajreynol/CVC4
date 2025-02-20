@@ -163,7 +163,7 @@ enum class TrustId : uint32_t
   ARITH_DIO_LEMMA,
   /** A lemma from the ArithStaticLearner utility */
   ARITH_STATIC_LEARN,
-  /** A nonlinear comparison lemma that failed to explain */
+  /** A nonlinear comparison lemma that failed proof reconstruction */
   ARITH_NL_COMPARE_LEMMA,
   /** A conflict coming from the bitblast solver */
   BV_BITBLAST_CONFLICT,

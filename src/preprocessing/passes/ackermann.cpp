@@ -26,17 +26,14 @@
 
 #include <cmath>
 
-#include "smt/env.h"
 #include "base/check.h"
 #include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
 #include "smt/logic_exception.h"
 #include "options/base_options.h"
-#include "options/smt_options.h"
+#include "options/options.h"
 #include "preprocessing/assertion_pipeline.h"
 #include "preprocessing/preprocessing_pass_context.h"
-#include "proof/proof_node_algorithm.h"
-#include "proof/proof.h"
 
 using namespace cvc5::internal;
 using namespace cvc5::internal::theory;
@@ -44,62 +41,6 @@ using namespace cvc5::internal::theory;
 namespace cvc5::internal {
 namespace preprocessing {
 namespace passes {
-
-/**
- * A proof generator for proving lemmas derived in the ackermann preprocessing pass.
- */
-class AckermannProofGenerator : protected EnvObj, public ProofGenerator
-{
- public:
-  AckermannProofGenerator(Env& env) : EnvObj(env) {}
-  virtual ~AckermannProofGenerator() {}
-  /**
-   * The lemma is of the form:
-   * (=> (and (= ti si) .. (= tj sj)) (= (f t1 ... tn) (f s1 ... sn)))
-   * which can be proven by a congruence step.
-   */
-  std::shared_ptr<ProofNode> getProofFor(Node fact) override
-  {
-    Assert(fact.getKind() == Kind::IMPLIES);
-    Assert(fact[1].getKind() == Kind::EQUAL);
-    Node a = fact[1][0];
-    Node b = fact[1][1];
-    Assert (a.getOperator()==b.getOperator());
-    std::vector<Node> assumps;
-    if (fact[0].getKind() == Kind::AND)
-    {
-      assumps.insert(assumps.end(), fact[0].begin(), fact[0].end());
-    }
-    else
-    {
-      assumps.push_back(fact[0]);
-    }
-    CDProof cdp(d_env);
-    Assert(a.getNumChildren() == b.getNumChildren());
-    std::vector<Node> cargs;
-    ProofRule cr = expr::getCongRule(a, cargs);
-    size_t nchild = a.getNumChildren();
-    std::vector<Node> premises;
-    for (size_t i = 0; i < nchild; i++)
-    {
-      Node eq = a[i].eqNode(b[i]);
-      premises.push_back(eq);
-      if (a[i] == b[i])
-      {
-        cdp.addStep(eq, ProofRule::REFL, {}, {a[i]});
-      }
-      else
-      {
-        Assert(std::find(assumps.begin(), assumps.end(), eq) != assumps.end());
-      }
-    }
-    cdp.addStep(fact[1], cr, premises, cargs);
-    std::shared_ptr<ProofNode> pfn = cdp.getProofFor(fact[1]);
-    return d_env.getProofNodeManager()->mkScope(pfn, assumps);
-  }
-  /** identify */
-  std::string identify() const override { return "AckermannProofGenerator"; }
-};
 
 /* -------------------------------------------------------------------------- */
 
@@ -109,8 +50,7 @@ void addLemmaForPair(TNode args1,
                      TNode args2,
                      const TNode func,
                      AssertionPipeline* assertionsToPreprocess,
-                     NodeManager* nm,
-                     ProofGenerator * pg)
+                     NodeManager* nm)
 {
   Node args_eq;
 
@@ -149,7 +89,7 @@ void addLemmaForPair(TNode args1,
   Node func_eq = nm->mkNode(Kind::EQUAL, args1, args2);
   Node lemma = nm->mkNode(Kind::IMPLIES, args_eq, func_eq);
   assertionsToPreprocess->push_back(
-      lemma, false, pg, TrustId::PREPROCESS_ACKERMANN_LEMMA);
+      lemma, false, nullptr, TrustId::PREPROCESS_ACKERMANN_LEMMA);
 }
 
 void storeFunctionAndAddLemmas(TNode func,
@@ -158,8 +98,7 @@ void storeFunctionAndAddLemmas(TNode func,
                                SubstitutionMap& fun_to_skolem,
                                AssertionPipeline* assertions,
                                NodeManager* nm,
-                               std::vector<TNode>* vec,
-                     ProofGenerator * pg)
+                               std::vector<TNode>* vec)
 {
   if (fun_to_args.find(func) == fun_to_args.end())
   {
@@ -172,7 +111,7 @@ void storeFunctionAndAddLemmas(TNode func,
     Node skolem = sm->mkPurifySkolem(term);
     for (const auto& t : set)
     {
-      addLemmaForPair(t, term, func, assertions, nm, pg);
+      addLemmaForPair(t, term, func, assertions, nm);
     }
     fun_to_skolem.addSubstitution(term, skolem);
     set.insert(term);
@@ -211,8 +150,7 @@ void collectFunctionsAndLemmas(NodeManager* nm,
                                FunctionToArgsMap& fun_to_args,
                                SubstitutionMap& fun_to_skolem,
                                std::vector<TNode>* vec,
-                               AssertionPipeline* assertions,
-                     ProofGenerator * pg)
+                               AssertionPipeline* assertions)
 {
   TNodeSet seen;
   TNode term;
@@ -231,7 +169,7 @@ void collectFunctionsAndLemmas(NodeManager* nm,
                                   fun_to_skolem,
                                   assertions,
                                   nm,
-                                  vec, pg);
+                                  vec);
       }
       else if (term.getKind() == Kind::STORE)
       {
@@ -361,9 +299,7 @@ Ackermann::Ackermann(PreprocessingPassContext* preprocContext)
     : PreprocessingPass(preprocContext, "ackermann"),
       d_funcToSkolem(userContext()),
       d_usVarsToBVVars(userContext()),
-      d_logic(logicInfo()),
-      d_apg(options().smt.produceProofs ? new AckermannProofGenerator(d_env)
-                                            : nullptr)
+      d_logic(logicInfo())
 {
 }
 
@@ -383,7 +319,7 @@ PreprocessingPassResult Ackermann::applyInternal(
                             d_funcToArgs,
                             d_funcToSkolem,
                             &to_process,
-                            assertionsToPreprocess, d_apg.get());
+                            assertionsToPreprocess);
 
   /* replace applications of UF by skolems */
   // FIXME for model building, github issue #1901
