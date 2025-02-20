@@ -3217,7 +3217,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_CONCAT_CONSTANT_MERGE),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Bitvectors -- Macro flatten assoc commut **
+   * **Bitvectors -- Macro flatten assocative commutative **
    *
    * \endverbatim
    */
