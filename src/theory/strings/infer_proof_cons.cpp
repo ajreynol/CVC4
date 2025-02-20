@@ -631,8 +631,9 @@ bool InferProofCons::convert(Env& env,
           lenSuccess = convertLengthPf(lenReq, lenConstraint, psb);
           rule = ProofRule::CONCAT_CPROP;
         }
-        else if (infer == InferenceId::STRINGS_N_CONST || infer == InferenceId::STRINGS_F_CONST
-                || infer == InferenceId::STRINGS_N_EQ_CONF)
+        else if (infer == InferenceId::STRINGS_N_CONST
+                 || infer == InferenceId::STRINGS_F_CONST
+                 || infer == InferenceId::STRINGS_N_EQ_CONF)
         {
           // first, splice if necessary
           mainEqCeq = spliceConstants(
@@ -644,7 +645,8 @@ bool InferProofCons::convert(Env& env,
           theory::strings::utils::getConcat(mainEqCeq[1], svecs);
           t0 = tvecs[isRev ? tvecs.size() - 1 : 0];
           s0 = svecs[isRev ? svecs.size() - 1 : 0];
-          lenReq = nm->mkNode(Kind::STRING_LENGTH, t0).eqNode(nm->mkNode(Kind::STRING_LENGTH, s0));
+          lenReq = nm->mkNode(Kind::STRING_LENGTH, t0)
+                       .eqNode(nm->mkNode(Kind::STRING_LENGTH, s0));
           // should be shown by evaluation
           lenSuccess = psb.applyPredIntro(lenReq, {});
           // will conclude an equality between string/sequence values, which
@@ -1549,7 +1551,8 @@ Node InferProofCons::spliceConstants(Env& env,
       vec[index] = o;
       vec.insert(vec.begin() + index + (isRev ? 0 : 1), currR);
     }
-    else if (rule == ProofRule::CONCAT_UNIFY && !conc.isNull() && conc.getKind()==Kind::EQUAL)
+    else if (rule == ProofRule::CONCAT_UNIFY && !conc.isNull()
+             && conc.getKind() == Kind::EQUAL)
     {
       Trace("strings-ipc-splice")
           << "Splice cprop at " << currT << " / " << currS
@@ -1613,7 +1616,8 @@ Node InferProofCons::spliceConstants(Env& env,
         svec.insert(svec.begin() + si + 1, Word::suffix(currS, len - 1));
       }
     }
-    else if (rule == ProofRule::CONCAT_UNIFY && conc.isConst() && !conc.getConst<bool>())
+    else if (rule == ProofRule::CONCAT_UNIFY && conc.isConst()
+             && !conc.getConst<bool>())
     {
       if (!currT.isConst() || !currS.isConst())
       {

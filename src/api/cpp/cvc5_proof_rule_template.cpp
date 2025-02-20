@@ -305,8 +305,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-bv-extract-sign-extend";
     case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST:
       return "macro-bv-ashr-by-const";
-    case ProofRewriteRule::MACRO_BV_OR_SIMPLIFY:
-      return "macro-bv-or-simplify";
+    case ProofRewriteRule::MACRO_BV_OR_SIMPLIFY: return "macro-bv-or-simplify";
     case ProofRewriteRule::MACRO_BV_AND_SIMPLIFY:
       return "macro-bv-and-simplify";
     case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:

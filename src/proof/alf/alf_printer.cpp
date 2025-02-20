@@ -197,9 +197,9 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
     case ProofRule::DSL_REWRITE: return true;
     case ProofRule::EXISTS_INV_CONDITION:
     {
-      Assert (pfn->getArguments()[0].getKind()==Kind::EXISTS);
+      Assert(pfn->getArguments()[0].getKind() == Kind::EXISTS);
       Node eq = pfn->getArguments()[0][1];
-      if (eq.getKind()==Kind::EQUAL)
+      if (eq.getKind() == Kind::EQUAL)
       {
         switch (eq[0].getKind())
         {
@@ -211,10 +211,8 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
           case Kind::BITVECTOR_LSHR:
           case Kind::BITVECTOR_AND:
           case Kind::BITVECTOR_OR:
-          case Kind::BITVECTOR_SIGN_EXTEND:
-            return true;
-          default:
-            break;
+          case Kind::BITVECTOR_SIGN_EXTEND: return true;
+          default: break;
         }
       }
       return false;

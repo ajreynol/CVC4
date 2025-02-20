@@ -38,7 +38,7 @@ using namespace cvc5::internal::theory::bv;
       return RewriteResponse(REWRITE_AGAIN_FULL, nrew); \
     }                                                   \
   }
-  
+
 TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
 {
   initializeRewrites();
@@ -432,9 +432,9 @@ RewriteResponse TheoryBVRewriter::RewriteOr(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteXor(TNode node, bool prerewrite)
 {
-  TRY_REWRITE(FlattenAssocCommut) // flatten the expression
-  TRY_REWRITE(XorSimplify) // simplify duplicates and constants
-  TRY_REWRITE(XorZero) // checks if the constant part is zero and eliminates it
+  TRY_REWRITE(FlattenAssocCommut)  // flatten the expression
+  TRY_REWRITE(XorSimplify)         // simplify duplicates and constants
+  TRY_REWRITE(XorZero)  // checks if the constant part is zero and eliminates it
   TRY_REWRITE(AndOrXorConcatPullUp)
 
   if (!prerewrite)
@@ -506,13 +506,13 @@ RewriteResponse TheoryBVRewriter::RewriteEagerAtom(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteMult(TNode node, bool prerewrite)
 {
-  TRY_REWRITE(FlattenAssocCommut) // flattens and sorts
-  TRY_REWRITE(MultSimplify) // multiplies constant part and checks for 0
+  TRY_REWRITE(FlattenAssocCommut)  // flattens and sorts
+  TRY_REWRITE(MultSimplify)        // multiplies constant part and checks for 0
 
   // only apply if every subterm was already rewritten
   if (!prerewrite)
   {
-    TRY_REWRITE(MultPow2) // replaces multiplication by a power of 2 by a shift
+    TRY_REWRITE(MultPow2)  // replaces multiplication by a power of 2 by a shift
     TRY_REWRITE(MultDistribConst)
     TRY_REWRITE(MultDistrib)
   }

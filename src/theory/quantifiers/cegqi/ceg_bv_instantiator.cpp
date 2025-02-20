@@ -144,8 +144,7 @@ Node BvInstantiator::hasProcessAssertion(CegInstantiator* ci,
   return processAssertionInternal(ci, lit);
 }
 
-Node BvInstantiator::processAssertionInternal(CegInstantiator* ci,
-                                         Node lit)
+Node BvInstantiator::processAssertionInternal(CegInstantiator* ci, Node lit)
 {
   Node atom = lit.getKind() == Kind::NOT ? lit[0] : lit;
   bool pol = lit.getKind() != Kind::NOT;

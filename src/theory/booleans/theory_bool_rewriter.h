@@ -69,15 +69,18 @@ class TheoryBoolRewriter : public TheoryRewriter
    * @param nm Pointer to node manager.
    * @param lit The node to rewrite.
    * @param var The variable to solve for.
-   * @param disallowedKinds The set of kinds we are not allowed to traverse on the path to var.
-   * @param cdp If provided, we add a proof of (= lit ret) to cdp, where ret is the equality returned by this method.
-   * @return The right hand side r corresponding to the solved form for var in lit, or null if we fail.
+   * @param disallowedKinds The set of kinds we are not allowed to traverse on
+   * the path to var.
+   * @param cdp If provided, we add a proof of (= lit ret) to cdp, where ret is
+   * the equality returned by this method.
+   * @return The right hand side r corresponding to the solved form for var in
+   * lit, or null if we fail.
    */
   static Node getBvInvertSolve(NodeManager* nm,
                                const Node& lit,
                                const Node& var,
                                std::unordered_set<Kind>& disallowedKinds,
-                               CDProof * cdp = nullptr);
+                               CDProof* cdp = nullptr);
 
  protected:
   /**

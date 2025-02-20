@@ -396,14 +396,17 @@ bool BasicRewriteRCons::ensureProofMacroBoolNnfNorm(CDProof* cdp,
   return true;
 }
 
-bool BasicRewriteRCons::ensureProofMacroBoolBvInvertSolve(CDProof* cdp, const Node& eq)
+bool BasicRewriteRCons::ensureProofMacroBoolBvInvertSolve(CDProof* cdp,
+                                                          const Node& eq)
 {
-  Trace("brc-macro") << "Expand Bool BV invert solve " << eq[0] << " == " << eq[1]
-                     << std::endl;
-  Assert (eq[0].getKind()==Kind::EQUAL);
-  Assert (eq[0][0].getKind()==Kind::EQUAL && eq[0][1].getKind()==Kind::EQUAL);
+  Trace("brc-macro") << "Expand Bool BV invert solve " << eq[0]
+                     << " == " << eq[1] << std::endl;
+  Assert(eq[0].getKind() == Kind::EQUAL);
+  Assert(eq[0][0].getKind() == Kind::EQUAL
+         && eq[0][1].getKind() == Kind::EQUAL);
   std::unordered_set<Kind> disallowedKinds;
-  theory::booleans::TheoryBoolRewriter::getBvInvertSolve(nodeManager(), eq[0][0], eq[0][1][0], disallowedKinds, cdp);
+  theory::booleans::TheoryBoolRewriter::getBvInvertSolve(
+      nodeManager(), eq[0][0], eq[0][1][0], disallowedKinds, cdp);
   // finish proof
   cdp->addStep(eq, ProofRule::TRUE_INTRO, {eq[0]}, {});
   return true;

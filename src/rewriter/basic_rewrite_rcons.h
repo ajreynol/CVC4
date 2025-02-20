@@ -135,7 +135,8 @@ class BasicRewriteRCons : protected EnvObj
    * ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE.
    *
    * @param cdp The proof to add to.
-   * @param eq The rewrite proven by ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE.
+   * @param eq The rewrite proven by
+   * ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE.
    * @return true if added a closed proof of eq to cdp.
    */
   bool ensureProofMacroBoolBvInvertSolve(CDProof* cdp, const Node& eq);

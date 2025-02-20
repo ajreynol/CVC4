@@ -23,8 +23,8 @@
 
 #include "expr/algorithm/flatten.h"
 #include "expr/node_value.h"
-#include "proof/proof.h"
 #include "proof/conv_proof_generator.h"
+#include "proof/proof.h"
 #include "theory/quantifiers/bv_inverter.h"
 #include "util/cardinality.h"
 
@@ -312,7 +312,7 @@ Node TheoryBoolRewriter::getBvInvertSolve(
     const Node& lit,
     const Node& var,
     std::unordered_set<Kind>& disallowedKinds,
-                               CDProof * cdp)
+    CDProof* cdp)
 {
   quantifiers::BvInverter binv(nm);
   // solve for the variable on this path using the inverter
@@ -334,14 +334,14 @@ Node TheoryBoolRewriter::getBvInvertSolve(
       unsigned p = path[npath - i - 1];
       curr = curr[p];
     }
-    Assert (slit.isNull() || curr==var);
+    Assert(slit.isNull() || curr == var);
   }
   if (slit.isNull())
   {
     return Node::null();
   }
   std::vector<Node> ts;
-  if (cdp!=nullptr)
+  if (cdp != nullptr)
   {
     Node curr = lit;
     for (size_t i = 0, npath = path.size(); i < npath; i++)
@@ -350,12 +350,12 @@ Node TheoryBoolRewriter::getBvInvertSolve(
       curr = curr[p];
       ts.push_back(curr);
     }
-    Assert (ts.back()==var);
+    Assert(ts.back() == var);
     ts.pop_back();
     std::reverse(ts.begin(), ts.end());
   }
   Node ret = binv.solveBvLit(var, lit, path, nullptr);
-  if (cdp!=nullptr)
+  if (cdp != nullptr)
   {
     Node slvEq = var.eqNode(ret);
     Trace("quant-velim-bv") << "Prove source: " << lit << std::endl;
@@ -370,7 +370,7 @@ Node TheoryBoolRewriter::getBvInvertSolve(
       Node next = t.eqNode(curr[1][0]);
       Trace("quant-velim-bv") << "- " << next << " == " << curr << std::endl;
       Node eqc = next.eqNode(curr);
-      if (t.getKind()==Kind::BITVECTOR_XOR && curr[0]!=t[0])
+      if (t.getKind() == Kind::BITVECTOR_XOR && curr[0] != t[0])
       {
         // flip to match the expected pattern of RARE rule bv-eq-xor-solve.
         Node tf = nm->mkNode(Kind::BITVECTOR_XOR, t[1], t[0]);
@@ -386,7 +386,7 @@ Node TheoryBoolRewriter::getBvInvertSolve(
           eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
       curr = next;
     }
-    if (curr!=lit)
+    if (curr != lit)
     {
       // likely symmetry
       Node eqc = lit.eqNode(curr);
@@ -395,14 +395,14 @@ Node TheoryBoolRewriter::getBvInvertSolve(
           eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     }
     Node eqf = lit.eqNode(slvEq);
-    if (transEq.size()>1)
+    if (transEq.size() > 1)
     {
       std::reverse(transEq.begin(), transEq.end());
       cdp->addStep(eqf, ProofRule::TRANS, transEq, {});
     }
     else
     {
-      Assert (transEq[0]==eqf);
+      Assert(transEq[0] == eqf);
     }
   }
   return ret;

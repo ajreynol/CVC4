@@ -252,7 +252,8 @@ Node BvInverter::solveBvLit(Node sv,
     Assert(index < nchildren);
     path.pop_back();
     k = sv_t.getKind();
-    Trace("bv-invert-debug") << "- solving " << sv_t << " = " << t << " at arg #" << index << std::endl;
+    Trace("bv-invert-debug") << "- solving " << sv_t << " = " << t
+                             << " at arg #" << index << std::endl;
 
     /* Note: All n-ary kinds except for CONCAT (i.e., BITVECTOR_AND,
      *       BITVECTOR_OR, MULT, ADD) are commutative (no case split
@@ -323,12 +324,13 @@ Node BvInverter::solveBvLit(Node sv,
     if (tnext.isNull())
     {
       /* t = fresh skolem constant */
-      if (k==Kind::BITVECTOR_MULT || k==Kind::BITVECTOR_AND || k==Kind::BITVECTOR_OR)
+      if (k == Kind::BITVECTOR_MULT || k == Kind::BITVECTOR_AND
+          || k == Kind::BITVECTOR_OR)
       {
         // commutative, always use index 0
-        if (index!=0)
+        if (index != 0)
         {
-          Assert (index==1);
+          Assert(index == 1);
           index = 0;
           sv_t = d_nm->mkNode(k, sv_t[1], sv_t[0]);
         }
@@ -423,7 +425,7 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
     Node s = dropChild(sv_t, index);
     if (k == Kind::BITVECTOR_MULT)
     {
-      Assert (index==0);
+      Assert(index == 0);
       ic = utils::getICBvMult(pol, litk, k, index, x, s, t);
     }
     else if (k == Kind::BITVECTOR_SHL)
@@ -440,7 +442,7 @@ Node BvInverter::mkInvertibilityCondition(const Node& x, const Node& exists)
     }
     else if (k == Kind::BITVECTOR_AND || k == Kind::BITVECTOR_OR)
     {
-      Assert (index==0);
+      Assert(index == 0);
       ic = utils::getICBvAndOr(pol, litk, k, index, x, s, t);
     }
     else if (k == Kind::BITVECTOR_LSHR)
