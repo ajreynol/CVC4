@@ -215,7 +215,6 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
           default: break;
         }
       }
-      AlwaysAssert(false) << "No inv " << eq;
       return false;
     }
     case ProofRule::BV_BITBLAST_STEP:
