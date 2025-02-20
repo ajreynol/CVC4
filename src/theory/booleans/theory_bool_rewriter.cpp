@@ -362,12 +362,25 @@ Node TheoryBoolRewriter::getBvInvertSolve(
     Trace("quant-velim-bv") << "Prove target: " << slvEq << std::endl;
     Trace("quant-velim-bv") << "Terms: " << ts << std::endl;
     Node curr = slvEq;
+    // Each of the steps below can either be handled by BV_POLY_NORM_EQ,
+    // or the RARE rules bv-eq-xor-solve or bv-eq-not-solve.
     std::vector<Node> transEq;
     for (const Node& t : ts)
     {
       Node next = t.eqNode(curr[1][0]);
-      Trace("quant-velim-bv") << "- " << curr << " == " << next << std::endl;
+      Trace("quant-velim-bv") << "- " << next << " == " << curr << std::endl;
       Node eqc = next.eqNode(curr);
+      if (t.getKind()==Kind::BITVECTOR_XOR && curr[0]!=t[0])
+      {
+        // flip to match the expected pattern of RARE rule bv-eq-xor-solve.
+        Node tf = nm->mkNode(Kind::BITVECTOR_XOR, t[1], t[0]);
+        Node nextf = tf.eqNode(curr[1][0]);
+        Node eqcf = nextf.eqNode(curr);
+        transEq.push_back(eqcf);
+        cdp->addTrustedStep(
+            eqcf, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+        eqc = next.eqNode(nextf);
+      }
       transEq.push_back(eqc);
       cdp->addTrustedStep(
           eqc, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});

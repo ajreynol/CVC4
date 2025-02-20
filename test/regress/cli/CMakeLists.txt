@@ -1508,7 +1508,9 @@ set(regress_0_tests
   regress0/quantifiers/cond-var-elim-binary.smt2
   regress0/quantifiers/dd_check-cc_bvxor.smt2
   regress0/quantifiers/dd_check-cc_bvxor-mpath.smt2
+  regress0/quantifiers/dd_check_cc_bvxor_x_s_4.smt2
   regress0/quantifiers/dd_check_eq_bvnot_32bit.smt2
+  regress0/quantifiers/dd_check_ic_sext_4_4.smt2
   regress0/quantifiers/dd_german169_semi_eval.smt2
   regress0/quantifiers/dd_p15_dio_lemma.smt2
   regress0/quantifiers/dd_psyco_186-ineq-elim.smt2

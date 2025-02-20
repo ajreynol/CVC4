@@ -252,6 +252,7 @@ Node BvInverter::solveBvLit(Node sv,
     Assert(index < nchildren);
     path.pop_back();
     k = sv_t.getKind();
+    Trace("bv-invert-debug") << "- solving " << sv_t << " = " << t << " at arg #" << index << std::endl;
 
     /* Note: All n-ary kinds except for CONCAT (i.e., BITVECTOR_AND,
      *       BITVECTOR_OR, MULT, ADD) are commutative (no case split
@@ -348,6 +349,8 @@ Node BvInverter::solveBvLit(Node sv,
     t = tnext;
 
     sv_t = sv_t[index];
+    Trace("bv-invert-debug") << "...tnext is " << t << std::endl;
+    Trace("bv-invert-debug") << "...snext is " << sv_t << std::endl;
   }
 
   /* Base case  */
