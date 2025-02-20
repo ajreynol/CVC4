@@ -60,6 +60,12 @@ TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_MULT_SLT_MULT,
                            TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT,
+                           TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::BV_UMULO_ELIMINATE,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::BV_SMULO_ELIMINATE,
@@ -139,6 +145,12 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       BV_PROOF_REWRITE_CASE(AndOrXorConcatPullUp)
     case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:
       BV_PROOF_REWRITE_CASE(MultSltMult)
+    case ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE:
+      BV_PROOF_REWRITE_CASE(ConcatExtractMerge)
+    case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
+      BV_PROOF_REWRITE_CASE(ConcatConstantMerge)
+    case ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT:
+      BV_PROOF_REWRITE_CASE(FlattenAssocCommut)
     case ProofRewriteRule::BV_UMULO_ELIMINATE:
       BV_PROOF_REWRITE_CASE(UmuloEliminate)
     case ProofRewriteRule::BV_SMULO_ELIMINATE:
@@ -392,9 +404,8 @@ RewriteResponse TheoryBVRewriter::RewriteExtract(TNode node, bool prerewrite)
 RewriteResponse TheoryBVRewriter::RewriteConcat(TNode node, bool prerewrite)
 {
   TRY_REWRITE(ConcatFlatten)
+  TRY_REWRITE(ConcatExtractMerge)
   Node resultNode = LinearRewriteStrategy<
-      // Merge the adjacent extracts on non-constants
-      RewriteRule<ConcatExtractMerge>,
       // Remove extracts that have no effect
       ApplyRuleToChildren<Kind::BITVECTOR_CONCAT, ExtractWhole>,
       // Merge the adjacent extracts on constants
