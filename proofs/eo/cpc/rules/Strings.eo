@@ -1,9 +1,9 @@
 (include "../theories/Strings.eo")
 (include "../theories/Quantifiers.eo")
 
-(include "../programs/Strings.eo")
 (include "../programs/Quantifiers.eo")
 (include "../programs/SeqToString.eo")
+(include "../programs/Strings.eo")
 
 ;;-------------------- Core
 
@@ -884,6 +884,7 @@
   :requires ((($str_eval_replace_re_all s r t) u))
   :conclusion (= (str.replace_re_all s r t) u)
 )
+
 
 ;;;;; ProofRewriteRule::SEQ_EVAL_OP
 

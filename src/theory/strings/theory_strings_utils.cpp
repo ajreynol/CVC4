@@ -454,6 +454,7 @@ TypeNode getOwnerStringType(Node n)
   {
     tn = n.getType();
   }
+  // otherwise return null
   return tn;
 }
 

@@ -3482,14 +3482,14 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_RE_INTER_UNION_CONST_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Strings -- Macro sequence evaluate operator**
+   * **Strings -- Sequence evaluate operator**
    *
    * .. math::
    *    f(s_1, \ldots, s_n) = t
    *
-   * where :math:`f` is an operator on sequences and :math:`s_1, \ldots, s_n`
-   * are sequence values, that is, the Node::isConst method returns true
-   * for each, and :math:`t` is the result of evaluating :math:`f` on them.
+   * where :math:`f` is an operator over sequences and :math:`s_1, \ldots, s_n`
+   * are values, that is, the Node::isConst method returns true for each, and
+   * :math:`t` is the result of evaluating :math:`f` on them.
    * \endverbatim
    */
   EVALUE(SEQ_EVAL_OP),

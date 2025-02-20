@@ -3357,7 +3357,9 @@ Node SequencesRewriter::rewriteReplace(Node node)
       Node ret;
       if (children0.size() == 1 && node[2].isConst())
       {
-        // evaluate the constant
+        // evaluate the constant, this ensures that we always immediately
+        // evaluate constants immediately, which is important for proof
+        // reconstruction.
         ret = Word::mkWordFlatten(children);
       }
       else
