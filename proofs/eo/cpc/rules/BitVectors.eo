@@ -16,6 +16,38 @@
   :conclusion (= (repeat n a) b)
 )
 
+;;;;; ProofRewriteRule::BV_SMULO_ELIM
+
+; rule: bv-smulo-elim
+; implements: ProofRewriteRule::BV_SMULO_ELIM
+; args:
+; - eq Bool: The equality to prove with this rule.
+; requires: c is the result of eliminating the left hand side.
+; conclusion: the given equality.
+(declare-rule bv-smulo-elim ((n Int) (a (BitVec n)) (b (BitVec n)) (c Bool))
+  :args ((= (bvsmulo a b) c))
+  :requires ((($bv_smulo_elim a b) c))
+  :conclusion (= (bvsmulo a b) c)
+)
+
+;;;;; ProofRewriteRule::BV_UMULO_ELIM
+
+(define $bv_umulo_elim ((n Int :implicit) (a (BitVec n)) (b (BitVec n)))
+  false
+)
+
+; rule: bv-umulo-elim
+; implements: ProofRewriteRule::BV_UMULO_ELIM
+; args:
+; - eq Bool: The equality to prove with this rule.
+; requires: c is the result of eliminating the left hand side.
+; conclusion: the given equality.
+(declare-rule bv-umulo-elim ((n Int) (a (BitVec n)) (b (BitVec n)) (c Bool))
+  :args ((= (bvumulo a b) c))
+  :requires ((($bv_umulo_elim a b) c))
+  :conclusion (= (bvumulo a b) c)
+)
+
 ;;;;; ProofRewriteRule::BV_BITWISE_SLICING
 
 ; program: $bv_mk_bitwise_slicing_rec

@@ -336,7 +336,7 @@
   :conclusion (not (= t s))
 )
 
-;;;;; ProofRule::DISTINCT_CARD_CONFLICT
+;;;;; ProofRule::ACI_NORM
 
 ; define: $get_aci_normal_form
 ; args:
