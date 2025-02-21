@@ -495,6 +495,7 @@ set(regress_0_tests
   regress0/bv/holes/ashr-by-const-2.smt2 # Could not find rule?
   regress0/bv/holes/ashr-zero.smt2
   regress0/bv/holes/bitwise-not-or.smt2
+  regress0/bv/holes/bvcomp-hole-qurt.smt2 
   regress0/bv/holes/bv-ite-width-one.smt2
   regress0/bv/holes/commutative-add.smt2
   regress0/bv/holes/commutative-add.smt2 # Subsumed by ARITH_POLY_NORM

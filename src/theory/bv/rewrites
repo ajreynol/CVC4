@@ -340,6 +340,10 @@
   (ite (= x (@bv 1 1)) (@bv 1 1) (@bv 0 1))
   x)
 
+(define-rule bv-ite-width-one-not ((x ?BitVec))
+  (ite (= x (@bv 0 1)) (@bv 1 1) (@bv 0 1))
+  (bvnot x))
+
 (define-rule bv-eq-xor-solve ((x ?BitVec) (y ?BitVec) (z ?BitVec))
   (= (= (bvxor x y) z) (= x (bvxor z y)))
   true)
