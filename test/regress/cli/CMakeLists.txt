@@ -634,6 +634,7 @@ set(regress_0_tests
   regress0/bv/overflow/umulo1.smt2
   regress0/bv/overflow/umulo2.smt2
   regress0/bv/overflow/smulo1.smt2
+  regress0/bv/overflow/smulo1b.smt2
   regress0/bv/overflow/smulo2.smt2
   regress0/bv/overflow/usubo1.smt2
   regress0/bv/overflow/usubo2.smt2
