@@ -133,6 +133,11 @@ bool isAssocCommIdem(Kind k)
   return false;
 }
 
+bool isAssocComm(Kind k)
+{
+  return (k==Kind::BITVECTOR_XOR);
+}
+
 bool isAssoc(Kind k)
 {
   switch (k)
@@ -163,7 +168,8 @@ Node getACINormalForm(Node a)
   }
   Kind k = a.getKind();
   bool aci = isAssocCommIdem(k);
-  if (!aci && !isAssoc(k))
+  bool ac = isAssocComm(k) || aci;
+  if (!ac && !isAssoc(k))
   {
     // not associative, return self
     a.setAttribute(nfa, a);
@@ -203,7 +209,7 @@ Node getACINormalForm(Node a)
       children.push_back(cur);
     }
   } while (!toProcess.empty());
-  if (aci)
+  if (ac)
   {
     // sort if commutative
     std::sort(children.begin(), children.end());
