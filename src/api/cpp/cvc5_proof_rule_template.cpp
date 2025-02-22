@@ -321,8 +321,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT:
       return "macro-bv-flatten-assoc-commut";
     case ProofRewriteRule::MACRO_BV_EQ_SOLVE: return "macro-bv-eq-solve";
-    case ProofRewriteRule::BV_UMULO_ELIMINATE: return "bv-umulo-eliminate";
-    case ProofRewriteRule::BV_SMULO_ELIMINATE: return "bv-smulo-eliminate";
+    case ProofRewriteRule::BV_UMULO_ELIM: return "bv-umulo-elim";
+    case ProofRewriteRule::BV_SMULO_ELIM: return "bv-smulo-elim";
     case ProofRewriteRule::BV_BITWISE_SLICING: return "bv-bitwise-slicing";
     case ProofRewriteRule::BV_REPEAT_ELIM: return "bv-repeat-elim";
     case ProofRewriteRule::STR_CTN_MULTISET_SUBSET:

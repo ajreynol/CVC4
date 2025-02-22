@@ -158,7 +158,7 @@
       (eo::define ((xb (bvxor b (sign_extend wm1 (extract wm1 wm1 b)))))
       (eo::define ((wm2 (eo::add w -2)))
       (eo::define ((ppc (extract wm2 wm2 xa)))
-      (eo::define ((res ($bv_smulo_elim_rec xa xb ppc (bvand (extract 1 1 b) ppc) 1 wm2)))
+      (eo::define ((res ($bv_smulo_elim_rec xa xb ppc (bvand (extract 1 1 xb) ppc) 1 wm2)))
         (= (bvor res (bvxor (extract w w mul) (extract wm1 wm1 mul))) one))))))))))))
 )
 
@@ -180,7 +180,7 @@
   (($bv_umulo_elim_rec a b uppc res i n)
       (eo::define ((ia (eo::add n -1 (eo::neg i))))
       (eo::define ((ip1 (eo::add i 1)))
-      (eo::define ((uppcn (bvor uppc (extract ia ia a))))
+      (eo::define ((uppcn (bvor (extract ia ia a) uppc)))
         (eo::cons bvor (bvand (extract i i b) uppc) ($bv_umulo_elim_rec a b uppcn res ip1 n))))))
   )
 )

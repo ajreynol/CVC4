@@ -3250,7 +3250,7 @@ enum ENUM(ProofRewriteRule)
    * http://ieeexplore.ieee.org/document/987767
    * \endverbatim
    */
-  EVALUE(BV_UMULO_ELIMINATE),
+  EVALUE(BV_UMULO_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Unsigned multiplication overflow detection elimination**
@@ -3260,7 +3260,7 @@ enum ENUM(ProofRewriteRule)
    * http://ieeexplore.ieee.org/document/987767
    * \endverbatim
    */
-  EVALUE(BV_SMULO_ELIMINATE),
+  EVALUE(BV_SMULO_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Extract continuous substrings of bitvectors**
