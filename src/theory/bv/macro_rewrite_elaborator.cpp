@@ -279,6 +279,7 @@ bool MacroRewriteElaborator::ensureProofForMultSltMult(CDProof* cdp,
         size_t sz = utils::getSize(n[0]);
         if (n[0] == utils::mkZero(sz))
         {
+          // turn concatenation with zero into zero extend
           Node zext = nm->mkConst(BitVectorZeroExtend(sz));
           Node nze = nm->mkNode(zext, n[1]);
           tcpg.addRewriteStep(n, nze, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
@@ -290,6 +291,7 @@ bool MacroRewriteElaborator::ensureProofForMultSltMult(CDProof* cdp,
     }
     if (ch[1].getKind()==Kind::BITVECTOR_ZERO_EXTEND)
     {
+      Assert (ch[0].getKind()!=Kind::BITVECTOR_ZERO_EXTEND);
       // swap to match rule
       Node mul = nm->mkNode(eq[0][i].getKind(), ch[0], ch[1]);
       Node muls = nm->mkNode(eq[0][i].getKind(), ch[1], ch[0]);
