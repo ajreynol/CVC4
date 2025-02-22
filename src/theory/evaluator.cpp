@@ -455,6 +455,12 @@ EvalResult Evaluator::evalInternal(
           results[currNode] = EvalResult(res);
           break;
         }
+        case Kind::IMPLIES:
+        {
+          bool res = !results[currNode[0]].d_bool || results[currNode[1]].d_bool;
+          results[currNode] = EvalResult(res);
+          break;
+        }
         case Kind::XOR:
         {
           bool res = results[currNode[0]].d_bool;
