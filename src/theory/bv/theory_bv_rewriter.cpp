@@ -151,10 +151,8 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       BV_PROOF_REWRITE_CASE(ConcatConstantMerge)
     case ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT:
       BV_PROOF_REWRITE_CASE(FlattenAssocCommut)
-    case ProofRewriteRule::BV_UMULO_ELIM:
-      BV_PROOF_REWRITE_CASE(UmuloEliminate)
-    case ProofRewriteRule::BV_SMULO_ELIM:
-      BV_PROOF_REWRITE_CASE(SmuloEliminate)
+    case ProofRewriteRule::BV_UMULO_ELIM: BV_PROOF_REWRITE_CASE(UmuloEliminate)
+    case ProofRewriteRule::BV_SMULO_ELIM: BV_PROOF_REWRITE_CASE(SmuloEliminate)
     case ProofRewriteRule::BV_BITWISE_SLICING:
       BV_PROOF_REWRITE_CASE(BitwiseSlicing)
     case ProofRewriteRule::BV_REPEAT_ELIM:

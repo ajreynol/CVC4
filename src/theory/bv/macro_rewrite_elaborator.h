@@ -26,8 +26,8 @@ namespace theory {
 namespace bv {
 
 /**
- * Methods for elaborating MACRO_BV_* proof rewrites. This class is called during
- * RARE proof reconstruction.
+ * Methods for elaborating MACRO_BV_* proof rewrites. This class is called
+ * during RARE proof reconstruction.
  */
 class MacroRewriteElaborator : protected EnvObj
 {
@@ -43,9 +43,7 @@ class MacroRewriteElaborator : protected EnvObj
    * @param eq The rewrite proven.
    * @return true if added a closed proof of eq to cdp.
    */
-  bool ensureProofFor(CDProof* cdp,
-                                   ProofRewriteRule id,
-                                   const Node& eq);
+  bool ensureProofFor(CDProof* cdp, ProofRewriteRule id, const Node& eq);
 };
 
 }  // namespace bv

@@ -19,11 +19,11 @@ namespace cvc5::internal {
 namespace theory {
 namespace bv {
 
-MacroRewriteElaborator::MacroRewriteElaborator(Env& env) : EnvObj(env){}
+MacroRewriteElaborator::MacroRewriteElaborator(Env& env) : EnvObj(env) {}
 MacroRewriteElaborator::~MacroRewriteElaborator() {}
 bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
-                                  ProofRewriteRule id,
-                                  const Node& eq)
+                                            ProofRewriteRule id,
+                                            const Node& eq)
 {
   Trace("bv-rew-elab") << "ensureProofFor: " << id << " " << eq << std::endl;
   switch (id)
@@ -38,10 +38,8 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
     case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:
     case ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE:
     case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
-    case ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT:
-      break;
-    default:
-      break;
+    case ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT: break;
+    default: break;
   }
   return false;
 }

@@ -69,7 +69,7 @@ BasicRewriteRCons::BasicRewriteRCons(Env& env)
       d_theoryRewriteMacroExpand(
           statisticsRegistry().registerHistogram<ProofRewriteRule>(
               "BasicRewriteRCons::macroExpandCount")),
-              d_bvRewElab(env)
+      d_bvRewElab(env)
 {
 
 }
