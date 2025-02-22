@@ -16,10 +16,10 @@
 #include "theory/bv/macro_rewrite_elaborator.h"
 
 #include "expr/aci_norm.h"
-#include "smt/env.h"
+#include "proof/proof_checker.h"
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
-#include "proof/proof_checker.h"
+#include "smt/env.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -51,9 +51,10 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
   return false;
 }
 
-bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp, const Node& eq)
+bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
+                                                    const Node& eq)
 {
-  NodeManager * nm = nodeManager();
+  NodeManager* nm = nodeManager();
   Kind k = eq[0].getKind();
   std::vector<Node> consts;
   std::vector<Node> nconsts;
@@ -68,7 +69,7 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp, const Node& eq
       nconsts.push_back(cc);
     }
   }
-  if (consts.size()<=1 || nconsts.empty())
+  if (consts.size() <= 1 || nconsts.empty())
   {
     return false;
   }
@@ -86,7 +87,7 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp, const Node& eq
   premises.push_back(ceq);
   Node equiv2 = proveCong(cdp, eq0c, premises);
   transEq.push_back(equiv2);
-  if (equiv2[1]!=eq[1])
+  if (equiv2[1] != eq[1])
   {
     if (expr::isACINorm(equiv2[1], eq[1]))
     {
@@ -103,10 +104,9 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp, const Node& eq
   return true;
 }
 
-
 Node MacroRewriteElaborator::proveCong(CDProof* cdp,
-                                  const Node& n,
-                                  const std::vector<Node>& premises)
+                                       const Node& n,
+                                       const std::vector<Node>& premises)
 {
   std::vector<Node> cpremises = premises;
   std::vector<Node> cargs;

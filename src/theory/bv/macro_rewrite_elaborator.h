@@ -44,7 +44,8 @@ class MacroRewriteElaborator : protected EnvObj
    * @return true if added a closed proof of eq to cdp.
    */
   bool ensureProofFor(CDProof* cdp, ProofRewriteRule id, const Node& eq);
-private:
+
+ private:
   /**
    * Elaborate a rewrite eq that was proven by a simplify rule.
    *
