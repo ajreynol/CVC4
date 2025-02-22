@@ -318,8 +318,6 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "macro-bv-concat-extract-merge";
     case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
       return "macro-bv-concat-constant-merge";
-    case ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT:
-      return "macro-bv-flatten-assoc-commut";
     case ProofRewriteRule::MACRO_BV_EQ_SOLVE: return "macro-bv-eq-solve";
     case ProofRewriteRule::BV_UMULO_ELIM: return "bv-umulo-elim";
     case ProofRewriteRule::BV_SMULO_ELIM: return "bv-smulo-elim";

@@ -49,8 +49,7 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
     case ProofRewriteRule::MACRO_BV_EXTRACT_SIGN_EXTEND:
     case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST:
     case ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP:
-    case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:
-    case ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT: break;
+    case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:break;
     default: break;
   }
   return false;
