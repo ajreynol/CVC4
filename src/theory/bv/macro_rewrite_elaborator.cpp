@@ -18,7 +18,10 @@
 #include "expr/aci_norm.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node_algorithm.h"
+#include "proof/conv_proof_generator.h"
+#include "proof/proof_node.h"
 #include "proof/proof_node_manager.h"
+#include "theory/bv/theory_bv_rewrite_rules_core.h"
 #include "smt/env.h"
 
 namespace cvc5::internal {
@@ -31,20 +34,22 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
                                             ProofRewriteRule id,
                                             const Node& eq)
 {
+  Assert (eq.getKind()==Kind::EQUAL);
   Trace("bv-rew-elab") << "ensureProofFor: " << id << " " << eq << std::endl;
   switch (id)
   {
     case ProofRewriteRule::MACRO_BV_OR_SIMPLIFY:
     case ProofRewriteRule::MACRO_BV_AND_SIMPLIFY:
       return ensureProofForSimplify(cdp, eq);
+    case ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE:
+    case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
+      return ensureProofForConcatMerge(cdp, eq);
     case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT:
     case ProofRewriteRule::MACRO_BV_EXTRACT_SIGN_EXTEND:
     case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST:
     case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:
     case ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP:
     case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:
-    case ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE:
-    case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
     case ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT: break;
     default: break;
   }
@@ -80,7 +85,7 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
   Node equiv1 = eq[0].eqNode(eq0c);
   cdp->addStep(equiv1, ProofRule::ACI_NORM, {}, {equiv1});
   transEq.push_back(equiv1);
-  Node ccr = rewrite(cc);
+  Node ccr = evaluate(cc, {}, {});
   Node ceq = cc.eqNode(ccr);
   cdp->addTrustedStep(ceq, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
   std::vector<Node> premises;
@@ -102,6 +107,76 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
   }
   cdp->addStep(eq, ProofRule::TRANS, transEq, {});
   return true;
+}
+
+bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp, const Node& eq)
+{
+  NodeManager* nm = nodeManager();
+  Node concat = eq[0];
+  std::vector<Node> children;
+  std::vector<Node> curr;
+  Node currRew;
+  Kind ck = Kind::UNDEFINED_KIND;
+  TConvProofGenerator tcpg(d_env);
+  for (size_t i=0, nchild = concat.getNumChildren(); i<=nchild; i++)
+  {
+    Node next = i<nchild ? concat[i] : Node::null();
+    if (!curr.empty() && next.getKind()==ck && (ck==Kind::CONST_BITVECTOR || ck==Kind::BITVECTOR_EXTRACT))
+    {
+      if (ck==Kind::BITVECTOR_EXTRACT)
+      {
+        Assert (curr.size()==1);
+        curr[0] = nm->mkNode(Kind::BITVECTOR_CONCAT, curr[0], next);
+        currRew = nm->mkNode(Kind::BITVECTOR_CONCAT, currRew, next);
+        Node rcr =  RewriteRule<ConcatExtractMerge>::run<true>(currRew);
+        // single rewrite step
+        tcpg.addRewriteStep(currRew, rcr, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+        currRew = rcr;
+      }
+      else
+      {
+        Assert (ck==Kind::CONST_BITVECTOR);
+        curr.push_back(next);
+      }
+    }
+    else
+    {
+      if (!curr.empty())
+      {
+        Node rem;
+        if (curr.size()>1)
+        {
+          rem = nm->mkNode(Kind::BITVECTOR_CONCAT, curr);
+          Node rr = evaluate(rem, {}, {});
+          tcpg.addRewriteStep(rem, rr, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+        }
+        else
+        {
+          rem = curr[0];
+        }
+        children.push_back(rem);
+        curr.clear();
+      }
+      curr.push_back(next);
+      currRew = next;
+      ck = next.getKind();
+    }
+  }
+  Node gc = children.size()==1 ? children[0] : nm->mkNode(Kind::BITVECTOR_CONCAT, children);
+  Node equiv1 = eq[0].eqNode(gc);
+  Trace("bv-rew-elab") << "- grouped concat: " << equiv1 << std::endl;
+  cdp->addStep(equiv1, ProofRule::ACI_NORM, {}, {equiv1});
+
+  std::shared_ptr<ProofNode> pfn = tcpg.getProofForRewriting(gc);
+  cdp->addProof(pfn);
+  Node equiv2 = pfn->getResult();
+  Trace("bv-rew-elab") << "- rewritten: " << equiv2 << std::endl;
+  if (equiv2[1]==eq[1])
+  {
+    cdp->addStep(eq, ProofRule::TRANS, {equiv1, equiv2}, {});
+    return true;
+  }
+  return false;
 }
 
 Node MacroRewriteElaborator::proveCong(CDProof* cdp,
