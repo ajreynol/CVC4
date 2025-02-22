@@ -399,7 +399,10 @@ Node RewriteRule<AshrByConst>::apply(TNode node) {
   if (amount >= Integer(size)) {
     // if we are shifting more than the length of the bitvector return n repetitions
     // of the first bit
-    return utils::mkConcat(sign_bit, size); 
+    // use repeat, which enables RARE reconstruction to succeed
+    NodeManager *nm = NodeManager::currentNM();
+    Node repeat = nm->mkConst(BitVectorRepeat(size));
+    return nm->mkNode(repeat, sign_bit);
   }
   
   // make sure we do not lose information casting

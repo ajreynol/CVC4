@@ -128,11 +128,10 @@ inline Node RewriteRule<ExtractSignExtend>::apply(TNode node)
     unsigned top = utils::getSize(extendee) - 1;
     Node most_significant_bit = utils::mkExtract(extendee, top, top);
     std::vector<Node> bits;
-    for (unsigned i = 0; i < high - low + 1; ++i)
-    {
-      bits.push_back(most_significant_bit);
-    }
-    resultNode = utils::mkConcat(bits);
+    // use repeat, which enables RARE reconstruction to succeed
+    NodeManager *nm = NodeManager::currentNM();
+    Node repeat = nm->mkConst(BitVectorRepeat(high - low + 1));
+    resultNode = nm->mkNode(repeat, most_significant_bit);
   }
   Trace("bv-rewrite") << "                           =>" << resultNode
                       << std::endl;
