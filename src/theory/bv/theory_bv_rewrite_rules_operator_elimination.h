@@ -791,6 +791,37 @@ inline Node RewriteRule<UmuloEliminate>::apply(TNode node)
   Trace("bv-rewrite") << "RewriteRule<UmuloEliminate>(" << node << ")"
                       << std::endl;
 
+(program $bv_umulo_elim_rec ((n Int) (a (BitVec n)) (b (BitVec n))
+                             (uppc (BitVec 1)) (res (BitVec 1)) (i Int))
+  ((BitVec n) (BitVec n) (BitVec 1) (BitVec 1) Int Int) (BitVec 1)
+  (
+  (($bv_umulo_elim_rec a b uppc res n n)   res)
+  (($bv_umulo_elim_rec a b uppc res i n)
+      (eo::define ((ia (eo::add n -1 (eo::neg i))))
+      (eo::define ((ip1 (eo::add i 1)))
+      (eo::define ((uppcn (bvor uppc (extract ia ia xa))))
+        (eo::cons bvor (bvand (extract i i b) uppc) ($bv_umulo_elim_rec a b uppcn res ip1 n))))))
+  )
+)
+
+; define: $bv_umulo_elim
+; args:
+; - a (BitVec n): The first argument to bvumulo
+; - b (BitVec n): The second argument to bvumulo
+; return: >
+;   The result of eliminating (bvumulo a b).
+(define $bv_umulo_elim ((n Int :implicit) (a (BitVec n)) (b (BitVec n)))
+  (eo::define ((w ($bv_bitwidth (eo::typeof a))))
+  (eo::ite (eo::is_eq w 1)
+    false
+    (eo::define ((wm1 (eo::add w -1)))
+    (eo::define ((zero (eo::to_bin 1 0)))
+    (eo::define ((uppc (extract wm1 wm1 a)))
+    (eo::define ((mul (bvmul (concat zero a) (concat zero b))))
+    (eo::define ((res ($bv_umulo_elim_rec a b uppc (bvor (extract w w mul)) 1 w)))
+      (= res (eo::to_bin 1 1))))))))))
+
+
   uint32_t size = node[0].getType().getBitVectorSize();
 
   if (size == 1)

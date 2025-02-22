@@ -32,10 +32,6 @@
 
 ;;;;; ProofRewriteRule::BV_UMULO_ELIM
 
-(define $bv_umulo_elim ((n Int :implicit) (a (BitVec n)) (b (BitVec n)))
-  false
-)
-
 ; rule: bv-umulo-elim
 ; implements: ProofRewriteRule::BV_UMULO_ELIM
 ; args:
