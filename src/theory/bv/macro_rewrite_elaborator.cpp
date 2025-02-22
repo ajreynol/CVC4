@@ -25,6 +25,7 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
                                   ProofRewriteRule id,
                                   const Node& eq)
 {
+  Trace("bv-rew-elab") << "ensureProofFor: " << id << " " << eq << std::endl;
   switch (id)
   {
     case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT:
