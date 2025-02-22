@@ -46,6 +46,7 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
     case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
       return ensureProofForConcatMerge(cdp, eq);
     case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT:
+      return ensureProofForExtractConcat(cdp, eq);
     case ProofRewriteRule::MACRO_BV_EXTRACT_SIGN_EXTEND:
     case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST:
     case ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP:
@@ -58,6 +59,10 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
 bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
                                                     const Node& eq)
 {
+  // below, we group all of the constant children into one nested
+  // child, prove the grouping by ACI_NORM, evaluate the constant
+  // child, then prove the equality by another instance of ACI_NORM
+  // if necessary.
   NodeManager* nm = nodeManager();
   Kind k = eq[0].getKind();
   std::vector<Node> consts;
@@ -90,6 +95,7 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
   std::vector<Node> premises;
   premises.push_back(ceq);
   Node equiv2 = proveCong(cdp, eq0c, premises);
+  Assert (equiv2.getKind()==Kind::EQUAL);
   transEq.push_back(equiv2);
   if (equiv2[1] != eq[1])
   {
@@ -110,6 +116,10 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
 
 bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp, const Node& eq)
 {
+  // below, we group portions of the concatenation into a form in which they
+  // can be rewritten in isolation. We prove the grouping by ACI_NORM, then
+  // prove the individual rewrites by either a RARE rule for ConcatExtractMerge
+  // (if merging extracts) or by evaluate (if merging constants).
   NodeManager* nm = nodeManager();
   Node concat = eq[0];
   std::vector<Node> children;
@@ -176,6 +186,76 @@ bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp, const Node&
     return true;
   }
   return false;
+}
+
+bool MacroRewriteElaborator::ensureProofForExtractConcat(CDProof* cdp, const Node& eq)
+{
+  // Below, we curry the bvconcat and then apply ExtractConcat to each 2 argument
+  // bv concat in isolation. We prove the currying via ACI_NORM and then prove
+  // the result (which is curried) is equivalent to the right hand side with another
+  // application of ACI_NORM.
+  NodeManager* nm = nodeManager();
+  Assert (eq[0].getKind()==Kind::BITVECTOR_EXTRACT);
+  Node concat = eq[0][0];
+  Assert (concat.getKind()==Kind::BITVECTOR_CONCAT);
+  Node curr = concat[0];
+  Trace("bv-rew-elab") << "concat is " << concat << std::endl;
+  for (size_t i=1, nchild = concat.getNumChildren(); i<nchild; i++)
+  {
+    curr = nm->mkNode(Kind::BITVECTOR_CONCAT, curr, concat[i]);
+  }
+  Node ceq = concat.eqNode(curr);
+  Trace("bv-rew-elab") << "  - grouped concat: " << ceq << std::endl;
+  cdp->addStep(ceq, ProofRule::ACI_NORM, {}, {ceq});
+  std::vector<Node> transEq;
+  Node equiv1 = proveCong(cdp, eq[0], {ceq});
+  transEq.push_back(equiv1);
+  Trace("bv-rew-elab") << "- grouped extract-concat: " << equiv1 << std::endl;
+  Assert (equiv1.getKind()==Kind::EQUAL);
+  Node exc = equiv1[1];
+  TConvProofGenerator tcpg(d_env);
+  while (RewriteRule<ExtractConcat>::applies(exc))
+  {
+    Node excr =  RewriteRule<ExtractConcat>::run<false>(exc);
+    Trace("bv-rew-elab") << "  - rewrite: " << exc << " -> " << excr << std::endl;
+    Assert (exc!=excr);
+    // single rewrite step
+    tcpg.addRewriteStep(exc, excr, nullptr, true, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+    if (excr.getKind()==Kind::BITVECTOR_EXTRACT)
+    {
+      exc = excr;
+    }
+    else if (excr.getKind()==Kind::BITVECTOR_CONCAT)
+    {
+      Assert (excr.getNumChildren()==2);
+      exc = excr[0];
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  std::shared_ptr<ProofNode> pfn = tcpg.getProofForRewriting(equiv1[1]);
+  cdp->addProof(pfn);
+  Node equiv2 = pfn->getResult();
+  transEq.push_back(equiv2);
+  Trace("bv-rew-elab") << "- grouped concat: " << equiv2 << std::endl;
+  if (equiv2[1]!=eq[1])
+  {
+    if (expr::isACINorm(equiv2[1], eq[1]))
+    {
+      Node equiv3 = equiv2[1].eqNode(eq[1]);
+      cdp->addStep(equiv3, ProofRule::ACI_NORM, {}, {equiv3});
+      transEq.push_back(equiv3);
+    }
+    else
+    {
+      return false;
+    }
+  }
+  cdp->addStep(eq, ProofRule::TRANS, transEq, {});
+  return true;
 }
 
 Node MacroRewriteElaborator::proveCong(CDProof* cdp,
