@@ -40,6 +40,7 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
   {
     case ProofRewriteRule::MACRO_BV_OR_SIMPLIFY:
     case ProofRewriteRule::MACRO_BV_AND_SIMPLIFY:
+    case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:
       return ensureProofForSimplify(cdp, eq);
     case ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE:
     case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
@@ -47,7 +48,6 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
     case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT:
     case ProofRewriteRule::MACRO_BV_EXTRACT_SIGN_EXTEND:
     case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST:
-    case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:
     case ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP:
     case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:
     case ProofRewriteRule::MACRO_BV_FLATTEN_ASSOC_COMMUT: break;
