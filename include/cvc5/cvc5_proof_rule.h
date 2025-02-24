@@ -3149,12 +3149,24 @@ enum ENUM(ProofRewriteRule)
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro extract and concat **
    *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule ExtractConcat.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_BV_EXTRACT_CONCAT),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro extract sign extend **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule ExtractSignExtend.
    *
    * \endverbatim
    */
@@ -3163,12 +3175,24 @@ enum ENUM(ProofRewriteRule)
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro arithmetic shift right by constant **
    *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule AshrByConst.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_BV_ASHR_BY_CONST),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro or simplify **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule OrSimplify.
    *
    * \endverbatim
    */
@@ -3177,12 +3201,24 @@ enum ENUM(ProofRewriteRule)
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro and simplify **
    *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule AndSimplify.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_BV_AND_SIMPLIFY),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro xor simplify **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule XorSimplify.
    *
    * \endverbatim
    */
@@ -3191,12 +3227,24 @@ enum ENUM(ProofRewriteRule)
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro and/or/xor concat pullup **
    *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule AndOrXorConcatPullup.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_BV_AND_OR_XOR_CONCAT_PULLUP),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro multiply signed less than multiply **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule MultSltMult.
    *
    * \endverbatim
    */
@@ -3205,12 +3253,24 @@ enum ENUM(ProofRewriteRule)
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro concat extract merge **
    *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule ConcatExtractMerge.
+   *
    * \endverbatim
    */
   EVALUE(MACRO_BV_CONCAT_EXTRACT_MERGE),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Macro concat constant merge **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule ConcatConstantMerge.
    *
    * \endverbatim
    */
