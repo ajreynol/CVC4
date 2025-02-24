@@ -154,7 +154,7 @@
 (declare-rule arith-divisible-elim ((n1 Int) (t1 Int))
   :premises ((= (= n1 0) false))
   :args (n1 t1)
-  :conclusion (= (DIVISIBLE n1 t1) (= (mod_total t1 n1) 0))
+  :conclusion (= (divisible n1 t1) (= (mod_total t1 n1) 0))
 )
 (declare-rule arith-abs-eq ((@T0 Type) (@T1 Type) (x1 @T0) (y1 @T1))
   :args (x1 y1)

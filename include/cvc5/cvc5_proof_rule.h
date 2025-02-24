@@ -3236,7 +3236,12 @@ enum ENUM(ProofRewriteRule)
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Unsigned multiplication overflow detection elimination**
-
+   *
+   * .. math::
+   *    \texttt{bvumulo}(x,y) = t
+   *
+   * where :math:`t` is the result of eliminating the application
+   * of :math:`\texttt{bvumulo}`.
    *
    * See M.Gok, M.J. Schulte, P.I. Balzola, "Efficient integer multiplication
    * overflow detection circuits", 2001.
@@ -3247,6 +3252,12 @@ enum ENUM(ProofRewriteRule)
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Unsigned multiplication overflow detection elimination**
+   *
+   * .. math::
+   *    \texttt{bvsmulo}(x,y) = t
+   *
+   * where :math:`t` is the result of eliminating the application
+   * of :math:`\texttt{bvsmulo}`.
    *
    * See M.Gok, M.J. Schulte, P.I. Balzola, "Efficient integer multiplication
    * overflow detection circuits", 2001.
