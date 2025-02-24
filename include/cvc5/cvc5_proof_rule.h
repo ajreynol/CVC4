@@ -3756,24 +3756,12 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_GEQ_NORM1_INT),
   /** Auto-generated from RARE rule arith-geq-norm1-real */
   EVALUE(ARITH_GEQ_NORM1_REAL),
-  /** Auto-generated from RARE rule arith-geq-norm2 */
-  EVALUE(ARITH_GEQ_NORM2),
-  /** Auto-generated from RARE rule arith-refl-leq */
-  EVALUE(ARITH_REFL_LEQ),
-  /** Auto-generated from RARE rule arith-refl-lt */
-  EVALUE(ARITH_REFL_LT),
-  /** Auto-generated from RARE rule arith-refl-geq */
-  EVALUE(ARITH_REFL_GEQ),
-  /** Auto-generated from RARE rule arith-refl-gt */
-  EVALUE(ARITH_REFL_GT),
   /** Auto-generated from RARE rule arith-eq-elim-real */
   EVALUE(ARITH_EQ_ELIM_REAL),
   /** Auto-generated from RARE rule arith-eq-elim-int */
   EVALUE(ARITH_EQ_ELIM_INT),
   /** Auto-generated from RARE rule arith-plus-flatten */
   EVALUE(ARITH_PLUS_FLATTEN),
-  /** Auto-generated from RARE rule arith-mult-flatten */
-  EVALUE(ARITH_MULT_FLATTEN),
   /** Auto-generated from RARE rule arith-abs-elim-int */
   EVALUE(ARITH_ABS_ELIM_INT),
   /** Auto-generated from RARE rule arith-abs-elim-real */
