@@ -202,7 +202,7 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "mbqi"
-  category   = "expert"
+  category   = "regular"
   long       = "mbqi"
   type       = "bool"
   default    = "false"
