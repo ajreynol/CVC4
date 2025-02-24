@@ -1,0 +1,4 @@
+; untyped list
+(declare-type @List ())
+(declare-const @list.nil @List)
+(declare-const @list (-> (! Type :var T :implicit) T @List @List) :right-assoc-nil @list.nil)

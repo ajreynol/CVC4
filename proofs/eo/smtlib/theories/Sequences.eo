@@ -1,0 +1,47 @@
+(include "../theories/Builtin.eo")
+(include "../theories/Arith.eo")
+
+; The sequence type.
+; disclaimer: This sort is not in SMT-LIB.
+(declare-type Seq (Type))
+
+; Empty sequence
+(declare-const seq.empty (-> (! Type :var T) T))
+
+; disclaimer: This function is not in SMT-LIB.
+(declare-const seq.unit (-> (! Type :var T :implicit) T (Seq T)))
+; disclaimer: This function is not in SMT-LIB.
+(declare-const seq.nth (-> (! Type :var T :implicit) (Seq T) Int T))
+
+
+; Core functions of strings.
+(declare-const seq.len (-> (! Type :var T :implicit) (Seq T) Int))
+
+(declare-parameterized-const seq.++
+  (-> (Seq T) (Seq T) (Seq T))
+  :right-assoc-nil (seq.empty (Seq T)))
+
+; Extended functions for strings.
+(declare-const seq.extract (-> (! Type :var T :implicit)
+                              (Seq T) Int Int (Seq T)))
+(declare-const seq.contains (-> (! Type :var T :implicit)
+                                (Seq T) (Seq T) Bool))
+(declare-const seq.replace (-> (! Type :var T :implicit)
+                               (Seq T) (Seq T) (Seq T) (Seq T)))
+(declare-const seq.replace_all (-> (! Type :var T :implicit)
+                                  (Seq T) (Seq T) (Seq T) (Seq T)))
+(declare-const seq.indexof (-> (! Type :var T :implicit)
+                               (Seq T) (Seq T) Int Int))
+(declare-const seq.at (-> (! Type :var T :implicit)
+                          (Seq T) Int (Seq T)))
+(declare-const seq.prefixof (-> (! Type :var T :implicit)
+                                (Seq T) (Seq T) Bool))
+(declare-const seq.suffixof (-> (! Type :var T :implicit)
+                                (Seq T) (Seq T) Bool))
+; disclaimer: This function is not in SMT-LIB.
+(declare-const seq.rev (-> (! Type :var T :implicit)
+                           (Seq T) (Seq T)))
+; disclaimer: This function is not in SMT-LIB.
+(declare-const seq.update (-> (! Type :var T :implicit)
+                              (Seq T) Int (Seq T) (Seq T)))
+

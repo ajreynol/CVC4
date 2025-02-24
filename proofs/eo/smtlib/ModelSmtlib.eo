@@ -1,0 +1,357 @@
+; =============================================================================
+;
+; =============================================================================
+
+(include "./theories/Builtin.eo")
+(include "./theories/Booleans.eo")
+(include "./theories/Arrays.eo")
+(include "./theories/Ints.eo")
+(include "./theories/Reals.eo")
+(include "./theories/BitVectors.eo")
+(include "./theories/Strings.eo")
+(include "./theories/Sequences.eo")
+(include "./theories/Sets.eo")
+(include "./theories/ArithBvConv.eo")
+(include "./theories/Quantifiers.eo")
+(include "./theories/Datatypes.eo")
+
+(include "./programs/DistinctValues.eo")
+(include "./programs/Arith.eo")
+
+; program: $meval
+; args:
+; - t S: The term to evaluate.
+; return: The result of evaluating t.
+(program $meval ((T Type) (S Type)
+                 (x T) (y T) (z S) (ys S :list)
+                 (b Bool) (n Int) (m Int)
+                 (xb (BitVec m)) (yb (BitVec m)) (ybs (BitVec m) :list) (ob (BitVec 1))
+                 (xs (Seq T)) (yss (Seq T) :list)
+                 (s (Set T)) (t (Set T))
+                 (vs @List) (ms @List)
+                 (f (-> T S))
+                 (r1 RegLan) (r2s RegLan :list)
+                 (lvs @List))
+    (S @List @List) S
+    (
+      ; builtin
+      (($meval (= x y) vs ms)             (eo::define ((ex ($meval x vs ms)))
+                                          (eo::define ((ey ($meval y vs ms)))
+                                          (eo::ite (eo::is_eq ex ey)
+                                            true
+                                            (eo::requires ($are_distinct_terms ex ey) true false)))))
+      (($meval (distinct x y) vs ms)      (eo::not ($meval (= x y) vs ms)))
+      (($meval (ite b x y) vs ms)         (eo::ite ($meval b vs ms)
+                                            ($meval x vs ms)
+                                            ($meval y vs ms)))
+      (($meval (or x ys) vs ms)           (eo::or ($meval x vs ms) ($meval ys vs ms)))
+      (($meval (and x ys) vs ms)          (eo::and ($meval x vs ms) ($meval ys vs ms)))
+      (($meval (=> x y) vs ms)            (eo::or (eo::not ($meval x vs ms)) ($meval y vs ms)))
+      (($meval (xor x y) vs ms)           (eo::xor ($meval x vs ms) ($meval y vs ms)))
+      (($meval (not b) vs ms)             (eo::not ($meval b vs ms)))
+      (($meval (lambda lvs y) vs ms)      (lambda lvs y)) ; lambda only evaluated as it is beta reduced
+  
+      ; arithmetic
+      (($meval (+ x ys) vs ms)            (eo::add ($meval x vs ms) ($meval ys vs ms)))
+      (($meval (- x y) vs ms)             (eo::add ($meval x vs ms) (eo::neg ($meval y vs ms))))
+      (($meval (* x ys) vs ms)            (eo::mul ($meval x vs ms) ($meval ys vs ms)))
+      (($meval (< x y) vs ms)             (eo::gt ($meval y vs ms) ($meval x vs ms)))
+      (($meval (<= x y) vs ms)            (eo::define ((ex ($meval x vs ms)))
+                                          (eo::define ((ey ($meval y vs ms)))
+                                            (eo::or (eo::gt ey ex) (eo::is_eq ex ey)))))
+      (($meval (> x y) vs ms)             (eo::gt ($meval x vs ms) ($meval y vs ms)))
+      (($meval (>= x y) vs ms)            (eo::define ((ex ($meval x vs ms)))
+                                          (eo::define ((ey ($meval y vs ms)))
+                                            (eo::or (eo::gt ex ey) (eo::is_eq ex ey)))))
+      (($meval (to_real x) vs ms)         (eo::to_q ($meval x vs ms)))
+      (($meval (to_int x) vs ms)          (eo::to_z ($meval x vs ms)))
+      (($meval (is_int x) vs ms)          (eo::define ((ex ($meval x vs ms)))
+                                            (eo::is_eq (eo::to_q (eo::to_z ex)) ex)))
+      (($meval (abs x) vs ms)             (eo::define ((ex ($meval x vs ms)))
+                                          (eo::ite (eo::is_neg ex)
+                                            (eo::neg ex)
+                                            ex)))
+      (($meval (- x) vs ms)               (eo::neg ($meval x vs ms)))
+
+      ; reals
+      (($meval (/ x y) vs ms)             (eo::define ((d (eo::to_q ($meval y vs ms))))
+                                          (eo::ite (eo::is_eq d 0/1)
+                                            ($meval (@div_by_zero x) vs ms)         ; can provide model for @div_by_zero
+                                            (eo::qdiv (eo::to_q ($meval x vs ms)) (eo::to_q ($meval y vs ms))))))
+      (($meval (/_total x y) vs ms)       (eo::define ((d (eo::to_q ($meval y vs ms))))
+                                          (eo::ite (eo::is_eq d 0/1)
+                                            0/1
+                                            (eo::qdiv (eo::to_q ($meval x vs ms)) d))))
+
+      ; ints
+      (($meval (div x y) vs ms)           (eo::define ((d ($meval y vs ms)))
+                                          (eo::ite (eo::is_eq d 0) 0
+                                            ($meval (@int_div_by_zero x) vs ms)     ; can provide model for @int_div_by_zero
+                                            (eo::zdiv ($meval x vs ms) d))))
+      (($meval (div_total x y) vs ms)     (eo::define ((d ($meval y vs ms)))
+                                          (eo::ite (eo::is_eq d 0)
+                                            0
+                                            (eo::zdiv ($meval x vs ms) d))))
+      (($meval (mod x y) vs ms)           (eo::define ((d ($meval y vs ms)))
+                                          (eo::ite (eo::is_eq d 0)
+                                            ($meval (@mod_by_zero x) vs ms)       ; can provide model for @mod_by_zero
+                                            (eo::zdiv ($meval x vs ms) d))))
+      (($meval (mod_total x y) vs ms)     (eo::define ((ex ($meval x vs ms)))
+                                          (eo::define ((ey ($meval y vs ms)))
+                                            (eo::ite (eo::is_eq ey 0)
+                                              ex
+                                              (eo::zmod ex ey)))))
+      (($meval (divisible n x) vs ms)     ($meval (= ($meval (mod x n)) 0) vs ms))
+
+      ; strings
+      (($meval (str.len x) vs ms)         (eo::len ($meval x vs ms)))
+      (($meval (str.++ xs yss) vs ms)     (eo::concat ($meval xs) ($meval yss)))
+      (($meval (str.substr x n m) vs ms)  (eo::define ((r ($meval n vs ms)))
+                                             (eo::extract ($meval x vs ms) r (eo::add r ($meval m vs ms) -1))))
+      (($meval (str.contains x y) vs ms)  (eo::not (eo::is_neg (eo::find ($meval x vs ms) ($meval y vs ms)))))
+      (($meval (str.replace x y z) vs ms) (eo::define ((ex ($meval x vs ms)))
+                                           (eo::define ((ey ($meval y vs ms)))
+                                           (eo::define ((r (eo::find (eo::to_str ex) (eo::to_str ey)))) ; ensure string literals
+                                             (eo::ite (eo::is_neg r)
+                                               ex
+                                               (eo::concat 
+                                                 (eo::extract ex 0 (eo::add r -1)) 
+                                                 ($meval z vs ms)
+                                                 (eo::extract ex (eo::add r (eo::len ey)) (eo::len ex))))))))
+      (($meval (str.indexof x y n) vs ms) (eo::define ((en ($meval n vs ms)))
+                                          (eo::ite (eo::is_neg en) -1
+                                            (eo::define ((ex ($meval x vs ms)))
+                                            (eo::define ((exl (eo::len ex)))
+                                            (eo::ite (eo::gt en exl) -1
+                                              (eo::define ((exs (eo::extract ex n exl)))
+                                              (eo::define ((ey ($meval y vs ms)))
+                                              (eo::define ((r (eo::find (eo::to_str exs) (eo::to_str ey))))
+                                              (eo::ite (eo::is_neg r) r (eo::add n r)))))))))))
+      (($meval (str.at x n) vs ms)        (eo::define ((r ($meval n vs ms)))
+                                            (eo::extract ($meval x vs ms) r r)))
+      (($meval (str.prefixof x y) vs ms)  (eo::define ((ex ($meval x vs ms)))
+                                          (eo::define ((ey ($meval y vs ms)))
+                                          (eo::define ((r (eo::extract ey 0 (eo::add (eo::len ex) -1))))
+                                              (eo::is_eq ex r)))))
+      (($meval (str.suffixof x y) vs ms)  (eo::define ((ex ($meval x vs ms)))
+                                    (eo::define ((ey ($meval y vs ms)))
+                                    (eo::define ((eyl (eo::len ey)))
+                                    (eo::define ((r (eo::extract ey
+                                                      (eo::add eyl (eo::neg (eo::len ex)))
+                                                      (eo::add eyl -1))))
+                                      (eo::is_eq ex r))))))
+      (($meval (str.rev x))         (eo::define ((ex ($meval x vs ms)))
+                                             ($eval_str_rev ex)))
+      (($meval (str.update x n y))  (eo::define ((ex ($meval x vs ms)))
+                                    (eo::define ((en ($meval n vs ms)))
+                                    (eo::define ((exl (eo::len ex)))
+                                    (eo::ite (eo::or (eo::gt 0 en) (eo::gt en exl))
+                                      ex
+                                      (eo::define ((ey ($meval y vs ms)))
+                                      (eo::define ((rc (eo::add (eo::neg en) exl)))
+                                      (eo::concat
+                                        (eo::extract ex 0 (eo::add en -1))
+                                        (eo::extract ey 0 (eo::add rc -1))
+                                        (eo::extract ex (eo::add en (eo::len ey)) exl)))))))))
+      (($meval (str.to_lower x))            (eo::define ((ex ($meval x vs ms)))
+                                              ($eval_str_to_lower ex)))
+      (($meval (str.to_upper x))            (eo::define ((ex ($meval x vs ms)))
+                                              ($eval_str_to_upper ex)))
+      (($meval (str.to_code x))             (eo::define ((ex ($meval x vs ms)))
+                                            (eo::define ((len (eo::len ex)))
+                                              (eo::ite (eo::is_eq len 1)
+                                                (eo::to_z ex)
+                                                (eo::ite (eo::is_z len)
+                                                  -1
+                                                  (str.to_code ex))))))
+      (($meval (str.from_code x))           (eo::define ((ex ($meval x vs ms)))
+                                              (eo::ite ($str_is_code_point ex)
+                                                (eo::to_str x)
+                                                "")))
+      (($meval (str.is_digit x))            (eo::define ((exc ($meval (str.to_code x))))
+                                              (eo::and ($meval (> exc 47) (> 58 exc)))))
+      (($meval (str.to_int x))              (eo::define ((ex ($meval x vs ms)))
+                                              ($eval_str_to_int ex)))
+      (($meval (str.from_int n))            (eo::define ((en ($meval n vs ms)))
+                                              ($eval_str_from_int en)))
+      (($meval (str.< x y))                 (eo::and (eo::not ($meval (= x y) ms vs)) ($meval (str.<= x y) ms vs)))
+      (($meval (str.<= x y))                (eo::define ((ex ($meval x vs ms)))
+                                            (eo::define ((ey ($meval y vs ms)))
+                                              ($eval_str_<= ex ey))))
+      (($meval (str.replace_all x y z))     ($eval_str_replace_all x y z))
+      (($meval (str.replace_re x r1 z))     ($eval_str_replace_re x y z))
+      (($meval (str.replace_re_all x r1 z)) ($eval_str_replace_re_all x y z))
+      (($meval (str.indexof_re x r1 n))     ($eval_str_indexof_re x r1 n))
+
+      (($meval re.allchar)                  re.allchar)
+      (($meval re.none)                     re.none)
+      (($meval re.all)                      re.all)
+      (($meval (str.to_re s1))              (str.to_re ($meval s1)))
+      (($meval (re.* r1))                   (re.* ($meval r1 ms vs)))
+      (($meval (re.+ r1))                   (re.+ ($meval r1 ms vs)))
+      (($meval (re.opt r1))                 (re.opt ($meval r1 ms vs)))
+      (($meval (re.comp r1))                (re.comp ($meval r1 ms vs)))
+      (($meval (re.range s1 s2))            (re.range ($meval s1 ms vs) ($meval s2 ms vs)))
+      (($meval (re.++ r1 r2s))              (eo::cons re.++ ($meval r1 ms vs) ($meval r2s ms vs)))
+      (($meval (re.inter r1 r2s))           (eo::cons re.inter ($meval r1 ms vs) ($meval r2s ms vs)))
+      (($meval (re.union r1 r2s))           (eo::cons re.union ($meval r1 ms vs) ($meval r2s ms vs)))
+      (($meval (re.diff r1 r2s))            (eo::cons re.diff ($meval r1 ms vs) ($meval r2s ms vs)))
+      (($meval (re.loop n m r1))            ($eval_re_loop n m ($meval r1 ms vs)))
+      (($meval (str.in_re s1 r1))           ($eval_str_in_re ($meval s1) ($meval r1 ms vs)))
+
+      ; sequences: TODO
+
+      ; bitvectors
+      (($meval (concat x ys))               (eo::concat ($meval x vs ms) ($meval ys vs ms)))
+      (($meval (extract m n x))             (eo::extract ($meval x vs ms) n m)) ; note swap n/m
+      (($meval (bvnot xb))                  (eo::not ($meval xb vs ms)))
+      (($meval (bvand xb ybs))              (eo::and ($meval xb vs ms) ($meval ybs)))
+      (($meval (bvor xb ybs))       (eo::or ($meval xb vs ms) ($meval ybs)))
+      (($meval (bvxor xb ybs))      (eo::xor ($meval xb vs ms) ($meval ybs)))
+      (($meval (bvneg xb))          (eo::neg ($meval xb vs ms)))
+      (($meval (bvadd xb ybs))      (eo::add ($meval xb vs ms) ($meval ybs)))
+      (($meval (bvmul xb ybs))      (eo::mul ($meval xb vs ms) ($meval ybs)))
+      (($meval (bvsub xb yb))       (eo::add ($meval xb vs ms) (eo::neg ($meval yb vs ms))))
+      (($meval (bvudiv xb yb))      (eo::define ((ex ($meval xb vs ms)))
+                                    (eo::define ((ey ($meval yb vs ms)))
+                                    (eo::ite (eo::is_eq (eo::to_z ey) 0)
+                                      ($bv_ones ($bv_bitwidth (eo::typeof xb)))
+                                      (eo::zdiv ex ey)))))
+      (($meval (bvurem xb yb))      (eo::define ((ex ($meval xb vs ms)))
+                                    (eo::define ((ey ($meval yb vs ms)))
+                                    (eo::ite (eo::is_eq (eo::to_z ey) 0)
+                                      ex
+                                      (eo::zmod ex ey)))))
+      (($meval (bvult xb yb))       ($meval (bvugt yb xb)))
+      (($meval (bvule xb yb))       ($meval (bvuge yb xb)))
+      (($meval (bvugt xb yb))       (eo::define ((ex (eo::to_z ($meval xb vs ms))))
+                                           (eo::define ((ey (eo::to_z ($meval yb vs ms))))
+                                             (eo::gt ex ey))))
+      (($meval (bvuge xb yb))       (eo::define ((ex ($meval xb vs ms)))
+                                           (eo::define ((ey ($meval yb vs ms)))
+                                             (eo::or (eo::gt ex ey) (eo::is_eq ex ey)))))
+      (($meval (bvslt xb yb))       ($meval (bvsgt yb xb)))
+      (($meval (bvsle xb yb))       ($meval (bvsge yb xb)))
+      (($meval (bvsgt xb yb))       (eo::define ((ex ($bv_to_signed_int ($meval xb vs ms))))
+                                           (eo::define ((ey ($bv_to_signed_int ($meval yb vs ms))))
+                                             (eo::gt ex ey))))
+      (($meval (bvsge xb yb))       (eo::define ((ex ($bv_to_signed_int ($meval xb vs ms))))
+                                           (eo::define ((ey ($bv_to_signed_int ($meval yb vs ms))))
+                                             (eo::or (eo::gt ex ey) (eo::is_eq ex ey)))))
+      (($meval (bvshl xb yb))       (eo::define ((ex ($meval xb vs ms)))
+                                           (eo::define ((ey ($meval yb vs ms)))
+                                           (eo::define ((eyz (eo::to_z ey)))
+                                           (eo::define ((w ($bv_bitwidth (eo::typeof xb))))
+                                           (eo::ite (eo::gt eyz w)
+                                             (eo::to_bin w 0)
+                                             (eo::to_bin w (eo::mul (eo::to_z ex) ($eval_arith_int_pow_2 eyz)))
+                                           ))))))
+      (($meval (bvlshr xb yb))              (eo::define ((ex ($meval xb vs ms)))
+                                            (eo::define ((ey ($meval yb vs ms)))
+                                            (eo::define ((eyz (eo::to_z ey)))
+                                            (eo::define ((w ($bv_bitwidth (eo::typeof xb))))
+                                            (eo::ite (eo::gt eyz w)
+                                              (eo::to_bin w 0)
+                                              (eo::to_bin w (eo::zdiv (eo::to_z ex) ($eval_arith_int_pow_2 eyz)))))))))
+      (($meval (bvashr xb yb))              (eo::define ((ex ($meval xb vs ms)))
+                                            (eo::define ((ey ($meval yb vs ms)))
+                                            (eo::define ((sb ($bv_sign_bit ex)))
+                                            (eo::ite (eo::is_eq sb #b0)
+                                              ($meval (bvlshr ex ey) vs ms)
+                                              ($meval (bvnot (bvlshr (bvnot ex) ey)) vs ms))))))
+      (($meval (repeat n xb))               ($meval ($eval_repeat ($meval n vs ms) ($meval xb vs ms))))
+      (($meval (sign_extend n xb))          (eo::define ((ex ($meval xb vs ms)))
+                                              (eo::concat ($meval (repeat n ($bv_sign_bit ex))) ex)))
+      (($meval (zero_extend n xb))          (eo::define ((ex ($meval xb vs ms)))
+                                              (eo::concat ($meval (repeat n #b0)) ex)))
+      (($meval (bvnand xb yb))              ($meval (bvnot (bvand x1 y1)) vs ms))
+      (($meval (bvnor xb yb))               ($meval (bvnot (bvor xb yb)) vs ms))
+      (($meval (bvxnor xb yb))              ($meval (bvnot (bvxor xb yb)) vs ms))
+      (($meval (bvsdiv xb yb))
+      (($meval (bvsrem xb yb))
+      (($meval (bvsmod xb yb))
+      (($meval (bvcomp xb yb))              (eo::ite ($meval (= xb yb) vs ms) #b1 #b0))
+      (($meval (rotate_left n xb))
+      (($meval (rotate_right n xb))
+      (($meval (reduce_and xb))
+      (($meval (reduce_or xb))
+      (($meval (reduce_xor xb))
+      (($meval (bvite ob x y))
+      (($meval (bv1ult
+      (($meval (bvuaddo
+      (($meval (bvnego
+      (($meval (bvsaddo
+      (($meval (bvumulo
+      (($meval (bvsmulo
+      (($meval (bvusubo
+      (($meval (bvssubo
+      (($meval (bvsdivo
+      (($meval (bvultbv
+      (($meval (bvsltbv
+      (($meval (bvredand xb))               (eo::define ((w ($bv_bitwidth (eo::typeof xb))))
+                                              ($meval (bvcomp xb (bvnot (eo::to_bin w 0))))))
+      (($meval (bvredor xb))                (eo::define ((w ($bv_bitwidth (eo::typeof xb))))
+                                              ($meval (bvnot (bvcomp xb (eo::to_bin w 0))))))
+
+
+(declare-rule bv-rotate-left-eliminate-1 ((@n0 Int) (x1 (BitVec @n0)) (amount1 Int) (u1 Int) (u2 Int) (l1 Int))
+  :premises ((= (= (mod amount1 (@bvsize x1)) 0) false) (eo::define ((_let_1 (@bvsize x1))) (= u1 (- _let_1 (+ 1 (mod amount1 _let_1))))) (= u2 (- (@bvsize x1) 1)) (eo::define ((_let_1 (@bvsize x1))) (= l1 (- _let_1 (mod amount1 _let_1)))))
+  :args (x1 amount1 u1 u2 l1)
+  :conclusion (= (rotate_left amount1 x1) (concat (extract u1 0 x1) (extract u2 l1 x1)))
+)
+(declare-rule bv-rotate-left-eliminate-2 ((@n0 Int) (x1 (BitVec @n0)) (amount1 Int))
+  :premises ((= (mod amount1 (@bvsize x1)) 0))
+  :args (x1 amount1)
+  :conclusion (= (rotate_left amount1 x1) x1)
+)
+(declare-rule bv-rotate-right-eliminate-1 ((@n0 Int) (x1 (BitVec @n0)) (amount1 Int) (u1 Int) (u2 Int) (l1 Int))
+  :premises ((= (= (mod amount1 (@bvsize x1)) 0) false) (= u1 (- (mod amount1 (@bvsize x1)) 1)) (= u2 (- (@bvsize x1) 1)) (= l1 (mod amount1 (@bvsize x1))))
+  :args (x1 amount1 u1 u2 l1)
+  :conclusion (= (rotate_right amount1 x1) (concat (extract u1 0 x1) (extract u2 l1 x1)))
+)
+(declare-rule bv-rotate-right-eliminate-2 ((@n0 Int) (x1 (BitVec @n0)) (amount1 Int))
+  :premises ((= (mod amount1 (@bvsize x1)) 0))
+  :args (x1 amount1)
+  :conclusion (= (rotate_right amount1 x1) x1)
+)
+
+      ; arrays
+      (($meval (select a x) vs ms)        ($eval_array_select ($meval a vs ms) ($meval x vs ms)))
+      (($meval (store a x z) vs ms)       ($eval_array_store ($meval a vs ms) ($meval x vs ms) ($meval z vs ms)))
+      (($meval (store_all T x) vs ms)     (store_all T ($meval x vs ms)))
+
+      ; sets
+      (($meval (set.empty (Set T)) vs ms) (set.empty (Set T)))
+      (($meval (set.singleton x) vs ms)   (set.singleton ($meval x vs ms)))
+      (($meval (set.union s t) vs ms)     ($eval_set_union ($meval s vs ms) ($meval t vs ms)))
+      (($meval (set.inter s t) vs ms)     ($eval_set_inter ($meval s vs ms) ($meval t vs ms)))
+      (($meval (set.minus s t) vs ms)     ($eval_set_minus ($meval s vs ms) ($meval t vs ms)))
+
+      ; quantifiers
+      (($meval (forall (@list bv bvs) b) vs ms) ...?)
+      (($meval (exists bvs b) vs ms)            (eo::not ($meval (exists bvs (not b)) vs ms)))
+
+      ; core
+      (($meval (f y) vs ms)         (eo::define ((ey ($meval y vs ms)))
+                                    (eo::match ((U Type) (bv T) (bvs @List :list) (body U))
+                                      ($meval f vs ms)
+                                      (
+                                        ; FIXME: bvs, may be partial
+                                        ((lambda (@list bv bvs) body) ($meval body (eo::cons @list bv vs) (eo::cons @list ey ms)))
+                                        (g                            (_ g ey)) ; e.g. a datatype constructor application
+                                      ))))
+      (($meval z vs ms)              (eo::ite ($is_atomic_value z) ; includes datatype constructors
+                                        z
+                                        (eo::define ((i (eo::list_find @list vs z)))
+                                        (eo::ite (eo::is_neg i) z (eo::list_nth @list ms i)))))
+    )
+)
+
+
+(declare-const @unsound Bool)
+
+(declare-rule unsound ((b Bool) (vs @List) (ms @List))
+  :premises (b)
+  :args (vs ms)
+  :requires ((($meval b vs ms) false))
+  :conclusion @unsound)
