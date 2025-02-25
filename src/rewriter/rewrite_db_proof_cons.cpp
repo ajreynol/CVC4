@@ -385,11 +385,18 @@ RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
     Trace("rpc-debug2") << "...proved via congruence" << std::endl;
     return RewriteProofStatus::CONG;
   }
-  if (proveWithRule(
-          RewriteProofStatus::CONG_EVAL, eqi, {}, {}, false, false, true))
+  if (d_currRecLimit>0)
   {
-    Trace("rpc-debug2") << "...proved via congruence + evaluation" << std::endl;
-    return RewriteProofStatus::CONG_EVAL;
+    // CONG_EVAL counts as a recursive step
+    d_currRecLimit--;
+    bool proven = proveWithRule(
+            RewriteProofStatus::CONG_EVAL, eqi, {}, {}, false, false, true);
+    d_currRecLimit++;
+    if (proven)
+    {
+      Trace("rpc-debug2") << "...proved via congruence + evaluation" << std::endl;
+      return RewriteProofStatus::CONG_EVAL;
+    }
   }
   // maybe by annihilate?
   if (proveWithRule(
