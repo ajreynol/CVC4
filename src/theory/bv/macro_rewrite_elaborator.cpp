@@ -131,6 +131,7 @@ bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
   for (size_t i = 0, nchild = concat.getNumChildren(); i <= nchild; i++)
   {
     Node next = i < nchild ? concat[i] : Node::null();
+    bool merged = false;
     if (!curr.empty() && next.getKind() == ck
         && (ck == Kind::CONST_BITVECTOR || ck == Kind::BITVECTOR_EXTRACT))
     {
@@ -140,21 +141,32 @@ bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
         curr[0] = nm->mkNode(Kind::BITVECTOR_CONCAT, curr[0], next);
         currRew = nm->mkNode(Kind::BITVECTOR_CONCAT, currRew, next);
         Node rcr = RewriteRule<ConcatExtractMerge>::run<true>(currRew);
-        // single rewrite step
-        tcpg.addRewriteStep(currRew,
-                            rcr,
-                            nullptr,
-                            false,
-                            TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
-        currRew = rcr;
+        if (rcr!=currRew)
+        {
+          Trace("bv-rew-elab") << "- r-step: " << currRew << " " << rcr << std::endl;
+          // single rewrite step
+          tcpg.addRewriteStep(currRew,
+                              rcr,
+                              nullptr,
+                              false,
+                              TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+          currRew = rcr;
+          merged = true;
+        }
+        else
+        {
+          // an adjacent extract, but one that did not merge
+          curr[0] = currRew[0];
+        }
       }
       else
       {
         Assert(ck == Kind::CONST_BITVECTOR);
         curr.push_back(next);
+        merged = true;
       }
     }
-    else
+    if (!merged)
     {
       if (!curr.empty())
       {
@@ -163,11 +175,10 @@ bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
         {
           rem = nm->mkNode(Kind::BITVECTOR_CONCAT, curr);
           Node rr = evaluate(rem, {}, {});
+          
           tcpg.addRewriteStep(rem,
                               rr,
-                              nullptr,
-                              false,
-                              TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+                              ProofRule::EVALUATE, {}, {rem});
         }
         else
         {
@@ -196,6 +207,7 @@ bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
     cdp->addStep(eq, ProofRule::TRANS, {equiv1, equiv2}, {});
     return true;
   }
+  Assert(false) << "...mismatch " << equiv2[1] << " " << eq[1];
   return false;
 }
 
