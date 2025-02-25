@@ -395,7 +395,7 @@ Node mkRepeat(TNode node, unsigned repeat)
   // e.g. automatically converting to concat or dropping repeat
   // of size one, since we use it to ensure that rewrites match
   // a particular form as defined in the RARE signatures.
-  NodeManager * nm = node.getNodeManager();
+  NodeManager* nm = node.getNodeManager();
   Node rop = nm->mkConst(BitVectorRepeat(repeat));
   return nm->mkNode(rop, node);
 }

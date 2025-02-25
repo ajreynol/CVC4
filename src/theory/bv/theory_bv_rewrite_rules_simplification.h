@@ -397,9 +397,9 @@ Node RewriteRule<AshrByConst>::apply(TNode node) {
   Node sign_bit = utils::mkExtract(a, size-1, size-1);
   
   if (amount >= Integer(size)) {
-    // if we are shifting more than the length of the bitvector return n repetitions
-    // of the first bit
-    // use repeat, which enables RARE reconstruction to succeed
+    // if we are shifting more than the length of the bitvector return n
+    // repetitions of the first bit use repeat, which enables RARE
+    // reconstruction to succeed
     return utils::mkRepeat(sign_bit, size);
   }
   
@@ -410,7 +410,7 @@ Node RewriteRule<AshrByConst>::apply(TNode node) {
   if (uint32_amount == 0) {
     return a; 
   }
-  
+
   Node left = utils::mkRepeat(sign_bit, uint32_amount);
   Node right = utils::mkExtract(a, size - 1, uint32_amount);
   return utils::mkConcat(left, right); 
