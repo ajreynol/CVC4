@@ -78,6 +78,7 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
   }
   if (consts.size() <= 1 || nconsts.empty())
   {
+    Assert(false) << "BV simplify: no constant eval";
     return false;
   }
   std::vector<Node> transEq;
@@ -105,6 +106,7 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
     }
     else
     {
+      Assert(false) << "BV simplify: fail aci norm";
       return false;
     }
   }
@@ -265,6 +267,7 @@ bool MacroRewriteElaborator::ensureProofForMultSltMult(CDProof* cdp,
   NodeManager* nm = nodeManager();
   Assert (eq[0].getKind()==Kind::BITVECTOR_SLT);
   TConvProofGenerator tcpg(d_env);
+  Node rhs1;
   for (size_t i=0; i<2; i++)
   {
     Assert (eq[0][i].getKind()==Kind::BITVECTOR_MULT);
@@ -288,15 +291,27 @@ bool MacroRewriteElaborator::ensureProofForMultSltMult(CDProof* cdp,
       }
       ch.push_back(n);
     }
-    if (ch[1].getKind()==Kind::BITVECTOR_ZERO_EXTEND)
+    // flip the multiplication on the right hand side if a zero_extend
+    // or a sign_extend applied to plus. Flip the left hand side if the
+    // lhs of the left hand side matches the rhs of the right hand side.
+    bool swap = i==0 ? (ch[1].getKind()==Kind::BITVECTOR_ZERO_EXTEND || (ch[1].getKind()==Kind::BITVECTOR_SIGN_EXTEND && ch[1][0].getKind()==Kind::BITVECTOR_ADD)) : ch[0]==rhs1;
+    Trace("bv-rew-elab") << "- check " << i << ", swap is " << swap << std::endl;
+    if (swap)
     {
       Assert (ch[0].getKind()!=Kind::BITVECTOR_ZERO_EXTEND);
       // swap to match rule
       Node mul = nm->mkNode(eq[0][i].getKind(), ch[0], ch[1]);
       Node muls = nm->mkNode(eq[0][i].getKind(), ch[1], ch[0]);
       tcpg.addRewriteStep(mul, muls, nullptr, false, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
+      Trace("bv-rew-elab") << "- swap " << mul << " to " << muls << std::endl;
+    }
+    if (i==0)
+    {
+      rhs1 = ch[swap ? 0 : 1];
+      Trace("bv-rew-elab") << "- rhs is " << rhs1 << std::endl;
     }
   }
+  
   std::shared_ptr<ProofNode> pfn = tcpg.getProofForRewriting(eq[0]);
   cdp->addProof(pfn);
   Node equiv1 = pfn->getResult();

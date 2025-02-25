@@ -2291,9 +2291,12 @@ Node RewriteRule<MultSltMult>::apply(TNode node)
   }
 
   x = (mr[0] == a) ? mr[1] : mr[0];
-  t = (addxt[0] == x) ? addxt[1] : addxt[0];
-
+  // Make the subtraction term (bvsub (bvadd x t) x) or (bvsub (bvadd t x) x),
+  // which will simplify to t. We use this instead of t to simplify the number
+  // of cases needed for proof reconstruction.
   NodeManager *nm = NodeManager::currentNM();
+  t = nm->mkNode(Kind::BITVECTOR_SUB, addxt, x);
+
   Node zero_t = utils::mkZero(utils::getSize(t));
   Node zero_a = utils::mkZero(utils::getSize(a));
 

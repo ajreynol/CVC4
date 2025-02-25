@@ -333,6 +333,7 @@ set(regress_0_tests
   regress0/bv/bvproof3.smt2
   regress0/bv/bvsimple.cvc.smt2
   regress0/bv/bvsmod.smt2
+  regress0/bv/bvult-large-triv.smt2
   regress0/bv/bvule-elim-conv.smt2
   regress0/bv/calc2_sec2_shifter_mult_bmc15.atlas.delta01.smtv1.smt2
   regress0/bv/core/a78test0002.smtv1.smt2
@@ -414,6 +415,8 @@ set(regress_0_tests
   regress0/bv/core/slice-19.smtv1.smt2
   regress0/bv/core/slice-20.smtv1.smt2
   regress0/bv/dd_fuzz21.smt2
+  regress0/bv/dd.kmdf_osrusbfx2_exe_testapp.c.smt2
+  regress0/bv/dd.try_small_difret.smt2
   regress0/bv/div_mod.cvc.smt2
   regress0/bv/div-zero-eval-tests.smt2
   regress0/bv/divtest_2_5.smt2
