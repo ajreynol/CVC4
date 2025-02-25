@@ -24,8 +24,8 @@
 
 #include "expr/sygus_term_enumerator.h"
 #include "smt/env_obj.h"
-#include "theory/quantifiers/sygus/sygus_enumerator.h"
 #include "theory/inference_id.h"
+#include "theory/quantifiers/sygus/sygus_enumerator.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -59,9 +59,9 @@ class MVarInfo
    * enumerated so far.
    */
   Node getEnumeratedTerm(NodeManager* nm, size_t i);
-  
-  /** 
-   * Get the auxiliary lemmas introduced while enumerating terms 
+
+  /**
+   * Get the auxiliary lemmas introduced while enumerating terms
    */
   std::vector<std::pair<Node, InferenceId>> getEnumeratedLemmas(const Node& t);
 
@@ -70,10 +70,11 @@ class MVarInfo
   std::unique_ptr<SygusTermEnumerator> d_senum;
   class ChoiceElimNodeConverter : public NodeConverter
   {
-  public:
+   public:
     ChoiceElimNodeConverter(NodeManager* nm);
     Node postConvert(Node n) override;
-    std::vector<std::pair<Node, InferenceId>> getEnumeratedLemmas(const Node& t);
+    std::vector<std::pair<Node, InferenceId>> getEnumeratedLemmas(
+        const Node& t);
     /** lemmas */
     std::map<Node, Node> d_lemmas;
     /** */
@@ -158,12 +159,13 @@ class MbqiEnum : protected EnvObj
    * @param auxLemmas Other lemmas to add.
    * @return true if we successfully modified the instantiation.
    */
-  bool constructInstantiation(const Node& q,
-                              const Node& query,
-                              const std::vector<Node>& vars,
-                              std::vector<Node>& mvs,
-                              const std::map<Node, Node>& mvFreshVar,
-                              std::vector<std::pair<Node, InferenceId>>& auxLemmas);
+  bool constructInstantiation(
+      const Node& q,
+      const Node& query,
+      const std::vector<Node>& vars,
+      std::vector<Node>& mvs,
+      const std::map<Node, Node>& mvFreshVar,
+      std::vector<std::pair<Node, InferenceId>>& auxLemmas);
 
  private:
   /**

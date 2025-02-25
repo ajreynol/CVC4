@@ -349,7 +349,7 @@ void InstStrategyMbqi::process(Node q)
   Instantiate* qinst = d_qim.getInstantiate();
   if (!qinst->addInstantiation(q, terms, InferenceId::QUANTIFIERS_INST_MBQI))
   {
-    //AlwaysAssert(false);
+    // AlwaysAssert(false);
     Trace("mbqi") << "...failed to add instantiation" << std::endl;
     return;
   }
@@ -509,13 +509,15 @@ void InstStrategyMbqi::modelValueFromQuery(
   {
     std::vector<Node> smvs(mvs);
     std::vector<std::pair<Node, InferenceId>> auxLemmas;
-    if (d_msenum->constructInstantiation(q, query, vars, smvs, mvToFreshVar, auxLemmas))
+    if (d_msenum->constructInstantiation(
+            q, query, vars, smvs, mvToFreshVar, auxLemmas))
     {
       mvs = smvs;
     }
     for (std::pair<Node, InferenceId>& al : auxLemmas)
     {
-      Trace("mbqi-aux-lemma") << "Auxiliary lemma: " << al.second << " : " << al.first << std::endl;
+      Trace("mbqi-aux-lemma")
+          << "Auxiliary lemma: " << al.second << " : " << al.first << std::endl;
       d_qim.lemma(al.first, al.second);
     }
   }
