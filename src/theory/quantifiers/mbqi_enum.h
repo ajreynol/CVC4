@@ -20,10 +20,12 @@
 
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "expr/sygus_term_enumerator.h"
 #include "smt/env_obj.h"
 #include "theory/quantifiers/sygus/sygus_enumerator.h"
+#include "theory/inference_id.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -57,10 +59,28 @@ class MVarInfo
    * enumerated so far.
    */
   Node getEnumeratedTerm(NodeManager* nm, size_t i);
+  
+  /** 
+   * Get the auxiliary lemmas introduced while enumerating terms 
+   */
+  std::vector<std::pair<Node, InferenceId>> getEnumeratedLemmas(const Node& t);
 
  private:
   /** The underlying sygus enumerator utility */
   std::unique_ptr<SygusTermEnumerator> d_senum;
+  class ChoiceElimNodeConverter : public NodeConverter
+  {
+  public:
+    ChoiceElimNodeConverter(NodeManager* nm);
+    Node postConvert(Node n) override;
+    std::vector<std::pair<Node, InferenceId>> getEnumeratedLemmas(const Node& t);
+    /** lemmas */
+    std::map<Node, Node> d_lemmas;
+    /** */
+    std::unordered_set<TNode> d_visited;
+  };
+  /** */
+  std::unique_ptr<ChoiceElimNodeConverter> d_cenc;
   /** A cache of all enumerated terms so far */
   std::vector<Node> d_enum;
   /**
@@ -135,13 +155,15 @@ class MbqiEnum : protected EnvObj
    * @param mvs The model values of vars found in the subsolver for MBQI.
    * @param mvFreshVar Maps model values to variables, for the purposes
    * of representing term models for uninterpreted sorts.
+   * @param auxLemmas Other lemmas to add.
    * @return true if we successfully modified the instantiation.
    */
   bool constructInstantiation(const Node& q,
                               const Node& query,
                               const std::vector<Node>& vars,
                               std::vector<Node>& mvs,
-                              const std::map<Node, Node>& mvFreshVar);
+                              const std::map<Node, Node>& mvFreshVar,
+                              std::vector<std::pair<Node, InferenceId>>& auxLemmas);
 
  private:
   /**

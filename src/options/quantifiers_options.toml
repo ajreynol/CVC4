@@ -240,6 +240,14 @@ name   = "Quantifiers"
   default    = "false"
   help       = "include global symbols from all available assertions in grammars for fast enumerative mbqi"
 
+[[option]]
+  name       = "mbqiEnumChoiceGrammar"
+  category   = "expert"
+  long       = "mbqi-enum-choice-grammar"
+  type       = "bool"
+  default    = "false"
+  help       = "use choice in fast enumeration to augment instantiations from MBQI"
+
 #### E-matching options
 
 [[option]]

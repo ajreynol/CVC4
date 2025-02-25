@@ -219,15 +219,17 @@ SygusGrammar SygusGrammarCons::mkEmptyGrammar(const Env& env,
       env.getOptions().quantifiers.sygusGrammarConsMode;
   for (const TypeNode& t : tvec)
   {
+    // use fresh variable, to ensure the name below is unique
+    Node an = NodeManager::mkBoundVar(t);
     std::stringstream ss;
     ss << "A_";
     if (t.getNumChildren() > 0)
     {
-      ss << t.getKind() << "_" << t.getId();
+      ss << t.getKind() << "_" << an.getId();
     }
     else
     {
-      ss << t;
+      ss << t << "_" << an.getId();
     }
     Node a = NodeManager::mkBoundVar(ss.str(), t);
     ntSyms.push_back(a);

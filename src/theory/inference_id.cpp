@@ -248,6 +248,7 @@ const char* toString(InferenceId i)
     case InferenceId::QUANTIFIERS_INST_CEGQI: return "QUANTIFIERS_INST_CEGQI";
     case InferenceId::QUANTIFIERS_INST_SYQI: return "QUANTIFIERS_INST_SYQI";
     case InferenceId::QUANTIFIERS_INST_MBQI: return "QUANTIFIERS_INST_MBQI";
+    case InferenceId::QUANTIFIERS_INST_MBQI_ENUM: return "QUANTIFIERS_INST_MBQI_ENUM";
     case InferenceId::QUANTIFIERS_INST_ENUM: return "QUANTIFIERS_INST_ENUM";
     case InferenceId::QUANTIFIERS_INST_POOL: return "QUANTIFIERS_INST_POOL";
     case InferenceId::QUANTIFIERS_INST_POOL_TUPLE:
@@ -267,6 +268,8 @@ const char* toString(InferenceId i)
       return "QUANTIFIERS_CEGQI_VTS_UB_DELTA";
     case InferenceId::QUANTIFIERS_CEGQI_VTS_LB_INF:
       return "QUANTIFIERS_CEGQI_VTS_LB_INF";
+    case InferenceId::QUANTIFIERS_MBQI_ENUM_CHOICE:
+      return "QUANTIFIERS_MBQI_ENUM_CHOICE";
     case InferenceId::QUANTIFIERS_ORACLE_INTERFACE:
       return "QUANTIFIERS_ORACLE_INTERFACE";
     case InferenceId::QUANTIFIERS_ORACLE_PURIFY_SUBS:
