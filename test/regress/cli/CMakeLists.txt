@@ -151,6 +151,7 @@ set(regress_0_tests
   regress0/arrays/issue6807-idem-rew.smt2
   regress0/arrays/issue7596-define-array-uminus.smt2
   regress0/arrays/issue8103-1-weak-equiv-models.smt2
+  regress0/arrays/issue8241-bad-model.smt2
   regress0/arrays/issue8276-arith-getModelValue.smt2
   regress0/arrays/issue8810-model-success.smt2
   regress0/arrays/issue9041.smt2
@@ -1423,8 +1424,11 @@ set(regress_0_tests
   regress0/proofs/proj-issue492-skolem-lemma-pf.smt2
   regress0/proofs/proj-issue528-ufpfchecker.smt2
   regress0/proofs/proj-issue529-open-pf.smt2
+  regress0/proofs/proj-issue544-nassume.smt2
   regress0/proofs/proj-issue554.smt2
   regress0/proofs/proj-issue589.smt2
+  regress0/proofs/proj-issue606.smt2
+  regress0/proofs/proj-issue669-nassume.smt2
   regress0/proofs/proj-issue696.smt2
   regress0/proofs/proj-issue698.smt2
   regress0/proofs/proj-issue711-open-sat-proof.smt2
@@ -1591,6 +1595,7 @@ set(regress_0_tests
   regress0/quantifiers/proj-issue152-2-non-std-nterm-ext-rew.smt2
   regress0/quantifiers/proj-issue512-has-skolem.smt2
   regress0/quantifiers/proj-issue608-mbqi-cegqi.smt2
+  regress0/quantifiers/proj-issue688.smt2
   regress0/quantifiers/proj-issue722-qpre.smt2
   regress0/quantifiers/proj-issue763-no-gt-purify-bool.smt2
   regress0/quantifiers/pure_dt_cbqi.smt2
