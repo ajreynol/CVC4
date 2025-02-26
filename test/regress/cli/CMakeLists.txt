@@ -417,6 +417,7 @@ set(regress_0_tests
   regress0/bv/core/slice-19.smtv1.smt2
   regress0/bv/core/slice-20.smtv1.smt2
   regress0/bv/dd_fuzz21.smt2
+  regress0/bv/dd_run_0000.smt2
   regress0/bv/dd.kmdf_osrusbfx2_exe_testapp.c.smt2
   regress0/bv/dd.try_small_difret.smt2
   regress0/bv/div_mod.cvc.smt2
@@ -1525,6 +1526,7 @@ set(regress_0_tests
   regress0/quantifiers/dd_check_eq_bvnot_32bit.smt2
   regress0/quantifiers/dd_check_ic_sext_4_4.smt2
   regress0/quantifiers/dd_german169_semi_eval.smt2
+  regress0/quantifiers/dd_kmdf_osrubvfx2.smt2
   regress0/quantifiers/dd_p15_dio_lemma.smt2
   regress0/quantifiers/dd_psyco_186-ineq-elim.smt2
   regress0/quantifiers/dd_quick_sort-q-rew.smt2
@@ -1988,6 +1990,7 @@ set(regress_0_tests
   regress0/strings/issue9784.smt2
   regress0/strings/itos-entail.smt2
   regress0/strings/large-model.smt2
+  regress0/strings/large-unify.smt2
   regress0/strings/leadingzero001.smt2
   regress0/strings/leq.smt2
   regress0/strings/loop-wrong-sem.smt2

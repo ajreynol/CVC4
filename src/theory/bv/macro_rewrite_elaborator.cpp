@@ -98,17 +98,10 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
   transEq.push_back(equiv2);
   if (equiv2[1] != eq[1])
   {
-    if (expr::isACINorm(equiv2[1], eq[1]))
-    {
-      Node equiv3 = equiv2[1].eqNode(eq[1]);
-      cdp->addStep(equiv3, ProofRule::ACI_NORM, {}, {equiv3});
-      transEq.push_back(equiv3);
-    }
-    else
-    {
-      Assert(false) << "BV simplify: fail aci norm";
-      return false;
-    }
+    // could be ACI_NORM or ANNIHILATE, just send generic subgoal.
+    Node equiv3 = equiv2[1].eqNode(eq[1]);
+    cdp->addTrustedStep(equiv3, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    transEq.push_back(equiv3);
   }
   cdp->addStep(eq, ProofRule::TRANS, transEq, {});
   return true;
