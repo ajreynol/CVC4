@@ -2277,7 +2277,7 @@ Node RewriteRule<MultSltMult>::apply(TNode node)
   std::tie(ml[0], ml[1], is_sext) = extract_ext_tuple(node[0]);
   std::tie(mr[0], mr[1], std::ignore) = extract_ext_tuple(node[1]);
 
-  TNode addxt, x, t, a;
+  TNode addxt, x, a;
   if (ml[0].getKind() == Kind::BITVECTOR_ADD)
   {
     addxt = ml[0];
@@ -2295,7 +2295,7 @@ Node RewriteRule<MultSltMult>::apply(TNode node)
   // which will simplify to t. We use this instead of t to simplify the number
   // of cases needed for proof reconstruction.
   NodeManager *nm = NodeManager::currentNM();
-  t = nm->mkNode(Kind::BITVECTOR_SUB, addxt, x);
+  Node t = nm->mkNode(Kind::BITVECTOR_SUB, addxt, x);
 
   Node zero_t = utils::mkZero(utils::getSize(t));
   Node zero_a = utils::mkZero(utils::getSize(a));
