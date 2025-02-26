@@ -364,7 +364,6 @@ RewriteProofStatus RewriteDbProofCons::proveInternal(const Node& eqi)
   d_currProving.insert(eqi);
   ++d_statTotalAttempts;
   // eqi should not hold trivially and should not be cached
-  Assert(d_currRecLimit > 0);
   Trace("rpc-debug2") << "proveInternal " << eqi << std::endl;
   // Otherwise, call the get matches routine. This will call notifyMatch below
   // for each matching rewrite rule conclusion in the database
