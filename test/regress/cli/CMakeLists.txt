@@ -787,6 +787,7 @@ set(regress_0_tests
   regress0/datatypes/wrong-sel-simp.cvc.smt2
   regress0/datatypes/yoni-cyclic.smt2
   regress0/dd.bad-conv-rewrite.smt2
+  regress0/dd_arith_bv_conv-rpf.smt2
   regress0/decision/aufbv-fuzz01.smtv1.smt2
   regress0/decision/bitvec0.delta01.smtv1.smt2
   regress0/decision/bitvec0.smtv1.smt2
