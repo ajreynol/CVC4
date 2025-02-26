@@ -460,11 +460,6 @@ bool RewriteDbProofCons::notifyMatch(const Node& s,
                                      std::vector<Node>& subs)
 {
   // if we reach our step limit, do not continue trying
-  if (d_currStepLimit == 0)
-  {
-    return false;
-  }
-  d_currStepLimit--;
   Trace("rpc-debug2") << "[steps remaining: " << d_currStepLimit << "]"
                       << std::endl;
   Trace("rpc-debug2") << "notifyMatch: " << s << " from " << n << " via "
@@ -899,7 +894,12 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
     Assert (!decRecLimit || d_currRecLimit>0);
     if (decRecLimit)
     {
-      d_currRecLimit--;
+      d_currRecLimit--;  
+      if (d_currStepLimit == 0)
+      {
+        return false;
+      }
+      d_currStepLimit--;
     }
     Trace("rpc-debug") << "Recurse rule "
                         << (id == RewriteProofStatus::DSL ? toString(r)
