@@ -1,3 +1,5 @@
+; EXPECT: unsat
+(set-logic ALL)
 (declare-fun x () (_ BitVec 8))
 (declare-fun y () (_ BitVec 8))
 (declare-fun z () (_ BitVec 8))
