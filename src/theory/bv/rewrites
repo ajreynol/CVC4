@@ -210,25 +210,25 @@
   (bvmul x (bvshl (@bv 1 w) (@bv m w))))
 
 (define-cond-rule bv-mult-slt-mult-1
-  ((x ?BitVec) (y ?BitVec) (t ?BitVec) (a ?BitVec) (n Int) (m Int) (tn Int) (an Int))
-  (and (= t (bvsub y x)) (= tn (@bvsize x)) (= an (@bvsize a)))
+  ((x ?BitVec) (y ?BitVec) (a ?BitVec) (n Int) (m Int) (tn Int) (an Int))
+  (and (= tn (@bvsize x)) (= an (@bvsize a)))
   (bvslt
     (bvmul (sign_extend n y) (sign_extend m a))
     (bvmul (sign_extend n x) (sign_extend m a))
   )
   (and
-    (not (= t (@bv 0 tn)))
+    (not (= (bvsub y x) (@bv 0 tn)))
     (not (= a (@bv 0 an)))
     (= (bvslt y x) (bvsgt a (@bv 0 an)))))
 (define-cond-rule bv-mult-slt-mult-2
-  ((x ?BitVec) (y ?BitVec) (t ?BitVec) (a ?BitVec) (n Int) (m Int) (tn Int) (an Int))
-  (and (= t (bvsub y x)) (= tn (@bvsize x)) (= an (@bvsize a)))
+  ((x ?BitVec) (y ?BitVec) (a ?BitVec) (n Int) (m Int) (tn Int) (an Int))
+  (and (= tn (@bvsize x)) (= an (@bvsize a)))
   (bvslt
     (bvmul (zero_extend n y) (sign_extend m a))
     (bvmul (zero_extend n x) (sign_extend m a))
   )
   (and
-    (not (= t (@bv 0 tn)))
+    (not (= (bvsub y x) (@bv 0 tn)))
     (not (= a (@bv 0 an)))
     (= (bvult y x) (bvsgt a (@bv 0 an)))))
 
