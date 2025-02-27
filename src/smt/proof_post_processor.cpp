@@ -319,8 +319,13 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   {
     std::vector<Node> tchildren;
     std::vector<Node> sargs = args;
+    MethodId idr = MethodId::RW_REWRITE;
+    if (args.size() >= 4)
+    {
+      getMethodId(args[3], idr);
+    }
     // take into account witness form, if necessary
-    bool reqWitness = d_wfpm.requiresWitnessFormIntro(args[0]);
+    bool reqWitness = d_wfpm.requiresWitnessFormIntro(args[0], idr);
     Trace("smt-proof-pp-debug")
         << "...pred intro reqWitness=" << reqWitness << std::endl;
     // (TRUE_ELIM
@@ -411,7 +416,12 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     std::vector<Node> schildren(children.begin() + 1, children.end());
     std::vector<Node> sargs = args;
     // first, compute if we need
-    bool reqWitness = d_wfpm.requiresWitnessFormTransform(children[0], args[0]);
+    MethodId idr = MethodId::RW_REWRITE;
+    if (args.size() >= 4)
+    {
+      getMethodId(args[3], idr);
+    }
+    bool reqWitness = d_wfpm.requiresWitnessFormTransform(children[0], args[0], idr);
     Trace("smt-proof-pp-debug") << "...reqWitness=" << reqWitness << std::endl;
     // convert both sides, in three steps, take symmetry of second chain
     for (unsigned r = 0; r < 2; r++)
@@ -469,6 +479,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     }
     // apply transitivity if necessary
     Node eq = addProofForTrans(tchildren, cdp);
+    Trace("ajr-temp") << "transitivity: " << tchildren << " / " << eq << std::endl;
     if (eq.isNull())
     {
       Assert(false) << "Failed proof for MACRO_SR_PRED_TRANSFORM";
@@ -477,6 +488,8 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       return Node::null();
     }
     cdp->addStep(eq[1], ProofRule::EQ_RESOLVE, {children[0], eq}, {});
+    Trace("ajr-temp") << "TRANSFORM proof : " << *cdp->getProofFor(args[0]) << std::endl;
+    AlwaysAssert(eq[1]==args[0]);
     return args[0];
   }
   else if (id == ProofRule::MACRO_RESOLUTION

@@ -231,7 +231,7 @@ std::shared_ptr<ProofNode> PfManager::connectProofToAssertions(
   // level into proofs that are used in a lower user context level.
   if (!options().base.incrementalSolving)
   {
-    d_pfpp->setAssertions(assertions, false);
+    d_pfpp->setAssertions(assertions, true);
   }
   d_pfpp->process(pfn, d_pppg.get());
 
