@@ -1204,11 +1204,6 @@ Node reverseStrings(NodeManager * nm, Node t, bool isRev)
 
 Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
 {
-  if (node[0].getKind() != Kind::STRING_CONCAT
-      || node[1].getKind() != Kind::STRING_CONCAT)
-  {
-    return Node::null();
-  }
   for (size_t r=0; r<2; r++)
   {
     bool isRev = (r==1);

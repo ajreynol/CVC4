@@ -488,6 +488,23 @@ bool InferProofCons::convert(Env& env,
         // Notice that this step is necessary to handle the "rproc"
         // optimization in processSimpleNEq. Alternatively, this could
         // possibly be done by CONCAT_EQ with !isRev.
+        if (conc==mainEqCeq)
+        {
+          Trace("strings-ipc-core") << "...success after concat_eq" << std::endl;
+          useBuffer = true;
+          break;
+        }
+        // first try CONCAT_EQ with !isRev
+        Node nnodeisRev = nm->mkConst(!isRev);
+        Node mainEqCeqr = psb.tryStep(ProofRule::CONCAT_EQ, {mainEqCeq}, {nnodeisRev});
+        Trace("strings-ipc-core") << "...reverse concat eq is " << mainEqCeqr << std::endl;
+        if (mainEqCeqr==conc)
+        {
+          Trace("strings-ipc-core") << "...success after reverse concat_eq" << std::endl;
+          useBuffer = true;
+          break;
+        }
+        // otherwise try extended equality rewriting
         std::vector<Node> cexp;
         if (psb.applyPredTransform(mainEqCeq,
                                    conc,
@@ -504,7 +521,7 @@ bool InferProofCons::convert(Env& env,
         }
         else
         {
-          Trace("ajr-temp") << "Failed to transform " << mainEqCeq << " to " << conc << std::endl;
+          Trace("strings-ipc-core") << "Failed to transform " << mainEqCeq << " to " << conc << std::endl;;
         }
         // Otherwise, note that EMP rules conclude ti = "" where
         // t1 ++ ... ++ tn == "". However, these are very rarely applied, let
@@ -1095,17 +1112,19 @@ bool InferProofCons::convert(Env& env,
       std::reverse(subs.begin(), subs.end());
       Trace("strings-ipc-prefix")
           << "- Possible conflicting equality : " << curr << std::endl;
-      Node concE = psb.applyPredElim(curr,
+      if (psb.applyPredTransform(curr,
+                                          conc,
                                      subs,
                                      MethodId::SB_DEFAULT,
                                      MethodId::SBA_SEQUENTIAL,
-                                     MethodId::RW_EXT_REWRITE);
-      Trace("strings-ipc-prefix")
-          << "- After pred elim: " << concE << std::endl;
-      if (concE == conc)
+                                     MethodId::RW_EXT_REWRITE))
       {
         Trace("strings-ipc-prefix") << "...success!" << std::endl;
         useBuffer = true;
+      }
+      else
+      {
+        AlwaysAssert(false);
       }
     }
     break;
