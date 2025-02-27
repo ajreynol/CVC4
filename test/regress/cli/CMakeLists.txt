@@ -1898,6 +1898,7 @@ set(regress_0_tests
   regress0/strings/dd_a1d_static_rewrite.smt2
   regress0/strings/dd_a68_pp_static.smt2
   regress0/strings/dd_dd_norn_235_f_endpoint_eq.smt2
+  regress0/strings/dd_issue6913-nendpt-eq.smt2 
   regress0/strings/dd_issue6913-str-inf.smt2
   regress0/strings/dd_norn_235_extf_d.smt2
   regress0/strings/dd_norn_675.smt2

@@ -502,6 +502,10 @@ bool InferProofCons::convert(Env& env,
           useBuffer = true;
           Trace("strings-ipc-core") << "...success!" << std::endl;
         }
+        else
+        {
+          Trace("ajr-temp") << "Failed to transform " << mainEqCeq << " to " << conc << std::endl;
+        }
         // Otherwise, note that EMP rules conclude ti = "" where
         // t1 ++ ... ++ tn == "". However, these are very rarely applied, let
         // alone for 2+ children. This case is intentionally unhandled here.
