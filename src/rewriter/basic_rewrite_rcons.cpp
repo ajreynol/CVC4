@@ -1111,7 +1111,6 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   std::map<Node, Node>::iterator it;
   for (const Node& tc : srcRew)
   {
-    /*
     if (nempIndex<nempCom.size() && tc==nempCom[nempIndex])
     {
       // Keep this one even if it equated to empty. For example, this ensures
@@ -1124,7 +1123,6 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
       eqe.push_back(Node::null());
       continue;
     }
-    */
     it = empMap.find(tc);
     if (it != empMap.end())
     {
