@@ -35,6 +35,7 @@ WitnessFormGenerator::WitnessFormGenerator(Env& env)
       d_wintroPf(env, nullptr, nullptr, "WfGenerator::LazyCDProof"),
       d_pskPf(env, nullptr, "WfGenerator::PurifySkolemProof")
 {
+  d_true = nodeManager()->mkConst(true);
 }
 
 std::shared_ptr<ProofNode> WitnessFormGenerator::getProofFor(Node eq)
@@ -118,18 +119,32 @@ Node WitnessFormGenerator::convertToWitnessForm(Node t)
   return tw;
 }
 
-bool WitnessFormGenerator::requiresWitnessFormTransform(Node t, Node s, MethodId idr) const
+WitnessReq WitnessFormGenerator::requiresWitnessFormTransform(Node t, Node s, MethodId idr) const
 {
   Node tr = d_env.rewriteViaMethod(t, idr);
   Node sr =  d_env.rewriteViaMethod(s, idr);
-  Trace("ajr-temp") << " Rewrites : " << tr << " " << sr << " " << idr << std::endl;
-  return d_env.rewriteViaMethod(t, idr) != d_env.rewriteViaMethod(s, idr);
+  if (tr==sr)
+  {
+    // rewriting via the method is enough
+    return WitnessReq::NONE;
+  }
+  if (rewrite(tr)==rewrite(sr))
+  {
+    // calling ordinary rewrite after witness is enough
+    return WitnessReq::REWRITE;
+  }
+  Node trw = SkolemManager::getOriginalForm(tr);
+  Node srw = SkolemManager::getOriginalForm(sr);
+  if (trw==srw)
+  {
+    return WitnessReq::WITNESS;
+  }
+  return WitnessReq::WITNESS_AND_REWRITE;
 }
 
-bool WitnessFormGenerator::requiresWitnessFormIntro(Node t, MethodId idr) const
+WitnessReq WitnessFormGenerator::requiresWitnessFormIntro(Node t, MethodId idr) const
 {
-  Node tr = d_env.rewriteViaMethod(t, idr);
-  return !tr.isConst() || !tr.getConst<bool>();
+  return requiresWitnessFormTransform(t, d_true, idr);
 }
 
 const std::unordered_set<Node>& WitnessFormGenerator::getWitnessFormEqs() const
