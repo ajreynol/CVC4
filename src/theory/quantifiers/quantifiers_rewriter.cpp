@@ -1363,7 +1363,7 @@ bool QuantifiersRewriter::getVarElimLit(Node body,
                                         std::vector<Node>& subs,
                                         CDProof* cdp) const
 {
-  AlwaysAssert(lit.getKind() != Kind::NOT);
+  Assert(lit.getKind() != Kind::NOT);
   Trace("var-elim-quant-debug")
       << "Eliminate : " << lit << ", pol = " << pol << "?" << std::endl;
   // all eliminations below guarded by varElimQuant()

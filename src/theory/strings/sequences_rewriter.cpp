@@ -77,15 +77,9 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT,
-                           TheoryRewriteCtx::DSL_SUBCALL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_IN_RE_INCLUSION,
-                           TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_STRIP_ENDPOINTS,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_SPLIT_CTN,
-                           TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_COMPONENT_CTN,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_CONST_NCTN_CONCAT,
                            TheoryRewriteCtx::DSL_SUBCALL);
@@ -94,6 +88,8 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
   // MACRO_RE_INTER_UNION_CONST_ELIM should always be called at post-dsl
   // as it is partly subsumed by RARE rewrites for intersection.
   registerProofRewriteRule(ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_STR_COMPONENT_CTN,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::SEQ_EVAL_OP,
                            TheoryRewriteCtx::PRE_DSL);
@@ -203,6 +199,8 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       std::vector<Node> nb, nrem, ne;
       return rewriteViaMacroStrStripEndpoints(n, nb, nrem, ne);
     }
+    case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM:
+      return rewriteViaMacroReInterUnionConstElim(n);
     case ProofRewriteRule::MACRO_STR_COMPONENT_CTN:
     {
       if (n.getKind() == Kind::STRING_CONTAINS)
@@ -221,8 +219,6 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::MACRO_RE_INTER_UNION_CONST_ELIM:
-      return rewriteViaMacroReInterUnionConstElim(n);
     case ProofRewriteRule::SEQ_EVAL_OP:
     {
       // this is a catchall rule for evaluation of operations on constant
