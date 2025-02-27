@@ -1085,6 +1085,22 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   // str-len-eq-zero-concat-rec and str-len-eq-zero-base
   cdfwd.addTrustedStep(eqconv, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
   cdfwd.addStep(eq1p[1], ProofRule::EQ_RESOLVE, {pnEq2, eqconv}, {});
+  
+  // we will iterate over the non-empty components to know which arguments
+  // to keep in the congruence application below
+  size_t nempIndex = 0;
+  std::vector<Node> nempCom;
+  Node nempRhs = eq[1][0][1];
+  Trace("brc-macro") << "- non-empty rhs is " << nempRhs << std::endl;
+  if (nempRhs.getKind()==Kind::STRING_CONCAT)
+  {
+    nempCom.insert(nempCom.end(), nempRhs.begin(), nempRhs.end());
+  }
+  else
+  {
+    nempCom.push_back(nempRhs);
+  }
+  Trace("brc-macro") << "- non-empty com: " << nempCom << std::endl;
 
   // proves (=> (and t="") (= (= (str.++ s t) r) (= s r)))
   CDProof cdmid(d_env);
@@ -1095,6 +1111,20 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   std::map<Node, Node>::iterator it;
   for (const Node& tc : srcRew)
   {
+    /*
+    if (nempIndex<nempCom.size() && tc==nempCom[nempIndex])
+    {
+      // Keep this one even if it equated to empty. For example, this ensures
+      // we succeed for (= x (str.++ x x)) ---> (and (= x x) (= x "")),
+      // where we want to infer
+      // (= x x)     (= x "")
+      // -----------------------------
+      // (= (str.++ x x) (str.++ x ""))
+      nempIndex++;
+      eqe.push_back(Node::null());
+      continue;
+    }
+    */
     it = empMap.find(tc);
     if (it != empMap.end())
     {
@@ -1102,6 +1132,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
     }
     else
     {
+      Assert (false);
       eqe.push_back(Node::null());
     }
   }
@@ -1193,7 +1224,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   std::vector<Node> elhs;
   std::vector<Node> erhs;
   std::vector<Node> cpremises(eq[1].begin(), eq[1].end());
-  size_t li;
+  size_t li = 0;
   bool liSet = false;
   for (const Node& eq1e : cpremises)
   {

@@ -46,6 +46,8 @@ enum WitnessReq
   // we don't require anything
   NONE
 };
+/** Print method */
+std::ostream& operator<<(std::ostream& out, WitnessReq wr);
   
 /**
  * The witness form proof generator, which acts as a wrapper around a

@@ -21,6 +21,20 @@
 
 namespace cvc5::internal {
 namespace smt {
+  
+std::ostream& operator<<(std::ostream& out, WitnessReq wr)
+{
+  switch (wr)
+  {
+    case WitnessReq::WITNESS_AND_REWRITE: out << "WITNESS_AND_REWRITE"; break;
+    case WitnessReq::WITNESS: out << "WITNESS"; break;
+    case WitnessReq::REWRITE:
+      out << "REWRITE";
+      break;
+    case WitnessReq::NONE: out << "NONE"; break;
+  }
+  return out;
+}
 
 WitnessFormGenerator::WitnessFormGenerator(Env& env)
     : EnvObj(env),
@@ -130,13 +144,14 @@ WitnessReq WitnessFormGenerator::requiresWitnessFormTransform(Node t, Node s, Me
   }
   if (rewrite(tr)==rewrite(sr))
   {
-    // calling ordinary rewrite after witness is enough
+    // calling ordinary rewrite after (extended) rewriting is enough
     return WitnessReq::REWRITE;
   }
   Node trw = SkolemManager::getOriginalForm(tr);
   Node srw = SkolemManager::getOriginalForm(sr);
   if (trw==srw)
   {
+    // witness is enough
     return WitnessReq::WITNESS;
   }
   return WitnessReq::WITNESS_AND_REWRITE;
