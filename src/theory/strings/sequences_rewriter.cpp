@@ -468,7 +468,7 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
   //
   // where yi' and yi'' correspond to some yj and
   //   (<= (str.len x) (str.++ y1' ... ym'))
-  new_ret = rewriteViaStrEqLenUnifyPrefix(node);
+  Node new_ret = rewriteViaStrEqLenUnifyPrefix(node);
   if (!new_ret.isNull())
   {
     return returnRewrite(node, new_ret, Rewrite::STR_EQ_CONJ_LEN_ENTAIL);
@@ -1151,7 +1151,7 @@ Node SequencesRewriter::rewriteViaStrEqLenUnifyPrefix(const Node& node)
   return Node::null();
 }
 
-Node reverseStrings(Node t, bool isRev)
+Node reverseStrings(NodeManager * nm, Node t, bool isRev)
 {
   if (!isRev)
   {
@@ -1171,13 +1171,13 @@ Node reverseStrings(Node t, bool isRev)
     std::vector<Node> newChildren;
     for (const Node& tc : t)
     {
-      newChildren.push_back(reverseStrings(tc, true));
+      newChildren.push_back(reverseStrings(nm, tc, true));
     }
     if (k==Kind::STRING_CONCAT || k==Kind::AND)
     {
       std::reverse(newChildren.begin(), newChildren.end());
     }
-    return NodeManager::currentNM()->mkNode(k, newChildren);
+    return nm->mkNode(k, newChildren);
   }
   return t;
 }
@@ -1192,8 +1192,8 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
   for (size_t r=0; r<2; r++)
   {
     bool isRev = (r==1);
-    Node n0 = reverseStrings(node[0], isRev);
-    Node n1 = reverseStrings(node[1], isRev);
+    Node n0 = reverseStrings(d_nm, node[0], isRev);
+    Node n1 = reverseStrings(d_nm, node[1], isRev);
     std::vector<Node> v0, v1;
     utils::getConcat(n0, v0);
     utils::getConcat(n1, v1);
@@ -1220,7 +1220,7 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
                                     pfx0.eqNode(pfx1),
                                     utils::mkConcat(sfxv0, stype)
                                         .eqNode(utils::mkConcat(sfxv1, stype)));
-            ret = reverseStrings(ret, isRev);
+            ret = reverseStrings(d_nm, ret, isRev);
             rule = Rewrite::SPLIT_EQ;
             return ret;
           }
@@ -1249,7 +1249,7 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
                                  pfx0.eqNode(utils::mkConcat(rpfxv1, stype)),
                                  utils::mkConcat(sfxv0, stype)
                                      .eqNode(utils::mkConcat(pfxv1, stype)));
-                ret = reverseStrings(ret, isRev);
+                ret = reverseStrings(d_nm, ret, isRev);
                 rule = Rewrite::SPLIT_EQ_STRIP_R;
                 return ret;
               }
@@ -1287,7 +1287,7 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
                                  utils::mkConcat(rpfxv0, stype).eqNode(pfx1),
                                  utils::mkConcat(sfxv0, stype)
                                      .eqNode(utils::mkConcat(sfxv1, stype)));
-                ret = reverseStrings(ret, isRev);
+                ret = reverseStrings(d_nm, ret, isRev);
                 rule = Rewrite::SPLIT_EQ_STRIP_L;
                 return ret;
               }
