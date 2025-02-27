@@ -68,9 +68,9 @@ SequencesRewriter::SequencesRewriter(NodeManager* nm,
   registerProofRewriteRule(ProofRewriteRule::STR_CTN_MULTISET_SUBSET,
                            TheoryRewriteCtx::DSL_SUBCALL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY_PREFIX,
-                           TheoryRewriteCtx::POST_DSL);
+                           TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY,
-                           TheoryRewriteCtx::POST_DSL);
+                           TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::STR_INDEXOF_RE_EVAL,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::STR_REPLACE_RE_EVAL,
@@ -339,101 +339,6 @@ Node SequencesRewriter::rewriteStrEqualityExt(Node node)
         // We may be able to simplify, e.g.
         //  str.++( x, "a" ) == "a"  ----> x = ""
       }
-    }
-  }
-
-  std::vector<Node> c[2];
-  for (unsigned i = 0; i < 2; i++)
-  {
-    utils::getConcat(node[i], c[i]);
-  }
-
-  // check if the prefix, suffix mismatches
-  //   For example, str.++( x, "a", y ) == str.++( x, "bc", z ) ---> false
-  unsigned minsize = std::min(c[0].size(), c[1].size());
-  for (unsigned r = 0; r < 2; r++)
-  {
-    for (unsigned i = 0; i < minsize; i++)
-    {
-      unsigned index1 = r == 0 ? i : (c[0].size() - 1) - i;
-      unsigned index2 = r == 0 ? i : (c[1].size() - 1) - i;
-      Node s = c[0][index1];
-      Node t = c[1][index2];
-      if (s.isConst() && t.isConst())
-      {
-        size_t lenS = Word::getLength(s);
-        size_t lenT = Word::getLength(t);
-        size_t lenShort = lenS <= lenT ? lenS : lenT;
-        bool isSameFix = r == 1 ? Word::rstrncmp(s, t, lenShort)
-                                : Word::strncmp(s, t, lenShort);
-        if (!isSameFix)
-        {
-          Node ret = nodeManager()->mkConst(false);
-          return returnRewrite(node, ret, Rewrite::EQ_NFIX);
-        }
-      }
-      if (s != t)
-      {
-        break;
-      }
-    }
-  }
-
-  Node new_ret;
-  // ------- equality unification
-  bool changed = false;
-  for (unsigned i = 0; i < 2; i++)
-  {
-    while (!c[0].empty() && !c[1].empty() && c[0].back() == c[1].back())
-    {
-      c[0].pop_back();
-      c[1].pop_back();
-      changed = true;
-    }
-    // splice constants
-    if (!c[0].empty() && !c[1].empty() && c[0].back().isConst()
-        && c[1].back().isConst())
-    {
-      Node cs[2];
-      size_t csl[2];
-      for (unsigned j = 0; j < 2; j++)
-      {
-        cs[j] = c[j].back();
-        csl[j] = Word::getLength(cs[j]);
-      }
-      size_t larger = csl[0] > csl[1] ? 0 : 1;
-      size_t smallerSize = csl[1 - larger];
-      if (cs[1 - larger]
-          == (i == 0 ? Word::suffix(cs[larger], smallerSize)
-                     : Word::prefix(cs[larger], smallerSize)))
-      {
-        size_t sizeDiff = csl[larger] - smallerSize;
-        c[larger][c[larger].size() - 1] =
-            i == 0 ? Word::prefix(cs[larger], sizeDiff)
-                   : Word::suffix(cs[larger], sizeDiff);
-        c[1 - larger].pop_back();
-        changed = true;
-      }
-    }
-    for (unsigned j = 0; j < 2; j++)
-    {
-      std::reverse(c[j].begin(), c[j].end());
-    }
-  }
-  if (changed)
-  {
-    // e.g. x++y = x++z ---> y = z, "AB" ++ x = "A" ++ y --> "B" ++ x = y
-    Node s1 = utils::mkConcat(c[0], stype);
-    Node s2 = utils::mkConcat(c[1], stype);
-    if (s1 != node[0] || s2 != node[1])
-    {
-      new_ret = s1.eqNode(s2);
-      // We generally don't apply the extended equality rewriter if the
-      // original node was an equality but we may be able to do additional
-      // rewriting here, e.g.,
-      // x++y = "" --> x = "" and y = ""   
-      new_ret = returnRewrite(node, new_ret, Rewrite::STR_EQ_UNIFY);
-      return rewriteStrEqualityExt(new_ret);
     }
   }
 
@@ -1246,14 +1151,52 @@ Node SequencesRewriter::rewriteViaStrEqLenUnifyPrefix(const Node& node)
   return Node::null();
 }
 
+Node reverseStrings(Node t, bool isRev)
+{
+  if (!isRev)
+  {
+    return t;
+  }
+  Kind k = t.getKind();
+  if (t.getType().isStringLike() && k!=Kind::STRING_CONCAT)
+  {
+    if (t.isConst())
+    {
+      return Word::reverse(t);
+    }
+    return t;
+  }
+  if (t.getNumChildren()>0)
+  {
+    std::vector<Node> newChildren;
+    for (const Node& tc : t)
+    {
+      newChildren.push_back(reverseStrings(tc, true));
+    }
+    if (k==Kind::STRING_CONCAT || k==Kind::AND)
+    {
+      std::reverse(newChildren.begin(), newChildren.end());
+    }
+    return NodeManager::currentNM()->mkNode(k, newChildren);
+  }
+  return t;
+}
+
 Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
 {
-  if (node[0].getKind() == Kind::STRING_CONCAT
-      && node[1].getKind() == Kind::STRING_CONCAT)
+  if (node[0].getKind() != Kind::STRING_CONCAT
+      || node[1].getKind() != Kind::STRING_CONCAT)
   {
+    return Node::null();
+  }
+  for (size_t r=0; r<2; r++)
+  {
+    bool isRev = (r==1);
+    Node n0 = reverseStrings(node[0], isRev);
+    Node n1 = reverseStrings(node[1], isRev);
     std::vector<Node> v0, v1;
-    utils::getConcat(node[0], v0);
-    utils::getConcat(node[1], v1);
+    utils::getConcat(n0, v0);
+    utils::getConcat(n1, v1);
     size_t startRhs = 0;
     TypeNode stype = node[0].getType();
     for (size_t i = 0, size0 = v0.size(); i <= size0; i++)
@@ -1277,6 +1220,7 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
                                     pfx0.eqNode(pfx1),
                                     utils::mkConcat(sfxv0, stype)
                                         .eqNode(utils::mkConcat(sfxv1, stype)));
+            ret = reverseStrings(ret, isRev);
             rule = Rewrite::SPLIT_EQ;
             return ret;
           }
@@ -1305,6 +1249,7 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
                                  pfx0.eqNode(utils::mkConcat(rpfxv1, stype)),
                                  utils::mkConcat(sfxv0, stype)
                                      .eqNode(utils::mkConcat(pfxv1, stype)));
+                ret = reverseStrings(ret, isRev);
                 rule = Rewrite::SPLIT_EQ_STRIP_R;
                 return ret;
               }
@@ -1342,6 +1287,7 @@ Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
                                  utils::mkConcat(rpfxv0, stype).eqNode(pfx1),
                                  utils::mkConcat(sfxv0, stype)
                                      .eqNode(utils::mkConcat(sfxv1, stype)));
+                ret = reverseStrings(ret, isRev);
                 rule = Rewrite::SPLIT_EQ_STRIP_L;
                 return ret;
               }
