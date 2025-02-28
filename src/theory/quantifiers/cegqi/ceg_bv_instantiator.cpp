@@ -136,8 +136,6 @@ Node BvInstantiator::hasProcessAssertion(CegInstantiator* ci,
                                          Node lit,
                                          CegInstEffort effort)
 {
-  NodeManager* nm = lit.getNodeManager();
-  ;
   if (effort == CEG_INST_EFFORT_FULL)
   {
     // always use model values at full effort
@@ -148,6 +146,7 @@ Node BvInstantiator::hasProcessAssertion(CegInstantiator* ci,
 
 Node BvInstantiator::processAssertionInternal(CegInstantiator* ci, Node lit)
 {
+  NodeManager* nm = lit.getNodeManager();
   Node atom = lit.getKind() == Kind::NOT ? lit[0] : lit;
   bool pol = lit.getKind() != Kind::NOT;
   Kind k = atom.getKind();

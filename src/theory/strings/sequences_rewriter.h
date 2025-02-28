@@ -176,12 +176,12 @@ class SequencesRewriter : public TheoryRewriter
   Node rewriteViaMacroSubstrStripSymLength(const Node& n,
                                            Rewrite& rule,
                                            StringsEntail& sent);
-  /** Rewrite based on MACRO_STR_SPLIT_CTN */
-  Node rewriteViaMacroStrSplitCtn(const Node& n);
   /** Rewrite based on MACRO_STR_IN_RE_INCLUSION */
   Node rewriteViaMacroStrInReInclusion(const Node& n);
   /** Rewrite based on MACRO_RE_INTER_UNION_CONST_ELIM */
   Node rewriteViaMacroReInterUnionConstElim(const Node& n);
+  /** Rewrite based on MACRO_STR_SPLIT_CTN */
+  Node rewriteViaMacroStrSplitCtn(const Node& n);
   /** Rewrite based on STR_INDEXOF_RE_EVAL */
   Node rewriteViaStrIndexofReEval(const Node& n);
   /** Rewrite based on STR_REPLACE_RE_EVAL */
