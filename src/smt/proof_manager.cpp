@@ -302,6 +302,18 @@ void PfManager::checkFinalProof(std::shared_ptr<ProofNode> pfn)
         << "ProofPostprocess::process: pedantic failure:" << std::endl
         << serr.str();
   }
+  if (options().proof.proofErrorStatus)
+  {
+    // HACK: this will be concatenated with the "unsat" that follows
+    if (d_finalCb.d_pfHole)
+    {
+      std::cout << "incomplete-";
+    }
+    else if (d_finalCb.d_pfHoleEoUnh)
+    {
+      std::cout << "incomplete-eo-";
+    }
+  }
 }
 
 void PfManager::printProof(std::ostream& out,

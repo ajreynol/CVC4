@@ -98,6 +98,11 @@ class ProofFinalCallback : protected EnvObj, public ProofNodeUpdaterCallback
   bool d_pedanticFailure;
   /** The pedantic failure string for debugging */
   std::stringstream d_pedanticFailureOut;
+public:
+  /** Was there a proof hole? */
+  bool d_pfHole;
+  /** Was there a step that was unhandled in Eunoia? */
+  bool d_pfHoleEoUnh;
 };
 
 }  // namespace smt

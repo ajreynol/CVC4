@@ -261,3 +261,11 @@ name   = "Proof"
   type       = "bool"
   default    = "false"
   help       = "Proof logging mode"
+
+[[option]]
+  name       = "proofErrorStatus"
+  category   = "expert"
+  long       = "proof-error-status"
+  type       = "bool"
+  default    = "false"
+  help       = "For debugging"

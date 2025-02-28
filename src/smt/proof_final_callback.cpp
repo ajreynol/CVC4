@@ -64,7 +64,9 @@ ProofFinalCallback::ProofFinalCallback(Env& env)
           statisticsRegistry().registerInt("finalProof::minPedanticLevel")),
       d_numFinalProofs(
           statisticsRegistry().registerInt("finalProofs::numFinalProofs")),
-      d_pedanticFailure(false)
+      d_pedanticFailure(false),
+      d_pfHole(false),
+      d_pfHoleEoUnh(false)
 {
   d_minPedanticLevel += 10;
 }
@@ -72,6 +74,8 @@ ProofFinalCallback::ProofFinalCallback(Env& env)
 void ProofFinalCallback::initializeUpdate()
 {
   d_pedanticFailure = false;
+  d_pfHole = false;
+  d_pfHoleEoUnh  = false;
   d_pedanticFailureOut.str("");
   ++d_numFinalProofs;
 }
@@ -104,12 +108,16 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
   {
     d_minPedanticLevel.minAssign(plevel);
   }
+  bool isHandled = proof::AlfPrinter::isHandled(options(), pn.get());
+  if (!isHandled)
+  {
+    d_pfHoleEoUnh = true;
+  }
   // if not taking statistics, don't bother computing the following
   if (options().base.statisticsInternal)
   {
     // record stats for the rule
     d_ruleCount << r;
-    bool isHandled = proof::AlfPrinter::isHandled(options(), pn.get());
     if (!isHandled)
     {
       d_ruleEouCount << r;
@@ -177,7 +185,7 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
     }
   }
 
-  if (options().proof.checkProofSteps
+  if (true || options().proof.checkProofSteps
       || isOutputOn(OutputTag::TRUSTED_PROOF_STEPS))
   {
     Node conc = pn->getResult();
@@ -188,6 +196,7 @@ bool ProofFinalCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
     }
     else
     {
+      d_pfHole = true;
       std::vector<Node> premises;
       const std::vector<std::shared_ptr<ProofNode>>& pnc = pn->getChildren();
       for (const std::shared_ptr<ProofNode>& pncc : pnc)
