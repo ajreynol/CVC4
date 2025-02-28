@@ -1368,12 +1368,12 @@
 
 ; program: $str_arith_entail_simple
 ; args:
-; - n Int: An integer term to process.
+; - n T: An arithmetic term to process.
 ; return: >
 ;   true if we can show n is greater than or equal 0 using the fact that length
 ;   is non-negative and basic properties of arithmetic.
-(program $str_arith_entail_simple ((s String) (n1 Int) (n2 Int :list))
-  (Int) Bool
+(program $str_arith_entail_simple ((T Type) (s String) (n1 T) (n2 T :list))
+  (T) Bool
   (
     (($str_arith_entail_simple (str.len s)) true)
     (($str_arith_entail_simple (+ n1 n2))   (eo::ite ($str_arith_entail_simple n1) ($str_arith_entail_simple n2) false))

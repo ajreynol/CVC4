@@ -298,7 +298,7 @@ bool MacroRewriteElaborator::ensureProofForMultSltMult(CDProof* cdp,
       if (n.getKind() == Kind::BITVECTOR_CONCAT)
       {
         size_t sz = utils::getSize(n[0]);
-        if (n[0] == utils::mkZero(sz))
+        if (n[0] == utils::mkZero(nm, sz))
         {
           // turn concatenation with zero into zero extend
           Node zext = nm->mkConst(BitVectorZeroExtend(sz));

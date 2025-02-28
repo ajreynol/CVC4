@@ -345,13 +345,13 @@ void TheoryDatatypes::preRegisterTerm(TNode n)
       break;
     case Kind::MATCH:
     {
-      Assert(!options().datatypes.datatypesExp);
+      Assert (!options().datatypes.datatypesExp);
       std::stringstream ss;
       ss << "Match terms not available in this configuration, try "
             "--datatypes-exp.";
       throw LogicException(ss.str());
     }
-    break;
+      break;
     default:
       // do initial lemmas (e.g. for dt.size)
       registerInitialLemmas(n);
