@@ -2679,13 +2679,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(LAMBDA_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Equality -- Macro lambda value norm**
-   *
-   * \endverbatim
-   */
-  EVALUE(MACRO_LAMBDA_VALUE_NORM),
-  /**
-   * \verbatim embed:rst:leading-asterisk
    * **Equality -- Macro lambda application capture avoid**
    *
    * .. math::

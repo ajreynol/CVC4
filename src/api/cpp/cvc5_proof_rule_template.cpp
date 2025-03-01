@@ -250,8 +250,6 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::ARITH_POW_ELIM: return "arith-pow-elim";
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";
     case ProofRewriteRule::LAMBDA_ELIM: return "lambda-elim";
-    case ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM:
-      return "macro-lambda-value-norm";
     case ProofRewriteRule::MACRO_LAMBDA_CAPTURE_AVOID:
       return "macro-lambda-capture-avoid";
     case ProofRewriteRule::ARRAYS_SELECT_CONST: return "arrays-select-const";

@@ -41,8 +41,6 @@ TheoryUfRewriter::TheoryUfRewriter(NodeManager* nm) : TheoryRewriter(nm)
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_CAPTURE_AVOID,
                            TheoryRewriteCtx::PRE_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM,
-                           TheoryRewriteCtx::PRE_DSL);
 }
 
 RewriteResponse TheoryUfRewriter::postRewrite(TNode node)
@@ -245,23 +243,6 @@ Node TheoryUfRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       if (n.getKind() == Kind::INT_TO_BITVECTOR)
       {
         return arith::eliminateInt2Bv(n);
-      }
-    }
-    break;
-    case ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM:
-    {
-      if (n.getKind() == Kind::LAMBDA)
-      {
-        Node anode = FunctionConst::toArrayConst(n);
-        if (!anode.isNull() && anode.isConst())
-        {
-          Assert(anode.getType().isArray());
-          Node retNode =
-              nodeManager()->mkConst(FunctionArrayConst(n.getType(), anode));
-          // convert back to lambda immediately
-          retNode = uf::FunctionConst::toLambda(retNode);
-          return retNode;
-        }
       }
     }
     break;
