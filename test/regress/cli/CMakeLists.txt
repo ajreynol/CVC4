@@ -161,6 +161,9 @@ set(regress_0_tests
   regress0/arrays/issue9043_4.smt2
   regress0/arrays/issue10494.smt2
   regress0/arrays/issue10494-2.smt2
+  regress0/arrays/proj-issue322-has-term.smt2
+  regress0/arrays/proj-issue391-minisat-elim.smt2
+  regress0/arrays/proj-issue467-cm.smt2
   regress0/arrays/proj-issue506-ms-var-elim.smt2
   regress0/arrays/proj-issue545-array-nconst.smt2
   regress0/arrays/proj-issue563.smt2
@@ -1358,6 +1361,7 @@ set(regress_0_tests
   regress0/printer/tuples_and_records.cvc.smt2
   regress0/printer/unsat-core-dagify.smt2
   regress0/proj-issue307-get-value-re.smt2
+  regress0/proj-issue614-minisat.smt2
   regress0/proj-issue645-abs-value-subs.smt2
   regress0/proj-issue750-real-to-int-safe.smt2
   regress0/proofs/alethe-res-need-or-step.smt2
@@ -1598,6 +1602,7 @@ set(regress_0_tests
   regress0/quantifiers/nested-inf.smt2
   regress0/quantifiers/partial-trigger.smt2
   regress0/quantifiers/proj-issue152-2-non-std-nterm-ext-rew.smt2
+  regress0/quantifiers/proj-issue411-bv-as-int.smt2
   regress0/quantifiers/proj-issue512-has-skolem.smt2
   regress0/quantifiers/proj-issue608-mbqi-cegqi.smt2
   regress0/quantifiers/proj-issue688.smt2
@@ -2810,6 +2815,8 @@ set(regress_1_tests
   regress1/parse-skolem-test-strings-occur-index.smt2
   regress1/print_timeout_core.smt2
   regress1/proj-issue175.smt2
+  regress1/proj-issue255-2-interpol.smt2
+  regress1/proj-issue255-3-interpol.smt2
   regress1/proj-issue406-diff-unsat-core.smt2
   regress1/proj-issue476-theoryOf-no-uf.smt2
   regress1/proj-issue539-rew-bv2nat.smt2
@@ -3975,6 +3982,7 @@ set(regress_4_tests
   regress4/instance_1151.smtv1.smt2
   regress4/NEQ016_size5.smtv1.smt2
   regress4/siegel-nl-bases.smt2
+  regress4/swap_t1_pp_nf_ai_00010_004.cvc.smt2
   regress4/unsat-circ-reduce.smt2
   regress4/xs-11-20-5-2-5-3.smt2
   regress4/xs-11-20-5-2-5-3.smtv1.smt2

@@ -26,9 +26,6 @@
 #include "expr/node.h"
 
 namespace cvc5::internal {
-
-class Options;
-
 namespace theory {
 
 class Rewriter;
