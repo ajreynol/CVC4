@@ -41,12 +41,12 @@ int main(void)
   Term t1 = solver.mkConst(s0, "_x0");
   Term t2 = solver.mkFalse();
   Term t3 = solver.mkConst(s0, "_x1");
-  Op o4 = solver.mkOp(EQUAL);
+  Op o4 = solver.mkOp(Kind::EQUAL);
   Term t5 = solver.mkTerm(o4, {t3, t2});
-  Op o6 = solver.mkOp(NOT);
+  Op o6 = solver.mkOp(Kind::NOT);
   Term t7 = solver.mkTerm(o6, {t5});
-  Term t8 = solver.mkTerm(AND, {t7, t3});
-  Op o9 = solver.mkOp(DISTINCT);
+  Term t8 = solver.mkTerm(Kind::AND, {t7, t3});
+  Op o9 = solver.mkOp(Kind::DISTINCT);
   Term t10 = solver.mkTerm(o9, {t8, t8});
   solver.assertFormula(t5);
   solver.assertFormula(t5);

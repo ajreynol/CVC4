@@ -10,7 +10,7 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Test for project issue #577
+ * Test for project issue #419
  *
  */
 #include <cvc5/cvc5.h>
@@ -18,18 +18,15 @@
 using namespace cvc5;
 int main(void)
 {
-  Solver solver;
-  solver.setOption("incremental", "false");
-  solver.setOption("produce-abducts", "true");
-  Sort s0 = solver.getBooleanSort();
-  Sort s1 = solver.mkBagSort(s0);
-  Term t2 = solver.mkConst(s1, "_x2");
-  Op o3 = solver.mkOp(Kind::BAG_CARD);
-  Term t4 = solver.mkTerm(o3, {t2});
-  Sort s5 = t4.getSort();
-  Op o6 = solver.mkOp(Kind::DIVISIBLE, "3341361203");
-  Term t7 = solver.mkTerm(o6, {t4});
-  Term t8 = solver.getAbduct(t7);
-
+  TermManager tm;
+  Solver slv(tm);
+  slv.setOption("produce-interpols", "default");
+  Sort s2 = tm.mkBitVectorSort(20);
+  Term t2 = tm.mkConst(s2, "_x1");
+  Term t54 = tm.mkTerm(tm.mkOp(Kind::BITVECTOR_ZERO_EXTEND, {23}), {t2});
+  Term t281 = tm.mkTerm(tm.mkOp(Kind::BITVECTOR_ZERO_EXTEND, {45}), {t54});
+  {
+    Term ipol = slv.getInterpolant(t281);
+  }
   return 0;
 }

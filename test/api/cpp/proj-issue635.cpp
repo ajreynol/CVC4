@@ -31,11 +31,11 @@ int main(void)
   Sort s5 = solver.mkBagSort(s0);
   Term t6 = solver.mkConst(s5, "_x37");
   Term t7 = solver.mkConst(s5, "_x38");
-  Op o8 = solver.mkOp(BAG_SUBBAG);
+  Op o8 = solver.mkOp(Kind::BAG_SUBBAG);
   Term t9 = solver.mkTerm(o8, {t6, t7});
-  Op o10 = solver.mkOp(SELECT);
+  Op o10 = solver.mkOp(Kind::SELECT);
   Term t11 = solver.mkTerm(o10, {t3, t9});
-  Term t12 = solver.mkTerm(XOR, {t4, t11});
+  Term t12 = solver.mkTerm(Kind::XOR, {t4, t11});
   Term t13 = solver.getAbduct(t12);
 
   return 0;
