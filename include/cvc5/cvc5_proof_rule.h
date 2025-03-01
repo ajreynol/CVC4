@@ -2874,6 +2874,31 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_QUANT_VAR_ELIM_INEQ),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Macro solve function definition**
+   *
+   * .. math::
+   *   \forall X.\> G = (f = \lambda Y.\> t)
+   *
+   * where :math:`\forall X.\> G` is equivalent to
+   * :math:`\forall Y.\> f(Y) = t` and :math:`t` does not contain :math:`f`.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_QUANT_SOLVE_FUN_DEF),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Macro solve function definition**
+   *
+   * .. math::
+   *   (\forall X.\> f(X) = t) = (f = \lambda X.\> t)
+   *
+   * where :math:`t` does not contain :math:`f`.
+   *
+   * \endverbatim
+   */
+  EVALUE(QUANT_SOLVE_FUN_DEF),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Quantifiers -- Macro quantifiers rewrite body**
    *
    * .. math::
