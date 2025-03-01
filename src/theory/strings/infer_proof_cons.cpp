@@ -527,7 +527,6 @@ bool InferProofCons::convert(Env& env,
         {
           Trace("strings-ipc-core") << "Failed to transform " << mainEqCeq
                                     << " to " << conc << std::endl;
-          ;
         }
         // Otherwise, note that EMP rules conclude ti = "" where
         // t1 ++ ... ++ tn == "". However, these are very rarely applied, let
@@ -1130,7 +1129,7 @@ bool InferProofCons::convert(Env& env,
       }
       else
       {
-        AlwaysAssert(false);
+        Assert(false);
       }
     }
     break;
