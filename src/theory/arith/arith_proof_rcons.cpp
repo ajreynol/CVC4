@@ -280,10 +280,9 @@ std::shared_ptr<ProofNode> ArithProofRCons::getProofFor(Node fact)
           // reconstruct the literals of the form
           // (>= t c1) and (not (>= t c2)).
           Node l1 = applySR(asubs, bl.second);
-          Assert(l1.getKind() != Kind::NOT);
+          l1 = l1.getKind()==Kind::NOT ? l1[0] : l1;
           Node l2 = applySR(asubs, itb->second);
-          Assert(l2.getKind() == Kind::NOT);
-          l2 = l2[0];
+          l2 = l2.getKind()==Kind::NOT ? l2[0] : l2;
           Trace("arith-proof-rcons") << "......dual binding lits " << l1
                                      << ", not " << l2 << std::endl;
           Assert(l1.getKind() == Kind::GEQ && l2.getKind() == Kind::GEQ);
