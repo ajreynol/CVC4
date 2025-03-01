@@ -147,7 +147,7 @@ Node SequencesRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_STR_EQ_LEN_UNIFY:
     {
-      if (n.getKind() == Kind::EQUAL)
+      if (n.getKind() == Kind::EQUAL && n[0].getType().isStringLike())
       {
         Rewrite rule;
         return rewriteViaStrEqLenUnify(n, rule);
@@ -1202,6 +1202,11 @@ Node reverseStrings(NodeManager* nm, Node t, bool isRev)
 
 Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
 {
+  Assert (node.getKind()==Kind::EQUAL && node[0].getType().isStringLike());
+  if (Word::isEmpty(node[0]) || Word::isEmpty(node[1]))
+  {
+    return Node::null();
+  }
   for (size_t r = 0; r < 2; r++)
   {
     bool isRev = (r == 1);
