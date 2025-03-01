@@ -22,7 +22,7 @@ int main(void)
   solver.setOption("incremental", "false");
   solver.setLogic("ALL");
   solver.setOption("check-unsat-cores", "true");
-  solver.setOption("sets-ext", "true");
+  solver.setOption("sets-exp", "true");
   solver.setOption("strings-exp", "true");
   solver.setOption("fp-exp", "true");
   solver.setOption("fmf-bound", "true");

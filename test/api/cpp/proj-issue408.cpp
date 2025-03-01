@@ -20,7 +20,7 @@ int main(void)
 {
   TermManager tm;
   Solver slv(tm);
-  slv.setOption("produce-interpols", "default");
+  slv.setOption("produce-interpolants", "true");
   Sort s2 = tm.mkBitVectorSort(20);
   Term t2 = tm.mkConst(s2, "_x1");
   Term t54 = tm.mkTerm(tm.mkOp(Kind::BITVECTOR_ZERO_EXTEND, {23}), {t2});

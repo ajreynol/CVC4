@@ -20,7 +20,7 @@ int main(void)
 {
   TermManager tm;
   Solver slv(tm);
-  slv.setOption("produce-interpols", "default");
+  slv.setOption("produce-interpolants", "true");
   Sort s1 = slv.mkUninterpretedSort("_u0");
   DatatypeDecl _dt1 = slv.mkDatatypeDecl("_dt1", {});
   DatatypeConstructorDecl _cons16 = slv.mkDatatypeConstructorDecl("_cons16");
@@ -49,7 +49,7 @@ int main(void)
     Term ipol = slv.getInterpolant(t601);
     if (slv.getOption("incremental") == "true")
     {
-      while (!ipol.isNull())
+      if (!ipol.isNull())
       {
         ipol = slv.getInterpolantNext();
       }

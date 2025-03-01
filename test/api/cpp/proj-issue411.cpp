@@ -21,7 +21,7 @@ int main(void)
   TermManager tm;
   Solver slv(tm);
   slv.setLogic("UFBVFP");
-  slv.setOption("produce-interpols", "default");
+  slv.setOption("produce-interpolants", "true");
   slv.setOption("incremental", "false");
   Sort s4 = slv.mkBitVectorSort(39);
   Term t3 = slv.mkVar(s4, "_x2");
@@ -40,7 +40,7 @@ int main(void)
     Term ipol = slv.getInterpolant(t66);
     if (slv.getOption("incremental") == "true")
     {
-      while(!ipol.isNull())
+      if (!ipol.isNull())
       {
         ipol = slv.getInterpolantNext();
       }
