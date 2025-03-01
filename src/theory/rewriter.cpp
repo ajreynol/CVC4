@@ -23,6 +23,7 @@
 #include "theory/rewriter_tables.h"
 #include "theory/theory.h"
 #include "util/resource_manager.h"
+#include "expr/bound_var_manager.h"
 
 using namespace std;
 
@@ -410,6 +411,72 @@ Node Rewriter::rewriteTo(theory::TheoryId theoryId,
                 << "with proofs: " << rewriteStackTop.d_node << std::endl;
             Trace("rewriter-proof") << " w/o proofs: " << cached << std::endl;
             Node eq = rewriteStackTop.d_node.eqNode(cached);
+            std::vector<std::pair<TNode, TNode>> toProcess;
+            std::unordered_set<std::pair<TNode, TNode>, TNodePairHashFunction> processed;
+            std::pair<TNode, TNode> currp;
+            toProcess.emplace_back(cached, rewriteStackTop.d_node);
+            Trace("rewriter-proof") << "====difference" << std::endl;
+            do
+            {
+              currp = toProcess.back();
+              toProcess.pop_back();
+              if (processed.find(currp)!=processed.end())
+              {
+                continue;
+              }
+              processed.insert(currp);
+              Trace("rewriter-proof") << "Traverse " << currp.first << " == " << currp.second << std::endl;
+              std::vector<Node> eqs;
+              expr::getConversionConditions(currp.first, currp.second, eqs);
+              for (const Node& eqq : eqs)
+              {
+                if (eqq[0].getKind()==Kind::FORALL && eqq[1].getKind()==Kind::FORALL && eqq[0][0].getNumChildren()==eqq[1][0].getNumChildren())
+                {
+                  size_t nvar = eqq[0][0].getNumChildren();
+                  if (eqq[0][0]==eqq[1][0])
+                  {
+                    // traverse
+                    toProcess.emplace_back(eqq[0][1], eqq[1][1]);
+                    continue;
+                  }
+                  for (size_t j=0; j<nvar; j++)
+                  {
+                    Node v1 = eqq[0][0][j];
+                    Node v2 = eqq[1][0][j];
+                    if (v1!=v2)
+                    {
+                      toProcess.emplace_back(v1, v2);
+                    }
+                  }
+                  continue;
+                }
+                if (eqq[0].getKind()==Kind::BOUND_VARIABLE && eqq[1].getKind()==Kind::BOUND_VARIABLE)
+                {
+                  Node v1 = eqq[0];
+                  Node v2 = eqq[1];
+                  BoundVarManager * bvm = NodeManager::currentNM()->getBoundVarManager();
+                  std::tuple<BoundVarId, TypeNode, Node> cache1 = bvm->d_revcache[v1];
+                  std::tuple<BoundVarId, TypeNode, Node> cache2 = bvm->d_revcache[v2];
+                  Node c1 = std::get<2>(cache1);
+                  Node c2 = std::get<2>(cache2);
+                  if (c1==c2 || c1.isNull() || c2.isNull())
+                  {
+                    Trace("rewriter-proof") << "In " << currp.first << " == " << currp.second << std::endl;
+                    Trace("rewriter-proof") << "Different variables for same cache val" << std::endl;
+                    Trace("rewriter-proof") << "    v1 " << v1 << " : " << std::get<0>(cache1) << " " << std::get<1>(cache1) << " " << c1 << std::endl;
+                    Trace("rewriter-proof") << "    v2 " << v2 << " : " << std::get<0>(cache2) << " " << std::get<1>(cache2) << " " << c2 << std::endl;
+                    continue;
+                  }
+                  //Trace("rewriter-proof") << "...traverse " << std::get<0>(cache1) << " " << c1 << " vs " << c2 << std::endl;
+                  toProcess.emplace_back(c1, c2);
+                  continue;
+                }
+                Trace("rewriter-proof") << "Disequal subterms" << std::endl;
+                Trace("rewriter-proof") << "  " << eqq << std::endl;
+              }
+            }while (!toProcess.empty());
+            Trace("rewriter-proof") << "====difference end" << std::endl;
+            AlwaysAssert(false);
             // we make this a post-rewrite, since we are processing a node that
             // has finished post-rewriting above
             Node trrid = mkTrustId(d_nm, TrustId::REWRITE_NO_ELABORATE);

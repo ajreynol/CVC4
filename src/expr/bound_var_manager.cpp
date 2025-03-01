@@ -66,6 +66,7 @@ Node BoundVarManager::mkBoundVar(BoundVarId id, Node n, TypeNode tn)
   }
   Node v = NodeManager::mkBoundVar(tn);
   d_cache[key] = v;
+  d_revcache[v] = key;
   return v;
 }
 

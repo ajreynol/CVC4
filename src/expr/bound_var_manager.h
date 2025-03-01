@@ -64,6 +64,7 @@ class BoundVarManager
   /** get cache value, return SEXPR of cv and constant rational node */
   static Node getCacheValue(TNode cv, size_t i);
   //---------------------------------- end utilities for computing Node hash
+  std::map<Node, std::tuple<BoundVarId, TypeNode, Node>> d_revcache;
  private:
   /** Set name of bound variable to name */
   static void setNameAttr(Node v, const std::string& name);
