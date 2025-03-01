@@ -1171,14 +1171,14 @@ Node SequencesRewriter::rewriteViaStrEqLenUnifyPrefix(const Node& node)
   return Node::null();
 }
 
-Node reverseStrings(NodeManager * nm, Node t, bool isRev)
+Node reverseStrings(NodeManager* nm, Node t, bool isRev)
 {
   if (!isRev)
   {
     return t;
   }
   Kind k = t.getKind();
-  if (t.getType().isStringLike() && k!=Kind::STRING_CONCAT)
+  if (t.getType().isStringLike() && k != Kind::STRING_CONCAT)
   {
     if (t.isConst())
     {
@@ -1186,14 +1186,14 @@ Node reverseStrings(NodeManager * nm, Node t, bool isRev)
     }
     return t;
   }
-  if (t.getNumChildren()>0)
+  if (t.getNumChildren() > 0)
   {
     std::vector<Node> newChildren;
     for (const Node& tc : t)
     {
       newChildren.push_back(reverseStrings(nm, tc, true));
     }
-    if (k==Kind::STRING_CONCAT || k==Kind::AND)
+    if (k == Kind::STRING_CONCAT || k == Kind::AND)
     {
       std::reverse(newChildren.begin(), newChildren.end());
     }
@@ -1204,9 +1204,9 @@ Node reverseStrings(NodeManager * nm, Node t, bool isRev)
 
 Node SequencesRewriter::rewriteViaStrEqLenUnify(const Node& node, Rewrite& rule)
 {
-  for (size_t r=0; r<2; r++)
+  for (size_t r = 0; r < 2; r++)
   {
-    bool isRev = (r==1);
+    bool isRev = (r == 1);
     Node n0 = reverseStrings(d_nm, node[0], isRev);
     Node n1 = reverseStrings(d_nm, node[1], isRev);
     std::vector<Node> v0, v1;

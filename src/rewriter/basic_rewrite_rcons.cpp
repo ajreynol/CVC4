@@ -1085,14 +1085,14 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   // str-len-eq-zero-concat-rec and str-len-eq-zero-base
   cdfwd.addTrustedStep(eqconv, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
   cdfwd.addStep(eq1p[1], ProofRule::EQ_RESOLVE, {pnEq2, eqconv}, {});
-  
+
   // we will iterate over the non-empty components to know which arguments
   // to keep in the congruence application below
   size_t nempIndex = 0;
   std::vector<Node> nempCom;
   Node nempRhs = eq[1][0][1];
   Trace("brc-macro") << "- non-empty rhs is " << nempRhs << std::endl;
-  if (nempRhs.getKind()==Kind::STRING_CONCAT)
+  if (nempRhs.getKind() == Kind::STRING_CONCAT)
   {
     nempCom.insert(nempCom.end(), nempRhs.begin(), nempRhs.end());
   }
@@ -1111,7 +1111,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
   std::map<Node, Node>::iterator it;
   for (const Node& tc : srcRew)
   {
-    if (nempIndex<nempCom.size() && tc==nempCom[nempIndex])
+    if (nempIndex < nempCom.size() && tc == nempCom[nempIndex])
     {
       // Keep this one even if it equated to empty. For example, this ensures
       // we succeed for (= x (str.++ x x)) ---> (and (= x x) (= x "")),
@@ -1130,7 +1130,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnifyPrefix(CDProof* cdp,
     }
     else
     {
-      Assert (false);
+      Assert(false);
       eqe.push_back(Node::null());
     }
   }
@@ -1231,7 +1231,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
     // (may be a prefix or a suffix)
     Node llc = nm->mkNode(Kind::STRING_LENGTH, eq1e[0]);
     Node lrc = nm->mkNode(Kind::STRING_LENGTH, eq1e[1]);
-    if (rewrite(llc)==rewrite(lrc))
+    if (rewrite(llc) == rewrite(lrc))
     {
       li = elhs.size();
       liSet = true;
@@ -1244,7 +1244,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
     Assert(false) << "Could not find equal length for " << eq;
     return false;
   }
-  Node isRevn = nodeManager()->mkConst(li==1);
+  Node isRevn = nodeManager()->mkConst(li == 1);
   // the proper grouped equality
   CDProof cdfwd(d_env);
   Node clhs = nm->mkNode(Kind::STRING_CONCAT, elhs);
@@ -1253,7 +1253,7 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   // NOTE: ceq could be proven equivalent to eq[0]
 
   // prove the "equal length" component is equal by REFL or CONCAT_UNIFY.
-  if (elhs[li]==erhs[li])
+  if (elhs[li] == erhs[li])
   {
     cdfwd.addStep(cpremises[li], ProofRule::REFL, {}, {elhs[li]});
   }
@@ -1273,8 +1273,8 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
   elhs[li] = erhs[li];
   Node clhs2 = nm->mkNode(Kind::STRING_CONCAT, elhs);
   Node equiv2 = clhs2.eqNode(crhs);
-  size_t lio = 1-li;
-  if (elhs[lio]==erhs[lio])
+  size_t lio = 1 - li;
+  if (elhs[lio] == erhs[lio])
   {
     cdfwd.addStep(cpremises[lio], ProofRule::REFL, {}, {elhs[lio]});
   }
@@ -1287,7 +1287,8 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
     Node reflEq = elhs[lio].eqNode(elhs[lio]);
     cdfwd.addStep(cp0s, ProofRule::SYMM, {cpremises[li]}, {});
     cdfwd.addStep(reflEq, ProofRule::REFL, {}, {elhs[lio]});
-    cdfwd.addStep(equiv, ccr, {li==0 ? cp0s : reflEq, li==0 ? reflEq : cp0s}, cargs);
+    cdfwd.addStep(
+        equiv, ccr, {li == 0 ? cp0s : reflEq, li == 0 ? reflEq : cp0s}, cargs);
     cdfwd.addStep(equiv2, ProofRule::TRANS, {equiv, ceq}, {});
     // prove second component by CONCAT_EQ after congruence above
     cdfwd.addStep(cpremises[lio], ProofRule::CONCAT_EQ, {equiv2}, {isRevn});
@@ -1326,7 +1327,8 @@ bool BasicRewriteRCons::ensureProofMacroStrEqLenUnify(CDProof* cdp,
     Trace("brc-macro") << "- subgoal " << eqs2 << std::endl;
     cdp->addTrustedStep(eqs2, TrustId::MACRO_THEORY_REWRITE_RCONS, {}, {});
     Node equivSetup = eq[0].eqNode(ceq);
-    Trace("brc-macro") << "setup/final " << equivSetup << " " << eqfinal << std::endl;
+    Trace("brc-macro") << "setup/final " << equivSetup << " " << eqfinal
+                       << std::endl;
     cargs.clear();
     ccr = expr::getCongRule(eq[0], cargs);
     cdp->addStep(equivSetup, ccr, {eqs1, eqs2}, cargs);
