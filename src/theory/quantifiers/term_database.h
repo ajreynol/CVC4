@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -36,6 +36,7 @@ namespace quantifiers {
 class QuantifiersState;
 class QuantifiersInferenceManager;
 class QuantifiersRegistry;
+class DeqCongProofGenerator;
 
 /** Context-dependent list of nodes */
 class DbList
@@ -206,7 +207,7 @@ class TermDb : public QuantifiersUtil {
    * the option termDbMode.
    * Otherwise, it returns the lookup in the map d_has_map.
    */
-  bool hasTermCurrent(Node n, bool useMode = true);
+  bool hasTermCurrent(const Node& n, bool useMode = true) const;
   /** is term eligble for instantiation? */
   bool isTermEligibleForInstantiation(TNode n, TNode f);
   /** get eligible term in equivalence class of r */
@@ -233,8 +234,6 @@ class TermDb : public QuantifiersUtil {
   NodeDbListMap d_opMap;
   /** select op map */
   std::map< Node, std::map< TypeNode, Node > > d_par_op_map;
-  /** whether master equality engine is UF-inconsistent */
-  bool d_consistent_ee;
   /** boolean terms */
   Node d_true;
   Node d_false;
@@ -265,12 +264,9 @@ class TermDb : public QuantifiersUtil {
    * of equality engine (for higher-order).
    */
   std::map<TypeNode, Node> d_ho_type_match_pred;
+  /** A proof generator for disequal congruent terms */
+  std::shared_ptr<DeqCongProofGenerator> d_dcproof;
   //----------------------------- implementation-specific
-  /**
-   * Reset internal, called when reset(e) is called. Returning false will cause
-   * the overall reset to terminate early, returning false.
-   */
-  virtual bool resetInternal(Theory::Effort e);
   /**
    * Finish reset internal, called at the end of reset(e). Returning false will
    * cause the overall reset to return false.
@@ -286,8 +282,8 @@ class TermDb : public QuantifiersUtil {
    * This method is called when terms a and b are indexed by the same operator,
    * and have equivalent arguments. This method checks if we are in conflict,
    * which is the case if a and b are disequal in the equality engine.
-   * If so, it adds the set of literals that are implied but do not hold, e.g.
-   * the equality (= a b).
+   * If so, it adds any additional arguments that explain why a = b, e.g. the
+   * equivalence of their operators if their operators are different.
    */
   virtual bool checkCongruentDisequal(TNode a, TNode b, std::vector<Node>& exp);
   //----------------------------- end implementation-specific

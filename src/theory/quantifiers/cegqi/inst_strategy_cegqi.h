@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -18,6 +18,7 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__INST_STRATEGY_CEGQI_H
 #define CVC5__THEORY__QUANTIFIERS__INST_STRATEGY_CEGQI_H
 
+#include "proof/trust_proof_generator.h"
 #include "smt/env_obj.h"
 #include "theory/decision_manager.h"
 #include "theory/quantifiers/bv_inverter.h"
@@ -93,7 +94,7 @@ class InstStrategyCegqi : public QuantifiersModule
   /** check ownership */
   void checkOwnership(Node q) override;
   /** identify */
-  std::string identify() const override { return std::string("Cegqi"); }
+  std::string identify() const override;
   /** get instantiator for quantifier */
   CegInstantiator* getInstantiator(Node q);
   /** pre-register quantifier */
@@ -202,6 +203,8 @@ class InstStrategyCegqi : public QuantifiersModule
   Node getCounterexampleLiteral(Node q);
   /** map from universal quantifiers to their counterexample literals */
   std::map<Node, Node> d_ce_lit;
+  /** For lemmas from the nested qe module */
+  std::shared_ptr<TrustProofGenerator> d_nqetpg;
   /** The nested quantifier elimination utility */
   std::unique_ptr<NestedQe> d_nestedQe;
 };

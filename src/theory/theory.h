@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Morgan Deters, Dejan Jovanovic
+ *   Andrew Reynolds, Morgan Deters, Tim King
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -141,11 +141,6 @@ class Theory : protected EnvObj
   virtual void computeCareGraph();
 
   /**
-   * A list of shared terms that the theory has.
-   */
-  context::CDList<TNode> d_sharedTerms;
-
-  /**
    * Construct a Theory.
    *
    * The pair <id, instance> is assumed to uniquely identify this Theory
@@ -207,23 +202,6 @@ class Theory : protected EnvObj
   void printFacts(std::ostream& os) const;
   void debugPrintFacts() const;
 
-  /** is legal elimination
-   *
-   * Returns true if x -> val is a legal elimination of variable x. This is
-   * useful for ppAssert, when x = val is an entailed equality. This function
-   * determines whether indeed x can be eliminated from the problem via the
-   * substituion x -> val.
-   *
-   * The following criteria imply that x -> val is *not* a legal elimination:
-   * (1) If x is contained in val,
-   * (2) If the type of val is not the same as the type of x,
-   * (3) If val contains an operator that cannot be evaluated, and
-   * produceModels is true. For example, x -> sqrt(2) is not a legal
-   * elimination if we are producing models. This is because we care about the
-   * value of x, and its value must be computed (approximated) by the
-   * non-linear solver.
-   */
-  bool isLegalElimination(TNode x, TNode val);
   //--------------------------------- private initialization
   /**
    * Called to set the official equality engine. This should be done by
@@ -318,6 +296,16 @@ class Theory : protected EnvObj
 
   /**
    * Returns the ID of the theory responsible for the given node.
+   *
+   * Note this method does not take into account "Boolean term skolem". Boolean
+   * term skolems always belong to THEORY_UF. This case is handled in
+   * Env::theoryOf.
+   * 
+   * @param node The node in question.
+   * @param mdoe The theoryof mode, which impacts which theory owns e.g.
+   * variables.
+   * @param usortOwner The theory that owns uninterpreted sorts.
+   * @return The theory that owns node.
    */
   static TheoryId theoryOf(
       TNode node,
@@ -329,6 +317,8 @@ class Theory : protected EnvObj
    */
   inline bool isLeaf(TNode node) const
   {
+    // variables have 0 children thus theoryOf is not impacted by whether
+    // node is a Boolean term skolem.
     return node.getNumChildren() == 0
            || theoryOf(node, options().theory.theoryOfMode) != d_id;
   }
@@ -341,6 +331,8 @@ class Theory : protected EnvObj
       TheoryId theoryId,
       options::TheoryOfMode mode = options::TheoryOfMode::THEORY_OF_TYPE_BASED)
   {
+    // variables have 0 children thus theoryOf is not impacted by whether
+    // node is a Boolean term skolem.
     return node.getNumChildren() == 0 || theoryOf(node, mode) != theoryId;
   }
 
@@ -593,22 +585,9 @@ class Theory : protected EnvObj
   //--------------------------------- preprocessing
   /**
    * Statically learn from assertion "in," which has been asserted
-   * true at the top level.  The theory should only add (via
-   * ::operator<< or ::append()) to the "learned" builder---it should
-   * *never* clear it.  It is a conjunction to add to the formula at
-   * the top-level and may contain other theories' contributions.
+   * true at the top level.
    */
-  virtual void ppStaticLearn(TNode in, NodeBuilder& learned) {}
-
-  enum PPAssertStatus
-  {
-    /** Atom has been solved  */
-    PP_ASSERT_STATUS_SOLVED,
-    /** Atom has not been solved */
-    PP_ASSERT_STATUS_UNSOLVED,
-    /** Atom is inconsistent */
-    PP_ASSERT_STATUS_CONFLICT
-  };
+  virtual void ppStaticLearn(TNode in, std::vector<TrustNode>& learned) {}
 
   /**
    * Given a literal and its proof generator (encapsulated by trust node tin),
@@ -618,9 +597,13 @@ class Theory : protected EnvObj
    * Note that tin has trust node kind LEMMA. Its proof generator should be
    * taken into account when adding a substitution to outSubstitutions when
    * proofs are enabled.
+   *
+   * @param tin The literal and its proof generator.
+   * @param outSubstitutions The substitution map to add to, if applicable.
+   * @return true iff the literal can be removed from the input, e.g. when
+   * the substitution it entails is added to outSubstitutions.
    */
-  virtual PPAssertStatus ppAssert(TrustNode tin,
-                                  TrustSubstitutionMap& outSubstitutions);
+  virtual bool ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions);
 
   /**
    * Given a term of the theory coming from the input formula or
@@ -734,31 +717,6 @@ class Theory : protected EnvObj
   typedef context::CDList<TNode>::const_iterator shared_terms_iterator;
 
   /**
-   * Provides access to the shared terms, primarily intended for theory
-   * debugging purposes.
-   *
-   * @return the iterator to the beginning of the shared terms list
-   */
-  shared_terms_iterator shared_terms_begin() const
-  {
-    return d_sharedTerms.begin();
-  }
-
-  /**
-   * Provides access to the facts queue, primarily intended for theory
-   * debugging purposes.
-   *
-   * @return the iterator to the end of the shared terms list
-   */
-  shared_terms_iterator shared_terms_end() const { return d_sharedTerms.end(); }
-
-  /**
-   * This is a utility function for constructing a copy of the currently
-   * shared terms in a queriable form.  As this is
-   */
-  std::unordered_set<TNode> currentlySharedTerms() const;
-
-  /**
    * This allows the theory to be queried for whether a literal, lit, is
    * entailed by the theory.  This returns a pair of a Boolean and a node E.
    *
@@ -835,9 +793,6 @@ class Theory : protected EnvObj
   /** Index into the head of the facts list */
   context::CDO<unsigned> d_factsHead;
 
-  /** Indices for splitting on the shared terms. */
-  context::CDO<unsigned> d_sharedTermsIndex;
-
   /** The care graph the theory will use during combination. */
   CareGraph* d_careGraph;
 
@@ -851,20 +806,6 @@ inline std::ostream& operator<<(std::ostream& out,
                                 const cvc5::internal::theory::Theory& theory)
 {
   return out << theory.identify();
-}
-
-inline std::ostream& operator << (std::ostream& out, theory::Theory::PPAssertStatus status) {
-  switch (status) {
-  case theory::Theory::PP_ASSERT_STATUS_SOLVED:
-    out << "SOLVE_STATUS_SOLVED"; break;
-  case theory::Theory::PP_ASSERT_STATUS_UNSOLVED:
-    out << "SOLVE_STATUS_UNSOLVED"; break;
-  case theory::Theory::PP_ASSERT_STATUS_CONFLICT:
-    out << "SOLVE_STATUS_CONFLICT"; break;
-  default:
-    Unhandled();
-  }
-  return out;
 }
 
 }  // namespace theory

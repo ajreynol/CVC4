@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Mathias Preiner, Gereon Kremer
+ *   Andrew Reynolds, Mathias Preiner, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -177,21 +177,6 @@ bool EquivSygusInvarianceTest::invariant(TermDbSygus* tds, Node nvn, Node x)
   return exc_arg;
 }
 
-bool DivByZeroSygusInvarianceTest::invariant(TermDbSygus* tds, Node nvn, Node x)
-{
-  TypeNode tn = nvn.getType();
-  Node nbv = tds->sygusToBuiltin(nvn, tn);
-  Node nbvr = d_rewriter->extendedRewrite(nbv);
-  if (tds->involvesDivByZero(nbvr))
-  {
-    Trace("sygus-sb-mexp") << "sb-min-exp : " << tds->sygusToBuiltin(nvn)
-                           << " involves div-by-zero regardless of "
-                           << tds->sygusToBuiltin(x) << std::endl;
-    return true;
-  }
-  return false;
-}
-
 void NegContainsSygusInvarianceTest::init(Node e,
                                           std::vector<std::vector<Node> >& ex,
                                           std::vector<Node>& exo,
@@ -220,8 +205,7 @@ bool NegContainsSygusInvarianceTest::invariant(TermDbSygus* tds,
       Assert(ii < d_exo.size());
       Node nbvre = tds->evaluateBuiltin(tn, nbvr, d_ex[ii]);
       Node out = d_exo[ii];
-      Node cont =
-          NodeManager::currentNM()->mkNode(Kind::STRING_CONTAINS, out, nbvre);
+      Node cont = NodeManager::mkNode(Kind::STRING_CONTAINS, out, nbvre);
       Trace("sygus-pbe-cterm-debug") << "Check: " << cont << std::endl;
       Node contr = d_rewriter->extendedRewrite(cont);
       if (!contr.isConst())

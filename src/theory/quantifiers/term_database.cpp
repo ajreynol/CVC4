@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -16,12 +16,17 @@
 #include "theory/quantifiers/term_database.h"
 
 #include "expr/skolem_manager.h"
+#include "expr/sort_to_term.h"
 #include "options/base_options.h"
 #include "options/printer_options.h"
 #include "options/quantifiers_options.h"
 #include "options/smt_options.h"
 #include "options/theory_options.h"
 #include "options/uf_options.h"
+#include "proof/proof.h"
+#include "proof/proof_generator.h"
+#include "proof/proof_node_algorithm.h"
+#include "proof/proof_node_manager.h"
 #include "theory/quantifiers/ematching/trigger_term_info.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
@@ -38,36 +43,93 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+/**
+ * A proof generator for proving simple congruence lemmas discovered by TermDb.
+ */
+class DeqCongProofGenerator : protected EnvObj, public ProofGenerator
+{
+ public:
+  DeqCongProofGenerator(Env& env) : EnvObj(env) {}
+  virtual ~DeqCongProofGenerator() {}
+  /**
+   * The lemma is of the form:
+   * (=> (and (= ti si) .. (= tj sj)) (= (f t1 ... tn) (f s1 ... sn)))
+   * which can be proven by a congruence step.
+   */
+  std::shared_ptr<ProofNode> getProofFor(Node fact) override
+  {
+    Assert(fact.getKind() == Kind::IMPLIES);
+    Assert(fact[1].getKind() == Kind::EQUAL);
+    Node a = fact[1][0];
+    Node b = fact[1][1];
+    std::vector<Node> assumps;
+    if (fact[0].getKind() == Kind::AND)
+    {
+      assumps.insert(assumps.end(), fact[0].begin(), fact[0].end());
+    }
+    else
+    {
+      assumps.push_back(fact[0]);
+    }
+    CDProof cdp(d_env);
+    if (a.getOperator() != b.getOperator())
+    {
+      // TODO: wishue #158, likely corresponds to a higher-order term
+      // indexing conflict.
+      cdp.addTrustedStep(fact, TrustId::QUANTIFIERS_PREPROCESS, {}, {});
+      return cdp.getProofFor(fact);
+    }
+    Assert(a.getNumChildren() == b.getNumChildren());
+    std::vector<Node> cargs;
+    ProofRule cr = expr::getCongRule(a, cargs);
+    size_t nchild = a.getNumChildren();
+    std::vector<Node> premises;
+    for (size_t i = 0; i < nchild; i++)
+    {
+      Node eq = a[i].eqNode(b[i]);
+      premises.push_back(eq);
+      if (a[i] == b[i])
+      {
+        cdp.addStep(eq, ProofRule::REFL, {}, {a[i]});
+      }
+      else
+      {
+        Assert(std::find(assumps.begin(), assumps.end(), eq) != assumps.end());
+      }
+    }
+    cdp.addStep(fact[1], cr, premises, cargs);
+    std::shared_ptr<ProofNode> pfn = cdp.getProofFor(fact[1]);
+    return d_env.getProofNodeManager()->mkScope(pfn, assumps);
+  }
+  /** identify */
+  std::string identify() const override { return "DeqCongProofGenerator"; }
+};
+
 TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
     : QuantifiersUtil(env),
       d_qstate(qs),
       d_qim(nullptr),
       d_qreg(qr),
-      d_termsContext(),
-      d_termsContextUse(options().quantifiers.termDbCd ? context()
-                                                       : &d_termsContext),
-      d_processed(d_termsContextUse),
-      d_typeMap(d_termsContextUse),
-      d_ops(d_termsContextUse),
-      d_opMap(d_termsContextUse),
-      d_inactive_map(context())
+      d_processed(context()),
+      d_typeMap(context()),
+      d_ops(context()),
+      d_opMap(context()),
+      d_inactive_map(context()),
+      d_dcproof(options().smt.produceProofs ? new DeqCongProofGenerator(d_env)
+                                            : nullptr)
 {
-  d_consistent_ee = true;
-  d_true = NodeManager::currentNM()->mkConst(true);
-  d_false = NodeManager::currentNM()->mkConst(false);
-  if (!options().quantifiers.termDbCd)
-  {
-    // when not maintaining terms in a context-dependent manner, we clear during
-    // each presolve, which requires maintaining a single outermost level
-    d_termsContext.push();
-  }
+  d_true = nodeManager()->mkConst(true);
+  d_false = nodeManager()->mkConst(false);
 }
 
 TermDb::~TermDb(){
 
 }
 
-void TermDb::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
+void TermDb::finishInit(QuantifiersInferenceManager* qim)
+{
+  d_qim = qim;
+}
 
 void TermDb::registerQuantifier( Node q ) {
   Assert(q[0].getNumChildren() == d_qreg.getNumInstantiationConstants(q));
@@ -167,11 +229,11 @@ Node TermDb::getOrMakeTypeFreshVariable(TypeNode tn)
   std::unordered_map<TypeNode, Node>::iterator it = d_type_fv.find(tn);
   if (it == d_type_fv.end())
   {
-    SkolemManager* sm = NodeManager::currentNM()->getSkolemManager();
-    std::stringstream ss;
-    options::ioutils::applyOutputLanguage(ss, options().printer.outputLanguage);
-    ss << "e_" << tn;
-    Node k = sm->mkDummySkolem(ss.str(), tn, "is a termDb fresh variable");
+    NodeManager* nm = nodeManager();
+    SkolemManager* sm = nm->getSkolemManager();
+    std::vector<Node> cacheVals;
+    cacheVals.push_back(nm->mkConst(SortToTerm(tn)));
+    Node k = sm->mkSkolemFunction(SkolemId::GROUND_TERM, cacheVals);
     Trace("mkVar") << "TermDb:: Make variable " << k << " : " << tn
                    << std::endl;
     if (options().quantifiers.instMaxLevel != -1)
@@ -232,11 +294,10 @@ void TermDb::addTerm(Node n)
     DbList* dlt = getOrMkDbListForType(n.getType());
     dlt->d_list.push_back(n);
     // if this is an atomic trigger, consider adding it
-    if (inst::TriggerTermInfo::isAtomicTrigger(n))
+    Node op = getMatchOperator(n);
+    if (!op.isNull())
     {
       Trace("term-db") << "register term in db " << n << std::endl;
-
-      Node op = getMatchOperator(n);
       Trace("term-db-debug") << "  match operator is : " << op << std::endl;
       DbList* dlo = getOrMkDbListForOp(op);
       dlo->d_list.push_back(n);
@@ -264,7 +325,7 @@ DbList* TermDb::getOrMkDbListForType(TypeNode tn)
   {
     return it->second.get();
   }
-  std::shared_ptr<DbList> dl = std::make_shared<DbList>(d_termsContextUse);
+  std::shared_ptr<DbList> dl = std::make_shared<DbList>(context());
   d_typeMap.insert(tn, dl);
   return dl.get();
 }
@@ -276,7 +337,7 @@ DbList* TermDb::getOrMkDbListForOp(TNode op)
   {
     return it->second.get();
   }
-  std::shared_ptr<DbList> dl = std::make_shared<DbList>(d_termsContextUse);
+  std::shared_ptr<DbList> dl = std::make_shared<DbList>(context());
   d_opMap.insert(op, dl);
   Assert(op.getKind() != Kind::BOUND_VARIABLE);
   d_ops.push_back(op);
@@ -287,10 +348,11 @@ void TermDb::computeArgReps( TNode n ) {
   if (d_arg_reps.find(n) == d_arg_reps.end())
   {
     eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
+    std::vector<TNode>& tars = d_arg_reps[n];
     for (const TNode& nc : n)
     {
       TNode r = ee->hasTerm(nc) ? ee->getRepresentative(nc) : nc;
-      d_arg_reps[n].push_back( r );
+      tars.emplace_back(r);
     }
   }
 }
@@ -338,7 +400,7 @@ void TermDb::computeUfTerms( TNode f ) {
   unsigned nonCongruentCount = 0;
   unsigned alreadyCongruentCount = 0;
   unsigned relevantCount = 0;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (TNode ff : ops)
   {
     NodeDbListMap::iterator it = d_opMap.find(ff);
@@ -396,18 +458,19 @@ void TermDb::computeUfTerms( TNode f ) {
         congruentCount++;
         continue;
       }
-      std::vector<Node> lits;
-      if (checkCongruentDisequal(at, n, lits))
+      std::vector<Node> antec;
+      if (checkCongruentDisequal(at, n, antec))
       {
         Assert(at.getNumChildren() == n.getNumChildren());
         for (size_t k = 0, size = at.getNumChildren(); k < size; k++)
         {
           if (at[k] != n[k])
           {
-            lits.push_back(nm->mkNode(Kind::EQUAL, at[k], n[k]).negate());
+            antec.push_back(nm->mkNode(Kind::EQUAL, at[k], n[k]));
+            Assert(d_qstate.areEqual(at[k], n[k]));
           }
         }
-        Node lem = nm->mkOr(lits);
+        Node lem = nm->mkNode(Kind::IMPLIES, nm->mkAnd(antec), at.eqNode(n));
         if (TraceIsOn("term-db-lemma"))
         {
           Trace("term-db-lemma") << "Disequal congruent terms : " << at << " "
@@ -420,9 +483,11 @@ void TermDb::computeUfTerms( TNode f ) {
           }
           Trace("term-db-lemma") << "  add lemma : " << lem << std::endl;
         }
-        d_qim->addPendingLemma(lem, InferenceId::QUANTIFIERS_TDB_DEQ_CONG);
+        d_qim->addPendingLemma(lem,
+                               InferenceId::QUANTIFIERS_TDB_DEQ_CONG,
+                               LemmaProperty::NONE,
+                               d_dcproof.get());
         d_qstate.notifyInConflict();
-        d_consistent_ee = false;
         return;
       }
       nonCongruentCount++;
@@ -448,7 +513,6 @@ bool TermDb::checkCongruentDisequal(TNode a, TNode b, std::vector<Node>& exp)
 {
   if (d_qstate.areDisequal(a, b))
   {
-    exp.push_back(a.eqNode(b));
     return true;
   }
   return false;
@@ -472,19 +536,16 @@ bool TermDb::inRelevantDomain(TNode f, size_t i, TNode r)
   return false;
 }
 
-bool TermDb::isTermActive( Node n ) {
+bool TermDb::isTermActive(Node n)
+{
   return d_inactive_map.find( n )==d_inactive_map.end(); 
   //return !n.getAttribute(NoMatchAttribute());
 }
 
-void TermDb::setTermInactive( Node n ) {
-  d_inactive_map[n] = true;
-  //Trace("term-db-debug2") << "set no match attribute" << std::endl;
-  //NoMatchAttribute nma;
-  //n.setAttribute(nma,true);
-}
+void TermDb::setTermInactive(Node n) { d_inactive_map[n] = true; }
 
-bool TermDb::hasTermCurrent( Node n, bool useMode ) {
+bool TermDb::hasTermCurrent(const Node& n, bool useMode) const
+{
   if( !useMode ){
     return d_has_map.find( n )!=d_has_map.end();
   }
@@ -506,17 +567,23 @@ bool TermDb::isTermEligibleForInstantiation(TNode n, TNode f)
 {
   if (options().quantifiers.instMaxLevel != -1)
   {
-    if( n.hasAttribute(InstLevelAttribute()) ){
+    uint64_t level;
+    if (QuantAttributes::getInstantiationLevel(n, level))
+    {
       int64_t fml =
           f.isNull() ? -1 : d_qreg.getQuantAttributes().getQuantInstLevel(f);
       unsigned ml = fml >= 0 ? fml : options().quantifiers.instMaxLevel;
 
-      if( n.getAttribute(InstLevelAttribute())>ml ){
-        Trace("inst-add-debug") << "Term " << n << " has instantiation level " << n.getAttribute(InstLevelAttribute());
+      if (level > ml)
+      {
+        Trace("inst-add-debug")
+            << "Term " << n << " has instantiation level " << level;
         Trace("inst-add-debug") << ", which is more than maximum allowed level " << ml << " for this quantified formula." << std::endl;
         return false;
       }
-    }else{
+    }
+    else
+    {
       Trace("inst-add-debug")
           << "Term " << n << " does not have an instantiation level."
           << std::endl;
@@ -555,12 +622,6 @@ Node TermDb::getEligibleTermInEqc( TNode r ) {
   }
 }
 
-bool TermDb::resetInternal(Theory::Effort e)
-{
-  // do nothing
-  return true;
-}
-
 bool TermDb::finishResetInternal(Theory::Effort e)
 {
   // do nothing
@@ -587,13 +648,7 @@ void TermDb::setHasTerm( Node n ) {
   }
 }
 
-void TermDb::presolve() {
-  if (options().base.incrementalSolving && !options().quantifiers.termDbCd)
-  {
-    d_termsContext.pop();
-    d_termsContext.push();
-  }
-}
+void TermDb::presolve() {}
 
 bool TermDb::reset( Theory::Effort effort ){
   d_op_nonred_count.clear();
@@ -601,16 +656,10 @@ bool TermDb::reset( Theory::Effort effort ){
   d_func_map_trie.clear();
   d_func_map_eqc_trie.clear();
   d_fmapRelDom.clear();
-  d_consistent_ee = true;
 
   eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
 
   Assert(ee->consistent());
-  // if higher-order, add equalities for the purification terms now
-  if (!resetInternal(effort))
-  {
-    return false;
-  }
 
   //compute has map
   if (options().quantifiers.termDbMode == options::TermDbMode::RELEVANT)

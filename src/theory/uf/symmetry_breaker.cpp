@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Morgan Deters, Gereon Kremer, Mathias Preiner
+ *   Morgan Deters, Aina Niemetz, Gereon Kremer
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -54,10 +54,9 @@ namespace uf {
 
 using namespace cvc5::context;
 
-SymmetryBreaker::Template::Template() :
-  d_template(),
-  d_sets(),
-  d_reps() {
+SymmetryBreaker::Template::Template(NodeManager* nm)
+    : d_template(), d_assertions(nm), d_sets(), d_reps()
+{
 }
 
 TNode SymmetryBreaker::Template::find(TNode n) {
@@ -174,7 +173,7 @@ SymmetryBreaker::SymmetryBreaker(Env& env, std::string name)
       d_phiSet(),
       d_permutations(),
       d_terms(),
-      d_template(),
+      d_template(nodeManager()),
       d_normalizationCache(),
       d_termEqs(),
       d_termEqsOnly(),
@@ -225,7 +224,7 @@ Node SymmetryBreaker::normInternal(TNode n, size_t level) {
       // commutative N-ary operator handling
       vector<TNode> kids(n.begin(), n.end());
       sort(kids.begin(), kids.end());
-      return result = NodeManager::currentNM()->mkNode(k, kids);
+      return result = nodeManager()->mkNode(k, kids);
     }
 
     case Kind::AND:
@@ -278,7 +277,7 @@ Node SymmetryBreaker::normInternal(TNode n, size_t level) {
       Trace("ufsymm:norm") << "UFSYMM got " << kids.size() << " kids for the "
                            << k << "-kinded Node" << endl;
       sort(kids.begin(), kids.end());
-      return result = NodeManager::currentNM()->mkNode(k, kids);
+      return result = nodeManager()->mkNode(k, kids);
     }
 
     case Kind::OR:
@@ -402,7 +401,7 @@ Node SymmetryBreaker::normInternal(TNode n, size_t level) {
     }
     Trace("ufsymm:norm") << "UFSYMM got " << kids.size() << " kids for the " << k << "-kinded Node" << endl;
     sort(kids.begin(), kids.end());
-    return result = NodeManager::currentNM()->mkNode(k, kids);
+    return result = nodeManager()->mkNode(k, kids);
     }
 
     case Kind::EQUAL:
@@ -420,8 +419,7 @@ Node SymmetryBreaker::normInternal(TNode n, size_t level) {
       CVC5_FALLTHROUGH;
     case Kind::XOR:
       // commutative binary operator handling
-      return n[1] < n[0] ? NodeManager::currentNM()->mkNode(k, n[1], n[0])
-                         : Node(n);
+      return n[1] < n[0] ? nodeManager()->mkNode(k, n[1], n[0]) : Node(n);
 
     default:
       // Normally T-rewriting is enough; only special cases (like
@@ -440,7 +438,7 @@ void SymmetryBreaker::assertFormula(TNode phi) {
   d_phi.push_back(phi);
   if (phi.getKind() == Kind::OR)
   {
-    Template t;
+    Template t(nodeManager());
     Node::iterator i = phi.begin();
     t.match(*i++);
     while(i != phi.end()) {
@@ -575,8 +573,8 @@ void SymmetryBreaker::apply(std::vector<Node>& newClauses) {
           Trace("ufsymm") << "UFSYMM p == " << p << endl;
           if(i != p.end() || p.size() != cts.size()) {
             Trace("ufsymm") << "UFSYMM cts != p" << endl;
-            NodeBuilder disj(Kind::OR);
-            NodeManager* nm = NodeManager::currentNM();
+            NodeManager* nm = nodeManager();
+            NodeBuilder disj(nm, Kind::OR);
             for (const Node& nn : cts)
             {
               if (t != nn)

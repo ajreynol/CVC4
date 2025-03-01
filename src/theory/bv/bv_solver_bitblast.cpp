@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Mathias Preiner, Andrew Reynolds, Andres Noetzli
+ *   Mathias Preiner, Andrew Reynolds, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -121,6 +121,7 @@ BVSolverBitblast::BVSolverBitblast(Env& env,
       d_epg(env.isTheoryProofProducing()
                 ? new EagerProofGenerator(env, userContext(), "")
                 : nullptr),
+      d_bvProofChecker(nodeManager()),
       d_factLiteralCache(context()),
       d_literalFactCache(context()),
       d_propagate(options().bv.bitvectorPropagate),
@@ -162,7 +163,7 @@ void BVSolverBitblast::postCheck(Theory::Effort level)
     d_resetNotify->reset();
   }
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   /* Process input assertions bit-blast queue. */
   while (!d_bbInputFacts.empty())
@@ -240,7 +241,17 @@ void BVSolverBitblast::postCheck(Theory::Effort level)
       std::vector<Node> assertions(d_assertions.begin(), d_assertions.end());
       conflict = nm->mkAnd(assertions);
     }
-    d_im.conflict(conflict, InferenceId::BV_BITBLAST_CONFLICT);
+    TrustNode tconflict;
+    if (d_epg != nullptr)
+    {
+      tconflict = d_epg->mkTrustNodeTrusted(
+          conflict, TrustId::BV_BITBLAST_CONFLICT, {}, {}, true);
+    }
+    else
+    {
+      tconflict = TrustNode::mkTrustConflict(conflict, nullptr);
+    }
+    d_im.trustedConflict(tconflict, InferenceId::BV_BITBLAST_CONFLICT);
   }
 }
 
@@ -313,7 +324,7 @@ bool BVSolverBitblast::collectModelValues(TheoryModel* m,
   // Boolean variables in the CNF stream.
   if (options().bv.bitblastMode == options::BitblastMode::EAGER)
   {
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     std::vector<TNode> vars;
     d_cnfStream->getBooleanVariables(vars);
     for (TNode var : vars)
@@ -365,9 +376,10 @@ Node BVSolverBitblast::getValue(TNode node, bool initialize)
     return node;
   }
 
+  NodeManager* nm = node.getNodeManager();
   if (!d_bitblaster->hasBBTerm(node))
   {
-    return initialize ? utils::mkConst(utils::getSize(node), 0u) : Node();
+    return initialize ? utils::mkConst(nm, utils::getSize(node), 0u) : Node();
   }
 
   std::vector<Node> bits;
@@ -388,7 +400,7 @@ Node BVSolverBitblast::getValue(TNode node, bool initialize)
     }
     value = value * 2 + bit;
   }
-  return utils::mkConst(bits.size(), value);
+  return utils::mkConst(nm, bits.size(), value);
 }
 
 void BVSolverBitblast::handleEagerAtom(TNode fact, bool assertFact)

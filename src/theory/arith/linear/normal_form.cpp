@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Tim King, Gereon Kremer, Andrew Reynolds
+ *   Tim King, Aina Niemetz, Gereon Kremer
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -553,8 +553,7 @@ Node Polynomial::computeQR(const Polynomial& p, const Integer& div){
   Polynomial p_q = Polynomial::mkPolynomial(q_vec);
   Polynomial p_r = Polynomial::mkPolynomial(r_vec);
 
-  return NodeManager::currentNM()->mkNode(
-      Kind::ADD, p_q.getNode(), p_r.getNode());
+  return NodeManager::mkNode(Kind::ADD, p_q.getNode(), p_r.getNode());
 }
 
 
@@ -638,8 +637,7 @@ Node SumPair::computeQR(const SumPair& sp, const Integer& div){
   SumPair sp_q(p_q, Constant::mkConstant(constant_q));
   SumPair sp_r(p_r, Constant::mkConstant(constant_r));
 
-  return NodeManager::currentNM()->mkNode(
-      Kind::ADD, sp_q.getNode(), sp_r.getNode());
+  return NodeManager::mkNode(Kind::ADD, sp_q.getNode(), sp_r.getNode());
 }
 
 SumPair SumPair::mkSumPair(const Polynomial& p){
@@ -855,8 +853,7 @@ Node Comparison::toNode(Kind k, const Polynomial& l, const Constant& r) {
   Assert(isRelationOperator(k));
   switch(k) {
     case Kind::GEQ:
-    case Kind::GT:
-      return NodeManager::currentNM()->mkNode(k, l.getNode(), r.getNode());
+    case Kind::GT: return NodeManager::mkNode(k, l.getNode(), r.getNode());
     default: Unhandled() << k;
   }
 }
@@ -866,8 +863,7 @@ Node Comparison::toNode(Kind k, const Polynomial& l, const Polynomial& r) {
   switch(k) {
     case Kind::GEQ:
     case Kind::EQUAL:
-    case Kind::GT:
-      return NodeManager::currentNM()->mkNode(k, l.getNode(), r.getNode());
+    case Kind::GT: return NodeManager::mkNode(k, l.getNode(), r.getNode());
     case Kind::LEQ: return toNode(Kind::GEQ, r, l).notNode();
     case Kind::LT: return toNode(Kind::GT, r, l).notNode();
     case Kind::DISTINCT: return toNode(Kind::EQUAL, r, l).notNode();
@@ -1224,7 +1220,8 @@ Node Comparison::mkIntInequality(Kind k, const Polynomial& p){
   }
 }
 
-Node Comparison::mkIntEquality(const Polynomial& p){
+Node Comparison::mkIntEquality(NodeManager* nm, const Polynomial& p)
+{
   Assert(!p.isConstant());
   Assert(p.allIntegralVariables());
 
@@ -1253,12 +1250,15 @@ Node Comparison::mkIntEquality(const Polynomial& p){
     Assert(newRight.isIntegral());
     return toNode(Kind::EQUAL, newLeft, newRight);
   }else{
-    return mkBoolNode(false);
+    return mkBoolNode(nm, false);
   }
 }
 
-Comparison Comparison::mkComparison(Kind k, const Polynomial& l, const Polynomial& r){
-
+Comparison Comparison::mkComparison(NodeManager* nm,
+                                    Kind k,
+                                    const Polynomial& l,
+                                    const Polynomial& r)
+{
   //Make this special case fast for sharing!
   if ((k == Kind::EQUAL || k == Kind::DISTINCT) && l.isVarList()
       && r.isVarList())
@@ -1287,11 +1287,11 @@ Comparison Comparison::mkComparison(Kind k, const Polynomial& l, const Polynomia
     bool isInteger = diff.allIntegralVariables();
     switch(k){
       case Kind::EQUAL:
-        result = isInteger ? mkIntEquality(diff) : mkRatEquality(diff);
+        result = isInteger ? mkIntEquality(nm, diff) : mkRatEquality(diff);
         break;
       case Kind::DISTINCT:
       {
-        Node eq = isInteger ? mkIntEquality(diff) : mkRatEquality(diff);
+        Node eq = isInteger ? mkIntEquality(nm, diff) : mkRatEquality(diff);
         result = eq.notNode();
       }
       break;
@@ -1357,14 +1357,14 @@ Kind Comparison::comparisonKind(TNode literal){
   }
 }
 
-
-Node Polynomial::makeAbsCondition(Variable v, Polynomial p){
+Node Polynomial::makeAbsCondition(NodeManager* nm, Variable v, Polynomial p)
+{
   Polynomial zerop = Polynomial::mkZero();
 
   Polynomial varp = Polynomial::mkPolynomial(v);
-  Comparison pLeq0 = Comparison::mkComparison(Kind::LEQ, p, zerop);
-  Comparison negP = Comparison::mkComparison(Kind::EQUAL, varp, -p);
-  Comparison posP = Comparison::mkComparison(Kind::EQUAL, varp, p);
+  Comparison pLeq0 = Comparison::mkComparison(nm, Kind::LEQ, p, zerop);
+  Comparison negP = Comparison::mkComparison(nm, Kind::EQUAL, varp, -p);
+  Comparison posP = Comparison::mkComparison(nm, Kind::EQUAL, varp, p);
 
   Node absCnd = (pLeq0.getNode()).iteNode(negP.getNode(), posP.getNode());
   return absCnd;

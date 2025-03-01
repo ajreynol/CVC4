@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Tim King, Gereon Kremer, Andrew Reynolds
+ *   Tim King, Aina Niemetz, Gereon Kremer
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -241,6 +241,7 @@ public:
      case Kind::DIVISION_TOTAL: return isDivMember(n);
      case Kind::IAND:
      case Kind::POW2:
+     case Kind::POW:
      case Kind::EXPONENTIAL:
      case Kind::SINE:
      case Kind::COSINE:
@@ -255,11 +256,11 @@ public:
      case Kind::ARCSECANT:
      case Kind::ARCCOTANGENT:
      case Kind::SQRT:
-     case Kind::PI: return areChildrenPolynomialMembers(n);
+     case Kind::PI:
      case Kind::ABS:
      case Kind::TO_INTEGER:
-       // Treat to_int as a variable; it is replaced in early preprocessing
-       // by a variable.
+       // All of the above are treated as variables. We assume their arguments
+       // are rewritten.
        return true;
      default: return isLeafMember(n);
    }
@@ -435,7 +436,7 @@ public:
 
 template <class GetNodeIterator>
 inline Node makeNode(Kind k, GetNodeIterator start, GetNodeIterator end) {
-  NodeBuilder nb(k);
+  NodeBuilder nb(NodeManager::currentNM(), k);
 
   while(start != end) {
     nb << (*start).getNode();
@@ -633,7 +634,7 @@ private:
     Assert(!c.isZero());
     Assert(!c.isOne());
     Assert(!vl.empty());
-    return NodeManager::currentNM()->mkNode(
+    return NodeManager::mkNode(
         Kind::MULT, c.getNode(), vl.getNode());
   }
 
@@ -1132,12 +1133,13 @@ public:
   friend class Comparison;
 
   /** Returns a node that if asserted ensures v is the abs of this polynomial.*/
-  Node makeAbsCondition(Variable v){
-    return makeAbsCondition(v, *this);
+  Node makeAbsCondition(NodeManager* nm, Variable v)
+  {
+    return makeAbsCondition(nm, v, *this);
   }
 
   /** Returns a node that if asserted ensures v is the abs of p.*/
-  static Node makeAbsCondition(Variable v, Polynomial p);
+  static Node makeAbsCondition(NodeManager* nm, Variable v, Polynomial p);
 
 };/* class Polynomial */
 
@@ -1156,7 +1158,7 @@ public:
 class SumPair : public NodeWrapper {
 private:
   static Node toNode(const Polynomial& p, const Constant& c){
-    return NodeManager::currentNM()->mkNode(
+    return NodeManager::mkNode(
         Kind::ADD, p.getNode(), c.getNode());
   }
 
@@ -1341,7 +1343,7 @@ private:
    * Creates a node in normal form equivalent to (= l 0).
    * All variables in l are integral.
    */
-  static Node mkIntEquality(const Polynomial& l);
+  static Node mkIntEquality(NodeManager* nm, const Polynomial& l);
 
   /**
    * Creates a comparison equivalent to (k l 0).
@@ -1384,7 +1386,10 @@ public:
 
   Kind comparisonKind() const { return comparisonKind(getNode()); }
 
-  static Comparison mkComparison(Kind k, const Polynomial& l, const Polynomial& r);
+  static Comparison mkComparison(NodeManager* nm,
+                                 Kind k,
+                                 const Polynomial& l,
+                                 const Polynomial& r);
 
   /** Returns true if the comparison is a boolean constant. */
   bool isBoolean() const;

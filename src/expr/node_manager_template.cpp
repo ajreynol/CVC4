@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -252,6 +252,7 @@ NodeManager::~NodeManager()
   TypeNode dummy;
   d_tt_cache.d_children.clear();
   d_tt_cache.d_data = dummy;
+  d_nt_cache.clear();
   d_rt_cache.d_children.clear();
   d_rt_cache.d_data = dummy;
 
@@ -259,6 +260,7 @@ NodeManager::~NodeManager()
   d_dtypes.clear();
   d_oracles.clear();
   d_nfreshSorts.clear();
+  d_nfreshVars.clear();
 
   Assert(!d_attrManager->inGarbageCollection());
 
@@ -319,6 +321,13 @@ const DType& NodeManager::getDTypeFor(TypeNode tn) const
   {
     // lookup its datatype encoding
     TypeNode dtt = getAttribute(tn, expr::TupleDatatypeAttr());
+    Assert(!dtt.isNull());
+    return getDTypeFor(dtt);
+  }
+  else if (k == Kind::NULLABLE_TYPE)
+  {
+    // lookup its datatype encoding
+    TypeNode dtt = getAttribute(tn, expr::NullableDatatypeAttr());
     Assert(!dtt.isNull());
     return getDTypeFor(dtt);
   }
@@ -504,8 +513,9 @@ TypeNode NodeManager::getType(TNode n, bool check, std::ostream* errOut)
   TypeNode typeNode;
   TypeAttr ta;
   TypeCheckedAttr tca;
-  bool hasType = getAttribute(n, ta, typeNode);
-  bool needsCheck = check && !getAttribute(n, tca);
+  NodeManager* nm = n.getNodeManager();
+  bool hasType = nm->getAttribute(n, ta, typeNode);
+  bool needsCheck = check && !nm->getAttribute(n, tca);
   if (hasType && !needsCheck)
   {
     return typeNode;
@@ -520,7 +530,8 @@ TypeNode NodeManager::getType(TNode n, bool check, std::ostream* errOut)
     cur = visit.back();
     visit.pop_back();
     // already computed (and checked, if necessary) this type
-    if (!getAttribute(cur, ta).isNull() && (!check || getAttribute(cur, tca)))
+    if (!nm->getAttribute(cur, ta).isNull()
+        && (!check || nm->getAttribute(cur, tca)))
     {
       continue;
     }
@@ -533,11 +544,11 @@ TypeNode NodeManager::getType(TNode n, bool check, std::ostream* errOut)
       // check the children types.
       if (!check)
       {
-        typeNode = TypeChecker::preComputeType(this, cur);
+        typeNode = TypeChecker::preComputeType(nm, cur);
         if (!typeNode.isNull())
         {
           visited[cur] = true;
-          setAttribute(cur, ta, typeNode);
+          nm->setAttribute(cur, ta, typeNode);
           // note that the result of preComputeType is not cached
           continue;
         }
@@ -551,21 +562,21 @@ TypeNode NodeManager::getType(TNode n, bool check, std::ostream* errOut)
     {
       visited[cur] = true;
       // children now have types assigned
-      typeNode = TypeChecker::computeType(this, cur, check, errOut);
+      typeNode = TypeChecker::computeType(nm, cur, check, errOut);
       // if null, immediately return without further caching
       if (typeNode.isNull())
       {
         return typeNode;
       }
-      setAttribute(cur, ta, typeNode);
-      setAttribute(cur, tca, check || getAttribute(cur, tca));
+      nm->setAttribute(cur, ta, typeNode);
+      nm->setAttribute(cur, tca, check || nm->getAttribute(cur, tca));
     }
   } while (!visit.empty());
 
   /* The type should be have been computed and stored. */
-  Assert(hasAttribute(n, ta));
+  Assert(n.hasAttribute(ta));
   /* The check should have happened, if we asked for it. */
-  Assert(!check || getAttribute(n, tca));
+  Assert(!check || n.getAttribute(tca));
   // should be the last type computed in the above loop
   return typeNode;
 }
@@ -686,6 +697,15 @@ std::vector<TypeNode> NodeManager::mkMutualDatatypeTypesInternal(
         // Set its datatype representation
         typeNode = mkTypeNode(Kind::TUPLE_TYPE, tupleTypes);
         typeNode.setAttribute(expr::TupleDatatypeAttr(), dtt);
+      }
+      if (dt.isNullable())
+      {
+        TypeNode dtt = typeNode;
+        const DTypeConstructor& some = dt[1];
+        Assert(some.getNumArgs() == 1);
+        // Set its datatype representation
+        typeNode = mkTypeNode(Kind::NULLABLE_TYPE, some[0].getType());
+        typeNode.setAttribute(expr::NullableDatatypeAttr(), dtt);
       }
     }
     else
@@ -941,6 +961,35 @@ TypeNode NodeManager::mkTupleType(const std::vector<TypeNode>& types)
   return d_tt_cache.getTupleType(this, types);
 }
 
+TypeNode NodeManager::mkNullableType(const TypeNode& type)
+{
+  Assert(!type.isNull());
+  auto it = d_nt_cache.find(type);
+  if (it != d_nt_cache.end())
+  {
+    return it->second;
+  }
+  // construct the corresponding datatype with two constructors
+  // null and some.
+  std::stringstream sst;
+  sst << "__cvc5_nullable_" << type;
+  DType dt(sst.str());
+  dt.setNullable();  
+  std::shared_ptr<DTypeConstructor> null =
+      std::make_shared<DTypeConstructor>("nullable.null");
+  dt.addConstructor(null);
+  std::shared_ptr<DTypeConstructor> some =
+      std::make_shared<DTypeConstructor>("nullable.some");  
+  some->addArg("nullable.val", type);
+  dt.addConstructor(some);
+  TypeNode datatype = mkDatatypeType(dt);
+  Assert(datatype.isNullable());
+  d_nt_cache[type] = datatype;
+  Trace("nullable-debug") << "NodeManager::mkNullableType(" << type
+                          << ") = " << datatype << std::endl;
+  return datatype;
+}
+
 TypeNode NodeManager::mkRecordType(const Record& rec)
 {
   return d_rt_cache.getRecordType(this, rec);
@@ -1049,23 +1098,28 @@ Node NodeManager::mkVar(const std::string& name,
     setAttribute(n, expr::VarNameAttr(), name);
     return n;
   }
-  // to construct a variable in a canonical way, we use the skolem
-  // manager, where SkolemFunId::INPUT_VARIABLE identifies that the
-  // variable is unique.
-  std::vector<Node> cnodes;
-  cnodes.push_back(mkConst(String(name, false)));
-  // Since we index only on Node, we must construct use mkGroundValue
-  // to construct a canonical node for the tn.
-  Node gt = mkGroundValue(type);
-  cnodes.push_back(gt);
-  return d_skManager->mkSkolemFunction(
-      SkolemFunId::INPUT_VARIABLE, type, cnodes);
+  // Note that the constructed variable must have kind VARIABLE, not SKOLEM,
+  // which is why this is not implemented as a case inside SkolemManager.
+  std::pair<std::string, TypeNode> key(name, type);
+  std::map<std::pair<std::string, TypeNode>, Node>::iterator it;
+  it = d_nfreshVars.find(key);
+  if (it != d_nfreshVars.end())
+  {
+    return it->second;
+  }
+  Node n = NodeBuilder(this, Kind::VARIABLE);
+  setAttribute(n, TypeAttr(), type);
+  setAttribute(n, TypeCheckedAttr(), true);
+  setAttribute(n, expr::VarNameAttr(), name);
+  Node v = n;
+  d_nfreshVars[key] = v;
+  return v;
 }
 
 Node NodeManager::mkBoundVar(const std::string& name, const TypeNode& type)
 {
   Node n = mkBoundVar(type);
-  setAttribute(n, expr::VarNameAttr(), name);
+  n.setAttribute(expr::VarNameAttr(), name);
   return n;
 }
 
@@ -1080,7 +1134,7 @@ Node NodeManager::getBoundVarListForFunctionType(TypeNode tn)
     {
       vars.push_back(mkBoundVar(tn[i]));
     }
-    bvl = mkNode(Kind::BOUND_VAR_LIST, vars);
+    bvl = tn.getNodeManager()->mkNode(Kind::BOUND_VAR_LIST, vars);
     Trace("functions") << "Make standard bound var list " << bvl << " for "
                        << tn << std::endl;
     tn.setAttribute(LambdaBoundVarListAttr(), bvl);
@@ -1181,23 +1235,23 @@ Node NodeManager::mkChain(Kind kind, const std::vector<Node>& children)
 
 Node NodeManager::mkVar(const TypeNode& type)
 {
-  Node n = NodeBuilder(this, Kind::VARIABLE);
-  setAttribute(n, TypeAttr(), type);
-  setAttribute(n, TypeCheckedAttr(), true);
+  Node n = NodeBuilder(type.getNodeManager(), Kind::VARIABLE);
+  n.setAttribute(TypeAttr(), type);
+  n.setAttribute(TypeCheckedAttr(), true);
   return n;
 }
 
 Node NodeManager::mkBoundVar(const TypeNode& type)
 {
-  Node n = NodeBuilder(this, Kind::BOUND_VARIABLE);
-  setAttribute(n, TypeAttr(), type);
-  setAttribute(n, TypeCheckedAttr(), true);
+  Node n = NodeBuilder(type.getNodeManager(), Kind::BOUND_VARIABLE);
+  n.setAttribute(TypeAttr(), type);
+  n.setAttribute(TypeCheckedAttr(), true);
   return n;
 }
 
 Node NodeManager::mkInstConstant(const TypeNode& type)
 {
-  Node n = NodeBuilder(this, Kind::INST_CONSTANT);
+  Node n = NodeBuilder(type.getNodeManager(), Kind::INST_CONSTANT);
   n.setAttribute(TypeAttr(), type);
   n.setAttribute(TypeCheckedAttr(), true);
   return n;
@@ -1205,10 +1259,10 @@ Node NodeManager::mkInstConstant(const TypeNode& type)
 
 Node NodeManager::mkRawSymbol(const std::string& name, const TypeNode& type)
 {
-  Node n = NodeBuilder(this, Kind::RAW_SYMBOL);
+  Node n = NodeBuilder(type.getNodeManager(), Kind::RAW_SYMBOL);
   n.setAttribute(TypeAttr(), type);
   n.setAttribute(TypeCheckedAttr(), true);
-  setAttribute(n, expr::VarNameAttr(), name);
+  n.setAttribute(expr::VarNameAttr(), name);
   return n;
 }
 
@@ -1266,12 +1320,15 @@ NodeClass NodeManager::mkConstInternal(Kind k, const T& val)
   nvStack.d_id = 0;
   nvStack.d_kind = static_cast<uint32_t>(k);
   nvStack.d_rc = 0;
+  nvStack.d_nm = this;
   nvStack.d_nchildren = 1;
 
 #if defined(__GNUC__) \
     && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+#if defined(__GNUC__) && (__GNUC__ > 9)
 #pragma GCC diagnostic ignored "-Wzero-length-bounds"
 #endif
 
@@ -1298,6 +1355,7 @@ NodeClass NodeManager::mkConstInternal(Kind k, const T& val)
   nv->d_nchildren = 0;
   nv->d_kind = static_cast<uint32_t>(k);
   nv->d_id = d_nextId++;
+  nv->d_nm = this;
   nv->d_rc = 0;
 
   new (&nv->d_children) T(val);
@@ -1322,6 +1380,15 @@ Node NodeManager::mkGroundValue(const TypeNode& tn)
 {
   theory::TypeEnumerator te(tn);
   return *te;
+}
+
+Node NodeManager::mkDummySkolem(const std::string& prefix,
+                                const TypeNode& type,
+                                const std::string& comment,
+                                SkolemFlags flags)
+{
+  NodeManager* nm = type.getNodeManager();
+  return nm->getSkolemManager()->mkDummySkolem(prefix, type, comment, flags);
 }
 
 bool NodeManager::safeToReclaimZombies() const

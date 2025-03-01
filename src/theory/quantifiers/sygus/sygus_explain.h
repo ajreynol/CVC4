@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -44,7 +44,7 @@ class TermDbSygus;
 class TermRecBuild
 {
  public:
-  TermRecBuild() {}
+  TermRecBuild(NodeManager* nm) : d_nm(nm) {}
   /** set the initial term to n
    *
    * The context initially empty, that is,
@@ -74,6 +74,8 @@ class TermRecBuild
   Node build(unsigned p = 0);
 
  private:
+  /** Pointer to the node manager */
+  NodeManager* d_nm;
   /** stack of active terms */
   std::vector<Node> d_term;
   /** stack of children of active terms
@@ -207,7 +209,7 @@ class SygusExplain : protected EnvObj
                          std::vector<Node>& exp,
                          SygusInvarianceTest& et,
                          Node vnr,
-                         std::map<TypeNode, int>& var_count,
+                         std::map<TypeNode, size_t>& var_count,
                          unsigned& sz);
   void getExplanationFor(Node n,
                          Node vn,
@@ -218,7 +220,7 @@ class SygusExplain : protected EnvObj
                          Node vn,
                          std::vector<Node>& exp,
                          SygusInvarianceTest& et,
-                         std::map<TypeNode, int>& var_count,
+                         std::map<TypeNode, size_t>& var_count,
                          bool strict = true);
 
  private:
@@ -234,7 +236,7 @@ class SygusExplain : protected EnvObj
                          Node n,
                          Node vn,
                          std::vector<Node>& exp,
-                         std::map<TypeNode, int>& var_count,
+                         std::map<TypeNode, size_t>& var_count,
                          SygusInvarianceTest& et,
                          Node vnr,
                          Node& vnr_exp,

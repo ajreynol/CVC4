@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Abdalrhman Mohamed, Gereon Kremer
+ *   Andrew Reynolds, Aina Niemetz, Abdalrhman Mohamed
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -142,8 +142,7 @@ void CegSingleInv::finishInit(bool syntaxRestricted)
     }
     return;
   }
-  NodeManager* nm = NodeManager::currentNM();
-  SkolemManager* sm = nm->getSkolemManager();
+  NodeManager* nm = nodeManager();
   d_single_inv = d_sip->getSingleInvocation();
   d_single_inv = TermUtil::simpleNegate(d_single_inv);
   std::vector<Node> func_vars;
@@ -159,8 +158,8 @@ void CegSingleInv::finishInit(bool syntaxRestricted)
   d_sip->getSingleInvocationVariables(sivars);
   for (unsigned i = 0, size = sivars.size(); i < size; i++)
   {
-    Node v =
-        sm->mkDummySkolem("a", sivars[i].getType(), "single invocation arg");
+    Node v = NodeManager::mkDummySkolem(
+        "a", sivars[i].getType(), "single invocation arg");
     d_single_inv_arg_sk.push_back(v);
   }
   d_single_inv = d_single_inv.substitute(sivars.begin(),
@@ -209,21 +208,15 @@ Result CegSingleInv::solve()
     return Result(Result::UNSAT);
   }
   Trace("sygus-si") << "Solve using single invocation..." << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
-  SkolemManager* sm = nm->getSkolemManager();
+  NodeManager* nm = nodeManager();
   // Mark the quantified formula with the quantifier elimination attribute to
   // ensure its structure is preserved in the query below.
   Node siq = d_single_inv;
   Node n_attr;
   if (siq.getKind() == Kind::FORALL)
   {
-    n_attr = sm->mkDummySkolem(
-        "qe_si",
-        nm->booleanType(),
-        "Auxiliary variable for qe attr for single invocation.");
-    QuantElimAttribute qea;
-    n_attr.setAttribute(qea, true);
-    n_attr = nm->mkNode(Kind::INST_ATTRIBUTE, n_attr);
+    // get the INST_ATTRIBUTE term marking quantifier elimination
+    n_attr = QuantAttributes::mkAttrQuantifierElimination(nm);
     n_attr = nm->mkNode(Kind::INST_PATTERN_LIST, n_attr);
     siq = nm->mkNode(Kind::FORALL, siq[0], siq[1], n_attr);
   }
@@ -353,7 +346,7 @@ Node CegSingleInv::getSolution(size_t sol_index,
       vars.begin(), vars.end(), sygusVars.begin(), sygusVars.end());
   sol = reconstructToSyntax(sol, stn, reconstructed, rconsSygus);
   return !sol.isNull() && s.getKind() == Kind::LAMBDA
-             ? NodeManager::currentNM()->mkNode(Kind::LAMBDA, s[0], sol)
+             ? nodeManager()->mkNode(Kind::LAMBDA, s[0], sol)
              : sol;
 }
 
@@ -407,7 +400,7 @@ Node CegSingleInv::getSolutionFromInst(size_t index)
     std::reverse(indices.begin(), indices.end());
     s = d_inst[indices[0]][sol_index];
     // it is an ITE chain whose conditions are the instantiations
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     for (unsigned j = 1, nindices = indices.size(); j < nindices; j++)
     {
       unsigned uindex = indices[j];
@@ -526,8 +519,9 @@ bool CegSingleInv::solveTrivial(Node q)
 
     std::vector<Node> varsTmp;
     std::vector<Node> subsTmp;
-    QuantifiersRewriter qrew(d_env.getRewriter(), options());
-    qrew.getVarElim(body, args, varsTmp, subsTmp);
+    std::vector<Node> litTmp;
+    QuantifiersRewriter qrew(nodeManager(), d_env.getRewriter(), options());
+    qrew.getVarElim(body, args, varsTmp, subsTmp, litTmp);
     // if we eliminated a variable, update body and reprocess
     if (!varsTmp.empty())
     {
@@ -567,7 +561,7 @@ bool CegSingleInv::solveTrivial(Node q)
       inst.push_back(imap[v]);
     }
     d_inst.push_back(inst);
-    d_instConds.push_back(NodeManager::currentNM()->mkConst(true));
+    d_instConds.push_back(nodeManager()->mkConst(true));
     return true;
   }
   Trace("sygus-si-trivial-solve")

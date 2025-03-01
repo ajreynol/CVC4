@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Mathias Preiner
+ *   Andrew Reynolds, Aina Niemetz, Mathias Preiner
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -18,6 +18,8 @@
 #include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
 #include "expr/subs.h"
+#include "printer/smt2/smt2_printer.h"
+#include "theory/quantifiers/mbqi_enum.h"
 #include "theory/quantifiers/first_order_model.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_rewriter.h"
@@ -25,6 +27,8 @@
 #include "theory/quantifiers/term_util.h"
 #include "theory/smt_engine_subsolver.h"
 #include "theory/strings/theory_strings_utils.h"
+#include "theory/uf/function_const.h"
+#include "smt/set_defaults.h"
 
 using namespace std;
 using namespace cvc5::internal::kind;
@@ -38,12 +42,42 @@ InstStrategyMbqi::InstStrategyMbqi(Env& env,
                                    QuantifiersInferenceManager& qim,
                                    QuantifiersRegistry& qr,
                                    TermRegistry& tr)
-    : QuantifiersModule(env, qs, qim, qr, tr)
+    : QuantifiersModule(env, qs, qim, qr, tr), d_globalSyms(userContext())
 {
   // some kinds may appear in model values that cannot be asserted
   d_nonClosedKinds.insert(Kind::STORE_ALL);
   d_nonClosedKinds.insert(Kind::CODATATYPE_BOUND_VARIABLE);
   d_nonClosedKinds.insert(Kind::UNINTERPRETED_SORT_VALUE);
+  // may appear in certain models e.g. strings of excessive length
+  d_nonClosedKinds.insert(Kind::WITNESS);
+
+  if (options().quantifiers.mbqiEnum)
+  {
+    d_msenum.reset(new MbqiEnum(env, *this));
+  }
+  d_subOptions.copyValues(options());
+  smt::SetDefaults::disableChecking(d_subOptions);
+}
+
+void InstStrategyMbqi::ppNotifyAssertions(const std::vector<Node>& assertions)
+{
+  // collecting global symbols from all available assertions
+  for (const Node& a : assertions)
+  {
+    std::unordered_set<Node> cur_syms;
+    expr::getSymbols(a, cur_syms);
+    // Iterate over the symbols in the current assertion
+    for (const auto& s : cur_syms)
+    {
+      // Add the symbol to syms if it's not already present
+      d_globalSyms.insert(s);
+    }
+  }
+}
+
+const context::CDHashSet<Node>& InstStrategyMbqi::getGlobalSyms() const
+{
+  return d_globalSyms;
 }
 
 void InstStrategyMbqi::reset_round(Theory::Effort e) { d_quantChecked.clear(); }
@@ -64,9 +98,17 @@ void InstStrategyMbqi::check(Theory::Effort e, QEffort quant_e)
   {
     return;
   }
+  FirstOrderModel* fm = d_treg.getModel();
+  if (TraceIsOn("mbqi-model-exp"))
+  {
+    eq::EqualityEngine* ee = fm->getEqualityEngine();
+    Trace("mbqi-model-exp") << "=== InstStrategyMbqi::check" << std::endl;
+    Trace("mbqi-model-exp") << "Ground model:" << std::endl;
+    Trace("mbqi-model-exp") << ee->debugPrintEqc() << std::endl;
+    Trace("mbqi-model-exp") << std::endl;
+  }
   // see if the negation of each quantified formula is satisfiable in the model
   std::vector<Node> disj;
-  FirstOrderModel* fm = d_treg.getModel();
   std::vector<TNode> visit;
   for (size_t i = 0, nquant = fm->getNumAssertedQuantifiers(); i < nquant; i++)
   {
@@ -77,6 +119,8 @@ void InstStrategyMbqi::check(Theory::Effort e, QEffort quant_e)
     }
     process(q);
   }
+  Trace("mbqi-model-exp") << "=== InstStrategyMbqi::check finished"
+                          << std::endl;
 }
 
 bool InstStrategyMbqi::checkCompleteFor(Node q)
@@ -87,6 +131,7 @@ bool InstStrategyMbqi::checkCompleteFor(Node q)
 void InstStrategyMbqi::process(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
+  Trace("mbqi-model-exp") << "* Process quantified formula: " << q << std::endl;
   Trace("mbqi") << "Process quantified formula: " << q << std::endl;
   // Cache mapping terms in the skolemized body of q to the form passed to
   // the subsolver. This is local to this call.
@@ -96,7 +141,7 @@ void InstStrategyMbqi::process(Node q)
   // model values to the fresh variables
   std::map<Node, Node> mvToFreshVar;
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   const RepSet* rs = d_treg.getModel()->getRepSet();
   FirstOrderModel* fm = d_treg.getModel();
@@ -105,7 +150,7 @@ void InstStrategyMbqi::process(Node q)
   Subs skolems;
   for (const Node& v : q[0])
   {
-    Node k = sm->mkPurifySkolem(v);
+    Node k = mkMbqiSkolem(v);
     skolems.add(v, k);
     // do not take its model value (which does not exist) in conversion below
     tmpConvertMap[k] = k;
@@ -121,6 +166,7 @@ void InstStrategyMbqi::process(Node q)
   // check if there are any bad kinds
   if (cbody.isNull())
   {
+    Trace("mbqi-model-exp") << "...INTERNAL FAIL" << std::endl;
     Trace("mbqi") << "...failed to convert to query" << std::endl;
     return;
   }
@@ -137,6 +183,7 @@ void InstStrategyMbqi::process(Node q)
   else if (!bquery.getConst<bool>())
   {
     d_quantChecked.insert(q);
+    Trace("mbqi-model-exp") << "...SUCCESS, by rewriting" << std::endl;
     Trace("mbqi") << "...success, by rewriting" << std::endl;
     return;
   }
@@ -168,13 +215,13 @@ void InstStrategyMbqi::process(Node q)
   for (const Node& k : skolems.d_subs)
   {
     TypeNode tn = k.getType();
-    itk = freshVarType.find(tn);
-    if (itk == freshVarType.end())
+    if (!tn.isUninterpretedSort())
     {
       // not an uninterpreted sort, continue
       continue;
     }
-    if (itk->second.empty())
+    itk = freshVarType.find(tn);
+    if (itk == freshVarType.end() || itk->second.empty())
     {
       Trace("mbqi") << "warning: failed to get vars for type " << tn
                     << std::endl;
@@ -211,19 +258,23 @@ void InstStrategyMbqi::process(Node q)
   Node query = nm->mkAnd(constraints);
 
   std::unique_ptr<SolverEngine> mbqiChecker;
-  initializeSubsolver(mbqiChecker, d_env);
+  SubsolverSetupInfo ssi(d_env, d_subOptions);
+  initializeSubsolver(mbqiChecker, ssi);
   mbqiChecker->setOption("produce-models", "true");
   mbqiChecker->assertFormula(query);
   Trace("mbqi") << "*** Check sat..." << std::endl;
-  Trace("mbqi") << "  query is : " << query << std::endl;
+  Trace("mbqi") << "  query is : " << SkolemManager::getOriginalForm(query)
+                << std::endl;
   Result r = mbqiChecker->checkSat();
   Trace("mbqi") << "  ...got : " << r << std::endl;
   if (r.getStatus() == Result::UNSAT)
   {
+    Trace("mbqi-model-exp") << "...SUCCESS" << std::endl;
     d_quantChecked.insert(q);
     Trace("mbqi") << "...success, SAT" << std::endl;
     return;
   }
+  Trace("mbqi-model-exp") << "...FAIL, will instantiate" << std::endl;
 
   // get the model values for all fresh variables
   for (const Node& v : allVars)
@@ -236,7 +287,8 @@ void InstStrategyMbqi::process(Node q)
 
   // get the model values for skolems
   std::vector<Node> terms;
-  getModelFromSubsolver(*mbqiChecker.get(), skolems.d_subs, terms);
+  modelValueFromQuery(
+      q, query, *mbqiChecker.get(), skolems.d_subs, terms, mvToFreshVar);
   Assert(skolems.size() == terms.size());
   if (TraceIsOn("mbqi"))
   {
@@ -262,7 +314,7 @@ void InstStrategyMbqi::process(Node q)
       Trace("mbqi") << "warning: failed to process model value " << vc
                     << ", from " << v
                     << ", use arbitrary term for instantiation" << std::endl;
-      vc = nm->mkGroundTerm(v.getType());
+      vc = NodeManager::mkGroundTerm(v.getType());
     }
     v = vc;
   }
@@ -281,7 +333,7 @@ void InstStrategyMbqi::process(Node q)
     {
       Trace("mbqi") << "warning: failed to get term from value " << ov
                     << ", use arbitrary term in query" << std::endl;
-      mvt = nm->mkGroundTerm(ov.getType());
+      mvt = NodeManager::mkGroundTerm(ov.getType());
     }
     Assert(v.getType() == mvt.getType());
     fvToInst.add(v, mvt);
@@ -308,7 +360,7 @@ Node InstStrategyMbqi::convertToQuery(
     std::unordered_map<Node, Node>& cmap,
     std::map<TypeNode, std::unordered_set<Node> >& freshVarType)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   FirstOrderModel* fm = d_treg.getModel();
   std::unordered_map<Node, Node>::iterator it;
@@ -336,15 +388,8 @@ Node InstStrategyMbqi::convertToQuery(
       {
         cmap[cur] = cur;
       }
-      else if (ck == Kind::UNINTERPRETED_SORT_VALUE)
-      {
-        // return the fresh variable for this term
-        Node k = sm->mkPurifySkolem(cur);
-        freshVarType[cur.getType()].insert(k);
-        cmap[cur] = k;
-        continue;
-      }
-      else if (ck == Kind::CONST_SEQUENCE || cur.isVar())
+      else if (ck == Kind::CONST_SEQUENCE || ck == Kind::FUNCTION_ARRAY_CONST
+               || cur.isVar())
       {
         // constant sequences and variables require two passes
         if (!cur.getType().isFirstClass())
@@ -362,13 +407,17 @@ Node InstStrategyMbqi::convertToQuery(
             {
               mval = strings::utils::mkConcatForConstSequence(cur);
             }
+            else if (ck == Kind::FUNCTION_ARRAY_CONST)
+            {
+              mval = uf::FunctionConst::toLambda(cur);
+            }
             else
             {
               mval = fm->getValue(cur);
             }
             Trace("mbqi-model") << "  M[" << cur << "] = " << mval << "\n";
             modelValue[cur] = mval;
-            if (cur == mval)
+            if (expr::hasSubterm(mval, cur))
             {
               // failed to evaluate in model, keep itself
               cmap[cur] = cur;
@@ -387,13 +436,23 @@ Node InstStrategyMbqi::convertToQuery(
           }
         }
       }
+      else if (d_nonClosedKinds.find(ck) != d_nonClosedKinds.end())
+      {
+        // if its a constant, we can continue, we will assume it is distinct
+        // from all others of its type
+        if (cur.isConst())
+        {
+          // return the fresh variable for this term
+          Node k = sm->mkPurifySkolem(cur);
+          freshVarType[cur.getType()].insert(k);
+          cmap[cur] = k;
+          continue;
+        }
+        // if this is a bad kind, fail immediately
+        return Node::null();
+      }
       else if (cur.getNumChildren() == 0)
       {
-        // if this is a bad kind, fail immediately
-        if (d_nonClosedKinds.find(ck) != d_nonClosedKinds.end())
-        {
-          return Node::null();
-        }
         cmap[cur] = cur;
       }
       else
@@ -436,12 +495,31 @@ Node InstStrategyMbqi::convertToQuery(
   return cmap[cur];
 }
 
+void InstStrategyMbqi::modelValueFromQuery(
+    const Node& q,
+    const Node& query,
+    SolverEngine& smt,
+    const std::vector<Node>& vars,
+    std::vector<Node>& mvs,
+    const std::map<Node, Node>& mvToFreshVar)
+{
+  getModelFromSubsolver(smt, vars, mvs);
+  if (options().quantifiers.mbqiEnum)
+  {
+    std::vector<Node> smvs(mvs);
+    if (d_msenum->constructInstantiation(q, query, vars, smvs, mvToFreshVar))
+    {
+      mvs = smvs;
+    }
+  }
+}
+
 Node InstStrategyMbqi::convertFromModel(
     Node t,
     std::unordered_map<Node, Node>& cmap,
     const std::map<Node, Node>& mvToFreshVar)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::unordered_map<Node, Node>::iterator it;
   std::map<Node, Node> modelValue;
   std::unordered_set<Node> processingChildren;
@@ -470,6 +548,7 @@ Node InstStrategyMbqi::convertFromModel(
         if (itmv != mvToFreshVar.end())
         {
           cmap[cur] = itmv->second;
+          continue;
         }
         else
         {
@@ -478,26 +557,39 @@ Node InstStrategyMbqi::convertFromModel(
           return Node::null();
         }
       }
-      else if (ck == Kind::CONST_SEQUENCE)
+      // must convert to concat of sequence units
+      // must convert function array constant to lambda
+      Node cconv;
+      if (ck == Kind::CONST_SEQUENCE)
       {
-        // must convert to concat of sequence units
-        Node cconv = strings::utils::mkConcatForConstSequence(cur);
-        cmap[cur] = convertFromModel(cconv, cmap, mvToFreshVar);
+        cconv = strings::utils::mkConcatForConstSequence(cur);
+      }
+      else if (ck == Kind::FUNCTION_ARRAY_CONST)
+      {
+        cconv = uf::FunctionConst::toLambda(cur);
+      }
+      if (!cconv.isNull())
+      {
+        Node cconvRet = convertFromModel(cconv, cmap, mvToFreshVar);
+        if (cconvRet.isNull())
+        {
+          return cconvRet;
+        }
+        cmap[cur] = cconvRet;
+        continue;
       }
       else if (cur.getNumChildren() == 0)
       {
         cmap[cur] = cur;
+        continue;
       }
-      else
+      processingChildren.insert(cur);
+      visit.push_back(cur);
+      if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
       {
-        processingChildren.insert(cur);
-        visit.push_back(cur);
-        if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
-        {
-          visit.push_back(cur.getOperator());
-        }
-        visit.insert(visit.end(), cur.begin(), cur.end());
+        visit.push_back(cur.getOperator());
       }
+      visit.insert(visit.end(), cur.begin(), cur.end());
       continue;
     }
     processingChildren.erase(cur);
@@ -526,6 +618,13 @@ Node InstStrategyMbqi::convertFromModel(
 
   Assert(cmap.find(cur) != cmap.end());
   return cmap[cur];
+}
+
+Node InstStrategyMbqi::mkMbqiSkolem(const Node& t)
+{
+  SkolemManager* skm = nodeManager()->getSkolemManager();
+  return skm->mkInternalSkolemFunction(
+      InternalSkolemId::MBQI_INPUT, t.getType(), {t});
 }
 
 }  // namespace quantifiers

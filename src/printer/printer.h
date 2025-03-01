@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -65,10 +65,16 @@ class CVC5_EXPORT Printer
   /**
    * Write a Node out to a stream with this Printer, with the provided
    * let binding.
+   * @param out The output stream to write to.
+   * @param n The node to print.
+   * @param lbind The let binding, which determines which nodes are letified.
+   * @param lbindTop If false, the topmost term in n does not take into account
+   * lbind.
    */
   virtual void toStream(std::ostream& out,
                         TNode n,
-                        const LetBinding* lbind) const;
+                        const LetBinding* lbind,
+                        bool lbindTop) const;
 
   /** Write a Kind out to a stream with this Printer. */
   virtual void toStream(std::ostream& out, Kind k) const = 0;
@@ -286,6 +292,10 @@ class CVC5_EXPORT Printer
   /** Print get-timeout-core command */
   virtual void toStreamCmdGetTimeoutCore(std::ostream& out) const;
 
+  /** Print get-timeout-core-assuming command */
+  virtual void toStreamCmdGetTimeoutCoreAssuming(
+      std::ostream& out, const std::vector<Node>& assumptions) const;
+
   /** Print get-learned-literals command */
   virtual void toStreamCmdGetLearnedLiterals(std::ostream& out,
                                              modes::LearnedLitType t) const;
@@ -380,7 +390,7 @@ class CVC5_EXPORT Printer
   static std::unique_ptr<Printer> makePrinter(Language lang);
 
   /** Printers for each Language */
-  static std::unique_ptr<Printer>
+  static thread_local std::unique_ptr<Printer>
       d_printers[static_cast<size_t>(Language::LANG_MAX)];
 
 }; /* class Printer */

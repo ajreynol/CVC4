@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds
+ *   Andrew Reynolds, Daniel Larraz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -15,8 +15,8 @@
 
 #include "cvc5_private.h"
 
-#ifndef CVC4__PROOF__ALF__ALF_PRINT_CHANNEL_H
-#define CVC4__PROOF__ALF__ALF_PRINT_CHANNEL_H
+#ifndef CVC5__PROOF__ALF__ALF_PRINT_CHANNEL_H
+#define CVC5__PROOF__ALF__ALF_PRINT_CHANNEL_H
 
 #include <iostream>
 #include <map>
@@ -37,14 +37,14 @@ namespace proof {
 class AlfPrintChannel
 {
  public:
-  AlfPrintChannel() {}
-  virtual ~AlfPrintChannel() {}
+  AlfPrintChannel();
+  virtual ~AlfPrintChannel();
   /** Print node n */
-  virtual void printNode(TNode n) {}
+  virtual void printNode(TNode n) = 0;
   /** Print type node n */
-  virtual void printTypeNode(TypeNode tn) {}
+  virtual void printTypeNode(TypeNode tn) = 0;
   /** Print assume */
-  virtual void printAssume(TNode n, size_t i, bool isPush = false) {}
+  virtual void printAssume(TNode n, size_t i, bool isPush = false) = 0;
   /**
    * Print step
    * @param rname The rule name.
@@ -59,11 +59,14 @@ class AlfPrintChannel
                          size_t i,
                          const std::vector<size_t>& premises,
                          const std::vector<Node>& args,
-                         bool isPop = false)
-  {
-  }
+                         bool isPop = false) = 0;
   /** Print trust step */
-  virtual void printTrustStep(ProofRule r, TNode n, size_t i, TNode conc) {}
+  virtual void printTrustStep(ProofRule r,
+                              TNode n,
+                              size_t i,
+                              const std::vector<size_t>& premises,
+                              const std::vector<Node>& args,
+                              TNode conc) = 0;
 };
 
 /** Prints the proof to output stream d_out */
@@ -71,8 +74,9 @@ class AlfPrintChannelOut : public AlfPrintChannel
 {
  public:
   AlfPrintChannelOut(std::ostream& out,
-                     const LetBinding& lbind,
-                     const std::string& tprefix);
+                     const LetBinding* lbind,
+                     const std::string& tprefix,
+                     bool trackWarn);
   void printNode(TNode n) override;
   void printTypeNode(TypeNode tn) override;
   void printAssume(TNode n, size_t i, bool isPush) override;
@@ -82,7 +86,12 @@ class AlfPrintChannelOut : public AlfPrintChannel
                  const std::vector<size_t>& premises,
                  const std::vector<Node>& args,
                  bool isPop = false) override;
-  void printTrustStep(ProofRule r, TNode n, size_t i, TNode conc) override;
+  void printTrustStep(ProofRule r,
+                      TNode n,
+                      size_t i,
+                      const std::vector<size_t>& premises,
+                      const std::vector<Node>& args,
+                      TNode conc) override;
 
   /**
    * Print node to stream in the expected format of ALF.
@@ -92,12 +101,24 @@ class AlfPrintChannelOut : public AlfPrintChannel
    * Print type node to stream in the expected format of ALF.
    */
   void printTypeNodeInternal(std::ostream& out, TypeNode tn);
+  std::ostream& getOStream() { return d_out; }
 
  private:
+  /**
+   * Helper for print steps. We set reqPremises to true if we require printing
+   * premises even if empty.
+   */
+  void printStepInternal(const std::string& rname,
+                         TNode n,
+                         size_t i,
+                         const std::vector<size_t>& premises,
+                         const std::vector<Node>& args,
+                         bool isPop,
+                         bool reqPremises);
   /** The output stream */
   std::ostream& d_out;
   /** The let binding */
-  const LetBinding& d_lbind;
+  const LetBinding* d_lbind;
   /** term prefix */
   std::string d_termLetPrefix;
   /**
@@ -105,6 +126,8 @@ class AlfPrintChannelOut : public AlfPrintChannel
    * associated with trusted steps.
    */
   std::unordered_set<ProofRule> d_warnedRules;
+  /** Are we tracking warned rules? */
+  bool d_trackWarn;
 };
 
 /**
@@ -115,8 +138,9 @@ class AlfPrintChannelOut : public AlfPrintChannel
 class AlfPrintChannelPre : public AlfPrintChannel
 {
  public:
-  AlfPrintChannelPre(LetBinding& lbind);
+  AlfPrintChannelPre(LetBinding* lbind);
   void printNode(TNode n) override;
+  void printTypeNode(TypeNode tn) override;
   void printAssume(TNode n, size_t i, bool isPush) override;
   void printStep(const std::string& rname,
                  TNode n,
@@ -124,20 +148,18 @@ class AlfPrintChannelPre : public AlfPrintChannel
                  const std::vector<size_t>& premises,
                  const std::vector<Node>& args,
                  bool isPop = false) override;
-  void printTrustStep(ProofRule r, TNode n, size_t i, TNode conc) override;
-
-  /** Get variables we encountered in printing */
-  const std::unordered_set<TNode>& getVariables() const;
+  void printTrustStep(ProofRule r,
+                      TNode n,
+                      size_t i,
+                      const std::vector<size_t>& premises,
+                      const std::vector<Node>& args,
+                      TNode conc) override;
 
  private:
   /** The let binding */
-  LetBinding& d_lbind;
+  LetBinding* d_lbind;
   /** For computing free variables */
   std::unordered_set<Node> d_keep;
-  /** The set of variables we have encountered */
-  std::unordered_set<TNode> d_vars;
-  /** The visited cache for computing variables */
-  std::unordered_set<TNode> d_varsVisited;
   /** Process that we will print node n in the final proof */
   void processInternal(const Node& n);
 };

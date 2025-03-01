@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Mathias Preiner, Andrew Reynolds, Gereon Kremer
+ *   Mathias Preiner, Andrew Reynolds, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -178,9 +178,10 @@ void addSpecialValues(const TypeNode& tn, std::vector<Node>& extra_cons)
   if (tn.isBitVector())
   {
     uint32_t size = tn.getBitVectorSize();
-    extra_cons.push_back(bv::utils::mkOnes(size));
-    extra_cons.push_back(bv::utils::mkMinSigned(size));
-    extra_cons.push_back(bv::utils::mkMaxSigned(size));
+    NodeManager* nm = NodeManager::currentNM();
+    extra_cons.push_back(bv::utils::mkOnes(nm, size));
+    extra_cons.push_back(bv::utils::mkMinSigned(nm, size));
+    extra_cons.push_back(bv::utils::mkMaxSigned(nm, size));
   }
 }
 
@@ -266,11 +267,12 @@ void SygusInst::check(Theory::Effort e, QEffort quant_e)
 
   if (quant_e != QEFFORT_STANDARD) return;
 
+  beginCallDebug();
   FirstOrderModel* model = d_treg.getModel();
   Instantiate* inst = d_qim.getInstantiate();
   TermDbSygus* db = d_treg.getTermDatabaseSygus();
   SygusExplain syexplain(d_env, db);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   options::SygusInstMode mode = options().quantifiers.sygusInstMode;
 
   for (const Node& q : d_active_quant)
@@ -336,6 +338,7 @@ void SygusInst::check(Theory::Effort e, QEffort quant_e)
       sendEvalUnfoldLemmas(eval_unfold_lemmas);
     }
   }
+  endCallDebug();
 }
 
 bool SygusInst::sendEvalUnfoldLemmas(const std::vector<Node>& lemmas)
@@ -486,6 +489,8 @@ void SygusInst::ppNotifyAssertions(const std::vector<Node>& assertions)
   }
 }
 
+std::string SygusInst::identify() const { return "sygus-inst"; }
+
 /*****************************************************************************/
 /* private methods                                                           */
 /*****************************************************************************/
@@ -498,9 +503,8 @@ Node SygusInst::getCeLiteral(Node q)
     return it->second;
   }
 
-  NodeManager* nm = NodeManager::currentNM();
-  SkolemManager* sm = nm->getSkolemManager();
-  Node sk = sm->mkDummySkolem("CeLiteral", nm->booleanType());
+  NodeManager* nm = nodeManager();
+  Node sk = NodeManager::mkDummySkolem("CeLiteral", nm->booleanType());
   Node lit = d_qstate.getValuation().ensureLiteral(sk);
   d_ce_lits[q] = lit;
   return lit;
@@ -516,7 +520,7 @@ void SygusInst::registerCeLemma(Node q, std::vector<TypeNode>& types)
   Trace("sygus-inst") << "Register CE Lemma for " << q << std::endl;
 
   /* Generate counterexample lemma for 'q'. */
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   SkolemManager* sm = nm->getSkolemManager();
   TermDbSygus* db = d_treg.getTermDatabaseSygus();
 

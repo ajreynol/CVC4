@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -65,19 +65,22 @@ unsigned getSignExtendAmount(TNode node)
 bool isOnes(TNode node)
 {
   if (!node.isConst()) return false;
-  return node == mkOnes(getSize(node));
+  NodeManager* nm = node.getNodeManager();
+  return node == mkOnes(nm, getSize(node));
 }
 
 bool isZero(TNode node)
 {
   if (!node.isConst()) return false;
-  return node == mkZero(getSize(node));
+  NodeManager* nm = node.getNodeManager();
+  return node == mkZero(nm, getSize(node));
 }
 
 bool isOne(TNode node)
 {
   if (!node.isConst()) return false;
-  return node == mkOne(getSize(node));
+  NodeManager* nm = node.getNodeManager();
+  return node == mkOne(nm, getSize(node));
 }
 
 unsigned isPow2Const(TNode node, bool& isNeg)
@@ -213,73 +216,66 @@ bool isBitblastAtom(Node lit)
 
 /* ------------------------------------------------------------------------- */
 
-Node mkTrue()
-{
-  return NodeManager::currentNM()->mkConst<bool>(true);
-}
+Node mkTrue(NodeManager* nm) { return nm->mkConst<bool>(true); }
 
-Node mkFalse()
-{
-  return NodeManager::currentNM()->mkConst<bool>(false);
-}
+Node mkFalse(NodeManager* nm) { return nm->mkConst<bool>(false); }
 
-Node mkZero(unsigned size)
+Node mkZero(NodeManager* nm, unsigned size)
 {
   Assert(size > 0);
-  return mkConst(size, 0u);
+  return mkConst(nm, size, 0u);
 }
 
-Node mkOne(unsigned size)
+Node mkOne(NodeManager* nm, unsigned size)
 {
   Assert(size > 0);
-  return mkConst(size, 1u);
+  return mkConst(nm, size, 1u);
 }
 
-Node mkOnes(unsigned size)
+Node mkOnes(NodeManager* nm, unsigned size)
 {
   Assert(size > 0);
-  return mkConst(BitVector::mkOnes(size));
+  return mkConst(nm, BitVector::mkOnes(size));
 }
 
-Node mkMinSigned(unsigned size)
+Node mkMinSigned(NodeManager* nm, unsigned size)
 {
   Assert(size > 0);
-  return mkConst(BitVector::mkMinSigned(size));
+  return mkConst(nm, BitVector::mkMinSigned(size));
 }
 
-Node mkMaxSigned(unsigned size)
+Node mkMaxSigned(NodeManager* nm, unsigned size)
 {
   Assert(size > 0);
-  return mkConst(BitVector::mkMaxSigned(size));
+  return mkConst(nm, BitVector::mkMaxSigned(size));
 }
 
 /* ------------------------------------------------------------------------- */
 
-Node mkConst(unsigned size, unsigned int value)
+Node mkConst(NodeManager* nm, unsigned size, unsigned int value)
 {
   BitVector val(size, value);
-  return NodeManager::currentNM()->mkConst<BitVector>(val);
+  return nm->mkConst<BitVector>(val);
 }
 
-Node mkConst(unsigned size, Integer& value)
+Node mkConst(NodeManager* nm, unsigned size, Integer& value)
 {
-  return NodeManager::currentNM()->mkConst<BitVector>(BitVector(size, value));
+  return nm->mkConst<BitVector>(BitVector(size, value));
 }
 
-Node mkConst(const BitVector& value)
+Node mkConst(NodeManager* nm, const BitVector& value)
 {
-  return NodeManager::currentNM()->mkConst<BitVector>(value);
+  return nm->mkConst<BitVector>(value);
 }
 
 /* ------------------------------------------------------------------------- */
 
-Node mkVar(unsigned size)
+Node mkVar(NodeManager* nm, unsigned size)
 {
-  NodeManager* nm = NodeManager::currentNM();
-  SkolemManager* sm = nm->getSkolemManager();
-  return sm->mkDummySkolem("BVSKOLEM$$",
-                           nm->mkBitVectorType(size),
-                           "is a variable created by the theory of bitvectors");
+  return NodeManager::mkDummySkolem(
+      "BVSKOLEM$$",
+      nm->mkBitVectorType(size),
+      "is a variable created by the theory of bitvectors");
 }
 
 /* ------------------------------------------------------------------------- */
@@ -291,11 +287,11 @@ Node mkSortedNode(Kind kind, TNode child1, TNode child2)
 
   if (child1 < child2)
   {
-    return NodeManager::currentNM()->mkNode(kind, child1, child2);
+    return NodeManager::mkNode(kind, child1, child2);
   }
   else
   {
-    return NodeManager::currentNM()->mkNode(kind, child2, child1);
+    return NodeManager::mkNode(kind, child2, child1);
   }
 }
 
@@ -314,24 +310,21 @@ Node mkSortedNode(Kind kind, std::vector<Node>& children)
 
 /* ------------------------------------------------------------------------- */
 
-Node mkNot(Node child)
-{
-  return NodeManager::currentNM()->mkNode(Kind::NOT, child);
-}
+Node mkNot(Node child) { return NodeManager::mkNode(Kind::NOT, child); }
 
 Node mkAnd(TNode node1, TNode node2)
 {
-  return NodeManager::currentNM()->mkNode(Kind::AND, node1, node2);
+  return NodeManager::mkNode(Kind::AND, node1, node2);
 }
 
 Node mkOr(TNode node1, TNode node2)
 {
-  return NodeManager::currentNM()->mkNode(Kind::OR, node1, node2);
+  return NodeManager::mkNode(Kind::OR, node1, node2);
 }
 
 Node mkXor(TNode node1, TNode node2)
 {
-  return NodeManager::currentNM()->mkNode(Kind::XOR, node1, node2);
+  return NodeManager::mkNode(Kind::XOR, node1, node2);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -353,18 +346,18 @@ Node mkExtract(TNode node, unsigned high, unsigned low)
   return nm->mkNode(extractOp, node);
 }
 
-Node mkBitOf(TNode node, unsigned index)
+Node mkBit(TNode node, unsigned index)
 {
   NodeManager *nm = NodeManager::currentNM();
-  Node bitOfOp = nm->mkConst<BitVectorBitOf>(BitVectorBitOf(index));
-  return nm->mkNode(bitOfOp, node);
+  Node bitOp = nm->mkConst<BitVectorBit>(BitVectorBit(index));
+  return nm->mkNode(bitOp, node);
 }
 
 /* ------------------------------------------------------------------------- */
 
 Node mkConcat(TNode t1, TNode t2)
 {
-  return NodeManager::currentNM()->mkNode(Kind::BITVECTOR_CONCAT, t1, t2);
+  return NodeManager::mkNode(Kind::BITVECTOR_CONCAT, t1, t2);
 }
 
 Node mkConcat(std::vector<Node>& children)
@@ -382,7 +375,7 @@ Node mkConcat(TNode node, unsigned repeat)
   {
     return node;
   }
-  NodeBuilder result(Kind::BITVECTOR_CONCAT);
+  NodeBuilder result(node.getNodeManager(), Kind::BITVECTOR_CONCAT);
   for (unsigned i = 0; i < repeat; ++i)
   {
     result << node;
@@ -395,14 +388,14 @@ Node mkConcat(TNode node, unsigned repeat)
 
 Node mkInc(TNode t)
 {
-  return NodeManager::currentNM()->mkNode(
-      Kind::BITVECTOR_ADD, t, mkOne(getSize(t)));
+  NodeManager* nm = t.getNodeManager();
+  return NodeManager::mkNode(Kind::BITVECTOR_ADD, t, mkOne(nm, getSize(t)));
 }
 
 Node mkDec(TNode t)
 {
-  return NodeManager::currentNM()->mkNode(
-      Kind::BITVECTOR_SUB, t, mkOne(getSize(t)));
+  NodeManager* nm = t.getNodeManager();
+  return NodeManager::mkNode(Kind::BITVECTOR_SUB, t, mkOne(nm, getSize(t)));
 }
 
 /* ------------------------------------------------------------------------- */

@@ -1,0 +1,88 @@
+(include "../theories/Sets.eo")
+
+;;;;; ProofRewriteRule::SETS_IS_EMPTY_EVAL
+
+; define: $set_is_empty_eval
+; args:
+; - t (Set T): The set to check.
+; return: >
+;   true if we can determine that t is the empty set, false if we can
+;   determine t is not empty. Otherwise this method returns an unevaluated term.
+(define $set_is_empty_eval ((T Type :implicit) (t (Set T)))
+  (eo::match ((U Type) (x U) (s (Set U)))
+    t
+    (
+    ((set.empty U) true)
+    ((set.singleton x) false)
+    ((set.union (set.singleton x) s) false)
+    )
+  )
+)
+
+; rule: sets-is-empty-eval
+; implements: ProofRewriteRule::SETS_IS_EMPTY_EVAL
+; args:
+; - eq Bool: The equality to prove, whose left hand side is an application of set.is_empty.
+; requires: >
+;   showing that the set that set.is_empty is applied to is (or is not) the
+;   empty set, as denoted by the right hand side of eq.
+; conclusion: The given equality.
+(declare-rule sets-is-empty-eval ((T Type) (t (Set T)) (b Bool))
+  :args ((= (set.is_empty t) b))
+  :requires ((($set_is_empty_eval t) b))
+  :conclusion (= (set.is_empty t) b)
+)
+
+;;;;; ProofRule::SETS_SINGLETON_INJ
+
+; rule: sets_singleton_inj
+; implements: ProofRule::SETS_SINGLETON_INJ
+; premises:
+; - deq: An equality between singleton sets.
+; conclusion: The elements of the singleton sets are equal.
+(declare-rule sets_singleton_inj ((T Type) (a T) (b T))
+  :premises ((= (set.singleton a) (set.singleton b)))
+  :conclusion (= a b)
+)
+
+;;;;; ProofRule::SETS_EXT
+
+; rule: sets_ext
+; implements: ProofRule::SETS_EXT
+; premises:
+; - deq: A disequality between sets.
+; conclusion: >
+;   The sets are disequal for a witness element, as given by the skolem
+;   (@set_deq_diff a b).
+(declare-rule sets_ext ((T Type) (a (Set T)) (b (Set T)))
+  :premises ((not (= a b)))
+  :conclusion (not (= (set.member (@sets_deq_diff a b) a) (set.member (@sets_deq_diff a b) b)))
+)
+
+;;;;; ProofRewriteRule::SETS_INSERT_ELIM
+
+; program: $set_eval_insert
+; args:
+; - es @List: The list of elements
+; - t (Set T): The set to insert into.
+; return: >
+;   The union of elements in es with t.
+(program $set_eval_insert ((T Type) (x T) (xs @List :list) (t (Set T)))
+  (@List (Set T)) (Set T)
+  (
+    (($set_eval_insert (@list x xs) t) (set.union (set.singleton x) ($set_eval_insert xs t)))
+    (($set_eval_insert @list.nil t)    t)
+  )
+)
+
+; rule: sets-insert-elim
+; implements: ProofRewriteRule::SETS_INSERT_ELIM
+; args:
+; - eq Bool: The equality to prove with this rule.
+; requires: the union of the elements in the first argument with the last argument equal the right hand side.
+; conclusion: the equality between a and b.
+(declare-rule sets-insert-elim ((T Type) (s (Set T)) (es @List) (t (Set T)))
+  :args ((= (set.insert es s) t))
+  :requires ((($set_eval_insert es s) t))
+  :conclusion (= (set.insert es s) t)
+)

@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -48,10 +48,7 @@ class MinisatSatSolver : public CDCLTSatSolver, protected EnvObj
 
   static void  toMinisatClause(SatClause& clause, Minisat::vec<Minisat::Lit>& minisat_clause);
   static void  toSatClause    (const Minisat::Clause& clause, SatClause& sat_clause);
-  void initialize(context::Context* context,
-                  TheoryProxy* theoryProxy,
-                  context::UserContext* userContext,
-                  ProofNodeManager* pnm) override;
+  void initialize(TheoryProxy* theoryProxy, PropPfManager* ppm) override;
 
   ClauseId addClause(SatClause& clause, bool removable) override;
   ClauseId addXorClause(SatClause& clause, bool rhs, bool removable) override
@@ -103,9 +100,6 @@ class MinisatSatSolver : public CDCLTSatSolver, protected EnvObj
 
   /** Retrieve a pointer to the underlying solver. */
   Minisat::SimpSolver* getSolver() { return d_minisat; }
-
-  /** Retrieve the proof manager of this SAT solver. */
-  SatProofManager* getProofManager() override;
 
   /** Retrieve the refutation proof of this SAT solver. */
   std::shared_ptr<ProofNode> getProof() override;

@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -57,7 +57,7 @@ TypeNode TypeNode::substitute(
   }
 
   // otherwise compute
-  NodeBuilder nb(getKind());
+  NodeBuilder nb(getNodeManager(), getKind());
   if(getMetaKind() == kind::metakind::PARAMETERIZED) {
     // push the operator
     nb << TypeNode(d_nv->d_children[0]);
@@ -197,7 +197,7 @@ CardinalityClass TypeNode::getCardinalityClass()
     else
     {
       // all types we care about should be handled above
-      Assert(false);
+      Assert(false) << *this;
     }
   }
   setAttribute(TypeCardinalityClassAttr(), static_cast<uint64_t>(ret));
@@ -367,8 +367,29 @@ TypeNode TypeNode::unifyInternal(const TypeNode& t, bool isLub) const
     }
   }
   Kind k = getKind();
-  if (k == Kind::TYPE_CONSTANT || k != t.getKind())
+  Kind tk = t.getKind();
+  if (k == Kind::TYPE_CONSTANT)
   {
+    // Special case: String is comparable to (Seq ?). This must be a special
+    // case since String is defined in RARE/ALF to be (Seq Char), but String
+    // is a base type in cvc5's internals. This special case could be removed
+    // if `String` was a macro for `(Seq Char)`, however this would lead to
+    // complications, since `Char` is intentionally a sort we do not export
+    // in our API.
+    if (tk == Kind::SEQUENCE_TYPE && t[0].isFullyAbstract() && isString())
+    {
+      return isLub ? *this : t;
+    }
+    return TypeNode::null();
+  }
+  if (k != tk)
+  {
+    // Symmetric special case as above for comparing String and (Seq ?).
+    if (k == Kind::SEQUENCE_TYPE && (*this)[0].isFullyAbstract()
+        && t.isString())
+    {
+      return isLub ? t : *this;
+    }
     // different kinds, or distinct constants
     return TypeNode::null();
   }
@@ -378,7 +399,7 @@ TypeNode TypeNode::unifyInternal(const TypeNode& t, bool isLub) const
     // different arities
     return TypeNode::null();
   }
-  NodeBuilder nb(k);
+  NodeBuilder nb(getNodeManager(), k);
   for (size_t i = 0; i < nchild; i++)
   {
     TypeNode c = (*this)[i];
@@ -446,6 +467,8 @@ std::vector<TypeNode> TypeNode::getInstantiatedParamTypes() const
 
 bool TypeNode::isTuple() const { return getKind() == Kind::TUPLE_TYPE; }
 
+bool TypeNode::isNullable() const { return getKind() == Kind::NULLABLE_TYPE; }
+
 bool TypeNode::isRecord() const
 {
   return (getKind() == Kind::DATATYPE_TYPE && getDType().isRecord());
@@ -466,10 +489,17 @@ vector<TypeNode> TypeNode::getTupleTypes() const {
   return args;
 }
 
+TypeNode TypeNode::getNullableElementType() const
+{
+  Assert(isNullable());
+  return (*this)[0];
+}
+
 /** Is this an instantiated datatype type */
 bool TypeNode::isInstantiatedDatatype() const {
   Kind k = getKind();
-  if (k == Kind::DATATYPE_TYPE || k == Kind::TUPLE_TYPE)
+  if (k == Kind::DATATYPE_TYPE || k == Kind::TUPLE_TYPE
+      || k == Kind::NULLABLE_TYPE)
   {
     return true;
   }
@@ -502,7 +532,7 @@ bool TypeNode::isInstantiated() const
 
 TypeNode TypeNode::instantiate(const std::vector<TypeNode>& params) const
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = getNodeManager();
   Kind k = getKind();
   TypeNode ret;
   // Note that parametric datatypes we instantiate have an AST where they are
@@ -596,7 +626,7 @@ bool TypeNode::isDatatype() const
 {
   Kind k = getKind();
   return k == Kind::DATATYPE_TYPE || k == Kind::PARAMETRIC_DATATYPE
-         || k == Kind::TUPLE_TYPE;
+         || k == Kind::TUPLE_TYPE || k == Kind::NULLABLE_TYPE;
 }
 
 bool TypeNode::isParametricDatatype() const
@@ -680,7 +710,13 @@ std::string TypeNode::toString() const {
 
 const DType& TypeNode::getDType() const
 {
-  return NodeManager::currentNM()->getDTypeFor(*this);
+  return getNodeManager()->getDTypeFor(*this);
+}
+
+bool TypeNode::isRelation() const
+{
+  return getKind() == Kind::SET_TYPE
+         && (*this)[0].getKind() == Kind::TUPLE_TYPE;
 }
 
 bool TypeNode::isBag() const { return getKind() == Kind::BAG_TYPE; }
@@ -725,7 +761,7 @@ TypeNode TypeNode::getRangeType() const
 {
   if (isDatatypeTester())
   {
-    return NodeManager::currentNM()->booleanType();
+    return getNodeManager()->booleanType();
   }
   Assert(isFunction() || isDatatypeConstructor() || isDatatypeSelector()
          || isDatatypeUpdater())

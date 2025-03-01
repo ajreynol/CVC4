@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -15,6 +15,8 @@
 
 #include <cvc5/cvc5.h>
 #include <cvc5/cvc5_parser.h>
+
+#include <sstream>
 
 #include "api_utilities.h"
 #include "io_github_cvc5_Command.h"
@@ -34,14 +36,12 @@ JNIEXPORT void JNICALL Java_io_github_cvc5_Command_deletePointer(JNIEnv*,
   delete reinterpret_cast<Command*>(pointer);
 }
 
-#include <iostream>
-
 /*
  * Class:     io_github_cvc5_Command
  * Method:    invoke
  * Signature: (JJJ)V
  */
-JNIEXPORT void JNICALL
+JNIEXPORT jstring JNICALL
 Java_io_github_cvc5_Command_invoke(JNIEnv* env,
                                    jobject,
                                    jlong pointer,
@@ -53,8 +53,10 @@ Java_io_github_cvc5_Command_invoke(JNIEnv* env,
   Solver* solver = reinterpret_cast<Solver*>(solverPointer);
   SymbolManager* symbolManager =
       reinterpret_cast<SymbolManager*>(symbolManagerPointer);
-  current->invoke(solver, symbolManager, std::cout);
-  CVC5_JAVA_API_TRY_CATCH_END(env);
+  std::stringstream ss;
+  current->invoke(solver, symbolManager, ss);
+  return env->NewStringUTF(ss.str().c_str());
+  CVC5_JAVA_API_TRY_CATCH_END_RETURN(env, 0);
 }
 
 /*

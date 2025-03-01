@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -26,6 +26,7 @@
 #include "proof/eager_proof_generator.h"
 #include "proof/proof_node_manager.h"
 #include "smt/env.h"
+#include "theory/arith/arith_proof_utilities.h"
 #include "theory/arith/arith_utilities.h"
 #include "theory/arith/linear/congruence_manager.h"
 #include "theory/arith/linear/normal_form.h"
@@ -514,9 +515,9 @@ bool Constraint::isInternalAssumption() const {
 
 TrustNode Constraint::externalExplainByAssertions() const
 {
-  NodeBuilder nb(Kind::AND);
+  NodeBuilder nb(d_database->nodeManager(), Kind::AND);
   auto pfFromAssumptions = externalExplain(nb, AssertionOrderSentinel);
-  Node exp = mkAndFromBuilder(nb);
+  Node exp = mkAndFromBuilder(d_database->nodeManager(), nb);
   if (d_database->isProofEnabled())
   {
     std::vector<Node> assumptions;
@@ -530,7 +531,7 @@ TrustNode Constraint::externalExplainByAssertions() const
     }
     auto pf = d_database->d_pnm->mkScope(pfFromAssumptions, assumptions);
     return d_database->d_pfGen->mkTrustedPropagation(
-        getLiteral(), NodeManager::currentNM()->mkAnd(assumptions), pf);
+        getLiteral(), d_database->nodeManager()->mkAnd(assumptions), pf);
   }
   return TrustNode::mkTrustPropExp(getLiteral(), exp);
 }
@@ -625,7 +626,7 @@ void Constraint::printProofTree(std::ostream& out, size_t depth) const
       bool first = true;
       for (const auto& coeff : *rule.d_farkasCoefficients)
       {
-        if (not first)
+        if (!first)
         {
           out << ", ";
         }
@@ -1105,30 +1106,30 @@ TrustNode Constraint::split()
   TNode lhs = eqNode[0];
   TNode rhs = eqNode[1];
 
-  Node leqNode = NodeBuilder(Kind::LEQ) << lhs << rhs;
-  Node ltNode = NodeBuilder(Kind::LT) << lhs << rhs;
-  Node gtNode = NodeBuilder(Kind::GT) << lhs << rhs;
-  Node geqNode = NodeBuilder(Kind::GEQ) << lhs << rhs;
+  NodeManager* nm = d_database->nodeManager();
+  Node leqNode = NodeBuilder(nm, Kind::LEQ) << lhs << rhs;
+  Node ltNode = NodeBuilder(nm, Kind::LT) << lhs << rhs;
+  Node gtNode = NodeBuilder(nm, Kind::GT) << lhs << rhs;
+  Node geqNode = NodeBuilder(nm, Kind::GEQ) << lhs << rhs;
 
-  Node lemma = NodeBuilder(Kind::OR) << leqNode << geqNode;
+  Node lemma = NodeBuilder(nm, Kind::OR) << leqNode << geqNode;
 
   TrustNode trustedLemma;
   if (d_database->isProofEnabled())
   {
     TypeNode type = lhs.getType();
     // Farkas proof that this works.
-    auto nm = NodeManager::currentNM();
     auto nLeqPf = d_database->d_pnm->mkAssume(leqNode.negate());
     auto gtPf = d_database->d_pnm->mkNode(
         ProofRule::MACRO_SR_PRED_TRANSFORM, {nLeqPf}, {gtNode});
     auto nGeqPf = d_database->d_pnm->mkAssume(geqNode.negate());
     auto ltPf = d_database->d_pnm->mkNode(
         ProofRule::MACRO_SR_PRED_TRANSFORM, {nGeqPf}, {ltNode});
-    auto sumPf =
-        d_database->d_pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB,
-                                  {gtPf, ltPf},
-                                  {nm->mkConstRealOrInt(type, Rational(-1)),
-                                   nm->mkConstRealOrInt(type, Rational(1))});
+    std::vector<Pf> args{gtPf, ltPf};
+    std::vector<Node> coeffs{nm->mkConstReal(-1), nm->mkConstReal(1)};
+    std::vector<Node> coeffsUse = getMacroSumUbCoeff(nm, args, coeffs);
+    auto sumPf = d_database->d_pnm->mkNode(
+        ProofRule::MACRO_ARITH_SCALE_SUM_UB, args, coeffsUse);
     auto botPf = d_database->d_pnm->mkNode(
         ProofRule::MACRO_SR_PRED_TRANSFORM, {sumPf}, {nm->mkConst(false)});
     std::vector<Node> a = {leqNode.negate(), geqNode.negate()};
@@ -1531,16 +1532,19 @@ bool Constraint::antecedentListLengthIsOne() const {
     d_database->d_antecedents[getEndAntecedent()-1] == NullConstraint;
 }
 
-Node Constraint::externalImplication(const ConstraintCPVec& b) const{
+Node Constraint::externalImplication(NodeManager* nm,
+                                     const ConstraintCPVec& b) const
+{
   Assert(hasLiteral());
-  Node antecedent = externalExplainByAssertions(b);
+  Node antecedent = externalExplainByAssertions(nm, b);
   Node implied = getLiteral();
   return antecedent.impNode(implied);
 }
 
-
-Node Constraint::externalExplainByAssertions(const ConstraintCPVec& b){
-  return externalExplain(b, AssertionOrderSentinel);
+Node Constraint::externalExplainByAssertions(NodeManager* nm,
+                                             const ConstraintCPVec& b)
+{
+  return externalExplain(nm, b, AssertionOrderSentinel);
 }
 
 TrustNode Constraint::externalExplainForPropagation(TNode lit) const
@@ -1548,9 +1552,9 @@ TrustNode Constraint::externalExplainForPropagation(TNode lit) const
   Assert(hasProof());
   Assert(!isAssumption());
   Assert(!isInternalAssumption());
-  NodeBuilder nb(Kind::AND);
+  NodeBuilder nb(d_database->nodeManager(), Kind::AND);
   auto pfFromAssumptions = externalExplain(nb, d_assertionOrder);
-  Node n = mkAndFromBuilder(nb);
+  Node n = mkAndFromBuilder(d_database->nodeManager(), nb);
   if (d_database->isProofEnabled())
   {
     std::vector<Node> assumptions;
@@ -1569,7 +1573,7 @@ TrustNode Constraint::externalExplainForPropagation(TNode lit) const
     }
     auto pf = d_database->d_pnm->mkScope(pfFromAssumptions, assumptions);
     return d_database->d_pfGen->mkTrustedPropagation(
-        lit, NodeManager::currentNM()->mkAnd(assumptions), pf);
+        lit, d_database->nodeManager()->mkAnd(assumptions), pf);
   }
   else
   {
@@ -1581,11 +1585,11 @@ TrustNode Constraint::externalExplainConflict() const
 {
   Trace("pf::arith::explain") << this << std::endl;
   Assert(inConflict());
-  NodeBuilder nb(Kind::AND);
+  NodeBuilder nb(d_database->nodeManager(), Kind::AND);
   auto pf1 = externalExplainByAssertions(nb);
   auto not2 = getNegation()->getProofLiteral().negate();
   auto pf2 = getNegation()->externalExplainByAssertions(nb);
-  Node n = mkAndFromBuilder(nb);
+  Node n = mkAndFromBuilder(d_database->nodeManager(), nb);
   if (d_database->isProofEnabled())
   {
     auto pfNot2 = d_database->d_pnm->mkNode(
@@ -1623,7 +1627,7 @@ TrustNode Constraint::externalExplainConflict() const
     }
     auto confPf = d_database->d_pnm->mkScope(bot, lits);
     return d_database->d_pfGen->mkTrustNode(
-        NodeManager::currentNM()->mkAnd(lits), confPf, true);
+        d_database->nodeManager()->mkAnd(lits), confPf, true);
   }
   else
   {
@@ -1677,14 +1681,17 @@ void Constraint::assertionFringe(ConstraintCPVec& o, const ConstraintCPVec& i){
   assertionFringe(o);
 }
 
-Node Constraint::externalExplain(const ConstraintCPVec& v, AssertionOrder order){
-  NodeBuilder nb(Kind::AND);
+Node Constraint::externalExplain(NodeManager* nm,
+                                 const ConstraintCPVec& v,
+                                 AssertionOrder order)
+{
+  NodeBuilder nb(nm, Kind::AND);
   ConstraintCPVec::const_iterator i, end;
   for(i = v.begin(), end = v.end(); i != end; ++i){
     ConstraintCP v_i = *i;
     v_i->externalExplain(nb, order);
   }
-  return mkAndFromBuilder(nb);
+  return mkAndFromBuilder(nm, nb);
 }
 
 std::shared_ptr<ProofNode> Constraint::externalExplain(
@@ -1781,21 +1788,23 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
           farkasChildren.insert(
               farkasChildren.end(), children.rbegin(), children.rend());
 
-          NodeManager* nm = NodeManager::currentNM();
+          NodeManager* nm = d_database->nodeManager();
 
           // Enumerate d_farkasCoefficients as nodes.
           std::vector<Node> farkasCoeffs;
           TypeNode type = plit[0].getType();
           for (Rational r : *getFarkasCoefficients())
           {
-            farkasCoeffs.push_back(nm->mkConstReal(Rational(r)));
+            farkasCoeffs.push_back(nm->mkConstRealOrInt(Rational(r)));
           }
+          std::vector<Node> farkasCoeffsUse =
+              getMacroSumUbCoeff(nm, farkasChildren, farkasCoeffs);
 
           // Apply the scaled-sum rule.
           std::shared_ptr<ProofNode> sumPf =
               pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB,
                           farkasChildren,
-                          farkasCoeffs);
+                          farkasCoeffsUse);
 
           // Provable rewrite the result
           Node falsen = nm->mkConst(false);
@@ -1839,20 +1848,16 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
         }
         case ArithProofType::IntHoleAP:
         {
-          Node t =
-              builtin::BuiltinProofRuleChecker::mkTheoryIdNode(THEORY_ARITH);
-          pf = pnm->mkTrustedNode(TrustId::THEORY_INFERENCE,
+          pf = pnm->mkTrustedNode(TrustId::THEORY_INFERENCE_ARITH,
                                   children,
-                                  {getProofLiteral(), t},
+                                  {getProofLiteral()},
                                   getProofLiteral());
           break;
         }
         case ArithProofType::TrichotomyAP:
         {
-          pf = pnm->mkNode(ProofRule::ARITH_TRICHOTOMY,
-                           children,
-                           {getProofLiteral()},
-                           getProofLiteral());
+          pf = pnm->mkNode(
+              ProofRule::ARITH_TRICHOTOMY, children, {}, getProofLiteral());
           break;
         }
         case ArithProofType::InternalAssumeAP:
@@ -1869,15 +1874,22 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
   return pf;
 }
 
-Node Constraint::externalExplainByAssertions(ConstraintCP a, ConstraintCP b){
-  NodeBuilder nb(Kind::AND);
+Node Constraint::externalExplainByAssertions(NodeManager* nm,
+                                             ConstraintCP a,
+                                             ConstraintCP b)
+{
+  NodeBuilder nb(nm, Kind::AND);
   a->externalExplainByAssertions(nb);
   b->externalExplainByAssertions(nb);
   return nb;
 }
 
-Node Constraint::externalExplainByAssertions(ConstraintCP a, ConstraintCP b, ConstraintCP c){
-  NodeBuilder nb(Kind::AND);
+Node Constraint::externalExplainByAssertions(NodeManager* nm,
+                                             ConstraintCP a,
+                                             ConstraintCP b,
+                                             ConstraintCP c)
+{
+  NodeBuilder nb(nm, Kind::AND);
   a->externalExplainByAssertions(nb);
   b->externalExplainByAssertions(nb);
   c->externalExplainByAssertions(nb);
@@ -2060,7 +2072,7 @@ Node Constraint::getProofLiteral() const
     }
     default: Unreachable() << d_type;
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = d_database->nodeManager();
   Node constPart = nm->mkConstRealOrInt(
       varPart.getType(), Rational(d_value.getNoninfinitesimalPart()));
   Node posLit = nm->mkNode(cmp, varPart, constPart);
@@ -2078,7 +2090,7 @@ void ConstraintDatabase::proveOr(std::vector<TrustNode>& out,
   if (isProofEnabled())
   {
     Assert(b->getNegation()->getType() != ConstraintType::Disequality);
-    auto nm = NodeManager::currentNM();
+    auto nm = nodeManager();
     Node alit = a->getNegation()->getProofLiteral();
     TypeNode type = alit[0].getType();
     auto pf_neg_la = d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
@@ -2089,12 +2101,13 @@ void ConstraintDatabase::proveOr(std::vector<TrustNode>& out,
                                    {d_pnm->mkAssume(lb.negate())},
                                    {blit});
     int sndSign = negateSecond ? -1 : 1;
+    std::vector<Pf> args{pf_neg_la, pf_neg_lb};
+    std::vector<Node> coeffs{nm->mkConstReal(Rational(-1 * sndSign)),
+                             nm->mkConstReal(Rational(sndSign))};
+    std::vector<Node> coeffsUse = getMacroSumUbCoeff(nm, args, coeffs);
     auto bot_pf = d_pnm->mkNode(
         ProofRule::MACRO_SR_PRED_TRANSFORM,
-        {d_pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB,
-                       {pf_neg_la, pf_neg_lb},
-                       {nm->mkConstRealOrInt(type, Rational(-1 * sndSign)),
-                        nm->mkConstRealOrInt(type, Rational(sndSign))})},
+        {d_pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB, args, coeffsUse)},
         {nm->mkConst(false)});
     std::vector<Node> as;
     std::transform(orN.begin(), orN.end(), std::back_inserter(as), [](Node n) {
