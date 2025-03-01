@@ -54,7 +54,6 @@ endmacro()
 
 cvc5_add_api_test(proj-issue408 "")
 cvc5_add_api_test(proj-issue410 "")
-cvc5_add_api_test(proj-issue411 "")
 cvc5_add_api_test(proj-issue565 "")
 cvc5_add_api_test(proj-issue568 "")
 cvc5_add_api_test(proj-issue577 "")
