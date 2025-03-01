@@ -31,8 +31,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-BvInverter::BvInverter(const Options& opts, Rewriter* r)
-    : d_opts(opts), d_rewriter(r)
+BvInverter::BvInverter(Rewriter* r)
+    : d_rewriter(r)
 {
 }
 
@@ -128,7 +128,7 @@ static bool isInvertible(Kind k, unsigned index)
 Node BvInverter::getPathToPv(Node lit,
                              Node pv,
                              Node sv,
-                             std::vector<unsigned>& path,
+                             std::vector<uint32_t>& path,
                              std::unordered_set<TNode>& visited)
 {
   if (visited.find(lit) == visited.end())
@@ -176,7 +176,7 @@ Node BvInverter::getPathToPv(Node lit,
                              Node pv,
                              Node sv,
                              Node pvs,
-                             std::vector<unsigned>& path,
+                             std::vector<uint32_t>& path,
                              bool projectNl)
 {
   std::unordered_set<TNode> visited;
@@ -224,13 +224,13 @@ static Node dropChild(Node n, unsigned index)
 
 Node BvInverter::solveBvLit(Node sv,
                             Node lit,
-                            std::vector<unsigned>& path,
+                            std::vector<uint32_t>& path,
                             BvInverterQuery* m)
 {
   Assert(!path.empty());
 
   bool pol = true;
-  unsigned index;
+  uint32_t index;
   Kind k, litk;
 
   Assert(!path.empty());
@@ -349,7 +349,7 @@ Node BvInverter::solveBvLit(Node sv,
     }
     else if (k == Kind::BITVECTOR_CONCAT)
     {
-      if (litk == Kind::EQUAL && d_opts.quantifiers.cegqiBvConcInv)
+      if (litk == Kind::EQUAL)
       {
         /* Compute inverse for s1 o x, x o s2, s1 o x o s2
          * (while disregarding that invertibility depends on si)
