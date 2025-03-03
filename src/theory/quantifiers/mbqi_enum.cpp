@@ -31,6 +31,33 @@
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
+  
+class MbqiEnumTermEnumeratorCallback : protected EnvObj, public SygusTermEnumeratorCallback
+{
+ public:
+  MbqiEnumTermEnumeratorCallback(Env& env) : EnvObj(env) {}
+  virtual ~MbqiEnumTermEnumeratorCallback() {}
+  /**
+   */
+  bool addTerm(const Node& n, std::unordered_set<Node>& bterms) override
+  {
+    Node bn = datatypes::utils::sygusToBuiltin(n);
+    bn = extendedRewrite(bn);
+    if (bterms.find(bn) != bterms.end())
+    {
+      return false;
+    }  
+    if (bn.getKind()==Kind::WITNESS)
+    {
+      if (!expr::hasSubterm(bn[1], bn[0][0]))
+      {
+        return false;
+      }
+    }
+    bterms.insert(bn);  
+    return true;
+  }
+};
 
 void MVarInfo::initialize(Env& env,
                           const Node& q,
@@ -143,9 +170,11 @@ void MVarInfo::initialize(Env& env,
     Trace("mbqi-fast-enum")
         << printer::smt2::Smt2Printer::sygusGrammarString(gcom) << std::endl;
     tuse = gcom;
+    d_senumCb.reset(new MbqiEnumTermEnumeratorCallback(env));
   }
-  d_senum.reset(new SygusTermEnumerator(env, tuse));
+  d_senum.reset(new SygusTermEnumerator(env, tuse, d_senumCb.get()));
 
+  /*
   for (size_t i = 0; i < 50; i++)
   {
     Node et;
@@ -154,15 +183,14 @@ void MVarInfo::initialize(Env& env,
       et = getEnumeratedTerm(nm, i);
     } while (et.isNull());
     Trace("mbqi-tmp") << "TMP Enum term: #" << i << " is " << et << std::endl;
-    /*
     std::vector<std::pair<Node, InferenceId>> lemmas = getEnumeratedLemmas(et);
     for (std::pair<Node, InferenceId>& al : lemmas)
     {
       Trace("mbqi-fast-enum") << "...new lemma: " << al.first << std::endl;
     }
-    */
   }
-  // exit(1);
+  exit(1);
+  */
 }
 
 MVarInfo::ChoiceElimNodeConverter::ChoiceElimNodeConverter(NodeManager* nm)
@@ -211,6 +239,7 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
       lem =
           nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem);
     }
+    Trace("mbqi-tmp") << "TMP " << sym << " for " << n << std::endl;
     Trace("mbqi-fast-enum") << "-----> lemma " << lem << std::endl;
     d_lemmas[sym] = lem;
     return h;

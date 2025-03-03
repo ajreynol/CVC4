@@ -73,6 +73,7 @@ Node SygusTermEnumerator::getCurrent()
   {
     return c;
   }
+  Trace("ajr-temp") << "Sygus term: " << c << std::endl;
   return theory::datatypes::utils::sygusToBuiltin(c);
 }
 

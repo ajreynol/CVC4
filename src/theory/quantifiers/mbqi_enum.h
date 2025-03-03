@@ -82,6 +82,8 @@ class MVarInfo
   };
   /** */
   std::unique_ptr<ChoiceElimNodeConverter> d_cenc;
+  /** */
+  std::unique_ptr<SygusTermEnumeratorCallback> d_senumCb;
   /** A cache of all enumerated terms so far */
   std::vector<Node> d_enum;
   /**

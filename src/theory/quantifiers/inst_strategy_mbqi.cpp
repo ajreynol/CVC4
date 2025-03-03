@@ -55,6 +55,7 @@ InstStrategyMbqi::InstStrategyMbqi(Env& env,
   {
     d_msenum.reset(new MbqiEnum(env, *this));
   }
+  d_subOptions.write_quantifiers().instMaxRounds = 5;
   d_subOptions.copyValues(options());
   smt::SetDefaults::disableChecking(d_subOptions);
 }
