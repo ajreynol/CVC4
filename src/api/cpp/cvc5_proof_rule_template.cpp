@@ -236,8 +236,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::BV_TO_NAT_ELIM: return "bv-to-nat-elim";
     case ProofRewriteRule::INT_TO_BV_ELIM: return "int-to-bv-elim";
     case ProofRewriteRule::MACRO_BOOL_NNF_NORM: return "macro-bool-nnf-norm";
-    case ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE:
-      return "macro-bool-bv-invert-solve";
+    case ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE: return "macro-bool-bv-invert-solve";
     case ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT:
       return "macro-arith-int-eq-conflict";
     case ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN:
@@ -251,8 +250,6 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::ARITH_POW_ELIM: return "arith-pow-elim";
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";
     case ProofRewriteRule::LAMBDA_ELIM: return "lambda-elim";
-    case ProofRewriteRule::MACRO_LAMBDA_VALUE_NORM:
-      return "macro-lambda-value-norm";
     case ProofRewriteRule::MACRO_LAMBDA_CAPTURE_AVOID:
       return "macro-lambda-capture-avoid";
     case ProofRewriteRule::ARRAYS_SELECT_CONST: return "arrays-select-const";
@@ -282,9 +279,6 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::MACRO_QUANT_VAR_ELIM_INEQ:
       return "macro-quant-var-elim-ineq";
     case ProofRewriteRule::QUANT_VAR_ELIM_EQ: return "quant-var-elim-eq";
-    case ProofRewriteRule::MACRO_QUANT_SOLVE_FUN_DEF:
-      return "macro-quant-solve-fun-def";
-    case ProofRewriteRule::QUANT_SOLVE_FUN_DEF: return "quant-solve-fun-def";
     case ProofRewriteRule::MACRO_QUANT_REWRITE_BODY:
       return "macro-quant-rewrite-body";
     case ProofRewriteRule::DT_INST: return "dt-inst";

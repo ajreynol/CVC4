@@ -2679,13 +2679,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(LAMBDA_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Equality -- Macro lambda value norm**
-   *
-   * \endverbatim
-   */
-  EVALUE(MACRO_LAMBDA_VALUE_NORM),
-  /**
-   * \verbatim embed:rst:leading-asterisk
    * **Equality -- Macro lambda application capture avoid**
    *
    * .. math::
@@ -2953,31 +2946,6 @@ enum ENUM(ProofRewriteRule)
    * \endverbatim
    */
   EVALUE(MACRO_QUANT_VAR_ELIM_INEQ),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Quantifiers -- Macro solve function definition**
-   *
-   * .. math::
-   *   \forall X.\> G = (f = \lambda Y.\> t)
-   *
-   * where :math:`\forall X.\> G` is equivalent to
-   * :math:`\forall Y.\> f(Y) = t` and :math:`t` does not contain :math:`f`.
-   *
-   * \endverbatim
-   */
-  EVALUE(MACRO_QUANT_SOLVE_FUN_DEF),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Quantifiers -- Macro solve function definition**
-   *
-   * .. math::
-   *   (\forall X.\> f(X) = t) = (f = \lambda X.\> t)
-   *
-   * where :math:`t` does not contain :math:`f`.
-   *
-   * \endverbatim
-   */
-  EVALUE(QUANT_SOLVE_FUN_DEF),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Quantifiers -- Macro quantifiers rewrite body**
@@ -4235,6 +4203,12 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_OR_CONCAT_PULLUP),
   /** Auto-generated from RARE rule bv-xor-concat-pullup */
   EVALUE(BV_XOR_CONCAT_PULLUP),
+  /** Auto-generated from RARE rule bv-and-concat-pullup2 */
+  EVALUE(BV_AND_CONCAT_PULLUP2),
+  /** Auto-generated from RARE rule bv-or-concat-pullup2 */
+  EVALUE(BV_OR_CONCAT_PULLUP2),
+  /** Auto-generated from RARE rule bv-xor-concat-pullup2 */
+  EVALUE(BV_XOR_CONCAT_PULLUP2),
   /** Auto-generated from RARE rule bv-bitwise-idemp-1 */
   EVALUE(BV_BITWISE_IDEMP_1),
   /** Auto-generated from RARE rule bv-bitwise-idemp-2 */

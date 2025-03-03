@@ -260,9 +260,18 @@ Node QuantifiersMacros::solveEq(Node n, Node ndef)
   NodeManager* nm = nodeManager();
   Trace("macros-debug") << "Add macro eq for " << n << std::endl;
   Trace("macros-debug") << "  def: " << ndef << std::endl;
-  std::vector<Node> fvars(n.begin(), n.end());
+  std::vector<Node> vars;
+  std::vector<Node> fvars;
+  for (const Node& nc : n)
+  {
+    vars.push_back(nc);
+    Node v = NodeManager::mkBoundVar(nc.getType());
+    fvars.push_back(v);
+  }
   Node fdef =
-      nm->mkNode(Kind::LAMBDA, nm->mkNode(Kind::BOUND_VAR_LIST, fvars), ndef);
+      ndef.substitute(vars.begin(), vars.end(), fvars.begin(), fvars.end());
+  fdef =
+      nm->mkNode(Kind::LAMBDA, nm->mkNode(Kind::BOUND_VAR_LIST, fvars), fdef);
   // If the definition has a free variable, it is malformed. This can happen
   // if the right hand side of a macro definition contains a variable not
   // contained in the left hand side

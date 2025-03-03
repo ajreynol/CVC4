@@ -876,7 +876,7 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
       // already holds, continue
       continue;
     }
-    if (!doRecurse || (decRecLimit && d_currRecLimit==0))
+    if (!doRecurse || (decRecLimit && d_currRecLimit == 0))
     {
       // we can't apply recursion, return false
       Trace("rpc-debug2") << "...fail (recursion limit)" << std::endl;
@@ -890,10 +890,10 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
   if (!condToProve.empty())
   {
     // we could only add condToProve if d_currRecLimit>0 above.
-    Assert (!decRecLimit || d_currRecLimit>0);
+    Assert(!decRecLimit || d_currRecLimit > 0);
     if (decRecLimit)
     {
-      d_currRecLimit--;  
+      d_currRecLimit--;
       if (d_currStepLimit == 0)
       {
         return false;
@@ -901,9 +901,9 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
       d_currStepLimit--;
     }
     Trace("rpc-debug") << "Recurse rule "
-                        << (id == RewriteProofStatus::DSL ? toString(r)
-                                                          : toString(id))
-                        << std::endl;
+                       << (id == RewriteProofStatus::DSL ? toString(r)
+                                                         : toString(id))
+                       << std::endl;
     bool recSuccess = true;
     // if no trivial failures, go back and try to recursively prove
     for (const Node& cond : condToProve)

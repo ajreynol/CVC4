@@ -103,7 +103,8 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
   {
     // could be ACI_NORM or ABSORB, just send generic subgoal.
     Node equiv3 = equiv2[1].eqNode(eq[1]);
-    cdp->addTrustedStep(equiv3, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
+    cdp->addTrustedStep(
+        equiv3, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     transEq.push_back(equiv3);
   }
   cdp->addStep(eq, ProofRule::TRANS, transEq, {});
@@ -137,9 +138,10 @@ bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
         curr[0] = nm->mkNode(Kind::BITVECTOR_CONCAT, curr[0], next);
         currRew = nm->mkNode(Kind::BITVECTOR_CONCAT, currRew, next);
         Node rcr = RewriteRule<ConcatExtractMerge>::run<true>(currRew);
-        if (rcr!=currRew)
+        if (rcr != currRew)
         {
-          Trace("bv-rew-elab") << "- r-step: " << currRew << " " << rcr << std::endl;
+          Trace("bv-rew-elab")
+              << "- r-step: " << currRew << " " << rcr << std::endl;
           // single rewrite step
           tcpg.addRewriteStep(currRew,
                               rcr,
@@ -171,10 +173,8 @@ bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
         {
           rem = nm->mkNode(Kind::BITVECTOR_CONCAT, curr);
           Node rr = evaluate(rem, {}, {});
-          
-          tcpg.addRewriteStep(rem,
-                              rr,
-                              ProofRule::EVALUATE, {}, {rem});
+
+          tcpg.addRewriteStep(rem, rr, ProofRule::EVALUATE, {}, {rem});
         }
         else
         {

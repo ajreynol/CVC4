@@ -26,9 +26,6 @@
 #include "expr/node.h"
 
 namespace cvc5::internal {
-
-class Options;
-
 namespace theory {
 
 class Rewriter;
@@ -74,14 +71,14 @@ class BvInverter
                    Node pv,
                    Node sv,
                    Node pvs,
-                   std::vector<unsigned>& path,
+                   std::vector<uint32_t>& path,
                    bool projectNl);
 
   /**
    * Same as above, but does not linearize lit for pv.
    * Use this version if we know lit is linear wrt pv.
    */
-  Node getPathToPv(Node lit, Node pv, std::vector<unsigned>& path)
+  Node getPathToPv(Node lit, Node pv, std::vector<uint32_t>& path)
   {
     return getPathToPv(lit, pv, pv, Node::null(), path, false);
   }
@@ -98,7 +95,7 @@ class BvInverter
    */
   Node solveBvLit(Node sv,
                   Node lit,
-                  std::vector<unsigned>& path,
+                  std::vector<uint32_t>& path,
                   BvInverterQuery* m);
 
   /**
@@ -128,7 +125,7 @@ class BvInverter
   Node getPathToPv(Node lit,
                    Node pv,
                    Node sv,
-                   std::vector<unsigned>& path,
+                   std::vector<uint32_t>& path,
                    std::unordered_set<TNode>& visited);
 
   /**
