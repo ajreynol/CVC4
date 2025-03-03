@@ -489,9 +489,9 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     Node eq = addProofForTrans(tchildren, cdp);
     if (eq.isNull() || eq[1]!=args[0])
     {
-      Assert(false) << "Failed proof for MACRO_SR_PRED_TRANSFORM";
       Trace("smt-proof-pp-debug")
           << "Failed transitivity from " << tchildren << std::endl;
+      Assert(false) << "Failed proof for MACRO_SR_PRED_TRANSFORM";
       return Node::null();
     }
     cdp->addStep(eq[1], ProofRule::EQ_RESOLVE, {children[0], eq}, {});

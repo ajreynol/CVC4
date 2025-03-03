@@ -49,6 +49,9 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
       return ensureProofForExtractConcat(cdp, eq);
     case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:
       return ensureProofForMultSltMult(cdp, eq);
+    case ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP:
+      //AlwaysAssert(false) << "and-or";
+      break;
     default: break;
   }
   return false;
@@ -98,7 +101,7 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
   transEq.push_back(equiv2);
   if (equiv2[1] != eq[1])
   {
-    // could be ACI_NORM or ANNIHILATE, just send generic subgoal.
+    // could be ACI_NORM or ABSORB, just send generic subgoal.
     Node equiv3 = equiv2[1].eqNode(eq[1]);
     cdp->addTrustedStep(equiv3, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
     transEq.push_back(equiv3);
