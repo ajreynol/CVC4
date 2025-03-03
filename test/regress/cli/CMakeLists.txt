@@ -422,6 +422,7 @@ set(regress_0_tests
   regress0/bv/dd_fuzz21.smt2
   regress0/bv/dd_run_0000.smt2
   regress0/bv/dd_run_0000-and-or-pullup.smt2
+  regress0/bv/dd_run_0000-and-or-pullup-2.smt2
   regress0/bv/dd.773_sqlite3.smt2
   regress0/bv/dd.kmdf_osrusbfx2_exe_testapp.c.smt2
   regress0/bv/dd.try_small_difret.smt2
