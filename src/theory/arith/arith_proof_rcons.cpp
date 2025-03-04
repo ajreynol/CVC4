@@ -15,7 +15,6 @@
 
 #include "theory/arith/arith_proof_rcons.h"
 
-#include "expr/term_context.h"
 #include "proof/conv_proof_generator.h"
 #include "proof/proof.h"
 #include "proof/proof_node.h"
@@ -26,31 +25,6 @@
 namespace cvc5::internal {
 namespace theory {
 namespace arith {
-
-/**
- * Arithmetic substitution term context.
- */
-class ArithSubsTermContext : public TermContext
-{
- public:
-  ArithSubsTermContext() {}
-  /** The initial value: valid. */
-  uint32_t initialValue() const override { return 0; }
-  /** Compute the value of the index^th child of t whose hash is tval */
-  uint32_t computeValue(TNode t, uint32_t tval, size_t index) const override
-  {
-    if (tval == 0)
-    {
-      // if we should not traverse, return 1
-      if (!ArithSubs::shouldTraverse(t))
-      {
-        return 1;
-      }
-      return 0;
-    }
-    return tval;
-  }
-};
 
 ArithProofRCons::ArithProofRCons(Env& env, TrustId id) : EnvObj(env), d_id(id)
 {
