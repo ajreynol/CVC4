@@ -494,24 +494,19 @@ bool MbqiEnum::constructInstantiation(
       Trace("mbqi-model-enum")
           << "- Converted candidate: " << v << " -> " << retc << std::endl;
       Node queryCheck;
-      if (lastVar)
-      {
-        Instantiate* qinst = d_parent.d_qim.getInstantiate();
-        mvs[ii] = ret;
-        success = qinst->addInstantiation(
-            q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM);
-      }
-      else
-      {
-        // see if it is still satisfiable, if still SAT, we replace
-        queryCheck = queryCurr.substitute(v, TNode(retc));
-        queryCheck = rewrite(queryCheck);
-        Trace("mbqi-model-enum") << "...check " << queryCheck << std::endl;
-        Result r = checkWithSubsolver(queryCheck, ssi);
-        success = (r == Result::SAT);
-      }
+      // see if it is still satisfiable, if still SAT, we replace
+      queryCheck = queryCurr.substitute(v, TNode(retc));
+      queryCheck = rewrite(queryCheck);
+      Trace("mbqi-model-enum") << "...check " << queryCheck << std::endl;
+      Result r = checkWithSubsolver(queryCheck, ssi);
+      success = (r == Result::SAT);
       if (success)
       {
+      if (lastVar)
+      {
+        mvs[ii] = ret;
+        success = d_parent.tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
+      }
         // remember the updated query
         queryCurr = queryCheck;
         Trace("mbqi-model-enum") << "...success" << std::endl;

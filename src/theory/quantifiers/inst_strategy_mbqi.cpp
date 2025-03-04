@@ -143,7 +143,6 @@ void InstStrategyMbqi::process(Node q)
   std::map<Node, Node> mvToFreshVar;
 
   NodeManager* nm = nodeManager();
-  SkolemManager* sm = nm->getSkolemManager();
   const RepSet* rs = d_treg.getModel()->getRepSet();
   FirstOrderModel* fm = d_treg.getModel();
 
@@ -287,28 +286,52 @@ void InstStrategyMbqi::process(Node q)
   }
 
   // get the model values for skolems
-  std::vector<Node> terms;
-  modelValueFromQuery(
-      q, query, *mbqiChecker.get(), skolems.d_subs, terms, mvToFreshVar);
-  Assert(skolems.size() == terms.size());
+  std::vector<Node> vars = skolems.d_subs;
+  std::vector<Node> mvs;
+  getModelFromSubsolver(*mbqiChecker.get(), vars, mvs);
   if (TraceIsOn("mbqi"))
   {
     Trace("mbqi") << "...model from subsolver is: " << std::endl;
     for (size_t i = 0, nterms = skolems.size(); i < nterms; i++)
     {
-      Trace("mbqi") << "  " << skolems.d_subs[i] << " -> " << terms[i]
+      Trace("mbqi") << "  " << skolems.d_subs[i] << " -> " << mvs[i]
                     << std::endl;
     }
   }
+  if (options().quantifiers.mbqiEnum)
+  {
+    std::vector<std::pair<Node, InferenceId>> auxLemmas;
+    d_msenum->constructInstantiation(
+            q, query, vars, mvs, mvToFreshVar, auxLemmas);
+    for (std::pair<Node, InferenceId>& al : auxLemmas)
+    {
+      Trace("mbqi-aux-lemma")
+          << "Auxiliary lemma: " << al.second << " : " << al.first << std::endl;
+      d_qim.lemma(al.first, al.second);
+    }
+  }
+  else
+  {
+    tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI, mvToFreshVar);
+  }
+}
+
+bool InstStrategyMbqi::tryInstantiation(const Node& q,
+                          const std::vector<Node>& mvs,
+                          InferenceId id,
+                          const std::map<Node, Node>& mvToFreshVar)
+{
+  const RepSet* rs = d_treg.getModel()->getRepSet();
+  std::vector<Node> terms = mvs;
   // try to convert those terms to an instantiation
-  tmpConvertMap.clear();
+  std::unordered_map<Node, Node> tmpConvertMap;
   for (Node& v : terms)
   {
     Node vc = convertFromModel(v, tmpConvertMap, mvToFreshVar);
     if (vc.isNull())
     {
       Trace("mbqi") << "...failed to convert " << v << " from model" << std::endl;
-      return;
+      return false;
     }
     if (expr::hasSubtermKinds(d_nonClosedKinds, vc))
     {
@@ -322,9 +345,12 @@ void InstStrategyMbqi::process(Node q)
 
   // get a term that has the same model value as the value each fresh variable
   // represents
+  NodeManager* nm = nodeManager();
+  SkolemManager* sm = nm->getSkolemManager();
   Subs fvToInst;
-  for (const Node& v : allVars)
+  for (const std::pair<const Node, Node>& mvf : mvToFreshVar)
   {
+    Node v = mvf.first;
     // get a term that witnesses this variable
     Node ov = sm->getOriginalForm(v);
     Node mvt = rs->getTermForRepresentative(ov);
@@ -348,13 +374,14 @@ void InstStrategyMbqi::process(Node q)
 
   // try to add instantiation
   Instantiate* qinst = d_qim.getInstantiate();
-  if (!qinst->addInstantiation(q, terms, InferenceId::QUANTIFIERS_INST_MBQI))
+  if (!qinst->addInstantiation(q, terms, id))
   {
     // AlwaysAssert(false);
     Trace("mbqi") << "...failed to add instantiation" << std::endl;
-    return;
+    return false;
   }
   Trace("mbqi") << "...success, instantiated" << std::endl;
+  return true;
 }
 
 Node InstStrategyMbqi::convertToQuery(
@@ -495,33 +522,6 @@ Node InstStrategyMbqi::convertToQuery(
 
   Assert(cmap.find(cur) != cmap.end());
   return cmap[cur];
-}
-
-void InstStrategyMbqi::modelValueFromQuery(
-    const Node& q,
-    const Node& query,
-    SolverEngine& smt,
-    const std::vector<Node>& vars,
-    std::vector<Node>& mvs,
-    const std::map<Node, Node>& mvToFreshVar)
-{
-  getModelFromSubsolver(smt, vars, mvs);
-  if (options().quantifiers.mbqiEnum)
-  {
-    std::vector<Node> smvs(mvs);
-    std::vector<std::pair<Node, InferenceId>> auxLemmas;
-    if (d_msenum->constructInstantiation(
-            q, query, vars, smvs, mvToFreshVar, auxLemmas))
-    {
-      mvs = smvs;
-    }
-    for (std::pair<Node, InferenceId>& al : auxLemmas)
-    {
-      Trace("mbqi-aux-lemma")
-          << "Auxiliary lemma: " << al.second << " : " << al.first << std::endl;
-      d_qim.lemma(al.first, al.second);
-    }
-  }
 }
 
 Node InstStrategyMbqi::convertFromModel(
