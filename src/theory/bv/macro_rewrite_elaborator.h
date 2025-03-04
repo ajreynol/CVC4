@@ -58,10 +58,11 @@ class MacroRewriteElaborator : protected EnvObj
    * Elaborate a rewrite eq that was proven by a concat merge rule.
    *
    * @param cdp The proof to add to.
+   * @param id The (macro) rewrite id that proved the rewrite.
    * @param eq The rewrite proven.
    * @return true if added a closed proof of eq to cdp.
    */
-  bool ensureProofForConcatMerge(CDProof* cdp, const Node& eq);
+  bool ensureProofForConcatMerge(CDProof* cdp, ProofRewriteRule id, const Node& eq);
   /**
    * Elaborate a rewrite eq that was proven by MACRO_BV_EXTRACT_CONCAT.
    *

@@ -44,7 +44,7 @@ bool MacroRewriteElaborator::ensureProofFor(CDProof* cdp,
       return ensureProofForSimplify(cdp, eq);
     case ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE:
     case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
-      return ensureProofForConcatMerge(cdp, eq);
+      return ensureProofForConcatMerge(cdp, id, eq);
     case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT:
       return ensureProofForExtractConcat(cdp, eq);
     case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:
@@ -111,6 +111,7 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
 }
 
 bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
+                                                       ProofRewriteRule id, 
                                                        const Node& eq)
 {
   // below, we group portions of the concatenation into a form in which they
@@ -129,7 +130,8 @@ bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
     Node next = i < nchild ? concat[i] : Node::null();
     bool merged = false;
     if (!curr.empty() && next.getKind() == ck
-        && (ck == Kind::CONST_BITVECTOR || ck == Kind::BITVECTOR_EXTRACT))
+        && ((ck == Kind::CONST_BITVECTOR && id==ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE) || 
+        (ck == Kind::BITVECTOR_EXTRACT && id==ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE)))
     {
       if (ck == Kind::BITVECTOR_EXTRACT)
       {
