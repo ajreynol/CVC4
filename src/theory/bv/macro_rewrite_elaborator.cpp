@@ -111,7 +111,7 @@ bool MacroRewriteElaborator::ensureProofForSimplify(CDProof* cdp,
 }
 
 bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
-                                                       ProofRewriteRule id, 
+                                                       ProofRewriteRule id,
                                                        const Node& eq)
 {
   // below, we group portions of the concatenation into a form in which they
@@ -130,8 +130,10 @@ bool MacroRewriteElaborator::ensureProofForConcatMerge(CDProof* cdp,
     Node next = i < nchild ? concat[i] : Node::null();
     bool merged = false;
     if (!curr.empty() && next.getKind() == ck
-        && ((ck == Kind::CONST_BITVECTOR && id==ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE) || 
-        (ck == Kind::BITVECTOR_EXTRACT && id==ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE)))
+        && ((ck == Kind::CONST_BITVECTOR
+             && id == ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE)
+            || (ck == Kind::BITVECTOR_EXTRACT
+                && id == ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE)))
     {
       if (ck == Kind::BITVECTOR_EXTRACT)
       {
@@ -358,7 +360,8 @@ bool MacroRewriteElaborator::ensureProofForMultSltMult(CDProof* cdp,
   return true;
 }
 
-bool MacroRewriteElaborator::ensureProofForAndOrXorConcatPullup(CDProof* cdp, const Node& eq)
+bool MacroRewriteElaborator::ensureProofForAndOrXorConcatPullup(CDProof* cdp,
+                                                                const Node& eq)
 {
   // The elaboration below handles the case where a constant appears in the
   // middle of a concatenation term that is being pulled up.
@@ -366,7 +369,7 @@ bool MacroRewriteElaborator::ensureProofForAndOrXorConcatPullup(CDProof* cdp, co
   // This method groups the concatenation term so that it matches the expected
   // form of RARE rewrites bv-*-concat-pullup3. In particular we rewrite:
   // (bvor xs (concat t1 ... tn c s1 ... sm) ws) --->
-  // (bvor xs (concat (concat t1 ... tn) c (concat s1 ... sm)) ws).  
+  // (bvor xs (concat (concat t1 ... tn) c (concat s1 ... sm)) ws).
   NodeManager* nm = nodeManager();
   TConvProofGenerator tcpg(d_env);
   bool addedRewrite = false;
@@ -374,17 +377,21 @@ bool MacroRewriteElaborator::ensureProofForAndOrXorConcatPullup(CDProof* cdp, co
   {
     if (c.getKind() == Kind::BITVECTOR_CONCAT)
     {
-      for (size_t i=0, nchild = c.getNumChildren(); i<nchild; i++)
+      for (size_t i = 0, nchild = c.getNumChildren(); i < nchild; i++)
       {
-        if (c[i].isConst() && i>0 && i+1<nchild)
+        if (c[i].isConst() && i > 0 && i + 1 < nchild)
         {
-          std::vector<Node> cpre(c.begin(), c.begin()+i);
-          Node npre = cpre.size()==1 ? cpre[0] : nm->mkNode(Kind::BITVECTOR_CONCAT, cpre);
-          std::vector<Node> cpost(c.begin()+i+1, c.end());
-          Node npost = cpost.size()==1 ? cpost[0] : nm->mkNode(Kind::BITVECTOR_CONCAT, cpost);
+          std::vector<Node> cpre(c.begin(), c.begin() + i);
+          Node npre = cpre.size() == 1
+                          ? cpre[0]
+                          : nm->mkNode(Kind::BITVECTOR_CONCAT, cpre);
+          std::vector<Node> cpost(c.begin() + i + 1, c.end());
+          Node npost = cpost.size() == 1
+                           ? cpost[0]
+                           : nm->mkNode(Kind::BITVECTOR_CONCAT, cpost);
           Node cg = nm->mkNode(Kind::BITVECTOR_CONCAT, {npre, c[i], npost});
           Trace("ajr-temp") << "Groupd " << c << " to " << cg << std::endl;
-          Assert(cg.getType()==c.getType());
+          Assert(cg.getType() == c.getType());
           // should be shown by ACI_NORM
           tcpg.addRewriteStep(c,
                               cg,
@@ -399,7 +406,7 @@ bool MacroRewriteElaborator::ensureProofForAndOrXorConcatPullup(CDProof* cdp, co
   }
   if (!addedRewrite)
   {
-    Assert (false) << "Failed to elaborate and-or-xor-concat-pullup";
+    Assert(false) << "Failed to elaborate and-or-xor-concat-pullup";
     return false;
   }
   std::shared_ptr<ProofNode> pfn = tcpg.getProofForRewriting(eq[0]);

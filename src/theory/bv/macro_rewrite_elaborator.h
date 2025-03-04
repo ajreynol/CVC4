@@ -62,7 +62,9 @@ class MacroRewriteElaborator : protected EnvObj
    * @param eq The rewrite proven.
    * @return true if added a closed proof of eq to cdp.
    */
-  bool ensureProofForConcatMerge(CDProof* cdp, ProofRewriteRule id, const Node& eq);
+  bool ensureProofForConcatMerge(CDProof* cdp,
+                                 ProofRewriteRule id,
+                                 const Node& eq);
   /**
    * Elaborate a rewrite eq that was proven by MACRO_BV_EXTRACT_CONCAT.
    *
@@ -80,7 +82,8 @@ class MacroRewriteElaborator : protected EnvObj
    */
   bool ensureProofForMultSltMult(CDProof* cdp, const Node& eq);
   /**
-   * Elaborate a rewrite eq that was proven by MACRO_BV_AND_OR_XOR_CONCAT_PULLUP.
+   * Elaborate a rewrite eq that was proven by
+   * MACRO_BV_AND_OR_XOR_CONCAT_PULLUP.
    *
    * @param cdp The proof to add to.
    * @param eq The rewrite proven.
