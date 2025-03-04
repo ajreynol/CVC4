@@ -502,18 +502,21 @@ bool MbqiEnum::constructInstantiation(
       success = (r == Result::SAT);
       if (success)
       {
-      if (lastVar)
-      {
-        mvs[ii] = ret;
-        success = d_parent.tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
-      }
-        // remember the updated query
-        queryCurr = queryCheck;
-        Trace("mbqi-model-enum") << "...success" << std::endl;
-        Trace("mbqi-model-enum")
-            << "* Enumerated " << q[0][ii] << " -> " << ret << std::endl;
-        mvs[ii] = ret;
-        vinst.add(q[0][ii], ret);
+        if (lastVar)
+        {
+          mvs[ii] = ret;
+          success = d_parent.tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
+        }
+        if (success)
+        {
+          // remember the updated query
+          queryCurr = queryCheck;
+          Trace("mbqi-model-enum") << "...success" << std::endl;
+          Trace("mbqi-model-enum")
+              << "* Enumerated " << q[0][ii] << " -> " << ret << std::endl;
+          mvs[ii] = ret;
+          vinst.add(q[0][ii], ret);
+        }
       }
       else if (!successEnum)
       {
