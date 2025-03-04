@@ -300,20 +300,21 @@ void InstStrategyMbqi::process(Node q)
   }
   if (options().quantifiers.mbqiEnum)
   {
+    std::vector<Node> smvs(mvs);
     std::vector<std::pair<Node, InferenceId>> auxLemmas;
-    d_msenum->constructInstantiation(
-            q, query, vars, mvs, mvToFreshVar, auxLemmas);
-    for (std::pair<Node, InferenceId>& al : auxLemmas)
+    if (d_msenum->constructInstantiation(
+            q, query, vars, smvs, mvToFreshVar, auxLemmas))
     {
-      Trace("mbqi-aux-lemma")
-          << "Auxiliary lemma: " << al.second << " : " << al.first << std::endl;
-      d_qim.lemma(al.first, al.second);
+      for (std::pair<Node, InferenceId>& al : auxLemmas)
+      {
+        Trace("mbqi-aux-lemma")
+            << "Auxiliary lemma: " << al.second << " : " << al.first << std::endl;
+        d_qim.lemma(al.first, al.second);
+      }
+      return;
     }
   }
-  else
-  {
-    tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI, mvToFreshVar);
-  }
+  tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI, mvToFreshVar);
 }
 
 bool InstStrategyMbqi::tryInstantiation(const Node& q,
@@ -350,7 +351,7 @@ bool InstStrategyMbqi::tryInstantiation(const Node& q,
   Subs fvToInst;
   for (const std::pair<const Node, Node>& mvf : mvToFreshVar)
   {
-    Node v = mvf.first;
+    Node v = mvf.second;
     // get a term that witnesses this variable
     Node ov = sm->getOriginalForm(v);
     Node mvt = rs->getTermForRepresentative(ov);
