@@ -46,10 +46,6 @@ TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_EXTRACT_SIGN_EXTEND,
-                           TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_ASHR_BY_CONST,
-                           TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_OR_SIMPLIFY,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_AND_SIMPLIFY,
@@ -129,10 +125,6 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
     break;
     case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT:
       BV_PROOF_REWRITE_CASE(ExtractConcat)
-    case ProofRewriteRule::MACRO_BV_EXTRACT_SIGN_EXTEND:
-      BV_PROOF_REWRITE_CASE(ExtractSignExtend)
-    case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST:
-      BV_PROOF_REWRITE_CASE(AshrByConst)
     case ProofRewriteRule::MACRO_BV_OR_SIMPLIFY:
       BV_PROOF_REWRITE_CASE(OrSimplify)
     case ProofRewriteRule::MACRO_BV_AND_SIMPLIFY:

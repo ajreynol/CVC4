@@ -349,15 +349,7 @@ void BasicRewriteRCons::ensureProofForTheoryRewrite(CDProof* cdp,
         handledMacro = true;
       }
       break;
-    case ProofRewriteRule::MACRO_ARRAYS_NORMALIZE_CONSTANT:
-      if (ensureProofMacroArraysNormalizeConstant(cdp, eq))
-      {
-        handledMacro = true;
-      }
-      break;
     case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT:
-    case ProofRewriteRule::MACRO_BV_EXTRACT_SIGN_EXTEND:
-    case ProofRewriteRule::MACRO_BV_ASHR_BY_CONST:
     case ProofRewriteRule::MACRO_BV_OR_SIMPLIFY:
     case ProofRewriteRule::MACRO_BV_AND_SIMPLIFY:
     case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:

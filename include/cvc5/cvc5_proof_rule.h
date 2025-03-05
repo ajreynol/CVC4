@@ -3130,6 +3130,7 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_EXTRACT_CONCAT),
   /**
    * \verbatim embed:rst:leading-asterisk
+<<<<<<< HEAD
    * **Bitvectors -- Macro extract sign extend **
    *
    * .. math::
@@ -3156,6 +3157,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BV_ASHR_BY_CONST),
   /**
    * \verbatim embed:rst:leading-asterisk
+=======
+>>>>>>> 263e43431b75358945e7f4242ce69f91b43ba875
    * **Bitvectors -- Macro or simplify **
    *
    * .. math::
