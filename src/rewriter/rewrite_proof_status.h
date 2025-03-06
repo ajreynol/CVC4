@@ -40,8 +40,9 @@ enum class RewriteProofStatus : uint32_t
   TRUE_INTRO,
   ARITH_POLY_NORM,
   ACI_NORM,
-  ALPHA_EQUIV,
   ABSORB,
+  // we can prove the encoded form of the goal (via rewrite_db_term_process)
+  ENCODE,
   // we have a DSL proof rule that proves this goal.
   DSL,
   // we have a THEORY_REWRITE that proves this goal.
