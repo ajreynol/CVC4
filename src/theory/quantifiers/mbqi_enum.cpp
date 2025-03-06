@@ -433,6 +433,7 @@ bool MbqiEnum::constructInstantiation(
     v = d_parent.convertFromModel(v, tmpCMap, mvFreshVar);
     if (v.isNull())
     {
+      Trace("mbqi-tmp") << "Failed to convert " << v << std::endl;
       return false;
     }
     Trace("mbqi-model-enum")
@@ -442,9 +443,9 @@ bool MbqiEnum::constructInstantiation(
     vinst.add(q[0][i], v);
   }
   Node queryCurr = query;
-  Trace("mbqi-model-enum") << "...query is " << queryCurr << std::endl;
+  Trace("mbqi-model-enum-debug") << "...query is " << queryCurr << std::endl;
   queryCurr = rewrite(inst.apply(queryCurr));
-  Trace("mbqi-model-enum") << "...processed is " << queryCurr << std::endl;
+  Trace("mbqi-model-enum-debug") << "...processed is " << queryCurr << std::endl;
   // consider variables in random order, for diversity of instantiations
   std::shuffle(indices.begin(), indices.end(), Random::getRandom());
   for (size_t i = 0, isize = indices.size(); i < isize; i++)
@@ -484,6 +485,7 @@ bool MbqiEnum::constructInstantiation(
         Node mc = d_parent.convertFromModel(mvs[ii], tmpCMap, mvFreshVar);
         if (mc.isNull())
         {
+          Trace("mbqi-tmp") << "Failed to convert " << mvs[ii] << std::endl;
           // if failed to convert, we fail
           return false;
         }
@@ -497,7 +499,7 @@ bool MbqiEnum::constructInstantiation(
       // see if it is still satisfiable, if still SAT, we replace
       queryCheck = queryCurr.substitute(v, TNode(retc));
       queryCheck = rewrite(queryCheck);
-      Trace("mbqi-model-enum") << "...check " << queryCheck << std::endl;
+      Trace("mbqi-model-enum-debug") << "...check " << queryCheck << std::endl;
       Result r = checkWithSubsolver(queryCheck, ssi);
       success = (r == Result::SAT);
       if (success)
@@ -505,7 +507,9 @@ bool MbqiEnum::constructInstantiation(
         if (lastVar)
         {
           mvs[ii] = ret;
+          Trace("mbqi-model-enum") << "...try inst" << std::endl;
           success = d_parent.tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
+          Trace("mbqi-model-enum") << "...try inst success = " << success << std::endl;
         }
         if (success)
         {
@@ -522,6 +526,7 @@ bool MbqiEnum::constructInstantiation(
       {
         // we did not enumerate a candidate, and tried the original, which
         // failed.
+        Trace("mbqi-tmp") << "Failed to enumerate" << std::endl;
         return false;
       }
     } while (!success);

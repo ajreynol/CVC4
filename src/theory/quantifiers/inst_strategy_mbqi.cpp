@@ -305,6 +305,7 @@ void InstStrategyMbqi::process(Node q)
     if (d_msenum->constructInstantiation(
             q, query, vars, smvs, mvToFreshVar, auxLemmas))
     {
+      Trace("mbqi-enum") << "Successfully added instantiation." << std::endl;
       for (std::pair<Node, InferenceId>& al : auxLemmas)
       {
         Trace("mbqi-aux-lemma")
@@ -313,6 +314,7 @@ void InstStrategyMbqi::process(Node q)
       }
       return;
     }
+    Trace("mbqi-enum") << "Failed to add instantiation, revert to normal MBQI..." << std::endl;
   }
   tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI, mvToFreshVar);
 }
@@ -559,14 +561,17 @@ Node InstStrategyMbqi::convertFromModel(
         if (itmv != mvToFreshVar.end())
         {
           cmap[cur] = itmv->second;
-          continue;
         }
         else
         {
-          // TODO (wishue #143): could convert RAN to witness term here
-          // failed to find equal, we fail
-          return Node::null();
+          // Just use the purification skolem if it does not exist. This
+          // can happen if our query involved parameteric types (e.g. functions,
+          // arrays) over uninterpreted sorts, where their models cannot be
+          // statically enforced to be in the finite domain.
+          SkolemManager* sm = nm->getSkolemManager();
+          cmap[cur] = sm->mkPurifySkolem(cur);
         }
+        continue;
       }
       // must convert to concat of sequence units
       // must convert function array constant to lambda
@@ -579,6 +584,7 @@ Node InstStrategyMbqi::convertFromModel(
       {
         cconv = uf::FunctionConst::toLambda(cur);
       }
+      // TODO (wishue #143): could convert RAN to witness term here
       if (!cconv.isNull())
       {
         Node cconvRet = convertFromModel(cconv, cmap, mvToFreshVar);
