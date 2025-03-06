@@ -522,7 +522,7 @@ bool MbqiEnum::constructInstantiation(
           vinst.add(q[0][ii], ret);
         }
       }
-      else if (!successEnum)
+      if (!success && !successEnum)
       {
         // we did not enumerate a candidate, and tried the original, which
         // failed.
