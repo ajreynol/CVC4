@@ -40,6 +40,8 @@ TheorySetsRewriter::TheorySetsRewriter(NodeManager* nm,
                                        bool relsEnabled)
     : TheoryRewriter(nm), d_cardEnabled(cardEnabled), d_relsEnabled(relsEnabled)
 {
+  // Needs to be a subcall in DSL reconstruction since set.is_empty is used
+  // as a premise to test emptiness of a set.
   registerProofRewriteRule(ProofRewriteRule::SETS_INSERT_ELIM,
                            TheoryRewriteCtx::PRE_DSL);
   registerProofRewriteRule(ProofRewriteRule::SETS_EVAL_OP,
