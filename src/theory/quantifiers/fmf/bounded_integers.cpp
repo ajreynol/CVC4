@@ -767,7 +767,17 @@ bool BoundedIntegers::getRsiSubsitution( Node q, Node v, std::vector< Node >& va
     // strings, which use quantification on integers only. Note this
     // impacts only quantified formulas with 2+ dimensions and dependencies
     // between dimensions, e.g. str.indexof_re reduction.
-    Node t = rsi->getCurrentTerm(vo, !tn.isClosedEnumerable());
+    Node t = rsi->getCurrentTerm(vo);
+    if (!tn.isClosedEnumerable())
+    {
+      Node lt = d_treg.getModel()->getEqualityQuery()->getLegalTermForRepresentative(t);
+      if (lt.isNull())
+      {
+        Assert(false);
+        return false;
+      }
+      t = lt;
+    }
     Trace("bound-int-rsi") << "term : " << t << std::endl;
     vars.push_back( d_set[q][i] );
     subs.push_back( t );

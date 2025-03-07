@@ -28,7 +28,6 @@ void RepSet::clear(){
   d_type_reps.clear();
   d_type_complete.clear();
   d_tmap.clear();
-  d_values_to_terms.clear();
 }
 
 bool RepSet::hasRep(TypeNode tn, Node n) const
@@ -140,24 +139,6 @@ bool RepSet::complete( TypeNode t ){
   }else{
     return it->second;
   }
-}
-
-Node RepSet::getTermForRepresentative(Node n) const
-{
-  std::map<Node, Node>::const_iterator it = d_values_to_terms.find(n);
-  if (it != d_values_to_terms.end())
-  {
-    return it->second;
-  }
-  else
-  {
-    return Node::null();
-  }
-}
-
-void RepSet::setTermForRepresentative(Node n, Node t)
-{
-  d_values_to_terms[n] = t;
 }
 
 Node RepSet::getDomainValue(TypeNode tn, const std::vector<Node>& exclude) const

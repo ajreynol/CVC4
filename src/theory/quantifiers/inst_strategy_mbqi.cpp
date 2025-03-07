@@ -322,11 +322,12 @@ void InstStrategyMbqi::process(Node q)
   // get a term that has the same model value as the value each fresh variable
   // represents
   Subs fvToInst;
+  EqualityQuery* eqq = fm->getEqualityQuery();
   for (const Node& v : allVars)
   {
     // get a term that witnesses this variable
     Node ov = sm->getOriginalForm(v);
-    Node mvt = rs->getTermForRepresentative(ov);
+    Node mvt = eqq->getLegalTermForRepresentative(ov);
     // ensure that this term does not contain cex variables, in case CEQGI
     // is combined with MBQI
     if (mvt.isNull() || !TermUtil::getInstConstAttr(mvt).isNull())

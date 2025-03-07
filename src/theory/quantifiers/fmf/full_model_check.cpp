@@ -917,8 +917,19 @@ bool FullModelChecker::exhaustiveInstantiate(FirstOrderModelFmc* fm,
         // TypeNode::isClosedEnumerable), then we must ensure that we are
         // using a term and not a value. This ensures that e.g. uninterpreted
         // constants do not appear in instantiations.
-        Node rr = riter.getCurrentTerm(i, !tn.isClosedEnumerable());
+        Node rr = riter.getCurrentTerm(i);
         Node r = fm->getRepresentative(rr);
+        if (!tn.isClosedEnumerable())
+        {
+          Node lr = fm->getEqualityQuery()->getLegalTermForRepresentative(r);
+          if (lr.isNull())
+          {
+            Assert(false) << "Failed to find legal term for rep " << r;
+            Trace("fmc-exh-debug") << "Failed to find legal term for rep " << r << ", return false" << std::endl;
+            return false;
+          }
+          r = lr;
+        }
         if (TraceIsOn("fmc-exh-debug"))
         {
           debugPrint("fmc-exh-debug", r);

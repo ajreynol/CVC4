@@ -93,7 +93,7 @@ class RepSetIterator
    * If valTerm is true, we return a term instead of a value by calling
    * RepSet::getTermForRepresentative on the value.
    */
-  Node getCurrentTerm(size_t i, bool valTerm = false) const;
+  Node getCurrentTerm(size_t i) const;
   /** get the number of terms in the tuple we are considering */
   size_t getNumTerms() const { return d_index_order.size(); }
   /** get current terms */

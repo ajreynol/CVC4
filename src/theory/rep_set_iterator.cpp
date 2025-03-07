@@ -279,7 +279,7 @@ int RepSetIterator::increment()
 
 bool RepSetIterator::isFinished() const { return d_index.empty(); }
 
-Node RepSetIterator::getCurrentTerm(size_t i, bool valTerm) const
+Node RepSetIterator::getCurrentTerm(size_t i) const
 {
   size_t ii = d_index_order[i];
   size_t curr = d_index[ii];
@@ -290,15 +290,6 @@ Node RepSetIterator::getCurrentTerm(size_t i, bool valTerm) const
   Assert(0 <= curr && curr < d_domain_elements[i].size());
   Node t = d_domain_elements[i][curr];
   Trace("rsi-debug") << "rsi : term = " << t << std::endl;
-  if (valTerm)
-  {
-    Node tt = d_rs->getTermForRepresentative(t);
-    if (!tt.isNull())
-    {
-      Trace("rsi-debug") << "rsi : return rep term = " << tt << std::endl;
-      return tt;
-    }
-  }
   Trace("rsi-debug") << "rsi : return" << std::endl;
   return t;
 }

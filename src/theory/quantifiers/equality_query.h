@@ -67,6 +67,10 @@ class EqualityQuery : public QuantifiersUtil
    * are ineligible.
    */
   Node getInternalRepresentative(Node a, Node q, size_t index);
+  /**
+   * Get a legal term for instantiation with the representative a.
+   */
+  Node getLegalTermForRepresentative(Node a);
 
  private:
   /** the quantifiers state */
@@ -79,6 +83,11 @@ class EqualityQuery : public QuantifiersUtil
   std::map< TypeNode, std::map< Node, Node > > d_int_rep;
   /** rep score */
   std::map<Node, int32_t> d_rep_score;
+  /**
+   * Maps representatives in the model to a legal term for instantiation, used
+   * for
+   */
+  std::map<Node, Node> d_legalInstTerms;
   /** the number of times reset( e ) has been called */
   size_t d_reset_count;
   /** processInferences : will merge equivalence classes in master equality engine, if possible */

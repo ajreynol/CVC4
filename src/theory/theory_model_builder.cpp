@@ -211,7 +211,6 @@ void TheoryEngineModelBuilder::assignConstantRep(TheoryModel* tm,
   d_constantReps[eqc] = constRep;
   Trace("model-builder") << "    Assign: Setting constant rep of " << eqc
                          << " to " << constRep << endl;
-  tm->d_rep_set.setTermForRepresentative(constRep, eqc);
 }
 
 bool TheoryEngineModelBuilder::isExcludedCdtValue(

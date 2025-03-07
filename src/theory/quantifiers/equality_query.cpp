@@ -43,6 +43,7 @@ EqualityQuery::~EqualityQuery() {}
 bool EqualityQuery::reset(Theory::Effort e)
 {
   d_int_rep.clear();
+  d_legalInstTerms.clear();
   d_reset_count++;
   return true;
 }
@@ -57,7 +58,7 @@ Node EqualityQuery::getInternalRepresentative(Node a, Node q, size_t index)
       //map back from values assigned by model, if any
       if (d_model != nullptr)
       {
-        Node tr = d_model->getRepSet()->getTermForRepresentative(r);
+        Node tr = getLegalTermForRepresentative(r);
         if (!tr.isNull())
         {
           r = tr;
@@ -143,6 +144,39 @@ Node EqualityQuery::getInternalRepresentative(Node a, Node q, size_t index)
   return r_best;
 }
 
+Node EqualityQuery::getLegalTermForRepresentative(Node a)
+{
+  if (a.getKind()!=Kind::UNINTERPRETED_SORT_VALUE)
+  {
+    return a;
+  }
+  eq::EqualityEngine* ee = d_model->getEqualityEngine();
+  if (!ee->hasTerm(a))
+  {
+    return Node::null();
+  }
+  Node r = ee->getRepresentative(a);
+  std::map<Node, Node>::iterator it = d_legalInstTerms.find(r);
+  if (it!=d_legalInstTerms.end())
+  {
+    return it->second;
+  }
+  Node ret;
+  eq::EqClassIterator eqc_i = eq::EqClassIterator(r, ee);
+  while (!eqc_i.isFinished())
+  {
+    TNode n = (*eqc_i);
+    if (n.getKind()!=Kind::UNINTERPRETED_SORT_VALUE)
+    {
+      ret = n;
+      break;
+    }
+    ++eqc_i;
+  }
+  d_legalInstTerms[r] = ret;
+  return ret;
+}
+
 //helper functions
 
 Node EqualityQuery::getInstance(Node n,
@@ -168,7 +202,7 @@ Node EqualityQuery::getInstance(Node n,
 //-2 : invalid, -1 : undesired, otherwise : smaller the score, the better
 int32_t EqualityQuery::getRepScore(Node n, Node q, size_t index, TypeNode v_tn)
 {
-  if (quantifiers::TermUtil::hasInstConstAttr(n))
+  if (quantifiers::TermUtil::hasInstConstAttr(n) || n.getKind()==Kind::UNINTERPRETED_SORT_VALUE)
   {  // reject
     return -2;
   }

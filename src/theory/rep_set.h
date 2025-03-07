@@ -89,16 +89,6 @@ class RepSet {
    * This should only be called for small finite interpreted types.
    */
   bool complete( TypeNode t );
-  /** get term for representative
-   * Returns a term that is interpreted as representative n in the current
-   * model, null otherwise.
-   */
-  Node getTermForRepresentative(Node n) const;
-  /** set term for representative
-   * Called when t is interpreted as value n. Subsequent class to
-   * getTermForRepresentative( n ) will return t.
-   */
-  void setTermForRepresentative(Node n, Node t);
   /** get existing domain value, with possible exclusions
     *   This function returns a term in d_type_reps[tn] but not in exclude
     */
@@ -111,8 +101,6 @@ class RepSet {
   std::map<TypeNode, bool> d_type_complete;
   /** map from representatives to their index in d_type_reps */
   std::map<Node, int> d_tmap;
-  /** map from values to terms they were assigned for */
-  std::map<Node, Node> d_values_to_terms;
 };/* class RepSet */
 
 
