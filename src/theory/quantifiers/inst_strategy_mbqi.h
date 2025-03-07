@@ -115,7 +115,19 @@ class InstStrategyMbqi : public QuantifiersModule
    * which can lead to logic exceptions in subsolvers.
    */
   Node mkMbqiSkolem(const Node& t);
-  /** Try instantiation */
+  /**
+   * Try instantiation. This attempts to add the instantiation mvs for q,
+   * where mvs may require post-processing, e.g. to map from uninterpreted
+   * sort values to canonical skolems.
+   *
+   * @param q The quantified formula.
+   * @param mvs The vector of terms to instantiate with.
+   * @param id The identifier (for stats, debugging).
+   * @param mvToFreshVar Maps from uninterpreted sort values to the skolems
+   * we should replace them with.
+   * @return true if we successfully converted mvs to a legal instantiation
+   * and successfully added it to the inference manager of this class.
+   */
   bool tryInstantiation(const Node& q,
                         const std::vector<Node>& mvs,
                         InferenceId id,
