@@ -2,7 +2,7 @@
 #
 # mkkind
 # Morgan Deters <mdeters@cs.nyu.edu> for cvc5
-# Copyright (c) 2010-2013  The cvc5 Project
+# Copyright (c) 2010-2025  The cvc5 Project
 #
 # The purpose of this script is to create kind.h (and also
 # type_properties.h) from a template and a list of theory kinds.
@@ -17,7 +17,7 @@
 # replacing & by the substituted text.
 shopt | grep -q '^patsub_replacement\b' &&  shopt -u patsub_replacement
 
-copyright=2010-2022
+copyright=2010-2025
 
 filename=`basename "$1" | sed 's,_template,,'`
 
@@ -291,7 +291,7 @@ function register_cardinality {
   header=$3
 
   type_cardinalities="${type_cardinalities}
-  case $id: return $cardinality_computer;
+  case Kind::$id: return $cardinality_computer;
 "
   if [ -n "$header" ]; then
     type_properties_includes="${type_properties_includes}
@@ -321,15 +321,15 @@ function register_wellfoundedness {
   fi
 
   type_wellfoundednesses="${type_wellfoundednesses}
-  case $id: return $wellfoundedness_computer;
+  case Kind::$id: return $wellfoundedness_computer;
 "
   if [ -n "$groundterm_computer" ]; then
     type_groundterms="${type_groundterms}
-  case $id: return $groundterm_computer;
+  case Kind::$id: return $groundterm_computer;
 "
   else
     type_groundterms="${type_groundterms}
-  case $id: Unhandled() << typeNode;
+  case Kind::$id: Unhandled() << typeNode;
 "
   fi
   if [ -n "$header" ]; then
@@ -347,9 +347,9 @@ function register_kind {
 
   kind_decls="${kind_decls}  $r, /**< $comment ($register_kind_counter) */
 "
-  kind_printers="${kind_printers}  case $r: return \"$r\";
+  kind_printers="${kind_printers}  case Kind::$r: return \"$r\";
 "
-  kind_to_theory_id="${kind_to_theory_id}  case kind::$r: return $theory_id;
+  kind_to_theory_id="${kind_to_theory_id}  case Kind::$r: return $theory_id;
 "
 }
 

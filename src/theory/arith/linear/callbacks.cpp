@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -30,7 +30,7 @@ SetupLiteralCallBack::SetupLiteralCallBack(TheoryArithPrivate& ta)
   : d_arith(ta)
 {}
 void SetupLiteralCallBack::operator()(TNode lit){
-  TNode atom = (lit.getKind() == kind::NOT) ? lit[0] : lit;
+  TNode atom = (lit.getKind() == Kind::NOT) ? lit[0] : lit;
   if(!d_arith.isSetup(atom)){
     d_arith.setupAtom(atom);
   }
@@ -47,9 +47,8 @@ TempVarMalloc::TempVarMalloc(TheoryArithPrivate& ta)
 : d_ta(ta)
 {}
 ArithVar TempVarMalloc::request(){
-  NodeManager* nm = NodeManager::currentNM();
-  SkolemManager* sm = nm->getSkolemManager();
-  Node skolem = sm->mkDummySkolem("tmpVar", nm->realType());
+  NodeManager* nm = d_ta.getNodeManager();
+  Node skolem = NodeManager::mkDummySkolem("tmpVar", nm->realType());
   return d_ta.requestArithVar(skolem, false, true);
 }
 void TempVarMalloc::release(ArithVar v){

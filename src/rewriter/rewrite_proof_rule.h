@@ -1,16 +1,16 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds
+ *   Andrew Reynolds, Abdalrhman Mohamed, Daniel Larraz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2021 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
  * ****************************************************************************
  *
- * Rewrite proof rule class
+ * proof rewrite rule class
  */
 
 #include "cvc5_private.h"
@@ -28,6 +28,16 @@
 
 namespace cvc5::internal {
 namespace rewriter {
+
+/**
+ * The level for a rewrite, which determines which proof signature they are a
+ * part of.
+ */
+enum class Level
+{
+  NORMAL,
+  EXPERT,
+};
 
 /**
  * The definition of a (conditional) rewrite rule. An instance of this
@@ -54,15 +64,18 @@ class RewriteProofRule
    * @param context The term context for the conclusion of the rule. This is
    * non-null for all rules that should be applied to fixed-point. The context
    * is a lambda term that specifies the next position of the term to rewrite.
+   * @param _level The level of the rewrite, which determines which proof
+   * signature they should be added to (normal or expert).
    */
-  void init(DslPfRule id,
+  void init(ProofRewriteRule id,
             const std::vector<Node>& userFvs,
             const std::vector<Node>& fvs,
             const std::vector<Node>& cond,
             Node conc,
-            Node context);
+            Node context,
+            Level _level);
   /** get id */
-  DslPfRule getId() const;
+  ProofRewriteRule getId() const;
   /** get name */
   const char* getName() const;
   /** Get user variable list */
@@ -90,11 +103,50 @@ class RewriteProofRule
    * can be used for debugging matches of h against the head of this rule.
    */
   void getMatches(Node h, expr::NotifyMatch* ntm) const;
-  /** Get conclusion of the rule */
-  Node getConclusion() const;
-  /** Get conclusion of the rule for the substituted terms ss */
+  /**
+   * Get (uninstantiated) conclusion of the rule.
+   * @param includeContext If we should include the context of this rule (if
+   * the RARE rule is given a "context" as described in the constructor).
+   * @return The (uninstantiated) conclusion of the rule.
+   */
+  Node getConclusion(bool includeContext = false) const;
+  /**
+   * Get conclusion of the rule for the substituted terms ss for the variables
+   * v = getVarList() of this rule.
+   *
+   * @param ss The terms to substitute in this rule. Each ss[i] is the same sort
+   * as v[i] if v[i] is not a list variable, or is an SEXPR if v[i] is a list
+   * variable,
+   * @return the substituted conclusion of the rule.
+   */
   Node getConclusionFor(const std::vector<Node>& ss) const;
-
+  /**
+   * Get conclusion of the rule for the substituted terms ss.
+   * Additionally computes the "witness term" for each variable in the rule
+   * which gives the corresponding term.
+   * In particular, for each v[i] where v = getVarList(),
+   * witnessTerms[i] is either:
+   * (UNDEFINED_KIND, {t}), specifying that v -> t,
+   * (k, {t1...tn}), specifying that v -> (<k> t1 ... tn).
+   * Note that we don't construct (<k> t1 ... tn) since it may be illegal to
+   * do so if e.g. k=or, and n=1 due to restrictions on the arity of Kinds.
+   *
+   * @param ss The terms to substitute in this rule. Each ss[i] is the same sort
+   * as v[i] if v[i] is not a list variable, or is an SEXPR if v[i] is a list
+   * variable,
+   * @param witnessTerms The computed witness terms for each variable of this
+   * rule.
+   * @return the substituted conclusion of the rule.
+   */
+  Node getConclusionFor(
+      const std::vector<Node>& ss,
+      std::vector<std::pair<Kind, std::vector<Node>>>& witnessTerms) const;
+  /**
+   * @return the list of applications of Kind::TYPE_OF that appear in the
+   * conclusion or a premise. These require special handling by the
+   * printer.
+   */
+  std::vector<Node> getExplicitTypeOfList() const;
   /**
    * Is variable explicit? An explicit variable is one that does not occur
    * in a condition and thus its value must be specified in a proof
@@ -118,20 +170,33 @@ class RewriteProofRule
   Kind getListContext(Node v) const;
   /** Was this rule marked as being applied to fixed point? */
   bool isFixedPoint() const;
-  /** Is this rule in flat form? */
-  bool isFlatForm() const;
+  /**
+   * Get condition definitions given an application vs -> ss of this rule.
+   * This is used to handle variables that do not occur in the left hand side
+   * of rewrite rules and are defined in conditions of this rule.
+   * @param vs The matched variables of this rule.
+   * @param ss The terms to substitute in this rule for each vs.
+   * @param dvs The variables for which a definition can now be inferred.
+   * @param dss The terms that each dvs are defined as, for each dvs.
+   */
+  void getConditionalDefinitions(const std::vector<Node>& vs,
+                                 const std::vector<Node>& ss,
+                                 std::vector<Node>& dvs,
+                                 std::vector<Node>& dss) const;
+  /** Get the signature level for the rewrite rule */
+  Level getSignatureLevel() const;
 
  private:
   /** The id of the rule */
-  DslPfRule d_id;
+  ProofRewriteRule d_id;
   /** The conditions of the rule */
   std::vector<Node> d_cond;
-  /** The obligation generator formulas of the rule */
-  std::vector<Node> d_obGen;
   /** The conclusion of the rule (an equality) */
   Node d_conc;
   /** Is the rule applied in some fixed point context? */
   Node d_context;
+  /** The level */
+  Level d_level;
   /** Whether the rule is in flat form */
   bool d_isFlatForm;
   /** the ordered list of free variables, provided by the user */
@@ -145,8 +210,10 @@ class RewriteProofRule
    * "holes" in a proof.
    */
   std::unordered_set<Node> d_noOccVars;
+  /** Maps variables to the term they are defined to be */
+  std::map<Node, Node> d_condDefinedVars;
   /** The context for list variables (see expr::getListVarContext). */
-  std::map<Node, Kind> d_listVarCtx;
+  std::map<Node, Node> d_listVarCtx;
   /** The match trie (for fixed point matching) */
   expr::NaryMatchTrie d_mt;
 };
@@ -154,4 +221,4 @@ class RewriteProofRule
 }  // namespace rewriter
 }  // namespace cvc5::internal
 
-#endif /* CVC4__REWRITER__REWRITE_PROOF_RULE__H */
+#endif /* CVC5__REWRITER__REWRITE_PROOF_RULE__H */

@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Haniel Barbosa, Mathias Preiner
+ *   Andrew Reynolds, Haniel Barbosa, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -172,8 +172,7 @@ void SygusUnifStrategy::registerStrategyPoint(Node et,
 
 void SygusUnifStrategy::buildStrategyGraph(TypeNode tn, NodeRole nrole)
 {
-  NodeManager* nm = NodeManager::currentNM();
-  SkolemManager* sm = nm->getSkolemManager();
+  NodeManager* nm = nodeManager();
   if (d_tinfo.find(tn) == d_tinfo.end())
   {
     // register type
@@ -196,7 +195,7 @@ void SygusUnifStrategy::buildStrategyGraph(TypeNode tn, NodeRole nrole)
   std::map<EnumRole, Node>::iterator iten = eti.d_enum.find(erole);
   if (iten == eti.d_enum.end())
   {
-    ee = sm->mkDummySkolem("ee", tn);
+    ee = NodeManager::mkDummySkolem("ee", tn);
     eti.d_enum[erole] = ee;
     Trace("sygus-unif-debug")
         << "...enumerator " << ee << " for " << tn.getDType().getName()
@@ -247,13 +246,13 @@ void SygusUnifStrategy::buildStrategyGraph(TypeNode tn, NodeRole nrole)
     for (unsigned k = 0, nargs = dt[j].getNumArgs(); k < nargs; k++)
     {
       TypeNode ttn = dt[j][k].getRangeType();
-      Node kv = sm->mkDummySkolem("ut", ttn);
+      Node kv = NodeManager::mkDummySkolem("ut", ttn);
       sks.push_back(kv);
       cop_to_sks[cop].push_back(kv);
       sktns.push_back(ttn);
       utchildren.push_back(kv);
     }
-    Node ut = nm->mkNode(APPLY_CONSTRUCTOR, utchildren);
+    Node ut = nm->mkNode(Kind::APPLY_CONSTRUCTOR, utchildren);
     std::vector<Node> echildren;
     echildren.push_back(ut);
     Node sbvl = dt.getSygusVarList();
@@ -261,7 +260,7 @@ void SygusUnifStrategy::buildStrategyGraph(TypeNode tn, NodeRole nrole)
     {
       echildren.push_back(sbv);
     }
-    Node eut = nm->mkNode(DT_SYGUS_EVAL, echildren);
+    Node eut = nm->mkNode(Kind::DT_SYGUS_EVAL, echildren);
     Trace("sygus-unif-debug2") << "  Test evaluation of " << eut << "..."
                                << std::endl;
     eut = d_tds->rewriteNode(eut);
@@ -269,11 +268,11 @@ void SygusUnifStrategy::buildStrategyGraph(TypeNode tn, NodeRole nrole)
     Trace("sygus-unif-debug2") << ", type : " << eut.getType() << std::endl;
 
     // candidate strategy
-    if (eut.getKind() == ITE)
+    if (eut.getKind() == Kind::ITE)
     {
       cop_to_strat[cop].push_back(strat_ITE);
     }
-    else if (eut.getKind() == STRING_CONCAT)
+    else if (eut.getKind() == Kind::STRING_CONCAT)
     {
       if (nrole != role_string_suffix)
       {
@@ -303,9 +302,9 @@ void SygusUnifStrategy::buildStrategyGraph(TypeNode tn, NodeRole nrole)
         echildren[0] = sks[k];
         Trace("sygus-unif-debug2") << "...set eval dt to " << sks[k]
                                    << std::endl;
-        Node esk = nm->mkNode(DT_SYGUS_EVAL, echildren);
+        Node esk = nm->mkNode(Kind::DT_SYGUS_EVAL, echildren);
         vs.push_back(esk);
-        Node tvar = sm->mkDummySkolem("templ", esk.getType());
+        Node tvar = NodeManager::mkDummySkolem("templ", esk.getType());
         templ_var_index[tvar] = k;
         Trace("sygus-unif-debug2") << "* template inference : looking for "
                                    << tvar << " for arg " << k << std::endl;
@@ -576,7 +575,7 @@ void SygusUnifStrategy::buildStrategyGraph(TypeNode tn, NodeRole nrole)
           if (cop_to_child_templ[cop].find(j) != cop_to_child_templ[cop].end())
           {
             // it is templated, allocate a fresh variable
-            et = sm->mkDummySkolem("et", ct);
+            et = NodeManager::mkDummySkolem("et", ct);
             Trace("sygus-unif-debug") << "...enumerate " << et << " of type "
                                       << ct.getDType().getName();
             Trace("sygus-unif-debug") << " for arg " << j << " of "
@@ -610,12 +609,12 @@ void SygusUnifStrategy::buildStrategyGraph(TypeNode tn, NodeRole nrole)
           if (sol_templ_children[j].isNull())
           {
             sol_templ_children[j] =
-                nm->mkGroundTerm(cop_to_sks[cop][j].getType());
+                NodeManager::mkGroundTerm(cop_to_sks[cop][j].getType());
           }
         }
         sol_templ_children.insert(sol_templ_children.begin(), cop);
         cons_strat->d_sol_templ =
-            nm->mkNode(APPLY_CONSTRUCTOR, sol_templ_children);
+            nm->mkNode(Kind::APPLY_CONSTRUCTOR, sol_templ_children);
         if (strat == strat_CONCAT_SUFFIX)
         {
           std::reverse(cons_strat->d_cenum.begin(), cons_strat->d_cenum.end());
@@ -812,8 +811,9 @@ void SygusUnifStrategy::staticLearnRedundantOps(
       const DType& dt = etn.getDType();
       Node op = dt[cindex].getSygusOp();
       TypeNode sygus_tn = dt.getSygusType();
-      if (op.getKind() == kind::BUILTIN
-          && NodeManager::operatorToKind(op) == ITE && sygus_tn.isBoolean()
+      if (op.getKind() == Kind::BUILTIN
+          && NodeManager::operatorToKind(op) == Kind::ITE
+          && sygus_tn.isBoolean()
           && (dt[cindex].getArgType(1) == dt[cindex].getArgType(2)))
       {
         unsigned ncons = dt.getNumConstructors(), indexT = ncons,
@@ -872,10 +872,11 @@ void SygusUnifStrategy::staticLearnRedundantOps(
         needs_cons_curr[j] = false;
         continue;
       }
-      if (op.getKind() == kind::BUILTIN)
+      if (op.getKind() == Kind::BUILTIN)
       {
         Kind kind = NodeManager::operatorToKind(op);
-        if (kind == NOT || kind == OR || kind == AND || kind == ITE)
+        if (kind == Kind::NOT || kind == Kind::OR || kind == Kind::AND
+            || kind == Kind::ITE)
         {
           // can eliminate if their argument types are simple loops to this type
           bool type_ok = true;

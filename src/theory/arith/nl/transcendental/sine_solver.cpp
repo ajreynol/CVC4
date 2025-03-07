@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Gereon Kremer, Andrew Reynolds, Tim King
+ *   Andrew Reynolds, Gereon Kremer, Daniel Larraz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -41,16 +41,15 @@ namespace transcendental {
 SineSolver::SineSolver(Env& env, TranscendentalState* tstate)
     : EnvObj(env), d_data(tstate)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Node zero = nm->mkConstReal(Rational(0));
   Node one = nm->mkConstReal(Rational(1));
   Node negOne = nm->mkConstReal(Rational(-1));
   d_pi = nm->mkNullaryOperator(nm->realType(), Kind::PI);
-  Node pi_2 = rewrite(
-      nm->mkNode(Kind::MULT, d_pi, nm->mkConstReal(Rational(1) / Rational(2))));
-  Node pi_neg_2 = rewrite(nm->mkNode(
-      Kind::MULT, d_pi, nm->mkConstReal(Rational(-1) / Rational(2))));
-  d_neg_pi = rewrite(nm->mkNode(Kind::MULT, d_pi, negOne));
+  Node pi_2 = nm->mkNode(Kind::MULT, nm->mkConstReal(Rational(1, 2)), d_pi);
+  Node pi_neg_2 =
+      nm->mkNode(Kind::MULT, nm->mkConstReal(Rational(-1, 2)), d_pi);
+  d_neg_pi = nm->mkNode(Kind::MULT, nm->mkConstInt(Rational(-1)), d_pi);
   d_mpoints.push_back(d_pi);
   d_mpointsSine[d_pi] = zero;
   d_mpoints.push_back(pi_2);
@@ -67,9 +66,9 @@ SineSolver::~SineSolver() {}
 
 void SineSolver::doReductions()
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   std::map<Kind, std::vector<Node> >::iterator it =
-      d_data->d_funcMap.find(kind::SINE);
+      d_data->d_funcMap.find(Kind::SINE);
   if (it == d_data->d_funcMap.end())
   {
     return;
@@ -95,9 +94,9 @@ void SineSolver::doReductions()
       if (mvs.getConst<Rational>() != -mv.getConst<Rational>())
       {
         Node lem =
-            nm->mkNode(kind::IMPLIES,
-                       tf[0].eqNode(nm->mkNode(kind::NEG, itv->second[0])),
-                       tf.eqNode(nm->mkNode(kind::NEG, itv->second)));
+            nm->mkNode(Kind::IMPLIES,
+                       tf[0].eqNode(nm->mkNode(Kind::NEG, itv->second[0])),
+                       tf.eqNode(nm->mkNode(Kind::NEG, itv->second)));
         d_data->d_im.addPendingLemma(
             lem, InferenceId::ARITH_NL_T_SINE_SYMM, nullptr);
       }
@@ -118,7 +117,7 @@ void SineSolver::doReductions()
           // the argument is a boundary point, we reduce it if not already done
           // so
           Node lem = nm->mkNode(
-              kind::IMPLIES, tf[0].eqNode(itv->second), tf.eqNode(mvs));
+              Kind::IMPLIES, tf[0].eqNode(itv->second), tf.eqNode(mvs));
           d_data->d_im.addPendingLemma(
               lem, InferenceId::ARITH_NL_T_SINE_BOUNDARY_REDUCE, nullptr);
         }
@@ -146,32 +145,36 @@ void SineSolver::doReductions()
   }
 }
 
-Node SineSolver::getPhaseShiftLemma(const Node& x, const Node& y, const Node& s)
+Node SineSolver::getPhaseShiftLemma(const Node& x)
 {
   NodeManager* nm = NodeManager::currentNM();
-  Node xr = (x.getType().isInteger() ? nm->mkNode(Kind::TO_REAL, x) : x);
-  Node yr = (y.getType().isInteger() ? nm->mkNode(Kind::TO_REAL, y) : y);
+  SkolemManager* sm = nm->getSkolemManager();
+  Node sinex = nm->mkNode(Kind::SINE, x);
+  Node y = sm->mkSkolemFunction(SkolemId::TRANSCENDENTAL_PURIFY_ARG, {sinex});
+  Node s = sm->mkSkolemFunction(SkolemId::TRANSCENDENTAL_SINE_PHASE_SHIFT, {x});
+  Assert(x.getType().isReal());
+  Assert(y.getType().isReal());
   Node mone = nm->mkConstReal(Rational(-1));
-  Node pi = nm->mkNullaryOperator(nm->realType(), PI);
+  Node pi = nm->mkNullaryOperator(nm->realType(), Kind::PI);
   return nm->mkAnd(std::vector<Node>{
-      nm->mkNode(GEQ, y, nm->mkNode(MULT, mone, pi)),
-      nm->mkNode(LEQ, y, pi),
-      nm->mkNode(IS_INTEGER, s),
-      nm->mkNode(ITE,
+      nm->mkNode(Kind::GEQ, y, nm->mkNode(Kind::MULT, mone, pi)),
+      nm->mkNode(Kind::LEQ, y, pi),
+      nm->mkNode(Kind::IS_INTEGER, s),
+      nm->mkNode(Kind::ITE,
                  nm->mkAnd(std::vector<Node>{
-                     nm->mkNode(GEQ, x, nm->mkNode(MULT, mone, pi)),
-                     nm->mkNode(LEQ, x, pi),
+                     nm->mkNode(Kind::GEQ, x, nm->mkNode(Kind::MULT, mone, pi)),
+                     nm->mkNode(Kind::LEQ, x, pi),
                  }),
-                 xr.eqNode(yr),
-                 xr.eqNode(nm->mkNode(
-                     ADD, y, nm->mkNode(MULT, nm->mkConstReal(2), s, pi)))),
-      nm->mkNode(SINE, y).eqNode(nm->mkNode(SINE, x))});
+                 x.eqNode(y),
+                 x.eqNode(nm->mkNode(
+                     Kind::ADD,
+                     y,
+                     nm->mkNode(Kind::MULT, nm->mkConstReal(2), s, pi)))),
+      nm->mkNode(Kind::SINE, y).eqNode(nm->mkNode(Kind::SINE, x))});
 }
 
 void SineSolver::doPhaseShift(TNode a, TNode new_a)
 {
-  NodeManager* nm = NodeManager::currentNM();
-  SkolemManager* sm = nm->getSkolemManager();
   Assert(a.getKind() == Kind::SINE);
   CDProof* proof = nullptr;
   Node lem;
@@ -179,26 +182,25 @@ void SineSolver::doPhaseShift(TNode a, TNode new_a)
   InferenceId iid;
   if (TranscendentalState::isSimplePurify(a))
   {
-    lem = nm->mkNode(Kind::AND, a.eqNode(new_a), a[0].eqNode(new_a[0]));
+    lem =
+        NodeManager::mkNode(Kind::AND, a.eqNode(new_a), a[0].eqNode(new_a[0]));
     if (d_data->isProofEnabled())
     {
       // simple to justify
       proof = d_data->getProof();
-      proof->addStep(lem, PfRule::MACRO_SR_PRED_INTRO, {}, {lem});
+      proof->addStep(lem, ProofRule::MACRO_SR_PRED_INTRO, {}, {lem});
     }
     iid = InferenceId::ARITH_NL_T_PURIFY_ARG;
   }
   else
   {
-    Node shift = sm->mkDummySkolem("s", nm->realType(), "number of shifts");
     // TODO (cvc4-projects #47) : do not introduce shift here, instead needs
     // model-based refinement for constant shifts (cvc4-projects #1284)
-    lem = getPhaseShiftLemma(a[0], new_a[0], shift);
+    lem = getPhaseShiftLemma(a[0]);
     if (d_data->isProofEnabled())
     {
       proof = d_data->getProof();
-      proof->addStep(
-          lem, PfRule::ARITH_TRANS_SINE_SHIFT, {}, {a[0], new_a[0], shift});
+      proof->addStep(lem, ProofRule::ARITH_TRANS_SINE_SHIFT, {}, {a[0]});
     }
     iid = InferenceId::ARITH_NL_T_PURIFY_ARG_PHASE_SHIFT;
   }
@@ -210,7 +212,6 @@ void SineSolver::doPhaseShift(TNode a, TNode new_a)
 
 void SineSolver::checkInitialRefine()
 {
-  NodeManager* nm = NodeManager::currentNM();
   for (std::pair<const Kind, std::vector<Node> >& tfl : d_data->d_funcMap)
   {
     if (tfl.first != Kind::SINE)
@@ -230,14 +231,15 @@ void SineSolver::checkInitialRefine()
         Assert(d_data->isPurified(t));
         {
           // sine bounds: -1 <= sin(t) <= 1
-          Node lem = nm->mkNode(Kind::AND,
-                                nm->mkNode(Kind::LEQ, t, d_data->d_one),
-                                nm->mkNode(Kind::GEQ, t, d_data->d_neg_one));
+          Node lem = NodeManager::mkNode(
+              Kind::AND,
+              NodeManager::mkNode(Kind::LEQ, t, d_data->d_one),
+              NodeManager::mkNode(Kind::GEQ, t, d_data->d_neg_one));
           CDProof* proof = nullptr;
           if (d_data->isProofEnabled())
           {
             proof = d_data->getProof();
-            proof->addStep(lem, PfRule::ARITH_TRANS_SINE_BOUNDS, {}, {t[0]});
+            proof->addStep(lem, ProofRule::ARITH_TRANS_SINE_BOUNDS, {}, {t[0]});
           }
           d_data->d_im.addPendingLemma(
               lem, InferenceId::ARITH_NL_T_INIT_REFINE, proof);
@@ -246,20 +248,22 @@ void SineSolver::checkInitialRefine()
           // sine zero tangent:
           //   t > 0  =>  sin(t) < t
           //   t < 0  =>  sin(t) > t
-          Node lem =
-              nm->mkNode(Kind::AND,
-                         nm->mkNode(Kind::IMPLIES,
-                                    nm->mkNode(Kind::GT, t[0], d_data->d_zero),
-                                    nm->mkNode(Kind::LT, t, t[0])),
-                         nm->mkNode(Kind::IMPLIES,
-                                    nm->mkNode(Kind::LT, t[0], d_data->d_zero),
-                                    nm->mkNode(Kind::GT, t, t[0])));
+          Node lem = NodeManager::mkNode(
+              Kind::AND,
+              NodeManager::mkNode(
+                  Kind::IMPLIES,
+                  NodeManager::mkNode(Kind::GT, t[0], d_data->d_zero),
+                  NodeManager::mkNode(Kind::LT, t, t[0])),
+              NodeManager::mkNode(
+                  Kind::IMPLIES,
+                  NodeManager::mkNode(Kind::LT, t[0], d_data->d_zero),
+                  NodeManager::mkNode(Kind::GT, t, t[0])));
           CDProof* proof = nullptr;
           if (d_data->isProofEnabled())
           {
             proof = d_data->getProof();
             proof->addStep(
-                lem, PfRule::ARITH_TRANS_SINE_TANGENT_ZERO, {}, {t[0]});
+                lem, ProofRule::ARITH_TRANS_SINE_TANGENT_ZERO, {}, {t[0]});
           }
           d_data->d_im.addPendingLemma(
               lem, InferenceId::ARITH_NL_T_INIT_REFINE, proof);
@@ -268,38 +272,51 @@ void SineSolver::checkInitialRefine()
           // sine pi tangent:
           //   t > -pi  =>  sin(t) > -pi-t
           //   t <  pi  =>  sin(t) <  pi-t
-          Node lem = nm->mkNode(
+          Node lem = NodeManager::mkNode(
               Kind::AND,
-              nm->mkNode(
+              NodeManager::mkNode(
                   Kind::IMPLIES,
-                  nm->mkNode(Kind::GT, t[0], d_neg_pi),
-                  nm->mkNode(
-                      Kind::GT, t, nm->mkNode(Kind::SUB, d_neg_pi, t[0]))),
-              nm->mkNode(
+                  NodeManager::mkNode(Kind::GT, t[0], d_neg_pi),
+                  NodeManager::mkNode(
+                      Kind::GT,
+                      t,
+                      NodeManager::mkNode(Kind::SUB, d_neg_pi, t[0]))),
+              NodeManager::mkNode(
                   Kind::IMPLIES,
-                  nm->mkNode(Kind::LT, t[0], d_pi),
-                  nm->mkNode(Kind::LT, t, nm->mkNode(Kind::SUB, d_pi, t[0]))));
+                  NodeManager::mkNode(Kind::LT, t[0], d_pi),
+                  NodeManager::mkNode(
+                      Kind::LT,
+                      t,
+                      NodeManager::mkNode(Kind::SUB, d_pi, t[0]))));
           CDProof* proof = nullptr;
           if (d_data->isProofEnabled())
           {
             proof = d_data->getProof();
             proof->addStep(
-                lem, PfRule::ARITH_TRANS_SINE_TANGENT_PI, {}, {t[0]});
+                lem, ProofRule::ARITH_TRANS_SINE_TANGENT_PI, {}, {t[0]});
           }
           d_data->d_im.addPendingLemma(
               lem, InferenceId::ARITH_NL_T_INIT_REFINE, proof);
         }
         {
-          Node lem =
-              nm->mkNode(Kind::AND,
-                         // sign
-                         nm->mkNode(Kind::EQUAL,
-                                    nm->mkNode(Kind::LT, t[0], d_data->d_zero),
-                                    nm->mkNode(Kind::LT, t, d_data->d_zero)),
-                         // zero val
-                         nm->mkNode(Kind::EQUAL,
-                                    nm->mkNode(Kind::GT, t[0], d_data->d_zero),
-                                    nm->mkNode(Kind::GT, t, d_data->d_zero)));
+          Node lem = NodeManager::mkNode(
+              Kind::AND,
+              // (-pi < t < 0) <=> (sin(t)<0)
+              NodeManager::mkNode(
+                  Kind::EQUAL,
+                  NodeManager::mkNode(
+                      Kind::AND,
+                      NodeManager::mkNode(Kind::LT, d_neg_pi, t[0]),
+                      NodeManager::mkNode(Kind::LT, t[0], d_data->d_zero)),
+                  NodeManager::mkNode(Kind::LT, t, d_data->d_zero)),
+              // (0 < t < pi) <=> (sin(t)>0)
+              NodeManager::mkNode(
+                  Kind::EQUAL,
+                  NodeManager::mkNode(
+                      Kind::AND,
+                      NodeManager::mkNode(Kind::GT, d_pi, t[0]),
+                      NodeManager::mkNode(Kind::GT, t[0], d_data->d_zero)),
+                  NodeManager::mkNode(Kind::GT, t, d_data->d_zero)));
           d_data->d_im.addPendingLemma(lem,
                                        InferenceId::ARITH_NL_T_INIT_REFINE);
         }
@@ -441,32 +458,34 @@ void SineSolver::checkMonotonic()
 
     if (!tval.isNull())
     {
-      NodeManager* nm = NodeManager::currentNM();
       Node mono_lem;
       if (monotonic_dir == 1
           && sval.getConst<Rational>() > tval.getConst<Rational>())
       {
-        mono_lem = nm->mkNode(Kind::IMPLIES,
-                              nm->mkNode(Kind::GEQ, targ, sarg),
-                              nm->mkNode(Kind::GEQ, t, s));
+        mono_lem =
+            NodeManager::mkNode(Kind::IMPLIES,
+                                NodeManager::mkNode(Kind::GEQ, targ, sarg),
+                                NodeManager::mkNode(Kind::GEQ, t, s));
       }
       else if (monotonic_dir == -1
                && sval.getConst<Rational>() < tval.getConst<Rational>())
       {
-        mono_lem = nm->mkNode(Kind::IMPLIES,
-                              nm->mkNode(Kind::LEQ, targ, sarg),
-                              nm->mkNode(Kind::LEQ, t, s));
+        mono_lem =
+            NodeManager::mkNode(Kind::IMPLIES,
+                                NodeManager::mkNode(Kind::LEQ, targ, sarg),
+                                NodeManager::mkNode(Kind::LEQ, s, t));
       }
       if (!mono_lem.isNull())
       {
         if (!mono_bounds[0].isNull())
         {
           Assert(!mono_bounds[1].isNull());
-          mono_lem = nm->mkNode(
+          mono_lem = NodeManager::mkNode(
               Kind::IMPLIES,
-              nm->mkNode(Kind::AND,
-                         mkBounded(mono_bounds[0], targ, mono_bounds[1]),
-                         mkBounded(mono_bounds[0], sarg, mono_bounds[1])),
+              NodeManager::mkNode(
+                  Kind::AND,
+                  mkBounded(mono_bounds[0], targ, mono_bounds[1]),
+                  mkBounded(mono_bounds[0], sarg, mono_bounds[1])),
               mono_lem);
         }
         Trace("nl-ext-tf-mono")
@@ -487,7 +506,7 @@ void SineSolver::checkMonotonic()
 void SineSolver::doTangentLemma(
     TNode e, TNode c, TNode poly_approx, int region, std::uint64_t d)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Assert(region != -1);
 
   Trace("nl-ext-sine") << c << " in region " << region << std::endl;
@@ -522,7 +541,7 @@ void SineSolver::doTangentLemma(
       if (usec)
       {
         proof->addStep(lem,
-                       PfRule::ARITH_TRANS_SINE_APPROX_BELOW_NEG,
+                       ProofRule::ARITH_TRANS_SINE_APPROX_BELOW_NEG,
                        {},
                        {nm->mkConstInt(Rational(2 * d)),
                         e[0],
@@ -533,7 +552,7 @@ void SineSolver::doTangentLemma(
       else
       {
         proof->addStep(lem,
-                       PfRule::ARITH_TRANS_SINE_APPROX_BELOW_NEG,
+                       ProofRule::ARITH_TRANS_SINE_APPROX_BELOW_NEG,
                        {},
                        {nm->mkConstInt(Rational(2 * d)),
                         e[0],
@@ -547,7 +566,7 @@ void SineSolver::doTangentLemma(
       if (usec)
       {
         proof->addStep(lem,
-                       PfRule::ARITH_TRANS_SINE_APPROX_ABOVE_POS,
+                       ProofRule::ARITH_TRANS_SINE_APPROX_ABOVE_POS,
                        {},
                        {nm->mkConstInt(Rational(2 * d)),
                         e[0],
@@ -558,7 +577,7 @@ void SineSolver::doTangentLemma(
       else
       {
         proof->addStep(lem,
-                       PfRule::ARITH_TRANS_SINE_APPROX_ABOVE_POS,
+                       ProofRule::ARITH_TRANS_SINE_APPROX_ABOVE_POS,
                        {},
                        {nm->mkConstInt(Rational(2 * d)),
                         e[0],
@@ -614,7 +633,7 @@ std::pair<Node, Node> SineSolver::getSecantBounds(TNode e,
 
 bool SineSolver::hasExactModelValue(TNode n) const
 {
-  Assert(n.getKind() == SINE);
+  Assert(n.getKind() == Kind::SINE);
   Node mv = d_data->d_model.computeAbstractModelValue(n[0]);
   return d_mpointsSine.find(mv) != d_mpointsSine.end();
 }

@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Andres Noetzli, Haniel Barbosa
+ *   Andrew Reynolds, Andres Noetzli, Abdalrhman Mohamed
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2022 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -18,6 +18,7 @@
 #include "expr/node_algorithm.h"
 
 #include "expr/attribute.h"
+#include "expr/cardinality_constraint.h"
 #include "expr/dtype.h"
 
 namespace cvc5::internal {
@@ -146,41 +147,56 @@ bool hasSubtermKind(Kind k, Node n)
       {
         return true;
       }
-      for (const Node& cn : cur)
+      if (cur.hasOperator())
       {
-        visit.push_back(cn);
+        visit.push_back(cur.getOperator());
       }
+      visit.insert(visit.end(), cur.begin(), cur.end());
     }
   } while (!visit.empty());
   return false;
 }
 
 bool hasSubtermKinds(const std::unordered_set<Kind, kind::KindHashFunction>& ks,
-                     Node n)
+                     TNode n)
 {
   if (ks.empty())
   {
     return false;
   }
   std::unordered_set<TNode> visited;
+  return hasSubtermKinds(ks, n, visited) != Kind::UNDEFINED_KIND;
+}
+
+Kind hasSubtermKinds(const std::unordered_set<Kind, kind::KindHashFunction>& ks,
+                     TNode n,
+                     std::unordered_set<TNode>& visited)
+{
+  Assert(!ks.empty());
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(n);
+  Kind k;
   do
   {
     cur = visit.back();
     visit.pop_back();
     if (visited.find(cur) == visited.end())
     {
-      if (ks.find(cur.getKind()) != ks.end())
+      k = cur.getKind();
+      if (ks.find(k) != ks.end())
       {
-        return true;
+        return k;
       }
       visited.insert(cur);
+      if (cur.hasOperator())
+      {
+        visit.push_back(cur.getOperator());
+      }
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
   } while (!visit.empty());
-  return false;
+  return Kind::UNDEFINED_KIND;
 }
 
 bool hasSubterm(TNode n, const std::vector<Node>& t, bool strict)
@@ -253,7 +269,7 @@ bool hasBoundVar(TNode n)
   if (!n.getAttribute(HasBoundVarComputedAttr()))
   {
     bool hasBv = false;
-    if (n.getKind() == kind::BOUND_VARIABLE)
+    if (n.getKind() == Kind::BOUND_VARIABLE)
     {
       hasBv = true;
     }
@@ -325,7 +341,7 @@ bool checkVariablesInternal(TNode n,
     if (itv == visited.end())
     {
       visited.insert(cur);
-      if (cur.getKind() == kind::BOUND_VARIABLE)
+      if (cur.getKind() == Kind::BOUND_VARIABLE)
       {
         if (scope.find(cur) == scope.end())
         {
@@ -342,11 +358,12 @@ bool checkVariablesInternal(TNode n,
       else if (cur.isClosure())
       {
         // add to scope
+        std::vector<TNode> boundvars;
         for (const TNode& cn : cur[0])
         {
-          if (checkShadow)
+          if (scope.find(cn) != scope.end())
           {
-            if (scope.find(cn) != scope.end())
+            if (checkShadow)
             {
               wasShadow = true;
               return true;
@@ -354,11 +371,10 @@ bool checkVariablesInternal(TNode n,
           }
           else
           {
-            // should not shadow
-            Assert(scope.find(cn) == scope.end())
-                << "Shadowed variable " << cn << " in " << cur << "\n";
+            // add to scope if it is not shadowing
+            boundvars.push_back(cn);
+            scope.insert(cn);
           }
-          scope.insert(cn);
         }
         // must make recursive call to use separate cache
         if (checkVariablesInternal(
@@ -368,7 +384,7 @@ bool checkVariablesInternal(TNode n,
           return true;
         }
         // cleanup
-        for (const TNode& cn : cur[0])
+        for (const TNode& cn : boundvars)
         {
           scope.erase(cn);
         }
@@ -402,7 +418,7 @@ bool hasFreeVar(TNode n)
   // optimization for variables and constants
   if (n.getNumChildren() == 0)
   {
-    return n.getKind() == kind::BOUND_VARIABLE;
+    return n.getKind() == Kind::BOUND_VARIABLE;
   }
   std::unordered_set<Node> fvs;
   std::unordered_set<TNode> scope;
@@ -414,7 +430,7 @@ bool hasFreeOrShadowedVar(TNode n, bool& wasShadow)
   // optimization for variables and constants
   if (n.getNumChildren() == 0)
   {
-    return n.getKind() == kind::BOUND_VARIABLE;
+    return n.getKind() == Kind::BOUND_VARIABLE;
   }
   std::unordered_set<Node> fvs;
   std::unordered_set<TNode> scope;
@@ -476,9 +492,16 @@ bool hasFreeVariablesScope(TNode n, std::unordered_set<TNode>& scope)
   return getVariablesInternal(n, fvs, scope, false);
 }
 
-bool getVariables(TNode n, std::unordered_set<TNode>& vs)
+bool getVariables(TNode n, std::unordered_set<Node>& vs)
 {
   std::unordered_set<TNode> visited;
+  return getVariables(n, vs, visited);
+}
+
+bool getVariables(TNode n,
+                  std::unordered_set<Node>& vs,
+                  std::unordered_set<TNode>& visited)
+{
   std::vector<TNode> visit;
   TNode cur;
   visit.push_back(n);
@@ -495,6 +518,10 @@ bool getVariables(TNode n, std::unordered_set<TNode>& vs)
       }
       else
       {
+        if (cur.hasOperator())
+        {
+          visit.push_back(cur.getOperator());
+        }
         visit.insert(visit.end(), cur.begin(), cur.end());
       }
       visited.insert(cur);
@@ -524,7 +551,7 @@ void getSymbols(TNode n,
     if (visited.find(cur) == visited.end())
     {
       visited.insert(cur);
-      if (cur.isVar() && cur.getKind() != kind::BOUND_VARIABLE)
+      if (cur.isVar() && cur.getKind() != Kind::BOUND_VARIABLE)
       {
         syms.insert(cur);
       }
@@ -635,6 +662,12 @@ void getTypes(TNode n,
     {
       visited.insert(cur);
       types.insert(cur.getType());
+      // special cases where the type is not part of the AST
+      if (cur.getKind() == Kind::CARDINALITY_CONSTRAINT)
+      {
+        types.insert(
+            cur.getOperator().getConst<CardinalityConstraint>().getType());
+      }
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
   } while (!visit.empty());
@@ -690,14 +723,14 @@ bool match(Node x, Node y, std::unordered_map<Node, Node>& subs)
     visited.insert(curr);
     if (curr.first.getNumChildren() == 0)
     {
-      if (curr.first.getType() != curr.second.getType())
+      if (!curr.first.getType().isComparableTo(curr.second.getType()))
       {
         // the two subterms have different types
         return false;
       }
       // if the two subterms are not equal and the first one is a bound
       // variable...
-      if (curr.first.getKind() == kind::BOUND_VARIABLE)
+      if (curr.first.getKind() == Kind::BOUND_VARIABLE)
       {
         // and we have not seen this variable before...
         subsIt = subs.find(curr.first);
@@ -746,20 +779,139 @@ bool match(Node x, Node y, std::unordered_map<Node, Node>& subs)
   return true;
 }
 
+void getConversionConditions(Node n1,
+                             Node n2,
+                             std::vector<Node>& eqs,
+                             bool isHo)
+{
+  std::unordered_set<std::pair<TNode, TNode>, TNodePairHashFunction> visited;
+  std::unordered_set<std::pair<TNode, TNode>, TNodePairHashFunction>::iterator
+      it;
+  std::vector<std::pair<TNode, TNode>> stack;
+  stack.emplace_back(n1, n2);
+  std::pair<TNode, TNode> curr;
+  while (!stack.empty())
+  {
+    curr = stack.back();
+    stack.pop_back();
+    if (curr.first == curr.second)
+    {
+      // holds trivially
+      continue;
+    }
+    Assert(curr.first.getType() == curr.second.getType());
+    it = visited.find(curr);
+    if (it != visited.end())
+    {
+      // already processed
+      continue;
+    }
+    visited.insert(curr);
+    bool rec = false;
+    if (curr.first.getNumChildren() > 0
+        && curr.first.getNumChildren() == curr.second.getNumChildren())
+    {
+      size_t prevSize = stack.size();
+      if (curr.first.getOperator() == curr.second.getOperator())
+      {
+        if (curr.first.isClosure())
+        {
+          // only recurse if equal variable lists
+          rec = (curr.first[0] == curr.second[0]);
+        }
+        else
+        {
+          rec = true;
+        }
+      }
+      else if (isHo && curr.first.getKind() == Kind::APPLY_UF
+               && curr.second.getKind() == Kind::APPLY_UF)
+      {
+        rec = true;
+        // if isHo, we recurse on distinct operators with the same type
+        // note that it is redundant to check type here, as we check the
+        // types of arguments below and undo if necessary
+        stack.emplace_back(curr.first.getOperator(), curr.second.getOperator());
+      }
+      if (rec)
+      {
+        // recurse on children
+        for (size_t i = 0, n = curr.first.getNumChildren(); i < n; ++i)
+        {
+          // if there is a type mismatch, we can't unify
+          if (curr.first[i].getType() != curr.second[i].getType())
+          {
+            stack.resize(prevSize);
+            rec = false;
+            break;
+          }
+          stack.emplace_back(curr.first[i], curr.second[i]);
+        }
+      }
+    }
+    if (!rec)
+    {
+      eqs.push_back(curr.first.eqNode(curr.second));
+    }
+  }
+}
+
 bool isBooleanConnective(TNode cur)
 {
   Kind k = cur.getKind();
-  return k == kind::NOT || k == kind::IMPLIES || k == kind::AND || k == kind::OR
-         || (k == kind::ITE && cur.getType().isBoolean()) || k == kind::XOR
-         || (k == kind::EQUAL && cur[0].getType().isBoolean());
+  return k == Kind::NOT || k == Kind::IMPLIES || k == Kind::AND || k == Kind::OR
+         || (k == Kind::ITE && cur.getType().isBoolean()) || k == Kind::XOR
+         || (k == Kind::EQUAL && cur[0].getType().isBoolean());
 }
 
 bool isTheoryAtom(TNode n)
 {
   Kind k = n.getKind();
-  Assert(k != kind::NOT);
-  return k != kind::AND && k != kind::OR && k != kind::IMPLIES && k != kind::ITE
-         && k != kind::XOR && (k != kind::EQUAL || !n[0].getType().isBoolean());
+  Assert(k != Kind::NOT);
+  return k != Kind::AND && k != Kind::OR && k != Kind::IMPLIES && k != Kind::ITE
+         && k != Kind::XOR && (k != Kind::EQUAL || !n[0].getType().isBoolean());
+}
+
+struct HasAbstractSubtermTag
+{
+};
+struct HasAbstractSubtermComputedTag
+{
+};
+/** Attribute true for expressions that have subterms with abstract type */
+using AbstractSubtermVarAttr = expr::Attribute<HasAbstractSubtermTag, bool>;
+using HasAbstractSubtermComputedAttr =
+    expr::Attribute<HasAbstractSubtermComputedTag, bool>;
+
+bool hasAbstractSubterm(TNode n)
+{
+  if (!n.getAttribute(HasAbstractSubtermComputedAttr()))
+  {
+    bool hasAbs = false;
+    if (n.getType().isAbstract())
+    {
+      hasAbs = true;
+    }
+    else
+    {
+      for (auto i = n.begin(); i != n.end(); ++i)
+      {
+        if (hasAbstractSubterm(*i))
+        {
+          hasAbs = true;
+          break;
+        }
+      }
+    }
+    if (!hasAbs && n.hasOperator())
+    {
+      hasAbs = hasAbstractSubterm(n.getOperator());
+    }
+    n.setAttribute(AbstractSubtermVarAttr(), hasAbs);
+    n.setAttribute(HasAbstractSubtermComputedAttr(), true);
+    return hasAbs;
+  }
+  return n.getAttribute(AbstractSubtermVarAttr());
 }
 
 }  // namespace expr
