@@ -31,8 +31,9 @@
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
-  
-class MbqiEnumTermEnumeratorCallback : protected EnvObj, public SygusTermEnumeratorCallback
+
+class MbqiEnumTermEnumeratorCallback : protected EnvObj,
+                                       public SygusTermEnumeratorCallback
 {
  public:
   MbqiEnumTermEnumeratorCallback(Env& env) : EnvObj(env) {}
@@ -46,15 +47,15 @@ class MbqiEnumTermEnumeratorCallback : protected EnvObj, public SygusTermEnumera
     if (bterms.find(bn) != bterms.end())
     {
       return false;
-    }  
-    if (bn.getKind()==Kind::WITNESS)
+    }
+    if (bn.getKind() == Kind::WITNESS)
     {
       if (!expr::hasSubterm(bn[1], bn[0][0]))
       {
         return false;
       }
     }
-    bterms.insert(bn);  
+    bterms.insert(bn);
     return true;
   }
 };
@@ -445,7 +446,8 @@ bool MbqiEnum::constructInstantiation(
   Node queryCurr = query;
   Trace("mbqi-model-enum-debug") << "...query is " << queryCurr << std::endl;
   queryCurr = rewrite(inst.apply(queryCurr));
-  Trace("mbqi-model-enum-debug") << "...processed is " << queryCurr << std::endl;
+  Trace("mbqi-model-enum-debug")
+      << "...processed is " << queryCurr << std::endl;
   // consider variables in random order, for diversity of instantiations
   std::shuffle(indices.begin(), indices.end(), Random::getRandom());
   for (size_t i = 0, isize = indices.size(); i < isize; i++)
@@ -508,8 +510,10 @@ bool MbqiEnum::constructInstantiation(
         {
           mvs[ii] = ret;
           Trace("mbqi-model-enum") << "...try inst" << std::endl;
-          success = d_parent.tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
-          Trace("mbqi-model-enum") << "...try inst success = " << success << std::endl;
+          success = d_parent.tryInstantiation(
+              q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
+          Trace("mbqi-model-enum")
+              << "...try inst success = " << success << std::endl;
         }
         if (success)
         {

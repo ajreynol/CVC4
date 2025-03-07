@@ -942,7 +942,8 @@ bool TheoryEngineModelBuilder::buildModel(TheoryModel* tm)
         ++i;
         if (evaluableEqc.find(*i2) != evaluableEqc.end())
         {
-          Trace("model-builder") << "  ...do not assign to evaluatable eqc " << *i2 << std::endl;
+          Trace("model-builder")
+              << "  ...do not assign to evaluatable eqc " << *i2 << std::endl;
           // we never assign to evaluable equivalence classes
           continue;
         }

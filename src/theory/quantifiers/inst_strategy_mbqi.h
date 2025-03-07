@@ -117,9 +117,9 @@ class InstStrategyMbqi : public QuantifiersModule
   Node mkMbqiSkolem(const Node& t);
   /** Try instantiation */
   bool tryInstantiation(const Node& q,
-                           const std::vector<Node>& mvs,
-                           InferenceId id,
-                           const std::map<Node, Node>& mvToFreshVar);
+                        const std::vector<Node>& mvs,
+                        InferenceId id,
+                        const std::map<Node, Node>& mvToFreshVar);
   /** The quantified formulas that we succeeded in checking */
   std::unordered_set<Node> d_quantChecked;
   /** Kinds that cannot appear in queries */

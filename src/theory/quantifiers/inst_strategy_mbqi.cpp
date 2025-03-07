@@ -308,21 +308,23 @@ void InstStrategyMbqi::process(Node q)
       Trace("mbqi-enum") << "Successfully added instantiation." << std::endl;
       for (std::pair<Node, InferenceId>& al : auxLemmas)
       {
-        Trace("mbqi-aux-lemma")
-            << "Auxiliary lemma: " << al.second << " : " << al.first << std::endl;
+        Trace("mbqi-aux-lemma") << "Auxiliary lemma: " << al.second << " : "
+                                << al.first << std::endl;
         d_qim.lemma(al.first, al.second);
       }
       return;
     }
-    Trace("mbqi-enum") << "Failed to add instantiation, revert to normal MBQI..." << std::endl;
+    Trace("mbqi-enum")
+        << "Failed to add instantiation, revert to normal MBQI..." << std::endl;
   }
   tryInstantiation(q, mvs, InferenceId::QUANTIFIERS_INST_MBQI, mvToFreshVar);
 }
 
-bool InstStrategyMbqi::tryInstantiation(const Node& q,
-                          const std::vector<Node>& mvs,
-                          InferenceId id,
-                          const std::map<Node, Node>& mvToFreshVar)
+bool InstStrategyMbqi::tryInstantiation(
+    const Node& q,
+    const std::vector<Node>& mvs,
+    InferenceId id,
+    const std::map<Node, Node>& mvToFreshVar)
 {
   const RepSet* rs = d_treg.getModel()->getRepSet();
   std::vector<Node> terms = mvs;
