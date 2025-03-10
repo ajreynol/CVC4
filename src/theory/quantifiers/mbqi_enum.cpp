@@ -450,6 +450,7 @@ bool MbqiEnum::constructInstantiation(
       << "...processed is " << queryCurr << std::endl;
   // consider variables in random order, for diversity of instantiations
   std::shuffle(indices.begin(), indices.end(), Random::getRandom());
+  bool addedInst = false;
   for (size_t i = 0, isize = indices.size(); i < isize; i++)
   {
     size_t ii = indices[i];
@@ -514,6 +515,7 @@ bool MbqiEnum::constructInstantiation(
               q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
           Trace("mbqi-model-enum")
               << "...try inst success = " << success << std::endl;
+          addedInst = addedInst || success;
         }
         if (success)
         {
@@ -548,7 +550,7 @@ bool MbqiEnum::constructInstantiation(
     Trace("mbqi-tmp") << ".TMP ..." << alv.size() << " aux lemmas" << std::endl;
     auxLemmas.insert(auxLemmas.end(), alv.begin(), alv.end());
   }
-  return true;
+  return addedInst;
 }
 }  // namespace quantifiers
 }  // namespace theory
