@@ -389,6 +389,7 @@ MbqiEnum::MbqiEnum(Env& env, InstStrategyMbqi& parent)
     : EnvObj(env), d_parent(parent)
 {
   d_subOptions.copyValues(options());
+  d_subOptions.write_quantifiers().instMaxRounds = 5;
   smt::SetDefaults::disableChecking(d_subOptions);
 }
 
@@ -499,24 +500,24 @@ bool MbqiEnum::constructInstantiation(
       Trace("mbqi-model-enum")
           << "- Converted candidate: " << v << " -> " << retc << std::endl;
       Node queryCheck;
-      // see if it is still satisfiable, if still SAT, we replace
-      queryCheck = queryCurr.substitute(v, TNode(retc));
-      queryCheck = rewrite(queryCheck);
-      Trace("mbqi-model-enum-debug") << "...check " << queryCheck << std::endl;
-      Result r = checkWithSubsolver(queryCheck, ssi);
-      success = (r == Result::SAT);
-      if (success)
+      if (lastVar)
       {
-        if (lastVar)
-        {
-          mvs[ii] = ret;
-          Trace("mbqi-model-enum") << "...try inst" << std::endl;
-          success = d_parent.tryInstantiation(
-              q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
-          Trace("mbqi-model-enum")
-              << "...try inst success = " << success << std::endl;
-          addedInst = addedInst || success;
-        }
+        mvs[ii] = ret;
+        Trace("mbqi-model-enum") << "...try inst" << std::endl;
+        success = d_parent.tryInstantiation(
+            q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
+        Trace("mbqi-model-enum")
+            << "...try inst success = " << success << std::endl;
+        addedInst = addedInst || success;
+      }
+      else
+      {
+        // see if it is still satisfiable, if still SAT, we replace
+        queryCheck = queryCurr.substitute(v, TNode(retc));
+        queryCheck = rewrite(queryCheck);
+        Trace("mbqi-model-enum-debug") << "...check " << queryCheck << std::endl;
+        Result r = checkWithSubsolver(queryCheck, ssi);
+        success = (r == Result::SAT);
         if (success)
         {
           // remember the updated query
@@ -528,6 +529,7 @@ bool MbqiEnum::constructInstantiation(
           vinst.add(q[0][ii], ret);
         }
       }
+      
       if (!success && !successEnum)
       {
         // we did not enumerate a candidate, and tried the original, which
