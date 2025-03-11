@@ -1,5 +1,36 @@
 (include "../programs/BitVectors.eo")
 
+
+;;; add
+
+(program $ripple_carry_adder_2 ((n Int) (b1 Bool) (b2 Bool) (a1 (BitVec n) :list) (a2 (BitVec n) :list) (carry Bool) (res (BitVec n)))
+  ((BitVec n) (BitVec n) Bool (BitVec n)) (@Pair Bool (BitVec n))
+  (
+  (($ripple_carry_adder_2 (@from_bools b1 a1) (@from_bools b2 a2) carry res) ($ripple_carry_adder_2 a1 a2 
+                                                                               (or (and b1 b2) (and (xor b1 b2) carry))
+                                                                               (eo::cons @from_bools (xor (xor b1 b2) carry) res)))
+  (($ripple_carry_adder_2 @bv_empty @bv_empty carry res)                     (@pair carry ($nary_reverse res)))
+  )
+)
+
+(define $ripple_carry_adder ((n Int :implicit) (a1 (BitVec n)) (a2 (BitVec n)) (carry Bool))
+  (eo::match ((m Int) (carryr Bool) (res (BitVec m)))
+    ($ripple_carry_adder_2 a1 a2 carry @bv_empty)
+    (((@pair carryr res) res))))
+
+;;; not
+
+(program $bv_mk_bitblast_step_not ((f (-> Bool Bool Bool)) (b1 Bool) (n Int) (m Int) (a1 (BitVec m) :list))
+  ((BitVec n)) (BitVec n)
+  (
+  (($bv_mk_bitblast_step_not @bv_empty)           @bv_empty)
+  (($bv_mk_bitblast_step_not (@from_bools b1 a1)) (eo::cons @from_bools (not b1) ($bv_mk_bitblast_step_not a1)))
+  )
+)
+
+;;; left shift
+
+
 ;;; equality
 
 ; program: $bv_mk_bitblast_step_eq
@@ -68,14 +99,6 @@
   )
 )
 
-(program $bv_mk_bitwise_nil ((b Bool) (n Int))
-  (Bool Int) (BitVec n)
-  (
-  (($bv_mk_bitwise_nil b 0) @bv_empty)
-  (($bv_mk_bitwise_nil b n) (eo::cons @from_bools b ($bv_mk_bitwise_nil b (eo::add n -1))))
-  )
-)
-
 ; program: $bv_mk_bitblast_step_bitwise
 ; args:
 ; - bf (-> (BitVec n) (BitVec n) (BitVec n)): The bitvector function.
@@ -95,6 +118,16 @@
   (
   (($bv_mk_bitblast_step_bitwise_nary bf f (bf a1 a2) ac)    ($bv_mk_bitblast_step_bitwise_nary bf f a2 ($bv_mk_bitwise_nary_app f ac a1)))
   (($bv_mk_bitblast_step_bitwise_nary bf f a2 ac)            ac)
+  )
+)
+
+;;; addition
+
+(program $bv_mk_bitblast_step_add ((n Int) (a1 (BitVec n)) (a2 (BitVec n) :list) (ac (BitVec n)))
+  ((BitVec n) (BitVec n)) (BitVec n)
+  (
+  (($bv_mk_bitblast_step_add (bvadd a1 a2) ac) ($bv_mk_bitblast_step_add a2 ($ripple_carry_adder ac a1 false)))
+  (($bv_mk_bitblast_step_add a2 ac)            ac)
   )
 )
 
@@ -162,6 +195,7 @@
   (eo::match ((n Int) (a1 (BitVec n)) (a2 (BitVec n) :list) (u Int) (l Int) (m Int) (a3 (BitVec m) :list))
   a
   (
+  ((bvnot a1)       ($bv_mk_bitblast_step_not a1))
   ((= a1 a2)        ($singleton_elim ($bv_mk_bitblast_step_eq a1 a2)))
   ((extract u l a1) ($bv_mk_bitblast_step_extract u l a1))
   ((concat a1 a3)   ($bv_mk_bitblast_step_concat a))
@@ -169,6 +203,8 @@
   ((bvand a1 a2)    ($bv_mk_bitblast_step_bitwise_nary bvand and a2 a1))
   ((bvxor a1 a2)    ($bv_mk_bitblast_step_bitwise bvxor xor a2 a1))
   ((bvxnor a1 a2)   ($bv_mk_bitwise_app = a1 a2))
+  ((bvadd a1 a2)    ($bv_mk_bitblast_step_add a2 a1))
+  ((bvsub a1 a2)    ($ripple_carry_adder a1 ($bv_mk_bitblast_step_not a2) true))
   (a1               (eo::ite (eo::is_bin a)
                       ($bv_mk_bitblast_step_const a)
                       ($bv_mk_bitblast_step_var a)))    ; otherwise assume a variable
