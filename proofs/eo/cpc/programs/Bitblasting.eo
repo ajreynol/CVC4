@@ -241,6 +241,7 @@
   ((bvxnor a1 a2)   ($bv_mk_bitwise_app = a1 a2))
   ((bvadd a1 a2)    ($bv_mk_bitblast_step_add a2 a1))
   ((bvsub a1 a2)    ($bv_ripple_carry_adder a1 ($bv_mk_bitblast_step_not a2) true))
+  ((bvcomp a1 a2)   (@from_bools ($singleton_elim ($bv_mk_bitblast_step_eq a1 a2))))
   (a1               (eo::ite (eo::is_bin a)
                       ($bv_mk_bitblast_step_const a)
                       ($bv_mk_bitblast_step_var a)))    ; otherwise assume a variable
