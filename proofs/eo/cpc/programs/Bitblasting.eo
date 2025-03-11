@@ -2,6 +2,14 @@
 
 ;;; utils
 
+(program $bv_bitblast_zero ((n Int))
+  (Int) (BitVec n)
+  (
+    (($bv_bitblast_zero 0)  @bv_empty)
+    (($bv_bitblast_zero n)  (eo::cons @from_bools false ($bv_bitblast_zero (eo::add n -1))))
+  )
+)
+
 (program $bv_bitblast_apply_unary ((f (-> Bool Bool)) (b1 Bool) (n Int) (m Int) (a1 (BitVec m) :list))
   ((-> Bool Bool) (BitVec n)) (BitVec n)
   (
@@ -9,6 +17,7 @@
   (($bv_bitblast_apply_unary f (@from_bools b1 a1)) (eo::cons @from_bools (f b1) ($bv_bitblast_apply_unary f a1)))
   )
 )
+
 (program $bv_bitblast_apply_unary_and ((b Bool) (b1 Bool) (n Int) (m Int) (a1 (BitVec m) :list))
   (Bool (BitVec n)) (BitVec n)
   (
@@ -291,6 +300,7 @@
   ((bvadd a1 a2)    ($bv_mk_bitblast_step_add a2 a1))
   ((bvmul a1 a2)    ($bv_mk_bitblast_step_mul a2 a1))
   ((bvsub a1 a2)    ($bv_ripple_carry_adder a1 ($bv_bitblast_apply_unary not a2) true))
+  ((bvneg a1)       ($bv_ripple_carry_adder ($bv_bitblast_apply_unary not a1) ($bv_bitblast_zero ($bv_bitwidth (eo::typeof a1))) true))
   ((bvcomp a1 a2)   (@from_bools ($singleton_elim ($bv_mk_bitblast_step_eq a1 a2))))
   (a1               (eo::ite (eo::is_bin a)
                       ($bv_mk_bitblast_step_const a)
