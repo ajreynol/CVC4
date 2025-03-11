@@ -403,6 +403,7 @@ bool AlfPrinter::isHandledBitblastStep(const Node& eq)
     case Kind::BITVECTOR_SLE:
     case Kind::BITVECTOR_ULT:
     case Kind::BITVECTOR_ULE:
+    case Kind::BITVECTOR_ITE:
     case Kind::BITVECTOR_COMP:
     case Kind::BITVECTOR_ULTBV:
     case Kind::BITVECTOR_SLTBV:return true;

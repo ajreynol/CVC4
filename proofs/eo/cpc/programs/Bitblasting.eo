@@ -226,6 +226,16 @@
   )
 )
 
+;;; ite
+
+(program $bv_mk_bitblast_step_ite ((n Int) (b1 Bool) (a1 (BitVec n) :list) (b2 Bool) (a2 (BitVec n) :list) (bc Bool))
+  ((BitVec 1) (BitVec n) (BitVec n)) (BitVec n)
+  (
+  (($bv_mk_bitblast_step_ite (@from_bools bc) (@from_bools b1 a1) (@from_bools b2 a2))  
+    (eo::cons @from_bools (and (or (not bc) b1) (or bc b2)) ($bv_mk_bitblast_step_ite (@from_bools bc) a1 a2)))
+  (($bv_mk_bitblast_step_ite (@from_bools bc) @bv_empty @bv_empty) @bv_empty)
+  )
+)
 ;;; constants
 
 ; program: $bv_const_to_bitlist_rec
@@ -287,7 +297,7 @@
 ; - a T: The bitvector term or predicate to bitblast.
 ; return: the bitblasted term for a.
 (define $bv_mk_bitblast_step ((T Type :implicit) (a T))
-  (eo::match ((n Int) (a1 (BitVec n)) (a2 (BitVec n) :list) (u Int) (l Int) (m Int) (a3 (BitVec m) :list))
+  (eo::match ((n Int) (a1 (BitVec n)) (a2 (BitVec n) :list) (u Int) (l Int) (m Int) (a3 (BitVec m) :list) (ac (BitVec 1)))
   a
   (
   ((bvnot a1)         ($bv_bitblast_apply_unary not a1))
@@ -306,9 +316,10 @@
   ((bvmul a1 a2)      ($bv_mk_bitblast_step_mul a2 a1))
   ((bvsub a1 a2)      ($bv_ripple_carry_adder a1 ($bv_bitblast_apply_unary not a2) true))
   ((bvneg a1)         ($bv_ripple_carry_adder ($bv_bitblast_apply_unary not a1) ($bv_bitblast_zero ($bv_bitwidth (eo::typeof a1))) true))
+  ((bvite ac a1 a2)   ($bv_mk_bitblast_step_ite ac a1 a2))
   ((bvcomp a1 a2)     (@from_bools ($singleton_elim ($bv_mk_bitblast_step_eq a1 a2))))
-  ((bvultbv a1 a2)    (@from_bools ($singleton_elim ($bv_bitblast_ult a1 a2 false))))
-  ((bvsltbv a1 a2)    (@from_bools ($singleton_elim ($bv_bitblast_slt a1 a2 false))))
+  ((bvultbv a1 a2)    (@from_bools ($bv_bitblast_ult a1 a2 false)))
+  ((bvsltbv a1 a2)    (@from_bools ($bv_bitblast_slt a1 a2 false)))
   ((sign_extend n a1) (eo::list_concat @from_bools a1 ($bv_bitblast_repeat ($bv_bitblast_sign_bit a1) n)))
   (a1                 (eo::ite (eo::is_bin a)
                         ($bv_mk_bitblast_step_const a)
