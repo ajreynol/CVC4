@@ -2,13 +2,15 @@
 
 ;;; utils
 
-(program $bv_bitblast_zero ((n Int))
-  (Int) (BitVec n)
+(program $bv_bitblast_zero ((b Bool) (n Int))
+  (Bool Int) (BitVec n)
   (
-    (($bv_bitblast_zero 0)  @bv_empty)
-    (($bv_bitblast_zero n)  (eo::cons @from_bools false ($bv_bitblast_zero (eo::add n -1))))
+    (($bv_bitblast_zero b 0)  @bv_empty)
+    (($bv_bitblast_zero b n)  (eo::cons @from_bools b ($bv_bitblast_zero (eo::add n -1))))
   )
 )
+
+(define $bv_bitblast_zero ((n Int)) ($bv_bitblast_repeat false n))
 
 (program $bv_bitblast_apply_unary ((f (-> Bool Bool)) (b1 Bool) (n Int) (m Int) (a1 (BitVec m) :list))
   ((-> Bool Bool) (BitVec n)) (BitVec n)
@@ -302,6 +304,8 @@
   ((bvsub a1 a2)    ($bv_ripple_carry_adder a1 ($bv_bitblast_apply_unary not a2) true))
   ((bvneg a1)       ($bv_ripple_carry_adder ($bv_bitblast_apply_unary not a1) ($bv_bitblast_zero ($bv_bitwidth (eo::typeof a1))) true))
   ((bvcomp a1 a2)   (@from_bools ($singleton_elim ($bv_mk_bitblast_step_eq a1 a2))))
+  ((bvultbv a1 a2)  (@from_bools ($singleton_elim ($bv_bitblast_ult a1 a2 false))))
+  ((bvsltbv a1 a2)  (@from_bools ($singleton_elim ($bv_bitblast_slt a1 a2 false))))
   (a1               (eo::ite (eo::is_bin a)
                       ($bv_mk_bitblast_step_const a)
                       ($bv_mk_bitblast_step_var a)))    ; otherwise assume a variable
