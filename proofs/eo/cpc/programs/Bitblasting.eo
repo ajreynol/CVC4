@@ -238,7 +238,7 @@
   ((BitVec n) (BitVec n) (BitVec n) Int) (@Pair (BitVec n) (BitVec n))
   (
   (($bv_div_mod_impl a1 a2 zero 0)    (@pair zero zero))
-  (($bv_div_mod_impl zero a2 zero 0)  (@pair zero zero))
+  (($bv_div_mod_impl zero a2 zero sz) (@pair zero zero))
   (($bv_div_mod_impl a1 a2 zero sz)   
      (eo::match ((m1 Int) (q1 (BitVec m1)) (r1 (BitVec m1)))
       ($bv_div_mod_impl ($bv_bitblast_rshift a1 1) a2 zero (eo::add sz -1))
