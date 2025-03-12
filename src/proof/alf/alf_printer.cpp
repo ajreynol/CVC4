@@ -36,6 +36,7 @@
 #include "theory/builtin/generic_op.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "util/string.h"
+#include "theory/theory.h"
 
 namespace cvc5::internal {
 
@@ -379,7 +380,7 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
 bool AlfPrinter::isHandledBitblastStep(const Node& eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);
-  if (eq[0].isVar())
+  if (theory::Theory::isLeafOf(eq[0], theory::THEORY_BV))
   {
     return true;
   }
@@ -401,6 +402,8 @@ bool AlfPrinter::isHandledBitblastStep(const Node& eq)
     case Kind::BITVECTOR_SHL:
     case Kind::BITVECTOR_ASHR:
     case Kind::BITVECTOR_LSHR:
+    case Kind::BITVECTOR_UDIV:
+    case Kind::BITVECTOR_UREM:
     case Kind::EQUAL: 
     case Kind::BITVECTOR_SLT:
     case Kind::BITVECTOR_SLE:
