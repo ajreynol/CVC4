@@ -23,14 +23,6 @@
   )
 )
 
-(program $bv_bitblast_apply_unary_and ((b Bool) (b1 Bool) (n Int) (m Int) (a1 (BitVec m) :list))
-  (Bool (BitVec n)) (BitVec n)
-  (
-  (($bv_bitblast_apply_unary_and b @bv_empty)           @bv_empty)
-  (($bv_bitblast_apply_unary_and b (@from_bools b1 a1)) (eo::cons @from_bools (and b b1) ($bv_bitblast_apply_unary_and b a1)))
-  )
-)
-
 (program $bv_bitblast_apply_ite ((bc Bool) (n Int) (m Int) (b1 Bool) (a1 (BitVec m) :list) (b2 Bool) (a2 (BitVec m) :list))
   (Bool (BitVec n) (BitVec n)) (BitVec n)
   (
@@ -217,7 +209,9 @@
 (program $bv_shift_add_multiplier ((n Int) (b1 Bool) (a1 (BitVec n) :list) (a2 (BitVec n)))
   ((BitVec n) (BitVec n)) (BitVec n)
   (
-  (($bv_shift_add_multiplier a2 (@from_bools b1 a1)) ($bv_shift_add_multiplier_rec a1 a2 1 ($bv_bitblast_apply_unary_and b1 a2)))
+  (($bv_shift_add_multiplier a2 (@from_bools b1 a1)) 
+    (eo::define ((sz ($bv_bitwidth (eo::typeof a2))))
+      ($bv_shift_add_multiplier_rec a1 a2 1 ($bv_mk_bitwise_nary_app and ($bv_bitblast_repeat b1 sz) a2))))
   )
 )
 
