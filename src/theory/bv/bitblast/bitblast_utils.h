@@ -77,11 +77,27 @@ inline Node mkFalse<Node>(NodeManager* nm)
 
 template <> inline
 Node mkNot<Node>(Node a) {
+  if (a.isConst())
+  {
+    return a.getNodeManager()->mkConst(!a.getConst<bool>());
+  }
+  else if (a.getKind()==Kind::NOT)
+  {
+    return a[0];
+  }
   return NodeManager::mkNode(Kind::NOT, a);
 }
 
 template <> inline
 Node mkOr<Node>(Node a, Node b) {
+  if (a.isConst())
+  {
+    return a.getConst<bool>() ? a : b;
+  }
+  else if (b.isConst())
+  {
+    return b.getConst<bool>() ? b : a;
+  }
   return NodeManager::mkNode(Kind::OR, a, b);
 }
 
@@ -95,6 +111,14 @@ inline Node mkOr<Node>(NodeManager* nm, const std::vector<Node>& children)
 
 template <> inline
 Node mkAnd<Node>(Node a, Node b) {
+  if (a.isConst())
+  {
+    return a.getConst<bool>() ? b : a;
+  }
+  else if (b.isConst())
+  {
+    return b.getConst<bool>() ? a : b;
+  }
   return NodeManager::mkNode(Kind::AND, a, b);
 }
 
@@ -108,16 +132,40 @@ inline Node mkAnd<Node>(NodeManager* nm, const std::vector<Node>& children)
 
 template <> inline
 Node mkXor<Node>(Node a, Node b) {
+  if (a.isConst())
+  {
+    return a.getConst<bool>() ? mkNot(b) : b;
+  }
+  else if (b.isConst())
+  {
+    return b.getConst<bool>() ? mkNot(a) : a;
+  }
   return NodeManager::mkNode(Kind::XOR, a, b);
 }
 
 template <> inline
 Node mkIff<Node>(Node a, Node b) {
+  if (a.isConst())
+  {
+    return a.getConst<bool>() ? b : mkNot(b);
+  }
+  else if (b.isConst())
+  {
+    return b.getConst<bool>() ? a : mkNot(a);
+  }
   return NodeManager::mkNode(Kind::EQUAL, a, b);
 }
 
 template <> inline
 Node mkIte<Node>(Node cond, Node a, Node b) {
+  if (cond.isConst())
+  {
+    return cond.getConst<bool>() ? a : b;
+  }
+  else if (cond.getKind()==Kind::NOT)
+  {
+    return NodeManager::mkNode(Kind::ITE, cond[0], b, a);
+  }
   return NodeManager::mkNode(Kind::ITE, cond, a, b);
 }
 
