@@ -31,11 +31,11 @@
   )
 )
 
-(program $bv_bitblast_apply_unary_ite_then ((bc Bool) (be Bool) (b1 Bool) (n Int) (m Int) (a1 (BitVec m) :list))
-  (Bool Bool (BitVec n)) (BitVec n)
+(program $bv_bitblast_apply_ite ((bc Bool) (n Int) (m Int) (b1 Bool) (a1 (BitVec m) :list) (b2 Bool) (a2 (BitVec m) :list))
+  (Bool (BitVec n) (BitVec n)) (BitVec n)
   (
-  (($bv_bitblast_apply_unary_ite_then bc be @bv_empty)           @bv_empty)
-  (($bv_bitblast_apply_unary_ite_then bc be (@from_bools b1 a1)) (eo::cons @from_bools (ite bc b1 be) ($bv_bitblast_apply_unary_ite_then bc be a1)))
+  (($bv_bitblast_apply_ite bc @bv_empty @bv_empty)                      @bv_empty)
+  (($bv_bitblast_apply_ite bc (@from_bools b1 a1) (@from_bools b2 a2))  (eo::cons @from_bools (ite bc b1 b2) ($bv_bitblast_apply_ite bc a1 a2)))
   )
 )
 
@@ -229,6 +229,14 @@
   )
 )
 
+;;; division and remainder
+
+(define $bv_mk_bitblast_step_udiv ((n Int :implicit) (a1 (BitVec n)) (a2 (BitVec n)))
+  a1)
+
+(define $bv_mk_bitblast_step_urem ((n Int :implicit) (a1 (BitVec n)) (a2 (BitVec n)))
+  a1)
+
 ;;; ite
 
 (program $bv_mk_bitblast_step_ite ((n Int) (b1 Bool) (a1 (BitVec n) :list) (b2 Bool) (a2 (BitVec n) :list) (bc Bool))
@@ -304,7 +312,7 @@
   (eo::define ((lsz (eo::ite ($arith_eval_int_is_pow_2 sz) lsz1 (eo::add lsz1 1))))
   (eo::define ((res ($bv_mk_bitblast_step_shl_rec a1 a2 0 lsz)))
   (eo::define ((szc ($bv_mk_bitblast_step_const (eo::to_bin sz sz))))
-    ($bv_bitblast_apply_unary_ite_then ($bv_bitblast_ult a2 szc false) false res)))))))
+    ($bv_bitblast_apply_ite ($bv_bitblast_ult a2 szc false) res ($bv_bitblast_repeat false sz))))))))
   
 
 (program $bv_mk_bitblast_step_shr_rec_step ((i Int) (n Int) (m Int) (mm1 Int) 
@@ -339,7 +347,7 @@
   (eo::define ((lsz (eo::ite ($arith_eval_int_is_pow_2 sz) lsz1 (eo::add lsz1 1))))
   (eo::define ((res ($bv_mk_bitblast_step_shr_rec a1 a2 0 lsz sbit)))
   (eo::define ((szc ($bv_mk_bitblast_step_const (eo::to_bin sz sz))))
-    ($bv_bitblast_apply_unary_ite_then ($bv_bitblast_ult a2 szc false) sbit res)))))))
+    ($bv_bitblast_apply_ite ($bv_bitblast_ult a2 szc false) res ($bv_bitblast_repeat sbit sz))))))))
 
 ;;; variables
 
@@ -387,6 +395,8 @@
   ((bvxnor a1 a2)     ($bv_mk_bitwise_app = a1 a2))
   ((bvadd a1 a2)      ($bv_mk_bitblast_step_add a2 a1))
   ((bvmul a1 a2)      ($bv_mk_bitblast_step_mul a2 a1))
+  ((bvudiv a1 a2)     ($bv_mk_bitblast_step_udiv a1 a2))
+  ((bvurem a1 a2)     ($bv_mk_bitblast_step_urem a1 a2))
   ((bvsub a1 a2)      ($bv_ripple_carry_adder a1 ($bv_bitblast_apply_unary not a2) true))
   ((bvneg a1)         ($bv_ripple_carry_adder ($bv_bitblast_apply_unary not a1) ($bv_bitblast_zero ($bv_bitwidth (eo::typeof a1))) true))
   ((bvite ac a1 a2)   ($bv_mk_bitblast_step_ite ac a1 a2))
