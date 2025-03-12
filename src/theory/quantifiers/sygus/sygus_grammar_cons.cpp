@@ -225,19 +225,23 @@ SygusGrammar SygusGrammarCons::mkEmptyGrammar(const Env& env,
     ss << "A_";
     if (t.getNumChildren() > 0)
     {
-      ss << t.getKind() << "_" << an.getId();
+      ss << t.getKind();
     }
     else
     {
-      ss << t << "_" << an.getId();
+      ss << t;
     }
+    ss << "_" << an.getId();
     Node a = NodeManager::mkBoundVar(ss.str(), t);
     ntSyms.push_back(a);
     // Some types require more than one non-terminal. Handle these cases here.
     if (t.isReal())
     {
+      Node an = NodeManager::mkBoundVar(t);
+      std::stringstream ssr;
+      ssr << "A_Real_PosC_" << an.getId();
       // the positive real constant grammar, for denominators
-      Node apc = NodeManager::mkBoundVar("A_Real_PosC", t);
+      Node apc = NodeManager::mkBoundVar(ss.str(), t);
       ntSyms.push_back(apc);
     }
     if (tsgcm == options::SygusGrammarConsMode::ANY_TERM
@@ -245,10 +249,11 @@ SygusGrammar SygusGrammarCons::mkEmptyGrammar(const Env& env,
     {
       if (t.isRealOrInt())
       {
+        Node an = NodeManager::mkBoundVar(t);
         // construction of the any-term grammar requires an auxiliary
         // "any constant".
         std::stringstream ssc;
-        ssc << "A_" << t << "_AnyC";
+        ssc << "A_" << t << "_AnyC_" << an.getId();
         Node aac = NodeManager::mkBoundVar(ssc.str(), t);
         ntSyms.push_back(aac);
       }
