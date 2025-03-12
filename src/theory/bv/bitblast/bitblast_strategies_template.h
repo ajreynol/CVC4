@@ -481,15 +481,14 @@ void uDivModRec(NodeManager* nm,
   lshift(nm, q1, 1);
   lshift(nm, r1, 1);
 
-  T is_odd = mkIff(a[0], mkTrue<T>(nm));
-  T one_if_odd = mkIte(is_odd, mkTrue<T>(nm), mkFalse<T>(nm));
+  T true_if_odd = a[0];
 
   std::vector<T> zero;
   makeZero(nm, zero, b.size());
 
   std::vector<T> r1_shift_add;
   // account for a being odd
-  rippleCarryAdder(r1, zero, r1_shift_add, one_if_odd); 
+  rippleCarryAdder(r1, zero, r1_shift_add, true_if_odd);
   // now check if the remainder is greater than b
   std::vector<T> not_b;
   negateBits(b, not_b);
