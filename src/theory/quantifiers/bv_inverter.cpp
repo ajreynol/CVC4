@@ -524,14 +524,6 @@ Node BvInverter::mkAnnotation(
   return annot;
 }
 
-/**
- * Mapping to the variable used for binding the existential below.
- */
-struct BviAnnotToVarAttributeId
-{
-};
-using BviAnnotToVarAttribute = expr::Attribute<BviAnnotToVarAttributeId, Node>;
-
 Node BvInverter::mkExistsForAnnotation(NodeManager* nm, const Node& n)
 {
   // this method unpacks the information constructed by mkAnnotation or
@@ -557,7 +549,7 @@ Node BvInverter::mkExistsForAnnotation(NodeManager* nm, const Node& n)
   BoundVarManager* bvm = nm->getBoundVarManager();
   if (n.getNumChildren() == 3)
   {
-    v = bvm->mkBoundVar<BviAnnotToVarAttribute>(
+    v = bvm->mkBoundVar(BoundVarId::QUANT_BV_INVERT_ANNOT,
         n, "@var.inv_cond", t.getType());
     s = v;
   }
@@ -579,7 +571,7 @@ Node BvInverter::mkExistsForAnnotation(NodeManager* nm, const Node& n)
     {
       return Node::null();
     }
-    v = bvm->mkBoundVar<BviAnnotToVarAttribute>(
+    v = bvm->mkBoundVar(BoundVarId::QUANT_BV_INVERT_ANNOT,
         n, "@var.inv_cond", sargs[index].getType());
     sargs[index] = v;
     s = nm->mkNode(op, sargs);

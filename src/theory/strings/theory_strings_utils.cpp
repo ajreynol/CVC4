@@ -17,7 +17,6 @@
 
 #include <sstream>
 
-#include "expr/attribute.h"
 #include "expr/bound_var_manager.h"
 #include "expr/sequence.h"
 #include "expr/skolem_manager.h"
