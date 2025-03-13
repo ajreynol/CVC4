@@ -23,7 +23,6 @@
 #include "proof/proof_node.h"
 #include "proof/proof_node_manager.h"
 #include "smt/env.h"
-#include "theory/arith/arith_subs.h"
 #include "theory/arith/arith_proof_utilities.h"
 #include "theory/arith/arith_subs.h"
 #include "theory/arith/arith_utilities.h"
@@ -33,7 +32,6 @@
 #include "theory/rewriter.h"
 #include "theory/uf/equality_engine.h"
 #include "theory/uf/proof_equality_engine.h"
-#include "proof/conv_proof_generator.h"
 
 using namespace cvc5::internal::kind;
 
