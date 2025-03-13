@@ -2,6 +2,11 @@
 
 ;;; utils
 
+; program: $bv_bitblast_repeat
+; args:
+; - b Bool: The Boolean to repeat
+; - n Int: The number of times to repeat it.
+; return: the list of bits containing b, n times.
 (program $bv_bitblast_repeat ((b Bool) (n Int))
   (Bool Int) (BitVec n)
   (
@@ -10,11 +15,24 @@
   )
 )
 
+; define: $bv_bitblast_zero
+; args:
+; - n Int: The bitwidth.
+; return: the list of bits corresponding to the zero of the given bitwidth.
 (define $bv_bitblast_zero ((n Int)) ($bv_bitblast_repeat false n))
 
+; define: $bv_bitblast_sign_bit
+; args:
+; - a (Bitvec n): The list of bits.
+; return: the sign bit of a, which is the last bit.
 (define $bv_bitblast_sign_bit ((n Int :implicit) (a (BitVec n))) 
   (eo::list_nth @from_bools a (eo::add (eo::list_len @from_bools a) -1)))
 
+; program: $bv_bitblast_apply_unary
+; args:
+; - f (-> Bool Bool): The unary function to apply to the bits of the second argument.
+; - a (Bitvec n): The list of bits.
+; return: the result of applying f to each bit in a.
 (program $bv_bitblast_apply_unary ((f (-> Bool Bool)) (b1 Bool) (n Int) (m Int) (a1 (BitVec m) :list))
   ((-> Bool Bool) (BitVec n)) (BitVec n)
   (
@@ -23,14 +41,30 @@
   )
 )
 
-(program $bv_bitblast_apply_binary ((f (-> Bool Bool Bool)) (b1 Bool) (b2 Bool) (n Int) (m Int) (a1 (BitVec m) :list) (a2 (BitVec m) :list))
-  ((-> Bool Bool Bool) (BitVec n) (BitVec n)) (BitVec n)
+; program: $bv_bitblast_apply_binary
+; args:
+; - f (-> T T Bool): >
+;   The binary function to apply pairwise to the bits of a1 and a2, expected to
+;   be an ordinary binary function, e.g. =, xor.
+; - a1 (Bitvec n): The first list of bits.
+; - a2 (Bitvec n): The second list of bits.
+; return: the result of applying f pairwise to the bits of a1 and a2.
+(program $bv_bitblast_apply_binary ((T Type) (f (-> T T Bool)) (b1 Bool) (b2 Bool) (n Int) (m Int) (a1 (BitVec m) :list) (a2 (BitVec m) :list))
+  ((-> T T Bool) (BitVec n) (BitVec n)) (BitVec n)
   (
   (($bv_bitblast_apply_binary f @bv_empty @bv_empty)                     @bv_empty)
   (($bv_bitblast_apply_binary f (@from_bools b1 a1) (@from_bools b2 a2)) (eo::cons @from_bools (f b1 b2) ($bv_bitblast_apply_binary f a1 a2)))
   )
 )
 
+; program: $bv_bitblast_apply_nary
+; args:
+; - f (-> Bool Bool Bool): >
+;   The binary function to apply pairwise to the bits of a1 and a2, expected to
+;   be an n-ary function, e.g. and, or.
+; - a1 (Bitvec n): The first list of bits.
+; - a2 (Bitvec n): The second list of bits.
+; return: the result of applying f pairwise to the bits of a1 and a2.
 (program $bv_bitblast_apply_nary ((f (-> Bool Bool Bool)) (b1 Bool) (b2 Bool) (n Int) (m Int) (a1 (BitVec m) :list) (a2 (BitVec m) :list))
   ((-> Bool Bool Bool) (BitVec n) (BitVec n)) (BitVec n)
   (
@@ -145,19 +179,28 @@
 ; program: $bv_mk_bitblast_step_bitwise
 ; args:
 ; - bf (-> (BitVec n) (BitVec n) (BitVec n)): The bitvector function.
-; - f (-> (BitVec n) (BitVec n) (BitVec n)): The Boolean function.
+; - f (-> T T Bool): The binary function to apply, expected to be an ordinary binary function, e.g. =, xor.
 ; - a (BitVec n): The term we are bitblasting, expected to be an application of bf to @from_bools arguments.
 ; - ac (BitVec n): The accumulated return value.
 ; return: the bitblasted version of a.
-(program $bv_mk_bitblast_step_bitwise ((n Int) (bf (-> (BitVec n) (BitVec n) (BitVec n))) (f (-> Bool Bool Bool)) (a1 (BitVec n)) (a2 (BitVec n) :list) (ac (BitVec n)))
-  ((-> (BitVec n) (BitVec n) (BitVec n)) (-> Bool Bool Bool) (BitVec n) (BitVec n)) (BitVec n)
+(program $bv_mk_bitblast_step_bitwise ((T Type) (n Int) (bf (-> (BitVec n) (BitVec n) (BitVec n))) 
+                                       (f (-> T T Bool)) (a1 (BitVec n)) (a2 (BitVec n) :list) (ac (BitVec n)))
+  ((-> (BitVec n) (BitVec n) (BitVec n)) (-> T T Bool) (BitVec n) (BitVec n)) (BitVec n)
   (
   (($bv_mk_bitblast_step_bitwise bf f (bf a1 a2) ac)    ($bv_mk_bitblast_step_bitwise bf f a2 ($bv_bitblast_apply_binary f ac a1)))
   (($bv_mk_bitblast_step_bitwise bf f a2 ac)            ac)
   )
 )
 
-(program $bv_mk_bitblast_step_bitwise_nary ((n Int) (bf (-> (BitVec n) (BitVec n) (BitVec n))) (f (-> Bool Bool Bool)) (a1 (BitVec n)) (a2 (BitVec n) :list) (ac (BitVec n)))
+; program: $bv_mk_bitblast_step_bitwise_nary
+; args:
+; - bf (-> (BitVec n) (BitVec n) (BitVec n)): The bitvector function.
+; - f (-> Bool Bool Bool): The binary function to apply, expected to be an n-ary function, e.g. and, or.
+; - a (BitVec n): The term we are bitblasting, expected to be an application of bf to @from_bools arguments.
+; - ac (BitVec n): The accumulated return value.
+; return: the bitblasted version of a.
+(program $bv_mk_bitblast_step_bitwise_nary ((n Int) (bf (-> (BitVec n) (BitVec n) (BitVec n))) 
+                                            (f (-> Bool Bool Bool)) (a1 (BitVec n)) (a2 (BitVec n) :list) (ac (BitVec n)))
   ((-> (BitVec n) (BitVec n) (BitVec n)) (-> Bool Bool Bool) (BitVec n) (BitVec n)) (BitVec n)
   (
   (($bv_mk_bitblast_step_bitwise_nary bf f (bf a1 a2) ac)    ($bv_mk_bitblast_step_bitwise_nary bf f a2 ($bv_bitblast_apply_nary f ac a1)))
