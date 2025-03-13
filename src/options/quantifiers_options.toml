@@ -1632,7 +1632,7 @@ name   = "Quantifiers"
   category   = "expert"
   long       = "cegqi-midpoint"
   type       = "bool"
-  default    = "true"
+  default    = "false"
   help       = "choose substitutions based on midpoints of lower and upper bounds for counterexample-based quantifier instantiation"
 
 [[option]]
