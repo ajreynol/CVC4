@@ -2,6 +2,12 @@
 
 ;;; utils
 
+; program: $bv_bitblast_binary_app
+; args:
+; - f (-> T T Bool): The binary function to apply to b1 and b2.
+; - b1 Bool: The first Boolean.
+; - b2 Bool: The second Boolean.
+; return: the result of applying f to b1 and b2.
 (program $bv_bitblast_binary_app ((T Type) (f (-> T T Bool)) (a Bool) (b Bool))
   ((-> T T Bool) Bool Bool) Bool
   (
@@ -65,6 +71,12 @@
   )
 )
 
+; program: $bv_bitblast_apply_ite
+; args:
+; - b Bool: The condition of the ITE.
+; - a1 (Bitvec n): The then branch, a list of bits.
+; - a2 (Bitvec n): The else branch, a list of bits.
+; return: the bitlist having bits that are ITEs whose condition is b and whose branches are a1 and a2.
 (program $bv_bitblast_apply_ite ((bc Bool) (n Int) (m Int) (b1 Bool) (a1 (BitVec m) :list) (b2 Bool) (a2 (BitVec m) :list))
   (Bool (BitVec n) (BitVec n)) (BitVec n)
   (
@@ -73,10 +85,20 @@
   )
 )
 
+; define: $bv_bitblast_rshift
+; args:
+; - a (Bitvec n): The list of bits.
+; - amount: The amount to shift, expected to in [0,n].
+; return: the result of shifting a right by amount.
 (define $bv_bitblast_rshift ((n Int :implicit) (a (BitVec n)) (amount Int))
   (eo::define ((len (eo::list_len @from_bools a)))
     (eo::list_concat @from_bools ($nary_subsequence @from_bools @bv_empty amount len a) ($bv_bitblast_repeat false amount))))
 
+; define: $bv_bitblast_lshift
+; args:
+; - a (Bitvec n): The list of bits.
+; - amount: The amount to shift, expected to in [0,n].
+; return: the result of shifting a left by amount.
 (define $bv_bitblast_lshift ((n Int :implicit) (a (BitVec n)) (amount Int))
   (eo::define ((len (eo::list_len @from_bools a)))
     (eo::list_concat @from_bools ($bv_bitblast_repeat false amount) ($nary_subsequence @from_bools @bv_empty 0 (eo::add len (eo::neg amount) -1) a))))
@@ -85,8 +107,8 @@
 
 ; program: $bv_mk_bitblast_step_eq_rec
 ; args:
-; - x T: The left hand side of the equality.
-; - y T: The right hand side of the equality.
+; - x T: The left hand side of the equality we have left to process.
+; - y T: The right hand side of the equality we have left to process.
 ; return: the bitblasted term for (= x y).
 (program $bv_mk_bitblast_step_eq_rec ((T Type) (W Type) (b1 Bool) (b2 Bool) (a1 W :list) (a2 W :list))
   (T T) Bool
@@ -96,6 +118,11 @@
   )
 )
 
+; program: $bv_mk_bitblast_step_eq_rec
+; args:
+; - x T: The left hand side of the equality.
+; - y T: The right hand side of the equality.
+; return: the bitblasted term for (= x y).
 (define $bv_mk_bitblast_step_eq ((n Int :implicit) (a1 (BitVec n)) (a2 (BitVec n)))
   ($singleton_elim ($bv_mk_bitblast_step_eq_rec a1 a2)))
 
