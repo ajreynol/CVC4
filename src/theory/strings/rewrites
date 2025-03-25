@@ -360,6 +360,11 @@
   (str.indexof t s n)
   (- 1))
 
+(define-cond-rule str-indexof-oob2 ((t ?Seq) (s ?Seq) (n Int))
+  (> 0 n)
+  (str.indexof t s n)
+  (- 1))
+
 (define-cond-rule str-indexof-oob ((t ?Seq) (s ?Seq) (n Int))
   (> n (str.len t))
   (str.indexof t s n)
