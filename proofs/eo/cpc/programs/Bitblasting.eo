@@ -238,8 +238,15 @@
 
 ;;; addition
 
-(program $bv_ripple_carry_adder_2 ((n Int) (b1 Bool) (b2 Bool) (a1 (BitVec n) :list) (a2 (BitVec n) :list) (carry Bool) (res (BitVec n)))
-  ((BitVec n) (BitVec n) Bool (BitVec n)) (@Pair Bool (BitVec n))
+; program: $bv_ripple_carry_adder_2
+; args:
+; - a1 (BitVec n): The first term to add, a list of bits.
+; - a2 (BitVec n): The second term to add, a list of bits.
+; - carry Bool: The current carry bit.
+; - ac (BitVec m): The accumulated return value.
+; return: a pair corresponding to the final carry bit and accumulated result.
+(program $bv_ripple_carry_adder_2 ((n Int) (m Int) (b1 Bool) (b2 Bool) (a1 (BitVec n) :list) (a2 (BitVec n) :list) (carry Bool) (res (BitVec m)))
+  ((BitVec n) (BitVec n) Bool (BitVec m)) (@Pair Bool (BitVec n))
   (
   (($bv_ripple_carry_adder_2 (@from_bools b1 a1) (@from_bools b2 a2) carry res) ($bv_ripple_carry_adder_2 a1 a2 
                                                                                   (or (and b1 b2) (and (xor b1 b2) carry))
@@ -248,6 +255,12 @@
   )
 )
 
+; program: $bv_ripple_carry_adder
+; args:
+; - a1 (BitVec n): The first term to add, a list of bits.
+; - a2 (BitVec n): The second term to add, a list of bits.
+; - carry Bool: The current carry bit.
+; return: the result of adding a1 and a2.
 (define $bv_ripple_carry_adder ((n Int :implicit) (a1 (BitVec n)) (a2 (BitVec n)) (carry Bool))
   (eo::match ((m Int) (carryr Bool) (res (BitVec m)))
     ($bv_ripple_carry_adder_2 a1 a2 carry @bv_empty)
