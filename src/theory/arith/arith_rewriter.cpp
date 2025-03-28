@@ -583,7 +583,22 @@ RewriteResponse ArithRewriter::rewriteSub(TNode t)
 RewriteResponse ArithRewriter::preRewritePlus(TNode t)
 {
   Assert(t.getKind() == Kind::ADD);
-  return RewriteResponse(REWRITE_DONE, expr::algorithm::flatten(d_nm, t));
+  std::vector<std::pair<TNode, uint64_t>> children;
+  expr::algorithm::flattenAndCollect(t, children, Kind::ADD);
+  NodeManager * nm = nodeManager();
+  NodeBuilder nb(nm, Kind::ADD);
+  for (const std::pair<TNode, uint64_t>& c : children)
+  {
+    if (c.second==1)
+    {
+      nb << c.first;
+    }
+    else
+    {
+      nb << nm->mkNode(Kind::MULT, nm->mkConstRealOrInt(c.first.getType(), Rational(c.second)), c.first);
+    }
+  }
+  return RewriteResponse(REWRITE_DONE, nb.constructNode());
 }
 
 RewriteResponse ArithRewriter::postRewritePlus(TNode t)
@@ -591,13 +606,23 @@ RewriteResponse ArithRewriter::postRewritePlus(TNode t)
   Assert(t.getKind() == Kind::ADD);
   Assert(t.getNumChildren() > 1);
 
-  std::vector<TNode> children;
-  expr::algorithm::flatten(t, children, Kind::ADD, Kind::TO_REAL);
-
+  std::vector<std::pair<TNode, uint64_t>> children;
+  expr::algorithm::flattenAndCollect(t, children, Kind::ADD, Kind::TO_REAL);
+  NodeManager * nm = nodeManager();
   rewriter::Sum sum;
-  for (const auto& child : children)
+  for (const std::pair<TNode, uint64_t>& c : children)
   {
-    rewriter::addToSum(sum, child);
+    Node child;
+    if (c.second==1)
+    {
+      child = c.first;
+      rewriter::addToSum(sum, child);
+    }
+    else
+    {
+      RealAlgebraicNumber mul = RealAlgebraicNumber(Integer(c.second));
+      rewriter::addMonomialToSum(sum, child, mul);
+    }
   }
   Node retSum = rewriter::collectSum(d_nm, sum);
   retSum = rewriter::maybeEnsureReal(t.getType(), retSum);

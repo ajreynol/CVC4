@@ -189,6 +189,12 @@ void addToSum(Sum& sum, TNode n, bool negate)
   addToSum(sum, mkNonlinearMult(monomial), multiplicity);
 }
 
+void addMonomialToSum(Sum& sum, TNode product, const RealAlgebraicNumber& multiplicity)
+{
+  Assert (product.getKind()!=Kind::ADD);
+  addToSum(sum, product, multiplicity);
+}
+
 Node collectSum(NodeManager* nm, const Sum& sum)
 {
   if (sum.empty()) return mkConst(nm, Rational(0));
