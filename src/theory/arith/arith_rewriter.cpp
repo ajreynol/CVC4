@@ -657,7 +657,7 @@ RewriteResponse ArithRewriter::preRewritePlus(TNode t)
       nb << nm->mkNode(Kind::MULT, nm->mkConstRealOrInt(c.second), c.first);
     }
   }
-  if (!coeff.isZero())
+  if (!coeff.isZero() || nb.getNumChildren()==0)
   {
     nb << nm->mkConstRealOrInt(t.getType(), coeff);
   }

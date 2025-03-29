@@ -217,10 +217,12 @@ SygusGrammar SygusGrammarCons::mkEmptyGrammar(const Env& env,
   std::vector<Node> ntSyms;
   options::SygusGrammarConsMode tsgcm =
       env.getOptions().quantifiers.sygusGrammarConsMode;
+  std::vector<Node> keep;
   for (const TypeNode& t : tvec)
   {
     // use fresh variable, to ensure the name below is unique
     Node an = NodeManager::mkBoundVar(t);
+    keep.emplace_back(an);
     std::stringstream ss;
     ss << "A_";
     if (t.getNumChildren() > 0)
@@ -237,7 +239,8 @@ SygusGrammar SygusGrammarCons::mkEmptyGrammar(const Env& env,
     // Some types require more than one non-terminal. Handle these cases here.
     if (t.isReal())
     {
-      Node an = NodeManager::mkBoundVar(t);
+      an = NodeManager::mkBoundVar(t);
+      keep.emplace_back(an);
       std::stringstream ssr;
       ssr << "A_Real_PosC_" << an.getId();
       // the positive real constant grammar, for denominators
@@ -249,7 +252,8 @@ SygusGrammar SygusGrammarCons::mkEmptyGrammar(const Env& env,
     {
       if (t.isRealOrInt())
       {
-        Node an = NodeManager::mkBoundVar(t);
+        an = NodeManager::mkBoundVar(t);
+        keep.emplace_back(an);
         // construction of the any-term grammar requires an auxiliary
         // "any constant".
         std::stringstream ssc;
