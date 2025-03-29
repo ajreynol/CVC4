@@ -593,6 +593,10 @@ RewriteResponse ArithRewriter::preRewritePlus(TNode t)
     {
       nb << c.first;
     }
+    else if (c.first.isConst())
+    {
+      nb << nm->mkConstRealOrInt(c.first.getType(), Rational(c.second)*c.first.getConst<Rational>());
+    }
     else
     {
       nb << nm->mkNode(Kind::MULT, nm->mkConstRealOrInt(c.first.getType(), Rational(c.second)), c.first);
