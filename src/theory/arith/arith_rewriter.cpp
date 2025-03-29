@@ -49,27 +49,34 @@ namespace theory {
 namespace arith {
 
 template <typename... Kinds>
-void flattenAndCollect(TNode t, std::vector<std::pair<TNode, Rational>>& children, Kinds... kinds)
+bool flattenAndCollect(TNode t, std::vector<std::pair<TNode, Rational>>& children, Kinds... kinds)
 {
+  if (!expr::algorithm::canFlatten(t, kinds...))
+  {
+    return false;
+  }
   std::map<TNode, Rational> countMap;
   countMap[t] = Rational(1);
   std::map<TNode, Rational>::iterator it;
+  Kind tk = t.getKind();
   while (!countMap.empty())
   {
     // go off of end first
     std::map<TNode, Rational>::iterator cur = std::prev(countMap.end());
     countMap.erase(cur);
     bool recurse = false;
-    Kind k = cur->first.getKind();
-    if (k==Kind::MULT && cur->first.getNumChildren()==2 && cur->first[0].isConst())
+    TNode tc = cur->first;
+    Kind k = tc.getKind();
+    while (k==Kind::MULT && tc.getNumChildren()==2 && tc[0].isConst())
     {
-      cur->second *= cur->first[0].getConst<Rational>();
-      k = cur->first[1].getKind();
+      cur->second *= tc[0].getConst<Rational>();
+      tc = tc[1];
+      k = tc.getKind();
     }
     // figure out whether to recurse into cur
     if constexpr (sizeof...(kinds) == 0)
     {
-      recurse = t.getKind() == k;
+      recurse = tk == k;
     }
     else
     {
@@ -77,7 +84,7 @@ void flattenAndCollect(TNode t, std::vector<std::pair<TNode, Rational>>& childre
     }
     if (recurse)
     {
-      for (TNode cc : cur->first)
+      for (TNode cc : tc)
       {
         countMap[cc] += cur->second;
       }
@@ -87,6 +94,7 @@ void flattenAndCollect(TNode t, std::vector<std::pair<TNode, Rational>>& childre
       children.emplace_back(*cur);
     }
   }
+  return true;
 }
 
 ArithRewriter::ArithRewriter(NodeManager* nm,
@@ -625,7 +633,10 @@ RewriteResponse ArithRewriter::preRewritePlus(TNode t)
 {
   Assert(t.getKind() == Kind::ADD);
   std::vector<std::pair<TNode, Rational>> children;
-  flattenAndCollect(t, children, Kind::ADD);
+  if (!flattenAndCollect(t, children, Kind::ADD))
+  {
+    return RewriteResponse(REWRITE_DONE, t);
+  }
   NodeManager * nm = nodeManager();
   Trace("ajr-temp") << "rewriting " << t << std::endl;
   NodeBuilder nb(nm, Kind::ADD);
@@ -659,19 +670,25 @@ RewriteResponse ArithRewriter::postRewritePlus(TNode t)
   Assert(t.getKind() == Kind::ADD);
   Assert(t.getNumChildren() > 1);
 
-  std::vector<std::pair<TNode, Rational>> children;
-  flattenAndCollect(t, children, Kind::ADD, Kind::TO_REAL);
   rewriter::Sum sum;
-  for (const std::pair<TNode, Rational>& c : children)
+  std::vector<std::pair<TNode, Rational>> children;
+  if (!flattenAndCollect(t, children, Kind::ADD, Kind::TO_REAL))
   {
-    if (c.second==1)
+    rewriter::addToSum(sum, t);
+  }
+  else
+  {
+    for (const std::pair<TNode, Rational>& c : children)
     {
-      rewriter::addToSum(sum, c.first);
-    }
-    else
-    {
-      RealAlgebraicNumber mul = RealAlgebraicNumber(c.second);
-      rewriter::addMonomialToSum(sum, c.first, mul);
+      if (c.second==1)
+      {
+        rewriter::addToSum(sum, c.first);
+      }
+      else
+      {
+        RealAlgebraicNumber mul = RealAlgebraicNumber(c.second);
+        rewriter::addMonomialToSum(sum, c.first, mul);
+      }
     }
   }
   Node retSum = rewriter::collectSum(d_nm, sum);
