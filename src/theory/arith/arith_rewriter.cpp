@@ -63,13 +63,14 @@ bool flattenAndCollect(TNode t, std::vector<std::pair<TNode, Rational>>& childre
   {
     // go off of end first
     std::map<TNode, Rational>::iterator cur = std::prev(countMap.end());
-    countMap.erase(cur);
     bool recurse = false;
     TNode tc = cur->first;
     Kind k = tc.getKind();
+    Rational coeff = cur->second;
+    countMap.erase(cur);
     while (k==Kind::MULT && tc.getNumChildren()==2 && tc[0].isConst())
     {
-      cur->second *= tc[0].getConst<Rational>();
+      coeff *= tc[0].getConst<Rational>();
       tc = tc[1];
       k = tc.getKind();
     }
@@ -86,12 +87,12 @@ bool flattenAndCollect(TNode t, std::vector<std::pair<TNode, Rational>>& childre
     {
       for (TNode cc : tc)
       {
-        countMap[cc] += cur->second;
+        countMap[cc] += coeff;
       }
     }
     else
     {
-      children.emplace_back(*cur);
+      children.emplace_back(tc,coeff);
     }
   }
   return true;
@@ -649,7 +650,7 @@ RewriteResponse ArithRewriter::preRewritePlus(TNode t)
     }
     else if (c.first.isConst())
     {
-      coeff += c.first.getConst<Rational>();
+      coeff += c.first.getConst<Rational>()*c.second;
     }
     else
     {
@@ -678,9 +679,16 @@ RewriteResponse ArithRewriter::postRewritePlus(TNode t)
   }
   else
   {
+    Trace("ajr-temp") << "Flatten " << t << std::endl;
+    Rational coeff(0);
     for (const std::pair<TNode, Rational>& c : children)
     {
-      if (c.second==1)
+      Trace("ajr-temp") << "- flatten factor " << c.first << " " << c.second << std::endl;
+      if (c.first.isConst())
+      {
+        coeff += c.first.getConst<Rational>()*c.second;
+      }
+      else if (c.second.isOne())
       {
         rewriter::addToSum(sum, c.first);
       }
@@ -689,6 +697,10 @@ RewriteResponse ArithRewriter::postRewritePlus(TNode t)
         RealAlgebraicNumber mul = RealAlgebraicNumber(c.second);
         rewriter::addMonomialToSum(sum, c.first, mul);
       }
+    }
+    if (!coeff.isZero())
+    {
+      rewriter::addToSum(sum, nodeManager()->mkConstRealOrInt(coeff));
     }
   }
   Node retSum = rewriter::collectSum(d_nm, sum);
