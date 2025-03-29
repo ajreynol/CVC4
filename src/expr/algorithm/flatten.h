@@ -62,41 +62,6 @@ void flatten(TNode t, std::vector<TNode>& children, Kinds... kinds)
   }
 }
 
-template <typename... Kinds>
-void flattenAndCollect(TNode t, std::vector<std::pair<TNode, uint64_t>>& children, Kinds... kinds)
-{
-  std::map<TNode, uint64_t> countMap;
-  countMap[t] = 1;
-  std::map<TNode, uint64_t>::iterator it;
-  while (!countMap.empty())
-  {
-    // go off of end first
-    std::map<TNode, uint64_t>::iterator cur = std::prev(countMap.end());
-    countMap.erase(cur);
-    bool recurse = false;
-    // figure out whether to recurse into cur
-    if constexpr (sizeof...(kinds) == 0)
-    {
-      recurse = t.getKind() == cur->first.getKind();
-    }
-    else
-    {
-      recurse = ((kinds == cur->first.getKind()) || ...);
-    }
-    if (recurse)
-    {
-      for (TNode cc : cur->first)
-      {
-        countMap[cc] += cur->second;
-      }
-    }
-    else
-    {
-      children.emplace_back(*cur);
-    }
-  }
-}
-
 /**
  * Check whether a node can be flattened, that is whether calling flatten()
  * returns something other than its direct children. If no kinds are passed
