@@ -586,7 +586,9 @@ RewriteResponse ArithRewriter::preRewritePlus(TNode t)
   std::vector<std::pair<TNode, uint64_t>> children;
   expr::algorithm::flattenAndCollect(t, children, Kind::ADD);
   NodeManager * nm = nodeManager();
+  Trace("ajr-temp") << "rewriting " << t << std::endl;
   NodeBuilder nb(nm, Kind::ADD);
+  Rational coeff(0);
   for (const std::pair<TNode, uint64_t>& c : children)
   {
     if (c.second==1)
@@ -595,14 +597,20 @@ RewriteResponse ArithRewriter::preRewritePlus(TNode t)
     }
     else if (c.first.isConst())
     {
-      nb << nm->mkConstRealOrInt(c.first.getType(), Rational(c.second)*c.first.getConst<Rational>());
+      coeff += c.first.getConst<Rational>();
     }
     else
     {
       nb << nm->mkNode(Kind::MULT, nm->mkConstRealOrInt(c.first.getType(), Rational(c.second)), c.first);
     }
   }
-  return RewriteResponse(REWRITE_DONE, nb.constructNode());
+  if (!coeff.isZero())
+  {
+    nb << nm->mkConstRealOrInt(t.getType(), coeff);
+  }
+  Node ret = nb.getNumChildren()==1 ? nb.getChild(0) : nb;
+  Trace("ajr-temp") << "Pre-rewrite " << t << " to " << ret << std::endl;
+  return RewriteResponse(REWRITE_DONE, ret);
 }
 
 RewriteResponse ArithRewriter::postRewritePlus(TNode t)
@@ -612,24 +620,22 @@ RewriteResponse ArithRewriter::postRewritePlus(TNode t)
 
   std::vector<std::pair<TNode, uint64_t>> children;
   expr::algorithm::flattenAndCollect(t, children, Kind::ADD, Kind::TO_REAL);
-  NodeManager * nm = nodeManager();
   rewriter::Sum sum;
   for (const std::pair<TNode, uint64_t>& c : children)
   {
-    Node child;
     if (c.second==1)
     {
-      child = c.first;
-      rewriter::addToSum(sum, child);
+      rewriter::addToSum(sum, c.first);
     }
     else
     {
       RealAlgebraicNumber mul = RealAlgebraicNumber(Integer(c.second));
-      rewriter::addMonomialToSum(sum, child, mul);
+      rewriter::addMonomialToSum(sum, c.first, mul);
     }
   }
   Node retSum = rewriter::collectSum(d_nm, sum);
   retSum = rewriter::maybeEnsureReal(t.getType(), retSum);
+  Trace("ajr-temp") << "Rewrite " << t << " to " << retSum << std::endl;
   return RewriteResponse(REWRITE_DONE, retSum);
 }
 
