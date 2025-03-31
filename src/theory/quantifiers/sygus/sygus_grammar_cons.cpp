@@ -244,7 +244,7 @@ SygusGrammar SygusGrammarCons::mkEmptyGrammar(const Env& env,
       std::stringstream ssr;
       ssr << "A_Real_PosC_" << an.getId();
       // the positive real constant grammar, for denominators
-      Node apc = NodeManager::mkBoundVar(ss.str(), t);
+      Node apc = NodeManager::mkBoundVar(ssr.str(), t);
       ntSyms.push_back(apc);
     }
     if (tsgcm == options::SygusGrammarConsMode::ANY_TERM
