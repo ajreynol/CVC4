@@ -25,7 +25,6 @@
 #include "theory/quantifiers/quantifiers_rewriter.h"
 #include "theory/quantifiers/skolemize.h"
 #include "theory/quantifiers/term_util.h"
-#include "theory/smt_engine_subsolver.h"
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/uf/function_const.h"
 #include "smt/set_defaults.h"
@@ -256,11 +255,14 @@ void InstStrategyMbqi::process(Node q)
 
   // make the query
   Node query = nm->mkAnd(constraints);
+  query = extendedRewrite(query);
 
   std::unique_ptr<SolverEngine> mbqiChecker;
   SubsolverSetupInfo ssi(d_env, d_subOptions);
   initializeSubsolver(mbqiChecker, ssi);
   mbqiChecker->setOption("produce-models", "true");
+  mbqiChecker->setTimeLimit(500);
+  // !expr::hasSubtermKind(Kind::FORALL, query)
   mbqiChecker->assertFormula(query);
   Trace("mbqi") << "*** Check sat..." << std::endl;
   Trace("mbqi") << "  query is : " << SkolemManager::getOriginalForm(query)
@@ -644,6 +646,21 @@ Node InstStrategyMbqi::mkMbqiSkolem(const Node& t)
   SkolemManager* skm = nodeManager()->getSkolemManager();
   return skm->mkInternalSkolemFunction(
       InternalSkolemId::MBQI_INPUT, t.getType(), {t});
+}
+
+Result InstStrategyMbqi::checkWithSubsolverSimple(
+                        Node query,
+                        const SubsolverSetupInfo& info)
+{
+  query = extendedRewrite(query);
+  /*
+  if (expr::hasSubtermKind(Kind::FORALL, query))
+  {
+    Trace("mbqi") << "*** SKIP " << query << std::endl;
+    return Result(Result::Status::UNKNOWN);
+  }
+  */
+  return checkWithSubsolver(query, info, true, 500);
 }
 
 }  // namespace quantifiers
