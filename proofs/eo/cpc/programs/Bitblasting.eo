@@ -281,6 +281,14 @@
 
 ;;; multiplication
 
+; define: $bv_shift_add_multiplier_rec_step
+; args:
+; - b1 Bool: The bit of the first term at the given index.
+; - a2 (BitVec n): The second term to multiply, a lists of bits.
+; - k Int: The index of the bit we are considering.
+; - res (BitVec n): The accumulated return value, a list of bits.
+; - carray Bool: The current carry bit.
+; return: the bitblasted term for processing the multiplication at the current index.
 (program $bv_shift_add_multiplier_rec_step ((n Int) (m Int) (k Int) (b1 Bool) (b2 Bool) (a2 (BitVec n) :list) (res (BitVec n)) 
                                             (br Bool) (ar (BitVec m) :list) (carry Bool))
   (Bool (BitVec n) Int (BitVec n) Bool) (BitVec n)
@@ -295,6 +303,13 @@
   )
 )
 
+; define: $bv_shift_add_multiplier_rec
+; args:
+; - a1 (BitVec m): The remainder of the first term to multiply, a lists of bits.
+; - a2 (BitVec n): The second term to multiply, a lists of bits.
+; - k Int: The index of bits we are considering.
+; - res (BitVec n): The accumulated return value, a list of bits.
+; return: the bitblasted term for processing the multiplication of a1 and a2.
 (program $bv_shift_add_multiplier_rec ((n Int) (m Int) (mm1 Int) (k Int) (b1 Bool) (a1 (BitVec mm1) :list) (a2 (BitVec n)) (res (BitVec n)))
   ((BitVec m) (BitVec n) Int (BitVec n)) (BitVec n)
   (
@@ -303,7 +318,11 @@
      ($bv_shift_add_multiplier_rec a1 a2 (eo::add k 1) ($bv_shift_add_multiplier_rec_step b1 a2 k res false)))
   )
 )
-
+; define: $bv_shift_add_multiplier
+; args:
+; - a (BitVec n): The first term to multiply, a lists of bits.
+; - b (BitVec n): The second term to multiply, a lists of bits.
+; return: the bitblasted term for (bvmul a b).
 (program $bv_shift_add_multiplier ((n Int) (b1 Bool) (a1 (BitVec n) :list) (a2 (BitVec n)))
   ((BitVec n) (BitVec n)) (BitVec n)
   (
@@ -357,7 +376,7 @@
   )
 )
 
-; define: $bv_mk_bitblast_step_urem
+; define: $bv_mk_bitblast_step_udiv
 ; args:
 ; - x (BitVec n): The first argument, expected to be a list of bits.
 ; - y (BitVec n): The second argument, expected to be a list of bits.
