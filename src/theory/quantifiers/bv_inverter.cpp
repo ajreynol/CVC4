@@ -549,8 +549,8 @@ Node BvInverter::mkExistsForAnnotation(NodeManager* nm, const Node& n)
   BoundVarManager* bvm = nm->getBoundVarManager();
   if (n.getNumChildren() == 3)
   {
-    v = bvm->mkBoundVar(BoundVarId::QUANT_BV_INVERT_ANNOT,
-        n, "@var.inv_cond", t.getType());
+    v = bvm->mkBoundVar(
+        BoundVarId::QUANT_BV_INVERT_ANNOT, n, "@var.inv_cond", t.getType());
     s = v;
   }
   else if (n.getNumChildren() == 5)
@@ -572,7 +572,9 @@ Node BvInverter::mkExistsForAnnotation(NodeManager* nm, const Node& n)
       return Node::null();
     }
     v = bvm->mkBoundVar(BoundVarId::QUANT_BV_INVERT_ANNOT,
-        n, "@var.inv_cond", sargs[index].getType());
+                        n,
+                        "@var.inv_cond",
+                        sargs[index].getType());
     sargs[index] = v;
     s = nm->mkNode(op, sargs);
   }

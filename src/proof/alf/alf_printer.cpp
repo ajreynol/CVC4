@@ -35,8 +35,8 @@
 #include "smt/print_benchmark.h"
 #include "theory/builtin/generic_op.h"
 #include "theory/strings/theory_strings_utils.h"
-#include "util/string.h"
 #include "theory/theory.h"
+#include "util/string.h"
 
 namespace cvc5::internal {
 
@@ -221,7 +221,7 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
       if (!isHandledBitblastStep(pfn->getArguments()[0]))
       {
         Trace("bb-tmp") << "Bitblast: " << pfn->getResult() << std::endl;
-        Trace("bb-tmp") << "From: " << pfn->getArguments()[0] << std::endl;        
+        Trace("bb-tmp") << "From: " << pfn->getArguments()[0] << std::endl;
         return false;
       }
       return true;
@@ -404,7 +404,7 @@ bool AlfPrinter::isHandledBitblastStep(const Node& eq)
     case Kind::BITVECTOR_LSHR:
     case Kind::BITVECTOR_UDIV:
     case Kind::BITVECTOR_UREM:
-    case Kind::EQUAL: 
+    case Kind::EQUAL:
     case Kind::BITVECTOR_SLT:
     case Kind::BITVECTOR_SLE:
     case Kind::BITVECTOR_ULT:
@@ -412,7 +412,7 @@ bool AlfPrinter::isHandledBitblastStep(const Node& eq)
     case Kind::BITVECTOR_ITE:
     case Kind::BITVECTOR_COMP:
     case Kind::BITVECTOR_ULTBV:
-    case Kind::BITVECTOR_SLTBV:return true;
+    case Kind::BITVECTOR_SLTBV: return true;
     default:
       Trace("alf-printer-debug") << "Cannot bitblast  " << eq[0] << std::endl;
       break;

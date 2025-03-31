@@ -225,8 +225,9 @@ class InferProofCons : protected EnvObj, public ProofGenerator
    * @return true if we successfully add a step proving b via
    * MACRO_SR_PRED_TRANSFORM from a.
    */
-  static bool applyPredTransformConversion(const Node& a, const Node& b,
-                              TheoryProofStepBuffer& psb);
+  static bool applyPredTransformConversion(const Node& a,
+                                           const Node& b,
+                                           TheoryProofStepBuffer& psb);
   /** The lazy fact map */
   NodeInferInfoMap d_lazyFactMap;
   /** Reference to the statistics for the theory of strings/sequences. */

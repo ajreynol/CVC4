@@ -911,7 +911,6 @@ bool InferProofCons::convert(Env& env,
         {
           Trace("strings-ipc-red") << "...failed to reduce" << std::endl;
         }
-      
       }
     }
     break;
@@ -1677,15 +1676,15 @@ std::string InferProofCons::identify() const
   return "strings::InferProofCons";
 }
 
-bool InferProofCons::applyPredTransformConversion(const Node& a, const Node& b,
-                              TheoryProofStepBuffer& psb)
+bool InferProofCons::applyPredTransformConversion(const Node& a,
+                                                  const Node& b,
+                                                  TheoryProofStepBuffer& psb)
 {
   std::vector<Node> cexp;
   // get the equalities where the reduction is different
   std::vector<Node> matchConds;
   expr::getConversionConditions(a, b, matchConds);
-  Trace("strings-ipc-red")
-      << "...need to prove " << matchConds << std::endl;
+  Trace("strings-ipc-red") << "...need to prove " << matchConds << std::endl;
   // To simplify the proof transformation step below, we manually
   // unpurify skolems from the concluded reduction. This
   // make it more likely the applyPredTransform step does not have to
