@@ -172,13 +172,14 @@ TrustNode LambdaLift::ppRewrite(Node node, std::vector<SkolemLemma>& lems)
   else if (needsLift(lam))
   {
     // Maybe it would help to purify the ground subterms? If so we rewrite
-    // and convert
+    // and add purification lemmas to lems.
     PurifyGroundNodeConverter pgnc(nodeManager());
     Node clam = pgnc.convert(lam);
     if (!needsLift(clam))
     {
       Trace("uf-lazy-ll-purify") << "ppRewrite " << lam << " to " << clam << " to avoid lifting." << std::endl;
       TrustNode trn = ppRewrite(clam, lems);
+      // add purification lemmas for terms we purified
       for (const Node& t : pgnc.d_pterms)
       {
         Node k = SkolemManager::mkPurifySkolem(t);
