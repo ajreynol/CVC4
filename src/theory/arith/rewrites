@@ -35,23 +35,12 @@
 (define-rule arith-geq-norm1-int ((t Int) (s Int)) (>= t s) (>= (- t s) 0))
 (define-rule arith-geq-norm1-real ((t Real) (s Real)) (>= t s) (>= (- t s) 0/1))
 
-;(define-rule arith-geq-norm2 ((t ?) (s ?)) (>= t s) (<= (- t) (- s)))
-
-;(define-rule arith-refl-leq ((t ?)) (<= t t) true)
-;(define-rule arith-refl-lt ((t ?)) (< t t) false)
-;(define-rule arith-refl-geq ((t ?)) (>= t t) true)
-;(define-rule arith-refl-gt ((t ?)) (> t t) false)
-
 (define-rule arith-eq-elim-real ((t Real) (s Real)) (= t s) (and (>= t s) (<= t s)))
 (define-rule arith-eq-elim-int ((t Int) (s Int)) (= t s) (and (>= t s) (<= t s)))
 
 (define-rule* arith-plus-flatten ((xs ? :list) (w ?) (ys ? :list) (zs ? :list))
   (+ xs (+ w ys) zs)
   (+ xs w ys zs))
-
-;(define-rule* arith-mult-flatten ((xs ? :list) (w ?) (ys ? :list) (zs ? :list))
-;  (* xs (* w ys) zs)
-;  (* xs w ys zs))
 
 (define-rule arith-abs-elim-int ((x Int)) (abs x) (ite (< x 0) (- x) x))
 (define-rule arith-abs-elim-real ((x Real)) (abs x) (ite (< x 0/1) (- x) x))
