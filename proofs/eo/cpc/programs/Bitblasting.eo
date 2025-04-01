@@ -347,6 +347,14 @@
 
 ;;; division and remainder
 
+; define: $bv_div_mod_impl
+; args:
+; - x (BitVec n): The first argument to div/rem, expected to be a list of bits.
+; - y (BitVec n): The second argument to div/rem, expected to be a list of bits.
+; - zero (BitVec n): A list of bits corresponding to the zero bitvector of the given width.
+; - sz Int: The number of bits left to process.
+; return:
+;   A pair corresponding to the bitblasted form of the quotient/remainder of x and y.
 (program $bv_div_mod_impl ((n Int :implicit) (a1 (BitVec n)) (a2 (BitVec n)) (sz Int) (zero (BitVec n)))
   ((BitVec n) (BitVec n) (BitVec n) Int) (@Pair (BitVec n) (BitVec n))
   (
