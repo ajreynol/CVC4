@@ -1,3 +1,4 @@
+; EXPECT: unsat
 (set-logic ALL)
 (declare-const n Int)
 (assert (not
