@@ -520,6 +520,14 @@ name   = "Quantifiers"
   help       = "maximum inst level of terms used to instantiate quantified formulas with (-1 == no limit, default)"
 
 [[option]]
+  name       = "instNestedMaxLevel"
+  category   = "expert"
+  long       = "inst-nested-max-level=N"
+  type       = "int64_t"
+  default    = "-1"
+  help       = "default maximum nested instantiation level of terms used to instantiate quantified formulas with (-1 == no limit, default)"
+
+[[option]]
   name       = "instMaxRounds"
   category   = "regular"
   long       = "inst-max-rounds=N"

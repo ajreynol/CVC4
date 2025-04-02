@@ -117,6 +117,7 @@ struct QAttributes
         d_hasPool(false),
         d_sygus(false),
         d_qinstLevel(-1),
+        d_qinstNestedLevel(-1),
         d_preserveStructure(false),
         d_quant_elim(false),
         d_quant_elim_partial(false),
@@ -140,6 +141,9 @@ struct QAttributes
   /** stores the maximum instantiation level allowed for this quantified formula
    * (-1 means allow any) */
   int64_t d_qinstLevel;
+  /** stores the maximum term origin level allowed for this quantified formula
+   * (-1 means allow any) */
+  int64_t d_qinstNestedLevel;
   /**
    * Is this formula marked as preserving structure?
    * For example, this attribute is marked when computing (partial) quantifier

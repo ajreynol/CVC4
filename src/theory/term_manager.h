@@ -51,18 +51,39 @@ class TermDbManager : public TheoryEngineModule
                    LemmaProperty p,
                    const std::vector<Node>& skAsserts,
                    const std::vector<Node>& sks) override;
-
+  /** Can we instantiation q with term n based on its origin information? */
+  bool canInstantiate(const Node& q, const Node& n);
  private:
   class TermOrigin
   {
    public:
-    TermOrigin(context::Context* c) : d_args(c) {}
+    TermOrigin(context::Context* c);
     void addOrigin(InferenceId id, const Node& arg);
 
    private:
-    context::CDList<std::pair<InferenceId, Node>> d_args;
+    context::CDList<std::pair<InferenceId, Node>> d_origin;
+    context::CDHashMap<Node, size_t> d_quantDepth;
   };
-  context::CDHashMap<Node, std::shared_ptr<TermOrigin>> d_origins;
+  /** Mapping */
+  context::CDHashMap<Node, std::shared_ptr<TermOrigin>> d_omap;
+  /** Mapping quantified formulas to their explicitly given inst nested level */
+  std::map<Node, int64_t> d_qinLevel;
+  /**
+   * If id is InferenceId::NONE, the term was from the input formulas.
+   * If args is provided, it is of the form (Q t_1 ... t_n),
+   * where quantified formula Q was instantiated with t_1 ... t_n to generate
+   * n.
+   * @param n The term we saw in an input formula or lemma.
+   * @param id The identifier indicating the lemma (if applicable) that
+   * generated this term.
+   * @param args The arguments.
+   */
+  void addOrigin(const Node& n, InferenceId id, const std::vector<Node>& args);
+  /**
+   * Do any term-specific initialization, called once when the term n is first
+   * seen in the user context.
+   */
+  void initializeTerm(const Node& n);
 };
 
 }  // namespace theory

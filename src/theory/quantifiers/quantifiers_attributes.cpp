@@ -56,6 +56,20 @@ struct PreserveStructureAttributeId
 using PreserveStructureAttribute =
     expr::Attribute<PreserveStructureAttributeId, bool>;
 
+/**
+ * for quantifier instantiation level.
+ */
+struct QuantInstLevelAttributeId {};
+typedef expr::Attribute<QuantInstLevelAttributeId, uint64_t>
+    QuantInstLevelAttribute;
+    
+/**
+ * for quantifier instantiation origin level.
+ */
+struct QuantInstNestedLevelAttributeId {};
+typedef expr::Attribute<QuantInstNestedLevelAttributeId, uint64_t>
+    QuantInstNestedLevelAttribute;
+
 bool QAttributes::isStandard() const
 {
   return !d_sygus && !d_preserveStructure && !isFunDef() && !isOracleInterface()
@@ -86,6 +100,12 @@ void QuantAttributes::setUserAttribute(const std::string& attr,
     uint64_t lvl = nodeValues[0].getConst<Rational>().getNumerator().getLong();
     Trace("quant-attr-debug") << "Set instantiation level " << n << " to " << lvl << std::endl;
     QuantInstLevelAttribute qila;
+    n.setAttribute( qila, lvl );
+  }else if( attr=="quant-inst-origin-max-level" ){
+    Assert(nodeValues.size() == 1);
+    uint64_t lvl = nodeValues[0].getConst<Rational>().getNumerator().getLong();
+    Trace("quant-attr-debug") << "Set instantiation origin level " << n << " to " << lvl << std::endl;
+    QuantInstNestedLevelAttribute qila;
     n.setAttribute( qila, lvl );
   }else if( attr=="quant-elim" ){
     Trace("quant-attr-debug") << "Set quantifier elimination " << n << std::endl;
@@ -298,6 +318,10 @@ void QuantAttributes::computeQuantAttributes( Node q, QAttributes& qa ){
         if( avar.hasAttribute(QuantInstLevelAttribute()) ){
           qa.d_qinstLevel = avar.getAttribute(QuantInstLevelAttribute());
           Trace("quant-attr") << "Attribute : quant inst level " << qa.d_qinstLevel << " : " << q << std::endl;
+        }
+        if( avar.hasAttribute(QuantInstNestedLevelAttribute()) ){
+          qa.d_qinstNestedLevel = avar.getAttribute(QuantInstNestedLevelAttribute());
+          Trace("quant-attr") << "Attribute : quant inst nested level " << qa.d_qinstNestedLevel << " : " << q << std::endl;
         }
         if (avar.getAttribute(PreserveStructureAttribute()))
         {
