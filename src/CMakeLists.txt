@@ -1231,6 +1231,8 @@ libcvc5_add_sources(
   theory/subs_minimize.h
   theory/substitutions.cpp
   theory/substitutions.h
+  theory/term_manager.cpp
+  theory/term_manager.h
   theory/term_registration_visitor.cpp
   theory/term_registration_visitor.h
   theory/theory.cpp

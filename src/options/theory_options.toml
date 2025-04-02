@@ -143,3 +143,11 @@ name   = "Theory Layer"
   type       = "bool"
   default    = "false"
   help       = "Infer equivalent literals when using lemma inprocess"
+
+[[option]]
+  name       = "trackTermOrigins"
+  category   = "expert"
+  long       = "track-term-origins"
+  type       = "bool"
+  default    = "false"
+  help       = "track the origin of terms based on the lemmas that introduced them"

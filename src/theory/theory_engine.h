@@ -91,6 +91,7 @@ class PluginModule;
 class RelevanceManager;
 class Rewriter;
 class SharedSolver;
+class TermManager;
 class TheoryModel;
 class ConflictProcessor;
 
@@ -585,6 +586,8 @@ class TheoryEngine : protected EnvObj
   std::unique_ptr<theory::DecisionManager> d_decManager;
   /** The relevance manager */
   std::unique_ptr<theory::RelevanceManager> d_relManager;
+  /** The term manager */
+  std::unique_ptr<theory::TermManager> d_termManager;
 
   /**
    * Output channels for individual theories.
