@@ -32,16 +32,18 @@ void TermDbManager::notifyPreprocessedAssertions(
   std::vector<TNode> visit;
   TNode cur;
   visit.insert(visit.end(), assertions.begin(), assertions.end());
-  do {
+  do
+  {
     cur = visit.back();
     visit.pop_back();
 
-    if (visited.find(cur) == visited.end()) {
+    if (visited.find(cur) == visited.end())
+    {
       visited.insert(cur);
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
   } while (!visit.empty());
-  
+
   std::vector<Node> emptyVec;
   for (TNode t : visited)
   {
@@ -57,16 +59,21 @@ void TermDbManager::notifyLemma(TNode n,
 {
 }
 
-TermDbManager::TermOrigin::TermOrigin(context::Context* c) : d_origin(c), d_quantDepth(c) {}
+TermDbManager::TermOrigin::TermOrigin(context::Context* c)
+    : d_origin(c), d_quantDepth(c)
+{
+}
 void TermDbManager::TermOrigin::addOrigin(InferenceId id, const Node& arg)
 {
   d_origin.emplace_back(id, arg);
 }
 
-void TermDbManager::addOrigin(const Node& n, InferenceId id, const std::vector<Node>& args)
+void TermDbManager::addOrigin(const Node& n,
+                              InferenceId id,
+                              const std::vector<Node>& args)
 {
   Node arg;
-  if (args.size()==1)
+  if (args.size() == 1)
   {
     arg = args[0];
   }
@@ -75,8 +82,9 @@ void TermDbManager::addOrigin(const Node& n, InferenceId id, const std::vector<N
     arg = nodeManager()->mkNode(Kind::SEXPR, args);
   }
   TermOrigin* t;
-  context::CDHashMap<Node, std::shared_ptr<TermOrigin>>::iterator it = d_omap.find(n);
-  if (it==d_omap.end())
+  context::CDHashMap<Node, std::shared_ptr<TermOrigin>>::iterator it =
+      d_omap.find(n);
+  if (it == d_omap.end())
   {
     std::shared_ptr<TermOrigin> tor =
         std::make_shared<TermOrigin>(userContext());
@@ -93,12 +101,13 @@ void TermDbManager::addOrigin(const Node& n, InferenceId id, const std::vector<N
 
 void TermDbManager::initializeTerm(const Node& n)
 {
-  if (n.getKind()==Kind::FORALL)
+  if (n.getKind() == Kind::FORALL)
   {
-    // get the origin level specified by user attribute :quant-inst-origin-max-level.
+    // get the origin level specified by user attribute
+    // :quant-inst-origin-max-level.
     quantifiers::QAttributes qa;
     quantifiers::QuantAttributes::computeQuantAttributes(n, qa);
-    if (qa.d_qinstNestedLevel!=-1)
+    if (qa.d_qinstNestedLevel != -1)
     {
       d_qinLevel[n] = qa.d_qinstNestedLevel;
     }

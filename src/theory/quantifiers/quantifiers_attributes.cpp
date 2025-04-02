@@ -59,14 +59,18 @@ using PreserveStructureAttribute =
 /**
  * for quantifier instantiation level.
  */
-struct QuantInstLevelAttributeId {};
+struct QuantInstLevelAttributeId
+{
+};
 typedef expr::Attribute<QuantInstLevelAttributeId, uint64_t>
     QuantInstLevelAttribute;
-    
+
 /**
  * for quantifier instantiation origin level.
  */
-struct QuantInstNestedLevelAttributeId {};
+struct QuantInstNestedLevelAttributeId
+{
+};
 typedef expr::Attribute<QuantInstNestedLevelAttributeId, uint64_t>
     QuantInstNestedLevelAttribute;
 
@@ -101,17 +105,24 @@ void QuantAttributes::setUserAttribute(const std::string& attr,
     Trace("quant-attr-debug") << "Set instantiation level " << n << " to " << lvl << std::endl;
     QuantInstLevelAttribute qila;
     n.setAttribute( qila, lvl );
-  }else if( attr=="quant-inst-origin-max-level" ){
+  }
+  else if (attr == "quant-inst-origin-max-level")
+  {
     Assert(nodeValues.size() == 1);
     uint64_t lvl = nodeValues[0].getConst<Rational>().getNumerator().getLong();
-    Trace("quant-attr-debug") << "Set instantiation origin level " << n << " to " << lvl << std::endl;
+    Trace("quant-attr-debug")
+        << "Set instantiation origin level " << n << " to " << lvl << std::endl;
     QuantInstNestedLevelAttribute qila;
-    n.setAttribute( qila, lvl );
-  }else if( attr=="quant-elim" ){
+    n.setAttribute(qila, lvl);
+  }
+  else if (attr == "quant-elim")
+  {
     Trace("quant-attr-debug") << "Set quantifier elimination " << n << std::endl;
     QuantElimAttribute qea;
     n.setAttribute( qea, true );
-  }else if( attr=="quant-elim-partial" ){
+  }
+  else if (attr == "quant-elim-partial")
+  {
     Trace("quant-attr-debug") << "Set partial quantifier elimination " << n << std::endl;
     QuantElimPartialAttribute qepa;
     n.setAttribute( qepa, true );
@@ -319,9 +330,13 @@ void QuantAttributes::computeQuantAttributes( Node q, QAttributes& qa ){
           qa.d_qinstLevel = avar.getAttribute(QuantInstLevelAttribute());
           Trace("quant-attr") << "Attribute : quant inst level " << qa.d_qinstLevel << " : " << q << std::endl;
         }
-        if( avar.hasAttribute(QuantInstNestedLevelAttribute()) ){
-          qa.d_qinstNestedLevel = avar.getAttribute(QuantInstNestedLevelAttribute());
-          Trace("quant-attr") << "Attribute : quant inst nested level " << qa.d_qinstNestedLevel << " : " << q << std::endl;
+        if (avar.hasAttribute(QuantInstNestedLevelAttribute()))
+        {
+          qa.d_qinstNestedLevel =
+              avar.getAttribute(QuantInstNestedLevelAttribute());
+          Trace("quant-attr")
+              << "Attribute : quant inst nested level " << qa.d_qinstNestedLevel
+              << " : " << q << std::endl;
         }
         if (avar.getAttribute(PreserveStructureAttribute()))
         {

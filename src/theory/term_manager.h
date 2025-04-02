@@ -53,6 +53,7 @@ class TermDbManager : public TheoryEngineModule
                    const std::vector<Node>& sks) override;
   /** Can we instantiation q with term n based on its origin information? */
   bool canInstantiate(const Node& q, const Node& n);
+
  private:
   class TermOrigin
   {
