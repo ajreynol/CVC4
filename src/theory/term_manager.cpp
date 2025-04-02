@@ -18,22 +18,23 @@
 namespace cvc5::internal {
 namespace theory {
 
-TermDbManager::TermDbManager(Env& env, TheoryEngine* engine) : TheoryEngineModule(env, engine, "TermDbManager"), d_origins(userContext()){}
-
-void TermDbManager::notifyPreprocessedAssertions(const std::vector<Node>& assertions)
+TermDbManager::TermDbManager(Env& env, TheoryEngine* engine)
+    : TheoryEngineModule(env, engine, "TermDbManager"), d_origins(userContext())
 {
-  
+}
+
+void TermDbManager::notifyPreprocessedAssertions(
+    const std::vector<Node>& assertions)
+{
 }
 
 void TermDbManager::notifyLemma(TNode n,
-                  InferenceId id,
-                  LemmaProperty p,
-                  const std::vector<Node>& skAsserts,
-                  const std::vector<Node>& sks)
+                                InferenceId id,
+                                LemmaProperty p,
+                                const std::vector<Node>& skAsserts,
+                                const std::vector<Node>& sks)
 {
-  
 }
 
 }  // namespace theory
 }  // namespace cvc5::internal
-

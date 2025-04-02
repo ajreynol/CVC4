@@ -43,9 +43,9 @@
 #include "theory/quantifiers/first_order_model.h"
 #include "theory/quantifiers_engine.h"
 #include "theory/relevance_manager.h"
-#include "theory/term_manager.h"
 #include "theory/rewriter.h"
 #include "theory/shared_solver.h"
+#include "theory/term_manager.h"
 #include "theory/theory.h"
 #include "theory/theory_engine_proof_generator.h"
 #include "theory/theory_id.h"
@@ -149,7 +149,7 @@ void TheoryEngine::finishInit()
     d_relManager.reset(new RelevanceManager(d_env, this));
     d_modules.push_back(d_relManager.get());
   }
-  
+
   if (options().theory.trackTermOrigins)
   {
     d_termManager.reset(new TermDbManager(d_env, this));

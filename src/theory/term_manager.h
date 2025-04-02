@@ -53,15 +53,16 @@ class TermDbManager : public TheoryEngineModule
                    const std::vector<Node>& sks) override;
 
  private:
-   class TermOrigin
-   {
+  class TermOrigin
+  {
    public:
-     TermOrigin(context::Context* c) : d_args(c){}
-     void addOrigin(InferenceId id, const Node& arg);
+    TermOrigin(context::Context* c) : d_args(c) {}
+    void addOrigin(InferenceId id, const Node& arg);
+
    private:
-     context::CDList<std::pair<InferenceId, Node>> d_args;
-   };
-   context::CDHashMap<Node, std::shared_ptr<TermOrigin>> d_origins;
+    context::CDList<std::pair<InferenceId, Node>> d_args;
+  };
+  context::CDHashMap<Node, std::shared_ptr<TermOrigin>> d_origins;
 };
 
 }  // namespace theory
