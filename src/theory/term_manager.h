@@ -10,7 +10,7 @@
  * directory for licensing information.
  * ****************************************************************************
  *
- * Relevance manager.
+ * Term manager.
  */
 
 #include "cvc5_private.h"
@@ -32,14 +32,14 @@ namespace theory {
 
 /**
  */
-class TermManager : public TheoryEngineModule
+class TermDbManager : public TheoryEngineModule
 {
  public:
   /**
    * @param env The environment
    * @param engine The parent theory engine
    */
-  TermManager(Env& env, TheoryEngine* engine);
+  TermDbManager(Env& env, TheoryEngine* engine);
   /**
    * Notify (preprocessed) assertions.
    * @param assertions The assertions

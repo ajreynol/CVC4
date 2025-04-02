@@ -152,7 +152,7 @@ void TheoryEngine::finishInit()
   
   if (options().theory.trackTermOrigins)
   {
-    d_termManager.reset(new TermManager(d_env, this));
+    d_termManager.reset(new TermDbManager(d_env, this));
     d_modules.push_back(d_termManager.get());
   }
 
