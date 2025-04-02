@@ -3927,10 +3927,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_EXTRACT_SIGN_EXTEND_2),
   /** Auto-generated from RARE rule bv-extract-sign-extend-3 */
   EVALUE(BV_EXTRACT_SIGN_EXTEND_3),
-  /** Auto-generated from RARE rule bv-neg-mult */
-  EVALUE(BV_NEG_MULT),
-  /** Auto-generated from RARE rule bv-neg-add */
-  EVALUE(BV_NEG_ADD),
   /** Auto-generated from RARE rule bv-not-xor */
   EVALUE(BV_NOT_XOR),
   /** Auto-generated from RARE rule bv-and-simplify-1 */
@@ -3959,16 +3955,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_COMMUTATIVE_XOR),
   /** Auto-generated from RARE rule bv-commutative-comp */
   EVALUE(BV_COMMUTATIVE_COMP),
-  /** Auto-generated from RARE rule bv-or-zero */
-  EVALUE(BV_OR_ZERO),
-  /** Auto-generated from RARE rule bv-mul-one */
-  EVALUE(BV_MUL_ONE),
-  /** Auto-generated from RARE rule bv-mul-zero */
-  EVALUE(BV_MUL_ZERO),
-  /** Auto-generated from RARE rule bv-add-zero */
-  EVALUE(BV_ADD_ZERO),
-  /** Auto-generated from RARE rule bv-add-two */
-  EVALUE(BV_ADD_TWO),
   /** Auto-generated from RARE rule bv-zero-extend-eliminate-0 */
   EVALUE(BV_ZERO_EXTEND_ELIMINATE_0),
   /** Auto-generated from RARE rule bv-sign-extend-eliminate-0 */
@@ -3983,10 +3969,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_CONCAT_MERGE_CONST),
   /** Auto-generated from RARE rule bv-commutative-add */
   EVALUE(BV_COMMUTATIVE_ADD),
-  /** Auto-generated from RARE rule bv-neg-sub */
-  EVALUE(BV_NEG_SUB),
-  /** Auto-generated from RARE rule bv-neg-idemp */
-  EVALUE(BV_NEG_IDEMP),
   /** Auto-generated from RARE rule bv-sub-eliminate */
   EVALUE(BV_SUB_ELIMINATE),
   /** Auto-generated from RARE rule bv-ite-width-one */
