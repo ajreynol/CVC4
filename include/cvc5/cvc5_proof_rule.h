@@ -4097,20 +4097,12 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_OR_CONCAT_PULLUP3),
   /** Auto-generated from RARE rule bv-xor-concat-pullup3 */
   EVALUE(BV_XOR_CONCAT_PULLUP3),
-  /** Auto-generated from RARE rule bv-bitwise-idemp-1 */
-  EVALUE(BV_BITWISE_IDEMP_1),
-  /** Auto-generated from RARE rule bv-bitwise-idemp-2 */
-  EVALUE(BV_BITWISE_IDEMP_2),
   /** Auto-generated from RARE rule bv-xor-duplicate */
   EVALUE(BV_XOR_DUPLICATE),
   /** Auto-generated from RARE rule bv-xor-ones */
   EVALUE(BV_XOR_ONES),
   /** Auto-generated from RARE rule bv-xor-zero */
   EVALUE(BV_XOR_ZERO),
-  /** Auto-generated from RARE rule bv-bitwise-not-and */
-  EVALUE(BV_BITWISE_NOT_AND),
-  /** Auto-generated from RARE rule bv-bitwise-not-or */
-  EVALUE(BV_BITWISE_NOT_OR),
   /** Auto-generated from RARE rule bv-xor-not */
   EVALUE(BV_XOR_NOT),
   /** Auto-generated from RARE rule bv-not-idemp */
@@ -4575,8 +4567,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_IN_RE_RANGE_ELIM),
   /** Auto-generated from RARE rule str-in-re-contains */
   EVALUE(STR_IN_RE_CONTAINS),
-  /** Auto-generated from RARE rule str-in-re-concat-emp */
-  EVALUE(STR_IN_RE_CONCAT_EMP),
   /** Auto-generated from RARE rule str-in-re-from-int-nemp-dig-range */
   EVALUE(STR_IN_RE_FROM_INT_NEMP_DIG_RANGE),
   /** Auto-generated from RARE rule str-in-re-from-int-dig-range */

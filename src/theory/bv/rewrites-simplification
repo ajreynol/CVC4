@@ -253,9 +253,6 @@
     (bvxor (extract num1 0 (bvxor xs ws)) u)
   ))
 
-(define-rule bv-bitwise-idemp-1 ((x ?BitVec)) (bvand x x) x)
-(define-rule bv-bitwise-idemp-2 ((x ?BitVec)) (bvor x x) x)
-
 (define-cond-rule bv-xor-duplicate ((x ?BitVec) (w Int))
   (= w (@bvsize x))
   (bvxor x x) 
@@ -270,14 +267,6 @@
   (bvxor xs (@bv 0 n) zs)
   (bvxor xs zs))
 
-(define-cond-rule bv-bitwise-not-and ((x ?BitVec) (w Int))
-  (= w (@bvsize x))
-  (bvand x (bvnot x))
-  (@bv 0 w))
-(define-cond-rule bv-bitwise-not-or ((x ?BitVec) (w Int))
-  (= w (@bvsize x))
-  (bvor x (bvnot x))
-  (bvnot (@bv 0 w)))
 (define-rule bv-xor-not ((x ?BitVec) (y ?BitVec))
   (bvxor (bvnot x) (bvnot y)) (bvxor x y))
 (define-rule bv-not-idemp ((x ?BitVec))

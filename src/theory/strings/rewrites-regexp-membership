@@ -25,11 +25,6 @@
   (str.in_re t (re.++ (re.* re.allchar) (str.to_re s) (re.* re.allchar)))
   (str.contains t s))
 
-(define-rule* str-in-re-concat-emp ((s String) (s1 String) (s2 String :list))
-  (str.in_re (str.++ s s1 s2) (str.to_re ""))
-  (str.in_re (str.++ s1 s2) (str.to_re ""))
-  (and (= s "") _))
-
 (define-cond-rule str-in-re-from-int-nemp-dig-range ((n Int))
   (>= n 0)
   (str.in_re (str.from_int n) (re.++ (re.range "0" "9") (re.* (re.range "0" "9"))))

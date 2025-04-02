@@ -303,6 +303,7 @@ set(regress_0_tests
   regress0/bv/bv-card-conflict.smt2
   regress0/bv/bv-int-collapse1.smt2
   regress0/bv/bv-int-collapse2.smt2
+  regress0/bv/bv-missing-dsl-rew.smt2
   regress0/bv/bv-options4.smt2
   regress0/bv/bv-term-small-rw-228.smt2
   regress0/bv/bv-to-bool1.smtv1.smt2
@@ -1948,6 +1949,7 @@ set(regress_0_tests
   regress0/strings/dd_str_term_529.smt2
   regress0/strings/delta-trust-subs.smt2
   regress0/strings/denghan-instance56567.smt2
+  regress0/strings/digit-mem-dsl-rew.smt2
   regress0/strings/distinct-witness-id.smt2
   regress0/strings/eager-red-str-to-int.smt2
   regress0/strings/escchar_25.smt2
