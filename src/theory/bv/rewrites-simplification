@@ -256,18 +256,6 @@
 (define-rule bv-bitwise-idemp-1 ((x ?BitVec)) (bvand x x) x)
 (define-rule bv-bitwise-idemp-2 ((x ?BitVec)) (bvor x x) x)
 
-(define-rule bv-and-zero ((x ?BitVec) (n Int))
-  (bvand x (@bv 0 n))
-  (@bv 0 n))
-(define-cond-rule bv-and-one ((x ?BitVec) (n Int) (w Int))
-  (and (= w (@bvsize x)) (= n (- (int.pow2 (@bvsize x)) 1)))
-  (bvand x (@bv n w))
-  x)
-(define-cond-rule bv-or-one ((x ?BitVec) (n Int) (w Int))
-  (and (= w (@bvsize x)) (= n (- (int.pow2 (@bvsize x)) 1)))
-  (bvor x (@bv n w))
-  (bvnot (@bv 0 w)))
-
 (define-cond-rule bv-xor-duplicate ((x ?BitVec) (w Int))
   (= w (@bvsize x))
   (bvxor x x) 
