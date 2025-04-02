@@ -4431,10 +4431,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_INDEXOF_SELF),
   /** Auto-generated from RARE rule str-indexof-no-contains */
   EVALUE(STR_INDEXOF_NO_CONTAINS),
-  /** Auto-generated from RARE rule str-indexof-oob2 */
-  EVALUE(STR_INDEXOF_OOB2),
   /** Auto-generated from RARE rule str-indexof-oob */
   EVALUE(STR_INDEXOF_OOB),
+  /** Auto-generated from RARE rule str-indexof-oob2 */
+  EVALUE(STR_INDEXOF_OOB2),
   /** Auto-generated from RARE rule str-indexof-contains-pre */
   EVALUE(STR_INDEXOF_CONTAINS_PRE),
   /** Auto-generated from RARE rule str-indexof-find */
