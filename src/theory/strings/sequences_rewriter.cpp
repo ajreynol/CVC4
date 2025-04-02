@@ -1113,6 +1113,7 @@ Node SequencesRewriter::rewriteAndOrRegExp(TNode node)
         return returnRewrite(node, ni, Rewrite::RE_AND_EMPTY);
       }
       // otherwise, can ignore
+      changed = true;
     }
     else if (nik == Kind::REGEXP_STAR
              && ni[0].getKind() == Kind::REGEXP_ALLCHAR)
