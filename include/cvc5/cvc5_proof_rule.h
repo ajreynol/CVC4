@@ -207,8 +207,9 @@ enum ENUM(ProofRule)
    * .. math::
    *   \inferrule{- \mid t = s}{t = s}
    *
-   * where :math:`\texttt{expr::isACNorm(t, s)} = \top`. For details, see
-   * :cvc5src:`expr/nary_term_util.h`.
+   * where :math:`t` and :math:`s` are equivalent modulo associativity
+   * and identity elements, and (optionally) commutativity and idempotency.
+   *
    * This method normalizes currently based on two kinds of operators:
    * (1) those that are associative, commutative, idempotent, and have an
    * identity element (examples are or, and, bvand),
@@ -216,9 +217,34 @@ enum ENUM(ProofRule)
    * element (bvxor),
    * (3) those that are associative and have an identity element (examples
    * are concat, str.++, re.++).
+   *
+   * This is implemented internally by checking that
+   * :math:`\texttt{expr::isACINorm(t, s)} = \top`. For details, see
+   * :cvc5src:`expr/aci_norm.h`.
    * \endverbatim
    */
   EVALUE(ACI_NORM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Builtin theory -- absorb**
+   *
+   * .. math::
+   *   \inferrule{- \mid t = z}{t = z}
+   *
+   * where :math:`t` contains :math:`z` as a subterm, where :math:`z`
+   * is a zero element.
+   *
+   * In particular, :math:`t` is expected to be an application of a
+   * function with a zero element :math:`z`, and :math:`z` is contained
+   * as a subterm of :math:`t` beneath applications of that function.
+   * For example, this may show that :math:`(A \wedge ( B \wedge \bot)) = \bot`.
+   *
+   * This is implemented internally by checking that
+   * :math:`\texttt{expr::isAbsorb(t, z)} = \top`. For details, see
+   * :cvc5src:`expr/aci_norm.h`.
+   * \endverbatim
+   */
+  EVALUE(ABSORB),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Builtin theory -- Substitution + Rewriting equality introduction**
@@ -1312,18 +1338,6 @@ enum ENUM(ProofRule)
    * \endverbatim
    */
   EVALUE(DT_SPLIT),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Datatypes -- Clash**
-   *
-   * .. math::
-   *
-   *   \inferruleSC{\mathit{is}_{C_i}(t), \mathit{is}_{C_j}(t)\mid -}{\bot}
-   *   {if $i\neq j$}
-   *
-   * \endverbatim
-   */
-  EVALUE(DT_CLASH),
 
   /**
    * \verbatim embed:rst:leading-asterisk
@@ -1486,42 +1500,6 @@ enum ENUM(ProofRule)
    * \endverbatim
    */
   EVALUE(CONCAT_UNIFY),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Strings -- Core rules -- Concatenation conflict**
-   *
-   * .. math::
-   *   \inferrule{(c_1 \cdot t) = (c_2 \cdot s)\mid \bot}{\bot}
-   *
-   * Alternatively for the reverse:
-   *
-   * .. math::
-   *   \inferrule{(t \cdot c_1) = (s \cdot c_2)\mid \top}{\bot}
-   *
-   * where :math:`c_1,\,c_2` are distinct (non-empty) string constants of the same length.
-   *
-   * \endverbatim
-   */
-  EVALUE(CONCAT_CONFLICT),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Strings -- Core rules -- Concatenation conflict for disequal characters**
-   *
-   * .. math::
-   *   \inferrule{(t_1\cdot t) = (s_1 \cdot s), t_1 \neq s_1 \mid \bot}{\bot}
-   *
-   * Alternatively for the reverse:
-   *
-   * .. math::
-   *   \inferrule{(t\cdot t_1) = (s \cdot s_1), t_1 \neq s_1 \mid \top}{\bot}
-   *
-   * where :math:`t_1` and :math:`s_1` are applications of :math:`seq.unit`.
-   *
-   * This rule is used exclusively for sequences.
-   *
-   * \endverbatim
-   */
-  EVALUE(CONCAT_CONFLICT_DEQ),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Strings -- Core rules -- Concatenation split**
@@ -2459,6 +2437,19 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_BOOL_NNF_NORM),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Booleans -- Bitvector invert solve**
+   *
+   * .. math::
+   *   ((t_1 = t_2) = (x = r)) = \top
+   *
+   * where :math:`x` occurs on an invertible path in :math:`t_1 = t_2`
+   * and has solved form :math:`r`.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BOOL_BV_INVERT_SOLVE),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Arithmetic -- Integer equality conflict**
    *
    * .. math::
@@ -3030,6 +3021,110 @@ enum ENUM(ProofRewriteRule)
   EVALUE(DT_MATCH_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro extract and concat **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule ExtractConcat.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_EXTRACT_CONCAT),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro or simplify **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule OrSimplify.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_OR_SIMPLIFY),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro and simplify **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule AndSimplify.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_AND_SIMPLIFY),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro xor simplify **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule XorSimplify.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_XOR_SIMPLIFY),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro and/or/xor concat pullup **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule AndOrXorConcatPullup.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_AND_OR_XOR_CONCAT_PULLUP),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro multiply signed less than multiply **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule MultSltMult.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_MULT_SLT_MULT),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro concat extract merge **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule ConcatExtractMerge.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_CONCAT_EXTRACT_MERGE),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Bitvectors -- Macro concat constant merge **
+   *
+   * .. math::
+   *    a = b
+   *
+   * where :math:`a` is rewritten to :math:`b` by the internal rewrite
+   * rule ConcatConstantMerge.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_BV_CONCAT_CONSTANT_MERGE),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bitvectors -- Extract negations from multiplicands**
    *
    * .. math::
@@ -3514,67 +3609,21 @@ enum ENUM(ProofRewriteRule)
   EVALUE(MACRO_SUBSTR_STRIP_SYM_LENGTH),
   /**
    * \verbatim embed:rst:leading-asterisk
-   * **Sets -- sets intersection evaluate**
+   * **Sets -- sets evaluate operator**
    *
    * .. math::
-   *   \mathit{set.inter}(t_1, t_2) = t
+   *   \mathit{f}(t_1, t_2) = t
    *
-   * where :math:`t_1` and :math:`t_2` are set values, that is,
-   * the Node::isConst method returns true for both, and
-   * where :math:`t` is an intersection of the component elements of
+   * where :math:`f` is one of :math:`\mathit{set.inter}, \mathit{set.minus}, \mathit{set.union}`,
+   * and :math:`t` is the result of evaluating :math:`f` on
    * :math:`t_1` and :math:`t_2`.
    *
-   * \endverbatim
-   */
-  EVALUE(MACRO_SETS_INTER_EVAL),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Sets -- sets minus evaluate**
-   *
-   * .. math::
-   *   \mathit{set.minus}(t_1, t_2) = t
-   *
-   * where :math:`t_1` and :math:`t_2` are set values, that is,
-   * the Node::isConst method returns true for both, and
-   * where :math:`t` is the difference of the component elements of
-   * :math:`t_1` and :math:`t_2`.
-   *
-   * \endverbatim
-   */
-  EVALUE(MACRO_SETS_MINUS_EVAL),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Sets -- sets union normalize**
-   *
-   * .. math::
-   *   \mathit{set.union}(t_1, t_2) = t
-   * 
-   * where :math:`t` is a union of the component elements of
-   * :math:`t_1` and :math:`t_2`.
-   * 
    * Note we use this rule only when :math:`t_1` and :math:`t_2` are set values,
    * that is, the Node::isConst method returns true for both.
    *
    * \endverbatim
    */
-  EVALUE(SETS_UNION_NORM),
-  /**
-   * \verbatim embed:rst:leading-asterisk
-   * **Sets -- empty tester evaluation**
-   *
-   * .. math::
-   *   \mathit{sets.is\_empty}(\epsilon) = \top
-   *
-   * where :math:`\epsilon` is the empty set, or alternatively:
-   *
-   * .. math::
-   *   \mathit{sets.is\_empty}(c) = \bot
-   *
-   * where :math:`c` is a constant set that is not the empty set.
-   *
-   * \endverbatim
-   */
-  EVALUE(SETS_IS_EMPTY_EVAL),
+  EVALUE(SETS_EVAL_OP),
   /**
    * \verbatim embed:rst:leading-asterisk
    * **Sets -- sets insert elimination**
@@ -3891,6 +3940,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_COMMUTATIVE_XOR),
   /** Auto-generated from RARE rule bv-commutative-mul */
   EVALUE(BV_COMMUTATIVE_MUL),
+  /** Auto-generated from RARE rule bv-commutative-comp */
+  EVALUE(BV_COMMUTATIVE_COMP),
   /** Auto-generated from RARE rule bv-or-zero */
   EVALUE(BV_OR_ZERO),
   /** Auto-generated from RARE rule bv-mul-one */
@@ -3927,6 +3978,14 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_NEG_IDEMP),
   /** Auto-generated from RARE rule bv-sub-eliminate */
   EVALUE(BV_SUB_ELIMINATE),
+  /** Auto-generated from RARE rule bv-ite-width-one */
+  EVALUE(BV_ITE_WIDTH_ONE),
+  /** Auto-generated from RARE rule bv-ite-width-one-not */
+  EVALUE(BV_ITE_WIDTH_ONE_NOT),
+  /** Auto-generated from RARE rule bv-eq-xor-solve */
+  EVALUE(BV_EQ_XOR_SOLVE),
+  /** Auto-generated from RARE rule bv-eq-not-solve */
+  EVALUE(BV_EQ_NOT_SOLVE),
   /** Auto-generated from RARE rule bv-ugt-eliminate */
   EVALUE(BV_UGT_ELIMINATE),
   /** Auto-generated from RARE rule bv-uge-eliminate */
@@ -3987,6 +4046,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_USUBO_ELIMINATE),
   /** Auto-generated from RARE rule bv-ssubo-eliminate */
   EVALUE(BV_SSUBO_ELIMINATE),
+  /** Auto-generated from RARE rule bv-nego-eliminate */
+  EVALUE(BV_NEGO_ELIMINATE),
   /** Auto-generated from RARE rule bv-ite-equal-children */
   EVALUE(BV_ITE_EQUAL_CHILDREN),
   /** Auto-generated from RARE rule bv-ite-const-children-1 */
@@ -4031,6 +4092,18 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_OR_CONCAT_PULLUP),
   /** Auto-generated from RARE rule bv-xor-concat-pullup */
   EVALUE(BV_XOR_CONCAT_PULLUP),
+  /** Auto-generated from RARE rule bv-and-concat-pullup2 */
+  EVALUE(BV_AND_CONCAT_PULLUP2),
+  /** Auto-generated from RARE rule bv-or-concat-pullup2 */
+  EVALUE(BV_OR_CONCAT_PULLUP2),
+  /** Auto-generated from RARE rule bv-xor-concat-pullup2 */
+  EVALUE(BV_XOR_CONCAT_PULLUP2),
+  /** Auto-generated from RARE rule bv-and-concat-pullup3 */
+  EVALUE(BV_AND_CONCAT_PULLUP3),
+  /** Auto-generated from RARE rule bv-or-concat-pullup3 */
+  EVALUE(BV_OR_CONCAT_PULLUP3),
+  /** Auto-generated from RARE rule bv-xor-concat-pullup3 */
+  EVALUE(BV_XOR_CONCAT_PULLUP3),
   /** Auto-generated from RARE rule bv-bitwise-idemp-1 */
   EVALUE(BV_BITWISE_IDEMP_1),
   /** Auto-generated from RARE rule bv-bitwise-idemp-2 */
@@ -4197,8 +4270,14 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_SUBSTR_EMPTY_START),
   /** Auto-generated from RARE rule str-substr-empty-start-neg */
   EVALUE(STR_SUBSTR_EMPTY_START_NEG),
+  /** Auto-generated from RARE rule str-substr-substr-start-geq-len */
+  EVALUE(STR_SUBSTR_SUBSTR_START_GEQ_LEN),
   /** Auto-generated from RARE rule str-substr-eq-empty */
   EVALUE(STR_SUBSTR_EQ_EMPTY),
+  /** Auto-generated from RARE rule str-substr-z-eq-empty-leq */
+  EVALUE(STR_SUBSTR_Z_EQ_EMPTY_LEQ),
+  /** Auto-generated from RARE rule str-substr-eq-empty-leq-len */
+  EVALUE(STR_SUBSTR_EQ_EMPTY_LEQ_LEN),
   /** Auto-generated from RARE rule str-len-replace-inv */
   EVALUE(STR_LEN_REPLACE_INV),
   /** Auto-generated from RARE rule str-len-replace-all-inv */
@@ -4237,6 +4316,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_PREFIXOF_ELIM),
   /** Auto-generated from RARE rule str-suffixof-elim */
   EVALUE(STR_SUFFIXOF_ELIM),
+  /** Auto-generated from RARE rule str-prefixof-eq */
+  EVALUE(STR_PREFIXOF_EQ),
+  /** Auto-generated from RARE rule str-suffixof-eq */
+  EVALUE(STR_SUFFIXOF_EQ),
   /** Auto-generated from RARE rule str-prefixof-one */
   EVALUE(STR_PREFIXOF_ONE),
   /** Auto-generated from RARE rule str-suffixof-one */
@@ -4253,6 +4336,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_SUBSTR_CONCAT1),
   /** Auto-generated from RARE rule str-substr-concat2 */
   EVALUE(STR_SUBSTR_CONCAT2),
+  /** Auto-generated from RARE rule str-substr-replace */
+  EVALUE(STR_SUBSTR_REPLACE),
   /** Auto-generated from RARE rule str-substr-full */
   EVALUE(STR_SUBSTR_FULL),
   /** Auto-generated from RARE rule str-substr-full-eq */
@@ -4273,10 +4358,14 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_CONTAINS_EMP),
   /** Auto-generated from RARE rule str-contains-is-emp */
   EVALUE(STR_CONTAINS_IS_EMP),
+  /** Auto-generated from RARE rule str-contains-char */
+  EVALUE(STR_CONTAINS_CHAR),
   /** Auto-generated from RARE rule str-at-elim */
   EVALUE(STR_AT_ELIM),
   /** Auto-generated from RARE rule str-replace-self */
   EVALUE(STR_REPLACE_SELF),
+  /** Auto-generated from RARE rule str-replace-id */
+  EVALUE(STR_REPLACE_ID),
   /** Auto-generated from RARE rule str-replace-prefix */
   EVALUE(STR_REPLACE_PREFIX),
   /** Auto-generated from RARE rule str-replace-no-contains */
@@ -4291,6 +4380,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPLACE_CONTAINS_PRE),
   /** Auto-generated from RARE rule str-replace-one-pre */
   EVALUE(STR_REPLACE_ONE_PRE),
+  /** Auto-generated from RARE rule str-replace-find-pre */
+  EVALUE(STR_REPLACE_FIND_PRE),
   /** Auto-generated from RARE rule str-replace-all-no-contains */
   EVALUE(STR_REPLACE_ALL_NO_CONTAINS),
   /** Auto-generated from RARE rule str-replace-re-none */
@@ -4299,18 +4390,28 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPLACE_RE_ALL_NONE),
   /** Auto-generated from RARE rule str-len-concat-rec */
   EVALUE(STR_LEN_CONCAT_REC),
+  /** Auto-generated from RARE rule str-len-eq-zero-concat-rec */
+  EVALUE(STR_LEN_EQ_ZERO_CONCAT_REC),
+  /** Auto-generated from RARE rule str-len-eq-zero-base */
+  EVALUE(STR_LEN_EQ_ZERO_BASE),
   /** Auto-generated from RARE rule str-indexof-self */
   EVALUE(STR_INDEXOF_SELF),
   /** Auto-generated from RARE rule str-indexof-no-contains */
   EVALUE(STR_INDEXOF_NO_CONTAINS),
+  /** Auto-generated from RARE rule str-indexof-oob */
+  EVALUE(STR_INDEXOF_OOB),
   /** Auto-generated from RARE rule str-indexof-contains-pre */
   EVALUE(STR_INDEXOF_CONTAINS_PRE),
   /** Auto-generated from RARE rule str-indexof-find */
   EVALUE(STR_INDEXOF_FIND),
   /** Auto-generated from RARE rule str-indexof-find-emp */
   EVALUE(STR_INDEXOF_FIND_EMP),
+  /** Auto-generated from RARE rule str-indexof-eq-irr */
+  EVALUE(STR_INDEXOF_EQ_IRR),
   /** Auto-generated from RARE rule str-indexof-re-none */
   EVALUE(STR_INDEXOF_RE_NONE),
+  /** Auto-generated from RARE rule str-indexof-re-emp-re */
+  EVALUE(STR_INDEXOF_RE_EMP_RE),
   /** Auto-generated from RARE rule str-to-lower-concat */
   EVALUE(STR_TO_LOWER_CONCAT),
   /** Auto-generated from RARE rule str-to-upper-concat */
@@ -4345,10 +4446,52 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_LT_ELIM),
   /** Auto-generated from RARE rule str-from-int-no-ctn-nondigit */
   EVALUE(STR_FROM_INT_NO_CTN_NONDIGIT),
+  /** Auto-generated from RARE rule str-substr-ctn-contra */
+  EVALUE(STR_SUBSTR_CTN_CONTRA),
   /** Auto-generated from RARE rule str-substr-ctn */
   EVALUE(STR_SUBSTR_CTN),
   /** Auto-generated from RARE rule str-replace-dual-ctn */
   EVALUE(STR_REPLACE_DUAL_CTN),
+  /** Auto-generated from RARE rule str-replace-dual-ctn-false */
+  EVALUE(STR_REPLACE_DUAL_CTN_FALSE),
+  /** Auto-generated from RARE rule str-replace-self-ctn-simp */
+  EVALUE(STR_REPLACE_SELF_CTN_SIMP),
+  /** Auto-generated from RARE rule str-replace-emp-ctn-src */
+  EVALUE(STR_REPLACE_EMP_CTN_SRC),
+  /** Auto-generated from RARE rule str-substr-char-start-eq-len */
+  EVALUE(STR_SUBSTR_CHAR_START_EQ_LEN),
+  /** Auto-generated from RARE rule str-contains-repl-char */
+  EVALUE(STR_CONTAINS_REPL_CHAR),
+  /** Auto-generated from RARE rule str-contains-repl-self-tgt-char */
+  EVALUE(STR_CONTAINS_REPL_SELF_TGT_CHAR),
+  /** Auto-generated from RARE rule str-contains-repl-self */
+  EVALUE(STR_CONTAINS_REPL_SELF),
+  /** Auto-generated from RARE rule str-contains-repl-tgt */
+  EVALUE(STR_CONTAINS_REPL_TGT),
+  /** Auto-generated from RARE rule str-repl-repl-len-id */
+  EVALUE(STR_REPL_REPL_LEN_ID),
+  /** Auto-generated from RARE rule str-repl-repl-src-tgt-no-ctn */
+  EVALUE(STR_REPL_REPL_SRC_TGT_NO_CTN),
+  /** Auto-generated from RARE rule str-repl-repl-tgt-self */
+  EVALUE(STR_REPL_REPL_TGT_SELF),
+  /** Auto-generated from RARE rule str-repl-repl-tgt-no-ctn */
+  EVALUE(STR_REPL_REPL_TGT_NO_CTN),
+  /** Auto-generated from RARE rule str-repl-repl-src-self */
+  EVALUE(STR_REPL_REPL_SRC_SELF),
+  /** Auto-generated from RARE rule str-repl-repl-src-inv-no-ctn1 */
+  EVALUE(STR_REPL_REPL_SRC_INV_NO_CTN1),
+  /** Auto-generated from RARE rule str-repl-repl-src-inv-no-ctn2 */
+  EVALUE(STR_REPL_REPL_SRC_INV_NO_CTN2),
+  /** Auto-generated from RARE rule str-repl-repl-src-inv-no-ctn3 */
+  EVALUE(STR_REPL_REPL_SRC_INV_NO_CTN3),
+  /** Auto-generated from RARE rule str-repl-repl-dual-self */
+  EVALUE(STR_REPL_REPL_DUAL_SELF),
+  /** Auto-generated from RARE rule str-repl-repl-dual-ite1 */
+  EVALUE(STR_REPL_REPL_DUAL_ITE1),
+  /** Auto-generated from RARE rule str-repl-repl-dual-ite2 */
+  EVALUE(STR_REPL_REPL_DUAL_ITE2),
+  /** Auto-generated from RARE rule str-repl-repl-lookahead-id-simp */
+  EVALUE(STR_REPL_REPL_LOOKAHEAD_ID_SIMP),
   /** Auto-generated from RARE rule re-all-elim */
   EVALUE(RE_ALL_ELIM),
   /** Auto-generated from RARE rule re-opt-elim */
@@ -4381,6 +4524,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_UNION_FLATTEN),
   /** Auto-generated from RARE rule re-union-dup */
   EVALUE(RE_UNION_DUP),
+  /** Auto-generated from RARE rule re-union-const-elim */
+  EVALUE(RE_UNION_CONST_ELIM),
   /** Auto-generated from RARE rule re-inter-all */
   EVALUE(RE_INTER_ALL),
   /** Auto-generated from RARE rule re-inter-none */
@@ -4421,8 +4566,16 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_EQ_REPL_SELF_EMP),
   /** Auto-generated from RARE rule str-eq-repl-no-change */
   EVALUE(STR_EQ_REPL_NO_CHANGE),
+  /** Auto-generated from RARE rule str-eq-repl-tgt-eq-len */
+  EVALUE(STR_EQ_REPL_TGT_EQ_LEN),
   /** Auto-generated from RARE rule str-eq-repl-len-one-emp-prefix */
   EVALUE(STR_EQ_REPL_LEN_ONE_EMP_PREFIX),
+  /** Auto-generated from RARE rule str-eq-repl-emp-tgt-nemp */
+  EVALUE(STR_EQ_REPL_EMP_TGT_NEMP),
+  /** Auto-generated from RARE rule str-eq-repl-nemp-src-emp */
+  EVALUE(STR_EQ_REPL_NEMP_SRC_EMP),
+  /** Auto-generated from RARE rule str-eq-repl-self-src */
+  EVALUE(STR_EQ_REPL_SELF_SRC),
   /** Auto-generated from RARE rule seq-len-unit */
   EVALUE(SEQ_LEN_UNIT),
   /** Auto-generated from RARE rule seq-nth-unit */

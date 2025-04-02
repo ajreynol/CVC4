@@ -48,25 +48,6 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-/**
- * Attributes used for constructing bound variables in a canonical way. These
- * are attributes that map to bound variable, introduced for the following
- * purposes:
- * - QRewPrenexAttribute: cached on (v, body) where we are prenexing bound
- * variable v in a nested quantified formula within the given body.
- * - QRewMiniscopeAttribute: cached on (v, q, i) where q is being miniscoped
- * for F_i in its body (and F_1 ... F_n), and v is one of the bound variables
- * that q binds.
- */
-struct QRewPrenexAttributeId
-{
-};
-using QRewPrenexAttribute = expr::Attribute<QRewPrenexAttributeId, Node>;
-struct QRewMiniscopeAttributeId
-{
-};
-using QRewMiniscopeAttribute = expr::Attribute<QRewMiniscopeAttributeId, Node>;
-
 std::ostream& operator<<(std::ostream& out, RewriteStep s)
 {
   switch (s)
@@ -1217,16 +1198,44 @@ Node QuantifiersRewriter::getVarElimEqBv(Node lit,
   Assert(lit.getKind() == Kind::EQUAL);
   // TODO (#1494) : linearize the literal using utility
 
+  // if the option varEntEqElimQuant is disabled, we must preserve equivalence
+  // when solving the variable, meaning that BITVECTOR_CONCAT cannot be
+  // on the path to the variable.
+  std::unordered_set<Kind> disallowedKinds;
+  if (!d_opts.quantifiers.varEntEqElimQuant)
+  {
+    // concatenation does not perserve equivalence i.e.
+    // (concat x y) = z is not equivalent to x = ((_ extract n m) z)
+    disallowedKinds.insert(Kind::BITVECTOR_CONCAT);
+  }
+
   // compute a subset active_args of the bound variables args that occur in lit
   std::vector<Node> active_args;
   computeArgVec(args, active_args, lit);
 
-  BvInverter binv(d_opts);
+  BvInverter binv;
   for (const Node& cvar : active_args)
   {
     // solve for the variable on this path using the inverter
-    std::vector<unsigned> path;
+    std::vector<uint32_t> path;
     Node slit = binv.getPathToPv(lit, cvar, path);
+    // check if the path had a kind that does not preserve equivalence of the
+    // overall literal
+    if (!disallowedKinds.empty())
+    {
+      Node curr = lit;
+      for (size_t i = 0, npath = path.size(); i < npath; i++)
+      {
+        Trace("quant-velim-bv") << "On path: " << curr << std::endl;
+        if (disallowedKinds.find(curr.getKind()) != disallowedKinds.end())
+        {
+          slit = Node::null();
+          break;
+        }
+        uint32_t p = path[npath - i - 1];
+        curr = curr[p];
+      }
+    }
     if (!slit.isNull())
     {
       Node slv = binv.solveBvLit(cvar, lit, path, nullptr);
@@ -1332,6 +1341,16 @@ bool QuantifiersRewriter::getVarElimLit(Node body,
   {
     if (pol || lit[0].getType().isBoolean())
     {
+      // In the loop below, we try solving for *both* sides to
+      // maximize the determinism of the rewriter. For example,
+      // given 2 Boolean variables x and y, when we construct
+      // (not (= (not x) (not y))), the rewriter may order them in
+      // either direction. Taking the first solved side leads to
+      // nondeterminism based on when (not x) and (not y) are constructed.
+      // However, if we compare the variables we will always solve
+      // x -> y or vice versa based on when x,y are constructed.
+      Node solvedVar;
+      Node solvedSubs;
       for (unsigned i = 0; i < 2; i++)
       {
         bool tpol = pol;
@@ -1341,27 +1360,39 @@ bool QuantifiersRewriter::getVarElimLit(Node body,
           v_slv = v_slv[0];
           tpol = !tpol;
         }
+        // don't solve if we solved the opposite side
+        // and it was smaller.
+        if (!solvedVar.isNull() && v_slv>solvedVar)
+        {
+          break;
+        }
         std::vector<Node>::iterator ita =
             std::find(args.begin(), args.end(), v_slv);
         if (ita != args.end())
         {
           if (isVarElim(v_slv, lit[1 - i]))
           {
-            Node slv = lit[1 - i];
+            solvedVar = v_slv;
+            solvedSubs = lit[1 - i];
             if (!tpol)
             {
-              Assert(slv.getType().isBoolean());
-              slv = slv.negate();
+              Assert(solvedSubs.getType().isBoolean());
+              solvedSubs = solvedSubs.negate();
             }
-            Trace("var-elim-quant")
-                << "Variable eliminate based on equality : " << v_slv << " -> "
-                << slv << std::endl;
-            vars.push_back(v_slv);
-            subs.push_back(slv);
-            args.erase(ita);
-            return true;
           }
         }
+      }
+      if (!solvedVar.isNull())
+      {
+        std::vector<Node>::iterator ita =
+            std::find(args.begin(), args.end(), solvedVar);
+        Trace("var-elim-quant")
+            << "Variable eliminate based on equality : " << solvedVar << " -> "
+            << solvedSubs << std::endl;
+        vars.push_back(solvedVar);
+        subs.push_back(solvedSubs);
+        args.erase(ita);
+        return true;
       }
     }
   }
@@ -1753,7 +1784,7 @@ Node QuantifiersRewriter::computePrenex(Node q,
           {
             Node ii = nm->mkConstInt(index);
             Node cacheVal = nm->mkNode(Kind::SEXPR, {q, body, v, ii});
-            vv = bvm->mkBoundVar<QRewPrenexAttribute>(cacheVal, vt);
+            vv = bvm->mkBoundVar(BoundVarId::QUANT_REW_PRENEX, cacheVal, vt);
             index++;
           } while (std::find(argVec.begin(), argVec.end(), vv) != argVec.end());
         }
@@ -2033,7 +2064,8 @@ Node QuantifiersRewriter::computeMiniscoping(Node q,
           {
             TypeNode vt = v.getType();
             Node cacheVal = BoundVarManager::getCacheValue(q, v, i);
-            Node vv = bvm->mkBoundVar<QRewMiniscopeAttribute>(cacheVal, vt);
+            Node vv =
+                bvm->mkBoundVar(BoundVarId::QUANT_REW_MINISCOPE, cacheVal, vt);
             argsc.push_back(vv);
           }
         }

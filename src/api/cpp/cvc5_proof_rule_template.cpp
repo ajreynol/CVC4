@@ -31,6 +31,7 @@ const char* toString(ProofRule rule)
     case ProofRule::EVALUATE: return "EVALUATE";
     case ProofRule::DISTINCT_VALUES: return "DISTINCT_VALUES";
     case ProofRule::ACI_NORM: return "ACI_NORM";
+    case ProofRule::ABSORB: return "ABSORB";
     case ProofRule::MACRO_SR_EQ_INTRO: return "MACRO_SR_EQ_INTRO";
     case ProofRule::MACRO_SR_PRED_INTRO: return "MACRO_SR_PRED_INTRO";
     case ProofRule::MACRO_SR_PRED_ELIM: return "MACRO_SR_PRED_ELIM";
@@ -124,7 +125,6 @@ const char* toString(ProofRule rule)
     case ProofRule::BV_POLY_NORM_EQ: return "BV_POLY_NORM_EQ";
     //================================================= Datatype rules
     case ProofRule::DT_SPLIT: return "DT_SPLIT";
-    case ProofRule::DT_CLASH: return "DT_CLASH";
     //================================================= Quantifiers rules
     case ProofRule::SKOLEM_INTRO: return "SKOLEM_INTRO";
     case ProofRule::SKOLEMIZE: return "SKOLEMIZE";
@@ -139,8 +139,6 @@ const char* toString(ProofRule rule)
     //================================================= String rules
     case ProofRule::CONCAT_EQ: return "CONCAT_EQ";
     case ProofRule::CONCAT_UNIFY: return "CONCAT_UNIFY";
-    case ProofRule::CONCAT_CONFLICT: return "CONCAT_CONFLICT";
-    case ProofRule::CONCAT_CONFLICT_DEQ: return "CONCAT_CONFLICT_DEQ";
     case ProofRule::CONCAT_SPLIT: return "CONCAT_SPLIT";
     case ProofRule::CONCAT_CSPLIT: return "CONCAT_CSPLIT";
     case ProofRule::CONCAT_LPROP: return "CONCAT_LPROP";
@@ -231,6 +229,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::BV_TO_NAT_ELIM: return "bv-to-nat-elim";
     case ProofRewriteRule::INT_TO_BV_ELIM: return "int-to-bv-elim";
     case ProofRewriteRule::MACRO_BOOL_NNF_NORM: return "macro-bool-nnf-norm";
+    case ProofRewriteRule::MACRO_BOOL_BV_INVERT_SOLVE: return "macro-bool-bv-invert-solve";
     case ProofRewriteRule::MACRO_ARITH_INT_EQ_CONFLICT:
       return "macro-arith-int-eq-conflict";
     case ProofRewriteRule::MACRO_ARITH_INT_GEQ_TIGHTEN:
@@ -287,6 +286,21 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::DT_COLLAPSE_UPDATER: return "dt-collapse-updater";
     case ProofRewriteRule::DT_UPDATER_ELIM: return "dt-updater-elim";
     case ProofRewriteRule::DT_MATCH_ELIM: return "dt-match-elim";
+    case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT:
+      return "macro-bv-extract-concat";
+    case ProofRewriteRule::MACRO_BV_OR_SIMPLIFY: return "macro-bv-or-simplify";
+    case ProofRewriteRule::MACRO_BV_AND_SIMPLIFY:
+      return "macro-bv-and-simplify";
+    case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:
+      return "macro-bv-xor-simplify";
+    case ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP:
+      return "macro-bv-and-or-xor-concat-pullup";
+    case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:
+      return "macro-bv-mult-slt-mult";
+    case ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE:
+      return "macro-bv-concat-extract-merge";
+    case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
+      return "macro-bv-concat-constant-merge";
     case ProofRewriteRule::MACRO_BV_EQ_SOLVE: return "macro-bv-eq-solve";
     case ProofRewriteRule::BV_UMULO_ELIMINATE: return "bv-umulo-eliminate";
     case ProofRewriteRule::BV_SMULO_ELIMINATE: return "bv-smulo-eliminate";
@@ -338,13 +352,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::STR_IN_RE_SIGMA_STAR: return "str-in-re-sigma-star";
     case ProofRewriteRule::MACRO_SUBSTR_STRIP_SYM_LENGTH:
       return "macro-substr-strip-sym-length";
-    case ProofRewriteRule::MACRO_SETS_INTER_EVAL:
-      return "macro-sets-inter-eval";
-    case ProofRewriteRule::MACRO_SETS_MINUS_EVAL:
-      return "macro-sets-minus-eval";
-    case ProofRewriteRule::SETS_UNION_NORM: return "sets-union-norm";
-    case ProofRewriteRule::SETS_IS_EMPTY_EVAL:
-      return "sets-is-empty-eval";
+    case ProofRewriteRule::SETS_EVAL_OP: return "sets-eval-op";
     case ProofRewriteRule::SETS_INSERT_ELIM:
       return "sets-insert-elim";
       //================================================= RARE rules
