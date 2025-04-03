@@ -534,7 +534,8 @@ Node BvInstantiator::rewriteAssertionForSolvePv(CegInstantiator* ci,
       }
     } while (!trace_visit.empty());
   }
-  // process again
+  // process again, to ensure the policy for cegqiBvIneqMode is handled after
+  // rewriting above.
   result = processAssertionInternal(ci, result);
 
   return result;
