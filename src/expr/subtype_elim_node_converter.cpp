@@ -103,6 +103,19 @@ Node SubtypeElimNodeConverter::postConvert(Node n)
   else if (k==Kind::BOUND_VARIABLE)
   {
     BoundVarManager* bvm = d_nm->getBoundVarManager();
+    BoundVarId id = bvm->getBoundVarId(n);
+    if (id!=BoundVarId::NONE)
+    {
+      Node cacheVal = bvm->getCacheValue(n);
+      if (!cacheVal.isNull())
+      {
+        Node cacheValc = convert(cacheVal);
+        if (cacheValc != cacheVal)
+        {
+          return bvm->mkBoundVar(id, cacheValc, n.getType());
+        }
+      }
+    }
   }
   return n;
 }
