@@ -1,0 +1,12 @@
+; EXPECT: unsat
+(set-logic ALL)
+(declare-const x (_ BitVec 4))
+(declare-const y (_ BitVec 4))
+(assert (or
+(not (= (bvult x x) false))
+(not (= (bvslt x x) false))
+(not (= (bvule x x) true))
+(not (= ((_ extract 3 2) (bvand x y)) (bvand ((_ extract 3 2) x) ((_ extract 3 2) y))))
+(not (= (bvand x (bvnot x)) #b0000))
+))
+(check-sat)
