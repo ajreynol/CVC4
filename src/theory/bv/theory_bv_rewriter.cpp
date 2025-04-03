@@ -139,8 +139,10 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       BV_PROOF_REWRITE_CASE(ConcatExtractMerge)
     case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
       BV_PROOF_REWRITE_CASE(ConcatConstantMerge)
-    case ProofRewriteRule::BV_UMULO_ELIM: BV_PROOF_REWRITE_CASE(UmuloEliminate)
-    case ProofRewriteRule::BV_SMULO_ELIM: BV_PROOF_REWRITE_CASE(SmuloEliminate)
+    case ProofRewriteRule::BV_UMULO_ELIM:
+      BV_PROOF_REWRITE_CASE(UmuloEliminate)
+    case ProofRewriteRule::BV_SMULO_ELIM:
+      BV_PROOF_REWRITE_CASE(SmuloEliminate)
     case ProofRewriteRule::BV_BITWISE_SLICING:
       BV_PROOF_REWRITE_CASE(BitwiseSlicing)
     case ProofRewriteRule::BV_REPEAT_ELIM:
