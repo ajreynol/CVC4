@@ -426,6 +426,7 @@
     ((and x1 x2)       false)
     ((re.union x1 x2)  re.all)
     ((re.inter x1 x2)  re.none)
+    ((re.++ x1 x2)     re.none)
     ((bvor xb1 xb2)    ($bv_ones ($bv_bitwidth (eo::typeof xb1))))
     ((bvand xb1 xb2)   (eo::to_bin ($bv_bitwidth (eo::typeof xb1)) 0))
     )
