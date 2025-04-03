@@ -3782,6 +3782,13 @@ Node SequencesRewriter::rewriteReplaceAll(Node node)
     return rri;
   }
 
+  Node cmp_conr = d_stringsEntail.checkContains(node[0], node[1]);
+  if (!cmp_conr.isNull())
+  {
+    // ~contains( t, s ) => ( replace_all( t, s, r ) ----> t )
+    return returnRewrite(node, node[0], Rewrite::RPL_NCTN);
+  }
+
   return node;
 }
 

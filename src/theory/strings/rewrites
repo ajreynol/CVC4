@@ -237,11 +237,6 @@
   (str.contains (str.++ x y z) w)
   (or (str.contains x w) (str.contains (str.++ y z) w)))
 
-(define-cond-rule str-contains-lt-len ((x ?Seq) (y ?Seq))
-  (> (str.len y) (str.len x))
-  (str.contains x y)
-  false)
-
 (define-cond-rule str-contains-leq-len-eq ((x ?Seq) (y ?Seq))
   (>= (str.len y) (str.len x))
   (str.contains x y)
