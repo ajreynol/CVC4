@@ -3783,7 +3783,7 @@ Node SequencesRewriter::rewriteReplaceAll(Node node)
   }
 
   Node cmp_conr = d_stringsEntail.checkContains(node[0], node[1]);
-  if (!cmp_conr.isNull())
+  if (!cmp_conr.isNull() && !cmp_conr.getConst<bool>())
   {
     // ~contains( t, s ) => ( replace_all( t, s, r ) ----> t )
     return returnRewrite(node, node[0], Rewrite::RPL_NCTN);
