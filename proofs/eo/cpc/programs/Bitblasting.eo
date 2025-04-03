@@ -458,8 +458,8 @@
 ; - i Int: The number of bits left to strip from a1.
 ; - b2 Bool: Whether the bit of the shift amount we are currently processing was true.
 ; return: the bitblasted term for processing the left shift of a1 for the current bit.
-(program $bv_mk_bitblast_step_shl_rec_step ((i Int) (n Int) (m Int) (mm1 Int) 
-                                             (b1 Bool) (a1 (BitVec mm1) :list) 
+(program $bv_mk_bitblast_step_shl_rec_step ((i Int) (n Int) (m Int) (mm1 Int)
+                                             (b1 Bool) (a1 (BitVec mm1) :list)
                                              (b1c Bool) (a1c (BitVec n) :list) (b2 Bool))
   ((BitVec m) (BitVec n) Int Bool) (BitVec m)
   (
@@ -482,7 +482,7 @@
   ((BitVec n) (BitVec m) Int Int) (BitVec n)
   (
   (($bv_mk_bitblast_step_shl_rec a1 a2 lsz lsz)                a1)
-  (($bv_mk_bitblast_step_shl_rec a1 (@from_bools b2 a2) s lsz) 
+  (($bv_mk_bitblast_step_shl_rec a1 (@from_bools b2 a2) s lsz)
     ($bv_mk_bitblast_step_shl_rec
       ($bv_mk_bitblast_step_shl_rec_step a1 a1 ($arith_eval_int_pow_2 s) b2)
       a2 (eo::add s 1) lsz))
@@ -501,7 +501,7 @@
   (eo::define ((res ($bv_mk_bitblast_step_shl_rec a1 a2 0 lsz)))
   (eo::define ((szc ($bv_mk_bitblast_step_const (eo::to_bin sz sz))))
     ($bv_bitblast_apply_ite ($bv_bitblast_ult a2 szc false) res ($bv_bitblast_repeat false sz))))))))
-  
+
 
 ; define: $bv_mk_bitblast_step_shr_rec_step
 ; args:
@@ -511,13 +511,13 @@
 ; - b2 Bool: Whether the bit of the shift amount we are currently processing was true.
 ; - sbit Bool: The sign bit we are processing (the sign of first argument for bvashr, false otherwise).
 ; return: the bitblasted term for processing the right shift of a1 for the current bit.
-(program $bv_mk_bitblast_step_shr_rec_step ((i Int) (n Int) (m Int) (mm1 Int) 
-                                             (b1 Bool) (a1 (BitVec mm1) :list) 
+(program $bv_mk_bitblast_step_shr_rec_step ((i Int) (n Int) (m Int) (mm1 Int)
+                                             (b1 Bool) (a1 (BitVec mm1) :list)
                                              (b1c Bool) (a1c (BitVec n) :list) (b2 Bool) (sbit Bool))
   ((BitVec m) (BitVec n) Int Bool Bool) (BitVec m)
   (
   (($bv_mk_bitblast_step_shr_rec_step @bv_empty a1c i b2 sbit)                              @bv_empty)
-  (($bv_mk_bitblast_step_shr_rec_step (@from_bools b1 a1) (@from_bools b1c a1c) 0 b2 sbit)  
+  (($bv_mk_bitblast_step_shr_rec_step (@from_bools b1 a1) (@from_bools b1c a1c) 0 b2 sbit)
     (eo::cons @from_bools (ite (not b2) b1 b1c) ($bv_mk_bitblast_step_shr_rec_step a1 a1c 0 b2 sbit)))
   (($bv_mk_bitblast_step_shr_rec_step (@from_bools b1 a1) @bv_empty 0 b2 sbit)
     (eo::cons @from_bools (ite b2 sbit b1) ($bv_mk_bitblast_step_shr_rec_step a1 @bv_empty 0 b2 sbit)))
@@ -538,7 +538,7 @@
   ((BitVec n) (BitVec n) Int Int Bool) (BitVec n)
   (
   (($bv_mk_bitblast_step_shr_rec a1 a2 lsz lsz sbit)                a1)
-  (($bv_mk_bitblast_step_shr_rec a1 (@from_bools b2 a2) s lsz sbit) 
+  (($bv_mk_bitblast_step_shr_rec a1 (@from_bools b2 a2) s lsz sbit)
     ($bv_mk_bitblast_step_shr_rec
       ($bv_mk_bitblast_step_shr_rec_step a1 a1 ($arith_eval_int_pow_2 s) b2 sbit)
       a2 (eo::add s 1) lsz sbit))
