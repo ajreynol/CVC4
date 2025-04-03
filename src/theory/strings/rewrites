@@ -594,9 +594,6 @@
 
 (define-rule re-plus-elim ((x RegLan)) (re.+ x) (re.++ x (re.* x)))
 
-(define-rule re-concat-emp ((xs RegLan :list) (ys RegLan :list)) (re.++ xs (str.to_re "") ys) (re.++ xs ys))
-(define-rule re-concat-none ((xs RegLan :list) (ys RegLan :list)) (re.++ xs re.none ys) re.none)
-
 (define-rule re-concat-flatten ((xs RegLan :list) (s RegLan) (ys RegLan :list) (zs RegLan :list)) (re.++ xs (re.++ s ys) zs) (re.++ xs s ys zs))
 
 (define-rule re-concat-star-swap ((xs RegLan :list) (r RegLan) (ys RegLan :list)) (re.++ xs (re.* r) r ys) (re.++ xs r (re.* r) ys))

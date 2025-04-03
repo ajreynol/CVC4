@@ -1927,6 +1927,8 @@ set(regress_0_tests
   regress0/strings/code-eval.smt2
   regress0/strings/code-perf.smt2
   regress0/strings/code-sat-neg-one.smt2
+  regress0/strings/concat-emp-dsl-rew.smt2
+  regress0/strings/concat-none-dsl-rew.smt2
   regress0/strings/com-ctn.smt2
   regress0/strings/complement-simple.smt2
   regress0/strings/cprop-splice.smt2
@@ -2084,6 +2086,7 @@ set(regress_0_tests
   regress0/strings/soundness-split-ctn.smt2
   regress0/strings/std2.6.1.smt2
   regress0/strings/str_unsound_ext_rew_eq.smt2
+  regress0/strings/str-dsl-missing-rew.smt2
   regress0/strings/str-in-re-mixed-include.smt2
   regress0/strings/str-pred-small-rw_429.smt2
   regress0/strings/str-pred-small-rw_538.smt2
