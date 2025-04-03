@@ -64,11 +64,17 @@ class BoundVarManager
   /** get cache value, return SEXPR of cv and constant rational node */
   static Node getCacheValue(TNode cv, size_t i);
   //---------------------------------- end utilities for computing Node hash
+  /** */
+  BoundVarId getBoundVarId(const Node& v);
+  /** */
+  Node getCacheValue(const Node& v);
  private:
   /** Set name of bound variable to name */
   static void setNameAttr(Node v, const std::string& name);
   /** The set of cache values we have used */
   std::map<std::tuple<BoundVarId, TypeNode, Node>, Node> d_cache;
+  /** Backwards mapping of above */
+  std::map<Node, std::tuple<BoundVarId, TypeNode, Node>> d_bvMap;
 };
 
 }  // namespace cvc5::internal

@@ -16,6 +16,7 @@
 #include "expr/subtype_elim_node_converter.h"
 
 #include "expr/skolem_manager.h"
+#include "expr/bound_var_manager.h"
 
 using namespace cvc5::internal::kind;
 
@@ -98,6 +99,10 @@ Node SubtypeElimNodeConverter::postConvert(Node n)
         return skm->mkSkolemFunction(id, cacheValc);
       }
     }
+  }
+  else if (k==Kind::BOUND_VARIABLE)
+  {
+    BoundVarManager* bvm = d_nm->getBoundVarManager();
   }
   return n;
 }

@@ -68,6 +68,7 @@ Node BoundVarManager::mkBoundVar(BoundVarId id, Node n, TypeNode tn)
   }
   Node v = NodeManager::mkBoundVar(tn);
   d_cache[key] = v;
+  d_bvMap[v] = key;
   return v;
 }
 
@@ -79,6 +80,26 @@ Node BoundVarManager::mkBoundVar(BoundVarId id,
   Node v = mkBoundVar(id, n, tn);
   setNameAttr(v, name);
   return v;
+}
+
+BoundVarId BoundVarManager::getBoundVarId(const Node& v)
+{
+  std::map<Node, std::tuple<BoundVarId, TypeNode, Node>>::iterator it = d_bvMap.find(v);
+  if (it!=d_bvMap.end())
+  {
+    return std::get<0>(it->second);
+  }
+  return BoundVarId::NONE;
+}
+
+Node BoundVarManager::getCacheValue(const Node& v)
+{
+  std::map<Node, std::tuple<BoundVarId, TypeNode, Node>>::iterator it = d_bvMap.find(v);
+  if (it!=d_bvMap.end())
+  {
+    return std::get<2>(it->second);
+  }
+  return Node::null();
 }
 
 }  // namespace cvc5::internal
