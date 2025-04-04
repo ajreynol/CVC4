@@ -37,6 +37,7 @@
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/theory.h"
 #include "util/string.h"
+#include "theory/builtin/generic_op.h"
 
 namespace cvc5::internal {
 
@@ -377,6 +378,7 @@ bool AlfPrinter::isHandledTheoryRewrite(ProofRewriteRule id, const Node& n)
   return false;
 }
 
+
 bool AlfPrinter::isHandledBitblastStep(const Node& eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);
@@ -434,7 +436,7 @@ bool AlfPrinter::canEvaluate(Node n)
     {
       visited.insert(cur);
       Kind k = cur.getKind();
-      if (k == Kind::APPLY_INDEXED_SYMBOLIC)
+      if (k==Kind::APPLY_INDEXED_SYMBOLIC)
       {
         k = cur.getOperator().getConst<GenericOp>().getKind();
       }
