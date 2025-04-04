@@ -27,15 +27,6 @@
   (= x y)
   false)
 
-
-; flips so that it can be applied to both sides easier
-(define-rule str-concat-flatten-eq ((x ?Seq) (x1 ?Seq :list) (x2 ?Seq :list) (y ?Seq))
-  (= (str.++ (str.++ x x1) x2) y)
-  (= y (str.++ x x1 x2)))
-(define-rule str-concat-flatten-eq-rev ((x ?Seq) (x1 ?Seq :list) (x2 ?Seq :list) (y ?Seq))
-  (= (str.++ x2 (str.++ x1 x)) y)
-  (= y (str.++ x2 x1 x)))
-
 (define-cond-rule str-substr-empty-str ((x ?Seq) (n Int) (m Int))
   (= x (@seq.empty_of_type (@type_of x)))
   (str.substr x n m)
@@ -286,12 +277,6 @@
   (str.replace t r s)
   (str.++ s t))
 
-(define-cond-rule str-replace-contains-pre ((t1 ?Seq) (t2 ?Seq :list) (s ?Seq) (r ?Seq))
-  (str.contains t1 s)
-  (str.replace (str.++ t1 t2) s r)
-  (str.++ (str.replace t1 s r) t2))
-
-
 (define-cond-rule str-replace-one-pre ((t ?Seq) (s ?Seq) (r ?Seq) (ts ?Seq :list) (ss ?Seq :list))
   (= (str.len s) 1)
   (str.replace (str.++ ts t ss t) s r)
@@ -352,11 +337,6 @@
   (str.contains (str.substr t1 n (str.len t1)) s)
   (str.indexof (str.++ t1 t2) s n)
   (str.indexof t1 s n))
-
-(define-cond-rule str-indexof-find ((t ?Seq) (s ?Seq) (n Int))
-  (and (not (= s (@seq.empty_of_type (@type_of t)))) (str.prefixof s (str.substr t n (str.len t))))
-  (str.indexof t s n)
-  n)
 
 (define-cond-rule str-indexof-find-emp ((t ?Seq) (emp ?Seq) (n Int))
   (and (= emp (@seq.empty_of_type (@type_of t))) (>= (str.len t) n))

@@ -4,8 +4,6 @@
 ; interchangable. This is because Int and Real are not comparable in our
 ; type system.
 
-(define-cond-rule arith-div-total-real ((t ?) (s Real)) (not (= s 0/1)) (/ t s) (/_total t s))
-(define-cond-rule arith-div-total-int ((t ?) (s Int)) (not (= s 0)) (/ t s) (/_total t s))
 (define-rule arith-div-total-zero-real ((t ?)) (/_total t 0/1) 0/1)
 (define-rule arith-div-total-zero-int ((t ?)) (/_total t 0) 0/1)
 
