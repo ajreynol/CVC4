@@ -15,6 +15,8 @@
 
 #include "theory/quantifiers/conflict_conjecture_generator.h"
 
+#include "expr/node_algorithm.h"
+#include "expr/subs.h"
 #include "options/quantifiers_options.h"
 #include "theory/quantifiers/first_order_model.h"
 #include "theory/quantifiers/instantiate.h"
@@ -22,9 +24,7 @@
 #include "theory/quantifiers/term_pools.h"
 #include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_tuple_enumerator.h"
-#include "expr/subs.h"
 #include "util/random.h"
-#include "expr/node_algorithm.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::context;
@@ -33,11 +33,12 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-ConflictConjectureGenerator::ConflictConjectureGenerator(Env& env,
-                                   QuantifiersState& qs,
-                                   QuantifiersInferenceManager& qim,
-                                   QuantifiersRegistry& qr,
-                                   TermRegistry& tr)
+ConflictConjectureGenerator::ConflictConjectureGenerator(
+    Env& env,
+    QuantifiersState& qs,
+    QuantifiersInferenceManager& qim,
+    QuantifiersRegistry& qr,
+    TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr)
 {
   d_false = nodeManager()->mkConst(false);
@@ -52,13 +53,9 @@ bool ConflictConjectureGenerator::needsCheck(Theory::Effort e)
 
 void ConflictConjectureGenerator::reset_round(Theory::Effort e) {}
 
-void ConflictConjectureGenerator::registerQuantifier(Node q)
-{
-}
+void ConflictConjectureGenerator::registerQuantifier(Node q) {}
 
-void ConflictConjectureGenerator::checkOwnership(Node q)
-{
-}
+void ConflictConjectureGenerator::checkOwnership(Node q) {}
 
 void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
 {
@@ -75,14 +72,15 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
   while (!eqc.isFinished())
   {
     Node n = *eqc;
-    if (n.getKind()==Kind::EQUAL)
+    if (n.getKind() == Kind::EQUAL)
     {
       candDeq.push_back(n);
     }
     ++eqc;
   }
-  
-  Trace("ccgen") << "...found " << candDeq.size() << " candidate disequalities" << std::endl;
+
+  Trace("ccgen") << "...found " << candDeq.size() << " candidate disequalities"
+                 << std::endl;
   for (const Node& eq : candDeq)
   {
     Trace("ccgen") << "Get generalizations of " << eq << std::endl;
@@ -90,11 +88,14 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
   }
 }
 
-std::string ConflictConjectureGenerator::identify() const { return "conflict-conjecture-gen"; }
+std::string ConflictConjectureGenerator::identify() const
+{
+  return "conflict-conjecture-gen";
+}
 
 void ConflictConjectureGenerator::checkDisequality(const Node& eq)
 {
-  for (size_t i=0; i<2; i++)
+  for (size_t i = 0; i < 2; i++)
   {
     Node r = d_ee->getRepresentative(eq[i]);
     Node v = getOrMkVarForEqc(r);
@@ -111,9 +112,9 @@ void ConflictConjectureGenerator::checkDisequality(const Node& eq)
 
 Node ConflictConjectureGenerator::getOrMkVarForEqc(const Node& e)
 {
-  Assert (d_ee->getRepresentative(e)==e);
+  Assert(d_ee->getRepresentative(e) == e);
   std::map<Node, Node>::iterator it = d_bv.find(e);
-  if (it!=d_bv.end())
+  if (it != d_bv.end())
   {
     return it->second;
   }
@@ -121,27 +122,27 @@ Node ConflictConjectureGenerator::getOrMkVarForEqc(const Node& e)
   d_bv[e] = v;
   d_bvToEqc[v] = e;
   return v;
-  
 }
-const std::vector<Node>& ConflictConjectureGenerator::getGenForEqc(const Node& e)
+const std::vector<Node>& ConflictConjectureGenerator::getGenForEqc(
+    const Node& e)
 {
   std::map<Node, std::vector<Node>>::iterator it = d_eqcGen.find(e);
   if (it != d_eqcGen.end())
   {
     return it->second;
   }
-  NodeManager * nm = nodeManager();
+  NodeManager* nm = nodeManager();
   std::vector<Node>& cg = d_eqcGen[e];
-  Assert (d_ee->hasTerm(e));
-  Assert (d_ee->getRepresentative(e)==e);
+  Assert(d_ee->hasTerm(e));
+  Assert(d_ee->getRepresentative(e) == e);
   eq::EqClassIterator eqc = eq::EqClassIterator(e, d_ee);
   while (!eqc.isFinished())
   {
     Node n = *eqc;
     ++eqc;
-    if (n.getKind()==Kind::APPLY_UF || n.getKind()==Kind::APPLY_CONSTRUCTOR)
+    if (n.getKind() == Kind::APPLY_UF || n.getKind() == Kind::APPLY_CONSTRUCTOR)
     {
-      if (n.getNumChildren()==0)
+      if (n.getNumChildren() == 0)
       {
         cg.emplace_back(n);
         continue;
@@ -150,7 +151,7 @@ const std::vector<Node>& ConflictConjectureGenerator::getGenForEqc(const Node& e
       children.push_back(n.getOperator());
       for (const Node& nc : n)
       {
-        Assert (d_ee->hasTerm(nc));
+        Assert(d_ee->hasTerm(nc));
         Node r = d_ee->getRepresentative(nc);
         Node v = getOrMkVarForEqc(r);
         children.push_back(v);
@@ -164,20 +165,20 @@ const std::vector<Node>& ConflictConjectureGenerator::getGenForEqc(const Node& e
 
 void ConflictConjectureGenerator::getGeneralizations(const Node& v)
 {
-  Assert (v.getKind()==Kind::BOUND_VARIABLE);
-  if (d_eqcGenRec.find(v)!=d_eqcGenRec.end())
+  Assert(v.getKind() == Kind::BOUND_VARIABLE);
+  if (d_eqcGenRec.find(v) != d_eqcGenRec.end())
   {
     return;
   }
   d_eqcGenRec[v].emplace_back(v);
   addGeneralizationTerm(v, v, 0, {});
   size_t reps = 3;
-  for (size_t i=0; i<reps; i++)
+  for (size_t i = 0; i < reps; i++)
   {
     getGeneralizationsInternal(v);
   }
 }
-  
+
 void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
 {
   size_t depth = 5;
@@ -188,12 +189,12 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
   std::vector<Node>& grecs = d_eqcGenRec[v];
   fvs.push_back(v);
   Subs subs;
-  for (size_t i=0; i<depth; i++)
+  for (size_t i = 0; i < depth; i++)
   {
-    size_t rindex = Random::getRandom().pick(0, fvs.size()-1);
+    size_t rindex = Random::getRandom().pick(0, fvs.size() - 1);
     Node vc = fvs[rindex];
     Trace("ccgen-debug") << "process " << vc << std::endl;
-    Assert (d_bvToEqc.find(vc)!=d_bvToEqc.end());
+    Assert(d_bvToEqc.find(vc) != d_bvToEqc.end());
     const std::vector<Node>& gens = getGenForEqc(d_bvToEqc[vc]);
     if (gens.empty())
     {
@@ -201,7 +202,7 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
       // nothing to generalize
       continue;
     }
-    size_t gindex = Random::getRandom().pick(0, gens.size()-1);
+    size_t gindex = Random::getRandom().pick(0, gens.size() - 1);
     Node g = gens[gindex];
     Node gs = subs.apply(g);
     if (expr::hasSubterm(gs, v))
@@ -211,8 +212,8 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
       continue;
     }
     Trace("ccgen-debug") << "...expand to " << gs << std::endl;
-    fvs.erase(fvs.begin()+rindex);
-    if (g.getNumChildren()>0)
+    fvs.erase(fvs.begin() + rindex);
+    if (g.getNumChildren() > 0)
     {
       // TODO: sorted add
       for (const Node& gv : g)
@@ -230,7 +231,7 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
     cur = stmp.apply(cur);
     stmp.applyToRange(subs);
     subs.add(vc, gs);
-    // cur is now a candidate term 
+    // cur is now a candidate term
     addGeneralizationTerm(cur, v, i, fvs);
     grecs.emplace_back(cur);
     if (fvs.empty())
@@ -240,9 +241,10 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
   }
 }
 
-void ConflictConjectureGenerator::addGeneralizationTerm(const Node& g, const Node& v, size_t depth, const std::vector<Node>& fvs)
+void ConflictConjectureGenerator::addGeneralizationTerm(
+    const Node& g, const Node& v, size_t depth, const std::vector<Node>& fvs)
 {
-  if (d_genToFv.find(g)!=d_genToFv.end())
+  if (d_genToFv.find(g) != d_genToFv.end())
   {
     return;
   }
@@ -255,16 +257,21 @@ void ConflictConjectureGenerator::addGeneralizationTerm(const Node& g, const Nod
   }
   gt->d_gens.emplace_back(g, v);
 }
- 
+
 void ConflictConjectureGenerator::GenTrie::clear()
 {
   d_children.clear();
   d_gens.clear();
 }
 
-void ConflictConjectureGenerator::findCompatible(const Node& g, const std::vector<Node>& fvs, const Node& vlhs, GenTrie* gt, ConflictConjectureGenerator::State state, size_t fvindex)
+void ConflictConjectureGenerator::findCompatible(
+    const Node& g,
+    const std::vector<Node>& fvs,
+    const Node& vlhs,
+    GenTrie* gt,
+    ConflictConjectureGenerator::State state,
+    size_t fvindex)
 {
-  
 }
 
 }  // namespace quantifiers

@@ -31,10 +31,10 @@ class ConflictConjectureGenerator : public QuantifiersModule
 {
  public:
   ConflictConjectureGenerator(Env& env,
-                   QuantifiersState& qs,
-                   QuantifiersInferenceManager& qim,
-                   QuantifiersRegistry& qr,
-                   TermRegistry& tr);
+                              QuantifiersState& qs,
+                              QuantifiersInferenceManager& qim,
+                              QuantifiersRegistry& qr,
+                              TermRegistry& tr);
   ~ConflictConjectureGenerator() {}
   /** Presolve */
   void presolve() override;
@@ -53,44 +53,53 @@ class ConflictConjectureGenerator : public QuantifiersModule
   void check(Theory::Effort e, QEffort quant_e) override;
   /** Identify. */
   std::string identify() const override;
-private:
+
+ private:
   Node d_false;
   /** */
   eq::EqualityEngine* d_ee;
- 
+
   std::map<Node, Node> d_bv;
   std::map<Node, Node> d_bvToEqc;
   Node getOrMkVarForEqc(const Node& e);
   std::map<Node, std::vector<Node>> d_eqcGen;
   const std::vector<Node>& getGenForEqc(const Node& e);
   void checkDisequality(const Node& eq);
-  
+
   std::map<Node, std::vector<Node>> d_eqcGenRec;
   std::map<Node, std::vector<Node>> d_genToFv;
-  
+
   class GenTrie
   {
-  public:
+   public:
     std::map<Node, GenTrie> d_children;
     std::vector<std::pair<Node, Node>> d_gens;
     void clear();
   };
   GenTrie d_gtrie;
-  
+
   void getGeneralizations(const Node& e);
   void getGeneralizationsInternal(const Node& e);
   /**
    * g is an expansion of v.
    */
-  void addGeneralizationTerm(const Node& g, const Node& v, size_t depth, const std::vector<Node>& fvs);
-  
+  void addGeneralizationTerm(const Node& g,
+                             const Node& v,
+                             size_t depth,
+                             const std::vector<Node>& fvs);
+
   enum class State
   {
     UNKNOWN,
     SUPERSET,
     SUBSET
   };
-  void findCompatible(const Node& g, const std::vector<Node>& fvs, const Node& vlhs, GenTrie* gt, State state, size_t fvindex);
+  void findCompatible(const Node& g,
+                      const std::vector<Node>& fvs,
+                      const Node& vlhs,
+                      GenTrie* gt,
+                      State state,
+                      size_t fvindex);
 };
 
 }  // namespace quantifiers
