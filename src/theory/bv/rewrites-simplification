@@ -435,11 +435,6 @@
   (sign_extend i (zero_extend j x))
   (zero_extend k x)
   )
-(define-rule bv-merge-sign-extend-3
-  ((x ?BitVec) (i Int))
-  (sign_extend i (zero_extend 0 x))
-  (sign_extend i x)
-  )
 (define-cond-rule bv-sign-extend-eq-const-1
   ((x ?BitVec) (m Int) (c Int) (nm Int) (mp1 Int) (nm1 Int) (nmm1 Int))
   (def

@@ -17,5 +17,8 @@
 (not (= (str.to_upper (str.from_int d)) (str.from_int d)))
 (not (str.contains a (str.substr a d e)))
 (not (str.contains (str.++ b a c) (str.substr a d e)))
+(str.<= "B" (str.++ "A" a))
+(not (= (str.replace (str.++ "AB" c) "B" c) (str.++ (str.replace "AB" "B" c) c)))
+(not (= (str.indexof (str.++ "ABC" a) "B" 1) 1))
 ))
 (check-sat)

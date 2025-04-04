@@ -4159,8 +4159,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_MERGE_SIGN_EXTEND_1),
   /** Auto-generated from RARE rule bv-merge-sign-extend-2 */
   EVALUE(BV_MERGE_SIGN_EXTEND_2),
-  /** Auto-generated from RARE rule bv-merge-sign-extend-3 */
-  EVALUE(BV_MERGE_SIGN_EXTEND_3),
   /** Auto-generated from RARE rule bv-sign-extend-eq-const-1 */
   EVALUE(BV_SIGN_EXTEND_EQ_CONST_1),
   /** Auto-generated from RARE rule bv-sign-extend-eq-const-2 */
