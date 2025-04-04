@@ -83,7 +83,6 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
                  << std::endl;
   for (const Node& eq : candDeq)
   {
-    Trace("ccgen") << "Get generalizations of " << eq << std::endl;
     checkDisequality(eq);
   }
 }
@@ -95,6 +94,7 @@ std::string ConflictConjectureGenerator::identify() const
 
 void ConflictConjectureGenerator::checkDisequality(const Node& eq)
 {
+  Trace("ccgen") << "Get generalizations of " << eq << std::endl;
   for (size_t i = 0; i < 2; i++)
   {
     Node r = d_ee->getRepresentative(eq[i]);
@@ -103,9 +103,12 @@ void ConflictConjectureGenerator::checkDisequality(const Node& eq)
   }
   // see if any generalization of the right hand
   std::vector<Node>& genRhs = d_eqcGenRec[eq[1]];
+  
+  Trace("ccgen") << "- look at " << genRhs.size() << " recursive generalizations of RHS" << std::endl;
   for (const Node& g : genRhs)
   {
     const std::vector<Node>& gfvs = d_genToFv[g];
+    Trace("ccgen-debug") << "  - " << g << std::endl;
     State s = gfvs.empty() ? State::SUBSET : State::UNKNOWN;
     findCompatible(g, gfvs, eq[0], &d_gtrie, s, 0);
   }
