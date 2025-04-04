@@ -3729,10 +3729,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_EQ_ELIM_INT),
   /** Auto-generated from RARE rule arith-plus-flatten */
   EVALUE(ARITH_PLUS_FLATTEN),
-  /** Auto-generated from RARE rule arith-abs-elim-int */
-  EVALUE(ARITH_ABS_ELIM_INT),
-  /** Auto-generated from RARE rule arith-abs-elim-real */
-  EVALUE(ARITH_ABS_ELIM_REAL),
   /** Auto-generated from RARE rule arith-to-real-elim */
   EVALUE(ARITH_TO_REAL_ELIM),
   /** Auto-generated from RARE rule arith-to-int-elim */
@@ -4283,10 +4279,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_CONCAT_UNIFY_BASE),
   /** Auto-generated from RARE rule str-concat-unify-base-rev */
   EVALUE(STR_CONCAT_UNIFY_BASE_REV),
-  /** Auto-generated from RARE rule str-concat-clash-char */
-  EVALUE(STR_CONCAT_CLASH_CHAR),
-  /** Auto-generated from RARE rule str-concat-clash-char-rev */
-  EVALUE(STR_CONCAT_CLASH_CHAR_REV),
   /** Auto-generated from RARE rule str-prefixof-elim */
   EVALUE(STR_PREFIXOF_ELIM),
   /** Auto-generated from RARE rule str-suffixof-elim */

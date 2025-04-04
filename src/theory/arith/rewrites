@@ -42,9 +42,6 @@
   (+ xs (+ w ys) zs)
   (+ xs w ys zs))
 
-(define-rule arith-abs-elim-int ((x Int)) (abs x) (ite (< x 0) (- x) x))
-(define-rule arith-abs-elim-real ((x Real)) (abs x) (ite (< x 0/1) (- x) x))
-
 (define-rule arith-to-real-elim ((x Real)) (to_real x) x)
 (define-rule arith-to-int-elim ((x Int)) (to_int x) x)
 (define-rule arith-to-int-elim-to-real ((x ?)) (to_int (to_real x)) (to_int x))
