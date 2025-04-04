@@ -648,12 +648,6 @@
   (str.++ s1 (str.substr (str.++ s2 s3) 0 (- n (str.len s1))))
 )
 
-(define-cond-rule str-substr-len-skip ((s1 ?Seq) (s2 ?Seq) (s3 ?Seq :list) (n Int) (m Int))
-  (>= n (str.len s1))
-  (str.substr (str.++ s1 s2 s3) n m)
-  (str.substr (str.++ s2 s3) (- n (str.len s1)) m)
-)
-
 (define-cond-rule str-substr-len-norm ((s ?Seq) (n Int) (m Int))
   (>= m (str.len s))
   (str.substr s n m)

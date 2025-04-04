@@ -11,7 +11,6 @@
 
 (not (= (str.len (str.replace_all a "A" "B")) (str.len a)))
 (not (= (str.replace_all a (str.++ a "A") "B") a))
-(str.contains (seq.unit d) (seq.++ (seq.unit d) (seq.unit e)))
 (not (= (str.contains "" a) (= "" a)))
 (not (= (str.to_upper (str.++ a b)) (str.++ (str.to_upper a) (str.to_upper b))))
 (not (= (str.to_upper (str.from_int d)) (str.from_int d)))
@@ -20,5 +19,6 @@
 (str.<= "B" (str.++ "A" a))
 (not (= (str.replace (str.++ "AB" c) "B" c) (str.++ (str.replace "AB" "B" c) c)))
 (not (= (str.indexof (str.++ "ABC" a) "B" 1) 1))
+(not (= (str.substr (str.++ a b c) (str.len a) 5) (str.substr (str.++ b c) 0 5)))
 ))
 (check-sat)

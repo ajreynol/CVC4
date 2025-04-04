@@ -4491,8 +4491,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_SUBSTR_LEN_INCLUDE),
   /** Auto-generated from RARE rule str-substr-len-include-pre */
   EVALUE(STR_SUBSTR_LEN_INCLUDE_PRE),
-  /** Auto-generated from RARE rule str-substr-len-skip */
-  EVALUE(STR_SUBSTR_LEN_SKIP),
   /** Auto-generated from RARE rule str-substr-len-norm */
   EVALUE(STR_SUBSTR_LEN_NORM),
   /** Auto-generated from RARE rule seq-len-rev */
