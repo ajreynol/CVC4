@@ -913,6 +913,14 @@ name   = "Quantifiers"
   default    = "3"
   help       = "maximum depth of terms to consider for conjectures"
 
+[[option]]
+  name       = "conflictConjectureGen"
+  category   = "expert"
+  long       = "conflict-conjecture-gen"
+  type       = "bool"
+  default    = "false"
+  help       = "generate conflict-driven candidate conjectures for inductive proofs"
+
 ### Synthesis options
 
 [[option]]
