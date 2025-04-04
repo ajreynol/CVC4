@@ -263,10 +263,6 @@
   (bvxor xs (@bv n w) zs)
   (bvnot (bvxor xs zs)))
 
-(define-rule bv-xor-zero ((xs ?BitVec :list) (zs ?BitVec :list) (n Int))
-  (bvxor xs (@bv 0 n) zs)
-  (bvxor xs zs))
-
 (define-rule bv-xor-not ((x ?BitVec) (y ?BitVec))
   (bvxor (bvnot x) (bvnot y)) (bvxor x y))
 (define-rule bv-not-idemp ((x ?BitVec))

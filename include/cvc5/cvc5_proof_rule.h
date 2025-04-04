@@ -3729,8 +3729,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_EQ_ELIM_INT),
   /** Auto-generated from RARE rule arith-plus-flatten */
   EVALUE(ARITH_PLUS_FLATTEN),
-  /** Auto-generated from RARE rule arith-to-real-elim */
-  EVALUE(ARITH_TO_REAL_ELIM),
   /** Auto-generated from RARE rule arith-to-int-elim */
   EVALUE(ARITH_TO_INT_ELIM),
   /** Auto-generated from RARE rule arith-to-int-elim-to-real */
@@ -4097,8 +4095,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_XOR_DUPLICATE),
   /** Auto-generated from RARE rule bv-xor-ones */
   EVALUE(BV_XOR_ONES),
-  /** Auto-generated from RARE rule bv-xor-zero */
-  EVALUE(BV_XOR_ZERO),
   /** Auto-generated from RARE rule bv-xor-not */
   EVALUE(BV_XOR_NOT),
   /** Auto-generated from RARE rule bv-not-idemp */
@@ -4231,8 +4227,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_EQ_CTN_FULL_FALSE2),
   /** Auto-generated from RARE rule str-eq-len-false */
   EVALUE(STR_EQ_LEN_FALSE),
-  /** Auto-generated from RARE rule str-concat-flatten */
-  EVALUE(STR_CONCAT_FLATTEN),
   /** Auto-generated from RARE rule str-concat-flatten-eq */
   EVALUE(STR_CONCAT_FLATTEN_EQ),
   /** Auto-generated from RARE rule str-concat-flatten-eq-rev */
@@ -4321,8 +4315,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_CONTAINS_LEQ_LEN_EQ),
   /** Auto-generated from RARE rule str-contains-emp */
   EVALUE(STR_CONTAINS_EMP),
-  /** Auto-generated from RARE rule str-contains-is-emp */
-  EVALUE(STR_CONTAINS_IS_EMP),
   /** Auto-generated from RARE rule str-contains-char */
   EVALUE(STR_CONTAINS_CHAR),
   /** Auto-generated from RARE rule str-at-elim */
@@ -4467,8 +4459,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_DIFF_ELIM),
   /** Auto-generated from RARE rule re-plus-elim */
   EVALUE(RE_PLUS_ELIM),
-  /** Auto-generated from RARE rule re-concat-flatten */
-  EVALUE(RE_CONCAT_FLATTEN),
   /** Auto-generated from RARE rule re-concat-star-swap */
   EVALUE(RE_CONCAT_STAR_SWAP),
   /** Auto-generated from RARE rule re-concat-star-repeat */

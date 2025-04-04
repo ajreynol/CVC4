@@ -2896,6 +2896,16 @@ Node SequencesRewriter::rewriteContains(Node node)
     return returnRewrite(node, cret, Rewrite::CTN_COMPONENT);
   }
   TypeNode stype = node[0].getType();
+  
+  // (str.contains (str.++ ... s ...) (str.substr s n m)) ---> true
+  if (node[1].getKind()==Kind::STRING_SUBSTR)
+  {
+    if (std::find(nc1.begin(), nc1.end(), node[1][0])!=nc1.end())
+    {
+      Node res = nm->mkConst(true);
+      return returnRewrite(node, res, Rewrite::CTN_CONCAT_CTN_SUBSTR);
+    }
+  }
 
   // strip endpoints
   Node retStr =

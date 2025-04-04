@@ -7,9 +7,15 @@
 (declare-fun e () Int)
 (assert (or
 ;(not (= (str.len (str.substr (str.++ a b c) 0 (str.len b))) (str.len b)))
+;(str.contains (str.++ (str.substr a 0 4) "BAA" a) (str.++ (str.substr a 0 5) "BBAA" a))
+
 (not (= (str.len (str.replace_all a "A" "B")) (str.len a)))
 (not (= (str.replace_all a (str.++ a "A") "B") a))
-;(str.contains (str.++ (str.substr a 0 4) "BAA" a) (str.++ (str.substr a 0 5) "BBAA" a))
 (str.contains (seq.unit d) (seq.++ (seq.unit d) (seq.unit e)))
+(not (= (str.contains "" a) (= "" a)))
+(not (= (str.to_upper (str.++ a b)) (str.++ (str.to_upper a) (str.to_upper b))))
+(not (= (str.to_upper (str.from_int d)) (str.from_int d)))
+(not (str.contains a (str.substr a d e)))
+(not (str.contains (str.++ b a c) (str.substr a d e)))
 ))
 (check-sat)

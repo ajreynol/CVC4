@@ -8,5 +8,6 @@
 (not (= (bvule x x) true))
 (not (= ((_ extract 3 2) (bvand x y)) (bvand ((_ extract 3 2) x) ((_ extract 3 2) y))))
 (not (= (bvand x (bvnot x)) #b0000))
+(not (= ((_ sign_extend 0) x) x))
 ))
 (check-sat)

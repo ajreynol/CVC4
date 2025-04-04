@@ -8,5 +8,6 @@
 (not (= (abs y) (ite (< y 0.0) (- y) y)))
 (not (= (/_total x 0) 0))
 (not (= (mod_total z 0) z))
+(not (= (to_real y) y))
 ))
 (check-sat)
