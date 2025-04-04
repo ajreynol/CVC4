@@ -106,7 +106,8 @@ void ConflictConjectureGenerator::checkDisequality(const Node& eq)
   for (const Node& g : genRhs)
   {
     const std::vector<Node>& gfvs = d_genToFv[g];
-    findCompatible(g, gfvs, eq[0], &d_gtrie, State::UNKNOWN, 0);
+    State s = gfvs.empty() ? State::SUBSET : State::UNKNOWN;
+    findCompatible(g, gfvs, eq[0], &d_gtrie, s, 0);
   }
 }
 
@@ -272,6 +273,38 @@ void ConflictConjectureGenerator::findCompatible(
     ConflictConjectureGenerator::State state,
     size_t fvindex)
 {
+  if (state!=State::SUBSET || fvindex==fvs.size())
+  {
+    for (const std::pair<Node, Node>& cg : gt->d_gens)
+    {
+      if (cg.second==vlhs)
+      {
+        Trace("cconj") << "*** Candidate conjecture : " << cg.first << " == " << g << std::endl;
+      }
+    }
+  }
+  Assert (state!=State::UNKNOWN || fvindex<fvs.size());
+  for (std::pair<const Node, GenTrie>& cg : gt->d_children)
+  {
+    if (fvindex<fvs.size() && cg.first==fvs[fvindex])
+    {
+      Assert (state!=State::SUPERSET);
+      State newState = fvindex+1==fvs.size() ? State::SUBSET : state;
+      findCompatible(g, fvs, vlhs, &cg.second, newState, fvindex+1);
+    }
+    else if (std::find(fvs.begin()+fvindex, fvs.end(), cg.first)!=fvs.end())
+    {
+      // we skipped a variable
+      if (state!=State::SUBSET)
+      {
+        findCompatible(g, fvs, vlhs, &cg.second, State::SUPERSET, fvindex);
+      }
+    }
+    else if (state!=State::SUPERSET)
+    {
+      findCompatible(g, fvs, vlhs, &cg.second, State::SUBSET, fvindex);
+    }
+  }
 }
 
 }  // namespace quantifiers
