@@ -10,5 +10,10 @@
 (not (= (bvand x (bvnot x)) #b0000))
 (not (= ((_ sign_extend 0) x) x))
 (not (= ((_ sign_extend 3) ((_ zero_extend 0) x)) ((_ sign_extend 3) x)))
+(not (= (bvsdivo x y) 
+  (and
+    (= x #b1000)
+    (= y #b1111)
+  )))
 ))
 (check-sat)
