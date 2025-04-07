@@ -25,6 +25,7 @@
 #include "context/cdhashset.h"
 #include "theory/quantifiers/quant_module.h"
 #include "theory/smt_engine_subsolver.h"
+#include "theory/quantifiers/mbqi_enum.h"
 
 namespace cvc5::internal {
     
@@ -73,6 +74,8 @@ class InstStrategyMbqi : public QuantifiersModule
   /** identify */
   std::string identify() const override { return "mbqi"; }
 
+  static Node mkNoMbqi(NodeManager* nm, Node bvl, Node body);
+  static bool isNoMbqiAttribute(Node var);
  private:
   /**
    * Process quantified formula q, which may add q to d_quantChecked, add an

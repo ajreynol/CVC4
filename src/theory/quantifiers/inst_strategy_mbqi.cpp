@@ -131,6 +131,12 @@ bool InstStrategyMbqi::checkCompleteFor(Node q)
 void InstStrategyMbqi::process(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
+  QuantAttributes& qattr = d_qreg.getQuantAttributes();
+  if (qattr.isNoMbqi(q))
+  {  
+    Trace("mbqi-debug") << "No-mbqi quantified formula: " << q << std::endl;
+    return;
+  }
   Trace("mbqi-model-exp") << "* Process quantified formula: " << q << std::endl;
   Trace("mbqi") << "Process quantified formula: " << q << std::endl;
   // Cache mapping terms in the skolemized body of q to the form passed to
@@ -262,8 +268,10 @@ void InstStrategyMbqi::process(Node q)
   initializeSubsolver(mbqiChecker, ssi);
   mbqiChecker->setOption("produce-models", "true");
   mbqiChecker->setTimeLimit(500);
-  // !expr::hasSubtermKind(Kind::FORALL, query)
-  mbqiChecker->assertFormula(query);
+  if (options().quantifiers.mbqiNestedCheck || !expr::hasSubtermKind(Kind::FORALL, query))
+  {
+    mbqiChecker->assertFormula(query);
+  }
   Trace("mbqi") << "*** Check sat..." << std::endl;
   Trace("mbqi") << "  query is : " << SkolemManager::getOriginalForm(query)
                 << std::endl;
@@ -653,14 +661,36 @@ Result InstStrategyMbqi::checkWithSubsolverSimple(
                         const SubsolverSetupInfo& info)
 {
   query = extendedRewrite(query);
-  /*
-  if (expr::hasSubtermKind(Kind::FORALL, query))
+  if (!options().quantifiers.mbqiNestedCheck && expr::hasSubtermKind(Kind::FORALL, query))
   {
     Trace("mbqi") << "*** SKIP " << query << std::endl;
     return Result(Result::Status::UNKNOWN);
   }
-  */
   return checkWithSubsolver(query, info, true, 500);
+}
+
+/**
+ */
+struct NoMbqiAttributeId
+{
+};
+typedef expr::Attribute<NoMbqiAttributeId, bool> NoMbqiAttribute;
+
+Node InstStrategyMbqi::mkNoMbqi(NodeManager* nm, Node bvl, Node body)
+{
+  Node qvar = NodeManager::mkDummySkolem("qinternal", nm->booleanType());
+  // this dummy variable marks that the quantified formula is internal
+  qvar.setAttribute(NoMbqiAttribute(), true);
+  // make the internal attribute, and put it in a singleton list
+  Node ip = nm->mkNode(Kind::INST_ATTRIBUTE, qvar);
+  Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, ip);
+  // make the overall formula
+  return nm->mkNode(Kind::FORALL, bvl, body, ipl);
+}
+
+bool InstStrategyMbqi::isNoMbqiAttribute(Node var)
+{
+  return var.getAttribute(NoMbqiAttribute());
 }
 
 }  // namespace quantifiers

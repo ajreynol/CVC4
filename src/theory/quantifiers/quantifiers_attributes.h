@@ -120,7 +120,8 @@ struct QAttributes
         d_preserveStructure(false),
         d_quant_elim(false),
         d_quant_elim_partial(false),
-        d_isQuantBounded(false)
+        d_isQuantBounded(false),
+        d_isNoMbqi(false)
   {
   }
   ~QAttributes(){}
@@ -160,6 +161,8 @@ struct QAttributes
   bool d_quant_elim_partial;
   /** Is this formula internally generated and belonging to bounded integers? */
   bool d_isQuantBounded;
+  /** */
+  bool d_isNoMbqi;
   /** the instantiation pattern list for this quantified formula (its 3rd child)
    */
   Node d_ipl;
@@ -236,6 +239,8 @@ class QuantAttributes
   bool isQuantElimPartial(Node q) const;
   /** is internal quantifier */
   bool isQuantBounded(Node q) const;
+  /** is no-mbqi quantifier */
+  bool isNoMbqi(Node q) const;
   /** get quant name, which is used for :qid */
   Node getQuantName(Node q) const;
   /** Print quantified formula q, possibly using its name, if it has one */

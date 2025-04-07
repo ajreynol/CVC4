@@ -206,7 +206,7 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     Trace("mbqi-fast-enum") << "---> convert " << n << std::endl;
     std::unordered_set<Node> fvs;
     expr::getFreeVariables(n, fvs);
-    Node exists = nm->mkNode(Kind::EXISTS, n[0], n[1]);
+    Node exists = n[1];
     TypeNode retType = n[0][0].getType();
     std::vector<TypeNode> argTypes;
     std::vector<Node> ubvl;
@@ -222,6 +222,7 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     SkolemManager* skm = nm->getSkolemManager();
     Node sym = skm->mkInternalSkolemFunction(
         InternalSkolemId::MBQI_CHOICE_FUN, retType, {n});
+    Trace("mbqi-choice-fun") << "Choice: " << sym << " for " << n << std::endl;
     Node h = sym;
     if (!ubvl.empty())
     {
@@ -235,11 +236,9 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     subs.add(n[0][0], h);
     Node kpred = subs.apply(n[1]);
     Node lem = nm->mkNode(Kind::OR, exists.negate(), kpred);
-    if (!ubvl.empty())
-    {
-      lem =
-          nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem);
-    }
+    ubvl.emplace_back(n[0][0]);
+    //  lem = InstStrategyMbqi::mkNoMbqi(nm, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem);
+    lem = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem);
     Trace("mbqi-tmp") << "TMP " << sym << " for " << n << std::endl;
     Trace("mbqi-fast-enum") << "-----> lemma " << lem << std::endl;
     d_lemmas[sym] = lem;

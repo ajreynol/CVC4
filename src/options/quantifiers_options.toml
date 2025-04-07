@@ -209,6 +209,14 @@ name   = "Quantifiers"
   help       = "use model-based quantifier instantiation"
 
 [[option]]
+  name       = "mbqiNestedCheck"
+  category   = "expert"
+  long       = "mbqi-nested-check"
+  type       = "bool"
+  default    = "true"
+  help       = "check nested quantified formulas in MBQI"
+
+[[option]]
   name       = "mbqiEnum"
   category   = "expert"
   long       = "mbqi-enum"
