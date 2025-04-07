@@ -421,6 +421,7 @@ set(regress_0_tests
   regress0/bv/core/slice-18.smtv1.smt2
   regress0/bv/core/slice-19.smtv1.smt2
   regress0/bv/core/slice-20.smtv1.smt2
+  regress0/bv/dd_check_bvugt_bvneg.smt2
   regress0/bv/dd_fuzz21.smt2
   regress0/bv/dd_fuzz26-hole.smt2
   regress0/bv/dd_run_0000.smt2
