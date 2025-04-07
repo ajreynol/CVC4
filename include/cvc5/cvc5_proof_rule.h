@@ -1591,8 +1591,7 @@ enum ENUM(ProofRule)
    *
    * .. math::
    *
-   *   \inferrule{(t_1\cdot \ldots \cdot t_n) = (c \cdot t_2 \ldots \cdot s_m),\,
-   *   \mathit{len}(t_1) \neq 0\mid \bot}{(t_1 = c\cdot r)}
+   *   \inferrule{(t_1\cdot \ldots \cdot t_n) = (c \cdot t_2 \ldots \cdot s_m),\,\mathit{len}(t_1) \neq 0\mid \bot}{(t_1 = c\cdot r)}
    *
    * where :math:`r` is the purification skolem for :math:`\mathit{suf}(t_1,1)`.
    *
@@ -1600,8 +1599,7 @@ enum ENUM(ProofRule)
    *
    * .. math::
    *
-   *   \inferrule{(t_1\cdot \ldots \cdot t_n = (s_1 \cdot \ldots s_{m-1} \cdot c),\,
-   *   \mathit{len}(t_n) \neq 0\mid \top}{(t_n = r\cdot c)}
+   *   \inferrule{(t_1\cdot \ldots \cdot t_n) = (s_1 \cdot \ldots s_{m-1} \cdot c),\,\mathit{len}(t_n) \neq 0\mid \top}{(t_n = r\cdot c)}
    *
    * where :math:`r` is the purification skolem for
    * :math:`\mathit{pre}(t_n,\mathit{len}(t_n) - 1)`.
