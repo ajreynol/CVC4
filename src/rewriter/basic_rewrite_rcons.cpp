@@ -3020,13 +3020,6 @@ bool BasicRewriteRCons::ensureProofMacroArraysNormalizeOp(CDProof* cdp,
   return false;
 }
 
-bool BasicRewriteRCons::ensureProofMacroArraysNormalizeConstant(CDProof* cdp,
-                                                                const Node& eq)
-{
-  // TODO
-  return false;
-}
-
 bool BasicRewriteRCons::ensureProofArithPolyNormRel(CDProof* cdp,
                                                     const Node& eq)
 {
