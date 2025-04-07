@@ -15,5 +15,6 @@
     (= x #b1000)
     (= y #b1111)
   )))
+(not (= (bvslt x #b0000) (= ((_ extract 3 3) x) #b1))) 
 ))
 (check-sat)

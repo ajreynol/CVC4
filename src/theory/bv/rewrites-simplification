@@ -295,12 +295,6 @@
 (define-rule bv-not-ult ((x ?BitVec) (y ?BitVec))
   (not (bvult x y))
   (bvule y x))
-(define-rule bv-not-ule ((x ?BitVec) (y ?BitVec))
-  (not (bvule x y))
-  (bvult y x))
-(define-rule bv-not-sle ((x ?BitVec) (y ?BitVec))
-  (not (bvsle x y))
-  (bvslt y x))
 
 (define-cond-rule bv-mult-pow2-1
   ((xs ?BitVec :list) (ys ?BitVec :list) (z ?BitVec) (size Int) (n Int) (exponent Int) (u Int))

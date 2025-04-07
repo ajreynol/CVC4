@@ -4115,10 +4115,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_ULE_MAX),
   /** Auto-generated from RARE rule bv-not-ult */
   EVALUE(BV_NOT_ULT),
-  /** Auto-generated from RARE rule bv-not-ule */
-  EVALUE(BV_NOT_ULE),
-  /** Auto-generated from RARE rule bv-not-sle */
-  EVALUE(BV_NOT_SLE),
   /** Auto-generated from RARE rule bv-mult-pow2-1 */
   EVALUE(BV_MULT_POW2_1),
   /** Auto-generated from RARE rule bv-mult-pow2-2 */
