@@ -134,7 +134,10 @@ enum class BoundVarId
   QUANT_REW_PRENEX,
   /** Mapping sygus variables to builtin variables */
   QUANT_SYGUS_BUILTIN_FV,
-  /** */
+  /**
+   * A variable for a BV invertibility condition. The cache value is a
+   * predicate that describes the invertibility condition.
+   */
   QUANT_BV_INVERT_ANNOT,
   /**
    * A variable used by the valid witness proof generator. This is cached based
