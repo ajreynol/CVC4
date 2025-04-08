@@ -21,7 +21,7 @@ namespace cvc5::internal {
 namespace theory {
 
 TermDbManager::TermDbManager(Env& env, TheoryEngine* engine)
-    : TheoryEngineModule(env, engine, "TermDbManager"), d_omap(userContext())
+    : TheoryEngineModule(env, engine, "TermDbManager"), d_omap(userContext()), d_qinLevel(userContext())
 {
 }
 
@@ -57,6 +57,11 @@ void TermDbManager::notifyLemma(TNode n,
                                 const std::vector<Node>& skAsserts,
                                 const std::vector<Node>& sks)
 {
+  if (n.getKind()==Kind::IMPLIES && n[0].getKind()==Kind::FORALL)
+  {
+    // Assume any lemma of the form (=> (forall ...) ...) is an instantiation
+    // lemma.
+  }
 }
 
 TermDbManager::TermOrigin::TermOrigin(context::Context* c)
