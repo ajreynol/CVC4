@@ -975,6 +975,10 @@ void TheoryEngine::notifyPreprocessedAssertions(
   {
     d_relManager->notifyPreprocessedAssertions(assertions, true);
   }
+  if (d_termManager!=nullptr)
+  {
+    d_termManager->notifyPreprocessedAssertions(assertions);
+  }
 }
 
 bool TheoryEngine::markPropagation(TNode assertion, TNode originalAssertion, theory::TheoryId toTheoryId, theory::TheoryId fromTheoryId) {

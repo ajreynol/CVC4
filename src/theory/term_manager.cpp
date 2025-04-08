@@ -136,6 +136,7 @@ void TermDbManager::addOrigin(const Node& n,
   {
     t = it->second.get();
   }
+  Trace("term-origin") << "Term " << n << " has origin " << id << " / " << args << std::endl;
   t->addOrigin(id, arg);
 }
 
@@ -150,6 +151,7 @@ void TermDbManager::initializeTerm(const Node& n)
     if (qa.d_qinstNestedLevel != -1)
     {
       d_qinLevel[n] = qa.d_qinstNestedLevel;
+      Trace("term-origin") << "Quantified formula " << n << " has inst nested level " << qa.d_qinstNestedLevel << std::endl;
     }
   }
 }
