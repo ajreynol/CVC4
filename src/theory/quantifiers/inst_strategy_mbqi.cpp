@@ -337,10 +337,17 @@ bool InstStrategyMbqi::tryInstantiation(
     const std::map<Node, Node>& mvToFreshVar)
 {
   const RepSet* rs = d_treg.getModel()->getRepSet();
+<<<<<<< HEAD
   std::vector<Node> terms = mvs;
   // try to convert those terms to an instantiation
   std::unordered_map<Node, Node> tmpConvertMap;
   for (Node& v : terms)
+=======
+  std::vector<Node> terms;
+  // try to convert those terms to an instantiation
+  std::unordered_map<Node, Node> tmpConvertMap;
+  for (const Node& v : mvs)
+>>>>>>> e84b22e033fe4d8f227c362f5faeb88a460e63f5
   {
     Node vc = convertFromModel(v, tmpConvertMap, mvToFreshVar);
     if (vc.isNull())
@@ -355,7 +362,7 @@ bool InstStrategyMbqi::tryInstantiation(
                     << ", use arbitrary term for instantiation" << std::endl;
       vc = NodeManager::mkGroundTerm(v.getType());
     }
-    v = vc;
+    terms.push_back(vc);
   }
 
   // get a term that has the same model value as the value each fresh variable
