@@ -35,6 +35,7 @@ namespace theory {
 struct Assertion;
 class TheoryModel;
 class SortInference;
+class QuantifiersEngine;
 
 /**
  * The status of an equality in the current context.
@@ -126,6 +127,10 @@ public:
    * and is non-null when options::sortInference is true.
    */
   SortInference* getSortInference();
+  /**
+   * Get quantifiers engine
+   */
+  QuantifiersEngine* getQuantifiersEngine();
 
   //-------------------------------------- static configuration of the model
   /**

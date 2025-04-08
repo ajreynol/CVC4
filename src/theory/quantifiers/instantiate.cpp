@@ -40,6 +40,15 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+/**
+ * Maps instantiation lemmas to the quantified formula and the terms that
+ * justify it, e.g. (Q, t_1, ..., t_n).
+ */
+struct InstTermVectorAttributeId
+{
+};
+using InstTermVectorAttribute = expr::Attribute<InstTermVectorAttributeId, Node>;
+    
 Instantiate::Instantiate(Env& env,
                          QuantifiersState& qs,
                          QuantifiersInferenceManager& qim,
@@ -392,6 +401,15 @@ bool Instantiate::addInstantiationInternal(
     }
     QuantAttributes::setInstantiationLevelAttr(lem[1], maxInstLevel + 1);
   }
+  if (options().theory.trackTermOrigins)
+  {
+    InstTermVectorAttribute itva;
+    std::vector<Node> children;
+    children.push_back(q);
+    children.insert(children.end(), terms.begin(), terms.end());
+    Node ex = nodeManager()->mkNode(Kind::SEXPR, children);
+    lem.setAttribute(itva, ex);
+  }
   Trace("inst-add-debug") << " --> Success." << std::endl;
   ++(d_statistics.d_instantiations);
   return true;
@@ -595,6 +613,7 @@ Node Instantiate::getInstantiation(Node q,
       body = newBody;
     }
   }
+  
   return body;
 }
 
@@ -690,6 +709,20 @@ void Instantiate::getInstantiations(Node q, std::vector<Node>& insts)
   {
     insts.insert(insts.end(), it->second.begin(), it->second.end());
   }
+}
+
+bool Instantiate::getTermVectorForInstantiation(const Node& inst, std::vector<Node>& tvec)
+{
+  Assert (options().theory.trackTermOrigins);
+  InstTermVectorAttribute itva;
+  if (!inst.hasAttribute(itva))
+  {
+    return false;
+  }
+  Node ex = inst.getAttribute(itva);
+  Assert (ex.getKind()==Kind::SEXPR);
+  tvec.insert(tvec.end(), ex.begin()+1, ex.end());
+  return true;
 }
 
 bool Instantiate::isProofEnabled() const

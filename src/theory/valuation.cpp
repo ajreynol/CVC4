@@ -143,6 +143,16 @@ SortInference* Valuation::getSortInference()
   return d_engine->getSortInference();
 }
 
+QuantifiersEngine* Valuation::getQuantifiersEngine()
+{
+  if (d_engine == nullptr)
+  {
+    // no theory engine, thus we don't have a quantifiers engine object
+    return nullptr;
+  }
+  return d_engine->getQuantifiersEngine();
+}
+
 void Valuation::setUnevaluatedKind(Kind k)
 {
   TheoryModel* m = getModel();

@@ -272,6 +272,10 @@ class Instantiate : public QuantifiersUtil
    * x)), this is a list of the form (P t1) ... (P tn) for ground terms ti.
    */
   void getInstantiations(Node q, std::vector<Node>& insts);
+  /**
+   * Get term vector for instantiation, expects an instantiation lemma
+   */
+  bool getTermVectorForInstantiation(const Node& inst, std::vector<Node>& tvec);
   //--------------------------------------end user-level interface utilities
 
   /** Are proofs enabled for this object? */

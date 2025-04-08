@@ -122,6 +122,10 @@ class QuantifiersEngine : protected EnvObj
    */
   void getInstantiations(Node q, std::vector<Node>& insts);
   /**
+   * Get term vector for instantiation, expects an instantiation lemma
+   */
+  bool getTermVectorForInstantiation(const Node& inst, std::vector<Node>& tvec);
+  /**
    * Get skolemization vectors, where for each quantified formula that was
    * skolemized, this is the list of skolems that were used to witness the
    * negation of that quantified formula.

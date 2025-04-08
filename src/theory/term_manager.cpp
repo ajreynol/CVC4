@@ -16,12 +16,14 @@
 #include "theory/term_manager.h"
 
 #include "theory/quantifiers/quantifiers_attributes.h"
+#include "theory/quantifiers_engine.h"
+#include "expr/node_algorithm.h"
 
 namespace cvc5::internal {
 namespace theory {
 
 TermDbManager::TermDbManager(Env& env, TheoryEngine* engine)
-    : TheoryEngineModule(env, engine, "TermDbManager"), d_omap(userContext()), d_qinLevel(userContext())
+    : TheoryEngineModule(env, engine, "TermDbManager"), d_omap(userContext()), d_qinLevel(userContext()), d_inputTerms(userContext())
 {
 }
 
@@ -31,6 +33,7 @@ void TermDbManager::notifyPreprocessedAssertions(
   std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
   TNode cur;
+  std::vector<Node> emptyVec;
   visit.insert(visit.end(), assertions.begin(), assertions.end());
   do
   {
@@ -40,15 +43,14 @@ void TermDbManager::notifyPreprocessedAssertions(
     if (visited.find(cur) == visited.end())
     {
       visited.insert(cur);
+      if (!expr::isBooleanConnective(cur))
+      {
+        d_inputTerms.insert(cur);
+        addOrigin(cur, InferenceId::NONE, emptyVec);
+      }
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
   } while (!visit.empty());
-
-  std::vector<Node> emptyVec;
-  for (TNode t : visited)
-  {
-    addOrigin(t, InferenceId::NONE, emptyVec);
-  }
 }
 
 void TermDbManager::notifyLemma(TNode n,
@@ -57,11 +59,44 @@ void TermDbManager::notifyLemma(TNode n,
                                 const std::vector<Node>& skAsserts,
                                 const std::vector<Node>& sks)
 {
+  Node q;
+  Node lem = n;
+  std::vector<Node> args;
   if (n.getKind()==Kind::IMPLIES && n[0].getKind()==Kind::FORALL)
   {
     // Assume any lemma of the form (=> (forall ...) ...) is an instantiation
     // lemma.
+    QuantifiersEngine* qe = d_val.getQuantifiersEngine();
+    if (qe->getTermVectorForInstantiation(n, args))
+    {
+      args.insert(args.begin(), n[0]);
+      lem = n[1];
+    }
   }
+  // get new terms
+  std::unordered_set<TNode> visited;
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.emplace_back(n);
+  do
+  {
+    cur = visit.back();
+    visit.pop_back();
+    if (d_inputTerms.find(cur)!=d_inputTerms.end())
+    {
+      // input terms never change origin
+      continue;
+    }
+    if (visited.find(cur) == visited.end())
+    {
+      visited.insert(cur);
+      if (!expr::isBooleanConnective(cur))
+      {
+        addOrigin(cur, id, args);
+      }
+      visit.insert(visit.end(), cur.begin(), cur.end());
+    }
+  } while (!visit.empty());
 }
 
 TermDbManager::TermOrigin::TermOrigin(context::Context* c)

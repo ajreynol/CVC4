@@ -87,6 +87,8 @@ class TheoryEngineModule : protected EnvObj
  protected:
   /** The output channel, for sending lemmas */
   OutputChannel d_out;
+  /** Valuation class, for queries */
+  Valuation d_val;
   /** The name */
   std::string d_name;
 

@@ -69,6 +69,8 @@ class TermDbManager : public TheoryEngineModule
   context::CDHashMap<Node, std::shared_ptr<TermOrigin>> d_omap;
   /** Mapping quantified formulas to their explicitly given inst nested level */
   context::CDHashMap<Node, int64_t> d_qinLevel;
+  /** The input terms */
+  context::CDHashSet<Node> d_inputTerms;
   /**
    * If id is InferenceId::NONE, the term was from the input formulas.
    * If args is provided, it is of the form (Q t_1 ... t_n),
