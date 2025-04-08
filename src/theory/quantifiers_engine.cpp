@@ -670,7 +670,8 @@ void QuantifiersEngine::getInstantiations(Node q, std::vector<Node>& insts)
   d_qim.getInstantiate()->getInstantiations(q, insts);
 }
 
-bool QuantifiersEngine::getTermVectorForInstantiation(const Node& inst, std::vector<Node>& tvec)
+bool QuantifiersEngine::getTermVectorForInstantiation(const Node& inst,
+                                                      std::vector<Node>& tvec)
 {
   return d_qim.getInstantiate()->getTermVectorForInstantiation(inst, tvec);
 }

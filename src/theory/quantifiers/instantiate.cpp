@@ -47,8 +47,9 @@ namespace quantifiers {
 struct InstTermVectorAttributeId
 {
 };
-using InstTermVectorAttribute = expr::Attribute<InstTermVectorAttributeId, Node>;
-    
+using InstTermVectorAttribute =
+    expr::Attribute<InstTermVectorAttributeId, Node>;
+
 Instantiate::Instantiate(Env& env,
                          QuantifiersState& qs,
                          QuantifiersInferenceManager& qim,
@@ -613,7 +614,7 @@ Node Instantiate::getInstantiation(Node q,
       body = newBody;
     }
   }
-  
+
   return body;
 }
 
@@ -711,17 +712,18 @@ void Instantiate::getInstantiations(Node q, std::vector<Node>& insts)
   }
 }
 
-bool Instantiate::getTermVectorForInstantiation(const Node& inst, std::vector<Node>& tvec)
+bool Instantiate::getTermVectorForInstantiation(const Node& inst,
+                                                std::vector<Node>& tvec)
 {
-  Assert (options().theory.trackTermOrigins);
+  Assert(options().theory.trackTermOrigins);
   InstTermVectorAttribute itva;
   if (!inst.hasAttribute(itva))
   {
     return false;
   }
   Node ex = inst.getAttribute(itva);
-  Assert (ex.getKind()==Kind::SEXPR);
-  tvec.insert(tvec.end(), ex.begin()+1, ex.end());
+  Assert(ex.getKind() == Kind::SEXPR);
+  tvec.insert(tvec.end(), ex.begin() + 1, ex.end());
   return true;
 }
 

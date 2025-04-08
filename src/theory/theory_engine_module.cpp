@@ -22,7 +22,9 @@ size_t TheoryEngineModule::d_idCounter = 0;
 TheoryEngineModule::TheoryEngineModule(Env& env,
                                        TheoryEngine* engine,
                                        const std::string& name)
-    : EnvObj(env), d_out(statisticsRegistry(), engine, name, d_idCounter), d_val(engine)
+    : EnvObj(env),
+      d_out(statisticsRegistry(), engine, name, d_idCounter),
+      d_val(engine)
 {
   // increment the id counter so that the id of this module is unique
   d_idCounter++;

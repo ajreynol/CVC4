@@ -15,15 +15,18 @@
 
 #include "theory/term_manager.h"
 
+#include "expr/node_algorithm.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers_engine.h"
-#include "expr/node_algorithm.h"
 
 namespace cvc5::internal {
 namespace theory {
 
 TermDbManager::TermDbManager(Env& env, TheoryEngine* engine)
-    : TheoryEngineModule(env, engine, "TermDbManager"), d_omap(userContext()), d_qinLevel(userContext()), d_inputTerms(userContext())
+    : TheoryEngineModule(env, engine, "TermDbManager"),
+      d_omap(userContext()),
+      d_qinLevel(userContext()),
+      d_inputTerms(userContext())
 {
 }
 
@@ -39,7 +42,7 @@ void TermDbManager::notifyPreprocessedAssertions(
   {
     cur = visit.back();
     visit.pop_back();
-    if (cur.getKind()==Kind::INST_PATTERN_LIST)
+    if (cur.getKind() == Kind::INST_PATTERN_LIST)
     {
       d_inputTerms.insert(cur);
       continue;
@@ -66,7 +69,7 @@ void TermDbManager::notifyLemma(TNode n,
   Node q;
   Node lem = n;
   std::vector<Node> args;
-  if (n.getKind()==Kind::IMPLIES && n[0].getKind()==Kind::FORALL)
+  if (n.getKind() == Kind::IMPLIES && n[0].getKind() == Kind::FORALL)
   {
     // Assume any lemma of the form (=> (forall ...) ...) is an instantiation
     // lemma.
@@ -86,7 +89,7 @@ void TermDbManager::notifyLemma(TNode n,
   {
     cur = visit.back();
     visit.pop_back();
-    if (d_inputTerms.find(cur)!=d_inputTerms.end())
+    if (d_inputTerms.find(cur) != d_inputTerms.end())
     {
       // input terms never change origin
       continue;
@@ -140,7 +143,8 @@ void TermDbManager::addOrigin(const Node& n,
   {
     t = it->second.get();
   }
-  Trace("term-origin") << "Term " << n << " has origin " << id << " / " << args << std::endl;
+  Trace("term-origin") << "Term " << n << " has origin " << id << " / " << args
+                       << std::endl;
   t->addOrigin(id, arg);
 }
 
@@ -155,7 +159,9 @@ void TermDbManager::initializeTerm(const Node& n)
     if (qa.d_qinstNestedLevel != -1)
     {
       d_qinLevel[n] = qa.d_qinstNestedLevel;
-      Trace("term-origin") << "Quantified formula " << n << " has inst nested level " << qa.d_qinstNestedLevel << std::endl;
+      Trace("term-origin") << "Quantified formula " << n
+                           << " has inst nested level " << qa.d_qinstNestedLevel
+                           << std::endl;
     }
   }
 }

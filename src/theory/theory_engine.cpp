@@ -975,7 +975,7 @@ void TheoryEngine::notifyPreprocessedAssertions(
   {
     d_relManager->notifyPreprocessedAssertions(assertions, true);
   }
-  if (d_termManager!=nullptr)
+  if (d_termManager != nullptr)
   {
     d_termManager->notifyPreprocessedAssertions(assertions);
   }
