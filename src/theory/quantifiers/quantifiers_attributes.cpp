@@ -106,7 +106,7 @@ void QuantAttributes::setUserAttribute(const std::string& attr,
     QuantInstLevelAttribute qila;
     n.setAttribute( qila, lvl );
   }
-  else if (attr == "quant-inst-origin-max-level")
+  else if (attr == "quant-inst-nested-max-level")
   {
     Assert(nodeValues.size() == 1);
     uint64_t lvl = nodeValues[0].getConst<Rational>().getNumerator().getLong();

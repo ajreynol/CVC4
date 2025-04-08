@@ -531,7 +531,7 @@ Term Smt2TermParser::parseTerm()
             {
               attrKind = Kind::INST_ADD_TO_POOL;
             }
-            else if (key == ":quant-inst-max-level")
+            else if (key == ":quant-inst-max-level" || key == ":quant-inst-nested-max-level")
             {
               // a numeral
               d_lex.eatToken(Token::INTEGER_LITERAL);

@@ -39,7 +39,11 @@ void TermDbManager::notifyPreprocessedAssertions(
   {
     cur = visit.back();
     visit.pop_back();
-
+    if (cur.getKind()==Kind::INST_PATTERN_LIST)
+    {
+      d_inputTerms.insert(cur);
+      continue;
+    }
     if (visited.find(cur) == visited.end())
     {
       visited.insert(cur);
