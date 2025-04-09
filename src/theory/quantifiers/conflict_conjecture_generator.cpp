@@ -162,7 +162,7 @@ void ConflictConjectureGenerator::checkDisequality(const Node& eq)
     const std::vector<Node>& gfvs = d_genToFv[g];
     Trace("ccgen-debug") << "  - " << g << std::endl;
     State s = gfvs.empty() ? State::SUBSET : State::UNKNOWN;
-    findCompatible(g, gfvs, eq[0], &d_gtrie, s, 0);
+    findCompatible(g, gfvs, vars[0], &d_gtrie, s, 0);
   }
 }
 
@@ -227,7 +227,8 @@ void ConflictConjectureGenerator::getGeneralizations(const Node& v)
     return;
   }
   d_eqcGenRec[v].emplace_back(v);
-  addGeneralizationTerm(v, v, 0, {});
+  // base case: own free variable
+  addGeneralizationTerm(v, v, 0, {v});
   size_t reps = 3;
   Trace("ccgen") << "Get " << reps << " runs for generalizations of " << v << std::endl;
   for (size_t i = 0; i < reps; i++)
@@ -305,6 +306,7 @@ void ConflictConjectureGenerator::addGeneralizationTerm(
     return;
   }
   Trace("ccgen") << "* Generalization term [" << v << "]: " << g << std::endl;
+  Trace("ccgen-debug") << "- free variables are " << fvs << std::endl;
   d_genToFv[g] = fvs;
   GenTrie* gt = &d_gtrie;
   for (const Node& fv : fvs)
@@ -336,8 +338,13 @@ void ConflictConjectureGenerator::findCompatible(
       {
         Trace("cconj") << "*** Candidate conjecture : " << cg.first << " == " << g << std::endl;
       }
+      else
+      {
+        Trace("ccgen-debug") << "- found term " << cg.first << " but not for lhs " << vlhs << " vs " << cg.second << std::endl;
+      }
     }
   }
+  Trace("ccgen-debug") << "  findCompatible " << fvindex << "/" << fvs.size() << " state = " << static_cast<int>(state) << std::endl;
   Assert (state!=State::UNKNOWN || fvindex<fvs.size());
   for (std::pair<const Node, GenTrie>& cg : gt->d_children)
   {
