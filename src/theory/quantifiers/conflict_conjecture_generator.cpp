@@ -73,14 +73,19 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
   d_funDefEvaluator.clear();
   quantifiers::FirstOrderModel* model = d_treg.getModel();
   Trace("ccgen-debug") << "Refresh function definitions..." << std::endl;
+  std::unordered_set<Node> qsyms;
+  std::unordered_set<TNode>  qvisited;
   for (size_t i = 0; i < model->getNumAssertedQuantifiers(); i++)
   {
     Node phi = model->getAssertedQuantifier(i);
+    Trace("ccgen-debug") << "- quant : " << phi << std::endl;
     if (d_qreg.getQuantAttributes().isFunDef(phi))
     {
       Trace("ccgen-debug") << "  fun def: " << phi << std::endl;
       d_funDefEvaluator.assertDefinition(phi);
     }
+    // record symbols
+    expr::getSymbols(phi, qsyms, qvisited);
   }
   d_ee = d_qstate.getEqualityEngine();
   d_eqcGen.clear();
@@ -111,8 +116,9 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
       {
         continue;
       }
-      //if (!d_funDefEvaluator.hasDefinition(s))
-      if (s.getKind()==Kind::SKOLEM)
+      // if the symbol appears in a quantified formula, do not trust its model
+      // value. HACK: Also always take model values for skolems.
+      if (qsyms.find(s)==qsyms.end() || s.getKind()==Kind::SKOLEM)
       {
         Node sm = model->getValue(s);
         Trace("ccgen-debug") << "  - " << s << " = " << sm << std::endl;
@@ -123,9 +129,10 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
     Trace("ccgen-debug") << "  ...concretizes to " << eqm << std::endl;
     if (eqm==d_false)
     {
-      Trace("ccgen") << "...filter " << eqm << std::endl;
+      Trace("ccgen") << "...filter " << eq << std::endl;
       continue;
     }
+    Trace("ccgen") << "...keep " << eq << std::endl;
     checkDisequality(eq);
   }
 }
@@ -137,15 +144,17 @@ std::string ConflictConjectureGenerator::identify() const
 
 void ConflictConjectureGenerator::checkDisequality(const Node& eq)
 {
-  Trace("ccgen") << "Get generalizations of " << eq << std::endl;
+  Trace("ccgen") << "checkDisequality " << eq << std::endl;
+  std::vector<Node> vars;
   for (size_t i = 0; i < 2; i++)
   {
     Node r = d_ee->getRepresentative(eq[i]);
     Node v = getOrMkVarForEqc(r);
+    vars.push_back(v);
     getGeneralizations(v);
   }
   // see if any generalization of the right hand
-  std::vector<Node>& genRhs = d_eqcGenRec[eq[1]];
+  std::vector<Node>& genRhs = d_eqcGenRec[vars[1]];
   
   Trace("ccgen") << "- look at " << genRhs.size() << " recursive generalizations of RHS" << std::endl;
   for (const Node& g : genRhs)
@@ -220,6 +229,7 @@ void ConflictConjectureGenerator::getGeneralizations(const Node& v)
   d_eqcGenRec[v].emplace_back(v);
   addGeneralizationTerm(v, v, 0, {});
   size_t reps = 3;
+  Trace("ccgen") << "Get " << reps << " runs for generalizations of " << v << std::endl;
   for (size_t i = 0; i < reps; i++)
   {
     getGeneralizationsInternal(v);
@@ -229,7 +239,6 @@ void ConflictConjectureGenerator::getGeneralizations(const Node& v)
 void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
 {
   size_t depth = 5;
-  Trace("ccgen") << "Get generalizations of " << v << std::endl;
   Node cur = v;
   // the current free variables of cur
   std::vector<Node> fvs;
