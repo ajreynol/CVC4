@@ -52,7 +52,7 @@ void TermDbManager::notifyPreprocessedAssertions(
     if (visited.find(cur) == visited.end())
     {
       visited.insert(cur);
-      if (!expr::isBooleanConnective(cur))
+      if (!expr::isBooleanConnective(cur) && !expr::hasFreeVar(cur))
       {
         d_inputTerms.insert(cur);
         addOrigin(cur, InferenceId::NONE, nullq, emptyVec);
@@ -93,6 +93,7 @@ void TermDbManager::notifyLemma(TNode n,
       // minor optimization: only look at new terms in the conclusion
       lem = n[1];
     }
+    // TODO: do not visit ground subterms of the quantified formula
   }
   // get new terms
   std::vector<TNode> visit;
@@ -114,7 +115,11 @@ void TermDbManager::notifyLemma(TNode n,
       {
         addOrigin(cur, id, q, args);
       }
-      visit.insert(visit.end(), cur.begin(), cur.end());
+      // do not traverse closures
+      if (!cur.isClosure())
+      {
+        visit.insert(visit.end(), cur.begin(), cur.end());
+      }
     }
   } while (!visit.empty());
 }
@@ -191,6 +196,11 @@ bool TermDbManager::canInstantiate(const Node& q, const Node& n)
   if (maxLevel==-1)
   {
     return true;
+  }
+  // input terms have a depth of 0 always
+  if (d_inputTerms.find(n)!=d_inputTerms.end())
+  {
+    return maxLevel>0;
   }
   context::CDHashMap<Node, std::shared_ptr<TermOrigin>>::iterator it = d_omap.find(n);
   if (it==d_omap.end())
