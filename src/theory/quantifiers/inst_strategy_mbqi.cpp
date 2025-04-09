@@ -267,7 +267,13 @@ void InstStrategyMbqi::process(Node q)
   SubsolverSetupInfo ssi(d_env, d_subOptions);
   initializeSubsolver(mbqiChecker, ssi);
   mbqiChecker->setOption("produce-models", "true");
-  mbqiChecker->setTimeLimit(500);
+  // set the time limit if applicable
+  if (options().quantifiers.mbqiCheckTimeout != 0)
+  {
+    mbqiChecker->setTimeLimit(options().quantifiers.mbqiCheckTimeout);
+  }
+  // if no nested check, don't assert the subquery, we will get an arbitrary
+  // model.
   if (options().quantifiers.mbqiNestedCheck || !expr::hasSubtermKind(Kind::FORALL, query))
   {
     mbqiChecker->assertFormula(query);
@@ -666,7 +672,9 @@ Result InstStrategyMbqi::checkWithSubsolverSimple(
     Trace("mbqi") << "*** SKIP " << query << std::endl;
     return Result(Result::Status::UNKNOWN);
   }
-  return checkWithSubsolver(query, info, true, 500);
+  return checkWithSubsolver(query, info,
+                           options().quantifiers.mbqiCheckTimeout != 0,
+                           options().quantifiers.mbqiCheckTimeout);
 }
 
 /**
