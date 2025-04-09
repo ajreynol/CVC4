@@ -58,11 +58,28 @@ class TermDbManager : public TheoryEngineModule
   class TermOrigin
   {
    public:
-    TermOrigin(context::Context* c);
-    void addOrigin(InferenceId id, const Node& arg);
-
-   private:
-    context::CDList<std::pair<InferenceId, Node>> d_origin;
+    TermOrigin(context::Context* c, const Node& t);
+    /** */
+    size_t getQuantifierDepth(const Node& q) const;
+    /** This term */
+    Node d_this;
+    /**
+     * Edges to children, labelled with the quantified formulas that were
+     * used to generate the child term.
+     */
+    context::CDHashMap<TermOrigin*, std::vector<Node>> d_children;
+    /**
+     * Set of parent terms
+     */
+    context::CDHashSet<TermOrigin*> d_parents;
+    /**
+     * The nested depth of this term, for each relevant quantified formula.
+     * Quantified formulas that are not present are 0. This is the minimial
+     * number of times the quantified formula occurs on a label in a path
+     * from this term to an input term.
+     * 
+     * This map is incrementally maintained as d_children/d_parents is updated.
+     */
     context::CDHashMap<Node, size_t> d_quantDepth;
   };
   /** Mapping */
@@ -71,6 +88,12 @@ class TermDbManager : public TheoryEngineModule
   context::CDHashMap<Node, int64_t> d_qinLevel;
   /** The input terms */
   context::CDHashSet<Node> d_inputTerms;
+  /**
+   */
+  int64_t getInstNestedMaxLimit(const Node& q) const;
+  /**
+   */
+  TermOrigin* getOrMkTermOrigin(const Node& t);
   /**
    * If id is InferenceId::NONE, the term was from the input formulas.
    * If args is provided, it is of the form (Q t_1 ... t_n),

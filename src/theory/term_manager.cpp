@@ -18,6 +18,7 @@
 #include "expr/node_algorithm.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers_engine.h"
+#include "options/quantifiers_options.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -106,15 +107,36 @@ void TermDbManager::notifyLemma(TNode n,
   } while (!visit.empty());
 }
 
-TermDbManager::TermOrigin::TermOrigin(context::Context* c)
-    : d_origin(c), d_quantDepth(c)
+TermDbManager::TermOrigin::TermOrigin(context::Context* c, const Node& t)
+    : d_this(t), d_children(c), d_parents(c), d_quantDepth(c)
 {
-}
-void TermDbManager::TermOrigin::addOrigin(InferenceId id, const Node& arg)
-{
-  d_origin.emplace_back(id, arg);
 }
 
+size_t TermDbManager::TermOrigin::getQuantifierDepth(const Node& q) const
+{
+  context::CDHashMap<Node, size_t>::iterator it = d_quantDepth.find(q);
+  if (it!=d_quantDepth.end())
+  {
+    return it->second;
+  }
+  return 0;
+}
+    
+TermDbManager::TermOrigin* TermDbManager::getOrMkTermOrigin(const Node& n)
+{
+  context::CDHashMap<Node, std::shared_ptr<TermOrigin>>::iterator it =
+      d_omap.find(n);
+  if (it != d_omap.end())
+  {
+    return it->second.get();
+  }
+  std::shared_ptr<TermOrigin> tor =
+      std::make_shared<TermOrigin>(userContext(), n);
+  initializeTerm(n);
+  d_omap.insert(n, tor);
+  return tor.get();
+}
+  
 void TermDbManager::addOrigin(const Node& n,
                               InferenceId id,
                               const std::vector<Node>& args)
@@ -128,24 +150,9 @@ void TermDbManager::addOrigin(const Node& n,
   {
     arg = nodeManager()->mkNode(Kind::SEXPR, args);
   }
-  TermOrigin* t;
-  context::CDHashMap<Node, std::shared_ptr<TermOrigin>>::iterator it =
-      d_omap.find(n);
-  if (it == d_omap.end())
-  {
-    std::shared_ptr<TermOrigin> tor =
-        std::make_shared<TermOrigin>(userContext());
-    initializeTerm(n);
-    d_omap.insert(n, tor);
-    t = tor.get();
-  }
-  else
-  {
-    t = it->second.get();
-  }
+  TermOrigin* t = getOrMkTermOrigin(n);
   Trace("term-origin") << "Term " << n << " has origin " << id << " / " << args
                        << std::endl;
-  t->addOrigin(id, arg);
 }
 
 void TermDbManager::initializeTerm(const Node& n)
@@ -163,6 +170,25 @@ void TermDbManager::initializeTerm(const Node& n)
                            << " has inst nested level " << qa.d_qinstNestedLevel
                            << std::endl;
     }
+  }
+}
+
+int64_t TermDbManager::getInstNestedMaxLimit(const Node& q) const
+{
+  context::CDHashMap<Node, int64_t>::iterator it = d_qinLevel.find(q);
+  if (it!=d_qinLevel.end())
+  {
+    return it->second;
+  }
+  return options().quantifiers.instNestedMaxLevel;
+}
+
+bool TermDbManager::canInstantiate(const Node& q, const Node& n)
+{
+  int64_t maxLevel = getInstNestedMaxLimit(q);
+  if (maxLevel==-1)
+  {
+    return true;
   }
 }
 
