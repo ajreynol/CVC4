@@ -32,14 +32,14 @@ using namespace cvc5::context;
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
-
+  
 ConflictConjectureGenerator::ConflictConjectureGenerator(
     Env& env,
     QuantifiersState& qs,
     QuantifiersInferenceManager& qim,
     QuantifiersRegistry& qr,
     TermRegistry& tr)
-    : QuantifiersModule(env, qs, qim, qr, tr)
+    : QuantifiersModule(env, qs, qim, qr, tr), d_funDefEvaluator(env)
 {
   d_false = nodeManager()->mkConst(false);
 }
@@ -48,7 +48,7 @@ void ConflictConjectureGenerator::presolve() {}
 
 bool ConflictConjectureGenerator::needsCheck(Theory::Effort e)
 {
-  return d_qstate.getInstWhenNeedsCheck(e);
+  return e >= Theory::EFFORT_LAST_CALL;
 }
 
 void ConflictConjectureGenerator::reset_round(Theory::Effort e) {}
@@ -57,14 +57,32 @@ void ConflictConjectureGenerator::registerQuantifier(Node q) {}
 
 void ConflictConjectureGenerator::checkOwnership(Node q) {}
 
+QuantifiersModule::QEffort ConflictConjectureGenerator::needsModel(Theory::Effort e)
+{
+  return QEFFORT_STANDARD;
+}
+
 void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
 {
   if (quant_e != QEFFORT_STANDARD)
   {
     return;
   }
-  d_ee = d_qstate.getEqualityEngine();
   Trace("ccgen") << "ConflictConjectureGenerator: check" << std::endl;
+  // update the function definitions
+  d_funDefEvaluator.clear();
+  quantifiers::FirstOrderModel* model = d_treg.getModel();
+  Trace("ccgen-debug") << "Refresh function definitions..." << std::endl;
+  for (size_t i = 0; i < model->getNumAssertedQuantifiers(); i++)
+  {
+    Node phi = model->getAssertedQuantifier(i);
+    if (d_qreg.getQuantAttributes().isFunDef(phi))
+    {
+      Trace("ccgen-debug") << "  fun def: " << phi << std::endl;
+      d_funDefEvaluator.assertDefinition(phi);
+    }
+  }
+  d_ee = d_qstate.getEqualityEngine();
   d_eqcGen.clear();
   d_eqcGenRec.clear();
   std::vector<Node> candDeq;
@@ -83,6 +101,31 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
                  << std::endl;
   for (const Node& eq : candDeq)
   {
+    Trace("ccgen") << "- disequality: " << eq << std::endl;
+    std::unordered_set<Node> syms;
+    expr::getSymbols(eq, syms);
+    Subs ss;
+    for (const Node& s : syms)
+    {
+      if (!s.getType().isFirstClass())
+      {
+        continue;
+      }
+      //if (!d_funDefEvaluator.hasDefinition(s))
+      if (s.getKind()==Kind::SKOLEM)
+      {
+        Node sm = model->getValue(s);
+        Trace("ccgen-debug") << "  - " << s << " = " << sm << std::endl;
+        ss.add(s, sm);
+      }
+    }
+    Node eqm = rewrite(ss.apply(eq));
+    Trace("ccgen-debug") << "  ...concretizes to " << eqm << std::endl;
+    if (eqm==d_false)
+    {
+      Trace("ccgen") << "...filter " << eqm << std::endl;
+      continue;
+    }
     checkDisequality(eq);
   }
 }

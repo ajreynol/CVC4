@@ -272,6 +272,17 @@ Node FunDefEvaluator::getDefinitionFor(Node f) const
   return Node::null();
 }
 
+bool FunDefEvaluator::hasDefinition(const Node& f) const
+{
+  return d_funDefMap.find(f)!=d_funDefMap.end();
+}
+
+void FunDefEvaluator::clear()
+{
+  d_funDefMap.clear();
+  d_funDefs.clear();
+}
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
