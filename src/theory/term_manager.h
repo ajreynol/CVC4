@@ -60,7 +60,7 @@ class TermDbManager : public TheoryEngineModule
    public:
     TermOrigin(context::Context* c, const Node& t);
     /** */
-    size_t getQuantifierDepth(const Node& q) const;
+    int64_t getQuantifierDepth(const Node& q) const;
     /** This term */
     Node d_this;
     /**
@@ -80,7 +80,7 @@ class TermDbManager : public TheoryEngineModule
      * 
      * This map is incrementally maintained as d_children/d_parents is updated.
      */
-    context::CDHashMap<Node, size_t> d_quantDepth;
+    context::CDHashMap<Node, int64_t> d_quantDepth;
   };
   /** Mapping */
   context::CDHashMap<Node, std::shared_ptr<TermOrigin>> d_omap;
@@ -104,7 +104,7 @@ class TermDbManager : public TheoryEngineModule
    * generated this term.
    * @param args The arguments.
    */
-  void addOrigin(const Node& n, InferenceId id, const std::vector<Node>& args);
+  void addOrigin(const Node& n, InferenceId id,const Node& q, const std::vector<TermOrigin*>& args);
   /**
    * Do any term-specific initialization, called once when the term n is first
    * seen in the user context.

@@ -37,7 +37,8 @@ void TermDbManager::notifyPreprocessedAssertions(
   std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
   TNode cur;
-  std::vector<Node> emptyVec;
+  Node nullq;
+  std::vector<TermOrigin*> emptyVec;
   visit.insert(visit.end(), assertions.begin(), assertions.end());
   do
   {
@@ -54,7 +55,7 @@ void TermDbManager::notifyPreprocessedAssertions(
       if (!expr::isBooleanConnective(cur))
       {
         d_inputTerms.insert(cur);
-        addOrigin(cur, InferenceId::NONE, emptyVec);
+        addOrigin(cur, InferenceId::NONE, nullq, emptyVec);
       }
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
@@ -67,25 +68,36 @@ void TermDbManager::notifyLemma(TNode n,
                                 const std::vector<Node>& skAsserts,
                                 const std::vector<Node>& sks)
 {
+  Trace("term-origin") << "Notify lemma: " << n << std::endl;
+  std::unordered_set<TNode> visited;
   Node q;
   Node lem = n;
-  std::vector<Node> args;
+  std::vector<TermOrigin*> args;
   if (n.getKind() == Kind::IMPLIES && n[0].getKind() == Kind::FORALL)
   {
+    q = n[0];
     // Assume any lemma of the form (=> (forall ...) ...) is an instantiation
     // lemma.
     QuantifiersEngine* qe = d_val.getQuantifiersEngine();
-    if (qe->getTermVectorForInstantiation(n, args))
+    std::vector<Node> inst;
+    if (qe->getTermVectorForInstantiation(n, inst))
     {
-      args.insert(args.begin(), n[0]);
+      Trace("term-origin") << "Lemma is instantiation " << q << " with " << inst
+                          << std::endl;
+      for (const Node& nc : inst)
+      {
+        // do not visit the terms we are instantiating
+        visited.insert(nc);
+        args.emplace_back(getOrMkTermOrigin(nc));
+      }
+      // minor optimization: only look at new terms in the conclusion
       lem = n[1];
     }
   }
   // get new terms
-  std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
   TNode cur;
-  visit.emplace_back(n);
+  visit.emplace_back(lem);
   do
   {
     cur = visit.back();
@@ -100,7 +112,7 @@ void TermDbManager::notifyLemma(TNode n,
       visited.insert(cur);
       if (!expr::isBooleanConnective(cur))
       {
-        addOrigin(cur, id, args);
+        addOrigin(cur, id, q, args);
       }
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
@@ -112,9 +124,9 @@ TermDbManager::TermOrigin::TermOrigin(context::Context* c, const Node& t)
 {
 }
 
-size_t TermDbManager::TermOrigin::getQuantifierDepth(const Node& q) const
+int64_t TermDbManager::TermOrigin::getQuantifierDepth(const Node& q) const
 {
-  context::CDHashMap<Node, size_t>::iterator it = d_quantDepth.find(q);
+  context::CDHashMap<Node, int64_t>::iterator it = d_quantDepth.find(q);
   if (it!=d_quantDepth.end())
   {
     return it->second;
@@ -139,20 +151,10 @@ TermDbManager::TermOrigin* TermDbManager::getOrMkTermOrigin(const Node& n)
   
 void TermDbManager::addOrigin(const Node& n,
                               InferenceId id,
-                              const std::vector<Node>& args)
+                              const Node& q,
+                              const std::vector<TermOrigin*>& args)
 {
-  Node arg;
-  if (args.size() == 1)
-  {
-    arg = args[0];
-  }
-  else
-  {
-    arg = nodeManager()->mkNode(Kind::SEXPR, args);
-  }
   TermOrigin* t = getOrMkTermOrigin(n);
-  Trace("term-origin") << "Term " << n << " has origin " << id << " / " << args
-                       << std::endl;
 }
 
 void TermDbManager::initializeTerm(const Node& n)
@@ -190,6 +192,12 @@ bool TermDbManager::canInstantiate(const Node& q, const Node& n)
   {
     return true;
   }
+  context::CDHashMap<Node, std::shared_ptr<TermOrigin>>::iterator it = d_omap.find(n);
+  if (it==d_omap.end())
+  {
+    return true;
+  }
+  return it->second->getQuantifierDepth(q)<=maxLevel;
 }
 
 }  // namespace theory
