@@ -336,7 +336,14 @@ void ConflictConjectureGenerator::findCompatible(
     {
       if (cg.second==vlhs)
       {
-        Trace("cconj") << "*** Candidate conjecture : " << cg.first << " == " << g << std::endl;
+        if (state==State::SUBSET)
+        {
+          candidateConjecture(cg.first, g);
+        }
+        else
+        {
+          candidateConjecture(g, cg.first);
+        }
       }
       else
       {
@@ -367,6 +374,14 @@ void ConflictConjectureGenerator::findCompatible(
       findCompatible(g, fvs, vlhs, &cg.second, State::SUBSET, fvindex);
     }
   }
+}
+
+void ConflictConjectureGenerator::candidateConjecture(const Node& a, const Node& b)
+{
+  Trace("cconj") << "*** Candidate conjecture : " << a << " == " << b << std::endl;
+  
+  // filter based on E-matching and test
+  
 }
 
 }  // namespace quantifiers
