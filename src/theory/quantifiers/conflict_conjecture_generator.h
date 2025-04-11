@@ -104,7 +104,7 @@ class ConflictConjectureGenerator : public QuantifiersModule
                       GenTrie* gt,
                       State state,
                       size_t fvindex);
-  
+
   /**
    * Called when FV(a) is a superset of FV(b).
    */

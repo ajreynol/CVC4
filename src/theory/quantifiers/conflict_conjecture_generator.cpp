@@ -32,7 +32,7 @@ using namespace cvc5::context;
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
-  
+
 ConflictConjectureGenerator::ConflictConjectureGenerator(
     Env& env,
     QuantifiersState& qs,
@@ -57,7 +57,8 @@ void ConflictConjectureGenerator::registerQuantifier(Node q) {}
 
 void ConflictConjectureGenerator::checkOwnership(Node q) {}
 
-QuantifiersModule::QEffort ConflictConjectureGenerator::needsModel(Theory::Effort e)
+QuantifiersModule::QEffort ConflictConjectureGenerator::needsModel(
+    Theory::Effort e)
 {
   return QEFFORT_STANDARD;
 }
@@ -74,7 +75,7 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
   quantifiers::FirstOrderModel* model = d_treg.getModel();
   Trace("ccgen-debug") << "Refresh function definitions..." << std::endl;
   std::unordered_set<Node> qsyms;
-  std::unordered_set<TNode>  qvisited;
+  std::unordered_set<TNode> qvisited;
   for (size_t i = 0; i < model->getNumAssertedQuantifiers(); i++)
   {
     Node phi = model->getAssertedQuantifier(i);
@@ -118,7 +119,7 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
       }
       // if the symbol appears in a quantified formula, do not trust its model
       // value. HACK: Also always take model values for skolems.
-      if (qsyms.find(s)==qsyms.end() || s.getKind()==Kind::SKOLEM)
+      if (qsyms.find(s) == qsyms.end() || s.getKind() == Kind::SKOLEM)
       {
         Node sm = model->getValue(s);
         Trace("ccgen-debug") << "  - " << s << " = " << sm << std::endl;
@@ -127,7 +128,7 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
     }
     Node eqm = rewrite(ss.apply(eq));
     Trace("ccgen-debug") << "  ...concretizes to " << eqm << std::endl;
-    if (eqm==d_false)
+    if (eqm == d_false)
     {
       Trace("ccgen") << "...filter " << eq << std::endl;
       continue;
@@ -155,8 +156,9 @@ void ConflictConjectureGenerator::checkDisequality(const Node& eq)
   }
   // see if any generalization of the right hand
   std::vector<Node>& genRhs = d_eqcGenRec[vars[1]];
-  
-  Trace("ccgen") << "- look at " << genRhs.size() << " recursive generalizations of RHS" << std::endl;
+
+  Trace("ccgen") << "- look at " << genRhs.size()
+                 << " recursive generalizations of RHS" << std::endl;
   for (const Node& g : genRhs)
   {
     const std::vector<Node>& gfvs = d_genToFv[g];
@@ -238,7 +240,8 @@ void ConflictConjectureGenerator::getGeneralizations(const Node& v)
   // base case: own free variable
   addGeneralizationTerm(v, v, 0, {v});
   size_t reps = 3;
-  Trace("ccgen") << "Get " << reps << " runs for generalizations of " << v << std::endl;
+  Trace("ccgen") << "Get " << reps << " runs for generalizations of " << v
+                 << std::endl;
   for (size_t i = 0; i < reps; i++)
   {
     getGeneralizationsInternal(v);
@@ -338,13 +341,13 @@ void ConflictConjectureGenerator::findCompatible(
     ConflictConjectureGenerator::State state,
     size_t fvindex)
 {
-  if (state!=State::SUBSET || fvindex==fvs.size())
+  if (state != State::SUBSET || fvindex == fvs.size())
   {
     for (const std::pair<Node, Node>& cg : gt->d_gens)
     {
-      if (cg.second==vlhs)
+      if (cg.second == vlhs)
       {
-        if (state==State::SUBSET)
+        if (state == State::SUBSET)
         {
           candidateConjecture(cg.first, g);
         }
@@ -355,29 +358,32 @@ void ConflictConjectureGenerator::findCompatible(
       }
       else
       {
-        Trace("ccgen-debug") << "- found term " << cg.first << " but not for lhs " << vlhs << " vs " << cg.second << std::endl;
+        Trace("ccgen-debug")
+            << "- found term " << cg.first << " but not for lhs " << vlhs
+            << " vs " << cg.second << std::endl;
       }
     }
   }
-  Trace("ccgen-debug") << "  findCompatible " << fvindex << "/" << fvs.size() << " state = " << static_cast<int>(state) << std::endl;
-  Assert (state!=State::UNKNOWN || fvindex<fvs.size());
+  Trace("ccgen-debug") << "  findCompatible " << fvindex << "/" << fvs.size()
+                       << " state = " << static_cast<int>(state) << std::endl;
+  Assert(state != State::UNKNOWN || fvindex < fvs.size());
   for (std::pair<const Node, GenTrie>& cg : gt->d_children)
   {
-    if (fvindex<fvs.size() && cg.first==fvs[fvindex])
+    if (fvindex < fvs.size() && cg.first == fvs[fvindex])
     {
-      Assert (state!=State::SUPERSET);
-      State newState = fvindex+1==fvs.size() ? State::SUBSET : state;
-      findCompatible(g, fvs, vlhs, &cg.second, newState, fvindex+1);
+      Assert(state != State::SUPERSET);
+      State newState = fvindex + 1 == fvs.size() ? State::SUBSET : state;
+      findCompatible(g, fvs, vlhs, &cg.second, newState, fvindex + 1);
     }
-    else if (std::find(fvs.begin()+fvindex, fvs.end(), cg.first)!=fvs.end())
+    else if (std::find(fvs.begin() + fvindex, fvs.end(), cg.first) != fvs.end())
     {
       // we skipped a variable
-      if (state!=State::SUBSET)
+      if (state != State::SUBSET)
       {
         findCompatible(g, fvs, vlhs, &cg.second, State::SUPERSET, fvindex);
       }
     }
-    else if (state!=State::SUPERSET)
+    else if (state != State::SUPERSET)
     {
       findCompatible(g, fvs, vlhs, &cg.second, State::SUBSET, fvindex);
     }
@@ -386,21 +392,23 @@ void ConflictConjectureGenerator::findCompatible(
 
 class EMatchFrame
 {
-public:
-  EMatchFrame(){}
-  EMatchFrame(TermDb* tdb, eq::EqualityEngine* ee, const Node& m, const Node& r) : d_toMatch(m), d_index(0){
-    Assert (ee->hasTerm(r) && ee->getRepresentative(r)==r && r.isConst());
+ public:
+  EMatchFrame() {}
+  EMatchFrame(TermDb* tdb, eq::EqualityEngine* ee, const Node& m, const Node& r)
+      : d_toMatch(m), d_index(0)
+  {
+    Assert(ee->hasTerm(r) && ee->getRepresentative(r) == r && r.isConst());
     Node op = m.getOperator();
     std::map<size_t, Node> groundArgs;
-    for (size_t i=0, nargs=m.getNumChildren(); i<nargs; i++)
+    for (size_t i = 0, nargs = m.getNumChildren(); i < nargs; i++)
     {
-      if (m[i].getKind()==Kind::BOUND_VARIABLE)
+      if (m[i].getKind() == Kind::BOUND_VARIABLE)
       {
         d_varArgs.push_back(i);
       }
       else if (!expr::hasBoundVar(m[i]))
       {
-        Assert (ee->hasTerm(m[i]));
+        Assert(ee->hasTerm(m[i]));
         groundArgs[i] = ee->getRepresentative(m[i]);
       }
       else
@@ -415,19 +423,20 @@ public:
       Node n = *eqc;
       ++eqc;
       // must match
-      if (!n.hasOperator() || n.getOperator()!=m.getOperator() || !tdb->isTermActive(n))
+      if (!n.hasOperator() || n.getOperator() != m.getOperator()
+          || !tdb->isTermActive(n))
       {
         continue;
       }
-      Assert (n.getNumChildren()==m.getNumChildren());
+      Assert(n.getNumChildren() == m.getNumChildren());
       // prune ground disequal
       bool success = true;
       for (std::pair<const size_t, Node>& g : groundArgs)
       {
-        Assert (g.first<n.getNumChildren());
-        Assert (ee->hasTerm(n[g.first]));
+        Assert(g.first < n.getNumChildren());
+        Assert(ee->hasTerm(n[g.first]));
         Node gr = ee->getRepresentative(n[g.first]);
-        if (gr!=g.second)
+        if (gr != g.second)
         {
           success = false;
           break;
@@ -445,23 +454,25 @@ public:
   std::vector<size_t> d_varArgs;
   std::unordered_set<size_t> d_varArgsBound;
   size_t d_index;
-  bool push(TermDb* tdb, eq::EqualityEngine* ee, Subs& match, std::vector<std::shared_ptr<EMatchFrame>>& emf)
+  bool push(TermDb* tdb,
+            eq::EqualityEngine* ee,
+            Subs& match,
+            std::vector<std::shared_ptr<EMatchFrame>>& emf)
   {
     Trace("cconj-em-debug") << "push " << std::endl;
     if (isFinished())
     {
-      
       Trace("cconj-em-debug") << "...already finished" << std::endl;
       return false;
     }
     Node nextMatch = d_matches[d_index];
     d_index++;
-    Assert (nextMatch.getNumChildren()==d_toMatch.getNumChildren());
+    Assert(nextMatch.getNumChildren() == d_toMatch.getNumChildren());
     std::vector<Node> groundRec;
     for (size_t i : d_recArgs)
     {
-      Assert (i<nextMatch.getNumChildren());
-      Assert (ee->hasTerm(nextMatch[i]));
+      Assert(i < nextMatch.getNumChildren());
+      Assert(ee->hasTerm(nextMatch[i]));
       Node r = ee->getRepresentative(nextMatch[i]);
       if (!r.isConst())
       {
@@ -476,7 +487,7 @@ public:
     for (size_t i : d_varArgs)
     {
       const Node& v = d_toMatch[i];
-      Assert (v.getKind()==Kind::BOUND_VARIABLE);
+      Assert(v.getKind() == Kind::BOUND_VARIABLE);
       Node cur = match.getSubs(v);
       if (cur.isNull())
       {
@@ -484,7 +495,7 @@ public:
         match.add(v, nextMatch[i]);
         continue;
       }
-      Assert (ee->hasTerm(nextMatch[i]));
+      Assert(ee->hasTerm(nextMatch[i]));
       if (!ee->areEqual(nextMatch[i], cur))
       {
         // failed a bound argument argument
@@ -494,10 +505,11 @@ public:
       }
     }
     Trace("cconj-em-debug") << "push" << std::endl;
-    Assert (groundRec.size()==d_recArgs.size());
-    for (size_t i=0, ngr=groundRec.size(); i<ngr; i++)
+    Assert(groundRec.size() == d_recArgs.size());
+    for (size_t i = 0, ngr = groundRec.size(); i < ngr; i++)
     {
-      emf.emplace_back(std::make_shared<EMatchFrame>(tdb, ee, d_toMatch[d_recArgs[i]], groundRec[i]));
+      emf.emplace_back(std::make_shared<EMatchFrame>(
+          tdb, ee, d_toMatch[d_recArgs[i]], groundRec[i]));
     }
     Trace("cconj-em-debug") << "...return success" << std::endl;
     return true;
@@ -510,27 +522,29 @@ public:
     }
     d_varArgsBound.clear();
   }
-  bool isFinished() const { return d_index==d_matches.size(); }
+  bool isFinished() const { return d_index == d_matches.size(); }
 };
 
-void ConflictConjectureGenerator::candidateConjecture(const Node& a, const Node& b)
+void ConflictConjectureGenerator::candidateConjecture(const Node& a,
+                                                      const Node& b)
 {
-  Trace("cconj-filter") << "Candidate conjecture : " << a << " == " << b << "?" << std::endl;
+  Trace("cconj-filter") << "Candidate conjecture : " << a << " == " << b << "?"
+                        << std::endl;
   Trace("cconj-filter") << "Filter based on E-matching" << std::endl;
-  if (filterEmatching(a,b))
+  if (filterEmatching(a, b))
   {
-    Trace("cconj-filter") << "...success, filtered based on E-matching" << std::endl;
+    Trace("cconj-filter") << "...success, filtered based on E-matching"
+                          << std::endl;
     return;
   }
   Trace("cconj") << "*** Conjecture : " << a << " == " << b << std::endl;
-  
 }
 bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)
 {
-  Assert (a.hasOperator());
-  
+  Assert(a.hasOperator());
+
   Node op = a.getOperator();
-  TermDb * tdb = getTermDatabase();
+  TermDb* tdb = getTermDatabase();
   EntailmentCheck* ec = d_treg.getEntailmentCheck();
   std::vector<Node> reps;
   eq::EqClassesIterator eqcs = eq::EqClassesIterator(d_ee);
@@ -538,7 +552,7 @@ bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)
   {
     Node r = (*eqcs);
     ++eqcs;
-    if (r.isConst() && r.getType()==a.getType())
+    if (r.isConst() && r.getType() == a.getType())
     {
       reps.push_back(r);
     }
@@ -555,54 +569,59 @@ bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)
     size_t eindex = 1;
     do
     {
-      Assert (0<eindex);
-      Trace("cconj-filter-debug") << "match at " << eindex << ", " << emf.size() << std::endl;
-      Assert (eindex<=emf.size()+1);
-      if (eindex==emf.size()+1)
+      Assert(0 < eindex);
+      Trace("cconj-filter-debug")
+          << "match at " << eindex << ", " << emf.size() << std::endl;
+      Assert(eindex <= emf.size() + 1);
+      if (eindex == emf.size() + 1)
       {
-        Trace("cconj-filter-debug") << "Matches " << match.toString() << std::endl;
+        Trace("cconj-filter-debug")
+            << "Matches " << match.toString() << std::endl;
         // should have a complete match, process the right hand side
         Node bs = match.apply(b);
         Node bse = ec->getEntailedTerm(bs);
-        Trace("cconj-filter-debug") << "...left hand side entailed " << bse << std::endl;
+        Trace("cconj-filter-debug")
+            << "...left hand side entailed " << bse << std::endl;
         if (!bse.isNull())
         {
           Node rr = d_ee->getRepresentative(bse);
           if (d_ee->areDisequal(r, rr, false))
           {
-            Trace("cconj-filter") << "...disequal, filtered based on " << match.toString() << std::endl;
+            Trace("cconj-filter") << "...disequal, filtered based on "
+                                  << match.toString() << std::endl;
             Trace("cconj-filter") << "lhs: " << r << std::endl;
-            Trace("cconj-filter") << "rhs: " << d_ee->getRepresentative(bse) << std::endl;
+            Trace("cconj-filter")
+                << "rhs: " << d_ee->getRepresentative(bse) << std::endl;
             return true;
           }
           tested++;
-          confirmed = confirmed + (r==rr ? 1 : 0);
+          confirmed = confirmed + (r == rr ? 1 : 0);
         }
       }
-      else if (emf[eindex-1]->push(tdb, d_ee, match, emf))
+      else if (emf[eindex - 1]->push(tdb, d_ee, match, emf))
       {
         eindex++;
         continue;
       }
       else
       {
-        emf[eindex-1]->pop(match);
+        emf[eindex - 1]->pop(match);
       }
       eindex--;
       emf.resize(eindex);
       if (!emf.empty())
       {
-        emf[eindex-1]->pop(match);
+        emf[eindex - 1]->pop(match);
       }
-    }
-    while (!emf.empty());
+    } while (!emf.empty());
   }
-  if (tested==0)
+  if (tested == 0)
   {
     // no tests, reject?
     return true;
   }
-  Trace("cconj-filter") << "...success, not filtered, tested=" << tested << ", confirmed=" << confirmed << std::endl;
+  Trace("cconj-filter") << "...success, not filtered, tested=" << tested
+                        << ", confirmed=" << confirmed << std::endl;
   return false;
 }
 

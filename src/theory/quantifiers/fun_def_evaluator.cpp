@@ -274,7 +274,7 @@ Node FunDefEvaluator::getDefinitionFor(Node f) const
 
 bool FunDefEvaluator::hasDefinition(const Node& f) const
 {
-  return d_funDefMap.find(f)!=d_funDefMap.end();
+  return d_funDefMap.find(f) != d_funDefMap.end();
 }
 
 void FunDefEvaluator::clear()
