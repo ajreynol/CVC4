@@ -240,7 +240,12 @@ const static std::unordered_map<Kind, std::pair<internal::Kind, std::string>>
         KIND_ENUM(Kind::BITVECTOR_ROTATE_RIGHT,
                   internal::Kind::BITVECTOR_ROTATE_RIGHT),
         KIND_ENUM(Kind::INT_TO_BITVECTOR, internal::Kind::INT_TO_BITVECTOR),
-        KIND_ENUM(Kind::BITVECTOR_TO_NAT, internal::Kind::BITVECTOR_TO_NAT),
+        KIND_ENUM(Kind::BITVECTOR_UBV_TO_INT,
+                  internal::Kind::BITVECTOR_UBV_TO_INT),
+        KIND_ENUM(Kind::BITVECTOR_SBV_TO_INT,
+                  internal::Kind::BITVECTOR_SBV_TO_INT),
+        // note we silently change BITVECTOR_TO_NAT to BITVECTOR_UBV_TO_INT
+        KIND_ENUM(Kind::BITVECTOR_TO_NAT, internal::Kind::BITVECTOR_UBV_TO_INT),
         KIND_ENUM(Kind::BITVECTOR_FROM_BOOLS,
                   internal::Kind::BITVECTOR_FROM_BOOLS),
         KIND_ENUM(Kind::BITVECTOR_BIT, internal::Kind::BITVECTOR_BIT),
@@ -637,7 +642,10 @@ const static std::unordered_map<internal::Kind,
         {internal::Kind::BITVECTOR_ROTATE_RIGHT, Kind::BITVECTOR_ROTATE_RIGHT},
         {internal::Kind::INT_TO_BITVECTOR_OP, Kind::INT_TO_BITVECTOR},
         {internal::Kind::INT_TO_BITVECTOR, Kind::INT_TO_BITVECTOR},
-        {internal::Kind::BITVECTOR_TO_NAT, Kind::BITVECTOR_TO_NAT},
+        // note that BITVECTOR_TO_NAT does not exist internally, only the
+        // case for BITVECTOR_UBV_TO_INT is given
+        {internal::Kind::BITVECTOR_UBV_TO_INT, Kind::BITVECTOR_UBV_TO_INT},
+        {internal::Kind::BITVECTOR_SBV_TO_INT, Kind::BITVECTOR_SBV_TO_INT},
         {internal::Kind::BITVECTOR_FROM_BOOLS, Kind::BITVECTOR_FROM_BOOLS},
         {internal::Kind::BITVECTOR_BIT_OP, Kind::BITVECTOR_BIT},
         {internal::Kind::BITVECTOR_BIT, Kind::BITVECTOR_BIT},
@@ -3671,7 +3679,7 @@ Term Term::getRealAlgebraicNumberLowerBound() const
 #ifdef CVC5_POLY_IMP
   const internal::RealAlgebraicNumber& ran =
       d_node->getOperator().getConst<internal::RealAlgebraicNumber>();
-  return Term(d_tm, internal::PolyConverter::ran_to_lower(ran));
+  return Term(d_tm, internal::PolyConverter::ran_to_lower(d_tm->d_nm, ran));
 #else
   return Term();
 #endif
@@ -3696,7 +3704,7 @@ Term Term::getRealAlgebraicNumberUpperBound() const
 #ifdef CVC5_POLY_IMP
   const internal::RealAlgebraicNumber& ran =
       d_node->getOperator().getConst<internal::RealAlgebraicNumber>();
-  return Term(d_tm, internal::PolyConverter::ran_to_upper(ran));
+  return Term(d_tm, internal::PolyConverter::ran_to_upper(d_tm->d_nm, ran));
 #else
   return Term();
 #endif
