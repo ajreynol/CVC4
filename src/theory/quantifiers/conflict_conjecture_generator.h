@@ -58,6 +58,7 @@ class ConflictConjectureGenerator : public QuantifiersModule
 
  private:
   Node d_false;
+  Node d_null;
   /** */
   eq::EqualityEngine* d_ee;
 
@@ -108,6 +109,7 @@ class ConflictConjectureGenerator : public QuantifiersModule
    * Called when FV(a) is a superset of FV(b).
    */
   void candidateConjecture(const Node& a, const Node& b);
+  bool filterEmatching(const Node& a, const Node& b);
 };
 
 }  // namespace quantifiers

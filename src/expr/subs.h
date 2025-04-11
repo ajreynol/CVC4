@@ -47,6 +47,8 @@ class Subs
   Node getSubs(Node v) const;
   /** Find the substitution for v, or return std::nullopt */
   std::optional<Node> find(TNode v) const;
+  /** Erase the substitution for v, if it exists */
+  void erase(const Node& v);
   /** Add v -> k for fresh skolem of the same type as v */
   void add(Node v);
   /** Add v -> k for fresh skolem of the same type as v for each v in vs */

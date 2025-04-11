@@ -84,6 +84,16 @@ void Subs::add(const std::vector<Node>& vs, const std::vector<Node>& ss)
   }
 }
 
+void Subs::erase(const Node& v)
+{
+  auto it = std::find(d_vars.begin(), d_vars.end(), v);
+  if (it != d_vars.end()) {
+    std::size_t index = std::distance(d_vars.begin(), it);
+    d_vars.erase(d_vars.begin() + index);
+    d_subs.erase(d_subs.begin() + index);
+  }
+}
+
 void Subs::addEquality(Node eq)
 {
   Assert(eq.getKind() == Kind::EQUAL);

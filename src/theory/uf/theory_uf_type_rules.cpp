@@ -46,6 +46,7 @@ TypeNode UfTypeRule::computeType(NodeManager* nodeManager,
     // if it is not even maybe a function type
     if (!fType.isMaybeKind(Kind::FUNCTION_TYPE))
     {
+      AlwaysAssert(false);
       if (errOut)
       {
         (*errOut) << "operator does not have function type";
