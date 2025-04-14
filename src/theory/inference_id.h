@@ -473,6 +473,8 @@ enum class InferenceId
   QUANTIFIERS_CONJ_GEN_SPLIT,
   // enumeration of ground terms for inductive theorem proving
   QUANTIFIERS_CONJ_GEN_GT_ENUM,
+  // a split on a conjecture for inductive theorem proving
+  QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT,
   //-------------------- miscellaneous
   // skolemization
   QUANTIFIERS_SKOLEMIZE,

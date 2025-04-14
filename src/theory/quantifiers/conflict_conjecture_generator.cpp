@@ -39,7 +39,7 @@ ConflictConjectureGenerator::ConflictConjectureGenerator(
     QuantifiersInferenceManager& qim,
     QuantifiersRegistry& qr,
     TermRegistry& tr)
-    : QuantifiersModule(env, qs, qim, qr, tr), d_funDefEvaluator(env)
+    : QuantifiersModule(env, qs, qim, qr, tr), d_funDefEvaluator(env), d_conjGen(userContext()), d_conjGenIndex(userContext())
 {
   d_false = nodeManager()->mkConst(false);
 }
@@ -135,6 +135,23 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
     }
     Trace("ccgen") << "...keep " << eq << std::endl;
     checkDisequality(eq);
+  }
+  
+  // candidate conjectures
+  NodeManager * nm = nodeManager();
+  while (d_conjGenIndex.get()<d_conjGen.size())
+  {
+    Node lem = d_conjGen[d_conjGenIndex.get()];
+    std::unordered_set<Node> fvs;
+    expr::getFreeVariables(lem, fvs);
+    std::vector<Node> bvs(fvs.begin(), fvs.end());
+    if (!bvs.empty())
+    {
+      lem = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bvs), lem);
+    }
+    lem = nm->mkNode(Kind::OR, lem.negate(), lem);
+    Trace("ccgen") << "- send lemma " << lem << std::endl;
+    d_conjGenIndex = d_conjGenIndex.get()+1;
   }
 }
 
@@ -554,7 +571,9 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& a,
     return;
   }
   Trace("cconj") << "*** Conjecture : " << a << " == " << b << std::endl;
+  d_conjGen.emplace_back(a.eqNode(b));
 }
+
 bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)
 {
   Assert(a.hasOperator());

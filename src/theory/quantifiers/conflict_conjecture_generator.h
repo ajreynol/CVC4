@@ -20,6 +20,7 @@
 
 #include "smt/env_obj.h"
 #include "theory/quantifiers/quant_module.h"
+#include "expr/term_canonize.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -57,18 +58,18 @@ class ConflictConjectureGenerator : public QuantifiersModule
   std::string identify() const override;
 
  private:
+  /** Common constants */
   Node d_false;
   Node d_null;
-  /** */
+  /** The equality engine of quantifiers */
   eq::EqualityEngine* d_ee;
-
+  FunDefEvaluator d_funDefEvaluator;
+  expr::TermCanonize d_tc;
+  /** Maps ground terms to a bound variable, used if the ground term is a rep */
   std::map<Node, Node> d_bv;
+  /** Reverse map of above */
   std::map<Node, Node> d_bvToEqc;
-  Node getOrMkVarForEqc(const Node& e);
   std::map<Node, std::vector<Node>> d_eqcGen;
-  const std::vector<Node>& getGenForEqc(const Node& e);
-  void checkDisequality(const Node& eq);
-
   std::map<Node, std::vector<Node>> d_eqcGenRec;
   std::map<Node, std::vector<Node>> d_genToFv;
 
@@ -80,8 +81,12 @@ class ConflictConjectureGenerator : public QuantifiersModule
     void clear();
   };
   GenTrie d_gtrie;
-  FunDefEvaluator d_funDefEvaluator;
-
+  context::CDList<Node> d_conjGen;
+  context::CDO<size_t> d_conjGenIndex;
+  
+  Node getOrMkVarForEqc(const Node& e);
+  const std::vector<Node>& getGenForEqc(const Node& e);
+  void checkDisequality(const Node& eq);
   void getGeneralizations(const Node& e);
   void getGeneralizationsInternal(const Node& e);
   /**
@@ -106,9 +111,14 @@ class ConflictConjectureGenerator : public QuantifiersModule
                       size_t fvindex);
 
   /**
-   * Called when FV(a) is a superset of FV(b).
+   * Called when FV(a) is a superset of FV(b). 
    */
   void candidateConjecture(const Node& a, const Node& b);
+  /**
+   * See if there is a sustituion sigma such that (a = b)*sigma is false,
+   * where sigma maps to constants. Called when FV(a) is a superset of FV(b).
+   * @return true if we filter the conjecture a = b.
+   */
   bool filterEmatching(const Node& a, const Node& b);
 };
 
