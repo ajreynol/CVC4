@@ -18,9 +18,9 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__CONFLICT_CONJECTURE_GENERATOR_H
 #define CVC5__THEORY__QUANTIFIERS__CONFLICT_CONJECTURE_GENERATOR_H
 
+#include "expr/term_canonize.h"
 #include "smt/env_obj.h"
 #include "theory/quantifiers/quant_module.h"
-#include "expr/term_canonize.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -85,7 +85,7 @@ class ConflictConjectureGenerator : public QuantifiersModule
   context::CDO<size_t> d_conjGenIndex;
   /** The canonized version of lemmas in d_conjGen */
   context::CDHashSet<Node> d_conjGenCache;
-  
+
   Node getOrMkVarForEqc(const Node& e);
   const std::vector<Node>& getGenForEqc(const Node& e);
   void checkDisequality(const Node& eq);
@@ -113,7 +113,7 @@ class ConflictConjectureGenerator : public QuantifiersModule
                       size_t fvindex);
 
   /**
-   * Called when FV(a) is a superset of FV(b). 
+   * Called when FV(a) is a superset of FV(b).
    */
   void candidateConjecture(const Node& a, const Node& b);
   /**

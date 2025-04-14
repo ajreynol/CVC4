@@ -39,7 +39,11 @@ ConflictConjectureGenerator::ConflictConjectureGenerator(
     QuantifiersInferenceManager& qim,
     QuantifiersRegistry& qr,
     TermRegistry& tr)
-    : QuantifiersModule(env, qs, qim, qr, tr), d_funDefEvaluator(env), d_conjGen(userContext()), d_conjGenIndex(userContext()), d_conjGenCache(userContext())
+    : QuantifiersModule(env, qs, qim, qr, tr),
+      d_funDefEvaluator(env),
+      d_conjGen(userContext()),
+      d_conjGenIndex(userContext()),
+      d_conjGenCache(userContext())
 {
   d_false = nodeManager()->mkConst(false);
 }
@@ -136,10 +140,10 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
     Trace("ccgen") << "...keep " << eq << std::endl;
     checkDisequality(eq);
   }
-  
+
   // candidate conjectures
-  NodeManager * nm = nodeManager();
-  while (d_conjGenIndex.get()<d_conjGen.size())
+  NodeManager* nm = nodeManager();
+  while (d_conjGenIndex.get() < d_conjGen.size())
   {
     Node lem = d_conjGen[d_conjGenIndex.get()];
     std::unordered_set<Node> fvs;
@@ -147,12 +151,14 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
     std::vector<Node> bvs(fvs.begin(), fvs.end());
     if (!bvs.empty())
     {
-      lem = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bvs), lem);
+      lem =
+          nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bvs), lem);
     }
     lem = nm->mkNode(Kind::OR, lem.negate(), lem);
     Trace("ccgen") << "- send lemma " << lem << std::endl;
-    d_qim.addPendingLemma(lem, InferenceId::QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT);
-    d_conjGenIndex = d_conjGenIndex.get()+1;
+    d_qim.addPendingLemma(lem,
+                          InferenceId::QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT);
+    d_conjGenIndex = d_conjGenIndex.get() + 1;
   }
 }
 
@@ -306,7 +312,7 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
       {
         if (!subs.contains(gv))
         {
-          if (std::find(fvs.begin(), fvs.end(), gv)==fvs.end())
+          if (std::find(fvs.begin(), fvs.end(), gv) == fvs.end())
           {
             newVars.push_back(gv);
           }
@@ -567,19 +573,17 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& a,
   Trace("cconj-filter") << "Try filter based on E-matching" << std::endl;
   if (filterEmatching(a, b))
   {
-    Trace("cconj-filter") << "...filtered based on E-matching"
-                          << std::endl;
+    Trace("cconj-filter") << "...filtered based on E-matching" << std::endl;
     return;
   }
-  
+
   // filter based on cache
   Node lem = a.eqNode(b);
   // canonize it, which catches duplicates modulo alpha equivalence
   Node clem = d_tc.getCanonicalTerm(lem);
-  if (d_conjGenCache.find(clem)!=d_conjGenCache.end())
+  if (d_conjGenCache.find(clem) != d_conjGenCache.end())
   {
-    Trace("cconj-filter") << "...already in cache"
-                          << std::endl;
+    Trace("cconj-filter") << "...already in cache" << std::endl;
     return;
   }
   d_conjGenCache.insert(clem);
