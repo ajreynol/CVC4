@@ -263,7 +263,7 @@ void ConflictConjectureGenerator::getGeneralizations(const Node& v)
   d_eqcGenRec[v].emplace_back(v);
   // base case: own free variable
   addGeneralizationTerm(v, v, 0, {v});
-  size_t reps = 3;
+  size_t reps = 15;
   Trace("ccgen") << "Get " << reps << " runs for generalizations of " << v
                  << std::endl;
   for (size_t i = 0; i < reps; i++)
@@ -310,16 +310,19 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
       bool isDag = false;
       for (const Node& gv : g)
       {
-        if (!subs.contains(gv))
+        if (subs.contains(gv))
         {
-          if (std::find(fvs.begin(), fvs.end(), gv) == fvs.end())
-          {
-            newVars.push_back(gv);
-          }
-          else
-          {
-            isDag = true;
-          }
+          // already handled
+          isDag = true;
+        }
+        else if (std::find(fvs.begin(), fvs.end(), gv) == fvs.end())
+        {
+          newVars.push_back(gv);
+        }
+        else
+        {
+          // already in progress of being handled
+          isDag = true;
         }
       }
       if (isDag)
