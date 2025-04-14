@@ -111,7 +111,7 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
                  << std::endl;
   for (const Node& eq : candDeq)
   {
-    Trace("ccgen") << "- disequality: " << eq << std::endl;
+    Trace("ccgen-debug") << "- disequality: " << eq << std::endl;
     std::unordered_set<Node> syms;
     expr::getSymbols(eq, syms);
     Subs ss;
@@ -134,10 +134,10 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
     Trace("ccgen-debug") << "  ...concretizes to " << eqm << std::endl;
     if (eqm == d_false)
     {
-      Trace("ccgen") << "...filter " << eq << std::endl;
+      Trace("ccgen-debug") << "...filter " << eq << std::endl;
       continue;
     }
-    Trace("ccgen") << "...keep " << eq << std::endl;
+    Trace("ccgen-debug") << "...keep " << eq << std::endl;
     checkDisequality(eq);
   }
 
@@ -155,11 +155,12 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
           nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bvs), lem);
     }
     lem = nm->mkNode(Kind::OR, lem.negate(), lem);
-    Trace("ccgen") << "- send lemma " << lem << std::endl;
+    Trace("ccgen-lemma") << "ConflictConjectureGenerator: send lemma " << lem << std::endl;
     d_qim.addPendingLemma(lem,
                           InferenceId::QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT);
     d_conjGenIndex = d_conjGenIndex.get() + 1;
   }
+  Trace("ccgen") << "ConflictConjectureGenerator: end check" << std::endl;
 }
 
 std::string ConflictConjectureGenerator::identify() const
@@ -264,7 +265,7 @@ void ConflictConjectureGenerator::getGeneralizations(const Node& v)
   // base case: own free variable
   addGeneralizationTerm(v, v, 0, {v});
   size_t reps = 15;
-  Trace("ccgen") << "Get " << reps << " runs for generalizations of " << v
+  Trace("ccgen-debug") << "Get " << reps << " runs for generalizations of " << v
                  << std::endl;
   for (size_t i = 0; i < reps; i++)
   {
@@ -281,15 +282,16 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
   std::vector<Node>& grecs = d_eqcGenRec[v];
   fvs.push_back(v);
   Subs subs;
+  size_t rindex = Random::getRandom().pick(0, fvs.size() - 1);
   for (size_t i = 0; i < depth; i++)
   {
-    size_t rindex = Random::getRandom().pick(0, fvs.size() - 1);
     Node vc = fvs[rindex];
     Trace("ccgen-debug") << "process " << vc << std::endl;
     Assert(d_bvToEqc.find(vc) != d_bvToEqc.end());
     const std::vector<Node>& gens = getGenForEqc(d_bvToEqc[vc]);
     if (gens.empty())
     {
+      rindex = rindex+1==fvs.size() ? 0 : rindex+1;
       Trace("ccgen-debug") << "...no generalizations" << std::endl;
       // nothing to generalize
       continue;
@@ -300,6 +302,7 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
     if (expr::hasSubterm(gs, v))
     {
       Trace("ccgen-debug") << "...cyclic to " << gs << std::endl;
+      rindex = Random::getRandom().pick(0, fvs.size() - 1);
       // cyclic, skip
       continue;
     }
@@ -327,6 +330,7 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
       }
       if (isDag)
       {
+        rindex = Random::getRandom().pick(0, fvs.size() - 1);
         continue;
       }
     }
@@ -349,6 +353,8 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
     {
       break;
     }
+    // new index
+    rindex = Random::getRandom().pick(0, fvs.size() - 1);
   }
 }
 
@@ -359,7 +365,7 @@ void ConflictConjectureGenerator::addGeneralizationTerm(
   {
     return;
   }
-  Trace("ccgen") << "* Generalization term [" << v << "]: " << g << std::endl;
+  Trace("ccgen-terms") << "* Generalization term [" << v << "]: " << g << std::endl;
   Trace("ccgen-debug") << "- free variables are " << fvs << std::endl;
   d_genToFv[g] = fvs;
   GenTrie* gt = &d_gtrie;
@@ -571,6 +577,12 @@ class EMatchFrame
 void ConflictConjectureGenerator::candidateConjecture(const Node& a,
                                                       const Node& b)
 {
+  if (a.isVar() && expr::hasSubterm(b,a))
+  {
+    // corner case of the form x = t[x], flip sides
+    candidateConjecture(b,a);
+    return;
+  }
   Trace("cconj-filter") << "Candidate conjecture : " << a << " == " << b << "?"
                         << std::endl;
   Trace("cconj-filter") << "Try filter based on E-matching" << std::endl;
@@ -596,7 +608,13 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& a,
 
 bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)
 {
-  Assert(a.hasOperator());
+  if (!a.hasOperator())
+  {
+    // we don't expect this to happen, but in case it does we given an
+    // assertion failure
+    Assert(false);
+    return false;
+  }
   // TODO: cache E-matching for a, for checking a = b1 and a = b2
   Node op = a.getOperator();
   TermDb* tdb = getTermDatabase();
