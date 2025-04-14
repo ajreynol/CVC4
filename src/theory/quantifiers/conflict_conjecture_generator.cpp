@@ -280,18 +280,34 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
       continue;
     }
     Trace("ccgen-debug") << "...expand to " << gs << std::endl;
-    fvs.erase(fvs.begin() + rindex);
+    std::vector<Node> newVars;
     if (g.getNumChildren() > 0)
     {
-      // TODO: sorted add
+      bool isDag = false;
       for (const Node& gv : g)
       {
         if (!subs.contains(gv))
         {
-          fvs.push_back(gv);
+          if (std::find(fvs.begin(), fvs.end(), gv)==fvs.end())
+          {
+            newVars.push_back(gv);
+          }
+          else
+          {
+            isDag = true;
+          }
         }
       }
-      std::sort(fvs.begin(), fvs.end());
+      if (isDag)
+      {
+        continue;
+      }
+    }
+    fvs.erase(fvs.begin() + rindex);
+    for (const Node& gv : newVars)
+    {
+      auto it = std::lower_bound(fvs.begin(), fvs.end(), gv);
+      fvs.insert(it, gv);
     }
     Trace("ccgen-debug") << "...free variables now " << fvs << std::endl;
     Subs stmp;
@@ -542,7 +558,7 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& a,
 bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)
 {
   Assert(a.hasOperator());
-
+  // TODO: cache E-matching for a, for checking a = b1 and a = b2
   Node op = a.getOperator();
   TermDb* tdb = getTermDatabase();
   EntailmentCheck* ec = d_treg.getEntailmentCheck();
