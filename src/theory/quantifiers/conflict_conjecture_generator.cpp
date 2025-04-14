@@ -39,7 +39,7 @@ ConflictConjectureGenerator::ConflictConjectureGenerator(
     QuantifiersInferenceManager& qim,
     QuantifiersRegistry& qr,
     TermRegistry& tr)
-    : QuantifiersModule(env, qs, qim, qr, tr), d_funDefEvaluator(env), d_conjGen(userContext()), d_conjGenIndex(userContext())
+    : QuantifiersModule(env, qs, qim, qr, tr), d_funDefEvaluator(env), d_conjGen(userContext()), d_conjGenIndex(userContext()), d_conjGenCache(userContext())
 {
   d_false = nodeManager()->mkConst(false);
 }
@@ -151,6 +151,7 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
     }
     lem = nm->mkNode(Kind::OR, lem.negate(), lem);
     Trace("ccgen") << "- send lemma " << lem << std::endl;
+    d_qim.addPendingLemma(lem, InferenceId::QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT);
     d_conjGenIndex = d_conjGenIndex.get()+1;
   }
 }
@@ -563,15 +564,27 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& a,
 {
   Trace("cconj-filter") << "Candidate conjecture : " << a << " == " << b << "?"
                         << std::endl;
-  Trace("cconj-filter") << "Filter based on E-matching" << std::endl;
+  Trace("cconj-filter") << "Try filter based on E-matching" << std::endl;
   if (filterEmatching(a, b))
   {
-    Trace("cconj-filter") << "...success, filtered based on E-matching"
+    Trace("cconj-filter") << "...filtered based on E-matching"
                           << std::endl;
     return;
   }
+  
+  // filter based on cache
+  Node lem = a.eqNode(b);
+  // canonize it, which catches duplicates modulo alpha equivalence
+  Node clem = d_tc.getCanonicalTerm(lem);
+  if (d_conjGenCache.find(clem)!=d_conjGenCache.end())
+  {
+    Trace("cconj-filter") << "...already in cache"
+                          << std::endl;
+    return;
+  }
+  d_conjGenCache.insert(clem);
   Trace("cconj") << "*** Conjecture : " << a << " == " << b << std::endl;
-  d_conjGen.emplace_back(a.eqNode(b));
+  d_conjGen.emplace_back(lem);
 }
 
 bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)

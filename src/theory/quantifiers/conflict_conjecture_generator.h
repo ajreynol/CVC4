@@ -83,6 +83,8 @@ class ConflictConjectureGenerator : public QuantifiersModule
   GenTrie d_gtrie;
   context::CDList<Node> d_conjGen;
   context::CDO<size_t> d_conjGenIndex;
+  /** The canonized version of lemmas in d_conjGen */
+  context::CDHashSet<Node> d_conjGenCache;
   
   Node getOrMkVarForEqc(const Node& e);
   const std::vector<Node>& getGenForEqc(const Node& e);
