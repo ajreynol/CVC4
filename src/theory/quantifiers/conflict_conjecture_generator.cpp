@@ -439,15 +439,24 @@ void ConflictConjectureGenerator::findCompatible(
   }
 }
 
+/**
+ * The state of finding E-matches for a term in an equalivalence class
+ */
 class EMatchFrame
 {
  public:
   EMatchFrame() {}
+  /**
+   * Initialize the list of terms in the equivalance class of r that may match
+   * m.
+   */
   EMatchFrame(TermDb* tdb, eq::EqualityEngine* ee, const Node& m, const Node& r)
       : d_toMatch(m), d_index(0)
   {
     Assert(ee->hasTerm(r) && ee->getRepresentative(r) == r && r.isConst());
     Node op = m.getOperator();
+    // maps argument positions to the ground term representative of that
+    // argument, for the ground arguments of m.
     std::map<size_t, Node> groundArgs;
     for (size_t i = 0, nargs = m.getNumChildren(); i < nargs; i++)
     {
@@ -465,13 +474,15 @@ class EMatchFrame
         d_recArgs.push_back(i);
       }
     }
-    // get the candidates
+    // get the candidate terms in this equivalence class
     eq::EqClassIterator eqc = eq::EqClassIterator(r, ee);
     while (!eqc.isFinished())
     {
       Node n = *eqc;
       ++eqc;
-      // must match
+      // must have the same operator, and be "active". The latter restriction
+      // will filter terms that are congruent to another term we already
+      // considered.
       if (!n.hasOperator() || n.getOperator() != m.getOperator()
           || !tdb->isTermActive(n))
       {
@@ -497,12 +508,29 @@ class EMatchFrame
       }
     }
   }
+  /** The term we are matching */
   Node d_toMatch;
+  /** The candidate list of terms */
   std::vector<Node> d_matches;
-  std::vector<size_t> d_recArgs;
-  std::vector<size_t> d_varArgs;
-  std::unordered_set<size_t> d_varArgsBound;
+  /** The next index in d_matches to consider */
   size_t d_index;
+  /** The argument positions of d_toMatch which are non-ground, non-variable */
+  std::vector<size_t> d_recArgs;
+  /** The argument positions of d_toMatch which are variables */
+  std::vector<size_t> d_varArgs;
+  /** 
+   * The set of variables we bound in the last successful call to push, if any.
+   */
+  std::unordered_set<size_t> d_varArgsBound;
+  /**
+   * Update match/emf based on matching the next term in the list of candidate
+   * terms computed in the constructor of this class. This adds
+   * - substitutions to match based on binding the direct variables of d_toMatch
+   * - a list of obligations to match recursively to emf based on the
+   * non-ground, non-variable chidlren of d_toMatch.
+   * 
+   * @return true if we successfully pushed to match/emf.
+   */
   bool push(TermDb* tdb,
             eq::EqualityEngine* ee,
             Subs& match,
@@ -563,6 +591,10 @@ class EMatchFrame
     Trace("cconj-em-debug") << "...return success" << std::endl;
     return true;
   }
+  /**
+   * Pop, which cleans up match based on what was bound by this class in the
+   * last successful call to push.
+   */
   void pop(Subs& match)
   {
     for (size_t i : d_varArgsBound)
