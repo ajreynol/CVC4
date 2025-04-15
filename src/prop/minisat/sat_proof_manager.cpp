@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Haniel Barbosa, Gereon Kremer, Mathias Preiner
+ *   Haniel Barbosa, Andrew Reynolds, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -47,8 +47,8 @@ SatProofManager::SatProofManager(Env& env,
       d_optResManager(userContext(), &d_resChains, d_optResProofs),
       d_optClausesManager(userContext(), ppm->getCnfProof(), d_optClausesPfs)
 {
-  d_true = NodeManager::currentNM()->mkConst(true);
-  d_false = NodeManager::currentNM()->mkConst(false);
+  d_true = nodeManager()->mkConst(true);
+  d_false = nodeManager()->mkConst(false);
   d_optResManager.trackNodeHashSet(&d_assumptions, &d_assumptionLevels);
   // temporary, to allow this class to be notified when new clauses are added
   // see https://github.com/cvc5/cvc5-wishues/issues/149
@@ -74,7 +74,7 @@ Node SatProofManager::getClauseNode(const Minisat::Clause& clause)
   }
   // order children by node id
   std::sort(clauseNodes.begin(), clauseNodes.end());
-  return NodeManager::currentNM()->mkNode(Kind::OR, clauseNodes);
+  return nodeManager()->mkNode(Kind::OR, clauseNodes);
 }
 
 void SatProofManager::startResChain(const Minisat::Clause& start)
@@ -169,6 +169,16 @@ void SatProofManager::endResChain(Node conclusion,
                                   uint32_t clauseLevel)
 {
   Trace("sat-proof") << ", " << conclusion << "\n";
+  LazyCDProof* cnfProof = d_ppm->getCnfProof();
+  if (cnfProof->hasStep(conclusion) || cnfProof->hasGenerator(conclusion))
+  {
+    Trace("sat-proof") << "SatProofManager::endResChain: cnf proof has "
+                          "step/gen for it; skip\n";
+    // clearing
+    d_resLinks.clear();
+    d_redundantLits.clear();
+    return;
+  }
   if (d_resChains.hasGenerator(conclusion))
   {
     Trace("sat-proof")
@@ -645,7 +655,12 @@ void SatProofManager::finalizeProof(Node inConflictNode,
     Trace("sat-proof") << "expand assumptions to prove false\n";
     std::shared_ptr<ProofNode> pfn = d_resChains.getProofFor(d_false);
     Assert(pfn);
-    Trace("sat-proof-debug") << "sat proof of flase: " << *pfn.get() << "\n";
+    if (TraceIsOn("sat-proof-debug"))
+    {
+      std::stringstream ss;
+      pfn->printDebug(ss, true);
+      Trace("sat-proof-debug") << "sat proof of false: " << ss.str() << "\n";
+    }
     std::vector<Node> fassumps;
     expr::getFreeAssumptions(pfn.get(), fassumps);
     if (TraceIsOn("sat-proof"))
@@ -715,16 +730,6 @@ void SatProofManager::finalizeProof(Node inConflictNode,
       premises.insert(fa);
     }
   } while (expanded);
-  // now we should be able to close it
-  if (options().proof.proofCheck == options::ProofCheckMode::EAGER)
-  {
-    std::vector<Node> assumptionsVec;
-    for (const Node& a : d_assumptions)
-    {
-      assumptionsVec.push_back(a);
-    }
-    d_resChains.addLazyStep(d_false, &d_resChainPg, assumptionsVec);
-  }
 }
 
 void SatProofManager::storeUnitConflict(Minisat::Lit inConflict)
@@ -893,7 +898,7 @@ Node SatProofManager::getClauseNode(const SatClause& clause)
   }
   // order children by node id
   std::sort(clauseNodes.begin(), clauseNodes.end());
-  return NodeManager::currentNM()->mkNode(Kind::OR, clauseNodes);
+  return nodeManager()->mkNode(Kind::OR, clauseNodes);
 }
 
 }  // namespace prop

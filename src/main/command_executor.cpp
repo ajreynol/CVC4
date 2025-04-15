@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -54,7 +54,7 @@ void setNoLimitCPU() {
 
 CommandExecutor::CommandExecutor(std::unique_ptr<cvc5::Solver>& solver)
     : d_solver(solver),
-      d_symman(new SymbolManager(d_solver.get())),
+      d_symman(new SymbolManager(d_solver->getTermManager())),
       d_result(),
       d_parseOnly(false)
 {
@@ -82,12 +82,25 @@ void CommandExecutor::printStatistics(std::ostream& out) const
 {
   if (d_solver->getOptionInfo("stats").boolValue())
   {
-    const auto& stats = d_solver->getStatistics();
-    auto it = stats.begin(d_solver->getOptionInfo("stats-internal").boolValue(),
-                          d_solver->getOptionInfo("stats-all").boolValue());
-    for (; it != stats.end(); ++it)
     {
-      out << it->first << " = " << it->second << std::endl;
+      const auto& stats = d_solver->getStatistics();
+      auto it =
+          stats.begin(d_solver->getOptionInfo("stats-internal").boolValue(),
+                      d_solver->getOptionInfo("stats-all").boolValue());
+      for (; it != stats.end(); ++it)
+      {
+        out << it->first << " = " << it->second << std::endl;
+      }
+    }
+    {
+      const auto& stats = d_solver->getTermManager().getStatistics();
+      auto it =
+          stats.begin(d_solver->getOptionInfo("stats-internal").boolValue(),
+                      d_solver->getOptionInfo("stats-all").boolValue());
+      for (; it != stats.end(); ++it)
+      {
+        out << it->first << " = " << it->second << std::endl;
+      }
     }
   }
 }
@@ -96,6 +109,7 @@ void CommandExecutor::printStatisticsSafe(int fd) const
 {
   if (d_solver->getOptionInfo("stats").boolValue())
   {
+    d_solver->getTermManager().printStatisticsSafe(fd);
     d_solver->printStatisticsSafe(fd);
   }
 }
@@ -117,8 +131,7 @@ bool CommandExecutor::doCommandSingleton(Cmd* cmd)
 {
   bool status = solverInvoke(d_solver.get(),
                              d_symman->toSymManager(),
-                             cmd,
-                             d_solver->getDriverOptions().out());
+                             cmd);
 
   cvc5::Result res;
   bool hasResult = false;
@@ -205,8 +218,7 @@ bool CommandExecutor::doCommandSingleton(Cmd* cmd)
 
 bool CommandExecutor::solverInvoke(cvc5::Solver* solver,
                                    SymManager* sm,
-                                   Cmd* cmd,
-                                   std::ostream& out)
+                                   Cmd* cmd)
 {
   // print output for -o raw-benchmark
   if (solver->isOutputOn("raw-benchmark"))
@@ -220,12 +232,13 @@ bool CommandExecutor::solverInvoke(cvc5::Solver* solver,
   if (d_parseOnly && dynamic_cast<SetBenchmarkLogicCommand*>(cmd) == nullptr
       && dynamic_cast<ResetCommand*>(cmd) == nullptr
       && dynamic_cast<DeclarationDefinitionCommand*>(cmd) == nullptr
-      && dynamic_cast<DatatypeDeclarationCommand*>(cmd) == nullptr)
+      && dynamic_cast<DatatypeDeclarationCommand*>(cmd) == nullptr
+      && dynamic_cast<DefineFunctionRecCommand*>(cmd) == nullptr)
   {
     return true;
   }
 
-  cmd->invoke(solver, sm, out);
+  cmd->invokeAndPrintResult(solver, sm);
   return !cmd->fail();
 }
 

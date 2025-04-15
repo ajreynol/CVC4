@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Haniel Barbosa, Gereon Kremer
+ *   Andrew Reynolds, Hans-Joerg Schurr, Haniel Barbosa
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "context/cdhashmap.h"
+#include "cvc5/cvc5_proof_rule.h"
 #include "expr/node.h"
 #include "proof/proof_generator.h"
 #include "proof/proof_step_buffer.h"
@@ -138,7 +139,7 @@ class CDProof : protected EnvObj, public ProofGenerator
 {
  public:
   /**
-   * @param pnm The proof node manager responsible for constructor ProofNode
+   * @param env Reference to the environment
    * @param c The context this proof depends on
    * @param name The name of this proof (for debugging)
    * @param autoSymm Whether this proof automatically adds symmetry steps based
@@ -210,6 +211,14 @@ class CDProof : protected EnvObj, public ProofGenerator
                       const std::vector<Node>& args,
                       bool ensureChildren = false,
                       CDPOverwrite opolicy = CDPOverwrite::ASSUME_ONLY);
+  /**
+   * Version with ProofRewriteRule. This adds a THEORY_REWRITE step with the
+   * expected arguments.
+   */
+  bool addTheoryRewriteStep(Node expected,
+                            ProofRewriteRule id,
+                            bool ensureChildren = false,
+                            CDPOverwrite opolicy = CDPOverwrite::ASSUME_ONLY);
   /** Version with ProofStep */
   bool addStep(Node expected,
                const ProofStep& step,

@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -42,6 +42,8 @@ enum class InferenceId
 {
   NONE,
   // ---------------------------------- core
+  // formulas coming from input
+  INPUT,
   // a conflict when two constants merge in the equality engine (of any theory)
   EQ_CONSTANT_MERGE,
   // a split from theory combination
@@ -50,6 +52,8 @@ enum class InferenceId
   CONFLICT_REWRITE_LIT,
   // an explained theory propagation
   EXPLAINED_PROPAGATION,
+  // a skolem lemma introduced by the theory preprocessor
+  THEORY_PP_SKOLEM_LEM,
   // ---------------------------------- ext theory
   // a simplification from the extended theory utility
   EXTT_SIMPLIFY,
@@ -210,7 +214,7 @@ enum class InferenceId
   BAGS_INTERSECTION_MIN,
   BAGS_DIFFERENCE_SUBTRACT,
   BAGS_DIFFERENCE_REMOVE,
-  BAGS_DUPLICATE_REMOVAL,
+  BAGS_SETOF,
   BAGS_MAP_DOWN,
   BAGS_MAP_DOWN_INJECTIVE,
   BAGS_MAP_UP1,
@@ -342,6 +346,10 @@ enum class InferenceId
   QUANTIFIERS_INST_CBQI_CONFLICT,
   // propagating instantiation from conflict-based instantiation
   QUANTIFIERS_INST_CBQI_PROP,
+  // conflicting instantiation from sub conflict-based instantiation
+  QUANTIFIERS_INST_SUB_CONFLICT,
+  // unsat core from sub conflict-based instantiation
+  QUANTIFIERS_SUB_UC,
   // instantiation from naive exhaustive instantiation in finite model finding
   QUANTIFIERS_INST_FMF_EXH,
   // instantiation from finite model finding based on its model-based algorithm
@@ -356,6 +364,8 @@ enum class InferenceId
   QUANTIFIERS_INST_SYQI,
   // instantiations from model-based instantiation
   QUANTIFIERS_INST_MBQI,
+  // instantiations from model-based instantiation (mbqi-enum)
+  QUANTIFIERS_INST_MBQI_ENUM,
   // instantiations from enumerative instantiation
   QUANTIFIERS_INST_ENUM,
   // instantiations from pool instantiation
@@ -453,6 +463,8 @@ enum class InferenceId
   QUANTIFIERS_SYGUS_COMPLETE_ENUM,
   // infeasible due to side condition (e.g. for abduction)
   QUANTIFIERS_SYGUS_SC_INFEASIBLE,
+  // infeasible due to non-well-founded grammar
+  QUANTIFIERS_SYGUS_NO_WF_GRAMMAR,
   //-------------------- dynamic splitting
   // a dynamic split from quantifiers
   QUANTIFIERS_DSPLIT,
@@ -478,6 +490,9 @@ enum class InferenceId
   // when term indexing discovers disequal congruent terms in the master
   // equality engine
   QUANTIFIERS_TDB_DEQ_CONG,
+  // An existential corresponding to a witness term generated based on BV
+  // invertibility conditions.
+  QUANTIFIERS_CEGQI_WITNESS,
   //-------------------------------------- end quantifiers theory
 
   // ---------------------------------- sep theory
@@ -567,6 +582,8 @@ enum class InferenceId
   SETS_RELS_JOIN_IMAGE_UP,
   SETS_RELS_JOIN_SPLIT_1,
   SETS_RELS_JOIN_SPLIT_2,
+  SETS_RELS_TABLE_JOIN_UP,
+  SETS_RELS_TABLE_JOIN_DOWN,
   SETS_RELS_PRODUCE_COMPOSE,
   SETS_RELS_PRODUCT_SPLIT,
   SETS_RELS_TCLOSURE_FWD,
@@ -956,16 +973,22 @@ enum class InferenceId
   // This is applied when lamda function f and ordinary function h are in the
   // same eq class.
   UF_HO_LAMBDA_APP_REDUCE,
+  // Lazy lambda lifting
+  UF_HO_LAMBDA_LAZY_LIFT,
   //-------------------- end model-construction specific part
   //-------------------- end HO extension to UF
   //-------------------- UF arith/bv conversions solver
   // reductions of an arithmetic/bit-vector conversion term
   UF_ARITH_BV_CONV_REDUCTION,
+  // value-based refinement of an arithmetic/bit-vector conversion term
+  UF_ARITH_BV_CONV_VALUE_REFINE,
   //-------------------------------------- end uf theory
 
   //-------------------------------------- lemma from modules
   // From the partition generator
   PARTITION_GENERATOR_PARTITION,
+  // From a plugin
+  PLUGIN_LEMMA,
   //-------------------------------------- unknown
   UNKNOWN
 };
@@ -991,7 +1014,7 @@ const char* toString(InferenceId i);
 std::ostream& operator<<(std::ostream& out, InferenceId i);
 
 /** Make node from inference id */
-Node mkInferenceIdNode(InferenceId i);
+Node mkInferenceIdNode(NodeManager* nm, InferenceId i);
 
 /** get an inference identifier from a node, return false if we fail */
 bool getInferenceId(TNode n, InferenceId& i);

@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Tim King, Mathias Preiner
+ *   Andrew Reynolds, Tim King, Morgan Deters
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -240,7 +240,7 @@ class QuantConflictFind : public QuantifiersModule
   };
   Statistics d_statistics;
   /** Identify this module */
-  std::string identify() const override { return "QcfEngine"; }
+  std::string identify() const override;
   /** is n a propagating instance?
    *
    * A propagating instance is any formula that consists of Boolean connectives,

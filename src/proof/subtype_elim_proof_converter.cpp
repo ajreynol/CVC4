@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -17,13 +17,14 @@
 
 #include "proof/proof.h"
 #include "proof/proof_checker.h"
+#include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
 #include "smt/env.h"
 
 namespace cvc5::internal {
 
 SubtypeElimConverterCallback::SubtypeElimConverterCallback(Env& env)
-    : EnvObj(env)
+    : EnvObj(env), d_nconv(nodeManager())
 {
   d_pc = d_env.getProofNodeManager()->getChecker();
 }
@@ -108,7 +109,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
     case ProofRule::ARITH_SUM_UB:
     {
       success = true;
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       Assert(resc.getNumChildren() == 2);
       Assert(resc[0].getNumChildren() == children.size());
       Assert(resc[1].getNumChildren() == children.size());
@@ -151,7 +152,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
       //
       // there t'~s' is a predicate over reals and t~s is a mixed integer
       // predicate.
-      NodeManager* nm = NodeManager::currentNM();
+      NodeManager* nm = nodeManager();
       Node sc = resc[0][0];
       Node relOld = resc[0][1];
       Node relNew = nm->mkNode(relOld.getKind(), resc[1][0][1], resc[1][1][1]);
@@ -231,7 +232,7 @@ bool SubtypeElimConverterCallback::prove(const Node& src,
   // t=s becomes (to_real t)=(to_real s), or t=0 becomes (to_real t)=0.0
   Node conv[2];
   Node convEq[2];
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (size_t j = 0; j < 2; j++)
   {
     conv[j] = nm->mkNode(Kind::TO_REAL, src[j]);
@@ -254,8 +255,9 @@ bool SubtypeElimConverterCallback::prove(const Node& src,
   Node csrc = nm->mkNode(src.getKind(), conv[0], conv[1]);
   if (tgt.getKind() == Kind::EQUAL)
   {
-    Node nk = ProofRuleChecker::mkKindNode(Kind::TO_REAL);
-    cdp->addStep(csrc, ProofRule::CONG, {src}, {nk});
+    std::vector<Node> cargs;
+    ProofRule cr = expr::getCongRule(csrc[0], cargs);
+    cdp->addStep(csrc, cr, {src}, cargs);
     Trace("pf-subtype-elim") << "...via " << csrc << std::endl;
     if (csrc != tgt)
     {
@@ -295,8 +297,9 @@ bool SubtypeElimConverterCallback::prove(const Node& src,
     if (csrc != tgt)
     {
       Node congEq = csrc.eqNode(tgt);
-      Node nk = ProofRuleChecker::mkKindNode(csrc.getKind());
-      cdp->addStep(congEq, ProofRule::CONG, {convEq[0], convEq[1]}, {nk});
+      std::vector<Node> cargs;
+      ProofRule cr = expr::getCongRule(csrc, cargs);
+      cdp->addStep(congEq, cr, {convEq[0], convEq[1]}, cargs);
       cdp->addStep(fullEq, ProofRule::TRANS, {rewriteEq, congEq}, {});
     }
     cdp->addStep(tgt, ProofRule::EQ_RESOLVE, {src, fullEq}, {});

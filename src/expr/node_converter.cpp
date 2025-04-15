@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -21,7 +21,10 @@ using namespace cvc5::internal::kind;
 
 namespace cvc5::internal {
 
-NodeConverter::NodeConverter(bool forceIdem) : d_forceIdem(forceIdem) {}
+NodeConverter::NodeConverter(NodeManager* nm, bool forceIdem)
+    : d_nm(nm), d_forceIdem(forceIdem)
+{
+}
 
 Node NodeConverter::convert(Node n, bool preserveTypes)
 {
@@ -30,7 +33,6 @@ Node NodeConverter::convert(Node n, bool preserveTypes)
     return n;
   }
   Trace("nconv-debug") << "NodeConverter::convert: " << n << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
   std::unordered_map<Node, Node>::iterator it;
   std::vector<TNode> visit;
   TNode cur;
@@ -116,7 +118,7 @@ Node NodeConverter::convert(Node n, bool preserveTypes)
         {
           if (childChanged)
           {
-            ret = nm->mkNode(ret.getKind(), children);
+            ret = d_nm->mkNode(ret.getKind(), children);
             Trace("nconv-debug2") << "..from children changed " << cur
                                   << " into " << ret << std::endl;
           }
@@ -209,7 +211,7 @@ TypeNode NodeConverter::convertType(TypeNode tn)
         TypeNode ret = cur;
         // reconstruct using a node builder, which seems to be required for
         // type nodes.
-        NodeBuilder nb(ret.getKind());
+        NodeBuilder nb(d_nm, ret.getKind());
         // there are no parameterized types
         Assert (ret.getMetaKind() != kind::metakind::PARAMETERIZED);
         for (TypeNode::const_iterator j = ret.begin(), iend = ret.end();

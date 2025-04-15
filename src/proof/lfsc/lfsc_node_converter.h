@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Abdalrhman Mohamed
+ *   Andrew Reynolds, Abdalrhman Mohamed, Daniel Larraz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -14,8 +14,8 @@
  */
 #include "cvc5_private.h"
 
-#ifndef CVC4__PROOF__LFSC__LFSC_NODE_CONVERTER_H
-#define CVC4__PROOF__LFSC__LFSC_NODE_CONVERTER_H
+#ifndef CVC5__PROOF__LFSC__LFSC_NODE_CONVERTER_H
+#define CVC5__PROOF__LFSC__LFSC_NODE_CONVERTER_H
 
 #include <iostream>
 #include <map>
@@ -34,8 +34,7 @@ namespace proof {
 class LfscNodeConverter : public NodeConverter
 {
  public:
-  LfscNodeConverter();
-  ~LfscNodeConverter() {}
+  LfscNodeConverter(NodeManager* nm);
   /** convert at pre-order traversal */
   Node preConvert(Node n) override;
   /** convert at post-order traversal */
@@ -50,9 +49,11 @@ class LfscNodeConverter : public NodeConverter
    *
    * The returned null terminator is *not* converted to internal form.
    *
-   * For examples of null terminators, see nary_term_utils.h.
+   * For examples of null terminators, see aci_norm.h.
    */
-  Node getNullTerminator(Kind k, TypeNode tn = TypeNode::null());
+  Node getNullTerminator(NodeManager* nm,
+                         Kind k,
+                         TypeNode tn = TypeNode::null());
   /**
    * Return the properly named operator for n of the form (f t1 ... tn), where
    * f could be interpreted or uninterpreted.  This method is used for cases

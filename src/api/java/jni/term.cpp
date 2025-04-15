@@ -4,7 +4,7 @@
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -548,16 +548,29 @@ JNIEXPORT jstring JNICALL Java_io_github_cvc5_Term_getStringValue(JNIEnv* env,
   Term* current = reinterpret_cast<Term*>(pointer);
   std::wstring termString = current->getStringValue();
 
-  size_t length = termString.length();
-  jchar* unicode = new jchar[length];
-  const wchar_t* s = termString.c_str();
-  for (size_t i = 0; i < length; i++)
+  std::u16string utf16String;
+  for (wchar_t wc : termString)
   {
-    unicode[i] = s[i];
+    if (wc <= 0xFFFF)
+    {
+      // BMP character (directly store it)
+      utf16String.push_back(static_cast<char16_t>(wc));
+    }
+    else
+    {
+      // Convert to surrogate pair
+      wchar_t codepoint = wc - 0x10000;
+      char16_t highSurrogate =
+          static_cast<char16_t>((codepoint >> 10) + 0xD800);
+      char16_t lowSurrogate =
+          static_cast<char16_t>((codepoint & 0x3FF) + 0xDC00);
+      utf16String.push_back(highSurrogate);
+      utf16String.push_back(lowSurrogate);
+    }
   }
-  jstring ret = env->NewString(unicode, length);
-  delete[] unicode;
-  return ret;
+
+  return env->NewString(reinterpret_cast<const jchar*>(utf16String.c_str()),
+                        utf16String.length());
   CVC5_JAVA_API_TRY_CATCH_END_RETURN(env, nullptr);
 }
 
@@ -865,11 +878,12 @@ JNIEXPORT jobject JNICALL Java_io_github_cvc5_Term_getFloatingPointValue(
   auto [exponent, significand, term] = current->getFloatingPointValue();
   Term* termPointer = new Term(term);
 
+  jstring e = env->NewStringUTF(std::to_string(exponent).c_str());
+  jstring s = env->NewStringUTF(std::to_string(significand).c_str());
+
   // Long longObject = new Long(pointer)
   jclass longClass = env->FindClass("Ljava/lang/Long;");
   jmethodID longConstructor = env->GetMethodID(longClass, "<init>", "(J)V");
-  jobject e = env->NewObject(longClass, longConstructor, exponent);
-  jobject s = env->NewObject(longClass, longConstructor, significand);
   jobject t = env->NewObject(longClass, longConstructor, termPointer);
 
   // Triplet triplet = new Triplet<Long, Long, Long>(e, s, t);
@@ -1065,6 +1079,52 @@ Java_io_github_cvc5_Term_getRealAlgebraicNumberUpperBound(JNIEnv* env,
 
 /*
  * Class:     io_github_cvc5_Term
+ * Method:    isSkolem
+ * Signature: (J)Z
+ */
+JNIEXPORT jboolean JNICALL Java_io_github_cvc5_Term_isSkolem(JNIEnv* env,
+                                                             jobject,
+                                                             jlong pointer)
+{
+  CVC5_JAVA_API_TRY_CATCH_BEGIN;
+  Term* current = reinterpret_cast<Term*>(pointer);
+  return static_cast<jboolean>(current->isSkolem());
+  CVC5_JAVA_API_TRY_CATCH_END_RETURN(env, static_cast<jboolean>(false));
+}
+
+/*
+ * Class:     io_github_cvc5_Term
+ * Method:    getSkolemId
+ * Signature: (J)I;
+ */
+JNIEXPORT jint JNICALL Java_io_github_cvc5_Term_getSkolemId(JNIEnv* env,
+                                                            jobject,
+                                                            jlong pointer)
+{
+  CVC5_JAVA_API_TRY_CATCH_BEGIN;
+  Term* current = reinterpret_cast<Term*>(pointer);
+  return static_cast<jint>(current->getSkolemId());
+  CVC5_JAVA_API_TRY_CATCH_END_RETURN(env, 0);
+}
+
+/*
+ * Class:     io_github_cvc5_Term
+ * Method:    getSkolemIndices
+ * Signature: (J)[J
+ */
+JNIEXPORT jlongArray JNICALL
+Java_io_github_cvc5_Term_getSkolemIndices(JNIEnv* env, jobject, jlong pointer)
+{
+  CVC5_JAVA_API_TRY_CATCH_BEGIN;
+  Term* current = reinterpret_cast<Term*>(pointer);
+  std::vector<Term> args = current->getSkolemIndices();
+  jlongArray ret = getPointersFromObjects<Term>(env, args);
+  return ret;
+  CVC5_JAVA_API_TRY_CATCH_END_RETURN(env, 0);
+}
+
+/*
+ * Class:     io_github_cvc5_Term
  * Method:    iterator
  * Signature: (J)J
  */
@@ -1076,5 +1136,20 @@ JNIEXPORT jlong JNICALL Java_io_github_cvc5_Term_iterator(JNIEnv* env,
   Term* current = reinterpret_cast<Term*>(pointer);
   Term::const_iterator* retPointer = new Term::const_iterator(current->begin());
   return reinterpret_cast<jlong>(retPointer);
+  CVC5_JAVA_API_TRY_CATCH_END_RETURN(env, 0);
+}
+
+/*
+ * Class:     io_github_cvc5_Term
+ * Method:    hashCode
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_io_github_cvc5_Term_hashCode(JNIEnv* env,
+                                                         jobject,
+                                                         jlong pointer)
+{
+  CVC5_JAVA_API_TRY_CATCH_BEGIN;
+  Term* result = reinterpret_cast<Term*>(pointer);
+  return static_cast<jint>(std::hash<cvc5::Term>()(*result));
   CVC5_JAVA_API_TRY_CATCH_END_RETURN(env, 0);
 }

@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Alex Ozdemir, Andrew Reynolds
+ *   Alex Ozdemir, Andrew Reynolds, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -54,6 +54,7 @@ TheoryFiniteFields::TheoryFiniteFields(Env& env,
                                        OutputChannel& out,
                                        Valuation valuation)
     : Theory(THEORY_FF, env, out, valuation),
+      d_rewriter(nodeManager()),
       d_state(env, valuation),
       d_im(env, *this, d_state, getStatsPrefix(THEORY_FF)),
       d_eqNotify(d_im),
@@ -66,7 +67,14 @@ TheoryFiniteFields::TheoryFiniteFields(Env& env,
 
 TheoryFiniteFields::~TheoryFiniteFields() {}
 
-TheoryRewriter* TheoryFiniteFields::getTheoryRewriter() { return &d_rewriter; }
+TheoryRewriter* TheoryFiniteFields::getTheoryRewriter()
+{
+  if (!options().ff.ff)
+  {
+    return nullptr;
+  }
+  return &d_rewriter;
+}
 
 ProofRuleChecker* TheoryFiniteFields::getProofChecker() { return nullptr; }
 
@@ -91,7 +99,7 @@ void TheoryFiniteFields::postCheck(Effort level)
 #ifdef CVC5_USE_COCOA
   Trace("ff::check") << "ff::check : " << level << " @ level "
                      << context()->getLevel() << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (auto& subTheory : d_subTheories)
   {
     Result r = subTheory.second.postCheck(level);
@@ -174,6 +182,12 @@ void TheoryFiniteFields::preRegisterTerm(TNode node)
   {
     Assert(node.getKind() == Kind::EQUAL);
     fieldTy = node[0].getType();
+  }
+  else if (!options().ff.ff)
+  {
+    std::stringstream ss;
+    ss << "Finite fields not available in this configuration, try --ff.";
+    throw LogicException(ss.str());
   }
   if (d_subTheories.count(fieldTy) == 0)
   {

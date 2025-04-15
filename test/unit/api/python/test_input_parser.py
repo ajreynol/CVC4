@@ -1,10 +1,10 @@
 ###############################################################################
 # Top contributors (to current version):
-#   Daniel Larraz
+#   Daniel Larraz, Andrew Reynolds, Aina Niemetz
 #
 # This file is part of the cvc5 project.
 #
-# Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+# Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
 # in the top-level source directory and their institutional affiliations.
 # All rights reserved.  See the file COPYING in the top-level source
 # directory for licensing information.
@@ -22,18 +22,21 @@ def does_not_raise():
     yield
 
 @pytest.fixture
-def solver():
-    return cvc5.Solver()
+def tm():
+    return cvc5.TermManager()
+@pytest.fixture
+def solver(tm):
+    return cvc5.Solver(tm)
 
 def test_get_solver(solver):
     p = InputParser(solver)
     assert p.getSolver() is solver
 
-def test_symbol_manager(solver):
+def test_symbol_manager(tm, solver):
     p = InputParser(solver)
     assert isinstance(p.getSymbolManager(), SymbolManager)
 
-    sm = SymbolManager(solver)
+    sm = SymbolManager(tm)
     p2 = InputParser(solver, sm)
     assert p2.getSymbolManager() is sm
 
@@ -42,8 +45,8 @@ def test_set_file_input(solver):
     with pytest.raises(RuntimeError):
         p.setFileInput(cvc5.InputLanguage.SMT_LIB_2_6, "nonexistent.smt2")
 
-def test_set_and_append_incremental_string_input(solver):
-    sm = SymbolManager(solver)
+def test_set_and_append_incremental_string_input(tm, solver):
+    sm = SymbolManager(tm)
     p = InputParser(solver, sm)
     p.setIncrementalStringInput(cvc5.InputLanguage.SMT_LIB_2_6, "test_input_parser")
     p.appendIncrementalStringInput("(set-logic ALL)")
@@ -62,8 +65,8 @@ def test_set_and_append_incremental_string_input(solver):
     with does_not_raise():
         cmd.invoke(solver, sm)
 
-def test_set_and_append_incremental_string_input_interleave(solver):
-    sm = SymbolManager(solver)
+def test_set_and_append_incremental_string_input_interleave(tm, solver):
+    sm = SymbolManager(tm)
     p = InputParser(solver, sm)
     p.setIncrementalStringInput(cvc5.InputLanguage.SMT_LIB_2_6, "test_input_parser")
     p.appendIncrementalStringInput("(set-logic ALL)")
@@ -82,14 +85,14 @@ def test_set_and_append_incremental_string_input_interleave(solver):
     with does_not_raise():
         cmd.invoke(solver, sm)
 
-def test_append_incremental_no_set(solver):
-    sm = SymbolManager(solver)
+def test_append_incremental_no_set(tm, solver):
+    sm = SymbolManager(tm)
     p = InputParser(solver, sm)
     with pytest.raises(RuntimeError):
         p.appendIncrementalStringInput("(set-logic ALL)")
 
-def test_set_string_input(solver):
-    sm = SymbolManager(solver)
+def test_set_string_input(tm, solver):
+    sm = SymbolManager(tm)
     p = InputParser(solver, sm)
     p.setStringInput(cvc5.InputLanguage.SMT_LIB_2_6, "(set-logic ALL)", "test_input_parser")
     cmd = p.nextCommand()
@@ -114,8 +117,8 @@ def test_next_term(solver):
     p.setIncrementalStringInput(cvc5.InputLanguage.SMT_LIB_2_6, "test_input_parser")
     assert p.nextTerm().isNull() is True
 
-def test_next_term2(solver):
-    sm = SymbolManager(solver)
+def test_next_term2(tm, solver):
+    sm = SymbolManager(tm)
     p = InputParser(solver, sm)
     p.setIncrementalStringInput(cvc5.InputLanguage.SMT_LIB_2_6, "test_input_parser")
     # parse a declaration command
@@ -144,8 +147,8 @@ def parse_logic_command(p, logic):
     p.appendIncrementalStringInput("(set-logic " + logic + ")\n")
     return p.nextCommand()
 
-def test_multiple_parsers(solver):
-    sm = SymbolManager(solver)
+def test_multiple_parsers(tm, solver):
+    sm = SymbolManager(tm)
     p = InputParser(solver, sm)
     # set a logic for the parser
     cmd = parse_logic_command(p, "QF_LIA")
@@ -158,7 +161,7 @@ def test_multiple_parsers(solver):
     # cannot set logic on solver now
     with pytest.raises(RuntimeError):
       solver.setLogic("QF_LRA")
-    
+
     # possible to construct another parser with the same solver and symbol
     # manager
     p2 = InputParser(solver, p.getSymbolManager())
@@ -188,3 +191,22 @@ def test_multiple_parsers(solver):
     p5 = InputParser(s4, sm)
     with pytest.raises(RuntimeError):
         p5.setIncrementalStringInput(cvc5.InputLanguage.SMT_LIB_2_6, "test_input_parser")
+
+
+def test_get_declared_terms_and_sorts(tm, solver):
+    sm = SymbolManager(tm)
+    p = InputParser(solver, sm)
+    p.setIncrementalStringInput(cvc5.InputLanguage.SMT_LIB_2_6, "test_input_parser")
+    p.appendIncrementalStringInput("(set-logic ALL)")
+    p.appendIncrementalStringInput("(declare-sort U 0)")
+    p.appendIncrementalStringInput("(declare-fun x () U)")
+    for i in [0,1,2]:
+      cmd = p.nextCommand()
+      assert cmd.isNull() != True
+      cmd.invoke(solver, sm);
+    sorts = sm.getDeclaredSorts();
+    terms = sm.getDeclaredTerms();
+    assert len(sorts) == 1
+    assert len(terms) == 1
+    assert terms[0].getSort() == sorts[0]
+

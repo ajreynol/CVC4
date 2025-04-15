@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Haniel Barbosa
+ *   Andrew Reynolds, Abdalrhman Mohamed, Leni Aniva
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -26,73 +26,31 @@ using namespace cvc5::internal::kind;
 namespace cvc5::internal {
 namespace rewriter {
 
-void addRules(RewriteDb& db)
+// clang-format off
+${decl_individual_rewrites}$
+    // clang-format on
+
+    void
+    addRules(NodeManager* nm, RewriteDb& db){
+        // Calls to individual rewrites
+        // clang-format off
+  ${call_individual_rewrites}$
+        // clang-format on
+    }
+
+Node mkRewriteRuleNode(NodeManager* nm, ProofRewriteRule rule)
 {
-  NodeManager* nm = NodeManager::currentNM();
-
-  // Variables
-  // clang-format off
-${decls}$
-
-  // Definitions
-${defns}$
-
-  // Rules
-${rules}$
-  // clang-format on
+  return nm->mkConstInt(Rational(static_cast<uint32_t>(rule)));
 }
 
-bool isInternalDslProofRule(DslProofRule drule)
-{
-  return drule == DslProofRule::FAIL || drule == DslProofRule::REFL
-         || drule == DslProofRule::EVAL || drule == DslProofRule::TRANS
-         || drule == DslProofRule::CONG || drule == DslProofRule::CONG_EVAL
-         || drule == DslProofRule::TRUE_ELIM
-         || drule == DslProofRule::TRUE_INTRO
-         || drule == DslProofRule::ARITH_POLY_NORM;
-}
-
-const char* toString(DslProofRule drule)
-{
-  switch (drule)
-  {
-    case DslProofRule::FAIL: return "FAIL";
-    case DslProofRule::REFL: return "REFL";
-    case DslProofRule::EVAL: return "EVAL";
-    case DslProofRule::TRANS: return "TRANS";
-    case DslProofRule::CONG: return "CONG";
-    case DslProofRule::CONG_EVAL: return "CONG_EVAL";
-    case DslProofRule::TRUE_ELIM: return "TRUE_ELIM";
-    case DslProofRule::TRUE_INTRO: return "TRUE_INTRO";
-    case DslProofRule::ARITH_POLY_NORM:
-      return "ARITH_POLY_NORM";
-      // clang-format off
-${printer}$
-    default : Unreachable();
-      // clang-format on
-  }
-}
-
-std::ostream& operator<<(std::ostream& out, DslProofRule drule)
-{
-  out << toString(drule);
-  return out;
-}
-
-Node mkDslProofRuleNode(DslProofRule i)
-{
-  return NodeManager::currentNM()->mkConstInt(
-      Rational(static_cast<uint32_t>(i)));
-}
-
-bool getDslProofRule(TNode n, DslProofRule& i)
+bool getRewriteRule(TNode n, ProofRewriteRule& rule)
 {
   uint32_t index;
   if (!ProofRuleChecker::getUInt32(n, index))
   {
     return false;
   }
-  i = static_cast<DslProofRule>(index);
+  rule = static_cast<ProofRewriteRule>(index);
   return true;
 }
 

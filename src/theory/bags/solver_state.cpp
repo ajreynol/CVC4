@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Mudathir Mohamed, Andrew Reynolds, Mathias Preiner
+ *   Mudathir Mohamed, Aina Niemetz, Andrew Reynolds
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -31,9 +31,9 @@ namespace bags {
 SolverState::SolverState(Env& env, Valuation val)
     : TheoryState(env, val), d_partElementSkolems(env.getUserContext())
 {
-  d_true = NodeManager::currentNM()->mkConst(true);
-  d_false = NodeManager::currentNM()->mkConst(false);
-  d_nm = NodeManager::currentNM();
+  d_true = nodeManager()->mkConst(true);
+  d_false = nodeManager()->mkConst(false);
+  d_nm = nodeManager();
 }
 
 void SolverState::registerBag(TNode n)
@@ -126,7 +126,7 @@ void SolverState::collectDisequalBagTerms()
       if (d_deq.find(equal) == d_deq.end())
       {
         SkolemManager* sm = d_nm->getSkolemManager();
-        Node skolem = sm->mkSkolemFunction(SkolemFunId::BAGS_DEQ_DIFF, {A, B});
+        Node skolem = sm->mkSkolemFunction(SkolemId::BAGS_DEQ_DIFF, {A, B});
         d_deq[equal] = skolem;
       }
     }
@@ -176,8 +176,8 @@ void SolverState::checkInjectivity(Node n)
   }
 
   TypeNode domainType = f.getType().getArgTypes()[0];
-  Node x = sm->mkDummySkolem("x", domainType);
-  Node y = sm->mkDummySkolem("y", domainType);
+  Node x = NodeManager::mkDummySkolem("x", domainType);
+  Node y = NodeManager::mkDummySkolem("y", domainType);
   Node f_x = d_nm->mkNode(Kind::APPLY_UF, f, x);
   Node f_y = d_nm->mkNode(Kind::APPLY_UF, f, y);
   Node f_x_equals_f_y = f_x.eqNode(f_y);

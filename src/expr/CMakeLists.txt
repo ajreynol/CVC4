@@ -4,7 +4,7 @@
 #
 # This file is part of the cvc5 project.
 #
-# Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+# Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
 # in the top-level source directory and their institutional affiliations.
 # All rights reserved.  See the file COPYING in the top-level source
 # directory for licensing information.
@@ -14,6 +14,8 @@
 ##
 
 libcvc5_add_sources(
+  aci_norm.cpp
+  aci_norm.h
   algorithm/flatten.h
   annotation_elim_node_converter.cpp
   annotation_elim_node_converter.h
@@ -25,6 +27,8 @@ libcvc5_add_sources(
   attribute.cpp
   attribute_internals.h
   attribute_unique_id.h
+  bound_var_id.cpp
+  bound_var_id.h
   bound_var_manager.cpp
   bound_var_manager.h
   cardinality_constraint.cpp
@@ -33,6 +37,8 @@ libcvc5_add_sources(
   codatatype_bound_variable.h
   elim_shadow_converter.cpp
   elim_shadow_converter.h
+  elim_witness_converter.cpp
+  elim_witness_converter.h
   emptyset.cpp
   emptyset.h
   emptybag.cpp
@@ -41,6 +47,8 @@ libcvc5_add_sources(
   free_var_cache.h
   function_array_const.cpp
   function_array_const.h
+  internal_skolem_id.cpp
+  internal_skolem_id.h
   kind_map.h
   match_trie.cpp
   match_trie.h
@@ -69,6 +77,8 @@ libcvc5_add_sources(
   oracle.h
   oracle_caller.cpp
   oracle_caller.h
+  plugin.cpp
+  plugin.h
   sequence.cpp
   sequence.h
   node_visitor.h

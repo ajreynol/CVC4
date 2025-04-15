@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds
+ *   Andrew Reynolds, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -21,7 +21,7 @@ namespace cvc5::internal {
 
 OracleCaller::OracleCaller(const Node& n)
     : d_oracleNode(getOracleFor(n)),
-      d_oracle(NodeManager::currentNM()->getOracleFor(d_oracleNode))
+      d_oracle(n.getNodeManager()->getOracleFor(d_oracleNode))
 {
   Assert(!d_oracleNode.isNull());
 }

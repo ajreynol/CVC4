@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Abdalrhman Mohamed, Mathias Preiner
+ *   Andrew Reynolds, Abdalrhman Mohamed, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -22,6 +22,7 @@
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
 #include "proof/proof_node_updater.h"
+#include "rewriter/rewrites.h"
 #include "smt/env.h"
 #include "theory/strings/theory_strings_utils.h"
 
@@ -58,7 +59,7 @@ bool LfscProofPostprocessCallback::update(Node res,
   Trace("lfsc-pp") << "LfscProofPostprocessCallback::update: " << id
                    << std::endl;
   Trace("lfsc-pp-debug") << "...proves " << res << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   Assert(id != ProofRule::LFSC_RULE);
 
   switch (id)
@@ -113,7 +114,7 @@ bool LfscProofPostprocessCallback::update(Node res,
         size_t ii = (nargs - 1) - i;
         // Use a dummy conclusion for what LAMBDA proves, since there is no
         // FOL representation for its type.
-        Node fconc = mkDummyPredicate();
+        Node fconc = mkDummyPredicate(nm);
         addLfscRule(cdp, fconc, {curr}, LfscRule::LAMBDA, {args[ii]});
         // we use a chained implication (=> F1 ... (=> Fn C)) which avoids
         // aliasing.
@@ -258,7 +259,7 @@ bool LfscProofPostprocessCallback::update(Node res,
       Node opEq = op.eqNode(op);
       cdp->addStep(opEq, ProofRule::REFL, {}, {op});
       size_t nchildren = children.size();
-      Node nullTerm = d_tproc.getNullTerminator(k, res[0].getType());
+      Node nullTerm = d_tproc.getNullTerminator(nm, k, res[0].getType());
       // Are we doing congruence of an n-ary operator? If so, notice that op
       // is a binary operator and we must apply congruence in a special way.
       // Note we use the first block of code if we have more than 2 children,
@@ -340,7 +341,7 @@ bool LfscProofPostprocessCallback::update(Node res,
     break;
     case ProofRule::AND_INTRO:
     {
-      Node cur = d_tproc.getNullTerminator(Kind::AND);
+      Node cur = d_tproc.getNullTerminator(nm, Kind::AND);
       size_t nchildren = children.size();
       for (size_t j = 0; j < nchildren; j++)
       {
@@ -362,7 +363,7 @@ bool LfscProofPostprocessCallback::update(Node res,
     case ProofRule::ARITH_SUM_UB:
     {
       // proof of null terminator base 0 = 0
-      Node zero = d_tproc.getNullTerminator(Kind::ADD, res[0].getType());
+      Node zero = d_tproc.getNullTerminator(nm, Kind::ADD, res[0].getType());
       Node cur = zero.eqNode(zero);
       cdp->addStep(cur, ProofRule::REFL, {}, {zero});
       for (size_t i = 0, size = children.size(); i < size; i++)
@@ -381,21 +382,6 @@ bool LfscProofPostprocessCallback::update(Node res,
           addLfscRule(cdp, cur, newChildren, LfscRule::ARITH_SUM_UB, {});
         }
       }
-    }
-    break;
-    case ProofRule::CONCAT_CONFLICT:
-    {
-      if (children.size() == 1)
-      {
-        // no need to change
-        return false;
-      }
-      Assert(children.size() == 2);
-      Assert(children[0].getKind() == Kind::EQUAL);
-      Assert(children[0][0].getType().isSequence());
-      // must use the sequences version of the rule
-      Node falsen = nm->mkConst(false);
-      addLfscRule(cdp, falsen, children, LfscRule::CONCAT_CONFLICT_DEQ, args);
     }
     break;
     case ProofRule::INSTANTIATE:
@@ -430,11 +416,24 @@ bool LfscProofPostprocessCallback::update(Node res,
       }
     }
     break;
-    case ProofRule::BETA_REDUCE:
+    case ProofRule::THEORY_REWRITE:
     {
-      // get the term to beta-reduce
-      Node termToReduce = nm->mkNode(Kind::APPLY_UF, args);
-      addLfscRule(cdp, res, {}, LfscRule::BETA_REDUCE, {termToReduce});
+      Assert(args.size() >= 2);
+      ProofRewriteRule idr;
+      if (!rewriter::getRewriteRule(args[0], idr))
+      {
+        return false;
+      }
+      if (idr == ProofRewriteRule::BETA_REDUCE)
+      {
+        // get the term to beta-reduce
+        Node termToReduce = nm->mkNode(Kind::APPLY_UF, args[1][0]);
+        addLfscRule(cdp, res, {}, LfscRule::BETA_REDUCE, {termToReduce});
+      }
+      else
+      {
+        return false;
+      }
     }
     break;
     default: return false; break;
@@ -464,7 +463,7 @@ void LfscProofPostprocessCallback::updateCong(Node res,
   }
   Node curL = currEq[0];
   Node curR = currEq[1];
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   for (; i < nchildren; i++)
   {
     // CONG rules for each child
@@ -493,7 +492,7 @@ void LfscProofPostprocessCallback::addLfscRule(
     const std::vector<Node>& args)
 {
   std::vector<Node> largs;
-  largs.push_back(mkLfscRuleNode(lr));
+  largs.push_back(mkLfscRuleNode(nodeManager(), lr));
   largs.push_back(conc);
   largs.insert(largs.end(), args.begin(), args.end());
   cdp->addStep(conc, ProofRule::LFSC_RULE, children, largs);
@@ -503,11 +502,11 @@ Node LfscProofPostprocessCallback::mkChain(Kind k,
                                            const std::vector<Node>& children)
 {
   Assert(!children.empty());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   size_t nchildren = children.size();
   size_t i = 0;
   // do we have a null terminator? If so, we start with it.
-  Node ret = d_tproc.getNullTerminator(k, children[0].getType());
+  Node ret = d_tproc.getNullTerminator(nm, k, children[0].getType());
   if (ret.isNull())
   {
     ret = children[nchildren - 1];
@@ -521,10 +520,9 @@ Node LfscProofPostprocessCallback::mkChain(Kind k,
   return ret;
 }
 
-Node LfscProofPostprocessCallback::mkDummyPredicate()
+Node LfscProofPostprocessCallback::mkDummyPredicate(NodeManager* nm)
 {
-  NodeManager* nm = NodeManager::currentNM();
-  return nm->mkBoundVar(nm->booleanType());
+  return NodeManager::mkBoundVar(nm->booleanType());
 }
 
 LfscProofPostprocess::LfscProofPostprocess(Env& env, LfscNodeConverter& ltp)

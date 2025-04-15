@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Mudathir Mohamed, Andrew Reynolds, Mathias Preiner
+ *   Mudathir Mohamed, Aina Niemetz, Andrew Reynolds
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -37,7 +37,7 @@ namespace bags {
 Node BagsUtils::computeDisjointUnion(TypeNode bagType,
                                      const std::vector<Node>& bags)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = bagType.getNodeManager();
   if (bags.empty())
   {
     return nm->mkConst(EmptyBag(bagType));
@@ -132,16 +132,13 @@ Node BagsUtils::evaluate(Rewriter* rewriter, TNode n)
   {
     case Kind::BAG_MAKE: return evaluateMakeBag(n);
     case Kind::BAG_COUNT: return evaluateBagCount(n);
-    case Kind::BAG_DUPLICATE_REMOVAL: return evaluateDuplicateRemoval(n);
+    case Kind::BAG_SETOF: return evaluateSetof(n);
     case Kind::BAG_UNION_DISJOINT: return evaluateUnionDisjoint(n);
     case Kind::BAG_UNION_MAX: return evaluateUnionMax(n);
     case Kind::BAG_INTER_MIN: return evaluateIntersectionMin(n);
     case Kind::BAG_DIFFERENCE_SUBTRACT: return evaluateDifferenceSubtract(n);
     case Kind::BAG_DIFFERENCE_REMOVE: return evaluateDifferenceRemove(n);
     case Kind::BAG_CARD: return evaluateCard(n);
-    case Kind::BAG_IS_SINGLETON: return evaluateIsSingleton(n);
-    case Kind::BAG_FROM_SET: return evaluateFromSet(n);
-    case Kind::BAG_TO_SET: return evaluateToSet(n);
     case Kind::BAG_MAP: return evaluateBagMap(n);
     case Kind::BAG_FILTER: return evaluateBagFilter(n);
     case Kind::BAG_FOLD: return evaluateBagFold(n);
@@ -232,7 +229,7 @@ Node BagsUtils::constructConstantBagFromElements(
     TypeNode t, const std::map<Node, Rational>& elements)
 {
   Assert(t.isBag());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = t.getNodeManager();
   if (elements.empty())
   {
     return nm->mkConst(EmptyBag(t));
@@ -252,7 +249,7 @@ Node BagsUtils::constructBagFromElements(TypeNode t,
                                          const std::map<Node, Node>& elements)
 {
   Assert(t.isBag());
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = t.getNodeManager();
   if (elements.empty())
   {
     return nm->mkConst(EmptyBag(t));
@@ -274,7 +271,7 @@ Node BagsUtils::evaluateMakeBag(TNode n)
   // here we handle the case where the multiplicity is zero or negative
   Assert(n.getKind() == Kind::BAG_MAKE && !n.isConst()
          && n[1].getConst<Rational>().sgn() < 1);
-  Node emptybag = NodeManager::currentNM()->mkConst(EmptyBag(n.getType()));
+  Node emptybag = n.getNodeManager()->mkConst(EmptyBag(n.getType()));
   return emptybag;
 }
 
@@ -292,7 +289,7 @@ Node BagsUtils::evaluateBagCount(TNode n)
   std::map<Node, Rational> elements = getBagElements(n[1]);
   std::map<Node, Rational>::iterator it = elements.find(n[0]);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = n.getNodeManager();
   if (it != elements.end())
   {
     Node count = nm->mkConstInt(it->second);
@@ -301,16 +298,16 @@ Node BagsUtils::evaluateBagCount(TNode n)
   return nm->mkConstInt(Rational(0));
 }
 
-Node BagsUtils::evaluateDuplicateRemoval(TNode n)
+Node BagsUtils::evaluateSetof(TNode n)
 {
-  Assert(n.getKind() == Kind::BAG_DUPLICATE_REMOVAL);
+  Assert(n.getKind() == Kind::BAG_SETOF);
 
   // Examples
   // --------
-  //  - (bag.duplicate_removal (as bag.empty (Bag String))) = (as bag.empty (Bag
+  //  - (bag.setof (as bag.empty (Bag String))) = (as bag.empty (Bag
   //  String))
-  //  - (bag.duplicate_removal (bag "x" 4)) = (bag "x" 1)
-  //  - (bag.duplicate_removal (bag.disjoint_union (bag "x" 3) (bag "y" 5)) =
+  //  - (bag.setof (bag "x" 4)) = (bag "x" 1)
+  //  - (bag.setof (bag.disjoint_union (bag "x" 3) (bag "y" 5)) =
   //     (bag.disjoint_union (bag "x" 1) (bag "y" 1)
 
   std::map<Node, Rational> oldElements = getBagElements(n[0]);
@@ -625,76 +622,9 @@ Node BagsUtils::evaluateCard(TNode n)
     sum += element.second;
   }
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = n.getNodeManager();
   Node sumNode = nm->mkConstInt(sum);
   return sumNode;
-}
-
-Node BagsUtils::evaluateIsSingleton(TNode n)
-{
-  Assert(n.getKind() == Kind::BAG_IS_SINGLETON);
-  // Examples
-  // --------
-  // - (bag.is_singleton (as bag.empty (Bag String))) = false
-  // - (bag.is_singleton (bag "x" 1)) = true
-  // - (bag.is_singleton (bag "x" 4)) = false
-  // - (bag.is_singleton (bag.union_disjoint (bag "x" 1) (bag "y" 1)))
-  // = false
-
-  if (n[0].getKind() == Kind::BAG_MAKE && n[0][1].getConst<Rational>().isOne())
-  {
-    return NodeManager::currentNM()->mkConst(true);
-  }
-  return NodeManager::currentNM()->mkConst(false);
-}
-
-Node BagsUtils::evaluateFromSet(TNode n)
-{
-  Assert(n.getKind() == Kind::BAG_FROM_SET);
-
-  // Examples
-  // --------
-  //  - (bag.from_set (as set.empty (Set String))) = (as bag.empty (Bag String))
-  //  - (bag.from_set (set.singleton "x")) = (bag "x" 1)
-  //  - (bag.from_set (set.union (set.singleton "x") (set.singleton "y"))) =
-  //     (bag.disjoint_union (bag "x" 1) (bag "y" 1))
-
-  NodeManager* nm = NodeManager::currentNM();
-  std::set<Node> setElements =
-      sets::NormalForm::getElementsFromNormalConstant(n[0]);
-  Rational one = Rational(1);
-  std::map<Node, Rational> bagElements;
-  for (const Node& element : setElements)
-  {
-    bagElements[element] = one;
-  }
-  TypeNode bagType = nm->mkBagType(n[0].getType().getSetElementType());
-  Node bag = constructConstantBagFromElements(bagType, bagElements);
-  return bag;
-}
-
-Node BagsUtils::evaluateToSet(TNode n)
-{
-  Assert(n.getKind() == Kind::BAG_TO_SET);
-
-  // Examples
-  // --------
-  //  - (bag.to_set (as bag.empty (Bag String))) = (as set.empty (Set String))
-  //  - (bag.to_set (bag "x" 4)) = (set.singleton "x")
-  //  - (bag.to_set (bag.disjoint_union (bag "x" 3) (bag "y" 5)) =
-  //     (set.union (set.singleton "x") (set.singleton "y")))
-
-  NodeManager* nm = NodeManager::currentNM();
-  std::map<Node, Rational> bagElements = getBagElements(n[0]);
-  std::set<Node> setElements;
-  std::map<Node, Rational>::const_reverse_iterator it;
-  for (it = bagElements.rbegin(); it != bagElements.rend(); it++)
-  {
-    setElements.insert(it->first);
-  }
-  TypeNode setType = nm->mkSetType(n[0].getType().getBagElementType());
-  Node set = sets::NormalForm::elementsToSet(setElements, setType);
-  return set;
 }
 
 Node BagsUtils::evaluateBagMap(TNode n)
@@ -713,7 +643,7 @@ Node BagsUtils::evaluateBagMap(TNode n)
   std::map<Node, Rational> elements = BagsUtils::getBagElements(n[1]);
   std::map<Node, Rational> mappedElements;
   std::map<Node, Rational>::iterator it = elements.begin();
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = n.getNodeManager();
   while (it != elements.end())
   {
     Node mappedElement = nm->mkNode(Kind::APPLY_UF, n[0], it->first);
@@ -738,7 +668,7 @@ Node BagsUtils::evaluateBagFilter(TNode n)
   Node P = n[0];
   Node A = n[1];
   TypeNode bagType = A.getType();
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = n.getNodeManager();
   Node empty = nm->mkConst(EmptyBag(bagType));
 
   std::map<Node, Rational> elements = getBagElements(n[1]);
@@ -775,7 +705,6 @@ Node BagsUtils::evaluateBagFold(TNode n)
   std::map<Node, Rational> elements = BagsUtils::getBagElements(A);
 
   std::map<Node, Rational>::iterator it = elements.begin();
-  NodeManager* nm = NodeManager::currentNM();
   while (it != elements.end())
   {
     // apply the combination function n times, where n is the multiplicity
@@ -783,7 +712,7 @@ Node BagsUtils::evaluateBagFold(TNode n)
     Assert(count.sgn() >= 0) << "negative multiplicity" << std::endl;
     while (!count.isZero())
     {
-      ret = nm->mkNode(Kind::APPLY_UF, f, it->first, ret);
+      ret = NodeManager::mkNode(Kind::APPLY_UF, f, it->first, ret);
       count = count - 1;
     }
     ++it;
@@ -794,7 +723,7 @@ Node BagsUtils::evaluateBagFold(TNode n)
 Node BagsUtils::evaluateBagPartition(Rewriter* rewriter, TNode n)
 {
   Assert(n.getKind() == Kind::BAG_PARTITION);
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = n.getNodeManager();
 
   // Examples
   // --------
@@ -840,7 +769,8 @@ Node BagsUtils::evaluateBagPartition(Rewriter* rewriter, TNode n)
     ++j;
     while (j != elements.end())
     {
-      Node sameClass = nm->mkNode(Kind::APPLY_UF, r, i->first, j->first);
+      Node sameClass =
+          NodeManager::mkNode(Kind::APPLY_UF, r, i->first, j->first);
       sameClass = rewriter->rewrite(sameClass);
       if (!sameClass.isConst())
       {
@@ -981,7 +911,7 @@ Node BagsUtils::evaluateGroup(TNode n)
 {
   Assert(n.getKind() == Kind::TABLE_GROUP);
 
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = n.getNodeManager();
 
   Node A = n[0];
   TypeNode bagType = A.getType();
@@ -1067,8 +997,6 @@ Node BagsUtils::evaluateTableProject(TNode n)
 std::pair<std::vector<uint32_t>, std::vector<uint32_t>>
 BagsUtils::splitTableJoinIndices(Node n)
 {
-  Assert(n.getKind() == Kind::TABLE_JOIN && n.hasOperator()
-         && n.getOperator().getKind() == Kind::TABLE_JOIN_OP);
   ProjectOp op = n.getOperator().getConst<ProjectOp>();
   const std::vector<uint32_t>& indices = op.getIndices();
   size_t joinSize = indices.size() / 2;

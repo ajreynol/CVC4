@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Gereon Kremer, Mudathir Mohamed
+ *   Andrew Reynolds, Gereon Kremer, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -46,7 +46,7 @@ InferenceManager::InferenceManager(Env& env,
       d_ipcl(isProofEnabled() ? new InferProofCons(env, context(), d_statistics)
                               : nullptr)
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   d_zero = nm->mkConstInt(Rational(0));
   d_one = nm->mkConstInt(Rational(1));
   d_true = nm->mkConst(true);
@@ -239,7 +239,7 @@ bool InferenceManager::sendSplit(Node a, Node b, InferenceId infer, bool preq)
   {
     return false;
   }
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
   InferInfo iiSplit(infer);
   iiSplit.d_sim = this;
   iiSplit.d_conc = nm->mkNode(Kind::OR, eq, nm->mkNode(Kind::NOT, eq));
@@ -254,6 +254,13 @@ void InferenceManager::addToExplanation(Node a,
 {
   if (a != b)
   {
+    // prefer having constants on the RHS, which helps proof reconstruction
+    if (a.isConst() && !b.isConst())
+    {
+      Node tmp = a;
+      a = b;
+      b = tmp;
+    }
     Trace("strings-explain")
         << "Add to explanation : " << a << " == " << b << std::endl;
     Assert(d_state.areEqual(a, b));
@@ -363,11 +370,12 @@ void InferenceManager::processConflict(const InferInfo& ii)
 
 void InferenceManager::processFact(InferInfo& ii, ProofGenerator*& pg)
 {
-  Trace("strings-assert") << "(assert (=> " << ii.getPremises() << " "
-                          << ii.d_conc << ")) ; fact " << ii.getId() << std::endl;
+  Trace("strings-assert") << "(assert (=> " << ii.getPremises(nodeManager())
+                          << " " << ii.d_conc << ")) ; fact " << ii.getId()
+                          << std::endl;
   Trace("strings-lemma") << "Strings::Fact: " << ii.d_conc << " from "
-                         << ii.getPremises() << " by " << ii.getId()
-                         << std::endl;
+                         << ii.getPremises(nodeManager()) << " by "
+                         << ii.getId() << std::endl;
   if (d_ipc != nullptr)
   {
     // ensure the proof generator is ready to explain this fact in the
@@ -564,7 +572,7 @@ Node InferenceManager::mkPrefixExplainMin(Node x,
     Trace("strings-exp-min-stats")
         << "Min-explain (prefix) " << minAssumptions.size() << " / "
         << assumptions.size() << std::endl;
-    return NodeManager::currentNM()->mkAnd(minAssumptions);
+    return nodeManager()->mkAnd(minAssumptions);
   }
   return Node::null();
 }

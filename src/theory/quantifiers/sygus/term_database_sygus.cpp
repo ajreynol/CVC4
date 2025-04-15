@@ -1,10 +1,10 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andrew Reynolds, Andres Noetzli, Mathias Preiner
+ *   Andrew Reynolds, Aina Niemetz, Andres Noetzli
  *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2023 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -38,13 +38,6 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-/** An attribute for mapping sygus variables to builtin variables */
-struct SygusBuiltinFreeVarAttributeId
-{
-};
-using SygusBuiltinFreeVarAttribute =
-    expr::Attribute<SygusBuiltinFreeVarAttributeId, Node>;
-
 std::ostream& operator<<(std::ostream& os, EnumeratorRole r)
 {
   switch (r)
@@ -58,16 +51,16 @@ std::ostream& operator<<(std::ostream& os, EnumeratorRole r)
   return os;
 }
 
-TermDbSygus::TermDbSygus(Env& env, QuantifiersState& qs, OracleChecker* oc)
+TermDbSygus::TermDbSygus(Env& env, QuantifiersState& qs)
     : EnvObj(env),
       d_qstate(qs),
       d_syexp(new SygusExplain(env, this)),
       d_funDefEval(new FunDefEvaluator(env)),
       d_eval_unfold(new SygusEvalUnfold(env, this)),
-      d_ochecker(oc)
+      d_ochecker(env.getOracleChecker())
 {
-  d_true = NodeManager::currentNM()->mkConst( true );
-  d_false = NodeManager::currentNM()->mkConst( false );
+  d_true = nodeManager()->mkConst(true);
+  d_false = nodeManager()->mkConst(false);
 }
 
 void TermDbSygus::finishInit(QuantifiersInferenceManager* qim) { d_qim = qim; }
@@ -98,12 +91,11 @@ Node TermDbSygus::getProxyVariable(TypeNode tn, Node c)
   {
     SygusTypeInfo& ti = getTypeInfo(tn);
     int anyC = ti.getAnyConstantConsNum();
-    NodeManager* nm = NodeManager::currentNM();
+    NodeManager* nm = nodeManager();
     Node k;
     if (anyC == -1)
     {
-      SkolemManager* sm = nm->getSkolemManager();
-      k = sm->mkDummySkolem("sy", tn, "sygus proxy");
+      k = NodeManager::mkDummySkolem("sy", tn, "sygus proxy");
       SygusPrintProxyAttribute spa;
       k.setAttribute(spa, c);
     }
@@ -221,7 +213,7 @@ Node TermDbSygus::canonizeBuiltin(Node n, std::map<TypeNode, size_t>& var_count)
     }
     if (childChanged)
     {
-      ret = NodeManager::currentNM()->mkNode(Kind::APPLY_CONSTRUCTOR, children);
+      ret = nodeManager()->mkNode(Kind::APPLY_CONSTRUCTOR, children);
     }
   }
   // cache if we had a fresh variable count
@@ -302,8 +294,8 @@ Node TermDbSygus::getBuiltinFreeVarFor(const Node& v)
   const TypeNode& tn = v.getType();
   Assert(tn.isSygusDatatype());
   const TypeNode& vtn = tn.getDType().getSygusType();
-  BoundVarManager* bvm = NodeManager::currentNM()->getBoundVarManager();
-  return bvm->mkBoundVar<SygusBuiltinFreeVarAttribute>(v, vtn);
+  BoundVarManager* bvm = nodeManager()->getBoundVarManager();
+  return bvm->mkBoundVar(BoundVarId::QUANT_SYGUS_BUILTIN_FV, v, vtn);
 }
 
 bool TermDbSygus::registerSygusType(TypeNode tn)
@@ -347,7 +339,7 @@ void TermDbSygus::registerEnumerator(Node e,
   registerSygusType(et);
   d_enum_to_conjecture[e] = conj;
   d_enum_to_synth_fun[e] = f;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = nodeManager();
 
   Trace("sygus-db") << "  registering symmetry breaking clauses..."
                     << std::endl;
@@ -497,7 +489,7 @@ void TermDbSygus::registerEnumerator(Node e,
   // values for arguments of any-constant constructors (in sygus_explain.cpp),
   // hence those blocking lemmas are refutation unsound. For simplicity, we
   // mark unsound once and for all at the beginning, meaning we do not
-  // answer "infeasible" when using smart enuemration + any-constant
+  // answer "infeasible" when using smart enumeration + any-constant
   // constructors. Using --sygus-repair-const on the other hand avoids this
   // incompleteness, which is checked here.
   if (!isActiveGen && usingAnyConst && !options().quantifiers.sygusRepairConst)
@@ -505,6 +497,10 @@ void TermDbSygus::registerEnumerator(Node e,
     Assert(d_qim != nullptr);
     d_qim->setRefutationUnsound(
         IncompleteId::QUANTIFIERS_SYGUS_SMART_BLOCK_ANY_CONSTANT);
+    Warning()
+        << "Warning: The SyGuS solver is incomplete when symbolic constants "
+           "are used in grammars and --sygus-repair-const is disabled."
+        << std::endl;
   }
   d_enum_active_gen[e] = isActiveGen;
   d_enum_basic[e] = isActiveGen && !isVarAgnostic;
@@ -513,9 +509,8 @@ void TermDbSygus::registerEnumerator(Node e,
   // populate a pool of terms, or (some cases) of when it is actively generated.
   if (isActiveGen || erole == ROLE_ENUM_POOL)
   {
-    SkolemManager* sm = nm->getSkolemManager();
     // make the guard
-    Node ag = sm->mkDummySkolem("eG", nm->booleanType());
+    Node ag = NodeManager::mkDummySkolem("eG", nm->booleanType());
     // must ensure it is a literal immediately here
     ag = d_qstate.getValuation().ensureLiteral(ag);
     // must ensure that it is asserted as a literal before we begin solving
@@ -530,15 +525,12 @@ void TermDbSygus::registerEnumerator(Node e,
     d_env.output(OutputTag::SYGUS_ENUMERATOR) << "(sygus-enumerator";
     if (!f.isNull())
     {
-      SkolemManager* sm = nm->getSkolemManager();
-      Assert(sm->getInternalId(f)
-             == InternalSkolemFunId::QUANTIFIERS_SYNTH_FUN_EMBED);
-      Node ff;
-      SkolemFunId id;
-      sm->isSkolemFunction(f, id, ff);
+      Assert(f.getInternalSkolemId()
+             == InternalSkolemId::QUANTIFIERS_SYNTH_FUN_EMBED);
+      std::vector<Node> ski = f.getSkolemIndices();
       // get the argument, which is stored after the internal identifier
-      Assert(ff.getKind() == Kind::SEXPR && ff.getNumChildren() == 2);
-      d_env.output(OutputTag::SYGUS_ENUMERATOR) << " :synth-fun " << ff[1];
+      Assert(ski.size() == 2);
+      d_env.output(OutputTag::SYGUS_ENUMERATOR) << " :synth-fun " << ski[1];
     }
     d_env.output(OutputTag::SYGUS_ENUMERATOR) << " :role " << erole;
     std::stringstream ss;
