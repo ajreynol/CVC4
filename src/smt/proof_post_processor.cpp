@@ -1145,9 +1145,9 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
 {
   Trace("proof-min-rewrite-input")
       << "Minimize " << eq[0] << " = " << eq[1] << std::endl;
-  SkolemManager* skm = NodeManager::currentNM()->getSkolemManager();
+  NodeManager* nm = nodeManager();
+  SkolemManager* skm = nm->getSkolemManager();
   ProofTranslationCallback ptc(cdp);
-  NodeManager* nm = NodeManager::currentNM();
   std::unordered_map<TNode, Node> visited;
   std::unordered_map<TNode, Node>::iterator it;
   std::map<Node, std::map<size_t, Node>> invChildren;
@@ -1171,7 +1171,7 @@ bool ProofPostprocessCallback::convertMinimizedRewrite(const Node& eq,
         continue;
       }
       visited[cur] = Node::null();
-      theory::quantifiers::TermRecBuild trb;
+      theory::quantifiers::TermRecBuild trb(nm);
       trb.init(cur);
       Node tgt = rewrite(cur);
       if (tgt == cur)
