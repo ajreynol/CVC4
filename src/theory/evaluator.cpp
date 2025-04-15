@@ -110,7 +110,7 @@ EvalResult::~EvalResult()
 
 Node EvalResult::toNode(const TypeNode& tn) const
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = tn.getNodeManager();
   switch (d_tag)
   {
     case EvalResult::BOOL: return nm->mkConst(d_bool);
@@ -1258,10 +1258,25 @@ EvalResult Evaluator::evalInternal(
           }
           break;
         }
-        case Kind::BITVECTOR_TO_NAT:
+        case Kind::BITVECTOR_UBV_TO_INT:
         {
           BitVector res = results[currNode[0]].d_bv;
           results[currNode] = EvalResult(Rational(res.toInteger()));
+          break;
+        }
+        case Kind::BITVECTOR_SBV_TO_INT:
+        {
+          BitVector res = results[currNode[0]].d_bv;
+          const uint32_t size = currNode[0].getType().getBitVectorSize();
+          if (res.isBitSet(size - 1))
+          {
+            Rational ttm = Rational(Integer(2).pow(size));
+            results[currNode] = EvalResult(Rational(res.toInteger()) - ttm);
+          }
+          else
+          {
+            results[currNode] = EvalResult(Rational(res.toInteger()));
+          }
           break;
         }
         case Kind::INT_TO_BITVECTOR:
@@ -1326,7 +1341,7 @@ Node Evaluator::reconstruct(TNode n,
     return n;
   }
   Trace("evaluator") << "Evaluator: reconstruct " << n << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = n.getNodeManager();
   std::unordered_map<TNode, EvalResult>::iterator itr;
   std::unordered_map<TNode, Node>::iterator itn;
   std::vector<Node> echildren;
