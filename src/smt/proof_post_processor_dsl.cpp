@@ -52,7 +52,7 @@ void ProofPostprocessDsl::reconstruct(
   d_traversing.clear();
   ProofNodeUpdater pnu(d_env, *this, true);
   std::shared_ptr<ProofNode> pfn;
-  if (pfs.size()>1)
+  if (pfs.size() > 1)
   {
     ProofNodeManager* pnm = d_env.getProofNodeManager();
     pfn = pnm->mkNode(ProofRule::AND_INTRO, pfs, {});

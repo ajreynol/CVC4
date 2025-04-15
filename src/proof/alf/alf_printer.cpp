@@ -37,7 +37,6 @@
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/theory.h"
 #include "util/string.h"
-#include "theory/builtin/generic_op.h"
 
 namespace cvc5::internal {
 

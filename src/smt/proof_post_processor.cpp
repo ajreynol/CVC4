@@ -1073,7 +1073,7 @@ bool ProofPostprocessCallback::addToTransChildren(Node eq,
   tchildren.push_back(equ);
   return true;
 }
-                            
+
 ProofPostprocess::ProofPostprocess(Env& env,
                                    rewriter::RewriteDb* rdb,
                                    bool updateScopedAssumptions)
@@ -1115,7 +1115,7 @@ void ProofPostprocess::process(std::shared_ptr<ProofNode> pf,
     // go back and find the (possibly new) trusted steps
     std::vector<std::shared_ptr<ProofNode>> tproofs;
     std::unordered_set<ProofRule> trustRules{ProofRule::TRUST,
-                                              ProofRule::TRUST_THEORY_REWRITE};
+                                             ProofRule::TRUST_THEORY_REWRITE};
     expr::getSubproofRules(pf, trustRules, tproofs);
     d_ppdsl->reconstruct(tproofs);
   }
