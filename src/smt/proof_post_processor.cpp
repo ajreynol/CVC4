@@ -1073,7 +1073,7 @@ bool ProofPostprocessCallback::addToTransChildren(Node eq,
   tchildren.push_back(equ);
   return true;
 }
-
+                            
 ProofPostprocess::ProofPostprocess(Env& env,
                                    rewriter::RewriteDb* rdb,
                                    bool updateScopedAssumptions)

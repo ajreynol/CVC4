@@ -44,7 +44,8 @@ class ProofNodeUpdaterCallback
    *
    * @param pn the proof node that maybe should be updated
    * @param fa the assumptions in scope
-   * @param continueUpdate whether we should continue recursively updating pn
+   * @param continueUpdate if this is set to false within this method, then we
+   * do not recursive update pn.
    * @return whether we should run the update method on pn
    */
   virtual bool shouldUpdate(std::shared_ptr<ProofNode> pn,
@@ -90,6 +91,8 @@ class ProofNodeUpdaterCallback
    * another proof, nor will its contents be replaced.
    */
   virtual bool canMerge(std::shared_ptr<ProofNode> pn);
+  /** Called when we are done processing pn */
+  virtual void finalize(std::shared_ptr<ProofNode> pn);
 };
 
 /**
