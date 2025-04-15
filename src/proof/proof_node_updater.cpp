@@ -51,12 +51,6 @@ bool ProofNodeUpdaterCallback::updatePost(Node res,
   return false;
 }
 
-bool ProofNodeUpdaterCallback::canMerge(std::shared_ptr<ProofNode> pn)
-{
-  // by default, no restriction on what proofs can merge
-  return true;
-}
-
 void ProofNodeUpdaterCallback::finalize(std::shared_ptr<ProofNode> pn)
 {
   // do nothing
@@ -305,11 +299,6 @@ void ProofNodeUpdater::runFinalize(
   }
   if (d_mergeSubproofs)
   {
-    // if we cannot merge this proof, skip it
-    if (!d_cb.canMerge(cur))
-    {
-      return;
-    }
     Node res = cur->getResult();
     // cache the result if we don't contain an assumption
     if (!expr::containsAssumption(cur.get(), cfaMap, cfaAllowed))

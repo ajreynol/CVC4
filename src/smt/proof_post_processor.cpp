@@ -159,12 +159,6 @@ bool ProofPostprocessCallback::update(Node res,
   return !ret.isNull();
 }
 
-bool ProofPostprocessCallback::canMerge(std::shared_ptr<ProofNode> pn)
-{
-  ProofRule id = pn->getRule();
-  return (id != ProofRule::TRUST_THEORY_REWRITE && id != ProofRule::TRUST);
-}
-
 bool ProofPostprocessCallback::updateInternal(Node res,
                                               ProofRule id,
                                               const std::vector<Node>& children,
@@ -316,7 +310,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     // that this rule application is immediately expanded in the recursive
     // call and not added to the proof.
     Node conc =
-        expandMacros(ProofRule::MACRO_SR_EQ_INTRO, children, sargs, cdp);
+        addExpandStep(ProofRule::MACRO_SR_EQ_INTRO, children, sargs, cdp);
     Trace("smt-proof-pp-debug")
         << "...pred intro conclusion is " << conc << std::endl;
     Assert(!conc.isNull());
@@ -337,7 +331,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       // toWitness(apply_SR(t)) = apply_SR(toWitness(apply_SR(t)))
       // rewrite again, don't need substitution. Also we always use the
       // default rewriter, due to the definition of MACRO_SR_PRED_INTRO.
-      Node weqr = expandMacros(ProofRule::MACRO_SR_EQ_INTRO, {}, {wc}, cdp);
+      Node weqr = addExpandStep(ProofRule::MACRO_SR_EQ_INTRO, {}, {wc}, cdp);
       addToTransChildren(weqr, tchildren);
     }
     // apply transitivity if necessary
@@ -360,7 +354,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     srargs.push_back(children[0]);
     srargs.insert(srargs.end(), args.begin(), args.end());
     Node conc =
-        expandMacros(ProofRule::MACRO_SR_EQ_INTRO, schildren, srargs, cdp);
+        addExpandStep(ProofRule::MACRO_SR_EQ_INTRO, schildren, srargs, cdp);
     Assert(!conc.isNull());
     Assert(conc.getKind() == Kind::EQUAL);
     Assert(conc[0] == children[0]);
@@ -434,7 +428,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
         // toWitness(apply_SR(t)) = apply_SR(toWitness(apply_SR(t)))
         // rewrite again, don't need substitution. Also, we always use the
         // default rewriter, due to the definition of MACRO_SR_PRED_TRANSFORM.
-        Node weqr = expandMacros(ProofRule::MACRO_SR_EQ_INTRO, {}, {wc}, cdp);
+        Node weqr = addExpandStep(ProofRule::MACRO_SR_EQ_INTRO, {}, {wc}, cdp);
         Trace("smt-proof-pp-debug")
             << "transform rewrite_witness (" << r << "): " << weqr << std::endl;
         addToTransChildren(weqr, tchildrenr);
@@ -990,6 +984,21 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     return eq;
   }
   return Node::null();
+}
+
+Node ProofPostprocessCallback::addExpandStep(ProofRule id,
+                  const std::vector<Node>& children,
+                  const std::vector<Node>& args,
+                  CDProof* cdp)
+{
+  return expandMacros(id, children, args, cdp);
+  Node res = d_pc->checkDebug(id, children, args);
+  if (res.isNull())
+  {
+    return res;
+  }
+  cdp->addStep(res, id, children, args);
+  return res;
 }
 
 Node ProofPostprocessCallback::addProofForWitnessForm(Node t, CDProof* cdp)
