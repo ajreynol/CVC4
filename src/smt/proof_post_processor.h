@@ -61,17 +61,6 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
    * has no effect.
    */
   void setEliminateRule(ProofRule rule);
-  /**
-   * Set collecting all trusted rules. All proofs of trusted rules can be
-   * obtained by getTrustedProofs below.
-   */
-  void setCollectAllTrustedRules();
-  /**
-   * Get trusted proofs, which is the set of all trusted proofs
-   * that were encountered in the last call to process, collected at
-   * post-order traversal.
-   */
-  std::vector<std::shared_ptr<ProofNode>>& getTrustedProofs();
   /** Should proof pn be updated? */
   bool shouldUpdate(std::shared_ptr<ProofNode> pn,
                     const std::vector<Node>& fa,
@@ -109,8 +98,6 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
   std::unordered_set<ProofRule, std::hash<ProofRule>> d_elimRules;
   /** Whether we are collecting all trusted rules */
   bool d_collectAllTrusted;
-  /** Set of all proofs to attempt to reconstruct */
-  std::vector<std::shared_ptr<ProofNode>> d_trustedPfs;
   /** Whether we post-process assumptions in scope. */
   bool d_updateScopedAssumptions;
   //---------------------------------reset at the begining of each update
@@ -235,6 +222,8 @@ class ProofPostprocess : protected EnvObj
   ProofPostprocessCallback d_cb;
   /** The DSL post processor */
   std::unique_ptr<ProofPostprocessDsl> d_ppdsl;
+  /** Eliminate trusted rules? */
+  bool d_elimTrustedRules;
   /**
    * The updater, which is responsible for expanding macros in the final proof
    * and connecting preprocessed assumptions to input assumptions.

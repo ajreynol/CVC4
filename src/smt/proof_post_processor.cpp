@@ -45,7 +45,6 @@ ProofPostprocessCallback::ProofPostprocessCallback(Env& env,
       d_pc(nullptr),
       d_pppg(nullptr),
       d_wfpm(env),
-      d_collectAllTrusted(false),
       d_updateScopedAssumptions(updateScopedAssumptions)
 {
   d_true = nodeManager()->mkConst(true);
@@ -62,17 +61,6 @@ void ProofPostprocessCallback::initializeUpdate(ProofGenerator* pppg)
 void ProofPostprocessCallback::setEliminateRule(ProofRule rule)
 {
   d_elimRules.insert(rule);
-}
-
-void ProofPostprocessCallback::setCollectAllTrustedRules()
-{
-  d_collectAllTrusted = true;
-}
-
-std::vector<std::shared_ptr<ProofNode>>&
-ProofPostprocessCallback::getTrustedProofs()
-{
-  return d_trustedPfs;
 }
 
 bool ProofPostprocessCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
@@ -100,16 +88,10 @@ bool ProofPostprocessCallback::shouldUpdate(std::shared_ptr<ProofNode> pn,
   }
   return true;
 }
+
 bool ProofPostprocessCallback::shouldUpdatePost(std::shared_ptr<ProofNode> pn,
                                                 const std::vector<Node>& fa)
 {
-  ProofRule id = pn->getRule();
-  // if we eliminate all trusted rules, remember this for later
-  if (d_collectAllTrusted
-      && (id == ProofRule::TRUST_THEORY_REWRITE || id == ProofRule::TRUST))
-  {
-    d_trustedPfs.emplace_back(pn);
-  }
   return false;
 }
 
@@ -179,13 +161,8 @@ bool ProofPostprocessCallback::update(Node res,
 
 bool ProofPostprocessCallback::canMerge(std::shared_ptr<ProofNode> pn)
 {
-  if (d_collectAllTrusted)
-  {
-    ProofRule id = pn->getRule();
-    return (id != ProofRule::TRUST_THEORY_REWRITE && id != ProofRule::TRUST);
-  }
-  // otherwise we can merge
-  return true;
+  ProofRule id = pn->getRule();
+  return (id != ProofRule::TRUST_THEORY_REWRITE && id != ProofRule::TRUST);
 }
 
 bool ProofPostprocessCallback::updateInternal(Node res,
@@ -1102,6 +1079,7 @@ ProofPostprocess::ProofPostprocess(Env& env,
                                    bool updateScopedAssumptions)
     : EnvObj(env),
       d_cb(env, updateScopedAssumptions),
+      d_elimTrustedRules(false),
       // the update merges subproofs if proofPpMerge is true
       d_updater(env, d_cb, options().proof.proofPpMerge)
 {
@@ -1131,26 +1109,15 @@ void ProofPostprocess::process(std::shared_ptr<ProofNode> pf,
     AlwaysAssert(pfc != nullptr);
     // now update
     d_env.getProofNodeManager()->updateNode(pf.get(), pfc.get());
+  }
+  if (d_elimTrustedRules && d_ppdsl != nullptr)
+  {
     // go back and find the (possibly new) trusted steps
     std::vector<std::shared_ptr<ProofNode>> tproofs;
     std::unordered_set<ProofRule> trustRules{ProofRule::TRUST,
-                                             ProofRule::TRUST_THEORY_REWRITE};
+                                              ProofRule::TRUST_THEORY_REWRITE};
     expr::getSubproofRules(pf, trustRules, tproofs);
-    if (d_ppdsl != nullptr)
-    {
-      d_ppdsl->reconstruct(tproofs);
-    }
-  }
-  else
-  {
-    // As an optimization, we have tracked the trusted steps while running
-    // the updater. Now run the reconstruction algorithm on the proofs to
-    // eliminate.
-    std::vector<std::shared_ptr<ProofNode>>& tproofs = d_cb.getTrustedProofs();
-    if (d_ppdsl != nullptr)
-    {
-      d_ppdsl->reconstruct(tproofs);
-    }
+    d_ppdsl->reconstruct(tproofs);
   }
 }
 
@@ -1161,7 +1128,7 @@ void ProofPostprocess::setEliminateRule(ProofRule rule)
 
 void ProofPostprocess::setEliminateAllTrustedRules()
 {
-  d_cb.setCollectAllTrustedRules();
+  d_elimTrustedRules = true;
 }
 
 void ProofPostprocess::setAssertions(const std::vector<Node>& assertions,
