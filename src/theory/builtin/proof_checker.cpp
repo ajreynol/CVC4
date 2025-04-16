@@ -405,7 +405,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     {
       return Node::null();
     }
-    //AlwaysAssert(children[0]!=args[0]);
+    // AlwaysAssert(children[0]!=args[0]);
     std::vector<Node> exp;
     exp.insert(exp.end(), children.begin() + 1, children.end());
     Node res1 = applySubstitutionRewrite(children[0], exp, ids, ida, idr);

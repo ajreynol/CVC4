@@ -2186,10 +2186,7 @@ std::shared_ptr<ProofNode> Solver::getProof()
 
 bool Solver::isProofEnabled() const { return d_pfManager != nullptr; }
 
-bool Solver::needProof() const
-{
-  return d_env.isSatProofProducing();
-}
+bool Solver::needProof() const { return d_env.isSatProofProducing(); }
 
 bool Solver::assertionLevelOnly() const
 {

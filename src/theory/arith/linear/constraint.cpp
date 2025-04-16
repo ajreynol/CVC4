@@ -2113,7 +2113,8 @@ void ConstraintDatabase::proveOr(std::vector<TrustNode>& out,
     });
     // No need to ensure that the expected node aggrees with `as` because we
     // are not providing an expected node.
-    auto pf = d_pnm->mkNode(ProofRule::NOT_AND, {d_pnm->mkScope(bot_pf, as)}, {});
+    auto pf =
+        d_pnm->mkNode(ProofRule::NOT_AND, {d_pnm->mkScope(bot_pf, as)}, {});
     pf = ensurePredTransform(d_pnm, pf, orN);
     out.push_back(d_pfGen->mkTrustNode(orN, pf));
   }

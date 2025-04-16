@@ -4554,13 +4554,10 @@ bool TheoryArithPrivate::rowImplicationCanBeApplied(RowIndex ridx, bool rowUp, C
         // then rewrite it into proof normal form.
         Node impLitn = implied->getLiteral().negate();
         auto pf = d_pnm->mkAssume(impLitn);
-        if (impLitn!=pfLit)
+        if (impLitn != pfLit)
         {
-          pf = 
-            d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
-                          {pf},
-                          {pfLit},
-                          pfLit);
+          pf = d_pnm->mkNode(
+              ProofRule::MACRO_SR_PRED_TRANSFORM, {pf}, {pfLit}, pfLit);
         }
         conflictPfs.push_back(pf);
         // Add the explaination proofs.

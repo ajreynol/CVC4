@@ -122,10 +122,11 @@ Node expandMacroSumUb(NodeManager* nm,
   return sumBounds;
 }
 
-std::shared_ptr<ProofNode> ensurePredTransform(ProofNodeManager * pnm,
-                       std::shared_ptr<ProofNode>& pf, const Node& pred)
+std::shared_ptr<ProofNode> ensurePredTransform(ProofNodeManager* pnm,
+                                               std::shared_ptr<ProofNode>& pf,
+                                               const Node& pred)
 {
-  if (pf->getResult()==pred)
+  if (pf->getResult() == pred)
   {
     return pf;
   }

@@ -119,9 +119,9 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
   /**
    */
   Node addExpandStep(ProofRule id,
-                    const std::vector<Node>& children,
-                    const std::vector<Node>& args,
-                    CDProof* cdp);
+                     const std::vector<Node>& children,
+                     const std::vector<Node>& args,
+                     CDProof* cdp);
   /**
    * Update the proof rule application, called during expand macros when
    * we wish to apply the update method. This method has the same behavior
