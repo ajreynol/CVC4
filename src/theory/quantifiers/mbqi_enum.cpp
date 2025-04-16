@@ -206,7 +206,7 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     Trace("mbqi-fast-enum") << "---> convert " << n << std::endl;
     std::unordered_set<Node> fvs;
     expr::getFreeVariables(n, fvs);
-    Node exists = n[1];
+    Node exists = nm->mkNode(Kind::EXISTS, n[0], n[1]);
     TypeNode retType = n[0][0].getType();
     std::vector<TypeNode> argTypes;
     std::vector<Node> ubvl;
@@ -236,7 +236,12 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     subs.add(n[0][0], h);
     Node kpred = subs.apply(n[1]);
     Node lem = nm->mkNode(Kind::OR, exists.negate(), kpred);
-    ubvl.emplace_back(n[0][0]);
+    if (!ubvl.empty())
+    {
+      Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, nm->mkNode(Kind::INST_PATTERN, h));
+      lem =
+          nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem, ipl);
+    }
     //  lem = InstStrategyMbqi::mkNoMbqi(nm, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem);
     lem = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem);
     Trace("mbqi-tmp") << "TMP " << sym << " for " << n << std::endl;
