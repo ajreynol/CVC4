@@ -203,6 +203,8 @@ class ProofNodeUpdater : protected EnvObj
       std::shared_ptr<ProofNode>& cur,
       const std::map<Node, std::shared_ptr<ProofNode>>& resCache,
       std::unordered_map<const ProofNode*, bool>& cfaMap);
+  /** */
+  void preSimplify(std::shared_ptr<ProofNode> cur);
   /** Are we debugging free assumptions? */
   bool d_debugFreeAssumps;
   /** The initial free assumptions */

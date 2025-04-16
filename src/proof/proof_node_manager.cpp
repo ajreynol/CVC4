@@ -47,6 +47,20 @@ std::shared_ptr<ProofNode> ProofNodeManager::mkNode(
 {
   Trace("pnm") << "ProofNodeManager::mkNode " << id << " {" << expected.getId()
                << "} " << expected << "\n";
+               /*
+  if (id==ProofRule::AND_ELIM && children.size()==1 && children[0]->getRule()==ProofRule::AND_INTRO)
+  {
+    uint32_t i;
+    if (!args.empty() && ProofRuleChecker::getUInt32(args[0], i))
+    {
+      const std::vector<std::shared_ptr<ProofNode>>& premises = children[0]->getChildren();
+      if (i<premises.size())
+      {
+        return premises[i];
+      }
+    }
+  }
+  */
   bool didCheck = false;
   Node res = checkInternal(id, children, args, expected, didCheck);
   if (res.isNull())

@@ -20,6 +20,7 @@
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
 #include "smt/env.h"
+#include "proof/proof_checker.h"
 
 namespace cvc5::internal {
 
@@ -145,6 +146,7 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
         visited[cur] = true;
         continue;
       }
+      preSimplify(cur);
       // run update to a fixed point
       bool continueUpdate = true;
       while (runUpdate(cur, fa, continueUpdate) && continueUpdate)
@@ -193,7 +195,8 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
       traversing.pop_back();
       visited[cur] = true;
       // finalize the node
-      if (cur->getRule() == ProofRule::SCOPE)
+      ProofRule id = cur->getRule();
+      if (id == ProofRule::SCOPE)
       {
         const std::vector<Node>& args = cur->getArguments();
         Assert(fa.size() >= args.size());
@@ -209,13 +212,73 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
       }
       else
       {
-        Trace("pf-process-merge") << "...merged on postvisit " << std::endl;
+        //AlwaysAssert(false) << id << " / " << cur->getRule();
+        Trace("pf-process-merge") << "...merged on postvisit " << id << " / " << cur->getRule() << std::endl;
       }
       // call the finalize callback, independent of whether it was merged
       d_cb.finalize(cur);
     }
   } while (!visit.empty());
   Trace("pf-process") << "ProofNodeUpdater::process: finished" << std::endl;
+}
+
+void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
+{
+  do
+  {
+    ProofRule id = cur->getRule();
+    switch (id)
+    {
+      case ProofRule::AND_ELIM:
+      {
+        const std::vector<std::shared_ptr<ProofNode>>& children = cur->getChildren();
+        Assert (children.size()==1);
+        if (children[0]->getRule()==ProofRule::AND_INTRO)
+        {
+          const std::vector<Node>& args = cur->getArguments();
+          Assert (args.size()==1);
+          uint32_t i;
+          if (ProofRuleChecker::getUInt32(args[0], i))
+          {
+            const std::vector<std::shared_ptr<ProofNode>>& cc = children[0]->getChildren();
+            if (i<cc.size())
+            {
+              Trace("pfu-pre-simplify") << "Pre-simplify AND_ELIM over AND_INTRO" << std::endl;
+              ProofNodeManager* pnm = d_env.getProofNodeManager();
+              // ensure the child is (temporarily) ref counted here, as it is a
+              // subproof of the one we are modifying
+              std::shared_ptr<ProofNode> tmp = cc[i];
+              pnm->updateNode(cur.get(), cc[i].get());
+              continue;
+            }
+          }
+        }
+      }
+        break;
+      case ProofRule::SYMM:
+      {
+        const std::vector<std::shared_ptr<ProofNode>>& children = cur->getChildren();
+        Assert (children.size()==1);
+        if (children[0]->getRule()==ProofRule::SYMM)
+        {
+          const std::vector<std::shared_ptr<ProofNode>>& cc = children[0]->getChildren();
+          Trace("pfu-pre-simplify") << "Pre-simplify SYMM over SYMM" << std::endl;
+          ProofNodeManager* pnm = d_env.getProofNodeManager();
+          // ensure the child is (temporarily) ref counted here, as it is a
+          // subproof of the one we are modifying
+          std::shared_ptr<ProofNode> tmp = cc[0];
+          pnm->updateNode(cur.get(), cc[0].get());
+          continue;
+        }
+      }
+        break;
+      default:
+      {
+      }
+        break;
+    }
+    return;
+  }while(true);
 }
 
 bool ProofNodeUpdater::updateProofNode(std::shared_ptr<ProofNode> cur,
@@ -267,6 +330,8 @@ bool ProofNodeUpdater::updateProofNode(std::shared_ptr<ProofNode> cur,
                          "pfnu-debug",
                          "ProofNodeUpdater:postupdate");
     }
+    // since we updated, we pre-simplify again
+    preSimplify(cur);
     Trace("pf-process-debug") << "..finished" << std::endl;
     return true;
   }
