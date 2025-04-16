@@ -238,6 +238,8 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     Node lem = nm->mkNode(Kind::OR, exists.negate(), kpred);
     if (!ubvl.empty())
     {
+      // use h(x) as the trigger, which is a legal trigger since it is applied
+      // to the exact variable list of the quantified formula.
       Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, nm->mkNode(Kind::INST_PATTERN, h));
       lem =
           nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem, ipl);
