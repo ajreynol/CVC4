@@ -122,6 +122,16 @@ Node expandMacroSumUb(NodeManager* nm,
   return sumBounds;
 }
 
+std::shared_ptr<ProofNode> ensurePredTransform(ProofNodeManager * pnm,
+                       std::shared_ptr<ProofNode>& pf, const Node& pred)
+{
+  if (pf->getResult()==pred)
+  {
+    return pf;
+  }
+  return pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM, {pf}, {pred}, pred);
+}
+
 }  // namespace arith
 }  // namespace theory
 }  // namespace cvc5::internal

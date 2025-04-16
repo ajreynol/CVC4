@@ -224,9 +224,11 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
 
 void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
 {
+  std::shared_ptr<ProofNode> toMerge;
   do
   {
     ProofRule id = cur->getRule();
+    toMerge = nullptr;
     switch (id)
     {
       case ProofRule::AND_ELIM:
@@ -244,12 +246,7 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
             if (i<cc.size())
             {
               Trace("pfu-pre-simplify") << "Pre-simplify AND_ELIM over AND_INTRO" << std::endl;
-              ProofNodeManager* pnm = d_env.getProofNodeManager();
-              // ensure the child is (temporarily) ref counted here, as it is a
-              // subproof of the one we are modifying
-              std::shared_ptr<ProofNode> tmp = cc[i];
-              pnm->updateNode(cur.get(), cc[i].get());
-              continue;
+              toMerge = cc[i];
             }
           }
         }
@@ -263,22 +260,59 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
         {
           const std::vector<std::shared_ptr<ProofNode>>& cc = children[0]->getChildren();
           Trace("pfu-pre-simplify") << "Pre-simplify SYMM over SYMM" << std::endl;
-          ProofNodeManager* pnm = d_env.getProofNodeManager();
-          // ensure the child is (temporarily) ref counted here, as it is a
-          // subproof of the one we are modifying
-          std::shared_ptr<ProofNode> tmp = cc[0];
-          pnm->updateNode(cur.get(), cc[0].get());
-          continue;
+          toMerge = cc[0];
         }
       }
         break;
       default:
       {
+        size_t depthLimit = 2;
+        Node res = cur->getResult();
+        std::vector<std::pair<size_t, std::shared_ptr<ProofNode>>> toProcess;
+        toProcess.emplace_back(0, cur);
+        std::unordered_map<std::shared_ptr<ProofNode>, size_t> processed;
+        std::unordered_map<std::shared_ptr<ProofNode>, size_t>::iterator itp;
+        do
+        {
+          std::pair<size_t, std::shared_ptr<ProofNode>> p = toProcess.back();
+          toProcess.pop_back();
+          std::shared_ptr<ProofNode> cc = p.second;
+          if (cc->getRule()==ProofRule::SCOPE)
+          {
+            continue;
+          }
+          itp = processed.find(cc);
+          if (itp!=processed.end() && p.first>=itp->second)
+          {
+            continue;
+          }
+          if (p.first>0)
+          {
+            if (cc->getResult()==res)
+            {
+              //AlwaysAssert(false) << "Merge at depth " << p.first << " " << cc->getRule() << " beneath " << cur->getRule();
+              toMerge = cc;
+              break;
+            }
+          }
+          if (p.first<depthLimit)
+          {
+            const std::vector<std::shared_ptr<ProofNode>>& children = cc->getChildren();
+            for (const std::shared_ptr<ProofNode>& cp : children)
+            {
+              toProcess.emplace_back(p.first+1, cp);
+            }
+          }
+        }while (!toProcess.empty());
       }
         break;
     }
-    return;
-  }while(true);
+    if (toMerge!=nullptr)
+    {
+      ProofNodeManager* pnm = d_env.getProofNodeManager();
+      pnm->updateNode(cur.get(), toMerge.get());
+    }
+  }while(toMerge!=nullptr);
 }
 
 bool ProofNodeUpdater::updateProofNode(std::shared_ptr<ProofNode> cur,

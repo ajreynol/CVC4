@@ -1601,8 +1601,7 @@ TrustNode Constraint::externalExplainConflict() const
   Node n = mkAndFromBuilder(d_database->nodeManager(), nb);
   if (d_database->isProofEnabled())
   {
-    auto pfNot2 = d_database->d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM, {pf1}, {not2});
+    auto pfNot2 = ensurePredTransform(d_database->d_pnm, pf1, not2);
     std::vector<Node> lits;
     if (n.getKind() == Kind::AND)
     {
@@ -1729,12 +1728,7 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
       pf = pnm->mkAssume(getWitness());
       // If the witness and literal differ, prove the difference through a
       // rewrite.
-      if (getWitness() != getProofLiteral())
-      {
-        Node plit = getProofLiteral();
-        pf = pnm->mkNode(
-            ProofRule::MACRO_SR_PRED_TRANSFORM, {pf}, {plit}, plit);
-      }
+      pf = ensurePredTransform(pnm, pf, getProofLiteral());
     }
   }
   else if (hasEqualityEngineProof())
@@ -1745,8 +1739,7 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
     {
       std::shared_ptr<ProofNode> a = pnm->mkAssume(getLiteral());
       Node plit = getProofLiteral();
-      pf = pnm->mkNode(
-          ProofRule::MACRO_SR_PRED_TRANSFORM, {a}, {plit}, plit);
+      pf = ensurePredTransform(pnm, a, plit);
     }
     Assert(lit.getKind() != Kind::AND);
     nb << lit;
@@ -1831,9 +1824,7 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
           //
           // Prove that this is the literal (may need to clean a double-not)
           Node plit2 = getProofLiteral();
-          pf = pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
-                           {maybeDoubleNotPf},
-                           {plit2}, plit2);
+          pf = ensurePredTransform(pnm, maybeDoubleNotPf, plit2);
 
           break;
         }
@@ -2102,13 +2093,11 @@ void ConstraintDatabase::proveOr(std::vector<TrustNode>& out,
     auto nm = nodeManager();
     Node alit = a->getNegation()->getProofLiteral();
     TypeNode type = alit[0].getType();
-    auto pf_neg_la = d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
-                                   {d_pnm->mkAssume(la.negate())},
-                                   {alit});
+    auto pf_neg_la = d_pnm->mkAssume(la.negate());
+    pf_neg_la = ensurePredTransform(d_pnm, pf_neg_la, alit);
     Node blit = b->getNegation()->getProofLiteral();
-    auto pf_neg_lb = d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
-                                   {d_pnm->mkAssume(lb.negate())},
-                                   {blit});
+    auto pf_neg_lb = d_pnm->mkAssume(lb.negate());
+    pf_neg_lb = ensurePredTransform(d_pnm, pf_neg_lb, blit);
     int sndSign = negateSecond ? -1 : 1;
     std::vector<Pf> args{pf_neg_la, pf_neg_lb};
     std::vector<Node> coeffs{nm->mkConstReal(Rational(-1 * sndSign)),
@@ -2124,10 +2113,8 @@ void ConstraintDatabase::proveOr(std::vector<TrustNode>& out,
     });
     // No need to ensure that the expected node aggrees with `as` because we
     // are not providing an expected node.
-    auto pf = d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM,
-        {d_pnm->mkNode(ProofRule::NOT_AND, {d_pnm->mkScope(bot_pf, as)}, {})},
-        {orN});
+    auto pf = d_pnm->mkNode(ProofRule::NOT_AND, {d_pnm->mkScope(bot_pf, as)}, {});
+    pf = ensurePredTransform(d_pnm, pf, orN);
     out.push_back(d_pfGen->mkTrustNode(orN, pf));
   }
   else

@@ -70,6 +70,11 @@ Node expandMacroSumUb(NodeManager* nm,
                       const std::vector<Node>& args,
                       CDProof* cdp);
 
+/** 
+ */
+std::shared_ptr<ProofNode> ensurePredTransform(ProofNodeManager * pnm,
+                       std::shared_ptr<ProofNode>& pf, const Node& pred);
+
 }  // namespace arith
 }  // namespace theory
 }  // namespace cvc5::internal

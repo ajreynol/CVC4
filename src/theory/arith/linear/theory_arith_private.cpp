@@ -4552,11 +4552,17 @@ bool TheoryArithPrivate::rowImplicationCanBeApplied(RowIndex ridx, bool rowUp, C
         TypeNode type = pfLit[0].getType();
         // Assume the negated getLiteral version of the implied constaint
         // then rewrite it into proof normal form.
-        conflictPfs.push_back(
+        Node impLitn = implied->getLiteral().negate();
+        auto pf = d_pnm->mkAssume(impLitn);
+        if (impLitn!=pfLit)
+        {
+          pf = 
             d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
-                          {d_pnm->mkAssume(implied->getLiteral().negate())},
+                          {pf},
                           {pfLit},
-                          pfLit));
+                          pfLit);
+        }
+        conflictPfs.push_back(pf);
         // Add the explaination proofs.
         for (const auto constraint : explain)
         {
@@ -4595,8 +4601,7 @@ bool TheoryArithPrivate::rowImplicationCanBeApplied(RowIndex ridx, bool rowUp, C
 
         // Convert it to a clause
         auto orNotNotPf = d_pnm->mkNode(ProofRule::NOT_AND, {notAndNotPf}, {});
-        clausePf = d_pnm->mkNode(
-            ProofRule::MACRO_SR_PRED_TRANSFORM, {orNotNotPf}, {clause}, clause);
+        clausePf = ensurePredTransform(d_pnm, orNotNotPf, clause);
 
         // Output it
         TrustNode trustedClause = d_pfGen->mkTrustNode(clause, clausePf);
