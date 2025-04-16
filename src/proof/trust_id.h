@@ -33,6 +33,11 @@ enum class TrustId : uint32_t
   /** A lemma sent by a theory without a proof */
   THEORY_LEMMA,
   /**
+   * An explanation in the prop proof manager that did not have a proof, e.g.
+   * if not theory proof producing.
+   */
+  PROP_EXPLAIN,
+  /**
    * A step proving false, used as a trust step when the prop engine is not SAT
    * proof producing (--proof-mode=pp-only).
    */

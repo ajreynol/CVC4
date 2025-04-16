@@ -28,7 +28,8 @@ const char* toString(TrustId id)
   {
     case TrustId::NONE: return "NONE";
     case TrustId::PREPROCESSED_INPUT: return "PREPROCESSED_INPUT";
-    case TrustId::THEORY_LEMMA: return "THEORY_LEMMA";
+    case TrustId::THEORY_LEMMA_EXPLAIN: return "THEORY_LEMMA_EXPLAIN";
+    case TrustId::PROP_EXPLAIN: return "PROP_EXPLAIN";
     case TrustId::SMT_REFUTATION: return "SMT_REFUTATION";
     // core
     case TrustId::THEORY_INFERENCE_ARITH: return "THEORY_INFERENCE_ARITH";

@@ -991,7 +991,7 @@ Node ProofPostprocessCallback::addExpandStep(ProofRule id,
                   const std::vector<Node>& args,
                   CDProof* cdp)
 {
-  return expandMacros(id, children, args, cdp);
+  //return expandMacros(id, children, args, cdp);
   Node res = d_pc->checkDebug(id, children, args);
   if (res.isNull())
   {

@@ -2188,8 +2188,7 @@ bool Solver::isProofEnabled() const { return d_pfManager != nullptr; }
 
 bool Solver::needProof() const
 {
-  return isProofEnabled()
-         && options().smt.proofMode != options::ProofMode::PP_ONLY;
+  return d_env.isSatProofProducing();
 }
 
 bool Solver::assertionLevelOnly() const
