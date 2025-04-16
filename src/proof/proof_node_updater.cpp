@@ -230,6 +230,7 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
   {
     ProofRule id = cur->getRule();
     toMerge = nullptr;
+    // implements two optimizations to directly find a child
     switch (id)
     {
       case ProofRule::AND_ELIM:
@@ -272,49 +273,49 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
       }
       break;
       default:
+        break;
+    }
+    // generic bounded search
+    if (toMerge==nullptr)
+    {
+      size_t depthLimit = 2;
+      Node res = cur->getResult();
+      std::vector<std::pair<size_t, std::shared_ptr<ProofNode>>> toProcess;
+      toProcess.emplace_back(0, cur);
+      std::unordered_map<std::shared_ptr<ProofNode>, size_t> processed;
+      std::unordered_map<std::shared_ptr<ProofNode>, size_t>::iterator itp;
+      do
       {
-        size_t depthLimit = 2;
-        Node res = cur->getResult();
-        std::vector<std::pair<size_t, std::shared_ptr<ProofNode>>> toProcess;
-        toProcess.emplace_back(0, cur);
-        std::unordered_map<std::shared_ptr<ProofNode>, size_t> processed;
-        std::unordered_map<std::shared_ptr<ProofNode>, size_t>::iterator itp;
-        do
+        std::pair<size_t, std::shared_ptr<ProofNode>> p = toProcess.back();
+        toProcess.pop_back();
+        std::shared_ptr<ProofNode> cc = p.second;
+        if (cc->getRule() == ProofRule::SCOPE)
         {
-          std::pair<size_t, std::shared_ptr<ProofNode>> p = toProcess.back();
-          toProcess.pop_back();
-          std::shared_ptr<ProofNode> cc = p.second;
-          if (cc->getRule() == ProofRule::SCOPE)
+          continue;
+        }
+        itp = processed.find(cc);
+        if (itp != processed.end() && p.first >= itp->second)
+        {
+          continue;
+        }
+        if (p.first > 0)
+        {
+          if (cc->getResult() == res)
           {
-            continue;
+            toMerge = cc;
+            break;
           }
-          itp = processed.find(cc);
-          if (itp != processed.end() && p.first >= itp->second)
+        }
+        if (p.first < depthLimit)
+        {
+          const std::vector<std::shared_ptr<ProofNode>>& children =
+              cc->getChildren();
+          for (const std::shared_ptr<ProofNode>& cp : children)
           {
-            continue;
+            toProcess.emplace_back(p.first + 1, cp);
           }
-          if (p.first > 0)
-          {
-            if (cc->getResult() == res)
-            {
-              // AlwaysAssert(false) << "Merge at depth " << p.first << " " <<
-              // cc->getRule() << " beneath " << cur->getRule();
-              toMerge = cc;
-              break;
-            }
-          }
-          if (p.first < depthLimit)
-          {
-            const std::vector<std::shared_ptr<ProofNode>>& children =
-                cc->getChildren();
-            for (const std::shared_ptr<ProofNode>& cp : children)
-            {
-              toProcess.emplace_back(p.first + 1, cp);
-            }
-          }
-        } while (!toProcess.empty());
-      }
-      break;
+        }
+      } while (!toProcess.empty());
     }
     if (toMerge != nullptr)
     {
