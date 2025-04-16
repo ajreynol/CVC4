@@ -141,6 +141,7 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
       // nodes having this as a child that are not subproofs of pf.
       if (checkMergeProof(cur, resCache, cfaMap))
       {
+        Trace("pf-process-merge") << "...merged on previsit" << std::endl;
         visited[cur] = true;
         continue;
       }
@@ -205,6 +206,10 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
       if (!checkMergeProof(cur, resCache, cfaMap))
       {
         runFinalize(cur, fa, resCache, resCacheNcWaiting, cfaMap, cfaAllowed);
+      }
+      else
+      {
+        Trace("pf-process-merge") << "...merged on postvisit " << std::endl;
       }
       // call the finalize callback, independent of whether it was merged
       d_cb.finalize(cur);
