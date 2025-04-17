@@ -1121,26 +1121,22 @@ TrustNode Constraint::split()
     TypeNode type = lhs.getType();
     // Farkas proof that this works.
     auto nLeqPf = d_database->d_pnm->mkAssume(leqNode.negate());
-    auto gtPf = d_database->d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM, {nLeqPf}, {gtNode});
+    auto gtPf = ensurePredTransform(d_database->d_pnm, nLeqPf, gtNode);
     auto nGeqPf = d_database->d_pnm->mkAssume(geqNode.negate());
-    auto ltPf = d_database->d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM, {nGeqPf}, {ltNode});
+    auto ltPf = ensurePredTransform(d_database->d_pnm, nGeqPf, ltNode);
     std::vector<Pf> args{gtPf, ltPf};
     std::vector<Node> coeffs{nm->mkConstReal(-1), nm->mkConstReal(1)};
     std::vector<Node> coeffsUse = getMacroSumUbCoeff(nm, args, coeffs);
     auto sumPf = d_database->d_pnm->mkNode(
         ProofRule::MACRO_ARITH_SCALE_SUM_UB, args, coeffsUse);
-    auto botPf = d_database->d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM, {sumPf}, {nm->mkConst(false)});
+    auto botPf = ensurePredTransform(d_database->d_pnm, sumPf, nm->mkConst(false));
     std::vector<Node> a = {leqNode.negate(), geqNode.negate()};
     auto notAndNotPf = d_database->d_pnm->mkScope(botPf, a);
     // No need to ensure that the expected node aggrees with `a` because we are
     // not providing an expected node.
     auto orNotNotPf =
         d_database->d_pnm->mkNode(ProofRule::NOT_AND, {notAndNotPf}, {});
-    auto orPf = d_database->d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM, {orNotNotPf}, {lemma});
+    auto orPf = ensurePredTransform(d_database->d_pnm, orNotNotPf, lemma);
     trustedLemma = d_database->d_pfGen->mkTrustNode(lemma, orPf);
   }
   else
@@ -1577,8 +1573,7 @@ TrustNode Constraint::externalExplainForPropagation(TNode lit) const
     }
     if (getProofLiteral() != lit)
     {
-      pfFromAssumptions = d_database->d_pnm->mkNode(
-          ProofRule::MACRO_SR_PRED_TRANSFORM, {pfFromAssumptions}, {lit});
+      pfFromAssumptions = ensurePredTransform(d_database->d_pnm, pfFromAssumptions, lit);
     }
     auto pf = d_database->d_pnm->mkScope(pfFromAssumptions, assumptions);
     return d_database->d_pfGen->mkTrustedPropagation(
@@ -1810,9 +1805,7 @@ std::shared_ptr<ProofNode> Constraint::externalExplain(
 
           // Provable rewrite the result
           Node falsen = nm->mkConst(false);
-          auto botPf = pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
-                                   {sumPf},
-                                   {falsen}, falsen);
+          auto botPf = ensurePredTransform(pnm, sumPf, falsen);
 
           // Scope out the negated constraint, yielding a proof of the
           // constraint.
@@ -2103,10 +2096,8 @@ void ConstraintDatabase::proveOr(std::vector<TrustNode>& out,
     std::vector<Node> coeffs{nm->mkConstReal(Rational(-1 * sndSign)),
                              nm->mkConstReal(Rational(sndSign))};
     std::vector<Node> coeffsUse = getMacroSumUbCoeff(nm, args, coeffs);
-    auto bot_pf = d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM,
-        {d_pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB, args, coeffsUse)},
-        {nm->mkConst(false)});
+    auto sumubpf = d_pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB, args, coeffsUse);
+    auto bot_pf = ensurePredTransform(d_pnm, sumubpf, nm->mkConst(false));
     std::vector<Node> as;
     std::transform(orN.begin(), orN.end(), std::back_inserter(as), [](Node n) {
       return n.negate();

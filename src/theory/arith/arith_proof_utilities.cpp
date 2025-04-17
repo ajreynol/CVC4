@@ -130,6 +130,8 @@ std::shared_ptr<ProofNode> ensurePredTransform(ProofNodeManager* pnm,
   {
     return pf;
   }
+  // give the predicate as the expected result, which is important for
+  // performance (does not require proof checking).
   return pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM, {pf}, {pred}, pred);
 }
 

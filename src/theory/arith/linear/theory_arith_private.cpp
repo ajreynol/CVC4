@@ -1414,26 +1414,21 @@ TrustNode TheoryArithPrivate::dioCutting()
       TypeNode type = gt[0].getType();
 
       Pf pfNotLeq = d_pnm->mkAssume(leq.getNode().negate());
-      Pf pfGt =
-          d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM, {pfNotLeq}, {gt}, gt);
+      Pf pfGt = ensurePredTransform(d_pnm, pfNotLeq, gt);
       Pf pfNotGeq = d_pnm->mkAssume(geq.getNode().negate());
-      Pf pfLt =
-          d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM, {pfNotGeq}, {lt}, lt);
+      Pf pfLt = ensurePredTransform(d_pnm, pfNotGeq, lt);
       std::vector<Pf> args{pfGt, pfLt};
       std::vector<Node> coeffs{nm->mkConstReal(-1), nm->mkConstReal(1)};
       std::vector<Node> coeffsUse = getMacroSumUbCoeff(nm, args, coeffs);
       Pf pfSum =
           d_pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB, args, coeffsUse);
       Node falsen = nm->mkConst(false);
-      Pf pfBot = d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
-                               {pfSum},
-                               {falsen}, falsen);
+      Pf pfBot = ensurePredTransform(d_pnm, pfSum, falsen);
       std::vector<Node> assumptions = {leq.getNode().negate(),
                                        geq.getNode().negate()};
       Pf pfNotAndNot = d_pnm->mkScope(pfBot, assumptions);
       Pf pfOr = d_pnm->mkNode(ProofRule::NOT_AND, {pfNotAndNot}, {});
-      Pf pfRewritten = d_pnm->mkNode(
-          ProofRule::MACRO_SR_PRED_TRANSFORM, {pfOr}, {rewrittenLemma}, rewrittenLemma);
+      Pf pfRewritten = ensurePredTransform(d_pnm, pfOr, rewrittenLemma);
       return d_pfGen->mkTrustNode(rewrittenLemma, pfRewritten);
     }
     else
@@ -1508,10 +1503,10 @@ ConstraintP TheoryArithPrivate::constraintFromFactQueue(TNode assertion)
         {
           Pf assume = d_pnm->mkAssume(assertion);
           std::vector<Node> assumptions = {assertion};
-          Pf pf =
-              d_pnm->mkScope(d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
-                                           {d_pnm->mkAssume(assertion)},
-                                           {}),
+          Node fn = nodeManager()->mkConst(false);
+          Pf pfb = ensurePredTransform(d_pnm, assume, fn);
+          Pf pf = 
+              d_pnm->mkScope(pfb,
                              assumptions);
           raiseBlackBoxConflict(assertion, pf);
         }
@@ -3769,8 +3764,7 @@ void TheoryArithPrivate::propagate(Theory::Effort e) {
             {pfAnt, exp.getGenerator()->getProofFor(exp.getProven())},
             {});
         // prove toProp (rewritten)
-        Pf pfConcRewritten = d_pnm->mkNode(
-            ProofRule::MACRO_SR_PRED_TRANSFORM, {pfConc}, {normalized});
+        Pf pfConcRewritten = ensurePredTransform(d_pnm, pfConc, normalized);
         Pf pfNotNormalized = d_pnm->mkAssume(notNormalized);
         // prove bottom from toProp and ~toProp
         Pf pfBot;
@@ -4552,13 +4546,8 @@ bool TheoryArithPrivate::rowImplicationCanBeApplied(RowIndex ridx, bool rowUp, C
         TypeNode type = pfLit[0].getType();
         // Assume the negated getLiteral version of the implied constaint
         // then rewrite it into proof normal form.
-        Node impLitn = implied->getLiteral().negate();
-        auto pf = d_pnm->mkAssume(impLitn);
-        if (impLitn != pfLit)
-        {
-          pf = d_pnm->mkNode(
-              ProofRule::MACRO_SR_PRED_TRANSFORM, {pf}, {pfLit}, pfLit);
-        }
+        auto pf = d_pnm->mkAssume(implied->getLiteral().negate());
+        pf = ensurePredTransform(d_pnm, pf, pfLit);
         conflictPfs.push_back(pf);
         // Add the explaination proofs.
         for (const auto constraint : explain)
@@ -4584,8 +4573,7 @@ bool TheoryArithPrivate::rowImplicationCanBeApplied(RowIndex ridx, bool rowUp, C
                                    conflictPfs,
                                    farkasCoefficientsUse);
         Node falsen = nm->mkConst(false);
-        auto botPf = d_pnm->mkNode(
-            ProofRule::MACRO_SR_PRED_TRANSFORM, {sumPf}, {falsen}, falsen);
+        auto botPf = ensurePredTransform(d_pnm, sumPf, falsen);
 
         // Prove the conflict
         std::vector<Node> assumptions;
