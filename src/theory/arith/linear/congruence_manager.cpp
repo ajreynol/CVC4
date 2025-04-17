@@ -534,8 +534,10 @@ TrustNode ArithCongruenceManager::explain(TNode external)
           d_pnm->mkNode(ProofRule::TRUE_INTRO, {d_pnm->mkAssume(a)}, {}));
     }
     // uses substitution to true
-    auto litPf = d_pnm->mkNode(
-        ProofRule::MACRO_SR_PRED_TRANSFORM, {assumptionPfs}, {external}, external);
+    auto litPf = d_pnm->mkNode(ProofRule::MACRO_SR_PRED_TRANSFORM,
+                               {assumptionPfs},
+                               {external},
+                               external);
     auto extPf = d_pnm->mkScope(litPf, assumptions);
     return d_pfGenExplain->mkTrustedPropagation(external, trn.getNode(), extPf);
   }

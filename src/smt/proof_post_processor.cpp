@@ -45,9 +45,8 @@ ProofPostprocessCallback::ProofPostprocessCallback(Env& env,
       d_pc(nullptr),
       d_pppg(nullptr),
       d_wfpm(env),
-      d_macroExpand(
-          statisticsRegistry().registerHistogram<ProofRule>(
-              "ProofPostprocessCallback::macroExpandCount")),
+      d_macroExpand(statisticsRegistry().registerHistogram<ProofRule>(
+          "ProofPostprocessCallback::macroExpandCount")),
       d_updateScopedAssumptions(updateScopedAssumptions)
 {
   d_true = nodeManager()->mkConst(true);

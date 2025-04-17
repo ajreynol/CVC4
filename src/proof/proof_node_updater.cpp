@@ -276,63 +276,68 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
       {
 #if 1
         const std::vector<std::shared_ptr<ProofNode>>& children =
-        cur->getChildren();
-        Assert (!children.empty());
+            cur->getChildren();
+        Assert(!children.empty());
         std::unordered_map<Node, size_t> terms;
         std::unordered_map<Node, size_t>::iterator it;
         terms[children[0]->getResult()[0]] = 0;
         Node prevCongLhs;
-        for (size_t i=0, nchild = children.size(); i<nchild; i++)
+        for (size_t i = 0, nchild = children.size(); i < nchild; i++)
         {
           Node res = children[i]->getResult();
-          Assert (res.getKind()==Kind::EQUAL);
+          Assert(res.getKind() == Kind::EQUAL);
           it = terms.find(res[1]);
           std::shared_ptr<ProofNode> gr;
-          size_t iend = i+1;
-          if (it!=terms.end())
+          size_t iend = i + 1;
+          if (it != terms.end())
           {
             // if we found a duplicate, drop children starting at it->second
             // until this one, inclusive.
             i = it->second;
-            Assert (iend>i);
+            Assert(iend > i);
             // leave gr null
           }
           else
           {
-            terms[res[1]] = i+1;
-            ProofRule idc = children[i]->getRule(); 
-            if (idc!=ProofRule::CONG && idc != ProofRule::NARY_CONG)
+            terms[res[1]] = i + 1;
+            ProofRule idc = children[i]->getRule();
+            if (idc != ProofRule::CONG && idc != ProofRule::NARY_CONG)
             {
               // no CONG
               continue;
             }
-            while (iend<children.size() && children[iend]->getRule()==idc)
+            while (iend < children.size() && children[iend]->getRule() == idc)
             {
               iend++;
             }
-            if (iend>i+1)
+            if (iend > i + 1)
             {
-              Trace("pfu-pre-simplify") << "Found " << (iend-i) << " consecutive " << idc << " over trans " << children[i]->getResult()[0] << std::endl;
+              Trace("pfu-pre-simplify")
+                  << "Found " << (iend - i) << " consecutive " << idc
+                  << " over trans " << children[i]->getResult()[0] << std::endl;
               ProofNodeManager* pnm = d_env.getProofNodeManager();
               size_t nargs = children[i]->getChildren().size();
               std::vector<std::shared_ptr<ProofNode>> childTrans;
-              Trace("pfu-pre-simplify") << "...number of arguments to CONG: " << nargs << std::endl;
-              for (size_t k=0; k<nargs; k++)
+              Trace("pfu-pre-simplify")
+                  << "...number of arguments to CONG: " << nargs << std::endl;
+              for (size_t k = 0; k < nargs; k++)
               {
                 std::vector<std::shared_ptr<ProofNode>> ctk;
-                for (size_t j=i; j<iend; j++)
+                for (size_t j = i; j < iend; j++)
                 {
                   const std::vector<std::shared_ptr<ProofNode>>& ccj =
                       children[j]->getChildren();
-                  Assert (ccj.size()==nargs);
+                  Assert(ccj.size() == nargs);
                   Node resk = ccj[k]->getResult();
-                  Assert (resk.getKind()==Kind::EQUAL);
-                  if (resk[0]!=resk[1])
+                  Assert(resk.getKind() == Kind::EQUAL);
+                  if (resk[0] != resk[1])
                   {
                     ctk.push_back(ccj[k]);
                   }
                 }
-                Trace("pfu-pre-simplify") << "...arg #" << k << " has " << ctk.size() << " transitive steps" << std::endl;
+                Trace("pfu-pre-simplify")
+                    << "...arg #" << k << " has " << ctk.size()
+                    << " transitive steps" << std::endl;
                 if (ctk.empty())
                 {
                   // add reflexive, if necessary, taking the i^th child
@@ -353,35 +358,39 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
           }
           // if we found a way to group premises
           std::vector<std::shared_ptr<ProofNode>> groupedPremises;
-          for (size_t j=0; j<nchild; j++)
+          for (size_t j = 0; j < nchild; j++)
           {
-            if (j==i)
+            if (j == i)
             {
               // should all have the same arguments
-              if (gr!=nullptr)
+              if (gr != nullptr)
               {
                 Trace("pfu-pre-simplify") << "......add merged" << std::endl;
                 groupedPremises.push_back(gr);
               }
               // skip to next
-              j = iend-1;
+              j = iend - 1;
               continue;
             }
             Trace("pfu-pre-simplify") << "......add " << j << std::endl;
             groupedPremises.push_back(children[j]);
           }
-          Assert (groupedPremises.size()<children.size());
-          Trace("pfu-pre-simplify") << "Update from " << children.size() << " -> " << groupedPremises.size() << " steps of trans " << i << " to " << iend << std::endl;
+          Assert(groupedPremises.size() < children.size());
+          Trace("pfu-pre-simplify")
+              << "Update from " << children.size() << " -> "
+              << groupedPremises.size() << " steps of trans " << i << " to "
+              << iend << std::endl;
           if (groupedPremises.empty())
           {
             Node resc = cur->getResult();
-            Assert (resc[0]==resc[1]);
+            Assert(resc[0] == resc[1]);
             ProofNodeManager* pnm = d_env.getProofNodeManager();
             pnm->updateNode(cur.get(), ProofRule::REFL, {}, {resc[0]});
           }
-          else if (groupedPremises.size()==1)
+          else if (groupedPremises.size() == 1)
           {
-            // if collapsing to single trans, the group children becomes the parent
+            // if collapsing to single trans, the group children becomes the
+            // parent
             toMerge = groupedPremises[0];
           }
           else
@@ -395,12 +404,11 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
         }
 #endif
       }
-        break;
-      default:
-        break;
+      break;
+      default: break;
     }
     // generic bounded search
-    if (toMerge==nullptr)
+    if (toMerge == nullptr)
     {
       size_t depthLimit = 2;
       Node res = cur->getResult();
@@ -441,7 +449,7 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
         }
       } while (!toProcess.empty());
     }
-    if (toMerge != nullptr && toMerge!=cur)
+    if (toMerge != nullptr && toMerge != cur)
     {
       ProofNodeManager* pnm = d_env.getProofNodeManager();
       pnm->updateNode(cur.get(), toMerge.get());

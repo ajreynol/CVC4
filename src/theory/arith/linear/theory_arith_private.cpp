@@ -1505,9 +1505,7 @@ ConstraintP TheoryArithPrivate::constraintFromFactQueue(TNode assertion)
           std::vector<Node> assumptions = {assertion};
           Node fn = nodeManager()->mkConst(false);
           Pf pfb = ensurePredTransform(d_pnm, assume, fn);
-          Pf pf = 
-              d_pnm->mkScope(pfb,
-                             assumptions);
+          Pf pf = d_pnm->mkScope(pfb, assumptions);
           raiseBlackBoxConflict(assertion, pf);
         }
         else

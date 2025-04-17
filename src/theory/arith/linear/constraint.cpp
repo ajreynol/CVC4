@@ -1129,7 +1129,8 @@ TrustNode Constraint::split()
     std::vector<Node> coeffsUse = getMacroSumUbCoeff(nm, args, coeffs);
     auto sumPf = d_database->d_pnm->mkNode(
         ProofRule::MACRO_ARITH_SCALE_SUM_UB, args, coeffsUse);
-    auto botPf = ensurePredTransform(d_database->d_pnm, sumPf, nm->mkConst(false));
+    auto botPf =
+        ensurePredTransform(d_database->d_pnm, sumPf, nm->mkConst(false));
     std::vector<Node> a = {leqNode.negate(), geqNode.negate()};
     auto notAndNotPf = d_database->d_pnm->mkScope(botPf, a);
     // No need to ensure that the expected node aggrees with `a` because we are
@@ -1573,7 +1574,8 @@ TrustNode Constraint::externalExplainForPropagation(TNode lit) const
     }
     if (getProofLiteral() != lit)
     {
-      pfFromAssumptions = ensurePredTransform(d_database->d_pnm, pfFromAssumptions, lit);
+      pfFromAssumptions =
+          ensurePredTransform(d_database->d_pnm, pfFromAssumptions, lit);
     }
     auto pf = d_database->d_pnm->mkScope(pfFromAssumptions, assumptions);
     return d_database->d_pfGen->mkTrustedPropagation(
@@ -2096,7 +2098,8 @@ void ConstraintDatabase::proveOr(std::vector<TrustNode>& out,
     std::vector<Node> coeffs{nm->mkConstReal(Rational(-1 * sndSign)),
                              nm->mkConstReal(Rational(sndSign))};
     std::vector<Node> coeffsUse = getMacroSumUbCoeff(nm, args, coeffs);
-    auto sumubpf = d_pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB, args, coeffsUse);
+    auto sumubpf =
+        d_pnm->mkNode(ProofRule::MACRO_ARITH_SCALE_SUM_UB, args, coeffsUse);
     auto bot_pf = ensurePredTransform(d_pnm, sumubpf, nm->mkConst(false));
     std::vector<Node> as;
     std::transform(orN.begin(), orN.end(), std::back_inserter(as), [](Node n) {

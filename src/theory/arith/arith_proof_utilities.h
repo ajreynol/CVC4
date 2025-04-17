@@ -75,7 +75,7 @@ Node expandMacroSumUb(NodeManager* nm,
  * It is expected that pf proves a formula pred' such that pred and pred' are
  * equivalent up to rewriting (via MACRO_SR_PRED_TRANSFORM).
  * If pf is already a proof of pred, it is returned as-is.
- * 
+ *
  * @param pnm Reference to the proof manager.
  * @param pf The proof.
  * @param pred The desired conclusion.
