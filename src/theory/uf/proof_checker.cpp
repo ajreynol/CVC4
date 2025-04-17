@@ -87,6 +87,22 @@ Node UfProofRuleChecker::checkInternal(ProofRule id,
       }
       curr = eqp[1];
     }
+#if 0
+    std::unordered_map<Node, size_t> terms;
+    std::unordered_map<Node, size_t>::iterator it;
+    terms[children[0][0]] = 0;
+    for (size_t i=0, nchild = children.size(); i<nchild; i++)
+    {
+      Node res = children[i];
+      Assert (res.getKind()==Kind::EQUAL);
+      it = terms.find(res[1]);
+      if (it!=terms.end())
+      {
+        AlwaysAssert(false) << "Duplicate term in trans chain, " << i+1 << " and " << it->second;
+      }
+      terms[res[1]] = i+1;
+    }
+#endif
     return first.eqNode(curr);
   }
   else if (id == ProofRule::CONG || id == ProofRule::NARY_CONG)

@@ -272,6 +272,29 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
         }
       }
       break;
+#if 0
+      case ProofRule::TRANS:
+      {
+        const std::vector<std::shared_ptr<ProofNode>>& children =
+            cur->getChildren();
+            Assert (!children.empty());
+        std::unordered_map<Node, size_t> terms;
+        std::unordered_map<Node, size_t>::iterator it;
+        terms[children[0]->getResult()[0]] = 0;
+        for (size_t i=0, nchild = children.size(); i<nchild; i++)
+        {
+          Node res = children[i]->getResult();
+          Assert (res.getKind()==Kind::EQUAL);
+          it = terms.find(res[1]);
+          if (it!=terms.end())
+          {
+            AlwaysAssert(false) << "Duplicate term in trans chain, " << i+1 << " and " << it->second;
+          }
+          terms[res[1]] = i+1;
+        }
+      }
+        break;
+#endif
       default:
         break;
     }

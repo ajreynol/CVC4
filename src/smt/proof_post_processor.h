@@ -89,6 +89,11 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
   std::vector<Node> d_wfAssumptions;
   /** Kinds of proof rules we are eliminating */
   std::unordered_set<ProofRule, std::hash<ProofRule>> d_elimRules;
+  /**
+   * Counts number of proof nodes for each rule that were
+   * expanded in macro elimination by this class.
+   */
+  HistogramStat<ProofRule> d_macroExpand;
   /** Whether we are collecting all trusted rules */
   bool d_collectAllTrusted;
   /** Whether we post-process assumptions in scope. */

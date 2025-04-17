@@ -45,6 +45,9 @@ ProofPostprocessCallback::ProofPostprocessCallback(Env& env,
       d_pc(nullptr),
       d_pppg(nullptr),
       d_wfpm(env),
+      d_macroExpand(
+          statisticsRegistry().registerHistogram<ProofRule>(
+              "ProofPostprocessCallback::macroExpandCount")),
       d_updateScopedAssumptions(updateScopedAssumptions)
 {
   d_true = nodeManager()->mkConst(true);
@@ -185,6 +188,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     // not eliminated
     return Node::null();
   }
+  d_macroExpand << id;
   Trace("smt-proof-pp-debug") << "Expand macro " << id << std::endl;
   if (id == ProofRule::TRUST)
   {
@@ -316,7 +320,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     Assert(!conc.isNull());
     Assert(conc.getKind() == Kind::EQUAL);
     Assert(conc[0] == args[0]);
-    tchildren.push_back(conc);
+    addToTransChildren(conc, tchildren);
     Node wc = conc[1];
     if (reqw == WitnessReq::WITNESS || reqw == WitnessReq::WITNESS_AND_REWRITE)
     {
@@ -333,6 +337,12 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       // default rewriter, due to the definition of MACRO_SR_PRED_INTRO.
       Node weqr = addExpandStep(ProofRule::MACRO_SR_EQ_INTRO, {}, {wc}, cdp);
       addToTransChildren(weqr, tchildren);
+    }
+    if (tchildren.empty())
+    {
+      // if trivial corner case, go back and add conc (which must be reflexive,
+      // since we already tried to add it via addToTransChildren).
+      tchildren.push_back(conc);
     }
     // apply transitivity if necessary
     Node eq = addProofForTrans(tchildren, cdp);
