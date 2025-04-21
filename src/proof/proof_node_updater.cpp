@@ -57,11 +57,6 @@ void ProofNodeUpdaterCallback::finalize(std::shared_ptr<ProofNode> pn)
   // do nothing
 }
 
-void ProofNodeUpdaterCallback::finalize(std::shared_ptr<ProofNode> pn)
-{
-  // do nothing
-}
-
 ProofNodeUpdater::ProofNodeUpdater(Env& env,
                                    ProofNodeUpdaterCallback& cb,
                                    bool mergeSubproofs,
