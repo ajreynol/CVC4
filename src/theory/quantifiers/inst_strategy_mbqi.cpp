@@ -62,15 +62,33 @@ InstStrategyMbqi::InstStrategyMbqi(Env& env,
 void InstStrategyMbqi::ppNotifyAssertions(const std::vector<Node>& assertions)
 {
   // collecting global symbols from all available assertions
+  Skolemize* sk = d_qim.getSkolemize();
   for (const Node& a : assertions)
   {
     std::unordered_set<Node> cur_syms;
     expr::getSymbols(a, cur_syms);
     // Iterate over the symbols in the current assertion
-    for (const auto& s : cur_syms)
+    for (const Node& s : cur_syms)
     {
       // Add the symbol to syms if it's not already present
       d_globalSyms.insert(s);
+    }
+    if (a.getKind()==Kind::FORALL)
+    {
+      continue;
+    }
+    // also consider skolems for (non-top-level) quantified formulas.
+    // TODO: could improve by only looking at those that are not positive
+    // polarity
+    std::unordered_set<Node> qs;
+    expr::getSubtermsKind(Kind::FORALL, a, qs, false);
+    for (const Node& q : qs)
+    {
+      std::vector<Node> ks = sk->getSkolemConstants(q);
+      for (const Node& s : ks)
+      {
+        d_globalSyms.insert(s);
+      }
     }
   }
 }
