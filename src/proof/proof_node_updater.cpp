@@ -57,6 +57,11 @@ void ProofNodeUpdaterCallback::finalize(std::shared_ptr<ProofNode> pn)
   // do nothing
 }
 
+void ProofNodeUpdaterCallback::finalize(std::shared_ptr<ProofNode> pn)
+{
+  // do nothing
+}
+
 ProofNodeUpdater::ProofNodeUpdater(Env& env,
                                    ProofNodeUpdaterCallback& cb,
                                    bool mergeSubproofs,
@@ -206,13 +211,16 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
       // proof with the same result. Same as above, updating the contents here
       // is typically not necessary since references to this proof will be
       // replaced.
+      // maybe found a proof in the meantime, i.e. a subproof of the current
+      // proof with the same result. Same as above, updating the contents here
+      // is typically not necessary since references to this proof will be
+      // replaced.
       if (!checkMergeProof(cur, resCache, cfaMap))
       {
         runFinalize(cur, fa, resCache, resCacheNcWaiting, cfaMap, cfaAllowed);
       }
       else
       {
-        // AlwaysAssert(false) << id << " / " << cur->getRule();
         Trace("pf-process-merge") << "...merged on postvisit " << id << " / "
                                   << cur->getRule() << std::endl;
       }
