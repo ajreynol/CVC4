@@ -2601,7 +2601,6 @@ bool BasicRewriteRCons::ensureProofMacroQuantVarElimIneq(CDProof* cdp,
                          iterm);
     }
   }
-  // TODO: ensure type correct??
   Trace("brc-macro") << "Instantiation term is: " << iterm << std::endl;
   // instantiate
   ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
