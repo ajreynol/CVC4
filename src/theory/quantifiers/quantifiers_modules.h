@@ -20,6 +20,7 @@
 
 #include "theory/quantifiers/alpha_equivalence.h"
 #include "theory/quantifiers/conjecture_generator.h"
+#include "theory/quantifiers/contextual_enumerator.h"
 #include "theory/quantifiers/ematching/instantiation_engine.h"
 #include "theory/quantifiers/fmf/bounded_integers.h"
 #include "theory/quantifiers/fmf/full_model_check.h"
@@ -88,6 +89,8 @@ class QuantifiersModules
   std::unique_ptr<InstStrategySubConflict> d_issc;
   /** subgoal generator */
   std::unique_ptr<ConjectureGenerator> d_sg_gen;
+  /** signature-based ground term enumerator */
+  std::unique_ptr<ContextualEnumerator> d_ctx_enum;
   /** ceg instantiation */
   std::unique_ptr<SynthEngine> d_synth_e;
   /** full saturation */

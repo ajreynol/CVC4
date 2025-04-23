@@ -66,6 +66,11 @@ void QuantifiersModules::initialize(Env& env,
     d_sg_gen.reset(new ConjectureGenerator(env, qs, qim, qr, tr));
     modules.push_back(d_sg_gen.get());
   }
+  if (options.quantifiers.contextualEnumerator)
+  {
+    d_ctx_enum.reset(new ContextualEnumerator(env, qs, qim, qr, tr));
+    modules.push_back(d_ctx_enum.get());
+  }  
   if (options.quantifiers.eMatching)
   {
     d_inst_engine.reset(new InstantiationEngine(env, qs, qim, qr, tr));

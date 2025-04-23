@@ -913,6 +913,37 @@ name   = "Quantifiers"
   default    = "3"
   help       = "maximum depth of terms to consider for conjectures"
 
+[[option]]
+  name       = "contextualEnumerator"
+  category   = "expert"
+  long       = "ctx-enum"
+  type       = "bool"
+  default    = "false"
+  help       = "enumerate ground terms based on current signature"
+
+[[option]]
+  name       = "contextualEnumeratorLimit"
+  category   = "expert"
+  long       = "ctx-enum-limit=N"
+  type       = "int64_t"
+  default    = "50"
+  help       = "maximum number of terms to enumerate per function symbol"
+
+[[option]]
+  name       = "contextualEnumeratorStrategy"
+  category   = "expert"
+  long       = "ctx-enum-strategy=MODE"
+  type       = "ContextualEnumeratorStrategy"
+  default    = "ENUMERATE"
+  help       = "whether to generate terms using the SyGuS term enumerator or the SyGuS sampler"
+  help_mode  = "Contextual enumerator mode."
+[[option.mode.ENUMERATE]]
+  name = "enumerate"
+  help = "Use the SyGuS Term Enumerator class to generate terms."
+[[option.mode.SAMPLE]]
+  name = "sample"
+  help = "Use the SyGuS Sampler class to generate terms."
+
 ### Synthesis options
 
 [[option]]
