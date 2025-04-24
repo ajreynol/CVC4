@@ -63,4 +63,6 @@ const std::vector<Node>& ElimWitnessNodeConverter::getAxioms() const
   return d_axioms;
 }
 
+Node ElimWitnessNodeConverter::getNormalFormFor(const Node& q) { return q; }
+
 }  // namespace cvc5::internal
