@@ -343,7 +343,7 @@ class RewriteDbProofCons : protected EnvObj
   int64_t d_currRecLimit;
   /** current step recursion limit */
   uint64_t d_currStepLimit;
-  /** Did we fail due to a resource limit in the current */
+  /** Did we fail due to a resource limit in the current run? */
   bool d_currFailResource;
   /** The mode for if/when to try theory rewrites */
   rewriter::TheoryRewriteMode d_tmode;
