@@ -127,12 +127,8 @@ enum RewriteRuleId
   XorEliminate,
   OrZero,
   OrOne,
-  XorDuplicate,
   XorOnes,
   XorZero,
-  BitwiseNotAnd,
-  BitwiseNotOr,
-  XorNot,
   NotIdemp,
   UltZero,
   UltSelf,
@@ -140,8 +136,6 @@ enum RewriteRuleId
   UleSelf,
   ZeroUle,
   UleMax,
-  NotUlt,
-  NotUle,
   MultPow2,
   MultSlice,
   ExtractMultLeadingBit,
@@ -188,7 +182,6 @@ enum RewriteRuleId
   XorSimplify,
   BitwiseSlicing,
   // rules to simplify bitblasting
-  BBAddNeg,
   UltAddOne,
   ConcatToMult,
   MultSltMult,
@@ -271,15 +264,9 @@ inline std::ostream& operator << (std::ostream& out, RewriteRuleId ruleId) {
   case ExtractNot :         out << "ExtractNot";          return out;
   case DoubleNeg :          out << "DoubleNeg";           return out;
   case NotConcat :          out << "NotConcat";           return out;
-  case XorDuplicate :       out << "XorDuplicate";        return out;
-  case BitwiseNotAnd :      out << "BitwiseNotAnd";       return out;
-  case BitwiseNotOr :       out << "BitwiseNotOr";        return out;
-  case XorNot :             out << "XorNot";              return out;
   case UltZero :            out << "UltZero";             return out;
   case UleZero :            out << "UleZero";             return out;
   case ZeroUle :            out << "ZeroUle";             return out;
-  case NotUlt :             out << "NotUlt";              return out;
-  case NotUle :             out << "NotUle";              return out;
   case UleMax :             out << "UleMax";              return out;
   case SleEliminate :       out << "SleEliminate";        return out;
   case XorOnes: out << "XorOnes"; return out;
@@ -323,11 +310,8 @@ inline std::ostream& operator << (std::ostream& out, RewriteRuleId ruleId) {
   case OrSimplify : out << "OrSimplify"; return out;
   case XorSimplify : out << "XorSimplify"; return out;
   case NegAdd: out << "NegAdd"; return out;
-  case BBAddNeg: out << "BBAddNeg"; return out;
   case UltOne : out << "UltOne"; return out;
   case UltOnes: out << "UltOnes"; return out;
-  case SltZero : out << "SltZero"; return out;
-  case ZeroUlt : out << "ZeroUlt"; return out;
   case MergeSignExtend : out << "MergeSignExtend"; return out;
   case SignExtendEqConst: out << "SignExtendEqConst"; return out;
   case ZeroExtendEqConst: out << "ZeroExtendEqConst"; return out;
@@ -351,40 +335,6 @@ inline std::ostream& operator << (std::ostream& out, RewriteRuleId ruleId) {
 template <RewriteRuleId rule>
 class RewriteRule {
 
-  // class RuleStatistics {
-
-  //   /** The name of the rule prefixed with the prefix */
-  //   static std::string getStatName(const char* prefix) {
-  //     std::stringstream statName;
-  //     statName << prefix << rule;
-  //     return statName.str();
-  //   }
-
-  // public:
-
-  //   /** Number of applications of this rule */
-  //   IntStat d_ruleApplications;
-
-  //   /** Constructor */
-  //   RuleStatistics()
-  //   : d_ruleApplications(getStatName("theory::bv::RewriteRules::count"), 0) {
-  //     currentStatisticsRegistry()->registerStat(&d_ruleApplications);
-  //   }
-
-  //   /** Destructor */
-  //   ~RuleStatistics() {
-  //     StatisticsRegistry::unregisterStat(&d_ruleApplications);
-  //   }
-  // };
-
-  // /* Statistics about the rule */
-  // // NOTE: Cannot have static fields like this, or else you can't have
-  // // two SolverEngines in the process (the second-to-be-destroyed will
-  // // have a dangling pointer and segfault).  If this statistic is needed,
-  // // fix the rewriter by making it an instance per-SolverEngine (instead of
-  // // static).
-  // static RuleStatistics* s_statistics;
-
   /** Actually apply the rewrite rule */
   static inline Node apply(TNode node) {
     Unreachable();
@@ -395,16 +345,9 @@ public:
 
   RewriteRule() {
     
-    // if (s_statistics == NULL) {
-    //   s_statistics = new RuleStatistics();
-    // }
-    
   }
 
   ~RewriteRule() {
-    
-    // delete s_statistics;
-    // s_statistics = NULL;
     
   }
 
@@ -433,11 +376,6 @@ public:
     }
   }
 };
-
-
- // template<RewriteRuleId rule>
- //   typename RewriteRule<rule>::RuleStatistics* RewriteRule<rule>::s_statistics = NULL;
-
 
 /** Have to list all the rewrite rules to get the statistics out */
 struct AllRewriteRules {
@@ -496,15 +434,9 @@ struct AllRewriteRules {
   RewriteRule<ExtractNot>                     rule54;
   RewriteRule<DoubleNeg>                      rule56;
   RewriteRule<NotConcat>                      rule57;
-  RewriteRule<XorDuplicate>                   rule62;
-  RewriteRule<BitwiseNotAnd>                  rule63;
-  RewriteRule<BitwiseNotOr>                   rule64;
-  RewriteRule<XorNot>                         rule65;
   RewriteRule<UltZero>                        rule68;
   RewriteRule<UleZero>                        rule69;
   RewriteRule<ZeroUle>                        rule70;
-  RewriteRule<NotUlt>                         rule71;
-  RewriteRule<NotUle>                         rule72;
   RewriteRule<ZeroExtendEliminate>            rule73;
   RewriteRule<UleMax>                         rule74;
   RewriteRule<SleEliminate>                   rule77;
@@ -533,11 +465,9 @@ struct AllRewriteRules {
   RewriteRule<AndSimplify>                    rule108;
   RewriteRule<OrSimplify>                     rule109;
   RewriteRule<NegAdd> rule110;
-  RewriteRule<BBAddNeg> rule111;
   RewriteRule<SolveEq>                        rule112;
   RewriteRule<BitwiseEq>                      rule113;
   RewriteRule<UltOne>                         rule114;
-  RewriteRule<SltZero>                        rule115;
   RewriteRule<MultDistrib>                    rule118;
   RewriteRule<UltAddOne> rule119;
   RewriteRule<ConcatToMult>                   rule120;
