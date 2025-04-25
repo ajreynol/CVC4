@@ -202,12 +202,8 @@ TrustNode TheoryBV::ppRewrite(TNode t, std::vector<SkolemLemma>& lems)
 {
   Trace("theory-bv-pp-rewrite") << "ppRewrite " << t << "\n";
   Node res = t;
-  if (options().bv.bitwiseEq && RewriteRule<BitwiseEq>::applies(t))
-  {
-    res = RewriteRule<BitwiseEq>::run<false>(t);
-  }
   // useful on QF_BV/space/ndist
-  else if (RewriteRule<UltAddOne>::applies(t))
+  if (RewriteRule<UltAddOne>::applies(t))
   {
     res = RewriteRule<UltAddOne>::run<false>(t);
   }
@@ -247,6 +243,14 @@ TrustNode TheoryBV::ppStaticRewrite(TNode atom)
     if (RewriteRule<SolveEq>::applies(atom))
     {
       Node res = RewriteRule<SolveEq>::run<false>(atom);
+      if (res != atom)
+      {
+        return TrustNode::mkTrustRewrite(atom, res);
+      }
+    }
+    if (options().bv.bitwiseEq && RewriteRule<BitwiseEq>::applies(atom))
+    {
+      Node res = RewriteRule<BitwiseEq>::run<false>(atom);
       if (res != atom)
       {
         return TrustNode::mkTrustRewrite(atom, res);
