@@ -3747,12 +3747,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_ABS_REAL_GT),
   /** Auto-generated from RARE rule arith-geq-ite-lift */
   EVALUE(ARITH_GEQ_ITE_LIFT),
-  /** Auto-generated from RARE rule arith-gt-ite-lift */
-  EVALUE(ARITH_GT_ITE_LIFT),
   /** Auto-generated from RARE rule arith-leq-ite-lift */
   EVALUE(ARITH_LEQ_ITE_LIFT),
-  /** Auto-generated from RARE rule arith-lt-ite-lift */
-  EVALUE(ARITH_LT_ITE_LIFT),
   /** Auto-generated from RARE rule arith-min-lt1 */
   EVALUE(ARITH_MIN_LT1),
   /** Auto-generated from RARE rule arith-min-lt2 */
@@ -3929,8 +3925,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_XOR_SIMPLIFY_3),
   /** Auto-generated from RARE rule bv-ult-add-one */
   EVALUE(BV_ULT_ADD_ONE),
-  /** Auto-generated from RARE rule bv-concat-to-mult */
-  EVALUE(BV_CONCAT_TO_MULT),
   /** Auto-generated from RARE rule bv-mult-slt-mult-1 */
   EVALUE(BV_MULT_SLT_MULT_1),
   /** Auto-generated from RARE rule bv-mult-slt-mult-2 */
@@ -3971,8 +3965,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_SGT_ELIMINATE),
   /** Auto-generated from RARE rule bv-sge-eliminate */
   EVALUE(BV_SGE_ELIMINATE),
-  /** Auto-generated from RARE rule bv-slt-eliminate */
-  EVALUE(BV_SLT_ELIMINATE),
   /** Auto-generated from RARE rule bv-sle-eliminate */
   EVALUE(BV_SLE_ELIMINATE),
   /** Auto-generated from RARE rule bv-redor-eliminate */
@@ -3999,12 +3991,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_XNOR_ELIMINATE),
   /** Auto-generated from RARE rule bv-sdiv-eliminate */
   EVALUE(BV_SDIV_ELIMINATE),
-  /** Auto-generated from RARE rule bv-sdiv-eliminate-fewer-bitwise-ops */
-  EVALUE(BV_SDIV_ELIMINATE_FEWER_BITWISE_OPS),
   /** Auto-generated from RARE rule bv-zero-extend-eliminate */
   EVALUE(BV_ZERO_EXTEND_ELIMINATE),
-  /** Auto-generated from RARE rule bv-sign-extend-eliminate */
-  EVALUE(BV_SIGN_EXTEND_ELIMINATE),
   /** Auto-generated from RARE rule bv-uaddo-eliminate */
   EVALUE(BV_UADDO_ELIMINATE),
   /** Auto-generated from RARE rule bv-saddo-eliminate */
@@ -4013,12 +4001,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_SDIVO_ELIMINATE),
   /** Auto-generated from RARE rule bv-smod-eliminate */
   EVALUE(BV_SMOD_ELIMINATE),
-  /** Auto-generated from RARE rule bv-smod-eliminate-fewer-bitwise-ops */
-  EVALUE(BV_SMOD_ELIMINATE_FEWER_BITWISE_OPS),
   /** Auto-generated from RARE rule bv-srem-eliminate */
   EVALUE(BV_SREM_ELIMINATE),
-  /** Auto-generated from RARE rule bv-srem-eliminate-fewer-bitwise-ops */
-  EVALUE(BV_SREM_ELIMINATE_FEWER_BITWISE_OPS),
   /** Auto-generated from RARE rule bv-usubo-eliminate */
   EVALUE(BV_USUBO_ELIMINATE),
   /** Auto-generated from RARE rule bv-ssubo-eliminate */
@@ -4139,8 +4123,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_UGT_UREM),
   /** Auto-generated from RARE rule bv-ult-one */
   EVALUE(BV_ULT_ONE),
-  /** Auto-generated from RARE rule bv-slt-zero */
-  EVALUE(BV_SLT_ZERO),
   /** Auto-generated from RARE rule bv-merge-sign-extend-1 */
   EVALUE(BV_MERGE_SIGN_EXTEND_1),
   /** Auto-generated from RARE rule bv-merge-sign-extend-2 */
