@@ -72,6 +72,8 @@ class ConflictConjectureGenerator : public QuantifiersModule
   std::map<Node, std::vector<Node>> d_eqcGen;
   std::map<Node, std::vector<Node>> d_eqcGenRec;
   std::map<Node, std::vector<Node>> d_genToFv;
+  /** */
+  std::vector<Node> d_currConjectures;
 
   class GenTrie
   {
@@ -85,6 +87,8 @@ class ConflictConjectureGenerator : public QuantifiersModule
   context::CDO<size_t> d_conjGenIndex;
   /** The canonized version of lemmas in d_conjGen */
   context::CDHashSet<Node> d_conjGenCache;
+  /** The options for subsolver calls */
+  Options d_subOptions;
 
   Node getOrMkVarForEqc(const Node& e);
   const std::vector<Node>& getGenForEqc(const Node& e);
@@ -122,6 +126,8 @@ class ConflictConjectureGenerator : public QuantifiersModule
    * @return true if we filter the conjecture a = b.
    */
   bool filterEmatching(const Node& a, const Node& b);
+  
+  bool filterDeductivelyEntailed(const Node& a, const Node& b);
 };
 
 }  // namespace quantifiers

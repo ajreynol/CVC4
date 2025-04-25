@@ -25,6 +25,8 @@
 #include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_tuple_enumerator.h"
 #include "util/random.h"
+#include "theory/smt_engine_subsolver.h"
+#include "smt/set_defaults.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::context;
@@ -46,6 +48,13 @@ ConflictConjectureGenerator::ConflictConjectureGenerator(
       d_conjGenCache(userContext())
 {
   d_false = nodeManager()->mkConst(false);
+  
+  d_subOptions.copyValues(options());
+  d_subOptions.write_quantifiers().instMaxRounds = 5;
+  d_subOptions.write_quantifiers().quantInduction = false;
+  d_subOptions.write_quantifiers().dtStcInduction = false;
+  d_subOptions.write_quantifiers().conflictConjectureGen = false;
+  smt::SetDefaults::disableChecking(d_subOptions);
 }
 
 void ConflictConjectureGenerator::presolve() {}
@@ -154,6 +163,7 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
       lem =
           nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bvs), lem);
     }
+    d_currConjectures.push_back(lem);
     lem = nm->mkNode(Kind::OR, lem.negate(), lem);
     Trace("ccgen-lemma") << "ConflictConjectureGenerator: send lemma " << lem << std::endl;
     d_qim.addPendingLemma(lem,
@@ -623,6 +633,12 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& a,
     Trace("cconj-filter") << "...filtered based on E-matching" << std::endl;
     return;
   }
+  Trace("cconj-filter") << "Try filter based on deductively entailed" << std::endl;
+  if (filterDeductivelyEntailed(a, b))
+  {
+    Trace("cconj-filter") << "...filtered based on deductively entailed" << std::endl;
+    return;
+  }
 
   // filter based on cache
   Node lem = a.eqNode(b);
@@ -728,6 +744,35 @@ bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)
   Trace("cconj-filter") << "...success, not filtered, tested=" << tested
                         << ", confirmed=" << confirmed << std::endl;
   return false;
+}
+
+bool ConflictConjectureGenerator::filterDeductivelyEntailed(const Node& a, const Node& b)
+{
+  std::unique_ptr<SolverEngine> dentChecker;
+  SubsolverSetupInfo ssi(d_env, d_subOptions);
+  initializeSubsolver(d_env.getNodeManager(), dentChecker, ssi, true, 100);
+  quantifiers::FirstOrderModel* model = d_treg.getModel();
+  for (size_t i = 0; i < model->getNumAssertedQuantifiers(); i++)
+  {
+    Node phi = model->getAssertedQuantifier(i);
+    dentChecker->assertFormula(phi);
+  }
+  Node lem = a.eqNode(b);
+  std::unordered_set<Node> fvs;
+  expr::getFreeVariables(lem, fvs);
+  std::vector<Node> bvs(fvs.begin(), fvs.end());
+  if (!bvs.empty())
+  {
+    NodeManager * nm = nodeManager();
+    lem =
+        nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bvs), lem);
+  }
+  lem = lem.notNode();
+  dentChecker->assertFormula(lem);
+  Trace("cconj-filter") << "Check with subsolver" << std::endl;
+  Result r = dentChecker->checkSat();
+  Trace("cconj-filter") << "  ...got : " << r << std::endl;
+  return (r.getStatus() == Result::UNSAT);
 }
 
 }  // namespace quantifiers
