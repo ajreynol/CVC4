@@ -1,4 +1,4 @@
-; COMMAND-LINE: --mbqi-enum --mbqi-enum-choice --pre-skolem-quant=on
+; COMMAND-LINE: --mbqi-enum --mbqi-enum-choice --no-mbqi-nested-check
 ; EXPECT: unsat
 (set-logic HO_ALL)
 (declare-sort u 0)

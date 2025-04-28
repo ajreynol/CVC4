@@ -564,6 +564,62 @@ void SygusGrammarCons::addDefaultRulesTo(
       {
         addRuleTo(nm, g, typeToNtSym, Kind::APPLY_UF, r, cargs);
       }
+      if (env.getOptions().quantifiers.sygusGrammarHoPartial)
+      {
+        Trace("sygus-grammar-def") << "Add partial applications for " << tn << std::endl;
+        // partial applications
+        for (const std::pair<const TypeNode, std::vector<Node>>& itt : typeToNtSym)
+        {
+          TypeNode ft = itt.first;
+          Trace("sygus-grammar-def") << "...maybe partially applied " << ft << "?" << std::endl;
+          if (!ft.isFunction())
+          {
+            continue;
+          }
+          std::vector<TypeNode> fcargs = ft.getArgTypes();
+          size_t nfcargs = fcargs.size();
+          size_t ncargs = cargs.size();
+          if (nfcargs<=ncargs)
+          {
+            continue;
+          }
+          size_t diff = nfcargs-ncargs;
+          bool isSuffix = true;
+          for (size_t i=0; i<ncargs; i++)
+          {
+            if (cargs[i]!=fcargs[i+diff])
+            {
+              isSuffix = false;
+              break;
+            }
+          }
+          Trace("sygus-grammar-def") << "...suffix is " << isSuffix << std::endl;
+          if (isSuffix)
+          {
+            std::map<TypeNode, std::vector<Node>>::const_iterator itta;
+            for (const Node& f : itt.second)
+            {
+              Node rule = f;
+              for (size_t i=0; i<diff; i++)
+              {
+                itta = typeToNtSym.find(fcargs[i]);
+                if (itta == typeToNtSym.end())
+                {
+                  rule = Node::null();
+                  break;
+                }
+                Assert(!itta->second.empty());
+                rule = nm->mkNode(Kind::HO_APPLY, rule, itta->second[0]);
+              }
+              if (!rule.isNull())
+              {
+                Trace("sygus-grammar-def") << "Add partial application " << rule << " to " << ntSym << std::endl;
+                g.addRule(ntSym, rule);
+              }
+            }
+          }
+        }  
+      }
     }
     else if (tn.isUninterpretedSort() || tn.isRoundingMode() || tn.isBoolean())
     {

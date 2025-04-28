@@ -52,6 +52,11 @@ class MbqiEnumTermEnumeratorCallback : protected EnvObj,
     {
       if (!expr::hasSubterm(bn[1], bn[0][0]))
       {
+        // always allow witness x. true ?
+        //if (!bn[1].isConst() || !bn[1].getConst<bool>())
+        //{
+        //  return false;
+        //}
         return false;
       }
     }
