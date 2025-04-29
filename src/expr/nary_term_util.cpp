@@ -50,13 +50,18 @@ void markListVar(TNode fv, bool isMatchOnly)
   {
     fv.setAttribute(IsMatchListAttr(), true);
   }
-  else {
+  else
+  {
     fv.setAttribute(IsMatchListAttr(), true);
     fv.setAttribute(IsListAttr(), true);
   }
 }
 
-bool isListVar(TNode fv, bool isMatch) { return isMatch ? fv.getAttribute(IsMatchListAttr()) : fv.getAttribute(IsListAttr()); }
+bool isListVar(TNode fv, bool isMatch)
+{
+  return isMatch ? fv.getAttribute(IsMatchListAttr())
+                 : fv.getAttribute(IsListAttr());
+}
 
 bool hasListVar(TNode n, bool isMatch)
 {
