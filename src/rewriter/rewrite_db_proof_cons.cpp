@@ -1330,10 +1330,15 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
         {
           std::vector<Node> subs(args.begin() + 1, args.end());
           const RewriteProofRule& rpr = d_db->getRule(pcur.d_dslId);
-          conc = rpr.getConclusionFor(subs);
+          conc = rpr.getConclusionFor(subs, false);
           Trace("rpc-debug") << "Finalize proof for " << cur << std::endl;
           Trace("rpc-debug") << "Proved: " << cur << std::endl;
           Trace("rpc-debug") << "From: " << conc << std::endl;
+          if (conc!=cur)
+          {
+            AlwaysAssert(false);
+            // TODO: repair
+          }
           pfr = ProofRule::DSL_REWRITE;
           cdp->addStep(conc, pfr, ps, args);
         }

@@ -1089,7 +1089,7 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
       const rewriter::RewriteProofRule& rpr = d_rdb->getRule(dr);
       std::vector<Node> ss(pargs.begin() + 1, pargs.end());
       std::vector<std::pair<Kind, std::vector<Node>>> witnessTerms;
-      rpr.getConclusionFor(ss, witnessTerms);
+      rpr.getConclusionFor(ss, witnessTerms, false);
       // the arguments are the computed witness terms
       for (const std::pair<Kind, std::vector<Node>>& w : witnessTerms)
       {
