@@ -727,10 +727,10 @@ void AlfPrinter::printDslRule(std::ostream& out, ProofRewriteRule r)
     Node uvtp = adtc.process(uvt);
     adtcConvMap[uvi] = uvtp;
     ssExplicit << uvtp;
-    if (expr::isListVar(uv))
+    if (expr::isListVar(uv, false))
     {
       // carry over whether it is a list variable
-      expr::markListVar(uvi);
+      expr::markListVar(uvi, false);
       ssExplicit << " :list";
     }
     ssExplicit << ")";

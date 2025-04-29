@@ -61,7 +61,9 @@ def gen_mk_skolem(name, sort):
         die(f'Cannot generate code for {sort}')
     res = f'Node {name} = NodeManager::mkBoundVar("{name}", {sort_code});'
     if sort.is_list:
-        res += f'expr::markListVar({name});'
+        res += f'expr::markListVar({name}, false);'
+    if sort.is_match_list:
+        res += f'expr::markListVar({name}, true);'
     return res
 
 

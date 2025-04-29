@@ -135,10 +135,10 @@ void RewriteDb::addRule(ProofRewriteRule id,
     {
       ofvs.push_back(v);
       cfvs.push_back(its->second);
-      if (expr::isListVar(v))
+      if (expr::isListVar(v, false))
       {
         // mark the canonical variable as a list variable as well
-        expr::markListVar(its->second);
+        expr::markListVar(its->second, !expr::isListVar(v, false));
       }
     }
     else

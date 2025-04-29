@@ -266,18 +266,19 @@ class Node:
 
 
 class Sort(Node):
-    def __init__(self, base, args=None, is_list=False, is_const=False):
+    def __init__(self, base, args=None, is_list=False, is_match_list=False, is_const=False):
         super().__init__(args if args else [])
         self.base = base
         self.is_list = is_list
+        self.is_match_list = is_match_list
         self.is_const = is_const
 
     def __eq__(self, other):
-        return self.base == other.base and self.is_list == other.is_list and\
+        return self.base == other.base and self.is_list == other.is_list and self.is_match_list == other.is_match_list and\
             super().__eq__(other)
 
     def __hash__(self):
-        return hash((self.base, self.is_list, tuple(self.children)))
+        return hash((self.base, self.is_list, self.is_match_list, tuple(self.children)))
 
     def __repr__(self):
         rep = ''
@@ -288,6 +289,8 @@ class Sort(Node):
                 self.base, ' '.join(str(child) for child in self.children))
         if self.is_list:
             rep = rep + ' :list'
+        if self.is_match_list:
+            rep = rep + ' :match-list'
         return rep
 
     def is_int(self):
