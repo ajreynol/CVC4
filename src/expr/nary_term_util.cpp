@@ -38,15 +38,27 @@ struct IsListTag
 };
 using IsListAttr = expr::Attribute<IsListTag, bool>;
 
-void markListVar(TNode fv)
+struct IsMatchListTag
+{
+};
+using IsMatchListAttr = expr::Attribute<IsMatchListTag, bool>;
+
+void markListVar(TNode fv, bool isMatchOnly)
 {
   Assert(fv.isVar());
-  fv.setAttribute(IsListAttr(), true);
+  if (isMatchOnly)
+  {
+    fv.setAttribute(IsMatchListAttr(), true);
+  }
+  else {
+    fv.setAttribute(IsMatchListAttr(), true);
+    fv.setAttribute(IsListAttr(), true);
+  }
 }
 
-bool isListVar(TNode fv) { return fv.getAttribute(IsListAttr()); }
+bool isListVar(TNode fv, bool isMatch) { return isMatch ? fv.getAttribute(IsMatchListAttr()) : fv.getAttribute(IsListAttr()); }
 
-bool hasListVar(TNode n)
+bool hasListVar(TNode n, bool isMatch)
 {
   std::unordered_set<TNode> visited;
   std::unordered_set<TNode>::iterator it;
@@ -62,7 +74,7 @@ bool hasListVar(TNode n)
     if (it == visited.end())
     {
       visited.insert(cur);
-      if (isListVar(cur))
+      if (isListVar(cur, isMatch))
       {
         return true;
       }
@@ -121,16 +133,18 @@ bool getListVarContext(TNode n, std::map<Node, Node>& context)
 
 Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
-                    const std::vector<Node>& subs)
+                    const std::vector<Node>& subs,
+                    bool isMatch)
 {
   std::unordered_map<TNode, Node> visited;
-  return narySubstitute(src, vars, subs, visited);
+  return narySubstitute(src, vars, subs, visited, isMatch);
 }
 
 Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
                     const std::vector<Node>& subs,
-                    std::unordered_map<TNode, Node>& visited)
+                    std::unordered_map<TNode, Node>& visited,
+                    bool isMatch)
 {
   // assumes all variables are list variables
   NodeManager* nm = src.getNodeManager();
@@ -156,7 +170,7 @@ Node narySubstitute(Node src,
       if (itv != vars.end())
       {
         size_t d = std::distance(vars.begin(), itv);
-        if (!isListVar(vars[d]))
+        if (!isListVar(vars[d], isMatch))
         {
           visited[cur] = subs[d];
           continue;
@@ -182,7 +196,7 @@ Node narySubstitute(Node src,
           size_t d = std::distance(vars.begin(), itv);
           Assert(d < subs.size());
           Node sd = subs[d];
-          if (isListVar(vars[d]))
+          if (isListVar(vars[d], isMatch))
           {
             Assert(sd.getKind() == Kind::SEXPR);
             // add its children

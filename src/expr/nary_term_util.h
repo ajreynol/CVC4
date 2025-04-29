@@ -27,12 +27,12 @@ namespace cvc5::internal {
 namespace expr {
 
 /** Mark variable as list */
-void markListVar(TNode fv);
+void markListVar(TNode fv, bool isMatchOnly = false);
 /** Is list variable */
-bool isListVar(TNode fv);
+bool isListVar(TNode fv, bool isMatch = true);
 
 /** Contains list variable */
-bool hasListVar(TNode n);
+bool hasListVar(TNode n, bool isMatch = true);
 
 /**
  * Compute list variable context
@@ -53,7 +53,8 @@ bool getListVarContext(TNode n, std::map<Node, Node>& context);
  */
 Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
-                    const std::vector<Node>& subs);
+                    const std::vector<Node>& subs,
+                    bool isMatch = true);
 /**
  * Same as above, with visited cache.
  *
@@ -65,7 +66,8 @@ Node narySubstitute(Node src,
 Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
                     const std::vector<Node>& subs,
-                    std::unordered_map<TNode, Node>& visited);
+                    std::unordered_map<TNode, Node>& visited,
+                    bool isMatch = true);
 
 }  // namespace expr
 }  // namespace cvc5::internal
