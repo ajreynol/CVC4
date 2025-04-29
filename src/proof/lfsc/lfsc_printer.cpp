@@ -1108,7 +1108,7 @@ void LfscPrinter::printDslRule(std::ostream& out,
     vlsubs.push_back(s);
     // remember if v was a list variable, we must convert these in side
     // condition printing below
-    if (expr::isListVar(v))
+    if (expr::isListVar(v, true))
     {
       listVars.insert(s);
     }

@@ -483,13 +483,13 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     }
     for (size_t i = 0, nchildren = children.size(); i < nchildren; i++)
     {
-      Node scond = expr::narySubstitute(conds[i], varList, subs);
+      Node scond = expr::narySubstitute(conds[i], varList, subs, false);
       if (scond != children[i])
       {
         return Node::null();
       }
     }
-    return rpr.getConclusionFor(subs);
+    return rpr.getConclusionFor(subs, false);
   }
   else if (id == ProofRule::THEORY_REWRITE)
   {

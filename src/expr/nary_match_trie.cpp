@@ -120,7 +120,7 @@ bool NaryMatchTrie::getMatches(Node n, NotifyMatch* ntm) const
         var = mt->d_vars[curr.d_index - 1];
         Assert(mt->d_children.find(var) != mt->d_children.end());
         std::vector<Node> currChildren;
-        if (isListVar(var))
+        if (isListVar(var, true))
         {
           // get the length of the list we want to consider
           size_t l = curr.d_variant;
@@ -302,7 +302,7 @@ std::string NaryMatchTrie::debugPrint() const
     {
       ss << n;
     }
-    ss << ((!n.isNull() && isListVar(n)) ? " [*]" : "");
+    ss << ((!n.isNull() && isListVar(n, true)) ? " [*]" : "");
     ss << std::endl;
     const NaryMatchTrie* mt = std::get<0>(curr);
     for (const std::pair<const Node, NaryMatchTrie>& c : mt->d_children)

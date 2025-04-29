@@ -165,8 +165,10 @@ class Parser:
             abs_set_sort | abs_abs_sort
 
     def var_decl_action(self, name, sort, attrs):
-        if attrs:
+        if ':list' in attrs:
             sort.is_list = True
+        if ':match-list' in attrs:
+            sort.is_match_list = True
         self.symbols.add_symbol(name, sort)
     def def_decl_action(self, name, expr):
         self.symbols.add_def(name, expr)
@@ -175,6 +177,7 @@ class Parser:
         decl = pp.Suppress(
             (pp.Suppress('(') + self.symbol() + self.sort() +
              pp.Optional(pp.Keyword(':list')) +
+             pp.Optional(pp.Keyword(':match-list')) +
              pp.Suppress(')')).setParseAction(
                  lambda s, l, t: self.var_decl_action(t[0], t[1], t[2:])))
         return (pp.Suppress('(') + pp.ZeroOrMore(decl) + pp.Suppress(')'))

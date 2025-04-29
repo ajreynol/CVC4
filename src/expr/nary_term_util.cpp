@@ -105,14 +105,14 @@ bool getListVarContext(TNode n, std::map<Node, Node>& context)
     if (it == visited.end())
     {
       visited.insert(cur);
-      if (isListVar(cur))
+      if (isListVar(cur, true))
       {
         // top-level list variable, undefined
         return false;
       }
       for (const Node& cn : cur)
       {
-        if (isListVar(cn))
+        if (isListVar(cn, true))
         {
           itc = context.find(cn);
           if (itc == context.end())

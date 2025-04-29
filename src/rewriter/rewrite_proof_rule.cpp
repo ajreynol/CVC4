@@ -208,16 +208,18 @@ Node RewriteProofRule::getConclusion(bool includeContext) const
   return conc;
 }
 
-Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss) const
+Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
+      bool isMatch) const
 {
   Assert(d_fvs.size() == ss.size());
   Node conc = getConclusion(true);
-  return expr::narySubstitute(conc, d_fvs, ss);
+  return expr::narySubstitute(conc, d_fvs, ss, isMatch);
 }
 
 Node RewriteProofRule::getConclusionFor(
     const std::vector<Node>& ss,
-    std::vector<std::pair<Kind, std::vector<Node>>>& witnessTerms) const
+    std::vector<std::pair<Kind, std::vector<Node>>>& witnessTerms,
+      bool isMatch) const
 {
   Assert(d_fvs.size() == ss.size());
   Node conc = getConclusion(true);
@@ -227,7 +229,7 @@ Node RewriteProofRule::getConclusionFor(
   // also compute for the condition
   for (const Node& c : d_cond)
   {
-    expr::narySubstitute(c, d_fvs, ss, visited);
+    expr::narySubstitute(c, d_fvs, ss, visited, isMatch);
   }
   std::map<Node, Node>::const_iterator itl;
   for (size_t i = 0, nfvs = ss.size(); i < nfvs; i++)
@@ -235,7 +237,7 @@ Node RewriteProofRule::getConclusionFor(
     TNode v = d_fvs[i];
     Kind wk = Kind::UNDEFINED_KIND;
     std::vector<Node> wargs;
-    if (!expr::isListVar(v))
+    if (!expr::isListVar(v, isMatch))
     {
       // if not a list variable, it is the given term
       wargs.push_back(ss[i]);

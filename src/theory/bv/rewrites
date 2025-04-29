@@ -144,7 +144,7 @@
   (bvnot (@bv 0 w)))
 
 (define-rule* bv-xor-simplify-1
-  ((xs ?BitVec :list) (ys ?BitVec :list) (zs ?BitVec :list) (x ?BitVec))
+  ((xs ?BitVec :match-list) (ys ?BitVec :match-list) (zs ?BitVec :list) (x ?BitVec))
   (bvxor xs x ys x zs)
   (bvxor xs ys zs))
 (define-rule bv-xor-simplify-2

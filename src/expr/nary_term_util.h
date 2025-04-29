@@ -28,7 +28,12 @@ namespace expr {
 
 /** Mark variable as list */
 void markListVar(TNode fv, bool isMatchOnly = false);
-/** Is list variable */
+/** 
+ * Is list variable? Returns true if fv is a list variable marked :list,
+ * or :match-list and isMatch is true.
+ * @param fv The variable to inspect
+ * @param isMatch Whether we also return true for :match-list.
+*/
 bool isListVar(TNode fv, bool isMatch = true);
 
 /** Contains list variable */
