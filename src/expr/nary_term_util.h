@@ -61,6 +61,12 @@ Node narySubstitute(Node src,
                     const std::vector<Node>& subs,
                     bool isMatch = true);
 /**
+ */
+std::vector<Node> convertSubstitutionNoMatch(Node src,
+                    const std::vector<Node>& vars,
+                    const std::vector<Node>& subs,
+                    const std::map<Node, Node>& context);
+/**
  * Same as above, with visited cache.
  *
  * @param src The term to substitute

@@ -145,6 +145,23 @@ Node narySubstitute(Node src,
   return narySubstitute(src, vars, subs, visited, isMatch);
 }
 
+std::vector<Node> convertSubstitutionNoMatch(Node src,
+                           const std::vector<Node>& vars,
+                           const std::vector<Node>& subs, 
+                           const std::map<Node, Node>& context)
+{
+  std::vector<Node> nsubs;
+  Assert (vars.size()==subs.size());
+  for (size_t i=0, nvars = vars.size(); i<nvars; i++)
+  {
+    if (isListVar(vars[i], true) && !isListVar(vars[i], false))
+    {
+      
+    }
+  }
+  return nsubs;
+}
+
 Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
                     const std::vector<Node>& subs,
@@ -207,8 +224,13 @@ Node narySubstitute(Node src,
             // add its children
             children.insert(children.end(), sd.begin(), sd.end());
           }
+          else if (!isMatch && isListVar(vars[d], true))
+          {
+            Assert(sd.getKind() == Kind::SEXPR);
+          }
           else
           {
+            Assert(sd.getKind() != Kind::SEXPR);
             children.push_back(sd);
           }
           continue;
