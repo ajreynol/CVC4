@@ -199,6 +199,7 @@ Node narySubstitute(Node src,
     {
       Node ret = cur;
       bool childChanged = false;
+      bool hasNullChild = false;
       std::vector<Node> children;
       for (const Node& cn : cur)
       {
@@ -228,8 +229,12 @@ Node narySubstitute(Node src,
             // case the caller of this method has already done this conversion.
             if (sd.getNumChildren() == 0)
             {
-              Node nt = expr::getNullTerminator(nm, cur.getKind(), cur.getType());
-              children.push_back(nt);
+              hasNullChild = true;
+              //Node nt = expr::getNullTerminator(nm, cur.getKind(), cur.getType());
+              //Trace("ajr-temp") << "...null terminator " << cur.getKind() << " " << cur.getType() << " returns " << nt << std::endl;
+              //Assert (!nt.isNull());
+              // we don't know the type to use for the null terminator yet, wait to do this below
+              children.push_back(Node::null());
             }
             else if (sd.getNumChildren()==1)
             {
@@ -256,6 +261,38 @@ Node narySubstitute(Node src,
       }
       if (childChanged)
       {
+        if (hasNullChild)
+        {
+          Node nt = getNullTerminator(nm, cur.getKind(), cur.getType());
+          if (nt.isNull())
+          {
+            // If the null terminator above is null, it is dependent on the
+            // return type. We get the type of a sibling.
+            for (const Node& c : children)
+            {
+              if (!c.isNull())
+              {
+                nt = getNullTerminator(nm, cur.getKind(), c.getType());
+                break;
+              }
+            }
+          }
+          // failed to find null terminator, should never happen
+          if (nt.isNull())
+          {
+            Assert(false) << "Failed to find null terminator";
+            return nt;
+          }
+          // go back and replace null placeholders with the null terminator
+          // computed above.
+          for (Node& c : children)
+          {
+            if (c.isNull())
+            {
+              c = nt;
+            }
+          }
+        }
         if (children.size() != cur.getNumChildren())
         {
           // n-ary operators cannot be parameterized
@@ -271,6 +308,13 @@ Node narySubstitute(Node src,
           }
           else
           {
+            // Assertion fails if we are doing singleton elimination after
+            // using :match-list variables. This will fail if a RARE
+            // rule depends on implicit singleton elimination, i.e. we
+            // are using match-list but there still exists a term with fewer
+            // than 2 :list variables.
+            Assert (children.size()>1 || noListVars.empty());
+            // implicit singleton elimination happens here
             ret = (children.size() == 1 ? children[0]
                                         : nm->mkNode(cur.getKind(), children));
           }
@@ -311,6 +355,7 @@ Node narySubstitute(Node src,
             }
             break;
             case Kind::TYPE_OF:
+              Trace("ajr-temp") << "Typeof " << children[0] << std::endl;
               ret = nm->mkConst(SortToTerm(children[0].getType()));
               break;
             default: ret = nm->mkNode(k, children); break;

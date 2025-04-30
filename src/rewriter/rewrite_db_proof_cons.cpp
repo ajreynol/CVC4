@@ -1316,7 +1316,6 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
         Assert(pfArgs.find(cur) != pfArgs.end());
         Assert(pcur.d_dslId != ProofRewriteRule::NONE);
         const std::vector<Node>& args = pfArgs[cur];
-        ProofRule pfr;
         if (pcur.d_id == RewriteProofStatus::DSL)
         {
           std::vector<Node> subs(args.begin() + 1, args.end());
@@ -1331,11 +1330,31 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
           Trace("ajr-temp") << "From: " << conc << std::endl;
           if (conc!=cur)
           {
-            AlwaysAssert(false);
-            // TODO: repair
+            Trace("rpc-debug") << "...correct via ACI_NORM" << std::endl;
+            CDProof cdpa(d_env);
+            std::vector<Node> transEq;
+            for (size_t i=0; i<2; i++)
+            {
+              if (cur[i]!=conc[i])
+              {
+                Node eq = i==0 ? cur[i].eqNode(conc[i]) : conc[i].eqNode(cur[i]);
+                cdpa.addStep(eq, ProofRule::ACI_NORM, {}, {eq});
+                transEq.push_back(eq);
+              }
+              if (i==0)
+              {
+                cdpa.addStep(conc, ProofRule::DSL_REWRITE, ps, args);
+                transEq.push_back(conc);
+              }
+            }
+            Assert (transEq.size()>1);
+            cdpa.addStep(cur, ProofRule::TRANS, transEq, {});
+            cdp->addProof(cdpa.getProofFor(cur));
           }
-          pfr = ProofRule::DSL_REWRITE;
-          cdp->addStep(conc, pfr, ps, args);
+          else
+          {
+            cdp->addStep(cur, ProofRule::DSL_REWRITE, ps, args);
+          }
         }
         else
         {
