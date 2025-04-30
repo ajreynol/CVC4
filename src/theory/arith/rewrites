@@ -45,7 +45,7 @@
 (define-rule arith-div-elim-to-real1 ((x ?) (y ?)) (/ (to_real x) y) (/ x y))
 (define-rule arith-div-elim-to-real2 ((x ?) (y ?)) (/ x (to_real y)) (/ x y))
 
-(define-cond-rule arith-mod-over-mod ((c Int) (ts Int :list) (r Int) (ss Int :list))
+(define-cond-rule arith-mod-over-mod ((c Int) (ts Int :match-list) (r Int) (ss Int :list))
   (not (= c 0))
   (mod_total (+ ts (mod_total r c) ss) c)
   (mod_total (+ ts r ss) c))

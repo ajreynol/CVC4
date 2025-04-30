@@ -119,10 +119,10 @@
   (= (str.++ s2 s3) (str.++ t2 t3))
   _)
 
-(define-rule str-concat-unify-base ((s ?Seq) (t1 ?Seq) (t2 ?Seq :list))
+(define-rule str-concat-unify-base ((s ?Seq) (t1 ?Seq) (t2 ?Seq :match-list))
   (= s (str.++ s t1 t2))
   (= (@seq.empty_of_type (@type_of s)) (str.++ t1 t2)))
-(define-rule str-concat-unify-base-rev ((s ?Seq) (t1 ?Seq) (t2 ?Seq :list))
+(define-rule str-concat-unify-base-rev ((s ?Seq) (t1 ?Seq) (t2 ?Seq :match-list))
   (= s (str.++ t1 t2 s))
   (= (@seq.empty_of_type (@type_of s)) (str.++ t1 t2)))
 
@@ -179,7 +179,7 @@
   (str.substr (str.++ s1 s2) n m)
   (str.substr s1 n m))
 
-(define-cond-rule str-substr-concat2 ((s1 ?Seq) (s2 ?Seq) (s3 ?Seq :list) (n Int) (m Int))
+(define-cond-rule str-substr-concat2 ((s1 ?Seq) (s2 ?Seq) (s3 ?Seq :match-list) (n Int) (m Int))
   (>= n (str.len s1))
   (str.substr (str.++ s1 s2 s3) n m)
   (str.substr (str.++ s2 s3) (- n (str.len s1)) m))
@@ -277,14 +277,14 @@
   (str.replace t r s)
   (str.++ s t))
 
-(define-cond-rule str-replace-one-pre ((t ?Seq) (s ?Seq) (r ?Seq) (ts ?Seq :list) (ss ?Seq :list))
+(define-cond-rule str-replace-one-pre ((t ?Seq) (s ?Seq) (r ?Seq) (ts ?Seq :match-list) (ss ?Seq :list))
   (= (str.len s) 1)
   (str.replace (str.++ ts t ss t) s r)
   (str.++ (str.replace (str.++ ts t ss) s r) t))
 
-(define-rule str-replace-find-pre ((t ?Seq) (r ?Seq) (ts ?Seq :list) (ss ?Seq :list))
-  (str.replace (str.++ ts t ss) t r)
-  (str.++ (str.replace (str.++ ts t) t r) ss))
+(define-rule str-replace-find-pre ((t ?Seq) (r ?Seq) (ts ?Seq :list) (t2 ?Seq) (ss ?Seq :list))
+  (str.replace (str.++ ts t t2 ss) t r)
+  (str.++ (str.replace (str.++ ts t) t r) t2 ss))
 
 (define-cond-rule str-replace-all-no-contains ((t ?Seq) (s ?Seq) (r ?Seq))
   (not (str.contains t s))
@@ -554,13 +554,15 @@
 
 (define-rule re-concat-star-swap ((xs RegLan :list) (r RegLan) (ys RegLan :list)) (re.++ xs (re.* r) r ys) (re.++ xs r (re.* r) ys))
 
-(define-rule re-concat-star-repeat ((xs RegLan :list) (r RegLan) (ys RegLan :list)) (re.++ xs (re.* r) (re.* r) ys) (re.++ xs (re.* r) ys))
+(define-rule re-concat-star-repeat ((xs RegLan :match-list) (r RegLan) (ys RegLan :list)) 
+  (re.++ xs (re.* r) (re.* r) ys) 
+  (re.++ xs (re.* r) ys))
 
-(define-rule re-concat-star-subsume1 ((xs RegLan :list) (r RegLan) (ys RegLan :list))
+(define-rule re-concat-star-subsume1 ((xs RegLan :match-list) (r RegLan) (ys RegLan :list))
   (re.++ xs (re.* r) (re.* re.allchar) ys)
   (re.++ xs (re.* re.allchar) ys))
 
-(define-rule re-concat-star-subsume2 ((xs RegLan :list) (r RegLan) (ys RegLan :list))
+(define-rule re-concat-star-subsume2 ((xs RegLan :match-list) (r RegLan) (ys RegLan :list))
   (re.++ xs (re.* re.allchar) (re.* r) ys)
   (re.++ xs (re.* re.allchar) ys))
 
@@ -577,7 +579,9 @@
   (re.union (str.to_re s) r)
   r)
 
-(define-rule* re-inter-all ((xs RegLan :list) (ys RegLan :list)) (re.inter xs (re.* re.allchar) ys) (re.inter xs ys))
+(define-rule* re-inter-all ((xs RegLan :match-list) (ys RegLan :match-list))
+  (re.inter xs (re.* re.allchar) ys) 
+  (re.inter xs ys))
 
 (define-rule re-star-none () (re.* re.none) (str.to_re ""))
 
@@ -585,7 +589,7 @@
 
 (define-rule re-star-star ((x RegLan)) (re.* (re.* x)) (re.* x))
 
-(define-rule re-star-union-drop-emp ((x RegLan :list) (y RegLan :list))
+(define-rule re-star-union-drop-emp ((x RegLan :match-list) (y RegLan :match-list))
   (re.* (re.union x (str.to_re "") y))
   (re.* (re.union x y)))
 
@@ -594,19 +598,19 @@
   (re.loop n m r)
   re.none)
 
-(define-cond-rule re-inter-cstring ((xs RegLan :list) (ys RegLan :list) (s String))
+(define-cond-rule re-inter-cstring ((xs RegLan :match-list) (ys RegLan :match-list) (s String))
   (str.in_re s (re.inter xs ys))
   (re.inter xs (str.to_re s) ys) 
   (str.to_re s))
 
-(define-cond-rule re-inter-cstring-neg ((xs RegLan :list) (ys RegLan :list) (s String))
+(define-cond-rule re-inter-cstring-neg ((xs RegLan :match-list) (ys RegLan :match-list) (s String))
   (not (str.in_re s (re.inter xs ys)))
   (re.inter xs (str.to_re s) ys) 
   re.none)
 
-(define-cond-rule str-substr-len-include ((s1 ?Seq) (s2 ?Seq :list) (n Int) (m Int))
+(define-cond-rule str-substr-len-include ((s1 ?Seq) (s2 ?Seq) (s3 ?Seq :list) (n Int) (m Int))
   (>= (str.len s1) (+ n m))
-  (str.substr (str.++ s1 s2) n m)
+  (str.substr (str.++ s1 s2 s3) n m)
   (str.substr s1 n m)
 )
 
