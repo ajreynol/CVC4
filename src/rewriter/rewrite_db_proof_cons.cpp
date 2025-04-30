@@ -1331,6 +1331,12 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
           if (conc!=cur)
           {
             Trace("rpc-debug") << "...correct via ACI_NORM" << std::endl;
+            // e.g. if DSL rule (:list) proves a1 = b1, but the RARE rule
+            // (:match-list and :list) proves a2 = b2, we prove this via:
+            // ------- ACI_NORM  --------- DSL_REWRITE  -------- ACI_NORM
+            // a2 = a1            a1 = b1               b1 = b2
+            // ------------------------------------------------- TRANS
+            /// a2 = b2
             CDProof cdpa(d_env);
             std::vector<Node> transEq;
             for (size_t i=0; i<2; i++)
