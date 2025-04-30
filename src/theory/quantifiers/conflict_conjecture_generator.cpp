@@ -53,6 +53,7 @@ ConflictConjectureGenerator::ConflictConjectureGenerator(
   d_subOptions.write_quantifiers().instMaxRounds = 5;
   d_subOptions.write_quantifiers().quantInduction = false;
   d_subOptions.write_quantifiers().dtStcInduction = false;
+  d_subOptions.write_quantifiers().conjectureGen = false;
   d_subOptions.write_quantifiers().conflictConjectureGen = false;
   smt::SetDefaults::disableChecking(d_subOptions);
 }
@@ -82,7 +83,7 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
   {
     return;
   }
-  Trace("ccgen") << "ConflictConjectureGenerator: check" << std::endl;
+  Trace("cconj") << "ConflictConjectureGenerator: check" << std::endl;
   // update the function definitions
   d_funDefEvaluator.clear();
   quantifiers::FirstOrderModel* model = d_treg.getModel();
@@ -616,13 +617,41 @@ class EMatchFrame
   bool isFinished() const { return d_index == d_matches.size(); }
 };
 
-void ConflictConjectureGenerator::candidateConjecture(const Node& a,
-                                                      const Node& b)
+void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
+                                                      const Node& bi)
 {
-  if (a.isVar() && expr::hasSubterm(b,a))
+  if (ai==bi)
+  {
+    return;
+  }
+  if (ai.isVar() && expr::hasSubterm(bi,ai))
   {
     // corner case of the form x = t[x], flip sides
-    candidateConjecture(b,a);
+    candidateConjecture(bi, ai);
+    return;
+  }
+  Node a = ai;
+  Node b = bi;
+  if (a.getKind()==Kind::APPLY_CONSTRUCTOR && b.getKind()==Kind::APPLY_CONSTRUCTOR)
+  {
+    Assert (a.getNumChildren()==b.getNumChildren());
+    Node eq;
+    // if constructor equals constructor, traverse to single argument that is
+    // different
+    for (size_t i=0, nargs=a.getNumChildren(); i<nargs; i++)
+    {
+      if (a[i]!=b[i])
+      {
+        if (eq.isNull())
+        {
+          eq = a[i].eqNode(b[i]);
+          continue;
+        }
+        return;
+      }
+    }
+    Assert (!eq.isNull());
+    candidateConjecture(eq[0], eq[1]);
     return;
   }
   Trace("cconj-filter") << "Candidate conjecture : " << a << " == " << b << "?"
