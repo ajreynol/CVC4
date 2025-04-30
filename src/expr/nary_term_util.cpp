@@ -213,14 +213,12 @@ Node narySubstitute(Node src,
           Node sd = subs[d];
           if (isListVar(vars[d]) && noListVars.find(vars[d])==noListVars.end())
           {
-            Trace("ajr-temp") << vars[d] << " is a list variable" << std::endl;
             Assert(sd.getKind() == Kind::SEXPR);
             // add its children
             children.insert(children.end(), sd.begin(), sd.end());
           }
           else if (sd.getKind() == Kind::SEXPR)
           {
-            Trace("ajr-temp") << "Substite non-list var to SEXPR, " << sd.getNumChildren() << std::endl;
             AlwaysAssert (isListVar(vars[d]));
             // A list variable that we are treating as a non list variable
             // We either must construct the null terminator, take the single
@@ -230,9 +228,6 @@ Node narySubstitute(Node src,
             if (sd.getNumChildren() == 0)
             {
               hasNullChild = true;
-              //Node nt = expr::getNullTerminator(nm, cur.getKind(), cur.getType());
-              //Trace("ajr-temp") << "...null terminator " << cur.getKind() << " " << cur.getType() << " returns " << nt << std::endl;
-              //Assert (!nt.isNull());
               // we don't know the type to use for the null terminator yet, wait to do this below
               children.push_back(Node::null());
             }
@@ -266,8 +261,12 @@ Node narySubstitute(Node src,
           Node nt = getNullTerminator(nm, cur.getKind(), cur.getType());
           if (nt.isNull())
           {
-            // If the null terminator above is null, it is dependent on the
-            // return type. We get the type of a sibling.
+            // If the null terminator above cannot be determine, it is dependent
+            // on the return type (where the type of cur is an abstract type).
+            // We get the type of a sibling, which should have the same type.
+            // (This is not the case for bv concat, but its null terminator
+            // is not dependent on the type and hence will not reach this
+            // block of code).
             for (const Node& c : children)
             {
               if (!c.isNull())
@@ -355,7 +354,6 @@ Node narySubstitute(Node src,
             }
             break;
             case Kind::TYPE_OF:
-              Trace("ajr-temp") << "Typeof " << children[0] << std::endl;
               ret = nm->mkConst(SortToTerm(children[0].getType()));
               break;
             default: ret = nm->mkNode(k, children); break;

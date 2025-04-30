@@ -68,6 +68,9 @@ Node narySubstitute(Node src,
  * @param src The term to substitute
  * @param vars The domain of the substitution
  * @param subs The range of the substitution
+ * @param noListVars The list of variables that have been marked as list
+ * variables, but we do not wish to treat as list variables (e.g. those marked
+ * :match-list).
  * @return the substituted term.
  */
 Node narySubstitute(Node src,
@@ -80,6 +83,10 @@ Node narySubstitute(Node src,
  * @param src The term to substitute
  * @param vars The domain of the substitution
  * @param subs The range of the substitution
+ * @param visited A cached of visited nodes
+ * @param noListVars The list of variables that have been marked as list
+ * variables, but we do not wish to treat as list variables (e.g. those marked
+ * :match-list).
  * @return the substituted term.
  */
 Node narySubstitute(Node src,
