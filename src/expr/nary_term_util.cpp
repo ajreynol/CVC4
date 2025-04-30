@@ -264,12 +264,12 @@ Node narySubstitute(Node src,
           Node nt = getNullTerminator(nm, cur.getKind(), cur.getType());
           if (nt.isNull())
           {
-            // If the null terminator above cannot be determine, it is dependent
-            // on the return type (where the type of cur is an abstract type).
-            // We get the type of a sibling, which should have the same type.
-            // (This is not the case for bv concat, but its null terminator
-            // is not dependent on the type and hence will not reach this
-            // block of code).
+            // If the null terminator above cannot be determined, it is likely
+            // dependent on the return type (where the type of cur is an
+            // abstract type). Instead, we get the type of a sibling, which
+            // should have the same type. (This is not the case for bv concat,
+            // but its null terminator is not dependent on the type and hence
+            // will not reach this block of code).
             for (const Node& c : children)
             {
               if (!c.isNull())
