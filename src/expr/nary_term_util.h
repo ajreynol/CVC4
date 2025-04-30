@@ -26,18 +26,18 @@
 namespace cvc5::internal {
 namespace expr {
 
-/** 
+/**
  * Mark variable as list, either with :list or :match-list.
  * @param fv The variable to mark.
  * @param isMatchOnly Whether the variable is marked :match-list.
  */
 void markListVar(TNode fv, bool isMatchOnly = false);
-/** 
+/**
  * Is list variable? Returns true if fv is a list variable marked :list,
  * or :match-list and isMatch is true.
  * @param fv The variable to inspect
  * @param isMatch Whether we also return true for :match-list.
-*/
+ */
 bool isListVar(TNode fv, bool isMatch = true);
 
 /** Contains list variable, considers :match-list variables to be list. */

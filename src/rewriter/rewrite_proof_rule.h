@@ -119,7 +119,8 @@ class RewriteProofRule
    * @param ss The terms to substitute in this rule. Each ss[i] is the same sort
    * as v[i] if v[i] is not a list variable, or is an SEXPR if v[i] is a list
    * variable,
-   * @param useMatchList if true, we treat :match-list variables as list variables.
+   * @param useMatchList if true, we treat :match-list variables as list
+   * variables.
    * @return the substituted conclusion of the rule.
    */
   Node getConclusionFor(const std::vector<Node>& ss, bool useMatchList) const;
@@ -139,7 +140,8 @@ class RewriteProofRule
    * variable,
    * @param witnessTerms The computed witness terms for each variable of this
    * rule.
-   * @param useMatchList if true, we treat :match-list variables as list variables.
+   * @param useMatchList if true, we treat :match-list variables as list
+   * variables.
    * @return the substituted conclusion of the rule.
    */
   Node getConclusionFor(
@@ -208,7 +210,8 @@ class RewriteProofRule
   std::vector<Node> d_userFvs;
   /** the ordered list of free variables */
   std::vector<Node> d_fvs;
-  /** The list of d_fvs that correspond to d_userFvs that were marked :match-list */
+  /** The list of d_fvs that correspond to d_userFvs that were marked
+   * :match-list */
   std::unordered_set<Node> d_matchListFvs;
   /** Empty set, used as an alternative to above set */
   std::unordered_set<Node> d_emptyFvs;

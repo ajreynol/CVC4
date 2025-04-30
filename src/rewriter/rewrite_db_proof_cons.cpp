@@ -1327,7 +1327,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
           Trace("rpc-debug") << "Finalize proof for " << cur << std::endl;
           Trace("rpc-debug") << "Proved: " << cur << std::endl;
           Trace("rpc-debug") << "From: " << conc << std::endl;
-          if (conc!=cur)
+          if (conc != cur)
           {
             Trace("rpc-debug") << "...correct via ACI_NORM" << std::endl;
             // e.g. if DSL rule (:list) proves a1 = b1, but the RARE rule
@@ -1338,21 +1338,22 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
             /// a2 = b2
             CDProof cdpa(d_env);
             std::vector<Node> transEq;
-            for (size_t i=0; i<2; i++)
+            for (size_t i = 0; i < 2; i++)
             {
-              if (cur[i]!=conc[i])
+              if (cur[i] != conc[i])
               {
-                Node eq = i==0 ? cur[i].eqNode(conc[i]) : conc[i].eqNode(cur[i]);
+                Node eq =
+                    i == 0 ? cur[i].eqNode(conc[i]) : conc[i].eqNode(cur[i]);
                 cdpa.addStep(eq, ProofRule::ACI_NORM, {}, {eq});
                 transEq.push_back(eq);
               }
-              if (i==0)
+              if (i == 0)
               {
                 cdpa.addStep(conc, ProofRule::DSL_REWRITE, ps, args);
                 transEq.push_back(conc);
               }
             }
-            Assert (transEq.size()>1);
+            Assert(transEq.size() > 1);
             cdpa.addStep(cur, ProofRule::TRANS, transEq, {});
             cdp->addProof(cdpa.getProofFor(cur));
           }
@@ -1528,10 +1529,10 @@ void RewriteDbProofCons::cacheProofSubPlaceholder(TNode context,
       std::unordered_set<Node> emptyFvs;
       while ((currp = parent[curr]) != Node::null())
       {
-        Node lhs =
-            expr::narySubstitute(currp, {placeholder}, {source}, visitedSrc, emptyFvs);
-        Node rhs =
-            expr::narySubstitute(currp, {placeholder}, {target}, visitedTgt, emptyFvs);
+        Node lhs = expr::narySubstitute(
+            currp, {placeholder}, {source}, visitedSrc, emptyFvs);
+        Node rhs = expr::narySubstitute(
+            currp, {placeholder}, {target}, visitedTgt, emptyFvs);
         congs.emplace_back(lhs.eqNode(rhs));
         curr = currp;
       }

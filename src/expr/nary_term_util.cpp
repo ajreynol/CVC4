@@ -211,7 +211,8 @@ Node narySubstitute(Node src,
           size_t d = std::distance(vars.begin(), itv);
           Assert(d < subs.size());
           Node sd = subs[d];
-          if (isListVar(vars[d]) && noListVars.find(vars[d])==noListVars.end())
+          if (isListVar(vars[d])
+              && noListVars.find(vars[d]) == noListVars.end())
           {
             Assert(sd.getKind() == Kind::SEXPR);
             // add its children
@@ -219,7 +220,7 @@ Node narySubstitute(Node src,
           }
           else if (sd.getKind() == Kind::SEXPR)
           {
-            Assert (isListVar(vars[d]));
+            Assert(isListVar(vars[d]));
             // If we have a SEXPR (list) in the range, then this must be
             // a list variable that we are treating as a non list variable.
             // We either must construct the null terminator, take the single
@@ -229,10 +230,11 @@ Node narySubstitute(Node src,
             if (sd.getNumChildren() == 0)
             {
               hasNullChild = true;
-              // we don't know the type to use for the null terminator yet, wait to do this below
+              // we don't know the type to use for the null terminator yet, wait
+              // to do this below
               children.push_back(Node::null());
             }
-            else if (sd.getNumChildren()==1)
+            else if (sd.getNumChildren() == 1)
             {
               children.push_back(sd[0]);
             }
@@ -313,7 +315,7 @@ Node narySubstitute(Node src,
             // rule depends on implicit singleton elimination, i.e. we
             // are using match-list but there still exists a term with fewer
             // than 2 :list variables.
-            Assert (children.size()>1 || noListVars.empty());
+            Assert(children.size() > 1 || noListVars.empty());
             // implicit singleton elimination happens here
             ret = (children.size() == 1 ? children[0]
                                         : nm->mkNode(cur.getKind(), children));

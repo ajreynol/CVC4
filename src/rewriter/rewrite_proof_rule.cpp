@@ -46,7 +46,7 @@ void RewriteProofRule::init(ProofRewriteRule id,
   // are used interchangably in the RARE reconstruction. Thus, we must
   // manually track which canonical variables (which are associated one-to-one
   // with user variables) are :match-list.
-  for (size_t i=0, nvars=userFvs.size(); i<nvars; i++)
+  for (size_t i = 0, nvars = userFvs.size(); i < nvars; i++)
   {
     const Node& v = userFvs[i];
     if (expr::isListVar(v, true) && !expr::isListVar(v, false))
@@ -194,7 +194,8 @@ void RewriteProofRule::getObligations(const std::vector<Node>& vs,
                                       std::vector<Node>& vcs,
                                       bool useMatchList) const
 {
-  const std::unordered_set<Node>& nmvs = useMatchList ? d_emptyFvs : d_matchListFvs;
+  const std::unordered_set<Node>& nmvs =
+      useMatchList ? d_emptyFvs : d_matchListFvs;
   // substitute into each condition
   for (const Node& c : d_cond)
   {
@@ -223,10 +224,11 @@ Node RewriteProofRule::getConclusion(bool includeContext) const
 }
 
 Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
-      bool useMatchList) const
+                                        bool useMatchList) const
 {
   Assert(d_fvs.size() == ss.size());
-  const std::unordered_set<Node>& nmvs = useMatchList ? d_emptyFvs : d_matchListFvs;
+  const std::unordered_set<Node>& nmvs =
+      useMatchList ? d_emptyFvs : d_matchListFvs;
   Node conc = getConclusion(true);
   return expr::narySubstitute(conc, d_fvs, ss, nmvs);
 }
@@ -234,10 +236,11 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
 Node RewriteProofRule::getConclusionFor(
     const std::vector<Node>& ss,
     std::vector<std::pair<Kind, std::vector<Node>>>& witnessTerms,
-      bool useMatchList) const
+    bool useMatchList) const
 {
   Assert(d_fvs.size() == ss.size());
-  const std::unordered_set<Node>& nmvs = useMatchList ? d_emptyFvs : d_matchListFvs;
+  const std::unordered_set<Node>& nmvs =
+      useMatchList ? d_emptyFvs : d_matchListFvs;
   Node conc = getConclusion(true);
   NodeManager* nm = conc.getNodeManager();
   std::unordered_map<TNode, Node> visited;
@@ -293,7 +296,8 @@ void RewriteProofRule::getConditionalDefinitions(const std::vector<Node>& vs,
                                                  std::vector<Node>& dvs,
                                                  std::vector<Node>& dss) const
 {
-  // only used internally, assumes all list/match-list variables are list (using d_emptyFvs)
+  // only used internally, assumes all list/match-list variables are list (using
+  // d_emptyFvs)
   for (const std::pair<const Node, Node>& cv : d_condDefinedVars)
   {
     dvs.push_back(cv.first);
