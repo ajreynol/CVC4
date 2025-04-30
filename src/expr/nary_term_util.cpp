@@ -63,7 +63,7 @@ bool isListVar(TNode fv, bool isMatch)
                  : fv.getAttribute(IsListAttr());
 }
 
-bool hasListVar(TNode n, bool isMatch)
+bool hasListVar(TNode n)
 {
   std::unordered_set<TNode> visited;
   std::unordered_set<TNode>::iterator it;
@@ -79,7 +79,7 @@ bool hasListVar(TNode n, bool isMatch)
     if (it == visited.end())
     {
       visited.insert(cur);
-      if (isListVar(cur, isMatch))
+      if (isListVar(cur))
       {
         return true;
       }
@@ -105,14 +105,14 @@ bool getListVarContext(TNode n, std::map<Node, Node>& context)
     if (it == visited.end())
     {
       visited.insert(cur);
-      if (isListVar(cur, true))
+      if (isListVar(cur))
       {
         // top-level list variable, undefined
         return false;
       }
       for (const Node& cn : cur)
       {
-        if (isListVar(cn, true))
+        if (isListVar(cn))
         {
           itc = context.find(cn);
           if (itc == context.end())
@@ -219,8 +219,9 @@ Node narySubstitute(Node src,
           }
           else if (sd.getKind() == Kind::SEXPR)
           {
-            AlwaysAssert (isListVar(vars[d]));
-            // A list variable that we are treating as a non list variable
+            Assert (isListVar(vars[d]));
+            // If we have a SEXPR (list) in the range, then this must be
+            // a list variable that we are treating as a non list variable.
             // We either must construct the null terminator, take the single
             // child, or construct a nested expression of the same kind/type.
             // Note it may have been the case that sd is not an SEXPR, in which

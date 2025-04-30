@@ -1320,14 +1320,13 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
         {
           std::vector<Node> subs(args.begin() + 1, args.end());
           const RewriteProofRule& rpr = d_db->getRule(pcur.d_dslId);
+          // get the official conclusion now according to the proof system,
+          // where we ignore :match-list. This may be different from the
+          // expected conclusion, which is corrected via ACI_NORM below.
           conc = rpr.getConclusionFor(subs, false);
           Trace("rpc-debug") << "Finalize proof for " << cur << std::endl;
           Trace("rpc-debug") << "Proved: " << cur << std::endl;
           Trace("rpc-debug") << "From: " << conc << std::endl;
-          Trace("ajr-temp") << "Finalize proof for " << rpr.getId() << std::endl;
-          Trace("ajr-temp") << "Args: " << subs << std::endl;
-          Trace("ajr-temp") << "Proved: " << cur << std::endl;
-          Trace("ajr-temp") << "From: " << conc << std::endl;
           if (conc!=cur)
           {
             Trace("rpc-debug") << "...correct via ACI_NORM" << std::endl;
@@ -1524,6 +1523,8 @@ void RewriteDbProofCons::cacheProofSubPlaceholder(TNode context,
     if (curr == placeholder)
     {
       TNode currp;
+      // below, we don't modify which variables are marked list (i.e.
+      // we consider :match-list as list here).
       std::unordered_set<Node> emptyFvs;
       while ((currp = parent[curr]) != Node::null())
       {

@@ -26,7 +26,11 @@
 namespace cvc5::internal {
 namespace expr {
 
-/** Mark variable as list */
+/** 
+ * Mark variable as list, either with :list or :match-list.
+ * @param fv The variable to mark.
+ * @param isMatchOnly Whether the variable is marked :match-list.
+ */
 void markListVar(TNode fv, bool isMatchOnly = false);
 /** 
  * Is list variable? Returns true if fv is a list variable marked :list,
@@ -36,13 +40,14 @@ void markListVar(TNode fv, bool isMatchOnly = false);
 */
 bool isListVar(TNode fv, bool isMatch = true);
 
-/** Contains list variable */
-bool hasListVar(TNode n, bool isMatch = true);
+/** Contains list variable, considers :match-list variables to be list. */
+bool hasListVar(TNode n);
 
 /**
  * Compute list variable context
  * Stores (one of the) parents for each list variable in n, or fail if a list
- * variable occurs beneath parents that have different kinds.
+ * variable occurs beneath parents that have different kinds. Considers
+ * :match-list variables to be list.
  */
 bool getListVarContext(TNode n, std::map<Node, Node>& context);
 

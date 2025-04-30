@@ -475,7 +475,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     {
       return Node::null();
     }
-    // get the expected premises
+    // get the expected premises, which does not consider :match-list
     std::vector<Node> conds;
     rpr.getObligations(varList, subs, conds, false);
     // check whether child proof match
@@ -490,6 +490,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
         return Node::null();
       }
     }
+    // get the conclusion, which does not consider :match-list.
     return rpr.getConclusionFor(subs, false);
   }
   else if (id == ProofRule::THEORY_REWRITE)

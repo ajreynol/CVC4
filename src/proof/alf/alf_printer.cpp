@@ -727,6 +727,7 @@ void AlfPrinter::printDslRule(std::ostream& out, ProofRewriteRule r)
     Node uvtp = adtc.process(uvt);
     adtcConvMap[uvi] = uvtp;
     ssExplicit << uvtp;
+    // we only care if marked :list, so isMatch is false here.
     if (expr::isListVar(uv, false))
     {
       // carry over whether it is a list variable
@@ -1089,6 +1090,7 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
       const rewriter::RewriteProofRule& rpr = d_rdb->getRule(dr);
       std::vector<Node> ss(pargs.begin() + 1, pargs.end());
       std::vector<std::pair<Kind, std::vector<Node>>> witnessTerms;
+      // we do not take into consideration :match-list variables here
       rpr.getConclusionFor(ss, witnessTerms, false);
       // the arguments are the computed witness terms
       for (const std::pair<Kind, std::vector<Node>>& w : witnessTerms)

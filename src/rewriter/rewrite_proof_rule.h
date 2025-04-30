@@ -90,11 +90,12 @@ class RewriteProofRule
   const std::vector<Node>& getConditions() const;
   /**
    * Get the conditions of the rule under the substitution { vs -> ss }.
+   * If useMatchList is true, we treat :match-list variables as list variables.
    */
   void getObligations(const std::vector<Node>& vs,
                       const std::vector<Node>& ss,
                       std::vector<Node>& vcs,
-                      bool isMatch) const;
+                      bool useMatchList) const;
   /**
    * Check match, return true if h matches the head of this rule; notifies
    * the match notify object ntm.
@@ -118,9 +119,10 @@ class RewriteProofRule
    * @param ss The terms to substitute in this rule. Each ss[i] is the same sort
    * as v[i] if v[i] is not a list variable, or is an SEXPR if v[i] is a list
    * variable,
+   * @param useMatchList if true, we treat :match-list variables as list variables.
    * @return the substituted conclusion of the rule.
    */
-  Node getConclusionFor(const std::vector<Node>& ss, bool isMatch) const;
+  Node getConclusionFor(const std::vector<Node>& ss, bool useMatchList) const;
   /**
    * Get conclusion of the rule for the substituted terms ss.
    * Additionally computes the "witness term" for each variable in the rule
@@ -137,12 +139,13 @@ class RewriteProofRule
    * variable,
    * @param witnessTerms The computed witness terms for each variable of this
    * rule.
+   * @param useMatchList if true, we treat :match-list variables as list variables.
    * @return the substituted conclusion of the rule.
    */
   Node getConclusionFor(
       const std::vector<Node>& ss,
       std::vector<std::pair<Kind, std::vector<Node>>>& witnessTerms,
-      bool isMatch = true) const;
+      bool useMatchList = true) const;
   /**
    * @return the list of applications of Kind::TYPE_OF that appear in the
    * conclusion or a premise. These require special handling by the

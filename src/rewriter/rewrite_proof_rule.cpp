@@ -41,8 +41,11 @@ void RewriteProofRule::init(ProofRewriteRule id,
   Assert(d_cond.empty() && d_fvs.empty());
   d_id = id;
   d_userFvs = userFvs;
-  // get the list of free variables that should be treated as a non-list
-  // when isMatch is false
+  // Get the list of free variables that are marked :match-list. Note that
+  // canonical variables do not distinguish :list versus :match-list as they
+  // are used interchangably in the RARE reconstruction. Thus, we must
+  // manually track which canonical variables (which are associated one-to-one
+  // with user variables) are :match-list.
   for (size_t i=0, nvars=userFvs.size(); i<nvars; i++)
   {
     const Node& v = userFvs[i];
@@ -189,9 +192,9 @@ const std::vector<Node>& RewriteProofRule::getConditions() const
 void RewriteProofRule::getObligations(const std::vector<Node>& vs,
                                       const std::vector<Node>& ss,
                                       std::vector<Node>& vcs,
-                                      bool isMatch) const
+                                      bool useMatchList) const
 {
-  const std::unordered_set<Node>& nmvs = isMatch ? d_emptyFvs : d_matchListFvs;
+  const std::unordered_set<Node>& nmvs = useMatchList ? d_emptyFvs : d_matchListFvs;
   // substitute into each condition
   for (const Node& c : d_cond)
   {
@@ -220,10 +223,10 @@ Node RewriteProofRule::getConclusion(bool includeContext) const
 }
 
 Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
-      bool isMatch) const
+      bool useMatchList) const
 {
   Assert(d_fvs.size() == ss.size());
-  const std::unordered_set<Node>& nmvs = isMatch ? d_emptyFvs : d_matchListFvs;
+  const std::unordered_set<Node>& nmvs = useMatchList ? d_emptyFvs : d_matchListFvs;
   Node conc = getConclusion(true);
   return expr::narySubstitute(conc, d_fvs, ss, nmvs);
 }
@@ -231,10 +234,10 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
 Node RewriteProofRule::getConclusionFor(
     const std::vector<Node>& ss,
     std::vector<std::pair<Kind, std::vector<Node>>>& witnessTerms,
-      bool isMatch) const
+      bool useMatchList) const
 {
   Assert(d_fvs.size() == ss.size());
-  const std::unordered_set<Node>& nmvs = isMatch ? d_emptyFvs : d_matchListFvs;
+  const std::unordered_set<Node>& nmvs = useMatchList ? d_emptyFvs : d_matchListFvs;
   Node conc = getConclusion(true);
   NodeManager* nm = conc.getNodeManager();
   std::unordered_map<TNode, Node> visited;
@@ -250,7 +253,7 @@ Node RewriteProofRule::getConclusionFor(
     TNode v = d_fvs[i];
     Kind wk = Kind::UNDEFINED_KIND;
     std::vector<Node> wargs;
-    if (!expr::isListVar(v, isMatch))
+    if (!expr::isListVar(v, useMatchList))
     {
       // if not a list variable, it is the given term
       wargs.push_back(ss[i]);
