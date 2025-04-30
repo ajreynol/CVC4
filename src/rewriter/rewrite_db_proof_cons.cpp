@@ -815,18 +815,13 @@ bool RewriteDbProofCons::proveWithRule(RewriteProofStatus id,
       std::vector<Node> subsall = subs;
       vsall.insert(vsall.end(), impliedVs.begin(), impliedVs.end());
       subsall.insert(subsall.end(), impliedSs.begin(), impliedSs.end());
-      if (!rpr.getObligations(vsall, subsall, vcs))
-      {
-        // cannot get conditions, likely due to failed side condition
-        Trace("rpc-debug2") << "...fail (obligations)" << std::endl;
-        return false;
-      }
+      // NOTE: could use true or false here?? same with below
+      rpr.getObligations(vsall, subsall, vcs, true);
     }
-    else if (!rpr.getObligations(vars, subs, vcs))
+    else
     {
-      // cannot get conditions, likely due to failed side condition
-      Trace("rpc-debug2") << "...fail (obligations)" << std::endl;
-      return false;
+      // NOTE: could use true or false here?? same with below
+      rpr.getObligations(vars, subs, vcs, true);
     }
     // Prove transitive equality last. We choose this order since the
     // transitive equality is expected to be the hardest to prove. Also, the
@@ -1205,11 +1200,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
                 rsubs.push_back(pcur.d_subs[d]);
               }
               // get the conditions, store into premises of cur.
-              if (!rpr.getObligations(vs, rsubs, ps))
-              {
-                Assert(false) << "failed a side condition?";
-                return false;
-              }
+              rpr.getObligations(vs, rsubs, ps, true);
               pfac.insert(pfac.end(), rsubs.begin(), rsubs.end());
             }
             else
@@ -1334,6 +1325,10 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
           Trace("rpc-debug") << "Finalize proof for " << cur << std::endl;
           Trace("rpc-debug") << "Proved: " << cur << std::endl;
           Trace("rpc-debug") << "From: " << conc << std::endl;
+          Trace("ajr-temp") << "Finalize proof for " << rpr.getId() << std::endl;
+          Trace("ajr-temp") << "Args: " << subs << std::endl;
+          Trace("ajr-temp") << "Proved: " << cur << std::endl;
+          Trace("ajr-temp") << "From: " << conc << std::endl;
           if (conc!=cur)
           {
             AlwaysAssert(false);
@@ -1504,12 +1499,13 @@ void RewriteDbProofCons::cacheProofSubPlaceholder(TNode context,
     if (curr == placeholder)
     {
       TNode currp;
+      std::unordered_set<Node> emptyFvs;
       while ((currp = parent[curr]) != Node::null())
       {
         Node lhs =
-            expr::narySubstitute(currp, {placeholder}, {source}, visitedSrc);
+            expr::narySubstitute(currp, {placeholder}, {source}, visitedSrc, emptyFvs);
         Node rhs =
-            expr::narySubstitute(currp, {placeholder}, {target}, visitedTgt);
+            expr::narySubstitute(currp, {placeholder}, {target}, visitedTgt, emptyFvs);
         congs.emplace_back(lhs.eqNode(rhs));
         curr = currp;
       }

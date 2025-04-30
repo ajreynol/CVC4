@@ -138,35 +138,27 @@ bool getListVarContext(TNode n, std::map<Node, Node>& context)
 
 Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
-                    const std::vector<Node>& subs,
-                    bool isMatch)
+                    const std::vector<Node>& subs)
 {
   std::unordered_map<TNode, Node> visited;
-  return narySubstitute(src, vars, subs, visited, isMatch);
+  std::unordered_set<Node> noListVars;
+  return narySubstitute(src, vars, subs, visited, noListVars);
 }
 
-std::vector<Node> convertSubstitutionNoMatch(Node src,
-                           const std::vector<Node>& vars,
-                           const std::vector<Node>& subs, 
-                           const std::map<Node, Node>& context)
+Node narySubstitute(Node src,
+                    const std::vector<Node>& vars,
+                    const std::vector<Node>& subs,
+                    const std::unordered_set<Node>& noListVars)
 {
-  std::vector<Node> nsubs;
-  Assert (vars.size()==subs.size());
-  for (size_t i=0, nvars = vars.size(); i<nvars; i++)
-  {
-    if (isListVar(vars[i], true) && !isListVar(vars[i], false))
-    {
-      
-    }
-  }
-  return nsubs;
+  std::unordered_map<TNode, Node> visited;
+  return narySubstitute(src, vars, subs, visited, noListVars);
 }
 
 Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
                     const std::vector<Node>& subs,
                     std::unordered_map<TNode, Node>& visited,
-                    bool isMatch)
+                    const std::unordered_set<Node>& noListVars)
 {
   // assumes all variables are list variables
   NodeManager* nm = src.getNodeManager();
@@ -192,7 +184,7 @@ Node narySubstitute(Node src,
       if (itv != vars.end())
       {
         size_t d = std::distance(vars.begin(), itv);
-        if (!isListVar(vars[d], isMatch))
+        if (!isListVar(vars[d]))
         {
           visited[cur] = subs[d];
           continue;
@@ -218,19 +210,40 @@ Node narySubstitute(Node src,
           size_t d = std::distance(vars.begin(), itv);
           Assert(d < subs.size());
           Node sd = subs[d];
-          if (isListVar(vars[d], isMatch))
+          if (isListVar(vars[d]) && noListVars.find(vars[d])==noListVars.end())
           {
+            Trace("ajr-temp") << vars[d] << " is a list variable" << std::endl;
             Assert(sd.getKind() == Kind::SEXPR);
             // add its children
             children.insert(children.end(), sd.begin(), sd.end());
           }
-          else if (!isMatch && isListVar(vars[d], true))
+          else if (sd.getKind() == Kind::SEXPR)
           {
-            Assert(sd.getKind() == Kind::SEXPR);
+            Trace("ajr-temp") << "Substite non-list var to SEXPR, " << sd.getNumChildren() << std::endl;
+            AlwaysAssert (isListVar(vars[d]));
+            // A list variable that we are treating as a non list variable
+            // We either must construct the null terminator, take the single
+            // child, or construct a nested expression of the same kind/type.
+            // Note it may have been the case that sd is not an SEXPR, in which
+            // case the caller of this method has already done this conversion.
+            if (sd.getNumChildren() == 0)
+            {
+              Node nt = expr::getNullTerminator(nm, cur.getKind(), cur.getType());
+              children.push_back(nt);
+            }
+            else if (sd.getNumChildren()==1)
+            {
+              children.push_back(sd[0]);
+            }
+            else
+            {
+              std::vector<Node> gchildren(sd.begin(), sd.end());
+              Node g = nm->mkNode(cur.getKind(), gchildren);
+              children.push_back(g);
+            }
           }
           else
           {
-            Assert(sd.getKind() != Kind::SEXPR);
             children.push_back(sd);
           }
           continue;

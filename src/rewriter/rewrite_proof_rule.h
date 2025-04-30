@@ -91,9 +91,10 @@ class RewriteProofRule
   /**
    * Get the conditions of the rule under the substitution { vs -> ss }.
    */
-  bool getObligations(const std::vector<Node>& vs,
+  void getObligations(const std::vector<Node>& vs,
                       const std::vector<Node>& ss,
-                      std::vector<Node>& vcs) const;
+                      std::vector<Node>& vcs,
+                      bool isMatch) const;
   /**
    * Check match, return true if h matches the head of this rule; notifies
    * the match notify object ntm.
@@ -119,8 +120,7 @@ class RewriteProofRule
    * variable,
    * @return the substituted conclusion of the rule.
    */
-  Node getConclusionFor(const std::vector<Node>& ss,
-      bool isMatch = true) const;
+  Node getConclusionFor(const std::vector<Node>& ss, bool isMatch) const;
   /**
    * Get conclusion of the rule for the substituted terms ss.
    * Additionally computes the "witness term" for each variable in the rule
@@ -205,6 +205,10 @@ class RewriteProofRule
   std::vector<Node> d_userFvs;
   /** the ordered list of free variables */
   std::vector<Node> d_fvs;
+  /** The list of d_fvs that correspond to d_userFvs that were marked :match-list */
+  std::unordered_set<Node> d_matchListFvs;
+  /** Empty set, used as an alternative to above set */
+  std::unordered_set<Node> d_emptyFvs;
   /** number of free variables */
   size_t d_numFv;
   /**

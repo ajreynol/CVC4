@@ -41,6 +41,16 @@ void RewriteProofRule::init(ProofRewriteRule id,
   Assert(d_cond.empty() && d_fvs.empty());
   d_id = id;
   d_userFvs = userFvs;
+  // get the list of free variables that should be treated as a non-list
+  // when isMatch is false
+  for (size_t i=0, nvars=userFvs.size(); i<nvars; i++)
+  {
+    const Node& v = userFvs[i];
+    if (expr::isListVar(v, true) && !expr::isListVar(v, false))
+    {
+      d_matchListFvs.insert(fvs[i]);
+    }
+  }
   d_level = _level;
   std::map<Node, Node> condDef;
   for (const Node& c : cond)
@@ -176,17 +186,18 @@ const std::vector<Node>& RewriteProofRule::getConditions() const
   return d_cond;
 }
 
-bool RewriteProofRule::getObligations(const std::vector<Node>& vs,
+void RewriteProofRule::getObligations(const std::vector<Node>& vs,
                                       const std::vector<Node>& ss,
-                                      std::vector<Node>& vcs) const
+                                      std::vector<Node>& vcs,
+                                      bool isMatch) const
 {
+  const std::unordered_set<Node>& nmvs = isMatch ? d_emptyFvs : d_matchListFvs;
   // substitute into each condition
   for (const Node& c : d_cond)
   {
-    Node sc = expr::narySubstitute(c, vs, ss);
+    Node sc = expr::narySubstitute(c, vs, ss, nmvs);
     vcs.push_back(sc);
   }
-  return true;
 }
 
 void RewriteProofRule::getMatches(Node h, expr::NotifyMatch* ntm) const
@@ -212,8 +223,9 @@ Node RewriteProofRule::getConclusionFor(const std::vector<Node>& ss,
       bool isMatch) const
 {
   Assert(d_fvs.size() == ss.size());
+  const std::unordered_set<Node>& nmvs = isMatch ? d_emptyFvs : d_matchListFvs;
   Node conc = getConclusion(true);
-  return expr::narySubstitute(conc, d_fvs, ss, isMatch);
+  return expr::narySubstitute(conc, d_fvs, ss, nmvs);
 }
 
 Node RewriteProofRule::getConclusionFor(
@@ -222,14 +234,15 @@ Node RewriteProofRule::getConclusionFor(
       bool isMatch) const
 {
   Assert(d_fvs.size() == ss.size());
+  const std::unordered_set<Node>& nmvs = isMatch ? d_emptyFvs : d_matchListFvs;
   Node conc = getConclusion(true);
   NodeManager* nm = conc.getNodeManager();
   std::unordered_map<TNode, Node> visited;
-  Node ret = expr::narySubstitute(conc, d_fvs, ss, visited);
+  Node ret = expr::narySubstitute(conc, d_fvs, ss, visited, nmvs);
   // also compute for the condition
   for (const Node& c : d_cond)
   {
-    expr::narySubstitute(c, d_fvs, ss, visited, isMatch);
+    expr::narySubstitute(c, d_fvs, ss, visited, nmvs);
   }
   std::map<Node, Node>::const_iterator itl;
   for (size_t i = 0, nfvs = ss.size(); i < nfvs; i++)
@@ -277,10 +290,11 @@ void RewriteProofRule::getConditionalDefinitions(const std::vector<Node>& vs,
                                                  std::vector<Node>& dvs,
                                                  std::vector<Node>& dss) const
 {
+  // only used internally, assumes all list/match-list variables are list (using d_emptyFvs)
   for (const std::pair<const Node, Node>& cv : d_condDefinedVars)
   {
     dvs.push_back(cv.first);
-    Node cvs = expr::narySubstitute(cv.second, vs, ss);
+    Node cvs = expr::narySubstitute(cv.second, vs, ss, d_emptyFvs);
     dss.push_back(cvs);
   }
 }

@@ -470,12 +470,14 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     }
     const rewriter::RewriteProofRule& rpr = d_rdb->getRule(di);
     const std::vector<Node>& varList = rpr.getVarList();
-    const std::vector<Node>& conds = rpr.getConditions();
     std::vector<Node> subs(args.begin() + 1, args.end());
     if (varList.size() != subs.size())
     {
       return Node::null();
     }
+    // get the expected premises
+    std::vector<Node> conds;
+    rpr.getObligations(varList, subs, conds, false);
     // check whether child proof match
     if (conds.size() != children.size())
     {
@@ -483,8 +485,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     }
     for (size_t i = 0, nchildren = children.size(); i < nchildren; i++)
     {
-      Node scond = expr::narySubstitute(conds[i], varList, subs, false);
-      if (scond != children[i])
+      if (conds[i] != children[i])
       {
         return Node::null();
       }

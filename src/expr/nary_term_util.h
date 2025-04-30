@@ -58,14 +58,22 @@ bool getListVarContext(TNode n, std::map<Node, Node>& context);
  */
 Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
-                    const std::vector<Node>& subs,
-                    bool isMatch = true);
+                    const std::vector<Node>& subs);
+
 /**
+ * Substitution with list semantics.
+ * Handles mixtures of list / non-list variables in vars.
+ * List variables are mapped to SEXPR whose children are the list to substitute.
+ *
+ * @param src The term to substitute
+ * @param vars The domain of the substitution
+ * @param subs The range of the substitution
+ * @return the substituted term.
  */
-std::vector<Node> convertSubstitutionNoMatch(Node src,
+Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
                     const std::vector<Node>& subs,
-                    const std::map<Node, Node>& context);
+                    const std::unordered_set<Node>& noListVars);
 /**
  * Same as above, with visited cache.
  *
@@ -78,7 +86,7 @@ Node narySubstitute(Node src,
                     const std::vector<Node>& vars,
                     const std::vector<Node>& subs,
                     std::unordered_map<TNode, Node>& visited,
-                    bool isMatch = true);
+                    const std::unordered_set<Node>& noListVars);
 
 }  // namespace expr
 }  // namespace cvc5::internal
