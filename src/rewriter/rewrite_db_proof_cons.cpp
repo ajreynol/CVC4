@@ -20,12 +20,12 @@
 #include "options/proof_options.h"
 #include "proof/proof_node_algorithm.h"
 #include "rewriter/rewrite_db_term_process.h"
+#include "rewriter/singleton_elim_converter.h"
 #include "smt/env.h"
 #include "theory/arith/arith_poly_norm.h"
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
 #include "util/bitvector.h"
-#include "rewriter/singleton_elim_converter.h"
 
 using namespace cvc5::internal::kind;
 
@@ -1207,7 +1207,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
               rpr.getObligations(vs, rsubs, ps, false);
               std::vector<Node> psPre;
               rpr.getObligations(vs, rsubs, psPre, true);
-              Assert (ps.size()==psFinal.size());
+              Assert(ps.size() == psFinal.size());
               for (size_t i = 0, nps = ps.size(); i < nps; i++)
               {
                 if (psPre[i] != ps[i])
@@ -1215,7 +1215,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
                   ensureProofSingletonElim(cdp, ps[i], psPre[i], true);
                 }
               }
-              pfac.insert(pfac.end(), rsubs.begin(), rsubs.end());              
+              pfac.insert(pfac.end(), rsubs.begin(), rsubs.end());
               // we will connect the proofs of psSe to those of ps at post
               // traversal
               processedVisit = true;

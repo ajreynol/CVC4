@@ -73,14 +73,15 @@ std::shared_ptr<ProofNode> SingletonElimConverter::convert(const Node& n,
           curr.first, curr.second, ProofRule::ARITH_POLY_NORM, {}, {eq});
       continue;
     }
-    if (curr.first.getKind()!=curr.second.getKind() || curr.first.getNumChildren()!=curr.second.getNumChildren())
+    if (curr.first.getKind() != curr.second.getKind()
+        || curr.first.getNumChildren() != curr.second.getNumChildren())
     {
       Assert(false) << "Cannot prove " << curr.first << " == " << curr.second;
       d_tpg.addRewriteStep(curr.first,
-                            curr.second,
-                            nullptr,
-                            false,
-                            TrustId::RARE_SINGLETON_ELIM);
+                           curr.second,
+                           nullptr,
+                           false,
+                           TrustId::RARE_SINGLETON_ELIM);
       continue;
     }
     // else recurse
