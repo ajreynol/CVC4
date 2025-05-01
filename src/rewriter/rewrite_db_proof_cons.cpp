@@ -25,6 +25,7 @@
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
 #include "util/bitvector.h"
+#include "rewriter/singleton_elim_converter.h"
 
 using namespace cvc5::internal::kind;
 
@@ -50,7 +51,9 @@ RewriteDbProofCons::RewriteDbProofCons(Env& env, RewriteDb* db)
       d_statTotalAttempts(statisticsRegistry().registerInt(
           "RewriteDbProofCons::totalAttempts")),
       d_statTotalInputSuccess(statisticsRegistry().registerInt(
-          "RewriteDbProofCons::totalInputSuccess"))
+          "RewriteDbProofCons::totalInputSuccess")),
+      d_statPfSingletonElims(statisticsRegistry().registerInt(
+          "RewriteDbProofCons::pfSingletonElim"))
 {
   NodeManager* nm = nodeManager();
   d_true = nm->mkConst(true);
@@ -1169,6 +1172,7 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
         }
         else
         {
+          bool processedVisit = false;
           std::vector<Node>& ps = premises[cur];
           std::vector<Node>& pfac = pfArgs[cur];
           if (pcur.isInternalRule())
@@ -1200,8 +1204,22 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
                 rsubs.push_back(pcur.d_subs[d]);
               }
               // get the conditions, store into premises of cur.
-              rpr.getObligations(vs, rsubs, ps, true);
-              pfac.insert(pfac.end(), rsubs.begin(), rsubs.end());
+              rpr.getObligations(vs, rsubs, ps, false);
+              std::vector<Node> psPre;
+              rpr.getObligations(vs, rsubs, psPre, true);
+              Assert (ps.size()==psFinal.size());
+              for (size_t i = 0, nps = ps.size(); i < nps; i++)
+              {
+                if (psPre[i] != ps[i])
+                {
+                  ensureProofSingletonElim(cdp, ps[i], psPre[i], true);
+                }
+              }
+              pfac.insert(pfac.end(), rsubs.begin(), rsubs.end());              
+              // we will connect the proofs of psSe to those of ps at post
+              // traversal
+              processedVisit = true;
+              visit.insert(visit.end(), psPre.begin(), psPre.end());
             }
             else
             {
@@ -1209,8 +1227,11 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
               pfac.push_back(cur);
             }
           }
-          // recurse on premises
-          visit.insert(visit.end(), ps.begin(), ps.end());
+          if (!processedVisit)
+          {
+            // recurse on premises
+            visit.insert(visit.end(), ps.begin(), ps.end());
+          }
         }
       }
     }
@@ -1322,44 +1343,18 @@ bool RewriteDbProofCons::ensureProofInternal(CDProof* cdp, const Node& eqi)
           const RewriteProofRule& rpr = d_db->getRule(pcur.d_dslId);
           // get the official conclusion now according to the proof system,
           // where we ignore :match-list. This may be different from the
-          // expected conclusion, which is corrected via ACI_NORM below.
+          // expected conclusion, which is corrected via
+          // ensureProofSingletonElim below.
           conc = rpr.getConclusionFor(subs, false);
           Trace("rpc-debug") << "Finalize proof for " << cur << std::endl;
           Trace("rpc-debug") << "Proved: " << cur << std::endl;
           Trace("rpc-debug") << "From: " << conc << std::endl;
+          cdp->addStep(conc, ProofRule::DSL_REWRITE, ps, args);
           if (conc != cur)
           {
-            Trace("rpc-debug") << "...correct via ACI_NORM" << std::endl;
-            // e.g. if DSL rule (:list) proves a1 = b1, but the RARE rule
-            // (:match-list and :list) proves a2 = b2, we prove this via:
-            // ------- ACI_NORM  --------- DSL_REWRITE  -------- ACI_NORM
-            // a2 = a1            a1 = b1               b1 = b2
-            // ------------------------------------------------- TRANS
-            /// a2 = b2
-            CDProof cdpa(d_env);
-            std::vector<Node> transEq;
-            for (size_t i = 0; i < 2; i++)
-            {
-              if (cur[i] != conc[i])
-              {
-                Node eq =
-                    i == 0 ? cur[i].eqNode(conc[i]) : conc[i].eqNode(cur[i]);
-                cdpa.addStep(eq, ProofRule::ACI_NORM, {}, {eq});
-                transEq.push_back(eq);
-              }
-              if (i == 0)
-              {
-                cdpa.addStep(conc, ProofRule::DSL_REWRITE, ps, args);
-                transEq.push_back(conc);
-              }
-            }
-            Assert(transEq.size() > 1);
-            cdpa.addStep(cur, ProofRule::TRANS, transEq, {});
-            cdp->addProof(cdpa.getProofFor(cur));
-          }
-          else
-          {
-            cdp->addStep(cur, ProofRule::DSL_REWRITE, ps, args);
+            // ensure the proof of the conversion to singleton elimination
+            // semantics.
+            ensureProofSingletonElim(cdp, conc, cur, false);
           }
         }
         else
@@ -1575,6 +1570,25 @@ Node RewriteDbProofCons::rewriteConcrete(const Node& n)
     return n;
   }
   return rewrite(n);
+}
+
+void RewriteDbProofCons::ensureProofSingletonElim(CDProof* cdp,
+                                                  const Node& eq,
+                                                  const Node& eqSe,
+                                                  bool fromSe)
+{
+  ++d_statPfSingletonElims;
+  SingletonElimConverter sec(d_env);
+  std::shared_ptr<ProofNode> pfn = sec.convert(eq, eqSe);
+  Node equiv = eq.eqNode(eqSe);
+  cdp->addProof(pfn);
+  if (fromSe)
+  {
+    Node equivs = eqSe.eqNode(eq);
+    cdp->addStep(equivs, ProofRule::SYMM, {equiv}, {});
+    equiv = equivs;
+  }
+  cdp->addStep(equiv[1], ProofRule::EQ_RESOLVE, {equiv[0], equiv}, {});
 }
 
 }  // namespace rewriter
