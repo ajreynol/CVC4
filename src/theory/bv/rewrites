@@ -148,11 +148,11 @@
   (bvxor xs x ys x zs)
   (bvxor xs ys zs))
 (define-rule bv-xor-simplify-2
-  ((xs ?BitVec :list) (ys ?BitVec :list) (zs ?BitVec :list) (x ?BitVec))
+  ((xs ?BitVec :match-list) (ys ?BitVec :match-list) (zs ?BitVec :list) (x ?BitVec))
   (bvxor xs x ys (bvnot x) zs)
   (bvnot (bvxor xs ys zs)))
 (define-rule bv-xor-simplify-3
-  ((xs ?BitVec :list) (ys ?BitVec :list) (zs ?BitVec :list) (x ?BitVec))
+  ((xs ?BitVec :match-list) (ys ?BitVec :match-list) (zs ?BitVec :list) (x ?BitVec))
   (bvxor xs (bvnot x) ys x zs)
   (bvnot (bvxor xs ys zs)))
 
@@ -161,7 +161,7 @@
 ; x < ys + 1 + zs <=> (not (ys + zs) < x) and (ys + zs) != 1...1
 ; we use ys, zs as lists so that 1 may appear on the left or the right of the bvadd term.
 (define-cond-rule bv-ult-add-one
-  ((x ?BitVec) (ys ?BitVec :list) (zs ?BitVec :list) (c1 ?BitVec) (w Int))
+  ((x ?BitVec) (ys ?BitVec :match-list) (zs ?BitVec :match-list) (c1 ?BitVec) (w Int))
   (and (= c1 (@bv 1 w)) (= w (@bvsize x)))
   (bvult x (bvadd ys c1 zs))
   (and
@@ -233,7 +233,7 @@
   (bvxor xs s1 s2 ys zs))
 
 (define-cond-rule bv-concat-merge-const
-  ((xs ?BitVec :list)
+  ((xs ?BitVec :match-list)
    (n1 Int) (w1 Int) (n2 Int) (w2 Int) (ww Int)
    (zs ?BitVec :list))
   (= ww (+ w1 w2))
