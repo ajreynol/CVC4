@@ -18,11 +18,6 @@
 #ifndef CVC5__THEORY__DEFERRED_BLOCKER_H
 #define CVC5__THEORY__DEFERRED_BLOCKER_H
 
-#include <chrono>
-#include <unordered_map>
-#include <vector>
-
-#include "proof/trust_node.h"
 #include "theory/theory.h"
 #include "theory/theory_engine_module.h"
 #include "theory/valuation.h"
@@ -67,6 +62,8 @@ class DeferredBlocker : public TheoryEngineModule
   context::CDList<Node> d_blockers;
   /** Have we filtered a lemma? */
   context::CDO<bool> d_filtered;
+  /** The options for subsolver calls */
+  Options d_subOptions;
 };
 
 }  // namespace theory
