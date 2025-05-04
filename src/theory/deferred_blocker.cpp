@@ -22,7 +22,7 @@ namespace theory {
 
 DeferredBlocker::DeferredBlocker(Env& env,
                     TheoryEngine* theoryEngine,
-                    prop::PropEngine* propEngine) : TheoryEngineModule(env, theoryEngine, "DeferredBlocker"), d_propEngine(propEngine), d_blockers(userContext()), d_filtered(false){}
+                    prop::PropEngine* propEngine) : TheoryEngineModule(env, theoryEngine, "DeferredBlocker"), d_propEngine(propEngine), d_blockers(userContext()), d_filtered(userContext(), false){}
 
 void DeferredBlocker::postsolve(prop::SatValue result)
 {}
