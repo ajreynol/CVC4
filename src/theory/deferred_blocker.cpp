@@ -17,24 +17,23 @@
 
 namespace cvc5::internal {
 
-
 namespace theory {
 
 DeferredBlocker::DeferredBlocker(Env& env,
-                    TheoryEngine* theoryEngine,
-                    prop::PropEngine* propEngine) : TheoryEngineModule(env, theoryEngine, "DeferredBlocker"), d_propEngine(propEngine), d_blockers(userContext()), d_filtered(userContext(), false){}
-
-void DeferredBlocker::postsolve(prop::SatValue result)
-{}
-
-void DeferredBlocker::check(Theory::Effort e)
+                                 TheoryEngine* theoryEngine,
+                                 prop::PropEngine* propEngine)
+    : TheoryEngineModule(env, theoryEngine, "DeferredBlocker"),
+      d_propEngine(propEngine),
+      d_blockers(userContext()),
+      d_filtered(userContext(), false)
 {
-
 }
 
-bool DeferredBlocker::filterLemma(TNode n,
-                  InferenceId id,
-                  LemmaProperty p)
+void DeferredBlocker::postsolve(prop::SatValue result) {}
+
+void DeferredBlocker::check(Theory::Effort e) {}
+
+bool DeferredBlocker::filterLemma(TNode n, InferenceId id, LemmaProperty p)
 {
   return false;
 }
@@ -69,4 +68,3 @@ void DeferredBlocker::notifyCandidateModel(TheoryModel* m)
 
 }  // namespace theory
 }  // namespace cvc5::internal
-

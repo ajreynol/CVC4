@@ -1498,20 +1498,20 @@ void TheoryEngine::lemma(TrustNode tlemma,
       tlemma = tproc;
     }
   }
+
+  // get the node
+  Node lemma = tlemma.getProven();
+
   if (!d_modules.empty())
   {
     for (TheoryEngineModule* tem : d_modules)
     {
-      if (tem->filterLemma(retLemma, id, p))
+      if (tem->filterLemma(lemma, id, p))
       {
         return;
       }
     }
   }
-
-  // get the node
-  Node node = tlemma.getNode();
-  Node lemma = tlemma.getProven();
 
   // must rewrite when checking here since we may have shadowing in rare cases,
   // e.g. lazy lambda lifting lemmas

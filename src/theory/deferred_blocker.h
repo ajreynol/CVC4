@@ -39,8 +39,8 @@ class DeferredBlocker : public TheoryEngineModule
 {
  public:
   DeferredBlocker(Env& env,
-                     TheoryEngine* theoryEngine,
-                     prop::PropEngine* propEngine);
+                  TheoryEngine* theoryEngine,
+                  prop::PropEngine* propEngine);
 
   /**
    * postsolve, attempts to solve
@@ -55,12 +55,11 @@ class DeferredBlocker : public TheoryEngineModule
   /**
    * May block the lemma
    */
-  bool filterLemma(TNode n,
-                   InferenceId id,
-                   LemmaProperty p) override;
+  bool filterLemma(TNode n, InferenceId id, LemmaProperty p) override;
 
   /** Notify that m is a (candidate) model */
   void notifyCandidateModel(TheoryModel* m) override;
+
  private:
   /** Current propEngine. */
   prop::PropEngine* d_propEngine;

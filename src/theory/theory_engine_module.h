@@ -82,10 +82,13 @@ class TheoryEngineModule : protected EnvObj
    * If the module returns true, it is responsible for either recording
    * that we are incomplete, or solving the problem in an alternative
    * way.
+   * Note this is called *before* the lemma n has been preprocessed.
+   * @param n The lemma, which has been theory preprocessed
+   * @param id The inference identifier of the lemma
+   * @param p The property of the lemma
+   * @return true if the theory engine should "filter" this lemma.
    */
-  virtual bool filterLemma(TNode n,
-                           InferenceId id,
-                           LemmaProperty p);
+  virtual bool filterLemma(TNode n, InferenceId id, LemmaProperty p);
   /** Needs candidate model, return true if the method below requires calling */
   virtual bool needsCandidateModel();
   /** Notify that m is a (candidate) model */
