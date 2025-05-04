@@ -59,6 +59,14 @@ name   = "Theory Layer"
   help       = "enable analysis of relevance of asserted literals with respect to the input formula"
 
 [[option]]
+  name       = "deferBlock"
+  category   = "expert"
+  long       = "defer-block"
+  type       = "bool"
+  default    = "false"
+  help       = "defer blocking clauses"
+
+[[option]]
   name       = "eeMode"
   category   = "regular"
   long       = "ee-mode=MODE"

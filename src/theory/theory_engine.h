@@ -32,6 +32,7 @@
 #include "theory/inference_id.h"
 #include "theory/interrupted.h"
 #include "theory/output_channel.h"
+#include "theory/deferred_blocker.h"
 #include "theory/partition_generator.h"
 #include "theory/rewriter.h"
 #include "theory/sort_inference.h"
@@ -685,6 +686,10 @@ class TheoryEngine : protected EnvObj
    * used.
    */
   std::unique_ptr<theory::PartitionGenerator> d_partitionGen;
+  /**
+   * The deferred blocker
+   */
+  std::unique_ptr<theory::DeferredBlocker> d_deferBlock;
   /** The list of modules */
   std::vector<theory::TheoryEngineModule*> d_modules;
   /** Conflict processor */

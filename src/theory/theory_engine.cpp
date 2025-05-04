@@ -199,6 +199,13 @@ void TheoryEngine::finishInit()
     d_modules.push_back(d_partitionGen.get());
   }
 
+  if (options().theory.deferBlock)
+  {
+    d_deferBlock =
+        std::make_unique<DeferredBlocker>(d_env, this, getPropEngine());
+    d_modules.push_back(d_deferBlock.get());
+  }
+
   // add user-provided plugins
   const std::vector<Plugin*> plugins = d_env.getPlugins();
   Trace("theory") << "initialize with " << plugins.size()
