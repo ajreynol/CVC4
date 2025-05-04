@@ -48,7 +48,6 @@ PartitionGenerator::PartitionGenerator(Env& env,
 {
   d_startTime = std::chrono::steady_clock::now();
   d_startTimeOfPreviousPartition = std::chrono::steady_clock::now();
-  d_valuation = std::make_unique<Valuation>(theoryEngine);
   d_propEngine = propEngine;
 
   d_conflictSize = options().parallel.partitionConflictSize;

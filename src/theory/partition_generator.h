@@ -169,11 +169,6 @@ std::chrono::time_point<std::chrono::steady_clock>
 prop::PropEngine* d_propEngine;
 
 /**
- * Valuation of the theory engine.
- */
-std::unique_ptr<Valuation> d_valuation;
-
-/**
  * The number of partitions requested through the compute-partitions option.
  */
 const uint64_t d_numPartitions;

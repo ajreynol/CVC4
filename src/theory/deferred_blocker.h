@@ -55,19 +55,19 @@ class DeferredBlocker : public TheoryEngineModule
   /**
    * May block the lemma
    */
-  void notifyLemma(TNode n,
+  bool filterLemma(TNode n,
                    InferenceId id,
-                   LemmaProperty p,
-                   const std::vector<Node>& skAsserts,
-                   const std::vector<Node>& sks) override;
+                   LemmaProperty p) override;
 
   /** Notify that m is a (candidate) model */
   void notifyCandidateModel(TheoryModel* m) override;
  private:
-  /**
-  * Current propEngine.
-  */
+  /** Current propEngine. */
   prop::PropEngine* d_propEngine;
+  /** The list of blockers we have considered */
+  context::CDList<Node> d_blockers;
+  /** Have we filtered a lemma? */
+  context::CDO<bool> d_filtered;
 };
 
 }  // namespace theory
