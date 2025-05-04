@@ -716,6 +716,8 @@ libcvc5_add_sources(
   theory/decision_manager.h
   theory/decision_strategy.cpp
   theory/decision_strategy.h
+  theory/deferred_blocker.cpp
+  theory/deferred_blocker.h
   theory/difficulty_manager.cpp
   theory/difficulty_manager.h
   theory/ee_manager.cpp

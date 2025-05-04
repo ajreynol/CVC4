@@ -1498,6 +1498,16 @@ void TheoryEngine::lemma(TrustNode tlemma,
       tlemma = tproc;
     }
   }
+  if (!d_modules.empty())
+  {
+    for (TheoryEngineModule* tem : d_modules)
+    {
+      if (tem->filterLemma(retLemma, id, p))
+      {
+        return;
+      }
+    }
+  }
 
   // get the node
   Node node = tlemma.getNode();

@@ -43,7 +43,12 @@ void TheoryEngineModule::notifyLemma(TNode n,
                                      const std::vector<Node>& sks)
 {
 }
-
+bool TheoryEngineModule::filterLemma(TNode n,
+                           InferenceId id,
+                           LemmaProperty p)
+{
+  return false;
+}
 bool TheoryEngineModule::needsCandidateModel() { return false; }
 
 void TheoryEngineModule::notifyCandidateModel(TheoryModel* m) {}
