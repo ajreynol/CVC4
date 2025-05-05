@@ -19,6 +19,7 @@
 #define CVC5__THEORY__QUANTIFIERS__QUANTIFIERS_MODULES_H
 
 #include "theory/quantifiers/alpha_equivalence.h"
+#include "theory/quantifiers/conflict_conjecture_generator.h"
 #include "theory/quantifiers/conjecture_generator.h"
 #include "theory/quantifiers/contextual_enumerator.h"
 #include "theory/quantifiers/ematching/instantiation_engine.h"
@@ -91,6 +92,8 @@ class QuantifiersModules
   std::unique_ptr<ConjectureGenerator> d_sg_gen;
   /** signature-based ground term enumerator */
   std::unique_ptr<ContextualEnumerator> d_ctx_enum;
+  /** subgoal generator */
+  std::unique_ptr<ConflictConjectureGenerator> d_cc_gen;
   /** ceg instantiation */
   std::unique_ptr<SynthEngine> d_synth_e;
   /** full saturation */

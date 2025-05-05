@@ -943,6 +943,14 @@ name   = "Quantifiers"
 [[option.mode.SAMPLE]]
   name = "sample"
   help = "Use the SyGuS Sampler class to generate terms."
+ 
+[[option]]
+  name       = "conflictConjectureGen"
+  category   = "expert"
+  long       = "conflict-conjecture-gen"
+  type       = "bool"
+  default    = "false"
+  help       = "generate conflict-driven candidate conjectures for inductive proofs"
 
 ### Synthesis options
 

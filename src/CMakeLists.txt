@@ -815,6 +815,8 @@ libcvc5_add_sources(
   theory/quantifiers/cegqi/nested_qe.h
   theory/quantifiers/cegqi/vts_term_cache.cpp
   theory/quantifiers/cegqi/vts_term_cache.h
+  theory/quantifiers/conflict_conjecture_generator.cpp
+  theory/quantifiers/conflict_conjecture_generator.h
   theory/quantifiers/conjecture_generator.cpp
   theory/quantifiers/conjecture_generator.h
   theory/quantifiers/contextual_enumerator.cpp

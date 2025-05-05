@@ -19,6 +19,7 @@
 #include "expr/skolem_manager.h"
 #include "expr/subs.h"
 #include "printer/smt2/smt2_printer.h"
+#include "options/smt_options.h"
 #include "theory/quantifiers/mbqi_enum.h"
 #include "theory/quantifiers/first_order_model.h"
 #include "theory/quantifiers/instantiate.h"
@@ -55,8 +56,9 @@ InstStrategyMbqi::InstStrategyMbqi(Env& env,
   {
     d_msenum.reset(new MbqiEnum(env, *this));
   }
-  d_subOptions.write_quantifiers().instMaxRounds = 5;
   d_subOptions.copyValues(options());
+  d_subOptions.write_quantifiers().instMaxRounds = 5;
+  d_subOptions.write_smt().produceModels = true;
   smt::SetDefaults::disableChecking(d_subOptions);
 }
 
@@ -260,7 +262,6 @@ void InstStrategyMbqi::process(Node q)
   std::unique_ptr<SolverEngine> mbqiChecker;
   SubsolverSetupInfo ssi(d_env, d_subOptions);
   initializeSubsolver(d_env.getNodeManager(), mbqiChecker, ssi);
-  mbqiChecker->setOption("produce-models", "true");
   mbqiChecker->assertFormula(query);
   Trace("mbqi") << "*** Check sat..." << std::endl;
   Trace("mbqi") << "  query is : " << SkolemManager::getOriginalForm(query)
