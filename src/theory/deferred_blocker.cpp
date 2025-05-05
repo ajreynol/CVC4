@@ -75,6 +75,11 @@ void DeferredBlocker::notifyCandidateModel(TheoryModel* m)
     Trace("defer-block") << "...already needs check" << std::endl;
     return;
   }
+  if (!d_filtered.get())
+  {
+    Trace("defer-block") << "...didnt filter" << std::endl;
+    return;
+  }
   std::vector<Node> assertions;
   std::unordered_set<Node> quants;
   const LogicInfo& logicInfo = d_env.getLogicInfo();
