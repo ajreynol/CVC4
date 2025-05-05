@@ -41,8 +41,8 @@ DeferredBlocker::DeferredBlocker(Env& env,
   // requires full proofs
   d_subOptions.write_smt().produceUnsatCores = true;
   // don't do simplification, to ensure core is small?
-  d_subOptions.write_smt().simplificationMode =
-      options::SimplificationMode::NONE;
+  //d_subOptions.write_smt().simplificationMode =
+   //   options::SimplificationMode::NONE;
   // requires unsat cores
   d_subOptions.write_theory().deferBlock = false;
 }
@@ -55,16 +55,24 @@ bool DeferredBlocker::filterLemma(TNode n, InferenceId id, LemmaProperty p)
 {
   if (id==InferenceId::ARITH_BB_LEMMA || id==InferenceId::ARITH_NL_TANGENT_PLANE)
   {
+    Trace("defer-block") << "...filtered " << id << std::endl;
     d_filtered = true;
     return true;
   }
   return false;
 }
 
+bool DeferredBlocker::needsCandidateModel()
+{
+  return d_filtered;
+}
+
 void DeferredBlocker::notifyCandidateModel(TheoryModel* m)
 {
+  Trace("defer-block") << "DeferredBlocker: notifyCandidateModel" << std::endl;
   if (d_valuation.needCheck())
   {
+    Trace("defer-block") << "...already needs check" << std::endl;
     return;
   }
   std::vector<Node> assertions;
@@ -95,17 +103,21 @@ void DeferredBlocker::notifyCandidateModel(TheoryModel* m)
   // assert and check-sat
   for (const Node& a : assertions)
   {
-    deferChecker->assertFormula(a);
+    if (a.getKind()!=Kind::FORALL)
+    {
+      deferChecker->assertFormula(a);
+    }
   }
-  Trace("qscf-engine") << ">>> Check subsolver..." << std::endl;
+  Trace("defer-block-solve") << ">>> Check subsolver..." << std::endl;
   Result r = deferChecker->checkSat();
+  Trace("defer-block-solve") << "...result " << r << std::endl;
   if (r.getStatus() == Result::UNSAT)
   {
     // Add the computed unsat core as a conflict, which will cause a backtrack.
     UnsatCore uc = deferChecker->getUnsatCore();
     Node ucc = nodeManager()->mkAnd(uc.getCore());
-    Trace("qscf-engine-debug") << "Unsat core is " << ucc << std::endl;
-    Trace("qscf-engine") << "Core size = " << uc.getCore().size() << std::endl;
+    Trace("defer-block-solve-debug") << "Unsat core is " << ucc << std::endl;
+    Trace("defer-block-solve") << "Core size = " << uc.getCore().size() << std::endl;
     TrustNode trn = TrustNode::mkTrustLemma(ucc.notNode(), nullptr);
     d_out.trustedLemma(trn, InferenceId::DEFER_BLOCK_UC);
   }

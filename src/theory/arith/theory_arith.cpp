@@ -560,11 +560,15 @@ bool TheoryArith::sanityCheckIntegerModel()
     // a non-integer value to an integer variable.
     return true;
   }
-  // this would imply that linear arithmetic's model failed to satisfy a branch
-  // and bound lemma
-  AlwaysAssert(!badAssignment)
-      << "Bad assignment from TheoryArithPrivate::collectModelValues, and no "
-         "branching lemma was sent";
+  if (badAssignment)
+  {
+    d_out->setModelUnsound(IncompleteId::ARITH_NO_IS_INT);
+    // this would imply that linear arithmetic's model failed to satisfy a branch
+    // and bound lemma
+    Assert(!badAssignment)
+        << "Bad assignment from TheoryArithPrivate::collectModelValues, and no "
+          "branching lemma was sent";
+  }
   return false;
 }
 

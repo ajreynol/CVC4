@@ -51,7 +51,8 @@ class DeferredBlocker : public TheoryEngineModule
    * May block the lemma
    */
   bool filterLemma(TNode n, InferenceId id, LemmaProperty p) override;
-
+  /** Needs candidate model, return true if the method below requires calling */
+  bool needsCandidateModel() override;
   /** Notify that m is a (candidate) model */
   void notifyCandidateModel(TheoryModel* m) override;
 
