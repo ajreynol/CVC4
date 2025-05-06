@@ -67,6 +67,21 @@ name   = "Theory Layer"
   help       = "defer blocking clauses"
 
 [[option]]
+  name       = "deferBlockMode"
+  category   = "expert"
+  long       = "defer-block-mode=MODE"
+  type       = "DeferBlockMode"
+  default    = "SUBSOLVE"
+  help       = "mode for deferring lemmas"
+  help_mode  = "Defines mode for deferring lemmas."
+[[option.mode.SUBSOLVE]]
+  name = "subsolve"
+  help = "Subsolve the quantifier-free part in a subsolver."
+[[option.mode.DELAY]]
+  name = "delay"
+  help = "Delay the lemmas."
+
+[[option]]
   name       = "eeMode"
   category   = "regular"
   long       = "ee-mode=MODE"

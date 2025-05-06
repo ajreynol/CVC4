@@ -31,19 +31,18 @@ DeferredBlocker::DeferredBlocker(Env& env,
     : TheoryEngineModule(env, theoryEngine, "DeferredBlocker"),
       d_propEngine(propEngine),
       d_blockers(userContext()),
-      d_filtered(userContext(), false)
+      d_filtered(context(), false),
+      d_filteredLems(context()),
+      d_filterIndex(context(), 0),
+      d_cache(userContext())
 {
   // determine the options to use for the verification subsolvers we spawn
   // we start with the provided options
   d_subOptions.copyValues(options());
   // disable checking first
   smt::SetDefaults::disableChecking(d_subOptions);
-  // requires full proofs
-  d_subOptions.write_smt().produceUnsatCores = true;
-  // don't do simplification, to ensure core is small?
-  //d_subOptions.write_smt().simplificationMode =
-   //   options::SimplificationMode::NONE;
   // requires unsat cores
+  d_subOptions.write_smt().produceUnsatCores = true;
   d_subOptions.write_theory().deferBlock = false;
 }
 
@@ -55,8 +54,9 @@ bool DeferredBlocker::filterLemma(TNode n, InferenceId id, LemmaProperty p)
 {
   if (id==InferenceId::ARITH_BB_LEMMA || id==InferenceId::ARITH_NL_TANGENT_PLANE || id==InferenceId::ARITH_NL_INFER_BOUNDS_NT)
   {
-    Trace("defer-block") << "...filtered " << id << std::endl;
+    Trace("defer-block-debug") << "...filtered " << id << std::endl;
     d_filtered = true;
+    d_filteredLems.push_back(n);
     return true;
   }
   return false;
@@ -69,15 +69,33 @@ bool DeferredBlocker::needsCandidateModel()
 
 void DeferredBlocker::notifyCandidateModel(TheoryModel* m)
 {
-  Trace("defer-block") << "DeferredBlocker: notifyCandidateModel" << std::endl;
+  Trace("defer-block-debug") << "DeferredBlocker: notifyCandidateModel" << std::endl;
   if (d_valuation.needCheck())
   {
-    Trace("defer-block") << "...already needs check" << std::endl;
+    Trace("defer-block-debug") << "...already needs check" << std::endl;
     return;
   }
   if (!d_filtered.get())
   {
-    Trace("defer-block") << "...didnt filter" << std::endl;
+    Trace("defer-block-debug") << "...didnt filter" << std::endl;
+    return;
+  }
+    Trace("defer-block-debug") << "...run check" << std::endl;
+  Trace("defer-block") << "DeferredBlocker: notifyCandidateModel" << std::endl;
+  // maybe just delaying?
+  if (options().theory.deferBlockMode==options::DeferBlockMode::DELAY)
+  {
+    while (d_filterIndex.get()<d_filteredLems.size())
+    {
+      Node n = d_filteredLems[d_filterIndex.get()];
+      d_filterIndex = d_filterIndex.get()+1;
+      if (d_cache.find(n)==d_cache.end())
+      {
+        d_cache.insert(n);
+        Trace("defer-block") << "...now send " << n << std::endl;
+        d_out.lemma(n, InferenceId::DEFER_BLOCK_UC);
+      }
+    }
     return;
   }
   std::vector<Node> assertions;
