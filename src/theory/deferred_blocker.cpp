@@ -31,9 +31,9 @@ DeferredBlocker::DeferredBlocker(Env& env,
     : TheoryEngineModule(env, theoryEngine, "DeferredBlocker"),
       d_propEngine(propEngine),
       d_blockers(userContext()),
-      d_filtered(context(), false),
-      d_filteredLems(context()),
-      d_filterIndex(context(), 0),
+      d_filtered(userContext(), false),
+      d_filteredLems(userContext()),
+      d_filterIndex(userContext(), 0),
       d_cache(userContext())
 {
   // determine the options to use for the verification subsolvers we spawn
