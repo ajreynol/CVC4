@@ -156,12 +156,8 @@ Node QuantifiersProofRuleChecker::checkInternal(
     }
     return eq;
   }
-<<<<<<< HEAD
   else if (id == ProofRule::EXISTS_STRING_LENGTH
            || id == ProofRule::EXISTS_INV_CONDITION)
-=======
-  else if (id == ProofRule::EXISTS_STRING_LENGTH)
->>>>>>> e852a84d311c8073ca115ce4c5578c5f86b770da
   {
     Node k = ValidWitnessProofGenerator::mkSkolem(nodeManager(), id, args);
     Node exists =
