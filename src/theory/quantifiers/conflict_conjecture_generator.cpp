@@ -659,7 +659,7 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
   if (a.getKind() == Kind::APPLY_CONSTRUCTOR
       && b.getKind() == Kind::APPLY_CONSTRUCTOR)
   {
-    if (a.getOperator()!=b.getOperator())
+    if (a.getOperator() != b.getOperator())
     {
       // obviously clashing
       return;
