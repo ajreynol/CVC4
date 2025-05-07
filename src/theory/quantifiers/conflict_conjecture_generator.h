@@ -122,7 +122,7 @@ class ConflictConjectureGenerator : public QuantifiersModule
    * Called when FV(a) is a superset of FV(b).
    */
   void candidateConjecture(const Node& a, const Node& b);
-  
+
   bool filterConjecture(const Node& clem);
   /**
    * See if there is a sustituion sigma such that (a = b)*sigma is false,
@@ -130,7 +130,7 @@ class ConflictConjectureGenerator : public QuantifiersModule
    * @return true if we filter the conjecture a = b.
    */
   bool filterEmatching(const Node& a, const Node& b);
-  
+
   bool filterDeductivelyEntailed(const Node& a, const Node& b);
 };
 

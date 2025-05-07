@@ -70,7 +70,7 @@ void QuantifiersModules::initialize(Env& env,
   {
     d_ctx_enum.reset(new ContextualEnumerator(env, qs, qim, qr, tr));
     modules.push_back(d_ctx_enum.get());
-  }  
+  }
   if (options.quantifiers.conflictConjectureGen)
   {
     d_cc_gen.reset(new ConflictConjectureGenerator(env, qs, qim, qr, tr));

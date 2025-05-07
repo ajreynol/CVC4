@@ -18,15 +18,15 @@
 #include "expr/node_algorithm.h"
 #include "expr/subs.h"
 #include "options/quantifiers_options.h"
+#include "smt/set_defaults.h"
 #include "theory/quantifiers/first_order_model.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/term_pools.h"
 #include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_tuple_enumerator.h"
-#include "util/random.h"
 #include "theory/smt_engine_subsolver.h"
-#include "smt/set_defaults.h"
+#include "util/random.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::context;
@@ -48,7 +48,7 @@ ConflictConjectureGenerator::ConflictConjectureGenerator(
       d_conjGenCache(userContext())
 {
   d_false = nodeManager()->mkConst(false);
-  
+
   d_subOptions.copyValues(options());
   d_subOptions.write_quantifiers().instMaxRounds = 5;
   d_subOptions.write_quantifiers().quantInduction = false;
@@ -167,7 +167,8 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
     }
     d_currConjectures.push_back(lem);
     lem = nm->mkNode(Kind::OR, lem.negate(), lem);
-    Trace("ccgen-lemma") << "ConflictConjectureGenerator: send lemma " << lem << std::endl;
+    Trace("ccgen-lemma") << "ConflictConjectureGenerator: send lemma " << lem
+                         << std::endl;
     d_qim.addPendingLemma(lem,
                           InferenceId::QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT);
     d_conjGenIndex = d_conjGenIndex.get() + 1;
@@ -205,7 +206,7 @@ void ConflictConjectureGenerator::checkDisequality(const Node& eq)
     State s = gfvs.empty() ? State::SUBSET : State::UNKNOWN;
     findCompatible(g, gfvs, vars[0], &d_gtrie, s, 0);
   }
-  
+
   // go back and see if the conjectures should be filtered
   for (const Node& lem : d_conjBuffer)
   {
@@ -216,7 +217,8 @@ void ConflictConjectureGenerator::checkDisequality(const Node& eq)
       continue;
     }
     d_conjGenCache.insert(clem);
-    Trace("cconj") << "*** Conjecture : " << clem[0] << " == " << clem[1] << std::endl;
+    Trace("cconj") << "*** Conjecture : " << clem[0] << " == " << clem[1]
+                   << std::endl;
     d_conjGen.emplace_back(lem);
   }
 }
@@ -294,7 +296,7 @@ void ConflictConjectureGenerator::getGeneralizations(const Node& v)
   addGeneralizationTerm(v, v, 0, {v});
   size_t reps = 15;
   Trace("ccgen-debug") << "Get " << reps << " runs for generalizations of " << v
-                 << std::endl;
+                       << std::endl;
   for (size_t i = 0; i < reps; i++)
   {
     getGeneralizationsInternal(v);
@@ -319,7 +321,7 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
     const std::vector<Node>& gens = getGenForEqc(d_bvToEqc[vc]);
     if (gens.empty())
     {
-      rindex = rindex+1==fvs.size() ? 0 : rindex+1;
+      rindex = rindex + 1 == fvs.size() ? 0 : rindex + 1;
       Trace("ccgen-debug") << "...no generalizations" << std::endl;
       // nothing to generalize
       continue;
@@ -393,7 +395,8 @@ void ConflictConjectureGenerator::addGeneralizationTerm(
   {
     return;
   }
-  Trace("ccgen-terms") << "* Generalization term [" << v << "]: " << g << std::endl;
+  Trace("ccgen-terms") << "* Generalization term [" << v << "]: " << g
+                       << std::endl;
   Trace("ccgen-debug") << "- free variables are " << fvs << std::endl;
   d_genToFv[g] = fvs;
   GenTrie* gt = &d_gtrie;
@@ -546,7 +549,7 @@ class EMatchFrame
   std::vector<size_t> d_recArgs;
   /** The argument positions of d_toMatch which are variables */
   std::vector<size_t> d_varArgs;
-  /** 
+  /**
    * The set of variables we bound in the last successful call to push, if any.
    */
   std::unordered_set<size_t> d_varArgsBound;
@@ -556,7 +559,7 @@ class EMatchFrame
    * - substitutions to match based on binding the direct variables of d_toMatch
    * - a list of obligations to match recursively to emf based on the
    * non-ground, non-variable chidlren of d_toMatch.
-   * 
+   *
    * @return true if we successfully pushed to match/emf.
    */
   bool push(TermDb* tdb,
@@ -637,11 +640,11 @@ class EMatchFrame
 void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
                                                       const Node& bi)
 {
-  if (ai==bi)
+  if (ai == bi)
   {
     return;
   }
-  if (ai.isVar() && expr::hasSubterm(bi,ai))
+  if (ai.isVar() && expr::hasSubterm(bi, ai))
   {
     // corner case of the form x = t[x], flip sides
     candidateConjecture(bi, ai);
@@ -649,15 +652,16 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
   }
   Node a = ai;
   Node b = bi;
-  if (a.getKind()==Kind::APPLY_CONSTRUCTOR && b.getKind()==Kind::APPLY_CONSTRUCTOR)
+  if (a.getKind() == Kind::APPLY_CONSTRUCTOR
+      && b.getKind() == Kind::APPLY_CONSTRUCTOR)
   {
-    Assert (a.getNumChildren()==b.getNumChildren());
+    Assert(a.getNumChildren() == b.getNumChildren());
     Node eq;
     // if constructor equals constructor, traverse to single argument that is
     // different
-    for (size_t i=0, nargs=a.getNumChildren(); i<nargs; i++)
+    for (size_t i = 0, nargs = a.getNumChildren(); i < nargs; i++)
     {
-      if (a[i]!=b[i])
+      if (a[i] != b[i])
       {
         if (eq.isNull())
         {
@@ -667,7 +671,7 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
         return;
       }
     }
-    Assert (!eq.isNull());
+    Assert(!eq.isNull());
     candidateConjecture(eq[0], eq[1]);
     return;
   }
@@ -678,8 +682,8 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
 
 bool ConflictConjectureGenerator::filterConjecture(const Node& clem)
 {
-  Trace("cconj-filter") << "Candidate conjecture : " << clem[0] << " == " << clem[1] << "?"
-                        << std::endl;
+  Trace("cconj-filter") << "Candidate conjecture : " << clem[0]
+                        << " == " << clem[1] << "?" << std::endl;
   if (d_conjGenCache.find(clem) != d_conjGenCache.end())
   {
     Trace("cconj-filter") << "...already in cache" << std::endl;
@@ -693,10 +697,12 @@ bool ConflictConjectureGenerator::filterConjecture(const Node& clem)
     Trace("cconj-filter") << "...filtered based on E-matching" << std::endl;
     return true;
   }
-  Trace("cconj-filter") << "Try filter based on deductively entailed" << std::endl;
+  Trace("cconj-filter") << "Try filter based on deductively entailed"
+                        << std::endl;
   if (filterDeductivelyEntailed(a, b))
   {
-    Trace("cconj-filter") << "...filtered based on deductively entailed" << std::endl;
+    Trace("cconj-filter") << "...filtered based on deductively entailed"
+                          << std::endl;
     return true;
   }
   return false;
@@ -794,7 +800,8 @@ bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)
   return false;
 }
 
-bool ConflictConjectureGenerator::filterDeductivelyEntailed(const Node& a, const Node& b)
+bool ConflictConjectureGenerator::filterDeductivelyEntailed(const Node& a,
+                                                            const Node& b)
 {
   std::unique_ptr<SolverEngine> dentChecker;
   SubsolverSetupInfo ssi(d_env, d_subOptions);
@@ -811,9 +818,8 @@ bool ConflictConjectureGenerator::filterDeductivelyEntailed(const Node& a, const
   std::vector<Node> bvs(fvs.begin(), fvs.end());
   if (!bvs.empty())
   {
-    NodeManager * nm = nodeManager();
-    lem =
-        nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bvs), lem);
+    NodeManager* nm = nodeManager();
+    lem = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, bvs), lem);
   }
   lem = lem.notNode();
   dentChecker->assertFormula(lem);
