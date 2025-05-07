@@ -173,7 +173,7 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
                           InferenceId::QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT);
     d_conjGenIndex = d_conjGenIndex.get() + 1;
   }
-  Trace("ccgen") << "ConflictConjectureGenerator: end check" << std::endl;
+  Trace("cconj") << "ConflictConjectureGenerator: end check" << std::endl;
 }
 
 std::string ConflictConjectureGenerator::identify() const
@@ -294,7 +294,7 @@ void ConflictConjectureGenerator::getGeneralizations(const Node& v)
   d_eqcGenRec[v].emplace_back(v);
   // base case: own free variable
   addGeneralizationTerm(v, v, 0, {v});
-  size_t reps = 15;
+  size_t reps = options().quantifiers.ccgenExpandReps;
   Trace("ccgen-debug") << "Get " << reps << " runs for generalizations of " << v
                        << std::endl;
   for (size_t i = 0; i < reps; i++)
@@ -644,10 +644,14 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
   {
     return;
   }
-  if (ai.isVar() && expr::hasSubterm(bi, ai))
+  if (ai.isVar())
   {
-    // corner case of the form x = t[x], flip sides
-    candidateConjecture(bi, ai);
+    if (expr::hasSubterm(bi, ai))
+    {
+      // corner case of the form x = t[x], flip sides
+      candidateConjecture(bi, ai);
+    }
+    // otherwise, definitely bogus
     return;
   }
   Node a = ai;
@@ -655,6 +659,11 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
   if (a.getKind() == Kind::APPLY_CONSTRUCTOR
       && b.getKind() == Kind::APPLY_CONSTRUCTOR)
   {
+    if (a.getOperator()!=b.getOperator())
+    {
+      // obviously clashing
+      return;
+    }
     Assert(a.getNumChildren() == b.getNumChildren());
     Node eq;
     // if constructor equals constructor, traverse to single argument that is
@@ -672,10 +681,10 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
       }
     }
     Assert(!eq.isNull());
+    // TODO: check free variable property
     candidateConjecture(eq[0], eq[1]);
     return;
   }
-  // filter based on cache
   Node lem = a.eqNode(b);
   d_conjBuffer.insert(lem);
 }

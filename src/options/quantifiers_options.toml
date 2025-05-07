@@ -952,6 +952,14 @@ name   = "Quantifiers"
   default    = "false"
   help       = "generate conflict-driven candidate conjectures for inductive proofs"
 
+[[option]]
+  name       = "ccgenExpandReps"
+  category   = "expert"
+  long       = "ccgen-expand-reps=N"
+  type       = "int64_t"
+  default    = "15"
+  help       = "number of runs to generalize terms"
+  
 ### Synthesis options
 
 [[option]]
