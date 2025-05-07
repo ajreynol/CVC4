@@ -339,6 +339,8 @@ const char* toString(InferenceId i)
       return "QUANTIFIERS_CONJ_GEN_SPLIT";
     case InferenceId::QUANTIFIERS_CONJ_GEN_GT_ENUM:
       return "QUANTIFIERS_CONJ_GEN_GT_ENUM";
+    case InferenceId::QUANTIFIERS_CTX_ENUM:
+      return "QUANTIFIERS_CTX_ENUM";
     case InferenceId::QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT:
       return "QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT";
     case InferenceId::QUANTIFIERS_SKOLEMIZE: return "QUANTIFIERS_SKOLEMIZE";

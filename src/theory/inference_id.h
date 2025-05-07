@@ -476,6 +476,7 @@ enum class InferenceId
   // a split on a conjecture for inductive theorem proving
   QUANTIFIERS_CONFLICT_CONJ_GEN_SPLIT,
   //-------------------- miscellaneous
+  QUANTIFIERS_CTX_ENUM,
   // skolemization
   QUANTIFIERS_SKOLEMIZE,
   // Q1 <=> Q2, where Q1 and Q2 are alpha equivalent
