@@ -54,6 +54,7 @@ ConflictConjectureGenerator::ConflictConjectureGenerator(
   d_subOptions.write_quantifiers().quantInduction = false;
   d_subOptions.write_quantifiers().dtStcInduction = false;
   d_subOptions.write_quantifiers().conjectureGen = false;
+  d_subOptions.write_quantifiers().contextualEnumerator = false;
   d_subOptions.write_quantifiers().conflictConjectureGen = false;
   smt::SetDefaults::disableChecking(d_subOptions);
 }
@@ -181,6 +182,7 @@ std::string ConflictConjectureGenerator::identify() const
 
 void ConflictConjectureGenerator::checkDisequality(const Node& eq)
 {
+  d_conjBuffer.clear();
   Trace("ccgen") << "checkDisequality " << eq << std::endl;
   std::vector<Node> vars;
   for (size_t i = 0; i < 2; i++)
@@ -195,12 +197,27 @@ void ConflictConjectureGenerator::checkDisequality(const Node& eq)
 
   Trace("ccgen") << "- look at " << genRhs.size()
                  << " recursive generalizations of RHS" << std::endl;
+  // generate the candidates, store in d_conjBuffer
   for (const Node& g : genRhs)
   {
     const std::vector<Node>& gfvs = d_genToFv[g];
     Trace("ccgen-debug") << "  - " << g << std::endl;
     State s = gfvs.empty() ? State::SUBSET : State::UNKNOWN;
     findCompatible(g, gfvs, vars[0], &d_gtrie, s, 0);
+  }
+  
+  // go back and see if the conjectures should be filtered
+  for (const Node& lem : d_conjBuffer)
+  {
+    // canonize it, which catches duplicates modulo alpha equivalence
+    Node clem = d_tc.getCanonicalTerm(lem);
+    if (filterConjecture(clem))
+    {
+      continue;
+    }
+    d_conjGenCache.insert(clem);
+    Trace("cconj") << "*** Conjecture : " << clem[0] << " == " << clem[1] << std::endl;
+    d_conjGen.emplace_back(lem);
   }
 }
 
@@ -654,33 +671,35 @@ void ConflictConjectureGenerator::candidateConjecture(const Node& ai,
     candidateConjecture(eq[0], eq[1]);
     return;
   }
-  Trace("cconj-filter") << "Candidate conjecture : " << a << " == " << b << "?"
+  // filter based on cache
+  Node lem = a.eqNode(b);
+  d_conjBuffer.insert(lem);
+}
+
+bool ConflictConjectureGenerator::filterConjecture(const Node& clem)
+{
+  Trace("cconj-filter") << "Candidate conjecture : " << clem[0] << " == " << clem[1] << "?"
                         << std::endl;
+  if (d_conjGenCache.find(clem) != d_conjGenCache.end())
+  {
+    Trace("cconj-filter") << "...already in cache" << std::endl;
+    return true;
+  }
+  Node a = clem[0];
+  Node b = clem[1];
   Trace("cconj-filter") << "Try filter based on E-matching" << std::endl;
   if (filterEmatching(a, b))
   {
     Trace("cconj-filter") << "...filtered based on E-matching" << std::endl;
-    return;
+    return true;
   }
   Trace("cconj-filter") << "Try filter based on deductively entailed" << std::endl;
   if (filterDeductivelyEntailed(a, b))
   {
     Trace("cconj-filter") << "...filtered based on deductively entailed" << std::endl;
-    return;
+    return true;
   }
-
-  // filter based on cache
-  Node lem = a.eqNode(b);
-  // canonize it, which catches duplicates modulo alpha equivalence
-  Node clem = d_tc.getCanonicalTerm(lem);
-  if (d_conjGenCache.find(clem) != d_conjGenCache.end())
-  {
-    Trace("cconj-filter") << "...already in cache" << std::endl;
-    return;
-  }
-  d_conjGenCache.insert(clem);
-  Trace("cconj") << "*** Conjecture : " << a << " == " << b << std::endl;
-  d_conjGen.emplace_back(lem);
+  return false;
 }
 
 bool ConflictConjectureGenerator::filterEmatching(const Node& a, const Node& b)

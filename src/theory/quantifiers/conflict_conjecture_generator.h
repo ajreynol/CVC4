@@ -87,6 +87,8 @@ class ConflictConjectureGenerator : public QuantifiersModule
   context::CDO<size_t> d_conjGenIndex;
   /** The canonized version of lemmas in d_conjGen */
   context::CDHashSet<Node> d_conjGenCache;
+  /** */
+  std::unordered_set<Node> d_conjBuffer;
   /** The options for subsolver calls */
   Options d_subOptions;
 
@@ -120,6 +122,8 @@ class ConflictConjectureGenerator : public QuantifiersModule
    * Called when FV(a) is a superset of FV(b).
    */
   void candidateConjecture(const Node& a, const Node& b);
+  
+  bool filterConjecture(const Node& clem);
   /**
    * See if there is a sustituion sigma such that (a = b)*sigma is false,
    * where sigma maps to constants. Called when FV(a) is a superset of FV(b).
