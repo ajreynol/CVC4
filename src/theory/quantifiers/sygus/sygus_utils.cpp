@@ -64,6 +64,13 @@ Node SygusUtils::mkSygusConjecture(NodeManager* nm,
                                    const std::vector<Node>& iattrs)
 {
   Assert(!fs.empty());
+  Subs varSubs;
+  for (const Node& f : fs)
+  {
+    Node fv = nm->mkBoundVar(f.getName(), f.getType());
+    varSubs.add(f, fv);
+  }
+  conj = varSubs.apply(conj);
   SygusAttribute ca;
   Node sygusVar = NodeManager::mkDummySkolem("sygus", conj.getType());
   sygusVar.setAttribute(ca, true);
@@ -71,7 +78,7 @@ Node SygusUtils::mkSygusConjecture(NodeManager* nm,
   // insert the remaining instantiation attributes
   ipls.insert(ipls.end(), iattrs.begin(), iattrs.end());
   Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, ipls);
-  Node bvl = nm->mkNode(Kind::BOUND_VAR_LIST, fs);
+  Node bvl = nm->mkNode(Kind::BOUND_VAR_LIST, varSubs.d_subs);
   return nm->mkNode(Kind::FORALL, bvl, conj, ipl);
 }
 

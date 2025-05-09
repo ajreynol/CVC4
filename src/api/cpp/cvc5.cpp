@@ -6858,7 +6858,7 @@ Term Solver::synthFunHelper(const std::string& symbol,
       varTypes.empty() ? *sort.d_type
                        : d_tm.d_nm->mkFunctionType(varTypes, *sort.d_type);
 
-  internal::Node fun = d_tm.mkVarHelper(funType, symbol);
+  internal::Node fun = d_tm.mkConstHelper(funType, symbol);
 
   std::vector<internal::Node> bvns = Term::termVectorToNodes(boundVars);
 
