@@ -65,6 +65,20 @@ class MbqiEnumTermEnumeratorCallback : protected EnvObj,
   }
 };
 
+bool introduceChoice(const Options& opts, const TypeNode& tn, const TypeNode& retType)
+{
+  // never for Booleans or functions
+  if (tn.isBoolean() || tn.isFunction())
+  {
+    return false;
+  }
+  if (opts.quantifiers.mbqiEnumChoiceGrammarAll)
+  {
+    return true;
+  }
+  return tn==retType;
+}
+
 void MVarInfo::initialize(Env& env,
                           const Node& q,
                           const Node& v,
@@ -121,67 +135,104 @@ void MVarInfo::initialize(Env& env,
   }
   TypeNode tuse = tng;
   const Options& opts = env.getOptions();
-  if (opts.quantifiers.mbqiEnumChoiceGrammar && !retType.isBoolean())
+  if (opts.quantifiers.mbqiEnumChoiceGrammar)
   {
     // we will be eliminating choice
     d_cenc.reset(new ChoiceElimNodeConverter(nm));
     TypeNode bt = nm->booleanType();
-    // not Boolean?
-    Node x = nm->mkBoundVar("x", retType);
-    trules.push_back(x);
-    Trace("mbqi-fast-enum") << "Make predicate grammar " << trules << std::endl;
-    TypeNode tnb = sgc.mkDefaultSygusType(env, bt, bvl, trules);
-    Trace("mbqi-fast-enum") << "Predicate grammar:" << std::endl;
-    Trace("mbqi-fast-enum")
-        << printer::smt2::Smt2Printer::sygusGrammarString(tnb) << std::endl;
+    // take the original grammar
     SygusGrammar sgg({}, tng);
-    SygusGrammar sgb({}, tnb);
     const std::vector<Node>& nts = sgg.getNtSyms();
-    const std::vector<Node>& ntsb = sgb.getNtSyms();
     std::vector<Node> ntAll = nts;
-    ntAll.insert(ntAll.end(), ntsb.begin(), ntsb.end());
-    Trace("mbqi-fast-enum") << "Make combined " << ntAll << std::endl;
-    SygusGrammar sgcom({}, ntAll);
-    // get the non-terminal for Bool of the predicate grammar
-    Trace("mbqi-fast-enum")
-        << "Find non-terminal Bool in predicate grammar..." << std::endl;
-    Node ntBool;
-    for (const Node& nt : ntsb)
-    {
-      const std::vector<Node>& rules = sgb.getRulesFor(nt);
-      if (nt.getType().isBoolean())
-      {
-        Trace("mbqi-fast-enum") << "...found " << ntBool << std::endl;
-        ntBool = nt;
-      }
-      sgcom.addRules(nt, rules);
-    }
-    Assert(!ntBool.isNull());
+    // Note we have to delay adding rules to the final combined grammar until
+    // all the non-terminals have been determined. This means we have to
+    // remember temporary information here. Note this would be easier if we
+    // could add non-terminals to grammars dynamically.
+    std::map<TypeNode, std::shared_ptr<SygusGrammar>> typeToPredGrammar;
+    std::map<TypeNode, Node> typeToWitnessRule;
     for (const Node& nt : nts)
     {
-      Trace("mbqi-fast-enum") << "- non-terminal in sgg: " << nt << std::endl;
-      std::vector<Node> rules = sgg.getRulesFor(nt);
-      if (nt.getType() == retType)
+      TypeNode ntt = nt.getType();
+      // choice for Boolean is not worthwhile
+      // in the rare case multiple nonterminals of the same type, skip
+      if (!introduceChoice(opts, ntt, retType) || typeToPredGrammar.find(ntt)!=typeToPredGrammar.end())
       {
-        Node witness = nm->mkNode(
-            Kind::WITNESS, nm->mkNode(Kind::BOUND_VAR_LIST, x), ntBool);
-        Trace("mbqi-fast-enum")
-            << "...add " << witness << " to " << nt << std::endl;
-        rules.insert(rules.begin(), witness);
+        continue;
       }
-      sgcom.addRules(nt, rules);
+      // not Boolean?
+      Node x = nm->mkBoundVar("x", ntt);
+      trules.push_back(x);
+      Trace("mbqi-fast-enum") << "Make predicate grammar " << trules << std::endl;
+      TypeNode tnb = sgc.mkDefaultSygusType(env, bt, bvl, trules);
+      Trace("mbqi-fast-enum") << "Predicate grammar:" << std::endl;
+      Trace("mbqi-fast-enum")
+          << printer::smt2::Smt2Printer::sygusGrammarString(tnb) << std::endl;
+      std::vector<Node> emptyVec;
+      typeToPredGrammar[ntt] = std::make_shared<SygusGrammar>(emptyVec, tnb);
+      SygusGrammar& sgb = *typeToPredGrammar[ntt].get();
+      const std::vector<Node>& ntsb = sgb.getNtSyms();
+      ntAll.insert(ntAll.end(), ntsb.begin(), ntsb.end());
+      Node ntBool;
+      for (const Node& snt : ntsb)
+      {
+        if (snt.getType().isBoolean())
+        {
+          Trace("mbqi-fast-enum") << "...found " << ntBool << std::endl;
+          ntBool = snt;
+          break;
+        }
+      }
+      Assert (!ntBool.isNull());
+      Node witness = nm->mkNode(
+          Kind::WITNESS, nm->mkNode(Kind::BOUND_VAR_LIST, x), ntBool);
+      typeToWitnessRule[ntt] = witness;
+      trules.pop_back();
     }
-    TypeNode gcom = sgcom.resolve();
-    Trace("mbqi-fast-enum") << "Combined grammar:" << std::endl;
-    Trace("mbqi-fast-enum")
-        << printer::smt2::Smt2Printer::sygusGrammarString(gcom) << std::endl;
-    tuse = gcom;
-    d_senumCb.reset(new MbqiEnumTermEnumeratorCallback(env));
+    if (!typeToPredGrammar.empty())
+    {
+      Trace("mbqi-fast-enum") << "Make combined " << ntAll << std::endl;
+      SygusGrammar sgcom({}, ntAll);
+      // get the non-terminal for Bool of the predicate grammar
+      Trace("mbqi-fast-enum")
+          << "Find non-terminal Bool in predicate grammar..." << std::endl;
+      // fill in the predicate grammars
+      for (std::pair<const TypeNode, std::shared_ptr<SygusGrammar>>& tpg : typeToPredGrammar)
+      {
+        SygusGrammar& sgb = *tpg.second.get();
+        const std::vector<Node>& ntsb = sgb.getNtSyms();
+        for (const Node& nt : ntsb)
+        {
+          const std::vector<Node>& rules = sgb.getRulesFor(nt);
+          sgcom.addRules(nt, rules);
+        }
+      }
+      // fill in the main grammar
+      for (const Node& nt : nts)
+      {
+        Trace("mbqi-fast-enum") << "- non-terminal in sgg: " << nt << std::endl;
+        std::vector<Node> rules = sgg.getRulesFor(nt);
+        TypeNode ntt = nt.getType();
+        if (introduceChoice(opts, ntt, retType))
+        {
+          Assert (typeToWitnessVar.find(ntt)!=typeToWitnessVar.end());
+          Node witness = typeToWitnessRule[ntt];
+          Trace("mbqi-fast-enum")
+              << "...add " << witness << " to " << nt << std::endl;
+          rules.insert(rules.begin(), witness);
+        }
+        sgcom.addRules(nt, rules);
+      }
+      TypeNode gcom = sgcom.resolve();
+      Trace("mbqi-fast-enum") << "Combined grammar:" << std::endl;
+      Trace("mbqi-fast-enum")
+          << printer::smt2::Smt2Printer::sygusGrammarString(gcom) << std::endl;
+      tuse = gcom;
+      d_senumCb.reset(new MbqiEnumTermEnumeratorCallback(env));
+    }
   }
   d_senum.reset(new SygusTermEnumerator(env, tuse, d_senumCb.get()));
-
-  /*
-  for (size_t i = 0; i < 50; i++)
+/*
+  for (size_t i = 0; i < 5000; i++)
   {
     Node et;
     do
