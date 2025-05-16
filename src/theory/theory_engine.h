@@ -391,9 +391,11 @@ class TheoryEngine : protected EnvObj
   /** return the theory that should explain a propagation from TheoryId */
   theory::TheoryId theoryExpPropagation(theory::TheoryId tid) const
   {
-    // If we explain via the central equality engine (computed at initialization),
-    // then we send the equality to THEORY_BUILTIN only.
-    return theory::TheoryIdSetUtil::setContains(tid, d_texpcIdSet) ? theory::THEORY_BUILTIN : tid;
+    // If we explain via the central equality engine (computed at
+    // initialization), then we send the equality to THEORY_BUILTIN only.
+    return theory::TheoryIdSetUtil::setContains(tid, d_texpcIdSet)
+               ? theory::THEORY_BUILTIN
+               : tid;
   }
 
   /**
@@ -684,7 +686,7 @@ class TheoryEngine : protected EnvObj
    * check()
    */
   context::CDO<bool> d_factsAsserted;
-  
+
   /**
    * The set of theories that are using the central equality engine for
    * propagations and explanations.

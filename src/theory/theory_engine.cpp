@@ -267,14 +267,15 @@ TheoryEngine::TheoryEngine(Env& env)
 
   d_true = nodeManager()->mkConst<bool>(true);
   d_false = nodeManager()->mkConst<bool>(false);
-  
+
   // compute the set of theories that use the central equality engine
   d_texpcIdSet = 0;
   if (options().theory.eeMode == options::EqEngineMode::CENTRAL)
   {
     for (TheoryId tid = THEORY_FIRST; tid < THEORY_LAST; ++tid)
     {
-      if (EqEngineManagerCentral::usesCentralEqualityEngine(options(), tid) && Theory::expUsingCentralEqualityEngine(tid))
+      if (EqEngineManagerCentral::usesCentralEqualityEngine(options(), tid)
+          && Theory::expUsingCentralEqualityEngine(tid))
       {
         d_texpcIdSet = TheoryIdSetUtil::setInsert(tid, d_texpcIdSet);
       }
