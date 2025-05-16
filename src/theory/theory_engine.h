@@ -389,7 +389,12 @@ class TheoryEngine : protected EnvObj
 
   bool isTheoryEnabled(theory::TheoryId theoryId) const;
   /** return the theory that should explain a propagation from TheoryId */
-  theory::TheoryId theoryExpPropagation(theory::TheoryId tid) const;
+  theory::TheoryId theoryExpPropagation(theory::TheoryId tid) const
+  {
+    // If we explain via the central equality engine (computed at initialization),
+    // then we send the equality to THEORY_BUILTIN only.
+    return theory::TheoryIdSetUtil::setContains(tid, d_texpcIdSet) ? theory::THEORY_BUILTIN : tid;
+  }
 
   /**
    * Returns the equality status of the two terms, from the theory
@@ -679,6 +684,12 @@ class TheoryEngine : protected EnvObj
    * check()
    */
   context::CDO<bool> d_factsAsserted;
+  
+  /**
+   * The set of theories that are using the central equality engine for
+   * propagations and explanations.
+   */
+  theory::TheoryIdSet d_texpcIdSet;
 
   /**
    * The splitter produces partitions when the compute-partitions option is
