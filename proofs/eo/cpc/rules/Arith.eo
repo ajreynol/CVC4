@@ -29,18 +29,6 @@
   )
 )
 
-; program: $arith_mk_zero
-; args:
-; - u Type : The type of the zero, which should be Int or Real.
-; return: the zero for the given type.
-(program $arith_mk_zero ((T Type))
-  (Type) T
-  (
-    (($arith_mk_zero Real) 0/1)
-    (($arith_mk_zero Int)  0)
-  )
-)
-
 ; program: $mk_arith_sum_ub
 ; args:
 ; - F Bool: A conjunction of arithmetic relations.
