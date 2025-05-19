@@ -3721,8 +3721,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_EQ_ELIM_REAL),
   /** Auto-generated from RARE rule arith-eq-elim-int */
   EVALUE(ARITH_EQ_ELIM_INT),
-  /** Auto-generated from RARE rule arith-plus-flatten */
-  EVALUE(ARITH_PLUS_FLATTEN),
   /** Auto-generated from RARE rule arith-to-int-elim */
   EVALUE(ARITH_TO_INT_ELIM),
   /** Auto-generated from RARE rule arith-to-int-elim-to-real */
@@ -3793,10 +3791,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BOOL_IMPL_ELIM),
   /** Auto-generated from RARE rule bool-dual-impl-eq */
   EVALUE(BOOL_DUAL_IMPL_EQ),
-  /** Auto-generated from RARE rule bool-or-flatten */
-  EVALUE(BOOL_OR_FLATTEN),
-  /** Auto-generated from RARE rule bool-and-flatten */
-  EVALUE(BOOL_AND_FLATTEN),
   /** Auto-generated from RARE rule bool-and-conf */
   EVALUE(BOOL_AND_CONF),
   /** Auto-generated from RARE rule bool-and-conf2 */
@@ -3871,8 +3865,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ITE_THEN_NEG_LOOKAHEAD),
   /** Auto-generated from RARE rule ite-else-neg-lookahead */
   EVALUE(ITE_ELSE_NEG_LOOKAHEAD),
-  /** Auto-generated from RARE rule bv-concat-flatten */
-  EVALUE(BV_CONCAT_FLATTEN),
   /** Auto-generated from RARE rule bv-concat-extract-merge */
   EVALUE(BV_CONCAT_EXTRACT_MERGE),
   /** Auto-generated from RARE rule bv-extract-extract */
@@ -3893,12 +3885,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_EQ_EXTRACT_ELIM2),
   /** Auto-generated from RARE rule bv-eq-extract-elim3 */
   EVALUE(BV_EQ_EXTRACT_ELIM3),
-  /** Auto-generated from RARE rule bv-extract-bitwise-and */
-  EVALUE(BV_EXTRACT_BITWISE_AND),
-  /** Auto-generated from RARE rule bv-extract-bitwise-or */
-  EVALUE(BV_EXTRACT_BITWISE_OR),
-  /** Auto-generated from RARE rule bv-extract-bitwise-xor */
-  EVALUE(BV_EXTRACT_BITWISE_XOR),
   /** Auto-generated from RARE rule bv-extract-not */
   EVALUE(BV_EXTRACT_NOT),
   /** Auto-generated from RARE rule bv-extract-sign-extend-1 */
@@ -3941,8 +3927,6 @@ enum ENUM(ProofRewriteRule)
   EVALUE(BV_NOT_NEQ),
   /** Auto-generated from RARE rule bv-ult-ones */
   EVALUE(BV_ULT_ONES),
-  /** Auto-generated from RARE rule bv-xor-flatten */
-  EVALUE(BV_XOR_FLATTEN),
   /** Auto-generated from RARE rule bv-concat-merge-const */
   EVALUE(BV_CONCAT_MERGE_CONST),
   /** Auto-generated from RARE rule bv-commutative-add */
