@@ -44,13 +44,25 @@ TheoryBVRewriter::TheoryBVRewriter(NodeManager* nm) : TheoryRewriter(nm)
   initializeRewrites();
   registerProofRewriteRule(ProofRewriteRule::MACRO_BV_EQ_SOLVE,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::BV_UMULO_ELIMINATE,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::BV_SMULO_ELIMINATE,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_OR_SIMPLIFY,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::BV_ADD_COMBINE_LIKE_TERMS,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_AND_SIMPLIFY,
                            TheoryRewriteCtx::POST_DSL);
-  registerProofRewriteRule(ProofRewriteRule::BV_MULT_SIMPLIFY,
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_MULT_SLT_MULT,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::BV_UMULO_ELIM,
+                           TheoryRewriteCtx::POST_DSL);
+  registerProofRewriteRule(ProofRewriteRule::BV_SMULO_ELIM,
                            TheoryRewriteCtx::POST_DSL);
   registerProofRewriteRule(ProofRewriteRule::BV_BITWISE_SLICING,
                            TheoryRewriteCtx::POST_DSL);
@@ -111,13 +123,26 @@ Node TheoryBVRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
       }
     }
     break;
-    case ProofRewriteRule::BV_UMULO_ELIMINATE:
+    case ProofRewriteRule::MACRO_BV_EXTRACT_CONCAT:
+      BV_PROOF_REWRITE_CASE(ExtractConcat)
+    case ProofRewriteRule::MACRO_BV_OR_SIMPLIFY:
+      BV_PROOF_REWRITE_CASE(OrSimplify)
+    case ProofRewriteRule::MACRO_BV_AND_SIMPLIFY:
+      BV_PROOF_REWRITE_CASE(AndSimplify)
+    case ProofRewriteRule::MACRO_BV_XOR_SIMPLIFY:
+      BV_PROOF_REWRITE_CASE(XorSimplify)
+    case ProofRewriteRule::MACRO_BV_AND_OR_XOR_CONCAT_PULLUP:
+      BV_PROOF_REWRITE_CASE(AndOrXorConcatPullUp)
+    case ProofRewriteRule::MACRO_BV_MULT_SLT_MULT:
+      BV_PROOF_REWRITE_CASE(MultSltMult)
+    case ProofRewriteRule::MACRO_BV_CONCAT_EXTRACT_MERGE:
+      BV_PROOF_REWRITE_CASE(ConcatExtractMerge)
+    case ProofRewriteRule::MACRO_BV_CONCAT_CONSTANT_MERGE:
+      BV_PROOF_REWRITE_CASE(ConcatConstantMerge)
+    case ProofRewriteRule::BV_UMULO_ELIM:
       BV_PROOF_REWRITE_CASE(UmuloEliminate)
-    case ProofRewriteRule::BV_SMULO_ELIMINATE:
+    case ProofRewriteRule::BV_SMULO_ELIM:
       BV_PROOF_REWRITE_CASE(SmuloEliminate)
-    case ProofRewriteRule::BV_ADD_COMBINE_LIKE_TERMS:
-      BV_PROOF_REWRITE_CASE(AddCombineLikeTerms)
-    case ProofRewriteRule::BV_MULT_SIMPLIFY: BV_PROOF_REWRITE_CASE(MultSimplify)
     case ProofRewriteRule::BV_BITWISE_SLICING:
       BV_PROOF_REWRITE_CASE(BitwiseSlicing)
     case ProofRewriteRule::BV_REPEAT_ELIM:
@@ -174,6 +199,7 @@ RewriteResponse TheoryBVRewriter::RewriteUlt(TNode node, bool prerewrite)
   Node resultNode =
       LinearRewriteStrategy<RewriteRule<EvalUlt>,  // if both arguments are
                                                    // constants evaluates
+                            RewriteRule<UltSelf>,
                             RewriteRule<UltOne>,
                             RewriteRule<UltOnes>,
                             RewriteRule<UltZero>,  // a < 0 rewrites to false,
@@ -197,6 +223,7 @@ RewriteResponse TheoryBVRewriter::RewriteSlt(TNode node, bool prerewrite)
 {
   Node resultNode =
       LinearRewriteStrategy<RewriteRule<EvalSlt>,
+                            RewriteRule<SltSelf>,
                             RewriteRule<MultSltMult>>::apply(node);
 
   return RewriteResponse(REWRITE_DONE, resultNode);
@@ -367,9 +394,8 @@ RewriteResponse TheoryBVRewriter::RewriteExtract(TNode node, bool prerewrite)
 RewriteResponse TheoryBVRewriter::RewriteConcat(TNode node, bool prerewrite)
 {
   TRY_REWRITE(ConcatFlatten)
+  TRY_REWRITE(ConcatExtractMerge)
   Node resultNode = LinearRewriteStrategy<
-      // Merge the adjacent extracts on non-constants
-      RewriteRule<ConcatExtractMerge>,
       // Remove extracts that have no effect
       ApplyRuleToChildren<Kind::BITVECTOR_CONCAT, ExtractWhole>,
       // Merge the adjacent extracts on constants
