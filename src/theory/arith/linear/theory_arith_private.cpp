@@ -3405,8 +3405,8 @@ bool TheoryArithPrivate::postCheck(Theory::Effort effortLevel)
             assump.push_back(possibleConflict);
           }
           Node npc = possibleConflict.notNode();
-          ArithProofRCons arc(d_env, TrustId::ARITH_DIO_LEMMA);
-          pf = arc.getProofFor(npc);
+          //ArithProofRCons arc(d_env, TrustId::ARITH_DIO_LEMMA);
+          //pf = arc.getProofFor(npc);
         }
         raiseBlackBoxConflict(possibleConflict, pf);
         outputConflicts();
