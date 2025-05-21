@@ -522,8 +522,11 @@ class EMatchFrame
         }
         else
         {
-          // in rare cases, we may have generated a ground term that does not
-          // exist
+          // In rare cases, we may have generated a ground term that does not
+          // exist, in which case we fail here. We could alternatively search
+          // for the "entailed equal" term for this here, which based on
+          // how we constructed this term should exist.
+          // TODO: maybe use entailment check here?
           groundFailure = true;
         }
       }
