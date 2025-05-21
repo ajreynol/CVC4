@@ -106,6 +106,8 @@ void ConflictConjectureGenerator::check(Theory::Effort e, QEffort quant_e)
   d_ee = d_qstate.getEqualityEngine();
   d_eqcGen.clear();
   d_eqcGenRec.clear();
+  d_genToFv.clear();
+  d_gtrie.clear();
   std::vector<Node> candDeq;
   eq::EqClassIterator eqc = eq::EqClassIterator(d_false, d_ee);
   while (!eqc.isFinished())
@@ -310,12 +312,19 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
   // the current free variables of cur
   std::vector<Node> fvs;
   std::vector<Node>& grecs = d_eqcGenRec[v];
+  // The set of variables that occur in more than one position in the expanded
+  // term. As a heuristic, we do not further expand these variables.
+  std::unordered_set<Node> lockedVars;
   fvs.push_back(v);
   Subs subs;
   size_t rindex = Random::getRandom().pick(0, fvs.size() - 1);
   for (size_t i = 0; i < depth; i++)
   {
     Node vc = fvs[rindex];
+    if (lockedVars.find(vc)!=lockedVars.end())
+    {
+      continue;
+    }
     Trace("ccgen-debug") << "process " << vc << std::endl;
     Assert(d_bvToEqc.find(vc) != d_bvToEqc.end());
     const std::vector<Node>& gens = getGenForEqc(d_bvToEqc[vc]);
@@ -326,8 +335,10 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
       // nothing to generalize
       continue;
     }
+    Trace("ccgen-debug") << "......has " << gens.size() << " generalizations." << std::endl;
     size_t gindex = Random::getRandom().pick(0, gens.size() - 1);
     Node g = gens[gindex];
+    Trace("ccgen-debug") << "......choose generalization " << g << std::endl;
     Node gs = subs.apply(g);
     if (expr::hasSubterm(gs, v))
     {
@@ -336,8 +347,8 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
       // cyclic, skip
       continue;
     }
-    Trace("ccgen-debug") << "...expand to " << gs << std::endl;
     std::vector<Node> newVars;
+    std::unordered_set<Node> newLockedVars;
     if (g.getNumChildren() > 0)
     {
       bool isDag = false;
@@ -346,7 +357,9 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
         if (subs.contains(gv))
         {
           // already handled
+          Trace("ccgen-debug") << "...is dag (already handled) " << gv << " with " << gs << std::endl;
           isDag = true;
+          break;
         }
         else if (std::find(fvs.begin(), fvs.end(), gv) == fvs.end())
         {
@@ -354,8 +367,10 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
         }
         else
         {
-          // already in progress of being handled
-          isDag = true;
+          // already in progress of being handled, we will add to lockedVars
+          // unless we fail below.
+          Trace("ccgen-debug") << "...is dag with " << gs << std::endl;
+          newLockedVars.insert(gv);
         }
       }
       if (isDag)
@@ -364,6 +379,9 @@ void ConflictConjectureGenerator::getGeneralizationsInternal(const Node& v)
         continue;
       }
     }
+    // add the newly locked variables
+    lockedVars.insert(newLockedVars.begin(), newLockedVars.end());
+    Trace("ccgen-debug") << "...expand to " << gs << std::endl;
     fvs.erase(fvs.begin() + rindex);
     for (const Node& gv : newVars)
     {
@@ -489,6 +507,7 @@ class EMatchFrame
     // maps argument positions to the ground term representative of that
     // argument, for the ground arguments of m.
     std::map<size_t, Node> groundArgs;
+    bool groundFailure = false;
     for (size_t i = 0, nargs = m.getNumChildren(); i < nargs; i++)
     {
       if (m[i].getKind() == Kind::BOUND_VARIABLE)
@@ -497,45 +516,56 @@ class EMatchFrame
       }
       else if (!expr::hasBoundVar(m[i]))
       {
-        Assert(ee->hasTerm(m[i]));
-        groundArgs[i] = ee->getRepresentative(m[i]);
+        if (ee->hasTerm(m[i]))
+        {
+          groundArgs[i] = ee->getRepresentative(m[i]);
+        }
+        else
+        {
+          // in rare cases, we may have generated a ground term that does not
+          // exist
+          groundFailure = true;
+        }
       }
       else
       {
         d_recArgs.push_back(i);
       }
     }
-    // get the candidate terms in this equivalence class
-    eq::EqClassIterator eqc = eq::EqClassIterator(r, ee);
-    while (!eqc.isFinished())
+    if (!groundFailure)
     {
-      Node n = *eqc;
-      ++eqc;
-      // must have the same operator, and be "active". The latter restriction
-      // will filter terms that are congruent to another term we already
-      // considered.
-      if (!n.hasOperator() || n.getOperator() != m.getOperator()
-          || !tdb->isTermActive(n))
+      // get the candidate terms in this equivalence class
+      eq::EqClassIterator eqc = eq::EqClassIterator(r, ee);
+      while (!eqc.isFinished())
       {
-        continue;
-      }
-      Assert(n.getNumChildren() == m.getNumChildren());
-      // prune ground disequal
-      bool success = true;
-      for (std::pair<const size_t, Node>& g : groundArgs)
-      {
-        Assert(g.first < n.getNumChildren());
-        Assert(ee->hasTerm(n[g.first]));
-        Node gr = ee->getRepresentative(n[g.first]);
-        if (gr != g.second)
+        Node n = *eqc;
+        ++eqc;
+        // must have the same operator, and be "active". The latter restriction
+        // will filter terms that are congruent to another term we already
+        // considered.
+        if (!n.hasOperator() || n.getOperator() != m.getOperator()
+            || !tdb->isTermActive(n))
         {
-          success = false;
-          break;
+          continue;
         }
-      }
-      if (success)
-      {
-        d_matches.push_back(n);
+        Assert(n.getNumChildren() == m.getNumChildren());
+        // prune ground disequal
+        bool success = true;
+        for (std::pair<const size_t, Node>& g : groundArgs)
+        {
+          Assert(g.first < n.getNumChildren());
+          Assert(ee->hasTerm(n[g.first]));
+          Node gr = ee->getRepresentative(n[g.first]);
+          if (gr != g.second)
+          {
+            success = false;
+            break;
+          }
+        }
+        if (success)
+        {
+          d_matches.push_back(n);
+        }
       }
     }
   }
