@@ -526,19 +526,19 @@ RewriteResponse TheoryUfRewriter::rewriteIntToBV(TNode node)
   return RewriteResponse(REWRITE_DONE, node);
 }
 
-Node TheoryUfRewriter::canEliminateLambda(NodeManager * nm, const Node& node)
+Node TheoryUfRewriter::canEliminateLambda(NodeManager* nm, const Node& node)
 {
   Assert(node.getKind() == Kind::LAMBDA);
   if (node[1].getKind() == Kind::APPLY_UF)
   {
     size_t nvar = node[0].getNumChildren();
     size_t nargs = node[1].getNumChildren();
-    if (nargs>=nvar)
+    if (nargs >= nvar)
     {
       bool matchesList = true;
       for (size_t i = 0; i < nvar; i++)
       {
-        if (node[0][(nvar-1)-i] != node[1][(nargs-1)-i])
+        if (node[0][(nvar - 1) - i] != node[1][(nargs - 1) - i])
         {
           matchesList = false;
           break;
@@ -547,10 +547,10 @@ Node TheoryUfRewriter::canEliminateLambda(NodeManager * nm, const Node& node)
       if (matchesList)
       {
         Node ret = node[1].getOperator();
-        if (nargs>nvar)
+        if (nargs > nvar)
         {
-          size_t diff = nargs-nvar;
-          for (size_t i=0; i<diff; i++)
+          size_t diff = nargs - nvar;
+          for (size_t i = 0; i < diff; i++)
           {
             ret = nm->mkNode(Kind::HO_APPLY, ret, node[1][i]);
           }

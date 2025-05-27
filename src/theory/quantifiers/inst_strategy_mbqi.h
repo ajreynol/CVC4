@@ -23,9 +23,9 @@
 #include <unordered_set>
 
 #include "context/cdhashset.h"
+#include "theory/quantifiers/mbqi_enum.h"
 #include "theory/quantifiers/quant_module.h"
 #include "theory/smt_engine_subsolver.h"
-#include "theory/quantifiers/mbqi_enum.h"
 
 namespace cvc5::internal {
     
@@ -76,6 +76,7 @@ class InstStrategyMbqi : public QuantifiersModule
 
   static Node mkNoMbqi(NodeManager* nm, Node bvl, Node body);
   static bool isNoMbqiAttribute(Node var);
+
  private:
   /**
    * Process quantified formula q, which may add q to d_quantChecked, add an
@@ -137,8 +138,7 @@ class InstStrategyMbqi : public QuantifiersModule
                         InferenceId id,
                         const std::map<Node, Node>& mvToFreshVar);
   /** */
-  Result checkWithSubsolverSimple(Node query,
-                          const SubsolverSetupInfo& info);
+  Result checkWithSubsolverSimple(Node query, const SubsolverSetupInfo& info);
   /** The quantified formulas that we succeeded in checking */
   std::unordered_set<Node> d_quantChecked;
   /** Kinds that cannot appear in queries */

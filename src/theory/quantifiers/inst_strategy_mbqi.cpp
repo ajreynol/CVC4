@@ -73,7 +73,7 @@ void InstStrategyMbqi::ppNotifyAssertions(const std::vector<Node>& assertions)
       // Add the symbol to syms if it's not already present
       d_globalSyms.insert(s);
     }
-    if (a.getKind()==Kind::FORALL)
+    if (a.getKind() == Kind::FORALL)
     {
       continue;
     }
@@ -151,7 +151,7 @@ void InstStrategyMbqi::process(Node q)
   Assert(q.getKind() == Kind::FORALL);
   QuantAttributes& qattr = d_qreg.getQuantAttributes();
   if (qattr.isNoMbqi(q))
-  {  
+  {
     Trace("mbqi-debug") << "No-mbqi quantified formula: " << q << std::endl;
     return;
   }
@@ -292,7 +292,8 @@ void InstStrategyMbqi::process(Node q)
   }
   // if no nested check, don't assert the subquery, we will get an arbitrary
   // model.
-  if (options().quantifiers.mbqiNestedCheck || !expr::hasSubtermKind(Kind::FORALL, query))
+  if (options().quantifiers.mbqiNestedCheck
+      || !expr::hasSubtermKind(Kind::FORALL, query))
   {
     mbqiChecker->assertFormula(query);
   }
@@ -681,18 +682,19 @@ Node InstStrategyMbqi::mkMbqiSkolem(const Node& t)
 }
 
 Result InstStrategyMbqi::checkWithSubsolverSimple(
-                        Node query,
-                        const SubsolverSetupInfo& info)
+    Node query, const SubsolverSetupInfo& info)
 {
   query = extendedRewrite(query);
-  if (!options().quantifiers.mbqiNestedCheck && expr::hasSubtermKind(Kind::FORALL, query))
+  if (!options().quantifiers.mbqiNestedCheck
+      && expr::hasSubtermKind(Kind::FORALL, query))
   {
     Trace("mbqi") << "*** SKIP " << query << std::endl;
     return Result(Result::Status::UNKNOWN);
   }
-  return checkWithSubsolver(query, info,
-                           options().quantifiers.mbqiCheckTimeout != 0,
-                           options().quantifiers.mbqiCheckTimeout);
+  return checkWithSubsolver(query,
+                            info,
+                            options().quantifiers.mbqiCheckTimeout != 0,
+                            options().quantifiers.mbqiCheckTimeout);
 }
 
 /**

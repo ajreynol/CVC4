@@ -1578,7 +1578,8 @@ void SetDefaults::setDefaultsQuantifiers(const LogicInfo& logic,
   }
   if (opts.quantifiers.mbqiEnumChoiceGrammar)
   {
-    SET_AND_NOTIFY_IF_NOT_USER(quantifiers, mbqiEnum, true, "mbqiEnumChoiceGrammar");
+    SET_AND_NOTIFY_IF_NOT_USER(
+        quantifiers, mbqiEnum, true, "mbqiEnumChoiceGrammar");
   }
   // enable MBQI if --mbqi-enum is provided
   if (opts.quantifiers.mbqiEnum)

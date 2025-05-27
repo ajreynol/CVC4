@@ -53,7 +53,7 @@ class MbqiEnumTermEnumeratorCallback : protected EnvObj,
       if (!expr::hasSubterm(bn[1], bn[0][0]))
       {
         // always allow witness x. true ?
-        //if (!bn[1].isConst() || !bn[1].getConst<bool>())
+        // if (!bn[1].isConst() || !bn[1].getConst<bool>())
         //{
         //  return false;
         //}
@@ -65,7 +65,9 @@ class MbqiEnumTermEnumeratorCallback : protected EnvObj,
   }
 };
 
-bool introduceChoice(const Options& opts, const TypeNode& tn, const TypeNode& retType)
+bool introduceChoice(const Options& opts,
+                     const TypeNode& tn,
+                     const TypeNode& retType)
 {
   // never for Booleans or functions
   if (tn.isBoolean() || tn.isFunction())
@@ -76,7 +78,7 @@ bool introduceChoice(const Options& opts, const TypeNode& tn, const TypeNode& re
   {
     return true;
   }
-  return tn==retType;
+  return tn == retType;
 }
 
 bool shouldEnumerate(const Options& opts, const TypeNode& tn)
@@ -95,7 +97,7 @@ void MVarInfo::initialize(Env& env,
 {
   NodeManager* nm = env.getNodeManager();
   TypeNode tn = v.getType();
-  Assert(shouldEnumerate( env.getOptions(), tn));
+  Assert(shouldEnumerate(env.getOptions(), tn));
   TypeNode retType = tn;
   std::vector<Node> trules;
   if (tn.isFunction())
@@ -164,14 +166,16 @@ void MVarInfo::initialize(Env& env,
       TypeNode ntt = nt.getType();
       // choice for Boolean is not worthwhile
       // in the rare case multiple nonterminals of the same type, skip
-      if (!introduceChoice(opts, ntt, retType) || typeToPredGrammar.find(ntt)!=typeToPredGrammar.end())
+      if (!introduceChoice(opts, ntt, retType)
+          || typeToPredGrammar.find(ntt) != typeToPredGrammar.end())
       {
         continue;
       }
       // not Boolean?
       Node x = nm->mkBoundVar("x", ntt);
       trules.push_back(x);
-      Trace("mbqi-fast-enum") << "Make predicate grammar " << trules << std::endl;
+      Trace("mbqi-fast-enum")
+          << "Make predicate grammar " << trules << std::endl;
       TypeNode tnb = sgc.mkDefaultSygusType(env, bt, bvl, trules);
       Trace("mbqi-fast-enum") << "Predicate grammar:" << std::endl;
       Trace("mbqi-fast-enum")
@@ -191,7 +195,7 @@ void MVarInfo::initialize(Env& env,
           break;
         }
       }
-      Assert (!ntBool.isNull());
+      Assert(!ntBool.isNull());
       Node witness = nm->mkNode(
           Kind::WITNESS, nm->mkNode(Kind::BOUND_VAR_LIST, x), ntBool);
       typeToWitnessRule[ntt] = witness;
@@ -205,7 +209,8 @@ void MVarInfo::initialize(Env& env,
       Trace("mbqi-fast-enum")
           << "Find non-terminal Bool in predicate grammar..." << std::endl;
       // fill in the predicate grammars
-      for (std::pair<const TypeNode, std::shared_ptr<SygusGrammar>>& tpg : typeToPredGrammar)
+      for (std::pair<const TypeNode, std::shared_ptr<SygusGrammar>>& tpg :
+           typeToPredGrammar)
       {
         SygusGrammar& sgb = *tpg.second.get();
         const std::vector<Node>& ntsb = sgb.getNtSyms();
@@ -223,7 +228,7 @@ void MVarInfo::initialize(Env& env,
         TypeNode ntt = nt.getType();
         if (introduceChoice(opts, ntt, retType))
         {
-          Assert (typeToWitnessVar.find(ntt)!=typeToWitnessVar.end());
+          Assert(typeToWitnessVar.find(ntt) != typeToWitnessVar.end());
           Node witness = typeToWitnessRule[ntt];
           Trace("mbqi-fast-enum")
               << "...add " << witness << " to " << nt << std::endl;
@@ -240,23 +245,23 @@ void MVarInfo::initialize(Env& env,
     }
   }
   d_senum.reset(new SygusTermEnumerator(env, tuse, d_senumCb.get()));
-/*
-  for (size_t i = 0; i < 5000; i++)
-  {
-    Node et;
-    do
+  /*
+    for (size_t i = 0; i < 5000; i++)
     {
-      et = getEnumeratedTerm(nm, i);
-    } while (et.isNull());
-    Trace("mbqi-tmp") << "TMP Enum term: #" << i << " is " << et << std::endl;
-    std::vector<std::pair<Node, InferenceId>> lemmas = getEnumeratedLemmas(et);
-    for (std::pair<Node, InferenceId>& al : lemmas)
-    {
-      Trace("mbqi-fast-enum") << "...new lemma: " << al.first << std::endl;
+      Node et;
+      do
+      {
+        et = getEnumeratedTerm(nm, i);
+      } while (et.isNull());
+      Trace("mbqi-tmp") << "TMP Enum term: #" << i << " is " << et << std::endl;
+      std::vector<std::pair<Node, InferenceId>> lemmas =
+    getEnumeratedLemmas(et); for (std::pair<Node, InferenceId>& al : lemmas)
+      {
+        Trace("mbqi-fast-enum") << "...new lemma: " << al.first << std::endl;
+      }
     }
-  }
-  exit(1);
-  */
+    exit(1);
+    */
 }
 
 MVarInfo::ChoiceElimNodeConverter::ChoiceElimNodeConverter(NodeManager* nm)
@@ -305,11 +310,13 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     {
       // use h(x) as the trigger, which is a legal trigger since it is applied
       // to the exact variable list of the quantified formula.
-      Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, nm->mkNode(Kind::INST_PATTERN, h));
-      lem =
-          nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem, ipl);
+      Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST,
+                            nm->mkNode(Kind::INST_PATTERN, h));
+      lem = nm->mkNode(
+          Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem, ipl);
     }
-    //  lem = InstStrategyMbqi::mkNoMbqi(nm, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem);
+    //  lem = InstStrategyMbqi::mkNoMbqi(nm, nm->mkNode(Kind::BOUND_VAR_LIST,
+    //  ubvl), lem);
     lem = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem);
     Trace("mbqi-tmp") << "TMP " << sym << " for " << n << std::endl;
     Trace("mbqi-fast-enum") << "-----> lemma " << lem << std::endl;
@@ -577,8 +584,9 @@ bool MbqiEnum::constructInstantiation(
         // see if it is still satisfiable, if still SAT, we replace
         queryCheck = queryCurr.substitute(v, TNode(retc));
         queryCheck = rewrite(queryCheck);
-        Trace("mbqi-model-enum-debug") << "...check " << queryCheck << std::endl;
-        //Result r = checkWithSubsolver(queryCheck, ssi);
+        Trace("mbqi-model-enum-debug")
+            << "...check " << queryCheck << std::endl;
+        // Result r = checkWithSubsolver(queryCheck, ssi);
         Result r = d_parent.checkWithSubsolverSimple(queryCheck, ssi);
         success = (r != Result::UNSAT);
         if (success)
@@ -598,7 +606,7 @@ bool MbqiEnum::constructInstantiation(
             q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
         addedInst = addedInst || success;
       }
-      
+
       if (!success && !successEnum)
       {
         // we did not enumerate a candidate, and tried the original, which

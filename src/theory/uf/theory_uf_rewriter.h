@@ -83,7 +83,8 @@ class TheoryUfRewriter : public TheoryRewriter
    * @param n The lambda in question.
    * @return the result of eliminating n, if possible, or null otherwise.
    */
-  static Node canEliminateLambda(NodeManager * nm, const Node& n);
+  static Node canEliminateLambda(NodeManager* nm, const Node& n);
+
  private:
   /** Entry point for rewriting lambdas */
   Node rewriteLambda(Node node);

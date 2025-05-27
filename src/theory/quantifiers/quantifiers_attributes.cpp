@@ -327,8 +327,7 @@ void QuantAttributes::computeQuantAttributes( Node q, QAttributes& qa ){
         }
         if (InstStrategyMbqi::isNoMbqiAttribute(avar))
         {
-          Trace("quant-attr")
-              << "Attribute : is no mbqi : " << q << std::endl;
+          Trace("quant-attr") << "Attribute : is no mbqi : " << q << std::endl;
           qa.d_isNoMbqi = true;
         }
         if( avar.hasAttribute(QuantIdNumAttribute()) ){

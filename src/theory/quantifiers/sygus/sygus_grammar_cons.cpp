@@ -566,12 +566,15 @@ void SygusGrammarCons::addDefaultRulesTo(
       }
       if (env.getOptions().quantifiers.sygusGrammarHoPartial)
       {
-        Trace("sygus-grammar-def") << "Add partial applications for " << tn << std::endl;
+        Trace("sygus-grammar-def")
+            << "Add partial applications for " << tn << std::endl;
         // partial applications
-        for (const std::pair<const TypeNode, std::vector<Node>>& itt : typeToNtSym)
+        for (const std::pair<const TypeNode, std::vector<Node>>& itt :
+             typeToNtSym)
         {
           TypeNode ft = itt.first;
-          Trace("sygus-grammar-def") << "...maybe partially applied " << ft << "?" << std::endl;
+          Trace("sygus-grammar-def")
+              << "...maybe partially applied " << ft << "?" << std::endl;
           if (!ft.isFunction())
           {
             continue;
@@ -579,28 +582,29 @@ void SygusGrammarCons::addDefaultRulesTo(
           std::vector<TypeNode> fcargs = ft.getArgTypes();
           size_t nfcargs = fcargs.size();
           size_t ncargs = cargs.size();
-          if (nfcargs<=ncargs)
+          if (nfcargs <= ncargs)
           {
             continue;
           }
-          size_t diff = nfcargs-ncargs;
+          size_t diff = nfcargs - ncargs;
           bool isSuffix = true;
-          for (size_t i=0; i<ncargs; i++)
+          for (size_t i = 0; i < ncargs; i++)
           {
-            if (cargs[i]!=fcargs[i+diff])
+            if (cargs[i] != fcargs[i + diff])
             {
               isSuffix = false;
               break;
             }
           }
-          Trace("sygus-grammar-def") << "...suffix is " << isSuffix << std::endl;
-          if (isSuffix && ft.getRangeType()==tn.getRangeType())
+          Trace("sygus-grammar-def")
+              << "...suffix is " << isSuffix << std::endl;
+          if (isSuffix && ft.getRangeType() == tn.getRangeType())
           {
             std::map<TypeNode, std::vector<Node>>::const_iterator itta;
             for (const Node& f : itt.second)
             {
               Node rule = f;
-              for (size_t i=0; i<diff; i++)
+              for (size_t i = 0; i < diff; i++)
               {
                 itta = typeToNtSym.find(fcargs[i]);
                 if (itta == typeToNtSym.end())
@@ -613,12 +617,13 @@ void SygusGrammarCons::addDefaultRulesTo(
               }
               if (!rule.isNull())
               {
-                Trace("sygus-grammar-def") << "Add partial application " << rule << " to " << ntSym << std::endl;
+                Trace("sygus-grammar-def") << "Add partial application " << rule
+                                           << " to " << ntSym << std::endl;
                 g.addRule(ntSym, rule);
               }
             }
           }
-        }  
+        }
       }
     }
     else if (tn.isUninterpretedSort() || tn.isRoundingMode() || tn.isBoolean())

@@ -16,14 +16,13 @@
 #include "theory/uf/lambda_lift.h"
 
 #include "expr/node_algorithm.h"
+#include "expr/node_converter.h"
 #include "expr/skolem_manager.h"
 #include "expr/sort_type_size.h"
 #include "options/uf_options.h"
 #include "proof/proof.h"
 #include "smt/env.h"
 #include "theory/uf/function_const.h"
-#include "expr/sort_type_size.h"
-#include "expr/node_converter.h"
 
 using namespace cvc5::internal::kind;
 
@@ -42,10 +41,7 @@ namespace uf {
 class PurifyGroundNodeConverter : public NodeConverter
 {
  public:
-  PurifyGroundNodeConverter(NodeManager * nm)
-      : NodeConverter(nm)
-  {
-  }
+  PurifyGroundNodeConverter(NodeManager* nm) : NodeConverter(nm) {}
   /** post-convert: convert (non-atomic) ground terms to their purify var */
   Node postConvert(Node n) override
   {
@@ -60,7 +56,7 @@ class PurifyGroundNodeConverter : public NodeConverter
   /** The list of terms purified by this converter */
   std::vector<Node> d_pterms;
 };
-  
+
 LambdaLift::LambdaLift(Env& env)
     : EnvObj(env),
       d_lifted(userContext()),
@@ -194,14 +190,16 @@ TrustNode LambdaLift::ppRewrite(Node node, std::vector<SkolemLemma>& lems)
     Node clam = pgnc.convert(lam);
     if (!needsLift(clam))
     {
-      Trace("uf-lazy-ll-purify") << "ppRewrite " << lam << " to " << clam << " to avoid lifting." << std::endl;
+      Trace("uf-lazy-ll-purify") << "ppRewrite " << lam << " to " << clam
+                                 << " to avoid lifting." << std::endl;
       TrustNode trn = ppRewrite(clam, lems);
       // add purification lemmas for terms we purified
       for (const Node& t : pgnc.d_pterms)
       {
         Node k = SkolemManager::mkPurifySkolem(t);
         TrustNode trnk = TrustNode::mkTrustLemma(k.eqNode(t));
-        Trace("uf-lazy-ll-purify") << "- purify lemma: " << k.eqNode(t) << std::endl;
+        Trace("uf-lazy-ll-purify")
+            << "- purify lemma: " << k.eqNode(t) << std::endl;
         lems.push_back(SkolemLemma(trnk, k));
       }
       return TrustNode::mkTrustRewrite(node, trn.getNode());
