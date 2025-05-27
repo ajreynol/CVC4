@@ -79,6 +79,15 @@ bool introduceChoice(const Options& opts, const TypeNode& tn, const TypeNode& re
   return tn==retType;
 }
 
+bool shouldEnumerate(const Options& opts, const TypeNode& tn)
+{
+  if (tn.isUninterpretedSort() && !opts.quantifiers.mbqiEnumChoiceGrammar)
+  {
+    return false;
+  }
+  return true;
+}
+
 void MVarInfo::initialize(Env& env,
                           const Node& q,
                           const Node& v,
@@ -86,7 +95,7 @@ void MVarInfo::initialize(Env& env,
 {
   NodeManager* nm = env.getNodeManager();
   TypeNode tn = v.getType();
-  Assert(MQuantInfo::shouldEnumerate(tn));
+  Assert(shouldEnumerate( env.getOptions(), tn));
   TypeNode retType = tn;
   std::vector<Node> trules;
   if (tn.isFunction())
@@ -399,7 +408,7 @@ void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
     d_vinfo.emplace_back();
     TypeNode vtn = v.getType();
     // if enumerated, add to list
-    if (shouldEnumerate(vtn))
+    if (shouldEnumerate(env.getOptions(), vtn))
     {
       d_indices.push_back(index);
     }
@@ -437,15 +446,6 @@ MVarInfo& MQuantInfo::getVarInfo(size_t index)
 
 std::vector<size_t> MQuantInfo::getInstIndices() { return d_indices; }
 std::vector<size_t> MQuantInfo::getNoInstIndices() { return d_nindices; }
-
-bool MQuantInfo::shouldEnumerate(const TypeNode& tn)
-{
-  if (tn.isUninterpretedSort())
-  {
-    return false;
-  }
-  return true;
-}
 
 MbqiEnum::MbqiEnum(Env& env, InstStrategyMbqi& parent)
     : EnvObj(env), d_parent(parent)

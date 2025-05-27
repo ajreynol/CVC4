@@ -116,8 +116,6 @@ class MQuantInfo
   std::vector<size_t> getNoInstIndices();
   /** Get variable info for the index^th variable of the quantified formula */
   MVarInfo& getVarInfo(size_t index);
-  /** Should we enumerate terms for type tn? */
-  static bool shouldEnumerate(const TypeNode& tn);
 
  private:
   /** The quantified formula */
