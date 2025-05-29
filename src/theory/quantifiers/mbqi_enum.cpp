@@ -83,7 +83,10 @@ bool introduceChoice(const Options& opts,
 
 bool shouldEnumerate(const Options& opts, const TypeNode& tn)
 {
-  if (tn.isUninterpretedSort() && !opts.quantifiers.mbqiEnumChoiceGrammar)
+  // It may make sense to enumerate choice for FO uninterpreted sorts, but
+  // seems to not work well in practice.
+  //if (tn.isUninterpretedSort() && !opts.quantifiers.mbqiEnumChoiceGrammar)
+  if (tn.isUninterpretedSort())
   {
     return false;
   }
