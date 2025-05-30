@@ -235,16 +235,20 @@ void ProofNodeUpdater::processInternal(std::shared_ptr<ProofNode> pf,
 
 void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
 {
+  if (d_mergeSubproofs)
+  {
+    return;
+  }
   std::shared_ptr<ProofNode> toMerge;
   do
   {
     ProofRule id = cur->getRule();
     toMerge = nullptr;
-    // implements two optimizations to directly find a child
     switch (id)
     {
       case ProofRule::AND_ELIM:
       {
+        // hardcoded for pattern (AND_ELIM (AND_INTRO ...))
         const std::vector<std::shared_ptr<ProofNode>>& children =
             cur->getChildren();
         Assert(children.size() == 1);
@@ -269,6 +273,7 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
       break;
       case ProofRule::SYMM:
       {
+        // hardcoded for pattern (SYMM (SYMM ...))
         const std::vector<std::shared_ptr<ProofNode>>& children =
             cur->getChildren();
         Assert(children.size() == 1);
@@ -417,7 +422,20 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
       break;
       default: break;
     }
-    // generic bounded search
+    // Generic search, which checks if there is a descendent of this proof node
+    // (up to a default bound, set to 2), which proves the same conclusion as this
+    // node. If this is the case, then we immediately take that subproof.
+    // This heuristic makes a big difference for proofs e.g. of the form
+    // F1 ......... Fn
+    // ---------------- AND_INTRO
+    // (and F1 .... Fn)
+    // ---------------- MACRO_SR_PRED_INTRO
+    // false
+    // where one of Fi is false. In this case, we *only* want to post-process
+    // the proof of Fi.
+    // The case above occurs often in practice when a single assertion in the rewrite
+    // rewrites to false. This optimization saves the internal work of post-processing
+    // F1 ... F{i-1} F{i+1} ... Fn.
     if (toMerge == nullptr)
     {
       size_t depthLimit = 2;
@@ -431,6 +449,7 @@ void ProofNodeUpdater::preSimplify(std::shared_ptr<ProofNode> cur)
         std::pair<size_t, std::shared_ptr<ProofNode>> p = toProcess.back();
         toProcess.pop_back();
         std::shared_ptr<ProofNode> cc = p.second;
+        // do not traverse SCOPE
         if (cc->getRule() == ProofRule::SCOPE)
         {
           continue;

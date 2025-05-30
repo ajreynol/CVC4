@@ -203,7 +203,15 @@ class ProofNodeUpdater : protected EnvObj
       std::shared_ptr<ProofNode>& cur,
       const std::map<Node, std::shared_ptr<ProofNode>>& resCache,
       std::unordered_map<const ProofNode*, bool>& cfaMap);
-  /** */
+  /**
+   * Pre-simplify, which is called on every proof node prior to updating
+   * them based on the callback. This performs initial checks for the
+   * sake of avoiding unecessary calls to post-processing. In particular,
+   * we use a strategy which looks ahead for subproofs (up to a fixed
+   * depth) which prove the same thing as the current node. This method
+   * does nothing if merge subproofs is disabled.
+   * @param cur The proof node to simplify.
+   */
   void preSimplify(std::shared_ptr<ProofNode> cur);
   /** Are we debugging free assumptions? */
   bool d_debugFreeAssumps;
