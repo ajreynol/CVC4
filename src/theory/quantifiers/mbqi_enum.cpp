@@ -131,20 +131,20 @@ void MVarInfo::initialize(Env& env,
       trules.push_back(symbol);
     }
   }
-  Trace("mbqi-fast-enum") << "Symbols: " << trules << std::endl;
+  Trace("mbqi-enum-grammar") << "Symbols: " << trules << std::endl;
   SygusGrammarCons sgc;
   Node bvl;
   TypeNode tng = sgc.mkDefaultSygusType(env, retType, bvl, trules);
-  if (TraceIsOn("mbqi-fast-enum"))
+  if (TraceIsOn("mbqi-enum"))
   {
-    Trace("mbqi-fast-enum") << "Enumerate terms for " << retType;
+    Trace("mbqi-enum") << "Enumerate terms for " << retType;
     if (!d_lamVars.isNull())
     {
-      Trace("mbqi-fast-enum") << ", variable list " << d_lamVars;
+      Trace("mbqi-enum") << ", variable list " << d_lamVars;
     }
-    Trace("mbqi-fast-enum") << std::endl;
-    Trace("mbqi-fast-enum") << "Based on grammar:" << std::endl;
-    Trace("mbqi-fast-enum")
+    Trace("mbqi-enum") << std::endl;
+    Trace("mbqi-enum-grammar") << "Based on grammar:" << std::endl;
+    Trace("mbqi-enum-grammar")
         << printer::smt2::Smt2Printer::sygusGrammarString(tng) << std::endl;
   }
   TypeNode tuse = tng;
@@ -177,11 +177,11 @@ void MVarInfo::initialize(Env& env,
       // not Boolean?
       Node x = nm->mkBoundVar("x", ntt);
       trules.push_back(x);
-      Trace("mbqi-fast-enum")
+      Trace("mbqi-enum-choice-grammar")
           << "Make predicate grammar " << trules << std::endl;
       TypeNode tnb = sgc.mkDefaultSygusType(env, bt, bvl, trules);
-      Trace("mbqi-fast-enum") << "Predicate grammar:" << std::endl;
-      Trace("mbqi-fast-enum")
+      Trace("mbqi-enum-choice-grammar") << "Predicate grammar:" << std::endl;
+      Trace("mbqi-enum-choice-grammar")
           << printer::smt2::Smt2Printer::sygusGrammarString(tnb) << std::endl;
       std::vector<Node> emptyVec;
       typeToPredGrammar[ntt] = std::make_shared<SygusGrammar>(emptyVec, tnb);
@@ -193,7 +193,7 @@ void MVarInfo::initialize(Env& env,
       {
         if (snt.getType().isBoolean())
         {
-          Trace("mbqi-fast-enum") << "...found " << ntBool << std::endl;
+          Trace("mbqi-enum-choice-grammar") << "...found " << ntBool << std::endl;
           ntBool = snt;
           break;
         }
@@ -206,10 +206,10 @@ void MVarInfo::initialize(Env& env,
     }
     if (!typeToPredGrammar.empty())
     {
-      Trace("mbqi-fast-enum") << "Make combined " << ntAll << std::endl;
+      Trace("mbqi-enum-choice-grammar") << "Make combined " << ntAll << std::endl;
       SygusGrammar sgcom({}, ntAll);
       // get the non-terminal for Bool of the predicate grammar
-      Trace("mbqi-fast-enum")
+      Trace("mbqi-enum-choice-grammar")
           << "Find non-terminal Bool in predicate grammar..." << std::endl;
       // fill in the predicate grammars
       for (std::pair<const TypeNode, std::shared_ptr<SygusGrammar>>& tpg :
@@ -226,22 +226,22 @@ void MVarInfo::initialize(Env& env,
       // fill in the main grammar
       for (const Node& nt : nts)
       {
-        Trace("mbqi-fast-enum") << "- non-terminal in sgg: " << nt << std::endl;
+        Trace("mbqi-enum-choice-grammar") << "- non-terminal in sgg: " << nt << std::endl;
         std::vector<Node> rules = sgg.getRulesFor(nt);
         TypeNode ntt = nt.getType();
         if (introduceChoice(opts, ntt, retType))
         {
           Assert(typeToWitnessVar.find(ntt) != typeToWitnessVar.end());
           Node witness = typeToWitnessRule[ntt];
-          Trace("mbqi-fast-enum")
+          Trace("mbqi-enum-choice-grammar")
               << "...add " << witness << " to " << nt << std::endl;
           rules.insert(rules.begin(), witness);
         }
         sgcom.addRules(nt, rules);
       }
       TypeNode gcom = sgcom.resolve();
-      Trace("mbqi-fast-enum") << "Combined grammar:" << std::endl;
-      Trace("mbqi-fast-enum")
+      Trace("mbqi-enum-choice-grammar") << "Combined grammar:" << std::endl;
+      Trace("mbqi-enum-choice-grammar")
           << printer::smt2::Smt2Printer::sygusGrammarString(gcom) << std::endl;
       tuse = gcom;
       d_senumCb.reset(new MbqiEnumTermEnumeratorCallback(env));
@@ -256,11 +256,11 @@ void MVarInfo::initialize(Env& env,
       {
         et = getEnumeratedTerm(nm, i);
       } while (et.isNull());
-      Trace("mbqi-tmp") << "TMP Enum term: #" << i << " is " << et << std::endl;
+      Trace("mbqi-enum-debug") << "TMP Enum term: #" << i << " is " << et << std::endl;
       std::vector<std::pair<Node, InferenceId>> lemmas =
     getEnumeratedLemmas(et); for (std::pair<Node, InferenceId>& al : lemmas)
       {
-        Trace("mbqi-fast-enum") << "...new lemma: " << al.first << std::endl;
+        Trace("mbqi-enum") << "...new lemma: " << al.first << std::endl;
       }
     }
     exit(1);
@@ -276,7 +276,7 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
   if (n.getKind() == Kind::WITNESS)
   {
     NodeManager* nm = d_nm;
-    Trace("mbqi-fast-enum") << "---> convert " << n << std::endl;
+    Trace("mbqi-enum-choice-grammar") << "---> convert " << n << std::endl;
     std::unordered_set<Node> fvs;
     expr::getFreeVariables(n, fvs);
     Node exists = nm->mkNode(Kind::EXISTS, n[0], n[1]);
@@ -295,7 +295,7 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     SkolemManager* skm = nm->getSkolemManager();
     Node sym = skm->mkInternalSkolemFunction(
         InternalSkolemId::MBQI_CHOICE_FUN, retType, {n});
-    Trace("mbqi-choice-fun") << "Choice: " << sym << " for " << n << std::endl;
+    Trace("mbqi-enum-choice-fun") << "Choice: " << sym << " for " << n << std::endl;
     Node h = sym;
     if (!ubvl.empty())
     {
@@ -321,8 +321,8 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     //  lem = InstStrategyMbqi::mkNoMbqi(nm, nm->mkNode(Kind::BOUND_VAR_LIST,
     //  ubvl), lem);
     lem = nm->mkNode(Kind::FORALL, nm->mkNode(Kind::BOUND_VAR_LIST, ubvl), lem);
-    Trace("mbqi-tmp") << "TMP " << sym << " for " << n << std::endl;
-    Trace("mbqi-fast-enum") << "-----> lemma " << lem << std::endl;
+    Trace("mbqi-enum-debug") << "TMP " << sym << " for " << n << std::endl;
+    Trace("mbqi-enum-choice-grammar") << "-----> lemma " << lem << std::endl;
     d_lemmas[sym] = lem;
     return h;
   }
@@ -346,11 +346,11 @@ MVarInfo::ChoiceElimNodeConverter::getEnumeratedLemmas(const Node& t)
   std::vector<std::pair<Node, InferenceId>> lemmas;
   std::unordered_set<Node> syms;
   expr::getSymbols(t, syms, d_visited);
-  Trace("mbqi-tmp") << "getEnumeratedLemmas for " << t << std::endl;
+  Trace("mbqi-enum-debug") << "getEnumeratedLemmas for " << t << std::endl;
   std::map<Node, Node>::iterator itl;
   for (const Node& s : syms)
   {
-    Trace("mbqi-tmp") << "...is lemma sym " << s << "?" << std::endl;
+    Trace("mbqi-enum-debug") << "...is lemma sym " << s << "?" << std::endl;
     itl = d_lemmas.find(s);
     if (itl != d_lemmas.end())
     {
@@ -367,7 +367,7 @@ Node MVarInfo::getEnumeratedTerm(NodeManager* nm, size_t i)
   while (i >= d_enum.size())
   {
     Node curr = d_senum->getCurrent();
-    Trace("mbqi-fast-enum-debug") << "Enumerate: " << curr << std::endl;
+    Trace("mbqi-enum-debug") << "Enumerate: " << curr << std::endl;
     if (!curr.isNull())
     {
       // use converter if it exists
@@ -400,7 +400,7 @@ Node MVarInfo::getEnumeratedTerm(NodeManager* nm, size_t i)
   }
   if (i >= d_enum.size())
   {
-    Trace("mbqi-fast-enum-debug") << "... return null" << std::endl;
+    Trace("mbqi-enum-debug") << "... return null" << std::endl;
     return Node::null();
   }
   Assert(!d_enum[i].isNull());
@@ -485,12 +485,12 @@ bool MbqiEnum::constructInstantiation(
 {
   Assert(q[0].getNumChildren() == vars.size());
   Assert(vars.size() == mvs.size());
-  if (TraceIsOn("mbqi-model-enum"))
+  if (TraceIsOn("mbqi-enum"))
   {
-    Trace("mbqi-model-enum") << "Instantiate " << q << std::endl;
+    Trace("mbqi-enum") << "Instantiate " << q << std::endl;
     for (size_t i = 0, nvars = vars.size(); i < nvars; i++)
     {
-      Trace("mbqi-model-enum")
+      Trace("mbqi-enum")
           << "  " << q[0][i] << " -> " << mvs[i] << std::endl;
     }
   }
@@ -507,19 +507,19 @@ bool MbqiEnum::constructInstantiation(
     v = d_parent.convertFromModel(v, tmpCMap, mvFreshVar);
     if (v.isNull())
     {
-      Trace("mbqi-tmp") << "Failed to convert " << v << std::endl;
+      Trace("mbqi-enum-model") << "Failed to convert " << v << std::endl;
       return false;
     }
-    Trace("mbqi-model-enum")
+    Trace("mbqi-enum-model")
         << "* Assume: " << q[0][i] << " -> " << v << std::endl;
     // if we don't enumerate it, we are already considering this instantiation
     inst.add(vars[i], v);
     vinst.add(q[0][i], v);
   }
   Node queryCurr = query;
-  Trace("mbqi-model-enum-debug") << "...query is " << queryCurr << std::endl;
+  Trace("mbqi-enum-model") << "...query is " << queryCurr << std::endl;
   queryCurr = rewrite(inst.apply(queryCurr));
-  Trace("mbqi-model-enum-debug")
+  Trace("mbqi-enum-model")
       << "...processed is " << queryCurr << std::endl;
   // consider variables in random order, for diversity of instantiations
   std::shuffle(indices.begin(), indices.end(), Random::getRandom());
@@ -540,9 +540,9 @@ bool MbqiEnum::constructInstantiation(
       Node retc;
       if (!ret.isNull())
       {
-        Trace("mbqi-tmp") << "TMP - Try candidate: " << q.getId() << " " << v
+        Trace("mbqi-enum-debug") << "TMP - Try candidate: " << q.getId() << " " << v
                           << " " << cindex << " " << ret << std::endl;
-        Trace("mbqi-model-enum") << "- Try candidate: " << ret << std::endl;
+        Trace("mbqi-enum") << "- Try candidate: " << ret << std::endl;
         // apply current substitution (to account for cases where ret has
         // other variables in its grammar).
         ret = vinst.apply(ret);
@@ -555,13 +555,13 @@ bool MbqiEnum::constructInstantiation(
       }
       else
       {
-        Trace("mbqi-model-enum")
+        Trace("mbqi-enum-debug")
             << "- Failed to enumerate candidate" << std::endl;
         // if we failed to enumerate, just try the original
         Node mc = d_parent.convertFromModel(mvs[ii], tmpCMap, mvFreshVar);
         if (mc.isNull())
         {
-          Trace("mbqi-tmp") << "Failed to convert " << mvs[ii] << std::endl;
+          Trace("mbqi-enum-debug") << "Failed to convert " << mvs[ii] << std::endl;
           // if failed to convert, we fail
           return false;
         }
@@ -569,16 +569,16 @@ bool MbqiEnum::constructInstantiation(
         retc = mc;
         successEnum = false;
       }
-      Trace("mbqi-model-enum")
+      Trace("mbqi-enum-model")
           << "- Converted candidate: " << v << " -> " << retc << std::endl;
       Node queryCheck;
       if (false && lastVar)
       {
         mvs[ii] = ret;
-        Trace("mbqi-model-enum") << "...try inst" << std::endl;
+        Trace("mbqi-enum-model") << "...try inst" << std::endl;
         success = d_parent.tryInstantiation(
             q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
-        Trace("mbqi-model-enum")
+        Trace("mbqi-enum-model")
             << "...try inst success = " << success << std::endl;
         addedInst = addedInst || success;
       }
@@ -587,7 +587,7 @@ bool MbqiEnum::constructInstantiation(
         // see if it is still satisfiable, if still SAT, we replace
         queryCheck = queryCurr.substitute(v, TNode(retc));
         queryCheck = rewrite(queryCheck);
-        Trace("mbqi-model-enum-debug")
+        Trace("mbqi-enum-model")
             << "...check " << queryCheck << std::endl;
         // Result r = checkWithSubsolver(queryCheck, ssi);
         Result r = d_parent.checkWithSubsolverSimple(queryCheck, ssi);
@@ -596,8 +596,8 @@ bool MbqiEnum::constructInstantiation(
         {
           // remember the updated query
           queryCurr = queryCheck;
-          Trace("mbqi-model-enum") << "...success" << std::endl;
-          Trace("mbqi-model-enum")
+          Trace("mbqi-enum-model") << "...success" << std::endl;
+          Trace("mbqi-enum")
               << "* Enumerated " << q[0][ii] << " -> " << ret << std::endl;
           mvs[ii] = ret;
           vinst.add(q[0][ii], ret);
@@ -614,22 +614,22 @@ bool MbqiEnum::constructInstantiation(
       {
         // we did not enumerate a candidate, and tried the original, which
         // failed.
-        Trace("mbqi-tmp") << "Failed to enumerate" << std::endl;
+        Trace("mbqi-enum-debug") << "Failed to enumerate" << std::endl;
         return false;
       }
     } while (!success);
   }
   // see if there are aux lemmas
-  Trace("mbqi-tmp") << "TMP Instantiate: " << q.getId() << std::endl;
+  Trace("mbqi-enum-debug") << "TMP Instantiate: " << q.getId() << std::endl;
   for (size_t i = 0, isize = indices.size(); i < isize; i++)
   {
     size_t ii = indices[i];
     TNode v = vars[ii];
-    Trace("mbqi-tmp") << "TMP - " << v << " -> " << mvs[ii] << std::endl;
+    Trace("mbqi-enum-debug") << "TMP - " << v << " -> " << mvs[ii] << std::endl;
     MVarInfo& vi = qi.getVarInfo(ii);
     std::vector<std::pair<Node, InferenceId>> alv =
         vi.getEnumeratedLemmas(mvs[ii]);
-    Trace("mbqi-tmp") << ".TMP ..." << alv.size() << " aux lemmas" << std::endl;
+    Trace("mbqi-enum-debug") << ".TMP ..." << alv.size() << " aux lemmas" << std::endl;
     auxLemmas.insert(auxLemmas.end(), alv.begin(), alv.end());
   }
   return addedInst;
