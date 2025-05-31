@@ -12,7 +12,7 @@
 ; - eq Bool: The equality to prove with this rule.
 ; requires: b is the concatenation of a, n times.
 ; conclusion: the equality between a and b.
-(declare-rule bv-repeat-elim ((k1 Int) (k2 Int) (n Int) (a (BitVec k1)) (b (BitVec (eo::mul n k1))))
+(declare-rule bv-repeat-elim ((k1 Int) (k2 Int) (n Int) (a (BitVec k1)) (b (BitVec k2)))
   :args ((= (repeat n a) b))
   :requires ((($singleton_elim ($bv_unfold_repeat n a)) b))
   :conclusion (= (repeat n a) b)
