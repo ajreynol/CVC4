@@ -333,6 +333,14 @@ name   = "SMT Layer"
   help       = "make multiple passes with nonclausal simplifier"
 
 [[option]]
+  name       = "finalSimp"
+  category   = "expert"
+  long       = "final-simp"
+  type       = "bool"
+  default    = "false"
+  help       = "if using simplification, use it as a final step after theory preprocessing"
+
+[[option]]
   name       = "sortInference"
   category   = "expert"
   long       = "sort-inference"
