@@ -291,23 +291,6 @@ bool ProcessAssertions::apply(AssertionPipeline& ap)
     d_slvStats.d_numAssertionsPost += ap.size();
   }
 
-  if (options().smt.repeatSimp)
-  {
-    dumpAssertions("assertions::pre-repeat-simplify", ap);
-    Trace("assertions::pre-repeat-simplify") << std::endl;
-    Trace("smt-proc")
-        << "ProcessAssertions::processAssertions() : pre-repeat-simplify"
-        << endl;
-    verbose(2) << "re-simplifying assertions..." << std::endl;
-    ScopeCounter depth(d_simplifyAssertionsDepth);
-    noConflict &= simplifyAssertions(ap);
-    Trace("smt-proc")
-        << "ProcessAssertions::processAssertions() : post-repeat-simplify"
-        << endl;
-    dumpAssertions("assertions::post-repeat-simplify", ap);
-    Trace("assertions::post-repeat-simplify") << std::endl;
-  }
-
   if (logicInfo().isHigherOrder())
   {
     applyPass("ho-elim", ap);
@@ -348,6 +331,25 @@ bool ProcessAssertions::apply(AssertionPipeline& ap)
   applyPass("theory-preprocess", ap);
   // notice that we do not apply substitutions as a last step here, since
   // the range of substitutions is not theory-preprocessed.
+
+  if (options().smt.repeatSimp)
+  {
+    dumpAssertions("assertions::pre-repeat-simplify", ap);
+    Trace("assertions::pre-repeat-simplify") << std::endl;
+    Trace("smt-proc")
+        << "ProcessAssertions::processAssertions() : pre-repeat-simplify"
+        << endl;
+    verbose(2) << "re-simplifying assertions..." << std::endl;
+    ScopeCounter depth(d_simplifyAssertionsDepth);
+    noConflict &= simplifyAssertions(ap);
+    Trace("smt-proc")
+        << "ProcessAssertions::processAssertions() : post-repeat-simplify"
+        << endl;
+    dumpAssertions("assertions::post-repeat-simplify", ap);
+    Trace("assertions::post-repeat-simplify") << std::endl;
+    // must end with theory preprocess
+    applyPass("theory-preprocess", ap);
+  }
 
   if (options().bv.bitblastMode == options::BitblastMode::EAGER)
   {
