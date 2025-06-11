@@ -99,12 +99,18 @@ SatLiteral JustificationStrategy::getNextInternal(bool& stopSearch)
   }
   d_lastDecisionLit = TNode::null();
   // while we are trying to satisfy assertions
+  size_t iter = 0;
   do
   {
+    Trace("ajr-temp") << "In loop " << iter << std::endl;
+    iter++;
     Assert(d_stack.getCurrent() != nullptr);
     // We get the next justify node, if it can be found.
+    size_t iter2 = 0;
     do
     {
+      Trace("ajr-temp") << "In loop2 " << iter2 << std::endl;
+      iter2++;
       // get the current justify info, which should be ready
       ji = d_stack.getCurrent();
       if (ji == nullptr)
@@ -123,8 +129,34 @@ SatLiteral JustificationStrategy::getNextInternal(bool& stopSearch)
 
     if (ji == nullptr)
     {
+      Trace("ajr-temp") << "No justify info!" << std::endl;
       // the assertion we just processed should have value true
-      Assert(lastChildVal == SAT_VALUE_TRUE);
+      if (lastChildVal != SAT_VALUE_TRUE)
+      {
+        Trace("ajr-temp") << "Bad: " << lastChildVal << " for " << d_tmp << std::endl;
+        std::vector<Node> toProcess;
+        std::unordered_set<Node> processed;
+        toProcess.push_back(d_tmp);
+        while (!toProcess.empty())
+        {
+          Node curr = toProcess.back();
+          toProcess.pop_back();
+          if (processed.find(curr)!=processed.end())
+          {
+            continue;
+          }
+          processed.insert(curr);
+          if (curr.getType().isBoolean())
+          {
+            Trace("ajr-temp") << "- " << curr << " = " << d_jcache.lookupValue(curr) << " " << d_jcache.lookupValue2(curr)  << std::endl;
+          }
+          if (curr.getNumChildren()>0)
+          {
+            toProcess.insert(toProcess.end(), curr.begin(), curr.end());
+          }
+        }
+      }
+      AlwaysAssert(lastChildVal == SAT_VALUE_TRUE);
       if (!d_currUnderStatus.isNull())
       {
         // notify status if we are watching it
@@ -150,6 +182,7 @@ SatLiteral JustificationStrategy::getNextInternal(bool& stopSearch)
     }
     else
     {
+      Trace("ajr-temp") << "Working on " << next.first << " " << next.second << std::endl;
       // must have requested a next child to justify
       Assert(!next.first.isNull());
       Assert(next.second != SAT_VALUE_UNKNOWN);
@@ -559,6 +592,8 @@ bool JustificationStrategy::refreshCurrentAssertionFromList(bool local)
     if (currValue == SAT_VALUE_UNKNOWN)
     {
       // if not already justified, we reset the stack and push to it
+      Trace("ajr-temp") << "*** Work on: " << curr << std::endl;
+      d_tmp= curr;
       d_stack.reset(curr);
       d_lastDecisionLit = TNode::null();
       // for activity

@@ -231,6 +231,8 @@ class JustificationStrategy : public DecisionEngine
   options::JutificationSkolemRlvMode d_jhSkRlvMode;
   /** The statistics */
   JustifyStatistics d_stats;
+  
+  Node d_tmp;
 };
 
 }  // namespace decision

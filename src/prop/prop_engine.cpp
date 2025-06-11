@@ -598,6 +598,8 @@ Node PropEngine::ensureLiteral(TNode n)
 
 Node PropEngine::getPreprocessedTerm(TNode n)
 {
+  Trace("ajr-temp") << "getPreprocessedTerm: " << n
+                         << std::endl;
   // must preprocess
   std::vector<theory::SkolemLemma> newLemmas;
   TrustNode tpn = d_theoryProxy->preprocess(n, newLemmas);

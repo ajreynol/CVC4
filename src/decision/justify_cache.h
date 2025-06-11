@@ -48,6 +48,7 @@ class JustifyCache
    * in the SAT solver if it is not already cached.
    */
   prop::SatValue lookupValue(TNode n);
+  prop::SatValue lookupValue2(TNode n);
   /**
    * Set that n is justified with the given value. This should be set when:
    * - n is a theory literal assigned to the given value,
