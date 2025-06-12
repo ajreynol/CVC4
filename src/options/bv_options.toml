@@ -51,6 +51,14 @@ name   = "Bitvector Theory"
   help       = "lift bit-vectors of size 1 to booleans when possible"
 
 [[option]]
+  name       = "bitblastLastCall"
+  category   = "regular"
+  long       = "bitblast-lc"
+  type       = "bool"
+  default    = "false"
+  help       = "delay to last call for bitblasting"
+  
+[[option]]
   name       = "boolToBitvector"
   category   = "regular"
   long       = "bool-to-bv=MODE"

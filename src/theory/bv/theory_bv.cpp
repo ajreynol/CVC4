@@ -148,6 +148,17 @@ bool TheoryBV::preCheck(Effort e) { return d_internal->preCheck(e); }
 
 void TheoryBV::postCheck(Effort e)
 {
+  if (options().bv.bitblastLastCall)
+  {
+    if (e==EFFORT_LAST_CALL)
+    {
+      return;
+    }
+    else if (e==EFFORT_FULL)
+    {
+      e = EFFORT_STANDARD;
+    }
+  }
   d_invalidateModelCache = true;
   d_internal->postCheck(e);
 }
@@ -174,7 +185,15 @@ void TheoryBV::computeRelevantTerms(std::set<Node>& termSet)
 }
 
 bool TheoryBV::collectModelValues(TheoryModel* m, const std::set<Node>& termSet)
-{
+{  
+  if (options().bv.bitblastLastCall)
+  {
+    d_internal->postCheck(EFFORT_FULL);
+    if (d_valuation.needCheck())
+    {
+      return false;
+    }
+  }
   return d_internal->collectModelValues(m, termSet);
 }
 
