@@ -15,6 +15,8 @@
 
 #include "theory/bv/bv_velim_solver.h"
 
+#include "theory/substitutions.h"
+
 namespace cvc5::internal {
 namespace theory {
 
@@ -25,6 +27,7 @@ BvVElimSolver::~BvVElimSolver() {}
 
 TrustNode BvVElimSolver::check(const std::vector<Node>& asserts)
 {
+  SubstitutionMap sm;
   return TrustNode::null();
 }
 
