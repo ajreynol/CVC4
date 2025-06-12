@@ -33,11 +33,7 @@ std::shared_ptr<ProofNode> BvVElimSolver::getProofFor(Node fact)
   return nullptr;
 }
 
-std::string BvVElimSolver::identify() const
-{
-  return "BvVElimSolver";
-}
-
+std::string BvVElimSolver::identify() const { return "BvVElimSolver"; }
 
 }  // namespace bv
 }  // namespace theory
