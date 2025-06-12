@@ -651,6 +651,8 @@ libcvc5_add_sources(
   theory/bv/bitblast/proof_bitblaster.h
   theory/bv/bv_pp_assert.cpp
   theory/bv/bv_pp_assert.h
+  theory/bv/bv_velim_solver.cpp
+  theory/bv/bv_velim_solver.h
   theory/bv/bv_solver.h
   theory/bv/bv_solver_bitblast.cpp
   theory/bv/bv_solver_bitblast.h
