@@ -6,42 +6,42 @@
 (declare-type Seq (Type))
 
 ; Empty sequence
-(declare-const seq.empty (-> (! Type :var T) T))
+(declare-parameterized-const seq.empty ((T Type :implicit)) T)
 
 ; disclaimer: This function is not in SMT-LIB.
-(declare-const seq.unit (-> (! Type :var T :implicit) T (Seq T)))
+(declare-parameterized-const seq.unit ((T Type :implicit)) (-> T (Seq T)))
 ; disclaimer: This function is not in SMT-LIB.
-(declare-const seq.nth (-> (! Type :var T :implicit) (Seq T) Int T))
+(declare-parameterized-const seq.nth ((T Type :implicit)) (-> (Seq T) Int T))
 
 
 ; Core functions of strings.
-(declare-const seq.len (-> (! Type :var T :implicit) (Seq T) Int))
+(declare-parameterized-const seq.len ((T Type :implicit)) (-> (Seq T) Int))
 
 (declare-parameterized-const seq.++
-  (-> (Seq T) (Seq T) (Seq T))
+  ((T Type :implicit)) (-> (Seq T) (Seq T) (Seq T))
   :right-assoc-nil (seq.empty (Seq T)))
 
 ; Extended functions for strings.
-(declare-const seq.extract (-> (! Type :var T :implicit)
-                              (Seq T) Int Int (Seq T)))
-(declare-const seq.contains (-> (! Type :var T :implicit)
-                                (Seq T) (Seq T) Bool))
-(declare-const seq.replace (-> (! Type :var T :implicit)
-                               (Seq T) (Seq T) (Seq T) (Seq T)))
-(declare-const seq.replace_all (-> (! Type :var T :implicit)
-                                  (Seq T) (Seq T) (Seq T) (Seq T)))
-(declare-const seq.indexof (-> (! Type :var T :implicit)
-                               (Seq T) (Seq T) Int Int))
-(declare-const seq.at (-> (! Type :var T :implicit)
-                          (Seq T) Int (Seq T)))
-(declare-const seq.prefixof (-> (! Type :var T :implicit)
-                                (Seq T) (Seq T) Bool))
-(declare-const seq.suffixof (-> (! Type :var T :implicit)
-                                (Seq T) (Seq T) Bool))
+(declare-parameterized-const seq.extract ((T Type :implicit))
+  (-> (Seq T) Int Int (Seq T)))
+(declare-parameterized-const seq.contains ((T Type :implicit))
+  (-> (Seq T) (Seq T) Bool))
+(declare-parameterized-const seq.replace ((T Type :implicit))
+  (-> (Seq T) (Seq T) (Seq T) (Seq T)))
+(declare-parameterized-const seq.replace_all ((T Type :implicit))
+  (-> (Seq T) (Seq T) (Seq T) (Seq T)))
+(declare-parameterized-const seq.indexof ((T Type :implicit))
+  (-> (Seq T) (Seq T) Int Int))
+(declare-parameterized-const seq.at ((T Type :implicit))
+  (-> (Seq T) Int (Seq T)))
+(declare-parameterized-const seq.prefixof ((T Type :implicit))
+  (-> (Seq T) (Seq T) Bool))
+(declare-parameterized-const seq.suffixof ((T Type :implicit))
+  (-> (Seq T) (Seq T) Bool))
 ; disclaimer: This function is not in SMT-LIB.
-(declare-const seq.rev (-> (! Type :var T :implicit)
-                           (Seq T) (Seq T)))
+(declare-parameterized-const seq.rev ((T Type :implicit))
+  (-> (Seq T) (Seq T)))
 ; disclaimer: This function is not in SMT-LIB.
-(declare-const seq.update (-> (! Type :var T :implicit)
-                              (Seq T) Int (Seq T) (Seq T)))
+(declare-parameterized-const seq.update ((T Type :implicit))
+  (-> (Seq T) Int (Seq T) (Seq T)))
 

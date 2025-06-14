@@ -8,7 +8,7 @@
 ; return: The log base 2 of x.
 ; note: Helper method for $eval_int_log_2 below.
 (program $eval_int_log_2_rec ((x Int))
-  (Int) Int
+  :signature (Int) Int
   (
   (($eval_int_log_2_rec 1) 0)
   (($eval_int_log_2_rec x) (eo::add 1 ($eval_int_log_2_rec (eo::zdiv x 2))))
@@ -30,7 +30,7 @@
 ; return: 2 to the power of x.
 ; note: Helper method for $eval_int_pow_2 below.
 (program $eval_int_pow_2_rec ((x Int))
-  (Int) Int
+  :signature (Int) Int
   (
   (($eval_int_pow_2_rec 0) 1)
   (($eval_int_pow_2_rec x) (eo::mul 2 ($eval_int_pow_2_rec (eo::add x -1))))
@@ -54,7 +54,7 @@
 ; return: true iff x is a power of two.
 ; note: Helper method for $eval_is_pow_2 below.
 (program $eval_int_is_pow_2_rec ((x Int))
-  (Int) Bool
+  :signature (Int) Bool
   (
   (($eval_int_is_pow_2_rec 1) true)
   (($eval_int_is_pow_2_rec x) (eo::ite (eo::is_eq (eo::zmod x 2) 0)
@@ -80,7 +80,7 @@
 ; - a T: The term to muliply.
 ; return: The result of multiplying a, n times.
 (program $arith_unfold_pow_rec ((T Type) (n Int) (a T))
-  (Int T) T
+  :signature (Int T) T
   (
     (($arith_unfold_pow_rec 0 a)  1)
     (($arith_unfold_pow_rec n a)  (eo::cons * a ($arith_unfold_pow_rec (eo::add n -1) a)))
