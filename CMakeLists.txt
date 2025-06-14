@@ -545,7 +545,7 @@ if(USE_CRYPTOMINISAT)
   # CryptoMiniSat requires pthreads support
   set(THREADS_PREFER_PTHREAD_FLAG ON)
   find_package(Threads REQUIRED)
-  find_package(CryptoMiniSat 5.8 REQUIRED)
+  find_package(CryptoMiniSat 5.11.2 REQUIRED)
   add_definitions(-DCVC5_USE_CRYPTOMINISAT)
 endif()
 
@@ -560,8 +560,22 @@ if(USE_KISSAT)
   add_definitions(-DCVC5_USE_KISSAT)
 endif()
 
+# disable libraries that cannot be used in safe mode
+if(ENABLE_SAFE_MODE)
+  if(USE_POLY)
+    set(USE_POLY OFF)
+    message(WARNING
+      "LibPoly disabled due to safe mode")
+  endif()
+  if(USE_COCOA)
+    set(USE_COCOA OFF)
+    message(WARNING
+      "Cocoa disabled due to safe mode")
+  endif()
+endif()
+
 if(USE_POLY)
-  find_package(Poly 0.1.13 REQUIRED)
+  find_package(Poly 0.2.0 REQUIRED)
   add_definitions(-DCVC5_USE_POLY)
   set(CVC5_USE_POLY_IMP 1)
 else()
