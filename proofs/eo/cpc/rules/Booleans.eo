@@ -51,7 +51,7 @@
 ;   The result of removing l from C, where additionally if C itself is
 ;   l, then we return the empty or-list false.
 (define $remove_maybe_self ((l Bool) (C Bool))
-  (eo::ite (eo::eq l C) false (eo::list_erase or C l)))
+  (eo::ite (eo::eq l C) false (eo::list_erase_all or C l)))
 
 ; define: $resolve
 ; args:
@@ -115,9 +115,9 @@
             ($chain_resolve_rec
                 (eo::define ((lp (eo::ite pol L (not L))))
                 (eo::define ((ln (eo::ite pol (not L) L)))
-                    (eo::list_concat or
+                    (eo::list_setof or (eo::list_concat or
                         ($remove_maybe_self lp C1)
-                        ($remove_maybe_self ln C2)))) Cs pols lits))
+                        ($remove_maybe_self ln C2))))) Cs pols lits))
     )
 )
 
@@ -148,8 +148,8 @@
 (declare-rule chain_m_resolution ((C1 Bool) (C2 Bool :list) (pols @List) (lits @List) (Cr Bool))
     :premise-list (and C1 C2) and
     :args (Cr pols lits)
-    :conclusion (eo::define ((Cc (eo::list_setof or ($chain_resolve_rec C1 C2 pols lits))))
-                  (eo::requires (eo::ite (eo::eq Cc Cr) true (eo::list_minclude or Cc Cr)) true
+    :conclusion (eo::define ((Cc ($chain_resolve_rec C1 C2 pols lits)))
+                  (eo::requires (eo::ite (eo::eq Cc Cr) true (eo::list_minclude or Cr Cc)) true
                     Cr))
 )
 

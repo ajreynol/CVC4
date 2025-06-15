@@ -495,6 +495,13 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     std::vector<Node> chainResArgs;
     chainResArgs.push_back(nm->mkNode(Kind::SEXPR, pols));
     chainResArgs.push_back(nm->mkNode(Kind::SEXPR, lits));
+    if (options().proof.proofChainMRes)
+    {
+      chainResArgs.insert(chainResArgs.begin(), args[0]);
+      cdp->addStep(
+          args[0], ProofRule::CHAIN_M_RESOLUTION, children, chainResArgs);
+      return args[0];
+    }
     Node chainConclusion = d_pc->checkDebug(
         ProofRule::CHAIN_RESOLUTION, children, chainResArgs, Node::null(), "");
     Trace("smt-proof-pp-debug") << "Original conclusion: " << args[0] << "\n";
@@ -521,13 +528,6 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
       cdp->addStep(
           chainConclusion, ProofRule::CHAIN_RESOLUTION, children, chainResArgs);
       return chainConclusion;
-    }
-    if (options().proof.proofChainMRes)
-    {
-      chainResArgs.insert(chainResArgs.begin(), args[0]);
-      cdp->addStep(
-          chainConclusion, ProofRule::CHAIN_M_RESOLUTION, children, chainResArgs);
-      return args[0];
     }
     size_t initProofSize = cdp->getNumProofNodes();
     // If we got here, then chainConclusion is NECESSARILY an OR node
