@@ -121,31 +121,6 @@
     )
 )
 
-; rule: chain_resolution
-; implements: ProofRule::CHAIN_RESOLUTION.
-; premises:
-; - Cs [:list]: >
-;   The premises of the chain resolution step, collected as
-;   a conjunction. The first is taken as the left resolvent, and the remaining
-;   are taken as the right resolvents, to be resolved in order.
-; args:
-; - pols @List: >
-;   The list of polarities of the remaining resolution steps.
-;   This is a list of Booleans values.
-; - lits @List: >
-;   The list of pivots of the remaining resolution steps.
-;   This is a list of Boolean terms of the same length as pols.
-; conclusion: >
-;   The result of the chain resolution of the premises clauses for
-;   the given polarities and pivots.
-(declare-rule chain_resolution ((C1 Bool) (C2 Bool :list) (pols @List) (lits @List))
-    :premise-list (and C1 C2) and
-    :args (pols lits)
-    :conclusion ($chain_resolve_rec C1 C2 pols lits)
-)
-
-
-
 ; program: $chain_m_resolve_rec_step
 ; args:
 ; - p (@Pair Bool Bool): >
@@ -205,9 +180,9 @@
   :signature (Bool (@Pair Bool Bool)) Bool
   (
   (($chain_m_resolve_final C1 (@pair C2 rl))
-    ($from_clause (eo::list_setof or (eo::ite (eo::is_neg (eo::list_find or rl C1))
+    (eo::ite (eo::is_neg (eo::list_find or rl C1))
       (eo::list_concat or (eo::list_diff or C1 rl) C2)
-      C2))))
+      C2))
   )
 )
 
@@ -229,10 +204,33 @@
 )
 
 
+; rule: chain_resolution
+; implements: ProofRule::CHAIN_RESOLUTION.
+; premises:
+; - Cs [:list]: >
+;   The premises of the chain resolution step, collected as
+;   a conjunction. The first is taken as the left resolvent, and the remaining
+;   are taken as the right resolvents, to be resolved in order.
+; args:
+; - pols @List: >
+;   The list of polarities of the remaining resolution steps.
+;   This is a list of Booleans values.
+; - lits @List: >
+;   The list of pivots of the remaining resolution steps.
+;   This is a list of Boolean terms of the same length as pols.
+; conclusion: >
+;   The result of the chain resolution of the premises clauses for
+;   the given polarities and pivots.
+(declare-rule chain_resolution ((C Bool) (pols @List) (lits @List))
+    :premise-list C and
+    :args (pols lits)
+    :conclusion ($from_clause ($chain_m_resolve C pols lits))
+)
+
 (declare-rule chain_m_resolution ((C Bool) (pols @List) (lits @List) (Cr Bool))
     :premise-list C and
     :args (Cr pols lits)
-    :conclusion (eo::define ((Cc ($chain_m_resolve C pols lits)))
+    :conclusion (eo::define ((Cc ($from_clause (eo::list_setof or ($chain_m_resolve C pols lits)))))
                   (eo::requires (eo::ite (eo::eq Cc Cr) true (eo::list_minclude or Cr Cc)) true
                     Cr))
 )
