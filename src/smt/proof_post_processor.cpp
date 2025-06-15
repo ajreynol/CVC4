@@ -522,6 +522,13 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
           chainConclusion, ProofRule::CHAIN_RESOLUTION, children, chainResArgs);
       return chainConclusion;
     }
+    if (options().proof.proofChainMRes)
+    {
+      chainResArgs.insert(chainResArgs.begin(), args[0]);
+      cdp->addStep(
+          chainConclusion, ProofRule::CHAIN_M_RESOLUTION, children, chainResArgs);
+      return args[0];
+    }
     size_t initProofSize = cdp->getNumProofNodes();
     // If we got here, then chainConclusion is NECESSARILY an OR node
     Assert(chainConclusion.getKind() == Kind::OR);

@@ -144,6 +144,15 @@
     :conclusion ($chain_resolve_rec C1 C2 pols lits)
 )
 
+
+(declare-rule chain_m_resolution ((C1 Bool) (C2 Bool :list) (pols @List) (lits @List) (Cr Bool))
+    :premise-list (and C1 C2) and
+    :args (Cr pols lits)
+    :conclusion (eo::define ((Cc (eo::list_setof or ($chain_resolve_rec C1 C2 pols lits))))
+                  (eo::requires (eo::ite (eo::eq Cc Cr) true (eo::list_minclude or Cc Cr)) true
+                    Cr))
+)
+
 ; rule: factoring
 ; implements: ProofRule::FACTORING
 ; premises:
