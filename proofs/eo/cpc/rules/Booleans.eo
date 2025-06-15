@@ -93,6 +93,17 @@
     :conclusion ($resolve C1 C2 pol L)
 )
 
+;(program $or_list_diff ((L Bool) (C1 Bool :list) (C2 Bool))
+;  :signature (Bool Bool) Bool
+;  (
+;  (($or_list_diff (or L C1) C2) (eo::define ((C2r (eo::list_erase or C2 L)))
+;                                  (eo::ite (eo::eq C2 C2r)
+;                                    (eo::cons or L ($or_list_diff C1 C2))
+;                                    ($or_list_diff C1 C2r))))
+;  (($or_list_diff false C2)     false)
+;  )
+;)
+
 ; program: $chain_resolve_rec_step
 ; args:
 ; - p (@Pair Bool Bool): >
