@@ -93,32 +93,86 @@
     :conclusion ($resolve C1 C2 pol L)
 )
 
+; program: $chain_resolve_rec_step
+; args:
+; - p (@Pair Bool Bool): >
+;   A pair corresponding to the result of $chain_resolve_rec, which is a
+;   resultant clause and a list of (positive) pivots to remove.
+; - Cc Bool: The current clause to process.
+; - pol Bool: The current polarity of the pivot.
+; - L Bool: The pivot literal.
+; return: >
+;   A pair corresponding to the result of chain resolution for the clauses in C for
+;   the given pivots and a list of (positive) pivots to remove in prior clauses.
+(program $chain_resolve_rec_step ((Cr Bool) (Cc Bool) (rmList Bool :list) (pol Bool) (L Bool))
+  :signature ((@Pair Bool Bool) Bool Bool Bool) (@Pair Bool Bool)
+  (
+  (($chain_resolve_rec_step (@pair Cr rmList) Cc pol L)
+    (eo::define ((lp (eo::ite pol L (not L))))
+    (eo::define ((ln (eo::ite pol (not L) L)))
+    (eo::define ((rln (or ln rmList)))
+    (eo::define ((rlp (or lp rmList)))
+      ; if the clause is not a unit literal to remove
+      (eo::ite (eo::is_neg (eo::list_find or rln Cc))
+        ; concatenate the result of remove the negative pivot and all further positive pivots
+        (@pair (eo::list_concat or (eo::list_diff or Cc rln) Cr) rlp)
+        (@pair Cr rlp)))))))
+  )
+)
+
 ; program: $chain_resolve_rec
 ; args:
-; - C1 Bool: The first formula in the chain resolution step.
-; - C2 Bool: The list of formulas that remain to be processed as the second clause in the chain resolution step.
+; - C Bool: A conjunction of clauses.
+; - pols @List: >
+;   The list of polarities of the remaining resolution steps.
+;   This is a list of Booleans values of the same length as C.
+; - lits @List: >
+;   The list of pivots of the remaining resolution steps.
+;   This is a list of Boolean terms of the same length as pols.
+; return: >
+;   A pair corresponding to the result of chain resolution for the clauses in C for
+;   the given pivots and a list of (positive) pivots to remove in prior clauses.
+(program $chain_resolve_rec ((C1 Bool) (C2 Bool) (Cs Bool :list) (pol Bool) (pols @List :list) (L Bool) (lits @List :list))
+  :signature (Bool @List @List) (@Pair Bool Bool)
+  (
+  (($chain_resolve_rec true @list.nil @list.nil)  (@pair false false))
+  (($chain_resolve_rec (and C1 Cs) (@list pol pols) (@list L lits))
+     ($chain_resolve_rec_step ($chain_resolve_rec Cs pols lits) C1 pol L))
+  )
+)
+
+; program: $chain_resolve_final
+; args:
+; - C1 Bool: The leftmost clause.
+; - p (@Pair Bool Bool): >
+;   A pair corresponding to the result of $chain_resolve_rec, which is a
+;   resultant clause and a list of (positive) pivots to remove.
+; return: The result of chain resolution for C1 given p.
+(program $chain_resolve_final ((C1 Bool) (C2 Bool) (rl Bool))
+  :signature (Bool (@Pair Bool Bool)) Bool
+  (
+  (($chain_resolve_final C1 (@pair C2 rl))
+    ($from_clause (eo::ite (eo::is_neg (eo::list_find or rl C1))
+      (eo::list_concat or (eo::list_diff or C1 rl) C2)
+      C2)))
+  )
+)
+
+; program: $chain_resolve
+; args:
+; - C Bool: A conjunction of clauses.
 ; - pols @List: >
 ;   The list of polarities of the remaining resolution steps.
 ;   This is a list of Booleans values.
 ; - lits @List: >
 ;   The list of pivots of the remaining resolution steps.
 ;   This is a list of Boolean terms of the same length as pols.
-; return: The result of chain resolution for C1, C2 for the given pivots.
-; note: >
-;   This side condition applies multiple steps of resolution but leaves the
-;   first argument in n-ary form as an optimization.
-(program $chain_resolve_rec ((C1 Bool) (C2 Bool) (Cs Bool :list) (pol Bool) (pols @List :list) (L Bool) (lits @List :list))
-    :signature (Bool Bool @List @List) Bool
-    (
-        (($chain_resolve_rec C1 true @list.nil @list.nil)         ($from_clause C1))
-        (($chain_resolve_rec C1 (and C2 Cs) (@list pol pols) (@list L lits))
-            ($chain_resolve_rec
-                (eo::define ((lp (eo::ite pol L (not L))))
-                (eo::define ((ln (eo::ite pol (not L) L)))
-                    (eo::list_concat or
-                        ($remove_maybe_self lp C1)
-                        ($remove_maybe_self ln C2)))) Cs pols lits))
-    )
+; return: The result of chain resolution for the clauses in C for the given pivots.
+(program $chain_resolve ((C1 Bool) (C2 Bool :list) (pols @List :list) (lits @List :list))
+  :signature (Bool @List @List) Bool
+  (
+  (($chain_resolve (and C1 C2) pols lits) ($chain_resolve_final C1 ($chain_resolve_rec C2 pols lits)))
+  )
 )
 
 ; rule: chain_resolution
@@ -138,10 +192,10 @@
 ; conclusion: >
 ;   The result of the chain resolution of the premises clauses for
 ;   the given polarities and pivots.
-(declare-rule chain_resolution ((C1 Bool) (C2 Bool :list) (pols @List) (lits @List))
-    :premise-list (and C1 C2) and
+(declare-rule chain_resolution ((Cs Bool) (pols @List) (lits @List))
+    :premise-list Cs and
     :args (pols lits)
-    :conclusion ($chain_resolve_rec C1 C2 pols lits)
+    :conclusion ($chain_resolve Cs pols lits)
 )
 
 ; rule: factoring
