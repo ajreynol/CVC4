@@ -144,7 +144,7 @@
       (eo::ite (eo::eq ln Cc)
         (@pair Cr rlp)
         ; concatenate the result of remove the negative pivot and all further positive pivots
-        (@pair (eo::list_concat or (eo::list_diff or Cc rln) Cr) rlp)))))))
+        (@pair (eo::list_concat or (eo::list_diff or (eo::list_setof or Cc) rln) Cr) rlp)))))))
   )
 )
 
@@ -182,7 +182,7 @@
   (($chain_m_resolve_final C1 (@pair C2 (or L rl)))
     (eo::ite (eo::eq C1 L)
       C2
-      (eo::list_concat or (eo::list_diff or C1 (or L rl)) C2)))
+      (eo::list_concat or (eo::list_diff or (eo::list_setof or C1) (or L rl)) C2)))
   )
 )
 
