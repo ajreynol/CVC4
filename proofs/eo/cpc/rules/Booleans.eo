@@ -141,10 +141,10 @@
     (eo::define ((rln (or ln rl)))
     (eo::define ((rlp (or lp rl)))
       ; if the clause is not a unit literal to remove
-      (eo::ite (eo::is_neg (eo::list_find or rln Cc))
+      (eo::ite (eo::eq ln Cc)
+        (@pair Cr rlp)
         ; concatenate the result of remove the negative pivot and all further positive pivots
-        (@pair (eo::list_concat or (eo::list_diff or Cc rln) Cr) rlp)
-        (@pair Cr rlp)))))))
+        (@pair (eo::list_concat or (eo::list_diff or Cc rln) Cr) rlp)))))))
   )
 )
 
@@ -176,13 +176,13 @@
 ;   A pair corresponding to the result of $chain_resolve_rec, which is a
 ;   resultant clause and a list of (positive) pivots to remove.
 ; return: The result of chain resolution for C1 given p.
-(program $chain_m_resolve_final ((C1 Bool) (C2 Bool) (rl Bool))
+(program $chain_m_resolve_final ((C1 Bool) (C2 Bool) (rl Bool :list) (L Bool))
   :signature (Bool (@Pair Bool Bool)) Bool
   (
-  (($chain_m_resolve_final C1 (@pair C2 rl))
-    (eo::ite (eo::is_neg (eo::list_find or rl C1))
-      (eo::list_concat or (eo::list_diff or C1 rl) C2)
-      C2))
+  (($chain_m_resolve_final C1 (@pair C2 (or L rl)))
+    (eo::ite (eo::eq C1 L)
+      C2
+      (eo::list_concat or (eo::list_diff or C1 (or L rl)) C2)))
   )
 )
 
@@ -248,8 +248,8 @@
 (declare-rule chain_m_resolution ((C Bool) (pols @List) (lits @List) (Cr Bool))
     :premise-list C and
     :args (Cr pols lits)
-    :requires (((eo::define ((Cc ($from_clause (eo::list_setof or ($chain_m_resolve C pols lits)))))
-                  (eo::ite (eo::eq Cc Cr) true (eo::list_minclude or Cr Cc))) true))
+    :requires (((eo::define ((Cc (eo::list_setof or ($chain_m_resolve C pols lits))))
+                  (eo::ite (eo::eq ($from_clause Cc) Cr) true (eo::list_minclude or Cr Cc))) true))
     :conclusion Cr
 )
 
