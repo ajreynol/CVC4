@@ -229,10 +229,6 @@ void PropEngine::assertTrustedLemmaInternal(theory::InferenceId id,
     output(OutputTag::LEMMAS) << ")" << std::endl;
   }
   
-  if (options().proof.proofDisableTheory)
-  {
-    trn = TrustNode::mkReplaceGenTrustNode(trn, nullptr);
-  }
   bool negated = trn.getKind() == TrustNodeKind::CONFLICT;
   // should have a proof generator if the theory engine is proof producing
   Assert(!d_env.isTheoryProofProducing() || trn.getGenerator() != nullptr);
@@ -240,7 +236,7 @@ void PropEngine::assertTrustedLemmaInternal(theory::InferenceId id,
   // then we need to prevent the lemma of being added as an assumption (since
   // the generator will be null). We use the default proof generator for lemmas.
   if (d_env.isSatProofProducing() && !d_env.isTheoryProofProducing()
-      && !trn.getGenerator())
+      && (!trn.getGenerator() || options().proof.proofDisableTheory))
   {
     Node actualNode = negated ? node.notNode() : node;
     d_theoryLemmaPg.addTrustedStep(actualNode, TrustId::THEORY_LEMMA, {}, {});
@@ -353,6 +349,12 @@ void PropEngine::notifyExplainedPropagation(TrustNode texp)
 {
   if (d_ppm != nullptr)
   {
+    if (options().proof.proofDisableTheory)
+    {
+      Node actualNode = texp.getProven();
+      d_theoryLemmaPg.addTrustedStep(actualNode, TrustId::THEORY_LEMMA, {}, {});
+      texp = TrustNode::mkReplaceGenTrustNode(texp, &d_theoryLemmaPg);
+    }
     d_ppm->notifyExplainedPropagation(texp);
   }
 }
