@@ -1,5 +1,6 @@
 (include "../theories/Builtin.eo")
 
+(include "../programs/Nary.eo")
 
 ; rule: scope
 ; assumption:
@@ -106,3 +107,71 @@
     (eo::define ((k (ite b t1 t2))) (ite b (= k t1) (= k t2)))
 )
 
+
+(program $subs_concat ((T Type) (t T) (s T) (xs @List :list) (ys @List :list))
+  :signature (T T (@Pair @List @List)) (@Pair @List @List)
+  (
+  (($subs_concat t s (@pair xs ys))  (@pair (@list t xs) (@list s ys)))
+  )
+)
+
+(program $to_convert_subs ((B Bool :list) (T Type) (t T) (s T))
+  :signature (Bool) (@Pair @List @List)
+  (
+  (($to_convert_subs (and (= t s) B))   ($subs_concat t s ($to_convert_subs B)))
+  (($to_convert_subs true)              (@pair @list.nil @list.nil))
+  )
+)
+
+(program $convert_step ((T Type) (t T) (xs @List) (ys @List))
+  :signature (T (@Pair @List @List)) T
+  (
+  (($convert_step t (@pair xs ys))  (eo::define ((i (eo::list_find @list xs t)))
+                                      (eo::ite (eo::is_neg i) t ($assoc_nil_nth @list ys i))))
+  )
+)
+  
+
+(program $convert_fix_point ((pre (@Pair @List @List)) (post (@Pair @List @List))
+                   (T Type) (U Type) (S Type) (f (-> U T)) (a S) (z T))
+  :signature (T (@Pair @List @List) (@Pair @List @List)) T
+  (
+  (($convert_fix_point (f a) pre post)  (eo::define ((t (f a))) 
+                                        (eo::define ((ct ($convert_step t pre)))
+                                        (eo::ite (eo::eq t ct)
+                                          (eo::define ((rt (_ ($convert_fix_point f pre post) ($convert_fix_point a pre post))))
+                                            (eo::define ((crt ($convert_step rt post)))
+                                              (eo::ite (eo::eq rt crt)
+                                                rt
+                                                ($convert_fix_point crt pre post))))
+                                          ($convert_fix_point ct pre post)))))
+  (($convert_fix_point a pre post)      (eo::define ((ca ($convert_step a pre)))
+                                        (eo::ite (eo::eq a ca)
+                                          (eo::define ((cra ($convert_step a post)))
+                                            (eo::ite (eo::eq a cra)
+                                              a
+                                              ($convert_fix_point cra pre post)))
+                                          ($convert_fix_point ca pre post))))
+  )
+)
+(program $convert_once ((pre (@Pair @List @List)) (post (@Pair @List @List))
+                   (T Type) (U Type) (S Type) (f (-> U T)) (a S) (z T))
+  :signature (T (@Pair @List @List) (@Pair @List @List)) T
+  (
+  (($convert_once (f a) pre post)   (eo::define ((t (f a))) 
+                                    (eo::define ((ct ($convert_step t pre)))
+                                    (eo::ite (eo::eq t ct)
+                                      ($convert_step (_ ($convert_once f pre post) ($convert_once a pre post)) post)
+                                      ct))))
+  (($convert_once a pre post)       (eo::define ((ca ($convert_step a pre)))
+                                    (eo::ite (eo::eq a ca)
+                                      ($convert_step a post)
+                                      ca)))
+  )
+)
+
+(declare-rule convert ((pre Bool) (post Bool) (T Type) (t T))
+  :premises (pre post)
+  :args (t)
+  :conclusion (= t ($convert_fix_point t ($to_convert_subs pre) ($to_convert_subs post)))
+)
