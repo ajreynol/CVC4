@@ -261,3 +261,27 @@ name   = "Proof"
   type       = "bool"
   default    = "false"
   help       = "Proof logging mode"
+
+[[option]]
+  name       = "proofDisableTheory"
+  category   = "expert"
+  long       = "proof-disable-theory"
+  type       = "bool"
+  default    = "false"
+  help       = "Debugging option"
+
+[[option]]
+  name       = "proofDisablePp"
+  category   = "expert"
+  long       = "proof-disable-pp"
+  type       = "bool"
+  default    = "false"
+  help       = "Debugging option"
+
+[[option]]
+  name       = "proofDisableSat"
+  category   = "expert"
+  long       = "proof-disable-sat"
+  type       = "bool"
+  default    = "false"
+  help       = "Debugging option"
