@@ -109,6 +109,11 @@ bool ProofPostprocessCallback::update(Node res,
 
   if (id == ProofRule::ASSUME)
   {
+    if (options().proof.proofDisablePp)
+    {
+      cdp->addTrustedStep(res, TrustId::PREPROCESSED_INPUT, {}, {});
+      return true;
+    }
     // we cache based on the assumption node, not the proof node, since there
     // may be multiple occurrences of the same node.
     Node f = args[0];
