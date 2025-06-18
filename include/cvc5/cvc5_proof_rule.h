@@ -151,6 +151,34 @@ enum ENUM(ProofRule)
   EVALUE(SUBS),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Builtin theory -- Convert**
+   *
+   * .. math::
+   *
+   *   \inferrule{F_{pre} F_{post} \mid t}{t = convert(t, \sigma_{pre}, \sigma_{post})}
+   *
+   * where :math:`\sigma_{pre}` is a substitution derived from :math:`F_{pre}`
+   * to apply at pre-traversal, and :math:`\sigma_{post}` is a substitution derived from :math:`F_{post}`
+   * to apply at post-traversal.
+   * \endverbatim
+   */
+  EVALUE(CONVERT),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Builtin theory -- Convert fixed-point**
+   *
+   * .. math::
+   *
+   *   \inferrule{F_{pre} F_{post} \mid t}{t = convert(t, \sigma_{pre}, \sigma_{post})}
+   *
+   * where :math:`\sigma_{pre}` is a substitution derived from :math:`F_{pre}`
+   * to apply at pre-traversal, and :math:`\sigma_{post}` is a substitution derived from :math:`F_{post}`
+   * to apply at post-traversal.
+   * \endverbatim
+   */
+  EVALUE(CONVERT_FIXED_POINT),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Builtin theory -- Rewrite**
    *
    * .. math::

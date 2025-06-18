@@ -27,6 +27,8 @@ const char* toString(ProofRule rule)
     case ProofRule::ASSUME: return "ASSUME";
     case ProofRule::SCOPE: return "SCOPE";
     case ProofRule::SUBS: return "SUBS";
+    case ProofRule::CONVERT: return "CONVERT";
+    case ProofRule::CONVERT_FIXED_POINT: return "CONVERT_FIXED_POINT";
     case ProofRule::MACRO_REWRITE: return "MACRO_REWRITE";
     case ProofRule::EVALUATE: return "EVALUATE";
     case ProofRule::DISTINCT_VALUES: return "DISTINCT_VALUES";
