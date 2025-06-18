@@ -119,6 +119,7 @@
   :signature (Bool) (@Pair @List @List)
   (
   (($to_convert_subs (and (= t s) B))   ($subs_concat t s ($to_convert_subs B)))
+  (($to_convert_subs (= t s))           (@pair (@list t) (@list s)))
   (($to_convert_subs true)              (@pair @list.nil @list.nil))
   )
 )

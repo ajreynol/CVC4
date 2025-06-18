@@ -48,6 +48,8 @@ void BuiltinProofRuleChecker::registerTo(ProofChecker* pc)
   pc->registerChecker(ProofRule::ASSUME, this);
   pc->registerChecker(ProofRule::SCOPE, this);
   pc->registerChecker(ProofRule::SUBS, this);
+  pc->registerChecker(ProofRule::CONVERT, this);
+  pc->registerChecker(ProofRule::CONVERT_FIXED_POINT, this);
   pc->registerChecker(ProofRule::EVALUATE, this);
   pc->registerChecker(ProofRule::DISTINCT_VALUES, this);
   pc->registerChecker(ProofRule::ACI_NORM, this);
@@ -258,6 +260,10 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
       return Node::null();
     }
     return args[0].eqNode(res);
+  }
+  else if (id == ProofRule::CONVERT || id == ProofRule::CONVERT_FIXED_POINT)
+  {
+    
   }
   else if (id == ProofRule::MACRO_REWRITE)
   {
