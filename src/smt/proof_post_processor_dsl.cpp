@@ -80,6 +80,16 @@ bool ProofPostprocessDsl::shouldUpdate(std::shared_ptr<ProofNode> pn,
   if ((id == ProofRule::TRUST || id == ProofRule::TRUST_THEORY_REWRITE)
       && pn->getChildren().empty() && d_traversing.size() < 3)
   {
+    // temporary: do not run RARE on parts we disable
+    if (id==ProofRule::TRUST)
+    {
+      TrustId tid;
+      getTrustId(pn->getArguments()[0], tid);
+      if (tid==TrustId::THEORY_LEMMA || tid==TrustId::PREPROCESSED_INPUT)
+      {
+        return false;
+      }
+    }
     Trace("pp-dsl-process") << "...push " << pn.get() << std::endl;
     // note that we may be pushing pn more than once, if it is updated from a
     // trust step to another trust step.
