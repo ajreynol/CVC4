@@ -571,12 +571,13 @@ Node BuiltinProofRuleChecker::mkTheoryIdNode(NodeManager* nm, TheoryId tid)
   return nm->mkConstInt(Rational(static_cast<uint32_t>(tid)));
 }
 
-Node BuiltinProofRuleChecker::getConvert(const Node& n,
-                                         const std::unordered_map<Node, Node>& pre,
-                                         const std::unordered_map<Node, Node>& post,
-                                         bool isFixedPoint)
+Node BuiltinProofRuleChecker::getConvert(
+    const Node& n,
+    const std::unordered_map<Node, Node>& pre,
+    const std::unordered_map<Node, Node>& post,
+    bool isFixedPoint)
 {
-  NodeManager * nm = nodeManager();
+  NodeManager* nm = nodeManager();
   // the final rewritten form of terms
   std::unordered_map<Node, Node> visited;
   // the rewritten form of terms we have processed so far
@@ -590,10 +591,10 @@ Node BuiltinProofRuleChecker::getConvert(const Node& n,
   {
     cur = visit.back();
     it = visited.find(cur);
-    if (it==visited.end())
+    if (it == visited.end())
     {
       it = pre.find(cur);
-      if (it!=pre.end())
+      if (it != pre.end())
       {
         if (isFixedPoint)
         {
@@ -609,11 +610,11 @@ Node BuiltinProofRuleChecker::getConvert(const Node& n,
         continue;
       }
       visited[cur] = Node::null();
-      if (cur.getKind()==Kind::APPLY_UF)
+      if (cur.getKind() == Kind::APPLY_UF)
       {
         visit.push_back(cur.getOperator());
       }
-      if (cur.getNumChildren()>0)
+      if (cur.getNumChildren() > 0)
       {
         visit.insert(visit.end(), cur.begin(), cur.end());
       }
@@ -627,24 +628,24 @@ Node BuiltinProofRuleChecker::getConvert(const Node& n,
         {
           Node curR = itr->second;
           itr = visited.find(curR);
-          Assert (itr!=visited.end());
+          Assert(itr != visited.end());
           visited[cur] = itr->second;
           continue;
         }
       }
       Node ret = cur;
-      if (cur.getNumChildren()>0)
+      if (cur.getNumChildren() > 0)
       {
         bool childChanged = false;
         std::vector<Node> children;
         Kind ck = cur.getKind();
-        if (ck==Kind::APPLY_UF)
+        if (ck == Kind::APPLY_UF)
         {
           Node cop = cur.getOperator();
           itr = visited.find(cop);
-          Assert (itr!=visited.end());
+          Assert(itr != visited.end());
           children.push_back(itr->second);
-          childChanged = (cop!=itr->second);
+          childChanged = (cop != itr->second);
         }
         else if (cur.getMetaKind() == metakind::PARAMETERIZED)
         {
@@ -654,9 +655,9 @@ Node BuiltinProofRuleChecker::getConvert(const Node& n,
         for (const Node& cc : cur)
         {
           itr = visited.find(cc);
-          Assert (itr!=visited.end());
+          Assert(itr != visited.end());
           children.push_back(itr->second);
-          childChanged = childChanged || (cc!=itr->second);
+          childChanged = childChanged || (cc != itr->second);
         }
         if (childChanged)
         {
@@ -665,7 +666,7 @@ Node BuiltinProofRuleChecker::getConvert(const Node& n,
       }
       // now check post rewrite
       itr = post.find(ret);
-      if (itr!=post.end())
+      if (itr != post.end())
       {
         if (isFixedPoint)
         {
@@ -680,8 +681,8 @@ Node BuiltinProofRuleChecker::getConvert(const Node& n,
       visited[cur] = ret;
       visit.pop_back();
     }
-  }while (visit.empty());
-  Assert (visited.find(n)!=visited.end());
+  } while (visit.empty());
+  Assert(visited.find(n) != visited.end());
   return visited[n];
 }
 
