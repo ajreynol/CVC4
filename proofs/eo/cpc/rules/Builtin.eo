@@ -107,25 +107,37 @@
     (eo::define ((k (ite b t1 t2))) (ite b (= k t1) (= k t2)))
 )
 
+(define $subs () (@Pair @List @List))
+(define $subs_pair () (@Pair (@Pair @List @List) (@Pair @List @List)))
+(define $empty_subs () (@pair @list.nil @list.nil))
 
 (program $subs_concat ((T Type) (t T) (s T) (xs @List :list) (ys @List :list))
-  :signature (T T (@Pair @List @List)) (@Pair @List @List)
+  :signature (T T $subs) $subs
   (
   (($subs_concat t s (@pair xs ys))  (@pair (@list t xs) (@list s ys)))
   )
 )
 
-(program $to_convert_subs ((B Bool :list) (T Type) (t T) (s T))
-  :signature (Bool) (@Pair @List @List)
+(program $subs_pair_concat ((T Type) (t T) (s T) (isPost Bool) (pre $subs) (post $subs))
+  :signature (T T Bool $subs_pair) $subs_pair
   (
-  (($to_convert_subs (and (= t s) B))   ($subs_concat t s ($to_convert_subs B)))
-  (($to_convert_subs (= t s))           (@pair (@list t) (@list s)))
-  (($to_convert_subs true)              (@pair @list.nil @list.nil))
+  (($subs_pair_concat t s isPost (@pair pre post))  (eo::ite isPost
+                                                      (@pair pre ($subs_concat t s post))
+                                                      (@pair ($subs_concat t s pre) post)))
+  )
+)
+
+(program $to_convert_subs ((B Bool :list) (T Type) (t T) (s T) (M $subs_pair) (n Int))
+  :signature (Bool Int $subs_pair) $subs_pair
+  (
+  (($to_convert_subs (and (= t s) B) n M) ($subs_pair_concat t s (eo::is_neg n) ($to_convert_subs B (eo::add n -1) M)))
+  (($to_convert_subs (= t s) n M)         ($subs_pair_concat t s (eo::is_neg n) M))
+  (($to_convert_subs true n M)            M)
   )
 )
 
 (program $convert_step ((T Type) (t T) (xs @List) (ys @List))
-  :signature (T (@Pair @List @List)) T
+  :signature (T $subs) T
   (
   (($convert_step t (@pair xs ys))  (eo::define ((i (eo::list_find @list xs t)))
                                       (eo::ite (eo::is_neg i) t ($assoc_nil_nth @list ys i))))
@@ -133,9 +145,9 @@
 )
   
 
-(program $convert_fix_point ((pre (@Pair @List @List)) (post (@Pair @List @List))
+(program $convert_fix_point ((pre $subs) (post $subs)
                    (T Type) (U Type) (S Type) (f (-> U T)) (a S) (z T))
-  :signature (T (@Pair @List @List) (@Pair @List @List)) T
+  :signature (T $subs $subs) T
   (
   (($convert_fix_point (f a) pre post)  (eo::define ((t (f a))) 
                                         (eo::define ((ct ($convert_step t pre)))
@@ -155,9 +167,10 @@
                                           ($convert_fix_point ca pre post))))
   )
 )
-(program $convert_once ((pre (@Pair @List @List)) (post (@Pair @List @List))
-                   (T Type) (U Type) (S Type) (f (-> U T)) (a S) (z T))
-  :signature (T (@Pair @List @List) (@Pair @List @List)) T
+
+(program $convert_once ((pre $subs) (post $subs)
+                        (T Type) (U Type) (S Type) (f (-> U T)) (a S) (z T))
+  :signature (T $subs $subs) T
   (
   (($convert_once (f a) pre post)   (eo::define ((t (f a))) 
                                     (eo::define ((ct ($convert_step t pre)))
@@ -171,8 +184,9 @@
   )
 )
 
-(declare-rule convert ((pre Bool) (post Bool) (T Type) (t T))
-  :premises (pre post)
-  :args (t)
-  :conclusion (= t ($convert_fix_point t ($to_convert_subs pre) ($to_convert_subs post)))
+(declare-rule convert ((E Bool) (T Type) (t T) (n Int))
+  :premise-list E and
+  :args (t n)
+  :conclusion (eo::define ((css ($to_convert_subs E (eo::add n -1) (@pair $empty_subs $empty_subs))))
+                (= t ($convert_fix_point t ($pair_first css) ($pair_second css))))
 )

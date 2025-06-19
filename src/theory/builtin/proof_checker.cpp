@@ -543,6 +543,12 @@ Node BuiltinProofRuleChecker::mkTheoryIdNode(NodeManager* nm, TheoryId tid)
   return nm->mkConstInt(Rational(static_cast<uint32_t>(tid)));
 }
 
+Node BuiltinProofRuleChecker::getConvert(const Node& n, const std::map<Node, Node>& pre, const std::map<Node, Node>& post, bool isFixedPoint)
+{
+
+  return n;
+}
+
 }  // namespace builtin
 }  // namespace theory
 }  // namespace cvc5::internal
