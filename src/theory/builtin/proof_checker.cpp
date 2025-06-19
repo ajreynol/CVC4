@@ -623,13 +623,15 @@ Node BuiltinProofRuleChecker::getConvert(
     {
       if (isFixedPoint)
       {
+        // if we already rewrote to something, we take its final result
         itr = rewritten.find(cur);
         if (itr != rewritten.end())
         {
-          Node curR = itr->second;
+          const Node& curR = itr->second;
           itr = visited.find(curR);
           Assert(itr != visited.end());
           visited[cur] = itr->second;
+          visit.pop_back();
           continue;
         }
       }

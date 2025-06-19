@@ -261,3 +261,11 @@ name   = "Proof"
   type       = "bool"
   default    = "false"
   help       = "Proof logging mode"
+
+[[option]]
+  name       = "proofUseRuleConvert"
+  category   = "expert"
+  long       = "proof-use-rule-convert"
+  type       = "bool"
+  default    = "false"
+  help       = "Use the proof rule (fixed point) convert"
