@@ -27,6 +27,7 @@
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
 #include "util/rational.h"
+#include "theory/builtin/proof_checker.h"
 
 using namespace cvc5::internal::kind;
 
@@ -255,38 +256,56 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node t)
   if (options().proof.proofUseRuleConvert)
   {
     // try to use CONVERT / CONVERT_FIXED_POINT
-    std::vector<Node> children;
-    size_t npre = 0;
+    std::unordered_map<Node, Node> pre, post;
     for (size_t r = 0; r < 2; r++)
     {
       const NodeNodeMap& rm = r == 0 ? d_preRewriteMap : d_postRewriteMap;
+      std::unordered_map<Node, Node>& m = r == 0 ? pre : post;
       for (NodeNodeMap::const_iterator it = rm.begin(); it != rm.end(); ++it)
       {
-        Node eq = (*it).first.eqNode((*it).second);
-        children.push_back(eq);
-      }
-      if (r == 0)
-      {
-        npre = children.size();
+        m[(*it).first] = (*it).second;
       }
     }
-    ProofRule pr = (d_policy == TConvPolicy::FIXPOINT)
-                       ? ProofRule::CONVERT_FIXED_POINT
-                       : ProofRule::CONVERT;
+    std::unordered_set<Node> usedPre, usedPost;
+    bool isFixedPoint = (d_policy == TConvPolicy::FIXPOINT);
     NodeManager* nm = nodeManager();
-    std::vector<Node> args;
-    args.push_back(t);
-    args.push_back(nm->mkConstInt(Rational(npre)));
-    ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
-    Node tconc = pc->checkDebug(pr, children, args, Node::null(), "");
-    Trace("ajr-temp") << "try convert: " << (tconc == tref) << " " << tconc
-                      << " vs " << tref << std::endl;
-    if (tconc == tref)
+    Node c = theory::builtin::BuiltinProofRuleChecker::getConvert(nm, t, pre, post, isFixedPoint, usedPre, usedPost);
+    Assert (!c.isNull());
+    if (c==tref[1])
     {
-      Trace("ajr-temp") << "...add rule " << pr << std::endl;
-      LazyCDProof lpfc(d_env, &d_proof, nullptr, d_name + "::LazyCDProofRewC");
-      lpfc.addStep(tconc, pr, children, args);
-      return lpfc.getProofFor(tconc);
+      std::vector<Node> children;
+      size_t npre = 0;
+      std::unordered_map<Node, Node>::const_iterator itr;
+      for (size_t r = 0; r < 2; r++)
+      {
+        std::unordered_set<Node>& u = r==0 ? usedPre : usedPost;
+        std::unordered_map<Node, Node>& rm = r == 0 ? pre : post;
+        for (const Node& cc : u)
+        {
+          itr = rm.find(cc);
+          Assert (itr!=rm.end());
+          Node eq = cc.eqNode(itr->second);
+          children.emplace_back(eq);
+        }
+        npre = children.size();
+      }
+      ProofRule pr = (d_policy == TConvPolicy::FIXPOINT)
+                        ? ProofRule::CONVERT_FIXED_POINT
+                        : ProofRule::CONVERT;
+      std::vector<Node> args;
+      args.push_back(t);
+      args.push_back(nm->mkConstInt(Rational(npre)));
+      ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
+      Node tconc = pc->checkDebug(pr, children, args, Node::null(), "");
+      Trace("ajr-temp") << "try convert: " << (tconc == tref) << " " << tconc
+                        << " vs " << tref << std::endl;
+      if (tconc == tref)
+      {
+        Trace("ajr-temp") << "...add rule " << pr << std::endl;
+        LazyCDProof lpfc(d_env, &d_proof, nullptr, d_name + "::LazyCDProofRewC");
+        lpfc.addStep(tconc, pr, children, args);
+        return lpfc.getProofFor(tconc);
+      }
     }
   }
   return lpf.getProofFor(tref);

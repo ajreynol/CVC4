@@ -289,11 +289,11 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
         post[prem[0]] = prem[1];
       }
     }
+    std::unordered_set<Node> usedPre, usedPost;
     Node c =
-        getConvert(args[0], pre, post, (id == ProofRule::CONVERT_FIXED_POINT));
+        getConvert(nm, args[0], pre, post, (id == ProofRule::CONVERT_FIXED_POINT), usedPre, usedPost);
     if (c.isNull())
     {
-      AlwaysAssert(false);
       return c;
     }
     return args[0].eqNode(c);
@@ -577,12 +577,14 @@ Node BuiltinProofRuleChecker::mkTheoryIdNode(NodeManager* nm, TheoryId tid)
 }
 
 Node BuiltinProofRuleChecker::getConvert(
+    NodeManager* nm,
     const Node& n,
     const std::unordered_map<Node, Node>& pre,
     const std::unordered_map<Node, Node>& post,
-    bool isFixedPoint)
+    bool isFixedPoint,
+    std::unordered_set<Node>& usedPre,
+    std::unordered_set<Node>& usedPost)
 {
-  NodeManager* nm = nodeManager();
   // the final rewritten form of terms
   std::unordered_map<Node, Node> visited;
   // the rewritten form of terms we have processed so far
@@ -601,6 +603,7 @@ Node BuiltinProofRuleChecker::getConvert(
       it = pre.find(cur);
       if (it != pre.end())
       {
+        usedPre.insert(cur);
         if (isFixedPoint)
         {
           visited[cur] = Node::null();
@@ -676,6 +679,7 @@ Node BuiltinProofRuleChecker::getConvert(
       itr = post.find(ret);
       if (itr != post.end())
       {
+        usedPost.insert(cur);
         if (isFixedPoint)
         {
           rewritten[cur] = itr->second;
