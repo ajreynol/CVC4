@@ -106,7 +106,7 @@ class BuiltinProofRuleChecker : public ProofRuleChecker
    * Get convert
    * @param n The node to convert
    */
-  static Node getConvert(NodeManager * nm,
+  static Node getConvert(NodeManager* nm,
                          const Node& n,
                          const std::unordered_map<Node, Node>& pre,
                          const std::unordered_map<Node, Node>& post,

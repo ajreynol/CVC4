@@ -26,8 +26,8 @@
 #include "proof/proof_node_manager.h"
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
-#include "util/rational.h"
 #include "theory/builtin/proof_checker.h"
+#include "util/rational.h"
 
 using namespace cvc5::internal::kind;
 
@@ -269,29 +269,30 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node t)
     std::unordered_set<Node> usedPre, usedPost;
     bool isFixedPoint = (d_policy == TConvPolicy::FIXPOINT);
     NodeManager* nm = nodeManager();
-    Node c = theory::builtin::BuiltinProofRuleChecker::getConvert(nm, t, pre, post, isFixedPoint, usedPre, usedPost);
-    Assert (!c.isNull());
-    if (c==tref[1])
+    Node c = theory::builtin::BuiltinProofRuleChecker::getConvert(
+        nm, t, pre, post, isFixedPoint, usedPre, usedPost);
+    Assert(!c.isNull());
+    if (c == tref[1])
     {
       std::vector<Node> children;
       size_t npre = 0;
       std::unordered_map<Node, Node>::const_iterator itr;
       for (size_t r = 0; r < 2; r++)
       {
-        std::unordered_set<Node>& u = r==0 ? usedPre : usedPost;
+        std::unordered_set<Node>& u = r == 0 ? usedPre : usedPost;
         std::unordered_map<Node, Node>& rm = r == 0 ? pre : post;
         for (const Node& cc : u)
         {
           itr = rm.find(cc);
-          Assert (itr!=rm.end());
+          Assert(itr != rm.end());
           Node eq = cc.eqNode(itr->second);
           children.emplace_back(eq);
         }
         npre = children.size();
       }
       ProofRule pr = (d_policy == TConvPolicy::FIXPOINT)
-                        ? ProofRule::CONVERT_FIXED_POINT
-                        : ProofRule::CONVERT;
+                         ? ProofRule::CONVERT_FIXED_POINT
+                         : ProofRule::CONVERT;
       std::vector<Node> args;
       args.push_back(t);
       args.push_back(nm->mkConstInt(Rational(npre)));
@@ -302,7 +303,8 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node t)
       if (tconc == tref)
       {
         Trace("ajr-temp") << "...add rule " << pr << std::endl;
-        LazyCDProof lpfc(d_env, &d_proof, nullptr, d_name + "::LazyCDProofRewC");
+        LazyCDProof lpfc(
+            d_env, &d_proof, nullptr, d_name + "::LazyCDProofRewC");
         lpfc.addStep(tconc, pr, children, args);
         return lpfc.getProofFor(tconc);
       }

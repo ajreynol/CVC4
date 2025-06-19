@@ -290,8 +290,13 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
       }
     }
     std::unordered_set<Node> usedPre, usedPost;
-    Node c =
-        getConvert(nm, args[0], pre, post, (id == ProofRule::CONVERT_FIXED_POINT), usedPre, usedPost);
+    Node c = getConvert(nm,
+                        args[0],
+                        pre,
+                        post,
+                        (id == ProofRule::CONVERT_FIXED_POINT),
+                        usedPre,
+                        usedPost);
     if (c.isNull())
     {
       return c;
