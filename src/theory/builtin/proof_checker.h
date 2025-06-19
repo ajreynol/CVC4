@@ -106,7 +106,10 @@ class BuiltinProofRuleChecker : public ProofRuleChecker
    * Get convert
    * @param n The node to convert
    */
-  Node getConvert(const Node& n, const std::map<Node, Node>& pre, const std::map<Node, Node>& post, bool isFixedPoint);
+  Node getConvert(const Node& n,
+                  const std::map<Node, Node>& pre,
+                  const std::map<Node, Node>& post,
+                  bool isFixedPoint);
 
   /** get a TheoryId from a node, return false if we fail */
   static bool getTheoryId(TNode n, TheoryId& tid);

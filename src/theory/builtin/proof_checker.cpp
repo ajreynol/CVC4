@@ -263,7 +263,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
   }
   else if (id == ProofRule::CONVERT || id == ProofRule::CONVERT_FIXED_POINT)
   {
-    Assert (args.size()==2);
+    Assert(args.size() == 2);
     uint32_t i;
     if (!getUInt32(args[1], i))
     {
@@ -271,11 +271,11 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     }
     std::map<Node, Node> pre;
     std::map<Node, Node> post;
-    for (size_t j=0, npremises=children.size(); j<npremises; j++)
+    for (size_t j = 0, npremises = children.size(); j < npremises; j++)
     {
-      bool isPre = (i>0);
+      bool isPre = (i > 0);
       Node prem = premises[j];
-      if (prem.getKind()!=Kind::EQUAL)
+      if (prem.getKind() != Kind::EQUAL)
       {
         return Node::null();
       }
@@ -289,7 +289,8 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
         post[prem[0]] = prem[1];
       }
     }
-    Node c = getConvert(args[0], pre, post, (id == ProofRule::CONVERT_FIXED_POINT));
+    Node c =
+        getConvert(args[0], pre, post, (id == ProofRule::CONVERT_FIXED_POINT));
     return args[0].eqNode(c);
   }
   else if (id == ProofRule::MACRO_REWRITE)
@@ -570,9 +571,11 @@ Node BuiltinProofRuleChecker::mkTheoryIdNode(NodeManager* nm, TheoryId tid)
   return nm->mkConstInt(Rational(static_cast<uint32_t>(tid)));
 }
 
-Node BuiltinProofRuleChecker::getConvert(const Node& n, const std::map<Node, Node>& pre, const std::map<Node, Node>& post, bool isFixedPoint)
+Node BuiltinProofRuleChecker::getConvert(const Node& n,
+                                         const std::map<Node, Node>& pre,
+                                         const std::map<Node, Node>& post,
+                                         bool isFixedPoint)
 {
-
   return n;
 }
 
