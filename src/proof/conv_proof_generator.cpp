@@ -290,7 +290,7 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node t)
         }
         npre = children.size();
       }
-      ProofRule pr = (d_policy == TConvPolicy::FIXPOINT)
+      ProofRule pr = isFixedPoint
                          ? ProofRule::CONVERT_FIXED_POINT
                          : ProofRule::CONVERT;
       std::vector<Node> args;

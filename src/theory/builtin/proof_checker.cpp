@@ -684,7 +684,7 @@ Node BuiltinProofRuleChecker::getConvert(
       itr = post.find(ret);
       if (itr != post.end())
       {
-        usedPost.insert(cur);
+        usedPost.insert(ret);
         if (isFixedPoint)
         {
           rewritten[cur] = itr->second;
