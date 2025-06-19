@@ -269,8 +269,8 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     {
       return Node::null();
     }
-    std::map<Node, Node> pre;
-    std::map<Node, Node> post;
+    std::unordered_map<Node, Node> pre;
+    std::unordered_map<Node, Node> post;
     for (size_t j = 0, npremises = children.size(); j < npremises; j++)
     {
       bool isPre = (i > 0);
@@ -572,16 +572,17 @@ Node BuiltinProofRuleChecker::mkTheoryIdNode(NodeManager* nm, TheoryId tid)
 }
 
 Node BuiltinProofRuleChecker::getConvert(const Node& n,
-                                         const std::map<Node, Node>& pre,
-                                         const std::map<Node, Node>& post,
+                                         const std::unordered_map<Node, Node>& pre,
+                                         const std::unordered_map<Node, Node>& post,
                                          bool isFixedPoint)
 {
+  NodeManager * nm = nodeManager();
   // the final rewritten form of terms
   std::unordered_map<Node, Node> visited;
   // the rewritten form of terms we have processed so far
   std::unordered_map<Node, Node> rewritten;
-  std::unordered_map<Node, Node>::iterator it;
-  std::unordered_map<Node, Node>::iterator itr;
+  std::unordered_map<Node, Node>::const_iterator it;
+  std::unordered_map<Node, Node>::const_iterator itr;
   std::vector<TNode> visit;
   visit.push_back(n);
   Node cur;
@@ -632,9 +633,52 @@ Node BuiltinProofRuleChecker::getConvert(const Node& n,
         }
       }
       Node ret = cur;
-      bool childChanged = false;
-      std::vector<Node> children;
-      Kind ck = cur.getKind();
+      if (cur.getNumChildren()>0)
+      {
+        bool childChanged = false;
+        std::vector<Node> children;
+        Kind ck = cur.getKind();
+        if (ck==Kind::APPLY_UF)
+        {
+          Node cop = cur.getOperator();
+          itr = visited.find(cop);
+          Assert (itr!=visited.end());
+          children.push_back(itr->second);
+          childChanged = (cop!=itr->second);
+        }
+        else if (cur.getMetaKind() == metakind::PARAMETERIZED)
+        {
+          // all other parameterized operators are unchanged
+          children.push_back(cur.getOperator());
+        }
+        for (const Node& cc : cur)
+        {
+          itr = visited.find(cc);
+          Assert (itr!=visited.end());
+          children.push_back(itr->second);
+          childChanged = childChanged || (cc!=itr->second);
+        }
+        if (childChanged)
+        {
+          ret = nm->mkNode(ck, children);
+        }
+      }
+      // now check post rewrite
+      itr = post.find(ret);
+      if (itr!=post.end())
+      {
+        if (isFixedPoint)
+        {
+          rewritten[cur] = itr->second;
+          rewritten[ret] = itr->second;
+          visit.emplace_back(ret);
+          visit.emplace_back(itr->second);
+          continue;
+        }
+        ret = itr->second;
+      }
+      visited[cur] = ret;
+      visit.pop_back();
     }
   }while (visit.empty());
   Assert (visited.find(n)!=visited.end());
