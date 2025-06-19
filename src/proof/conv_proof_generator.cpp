@@ -253,6 +253,11 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node t)
 {
   LazyCDProof lpf(d_env, &d_proof, nullptr, d_name + "::LazyCDProofRew");
   Node tref = getProofForRewritingInternal(t, lpf, d_tcontext);
+  if (tref[0]==tref[1])
+  {
+    // corner case: reflexive
+    return d_env.getProofNodeManager()->mkNode(ProofRule::REFL, {}, {tref[0]}, tref);
+  }
   if (options().proof.proofUseRuleConvert)
   {
     // try to use CONVERT / CONVERT_FIXED_POINT
