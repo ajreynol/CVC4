@@ -274,7 +274,7 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     for (size_t j = 0, npremises = children.size(); j < npremises; j++)
     {
       bool isPre = (i > 0);
-      Node prem = premises[j];
+      Node prem = children[j];
       if (prem.getKind() != Kind::EQUAL)
       {
         return Node::null();
@@ -576,7 +576,69 @@ Node BuiltinProofRuleChecker::getConvert(const Node& n,
                                          const std::map<Node, Node>& post,
                                          bool isFixedPoint)
 {
-  return n;
+  // the final rewritten form of terms
+  std::unordered_map<Node, Node> visited;
+  // the rewritten form of terms we have processed so far
+  std::unordered_map<Node, Node> rewritten;
+  std::unordered_map<Node, Node>::iterator it;
+  std::unordered_map<Node, Node>::iterator itr;
+  std::vector<TNode> visit;
+  visit.push_back(n);
+  Node cur;
+  do
+  {
+    cur = visit.back();
+    it = visited.find(cur);
+    if (it==visited.end())
+    {
+      it = pre.find(cur);
+      if (it!=pre.end())
+      {
+        if (isFixedPoint)
+        {
+          visited[cur] = Node::null();
+          rewritten[cur] = it->second;
+          visit.push_back(it->second);
+        }
+        else
+        {
+          visited[cur] = it->second;
+          visit.pop_back();
+        }
+        continue;
+      }
+      visited[cur] = Node::null();
+      if (cur.getKind()==Kind::APPLY_UF)
+      {
+        visit.push_back(cur.getOperator());
+      }
+      if (cur.getNumChildren()>0)
+      {
+        visit.insert(visit.end(), cur.begin(), cur.end());
+      }
+    }
+    else if (it->second.isNull())
+    {
+      if (isFixedPoint)
+      {
+        itr = rewritten.find(cur);
+        if (itr != rewritten.end())
+        {
+          Node curR = itr->second;
+          itr = visited.find(curR);
+          Assert (itr!=visited.end());
+          visited[cur] = itr->second;
+          continue;
+        }
+      }
+      Node ret = cur;
+      bool childChanged = false;
+      std::vector<Node> children;
+      Kind ck = cur.getKind();
+    }
+  }while (visit.empty());
+  Assert (visited.find(n)!=visited.end());
+  return visited[n];
 }
 
 }  // namespace builtin
