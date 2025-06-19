@@ -302,11 +302,15 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node t)
                         << " vs " << tref << std::endl;
       if (tconc == tref)
       {
-        Trace("ajr-temp") << "...add rule " << pr << std::endl;
-        LazyCDProof lpfc(
-            d_env, &d_proof, nullptr, d_name + "::LazyCDProofRewC");
-        lpfc.addStep(tconc, pr, children, args);
-        return lpfc.getProofFor(tconc);
+        // trivial if a single child proves it
+        if (children.size()>1 || children[0]!=tref)
+        {
+          Trace("ajr-temp") << "...add rule " << pr << std::endl;
+          LazyCDProof lpfc(
+              d_env, &d_proof, nullptr, d_name + "::LazyCDProofRewC");
+          lpfc.addStep(tconc, pr, children, args);
+          return lpfc.getProofFor(tconc);
+        }
       }
     }
   }
