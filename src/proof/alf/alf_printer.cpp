@@ -193,7 +193,7 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
     case ProofRule::BV_POLY_NORM:
     case ProofRule::BV_POLY_NORM_EQ:
     case ProofRule::EXISTS_STRING_LENGTH:
-    case ProofRule::DSL_REWRITE: 
+    case ProofRule::DSL_REWRITE:
     case ProofRule::CONVERT:
     case ProofRule::CONVERT_FIXED_POINT: return true;
     case ProofRule::BV_BITBLAST_STEP:

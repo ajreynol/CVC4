@@ -19,7 +19,6 @@
 
 #include "expr/term_context.h"
 #include "expr/term_context_stack.h"
-#include "util/rational.h"
 #include "printer/let_binding.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node.h"
@@ -27,6 +26,7 @@
 #include "proof/proof_node_manager.h"
 #include "rewriter/rewrites.h"
 #include "smt/env.h"
+#include "util/rational.h"
 
 using namespace cvc5::internal::kind;
 
@@ -257,29 +257,31 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node t)
     // try to use CONVERT / CONVERT_FIXED_POINT
     std::vector<Node> children;
     size_t npre = 0;
-    for (size_t r=0; r<2; r++)
+    for (size_t r = 0; r < 2; r++)
     {
       const NodeNodeMap& rm = r == 0 ? d_preRewriteMap : d_postRewriteMap;
-      for (NodeNodeMap::const_iterator it = rm.begin(); it != rm.end();
-            ++it)
+      for (NodeNodeMap::const_iterator it = rm.begin(); it != rm.end(); ++it)
       {
         Node eq = (*it).first.eqNode((*it).second);
         children.push_back(eq);
       }
-      if (r==0)
+      if (r == 0)
       {
         npre = children.size();
       }
     }
-    ProofRule pr = (d_policy == TConvPolicy::FIXPOINT) ? ProofRule::CONVERT_FIXED_POINT : ProofRule::CONVERT;
+    ProofRule pr = (d_policy == TConvPolicy::FIXPOINT)
+                       ? ProofRule::CONVERT_FIXED_POINT
+                       : ProofRule::CONVERT;
     NodeManager* nm = nodeManager();
     std::vector<Node> args;
     args.push_back(t);
     args.push_back(nm->mkConstInt(Rational(npre)));
     ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
     Node tconc = pc->checkDebug(pr, children, args, Node::null(), "");
-    Trace("ajr-temp") << "try convert: " << (tconc==tref) << " " << tconc << " vs " << tref << std::endl;
-    if (tconc==tref)
+    Trace("ajr-temp") << "try convert: " << (tconc == tref) << " " << tconc
+                      << " vs " << tref << std::endl;
+    if (tconc == tref)
     {
       Trace("ajr-temp") << "...add rule " << pr << std::endl;
       LazyCDProof lpfc(d_env, &d_proof, nullptr, d_name + "::LazyCDProofRewC");
@@ -291,8 +293,8 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node t)
 }
 
 Node TConvProofGenerator::getProofForRewritingInternal(Node t,
-                                               LazyCDProof& pf,
-                                               TermContext* tctx)
+                                                       LazyCDProof& pf,
+                                                       TermContext* tctx)
 {
   NodeManager* nm = nodeManager();
   // Invariant: if visited[hash(t)] = s or rewritten[hash(t)] = s and t,s are

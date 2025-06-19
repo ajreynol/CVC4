@@ -243,7 +243,9 @@ class TConvProofGenerator : protected EnvObj, public ProofGenerator
   /**
    * Helper method for above.
    */
-  Node getProofForRewritingInternal(Node t, LazyCDProof& pf, TermContext* tc = nullptr);
+  Node getProofForRewritingInternal(Node t,
+                                    LazyCDProof& pf,
+                                    TermContext* tc = nullptr);
   /**
    * Register rewrite step, returns the equality t=s if t is distinct from s
    * and a rewrite step has not already been registered for t.
