@@ -19,11 +19,14 @@
 
 #include "expr/term_context.h"
 #include "expr/term_context_stack.h"
+#include "util/rational.h"
 #include "printer/let_binding.h"
 #include "proof/proof_checker.h"
 #include "proof/proof_node.h"
 #include "proof/proof_node_algorithm.h"
+#include "proof/proof_node_manager.h"
 #include "rewriter/rewrites.h"
+#include "smt/env.h"
 
 using namespace cvc5::internal::kind;
 
@@ -195,14 +198,15 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofFor(Node f)
     return nullptr;
   }
   // we use the existing proofs
-  LazyCDProof lpf(d_env, &d_proof, nullptr, d_name + "::LazyCDProof");
+  std::shared_ptr<ProofNode> pfn;
   if (f[0] == f[1])
   {
-    lpf.addStep(f, ProofRule::REFL, {}, {f[0]});
+    pfn = d_env.getProofNodeManager()->mkNode(ProofRule::REFL, {}, {f[0]}, f);
   }
   else
   {
-    Node conc = getProofForRewriting(f[0], lpf, d_tcontext);
+    pfn = getProofForRewriting(f[0]);
+    Node conc = pfn->getResult();
     if (conc != f)
     {
       bool debugTraceEnabled = TraceIsOn("tconv-pf-gen-debug");
@@ -238,28 +242,55 @@ std::shared_ptr<ProofNode> TConvProofGenerator::getProofFor(Node f)
       return nullptr;
     }
   }
-  std::shared_ptr<ProofNode> pfn = lpf.getProofFor(f);
   Trace("tconv-pf-gen") << "... success" << std::endl;
   Assert(pfn != nullptr);
   Trace("tconv-pf-gen-debug-pf") << "... proof is " << *pfn << std::endl;
   return pfn;
 }
 
-std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node n)
+std::shared_ptr<ProofNode> TConvProofGenerator::getProofForRewriting(Node t)
 {
   LazyCDProof lpf(d_env, &d_proof, nullptr, d_name + "::LazyCDProofRew");
-  Node conc = getProofForRewriting(n, lpf, d_tcontext);
-  if (conc[1] == n)
+  Node tref = getProofForRewritingInternal(t, lpf, d_tcontext);
+  if (options().proof.proofUseRuleConvert)
   {
-    lpf.addStep(conc, ProofRule::REFL, {}, {n});
+    // try to use CONVERT / CONVERT_FIXED_POINT
+    std::vector<Node> children;
+    size_t npre = 0;
+    for (size_t r=0; r<2; r++)
+    {
+      const NodeNodeMap& rm = r == 0 ? d_preRewriteMap : d_postRewriteMap;
+      for (NodeNodeMap::const_iterator it = rm.begin(); it != rm.end();
+            ++it)
+      {
+        Node eq = (*it).first.eqNode((*it).second);
+        children.push_back(eq);
+      }
+      if (r==0)
+      {
+        npre = children.size();
+      }
+    }
+    ProofRule pr = (d_policy == TConvPolicy::FIXPOINT) ? ProofRule::CONVERT_FIXED_POINT : ProofRule::CONVERT;
+    NodeManager* nm = nodeManager();
+    std::vector<Node> args;
+    args.push_back(t);
+    args.push_back(nm->mkConstInt(Rational(npre)));
+    ProofChecker* pc = d_env.getProofNodeManager()->getChecker();
+    Node tconc = pc->checkDebug(pr, children, args, Node::null(), "");
+    Trace("ajr-temp") << "try convert: " << (tconc==tref) << " " << tconc << " vs " << tref << std::endl;
+    if (tconc==tref)
+    {
+      Trace("ajr-temp") << "...add rule " << pr << std::endl;
+      LazyCDProof lpfc(d_env, &d_proof, nullptr, d_name + "::LazyCDProofRewC");
+      lpfc.addStep(tconc, pr, children, args);
+      return lpfc.getProofFor(tconc);
+    }
   }
-  std::shared_ptr<ProofNode> pfn = lpf.getProofFor(conc);
-  Assert(pfn != nullptr);
-  Trace("tconv-pf-gen-debug-pf") << "... proof is " << *pfn << std::endl;
-  return pfn;
+  return lpf.getProofFor(tref);
 }
 
-Node TConvProofGenerator::getProofForRewriting(Node t,
+Node TConvProofGenerator::getProofForRewritingInternal(Node t,
                                                LazyCDProof& pf,
                                                TermContext* tctx)
 {

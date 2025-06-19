@@ -291,6 +291,11 @@ Node BuiltinProofRuleChecker::checkInternal(ProofRule id,
     }
     Node c =
         getConvert(args[0], pre, post, (id == ProofRule::CONVERT_FIXED_POINT));
+    if (c.isNull())
+    {
+      AlwaysAssert(false);
+      return c;
+    }
     return args[0].eqNode(c);
   }
   else if (id == ProofRule::MACRO_REWRITE)
@@ -585,7 +590,7 @@ Node BuiltinProofRuleChecker::getConvert(
   std::unordered_map<Node, Node>::const_iterator it;
   std::unordered_map<Node, Node>::const_iterator itr;
   std::vector<TNode> visit;
-  visit.push_back(n);
+  visit.emplace_back(n);
   Node cur;
   do
   {
@@ -600,7 +605,7 @@ Node BuiltinProofRuleChecker::getConvert(
         {
           visited[cur] = Node::null();
           rewritten[cur] = it->second;
-          visit.push_back(it->second);
+          visit.emplace_back(it->second);
         }
         else
         {
@@ -618,6 +623,7 @@ Node BuiltinProofRuleChecker::getConvert(
       {
         visit.insert(visit.end(), cur.begin(), cur.end());
       }
+      continue;
     }
     else if (it->second.isNull())
     {
@@ -681,9 +687,9 @@ Node BuiltinProofRuleChecker::getConvert(
         ret = itr->second;
       }
       visited[cur] = ret;
-      visit.pop_back();
     }
-  } while (visit.empty());
+    visit.pop_back();
+  } while (!visit.empty());
   Assert(visited.find(n) != visited.end());
   return visited[n];
 }

@@ -140,7 +140,7 @@
   :signature (T $subs) T
   (
   (($convert_step t (@pair xs ys))  (eo::define ((i (eo::list_find @list xs t)))
-                                      (eo::ite (eo::is_neg i) t ($assoc_nil_nth @list ys i))))
+                                      (eo::ite (eo::is_neg i) t (eo::list_nth @list ys i))))
   )
 )
   
@@ -185,6 +185,13 @@
 )
 
 (declare-rule convert ((E Bool) (T Type) (t T) (n Int))
+  :premise-list E and
+  :args (t n)
+  :conclusion (eo::define ((css ($to_convert_subs E (eo::add n -1) (@pair $empty_subs $empty_subs))))
+                (= t ($convert_once t ($pair_first css) ($pair_second css))))
+)
+
+(declare-rule convert_fixed_point ((E Bool) (T Type) (t T) (n Int))
   :premise-list E and
   :args (t n)
   :conclusion (eo::define ((css ($to_convert_subs E (eo::add n -1) (@pair $empty_subs $empty_subs))))

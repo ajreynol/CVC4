@@ -241,11 +241,9 @@ class TConvProofGenerator : protected EnvObj, public ProofGenerator
   /** Get rewrite step for (hash value of) term. */
   Node getRewriteStepInternal(Node thash, bool isPre) const;
   /**
-   * Adds a proof of t = t' to the proof pf where t' is the result of rewriting
-   * t based on the rewrite steps registered to this class. This method then
-   * returns the proved equality t = t'.
+   * Helper method for above.
    */
-  Node getProofForRewriting(Node t, LazyCDProof& pf, TermContext* tc = nullptr);
+  Node getProofForRewritingInternal(Node t, LazyCDProof& pf, TermContext* tc = nullptr);
   /**
    * Register rewrite step, returns the equality t=s if t is distinct from s
    * and a rewrite step has not already been registered for t.
