@@ -31,7 +31,7 @@ class ProofChecker;
  * not performed on literals.
  */
 class UnrewriteConverterCallback : public ProofNodeConverterCallback,
-                                     protected EnvObj
+                                   protected EnvObj
 {
  public:
   UnrewriteConverterCallback(Env& env);

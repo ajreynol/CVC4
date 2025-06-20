@@ -283,59 +283,57 @@ bool isBooleanRule(ProofRule r)
 {
   switch (r)
   {
-    case	ProofRule::RESOLUTION:
-case	ProofRule::CHAIN_RESOLUTION:
-case	ProofRule::FACTORING:
-case	ProofRule::REORDERING:
-case	ProofRule::MACRO_RESOLUTION:
-case	ProofRule::MACRO_RESOLUTION_TRUST:
-case	ProofRule::SPLIT:
-case	ProofRule::MODUS_PONENS:
-case	ProofRule::NOT_NOT_ELIM:
-case	ProofRule::CONTRA:
-case	ProofRule::AND_ELIM:
-case	ProofRule::AND_INTRO:
-case	ProofRule::NOT_OR_ELIM:
-case	ProofRule::IMPLIES_ELIM:
-case	ProofRule::NOT_IMPLIES_ELIM1:
-case	ProofRule::NOT_IMPLIES_ELIM2:
-case	ProofRule::EQUIV_ELIM1:
-case	ProofRule::EQUIV_ELIM2:
-case	ProofRule::NOT_EQUIV_ELIM1:
-case	ProofRule::NOT_EQUIV_ELIM2:
-case	ProofRule::XOR_ELIM1:
-case	ProofRule::XOR_ELIM2:
-case	ProofRule::NOT_XOR_ELIM1:
-case	ProofRule::NOT_XOR_ELIM2:
-case	ProofRule::ITE_ELIM1:
-case	ProofRule::ITE_ELIM2:
-case	ProofRule::NOT_ITE_ELIM1:
-case	ProofRule::NOT_ITE_ELIM2:
-case	ProofRule::NOT_AND:
-case	ProofRule::CNF_AND_POS:
-case	ProofRule::CNF_AND_NEG:
-case	ProofRule::CNF_OR_POS:
-case	ProofRule::CNF_OR_NEG:
-case	ProofRule::CNF_IMPLIES_POS:
-case	ProofRule::CNF_IMPLIES_NEG1:
-case	ProofRule::CNF_IMPLIES_NEG2:
-case	ProofRule::CNF_EQUIV_POS1:
-case	ProofRule::CNF_EQUIV_POS2:
-case	ProofRule::CNF_EQUIV_NEG1:
-case	ProofRule::CNF_EQUIV_NEG2:
-case	ProofRule::CNF_XOR_POS1:
-case	ProofRule::CNF_XOR_POS2:
-case	ProofRule::CNF_XOR_NEG1:
-case	ProofRule::CNF_XOR_NEG2:
-case	ProofRule::CNF_ITE_POS1:
-case	ProofRule::CNF_ITE_POS2:
-case	ProofRule::CNF_ITE_POS3:
-case	ProofRule::CNF_ITE_NEG1:
-case	ProofRule::CNF_ITE_NEG2:
-case	ProofRule::CNF_ITE_NEG3:
-  return true;
-default:
-  break;
+    case ProofRule::RESOLUTION:
+    case ProofRule::CHAIN_RESOLUTION:
+    case ProofRule::FACTORING:
+    case ProofRule::REORDERING:
+    case ProofRule::MACRO_RESOLUTION:
+    case ProofRule::MACRO_RESOLUTION_TRUST:
+    case ProofRule::SPLIT:
+    case ProofRule::MODUS_PONENS:
+    case ProofRule::NOT_NOT_ELIM:
+    case ProofRule::CONTRA:
+    case ProofRule::AND_ELIM:
+    case ProofRule::AND_INTRO:
+    case ProofRule::NOT_OR_ELIM:
+    case ProofRule::IMPLIES_ELIM:
+    case ProofRule::NOT_IMPLIES_ELIM1:
+    case ProofRule::NOT_IMPLIES_ELIM2:
+    case ProofRule::EQUIV_ELIM1:
+    case ProofRule::EQUIV_ELIM2:
+    case ProofRule::NOT_EQUIV_ELIM1:
+    case ProofRule::NOT_EQUIV_ELIM2:
+    case ProofRule::XOR_ELIM1:
+    case ProofRule::XOR_ELIM2:
+    case ProofRule::NOT_XOR_ELIM1:
+    case ProofRule::NOT_XOR_ELIM2:
+    case ProofRule::ITE_ELIM1:
+    case ProofRule::ITE_ELIM2:
+    case ProofRule::NOT_ITE_ELIM1:
+    case ProofRule::NOT_ITE_ELIM2:
+    case ProofRule::NOT_AND:
+    case ProofRule::CNF_AND_POS:
+    case ProofRule::CNF_AND_NEG:
+    case ProofRule::CNF_OR_POS:
+    case ProofRule::CNF_OR_NEG:
+    case ProofRule::CNF_IMPLIES_POS:
+    case ProofRule::CNF_IMPLIES_NEG1:
+    case ProofRule::CNF_IMPLIES_NEG2:
+    case ProofRule::CNF_EQUIV_POS1:
+    case ProofRule::CNF_EQUIV_POS2:
+    case ProofRule::CNF_EQUIV_NEG1:
+    case ProofRule::CNF_EQUIV_NEG2:
+    case ProofRule::CNF_XOR_POS1:
+    case ProofRule::CNF_XOR_POS2:
+    case ProofRule::CNF_XOR_NEG1:
+    case ProofRule::CNF_XOR_NEG2:
+    case ProofRule::CNF_ITE_POS1:
+    case ProofRule::CNF_ITE_POS2:
+    case ProofRule::CNF_ITE_POS3:
+    case ProofRule::CNF_ITE_NEG1:
+    case ProofRule::CNF_ITE_NEG2:
+    case ProofRule::CNF_ITE_NEG3: return true;
+    default: break;
   }
   return false;
 }

@@ -23,17 +23,17 @@
 
 namespace cvc5::internal {
 
-UnrewriteConverterCallback::UnrewriteConverterCallback(Env& env) : EnvObj(env) {}
-
-Node UnrewriteConverterCallback::convert(Node res,
-              ProofRule id,
-              const std::vector<Node>& children,
-              const std::vector<Node>& args,
-              CDProof* cdp)
+UnrewriteConverterCallback::UnrewriteConverterCallback(Env& env) : EnvObj(env)
 {
-  
 }
 
+Node UnrewriteConverterCallback::convert(Node res,
+                                         ProofRule id,
+                                         const std::vector<Node>& children,
+                                         const std::vector<Node>& args,
+                                         CDProof* cdp)
+{
+}
 
 bool UnrewriteConverterCallback::tryWith(ProofRule id,
                                          const std::vector<Node>& children,
@@ -55,4 +55,3 @@ bool UnrewriteConverterCallback::tryWith(ProofRule id,
   return false;
 }
 }  // namespace cvc5::internal
-
