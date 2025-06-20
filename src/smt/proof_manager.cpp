@@ -224,6 +224,8 @@ std::shared_ptr<ProofNode> PfManager::connectProofToAssertions(
     }
     Trace("smt-proof") << "=====" << std::endl;
   }
+  // do initial process of pfn
+  prepareFinalProof(pfn);
 
   Trace("smt-proof")
       << "SolverEngine::connectProofToAssertions(): postprocess...\n";
@@ -288,6 +290,139 @@ std::shared_ptr<ProofNode> PfManager::connectProofToAssertions(
     }
     default: Unreachable();
   }
+}
+bool isBooleanRule(ProofRule r)
+{
+  switch (r)
+  {
+    case	ProofRule::RESOLUTION:
+case	ProofRule::CHAIN_RESOLUTION:
+case	ProofRule::FACTORING:
+case	ProofRule::REORDERING:
+case	ProofRule::MACRO_RESOLUTION:
+case	ProofRule::MACRO_RESOLUTION_TRUST:
+case	ProofRule::SPLIT:
+case	ProofRule::MODUS_PONENS:
+case	ProofRule::NOT_NOT_ELIM:
+case	ProofRule::CONTRA:
+case	ProofRule::AND_ELIM:
+case	ProofRule::AND_INTRO:
+case	ProofRule::NOT_OR_ELIM:
+case	ProofRule::IMPLIES_ELIM:
+case	ProofRule::NOT_IMPLIES_ELIM1:
+case	ProofRule::NOT_IMPLIES_ELIM2:
+case	ProofRule::EQUIV_ELIM1:
+case	ProofRule::EQUIV_ELIM2:
+case	ProofRule::NOT_EQUIV_ELIM1:
+case	ProofRule::NOT_EQUIV_ELIM2:
+case	ProofRule::XOR_ELIM1:
+case	ProofRule::XOR_ELIM2:
+case	ProofRule::NOT_XOR_ELIM1:
+case	ProofRule::NOT_XOR_ELIM2:
+case	ProofRule::ITE_ELIM1:
+case	ProofRule::ITE_ELIM2:
+case	ProofRule::NOT_ITE_ELIM1:
+case	ProofRule::NOT_ITE_ELIM2:
+case	ProofRule::NOT_AND:
+case	ProofRule::CNF_AND_POS:
+case	ProofRule::CNF_AND_NEG:
+case	ProofRule::CNF_OR_POS:
+case	ProofRule::CNF_OR_NEG:
+case	ProofRule::CNF_IMPLIES_POS:
+case	ProofRule::CNF_IMPLIES_NEG1:
+case	ProofRule::CNF_IMPLIES_NEG2:
+case	ProofRule::CNF_EQUIV_POS1:
+case	ProofRule::CNF_EQUIV_POS2:
+case	ProofRule::CNF_EQUIV_NEG1:
+case	ProofRule::CNF_EQUIV_NEG2:
+case	ProofRule::CNF_XOR_POS1:
+case	ProofRule::CNF_XOR_POS2:
+case	ProofRule::CNF_XOR_NEG1:
+case	ProofRule::CNF_XOR_NEG2:
+case	ProofRule::CNF_ITE_POS1:
+case	ProofRule::CNF_ITE_POS2:
+case	ProofRule::CNF_ITE_POS3:
+case	ProofRule::CNF_ITE_NEG1:
+case	ProofRule::CNF_ITE_NEG2:
+case	ProofRule::CNF_ITE_NEG3:
+  return true;
+default:
+  break;
+  }
+  return false;
+}
+void PfManager::prepareFinalProof(std::shared_ptr<ProofNode> pfn)
+{
+  if (!options().proof.proofUnrewrite)
+  {
+    return;
+  }
+  Trace("pf-urw") << "Final proof is " << *pfn.get() << std::endl;
+  std::shared_ptr<ProofNode> cur;
+  std::vector<std::shared_ptr<ProofNode>> toProcess;
+  toProcess.push_back(pfn);
+  std::map<Node, std::vector<std::shared_ptr<ProofNode>>> amap;
+  std::map<Node, size_t> amapProcessed;
+  Trace("pf-urw") << "Look at proofs of CNF inputs" << std::endl;
+  do
+  {
+    cur = toProcess.back();
+    toProcess.pop_back();
+    expr:: getFreeAssumptionsMap(cur, amap);
+    for (const std::pair<const Node, std::vector<std::shared_ptr<ProofNode>>>& p : amap)
+    {
+      Node f = p.first;
+      size_t start = amapProcessed[f];
+      size_t end = p.second.size();
+      if (start==end)
+      {
+        continue;
+      }
+      std::shared_ptr<ProofNode> cpfn = d_pppg->getProofFor(f);
+      if (cpfn == nullptr || cpfn->getRule()==ProofRule::ASSUME)
+      {
+        Trace("pf-urw") << "* Input: " << f << std::endl;
+        continue;
+      }
+      Trace("pf-urw") << "* Derived: " << f << std::endl;
+      Trace("pf-urw") << "Its proof is " << *cpfn.get() << std::endl;
+      for (size_t i=start; i<end; i++)
+      {
+        d_pnm->updateNode(p.second[i].get(), cpfn.get());
+      }
+      amapProcessed[f] = end;
+      toProcess.push_back(cpfn);
+    }
+  }while (!toProcess.empty());
+  Trace("pf-urw") << "Final proof is now " << *pfn.get() << std::endl;
+  
+  std::unordered_set<ProofNode*> visited;
+  std::unordered_set<ProofNode*>::iterator it;
+  std::vector<std::shared_ptr<ProofNode>> visit;
+  std::unordered_set<std::shared_ptr<ProofNode>> inputProofs;
+  visit.push_back(pfn);
+  do
+  {
+    cur = visit.back();
+    visit.pop_back();
+    it = visited.find(cur.get());
+    if (it == visited.end())
+    {
+      visited.insert(cur.get());
+      ProofRule id = cur->getRule();
+      if (isBooleanRule(id))
+      {
+        const std::vector<std::shared_ptr<ProofNode>>& cs = cur->getChildren();
+        visit.insert(visit.end(), cs.begin(), cs.end());
+      }
+      else
+      {
+        Trace("pf-urw") << "*** Final input: " << cur->getResult() << std::endl;
+        Trace("pf-urw") << "Its proof is " << *cur.get() << std::endl;
+        inputProofs.insert(cur);
+      }
+    }
+  } while (!visit.empty());
 }
 
 void PfManager::checkFinalProof(std::shared_ptr<ProofNode> pfn)

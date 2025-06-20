@@ -171,6 +171,8 @@ class PfManager : protected EnvObj
   PreprocessProofGenerator* getPreprocessProofGenerator() const;
   //--------------------------- end access to utilities
  private:
+  /** Initial process of a final proof, just before post-processing */
+  void prepareFinalProof(std::shared_ptr<ProofNode> pfn);
   /**
    * Get assertions from the assertions
    */
