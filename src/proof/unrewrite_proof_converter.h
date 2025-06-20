@@ -47,6 +47,19 @@ class UnrewriteConverterCallback : public ProofNodeConverterCallback,
                CDProof* cdp) override;
 
  private:
+  /**
+   * Try to prove expected via the given rule, children, and arguments. Return
+   * true if this proves expected, otherwise we return false and set newRes
+   * to what was proven by (id, children, args).
+   *
+   * If we return true, we add the step (id, children, args) to cdp.
+   */
+  bool tryWith(ProofRule id,
+               const std::vector<Node>& children,
+               const std::vector<Node>& args,
+               Node expected,
+               Node& newRes,
+               CDProof* cdp);
   /** The proof checker we are using */
   ProofChecker* d_pc;
 };

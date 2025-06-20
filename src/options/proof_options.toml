@@ -269,3 +269,11 @@ name   = "Proof"
   type       = "uint64_t"
   default    = "2"
   help       = "the lookahead depth for merging proofs at previsit"
+
+[[option]]
+  name       = "proofUnrewrite"
+  category   = "expert"
+  long       = "proof-unrewrite"
+  type       = "bool"
+  default    = "false"
+  help       = "Process the proof with unrewriting"

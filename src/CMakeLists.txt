@@ -236,8 +236,8 @@ libcvc5_add_sources(
   proof/theory_proof_step_buffer.h
   proof/unsat_core.cpp
   proof/unsat_core.h
-  proof/unrewrite_converter.cpp
-  proof/unrewrite_converter.h
+  proof/unrewrite_proof_converter.cpp
+  proof/unrewrite_proof_converter.h
   proof/valid_witness_proof_generator.cpp
   proof/valid_witness_proof_generator.h
   proof/alethe/alethe_let_binding.cpp
