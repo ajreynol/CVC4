@@ -130,6 +130,13 @@ bool containsSubproof(ProofNode* pn,
  */
 ProofRule getCongRule(const Node& n, std::vector<Node>& args);
 
+/**
+ * Is r a Boolean rule? If so, it is agnostic to the content of theory literals.
+ * @param r The rule.
+ * @return true if r is a Boolean rule.
+ */
+bool isBooleanRule(ProofRule r);
+
 }  // namespace expr
 }  // namespace cvc5::internal
 
