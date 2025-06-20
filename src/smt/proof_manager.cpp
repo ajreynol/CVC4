@@ -364,14 +364,14 @@ void PfManager::prepareFinalProof(std::shared_ptr<ProofNode> pfn)
       }
     }
   } while (!visit.empty());
-  
+
   std::vector<std::shared_ptr<ProofNode>> tlProofs;
   std::vector<std::shared_ptr<ProofNode>> inputProofs;
   std::map<std::shared_ptr<ProofNode>, std::vector<Node>> fassumps;
   for (std::shared_ptr<ProofNode>& p : nbProofs)
   {
     Trace("pf-urw") << "*** Final input: " << cur->getResult() << std::endl;
-    //Trace("pf-urw") << "Its proof is " << *cur.get() << std::endl;
+    // Trace("pf-urw") << "Its proof is " << *cur.get() << std::endl;
     std::vector<Node>& fas = fassumps[p];
     expr::getFreeAssumptions(p.get(), fas);
     if (fas.empty())
