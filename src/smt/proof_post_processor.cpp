@@ -1076,24 +1076,46 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
   }
   std::vector<Node> cc = children;
   std::vector<Node> ca = args;
-  for (size_t i=0; i<nchild; i++)
+  std::vector<Node> congChildren;
+  for (size_t r=0; r<2; r++)
   {
-    if (t1[i]==t2[i])
+    for (size_t i=0; i<nchild; i++)
     {
-      // reflexive, trivial
-      continue;
-    }
-    cc[0] = t1[i];
-    ca[0] = t2[i];
-    // check if the argument rewrites
-    Node cconc = d_pc->checkDebug(
-        ProofRule::MACRO_SR_PRED_TRANSFORM, cc, ca, Node::null(), "");
-    if (cconc.isNull())
-    {
-      return false;
+      if (t1[i]==t2[i])
+      {
+        // reflexive, trivial
+        if (r==1)
+        {
+          Node eq = t1[i].eqNode(t2[i]);
+          cdp->addStep(eq, ProofRule::REFL, {}, {t1[i]});
+          congChildren.emplace_back(eq);
+        }
+        continue;
+      }
+      cc[0] = t1[i];
+      ca[0] = t2[i];
+      if (r==0)
+      {
+        // check if the argument rewrites
+        Node cconc = d_pc->checkDebug(
+            ProofRule::MACRO_SR_PRED_TRANSFORM, cc, ca, Node::null(), "");
+        if (cconc.isNull())
+        {
+          return false;
+        }
+      }
+      else
+      {
+        Node eq = t1[i].eqNode(t2[i]);
+        cdp->addStep(eq, ProofRule::MACRO_SR_PRED_TRANSFORM, cc, ca);
+        congChildren.emplace_back(eq);
+      }
     }
   }
-  return false;
+  std::vector<Node> congArgs;
+  ProofRule cr = expr::getCongRule(t1, congArgs);
+  cdp->addStep(t1.eqNode(t2), cr, congChildren, congArgs);
+  return true;
 }
 
 Node ProofPostprocessCallback::addProofForSubsStep(Node var,
