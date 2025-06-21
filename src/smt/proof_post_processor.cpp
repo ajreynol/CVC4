@@ -1092,7 +1092,15 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
   std::vector<Node> ca = args;
   for (const Node& eq : eqs)
   {
+    // may be an assumption
+    Node eqsym = eq[1].eqNode(eq[0]);
+    if (std::find(cc.begin(), cc.end(), eq)!=cc.end() || std::find(cc.begin(), cc.end(), eqsym)!=cc.end())
+    {
+      tcg.addRewriteStep(eq[0], eq[1], cdp, true);
+      continue;
+    }
     ca[0] = eq;
+    // otherwise try using the same pred intro template
     Node cconc = d_pc->checkDebug(
         ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
     if (cconc.isNull())
