@@ -1085,6 +1085,17 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
       }
       cdp->addStep(rc, ProofRule::MACRO_SR_PRED_INTRO, children, ca);
     }
+    // Reduces
+    // F1 ... Fn
+    // --------------- SR_INTRO{(and G1 ... Gn)}
+    // (and G1 ... Gn)
+    // to
+    // F1 ... Fn               F1 ... Fn
+    // --------- SR_INTRO{G1}  --------- SR_INTRO{Gn}
+    // G1           ....       Gn
+    // --------------------------------- AND_INTRO
+    // (and G1 ... Gn)
+
     Trace("pf-pp-reduce") << "* reduce SR_INTRO based on AND_INTRO" << std::endl;
     std::vector<Node> resc(res.begin(), res.end());
     cdp->addStep(res, ProofRule::AND_INTRO, resc, {});
