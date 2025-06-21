@@ -167,6 +167,10 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
    * @return The conclusion of the TRANS step.
    */
   Node addProofForTrans(const std::vector<Node>& tchildren, CDProof* cdp);
+  bool addProofForReduceTransform(
+                    const std::vector<Node>& children,
+                    const std::vector<Node>& args,
+                    CDProof* cdp);
   /**
    * Add proof for substitution step. Some substitutions are derived based
    * on viewing a formula as a Boolean assignment (see MethodId::SB_LITERAL for

@@ -397,11 +397,15 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     std::vector<Node> tchildren;
     std::vector<Node> schildren(children.begin() + 1, children.end());
     std::vector<Node> sargs = args;
-    // first, compute if we need
     MethodId idr = MethodId::RW_REWRITE;
     if (args.size() >= 4)
     {
       getMethodId(args[3], idr);
+    }
+    // try to reduce the current goal by congruence if possible
+    if (addProofForReduceTransform(children, args, cdp))
+    {
+      return args[0];
     }
     WitnessReq reqw =
         d_wfpm.requiresWitnessFormTransform(children[0], args[0], idr);
@@ -1051,6 +1055,45 @@ Node ProofPostprocessCallback::addProofForTrans(
     return tchildren[0];
   }
   return Node::null();
+}
+
+bool ProofPostprocessCallback::addProofForReduceTransform(
+                  const std::vector<Node>& children,
+                  const std::vector<Node>& args,
+                  CDProof* cdp)
+{
+  Node t1 = children[0];
+  Node t2 = args[0];
+  size_t nchild = t1.getNumChildren();
+  if (nchild==0 || t2.getNumChildren()!=nchild)
+  {
+    return false;
+  }
+  Assert (t1.hasOperator() && t2.hasOperator());
+  if (t1.getOperator()!=t2.getOperator())
+  {
+    return false;
+  }
+  std::vector<Node> cc = children;
+  std::vector<Node> ca = args;
+  for (size_t i=0; i<nchild; i++)
+  {
+    if (t1[i]==t2[i])
+    {
+      // reflexive, trivial
+      continue;
+    }
+    cc[0] = t1[i];
+    ca[0] = t2[i];
+    // check if the argument rewrites
+    Node cconc = d_pc->checkDebug(
+        ProofRule::MACRO_SR_PRED_TRANSFORM, cc, ca, Node::null(), "");
+    if (cconc.isNull())
+    {
+      return false;
+    }
+  }
+  return false;
 }
 
 Node ProofPostprocessCallback::addProofForSubsStep(Node var,
