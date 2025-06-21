@@ -24,6 +24,7 @@
 #include "proof/proof_node_manager.h"
 #include "proof/resolution_proofs_util.h"
 #include "proof/subtype_elim_proof_converter.h"
+#include "theory/arith/arith_poly_norm.h"
 #include "theory/arith/arith_proof_utilities.h"
 #include "theory/arith/arith_utilities.h"
 #include "theory/builtin/proof_checker.h"
@@ -208,6 +209,15 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   // macro elimination
   if (id == ProofRule::MACRO_SR_EQ_INTRO)
   {
+    // seems to make things worse
+    /*
+    std::vector<Node> ca = args;
+    ca[0] = res;
+    if (addProofForReduceIntro(res, children, args, cdp))
+    {
+      return res;
+    }
+    */
     // (TRANS
     //   (SUBS <children> :args args[0:1])
     //   (REWRITE :args <t.substitute(x1,t1). ... .substitute(xn,tn)> args[2]))
@@ -1074,6 +1084,45 @@ bool ProofPostprocessCallback::addProofForReduceEqSimple(const Node& a,
   }
   return false;
 }
+bool ProofPostprocessCallback::addProofForReduceEq(const Node& a,
+                                                         const Node& b,
+                                                         CDProof* cdp)
+{
+  TypeNode tn = a.getType();
+  if (a.getType().isBoolean())
+  {
+    Rational rx, ry;
+    if (!theory::arith::PolyNorm::isArithPolyNormRel(
+            a, b, rx, ry))
+    {
+      return false;
+    }
+    Node premise = theory::arith::PolyNorm::getArithPolyNormRelPremise(
+        a, b, rx, ry);
+    bool isBv = a[0].getType().isBitVector();
+    ProofRule rule = isBv ? ProofRule::BV_POLY_NORM : ProofRule::ARITH_POLY_NORM;
+    cdp->addStep(premise, rule, {}, {premise});
+    ProofRule rrule =
+        isBv ? ProofRule::BV_POLY_NORM_EQ : ProofRule::ARITH_POLY_NORM_REL;
+    Node eq = a.eqNode(b);
+    cdp->addStep(eq, rrule, {premise}, {eq});
+    return true;
+  }
+  else
+  {
+    if (!theory::arith::PolyNorm::isArithPolyNorm(a, b))
+    {
+      return false;
+    }
+    Node eq = a.eqNode(b);
+    bool isBitVec = (tn.isBitVector());
+    ProofRule pr =
+        isBitVec ? ProofRule::BV_POLY_NORM : ProofRule::ARITH_POLY_NORM;
+    cdp->addStep(eq, pr, {}, {eq});
+    return true;
+  }
+  return false;
+}
 
 bool ProofPostprocessCallback::addProofForReduceIntro(
     const Node& res,
@@ -1118,53 +1167,64 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
   {
     return false;
   }
-  if (res[0] == res[1])
+  // try trivial
+  if (addProofForReduceEqSimple(res[0], res[1], cdp))
   {
-    cdp->addStep(res, ProofRule::REFL, {}, {res[0]});
     return true;
   }
   std::vector<Node> eqs;
   expr::getConversionConditions(res[0], res[1], eqs);
-  if (eqs.size() == 1 && eqs[0] == res)
+  // if non-trivial to decompose
+  if (eqs.size() > 1 || eqs[0] != res)
   {
-    // cannot be reduced
-    return false;
-  }
-  // break into smaller steps, if these can each be proven,
-  // then we add the term conversion proof + the (localized)
-  // MACRO_SR_PRED_INTRO steps.
-  TConvProofGenerator tcg(d_env, nullptr, TConvPolicy::ONCE);
-  for (const Node& eq : eqs)
-  {
-    // may be an assumption
-    if (isPremiseModSym(eq, children))
+    // break into smaller steps, if these can each be proven,
+    // then we add the term conversion proof + the (localized)
+    // MACRO_SR_PRED_INTRO steps.
+    TConvProofGenerator tcg(d_env, nullptr, TConvPolicy::ONCE);
+    bool convertSuccess = true;
+    for (const Node& eq : eqs)
     {
-      tcg.addRewriteStep(eq[0], eq[1], cdp, true);
-      continue;
+      // may be an assumption
+      if (isPremiseModSym(eq, children))
+      {
+        tcg.addRewriteStep(eq[0], eq[1], cdp, true);
+        continue;
+      }
+      ca[0] = eq;
+      // otherwise try using the same pred intro template
+      if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, children, ca) != eq)
+      {
+        convertSuccess = false;
+        break;
+      }
+      // rewrite at pre
+      tcg.addRewriteStep(
+          eq[0], eq[1], ProofRule::MACRO_SR_PRED_INTRO, children, ca, true);
     }
-    ca[0] = eq;
-    // otherwise try using the same pred intro template
-    if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, children, ca) != eq)
+    if (convertSuccess)
     {
-      return false;
+      std::shared_ptr<ProofNode> pfn = tcg.getProofForRewriting(res[0]);
+      if (pfn != nullptr)
+      {
+        Node resp = pfn->getResult();
+        if (res == resp)
+        {
+          Trace("pf-pp-reduce") << "* reduce SR_INTRO for " << res << " based on "
+                                << eqs << std::endl;
+          cdp->addProof(pfn, CDPOverwrite::ASSUME_ONLY, true);
+          return true;
+        }
+      }
     }
-    // rewrite at pre
-    tcg.addRewriteStep(
-        eq[0], eq[1], ProofRule::MACRO_SR_PRED_INTRO, children, ca, true);
   }
-  std::shared_ptr<ProofNode> pfn = tcg.getProofForRewriting(res[0]);
-  if (pfn == nullptr)
+  // otherwise, try e.g. arith poly norm
+  // questionable if this is a good idea
+  /*
+  if (addProofForReduceEq(res[0], res[1], cdp))
   {
-    return false;
-  }
-  Node resp = pfn->getResult();
-  if (res == resp)
-  {
-    Trace("pf-pp-reduce") << "* reduce SR_INTRO for " << res << " based on "
-                          << eqs << std::endl;
-    cdp->addProof(pfn, CDPOverwrite::ASSUME_ONLY, true);
     return true;
   }
+  */
   return false;
 }
 

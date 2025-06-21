@@ -205,6 +205,15 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
    */
   bool addProofForReduceEqSimple(const Node& a, const Node& b, CDProof* cdp);
   /**
+   * Called when we require a proof of (= a b).
+   *
+   * @param a The first term
+   * @param b The second term
+   * @param cdp The proof to add to
+   * @return true if we added a proof of (= a b) to cdp.
+   */
+  bool addProofForReduceEq(const Node& a, const Node& b, CDProof* cdp);
+  /**
    * Add proof for substitution step. Some substitutions are derived based
    * on viewing a formula as a Boolean assignment (see MethodId::SB_LITERAL for
    * example). This method ensures that the proof of var == subs exists
