@@ -15,6 +15,7 @@
 
 #include "smt/proof_post_processor.h"
 
+#include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
 #include "options/base_options.h"
 #include "options/proof_options.h"
@@ -291,6 +292,11 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   }
   else if (id == ProofRule::MACRO_SR_PRED_INTRO)
   {
+    Assert (!res.isNull());
+    if (addProofForReduceIntro(res, children, args, cdp))
+    {
+      return res;
+    }
     std::vector<Node> tchildren;
     std::vector<Node> sargs = args;
     MethodId idr = MethodId::RW_REWRITE;
@@ -1057,6 +1063,60 @@ Node ProofPostprocessCallback::addProofForTrans(
   return Node::null();
 }
 
+bool ProofPostprocessCallback::addProofForReduceIntro(
+                  const Node& res,
+                  const std::vector<Node>& children,
+                  const std::vector<Node>& args,
+                  CDProof* cdp)
+{
+  if (res.getKind()!=Kind::EQUAL)
+  {
+    return false;
+  }
+  if (res[0]==res[1])
+  {
+    cdp->addStep(res, ProofRule::REFL, {}, {res[0]});
+    return true;
+  }
+  std::vector<Node> eqs;
+  expr::getConversionConditions(res[0], res[1], eqs);
+  if (eqs.size()==1 && eqs[0]==res)
+  {
+    // cannot be reduced
+    return false;
+  }
+  // break into smaller steps, if these can each be proven,
+  // then we reduce
+  TConvProofGenerator tcg(d_env, nullptr, TConvPolicy::ONCE);
+  std::vector<Node> cc = children;
+  std::vector<Node> ca = args;
+  for (const Node& eq : eqs)
+  {
+    ca[0] = eq;
+    Node cconc = d_pc->checkDebug(
+        ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
+    if (cconc.isNull())
+    {
+      return false;
+    }
+    Assert (cconc==eq);
+    // rewrite at pre
+    tcg.addRewriteStep(eq[0], eq[1], ProofRule::MACRO_SR_PRED_INTRO, cc, ca, true);
+  }
+  std::shared_ptr<ProofNode> pfn = tcg.getProofForRewriting(res[0]);
+  if (pfn==nullptr)
+  {
+    return false;
+  }
+  Node resp = pfn->getResult();
+  if (res==resp)
+  {
+    cdp->addProof(pfn);
+    return true;
+  }
+  return false;
+}
+
 bool ProofPostprocessCallback::addProofForReduceTransform(
                   const std::vector<Node>& children,
                   const std::vector<Node>& args,
@@ -1064,58 +1124,15 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
 {
   Node t1 = children[0];
   Node t2 = args[0];
-  size_t nchild = t1.getNumChildren();
-  if (nchild==0 || t2.getNumChildren()!=nchild)
-  {
-    return false;
-  }
-  Assert (t1.hasOperator() && t2.hasOperator());
-  if (t1.getOperator()!=t2.getOperator())
-  {
-    return false;
-  }
-  std::vector<Node> cc = children;
+  std::vector<Node> cc(children.begin()+1, children.end());
   std::vector<Node> ca = args;
-  std::vector<Node> congChildren;
-  for (size_t r=0; r<2; r++)
+  Node res = t1.eqNode(t2);
+  if (addProofForReduceIntro(res, cc, ca, cdp))
   {
-    for (size_t i=0; i<nchild; i++)
-    {
-      if (t1[i]==t2[i])
-      {
-        // reflexive, trivial
-        if (r==1)
-        {
-          Node eq = t1[i].eqNode(t2[i]);
-          cdp->addStep(eq, ProofRule::REFL, {}, {t1[i]});
-          congChildren.emplace_back(eq);
-        }
-        continue;
-      }
-      cc[0] = t1[i];
-      ca[0] = t2[i];
-      if (r==0)
-      {
-        // check if the argument rewrites
-        Node cconc = d_pc->checkDebug(
-            ProofRule::MACRO_SR_PRED_TRANSFORM, cc, ca, Node::null(), "");
-        if (cconc.isNull())
-        {
-          return false;
-        }
-      }
-      else
-      {
-        Node eq = t1[i].eqNode(t2[i]);
-        cdp->addStep(eq, ProofRule::MACRO_SR_PRED_TRANSFORM, cc, ca);
-        congChildren.emplace_back(eq);
-      }
-    }
+    cdp->addStep(args[0], ProofRule::EQ_RESOLVE, {t1, res}, {});
+    return true;
   }
-  std::vector<Node> congArgs;
-  ProofRule cr = expr::getCongRule(t1, congArgs);
-  cdp->addStep(t1.eqNode(t2), cr, congChildren, congArgs);
-  return true;
+  return false;
 }
 
 Node ProofPostprocessCallback::addProofForSubsStep(Node var,
