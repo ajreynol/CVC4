@@ -1070,7 +1070,7 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
     CDProof* cdp)
 {
   std::vector<Node> ca = args;
-  if (res.getKind()==Kind::AND)
+  if (res.getKind() == Kind::AND)
   {
     for (const Node& rc : res)
     {
@@ -1079,7 +1079,7 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
         continue;
       }
       ca[0] = rc;
-      if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, children, ca)!=rc)
+      if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, children, ca) != rc)
       {
         return false;
       }
@@ -1096,7 +1096,8 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
     // --------------------------------- AND_INTRO
     // (and G1 ... Gn)
 
-    Trace("pf-pp-reduce") << "* reduce SR_INTRO based on AND_INTRO" << std::endl;
+    Trace("pf-pp-reduce") << "* reduce SR_INTRO based on AND_INTRO"
+                          << std::endl;
     std::vector<Node> resc(res.begin(), res.end());
     cdp->addStep(res, ProofRule::AND_INTRO, resc, {});
     return true;
@@ -1131,7 +1132,7 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
     }
     ca[0] = eq;
     // otherwise try using the same pred intro template
-    if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, children, ca)!=eq)
+    if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, children, ca) != eq)
     {
       return false;
     }
@@ -1147,8 +1148,8 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
   Node resp = pfn->getResult();
   if (res == resp)
   {
-    Trace("pf-pp-reduce") << "* reduce SR_INTRO for " << res
-                          << " based on " << eqs << std::endl;
+    Trace("pf-pp-reduce") << "* reduce SR_INTRO for " << res << " based on "
+                          << eqs << std::endl;
     cdp->addProof(pfn, CDPOverwrite::ASSUME_ONLY, true);
     return true;
   }
@@ -1167,19 +1168,20 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
   std::vector<Node> ca = args;
   bool tried = false;
   // decompose based on AND_ELIM / AND_INTRO
-  if (t1.getKind() == Kind::AND && t2.getKind()==Kind::AND && t1.getNumChildren()==t2.getNumChildren())
+  if (t1.getKind() == Kind::AND && t2.getKind() == Kind::AND
+      && t1.getNumChildren() == t2.getNumChildren())
   {
     size_t nchild = t1.getNumChildren();
     bool andSuccess = true;
-    for (size_t i=0; i<nchild; i++)
+    for (size_t i = 0; i < nchild; i++)
     {
-      if (t1[i]==t2[i])
+      if (t1[i] == t2[i])
       {
         continue;
       }
       Node aeq = t1[i].eqNode(t2[i]);
       ca[0] = aeq;
-      if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, cc, ca) !=aeq )
+      if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, cc, ca) != aeq)
       {
         andSuccess = false;
         break;
@@ -1199,13 +1201,13 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
       // G                   H2
       // ----------------------------------- AND_INTRO
       // (and G H2)
-      NodeManager * nm =nodeManager();
+      NodeManager* nm = nodeManager();
       size_t nchanged = 0;
-      for (size_t i=0; i<nchild; i++)
+      for (size_t i = 0; i < nchild; i++)
       {
         Node ni = nm->mkConstInt(Rational(i));
         cdp->addStep(t1[i], ProofRule::AND_ELIM, {t1}, {ni});
-        if (t1[i]==t2[i])
+        if (t1[i] == t2[i])
         {
           continue;
         }
@@ -1215,7 +1217,8 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
         cdp->addStep(t2[i], ProofRule::EQ_RESOLVE, {t1[i], aeq}, {});
         nchanged++;
       }
-      Trace("pf-pp-reduce") << "* reduce SR_TRANS based on AND_ELIM/AND_INTRO (" << nchanged << "/" << nchild << ")" << std::endl;
+      Trace("pf-pp-reduce") << "* reduce SR_TRANS based on AND_ELIM/AND_INTRO ("
+                            << nchanged << "/" << nchild << ")" << std::endl;
       std::vector<Node> t2c(t2.begin(), t2.end());
       cdp->addStep(t2, ProofRule::AND_INTRO, t2c, {});
       return true;
@@ -1341,16 +1344,17 @@ bool ProofPostprocessCallback::addToTransChildren(Node eq,
   return true;
 }
 
-bool ProofPostprocessCallback::isPremiseModSym(const Node& n, const std::vector<Node>& premises)
+bool ProofPostprocessCallback::isPremiseModSym(
+    const Node& n, const std::vector<Node>& premises)
 {
-  if (std::find(premises.begin(), premises.end(), n)!=premises.end())
+  if (std::find(premises.begin(), premises.end(), n) != premises.end())
   {
     return true;
   }
-  if (n.getKind()==Kind::EQUAL)
+  if (n.getKind() == Kind::EQUAL)
   {
     Node nsym = n[1].eqNode(n[0]);
-    return std::find(premises.begin(), premises.end(), nsym)!=premises.end();
+    return std::find(premises.begin(), premises.end(), nsym) != premises.end();
   }
   return false;
 }
