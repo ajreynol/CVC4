@@ -212,7 +212,8 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
   bool addToTransChildren(Node eq,
                           std::vector<Node>& tchildren,
                           bool isSymm = false);
-
+  /** Is n in the premise list (modulo symmetry of equality?) */
+  static bool isPremiseModSym(const Node& n, const std::vector<Node>& premises);
 };
 
 /**
