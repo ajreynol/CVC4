@@ -1111,7 +1111,8 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
   Node resp = pfn->getResult();
   if (res==resp)
   {
-    cdp->addProof(pfn);
+    Trace("ajr-temp") << "Can reduce MACRO_SR_PRED_INTRO for " << res << " based on " << eqs << std::endl;
+    cdp->addProof(pfn, CDPOverwrite::ASSUME_ONLY, true);
     return true;
   }
   return false;
@@ -1129,6 +1130,7 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
   Node res = t1.eqNode(t2);
   if (addProofForReduceIntro(res, cc, ca, cdp))
   {
+    Trace("ajr-temp") << "EQ_RESOLVE " << t1 << " / " << res << std::endl;
     cdp->addStep(args[0], ProofRule::EQ_RESOLVE, {t1, res}, {});
     return true;
   }
