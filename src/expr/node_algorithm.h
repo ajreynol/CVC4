@@ -323,6 +323,15 @@ bool isBooleanConnective(TNode cur);
 bool isTheoryAtom(TNode cur);
 
 /**
+ * Get the theory atoms in formula f.
+ * @param f The formula.
+ * @param atoms The set to populate with the theory atoms of f.
+ * @param visited The set of terms we have already visited.
+ */
+void getTheoryAtoms(TNode f, std::unordered_set<Node>& atoms,
+  std::unordered_set<TNode>& visited);
+
+/**
  * Returns true iff the node n contains a subterm with abstract type.
  * @param n The node under investigation
  * @return true iff this node contains a subterm with abstract type

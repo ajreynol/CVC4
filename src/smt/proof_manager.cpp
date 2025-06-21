@@ -365,6 +365,9 @@ void PfManager::prepareFinalProof(std::shared_ptr<ProofNode> pfn)
     }
   } while (!visit.empty());
 
+
+  std::unordered_set<TNode> tlAtoms, tlVisited;
+  std::unordered_set<TNode> ilAtoms, ilVisited;
   std::vector<std::shared_ptr<ProofNode>> tlProofs;
   std::vector<std::shared_ptr<ProofNode>> inputProofs;
   std::map<std::shared_ptr<ProofNode>, std::vector<Node>> fassumps;
@@ -378,13 +381,31 @@ void PfManager::prepareFinalProof(std::shared_ptr<ProofNode> pfn)
     {
       Trace("pf-urw") << "--> theory lemma" << std::endl;
       tlProofs.push_back(p);
+      expr::getTheoryAtoms(p, tlAtoms, tlVisited);
     }
     else
     {
       Trace("pf-urw") << "--> input lemma via " << fas << std::endl;
       inputProofs.push_back(p);
+      expr::getTheoryAtoms(p, ilAtoms, ilVisited);
     }
   }
+  Trace("pf-urw") << "Atoms in theory lemmas: " << tlAtoms.size() << std::endl;
+  size_t ilCountTl = 0;
+  size_t ilCount = 0;
+  for (TNode ila : ilAtoms)
+  {
+    if (tlAtoms.find(ila)!=tlAtoms.end())
+    {
+      ilCountTl++;
+    }
+    else
+    {
+      ilCount++;
+    }
+  }
+  Trace("pf-urw") << "Atoms in input+theory lemmas: " << ilCountTl << std::endl;
+  Trace("pf-urw") << "Atoms in only input lemmas: " << ilCount << std::endl;
 }
 
 void PfManager::checkFinalProof(std::shared_ptr<ProofNode> pfn)

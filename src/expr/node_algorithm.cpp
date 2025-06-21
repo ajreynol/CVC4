@@ -926,6 +926,32 @@ bool isTheoryAtom(TNode n)
          && k != Kind::XOR && (k != Kind::EQUAL || !n[0].getType().isBoolean());
 }
 
+
+void getTheoryAtoms(TNode f, std::unordered_set<Node>& atoms,
+  std::unordered_set<TNode>& visited)
+{
+  std::unordered_set<TNode>::iterator it;
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(f);
+  do {
+    cur = visit.back();
+    visit.pop_back();
+    it = visited.find(cur);
+    if (it == visited.end()) {
+      visited.insert(cur);
+      if (isBooleanConnective(cur)
+      {
+        visit.insert(visit.end(), cur.begin(), cur.end());
+      }
+      else
+      {
+        atoms.insert(cur);
+      }
+    }
+  } while (!visit.empty());
+}
+
 struct HasAbstractSubtermTag
 {
 };
