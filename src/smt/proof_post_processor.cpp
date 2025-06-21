@@ -1133,8 +1133,29 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
 {
   Node t1 = children[0];
   Node t2 = args[0];
+  Assert (t1!=t2);
   std::vector<Node> cc(children.begin()+1, children.end());
   std::vector<Node> ca = args;
+  if (t1.getKind()==Kind::EQUAL && t2.getKind()==Kind::EQUAL)
+  {
+    // minor optimization: if transforming (= t s1) to (= t s2), then
+    // use TRANS instead of EQ_RESOLVE+CONG.
+    for (size_t i=0; i<2; i++)
+    {
+      if (t1[i]==t2[i])
+      {
+        Node oeq = i==0 ? t1[1].eqNode(t2[1]) : t2[0].eqNode(t1[0]);
+        if (addProofForReduceIntro(oeq, cc, ca, cdp))
+        {
+          std::vector<Node> transEq;
+          transEq.push_back(i==0 ? t1 : oeq);
+          transEq.push_back(i==0 ? oeq : t1);
+          cdp->addStep(t2, ProofRule::TRANS, transEq, {});
+          return true;
+        }
+      }
+    }
+  }
   Node res = t1.eqNode(t2);
   if (addProofForReduceIntro(res, cc, ca, cdp))
   {
