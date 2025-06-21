@@ -292,7 +292,7 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   }
   else if (id == ProofRule::MACRO_SR_PRED_INTRO)
   {
-    Assert (!res.isNull());
+    Assert(!res.isNull());
     if (addProofForReduceIntro(res, children, args, cdp))
     {
       return res;
@@ -1064,23 +1064,23 @@ Node ProofPostprocessCallback::addProofForTrans(
 }
 
 bool ProofPostprocessCallback::addProofForReduceIntro(
-                  const Node& res,
-                  const std::vector<Node>& children,
-                  const std::vector<Node>& args,
-                  CDProof* cdp)
+    const Node& res,
+    const std::vector<Node>& children,
+    const std::vector<Node>& args,
+    CDProof* cdp)
 {
-  if (res.getKind()!=Kind::EQUAL)
+  if (res.getKind() != Kind::EQUAL)
   {
     return false;
   }
-  if (res[0]==res[1])
+  if (res[0] == res[1])
   {
     cdp->addStep(res, ProofRule::REFL, {}, {res[0]});
     return true;
   }
   std::vector<Node> eqs;
   expr::getConversionConditions(res[0], res[1], eqs);
-  if (eqs.size()==1 && eqs[0]==res)
+  if (eqs.size() == 1 && eqs[0] == res)
   {
     // cannot be reduced
     return false;
@@ -1094,32 +1094,34 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
   {
     // may be an assumption
     Node eqsym = eq[1].eqNode(eq[0]);
-    if (std::find(cc.begin(), cc.end(), eq)!=cc.end() || std::find(cc.begin(), cc.end(), eqsym)!=cc.end())
+    if (std::find(cc.begin(), cc.end(), eq) != cc.end()
+        || std::find(cc.begin(), cc.end(), eqsym) != cc.end())
     {
       tcg.addRewriteStep(eq[0], eq[1], cdp, true);
       continue;
     }
     ca[0] = eq;
     // otherwise try using the same pred intro template
-    Node cconc = d_pc->checkDebug(
-        ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
+    Node cconc = d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
     if (cconc.isNull())
     {
       return false;
     }
-    Assert (cconc==eq);
+    Assert(cconc == eq);
     // rewrite at pre
-    tcg.addRewriteStep(eq[0], eq[1], ProofRule::MACRO_SR_PRED_INTRO, cc, ca, true);
+    tcg.addRewriteStep(
+        eq[0], eq[1], ProofRule::MACRO_SR_PRED_INTRO, cc, ca, true);
   }
   std::shared_ptr<ProofNode> pfn = tcg.getProofForRewriting(res[0]);
-  if (pfn==nullptr)
+  if (pfn == nullptr)
   {
     return false;
   }
   Node resp = pfn->getResult();
-  if (res==resp)
+  if (res == resp)
   {
-    Trace("pf-pp-reduce") << "Can reduce MACRO_SR_PRED_INTRO for " << res << " based on " << eqs << std::endl;
+    Trace("pf-pp-reduce") << "Can reduce MACRO_SR_PRED_INTRO for " << res
+                          << " based on " << eqs << std::endl;
     cdp->addProof(pfn, CDPOverwrite::ASSUME_ONLY, true);
     return true;
   }
@@ -1127,28 +1129,29 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
 }
 
 bool ProofPostprocessCallback::addProofForReduceTransform(
-                  const std::vector<Node>& children,
-                  const std::vector<Node>& args,
-                  CDProof* cdp)
+    const std::vector<Node>& children,
+    const std::vector<Node>& args,
+    CDProof* cdp)
 {
   Node t1 = children[0];
   Node t2 = args[0];
-  Assert (t1!=t2);
-  std::vector<Node> cc(children.begin()+1, children.end());
+  Assert(t1 != t2);
+  std::vector<Node> cc(children.begin() + 1, children.end());
   std::vector<Node> ca = args;
   bool tried = false;
-  if (t1.getKind()==Kind::EQUAL && t2.getKind()==Kind::EQUAL)
+  if (t1.getKind() == Kind::EQUAL && t2.getKind() == Kind::EQUAL)
   {
     // minor optimization: if transforming (= t s1) to (= t s2), then
     // use TRANS instead of EQ_RESOLVE+CONG.
-    for (size_t i=0; i<2; i++)
+    for (size_t i = 0; i < 2; i++)
     {
-      if (t1[i]==t2[i])
+      if (t1[i] == t2[i])
       {
-        Node oeq = i==0 ? t1[1].eqNode(t2[1]) : t2[0].eqNode(t1[0]);
+        Node oeq = i == 0 ? t1[1].eqNode(t2[1]) : t2[0].eqNode(t1[0]);
         Node oeqSym = oeq[1].eqNode(oeq[0]);
         bool success = false;
-        if (std::find(cc.begin(), cc.end(), oeq)!=cc.end() || std::find(cc.begin(), cc.end(), oeqSym)!=cc.end())
+        if (std::find(cc.begin(), cc.end(), oeq) != cc.end()
+            || std::find(cc.begin(), cc.end(), oeqSym) != cc.end())
         {
           success = true;
         }
@@ -1156,9 +1159,8 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
         {
           Node prev = ca[0];
           ca[0] = oeq;
-          Node cconc = d_pc->checkDebug(
-              ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
-          if (cconc==oeq)
+          Node cconc = d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
+          if (cconc == oeq)
           {
             cdp->addStep(oeq, ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
             success = true;
@@ -1182,9 +1184,10 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
           // ------------------ TRANS
           // (= t s2)
           std::vector<Node> transEq;
-          transEq.push_back(i==0 ? t1 : oeq);
-          transEq.push_back(i==0 ? oeq : t1);
-          Trace("pf-pp-reduce") << "* reduce SR_TRANS to SR_INTRO " << std::endl;
+          transEq.push_back(i == 0 ? t1 : oeq);
+          transEq.push_back(i == 0 ? oeq : t1);
+          Trace("pf-pp-reduce")
+              << "* reduce SR_TRANS to SR_INTRO " << std::endl;
           Trace("pf-pp-reduce") << "...via TRANS " << transEq << std::endl;
           cdp->addStep(t2, ProofRule::TRANS, transEq, {});
           return true;
@@ -1209,7 +1212,8 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
     // where the proof of SR_INTRO{G} is directly optimized
     // based on addProofForReduceIntro above.
     Trace("pf-pp-reduce") << "* reduce SR_TRANS to SR_INTRO " << std::endl;
-    Trace("pf-pp-reduce") << "...via EQ_RESOLVE " << t1 << " / " << res << std::endl;
+    Trace("pf-pp-reduce") << "...via EQ_RESOLVE " << t1 << " / " << res
+                          << std::endl;
     AlwaysAssert(!tried);
     cdp->addStep(args[0], ProofRule::EQ_RESOLVE, {t1, res}, {});
     return true;
