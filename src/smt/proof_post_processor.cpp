@@ -1063,6 +1063,18 @@ Node ProofPostprocessCallback::addProofForTrans(
   return Node::null();
 }
 
+bool ProofPostprocessCallback::addProofForReduceEqSimple(
+  const Node& a, const Node& b,
+    CDProof* cdp)
+{
+  if (a == b)
+  {
+    cdp->addStep(a.eqNode(b), ProofRule::REFL, {}, {a});
+    return true;
+  }
+  return false;
+}
+
 bool ProofPostprocessCallback::addProofForReduceIntro(
     const Node& res,
     const std::vector<Node>& children,
