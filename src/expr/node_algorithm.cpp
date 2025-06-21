@@ -940,7 +940,7 @@ void getTheoryAtoms(TNode f, std::unordered_set<Node>& atoms,
     it = visited.find(cur);
     if (it == visited.end()) {
       visited.insert(cur);
-      if (isBooleanConnective(cur)
+      if (isBooleanConnective(cur))
       {
         visit.insert(visit.end(), cur.begin(), cur.end());
       }
