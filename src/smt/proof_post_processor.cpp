@@ -1256,7 +1256,7 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
         }
         if (success)
         {
-          // This transforms
+          // This transforms, for example:
           // (= t s1) F1 ... Fn
           // ------------------ SR_TRANSFORM{(= t s2)}
           // (= t s2)
