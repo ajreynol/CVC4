@@ -167,9 +167,29 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
    * @return The conclusion of the TRANS step.
    */
   Node addProofForTrans(const std::vector<Node>& tchildren, CDProof* cdp);
+  /**
+   * Try to reduce the proof of a MACRO_SR_PRED_TRANSFORM step to an
+   * optimized version. This primarily relies on the addProofForReduceIntro
+   * below.
+   *
+   * @param children The children of the application
+   * @param args The arguments of the application
+   * @param cdp The proof to add to
+   * @return true if we added a proof of the conclusion to cdp.
+   */
   bool addProofForReduceTransform(const std::vector<Node>& children,
                                   const std::vector<Node>& args,
                                   CDProof* cdp);
+  /**
+   * Try to reduce the proof of a MACRO_SR_PRED_INTRO step to an
+   * optimized version which e.g. localizes what must be rewritten and
+   * uses a term conversion proof to tie the rest together.
+   *
+   * @param children The children of the application
+   * @param args The arguments of the application
+   * @param cdp The proof to add to
+   * @return true if we added a proof of the conclusion to cdp.
+   */
   bool addProofForReduceIntro(const Node& res,
                               const std::vector<Node>& children,
                               const std::vector<Node>& args,
