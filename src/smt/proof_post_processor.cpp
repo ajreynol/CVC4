@@ -1119,7 +1119,7 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
   Node resp = pfn->getResult();
   if (res==resp)
   {
-    Trace("ajr-temp") << "Can reduce MACRO_SR_PRED_INTRO for " << res << " based on " << eqs << std::endl;
+    Trace("pf-pp-reduce") << "Can reduce MACRO_SR_PRED_INTRO for " << res << " based on " << eqs << std::endl;
     cdp->addProof(pfn, CDPOverwrite::ASSUME_ONLY, true);
     return true;
   }
@@ -1136,6 +1136,7 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
   Assert (t1!=t2);
   std::vector<Node> cc(children.begin()+1, children.end());
   std::vector<Node> ca = args;
+  bool tried = false;
   if (t1.getKind()==Kind::EQUAL && t2.getKind()==Kind::EQUAL)
   {
     // minor optimization: if transforming (= t s1) to (= t s2), then
@@ -1145,24 +1146,75 @@ bool ProofPostprocessCallback::addProofForReduceTransform(
       if (t1[i]==t2[i])
       {
         Node oeq = i==0 ? t1[1].eqNode(t2[1]) : t2[0].eqNode(t1[0]);
-        if (addProofForReduceIntro(oeq, cc, ca, cdp))
+        Node oeqSym = oeq[1].eqNode(oeq[0]);
+        bool success = false;
+        if (std::find(cc.begin(), cc.end(), oeq)!=cc.end() || std::find(cc.begin(), cc.end(), oeqSym)!=cc.end())
         {
+          success = true;
+        }
+        else
+        {
+          Node prev = ca[0];
+          ca[0] = oeq;
+          Node cconc = d_pc->checkDebug(
+              ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
+          if (cconc==oeq)
+          {
+            cdp->addStep(oeq, ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
+            success = true;
+          }
+          else
+          {
+            // probably should never happen
+            ca[0] = prev;
+          }
+        }
+        if (success)
+        {
+          // This transforms
+          // (= t s1) F1 ... Fn
+          // ------------------ SR_TRANSFORM{(= t s2)}
+          // (= t s2)
+          // to
+          //          F1 ... Fn
+          //          --------- SR_INTRO{(= s1 s2)}
+          // (= t s1) (= s1 s2)
+          // ------------------ TRANS
+          // (= t s2)
           std::vector<Node> transEq;
           transEq.push_back(i==0 ? t1 : oeq);
           transEq.push_back(i==0 ? oeq : t1);
+          Trace("pf-pp-reduce") << "* reduce SR_TRANS to SR_INTRO " << std::endl;
+          Trace("pf-pp-reduce") << "...via TRANS " << transEq << std::endl;
           cdp->addStep(t2, ProofRule::TRANS, transEq, {});
           return true;
         }
+        tried = true;
       }
     }
   }
   Node res = t1.eqNode(t2);
   if (addProofForReduceIntro(res, cc, ca, cdp))
   {
-    Trace("ajr-temp") << "EQ_RESOLVE " << t1 << " / " << res << std::endl;
+    // This transforms
+    // F F1 ... Fn
+    // ----------- SR_TRANSFORM{G}
+    // G
+    // into
+    //    F1 ... Fn
+    //    --------- SR_INTRO{G}
+    // F  (= F G)
+    // ---------- EQ_RESOLVE
+    // G
+    // where the proof of SR_INTRO{G} is directly optimized
+    // based on addProofForReduceIntro above.
+    Trace("pf-pp-reduce") << "* reduce SR_TRANS to SR_INTRO " << std::endl;
+    Trace("pf-pp-reduce") << "...via EQ_RESOLVE " << t1 << " / " << res << std::endl;
+    AlwaysAssert(!tried);
     cdp->addStep(args[0], ProofRule::EQ_RESOLVE, {t1, res}, {});
     return true;
   }
+  // otherwise, no optimization is possible.
   return false;
 }
 
