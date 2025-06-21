@@ -203,9 +203,7 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
    * @param cdp The proof to add to
    * @return true if we added a proof of (= a b) to cdp.
    */
-  bool addProofForReduceEqSimple(
-    const Node& a, const Node& b,
-      CDProof* cdp);
+  bool addProofForReduceEqSimple(const Node& a, const Node& b, CDProof* cdp);
   /**
    * Add proof for substitution step. Some substitutions are derived based
    * on viewing a formula as a Boolean assignment (see MethodId::SB_LITERAL for

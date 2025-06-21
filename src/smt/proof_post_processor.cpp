@@ -1063,9 +1063,9 @@ Node ProofPostprocessCallback::addProofForTrans(
   return Node::null();
 }
 
-bool ProofPostprocessCallback::addProofForReduceEqSimple(
-  const Node& a, const Node& b,
-    CDProof* cdp)
+bool ProofPostprocessCallback::addProofForReduceEqSimple(const Node& a,
+                                                         const Node& b,
+                                                         CDProof* cdp)
 {
   if (a == b)
   {
