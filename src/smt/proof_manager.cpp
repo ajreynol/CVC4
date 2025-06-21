@@ -387,10 +387,13 @@ void PfManager::prepareFinalProof(std::shared_ptr<ProofNode> pfn)
     {
       Trace("pf-urw") << "--> input lemma via " << fas << std::endl;
       inputProofs.push_back(p);
+      expr::getTheoryAtoms(p->getResult(), ilAtoms, ilVisited);
+      /*
       for (const Node& a : fas)
       {
         expr::getTheoryAtoms(a, ilAtoms, ilVisited);
       }
+      */
     }
   }
   Trace("pf-urw") << "Atoms in theory lemmas: " << tlAtoms.size() << std::endl;
@@ -401,16 +404,40 @@ void PfManager::prepareFinalProof(std::shared_ptr<ProofNode> pfn)
     if (tlAtoms.find(ila)!=tlAtoms.end())
     {
       ilCountTl++;
-      Trace("pf-urw") << "- input+t atom " << ila << std::endl;
+      Trace("pf-urw-debug") << "- input+t atom " << ila << std::endl;
     }
     else
     {
       ilCount++;
-      Trace("pf-urw") << "- pure input atom " << ila << std::endl;
+      Trace("pf-urw-debug") << "- pure input atom " << ila << std::endl;
     }
   }
   Trace("pf-urw") << "Atoms in input+theory lemmas: " << ilCountTl << std::endl;
   Trace("pf-urw") << "Atoms in only input lemmas: " << ilCount << std::endl;
+  for (std::shared_ptr<ProofNode>& p : inputProofs)
+  {
+
+    Trace("pf-urw-debug") << "* work on " << p->getResult() << std::endl;
+    std::vector<Node>& fas = fassumps[p];
+    Assert (!fas.empty());
+    ilAtoms.clear();
+    ilVisited.clear();
+    expr::getTheoryAtoms(p->getResult(), ilAtoms, ilVisited);
+    std::unordered_set<Node> toUrw;
+    for (TNode a : ilAtoms)
+    {
+      if (tlAtoms.find(a)==tlAtoms.end())
+      {
+        toUrw.insert(a);
+      }
+    }
+    Trace("pf-urw") << "  " << toUrw.size() << " / " << ilAtoms.size() << " assumptions are unrewritable" << std::endl;
+    if (toUrw.empty())
+    {
+      continue;
+    }
+    Trace("pf-urw") << "  proof is " << *p.get() << std::endl;
+  }
 }
 
 void PfManager::checkFinalProof(std::shared_ptr<ProofNode> pfn)
