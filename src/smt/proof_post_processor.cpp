@@ -15,6 +15,7 @@
 
 #include "smt/proof_post_processor.h"
 
+#include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
 #include "options/base_options.h"
 #include "options/proof_options.h"
@@ -23,6 +24,7 @@
 #include "proof/proof_node_manager.h"
 #include "proof/resolution_proofs_util.h"
 #include "proof/subtype_elim_proof_converter.h"
+#include "theory/arith/arith_poly_norm.h"
 #include "theory/arith/arith_proof_utilities.h"
 #include "theory/arith/arith_utilities.h"
 #include "theory/builtin/proof_checker.h"
@@ -207,6 +209,15 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   // macro elimination
   if (id == ProofRule::MACRO_SR_EQ_INTRO)
   {
+    // seems to make things worse
+    /*
+    std::vector<Node> ca = args;
+    ca[0] = res;
+    if (addProofForReduceIntro(res, children, args, cdp))
+    {
+      return res;
+    }
+    */
     // (TRANS
     //   (SUBS <children> :args args[0:1])
     //   (REWRITE :args <t.substitute(x1,t1). ... .substitute(xn,tn)> args[2]))
@@ -291,6 +302,11 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   }
   else if (id == ProofRule::MACRO_SR_PRED_INTRO)
   {
+    Assert(!res.isNull());
+    if (addProofForReduceIntro(res, children, args, cdp))
+    {
+      return res;
+    }
     std::vector<Node> tchildren;
     std::vector<Node> sargs = args;
     MethodId idr = MethodId::RW_REWRITE;
@@ -397,11 +413,15 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
     std::vector<Node> tchildren;
     std::vector<Node> schildren(children.begin() + 1, children.end());
     std::vector<Node> sargs = args;
-    // first, compute if we need
     MethodId idr = MethodId::RW_REWRITE;
     if (args.size() >= 4)
     {
       getMethodId(args[3], idr);
+    }
+    // try to reduce the current goal by congruence if possible
+    if (addProofForReduceTransform(children, args, cdp))
+    {
+      return args[0];
     }
     WitnessReq reqw =
         d_wfpm.requiresWitnessFormTransform(children[0], args[0], idr);
@@ -1060,6 +1080,311 @@ Node ProofPostprocessCallback::addProofForTrans(
   return Node::null();
 }
 
+bool ProofPostprocessCallback::addProofForReduceEqSimple(const Node& a,
+                                                         const Node& b,
+                                                         CDProof* cdp)
+{
+  if (a == b)
+  {
+    cdp->addStep(a.eqNode(b), ProofRule::REFL, {}, {a});
+    return true;
+  }
+  return false;
+}
+bool ProofPostprocessCallback::addProofForReduceEq(const Node& a,
+                                                         const Node& b,
+                                                         CDProof* cdp)
+{
+  TypeNode tn = a.getType();
+  if (a.getType().isBoolean())
+  {
+    Rational rx, ry;
+    if (!theory::arith::PolyNorm::isArithPolyNormRel(
+            a, b, rx, ry))
+    {
+      return false;
+    }
+    Node premise = theory::arith::PolyNorm::getArithPolyNormRelPremise(
+        a, b, rx, ry);
+    bool isBv = a[0].getType().isBitVector();
+    ProofRule rule = isBv ? ProofRule::BV_POLY_NORM : ProofRule::ARITH_POLY_NORM;
+    cdp->addStep(premise, rule, {}, {premise});
+    ProofRule rrule =
+        isBv ? ProofRule::BV_POLY_NORM_EQ : ProofRule::ARITH_POLY_NORM_REL;
+    Node eq = a.eqNode(b);
+    cdp->addStep(eq, rrule, {premise}, {eq});
+    return true;
+  }
+  else
+  {
+    if (!theory::arith::PolyNorm::isArithPolyNorm(a, b))
+    {
+      return false;
+    }
+    Node eq = a.eqNode(b);
+    bool isBitVec = (tn.isBitVector());
+    ProofRule pr =
+        isBitVec ? ProofRule::BV_POLY_NORM : ProofRule::ARITH_POLY_NORM;
+    cdp->addStep(eq, pr, {}, {eq});
+    return true;
+  }
+  return false;
+}
+
+bool ProofPostprocessCallback::addProofForReduceIntro(
+    const Node& res,
+    const std::vector<Node>& children,
+    const std::vector<Node>& args,
+    CDProof* cdp)
+{
+  std::vector<Node> ca = args;
+  if (res.getKind() == Kind::AND)
+  {
+    for (const Node& rc : res)
+    {
+      if (isPremiseModSym(rc, children))
+      {
+        continue;
+      }
+      ca[0] = rc;
+      if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, children, ca) != rc)
+      {
+        return false;
+      }
+      cdp->addStep(rc, ProofRule::MACRO_SR_PRED_INTRO, children, ca);
+    }
+    // Reduces
+    // F1 ... Fn
+    // --------------- SR_INTRO{(and G1 ... Gn)}
+    // (and G1 ... Gn)
+    // to
+    // F1 ... Fn               F1 ... Fn
+    // --------- SR_INTRO{G1}  --------- SR_INTRO{Gn}
+    // G1           ....       Gn
+    // --------------------------------- AND_INTRO
+    // (and G1 ... Gn)
+
+    Trace("pf-pp-reduce") << "* reduce SR_INTRO based on AND_INTRO"
+                          << std::endl;
+    std::vector<Node> resc(res.begin(), res.end());
+    cdp->addStep(res, ProofRule::AND_INTRO, resc, {});
+    return true;
+  }
+  if (res.getKind() != Kind::EQUAL)
+  {
+    return false;
+  }
+  // try trivial
+  if (addProofForReduceEqSimple(res[0], res[1], cdp))
+  {
+    return true;
+  }
+  std::vector<Node> eqs;
+  expr::getConversionConditions(res[0], res[1], eqs);
+  // if non-trivial to decompose
+  if (eqs.size() > 1 || eqs[0] != res)
+  {
+    // break into smaller steps, if these can each be proven,
+    // then we add the term conversion proof + the (localized)
+    // MACRO_SR_PRED_INTRO steps.
+    TConvProofGenerator tcg(d_env, nullptr, TConvPolicy::ONCE);
+    bool convertSuccess = true;
+    for (const Node& eq : eqs)
+    {
+      // may be an assumption
+      if (isPremiseModSym(eq, children))
+      {
+        tcg.addRewriteStep(eq[0], eq[1], cdp, true);
+        continue;
+      }
+      ca[0] = eq;
+      // otherwise try using the same pred intro template
+      if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, children, ca) != eq)
+      {
+        convertSuccess = false;
+        break;
+      }
+      // rewrite at pre
+      tcg.addRewriteStep(
+          eq[0], eq[1], ProofRule::MACRO_SR_PRED_INTRO, children, ca, true);
+    }
+    if (convertSuccess)
+    {
+      std::shared_ptr<ProofNode> pfn = tcg.getProofForRewriting(res[0]);
+      if (pfn != nullptr)
+      {
+        Node resp = pfn->getResult();
+        if (res == resp)
+        {
+          Trace("pf-pp-reduce") << "* reduce SR_INTRO for " << res << " based on "
+                                << eqs << std::endl;
+          cdp->addProof(pfn, CDPOverwrite::ASSUME_ONLY, true);
+          return true;
+        }
+      }
+    }
+  }
+  // otherwise, try e.g. arith poly norm
+  // questionable if this is a good idea
+  /*
+  if (addProofForReduceEq(res[0], res[1], cdp))
+  {
+    return true;
+  }
+  */
+  return false;
+}
+
+bool ProofPostprocessCallback::addProofForReduceTransform(
+    const std::vector<Node>& children,
+    const std::vector<Node>& args,
+    CDProof* cdp)
+{
+  Node t1 = children[0];
+  Node t2 = args[0];
+  Assert(t1 != t2);
+  std::vector<Node> cc(children.begin() + 1, children.end());
+  std::vector<Node> ca = args;
+  bool tried = false;
+  // decompose based on AND_ELIM / AND_INTRO
+  if (t1.getKind() == Kind::AND && t2.getKind() == Kind::AND
+      && t1.getNumChildren() == t2.getNumChildren())
+  {
+    size_t nchild = t1.getNumChildren();
+    bool andSuccess = true;
+    for (size_t i = 0; i < nchild; i++)
+    {
+      if (t1[i] == t2[i])
+      {
+        continue;
+      }
+      Node aeq = t1[i].eqNode(t2[i]);
+      ca[0] = aeq;
+      if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, cc, ca) != aeq)
+      {
+        andSuccess = false;
+        break;
+      }
+    }
+    if (andSuccess)
+    {
+      // for example transforms:
+      // (and G H1) F1 ... Fn
+      // -------------------- SR_INTRO{(and G H2)}
+      // (and G H2)
+      // to
+      //                     (and G H1)           F1 ... Fn
+      //                     ---------- AND_ELIM  --------- SR_INTRO{(= H1 H2)
+      // (and G H1)          H1                  (= H1 H2)
+      // --------- AND_ELIM  -----------------------------
+      // G                   H2
+      // ----------------------------------- AND_INTRO
+      // (and G H2)
+      NodeManager* nm = nodeManager();
+      size_t nchanged = 0;
+      for (size_t i = 0; i < nchild; i++)
+      {
+        Node ni = nm->mkConstInt(Rational(i));
+        cdp->addStep(t1[i], ProofRule::AND_ELIM, {t1}, {ni});
+        if (t1[i] == t2[i])
+        {
+          continue;
+        }
+        Node aeq = t1[i].eqNode(t2[i]);
+        ca[0] = aeq;
+        cdp->addStep(aeq, ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
+        cdp->addStep(t2[i], ProofRule::EQ_RESOLVE, {t1[i], aeq}, {});
+        nchanged++;
+      }
+      Trace("pf-pp-reduce") << "* reduce SR_TRANS based on AND_ELIM/AND_INTRO ("
+                            << nchanged << "/" << nchild << ")" << std::endl;
+      std::vector<Node> t2c(t2.begin(), t2.end());
+      cdp->addStep(t2, ProofRule::AND_INTRO, t2c, {});
+      return true;
+    }
+    ca[0] = t1;
+  }
+  if (t1.getKind() == Kind::EQUAL && t2.getKind() == Kind::EQUAL)
+  {
+    // minor optimization: if transforming (= t s1) to (= t s2), then
+    // use TRANS instead of EQ_RESOLVE+CONG.
+    for (size_t i = 0; i < 2; i++)
+    {
+      if (t1[i] == t2[i])
+      {
+        Node oeq = i == 0 ? t1[1].eqNode(t2[1]) : t2[0].eqNode(t1[0]);
+        bool success = false;
+        if (isPremiseModSym(oeq, cc))
+        {
+          success = true;
+        }
+        else
+        {
+          Node prev = ca[0];
+          ca[0] = oeq;
+          if (d_pc->checkDebug(ProofRule::MACRO_SR_PRED_INTRO, cc, ca) == oeq)
+          {
+            cdp->addStep(oeq, ProofRule::MACRO_SR_PRED_INTRO, cc, ca);
+            success = true;
+          }
+          else
+          {
+            // probably should never happen
+            ca[0] = t2;
+          }
+        }
+        if (success)
+        {
+          // This transforms, for example:
+          // (= t s1) F1 ... Fn
+          // ------------------ SR_TRANSFORM{(= t s2)}
+          // (= t s2)
+          // to
+          //          F1 ... Fn
+          //          --------- SR_INTRO{(= s1 s2)}
+          // (= t s1) (= s1 s2)
+          // ------------------ TRANS
+          // (= t s2)
+          std::vector<Node> transEq;
+          transEq.push_back(i == 0 ? t1 : oeq);
+          transEq.push_back(i == 0 ? oeq : t1);
+          Trace("pf-pp-reduce")
+              << "* reduce SR_TRANS to SR_INTRO " << std::endl;
+          Trace("pf-pp-reduce") << "...via TRANS " << transEq << std::endl;
+          cdp->addStep(t2, ProofRule::TRANS, transEq, {});
+          return true;
+        }
+        tried = true;
+      }
+    }
+  }
+  Node res = t1.eqNode(t2);
+  ca[0] = res;
+  if (addProofForReduceIntro(res, cc, ca, cdp))
+  {
+    // This transforms
+    // F F1 ... Fn
+    // ----------- SR_TRANSFORM{G}
+    // G
+    // into
+    //    F1 ... Fn
+    //    --------- SR_INTRO{G}
+    // F  (= F G)
+    // ---------- EQ_RESOLVE
+    // G
+    // where the proof of SR_INTRO{G} is directly optimized
+    // based on addProofForReduceIntro above.
+    Trace("pf-pp-reduce") << "* reduce SR_TRANS to SR_INTRO " << std::endl;
+    Trace("pf-pp-reduce") << "...via EQ_RESOLVE " << t1 << " / " << res
+                          << std::endl;
+    AlwaysAssert(!tried);
+    cdp->addStep(args[0], ProofRule::EQ_RESOLVE, {t1, res}, {});
+    return true;
+  }
+  // otherwise, no optimization is possible.
+  return false;
+}
+
 Node ProofPostprocessCallback::addProofForSubsStep(Node var,
                                                    Node subs,
                                                    Node assump,
@@ -1096,6 +1421,21 @@ bool ProofPostprocessCallback::addToTransChildren(Node eq,
              && tchildren[tchildren.size() - 1][1] == equ[0]));
   tchildren.push_back(equ);
   return true;
+}
+
+bool ProofPostprocessCallback::isPremiseModSym(
+    const Node& n, const std::vector<Node>& premises)
+{
+  if (std::find(premises.begin(), premises.end(), n) != premises.end())
+  {
+    return true;
+  }
+  if (n.getKind() == Kind::EQUAL)
+  {
+    Node nsym = n[1].eqNode(n[0]);
+    return std::find(premises.begin(), premises.end(), nsym) != premises.end();
+  }
+  return false;
 }
 
 ProofPostprocess::ProofPostprocess(Env& env,

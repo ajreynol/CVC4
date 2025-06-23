@@ -168,6 +168,52 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
    */
   Node addProofForTrans(const std::vector<Node>& tchildren, CDProof* cdp);
   /**
+   * Try to reduce the proof of a MACRO_SR_PRED_TRANSFORM step to an
+   * optimized version. This primarily relies on the addProofForReduceIntro
+   * below.
+   *
+   * @param children The children of the application
+   * @param args The arguments of the application
+   * @param cdp The proof to add to
+   * @return true if we added a proof of the conclusion to cdp.
+   */
+  bool addProofForReduceTransform(const std::vector<Node>& children,
+                                  const std::vector<Node>& args,
+                                  CDProof* cdp);
+  /**
+   * Try to reduce the proof of a MACRO_SR_PRED_INTRO step to an
+   * optimized version which e.g. localizes what must be rewritten and
+   * uses a term conversion proof to tie the rest together.
+   *
+   * @param children The children of the application
+   * @param args The arguments of the application
+   * @param cdp The proof to add to
+   * @return true if we added a proof of the conclusion to cdp.
+   */
+  bool addProofForReduceIntro(const Node& res,
+                              const std::vector<Node>& children,
+                              const std::vector<Node>& args,
+                              CDProof* cdp);
+  /**
+   * Called when we require a proof of (= a b). This checks for simple
+   * ways to prove (= a b) without resorting to more advanced techniques.
+   *
+   * @param a The first term
+   * @param b The second term
+   * @param cdp The proof to add to
+   * @return true if we added a proof of (= a b) to cdp.
+   */
+  bool addProofForReduceEqSimple(const Node& a, const Node& b, CDProof* cdp);
+  /**
+   * Called when we require a proof of (= a b).
+   *
+   * @param a The first term
+   * @param b The second term
+   * @param cdp The proof to add to
+   * @return true if we added a proof of (= a b) to cdp.
+   */
+  bool addProofForReduceEq(const Node& a, const Node& b, CDProof* cdp);
+  /**
    * Add proof for substitution step. Some substitutions are derived based
    * on viewing a formula as a Boolean assignment (see MethodId::SB_LITERAL for
    * example). This method ensures that the proof of var == subs exists
@@ -185,7 +231,8 @@ class ProofPostprocessCallback : public ProofNodeUpdaterCallback, protected EnvO
   bool addToTransChildren(Node eq,
                           std::vector<Node>& tchildren,
                           bool isSymm = false);
-
+  /** Is n in the premise list (modulo symmetry of equality?) */
+  static bool isPremiseModSym(const Node& n, const std::vector<Node>& premises);
 };
 
 /**
