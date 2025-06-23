@@ -209,15 +209,6 @@ Node ProofPostprocessCallback::expandMacros(ProofRule id,
   // macro elimination
   if (id == ProofRule::MACRO_SR_EQ_INTRO)
   {
-    // seems to make things worse
-    /*
-    std::vector<Node> ca = args;
-    ca[0] = res;
-    if (addProofForReduceIntro(res, children, args, cdp))
-    {
-      return res;
-    }
-    */
     // (TRANS
     //   (SUBS <children> :args args[0:1])
     //   (REWRITE :args <t.substitute(x1,t1). ... .substitute(xn,tn)> args[2]))
@@ -1084,45 +1075,6 @@ bool ProofPostprocessCallback::addProofForReduceEqSimple(const Node& a,
   }
   return false;
 }
-bool ProofPostprocessCallback::addProofForReduceEq(const Node& a,
-                                                         const Node& b,
-                                                         CDProof* cdp)
-{
-  TypeNode tn = a.getType();
-  if (a.getType().isBoolean())
-  {
-    Rational rx, ry;
-    if (!theory::arith::PolyNorm::isArithPolyNormRel(
-            a, b, rx, ry))
-    {
-      return false;
-    }
-    Node premise = theory::arith::PolyNorm::getArithPolyNormRelPremise(
-        a, b, rx, ry);
-    bool isBv = a[0].getType().isBitVector();
-    ProofRule rule = isBv ? ProofRule::BV_POLY_NORM : ProofRule::ARITH_POLY_NORM;
-    cdp->addStep(premise, rule, {}, {premise});
-    ProofRule rrule =
-        isBv ? ProofRule::BV_POLY_NORM_EQ : ProofRule::ARITH_POLY_NORM_REL;
-    Node eq = a.eqNode(b);
-    cdp->addStep(eq, rrule, {premise}, {eq});
-    return true;
-  }
-  else
-  {
-    if (!theory::arith::PolyNorm::isArithPolyNorm(a, b))
-    {
-      return false;
-    }
-    Node eq = a.eqNode(b);
-    bool isBitVec = (tn.isBitVector());
-    ProofRule pr =
-        isBitVec ? ProofRule::BV_POLY_NORM : ProofRule::ARITH_POLY_NORM;
-    cdp->addStep(eq, pr, {}, {eq});
-    return true;
-  }
-  return false;
-}
 
 bool ProofPostprocessCallback::addProofForReduceIntro(
     const Node& res,
@@ -1217,14 +1169,6 @@ bool ProofPostprocessCallback::addProofForReduceIntro(
       }
     }
   }
-  // otherwise, try e.g. arith poly norm
-  // questionable if this is a good idea
-  /*
-  if (addProofForReduceEq(res[0], res[1], cdp))
-  {
-    return true;
-  }
-  */
   return false;
 }
 
