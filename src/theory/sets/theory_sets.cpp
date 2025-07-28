@@ -82,6 +82,7 @@ void TheorySets::finishInit()
   d_equalityEngine->addFunctionKind(Kind::SET_MINUS);
   d_equalityEngine->addFunctionKind(Kind::SET_MEMBER);
   d_equalityEngine->addFunctionKind(Kind::SET_SUBSET);
+  d_equalityEngine->addFunctionKind(Kind::SET_CHOOSE);
   // relation operators
   d_equalityEngine->addFunctionKind(Kind::RELATION_PRODUCT);
   d_equalityEngine->addFunctionKind(Kind::RELATION_JOIN);
@@ -190,7 +191,7 @@ TrustNode TheorySets::ppRewrite(TNode n, std::vector<SkolemLemma>& lems)
     Node ret = SetReduction::reduceProjectOperator(n);
     return TrustNode::mkTrustRewrite(n, ret, nullptr);
   }
-  return d_internal->ppRewrite(n, lems);
+  return TrustNode::null();
 }
 
 bool TheorySets::ppAssert(TrustNode tin, TrustSubstitutionMap& outSubstitutions)

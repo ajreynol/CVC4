@@ -550,6 +550,8 @@ enum class InferenceId
   SETS_UP_CLOSURE,
   SETS_UP_CLOSURE_2,
   SETS_UP_UNIV,
+  // reduction of set.choose
+  SETS_CHOOSE_REDUCE,
   //-------------------- sets cardinality solver
   // split on emptyset
   SETS_CARD_SPLIT_EMPTY,

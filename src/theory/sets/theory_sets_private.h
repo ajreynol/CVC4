@@ -378,12 +378,6 @@ class TheorySetsPrivate : protected EnvObj
   eq::EqualityEngine* d_equalityEngine;
 
   bool isCareArg( Node n, unsigned a );
-
-  /** expand the definition of the choose operator */
-  TrustNode expandChooseOperator(const Node& node,
-                                 std::vector<SkolemLemma>& lems);
-  /** expand the definition of is_singleton operator */
-  TrustNode expandIsSingletonOperator(const Node& node);
   /** ensure that the set type is over first class type, throw logic exception
    * if not */
   void ensureFirstClassSetType(TypeNode tn) const;

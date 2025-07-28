@@ -1695,69 +1695,21 @@ void TheorySetsPrivate::preRegisterTerm(TNode node)
       }
     }
     break;
+    case Kind::SET_CHOOSE:
+    {
+      NodeManager* nm = nodeManager();
+      Node A = node[0];
+      TypeNode setType = A.getType();
+      Node emptySet = nm->mkConst(EmptySet(setType));
+      Node isEmpty = A.eqNode(emptySet);
+      Node member = nm->mkNode(Kind::SET_MEMBER, node, A);
+      Node lem =  nm->mkNode(Kind::OR, isEmpty, member);
+      TrustNode tlem = TrustNode::mkTrustLemma(lem, nullptr);
+      d_im.lemma(tlem, InferenceId::SETS_CHOOSE_REDUCE);
+    }
+    break;
     default: d_equalityEngine->addTerm(node); break;
   }
-}
-
-TrustNode TheorySetsPrivate::ppRewrite(Node node,
-                                       std::vector<SkolemLemma>& lems)
-{
-  Trace("sets-proc") << "ppRewrite : " << node << std::endl;
-
-  switch (node.getKind())
-  {
-    case Kind::SET_CHOOSE: return expandChooseOperator(node, lems);
-    case Kind::SET_IS_SINGLETON: return expandIsSingletonOperator(node);
-    default: break;
-  }
-  return TrustNode::null();
-}
-
-TrustNode TheorySetsPrivate::expandChooseOperator(
-    const Node& node, std::vector<SkolemLemma>& lems)
-{
-  Assert(node.getKind() == Kind::SET_CHOOSE);
-
-  // (choose A) is eliminated to k, with lemma
-  //   (and (= k (uf A)) (or (= A (as set.empty (Set E))) (set.member k A)))
-  // where uf: (Set E) -> E is a skolem function, and E is the type of elements
-  // of A
-
-  NodeManager* nm = nodeManager();
-  SkolemManager* sm = nm->getSkolemManager();
-  Node x = sm->mkPurifySkolem(node);
-  Node A = node[0];
-  TypeNode setType = A.getType();
-  ensureFirstClassSetType(setType);
-  // use canonical constant to ensure it can be typed
-  Node mkElem = NodeManager::mkGroundValue(setType);
-  // a Null node is used here to get a unique skolem function per set type
-  Node uf = sm->mkSkolemFunction(SkolemId::SETS_CHOOSE, mkElem);
-  Node ufA = nodeManager()->mkNode(Kind::APPLY_UF, uf, A);
-
-  Node equal = x.eqNode(ufA);
-  Node emptySet = nm->mkConst(EmptySet(setType));
-  Node isEmpty = A.eqNode(emptySet);
-  Node member = nm->mkNode(Kind::SET_MEMBER, x, A);
-  Node lem =
-      nm->mkNode(Kind::AND, equal, nm->mkNode(Kind::OR, isEmpty, member));
-  TrustNode tlem = TrustNode::mkTrustLemma(lem, nullptr);
-  lems.push_back(SkolemLemma(tlem, x));
-  return TrustNode::mkTrustRewrite(node, x, nullptr);
-}
-
-TrustNode TheorySetsPrivate::expandIsSingletonOperator(const Node& node)
-{
-  Assert(node.getKind() == Kind::SET_IS_SINGLETON);
-  Assert(rewrite(node) == node);
-
-  // (is_singleton A) is expanded as (= A (set.singleton (set.choose A)))
-
-  NodeManager* nm = nodeManager();
-  Node choose = nm->mkNode(Kind::SET_CHOOSE, node[0]);
-  Node ss = nm->mkNode(Kind::SET_SINGLETON, choose);
-  Node ret = nm->mkNode(Kind::EQUAL, node[0], ss);
-  return TrustNode::mkTrustRewrite(node, ret, nullptr);
 }
 
 void TheorySetsPrivate::ensureFirstClassSetType(TypeNode tn) const
