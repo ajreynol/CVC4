@@ -1705,7 +1705,7 @@ void TheorySetsPrivate::preRegisterTerm(TNode node)
       Node member = nm->mkNode(Kind::SET_MEMBER, node, A);
       Node lem =  nm->mkNode(Kind::OR, isEmpty, member);
       TrustNode tlem = TrustNode::mkTrustLemma(lem, nullptr);
-      d_im.lemma(tlem, InferenceId::SETS_CHOOSE_REDUCE);
+      d_im.trustedLemma(tlem, InferenceId::SETS_CHOOSE_REDUCE);
     }
     break;
     default: d_equalityEngine->addTerm(node); break;
