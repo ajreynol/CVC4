@@ -254,7 +254,7 @@ name   = "Quantifiers"
   category   = "expert"
   long       = "mbqi-enum-global-syms-grammar"
   type       = "bool"
-  default    = "false"
+  default    = "true"
   help       = "include global symbols from all available assertions in grammars for fast enumerative mbqi"
 
 [[option]]
