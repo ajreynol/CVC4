@@ -1040,6 +1040,7 @@ set(regress_0_tests
   regress0/issue1063-overloading-dt-fun.smt2
   regress0/issue1063-overloading-dt-sel.smt2
   regress0/issue11198-real-as-int.smt2
+  regress0/issue12038-model-get-value.smt2
   regress0/issue2832-qualId.smt2
   regress0/issue4010-sort-inf-var.smt2
   regress0/issue4469-unc-no-reuse-var.smt2
@@ -2016,6 +2017,7 @@ set(regress_0_tests
   regress0/strings/issue11703-re-uf.smt2
   regress0/strings/issue11710-numeric-max.smt2
   regress0/strings/issue11890-eec-model.smt2
+  regress0/strings/issue12027-str-ae.smt2
   regress0/strings/issue1189.smt2
   regress0/strings/issue2958.smt2
   regress0/strings/issue3440.smt2
@@ -2740,6 +2742,7 @@ set(regress_1_tests
   regress1/issue10042.smt2
   regress1/issue10750-zll-repeat.smt2
   regress1/issue10788-refresh-a-interp.smt2
+  regress1/issue11966-get-value-ss.smt2
   regress1/issue3970-nl-ext-purify.smt2
   regress1/issue3990-sort-inference.smt2
   regress1/issue4273-ext-rew-cache.smt2
