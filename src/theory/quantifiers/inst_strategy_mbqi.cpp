@@ -107,15 +107,16 @@ bool InstStrategyMbqi::needsCheck(Theory::Effort e)
 
 QuantifiersModule::QEffort InstStrategyMbqi::needsModel(Theory::Effort e)
 {
-  return QEFFORT_MODEL;
+  return QEFFORT_STANDARD;
 }
 
 void InstStrategyMbqi::check(Theory::Effort e, QEffort quant_e)
 {
-  if (e != Theory::EFFORT_LAST_CALL || quant_e != QEFFORT_MODEL)
+  if (e != Theory::EFFORT_LAST_CALL || quant_e != QEFFORT_STANDARD)
   {
     return;
   }
+  beginCallDebug();
   FirstOrderModel* fm = d_treg.getModel();
   if (TraceIsOn("mbqi-model-exp"))
   {
@@ -139,6 +140,7 @@ void InstStrategyMbqi::check(Theory::Effort e, QEffort quant_e)
   }
   Trace("mbqi-model-exp") << "=== InstStrategyMbqi::check finished"
                           << std::endl;
+  endCallDebug();
 }
 
 bool InstStrategyMbqi::checkCompleteFor(Node q)
