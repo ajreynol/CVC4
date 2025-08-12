@@ -545,11 +545,10 @@ RewriteResponse TheoryBVRewriter::RewriteMult(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteAdd(TNode node, bool prerewrite)
 {
+  //TRY_REWRITE(FlattenAssocCommut) // flattens and sorts
   Node resultNode = node;
   if (prerewrite)
   {
-    //resultNode =
-    //    LinearRewriteStrategy<RewriteRule<FlattenAssocCommut>>::apply(node);
     return RewriteResponse(REWRITE_DONE, resultNode);
   }
 
