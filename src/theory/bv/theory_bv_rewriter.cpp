@@ -433,7 +433,7 @@ RewriteResponse TheoryBVRewriter::RewriteOr(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteXor(TNode node, bool prerewrite)
 {
-  TRY_REWRITE(FlattenAssocCommut) // flatten the expression
+  //TRY_REWRITE(FlattenAssocCommut) // flatten the expression
   TRY_REWRITE(XorSimplify) // simplify duplicates and constants
   TRY_REWRITE(XorZero) // checks if the constant part is zero and eliminates it
   TRY_REWRITE(AndOrXorConcatPullUp)
@@ -530,7 +530,7 @@ RewriteResponse TheoryBVRewriter::RewriteEagerAtom(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteMult(TNode node, bool prerewrite)
 {
-  TRY_REWRITE(FlattenAssocCommut) // flattens and sorts
+  //TRY_REWRITE(FlattenAssocCommut) // flattens and sorts
   TRY_REWRITE(MultSimplify) // multiplies constant part and checks for 0
 
   // only apply if every subterm was already rewritten
@@ -548,14 +548,12 @@ RewriteResponse TheoryBVRewriter::RewriteAdd(TNode node, bool prerewrite)
   Node resultNode = node;
   if (prerewrite)
   {
-    resultNode =
-        LinearRewriteStrategy<RewriteRule<FlattenAssocCommut>>::apply(node);
+    //resultNode =
+    //    LinearRewriteStrategy<RewriteRule<FlattenAssocCommut>>::apply(node);
     return RewriteResponse(REWRITE_DONE, resultNode);
   }
 
-  resultNode =
-      LinearRewriteStrategy<RewriteRule<FlattenAssocCommut>,
-                            RewriteRule<AddCombineLikeTerms>>::apply(node);
+  TRY_REWRITE(AddCombineLikeTerms)
 
   if (node != resultNode)
   {
