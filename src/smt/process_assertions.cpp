@@ -159,6 +159,11 @@ bool ProcessAssertions::apply(AssertionPipeline& ap)
     applyPass("int-to-bv", ap);
   }
 
+  if (options().smt.dtElim)
+  {
+    applyPass("dt-elim", ap);
+  }
+
   if (options().smt.ackermann)
   {
     applyPass("ackermann", ap);

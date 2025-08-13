@@ -36,7 +36,7 @@ class DtElim : public PreprocessingPass
   PreprocessingPassResult applyInternal(
       AssertionPipeline* assertionsToPreprocess) override;
   /** process internal */
-  Node processInternal(const Node& n);
+  Node processInternal(const Node& n, std::unordered_set<Node>& visited);
 };
 
 }  // namespace passes
