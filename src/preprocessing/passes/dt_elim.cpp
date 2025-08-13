@@ -20,6 +20,7 @@
 #include "options/smt_options.h"
 #include "preprocessing/assertion_pipeline.h"
 #include "theory/rewriter.h"
+#include "expr/node_algorithm.h"
 
 namespace cvc5::internal {
 namespace preprocessing {
@@ -42,18 +43,21 @@ Node DtElim::processInternal(const Node& n, std::unordered_set<Node>& visited)
     visit.pop_back();
     if (visited.find(cur) == visited.end()) {
       visited.insert(cur);
+      if (n.hasOperator())
+      {
+        visit.push_back(n.getOperator());
+      }
       visit.insert(visit.end(), cur.begin(), cur.end());
-      Kind k = n.getKind();
-      TypeNode tn;
-      if (k==Kind::APPLY_CONSTRUCTOR)
+      TypeNode tn = n.getType();
+      if (!d_processed.insert(tn).second)
       {
-        tn = n.getType();
+        continue;
       }
-      else if(k==Kind::APPLY_SELECTOR || k==Kind::APPLY_TESTER)
+      if (tn.isDatatype())
       {
-        tn = n[0].getType();
+        d_candidateDt.push_back(tn);
       }
-      if (!tn.isNull())
+      else if (tn.getNumChildren()>0)
       {
         
       }
@@ -65,13 +69,23 @@ Node DtElim::processInternal(const Node& n, std::unordered_set<Node>& visited)
 PreprocessingPassResult DtElim::applyInternal(
   AssertionPipeline* assertionsToPreprocess)
 {
-  std::unordered_set<Node> visited;
+  std::unordered_set<TNode> visited;
+  std::unordered_set<Node> syms;
+  std::unordered_set<TNode> tvisited;
+  std::unordered_set<TypeNode> types;
   for (size_t i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
   {
     const Node& a = (*assertionsToPreprocess)[i];
+    expr::getSymbols(a, syms, visited);
+    expr::getTypes(a, types, tvisited);
+  }
+  /*
+  for (size_t i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
+  {
     Node ar = processInternal(a,visited);
     assertionsToPreprocess->replace(i, ar);
   }
+  */
   return PreprocessingPassResult::NO_CONFLICT;
 }
 
