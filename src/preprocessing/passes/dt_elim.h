@@ -27,6 +27,24 @@ namespace cvc5::internal {
 namespace preprocessing {
 namespace passes {
 
+enum class DtElimPolicy
+{
+  /** Not processing this datatype */
+  NONE,
+  /** 1 cons, 0 fields */
+  UNIT,
+  /** 1 cons, 1+ fields */
+  ONE_INLINE,
+  /** 2 cons, 0 fields */
+  BINARY_TEST,
+  /** 2 cons, 1+ fields, no recursion */
+  BINARY_TEST_SPLIT,
+  /** 1+ cons, 0 fields */
+  ABSTRACT,
+  /** 1+ cons, 1+ fields, no recursion */
+  ABSTRACT_SPLIT,
+};
+
 class DtElim : public PreprocessingPass
 {
  public:
@@ -36,7 +54,7 @@ class DtElim : public PreprocessingPass
   PreprocessingPassResult applyInternal(
       AssertionPipeline* assertionsToPreprocess) override;
   /** process internal */
-  Node processInternal(const Node& n, std::unordered_set<Node>& visited);
+  Node processInternal(const Node& n, std::unordered_set<TNode>& visited);
   /** */
   std::unordered_set<TypeNode> d_processed;
   std::vector<TypeNode> d_candidateDt;
