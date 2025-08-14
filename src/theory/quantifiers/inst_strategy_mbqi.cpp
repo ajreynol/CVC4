@@ -107,12 +107,12 @@ bool InstStrategyMbqi::needsCheck(Theory::Effort e)
 
 QuantifiersModule::QEffort InstStrategyMbqi::needsModel(Theory::Effort e)
 {
-  return QEFFORT_STANDARD;
+  return QEFFORT_MODEL;
 }
 
 void InstStrategyMbqi::check(Theory::Effort e, QEffort quant_e)
 {
-  if (e != Theory::EFFORT_LAST_CALL || quant_e != QEFFORT_STANDARD)
+  if (e != Theory::EFFORT_LAST_CALL || quant_e != QEFFORT_MODEL)
   {
     return;
   }

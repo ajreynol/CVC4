@@ -231,7 +231,7 @@ void MVarInfo::initialize(Env& env,
         TypeNode ntt = nt.getType();
         if (introduceChoice(opts, ntt, retType))
         {
-          Assert(typeToWitnessVar.find(ntt) != typeToWitnessVar.end());
+          Assert(typeToWitnessRule.find(ntt) != typeToWitnessRule.end());
           Node witness = typeToWitnessRule[ntt];
           Trace("mbqi-enum-choice-grammar")
               << "...add " << witness << " to " << nt << std::endl;

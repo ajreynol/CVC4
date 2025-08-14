@@ -1,4 +1,4 @@
-; COMMAND-LINE: --mbqi-enum --mbqi-enum-choice
+; COMMAND-LINE: --mbqi-enum --mbqi-enum-choice-grammar
 ; EXPECT: unsat
 (set-logic HO_ALL)
 (declare-sort u 0)
