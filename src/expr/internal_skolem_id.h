@@ -58,6 +58,8 @@ enum class InternalSkolemId
   QUANTIFIERS_ATTRIBUTE_INTERNAL,
   /** Skolem used for subsolver in get-value */
   GET_VALUE_PURIFY,
+  /** Skolem for abstracting datatypes */
+  DT_ELIM_CONS_ABSTRACTION,
 };
 /** Converts an internal skolem function name to a string. */
 const char* toString(InternalSkolemId id);

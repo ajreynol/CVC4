@@ -22,6 +22,7 @@
 
 #include "preprocessing/preprocessing_pass.h"
 #include "proof/rewrite_proof_generator.h"
+#include "expr/node_converter.h"
 
 namespace cvc5::internal {
 namespace preprocessing {
@@ -34,15 +35,76 @@ enum class DtElimPolicy
   /** 1 cons, 0 fields */
   UNIT,
   /** 1 cons, 1+ fields */
-  ONE_INLINE,
+  UNARY,
   /** 2 cons, 0 fields */
-  BINARY_TEST,
+  BINARY_ENUM,
   /** 2 cons, 1+ fields, no recursion */
-  BINARY_TEST_SPLIT,
+  BINARY,
   /** 1+ cons, 0 fields */
-  ABSTRACT,
+  ABSTRACT_ENUM,
   /** 1+ cons, 1+ fields, no recursion */
-  ABSTRACT_SPLIT,
+  ABSTRACT,
+};
+bool isUnaryPolicy(DtElimPolicy policy);
+bool isBinaryTestPolicy(DtElimPolicy policy);
+bool isAbstractPolicy(DtElimPolicy policy);
+/** Converts a dt-elim policy identifier to a string. */
+const char* toString(DtElimPolicy policy);
+/** Writes a dt-elim policy identifier to a stream. */
+std::ostream& operator<<(std::ostream& out, DtElimPolicy policy);
+
+
+
+class DtElimConverter : protected EnvObj, public NodeConverter
+{
+ public:
+  DtElimConverter(Env& env, const std::vector<Node>& assertions);
+  ~DtElimConverter();
+  /**
+   * Compute the policies for each datatype
+   */
+  void computePolicies(const std::vector<Node>& assertions);
+  /**
+   */
+  Node postConvert(Node n) override;
+
+ private:
+  /**
+   * For t : D where D is a datatype, this returns the abstraction of t.
+   * For example, if D is (Option Bool), this returns
+   *  (ite ((_ is some) t) U_some U_none)),
+   * where U is getTypeAbstraction(D) and U_some, U_none : U.
+   */
+  Node getDtAbstraction(const Node& v);
+  /**
+   * if an apply UF, we get the predicate that is true when the function
+   * f is that tester. For instance, for f : Int -> (Option Bool), we
+   * introduce a predicate f-is-none : Int -> Bool that is equivalent to
+   * (lambda ((x Int)) ((_ is none) (f x))). The tester for (f a) is
+   * (f-is-none a).
+   * Analoguously if we are doing abstraction policy, then we introduce
+   * f-get-cons : Int -> U, where f-get-cons is equivalent to
+   * (lambda ((x Int)) (ite ((_ is some) (f x)) U_some U_none)), where
+   * U is an uninterpreted sort and U_some, U_none : U.
+   */
+  Node getTesterFunctionInternal(const Node& v, DtElimPolicy policy);
+  Node getTesterInternal(const Node& v, DtElimPolicy policy);
+  Node getTester(const Node& v, DtElimPolicy policy, size_t i);
+  const std::vector<Node>& getSelectorVec(const Node& v, size_t i);
+  TypeNode getTypeAbstraction(const TypeNode& dt);
+  const std::vector<Node>& getConstructorVec(const TypeNode& tn);
+  /** The new lemmas */
+  std::vector<Node> d_newLemmas;
+  /** The policy */
+  std::map<TypeNode, DtElimPolicy> d_dtep;
+  /** Used for getTester and getAbstractConsKind */
+  std::map<Node, Node> d_tester;
+  /** */
+  std::map<Node, std::vector<Node>> d_selectors;
+  /** */
+  std::map<TypeNode, std::vector<Node>> d_constructors;
+  /** */
+  TypeNode d_dtElimSc;
 };
 
 class DtElim : public PreprocessingPass
