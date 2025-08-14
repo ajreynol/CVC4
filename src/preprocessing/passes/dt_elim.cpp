@@ -35,30 +35,31 @@ using namespace cvc5::internal::theory;
 
 bool isUnaryPolicy(DtElimPolicy policy)
 {
-  return policy == DtElimPolicy::UNIT || policy==DtElimPolicy::UNARY;
+  return policy == DtElimPolicy::UNIT || policy == DtElimPolicy::UNARY;
 }
 
 bool isBinaryTestPolicy(DtElimPolicy policy)
 {
-  return policy==DtElimPolicy::BINARY_ENUM || policy==DtElimPolicy::BINARY;
+  return policy == DtElimPolicy::BINARY_ENUM || policy == DtElimPolicy::BINARY;
 }
 
 bool isAbstractPolicy(DtElimPolicy policy)
 {
-  return policy==DtElimPolicy::ABSTRACT_ENUM || policy==DtElimPolicy::ABSTRACT;
+  return policy == DtElimPolicy::ABSTRACT_ENUM
+         || policy == DtElimPolicy::ABSTRACT;
 }
 
 const char* toString(DtElimPolicy policy)
 {
   switch (policy)
   {
-    case DtElimPolicy::NONE:return "NONE";
-    case DtElimPolicy::UNIT:return "UNIT";
-    case DtElimPolicy::UNARY:return "UNARY";
-    case DtElimPolicy::BINARY_ENUM:return "BINARY_ENUM";
-    case DtElimPolicy::BINARY:return "BINARY";
-    case DtElimPolicy::ABSTRACT_ENUM:return "ABSTRACT_ENUM";
-    case DtElimPolicy::ABSTRACT:return "ABSTRACT";
+    case DtElimPolicy::NONE: return "NONE";
+    case DtElimPolicy::UNIT: return "UNIT";
+    case DtElimPolicy::UNARY: return "UNARY";
+    case DtElimPolicy::BINARY_ENUM: return "BINARY_ENUM";
+    case DtElimPolicy::BINARY: return "BINARY";
+    case DtElimPolicy::ABSTRACT_ENUM: return "ABSTRACT_ENUM";
+    case DtElimPolicy::ABSTRACT: return "ABSTRACT";
     default: return "?";
   }
 }
@@ -76,8 +77,8 @@ DtElimConverter::DtElimConverter(Env& env, const std::vector<Node>& assertions)
 }
 DtElimConverter::~DtElimConverter() {}
 /**
-  * Compute the policies for each datatype
-  */
+ * Compute the policies for each datatype
+ */
 void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
 {
   std::unordered_set<TypeNode> allDt;
@@ -108,7 +109,7 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     size_t ncons = dt.getNumConstructors();
     for (size_t i = 0; i < ncons; i++)
     {
-      if (dt[i].getNumArgs()>0)
+      if (dt[i].getNumArgs() > 0)
       {
         isEnum = false;
         break;
@@ -117,17 +118,22 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     DtElimPolicy policy = DtElimPolicy::NONE;
     if (isEnum)
     {
-      policy = (ncons==1 ? DtElimPolicy::UNIT : (ncons==2 ? DtElimPolicy::BINARY_ENUM :DtElimPolicy::ABSTRACT_ENUM));
+      policy = (ncons == 1 ? DtElimPolicy::UNIT
+                           : (ncons == 2 ? DtElimPolicy::BINARY_ENUM
+                                         : DtElimPolicy::ABSTRACT_ENUM));
     }
     else
     {
-      policy = (ncons==1 ? DtElimPolicy::UNARY : (ncons==2 ? DtElimPolicy::BINARY :DtElimPolicy::ABSTRACT));
+      policy = (ncons == 1 ? DtElimPolicy::UNARY
+                           : (ncons == 2 ? DtElimPolicy::BINARY
+                                         : DtElimPolicy::ABSTRACT));
     }
-    Trace("dt-elim-policy") << "Policy for " << tn << " is " << policy << std::endl;
+    Trace("dt-elim-policy")
+        << "Policy for " << tn << " is " << policy << std::endl;
   }
 }
 /**
-  */
+ */
 Node DtElimConverter::postConvert(Node n)
 {
   Kind k = n.getKind();
@@ -156,28 +162,28 @@ Node DtElimConverter::postConvert(Node n)
     {
       return n;
     }
-    else if (itd->second==DtElimPolicy::UNIT)
+    else if (itd->second == DtElimPolicy::UNIT)
     {
       // unit equality is always true
       return d_nm->mkConst(true);
     }
-    Assert (tn.isDatatype());
+    Assert(tn.isDatatype());
     const DType& dt = tn.getDType();
     Node cur = d_nm->mkConst(false);
     for (size_t i = 0, ncons = dt.getNumConstructors(); i < ncons; i++)
     {
-      size_t ii = ncons-i-1;
+      size_t ii = ncons - i - 1;
       // their selectors are each equal
       const std::vector<Node>& sels1 = getSelectorVec(n[0], ii);
       const std::vector<Node>& sels2 = getSelectorVec(n[1], ii);
-      Assert (sels1.size()==sels2.size());
+      Assert(sels1.size() == sels2.size());
       std::vector<Node> conj;
-      for (size_t j=0, nsels=sels1.size(); j<nsels; j++)
+      for (size_t j = 0, nsels = sels1.size(); j < nsels; j++)
       {
         conj.push_back(sels1[j].eqNode(sels2[j]));
       }
       Node eq = d_nm->mkAnd(conj);
-      if (ncons==1)
+      if (ncons == 1)
       {
         cur = eq;
         break;
@@ -231,7 +237,6 @@ Node DtElimConverter::postConvert(Node n)
     {
       // if we are not, we must purify??
     }
-    
   }
   else if (k == Kind::FORALL)
   {
@@ -281,7 +286,7 @@ Node DtElimConverter::getDtAbstraction(const Node& v)
   Assert(vtn.isDatatype());
   const std::vector<Node>& cvec = getConstructorVec(vtn);
   const DType& dt = vtn.getDType();
-  Assert (cvec.size()==dt.getNumConstructors());
+  Assert(cvec.size() == dt.getNumConstructors());
   Node cur = cvec[0];
   for (size_t i = 1, ncons = dt.getNumConstructors(); i < ncons; i++)
   {
@@ -291,7 +296,8 @@ Node DtElimConverter::getDtAbstraction(const Node& v)
   return cur;
 }
 
-Node DtElimConverter::getTesterFunctionInternal(const Node& v, DtElimPolicy policy)
+Node DtElimConverter::getTesterFunctionInternal(const Node& v,
+                                                DtElimPolicy policy)
 {
   Assert(v.getKind() == Kind::APPLY_UF);
   Node op = v.getOperator();
@@ -368,8 +374,9 @@ Node DtElimConverter::getTesterInternal(const Node& v, DtElimPolicy policy)
       Unhandled() << "getTesterInternal: Unknown policy " << policy;
     }
   }
-  Assert (!isBinaryTestPolicy(policy) || tester.getType().isBoolean());
-  Assert (!isAbstractPolicy(policy) || tester.getType()==getTypeAbstraction(vtn));
+  Assert(!isBinaryTestPolicy(policy) || tester.getType().isBoolean());
+  Assert(!isAbstractPolicy(policy)
+         || tester.getType() == getTypeAbstraction(vtn));
   d_tester[v] = tester;
   return tester;
 }
@@ -379,13 +386,13 @@ Node DtElimConverter::getTester(const Node& v, DtElimPolicy policy, size_t i)
   Node tester = getTesterInternal(v, policy);
   if (isBinaryTestPolicy(policy))
   {
-    return i==0 ? tester : tester.notNode();
+    return i == 0 ? tester : tester.notNode();
   }
   else if (isAbstractPolicy(policy))
   {
     TypeNode vtn = v.getType();
     const std::vector<Node>& cvec = getConstructorVec(vtn);
-    Assert (i<cvec.size());
+    Assert(i < cvec.size());
     return tester.eqNode(cvec[i]);
   }
   else
@@ -394,8 +401,9 @@ Node DtElimConverter::getTester(const Node& v, DtElimPolicy policy, size_t i)
   }
   return Node::null();
 }
-  
-const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v, size_t i)
+
+const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
+                                                         size_t i)
 {
   Assert(v.isVar() || v.getKind() == Kind::APPLY_UF);
   Assert(v.getKind() != Kind::BOUND_VARIABLE);
@@ -416,8 +424,7 @@ TypeNode DtElimConverter::getTypeAbstraction(const TypeNode& dt)
 const std::vector<Node>& DtElimConverter::getConstructorVec(const TypeNode& tn)
 {
   Assert(tn.isDatatype());
-  std::map<TypeNode, std::vector<Node>>::iterator it =
-      d_constructors.find(tn);
+  std::map<TypeNode, std::vector<Node>>::iterator it = d_constructors.find(tn);
   if (it != d_constructors.end())
   {
     return it->second;
@@ -434,7 +441,7 @@ const std::vector<Node>& DtElimConverter::getConstructorVec(const TypeNode& tn)
     cons.push_back(k);
   }
   // distinctness is a lemma
-  if (cons.size()>1)
+  if (cons.size() > 1)
   {
     Node distinct = d_nm->mkNode(Kind::DISTINCT, cons);
     d_newLemmas.push_back(distinct);

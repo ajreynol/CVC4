@@ -37,7 +37,8 @@ const char* toString(InternalSkolemId id)
     case InternalSkolemId::QUANTIFIERS_ATTRIBUTE_INTERNAL:
       return "QUANTIFIERS_ATTRIBUTE_INTERNAL";
     case InternalSkolemId::GET_VALUE_PURIFY: return "GET_VALUE_PURIFY";
-    case InternalSkolemId::DT_ELIM_CONS_ABSTRACTION: return "DT_ELIM_CONS_ABSTRACTION";
+    case InternalSkolemId::DT_ELIM_CONS_ABSTRACTION:
+      return "DT_ELIM_CONS_ABSTRACTION";
     default: return "?";
   }
 }

@@ -20,9 +20,9 @@
 #ifndef CVC5__PREPROCESSING__PASSES__DT_ELIM_H
 #define CVC5__PREPROCESSING__PASSES__DT_ELIM_H
 
+#include "expr/node_converter.h"
 #include "preprocessing/preprocessing_pass.h"
 #include "proof/rewrite_proof_generator.h"
-#include "expr/node_converter.h"
 
 namespace cvc5::internal {
 namespace preprocessing {
@@ -52,8 +52,6 @@ bool isAbstractPolicy(DtElimPolicy policy);
 const char* toString(DtElimPolicy policy);
 /** Writes a dt-elim policy identifier to a stream. */
 std::ostream& operator<<(std::ostream& out, DtElimPolicy policy);
-
-
 
 class DtElimConverter : protected EnvObj, public NodeConverter
 {
