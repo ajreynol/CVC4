@@ -787,7 +787,8 @@ Node TheorySetsRewriter::rewriteMembershipBinaryOp(const Node& node)
 }
 
 // static
-RewriteResponse TheorySetsRewriter::preRewrite(TNode node) {
+RewriteResponse TheorySetsRewriter::preRewrite(TNode node) 
+{
   NodeManager* nm = nodeManager();
   Kind k = node.getKind();
   if (k == Kind::EQUAL)
@@ -812,6 +813,8 @@ RewriteResponse TheorySetsRewriter::preRewrite(TNode node) {
   }
   else if (k == Kind::SET_UNION)
   {
+    /*
+    Trace("ajr-temp") << "Try prewrite" << std::endl;
     std::set<Node> elements;
     std::unordered_set<TNode> visited;
     std::vector<TNode> visit;
@@ -844,9 +847,10 @@ RewriteResponse TheorySetsRewriter::preRewrite(TNode node) {
     {
       Node newNode =
           NormalForm::elementsToSet(elements, node.getType());
-      Assert (newNode.isConst();
+      AlwaysAssert (newNode.isConst());
       return RewriteResponse(REWRITE_DONE, newNode);
     }
+    */
   }
 
   return RewriteResponse(REWRITE_DONE, node);

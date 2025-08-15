@@ -79,51 +79,39 @@ class NormalForm {
     else if (n.getKind() == Kind::SET_UNION)
     {
       // assuming (union {SmallestNodeID} ... (union {BiggerNodeId} ...
+      if (!n[1].isConst())
+      {
+        return false;
+      }
 
       Node orig = n;
       TNode prvs;
-      // check intermediate nodes
-      while (n.getKind() == Kind::SET_UNION)
+      if (n[0].getKind() != Kind::SET_SINGLETON || !n[0][0].isConst())
       {
-        if (n[0].getKind() != Kind::SET_SINGLETON || !n[0][0].isConst())
-        {
-          // not a constant
-          Trace("sets-isconst") << "sets::isConst: " << orig << " not due to "
-                                << n[0] << std::endl;
-          return false;
-        }
-        Trace("sets-checknormal")
-            << "[sets-checknormal]              element = " << n[0][0] << " "
-            << n[0][0].getId() << std::endl;
-        if (!prvs.isNull() && n[0][0] >= prvs)
-        {
-          Trace("sets-isconst")
-              << "sets::isConst: " << orig << " not due to compare " << n[0][0]
-              << std::endl;
-          return false;
-        }
-        prvs = n[0][0];
-        n = n[1];
-      }
-
-      // check SmallestNodeID is smallest
-      if (n.getKind() != Kind::SET_SINGLETON || !n[0].isConst())
-      {
-        Trace("sets-isconst") << "sets::isConst: " << orig
-                              << " not due to final " << n << std::endl;
+        // not a constant
+        Trace("sets-isconst") << "sets::isConst: " << orig << " not due to "
+                              << n[0] << std::endl;
         return false;
       }
-      Trace("sets-checknormal")
-          << "[sets-checknormal]              lst element = " << n[0] << " "
-          << n[0].getId() << std::endl;
-      // compare last ID
-      if (n[0] < prvs)
+      Node nextElem;
+      Kind nk = n[1].getKind();
+      if (nk == Kind::SET_SINGLETON)
       {
-        return true;
+        nextElem = n[1][0];
       }
-      Trace("sets-isconst")
-          << "sets::isConst: " << orig << " not due to compare final " << n[0]
-          << std::endl;
+      else if (nk == Kind::SET_UNION)
+      {
+        Assert (n[1][0].getKind()==Kind::SET_SINGLETON);
+        nextElem = n[1][0][0];
+      }
+      Assert (nextElem.isConst());
+      if (nextElem >= n[0][0])
+      {
+        Trace("sets-isconst")
+            << "sets::isConst: " << orig << " not due to compare " << n[0][0]
+            << std::endl;
+        return false;
+      }
     }
     return false;
   }

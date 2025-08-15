@@ -441,6 +441,7 @@ RewriteResponse TheoryBoolRewriter::flattenNode(TNode n,
   typedef std::vector<TNode> ChildList;
   ChildList childList;   //TNode should be fine, since 'n' is still there
 
+  Trace("ajr-temp") << "Flatten " << n.getKind() << std::endl;
   for (unsigned i = 0; i < toProcess.size(); ++ i) {
     TNode current = toProcess[i];
     for(unsigned j = 0, j_end = current.getNumChildren(); j < j_end; ++ j) {
@@ -461,6 +462,7 @@ RewriteResponse TheoryBoolRewriter::flattenNode(TNode n,
   if (childList.size() == 0) return RewriteResponse(REWRITE_DONE, skipNode);
   if (childList.size() == 1) return RewriteResponse(REWRITE_AGAIN, childList[0]);
 
+  Trace("ajr-temp") << "...child list size " << childList.size() << std::endl;
   /* Trickery to stay under number of children possible in a node */
   NodeManager* nm = nodeManager();
   if (childList.size() < expr::NodeValue::MAX_CHILDREN)
@@ -470,6 +472,7 @@ RewriteResponse TheoryBoolRewriter::flattenNode(TNode n,
   }
   else
   {
+    Trace("ajr-temp") << "HERE" << std::endl;
     Assert(childList.size()
            < static_cast<size_t>(expr::NodeValue::MAX_CHILDREN)
                  * static_cast<size_t>(expr::NodeValue::MAX_CHILDREN));
