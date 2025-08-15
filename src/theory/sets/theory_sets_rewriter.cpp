@@ -810,8 +810,44 @@ RewriteResponse TheorySetsRewriter::preRewrite(TNode node) {
                    nm->mkNode(Kind::SET_UNION, node[0], node[1]),
                    node[1]));
   }
-
-  // could have an efficient normalizer for union here
+  else if (k == Kind::SET_UNION)
+  {
+    std::set<Node> elements;
+    std::unordered_set<TNode> visited;
+    std::vector<TNode> visit;
+    TNode cur;
+    visit.push_back(node);
+    bool success = true;
+    do {
+      cur = visit.back();
+      visit.pop_back();
+      if (!visited.insert(cur).second)
+      {
+        continue;
+      }
+      Kind ck = cur.getKind();
+      if (ck==Kind::SET_SINGLETON && cur[0].isConst())
+      {
+        elements.insert(cur[0]);
+      }
+      else if (ck==Kind::SET_UNION)
+      {
+        visit.push_back(cur[0]);
+        visit.push_back(cur[1]);
+      }
+      else
+      {
+        success = false;
+      }
+    } while (!visit.empty());
+    if (success)
+    {
+      Node newNode =
+          NormalForm::elementsToSet(elements, node.getType());
+      Assert (newNode.isConst();
+      return RewriteResponse(REWRITE_DONE, newNode);
+    }
+  }
 
   return RewriteResponse(REWRITE_DONE, node);
 }
