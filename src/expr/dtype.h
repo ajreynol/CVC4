@@ -320,6 +320,10 @@ class DType
    */
   bool isRecursiveSingleton(TypeNode t) const;
   bool isRecursiveSingleton() const;
+  /**
+   * Return true if this datatype is recursive
+   */
+  bool isRecursive() const;
 
   /** recursive single arguments
    *

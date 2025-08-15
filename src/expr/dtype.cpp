@@ -453,6 +453,37 @@ bool DType::isRecursiveSingleton() const
   return isRecursiveSingleton(d_self);
 }
 
+bool DType::isRecursive() const
+{
+  Assert(!isParametric());
+  // check if recursive
+  std::unordered_set<TypeNode> tvisited;
+  std::vector<TypeNode> tvisit;
+  std::unordered_set<TypeNode> stypes = getSubfieldTypes();
+  tvisit.insert(tvisit.end(), stypes.begin(), stypes.end());
+  do
+  {
+    TypeNode curTyp = tvisit.back();
+    tvisit.pop_back();
+    if (!tvisited.insert(curTyp).second)
+    {
+      continue;
+    }
+    if (curTyp==d_self)
+    {
+      return true;
+    }
+    else if (curTyp.isDatatype())
+    {
+      const DType& dtcur = curTyp.getDType();
+      stypes = dtcur.getSubfieldTypes();
+      tvisit.insert(tvisit.end(), stypes.begin(), stypes.end());
+    }
+  }
+  while (!tvisit.empty());
+  return false;
+}
+
 unsigned DType::getNumRecursiveSingletonArgTypes(TypeNode t) const
 {
   Assert(d_cardRecSingleton.find(t) != d_cardRecSingleton.end());

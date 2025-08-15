@@ -105,6 +105,11 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     }
     Assert(tn.isDatatype());
     const DType& dt = tn.getDType();
+    if (dt.isParametric())
+    {
+      // parameteric datatypes can't be eliminated currently?
+      continue;
+    }
     bool isEnum = true;
     size_t ncons = dt.getNumConstructors();
     for (size_t i = 0; i < ncons; i++)
@@ -124,9 +129,13 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     }
     else
     {
-      policy = (ncons == 1 ? DtElimPolicy::UNARY
-                           : (ncons == 2 ? DtElimPolicy::BINARY
-                                         : DtElimPolicy::ABSTRACT));
+      // check if recursive
+      if (!dt.isRecursive())
+      {
+        policy = (ncons == 1 ? DtElimPolicy::UNARY
+                            : (ncons == 2 ? DtElimPolicy::BINARY
+                                          : DtElimPolicy::ABSTRACT));
+      }
     }
     Trace("dt-elim-policy")
         << "Policy for " << tn << " is " << policy << std::endl;
