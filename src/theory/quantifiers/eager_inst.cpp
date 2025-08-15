@@ -49,9 +49,9 @@ EagerInst::EagerInst(Env& env,
       d_opInfo(context()),
       d_patInfo(context()),
       d_bufferNewEqc(context()),
-      d_bufferNewEqcIndex(context(),0),
+      d_bufferNewEqcIndex(context(), 0),
       d_bufferMerge(context()),
-      d_bufferMergeIndex(context(),0),
+      d_bufferMergeIndex(context(), 0),
       d_gdb(env, qs, tr.getTermDatabase()),
       d_statUserPats(statisticsRegistry().registerInt("EagerInst::userPats")),
       d_statUserPatsCd(
@@ -102,7 +102,7 @@ bool EagerInst::needsCheck(Theory::Effort e)
   }
   if (d_bufferCheck)
   {
-    return e==Theory::Effort::EFFORT_STANDARD;
+    return e == Theory::Effort::EFFORT_STANDARD;
   }
   return false;
 }
@@ -114,9 +114,9 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
     return;
   }
   size_t nsize = d_bufferNewEqc.size();
-  if (d_bufferNewEqcIndex.get()<nsize)
+  if (d_bufferNewEqcIndex.get() < nsize)
   {
-    for (size_t i=d_bufferNewEqcIndex.get(); i<nsize; i++)
+    for (size_t i = d_bufferNewEqcIndex.get(); i < nsize; i++)
     {
       const Node& n = d_bufferNewEqc[i];
       newTerm(n);
@@ -124,9 +124,9 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
     d_bufferNewEqcIndex = nsize;
   }
   size_t msize = d_bufferMerge.size();
-  if (d_bufferMergeIndex.get()<msize)
+  if (d_bufferMergeIndex.get() < msize)
   {
-    for (size_t i=d_bufferMergeIndex.get(); i<msize; i++)
+    for (size_t i = d_bufferMergeIndex.get(); i < msize; i++)
     {
       const std::pair<Node, Node>& m = d_bufferMerge[i];
       merge(m.first, m.second);
@@ -300,7 +300,9 @@ void EagerInst::registerQuantInternal(const Node& q)
   }
   if (options().quantifiers.eagerInstMacroOnly)
   {
-    if (!(q[1].getKind()==Kind::EQUAL && q[2].getNumChildren()==1 && q[2][0].getKind()==Kind::INST_PATTERN && q[2][0].getNumChildren()==1 && q[1][0]==q[2][0][0]))
+    if (!(q[1].getKind() == Kind::EQUAL && q[2].getNumChildren() == 1
+          && q[2][0].getKind() == Kind::INST_PATTERN
+          && q[2][0].getNumChildren() == 1 && q[1][0] == q[2][0][0]))
     {
       return;
     }
@@ -1414,7 +1416,7 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
 {
   if (d_bufferCheck)
   {
-    d_bufferMerge.push_back(std::pair<Node, Node>(t1,t2));
+    d_bufferMerge.push_back(std::pair<Node, Node>(t1, t2));
     return;
   }
   merge(t1, t2);

@@ -85,8 +85,8 @@ class TermUtil
   /**
    */
   static uint64_t getInstVarNum(const Node& v);
-  
-private:
+
+ private:
   /** get bound vars */
   static Node getRemoveQuantifiers2( Node n, std::map< Node, Node >& visited );
 public:

@@ -280,7 +280,8 @@ bool Instantiate::addInstantiationInternal(
       d_bufferedInst[onLevel].push_back(InstCall(q, terms, id, pfArg, doVts));
       Trace("inst-buffer") << "--> Buffer inst with maxLevel " << maxLevel
                            << ", will add at full check " << onLevel
-                           << ", currently full check " << d_fullEffortChecks << std::endl;
+                           << ", currently full check " << d_fullEffortChecks
+                           << std::endl;
       Trace("inst-add-debug")
           << "--> Buffer inst with maxLevel " << maxLevel
           << ", will add at full check " << onLevel << std::endl;

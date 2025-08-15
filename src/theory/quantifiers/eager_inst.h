@@ -107,7 +107,6 @@ class EagerInst : public QuantifiersModule
   context::CDO<size_t> d_bufferNewEqcIndex;
   context::CDList<std::pair<Node, Node>> d_bufferMerge;
   context::CDO<size_t> d_bufferMergeIndex;
-  
 
   EagerGroundDb d_gdb;
   /** Number of patterns */
