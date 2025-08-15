@@ -13,6 +13,7 @@
  * Utility for quantifiers state.
  */
 
+#include <cstdint>
 #include "cvc5_private.h"
 
 #ifndef CVC5__THEORY__QUANTIFIERS__QUANTIFIERS_STATE_H
@@ -73,6 +74,8 @@ class QuantifiersState : public TheoryState
   uint64_t d_ierCounter;
   /** The number of total instantiation rounds (last call effort) */
   uint64_t d_ierCounterLc;
+  /** Number of times called while not doing check */
+  uint64_t d_ierSkipCount;
   /**
    * A counter to remember the last value of d_ierCounterLc where we a
    * full effort check. This is used for interleaving theory combination

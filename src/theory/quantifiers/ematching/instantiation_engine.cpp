@@ -124,7 +124,8 @@ void InstantiationEngine::doInstantiationRound( Theory::Effort effort ){
   }
 }
 
-bool InstantiationEngine::needsCheck( Theory::Effort e ){
+bool InstantiationEngine::needsCheck( Theory::Effort e )
+{
   return d_qstate.getInstWhenNeedsCheck(e);
 }
 

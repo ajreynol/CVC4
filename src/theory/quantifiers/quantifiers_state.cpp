@@ -41,6 +41,7 @@ QuantifiersState::QuantifiersState(Env& env,
                     + (options().quantifiers.instWhenPhase < 1
                            ? 1
                            : options().quantifiers.instWhenPhase);
+  d_ierSkipCount = 0;
 }
 
 void QuantifiersState::incrementInstRoundCounters(Theory::Effort e)
@@ -49,11 +50,16 @@ void QuantifiersState::incrementInstRoundCounters(Theory::Effort e)
   {
     // increment if a last call happened, or already were in phase
     if (d_ierCounterLastLc != d_ierCounterLc
-        || d_ierCounter % d_instWhenPhase != 0)
+        || d_ierCounter % d_instWhenPhase != 0 || d_ierSkipCount>5)
     {
       d_ierCounter = d_ierCounter + 1;
       d_ierCounterLastLc = d_ierCounterLc;
       d_ierCounterc = d_ierCounterc.get() + 1;
+      d_ierSkipCount = 0;
+    }
+    else
+    {
+      d_ierSkipCount++;
     }
   }
   else if (e == Theory::EFFORT_LAST_CALL)
