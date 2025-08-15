@@ -665,12 +665,12 @@ void QuantifiersEngine::assertQuantifier( Node f, bool pol ){
     mdl->assertNode(f);
   }
   // add term to the registry
-  d_treg.addTerm(d_qreg.getInstConstantBody(f), true);
+  d_treg.addQuantifierBody(d_qreg.getInstConstantBody(f));
 }
 
 void QuantifiersEngine::eqNotifyNewClass(TNode t)
 {
-  d_treg.addTerm(t);
+  d_treg.eqNotifyNewClass(t);
   if (d_eagerInstNewEqc)
   {
     notifyAssertedTerm(t);
@@ -679,6 +679,7 @@ void QuantifiersEngine::eqNotifyNewClass(TNode t)
 
 void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
 {
+  d_treg.eqNotifyMerge(t1, t2);
   if (d_eagerInstEqcMerge)
   {
     for (size_t i = 0; i < 2; i++)
