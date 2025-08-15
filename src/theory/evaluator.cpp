@@ -1,6 +1,6 @@
 /******************************************************************************
  * Top contributors (to current version):
- *   Andres Noetzli, Andrew Reynolds, Aina Niemetz
+ *   Andrew Reynolds, Andres Noetzli, Aina Niemetz
  *
  * This file is part of the cvc5 project.
  *
@@ -110,7 +110,7 @@ EvalResult::~EvalResult()
 
 Node EvalResult::toNode(const TypeNode& tn) const
 {
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = tn.getNodeManager();
   switch (d_tag)
   {
     case EvalResult::BOOL: return nm->mkConst(d_bool);
@@ -1169,11 +1169,12 @@ EvalResult Evaluator::evalInternal(
           BitVector res = results[currNode[0]].d_bv;
           unsigned amount =
               currNode.getOperator().getConst<BitVectorRepeat>().d_repeatAmount;
+          BitVector ret = res;
           for (size_t i = 1; i < amount; i++)
           {
-            res = res.concat(res);
+            ret = ret.concat(res);
           }
-          results[currNode] = EvalResult(res);
+          results[currNode] = EvalResult(ret);
           break;
         }
         case Kind::BITVECTOR_SIGN_EXTEND:
@@ -1341,7 +1342,7 @@ Node Evaluator::reconstruct(TNode n,
     return n;
   }
   Trace("evaluator") << "Evaluator: reconstruct " << n << std::endl;
-  NodeManager* nm = NodeManager::currentNM();
+  NodeManager* nm = n.getNodeManager();
   std::unordered_map<TNode, EvalResult>::iterator itr;
   std::unordered_map<TNode, Node>::iterator itn;
   std::vector<Node> echildren;

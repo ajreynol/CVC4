@@ -545,6 +545,8 @@ const char* toString(InferenceId i)
       return "STRINGS_REGISTER_TERM_ATOMIC";
     case InferenceId::STRINGS_REGISTER_TERM: return "STRINGS_REGISTER_TERM";
     case InferenceId::STRINGS_CMI_SPLIT: return "STRINGS_CMI_SPLIT";
+    case InferenceId::STRINGS_CONST_SEQ_PURIFY:
+      return "STRINGS_CONST_SEQ_PURIFY";
 
     case InferenceId::UF_BREAK_SYMMETRY: return "UF_BREAK_SYMMETRY";
     case InferenceId::UF_CARD_CLIQUE: return "UF_CARD_CLIQUE";
@@ -588,8 +590,7 @@ std::ostream& operator<<(std::ostream& out, InferenceId i)
 
 Node mkInferenceIdNode(NodeManager* nm, InferenceId i)
 {
-  return NodeManager::currentNM()->mkConstInt(
-      Rational(static_cast<uint32_t>(i)));
+  return nm->mkConstInt(Rational(static_cast<uint32_t>(i)));
 }
 
 bool getInferenceId(TNode n, InferenceId& i)

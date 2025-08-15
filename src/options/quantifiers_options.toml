@@ -190,6 +190,7 @@ name   = "Quantifiers"
   long       = "ext-rewrite-quant"
   type       = "bool"
   default    = "false"
+  no_support = ["proofs"]
   help       = "apply extended rewriting to bodies of quantified formulas"
 
 [[option]]
@@ -857,10 +858,11 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "quantSubCbqi"
-  category   = "expert"
+  category   = "regular"
   long       = "sub-cbqi"
   type       = "bool"
   default    = "false"
+  no_support = ["proofs"]
   help       = "Enable conflict-based instantiation subsolver strategy"
 
 [[option]]
@@ -1603,10 +1605,11 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "cegqiNestedQE"
-  category   = "expert"
+  category   = "regular"
   long       = "cegqi-nested-qe"
   type       = "bool"
   default    = "false"
+  no_support = ["proofs"]
   help       = "process nested quantified formulas with quantifier elimination in counterexample-based quantifier instantiation"
 
 # CEGQI for arithmetic
@@ -1645,10 +1648,11 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "cegqiMidpoint"
-  category   = "expert"
+  category   = "regular"
   long       = "cegqi-midpoint"
   type       = "bool"
   default    = "false"
+  no_support = ["proofs"]
   help       = "choose substitutions based on midpoints of lower and upper bounds for counterexample-based quantifier instantiation"
 
 [[option]]
@@ -1667,6 +1671,7 @@ name   = "Quantifiers"
   long       = "cegqi-bv"
   type       = "bool"
   default    = "true"
+  no_support = ["proofs"]
   help       = "use word-level inversion approach for counterexample-guided quantifier instantiation for bit-vectors"
 
 [[option]]
@@ -1731,10 +1736,11 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "macrosQuant"
-  category   = "expert"
+  category   = "regular"
   long       = "macros-quant"
   type       = "bool"
   default    = "false"
+  no_support = ["proofs"]
   help       = "perform quantifiers macro expansion"
 
 [[option]]
@@ -1873,7 +1879,7 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "hoElim"
-  category   = "regular"
+  category   = "expert"
   long       = "ho-elim"
   type       = "bool"
   default    = "false"
@@ -1881,7 +1887,7 @@ name   = "Quantifiers"
 
 [[option]]
   name       = "hoElimStoreAx"
-  category   = "regular"
+  category   = "expert"
   long       = "ho-elim-store-ax"
   type       = "bool"
   default    = "true"

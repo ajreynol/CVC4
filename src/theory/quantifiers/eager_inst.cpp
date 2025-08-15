@@ -298,6 +298,14 @@ void EagerInst::registerQuantInternal(const Node& q)
         << "Unhandled quantified formula (no patterns) " << q << std::endl;
     return;
   }
+  if (options().quantifiers.eagerInstMacroOnly)
+  {
+    if (!(q[1].getKind()==Kind::EQUAL && q[2].getNumChildren()==1 && q[2][0].getKind()==Kind::INST_PATTERN && q[2][0].getNumChildren()==1 && q[1][0]==q[2][0][0]))
+    {
+      return;
+    }
+    Trace("eager-inst-macro") << "Macro " << q << std::endl;
+  }
   Node ipl = q[2];
   bool isPp = (d_ppQuants.find(q) != d_ppQuants.end());
   bool owner = isPp;
