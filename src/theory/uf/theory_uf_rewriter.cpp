@@ -554,6 +554,13 @@ Node TheoryUfRewriter::canEliminateLambda(NodeManager* nm, const Node& node)
           {
             ret = nm->mkNode(Kind::HO_APPLY, ret, node[1][i]);
           }
+          // For instance we cannot eliminate (lambda ((x Int)) (f x x)) to
+          // (f x).
+          std::vector<Node> vars(node[0].begin(), node[0].end());
+          if (expr::hasSubterm(ret, vars))
+          {
+            return Node::null();
+          }
         }
         return ret;
       }
