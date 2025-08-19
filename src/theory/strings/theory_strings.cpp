@@ -319,7 +319,7 @@ bool TheoryStrings::collectModelInfoType(
   std::vector<std::vector<Node>> col;
   std::vector<Node> lts;
   const std::vector<Node> repVec(repSet.at(tn).begin(), repSet.at(tn).end());
-  mc->separateByLength(repVec, col, lts);
+  mc->separateByLength(m, repVec, col, lts);
   Assert(col.size() == lts.size());
   // indices in col that have lengths that are too big to represent
   std::unordered_set<size_t> oobIndices;
@@ -1234,9 +1234,9 @@ TrustNode TheoryStrings::ppStaticRewrite(TNode atom)
   {
     if (atom[0].getType().isRegExp())
     {
-      std::stringstream ss;
-      ss << "Equality between regular expressions is not supported";
-      throw LogicException(ss.str());
+      Node res = d_rewriter.rewriteViaRule(ProofRewriteRule::RE_EQ_ELIM, atom);
+      Assert(!res.isNull());
+      return TrustNode::mkTrustRewrite(atom, res, d_psrewPg.get());
     }
     // always apply aggressive equality rewrites here
     Node ret = d_rewriter.rewriteEqualityExt(atom);
