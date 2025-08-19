@@ -691,7 +691,7 @@ Result InstStrategyMbqi::checkWithSubsolverSimple(
       && expr::hasSubtermKind(Kind::FORALL, query))
   {
     Trace("mbqi") << "*** SKIP " << query << std::endl;
-    return Result(Result::Status::UNKNOWN);
+    return Result();
   }
   return checkWithSubsolver(query,
                             info,
