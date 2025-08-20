@@ -385,7 +385,7 @@ Node DtElimConverter::getTesterInternal(const Node& v, DtElimPolicy policy)
   }
   Assert(!isBinaryTestPolicy(policy) || tester.getType().isBoolean());
   Assert(!isAbstractPolicy(policy)
-         || tester.getType() == getTypeAbstraction(vtn));
+         || tester.getType() == getTypeAbstraction(v.getType()));
   d_tester[v] = tester;
   return tester;
 }
