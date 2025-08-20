@@ -551,8 +551,9 @@ void TheoryEngine::check(Theory::Effort effort) {
           }
           if (!d_tc->buildModel())
           {
-            // model failed to build, we are done
-            break;
+            // same as with theories, for uniformity we ask all modules
+            // needsCandidateModel method.
+            continue;
           }
           tem->notifyCandidateModel(getModel());
         }

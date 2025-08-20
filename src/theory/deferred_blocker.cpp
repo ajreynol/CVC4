@@ -64,21 +64,20 @@ bool DeferredBlocker::filterLemma(TNode n, InferenceId id, LemmaProperty p)
 
 bool DeferredBlocker::needsCandidateModel()
 {
-  return d_filtered;
-}
-
-void DeferredBlocker::notifyCandidateModel(TheoryModel* m)
-{
+  if (!d_filtered)
+  {
+    return false;
+  }
   Trace("defer-block-debug") << "DeferredBlocker: notifyCandidateModel" << std::endl;
   if (d_valuation.needCheck())
   {
     Trace("defer-block-debug") << "...already needs check" << std::endl;
-    return;
+    return false;
   }
   if (!d_filtered.get())
   {
     Trace("defer-block-debug") << "...didnt filter" << std::endl;
-    return;
+    return false;
   }
     Trace("defer-block-debug") << "...run check" << std::endl;
   Trace("defer-block") << "DeferredBlocker: notifyCandidateModel" << std::endl;
@@ -96,7 +95,7 @@ void DeferredBlocker::notifyCandidateModel(TheoryModel* m)
         d_out.lemma(n, InferenceId::DEFER_BLOCK_UC);
       }
     }
-    return;
+    return false;
   }
   std::vector<Node> assertions;
   std::unordered_set<Node> quants;
@@ -144,6 +143,7 @@ void DeferredBlocker::notifyCandidateModel(TheoryModel* m)
     TrustNode trn = TrustNode::mkTrustLemma(ucc.notNode(), nullptr);
     d_out.trustedLemma(trn, InferenceId::DEFER_BLOCK_UC);
   }
+  return false;
 }
 
 }  // namespace theory
