@@ -65,6 +65,8 @@ class DeferredBlocker : public TheoryEngineModule
   context::CDList<Node> d_filteredLems;
   /** The index of lemmas we have added */
   context::CDO<size_t> d_filterIndex;
+  /** Lemmas we have blocked in the current context */
+  context::CDHashSet<Node> d_bbSplit;
   /** All lemmas we have sent in the user context */
   context::CDHashSet<Node> d_cache;
   /** The options for subsolver calls */

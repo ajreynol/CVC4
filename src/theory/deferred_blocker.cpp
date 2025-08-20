@@ -34,6 +34,7 @@ DeferredBlocker::DeferredBlocker(Env& env,
       d_filtered(userContext(), false),
       d_filteredLems(userContext()),
       d_filterIndex(userContext(), 0),
+      d_bbSplit(context()),
       d_cache(userContext())
 {
   // determine the options to use for the verification subsolvers we spawn
@@ -55,6 +56,13 @@ bool DeferredBlocker::filterLemma(TNode n, InferenceId id, LemmaProperty p)
   //if (id==InferenceId::ARITH_BB_LEMMA || id==InferenceId::ARITH_NL_TANGENT_PLANE || id==InferenceId::ARITH_NL_INFER_BOUNDS_NT)
   if (id==InferenceId::ARITH_BB_LEMMA)
   {
+    Assert (n.getKind()==Kind::OR && n[0].getNumChildren()==2 && n[0][1].isConst());
+    Node term = n[0][0];
+    if (d_bbSplit.find(term)==d_bbSplit.end())
+    {
+      d_bbSplit.insert(term);
+      return false;
+    }
     Trace("defer-block-debug") << "...filtered " << id << std::endl;
     d_filtered = true;
     d_filteredLems.push_back(n);
