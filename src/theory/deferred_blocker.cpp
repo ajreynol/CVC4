@@ -52,7 +52,8 @@ void DeferredBlocker::check(Theory::Effort e) {}
 
 bool DeferredBlocker::filterLemma(TNode n, InferenceId id, LemmaProperty p)
 {
-  if (id==InferenceId::ARITH_BB_LEMMA || id==InferenceId::ARITH_NL_TANGENT_PLANE || id==InferenceId::ARITH_NL_INFER_BOUNDS_NT)
+  //if (id==InferenceId::ARITH_BB_LEMMA || id==InferenceId::ARITH_NL_TANGENT_PLANE || id==InferenceId::ARITH_NL_INFER_BOUNDS_NT)
+  if (id==InferenceId::ARITH_BB_LEMMA)
   {
     Trace("defer-block-debug") << "...filtered " << id << std::endl;
     d_filtered = true;
