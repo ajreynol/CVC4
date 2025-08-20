@@ -65,7 +65,14 @@ class DtElimConverter : protected EnvObj, public NodeConverter
   /**
    */
   Node postConvert(Node n) override;
-
+  /**
+   * Get the new lemmas
+   */
+  const std::vector<Node>& getNewLemmas() const { return d_newLemmas; }
+  /**
+   * Get the model substitutions
+   */
+  const std::vector<Node>& getModelSubstitutions() const { return d_modelSubs; }
  private:
   /**
    * For t : D where D is a datatype, this returns the abstraction of t.
@@ -93,6 +100,8 @@ class DtElimConverter : protected EnvObj, public NodeConverter
   const std::vector<Node>& getConstructorVec(const TypeNode& tn);
   /** The new lemmas */
   std::vector<Node> d_newLemmas;
+  /** The eliminations */
+  std::vector<Node> d_modelSubs;
   /** The policy */
   std::map<TypeNode, DtElimPolicy> d_dtep;
   /** Used for getTester and getAbstractConsKind */

@@ -49,6 +49,7 @@ const char* toString(TrustId id)
     case TrustId::PREPROCESS_BV_TO_INT: return "PREPROCESS_BV_TO_INT";
     case TrustId::PREPROCESS_BV_TO_INT_LEMMA:
       return "PREPROCESS_BV_TO_INT_LEMMA";
+    case TrustId::PREPROCESS_DT_ELIM: return "PREPROCESS_DT_ELIM";
     case TrustId::PREPROCESS_BOOL_TO_BV: return "PREPROCESS_BOOL_TO_BV";
     case TrustId::PREPROCESS_ACKERMANN: return "PREPROCESS_ACKERMANN";
     case TrustId::PREPROCESS_ACKERMANN_LEMMA:
@@ -112,7 +113,7 @@ const char* toString(TrustId id)
       return "QUANTIFIERS_SUB_CBQI_LEMMA";
     case TrustId::QUANTIFIERS_NESTED_QE_LEMMA:
       return "QUANTIFIERS_NESTED_QE_LEMMA";
-    case TrustId::STRINGS_PP_STATIC_REWRITE: return "STRINGS_PP_STATIC_REWRITE";
+    case TrustId::STRINGS_PP_STATIC_REWRITE: return "STRINGS_PP_LREWRITE";
     case TrustId::VALID_WITNESS: return "VALID_WITNESS";
     case TrustId::SUBTYPE_ELIMINATION: return "SUBTYPE_ELIMINATION";
     case TrustId::MACRO_THEORY_REWRITE_RCONS:

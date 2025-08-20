@@ -26,6 +26,8 @@
 #include "theory/datatypes/theory_datatypes_utils.h"
 #include "theory/rewriter.h"
 #include "util/rational.h"
+#include "preprocessing/assertion_pipeline.h"
+#include "preprocessing/preprocessing_pass_context.h"
 
 namespace cvc5::internal {
 namespace preprocessing {
@@ -93,6 +95,16 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     if (visited.find(cur) == visited.end())
     {
       visited.insert(cur);
+      TypeNode tn = cur.getType();
+      if (tn.isDatatype())
+      {
+        allDt.insert(tn);
+        continue;
+      }
+      if (cur.isVar())
+      {
+        // all its component types must be preserved????
+      }
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
   } while (!visit.empty());
@@ -139,13 +151,17 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     }
     Trace("dt-elim-policy")
         << "Policy for " << tn << " is " << policy << std::endl;
+    if (policy!=DtElimPolicy::NONE)
+    {
+      d_dtep[tn] = policy;
+    }
   }
 }
-/**
- */
+
 Node DtElimConverter::postConvert(Node n)
 {
   Kind k = n.getKind();
+  Trace("dt-elim-debug") << "convert: " << n << " " << k << std::endl;
   if (k == Kind::APPLY_TESTER)
   {
     Node t = n[0];
@@ -220,6 +236,7 @@ Node DtElimConverter::postConvert(Node n)
     Node kt = SkolemManager::mkPurifySkolem(n);
     Node iteLemma =
         d_nm->mkNode(Kind::ITE, n[0], kt.eqNode(n[1]), kt.eqNode(n[2]));
+    iteLemma = convert(iteLemma);
     d_newLemmas.push_back(iteLemma);
     return kt;
   }
@@ -265,18 +282,73 @@ Node DtElimConverter::postConvert(Node n)
     TypeNode tn = n.getType();
     if (tn.isFunction())
     {
+      Trace("dt-elim-debug") << "Process function " << n << std::endl;
       // check if any argument is a datatype, if so we replace by a lambda
       std::vector<TypeNode> argTypes = tn.getArgTypes();
-      for (const TypeNode& tna : argTypes)
+      for (size_t i=0, nargs=argTypes.size(); i<nargs; i++)
       {
+        TypeNode tna = argTypes[i];
         std::map<TypeNode, DtElimPolicy>::iterator itd = d_dtep.find(tna);
         if (itd == d_dtep.end())
         {
           continue;
         }
         // otherwise we construct the appropriate lambda.
+        std::vector<Node> vars;
+        std::vector<Node> args;
+        std::vector<Node> revVars;
+        std::vector<Node> revArgs;
+        for (size_t j=0; j<nargs; j++)
+        {
+          tna = argTypes[j];
+          if (j!=i)
+          {
+            Node v = d_nm->mkBoundVar(tna);
+            args.push_back(v);
+            vars.push_back(v);
+            revArgs.push_back(v);
+            revVars.push_back(v);
+            continue;
+          }
+          Assert (tna.isDatatype());
+          const DType& dt = tna.getDType();
+          if (dt.getNumConstructors()==1)
+          {
+            Node dv = d_nm->mkBoundVar(tna);
+            revVars.push_back(dv);
+            std::vector<Node> consArg;
+            consArg.push_back(dt[0].getConstructor());
+            for (size_t s=0, ndtargs=dt[0].getNumArgs(); s<ndtargs; s++)
+            {
+              Node sel = d_nm->mkNode(Kind::APPLY_SELECTOR, dt[0].getSelector(s), dv);
+              revArgs.push_back(sel);
+              Node v = d_nm->mkBoundVar(dt[0].getArgType(s));
+              vars.push_back(v);
+              consArg.push_back(v);
+            }
+            Node cons = d_nm->mkNode(Kind::APPLY_CONSTRUCTOR, consArg);
+            args.push_back(cons);
+          }
+          else
+          {
+            Unhandled() << "Can't handle function applied to 2+ constructor datatype " << tna;
+          }
+        }
+        args.insert(args.begin(), n);
+        Node lamBody = d_nm->mkNode(Kind::APPLY_UF, args);
+        Node lam = vars.empty() ? lamBody : d_nm->mkNode(Kind::LAMBDA, d_nm->mkNode(Kind::BOUND_VAR_LIST, vars), lamBody);
+        Node nnew = SkolemManager::mkPurifySkolem(lam);
+        revArgs.insert(revArgs.begin(), nnew);
+        Node revLamBody = d_nm->mkNode(Kind::APPLY_UF, revArgs);
+        Node revLam = revVars.empty() ? revLamBody : d_nm->mkNode(Kind::LAMBDA, d_nm->mkNode(Kind::BOUND_VAR_LIST, revVars), revLamBody);
+        Trace("dt-elim") << "*** Replace " << n << " with " << revLam << std::endl;
+        Trace("dt-elim") << "  where " << nnew << " is " << lam << std::endl;
+        d_modelSubs.push_back(n.eqNode(revLam));
+        return revLam;
       }
     }
+    // if the return type has changed, we save a model substitution and return
+    // self
     std::map<TypeNode, DtElimPolicy>::iterator itd = d_dtep.find(tn);
     if (itd == d_dtep.end())
     {
@@ -463,56 +535,32 @@ DtElim::DtElim(PreprocessingPassContext* preprocContext)
 {
 }
 
-Node DtElim::processInternal(const Node& n, std::unordered_set<TNode>& visited)
-{
-  std::vector<TNode> visit;
-  TNode cur;
-  visit.push_back(n);
-  do
-  {
-    cur = visit.back();
-    visit.pop_back();
-    if (visited.find(cur) == visited.end())
-    {
-      visited.insert(cur);
-      if (n.hasOperator())
-      {
-        visit.push_back(n.getOperator());
-      }
-      visit.insert(visit.end(), cur.begin(), cur.end());
-      TypeNode tn = n.getType();
-      if (!d_processed.insert(tn).second)
-      {
-        continue;
-      }
-      if (tn.isDatatype())
-      {
-        d_candidateDt.push_back(tn);
-      }
-      else if (tn.getNumChildren() > 0)
-      {
-      }
-    }
-  } while (!visit.empty());
-  return n;
-}
-
 PreprocessingPassResult DtElim::applyInternal(
     AssertionPipeline* assertionsToPreprocess)
 {
-  std::unordered_set<TNode> visited;
+  DtElimConverter dec(d_env, assertionsToPreprocess->ref());
   for (size_t i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
   {
-    const Node& a = (*assertionsToPreprocess)[i];
-    processInternal(a, visited);
+    Node a = (*assertionsToPreprocess)[i];
+    Node ac = dec.convert(a);
+    if (a != ac)
+    {
+      assertionsToPreprocess->replace(
+          i, ac, nullptr, TrustId::PREPROCESS_DT_ELIM);
+    }
   }
-  /*
-  for (size_t i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
+  const std::vector<Node>& lems = dec.getNewLemmas();
+  for (const Node& lem : lems)
   {
-    Node ar = processInternal(a,visited);
-    assertionsToPreprocess->replace(i, ar);
+      assertionsToPreprocess->push_back(lem, false, nullptr, TrustId::PREPROCESS_DT_ELIM, true);
+    
   }
-  */
+  const std::vector<Node>& msubs = dec.getModelSubstitutions();
+  for (const Node& eq : msubs)
+  {
+    Assert (eq.getKind()==Kind::EQUAL);
+    d_preprocContext->addSubstitution(eq[0], eq[1]);
+  }
   return PreprocessingPassResult::NO_CONFLICT;
 }
 
