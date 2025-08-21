@@ -24,11 +24,11 @@
 #include "options/smt_options.h"
 #include "preprocessing/assertion_pipeline.h"
 #include "preprocessing/preprocessing_pass_context.h"
+#include "smt/env.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
 #include "theory/quantifiers/quant_split.h"
 #include "theory/rewriter.h"
 #include "util/rational.h"
-#include "smt/env.h"
 
 namespace cvc5::internal {
 namespace preprocessing {
@@ -137,7 +137,7 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
       }
     }
     // FIXME
-    if (ncons>=2)
+    if (ncons >= 2)
     {
       noElimDt.push_back(tn);
       continue;
@@ -173,7 +173,7 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
   // go back and erase subfield types
   size_t i = 0;
   std::unordered_set<TypeNode> noElimProcessed;
-  while (i<noElimDt.size())
+  while (i < noElimDt.size())
   {
     TypeNode tn = noElimDt[i];
     i++;
@@ -181,14 +181,15 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     {
       continue;
     }
-    Assert (tn.isDatatype());
+    Assert(tn.isDatatype());
     const DType& dt = tn.getDType();
     std::unordered_set<TypeNode> stns = dt.getSubfieldTypes();
     for (const TypeNode& stn : stns)
     {
-      if (d_dtep.find(stn)!=d_dtep.end())
+      if (d_dtep.find(stn) != d_dtep.end())
       {
-        Trace("dt-elim-policy") << "...due to not eliminating " << tn << ", don't eliminate " << stn << std::endl;
+        Trace("dt-elim-policy") << "...due to not eliminating " << tn
+                                << ", don't eliminate " << stn << std::endl;
         d_dtep.erase(stn);
         noElimDt.push_back(stn);
       }
@@ -202,7 +203,7 @@ Node DtElimConverter::preConvert(Node n)
   if (k == Kind::FORALL)
   {
     // TODO: see if any variables need to be split??
-    for (size_t i=0, nvars=n[0].getNumChildren(); i<nvars; i++)
+    for (size_t i = 0, nvars = n[0].getNumChildren(); i < nvars; i++)
     {
       Node v = n[0][i];
       TypeNode tn = v.getType();
@@ -411,13 +412,13 @@ Node DtElimConverter::postConvert(Node n)
       }
     }
   }
-  else if (k==Kind::APPLY_UF && n.getOperator().getKind()==Kind::LAMBDA)
+  else if (k == Kind::APPLY_UF && n.getOperator().getKind() == Kind::LAMBDA)
   {
     // apply full rewriter, as this may induce selector collapses in
     // addition to beta reduction
     Node nc = rewrite(n);
     Trace("dt-elim") << "Beta reduce " << n << " to " << nc << std::endl;
-    Assert (nc!=n);
+    Assert(nc != n);
     return convert(nc);
   }
   return n;
@@ -643,14 +644,14 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
                                                          DtElimPolicy policy,
                                                          size_t i)
 {
-  if (v.getKind()==Kind::APPLY_CONSTRUCTOR)
+  if (v.getKind() == Kind::APPLY_CONSTRUCTOR)
   {
     size_t constructorIndex = datatypes::utils::indexOf(v.getOperator());
-    if (i==constructorIndex)
+    if (i == constructorIndex)
     {
       std::pair<Node, size_t> key(v, i);
       std::vector<Node>& args = d_selectors[key];
-      if (args.size()<v.getNumChildren())
+      if (args.size() < v.getNumChildren())
       {
         args.insert(args.end(), v.begin(), v.end());
       }
