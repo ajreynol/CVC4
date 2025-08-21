@@ -199,8 +199,8 @@ Node DtElimConverter::postConvert(Node n)
     {
       size_t ii = ncons - i - 1;
       // their selectors are each equal
-      const std::vector<Node>& sels1 = getSelectorVec(n[0], ii);
-      const std::vector<Node>& sels2 = getSelectorVec(n[1], ii);
+      const std::vector<Node>& sels1 = getSelectorVec(n[0], itd->second, ii);
+      const std::vector<Node>& sels2 = getSelectorVec(n[1], itd->second, ii);
       Assert(sels1.size() == sels2.size());
       std::vector<Node> conj;
       for (size_t j = 0, nsels = sels1.size(); j < nsels; j++)
@@ -244,24 +244,22 @@ Node DtElimConverter::postConvert(Node n)
   {
     Node t = n[0];
     TypeNode tn = t.getType();
-    if (d_dtep.find(tn) == d_dtep.end())
+    std::map<TypeNode, DtElimPolicy>::iterator itd = d_dtep.find(tn);
+    if (itd == d_dtep.end())
     {
       return n;
     }
-    // We can only apply to variables and APPLY_UF. We first check if we
-    // are an unrewritten correctly applied selector.
-    Kind kt = t.getKind();
-    if (kt == Kind::APPLY_CONSTRUCTOR)
+    if (itd->second==DtElimPolicy::UNIT || itd->second==DtElimPolicy::UNARY)
     {
-      Node nr = rewrite(n);
-      if (nr != n)
-      {
-        return nr;
-      }
+      const std::vector<Node>& sels = getSelectorVec(t, itd->second, 0);
+      size_t selectorIndex = datatypes::utils::indexOf(n.getOperator());
+      Assert (selectorIndex<sels.size());
+      return sels[selectorIndex];
     }
-    if (!t.isVar() && t.getKind() != Kind::APPLY_UF)
+    else
     {
-      // if we are not, we must purify??
+      //size_t cindex = datatypes::utils::cindexOf(n.getOperator());
+      Unhandled() << "Can't handle selector for non-unary datatype";
     }
   }
   else if (k == Kind::FORALL)
@@ -416,15 +414,18 @@ Node DtElimConverter::getTesterFunctionInternal(const Node& v,
 
 Node DtElimConverter::getTesterInternal(const Node& v, DtElimPolicy policy)
 {
-  Assert(v.isVar() || v.getKind() == Kind::APPLY_UF);
-  Assert(v.getKind() != Kind::BOUND_VARIABLE);
+  Kind vk = v.getKind();
+  if (vk==Kind::BOUND_VARIABLE || (!v.isVar() && vk != Kind::APPLY_UF))
+  {
+    Unhandled() << "Cannot get tester for " << v;
+  }
   std::map<Node, Node>::iterator it = d_tester.find(v);
   if (it != d_tester.end())
   {
     return it->second;
   }
   Node tester;
-  if (v.getKind() == Kind::APPLY_UF)
+  if (vk == Kind::APPLY_UF)
   {
     std::vector<Node> ufArgs;
     ufArgs.push_back(getTesterFunctionInternal(v, policy));
@@ -483,12 +484,15 @@ Node DtElimConverter::getTester(const Node& v, DtElimPolicy policy, size_t i)
   return Node::null();
 }
 
-const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
+const std::vector<Node>& DtElimConverter::getSelectorVecInternal(const Node& v,
                                                          size_t i)
 {
+  Kind vk = v.getKind();
+  if (vk==Kind::BOUND_VARIABLE || (!v.isVar() && vk != Kind::APPLY_UF))
+  {
+    Unhandled() << "Cannot get selector for " << v;
+  }
   std::pair<Node, size_t> key(v,i);
-  Assert(v.isVar() || v.getKind() == Kind::APPLY_UF);
-  Assert(v.getKind() != Kind::BOUND_VARIABLE);
   std::map<std::pair<Node, size_t>, std::vector<Node>>::iterator it = d_selectors.find(key);
   if (it != d_selectors.end())
   {
@@ -497,7 +501,7 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
   std::vector<Node> sels;
   if (v.getKind() == Kind::APPLY_UF)
   {
-    const std::vector<Node>& funSelVec = getSelectorVec(v.getOperator(), i);
+    const std::vector<Node>& funSelVec = getSelectorVecInternal(v.getOperator(), i);
     std::vector<Node> appArgs;
     appArgs.push_back(Node::null());
     appArgs.insert(appArgs.end(), v.begin(), v.end());
@@ -530,6 +534,8 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
     const DType& dt = tn.getDType();
     Assert (i<dt.getNumConstructors());
     Trace("dt-elim") << "*** Replace " << v << " with selectors" << std::endl;
+    std::vector<Node> consAppChildren;
+    consAppChildren.push_back(dt[i].getConstructor());
     for (size_t s=0, ndtargs=dt[i].getNumArgs(); s<ndtargs; s++)
     {
       Node sel = d_nm->mkNode(Kind::APPLY_SELECTOR, dt[0].getSelector(s), vi);
@@ -540,10 +546,66 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
       Node ksel = SkolemManager::mkPurifySkolem(sel);
       sels.push_back(ksel);
       Trace("dt-elim") << "- " << ksel << " which is " << sel << std::endl;
+      if (!args.empty())
+      {
+        std::vector<Node> selApp;
+        selApp.push_back(ksel);
+        selApp.insert(selApp.end(), args.begin(), args.end());
+        ksel = d_nm->mkNode(Kind::APPLY_UF, selApp);
+      }
+      consAppChildren.push_back(ksel);
     }
+    Node consApp = d_nm->mkNode(Kind::APPLY_CONSTRUCTOR, consAppChildren);
+    if (!args.empty())
+    {
+      consApp = d_nm->mkNode(Kind::LAMBDA, d_nm->mkNode(Kind::BOUND_VAR_LIST, args), consApp);
+    }
+    Trace("dt-elim") << "-> " << v << " for constructor " << dt[i] << " is " << consApp << std::endl;
+    d_selectorsElim[key] = consApp;
   }
   d_selectors[key] = sels;
   return d_selectors[key];
+}
+
+const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
+                                                         DtElimPolicy policy,
+                                                         size_t i)
+{
+  const std::vector<Node>& ret = getSelectorVecInternal(v, i);
+  Node ve = v.getKind()==Kind::APPLY_UF ? v.getOperator() : v;
+  if (d_modelElim.insert(v).second)
+  {
+    TypeNode tn = ve.getType();
+    if (tn.isFunction())
+    {
+      tn = tn.getRangeType();
+    }
+    Assert (tn.isDatatype());
+    const DType& dt = tn.getDType();
+    Node cur;
+    std::map<std::pair<Node, size_t>, Node>::iterator its;
+    for (size_t j=0, ncons=dt.getNumConstructors(); j<ncons; j++)
+    {
+      getSelectorVecInternal(ve, j);
+      std::pair<Node, size_t> key(ve, j);
+      its = d_selectorsElim.find(key);
+      Assert (its!=d_selectorsElim.end());
+      if (cur.isNull())
+      {
+        cur = its->second;
+      }
+      else
+      {
+        Node tester = getTester(ve, policy, j);
+        cur = d_nm->mkNode(Kind::ITE, tester, its->second, cur);
+      }
+    }
+    Node meq = v.eqNode(cur);
+    Trace("dt-elim") << "*** Overall elimination for " << v << " is " << cur << std::endl;
+    d_modelSubs.push_back(meq);
+    
+  }
+  return ret;
 }
 
 TypeNode DtElimConverter::getTypeAbstraction(const TypeNode& dt)

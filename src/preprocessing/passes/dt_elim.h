@@ -95,19 +95,23 @@ class DtElimConverter : protected EnvObj, public NodeConverter
   Node getTesterFunctionInternal(const Node& v, DtElimPolicy policy);
   Node getTesterInternal(const Node& v, DtElimPolicy policy);
   Node getTester(const Node& v, DtElimPolicy policy, size_t i);
-  const std::vector<Node>& getSelectorVec(const Node& v, size_t i);
+  const std::vector<Node>& getSelectorVecInternal(const Node& v, size_t i);
+  const std::vector<Node>& getSelectorVec(const Node& v, DtElimPolicy policy, size_t i);
   TypeNode getTypeAbstraction(const TypeNode& dt);
   const std::vector<Node>& getConstructorVec(const TypeNode& tn);
   /** The new lemmas */
   std::vector<Node> d_newLemmas;
   /** The eliminations */
   std::vector<Node> d_modelSubs;
+  /** */
+  std::unordered_set<Node> d_modelElim;
   /** The policy */
   std::map<TypeNode, DtElimPolicy> d_dtep;
   /** Used for getTester and getAbstractConsKind */
   std::map<Node, Node> d_tester;
   /** */
   std::map<std::pair<Node, size_t>, std::vector<Node>> d_selectors;
+  std::map<std::pair<Node, size_t>, Node> d_selectorsElim;
   /** */
   std::map<TypeNode, std::vector<Node>> d_constructors;
   /** */
