@@ -279,7 +279,7 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     Trace("mbqi-enum-choice-grammar") << "---> convert " << n << std::endl;
     std::unordered_set<Node> fvs;
     expr::getFreeVariables(n, fvs);
-    Node exists = nm->mkNode(Kind::EXISTS, n[0], n[1]);
+    Node exists = nm->mkNode(Kind::FORALL, n[0], n[1].negate());
     TypeNode retType = n[0][0].getType();
     std::vector<TypeNode> argTypes;
     std::vector<Node> ubvl;
@@ -308,7 +308,7 @@ Node MVarInfo::ChoiceElimNodeConverter::postConvert(Node n)
     Subs subs;
     subs.add(n[0][0], h);
     Node kpred = subs.apply(n[1]);
-    Node lem = nm->mkNode(Kind::OR, exists.negate(), kpred);
+    Node lem = nm->mkNode(Kind::OR, exists, kpred);
     if (!ubvl.empty())
     {
       // use h(x) as the trigger, which is a legal trigger since it is applied
