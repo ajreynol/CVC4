@@ -25,8 +25,10 @@
 #include "preprocessing/assertion_pipeline.h"
 #include "preprocessing/preprocessing_pass_context.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
+#include "theory/quantifiers/quant_split.h"
 #include "theory/rewriter.h"
 #include "util/rational.h"
+#include "smt/env.h"
 
 namespace cvc5::internal {
 namespace preprocessing {
@@ -90,6 +92,7 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
   do
   {
     cur = visit.back();
+    Trace("dt-elim-debug2") << "- visit " << cur << std::endl;
     visit.pop_back();
     if (visited.find(cur) == visited.end())
     {
@@ -98,7 +101,6 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
       if (tn.isDatatype())
       {
         allDt.insert(tn);
-        continue;
       }
       if (cur.isVar())
       {
@@ -110,6 +112,7 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
 
   for (const TypeNode& tn : allDt)
   {
+    Trace("dt-elim-policy") << "Compute policy for " << tn << std::endl;
     if (preserveTypes.find(tn) != preserveTypes.end())
     {
       continue;
@@ -130,6 +133,11 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
         isEnum = false;
         break;
       }
+    }
+    // FIXME
+    if (ncons>=2)
+    {
+      continue;
     }
     DtElimPolicy policy = DtElimPolicy::NONE;
     if (isEnum)
@@ -155,6 +163,28 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
       d_dtep[tn] = policy;
     }
   }
+}
+
+Node DtElimConverter::preConvert(Node n)
+{
+  Kind k = n.getKind();
+  if (k == Kind::FORALL)
+  {
+    // TODO: see if any variables need to be split??
+    for (size_t i=0, nvars=n[0].getNumChildren(); i<nvars; i++)
+    {
+      Node v = n[0][i];
+      TypeNode tn = v.getType();
+      std::map<TypeNode, DtElimPolicy>::iterator itd = d_dtep.find(tn);
+      if (itd == d_dtep.end())
+      {
+        continue;
+      }
+      Node ns = quantifiers::QuantDSplit::split(nodeManager(), n, i);
+      return ns;
+    }
+  }
+  return n;
 }
 
 Node DtElimConverter::postConvert(Node n)
@@ -261,19 +291,6 @@ Node DtElimConverter::postConvert(Node n)
       Unhandled() << "Can't handle selector for non-unary datatype";
     }
   }
-  else if (k == Kind::FORALL)
-  {
-    // TODO: see if any variables need to be split??
-    for (const Node& v : n[0])
-    {
-      TypeNode tn = v.getType();
-      std::map<TypeNode, DtElimPolicy>::iterator itd = d_dtep.find(tn);
-      if (itd == d_dtep.end())
-      {
-        continue;
-      }
-    }
-  }
   else if ((k != Kind::BOUND_VARIABLE && n.isVar()) || k == Kind::APPLY_UF)
   {
     TypeNode tn = n.getType();
@@ -342,8 +359,12 @@ Node DtElimConverter::postConvert(Node n)
                                       d_nm->mkNode(Kind::BOUND_VAR_LIST, vars),
                                       lamBody);
         Node nnew = SkolemManager::mkPurifySkolem(lam);
-        revArgs.insert(revArgs.begin(), nnew);
-        Node revLamBody = d_nm->mkNode(Kind::APPLY_UF, revArgs);
+        Node revLamBody = nnew;
+        if (!revArgs.empty())
+        {
+          revArgs.insert(revArgs.begin(), nnew);
+          revLamBody = d_nm->mkNode(Kind::APPLY_UF, revArgs);
+        }
         Node revLam =
             revVars.empty()
                 ? revLamBody
@@ -357,14 +378,15 @@ Node DtElimConverter::postConvert(Node n)
         return revLam;
       }
     }
-    // if the return type has changed, we save a model substitution and return
-    // self
-    std::map<TypeNode, DtElimPolicy>::iterator itd = d_dtep.find(tn);
-    if (itd == d_dtep.end())
+    if (k==Kind::APPLY_UF && n.getOperator().getKind()==Kind::LAMBDA)
     {
-      return n;
+      // apply full rewriter, as this may induce selector collapses in
+      // addition to beta reduction
+      Node nc = rewrite(n);
+      Trace("dt-elim") << "Beta reduce " << n << " to " << nc << std::endl;
+      Assert (nc!=n);
+      return convert(nc);
     }
-    // change the variable into constructors only??
   }
   return n;
 }
@@ -502,7 +524,7 @@ const std::vector<Node>& DtElimConverter::getSelectorVecInternal(const Node& v,
   Kind vk = v.getKind();
   if (vk == Kind::BOUND_VARIABLE || (!v.isVar() && vk != Kind::APPLY_UF))
   {
-    Unhandled() << "Cannot get selector for " << v;
+    Unhandled() << "Cannot get selector for " << v << " " << vk;
   }
   std::pair<Node, size_t> key(v, i);
   std::map<std::pair<Node, size_t>, std::vector<Node>>::iterator it =
@@ -589,6 +611,20 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
                                                          DtElimPolicy policy,
                                                          size_t i)
 {
+  if (v.getKind()==Kind::APPLY_CONSTRUCTOR)
+  {
+    size_t constructorIndex = datatypes::utils::indexOf(v.getOperator());
+    if (i==constructorIndex)
+    {
+      std::pair<Node, size_t> key(v, i);
+      std::vector<Node>& args = d_selectors[key];
+      if (args.size()<v.getNumChildren())
+      {
+        args.insert(args.end(), v.begin(), v.end());
+      }
+      return args;
+    }
+  }
   const std::vector<Node>& ret = getSelectorVecInternal(v, i);
   Node ve = v.getKind() == Kind::APPLY_UF ? v.getOperator() : v;
   if (d_modelElim.insert(ve).second)

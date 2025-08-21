@@ -62,6 +62,7 @@ class DtElimConverter : protected EnvObj, public NodeConverter
    * Compute the policies for each datatype
    */
   void computePolicies(const std::vector<Node>& assertions);
+  Node preConvert(Node n) override;
   /**
    */
   Node postConvert(Node n) override;
