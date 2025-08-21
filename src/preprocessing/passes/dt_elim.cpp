@@ -110,11 +110,13 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     }
   } while (!visit.empty());
 
+  std::vector<TypeNode> noElimDt;
   for (const TypeNode& tn : allDt)
   {
     Trace("dt-elim-policy") << "Compute policy for " << tn << std::endl;
     if (preserveTypes.find(tn) != preserveTypes.end())
     {
+      noElimDt.push_back(tn);
       continue;
     }
     Assert(tn.isDatatype());
@@ -137,6 +139,7 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     // FIXME
     if (ncons>=2)
     {
+      noElimDt.push_back(tn);
       continue;
     }
     DtElimPolicy policy = DtElimPolicy::NONE;
@@ -161,6 +164,34 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     if (policy != DtElimPolicy::NONE)
     {
       d_dtep[tn] = policy;
+    }
+    else
+    {
+      noElimDt.push_back(tn);
+    }
+  }
+  // go back and erase subfield types
+  size_t i = 0;
+  std::unordered_set<TypeNode> noElimProcessed;
+  while (i<noElimDt.size())
+  {
+    TypeNode tn = noElimDt[i];
+    i++;
+    if (!noElimProcessed.insert(tn).second)
+    {
+      continue;
+    }
+    Assert (tn.isDatatype());
+    const DType& dt = tn.getDType();
+    std::unordered_set<TypeNode> stns = dt.getSubfieldTypes();
+    for (const TypeNode& stn : stns)
+    {
+      if (d_dtep.find(stn)!=d_dtep.end())
+      {
+        Trace("dt-elim-policy") << "...due to not eliminating " << tn << ", don't eliminate " << stn << std::endl;
+        d_dtep.erase(stn);
+        noElimDt.push_back(stn);
+      }
     }
   }
 }
@@ -291,8 +322,9 @@ Node DtElimConverter::postConvert(Node n)
       Unhandled() << "Can't handle selector for non-unary datatype";
     }
   }
-  else if ((k != Kind::BOUND_VARIABLE && n.isVar()) || k == Kind::APPLY_UF)
+  else if (k != Kind::BOUND_VARIABLE && n.isVar())
   {
+    // if a function variable, we may need to eliminate arguments
     TypeNode tn = n.getType();
     if (tn.isFunction())
     {
@@ -378,15 +410,15 @@ Node DtElimConverter::postConvert(Node n)
         return revLam;
       }
     }
-    if (k==Kind::APPLY_UF && n.getOperator().getKind()==Kind::LAMBDA)
-    {
-      // apply full rewriter, as this may induce selector collapses in
-      // addition to beta reduction
-      Node nc = rewrite(n);
-      Trace("dt-elim") << "Beta reduce " << n << " to " << nc << std::endl;
-      Assert (nc!=n);
-      return convert(nc);
-    }
+  }
+  else if (k==Kind::APPLY_UF && n.getOperator().getKind()==Kind::LAMBDA)
+  {
+    // apply full rewriter, as this may induce selector collapses in
+    // addition to beta reduction
+    Node nc = rewrite(n);
+    Trace("dt-elim") << "Beta reduce " << n << " to " << nc << std::endl;
+    Assert (nc!=n);
+    return convert(nc);
   }
   return n;
 }
