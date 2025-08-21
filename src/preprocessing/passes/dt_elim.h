@@ -107,7 +107,7 @@ class DtElimConverter : protected EnvObj, public NodeConverter
   /** Used for getTester and getAbstractConsKind */
   std::map<Node, Node> d_tester;
   /** */
-  std::map<Node, std::vector<Node>> d_selectors;
+  std::map<std::pair<Node, size_t>, std::vector<Node>> d_selectors;
   /** */
   std::map<TypeNode, std::vector<Node>> d_constructors;
   /** */

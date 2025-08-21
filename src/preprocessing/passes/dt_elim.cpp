@@ -486,14 +486,64 @@ Node DtElimConverter::getTester(const Node& v, DtElimPolicy policy, size_t i)
 const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
                                                          size_t i)
 {
+  std::pair<Node, size_t> key(v,i);
   Assert(v.isVar() || v.getKind() == Kind::APPLY_UF);
   Assert(v.getKind() != Kind::BOUND_VARIABLE);
-  std::map<Node, std::vector<Node>>::iterator it = d_selectors.find(v);
+  std::map<std::pair<Node, size_t>, std::vector<Node>>::iterator it = d_selectors.find(key);
   if (it != d_selectors.end())
   {
     return it->second;
   }
-  // TODO
+  std::vector<Node> sels;
+  if (v.getKind() == Kind::APPLY_UF)
+  {
+    const std::vector<Node>& funSelVec = getSelectorVec(v.getOperator(), i);
+    std::vector<Node> appArgs;
+    appArgs.push_back(Node::null());
+    appArgs.insert(appArgs.end(), v.begin(), v.end());
+    for (size_t j=0, nsels=funSelVec.size(); j<nsels; j++)
+    {
+      appArgs[0] = funSelVec[j];
+      Node selApp = d_nm->mkNode(Kind::APPLY_UF, appArgs);
+      sels.push_back(selApp);
+    }
+  }
+  else
+  {
+    TypeNode tn = v.getType();
+    std::vector<Node> args;
+    Node vi = v;
+    if (tn.isFunction())
+    {
+      std::vector<Node> appArgs;
+      appArgs.push_back(v);
+      std::vector<TypeNode> argTypes = tn.getArgTypes();
+      for (const TypeNode& tna : argTypes)
+      {
+        Node vv = d_nm->mkBoundVar(tna);
+        appArgs.push_back(vv);
+      }
+      tn = tn.getRangeType();
+      vi = d_nm->mkNode(Kind::APPLY_UF, appArgs);
+    }
+    Assert (tn.isDatatype());
+    const DType& dt = tn.getDType();
+    Assert (i<dt.getNumConstructors());
+    Trace("dt-elim") << "*** Replace " << v << " with selectors" << std::endl;
+    for (size_t s=0, ndtargs=dt[i].getNumArgs(); s<ndtargs; s++)
+    {
+      Node sel = d_nm->mkNode(Kind::APPLY_SELECTOR, dt[0].getSelector(s), vi);
+      if (!args.empty())
+      {
+        sel = d_nm->mkNode(Kind::LAMBDA, d_nm->mkNode(Kind::BOUND_VAR_LIST, args), sel);
+      }
+      Node ksel = SkolemManager::mkPurifySkolem(sel);
+      sels.push_back(ksel);
+      Trace("dt-elim") << "- " << ksel << " which is " << sel << std::endl;
+    }
+  }
+  d_selectors[key] = sels;
+  return d_selectors[key];
 }
 
 TypeNode DtElimConverter::getTypeAbstraction(const TypeNode& dt)
