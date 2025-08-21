@@ -526,6 +526,7 @@ const std::vector<Node>& DtElimConverter::getSelectorVecInternal(const Node& v,
       {
         Node vv = d_nm->mkBoundVar(tna);
         appArgs.push_back(vv);
+        args.push_back(vv);
       }
       tn = tn.getRangeType();
       vi = d_nm->mkNode(Kind::APPLY_UF, appArgs);
@@ -560,7 +561,7 @@ const std::vector<Node>& DtElimConverter::getSelectorVecInternal(const Node& v,
     {
       consApp = d_nm->mkNode(Kind::LAMBDA, d_nm->mkNode(Kind::BOUND_VAR_LIST, args), consApp);
     }
-    Trace("dt-elim") << "-> " << v << " for constructor " << dt[i] << " is " << consApp << std::endl;
+    Trace("dt-elim") << "-> " << v << " for constructor " << dt[i].getName() << " is " << consApp << std::endl;
     d_selectorsElim[key] = consApp;
   }
   d_selectors[key] = sels;
@@ -573,7 +574,7 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
 {
   const std::vector<Node>& ret = getSelectorVecInternal(v, i);
   Node ve = v.getKind()==Kind::APPLY_UF ? v.getOperator() : v;
-  if (d_modelElim.insert(v).second)
+  if (d_modelElim.insert(ve).second)
   {
     TypeNode tn = ve.getType();
     if (tn.isFunction())
@@ -600,8 +601,8 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
         cur = d_nm->mkNode(Kind::ITE, tester, its->second, cur);
       }
     }
-    Node meq = v.eqNode(cur);
-    Trace("dt-elim") << "*** Overall elimination for " << v << " is " << cur << std::endl;
+    Node meq = ve.eqNode(cur);
+    Trace("dt-elim") << "*** Overall elimination for " << ve << " is " << cur << std::endl;
     d_modelSubs.push_back(meq);
     
   }
