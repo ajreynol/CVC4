@@ -469,7 +469,7 @@ bool DType::isRecursive() const
     {
       continue;
     }
-    if (curTyp==d_self)
+    if (curTyp == d_self)
     {
       return true;
     }
@@ -479,8 +479,7 @@ bool DType::isRecursive() const
       stypes = dtcur.getSubfieldTypes();
       tvisit.insert(tvisit.end(), stypes.begin(), stypes.end());
     }
-  }
-  while (!tvisit.empty());
+  } while (!tvisit.empty());
   return false;
 }
 

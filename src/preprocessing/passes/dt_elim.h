@@ -73,6 +73,7 @@ class DtElimConverter : protected EnvObj, public NodeConverter
    * Get the model substitutions
    */
   const std::vector<Node>& getModelSubstitutions() const { return d_modelSubs; }
+
  private:
   /**
    * For t : D where D is a datatype, this returns the abstraction of t.
@@ -96,7 +97,9 @@ class DtElimConverter : protected EnvObj, public NodeConverter
   Node getTesterInternal(const Node& v, DtElimPolicy policy);
   Node getTester(const Node& v, DtElimPolicy policy, size_t i);
   const std::vector<Node>& getSelectorVecInternal(const Node& v, size_t i);
-  const std::vector<Node>& getSelectorVec(const Node& v, DtElimPolicy policy, size_t i);
+  const std::vector<Node>& getSelectorVec(const Node& v,
+                                          DtElimPolicy policy,
+                                          size_t i);
   TypeNode getTypeAbstraction(const TypeNode& dt);
   const std::vector<Node>& getConstructorVec(const TypeNode& tn);
   /** The new lemmas */
