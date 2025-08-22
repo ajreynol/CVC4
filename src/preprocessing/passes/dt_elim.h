@@ -73,7 +73,7 @@ class DtElimConverter : protected EnvObj, public NodeConverter
   /**
    * Get the model substitutions
    */
-  const std::vector<Node>& getModelSubstitutions() const { return d_modelSubs; }
+  const std::map<Node, Node>& getModelSubstitutions() const { return d_modelSubs; }
 
  private:
   /**
@@ -101,14 +101,13 @@ class DtElimConverter : protected EnvObj, public NodeConverter
   const std::vector<Node>& getSelectorVec(const Node& v,
                                           DtElimPolicy policy,
                                           size_t i);
+  Node getModelElimination(const Node& v);
   TypeNode getTypeAbstraction(const TypeNode& dt);
   const std::vector<Node>& getConstructorVec(const TypeNode& tn);
   /** The new lemmas */
   std::vector<Node> d_newLemmas;
   /** The eliminations */
-  std::vector<Node> d_modelSubs;
-  /** */
-  std::unordered_set<Node> d_modelElim;
+  std::map<Node, Node> d_modelSubs;
   /** The policy */
   std::map<TypeNode, DtElimPolicy> d_dtep;
   /** Used for getTester and getAbstractConsKind */
