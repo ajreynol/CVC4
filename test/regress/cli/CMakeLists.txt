@@ -2106,6 +2106,8 @@ set(regress_0_tests
   regress0/strings/re-consume-star.smt2
   regress0/strings/re-consume-sym.smt2
   regress0/strings/re-consume-sym-sigma.smt2
+  regress0/strings/re-eq-simple.smt2
+  regress0/strings/re-eq-simple-sat.smt2
   regress0/strings/re-include-union.smt2
   regress0/strings/re-inclusion-am-pf.smt2
   regress0/strings/re-inter-all.smt2
@@ -2120,6 +2122,7 @@ set(regress_0_tests
   regress0/strings/regexp_inclusion_reduction.smt2
   regress0/strings/regexp_inclusion.smt2
   regress0/strings/regexp-native-simple.cvc.smt2
+  regress0/strings/regexp-repeat.smt2
   regress0/strings/repl-rewrites2.smt2
   regress0/strings/replace-const.smt2
   regress0/strings/replaceall-eval.smt2
@@ -3789,6 +3792,7 @@ set(regress_1_tests
   regress1/sygus/rand_p_1.sy
   regress1/sygus/real-any-const.sy
   regress1/sygus/real-grammar.sy
+  regress1/sygus/rec-declare-fun.sy
   regress1/sygus/rec-fun-swap.sy
   regress1/sygus/rec-fun-sygus.sy
   regress1/sygus/rec-fun-while-1.sy

@@ -617,6 +617,33 @@ enum ENUM(ProofRule)
    * \endverbatim
    */
   EVALUE(MACRO_RESOLUTION_TRUST),
+  /**
+   * \verbatim embed:rst:leading-asterisk
+   * **Boolean -- Chain multiset resolution**
+   *
+   * This rule combines Resolution + Factoring + Reordering.
+   *
+   * .. math::
+   *   \inferrule{C_1 \dots C_n \mid C, (pol_1 \dots pol_{n-1}), (L_1 \dots L_{n-1})}{C}
+   *
+   * where
+   *
+   * - let :math:`C_1 \dots C_n` be nodes viewed as clauses, as defined in
+   *   :cpp:enumerator:`RESOLUTION <cvc5::ProofRule::RESOLUTION>`
+   * - let :math:`C_1 \diamond_{L,\mathit{pol}} C_2` represent the resolution of
+   *   :math:`C_1` with :math:`C_2` with pivot :math:`L` and polarity
+   *   :math:`pol`, as defined in
+   *   :cpp:enumerator:`RESOLUTION <cvc5::ProofRule::RESOLUTION>`
+   * - let :math:`C_1'` be equal, in its set representation, to :math:`C_1`,
+   * - for each :math:`i > 1`, let :math:`C_i'` be equal, in its set
+   *   representation, to :math:`C_{i-1} \diamond_{L_{i-1},\mathit{pol}_{i-1}}
+   *   C_i'`
+   *
+   * The result of the chain resolution is :math:`C`, which is equal, in its set
+   * representation, to :math:`C_n'`.
+   * \endverbatim
+   */
+  EVALUE(CHAIN_M_RESOLUTION),
 
   /**
    * \verbatim embed:rst:leading-asterisk
@@ -3710,6 +3737,17 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_LOOP_ELIM),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Strings -- regular expression equality elimination**
+   *
+   * .. math::
+   *
+   *   (R1 = R2) = \forall s.\> (\mathit{str.in_re}(s, R1) = \mathit{str.in_re}(s, R2))
+   *
+   * \endverbatim
+   */
+  EVALUE(RE_EQ_ELIM),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Strings -- regular expression intersection/union inclusion**
    *
    * .. math::
@@ -4598,6 +4636,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_DIFF_ELIM),
   /** Auto-generated from RARE rule re-plus-elim */
   EVALUE(RE_PLUS_ELIM),
+  /** Auto-generated from RARE rule re-repeat-elim */
+  EVALUE(RE_REPEAT_ELIM),
   /** Auto-generated from RARE rule re-concat-star-swap */
   EVALUE(RE_CONCAT_STAR_SWAP),
   /** Auto-generated from RARE rule re-concat-star-repeat */
