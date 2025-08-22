@@ -420,7 +420,7 @@ Node DtElimConverter::postConvert(Node n)
     Node ret = getModelElimination(n);
     if (!ret.isNull())
     {
-      Assert(ret.getType()==n.getType());
+      Assert(ret.getType() == n.getType());
       return ret;
     }
   }
@@ -664,7 +664,7 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
     {
       std::pair<Node, size_t> key(v, i);
       std::vector<Node>& ret = d_selectors[key];
-      if (ret.empty() && v.getNumChildren()>0)
+      if (ret.empty() && v.getNumChildren() > 0)
       {
         ret.insert(ret.end(), v.begin(), v.end());
       }
@@ -675,12 +675,12 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
   {
     const std::vector<Node>& s1 = getSelectorVec(v[1], policy, i);
     const std::vector<Node>& s2 = getSelectorVec(v[2], policy, i);
-    Assert (s1.size()==s2.size());
+    Assert(s1.size() == s2.size());
     std::pair<Node, size_t> key(v, i);
     std::vector<Node>& ret = d_selectors[key];
     if (ret.empty() && !s1.empty())
     {
-      for (size_t j=0, nsels=s1.size(); j<nsels; j++)
+      for (size_t j = 0, nsels = s1.size(); j < nsels; j++)
       {
         Node rs = d_nm->mkNode(Kind::ITE, v[0], s1[j], s2[j]);
         ret.push_back(rs);
@@ -697,7 +697,7 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
 Node DtElimConverter::getModelElimination(const Node& v)
 {
   std::map<Node, Node>::iterator itm = d_modelSubs.find(v);
-  if (itm!=d_modelSubs.end())
+  if (itm != d_modelSubs.end())
   {
     return itm->second;
   }
@@ -707,12 +707,12 @@ Node DtElimConverter::getModelElimination(const Node& v)
     tn = tn.getRangeType();
   }
   std::map<TypeNode, DtElimPolicy>::iterator itd = d_dtep.find(tn);
-  if (itd==d_dtep.end())
+  if (itd == d_dtep.end())
   {
     d_modelSubs[v] = Node::null();
     return Node::null();
   }
-  Assert (tn.isDatatype());
+  Assert(tn.isDatatype());
   const DType& dt = tn.getDType();
   Node cur;
   std::map<std::pair<Node, size_t>, Node>::iterator its;
@@ -733,7 +733,7 @@ Node DtElimConverter::getModelElimination(const Node& v)
     }
   }
   Trace("dt-elim") << "*** Overall elimination for " << v << " is " << cur
-                    << std::endl;
+                   << std::endl;
   d_modelSubs[v] = cur;
   return cur;
 }
@@ -787,10 +787,11 @@ PreprocessingPassResult DtElim::applyInternal(
     Node ac = dec.convert(a);
     if (a != ac)
     {
-      Trace("dt-elim-assert") << "DtElim: Rewrite " << a << " to " << ac << std::endl;
+      Trace("dt-elim-assert")
+          << "DtElim: Rewrite " << a << " to " << ac << std::endl;
       assertionsToPreprocess->replace(
           i, ac, nullptr, TrustId::PREPROCESS_DT_ELIM);
-      Assert (!expr::hasFreeVar(ac));
+      Assert(!expr::hasFreeVar(ac));
     }
   }
   const std::vector<Node>& lems = dec.getNewLemmas();
@@ -798,7 +799,7 @@ PreprocessingPassResult DtElim::applyInternal(
   {
     assertionsToPreprocess->push_back(
         lem, false, nullptr, TrustId::PREPROCESS_DT_ELIM, true);
-    Assert (!expr::hasFreeVar(lem)) << "Bad lemma " << lem;
+    Assert(!expr::hasFreeVar(lem)) << "Bad lemma " << lem;
   }
   const std::map<Node, Node>& msubs = dec.getModelSubstitutions();
   for (const std::pair<const Node, Node>& s : msubs)
@@ -807,9 +808,9 @@ PreprocessingPassResult DtElim::applyInternal(
     {
       continue;
     }
-    Assert (s.first.getType()==s.second.getType());
+    Assert(s.first.getType() == s.second.getType());
     d_preprocContext->addSubstitution(s.first, s.second);
-    Assert (!expr::hasFreeVar(s.second));
+    Assert(!expr::hasFreeVar(s.second));
   }
   return PreprocessingPassResult::NO_CONFLICT;
 }

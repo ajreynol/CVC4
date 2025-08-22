@@ -73,7 +73,10 @@ class DtElimConverter : protected EnvObj, public NodeConverter
   /**
    * Get the model substitutions
    */
-  const std::map<Node, Node>& getModelSubstitutions() const { return d_modelSubs; }
+  const std::map<Node, Node>& getModelSubstitutions() const
+  {
+    return d_modelSubs;
+  }
 
  private:
   /**
