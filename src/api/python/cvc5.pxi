@@ -5,9 +5,9 @@ import traceback
 
 cimport cpython.ref as cpy_ref
 from cython.operator cimport dereference, preincrement
+from cpython.unicode cimport PyUnicode_DATA, PyUnicode_KIND, PyUnicode_READ, PyUnicode_FromKindAndData, PyUnicode_4BYTE_KIND
 
 from libc.stdint cimport int32_t, int64_t, uint32_t, uint64_t
-from libc.stddef cimport wchar_t
 
 from libcpp cimport bool as c_bool
 from libcpp.pair cimport pair
@@ -43,7 +43,7 @@ from cvc5 cimport Proof as c_Proof
 from cvc5 cimport Sort as c_Sort
 from cvc5 cimport Term as c_Term
 from cvc5 cimport hash as c_hash
-from cvc5 cimport wstring as c_wstring
+from cvc5 cimport u32string as c_u32string
 from cvc5 cimport tuple as c_tuple
 from cvc5 cimport get0, get1, get2
 from cvc5kinds cimport Kind as c_Kind
@@ -55,11 +55,6 @@ from cvc5types cimport InputLanguage as c_InputLanguage
 from cvc5proofrules cimport ProofRewriteRule as c_ProofRewriteRule
 from cvc5proofrules cimport ProofRule as c_ProofRule
 from cvc5skolemids cimport SkolemId as c_SkolemId
-
-cdef extern from "Python.h":
-    wchar_t* PyUnicode_AsWideCharString(object, Py_ssize_t *) except NULL
-    object PyUnicode_FromWideChar(const wchar_t*, Py_ssize_t)
-    void PyMem_Free(void*)
 
 # Style Guidelines
 ### Using PEP-8 spacing recommendations
@@ -1727,7 +1722,7 @@ cdef class TermManager:
 
             First converts the arguments to a temporary string, either
             ``"<numerator>"`` or ``"<numerator>/<denominator>"``. This temporary
-            string is forwarded to :cpp:func:`cvc5::Solver::mkReal()` and should
+            string is forwarded to :cpp:func:`cvc5::TermManager::mkReal()` and should
             thus represent an integer, a decimal number or a fraction.
 
             :param numerator: The numerator.
@@ -1819,15 +1814,23 @@ cdef class TermManager:
                                     unicode character
             :return: The String constant.
         """
-        cdef Py_ssize_t size
         if isinstance(useEscSequences, bool):
             return _term(
                 self,
                 self.ctm.mkString(s.encode(), <bint> useEscSequences))
-        cdef wchar_t* tmp = PyUnicode_AsWideCharString(s, &size)
-        cdef Term res = _term(self, self.ctm.mkString(c_wstring(tmp, size)))
-        PyMem_Free(tmp)
-        return res
+
+        cdef Py_ssize_t n = len(s)
+        cdef int kind = PyUnicode_KIND(s)
+        cdef void* data = PyUnicode_DATA(s)
+        cdef Py_ssize_t i
+
+        cdef c_u32string result
+        result.resize(n)
+
+        for i in range(n):
+            result[i] = <Py_UCS4>PyUnicode_READ(kind, data, i)
+
+        return _term(self, self.ctm.mkString(result))
 
     def mkEmptySequence(self, Sort sort):
         """
@@ -2472,9 +2475,6 @@ cdef class Solver:
         """
             Create a record sort
 
-            .. warning::
-
-                This function is experimental and may change in future versions.
             :param fields: The list of fields of the record.
             :return: The record sort.
             :note: This function is deprecated and will be removed in a future
@@ -2870,7 +2870,7 @@ cdef class Solver:
 
             First converts the arguments to a temporary string, either
             ``"<numerator>"`` or ``"<numerator>/<denominator>"``. This temporary
-            string is forwarded to :cpp:func:`cvc5::Solver::mkReal()` and should
+            string is forwarded to :cpp:func:`cvc5::TermManager::mkReal()` and should
             thus represent an integer, a decimal number or a fraction.
 
             :param numerator: The numerator.
@@ -2915,6 +2915,7 @@ cdef class Solver:
             Create a regular expression none (``re.none``) term.
 
             :return: The none term.
+
             .. warning::
 
                 This function is deprecated and will be removed in a future
@@ -3677,9 +3678,9 @@ cdef class Solver:
 
             .. note::
 
-                This corresponds to :py:meth:`Solver.mkUninterpretedSort()` if
+                This corresponds to :py:meth:`TermManager.mkUninterpretedSort()` if
                 arity = 0, and to
-                :py:meth:`Solver.mkUninterpretedSortConstructorSort()` if
+                :py:meth:`TermManager.mkUninterpretedSortConstructorSort()` if
                 arity > 0.
 
             :param symbol: The name of the sort.
@@ -4082,7 +4083,7 @@ cdef class Solver:
                 This function is experimental and may change in future versions.
 
             :return: A set of terms representing the lemmas used to derive
-            unsatisfiability.
+                     unsatisfiability.
         """
         coreLemmas = []
         for a in self.csolver.getUnsatCoreLemmas():
@@ -4119,6 +4120,10 @@ cdef class Solver:
             assertions that cause a timeout. Note it does not require being
             proceeded by a call to checkSat.
 
+            This function may make multiple checks for satisfiability internally,
+            each limited by the timeout value given by
+            :ref:`timeout-core-timeout <lbl-option-timeout-core-timeout>`.
+
             .. code-block:: smtlib
 
                 (get-timeout-core)
@@ -4128,19 +4133,15 @@ cdef class Solver:
                 This function is experimental and may change in future versions.
 
             :return: The result of the timeout core computation. This is a pair
-            containing a result and a list of formulas. If the result is unknown
-            and the reason is timeout, then the list of formulas correspond to a
-            subset of the current assertions that cause a timeout in the
-            specified time
-            :ref:`timeout-core-timeout <lbl-option-timeout-core-timeout>`.
-            If the result is unsat, then the list of formulas correspond to an
-            unsat core for the current assertions. Otherwise, the result is sat,
-            indicating that the current assertions are satisfiable, and
-            the list of formulas is empty.
-
-            This function may make multiple checks for satisfiability internally,
-            each limited by the timeout value given by
-            :ref:`timeout-core-timeout <lbl-option-timeout-core-timeout>`.
+                     containing a result and a list of formulas. If the result is unknown
+                     and the reason is timeout, then the list of formulas correspond to a
+                     subset of the current assertions that cause a timeout in the
+                     specified time
+                     :ref:`timeout-core-timeout <lbl-option-timeout-core-timeout>`.
+                     If the result is unsat, then the list of formulas correspond to an
+                     unsat core for the current assertions. Otherwise, the result is sat,
+                     indicating that the current assertions are satisfiable, and
+                     the list of formulas is empty.
         """
         cdef pair[c_Result, vector[c_Term]] res
         res = self.csolver.getTimeoutCore()
@@ -4157,6 +4158,10 @@ cdef class Solver:
             that cause a timeout when added to the current assertions. Note it
             does not require being proceeded by a call to checkSat.
 
+            This function may make multiple checks for satisfiability internally,
+            each limited by the timeout value given by
+            :ref:`timeout-core-timeout <lbl-option-timeout-core-timeout>`.
+
             .. code-block:: smtlib
 
                 (get-timeout-core)
@@ -4167,19 +4172,15 @@ cdef class Solver:
 
             :param assumptions: The formulas to assume.
             :return: The result of the timeout core computation. This is a pair
-             containing a result and a list of formulas. If the result is unknown
-             and the reason is timeout, then the list of formulas correspond to a
-             subset of assumptions that cause a timeout when added to the current
-             assertions in the specified time
-            :ref:`timeout-core-timeout <lbl-option-timeout-core-timeout>`.
-             If the result is unsat, then the list of formulas plus the current
-             assertions correspond to an unsat core for the current assertions.
-             Otherwise, the result is sat, indicating that the given assumptions plus
-             the current assertions are satisfiable, and the list of formulas is empty.
-
-            This function may make multiple checks for satisfiability internally,
-            each limited by the timeout value given by
-            :ref:`timeout-core-timeout <lbl-option-timeout-core-timeout>`.
+                     containing a result and a list of formulas. If the result is unknown
+                     and the reason is timeout, then the list of formulas correspond to a
+                     subset of assumptions that cause a timeout when added to the current
+                     assertions in the specified time
+                     :ref:`timeout-core-timeout <lbl-option-timeout-core-timeout>`.
+                     If the result is unsat, then the list of formulas plus the current
+                     assertions correspond to an unsat core for the current assertions.
+                     Otherwise, the result is sat, indicating that the given assumptions plus
+                     the current assertions are satisfiable, and the list of formulas is empty.
         """
         cdef vector[c_Term] v
         for a in assumptions:
@@ -5255,11 +5256,12 @@ cdef class Sort:
     def getAbstractedKind(self):
         """
             :return: The sort kind of an abstract sort, which denotes the kind
-            of sorts that this abstract sort denotes.
+                     of sorts that this abstract sort denotes.
 
             .. warning::
 
                 This function is experimental and may change in future versions.
+
         """
         return SortKind(<int> self.csort.getAbstractedKind())
 
@@ -5683,9 +5685,14 @@ cdef class Term:
 
             :return: The string term as a native string value.
         """
-        cdef Py_ssize_t size
-        cdef c_wstring s = self.cterm.getStringValue()
-        return PyUnicode_FromWideChar(s.data(), s.size())
+        cdef c_u32string s = self.cterm.getU32StringValue()
+        cdef Py_ssize_t n = s.size()
+
+        if n == 0:
+            return u""
+
+        return PyUnicode_FromKindAndData(PyUnicode_4BYTE_KIND, <const void*>&s[0], n)
+
 
     def getRealOrIntegerValueSign(self):
         """
@@ -5910,6 +5917,7 @@ cdef class Term:
             .. warning::
 
                 This function is experimental and may change in future versions.
+
             :return: The skolem identifier of this term.
         """
         return SkolemId(<int> self.cterm.getSkolemId())
