@@ -29,6 +29,7 @@
 #include "prop/sat_solver_types.h"
 #include "smt/env_obj.h"
 #include "theory/atom_requests.h"
+#include "theory/deferred_blocker.h"
 #include "theory/inference_id.h"
 #include "theory/interrupted.h"
 #include "theory/output_channel.h"
@@ -685,6 +686,10 @@ class TheoryEngine : protected EnvObj
    * used.
    */
   std::unique_ptr<theory::PartitionGenerator> d_partitionGen;
+  /**
+   * The deferred blocker
+   */
+  std::unique_ptr<theory::DeferredBlocker> d_deferBlock;
   /** The list of modules */
   std::vector<theory::TheoryEngineModule*> d_modules;
   /** Conflict processor */

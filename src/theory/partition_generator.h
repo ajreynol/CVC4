@@ -15,8 +15,8 @@
 
 #include "cvc5_private.h"
 
-#ifndef CVC5__THEORY__SPLITTER_H
-#define CVC5__THEORY__SPLITTER_H
+#ifndef CVC5__THEORY__PARTITION_GENERATOR_H
+#define CVC5__THEORY__PARTITION_GENERATOR_H
 
 #include <chrono>
 #include <unordered_map>
@@ -167,11 +167,6 @@ std::chrono::time_point<std::chrono::steady_clock>
  * Current propEngine.
  */
 prop::PropEngine* d_propEngine;
-
-/**
- * Valuation of the theory engine.
- */
-std::unique_ptr<Valuation> d_valuation;
 
 /**
  * The number of partitions requested through the compute-partitions option.

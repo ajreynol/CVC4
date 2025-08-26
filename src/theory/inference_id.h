@@ -995,6 +995,8 @@ enum class InferenceId
   PARTITION_GENERATOR_PARTITION,
   // From a plugin
   PLUGIN_LEMMA,
+  // deferred blocker
+  DEFER_BLOCK_UC,
   //-------------------------------------- unknown
   UNKNOWN
 };

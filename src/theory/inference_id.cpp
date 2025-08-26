@@ -576,6 +576,7 @@ const char* toString(InferenceId i)
     case InferenceId::PARTITION_GENERATOR_PARTITION:
       return "PARTITION_GENERATOR_PARTITION";
     case InferenceId::PLUGIN_LEMMA: return "PLUGIN_LEMMA";
+    case InferenceId::DEFER_BLOCK_UC: return "DEFER_BLOCK_UC";
     case InferenceId::UNKNOWN: return "?";
 
     default:

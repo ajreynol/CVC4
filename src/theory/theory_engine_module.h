@@ -77,6 +77,18 @@ class TheoryEngineModule : protected EnvObj
                            LemmaProperty p,
                            const std::vector<Node>& skAsserts,
                            const std::vector<Node>& sks);
+  /**
+   * Filter lemma? Return true if this module wants to filter this lemma.
+   * If the module returns true, it is responsible for either recording
+   * that we are incomplete, or solving the problem in an alternative
+   * way.
+   * Note this is called *before* the lemma n has been preprocessed.
+   * @param n The lemma, which has been theory preprocessed
+   * @param id The inference identifier of the lemma
+   * @param p The property of the lemma
+   * @return true if the theory engine should "filter" this lemma.
+   */
+  virtual bool filterLemma(TNode n, InferenceId id, LemmaProperty p);
   /** Needs candidate model, return true if the method below requires calling */
   virtual bool needsCandidateModel();
   /** Notify that m is a (candidate) model */
@@ -87,6 +99,8 @@ class TheoryEngineModule : protected EnvObj
  protected:
   /** The output channel, for sending lemmas */
   OutputChannel d_out;
+  /** A valuation for certain queries */
+  Valuation d_valuation;
   /** The name */
   std::string d_name;
 

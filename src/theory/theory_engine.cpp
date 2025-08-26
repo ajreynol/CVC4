@@ -199,6 +199,13 @@ void TheoryEngine::finishInit()
     d_modules.push_back(d_partitionGen.get());
   }
 
+  if (options().theory.deferBlock)
+  {
+    d_deferBlock =
+        std::make_unique<DeferredBlocker>(d_env, this, getPropEngine());
+    d_modules.push_back(d_deferBlock.get());
+  }
+
   // add user-provided plugins
   const std::vector<Plugin*> plugins = d_env.getPlugins();
   Trace("theory") << "initialize with " << plugins.size()
@@ -544,8 +551,9 @@ void TheoryEngine::check(Theory::Effort effort) {
           }
           if (!d_tc->buildModel())
           {
-            // model failed to build, we are done
-            break;
+            // same as with theories, for uniformity we ask all modules
+            // needsCandidateModel method.
+            continue;
           }
           tem->notifyCandidateModel(getModel());
         }
@@ -1498,8 +1506,18 @@ void TheoryEngine::lemma(TrustNode tlemma,
   }
 
   // get the node
-  Node node = tlemma.getNode();
   Node lemma = tlemma.getProven();
+
+  if (!d_modules.empty())
+  {
+    for (TheoryEngineModule* tem : d_modules)
+    {
+      if (tem->filterLemma(lemma, id, p))
+      {
+        return;
+      }
+    }
+  }
 
   // must rewrite when checking here since we may have shadowing in rare cases,
   // e.g. lazy lambda lifting lemmas

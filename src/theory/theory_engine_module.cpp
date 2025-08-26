@@ -22,7 +22,9 @@ size_t TheoryEngineModule::d_idCounter = 0;
 TheoryEngineModule::TheoryEngineModule(Env& env,
                                        TheoryEngine* engine,
                                        const std::string& name)
-    : EnvObj(env), d_out(statisticsRegistry(), engine, name, d_idCounter)
+    : EnvObj(env),
+      d_out(statisticsRegistry(), engine, name, d_idCounter),
+      d_valuation(engine)
 {
   // increment the id counter so that the id of this module is unique
   d_idCounter++;
@@ -43,7 +45,10 @@ void TheoryEngineModule::notifyLemma(TNode n,
                                      const std::vector<Node>& sks)
 {
 }
-
+bool TheoryEngineModule::filterLemma(TNode n, InferenceId id, LemmaProperty p)
+{
+  return false;
+}
 bool TheoryEngineModule::needsCandidateModel() { return false; }
 
 void TheoryEngineModule::notifyCandidateModel(TheoryModel* m) {}

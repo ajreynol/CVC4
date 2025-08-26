@@ -38,6 +38,8 @@ enum class IncompleteId
   ARITH_NL_DISABLED,
   // the non-linear arithmetic solver was incomplete
   ARITH_NL,
+  // the linear arithmetic solver failed to find an integer solution
+  ARITH_NO_IS_INT,
   // incomplete due to lack of a complete quantifiers strategy
   QUANTIFIERS,
   // (refutation unsound) we failed to verify the correctness of a candidate

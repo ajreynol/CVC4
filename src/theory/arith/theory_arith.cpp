@@ -540,9 +540,9 @@ bool TheoryArith::sanityCheckIntegerModel()
   {
     Trace("arith-check") << p.first << " -> " << p.second << std::endl;
     Assert(p.first.getType().isInteger() && !p.second.getType().isInteger());
-    warning() << "TheoryArithPrivate generated a bad model value for "
-                 "integer variable "
-              << p.first << " : " << p.second << std::endl;
+    //warning() << "TheoryArithPrivate generated a bad model value for "
+    //             "integer variable "
+    //          << p.first << " : " << p.second << std::endl;
     // must branch and bound
     std::vector<TrustNode> lems =
         d_bab.branchIntegerVariable(p.first, p.second.getConst<Rational>());
@@ -561,11 +561,15 @@ bool TheoryArith::sanityCheckIntegerModel()
     // a non-integer value to an integer variable.
     return true;
   }
-  // this would imply that linear arithmetic's model failed to satisfy a branch
-  // and bound lemma
-  AlwaysAssert(!badAssignment)
-      << "Bad assignment from TheoryArithPrivate::collectModelValues, and no "
-         "branching lemma was sent";
+  if (badAssignment)
+  {
+    d_out->setModelUnsound(IncompleteId::ARITH_NO_IS_INT);
+    // this would imply that linear arithmetic's model failed to satisfy a branch
+    // and bound lemma
+    Assert(!badAssignment)
+        << "Bad assignment from TheoryArithPrivate::collectModelValues, and no "
+          "branching lemma was sent";
+  }
   return false;
 }
 
