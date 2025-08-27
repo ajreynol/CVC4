@@ -851,10 +851,11 @@ Result SolverEngine::checkSatInternal(const std::vector<Node>& assumptions)
     const context::CDList<Node>& al = as.getAssertionList();
     TheoryEngine* te = d_smtSolver->getTheoryEngine();
     std::vector<Node> tlemmas = te->getLemmas();
-    Trace("smt") << "Recheck with " << tlemmas.size() << " lemmas" << std::endl;
+    Trace("smt-recheck") << "Recheck with " << tlemmas.size() << " lemmas" << std::endl;
     Options subOptions;
     subOptions.copyValues(d_env->getOptions());
     smt::SetDefaults::disableChecking(subOptions);
+    subOptions.write_smt().reCheckLemmas = false;
     // initialize the subsolver
     SubsolverSetupInfo ssi(*d_env.get(), subOptions);
     std::unique_ptr<SolverEngine> reChecker;
@@ -867,7 +868,12 @@ Result SolverEngine::checkSatInternal(const std::vector<Node>& assumptions)
     {
       reChecker->assertFormula(tlem);
     }
-    Result r = reChecker->checkSat();
+    clock_t beginTimeStamp = clock();
+    Result rer = reChecker->checkSat();
+    clock_t endTimeStamp = clock() - beginTimeStamp;
+    double time =
+        static_cast<double>(endTimeStamp) / static_cast<double>(CLOCKS_PER_SEC);
+    Trace("smt-recheck") << "...result is " << rer << ", time: " << time << std::endl;
   }
 
   if (d_env->getOptions().base.statisticsEveryQuery)

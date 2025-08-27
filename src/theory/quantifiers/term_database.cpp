@@ -712,6 +712,7 @@ bool TermDb::reset( Theory::Effort effort ){
       }
     }
   }
+  Trace("ajr-temp") << "Reset term db " << d_has_map.size() << std::endl;
   // finish reset
   return finishResetInternal(effort);
 }

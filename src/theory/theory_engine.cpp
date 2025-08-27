@@ -712,6 +712,7 @@ theory::TheoryId TheoryEngine::theoryExpPropagation(theory::TheoryId tid) const
 }
 
 bool TheoryEngine::presolve() {
+  d_collectLemmas.clear();
   // Reset the interrupt flag
   d_interrupted = false;
 
@@ -1520,6 +1521,10 @@ void TheoryEngine::lemma(TrustNode tlemma,
         options(), "te-proof-debug", "TheoryEngine::lemma_initial");
   }
 
+  if (id==InferenceId::QUANTIFIERS_INST_E_MATCHING || id==InferenceId::QUANTIFIERS_INST_E_MATCHING_SIMPLE)
+  {
+    d_collectLemmas.push_back(lemma);
+  }
   // assert the lemma
   d_propEngine->assertLemma(id, tlemma, p);
 
