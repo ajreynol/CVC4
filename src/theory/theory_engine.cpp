@@ -2225,4 +2225,9 @@ void TheoryEngine::initializeProofChecker(ProofChecker* pc)
 
 theory::Rewriter* TheoryEngine::getRewriter() { return d_env.getRewriter(); }
 
+void TheoryEngine::dumpLemmas(std::vector<Node>& input)
+{
+  
+}
+  
 }  // namespace cvc5::internal

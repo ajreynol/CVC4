@@ -845,6 +845,11 @@ Result SolverEngine::checkSatInternal(const std::vector<Node>& assumptions)
       checkUnsatCore();
     }
   }
+  const Assertions& as = d_smtSolver->getAssertions();
+  const context::CDList<Node>& al = as.getAssertionList();
+  std::vector<Node> input(al.begin(), al.end());
+  TheoryEngine* te = d_smtSolver->getTheoryEngine();
+  te->dumpLemmas(input);
 
   if (d_env->getOptions().base.statisticsEveryQuery)
   {

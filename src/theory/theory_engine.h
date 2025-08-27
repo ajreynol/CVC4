@@ -452,6 +452,7 @@ class TheoryEngine : protected EnvObj
   /** Called externally that we are unsound (user-context). */
   void setRefutationUnsound(theory::IncompleteId id);
 
+  void dumpLemmas(std::vector<Node>& input);
  private:
   typedef context::
       CDHashMap<NodeTheoryPair, NodeTheoryPair, NodeTheoryPairHashFunction>
@@ -691,6 +692,9 @@ class TheoryEngine : protected EnvObj
   std::unique_ptr<theory::ConflictProcessor> d_cp;
   /** User plugin modules */
   std::vector<std::unique_ptr<theory::PluginModule>> d_userPlugins;
+  
+  // debug
+  std::vector<Node> d_collectLemmas;
 
 }; /* class TheoryEngine */
 
