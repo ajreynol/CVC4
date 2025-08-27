@@ -452,7 +452,7 @@ class TheoryEngine : protected EnvObj
   /** Called externally that we are unsound (user-context). */
   void setRefutationUnsound(theory::IncompleteId id);
 
-  void dumpLemmas(std::vector<Node>& input);
+  std::vector<Node> getLemmas() { return d_collectLemmas; }
  private:
   typedef context::
       CDHashMap<NodeTheoryPair, NodeTheoryPair, NodeTheoryPairHashFunction>

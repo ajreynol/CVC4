@@ -158,6 +158,14 @@ name   = "SMT Layer"
   help       = "after UNSAT/VALID, check the generated proof (with proof)"
 
 [[option]]
+  name       = "reCheckLemmas"
+  category   = "common"
+  long       = "re-check-lemmas"
+  type       = "bool"
+  default    = "false"
+  help       = "after UNSAT/VALID, check the generated proof (with proof)"
+
+[[option]]
   name       = "produceUnsatCores"
   category   = "common"
   long       = "produce-unsat-cores"

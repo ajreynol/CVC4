@@ -845,11 +845,30 @@ Result SolverEngine::checkSatInternal(const std::vector<Node>& assumptions)
       checkUnsatCore();
     }
   }
-  const Assertions& as = d_smtSolver->getAssertions();
-  const context::CDList<Node>& al = as.getAssertionList();
-  std::vector<Node> input(al.begin(), al.end());
-  TheoryEngine* te = d_smtSolver->getTheoryEngine();
-  te->dumpLemmas(input);
+  if (d_env->getOptions().smt.reCheckLemmas)
+  {
+    const Assertions& as = d_smtSolver->getAssertions();
+    const context::CDList<Node>& al = as.getAssertionList();
+    TheoryEngine* te = d_smtSolver->getTheoryEngine();
+    std::vector<Node> tlemmas = te->getLemmas();
+    Trace("smt") << "Recheck with " << tlemmas.size() << " lemmas" << std::endl;
+    Options subOptions;
+    subOptions.copyValues(d_env->getOptions());
+    smt::SetDefaults::disableChecking(subOptions);
+    // initialize the subsolver
+    SubsolverSetupInfo ssi(*d_env.get(), subOptions);
+    std::unique_ptr<SolverEngine> reChecker;
+    initializeSubsolver(d_env->getNodeManager(), reChecker, ssi);
+    for (const Node& ia : al)
+    {
+      reChecker->assertFormula(ia);
+    }
+    for (const Node& tlem : tlemmas)
+    {
+      reChecker->assertFormula(tlem);
+    }
+    Result r = reChecker->checkSat();
+  }
 
   if (d_env->getOptions().base.statisticsEveryQuery)
   {
