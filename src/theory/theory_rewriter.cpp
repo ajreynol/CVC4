@@ -115,6 +115,10 @@ ProofRewriteRule TheoryRewriter::findRule(const Node& a,
 void TheoryRewriter::registerProofRewriteRule(ProofRewriteRule id,
                                               TheoryRewriteCtx ctx)
 {
+  if (ctx==TheoryRewriteCtx::POST_DSL)
+  {
+    ctx = TheoryRewriteCtx::PRE_DSL;
+  }
   std::vector<ProofRewriteRule>& rules = d_pfTheoryRewrites[ctx];
   rules.push_back(id);
   // theory rewrites marked DSL_SUBCALL are also tried at PRE_DSL effort.
