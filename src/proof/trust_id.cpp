@@ -86,6 +86,8 @@ const char* toString(TrustId id)
       return "PREPROCESS_SORT_INFER_LEMMA";
     case TrustId::PREPROCESS_STRINGS_EAGER_PP:
       return "PREPROCESS_STRINGS_EAGER_PP";
+    case TrustId::PREPROCESS_EAGER_QMATCHING:
+      return "PREPROCESS_EAGER_QMATCHING";
     // other
     case TrustId::ARITH_NL_COVERING_DIRECT: return "ARITH_NL_COVERING_DIRECT";
     case TrustId::ARITH_NL_COVERING_RECURSIVE:
