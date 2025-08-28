@@ -325,6 +325,14 @@ name   = "SMT Layer"
   help       = "remove ITEs early in preprocessing"
 
 [[option]]
+  name       = "eagerQMatching"
+  category   = "expert"
+  long       = "eager-q-matching"
+  type       = "bool"
+  default    = "false"
+  help       = "eagerly add instantiations based on matching prior to solving"
+
+[[option]]
   name       = "unconstrainedSimp"
   category   = "expert"
   long       = "unconstrained-simp"
