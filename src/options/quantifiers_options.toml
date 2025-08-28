@@ -1846,7 +1846,7 @@ name   = "Quantifiers"
   category   = "expert"
   long       = "eager-inst-macro-only"
   type       = "bool"
-  default    = "true"
+  default    = "false"
   help       = "only do eager instantiation for macros"
   
 [[option]]

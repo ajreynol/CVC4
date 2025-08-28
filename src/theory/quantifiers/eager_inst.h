@@ -109,6 +109,9 @@ class EagerInst : public QuantifiersModule
   context::CDO<size_t> d_bufferMergeIndex;
 
   EagerGroundDb d_gdb;
+  /** Number of instantiations in this round */
+  context::CDHashMap<Node, size_t> d_eagerQiCount;
+  context::CDO<size_t> d_eagerCount;
   /** Number of patterns */
   IntStat d_statUserPats;
   /** Number of cd patterns */

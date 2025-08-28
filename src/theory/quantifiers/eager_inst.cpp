@@ -53,6 +53,8 @@ EagerInst::EagerInst(Env& env,
       d_bufferMerge(context()),
       d_bufferMergeIndex(context(), 0),
       d_gdb(env, qs, tr.getTermDatabase()),
+      d_eagerQiCount(context()),
+      d_eagerCount(context()),
       d_statUserPats(statisticsRegistry().registerInt("EagerInst::userPats")),
       d_statUserPatsCd(
           statisticsRegistry().registerInt("EagerInst::userPatsCd")),
@@ -1026,6 +1028,14 @@ bool EagerInst::doInstantiation(const Node& q, const Node& pat, const Node& n)
       return true;
     }
   }
+  //if (d_eagerQiCount[q]>100)
+  //{
+  //  return false;
+  //}
+  //if (d_eagerCount>1000)
+  //{
+  //  return false;
+  //}
   // must resize now
   std::vector<Node> instq(d_inst.begin(),
                           d_inst.begin() + q[0].getNumChildren());
@@ -1034,6 +1044,8 @@ bool EagerInst::doInstantiation(const Node& q, const Node& pat, const Node& n)
   if (ie->addInstantiation(
           q, instq, InferenceId::QUANTIFIERS_INST_EAGER_E_MATCHING))
   {
+    d_eagerQiCount[q] = d_eagerQiCount[q]+1;
+    d_eagerCount = d_eagerCount+1;
     d_tmpAddedLemmas++;
     if (!n.isNull())
     {
