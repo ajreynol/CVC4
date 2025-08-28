@@ -33,16 +33,16 @@ class EagerQMatching : public PreprocessingPass
  protected:
   PreprocessingPassResult applyInternal(
       AssertionPipeline* assertionsToPreprocess) override;
-void processInternal(const Node& a);
-    std::unordered_set<Node> d_visited;
+  void processInternal(const Node& a);
+  std::unordered_set<Node> d_visited;
   std::map<Node, std::vector<Node> > d_ufTerms;
   std::vector<Node> d_tlQuant;
   class PatInfo
   {
-  public:
-      PatInfo(const Node& q) : d_quant(q), d_ufIndex(0){}
-      Node d_quant;
-      size_t d_ufIndex;
+   public:
+    PatInfo(const Node& q) : d_quant(q), d_ufIndex(0) {}
+    Node d_quant;
+    size_t d_ufIndex;
   };
   std::map<Node, PatInfo> d_pinfo;
 };

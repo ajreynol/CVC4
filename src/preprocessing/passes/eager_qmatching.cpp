@@ -20,7 +20,7 @@ namespace preprocessing {
 namespace passes {
 
 EagerQMatching::EagerQMatching(PreprocessingPassContext* preprocContext)
-: PreprocessingPass(preprocContext, "eager-qmatching")
+    : PreprocessingPass(preprocContext, "eager-qmatching")
 {
 }
 
@@ -30,7 +30,7 @@ PreprocessingPassResult EagerQMatching::applyInternal(
   for (size_t i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
   {
     Node a = (*assertionsToPreprocess)[i];
-    if (a.getKind()==Kind::FORALL)
+    if (a.getKind() == Kind::FORALL)
     {
       d_tlQuant.push_back(a);
     }
@@ -46,18 +46,17 @@ PreprocessingPassResult EagerQMatching::applyInternal(
     {
       Node pat = p.first;
       itu = d_ufTerms.find(p.getOperator());
-      if (itu==d_ufTerms.end())
+      if (itu == d_ufTerms.end())
       {
         continue;
       }
       size_t nuf = itu->second.size();
-      for (size_t i=p.second.d_ufIndex; i<nuf; i++)
+      for (size_t i = p.second.d_ufIndex; i < nuf; i++)
       {
         std::unordered_map<Node, Node> subs;
         if (expr::match(pat, itu->second[i], subs))
         {
           // new instantiation
-          
         }
       }
       p.second.d_ufIndex = nuf;
@@ -65,21 +64,16 @@ PreprocessingPassResult EagerQMatching::applyInternal(
     // add new instantiations, collect terms in them
     for (const Node& ni : newInst)
     {
-      
-    assertionsToPreprocess->push_back(
-        ni, false, nullptr, TrustId::PREPROCESS_EAGER_QMATCHING, true);
+      assertionsToPreprocess->push_back(
+          ni, false, nullptr, TrustId::PREPROCESS_EAGER_QMATCHING, true);
       processInternal(ni);
     }
-  }while (!newInst.empty());
+  } while (!newInst.empty());
   return PreprocessingPassResult::NO_CONFLICT;
 }
 
-void EagerQMatching::processInternal(const Node& a)
-{
-  
-}
+void EagerQMatching::processInternal(const Node& a) {}
 
 }  // namespace passes
 }  // namespace preprocessing
 }  // namespace cvc5::internal
-
