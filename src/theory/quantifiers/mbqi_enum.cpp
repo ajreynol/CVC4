@@ -409,15 +409,12 @@ Node MVarInfo::getEnumeratedTerm(NodeManager* nm, size_t i)
 
 void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
 {
-  // The externally provided terminal rules. This set is shared between
-  // all variables we instantiate.
-  std::vector<Node> etrules;
+  std::vector<Node> sharedEtrules;
   for (const Node& v : q[0])
   {
     size_t index = d_vinfo.size();
     d_vinfo.emplace_back();
     TypeNode vtn = v.getType();
-    // if enumerated, add to list
     if (shouldEnumerate(env.getOptions(), vtn))
     {
       d_indices.push_back(index);
@@ -425,26 +422,64 @@ void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
     else
     {
       d_nindices.push_back(index);
-      // include variables defined in terms of others if applicable
-      if (env.getOptions().quantifiers.mbqiEnumExtVarsGrammar)
-      {
-        etrules.push_back(v);
-      }
     }
   }
-  // include the global symbols if applicable
   if (env.getOptions().quantifiers.mbqiEnumGlobalSymGrammar)
   {
     const context::CDHashSet<Node>& gsyms = parent.getGlobalSyms();
     for (const Node& v : gsyms)
     {
-      etrules.push_back(v);
+      sharedEtrules.push_back(v);
     }
   }
-  // initialize the variables we are instantiating
+
+  std::vector<Node> allBoundVars(q[0].begin(), q[0].end());
   for (size_t index : d_indices)
   {
-    d_vinfo[index].initialize(env, q, q[0][index], etrules);
+    Node curV = q[0][index];
+    TypeNode curT = curV.getType();
+
+    // determine the types of arguments for this variable
+    std::vector<TypeNode> argTypes;
+    if (curT.isFunction())
+    {
+      argTypes = curT.getArgTypes();
+    }
+    else
+    {
+      argTypes.push_back(curT);
+    }
+    std::vector<Node> etrulesLocal = sharedEtrules;
+    if (env.getOptions().quantifiers.mbqiEnumExtVarsGrammar)
+    {
+      for (const Node& bv : allBoundVars)
+      {
+        if (bv == curV) continue; // skip self
+        TypeNode bvType = bv.getType();
+
+        // include ext variable if it is compatible with any argument type
+        bool compatible = false;
+        for (const TypeNode& at : argTypes)
+        {
+          if (bvType == at) 
+          {
+            compatible = true;
+            break;
+          }
+          // function-valued: can be applied to existing bound vars to yield type at
+          if (bvType.isFunction() && bvType.getRangeType() == at)
+          {
+            compatible = true;
+            break;
+          }
+        }
+        if (compatible && std::find(etrulesLocal.begin(), etrulesLocal.end(), bv) == etrulesLocal.end())
+        {
+          etrulesLocal.push_back(bv);
+        }
+      }
+    }
+    d_vinfo[index].initialize(env, q, curV, etrulesLocal);
   }
 }
 
