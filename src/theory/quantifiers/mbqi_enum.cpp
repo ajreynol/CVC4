@@ -409,15 +409,12 @@ Node MVarInfo::getEnumeratedTerm(NodeManager* nm, size_t i)
 
 void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
 {
-  // The externally provided terminal rules. This set is shared between
-  // all variables we instantiate.
-  std::vector<Node> sharedEtrules;
+  // categorize variables as to enumerate or not
   for (const Node& v : q[0])
   {
     size_t index = d_vinfo.size();
     d_vinfo.emplace_back();
-    TypeNode vtn = v.getType();
-    if (shouldEnumerate(env.getOptions(), vtn))
+    if (shouldEnumerate(env.getOptions(), v.getType()))
     {
       d_indices.push_back(index);
     }
@@ -426,165 +423,115 @@ void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
       d_nindices.push_back(index);
     }
   }
-   // include the global symbols if applicable
+  // The externally provided terminal rules. This set is shared between
+  // all variables we instantiate.
+  std::vector<Node> sharedTrules;
+  // include the global symbols if applicable
   if (env.getOptions().quantifiers.mbqiEnumGlobalSymGrammar)
   {
-    const context::CDHashSet<Node>& gsyms = parent.getGlobalSyms();
-    for (const Node& v : gsyms)
+    for (const Node& v : parent.getGlobalSyms())
     {
-      sharedEtrules.push_back(v);
+      sharedTrules.push_back(v);
     }
   }
   // list of all bound variables (in quantifier prefix order)
   std::vector<Node> allBoundVars(q[0].begin(), q[0].end());
 
-  // helper that decides if external variable type is compatible with any
+  // helper that decides if bound variable type is compatible with any
   // of the argument types of the variable we are trying to instantiate
-  auto bvCompatibleWithArgs = [](const TypeNode& bvType,
-                                 const std::vector<TypeNode>& argTypes) -> bool {
-    for (const TypeNode& at : argTypes)
-    {
-      if (bvType == at) return true;
-      if (bvType.isFunction() && bvType.getRangeType() == at) return true;
-    }
+  auto bvCompatibleWithArgs = [](const TypeNode& bvType, const std::vector<TypeNode>& argTypes) -> bool {
+  for (const TypeNode& at : argTypes)
+  {
+    if (bvType == at) return true;
+    if (bvType.isFunction() && bvType.getRangeType() == at) return true;
+  }
     return false;
   };
 
-  // if var i's local terminal rules contain var j (j != i), then i depends on j.
-  // build edges j -> i (j before i).
-  std::map<size_t, std::vector<Node>> indexToEtrules;
-  std::map<size_t, std::set<size_t>> deps;
+  std::unordered_map<size_t, std::vector<Node>> indexTrules;
   for (size_t index : d_indices)
   {
     Node currV = q[0][index];
-    TypeNode currT = currV.getType();
-    // if function typed, use its arg types, otherwise single-type vector
-    std::vector<TypeNode> argTypes;
-    if (currT.isFunction())
-    {
-      argTypes = currT.getArgTypes();
-    }
-    else
-    {
-      argTypes.push_back(currT);
-    }
-    // local terminal rules for each quantified variable to enumerate
-    std::vector<Node> etrulesLocal = sharedEtrules;
+    std::vector<TypeNode> argTypes = currV.getType().isFunction() ? currV.getType().getArgTypes() : std::vector<TypeNode>{currV.getType()};
+    // local terminal rules for each variable to enumerate
+    std::vector<Node> localTrules = sharedTrules;
+    std::unordered_set<Node> localSet(localTrules.begin(), localTrules.end());
     // include variables defined in terms of others if applicable
     if (env.getOptions().quantifiers.mbqiEnumExtVarsGrammar)
     {
-      // include any variable whose type is compatible
       for (size_t j = 0; j < allBoundVars.size(); ++j)
       {
         const Node& bv = allBoundVars[j];
         if (bv == currV) continue;
-        TypeNode bvType = bv.getType();
-        if (bvCompatibleWithArgs(bvType, argTypes))
+        if (bvCompatibleWithArgs(bv.getType(), argTypes) && localSet.insert(bv).second)
         {
-          if (std::find(etrulesLocal.begin(), etrulesLocal.end(), bv)
-              == etrulesLocal.end())
-          {
-            etrulesLocal.push_back(bv);
-          }
+          localTrules.push_back(bv);
         }
       }
     }
-    indexToEtrules[index] = etrulesLocal;
+    indexTrules[index] = std::move(localTrules);
   }
-  // for each enumerated variable i, check its etrulesLocal for occurrences of
-  // bound variables that are enumerated; add edge (j -> i) if found.
-  std::set<size_t> enumeratedSet(d_indices.begin(), d_indices.end());
-  for (const auto& p : indexToEtrules)
+  // if var i's terminal rules contain var j (j != i), then i depends on j.
+  // build edges j -> i (j before i)
+  std::unordered_set<size_t> enumeratedSet(d_indices.begin(), d_indices.end());
+  std::unordered_map<size_t, std::unordered_set<size_t>> deps;
+
+  for (const auto& [i, localTrules] : indexTrules)
   {
-    size_t i = p.first;
-    const std::vector<Node>& etrulesLocal = p.second;
-    for (const Node& term : etrulesLocal)
+    for (const Node& term : localTrules)
     {
-      // term may be one of the bound vars; find its index in the quantifier prefix
-      // compare with q[0] children
       for (size_t j = 0; j < q[0].getNumChildren(); ++j)
       {
-        if (q[0][j] == term)
+        if (q[0][j] == term && enumeratedSet.count(j))
         {
-          // if j is enumerated, add dependency j -> i
-          if (enumeratedSet.find(j) != enumeratedSet.end())
-          {
-            deps[j].insert(i);
-          }
+          deps[j].insert(i);
           break;
         }
       }
     }
   }
 
-  // Topological sort (Kahn). 
-  // Nodes are the enumerated variable indices in d_indices.
-  // Build indegree map for enumerated nodes.
-  std::map<size_t, int> indegree;
+  // topological sort
+  // determine a valid order of variable enumeration respecting dependencies
+  std::unordered_map<size_t, int> indegree;
   for (size_t n : d_indices) indegree[n] = 0;
-  for (const auto& e : deps)
-  {
-    //size_t u = e.first;
-    for (size_t v : e.second)
-    {
-      if (indegree.find(v) != indegree.end())
-      {
-        indegree[v]++;
-      }
-    }
-  }
+  for (auto& [u, vs] : deps)
+      for (size_t v : vs) if (indegree.count(v)) indegree[v]++;
+
   std::deque<size_t> qzero;
-  for (const auto& p : indegree)
-  {
-    if (p.second == 0) qzero.push_back(p.first);
-  }
+  for (auto& [n, deg] : indegree) if (deg == 0) qzero.push_back(n);
+
   std::vector<size_t> ordered;
   while (!qzero.empty())
   {
-    size_t u = qzero.front();
-    qzero.pop_front();
+    size_t u = qzero.front(); qzero.pop_front();
     ordered.push_back(u);
-    auto it = deps.find(u);
-    if (it != deps.end())
+    if (deps.count(u))
     {
-      for (size_t v : it->second)
+      for (size_t v : deps[u])
       {
-        if (indegree.find(v) == indegree.end()) continue;
-        indegree[v]--;
-        if (indegree[v] == 0)
-        {
-          qzero.push_back(v);
-        }
+        if (indegree.count(v) && --indegree[v] == 0) qzero.push_back(v);
       }
     }
   }
-
+  
   // break cycles deterministically
+  // if there are cycles, add remaining variables in index order
   if (ordered.size() < d_indices.size())
   {
-    // collect remaining nodes
-    std::set<size_t> inOrdered(ordered.begin(), ordered.end());
+    std::unordered_set<size_t> inOrdered(ordered.begin(), ordered.end());
     std::vector<size_t> remaining;
-    for (size_t n : d_indices)
-    {
-      if (inOrdered.find(n) == inOrdered.end()) remaining.push_back(n);
-    }
-    // append remaining nodes in increasing index order
-    // this resolves cycles by forcing an order
+    for (size_t n : d_indices) if (!inOrdered.count(n)) remaining.push_back(n);
     std::sort(remaining.begin(), remaining.end());
-    for (size_t n : remaining) ordered.push_back(n);
+    ordered.insert(ordered.end(), remaining.begin(), remaining.end());
   }
-  d_indices = ordered;
-  // initialize for each variable in the (new) ordered list
+  // variables are now ordered
+  d_indices = std::move(ordered);
+  // initialize variable info
   for (size_t index : d_indices)
   {
-    std::vector<Node> etrulesLocal = sharedEtrules;
-    auto it = indexToEtrules.find(index);
-    if (it != indexToEtrules.end())
-    {
-      etrulesLocal = it->second;
-    }
-    d_vinfo[index].initialize(env, q, q[0][index], etrulesLocal);
+    auto it = indexTrules.find(index);
+    d_vinfo[index].initialize(env, q, q[0][index], it != indexTrules.end() ? it->second : sharedTrules);
   }
 }
 
