@@ -73,13 +73,6 @@ void InstStrategyMbqi::ppNotifyAssertions(const std::vector<Node>& assertions)
       // Add the symbol to syms if it's not already present
       d_globalSyms.insert(s);
     }
-    std::unordered_set<Node> terms;
-    expr::getTerms(a, terms);
-    for (const Node& t : terms)
-    {
-        d_globalSyms.insert(t);
-    }
-
     if (a.getKind() == Kind::FORALL)
     {
       continue;

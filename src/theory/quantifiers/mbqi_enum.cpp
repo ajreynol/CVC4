@@ -122,6 +122,10 @@ void MVarInfo::initialize(Env& env,
     std::unordered_set<Node> syms;
     expr::getSymbols(q[1], syms);
     trules.insert(trules.end(), syms.begin(), syms.end());
+    // also collect full terms (applications of symbols)
+    std::unordered_set<Node> terms;
+    expr::getTerms(q[1], terms);
+    trules.insert(trules.end(), terms.begin(), terms.end());
   }
   // include the external terminal rules
   for (const Node& symbol : etrules)
