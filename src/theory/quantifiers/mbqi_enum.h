@@ -116,6 +116,8 @@ class MQuantInfo
   std::vector<size_t> getNoInstIndices();
   /** Get variable info for the index^th variable of the quantified formula */
   MVarInfo& getVarInfo(size_t index);
+  /** Get dependency order (topological order of variable indices) */
+  const std::vector<size_t>& getDependencyOrder() const { return d_topoOrder; }
 
  private:
   /** The quantified formula */
@@ -126,6 +128,10 @@ class MQuantInfo
   std::vector<size_t> d_indices;
   /** The indices of variables we are not enumerating */
   std::vector<size_t> d_nindices;
+  /** Cached topological order of variable indices */
+  std::vector<size_t> d_topoOrder;
+  /** Internal helper to compute dependency order */
+  std::vector<size_t> computeDependencyOrder(const Node& q);
 };
 
 /**

@@ -409,129 +409,82 @@ Node MVarInfo::getEnumeratedTerm(NodeManager* nm, size_t i)
 
 void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
 {
-  // categorize variables as to enumerate or not
-  for (const Node& v : q[0])
+  // compute topological order of bound variables
+  d_topoOrder = computeDependencyOrder(q);
+  // collect all bound vars
+  std::vector<Node> allBoundVars(q[0].begin(), q[0].end());
+   // DEBUG: print topological order
+  std::cerr << "Topological order: ";
+  for (size_t idx : d_topoOrder)
   {
+    std::cerr << allBoundVars[idx] << " ";
+  }
+  std::cerr << std::endl;
+  // The externally provided terminal rules. This set is shared between
+  // all variables we instantiate.
+  std::vector<Node> etrules;
+  // include the global symbols if applicable
+  if (env.getOptions().quantifiers.mbqiEnumGlobalSymGrammar)
+  {
+    const context::CDHashSet<Node>& gsyms = parent.getGlobalSyms();
+    for (const Node& v : gsyms)
+    {
+      etrules.push_back(v);
+    }
+  }
+  // initialize variables in topological order
+  for (size_t varIdx : d_topoOrder)
+  {
+    Node v = allBoundVars[varIdx];
     size_t index = d_vinfo.size();
     d_vinfo.emplace_back();
-    if (shouldEnumerate(env.getOptions(), v.getType()))
+    TypeNode vtn = v.getType();
+    if (shouldEnumerate(env.getOptions(),vtn))
     {
       d_indices.push_back(index);
+      // start with shared terminals
+      std::vector<Node> etrulesLocal = etrules;
+      // include variables defined in terms of others if applicable
+      if (env.getOptions().quantifiers.mbqiEnumExtVarsGrammar)
+      {
+        // determine arg types this variable accepts
+        std::vector<TypeNode> argTypes;
+        if (vtn.isFunction())
+        {
+          argTypes = vtn.getArgTypes();
+        }
+        else
+        {
+          argTypes.push_back(vtn);
+        }
+        for (const Node& bv : allBoundVars)
+        {
+          if (bv == v) continue;
+          TypeNode bvType = bv.getType();
+
+          bool compatible = false;
+          for (const TypeNode& at : argTypes)
+          {
+            if (bvType == at || (bvType.isFunction() && bvType.getRangeType() == at))
+            {
+              compatible = true;
+              break;
+            }
+          }
+          if (compatible &&
+              std::find(etrulesLocal.begin(), etrulesLocal.end(), bv) == etrulesLocal.end())
+          {
+            etrulesLocal.push_back(bv);
+          }
+        }
+      }
+      // initialize the variables we are instantiating
+      d_vinfo[index].initialize(env, q, v, etrulesLocal);
     }
     else
     {
       d_nindices.push_back(index);
     }
-  }
-  // The externally provided terminal rules. This set is shared between
-  // all variables we instantiate.
-  std::vector<Node> sharedTrules;
-  // include the global symbols if applicable
-  if (env.getOptions().quantifiers.mbqiEnumGlobalSymGrammar)
-  {
-    for (const Node& v : parent.getGlobalSyms())
-    {
-      sharedTrules.push_back(v);
-    }
-  }
-  // list of all bound variables (in quantifier prefix order)
-  std::vector<Node> allBoundVars(q[0].begin(), q[0].end());
-
-  // helper that decides if bound variable type is compatible with any
-  // of the argument types of the variable we are trying to instantiate
-  auto bvCompatibleWithArgs = [](const TypeNode& bvType, const std::vector<TypeNode>& argTypes) -> bool {
-  for (const TypeNode& at : argTypes)
-  {
-    if (bvType == at) return true;
-    if (bvType.isFunction() && bvType.getRangeType() == at) return true;
-  }
-    return false;
-  };
-
-  std::unordered_map<size_t, std::vector<Node>> indexTrules;
-  for (size_t index : d_indices)
-  {
-    Node currV = q[0][index];
-    std::vector<TypeNode> argTypes = currV.getType().isFunction() ? currV.getType().getArgTypes() : std::vector<TypeNode>{currV.getType()};
-    // local terminal rules for each variable to enumerate
-    std::vector<Node> localTrules = sharedTrules;
-    std::unordered_set<Node> localSet(localTrules.begin(), localTrules.end());
-    // include variables defined in terms of others if applicable
-    if (env.getOptions().quantifiers.mbqiEnumExtVarsGrammar)
-    {
-      for (size_t j = 0; j < allBoundVars.size(); ++j)
-      {
-        const Node& bv = allBoundVars[j];
-        if (bv == currV) continue;
-        if (bvCompatibleWithArgs(bv.getType(), argTypes) && localSet.insert(bv).second)
-        {
-          localTrules.push_back(bv);
-        }
-      }
-    }
-    indexTrules[index] = std::move(localTrules);
-  }
-  // if var i's terminal rules contain var j (j != i), then i depends on j.
-  // build edges j -> i (j before i)
-  std::unordered_set<size_t> enumeratedSet(d_indices.begin(), d_indices.end());
-  std::unordered_map<size_t, std::unordered_set<size_t>> deps;
-
-  for (const auto& [i, localTrules] : indexTrules)
-  {
-    for (const Node& term : localTrules)
-    {
-      for (size_t j = 0; j < q[0].getNumChildren(); ++j)
-      {
-        if (q[0][j] == term && enumeratedSet.count(j))
-        {
-          deps[j].insert(i);
-          break;
-        }
-      }
-    }
-  }
-
-  // topological sort
-  // determine a valid order of variable enumeration respecting dependencies
-  std::unordered_map<size_t, int> indegree;
-  for (size_t n : d_indices) indegree[n] = 0;
-  for (auto& [u, vs] : deps)
-      for (size_t v : vs) if (indegree.count(v)) indegree[v]++;
-
-  std::deque<size_t> qzero;
-  for (auto& [n, deg] : indegree) if (deg == 0) qzero.push_back(n);
-
-  std::vector<size_t> ordered;
-  while (!qzero.empty())
-  {
-    size_t u = qzero.front(); qzero.pop_front();
-    ordered.push_back(u);
-    if (deps.count(u))
-    {
-      for (size_t v : deps[u])
-      {
-        if (indegree.count(v) && --indegree[v] == 0) qzero.push_back(v);
-      }
-    }
-  }
-  
-  // break cycles deterministically
-  // if there are cycles, add remaining variables in index order
-  if (ordered.size() < d_indices.size())
-  {
-    std::unordered_set<size_t> inOrdered(ordered.begin(), ordered.end());
-    std::vector<size_t> remaining;
-    for (size_t n : d_indices) if (!inOrdered.count(n)) remaining.push_back(n);
-    std::sort(remaining.begin(), remaining.end());
-    ordered.insert(ordered.end(), remaining.begin(), remaining.end());
-  }
-  // variables are now ordered
-  d_indices = std::move(ordered);
-  // initialize variable info
-  for (size_t index : d_indices)
-  {
-    auto it = indexTrules.find(index);
-    d_vinfo[index].initialize(env, q, q[0][index], it != indexTrules.end() ? it->second : sharedTrules);
   }
 }
 
@@ -550,6 +503,80 @@ MbqiEnum::MbqiEnum(Env& env, InstStrategyMbqi& parent)
   d_subOptions.copyValues(options());
   d_subOptions.write_quantifiers().instMaxRounds = 5;
   smt::SetDefaults::disableChecking(d_subOptions);
+}
+
+std::vector<size_t> MQuantInfo::computeDependencyOrder(const Node& q)
+{
+  std::vector<Node> allBoundVars(q[0].begin(), q[0].end());
+  size_t n = allBoundVars.size();
+  // helper
+  auto bvCompatibleWithArgs = [](const TypeNode& bvType, const std::vector<TypeNode>& argTypes) -> bool {
+    for (const TypeNode& at : argTypes)
+    {
+      if (bvType == at) return true;
+      if (bvType.isFunction() && bvType.getRangeType() == at) return true;
+    }
+    return false;
+  };
+
+  // build dependency graph: j -> i if i depends on j
+  std::unordered_map<size_t, std::unordered_set<size_t>> deps;
+  for (size_t i = 0; i < n; ++i)
+  {
+    TypeNode vtn = allBoundVars[i].getType();
+    if (vtn.isUninterpretedSort()) continue; // skip non-enumerated vars
+    std::vector<TypeNode> argTypes;
+    if (vtn.isFunction())
+      argTypes = vtn.getArgTypes();
+    else
+      argTypes.push_back(vtn);
+
+    for (size_t j = 0; j < n; ++j)
+    {
+      if (i == j) continue;
+      if (bvCompatibleWithArgs(allBoundVars[j].getType(), argTypes))
+      {
+        deps[j].insert(i); // j -> i (j must come before i)
+      }
+    }
+  }
+  // compute indegrees
+  std::vector<int> indegree(n, 0);
+  for (auto& [u, vs] : deps)
+    for (size_t v : vs)
+      indegree[v]++;
+  // priority queue for deterministic topological sort (smallest index first)
+  std::priority_queue<size_t, std::vector<size_t>, std::greater<size_t>> qzero;
+  for (size_t i = 0; i < n; ++i)
+    if (indegree[i] == 0) qzero.push(i);
+
+  std::vector<size_t> ordered;
+  while (!qzero.empty())
+  {
+    size_t u = qzero.top();
+    qzero.pop();
+    ordered.push_back(u);
+    if (deps.count(u))
+    {
+      for (size_t v : deps[u])
+      {
+        if (--indegree[v] == 0)
+          qzero.push(v);
+      }
+    }
+  }
+  // break cycles deterministically if any
+  if (ordered.size() < n)
+  {
+    std::unordered_set<size_t> inOrdered(ordered.begin(), ordered.end());
+    std::vector<size_t> remaining;
+    for (size_t i = 0; i < n; ++i)
+      if (!inOrdered.count(i))
+        remaining.push_back(i);
+    std::sort(remaining.begin(), remaining.end());
+    ordered.insert(ordered.end(), remaining.begin(), remaining.end());
+  }
+  return ordered;
 }
 
 MQuantInfo& MbqiEnum::getOrMkQuantInfo(const Node& q)
@@ -583,8 +610,21 @@ bool MbqiEnum::constructInstantiation(
   }
   SubsolverSetupInfo ssi(d_env, d_subOptions);
   MQuantInfo& qi = getOrMkQuantInfo(q);
+  const std::vector<size_t>& topoOrder = qi.getDependencyOrder();
   std::vector<size_t> indices = qi.getInstIndices();
   std::vector<size_t> nindices = qi.getNoInstIndices();
+  // Create mapping from topoOrder index -> original index in vars/mvs
+  std::unordered_map<size_t, size_t> topoToOrig;
+  for (size_t i = 0; i < vars.size(); ++i) { topoToOrig[i] = i; }
+  // filter topological order to keep only indices we enumerate
+  std::vector<size_t> orderedIndices;
+  for (size_t idx : topoOrder)
+  {
+    if (std::find(indices.begin(), indices.end(), idx) != indices.end())
+    {
+      orderedIndices.push_back(idx);
+    }
+  }
   Subs inst;
   Subs vinst;
   std::unordered_map<Node, Node> tmpCMap;
@@ -608,14 +648,13 @@ bool MbqiEnum::constructInstantiation(
   queryCurr = rewrite(inst.apply(queryCurr));
   Trace("mbqi-enum-model")
       << "...processed is " << queryCurr << std::endl;
-  // consider variables in random order, for diversity of instantiations
-  std::shuffle(indices.begin(), indices.end(), Random::getRandom());
   bool addedInst = false;
-  for (size_t i = 0, isize = indices.size(); i < isize; i++)
+  for (size_t i = 0, isize = orderedIndices.size(); i < isize; i++)
   {
-    size_t ii = indices[i];
+    size_t topoIdx = orderedIndices[i];
+    size_t ii = topoToOrig[topoIdx]; // map to mvs/vars index
     TNode v = vars[ii];
-    MVarInfo& vi = qi.getVarInfo(ii);
+    MVarInfo& vi = qi.getVarInfo(topoIdx);
     size_t cindex = 0;
     bool success = false;
     bool successEnum;
@@ -708,9 +747,9 @@ bool MbqiEnum::constructInstantiation(
   }
   // see if there are aux lemmas
   Trace("mbqi-enum-debug") << "TMP Instantiate: " << q.getId() << std::endl;
-  for (size_t i = 0, isize = indices.size(); i < isize; i++)
+  for (size_t i = 0, isize = orderedIndices.size(); i < isize; i++)
   {
-    size_t ii = indices[i];
+    size_t ii = topoToOrig[orderedIndices[i]];
     TNode v = vars[ii];
     Trace("mbqi-enum-debug") << "TMP - " << v << " -> " << mvs[ii] << std::endl;
     MVarInfo& vi = qi.getVarInfo(ii);
@@ -724,3 +763,174 @@ bool MbqiEnum::constructInstantiation(
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
+
+
+// bool MbqiEnum::constructInstantiation(
+//     const Node& q,
+//     const Node& query,
+//     const std::vector<Node>& vars,
+//     std::vector<Node>& mvs,
+//     const std::map<Node, Node>& mvFreshVar,
+//     std::vector<std::pair<Node, InferenceId>>& auxLemmas)
+// {
+//   Assert(q[0].getNumChildren() == vars.size());
+//   Assert(vars.size() == mvs.size());
+//   if (TraceIsOn("mbqi-enum"))
+//   {
+//     Trace("mbqi-enum") << "Instantiate " << q << std::endl;
+//     for (size_t i = 0, nvars = vars.size(); i < nvars; i++)
+//     {
+//       Trace("mbqi-enum")
+//           << "  " << q[0][i] << " -> " << mvs[i] << std::endl;
+//     }
+//   }
+//   SubsolverSetupInfo ssi(d_env, d_subOptions);
+//   MQuantInfo& qi = getOrMkQuantInfo(q);
+//   const std::vector<size_t>& topoOrder = qi.getDependencyOrder();
+//   std::vector<size_t> indices = qi.getInstIndices();
+//   std::vector<size_t> nindices = qi.getNoInstIndices();
+//   // filter topological order to keep only indices we enumerate
+//   std::vector<size_t> orderedIndices;
+//   for (size_t idx : topoOrder)
+//   {
+//     if (std::find(indices.begin(), indices.end(), idx) != indices.end())
+//     {
+//       orderedIndices.push_back(idx);
+//     }
+//   }
+//   Subs inst;
+//   Subs vinst;
+//   std::unordered_map<Node, Node> tmpCMap;
+//   for (size_t i : nindices)
+//   {
+//     Node v = mvs[i];
+//     v = d_parent.convertFromModel(v, tmpCMap, mvFreshVar);
+//     if (v.isNull())
+//     {
+//       Trace("mbqi-enum-model") << "Failed to convert " << v << std::endl;
+//       return false;
+//     }
+//     Trace("mbqi-enum-model")
+//         << "* Assume: " << q[0][i] << " -> " << v << std::endl;
+//     // if we don't enumerate it, we are already considering this instantiation
+//     inst.add(vars[i], v);
+//     vinst.add(q[0][i], v);
+//   }
+//   Node queryCurr = query;
+//   Trace("mbqi-enum-model") << "...query is " << queryCurr << std::endl;
+//   queryCurr = rewrite(inst.apply(queryCurr));
+//   Trace("mbqi-enum-model")
+//       << "...processed is " << queryCurr << std::endl;
+  
+//   bool addedInst = false;
+//   for (size_t i = 0, isize = orderedIndices.size(); i < isize; i++)
+//   {
+//     TNode v = vars[orderedIndices[i]];
+//     MVarInfo& vi = qi.getVarInfo(orderedIndices[i]);
+//     size_t cindex = 0;
+//     bool success = false;
+//     bool successEnum;
+//     bool lastVar = (i + 1 == isize);
+//     do
+//     {
+//       Node ret = vi.getEnumeratedTerm(nodeManager(), cindex);
+//       cindex++;
+//       Node retc;
+//       if (!ret.isNull())
+//       {
+//         Trace("mbqi-enum-debug") << "TMP - Try candidate: " << q.getId() << " " << v
+//                           << " " << cindex << " " << ret << std::endl;
+//         Trace("mbqi-enum") << "- Try candidate: " << ret << std::endl;
+//         // apply current substitution (to account for cases where ret has
+//         // other variables in its grammar).
+//         ret = vinst.apply(ret);
+//         retc = ret;
+//         successEnum = true;
+//         // now convert the value
+//         std::unordered_map<Node, Node> tmpConvertMap;
+//         std::map<TypeNode, std::unordered_set<Node> > freshVarType;
+//         retc = d_parent.convertToQuery(retc, tmpConvertMap, freshVarType);
+//       }
+//       else
+//       {
+//         Trace("mbqi-enum-debug")
+//             << "- Failed to enumerate candidate" << std::endl;
+//         // if we failed to enumerate, just try the original
+//         Node mc = d_parent.convertFromModel(mvs[orderedIndices[i]], tmpCMap, mvFreshVar);
+//         if (mc.isNull())
+//         {
+//           Trace("mbqi-enum-debug") << "Failed to convert " << mvs[orderedIndices[i]] << std::endl;
+//           // if failed to convert, we fail
+//           return false;
+//         }
+//         ret = mc;
+//         retc = mc;
+//         successEnum = false;
+//       }
+//       Trace("mbqi-enum-model")
+//           << "- Converted candidate: " << v << " -> " << retc << std::endl;
+//       Node queryCheck;
+//       if (false && lastVar)
+//       {
+//         mvs[orderedIndices[i]] = ret;
+//         Trace("mbqi-enum-model") << "...try inst" << std::endl;
+//         success = d_parent.tryInstantiation(
+//             q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
+//         Trace("mbqi-enum-model")
+//             << "...try inst success = " << success << std::endl;
+//         addedInst = addedInst || success;
+//       }
+//       else
+//       {
+//         // see if it is still satisfiable, if still SAT, we replace
+//         queryCheck = queryCurr.substitute(v, TNode(retc));
+//         queryCheck = rewrite(queryCheck);
+//         Trace("mbqi-enum-model")
+//             << "...check " << queryCheck << std::endl;
+//         // Result r = checkWithSubsolver(queryCheck, ssi);
+//         Result r = d_parent.checkWithSubsolverSimple(queryCheck, ssi);
+//         success = (r != Result::UNSAT);
+//         if (success)
+//         {
+//           // remember the updated query
+//           queryCurr = queryCheck;
+//           Trace("mbqi-enum-model") << "...success" << std::endl;
+//           Trace("mbqi-enum")
+//               << "* Enumerated " << q[0][orderedIndices[i]] << " -> " << ret << std::endl;
+//           mvs[orderedIndices[i]] = ret;
+//           vinst.add(q[0][orderedIndices[i]], ret);
+//         }
+//       }
+//       if (lastVar && success)
+//       {
+//         success = d_parent.tryInstantiation(
+//             q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
+//         addedInst = addedInst || success;
+//       }
+
+//       if (!success && !successEnum)
+//       {
+//         // we did not enumerate a candidate, and tried the original, which
+//         // failed.
+//         Trace("mbqi-enum-debug") << "Failed to enumerate" << std::endl;
+//         return false;
+//       }
+//     } while (!success);
+//   }
+//   // see if there are aux lemmas
+//   Trace("mbqi-enum-debug") << "TMP Instantiate: " << q.getId() << std::endl;
+//   for (size_t i = 0, isize = orderedIndices.size(); i < isize; i++)
+//   {
+//     TNode v = vars[orderedIndices[i]];
+//     Trace("mbqi-enum-debug") << "TMP - " << v << " -> " << mvs[orderedIndices[i]] << std::endl;
+//     MVarInfo& vi = qi.getVarInfo(orderedIndices[i]);
+//     std::vector<std::pair<Node, InferenceId>> alv =
+//         vi.getEnumeratedLemmas(mvs[orderedIndices[i]]);
+//     Trace("mbqi-enum-debug") << ".TMP ..." << alv.size() << " aux lemmas" << std::endl;
+//     auxLemmas.insert(auxLemmas.end(), alv.begin(), alv.end());
+//   }
+//   return addedInst;
+// }
+// }  // namespace quantifiers
+// }  // namespace theory
+// }  // namespace cvc5::internal
