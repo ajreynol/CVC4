@@ -131,7 +131,7 @@ class MQuantInfo
   /** Cached topological order of variable indices */
   std::vector<size_t> d_topoOrder;
   /** Internal helper to compute dependency order */
-  std::vector<size_t> computeDependencyOrder(const Node& q);
+  std::vector<size_t> mkDependencyOrder(const Node& q);
 };
 
 /**

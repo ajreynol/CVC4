@@ -409,17 +409,9 @@ Node MVarInfo::getEnumeratedTerm(NodeManager* nm, size_t i)
 
 void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
 {
-  // compute topological order of bound variables
-  d_topoOrder = computeDependencyOrder(q);
+  d_topoOrder = mkDependencyOrder(q);
   // collect all bound vars
   std::vector<Node> allBoundVars(q[0].begin(), q[0].end());
-   // DEBUG: print topological order
-  std::cerr << "Topological order: ";
-  for (size_t idx : d_topoOrder)
-  {
-    std::cerr << allBoundVars[idx] << " ";
-  }
-  std::cerr << std::endl;
   // The externally provided terminal rules. This set is shared between
   // all variables we instantiate.
   std::vector<Node> etrules;
@@ -432,14 +424,13 @@ void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
       etrules.push_back(v);
     }
   }
-  // initialize variables in topological order
-  for (size_t varIdx : d_topoOrder)
+  for (const Node& v : q[0])
   {
-    Node v = allBoundVars[varIdx];
     size_t index = d_vinfo.size();
     d_vinfo.emplace_back();
     TypeNode vtn = v.getType();
-    if (shouldEnumerate(env.getOptions(),vtn))
+    // if enumerated, add to list
+    if (shouldEnumerate(env.getOptions(), vtn))
     {
       d_indices.push_back(index);
       // start with shared terminals
@@ -471,15 +462,14 @@ void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
               break;
             }
           }
-          if (compatible &&
-              std::find(etrulesLocal.begin(), etrulesLocal.end(), bv) == etrulesLocal.end())
+          if (compatible && std::find(etrulesLocal.begin(), etrulesLocal.end(), bv) == etrulesLocal.end())
           {
             etrulesLocal.push_back(bv);
           }
         }
       }
       // initialize the variables we are instantiating
-      d_vinfo[index].initialize(env, q, v, etrulesLocal);
+      d_vinfo[index].initialize(env, q, q[0][index], etrulesLocal);
     }
     else
     {
@@ -505,7 +495,7 @@ MbqiEnum::MbqiEnum(Env& env, InstStrategyMbqi& parent)
   smt::SetDefaults::disableChecking(d_subOptions);
 }
 
-std::vector<size_t> MQuantInfo::computeDependencyOrder(const Node& q)
+std::vector<size_t> MQuantInfo::mkDependencyOrder(const Node& q)
 {
   std::vector<Node> allBoundVars(q[0].begin(), q[0].end());
   size_t n = allBoundVars.size();
