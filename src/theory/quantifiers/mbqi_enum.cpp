@@ -122,10 +122,6 @@ void MVarInfo::initialize(Env& env,
     std::unordered_set<Node> syms;
     expr::getSymbols(q[1], syms);
     trules.insert(trules.end(), syms.begin(), syms.end());
-    // also collect full terms (applications of symbols)
-    std::unordered_set<Node> terms;
-    expr::getTerms(q[1], terms);
-    trules.insert(trules.end(), terms.begin(), terms.end());
   }
   // include the external terminal rules
   for (const Node& symbol : etrules)
@@ -416,6 +412,15 @@ void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
   // The externally provided terminal rules. This set is shared between
   // all variables we instantiate.
   std::vector<Node> etrules;
+  // include the global symbols if applicable
+  if (env.getOptions().quantifiers.mbqiEnumGlobalSymGrammar)
+  {
+    const context::CDHashSet<Node>& gsyms = parent.getGlobalSyms();
+    for (const Node& v : gsyms)
+    {
+      etrules.push_back(v);
+    }
+  }
   for (const Node& v : q[0])
   {
     size_t index = d_vinfo.size();
@@ -436,19 +441,29 @@ void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
       }
     }
   }
-  // include the global symbols if applicable
-  if (env.getOptions().quantifiers.mbqiEnumGlobalSymGrammar)
-  {
-    const context::CDHashSet<Node>& gsyms = parent.getGlobalSyms();
-    for (const Node& v : gsyms)
-    {
-      etrules.push_back(v);
-    }
-  }
   // initialize the variables we are instantiating
   for (size_t index : d_indices)
   {
-    d_vinfo[index].initialize(env, q, q[0][index], etrules);
+    // start with the shared terminal rules
+    std::vector<Node> etrulesLocal = etrules;
+    if (env.getOptions().quantifiers.mbqiEnumFreeSymsGrammar)
+    {
+      // collect full terms (applications of symbols) if applicable
+      std::unordered_set<Node> terms;
+      expr::getTerms(q[1], terms);
+      for (const Node& t : terms)
+      {
+        // skip terms that mention the variable we are instantiating
+        Node v = q[0][index]; 
+        if (expr::hasSubterm(t, v))
+        {
+          continue;
+        }
+        etrulesLocal.push_back(t);
+      }
+    }
+    // initialize the variables we are instantiating
+    d_vinfo[index].initialize(env, q, q[0][index], etrulesLocal);
   }
 }
 
