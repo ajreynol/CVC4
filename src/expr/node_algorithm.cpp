@@ -621,19 +621,15 @@ void getSymbols(TNode n,
 
 void getTerms(TNode n, std::unordered_set<Node>& terms)
 {
-  std::unordered_set<TNode> visited;
   std::vector<TNode> visit;
   visit.push_back(n);
   while (!visit.empty())
   {
     TNode cur = visit.back();
     visit.pop_back();
-    if (visited.find(cur) != visited.end()) continue;
-    visited.insert(cur);
-    // if it's a function application collect it
-    if (cur.getKind() == Kind::APPLY_UF && cur.getOperator().getKind() != Kind::BOUND_VARIABLE)
+    if (!terms.insert(cur).second)
     {
-      terms.insert(cur);
+      continue;
     }
     // recurse on children
     visit.insert(visit.end(), cur.begin(), cur.end());

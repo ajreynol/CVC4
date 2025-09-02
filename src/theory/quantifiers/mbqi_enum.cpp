@@ -20,6 +20,7 @@
 #include "expr/subs.h"
 #include "printer/smt2/smt2_printer.h"
 #include "smt/set_defaults.h"
+#include "theory/substitutions.h"
 #include "theory/datatypes/sygus_datatype_utils.h"
 #include "theory/quantifiers/inst_strategy_mbqi.h"
 #include "theory/quantifiers/instantiate.h"
@@ -519,11 +520,14 @@ bool MbqiEnum::constructInstantiation(
   std::vector<size_t> nindices = qi.getNoInstIndices();
   Subs inst;
   Subs vinst;
+  Subs vinstOrig;
+  SubstitutionMap vinstMap;
   std::unordered_map<Node, Node> tmpCMap;
   for (size_t i : nindices)
   {
     Node v = mvs[i];
     v = d_parent.convertFromModel(v, tmpCMap, mvFreshVar);
+    vinstOrig.add(v, mvs[i]);
     if (v.isNull())
     {
       Trace("mbqi-enum-model") << "Failed to convert " << v << std::endl;
@@ -534,6 +538,7 @@ bool MbqiEnum::constructInstantiation(
     // if we don't enumerate it, we are already considering this instantiation
     inst.add(vars[i], v);
     vinst.add(q[0][i], v);
+    vinstMap.addSubstitution(q[i][i], v);
   }
   Node queryCurr = query;
   Trace("mbqi-enum-model") << "...query is " << queryCurr << std::endl;
@@ -565,6 +570,11 @@ bool MbqiEnum::constructInstantiation(
         // apply current substitution (to account for cases where ret has
         // other variables in its grammar).
         ret = vinst.apply(ret);
+        Node retFixPoint = vinstMap.apply(ret);
+        if (expr::hasSubterm(retFixPoint, q[0][ii]))
+        {
+          continue;
+        }
         retc = ret;
         successEnum = true;
         // now convert the value
@@ -604,7 +614,8 @@ bool MbqiEnum::constructInstantiation(
       else
       {
         // see if it is still satisfiable, if still SAT, we replace
-        queryCheck = queryCurr.substitute(v, TNode(retc));
+        queryCheck = vinstMap.apply(query);
+        queryCheck = vinstOrig.apply(queryCheck);
         queryCheck = rewrite(queryCheck);
         Trace("mbqi-enum-model")
             << "...check " << queryCheck << std::endl;
@@ -620,12 +631,19 @@ bool MbqiEnum::constructInstantiation(
               << "* Enumerated " << q[0][ii] << " -> " << ret << std::endl;
           mvs[ii] = ret;
           vinst.add(q[0][ii], ret);
+          vinstMap.addSubstitution(q[0][ii], ret);
         }
       }
       if (lastVar && success)
       {
+        std::vector<Node> fmvs;
+        for (const Node& mv : fmvs)
+        {
+          Node fmv = vinstMap.apply(mv);
+          fmvs.push_back(fmv);
+        }
         success = d_parent.tryInstantiation(
-            q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
+            q, fmvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
         addedInst = addedInst || success;
       }
 
