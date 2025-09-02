@@ -20,6 +20,7 @@
 #include "expr/attribute.h"
 #include "expr/cardinality_constraint.h"
 #include "expr/dtype.h"
+#include "expr/skolem_manager.h"
 
 namespace cvc5::internal {
 namespace expr {
@@ -616,6 +617,27 @@ void getSymbols(TNode n,
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
   } while (!visit.empty());
+}
+
+void getTerms(TNode n, std::unordered_set<Node>& terms)
+{
+  std::unordered_set<TNode> visited;
+  std::vector<TNode> visit;
+  visit.push_back(n);
+  while (!visit.empty())
+  {
+    TNode cur = visit.back();
+    visit.pop_back();
+    if (visited.find(cur) != visited.end()) continue;
+    visited.insert(cur);
+    // if it's a function application collect it
+    if (cur.getKind() == Kind::APPLY_UF && cur.getOperator().getKind() != Kind::BOUND_VARIABLE)
+    {
+      terms.insert(cur);
+    }
+    // recurse on children
+    visit.insert(visit.end(), cur.begin(), cur.end());
+  }
 }
 
 void getKindSubterms(TNode n,
