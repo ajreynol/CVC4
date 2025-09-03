@@ -34,6 +34,8 @@ enum class DtElimPolicy
   NONE,
   /** 1 cons, 0 fields */
   UNIT,
+  /** 1 cons, 0 fields, handled as enum */
+  UNIT_ENUM,
   /** 1 cons, 1+ fields */
   UNARY,
   /** 2 cons, 0 fields */
@@ -48,6 +50,7 @@ enum class DtElimPolicy
 bool isUnaryPolicy(DtElimPolicy policy);
 bool isBinaryTestPolicy(DtElimPolicy policy);
 bool isAbstractPolicy(DtElimPolicy policy);
+bool isEnumPolicy(DtElimPolicy policy);
 /** Converts a dt-elim policy identifier to a string. */
 const char* toString(DtElimPolicy policy);
 /** Writes a dt-elim policy identifier to a stream. */
@@ -86,6 +89,7 @@ class DtElimConverter : protected EnvObj, public NodeConverter
    * where U is getTypeAbstraction(D) and U_some, U_none : U.
    */
   Node getDtAbstraction(const Node& v);
+  Node getDtRevAbstraction(const Node& v);
   /**
    * if an apply UF, we get the predicate that is true when the function
    * f is that tester. For instance, for f : Int -> (Option Bool), we

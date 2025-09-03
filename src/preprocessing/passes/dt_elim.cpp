@@ -38,7 +38,7 @@ using namespace cvc5::internal::theory;
 
 bool isUnaryPolicy(DtElimPolicy policy)
 {
-  return policy == DtElimPolicy::UNIT || policy == DtElimPolicy::UNARY;
+  return policy == DtElimPolicy::UNIT || policy == DtElimPolicy::UNARY || policy == DtElimPolicy::UNIT_ENUM;
 }
 
 bool isBinaryTestPolicy(DtElimPolicy policy)
@@ -52,12 +52,17 @@ bool isAbstractPolicy(DtElimPolicy policy)
          || policy == DtElimPolicy::ABSTRACT;
 }
 
+bool isEnumPolicy(DtElimPolicy policy)
+{
+  return policy == DtElimPolicy::UNIT_ENUM || policy == DtElimPolicy::BINARY_ENUM || policy == DtElimPolicy::ABSTRACT_ENUM;
+}
 const char* toString(DtElimPolicy policy)
 {
   switch (policy)
   {
     case DtElimPolicy::NONE: return "NONE";
     case DtElimPolicy::UNIT: return "UNIT";
+    case DtElimPolicy::UNIT_ENUM: return "UNIT_ENUM";
     case DtElimPolicy::UNARY: return "UNARY";
     case DtElimPolicy::BINARY_ENUM: return "BINARY_ENUM";
     case DtElimPolicy::BINARY: return "BINARY";
@@ -136,10 +141,16 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
         break;
       }
     }
+    /*
     // FIXME
     if (ncons >= 2)
     {
       noElimDt.push_back(tn);
+      continue;
+    }
+    */
+    if (!isEnum)
+    {
       continue;
     }
     DtElimPolicy policy = DtElimPolicy::NONE;
@@ -248,11 +259,6 @@ Node DtElimConverter::postConvert(Node n)
     {
       return n;
     }
-    else if (itd->second == DtElimPolicy::UNIT)
-    {
-      // unit equality is always true
-      return d_nm->mkConst(true);
-    }
     Assert(tn.isDatatype());
     const DType& dt = tn.getDType();
     Node cur = d_nm->mkConst(false);
@@ -285,24 +291,6 @@ Node DtElimConverter::postConvert(Node n)
     }
     return cur;
   }
-  /*
-  else if (k == Kind::ITE)
-  {
-    TypeNode tn = n.getType();
-    if (d_dtep.find(tn) == d_dtep.end())
-    {
-      // non-datatype ite, skip
-      return n;
-    }
-    // eliminate ITE by lifting
-    Node kt = SkolemManager::mkPurifySkolem(n);
-    Node iteLemma =
-        d_nm->mkNode(Kind::ITE, n[0], kt.eqNode(n[1]), kt.eqNode(n[2]));
-    iteLemma = convert(iteLemma);
-    d_newLemmas.push_back(iteLemma);
-    return kt;
-  }
-  */
   else if (k == Kind::APPLY_SELECTOR)
   {
     Node t = n[0];
@@ -312,7 +300,7 @@ Node DtElimConverter::postConvert(Node n)
     {
       return n;
     }
-    if (itd->second == DtElimPolicy::UNIT || itd->second == DtElimPolicy::UNARY)
+    if (itd->second == DtElimPolicy::UNARY)
     {
       const std::vector<Node>& sels = getSelectorVec(t, itd->second, 0);
       size_t selectorIndex = datatypes::utils::indexOf(n.getOperator());
@@ -363,7 +351,9 @@ Node DtElimConverter::postConvert(Node n)
           }
           Assert(tna.isDatatype());
           const DType& dt = tna.getDType();
-          if (dt.getNumConstructors() == 1)
+          bool isInline = false;
+          //bool isInline = (dt.getNumConstructors() == 1);
+          if (isInline)
           {
             Node dv = d_nm->mkBoundVar(tna);
             revVars.push_back(dv);
@@ -380,6 +370,9 @@ Node DtElimConverter::postConvert(Node n)
             }
             Node cons = d_nm->mkNode(Kind::APPLY_CONSTRUCTOR, consArg);
             args.push_back(cons);
+          }
+          else if (isEnumPolicy(itd->second))
+          {
           }
           else
           {
@@ -450,6 +443,25 @@ Node DtElimConverter::getDtAbstraction(const Node& v)
   {
     Node tester = datatypes::utils::mkTester(v, i, dt);
     cur = d_nm->mkNode(Kind::ITE, tester, cvec[i], cur);
+  }
+  return cur;
+}
+
+Node DtElimConverter::getDtRevAbstraction(const Node& v)
+{
+  Assert(v.isVar() || v.getKind() == Kind::APPLY_UF);
+  Assert(v.getKind() != Kind::BOUND_VARIABLE);
+  TypeNode vtn = v.getType();
+  Assert(vtn.isDatatype());
+  const std::vector<Node>& cvec = getConstructorVec(vtn);
+  const DType& dt = vtn.getDType();
+  Assert(cvec.size() == dt.getNumConstructors());
+  Node cur = cvec[0];
+  for (size_t i = 1, ncons = dt.getNumConstructors(); i < ncons; i++)
+  {
+    Node tester = v.eqNode(cvec[i]);
+    Node cons = d_nm->mkNode(Kind::APPLY_CONSTRUCTOR, {dt[i].getConstructor()});
+    cur = d_nm->mkNode(Kind::ITE, tester, cons, cur);
   }
   return cur;
 }
