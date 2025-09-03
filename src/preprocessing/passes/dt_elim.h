@@ -89,7 +89,7 @@ class DtElimConverter : protected EnvObj, public NodeConverter
    * where U is getTypeAbstraction(D) and U_some, U_none : U.
    */
   Node getDtAbstraction(const Node& v);
-  Node getDtRevAbstraction(const Node& v);
+  Node getDtRevAbstraction(const Node& v, const TypeNode& dtn);
   /**
    * if an apply UF, we get the predicate that is true when the function
    * f is that tester. For instance, for f : Int -> (Option Bool), we
@@ -124,6 +124,7 @@ class DtElimConverter : protected EnvObj, public NodeConverter
   std::map<std::pair<Node, size_t>, Node> d_selectorsElim;
   /** */
   std::map<TypeNode, std::vector<Node>> d_constructors;
+  std::map<TypeNode, TypeNode> d_typeAbs;
   /** */
   TypeNode d_dtElimSc;
 };

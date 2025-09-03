@@ -156,7 +156,7 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
     DtElimPolicy policy = DtElimPolicy::NONE;
     if (isEnum)
     {
-      policy = (ncons == 1 ? DtElimPolicy::UNIT
+      policy = (ncons == 1 ? DtElimPolicy::UNIT_ENUM
                            : (ncons == 2 ? DtElimPolicy::BINARY_ENUM
                                          : DtElimPolicy::ABSTRACT_ENUM));
     }
@@ -373,6 +373,13 @@ Node DtElimConverter::postConvert(Node n)
           }
           else if (isEnumPolicy(itd->second))
           {
+            Node dv = d_nm->mkBoundVar(tna);
+            TypeNode tnabs = getTypeAbstraction(tna);
+            Node av = d_nm->mkBoundVar(tnabs);
+            revVars.push_back(dv);
+            revArgs.push_back(getDtAbstraction(dv));
+            vars.push_back(av);
+            args.push_back(getDtRevAbstraction(av, tna));
           }
           else
           {
@@ -414,7 +421,7 @@ Node DtElimConverter::postConvert(Node n)
     if (!ret.isNull())
     {
       Assert(ret.getType() == n.getType());
-      return ret;
+      return n;
     }
   }
   else if (k == Kind::APPLY_UF && n.getOperator().getKind() == Kind::LAMBDA)
@@ -432,7 +439,6 @@ Node DtElimConverter::postConvert(Node n)
 Node DtElimConverter::getDtAbstraction(const Node& v)
 {
   Assert(v.isVar() || v.getKind() == Kind::APPLY_UF);
-  Assert(v.getKind() != Kind::BOUND_VARIABLE);
   TypeNode vtn = v.getType();
   Assert(vtn.isDatatype());
   const std::vector<Node>& cvec = getConstructorVec(vtn);
@@ -447,16 +453,14 @@ Node DtElimConverter::getDtAbstraction(const Node& v)
   return cur;
 }
 
-Node DtElimConverter::getDtRevAbstraction(const Node& v)
+Node DtElimConverter::getDtRevAbstraction(const Node& v, const TypeNode& dtn)
 {
   Assert(v.isVar() || v.getKind() == Kind::APPLY_UF);
-  Assert(v.getKind() != Kind::BOUND_VARIABLE);
-  TypeNode vtn = v.getType();
-  Assert(vtn.isDatatype());
-  const std::vector<Node>& cvec = getConstructorVec(vtn);
-  const DType& dt = vtn.getDType();
+  Assert(dtn.isDatatype());
+  const std::vector<Node>& cvec = getConstructorVec(dtn);
+  const DType& dt = dtn.getDType();
   Assert(cvec.size() == dt.getNumConstructors());
-  Node cur = cvec[0];
+  Node cur = d_nm->mkNode(Kind::APPLY_CONSTRUCTOR, {dt[0].getConstructor()});
   for (size_t i = 1, ncons = dt.getNumConstructors(); i < ncons; i++)
   {
     Node tester = v.eqNode(cvec[i]);
@@ -479,7 +483,7 @@ Node DtElimConverter::getTesterFunctionInternal(const Node& v,
   std::vector<Node> lamArgs;
   for (const Node& vc : v)
   {
-    lamArgs.push_back(d_nm->mkBoundVar(v.getType()));
+    lamArgs.push_back(d_nm->mkBoundVar(vc.getType()));
   }
   Node lbvl = d_nm->mkNode(Kind::BOUND_VAR_LIST, lamArgs);
   lamArgs.insert(lamArgs.begin(), v.getOperator());
@@ -682,6 +686,16 @@ const std::vector<Node>& DtElimConverter::getSelectorVec(const Node& v,
       }
       return ret;
     }
+    // null if empty
+    TypeNode tn = v.getType();
+    Assert(tn.isDatatype());
+    const DType& dt = tn.getDType();
+    if (dt[i].getNumArgs()==0)
+    {
+      std::pair<Node, size_t> key(v, i);
+      Assert (d_selectors[key].empty());
+      return d_selectors[key];
+    }
   }
   else if (vk == Kind::ITE)
   {
@@ -713,9 +727,21 @@ Node DtElimConverter::getModelElimination(const Node& v)
   {
     return itm->second;
   }
+  Node vinst = v;
+  std::vector<Node> vars;
   TypeNode tn = v.getType();
   if (tn.isFunction())
   {
+    std::vector<TypeNode> argTypes = tn.getArgTypes();
+    std::vector<Node> cons;
+    cons.push_back(v);
+    for (const TypeNode& tna : argTypes)
+    {
+      Node lv = d_nm->mkBoundVar(tna);
+      vars.push_back(lv);
+      cons.push_back(lv);
+    }
+    vinst = d_nm->mkNode(Kind::APPLY_UF, cons);
     tn = tn.getRangeType();
   }
   std::map<TypeNode, DtElimPolicy>::iterator itd = d_dtep.find(tn);
@@ -730,7 +756,7 @@ Node DtElimConverter::getModelElimination(const Node& v)
   std::map<std::pair<Node, size_t>, Node>::iterator its;
   for (size_t j = 0, ncons = dt.getNumConstructors(); j < ncons; j++)
   {
-    getSelectorVecInternal(v, j);
+    getSelectorVecInternal(vinst, j);
     std::pair<Node, size_t> key(v, j);
     its = d_selectorsElim.find(key);
     Assert(its != d_selectorsElim.end());
@@ -740,9 +766,13 @@ Node DtElimConverter::getModelElimination(const Node& v)
     }
     else
     {
-      Node tester = getTester(v, itd->second, j);
+      Node tester = getTester(vinst, itd->second, j);
       cur = d_nm->mkNode(Kind::ITE, tester, its->second, cur);
     }
+  }
+  if (!vars.empty())
+  {
+    cur = d_nm->mkNode(Kind::LAMBDA, d_nm->mkNode(Kind::BOUND_VAR_LIST, vars), cur);
   }
   Trace("dt-elim") << "*** Overall elimination for " << v << " is " << cur
                    << std::endl;
@@ -753,7 +783,14 @@ Node DtElimConverter::getModelElimination(const Node& v)
 TypeNode DtElimConverter::getTypeAbstraction(const TypeNode& dt)
 {
   Assert(dt.isDatatype());
-  return nodeManager()->mkSort(d_dtElimSc, {dt});
+  std::map<TypeNode, TypeNode>::iterator it = d_typeAbs.find(dt);
+  if (it!=d_typeAbs.end())
+  {
+    return it->second;
+  }
+  TypeNode ret = nodeManager()->mkSort(d_dtElimSc, {dt});
+  d_typeAbs[dt] = ret;
+  return ret;
 }
 
 const std::vector<Node>& DtElimConverter::getConstructorVec(const TypeNode& tn)
