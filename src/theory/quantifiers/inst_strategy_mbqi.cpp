@@ -203,7 +203,13 @@ void InstStrategyMbqi::process(Node q)
   Node bquery = rewrite(cbody.negate());
   if (!bquery.isConst())
   {
-    constraints.push_back(bquery);
+    // if no nested check, don't assert the subquery, we will get an arbitrary
+    // model.
+    if (options().quantifiers.mbqiNestedCheck
+        || !expr::hasSubtermKind(Kind::FORALL, bquery))
+    {
+      constraints.push_back(bquery);
+    }
   }
   else if (!bquery.getConst<bool>())
   {
@@ -292,15 +298,11 @@ void InstStrategyMbqi::process(Node q)
   {
     mbqiChecker->setTimeLimit(options().quantifiers.mbqiCheckTimeout);
   }
-  // if no nested check, don't assert the subquery, we will get an arbitrary
-  // model.
-  if (options().quantifiers.mbqiNestedCheck
-      || !expr::hasSubtermKind(Kind::FORALL, query))
-  {
-    mbqiChecker->assertFormula(query);
-  }
+  mbqiChecker->assertFormula(query);
   Trace("mbqi") << "*** Check sat..." << std::endl;
-  Trace("mbqi") << "  query is : " << SkolemManager::getOriginalForm(query)
+  Trace("mbqi") << "  query-o is : " << SkolemManager::getOriginalForm(query)
+                << std::endl;
+  Trace("mbqi") << "  query is : " << query
                 << std::endl;
   Result r = mbqiChecker->checkSat();
   Trace("mbqi") << "  ...got : " << r << std::endl;
