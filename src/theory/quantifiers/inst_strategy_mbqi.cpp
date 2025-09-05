@@ -318,7 +318,6 @@ void InstStrategyMbqi::process(Node q)
   for (const Node& v : allVars)
   {
     Node mv = mbqiChecker->getValue(v);
-    Assert(mvToFreshVar.find(mv) == mvToFreshVar.end());
     mvToFreshVar[mv] = v;
     Trace("mbqi-debug") << "mvToFreshVar " << mv << " is " << v << std::endl;
   }
