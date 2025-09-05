@@ -203,8 +203,7 @@ void InstStrategyMbqi::process(Node q)
   Node bquery = rewrite(cbody.negate());
   if (!bquery.isConst())
   {
-    // if no nested check, don't assert the subquery, we will get an arbitrary
-    // model.
+    // if no nested check, don't assert the subquery if it contains quantifiers
     if (options().quantifiers.mbqiNestedCheck
         || !expr::hasSubtermKind(Kind::FORALL, bquery))
     {
