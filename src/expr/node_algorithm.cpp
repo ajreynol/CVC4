@@ -631,6 +631,10 @@ void getTerms(TNode n, std::unordered_set<Node>& terms)
     {
       continue;
     }
+    if (cur.isClosure())
+    {
+      continue;
+    }
     // recurse on children
     visit.insert(visit.end(), cur.begin(), cur.end());
   }

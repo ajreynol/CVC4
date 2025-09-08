@@ -144,10 +144,10 @@ void MVarInfo::initialize(Env& env,
       Trace("mbqi-enum") << ", variable list " << d_lamVars;
     }
     Trace("mbqi-enum") << std::endl;
-    Trace("mbqi-enum-grammar") << "Based on grammar:" << std::endl;
-    Trace("mbqi-enum-grammar")
-        << printer::smt2::Smt2Printer::sygusGrammarString(tng) << std::endl;
   }
+  Trace("mbqi-enum-grammar") << "Based on grammar:" << std::endl;
+  Trace("mbqi-enum-grammar")
+      << printer::smt2::Smt2Printer::sygusGrammarString(tng) << std::endl;
   TypeNode tuse = tng;
   const Options& opts = env.getOptions();
   if (opts.quantifiers.mbqiEnumChoiceGrammar)
@@ -615,7 +615,7 @@ bool MbqiEnum::constructInstantiation(
       {
         // see if it is still satisfiable, if still SAT, we replace
         queryCheck = vinstMap.apply(query);
-        queryCheck = vinstOrig.apply(queryCheck);
+        //queryCheck = vinstOrig.apply(queryCheck);
         queryCheck = rewrite(queryCheck);
         Trace("mbqi-enum-model")
             << "...check " << queryCheck << std::endl;
@@ -637,7 +637,7 @@ bool MbqiEnum::constructInstantiation(
       if (lastVar && success)
       {
         std::vector<Node> fmvs;
-        for (const Node& mv : fmvs)
+        for (const Node& mv : mvs)
         {
           Node fmv = vinstMap.apply(mv);
           fmvs.push_back(fmv);
