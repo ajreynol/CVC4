@@ -590,37 +590,26 @@ bool MbqiEnum::constructInstantiation(
       Trace("mbqi-enum-model")
           << "- Converted candidate: " << v << " -> " << retc << std::endl;
       Node queryCheck;
-      if (false && lastVar)
+      // see if it is still satisfiable, if still SAT, we replace
+      queryCheck = queryCurr.substitute(v, TNode(retc));
+      queryCheck = rewrite(queryCheck);
+      Trace("mbqi-enum-model")
+          << "...check " << queryCheck << std::endl;
+      // Result r = checkWithSubsolver(queryCheck, ssi);
+      Result r = d_parent.checkWithSubsolverSimple(queryCheck, ssi);
+      success = (r != Result::UNSAT);
+      if (success)
       {
+        // remember the updated query
+        queryCurr = queryCheck;
+        Trace("mbqi-enum-model") << "...success" << std::endl;
+        Trace("mbqi-enum")
+            << "* Enumerated " << q[0][ii] << " -> " << ret << std::endl;
         mvs[ii] = ret;
-        Trace("mbqi-enum-model") << "...try inst" << std::endl;
-        success = d_parent.tryInstantiation(
-            q, mvs, InferenceId::QUANTIFIERS_INST_MBQI_ENUM, mvFreshVar);
-        Trace("mbqi-enum-model")
-            << "...try inst success = " << success << std::endl;
-        addedInst = addedInst || success;
+        vinst.add(q[0][ii], ret);
       }
-      else
-      {
-        // see if it is still satisfiable, if still SAT, we replace
-        queryCheck = queryCurr.substitute(v, TNode(retc));
-        queryCheck = rewrite(queryCheck);
-        Trace("mbqi-enum-model")
-            << "...check " << queryCheck << std::endl;
-        // Result r = checkWithSubsolver(queryCheck, ssi);
-        Result r = d_parent.checkWithSubsolverSimple(queryCheck, ssi);
-        success = (r != Result::UNSAT);
-        if (success)
-        {
-          // remember the updated query
-          queryCurr = queryCheck;
-          Trace("mbqi-enum-model") << "...success" << std::endl;
-          Trace("mbqi-enum")
-              << "* Enumerated " << q[0][ii] << " -> " << ret << std::endl;
-          mvs[ii] = ret;
-          vinst.add(q[0][ii], ret);
-        }
-      }
+      // We verify the lemma is successfully added here. If it is not, then
+      // success is false and we continue the enumeration.
       if (lastVar && success)
       {
         success = d_parent.tryInstantiation(
@@ -637,17 +626,18 @@ bool MbqiEnum::constructInstantiation(
       }
     } while (!success);
   }
-  // see if there are aux lemmas
-  Trace("mbqi-enum-debug") << "TMP Instantiate: " << q.getId() << std::endl;
+  // See if there are auxiliary lemmas, if so, add them to the returned
+  // vector.
+  Trace("mbqi-enum-debug") << "Instantiate: " << q.getId() << std::endl;
   for (size_t i = 0, isize = indices.size(); i < isize; i++)
   {
     size_t ii = indices[i];
     TNode v = vars[ii];
-    Trace("mbqi-enum-debug") << "TMP - " << v << " -> " << mvs[ii] << std::endl;
+    Trace("mbqi-enum-debug") << "- " << v << " -> " << mvs[ii] << std::endl;
     MVarInfo& vi = qi.getVarInfo(ii);
     std::vector<std::pair<Node, InferenceId>> alv =
         vi.getEnumeratedLemmas(mvs[ii]);
-    Trace("mbqi-enum-debug") << ".TMP ..." << alv.size() << " aux lemmas" << std::endl;
+    Trace("mbqi-enum-debug") << "..." << alv.size() << " aux lemmas" << std::endl;
     auxLemmas.insert(auxLemmas.end(), alv.begin(), alv.end());
   }
   return addedInst;
