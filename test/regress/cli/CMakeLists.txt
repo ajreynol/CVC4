@@ -2734,6 +2734,7 @@ set(regress_1_tests
   regress1/ho/dd.seu-mbqi.smt2
   regress1/ho/dd.seu589-wrong.smt2
   regress1/ho/fta0328.lfho.smt2
+  regress1/ho/ho-choice-partial-mbqi-enum.smt2
   regress1/ho/ho-fun-sharing-dd.smt2
   regress1/ho/issue12000.smt2
   regress1/ho/issue12000-2.smt2
