@@ -48,6 +48,8 @@ bool CandidateGenerator::isLegalCandidate(const Node& n)
   return d_treg.getTermDatabase()->isTermActive(n);
 }
 
+std::map<Node, size_t> CandidateGeneratorQE::s_opCount;
+std::map<Node, size_t> CandidateGeneratorQE::s_opSize;
 std::map<Node, size_t> CandidateGeneratorQE::s_eqcCount;
 std::map<Node, size_t> CandidateGeneratorQE::s_eqcSize;
 std::map<Node, size_t> CandidateGeneratorQE::s_eqcTotal;
@@ -74,11 +76,17 @@ void CandidateGeneratorQE::resetDebug()
   Trace("ajr-temp") << "Round summary:" << std::endl;
   for (std::pair<const Node, size_t>& p : s_eqcCount)
   {
-    Trace("ajr-temp") << "- matched " << p.second << ", size " << s_eqcSize[p.first] << ", total " << s_eqcTotal[p.first] << std::endl;
+    Trace("ajr-temp") << "- eqc matched " << p.second << ", size " << s_eqcSize[p.first] << ", total " << s_eqcTotal[p.first] << std::endl;
+  }
+  for (std::pair<const Node, size_t>& p : s_opCount)
+  {
+    Trace("ajr-temp") << "- op " << p.first << " matched " << p.second << ", size " << s_opSize[p.first] << std::endl;
   }
   s_eqcCount.clear();
   s_eqcSize.clear();
   s_eqcTotal.clear();
+  s_opCount.clear();
+  s_opSize.clear();
 }
 
 void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
@@ -90,6 +98,11 @@ void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
   if (eqc.isNull())
   {
     d_mode = cand_term_db;
+    if (d_termIterList!=nullptr)
+    {
+      s_opCount[d_op]++;
+      s_opSize[d_op] = d_termIterList->d_list.size();
+    }
   }else{
     if( isExcludedEqc( eqc ) ){
       d_mode = cand_term_none;

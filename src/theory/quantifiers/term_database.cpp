@@ -680,7 +680,7 @@ void TermDb::setHasTerm(Node n)
 void TermDb::presolve() {}
 
 bool TermDb::reset( Theory::Effort effort ){
-  d_roundDepth++;
+  d_roundDepth = d_roundDepth + 1;
   Trace("ajr-temp-rd") << "Round depth is " << d_roundDepth.get() << std::endl;
   inst::CandidateGeneratorQE::resetDebug();
   d_op_nonred_count.clear();

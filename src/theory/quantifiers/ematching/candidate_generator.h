@@ -151,6 +151,8 @@ class CandidateGeneratorQE : public CandidateGenerator
   static std::map<Node, size_t> s_eqcCount;
   static std::map<Node, size_t> s_eqcSize;
   static std::map<Node, size_t> s_eqcTotal;
+  static std::map<Node, size_t> s_opCount;
+  static std::map<Node, size_t> s_opSize;
   static size_t s_currEqcCount;
   static size_t s_currEqcCountSucc;
 };
