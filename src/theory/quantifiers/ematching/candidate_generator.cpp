@@ -48,6 +48,12 @@ bool CandidateGenerator::isLegalCandidate(const Node& n)
   return d_treg.getTermDatabase()->isTermActive(n);
 }
 
+std::map<Node, size_t> CandidateGeneratorQE::s_eqcCount;
+std::map<Node, size_t> CandidateGeneratorQE::s_eqcSize;
+std::map<Node, size_t> CandidateGeneratorQE::s_eqcTotal;
+size_t CandidateGeneratorQE::s_currEqcCount;
+size_t CandidateGeneratorQE::s_currEqcCountSucc;
+
 CandidateGeneratorQE::CandidateGeneratorQE(Env& env,
                                            QuantifiersState& qs,
                                            TermRegistry& tr,
@@ -62,6 +68,18 @@ CandidateGeneratorQE::CandidateGeneratorQE(Env& env,
 }
 
 void CandidateGeneratorQE::reset(Node eqc) { resetForOperator(eqc, d_op); }
+
+void CandidateGeneratorQE::resetDebug()
+{
+  Trace("ajr-temp") << "Round summary:" << std::endl;
+  for (std::pair<const Node, size_t>& p : s_eqcCount)
+  {
+    Trace("ajr-temp") << "- matched " << p.second << ", size " << s_eqcSize[p.first] << ", total " << s_eqcTotal[p.first] << std::endl;
+  }
+  s_eqcCount.clear();
+  s_eqcSize.clear();
+  s_eqcTotal.clear();
+}
 
 void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
 {
@@ -82,8 +100,18 @@ void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
         if( tat ){
           //create an equivalence class iterator in eq class eqc
           Node rep = ee->getRepresentative( eqc );
+          d_rep = rep;
           d_eqc_iter = eq::EqClassIterator( rep, ee );
           d_mode = cand_term_eqc;
+          s_eqcCount[rep]++;
+          if (s_eqcSize.find(rep)==s_eqcSize.end())
+          {
+            eq::EqClassIterator tmp( rep, ee );
+            while( !tmp.isFinished() ){
+              ++tmp;
+              s_eqcSize[rep]++;
+            }
+          }
         }else{
           d_mode = cand_term_none;
         }   
@@ -145,6 +173,7 @@ Node CandidateGeneratorQE::getNextCandidateInternal()
       ++d_eqc_iter;
       if( isLegalOpCandidate( n ) ){
         Trace("cand-gen-qe") << "...returning " << n << std::endl;
+        s_eqcTotal[d_rep]++;
         return n;
       }
     }

@@ -103,6 +103,7 @@ class CandidateGeneratorQE : public CandidateGenerator
                        QuantifiersState& qs,
                        TermRegistry& tr,
                        Node pat);
+  static void resetDebug();
   /** reset */
   void reset(Node eqc) override;
   /** get next candidate */
@@ -146,6 +147,12 @@ class CandidateGeneratorQE : public CandidateGenerator
   /** the equivalence classes that we have excluded from candidate generation */
   std::map< Node, bool > d_exclude_eqc;
 
+  Node d_rep;
+  static std::map<Node, size_t> s_eqcCount;
+  static std::map<Node, size_t> s_eqcSize;
+  static std::map<Node, size_t> s_eqcTotal;
+  static size_t s_currEqcCount;
+  static size_t s_currEqcCountSucc;
 };
 
 /**

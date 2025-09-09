@@ -228,6 +228,7 @@ class TermDb : public QuantifiersUtil {
   context::Context* d_termsContextUse;
   /** terms processed */
   NodeSet d_processed;
+  context::CDO<size_t> d_roundDepth;
   /** map from types to ground terms for that type */
   TypeNodeDbListMap d_typeMap;
   /** list of all operators */

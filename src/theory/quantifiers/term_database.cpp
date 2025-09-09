@@ -28,6 +28,7 @@
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
 #include "theory/quantifiers/ematching/trigger_term_info.h"
+#include "theory/quantifiers/ematching/candidate_generator.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_registry.h"
@@ -111,6 +112,7 @@ TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
       d_qim(nullptr),
       d_qreg(qr),
       d_processed(context()),
+      d_roundDepth(context()),
       d_typeMap(context()),
       d_ops(context()),
       d_opMap(context()),
@@ -678,6 +680,9 @@ void TermDb::setHasTerm(Node n)
 void TermDb::presolve() {}
 
 bool TermDb::reset( Theory::Effort effort ){
+  d_roundDepth++;
+  Trace("ajr-temp-rd") << "Round depth is " << d_roundDepth.get() << std::endl;
+  inst::CandidateGeneratorQE::resetDebug();
   d_op_nonred_count.clear();
   d_arg_reps.clear();
   d_func_map_trie.clear();
