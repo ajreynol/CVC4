@@ -113,6 +113,12 @@ TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
       d_qreg(qr),
       d_processed(context()),
       d_roundDepth(context()),
+      d_indexedTerms(context()),
+      d_indTerms(0),
+      d_congTerms(0),
+      d_ncongTerms(0),
+      d_rlvTerms(0),
+      d_totalTerms(0),
       d_typeMap(context()),
       d_ops(context()),
       d_opMap(context()),
@@ -323,6 +329,7 @@ void TermDb::addTerm(Node n)
       dlo->d_list.push_back(n);
       // If we are higher-order, we may need to register more terms.
       addTermInternal(n);
+      d_indexedTerms = d_indexedTerms+1;
     }
   }
   else
@@ -514,6 +521,11 @@ void TermDb::computeUfTerms( TNode f ) {
       nonCongruentCount++;
       d_op_nonred_count[f]++;
     }
+    d_congTerms += congruentCount;
+    d_ncongTerms += nonCongruentCount;
+    d_rlvTerms += relevantCount;
+    d_totalTerms += it->second->d_list.size();
+    
     if (TraceIsOn("tdb"))
     {
       Trace("tdb") << "Term db size [" << f << "] : " << nonCongruentCount
@@ -682,18 +694,41 @@ void TermDb::presolve() {}
 bool TermDb::reset( Theory::Effort effort ){
   d_roundDepth = d_roundDepth + 1;
   Trace("ajr-temp-rd") << "Round depth is " << d_roundDepth.get() << std::endl;
+  Trace("ajr-temp-rd") << "SAT context level is " << context()->getLevel() << std::endl;
   inst::CandidateGeneratorQE::resetDebug();
   d_op_nonred_count.clear();
   d_arg_reps.clear();
   d_func_map_trie.clear();
   d_func_map_eqc_trie.clear();
   d_fmapRelDom.clear();
+  // Gives stats on terms from the previous round:
+  // "matchable" means that its operator is considered for E-matching
+  // (getMatchOperator).
+  // We print 4 totals:
+  // 1. the number of matchable terms that were unique modulo congruence, and
+  // considered relevant (*asserted* if term-db=relevant, *pre-registered* if
+  // term-db=all), and whose operator we built an index for.
+  // 2. The number of matchable terms that considered relevant, and whose
+  // operator we built an index for.
+  // 3. The number of pre-registered matchable terms whose operator we
+  // built an index for.
+  // 4. The total number of pre-registered matchable terms.
+  if (d_indTerms>0)
+  {
+    Trace("ajr-temp-rd") << "Prev (ncong/rlv/proc/total): " << d_ncongTerms << " / " << d_rlvTerms << " / " << d_totalTerms << " / " << d_indTerms << std::endl;
+  }
+  d_indTerms = d_indexedTerms.get();
+  d_congTerms = 0;
+  d_ncongTerms = 0;
+  d_rlvTerms = 0;
+  d_totalTerms = 0;
 
   Assert(d_qstate.getEqualityEngine()->consistent());
 
   //compute has map
   if (options().quantifiers.termDbMode == options::TermDbMode::RELEVANT)
   {
+    size_t totalFacts = 0;
     d_term_elig_eqc.clear();
     const LogicInfo& logicInfo = d_qstate.getLogicInfo();
     for (TheoryId theoryId = THEORY_FIRST; theoryId < THEORY_LAST; ++theoryId)
@@ -702,6 +737,7 @@ bool TermDb::reset( Theory::Effort effort ){
       {
         continue;
       }
+      size_t nfacts = 0;
       // Note that we have already marked all terms that have participated in
       // equality engine merges as relevant. We go back and ensure all
       // remaining terms that appear in assertions are marked relevant here
@@ -713,9 +749,13 @@ bool TermDb::reset( Theory::Effort effort ){
            it != it_end;
            ++it)
       {
+        nfacts++;
         setHasTerm((*it).d_assertion);
       }
+      Trace("ajr-temp-rd") << "#" << theoryId << " assertions: " << nfacts << std::endl;
+      totalFacts += nfacts;
     }
+    Trace("ajr-temp-rd") << "# assertions total: " << totalFacts << std::endl;
   }
   // finish reset
   return finishResetInternal(effort);
