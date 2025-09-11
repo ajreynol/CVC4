@@ -332,7 +332,6 @@ class Instantiate : public QuantifiersUtil
   std::map<Node, std::vector<Node> > d_recordedInst;
   /** statistics for debugging total instantiations per quantifier per round */
   std::map<Node, uint32_t> d_instDebugTemp;
-
   /** list of all instantiations produced for each quantifier
    *
    * We store context (dependent, independent) versions. If incremental solving
@@ -340,6 +339,12 @@ class Instantiate : public QuantifiersUtil
    */
   std::map<Node, InstMatchTrie> d_inst_match_trie;
   std::map<Node, CDInstMatchTrie*> d_c_inst_match_trie;
+  /**
+   * The context which d_c_inst_match_trie depends on, if applicable. If
+   * instLocal is true, this is the SAT context, otherwise it is the user
+   * context.
+   */
+  context::Context* d_ictx;
   /**
    * The list of quantified formulas for which the domain of d_c_inst_match_trie
    * is valid.
@@ -349,6 +354,8 @@ class Instantiate : public QuantifiersUtil
    * A CDProof storing instantiation steps.
    */
   std::unique_ptr<CDProof> d_pfInst;
+  /** Whether we are using context-dependent trie index */
+  bool d_useCdInstTrie;
 };
 
 }  // namespace quantifiers

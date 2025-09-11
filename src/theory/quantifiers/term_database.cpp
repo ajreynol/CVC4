@@ -391,6 +391,7 @@ void TermDb::computeUfEqcTerms( TNode f ) {
   {
     return;
   }
+  Trace("term-db-debug") << "computeUfEqcTerms for " << f << std::endl;
   TNodeTrie& tnt = d_func_map_eqc_trie[f];
   tnt.clear();
   // get the matchable operators in the equivalence class of f
@@ -407,6 +408,9 @@ void TermDb::computeUfEqcTerms( TNode f ) {
         computeArgReps(n);
         TNode r = ee->hasTerm(n) ? ee->getRepresentative(n) : TNode(n);
         tnt.d_data[r].addTerm(n, d_arg_reps[n]);
+        Trace("term-db-debug")
+            << "Adding term " << n << " to eqc " << r
+            << " with arg reps : " << d_arg_reps[n] << std::endl;
       }
     }
   }
@@ -694,6 +698,7 @@ void TermDb::presolve() {}
 
 bool TermDb::reset( Theory::Effort effort ){
   d_roundDepth = d_roundDepth + 1;
+  Trace("ajr-temp-rd") << "==============================" << std::endl;
   Trace("ajr-temp-rd") << "Round depth is " << d_roundDepth.get() << std::endl;
   Trace("ajr-temp-rd") << "SAT context level is " << context()->getLevel() << std::endl;
   inst::CandidateGeneratorQE::resetDebug();
@@ -723,7 +728,7 @@ bool TermDb::reset( Theory::Effort effort ){
   d_ncongTerms = 0;
   d_rlvTerms = 0;
   d_totalTerms = 0;
-  Trace("ajr-temp-rd") << "Prev triggers: " << d_procTriggerNodes.size() << " / " << d_procTriggers.size() << std::endl;
+  Trace("ajr-temp-rd") << "Prev triggers (unique-ae/total): " << d_procTriggerNodes.size() << " / " << d_procTriggers.size() << std::endl;
   
   d_procTriggers.clear();
   d_procTriggerNodes.clear();

@@ -52,11 +52,17 @@ Instantiate::Instantiate(Env& env,
       d_qreg(qr),
       d_treg(tr),
       d_insts(userContext()),
-      d_c_inst_match_trie_dom(userContext()),
+      d_ictx(options().quantifiers.instLocal ? context() : userContext()),
+      d_c_inst_match_trie_dom(d_ictx),
       d_pfInst(isProofEnabled()
                    ? new CDProof(env, userContext(), "Instantiate::pfInst")
                    : nullptr)
 {
+  // We need to use context-dependent trie if incremental or if inst-local is
+  // set to true. The context is determined above when initializing
+  // d_c_inst_match_trie_dom.
+  d_useCdInstTrie =
+      (options().base.incrementalSolving || options().quantifiers.instLocal);
 }
 
 Instantiate::~Instantiate()
@@ -331,15 +337,19 @@ bool Instantiate::addInstantiationInternal(
 
   // added lemma, which checks for lemma duplication
   bool addedLem = false;
+  LemmaProperty p = LemmaProperty::INPROCESS;
+  if (options().quantifiers.instLocal)
+  {
+    p = LemmaProperty::LOCAL;
+  }
   if (hasProof)
   {
     // use proof generator
-    addedLem = d_qim.addPendingLemma(
-        lem, id, LemmaProperty::INPROCESS, d_pfInst.get());
+    addedLem = d_qim.addPendingLemma(lem, id, p, d_pfInst.get());
   }
   else
   {
-    addedLem = d_qim.addPendingLemma(lem, id, LemmaProperty::INPROCESS);
+    addedLem = d_qim.addPendingLemma(lem, id, p);
   }
 
   if (!addedLem)
@@ -520,12 +530,12 @@ void Instantiate::recordInstantiation(Node q,
 
 bool Instantiate::existsInstantiation(Node q, const std::vector<Node>& terms)
 {
-  if (options().base.incrementalSolving)
+  if (d_useCdInstTrie)
   {
     std::map<Node, CDInstMatchTrie*>::iterator it = d_c_inst_match_trie.find(q);
     if (it != d_c_inst_match_trie.end())
     {
-      return it->second->existsInstMatch(userContext(), q, terms);
+      return it->second->existsInstMatch(d_ictx, q, terms);
     }
   }
   else
@@ -610,17 +620,17 @@ Node Instantiate::getInstantiation(Node q,
 bool Instantiate::recordInstantiationInternal(Node q,
                                               const std::vector<Node>& terms)
 {
-  if (options().base.incrementalSolving)
+  if (d_useCdInstTrie)
   {
     Trace("inst-add-debug")
         << "Adding into context-dependent inst trie" << std::endl;
     const auto res = d_c_inst_match_trie.insert({q, nullptr});
     if (res.second)
     {
-      res.first->second = new CDInstMatchTrie(userContext());
+      res.first->second = new CDInstMatchTrie(d_ictx);
     }
     d_c_inst_match_trie_dom.insert(q);
-    return res.first->second->addInstMatch(userContext(), q, terms);
+    return res.first->second->addInstMatch(d_ictx, q, terms);
   }
   Trace("inst-add-debug") << "Adding into inst trie" << std::endl;
   return d_inst_match_trie[q].addInstMatch(q, terms);
@@ -639,7 +649,7 @@ void Instantiate::getInstantiatedQuantifiedFormulas(std::vector<Node>& qs) const
 void Instantiate::getInstantiationTermVectors(
     Node q, std::vector<std::vector<Node> >& tvecs)
 {
-  if (options().base.incrementalSolving)
+  if (d_useCdInstTrie)
   {
     std::map<Node, CDInstMatchTrie*>::const_iterator it =
         d_c_inst_match_trie.find(q);
@@ -662,7 +672,7 @@ void Instantiate::getInstantiationTermVectors(
 void Instantiate::getInstantiationTermVectors(
     std::map<Node, std::vector<std::vector<Node> > >& insts)
 {
-  if (options().base.incrementalSolving)
+  if (d_useCdInstTrie)
   {
     for (const auto& t : d_c_inst_match_trie)
     {
