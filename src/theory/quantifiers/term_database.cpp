@@ -29,6 +29,7 @@
 #include "proof/proof_node_manager.h"
 #include "theory/quantifiers/ematching/trigger_term_info.h"
 #include "theory/quantifiers/ematching/candidate_generator.h"
+#include "theory/quantifiers/ematching/trigger.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_registry.h"
@@ -722,6 +723,10 @@ bool TermDb::reset( Theory::Effort effort ){
   d_ncongTerms = 0;
   d_rlvTerms = 0;
   d_totalTerms = 0;
+  Trace("ajr-temp-rd") << "Prev triggers: " << d_procTriggerNodes.size() << " / " << d_procTriggers.size() << std::endl;
+  
+  d_procTriggers.clear();
+  d_procTriggerNodes.clear();
 
   Assert(d_qstate.getEqualityEngine()->consistent());
 
@@ -813,6 +818,18 @@ TNode TermDb::getCongruentTerm(Node f, const std::vector<TNode>& args)
   return d_func_map_trie[f].existsTerm( args );
 }
 
+void TermDb::debugNotifyTriggerProcess(inst::Trigger* t)
+{
+  if (!d_procTriggers.insert(t).second)
+  {
+    return;
+  }
+  Node tn = t->getTriggerNode();
+  Node tnc = d_tcanont.getCanonicalTerm(tn);
+  d_procTriggerNodes.insert(tnc);
+  Trace("ajr-temp-t") << "Process trigger: " << t << " " << tn << std::endl;
+}
+  
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

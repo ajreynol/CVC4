@@ -153,6 +153,7 @@ class Trigger : protected EnvObj
   * (! ... :pattern) attributes.
   */
   Node getInstPattern() const;
+  Node getTriggerNode() const { return d_trNode; }
   /* A heuristic value indicating how active this generator is.
    *
   * This returns the number of ground terms for the match operators in terms

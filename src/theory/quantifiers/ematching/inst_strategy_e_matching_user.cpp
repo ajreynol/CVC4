@@ -18,6 +18,8 @@
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/ematching/trigger_database.h"
 #include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_registry.h"
+#include "theory/quantifiers/term_database.h"
 
 using namespace cvc5::internal::kind;
 using namespace cvc5::internal::theory::quantifiers::inst;
@@ -105,6 +107,8 @@ InstStrategyStatus InstStrategyUserPatterns::process(Node q,
       t->debugPrint("process-trigger");
       Trace("process-trigger") << "..." << std::endl;
     }
+    quantifiers::TermDb* tdb = d_treg.getTermDatabase();
+    tdb->debugNotifyTriggerProcess(t);
     unsigned numInst = t->addInstantiations();
     Trace("process-trigger")
         << "  Done, numInst = " << numInst << "." << std::endl;

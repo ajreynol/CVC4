@@ -28,6 +28,7 @@
 #include "theory/quantifiers/quant_util.h"
 #include "theory/theory.h"
 #include "theory/type_enumerator.h"
+#include "expr/term_canonize.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -37,6 +38,10 @@ class QuantifiersState;
 class QuantifiersInferenceManager;
 class QuantifiersRegistry;
 class DeqCongProofGenerator;
+
+namespace inst {
+class Trigger;
+}
 
 /** Context-dependent list of nodes */
 class DbList
@@ -215,6 +220,7 @@ class TermDb : public QuantifiersUtil {
   /** get eligible term in equivalence class of r */
   Node getEligibleTermInEqc(TNode r);
 
+  void debugNotifyTriggerProcess(inst::Trigger* t);
  protected:
   /** The quantifiers state object */
   QuantifiersState& d_qstate;
@@ -235,6 +241,9 @@ class TermDb : public QuantifiersUtil {
   size_t d_ncongTerms;
   size_t d_rlvTerms;
   size_t d_totalTerms;
+  std::unordered_set<inst::Trigger*> d_procTriggers;
+  std::unordered_set<Node> d_procTriggerNodes;
+  expr::TermCanonize d_tcanont;
   /** map from types to ground terms for that type */
   TypeNodeDbListMap d_typeMap;
   /** list of all operators */
