@@ -462,6 +462,8 @@ class PropEngine : protected EnvObj
     Statistics(StatisticsRegistry& sr);
     /** Number of atoms allocated when asserting the input formula */
     IntStat d_numInputAtoms;
+    IntStat d_localLemmas;
+    IntStat d_localLemmasUnique;
   };
   /** Statistics */
   Statistics d_stats;
