@@ -257,6 +257,11 @@ Node LambdaLift::getAssertionFor(TNode node)
     // ((lambda (y1 ... yn) s) t1 ... tn) is alpha-equivalent but not
     // necessarily syntactical equal to s.
     children.push_back(skolem_app.eqNode(rhs));
+    // preserve structure, to ensure that macros quant doesn't eliminate it
+    Node psan =
+        theory::quantifiers::QuantAttributes::mkAttrPreserveStructure(nm);
+    Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, psan);
+    children.push_back(ipl);
     // axiom defining skolem
     assertion = nm->mkNode(Kind::FORALL, children);
 

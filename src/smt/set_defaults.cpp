@@ -1570,9 +1570,6 @@ void SetDefaults::setDefaultsQuantifiers(const LogicInfo& logic,
                                        hoElimStoreAx,
                                        opts.quantifiers.hoElim,
                                        "higher-order logic");
-    // Cannot use macros, since lambda lifting and macro elimination are inverse
-    // operations.
-    SET_AND_NOTIFY(quantifiers, macrosQuant, false, "higher-order logic");
   }
   if (opts.quantifiers.fmfFunWellDefinedRelevant)
   {
