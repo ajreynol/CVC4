@@ -23,6 +23,7 @@
 #include "proof/proof.h"
 #include "smt/env.h"
 #include "theory/uf/function_const.h"
+#include "theory/quantifiers/quantifiers_attributes.h"
 
 using namespace cvc5::internal::kind;
 
