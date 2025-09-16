@@ -141,6 +141,26 @@
     :conclusion (= t ($mk_nary_cong_rhs t E))
 )
 
+;;;;; ProofRule::ARG_LIST_CONG
+
+; rule: arg_list_cong
+; implements: ProofRule::ARG_LIST_CONG
+; premises:
+; - E [:list]: A conjunction of equalities to apply arg-list-congruence to.
+; args:
+; - t U: >
+;   The term to apply congruence to. This is assumed to be an application of
+;   a function that is marked :arg-list. It is required to be the left hand side
+;   of the equality we are proving.
+; conclusion: >
+;   An equality between applications of f whose argument lists are given
+;   by the equalities in E.
+(declare-rule arg_list_cong ((E Bool) (T Type) (U Type) (xs U) (f (-> U T)))
+    :premise-list E and
+    :args ((f xs))
+    :conclusion (= (f xs) (f ($mk_nary_cong_rhs xs E)))
+)
+
 ;;;;; ProofRule::TRUE_INTRO
 
 ; rule: true_intro

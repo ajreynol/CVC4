@@ -15,7 +15,10 @@
 
 #include "proof/proof_node_algorithm.h"
 
+#include "proof/proof.h"
+#include "proof/proof_checker.h"
 #include "proof/proof_node.h"
+#include "proof/proof_node_manager.h"
 #include "proof/proof_rule_checker.h"
 #include "theory/builtin/generic_op.h"
 
@@ -244,8 +247,9 @@ ProofRule getCongRule(const Node& n, std::vector<Node>& args)
   ProofRule r = ProofRule::CONG;
   switch (k)
   {
+    // distinct takes an argument list
+    case Kind::DISTINCT: r = ProofRule::ARG_LIST_CONG; break;
     case Kind::APPLY_UF:
-    case Kind::DISTINCT:
     case Kind::FLOATINGPOINT_LT:
     case Kind::FLOATINGPOINT_LEQ:
     case Kind::FLOATINGPOINT_GT:
