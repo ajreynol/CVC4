@@ -60,6 +60,17 @@ jobs:
             exclude_regress: 3-4
             run_regression_args: --tester base --tester proof --tester cpc --tester model --tester synth --tester abduct --tester dump
 
+          - name: ubuntu:stable-mode
+            os: ubuntu-22.04
+            config: stable-mode --auto-download --all-bindings --editline -DBUILD_GMP=1
+            cache-key: production-stable
+            strip-bin: strip
+            python-bindings: true
+            java-bindings: true
+            check-examples: true
+            exclude_regress: 3-4
+            run_regression_args: --tester base --tester proof --tester cpc --tester model --tester dump
+
           - name: ubuntu:production-arm64
             os: ubuntu-22.04-arm
             config: production --auto-download --all-bindings --editline -DBUILD_GMP=1
@@ -123,6 +134,21 @@ jobs:
             shell: 'msys2 {0}'
             check-examples: true
             package-name: cvc5-Win64-x86_64
+            exclude_regress: 1-4
+            run_regression_args: --tester base --tester model --tester synth --tester abduct --tester dump
+
+          - name: win64:production-arm64
+            os: windows-11-arm
+            config: production --auto-download --all-bindings
+            cache-key: production-win64-native-arm64
+            strip-bin: strip
+            python-bindings: true
+            java-bindings: true
+            java-version: 21
+            windows-build: true
+            shell: 'msys2 {0}'
+            check-examples: true
+            package-name: cvc5-Win64-arm64
             exclude_regress: 1-4
             run_regression_args: --tester base --tester model --tester synth --tester abduct --tester dump
 
