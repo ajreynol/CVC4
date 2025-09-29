@@ -4692,10 +4692,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_LOOP_NEG),
   /** Auto-generated from RARE rule re-inter-cstring */
   EVALUE(RE_INTER_CSTRING),
-  /** Auto-generated from RARE rule re-inter-cstring-neg1 */
-  EVALUE(RE_INTER_CSTRING_NEG1),
-  /** Auto-generated from RARE rule re-inter-cstring-neg2 */
-  EVALUE(RE_INTER_CSTRING_NEG2),
+  /** Auto-generated from RARE rule re-inter-cstring-neg */
+  EVALUE(RE_INTER_CSTRING_NEG),
   /** Auto-generated from RARE rule str-substr-len-include */
   EVALUE(STR_SUBSTR_LEN_INCLUDE),
   /** Auto-generated from RARE rule str-substr-len-include-pre */

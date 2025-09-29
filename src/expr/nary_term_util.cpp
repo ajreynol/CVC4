@@ -88,6 +88,11 @@ bool getListVarContext(TNode n, std::map<Node, Node>& context)
     if (it == visited.end())
     {
       visited.insert(cur);
+      if (isListVar(cur))
+      {
+        // top-level list variable, undefined
+        return false;
+      }
       for (const Node& cn : cur)
       {
         if (isListVar(cn))
@@ -97,17 +102,12 @@ bool getListVarContext(TNode n, std::map<Node, Node>& context)
           {
             if (!NodeManager::isNAryKind(cur.getKind()))
             {
-              continue;
+              return false;
             }
             context[cn] = cur;
           }
           else if (itc->second.getKind() != cur.getKind())
           {
-            if (!NodeManager::isNAryKind(cur.getKind()))
-            {
-              continue;
-            }
-            AlwaysAssert(false) << "bad kinds: " << cur.getKind() << " " << itc->second.getKind();
             return false;
           }
           continue;
