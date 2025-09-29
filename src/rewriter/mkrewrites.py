@@ -177,21 +177,6 @@ def validate_rule(rule):
             used_vars.add(curr)
         to_visit.extend(curr.children)
 
-    # Check that list variables are always used within the same operators
-    var_to_op = dict()
-    to_visit = [rule.cond, rule.lhs, rule.rhs]
-    while to_visit:
-        curr = to_visit.pop()
-        if isinstance(curr, App):
-            for child in curr.children:
-                if isinstance(child, Var) and child.sort.is_list:
-                    if child in var_to_op and curr.op != var_to_op[child]:
-                        die(f'List variable {child.name} cannot be used in '
-                            f'{curr.op} and {var_to_op[child]} simultaneously')
-                    var_to_op[child] = curr.op
-        elif isinstance(curr, str):
-            print(f"Unparsed string detected {curr}")
-        to_visit.extend(curr.children)
 
     # Perform type checking
     lhsHasConst = type_check(rule.lhs)
