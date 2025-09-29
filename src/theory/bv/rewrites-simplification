@@ -167,7 +167,7 @@
    (nxm1 Int) (ny Int) (nym1 Int))
   (def
     (s (@bvsize xs))
-    (sy (@bvsize (concat y ys)))
+    (sy (+ (@bvsize y) (@bvsize ys)))
   )
   (and (= ny sy) (= nxm1 (- s 1)) (= nym1 (- sy 1)))
   (bvand xs (concat z y ys) ws)
@@ -181,7 +181,7 @@
    (nxm1 Int) (ny Int) (nym1 Int))
   (def
     (s (@bvsize xs))
-    (sy (@bvsize (concat y ys)))
+    (sy (+ (@bvsize y) (@bvsize ys)))
   )
   (and (= ny sy) (= nxm1 (- s 1)) (= nym1 (- sy 1)))
   (bvor xs (concat z y ys) ws)
@@ -195,7 +195,7 @@
    (nxm1 Int) (ny Int) (nym1 Int))
   (def
     (s (@bvsize xs))
-    (sy (@bvsize (concat y ys)))
+    (sy (+ (@bvsize y) (@bvsize ys)))
   )
   (and (= ny sy) (= nxm1 (- s 1)) (= nym1 (- sy 1)))
   (bvxor xs (concat z y ys) ws)

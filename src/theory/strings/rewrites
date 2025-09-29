@@ -339,7 +339,7 @@
   (str.indexof t1 s n))
 
 (define-cond-rule str-indexof-find-emp ((t ?Seq) (emp ?Seq) (n Int))
-  (and (= emp (@seq.empty_of_type (@type_of t))) (>= (str.len t) n) (>= n 0))
+  (and (= (str.len emp) 0) (>= (str.len t) n) (>= n 0))
   (str.indexof t emp n)
   n)
 
@@ -458,7 +458,7 @@
   (str.contains s t))
 
 (define-cond-rule str-replace-emp-ctn-src ((s ?Seq) (t ?Seq) (emp ?Seq))
-  (= emp (@seq.empty_of_type (@type_of s)))
+  (= (str.len emp) 0)
   (str.contains s (str.replace emp s t))
   (= emp (str.replace emp s t)))
 
@@ -597,12 +597,17 @@
   re.none)
 
 (define-cond-rule re-inter-cstring ((xs RegLan :list) (ys RegLan :list) (s String))
-  (str.in_re s (re.inter xs ys))
+  (and (str.in_re s xs) (str.in_re s ys))
   (re.inter xs (str.to_re s) ys) 
   (str.to_re s))
 
-(define-cond-rule re-inter-cstring-neg ((xs RegLan :list) (ys RegLan :list) (s String))
-  (not (str.in_re s (re.inter xs ys)))
+(define-cond-rule re-inter-cstring-neg1 ((xs RegLan :list) (ys RegLan :list) (s String))
+  (not (str.in_re s xs))
+  (re.inter xs (str.to_re s) ys)
+  re.none)
+  
+(define-cond-rule re-inter-cstring-neg2 ((xs RegLan :list) (ys RegLan :list) (s String))
+  (not (str.in_re s ys))
   (re.inter xs (str.to_re s) ys) 
   re.none)
 
@@ -639,7 +644,7 @@
 
 
 (define-cond-rule str-eq-repl-self-emp ((x ?Seq) (y ?Seq) (emp ?Seq))
-  (= emp (@seq.empty_of_type (@type_of x)))
+  (= (str.len emp) 0)
   (= (str.replace x y x) emp)
   (= x emp))
 
@@ -654,18 +659,18 @@
   (or (= x y) (= x z)))
 
 (define-cond-rule str-eq-repl-len-one-emp-prefix ((x ?Seq) (y ?Seq) (emp ?Seq))
-  (and (= emp (@seq.empty_of_type (@type_of x))) (= (str.len y) 1))
+  (and (= (str.len emp) 0) (= (str.len y) 1))
   (= (str.replace x y emp) emp)
   (str.prefixof x y))
 
 (define-cond-rule str-eq-repl-emp-tgt-nemp ((x ?Seq) (y ?Seq) (z ?Seq) (emp ?Seq))
-  (and (= emp (@seq.empty_of_type (@type_of x))) (not (= z emp)))
+  (and (= (str.len emp) 0) (not (= z emp)))
   (= (str.replace x y z) emp)
   (and (= x emp) (not (= y emp))))
 
 
 (define-cond-rule str-eq-repl-nemp-src-emp ((x ?Seq) (y ?Seq) (z ?Seq) (emp ?Seq))
-  (and (= emp (@seq.empty_of_type (@type_of x))) (not (= z emp)))
+  (and (= (str.len emp) 0) (not (= z emp)))
   (= (str.replace emp x y) z)
   (and (= x emp) (= y z)))
 
@@ -679,7 +684,3 @@
 (define-rule seq-nth-unit ((x ?)) (seq.nth (seq.unit x) 0) x)
 (define-rule seq-rev-unit ((x ?)) (str.rev (seq.unit x)) (seq.unit x))
 
-(define-cond-rule seq-len-empty ((x ?Seq))
-  (= x (@seq.empty_of_type (@type_of x)))
-  (str.len x) 
-  0)
