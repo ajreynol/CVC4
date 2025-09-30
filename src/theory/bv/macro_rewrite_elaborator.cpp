@@ -370,23 +370,15 @@ bool MacroRewriteElaborator::ensureProofForAndOrXorConcatPullup(CDProof* cdp,
   // form of RARE rewrites bv-*-concat-pullup3. In particular we rewrite:
   // (bvor xs (concat t1 ... tn c s1 ... sm) ws) --->
   // (bvor xs (concat (concat t1 ... tn) c (concat s1 ... sm)) ws).
-  // We additionally may require grouping to ensure the concat term is the
-  // second term in the topmost operator, e.g.
-  // (bvor a b (concat ...) c) ---> (bvor (bvor a b) (concat ...) c).
   NodeManager* nm = nodeManager();
   TConvProofGenerator tcpg(d_env);
   bool addedRewrite = false;
-  bool groupedRewrite = false;
-  for (size_t j = 0, nchilde = eq[0].getNumChildren(); j < nchilde; j++)
+  for (const TNode& c : eq[0])
   {
-    Node c = eq[0][j];
     if (c.getKind() == Kind::BITVECTOR_CONCAT)
     {
-      Node cg = c;
-      bool hasConst = false;
       for (size_t i = 0, nchild = c.getNumChildren(); i < nchild; i++)
       {
-        hasConst = hasConst || c[i].isConst();
         if (c[i].isConst() && i > 0 && i + 1 < nchild)
         {
           std::vector<Node> cpre(c.begin(), c.begin() + i);
@@ -397,7 +389,7 @@ bool MacroRewriteElaborator::ensureProofForAndOrXorConcatPullup(CDProof* cdp,
           Node npost = cpost.size() == 1
                            ? cpost[0]
                            : nm->mkNode(Kind::BITVECTOR_CONCAT, cpost);
-          cg = nm->mkNode(Kind::BITVECTOR_CONCAT, {npre, c[i], npost});
+          Node cg = nm->mkNode(Kind::BITVECTOR_CONCAT, {npre, c[i], npost});
           Trace("bv-rew-elab") << "Group " << c << " to " << cg << std::endl;
           Assert(cg.getType() == c.getType());
           // should be shown by ACI_NORM
@@ -410,40 +402,6 @@ bool MacroRewriteElaborator::ensureProofForAndOrXorConcatPullup(CDProof* cdp,
           break;
         }
       }
-      // doesn't quite work, also needs to rewrite left side which is hard.
-      /*
-      if (hasConst && !groupedRewrite)
-      {
-        groupedRewrite = true;
-        addedRewrite = true;
-        // also must group to make this the second child
-        if (j!=1)
-        {
-          Kind k = eq[0].getKind();
-          std::vector<Node> cnew(eq[0].begin(), eq[0].end());
-          cnew[j] = cg;
-          Node gnew = nm->mkNode(k, cnew);
-          std::vector<Node> cnew2;
-          if (j==0)
-          {
-            cnew2.push_back(expr::getNullTerminator(nm, k, eq[0].getType()));
-          }
-          else
-          {
-            std::vector<Node> cnew2pre(cnew.begin(), cnew.begin()+j-1);
-            cnew2.push_back(nm->mkNode(k, cnew2pre));
-          }
-          cnew2.insert(cnew2.end(), cnew.begin()+j, cnew.end());
-          Node gnew2 = nm->mkNode(k, cnew2);
-          Trace("bv-rew-elab") << "Group pre " << gnew << " to " << gnew2 << std::endl;
-          tcpg.addRewriteStep(gnew,
-                              gnew2,
-                              nullptr,
-                              false,
-                              TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE);
-        }
-      }
-      */
     }
   }
   if (!addedRewrite)
@@ -458,7 +416,6 @@ bool MacroRewriteElaborator::ensureProofForAndOrXorConcatPullup(CDProof* cdp,
   // should be shown by bv-*-concat-pullup3
   cdp->addTrustedStep(
       equiv2, TrustId::MACRO_THEORY_REWRITE_RCONS_SIMPLE, {}, {});
-  Trace("bv-rew-elab") << "- Full step to reconstruct: " << equiv2 << std::endl;
   cdp->addStep(eq, ProofRule::TRANS, {equiv1, equiv2}, {});
   return true;
 }
