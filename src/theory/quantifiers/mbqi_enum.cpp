@@ -443,26 +443,8 @@ void MQuantInfo::initialize(Env& env, InstStrategyMbqi& parent, const Node& q)
   // initialize the variables we are instantiating
   for (size_t index : d_indices)
   {
-    // start with the shared terminal rules
-    std::vector<Node> etrulesLocal = etrules;
-    if (env.getOptions().quantifiers.mbqiEnumFreeSymsGrammar)
-    {
-      // collect full terms (applications of symbols) if applicable
-      std::unordered_set<Node> terms;
-      expr::getTerms(q[1], terms);
-      for (const Node& t : terms)
-      {
-        // skip terms that mention the variable we are instantiating
-        Node v = q[0][index]; 
-        if (expr::hasSubterm(t, v))
-        {
-          continue;
-        }
-        etrulesLocal.push_back(t);
-      }
-    }
     // initialize the variables we are instantiating
-    d_vinfo[index].initialize(env, q, q[0][index], etrulesLocal);
+    d_vinfo[index].initialize(env, q, q[0][index], etrules);
   }
 }
 
