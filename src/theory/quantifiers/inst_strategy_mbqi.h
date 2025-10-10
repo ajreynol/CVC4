@@ -137,7 +137,7 @@ class InstStrategyMbqi : public QuantifiersModule
                         const std::vector<Node>& mvs,
                         InferenceId id,
                         const std::map<Node, Node>& mvToFreshVar);
-  /** */
+  /** Check with subsolver, which takes into account options */
   Result checkWithSubsolverSimple(Node query, const SubsolverSetupInfo& info);
   /** The quantified formulas that we succeeded in checking */
   std::unordered_set<Node> d_quantChecked;

@@ -78,8 +78,6 @@ void InstStrategyMbqi::ppNotifyAssertions(const std::vector<Node>& assertions)
       continue;
     }
     // also consider skolems for (non-top-level) quantified formulas.
-    // TODO: could improve by only looking at those that are not positive
-    // polarity
     std::unordered_set<Node> qs;
     expr::getSubtermsKind(Kind::FORALL, a, qs, false);
     for (const Node& q : qs)
