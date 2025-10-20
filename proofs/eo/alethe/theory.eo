@@ -31,9 +31,9 @@
 ; rational, during parsing
 (declare-consts <decimal> Real)
 
-(declare-consts <string> Int)
+;(declare-consts <string> Int)
 
-(declare-consts <binary> Int)
+;(declare-consts <binary> Int)
 
 ; NOTE: Arithmetic here is handled in the same way as it is handled
 ; for cvc5: Real and Int can be mixed, and the return type of arithmetic
