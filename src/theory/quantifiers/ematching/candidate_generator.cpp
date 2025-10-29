@@ -70,7 +70,8 @@ void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
   d_op = op;
   if (eqc.isNull())
   {
-    // ensure we've computed the trie
+    // ensure we've computed the trie, which impacts whether certain terms we
+    // take in this list are marked inactive or not
     d_treg.getTermDatabase()->getTermArgTrie(op);
     d_termIterList = d_treg.getTermDatabase()->getGroundTermList(d_op);
     d_mode = cand_term_db;
