@@ -633,7 +633,7 @@ bool DType::isRecursive() const
   std::unordered_set<TypeNode> processed;
   toProcess.insert(toProcess.end(), sft.begin(), sft.end());
   size_t i = 0;
-  while (i<toProcess.size())
+  while (i < toProcess.size())
   {
     TypeNode t = toProcess[i];
     i++;
@@ -641,7 +641,7 @@ bool DType::isRecursive() const
     {
       continue;
     }
-    if (t==d_self)
+    if (t == d_self)
     {
       d_recursion = 1;
       return true;
