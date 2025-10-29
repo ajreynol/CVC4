@@ -28,7 +28,7 @@ namespace theory {
 namespace quantifiers {
 namespace inst {
 
-/** 
+/**
  * InstMatchGeneratorTrivial class
  */
 class InstMatchGeneratorTrivial : public IMGenerator
@@ -45,6 +45,7 @@ class InstMatchGeneratorTrivial : public IMGenerator
   int getActiveScore() override;
   /** Is trivial trigger? */
   static bool isTrivialTrigger(const Node& pat);
+
  private:
   /** quantified formula for the trigger term */
   Node d_quant;

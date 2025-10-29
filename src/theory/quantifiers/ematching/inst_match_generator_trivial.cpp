@@ -25,11 +25,18 @@ namespace theory {
 namespace quantifiers {
 namespace inst {
 
-InstMatchGeneratorTrivial::InstMatchGeneratorTrivial(Env& env, Trigger* tparent, Node q, Node pat) : IMGenerator(env, tparent), d_quant(q), d_pat(pat), d_terms(d_env.getUserContext()){
-  
+InstMatchGeneratorTrivial::InstMatchGeneratorTrivial(Env& env,
+                                                     Trigger* tparent,
+                                                     Node q,
+                                                     Node pat)
+    : IMGenerator(env, tparent),
+      d_quant(q),
+      d_pat(pat),
+      d_terms(d_env.getUserContext())
+{
   for (size_t i = 0, nchild = d_pat.getNumChildren(); i < nchild; i++)
   {
-    Assert (d_pat[i].getKind() == Kind::INST_CONSTANT);
+    Assert(d_pat[i].getKind() == Kind::INST_CONSTANT);
     d_varNum.push_back(d_pat[i].getAttribute(InstVarNumAttribute()));
   }
   TermDb* tdb = d_treg.getTermDatabase();
@@ -51,7 +58,7 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
   for (const Node& n : list)
   {
     // if already considered this term
-    if (d_terms.find(n)!=d_terms.end())
+    if (d_terms.find(n) != d_terms.end())
     {
       continue;
     }
@@ -66,11 +73,11 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
       continue;
     }
     d_terms.insert(n);
-    Assert (n.getNumChildren()==d_quant[0].getNumChildren());
+    Assert(n.getNumChildren() == d_quant[0].getNumChildren());
     // it is an instantiation
     std::vector<Node> terms;
     terms.resize(n.getNumChildren());
-    for (size_t i=0, nvars=d_varNum.size(); i<nvars; i++)
+    for (size_t i = 0, nvars = d_varNum.size(); i < nvars; i++)
     {
       Assert(v.first < n.getNumChildren());
       terms[d_varNum[i]] = n[i];
@@ -93,7 +100,7 @@ int InstMatchGeneratorTrivial::getActiveScore()
 
 bool InstMatchGeneratorTrivial::isTrivialTrigger(const Node& pat)
 {
-  Assert (pat.getNumChildren()>0);
+  Assert(pat.getNumChildren() > 0);
   std::unordered_set<Node> children;
   // must each be unique inst constants
   for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
@@ -114,4 +121,3 @@ bool InstMatchGeneratorTrivial::isTrivialTrigger(const Node& pat)
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
-
