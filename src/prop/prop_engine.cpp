@@ -160,6 +160,13 @@ void PropEngine::assertInputFormulas(
     std::unordered_map<size_t, Node>& skolemMap)
 {
   Assert(!d_inCheckSat) << "Sat solver in solve()!";
+  // now presolve with prop proof manager so proof logging is on. This must be
+  // done *before* the PropEngine checkSat call because when asserting formulas
+  // to the theory engine lemmas may already be generated.
+  if (d_ppm != nullptr)
+  {
+    d_ppm->presolve();
+  }
   d_theoryProxy->notifyInputFormulas(assertions, skolemMap);
   int64_t natomsPre = d_cnfStream->d_stats.d_numAtoms.get();
   for (const Node& node : assertions)
@@ -223,14 +230,12 @@ void PropEngine::assertTrustedLemmaInternal(theory::InferenceId id,
   Node node = trn.getNode();
   if (local)
   {
-    ++(d_stats.d_localLemmas);
     // if local, filter here
-    if (d_localLemmas.find(node)!=d_localLemmas.end())
+    if (d_localLemmas.find(node) != d_localLemmas.end())
     {
       return;
     }
     d_localLemmas.insert(node);
-    ++(d_stats.d_localLemmasUnique);
   }
   Trace("prop::lemmas") << "assertLemma(" << node << ")" << std::endl;
   if (isOutputOn(OutputTag::LEMMAS))
@@ -332,8 +337,10 @@ void PropEngine::assertLemmasInternal(
   }
   for (const theory::SkolemLemma& lem : ppLemmas)
   {
-    assertTrustedLemmaInternal(
-        theory::InferenceId::THEORY_PP_SKOLEM_LEM, lem.d_lemma, removable, local);
+    assertTrustedLemmaInternal(theory::InferenceId::THEORY_PP_SKOLEM_LEM,
+                               lem.d_lemma,
+                               removable,
+                               local);
   }
   // Note that this order is important for theories that send lemmas during
   // preregistration, as it impacts the order in which lemmas are processed
@@ -450,12 +457,6 @@ Result PropEngine::checkSat() {
   {
     outputIncompleteReason(UnknownExplanation::REQUIRES_FULL_CHECK);
     return Result(Result::UNKNOWN, UnknownExplanation::REQUIRES_FULL_CHECK);
-  }
-
-  // now presolve with prop proof manager so proof logging is on
-  if (d_ppm != nullptr)
-  {
-    d_ppm->presolve();
   }
 
   // Note this currently ignores conflicts (a dangerous practice).
@@ -851,9 +852,7 @@ modes::LearnedLitType PropEngine::getLiteralType(const Node& lit) const
 }
 
 PropEngine::Statistics::Statistics(StatisticsRegistry& sr)
-    : d_numInputAtoms(sr.registerInt("prop::PropEngine::numInputAtoms")),
-      d_localLemmas(sr.registerInt("prop::PropEngine::localLemmas")),
-      d_localLemmasUnique(sr.registerInt("prop::PropEngine::localLemmasUnique"))
+    : d_numInputAtoms(sr.registerInt("prop::PropEngine::numInputAtoms"))
 {
 }
 
