@@ -34,6 +34,7 @@
 #include "theory/arith/rewriter/node_utils.h"
 #include "theory/arith/rewriter/ordering.h"
 #include "theory/arith/rewriter/rewrite_atom.h"
+#include "theory/evaluator.h"
 #include "theory/rewriter.h"
 #include "theory/strings/arith_entail.h"
 #include "theory/theory.h"
@@ -228,8 +229,9 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         Node a = n[0].getKind() == Kind::TO_REAL ? n[0][0] : n[0];
         Node b = n[1].getKind() == Kind::TO_REAL ? n[1][0] : n[1];
         rewriter::Sum sum;
-        rewriter::addToSum(sum, a, false);
-        rewriter::addToSum(sum, b, true);
+        // allow dropping TO_REAL
+        rewriter::addToSumNoMixed(sum, a, false);
+        rewriter::addToSumNoMixed(sum, b, true);
         if (rewriter::isIntegral(sum))
         {
           std::pair<Node, Node> p = decomposeSum(d_nm, std::move(sum));
@@ -250,8 +252,9 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         Node a = n[0].getKind() == Kind::TO_REAL ? n[0][0] : n[0];
         Node b = n[1].getKind() == Kind::TO_REAL ? n[1][0] : n[1];
         rewriter::Sum sum;
-        rewriter::addToSum(sum, a, false);
-        rewriter::addToSum(sum, b, true);
+        // allow dropping TO_REAL
+        rewriter::addToSumNoMixed(sum, a, false);
+        rewriter::addToSumNoMixed(sum, b, true);
         if (rewriter::isIntegral(sum))
         {
           // decompose the sum into a non-constant and constant part
@@ -523,6 +526,7 @@ RewriteResponse ArithRewriter::postRewriteTerm(TNode t){
       case Kind::TO_REAL: return rewriteToReal(t);
       case Kind::TO_INTEGER: return rewriteExtIntegerOp(t);
       case Kind::PI: return RewriteResponse(REWRITE_DONE, t);
+      case Kind::POW2: return postRewritePow2(t);
       // expert cases
       case Kind::POW:
       case Kind::EXPONENTIAL:
@@ -539,8 +543,7 @@ RewriteResponse ArithRewriter::postRewriteTerm(TNode t){
       case Kind::ARCSECANT:
       case Kind::ARCCOTANGENT:
       case Kind::SQRT:
-      case Kind::IAND:
-      case Kind::POW2: return postRewriteExpert(t);
+      case Kind::IAND: return postRewriteExpert(t);
       default: Unreachable();
     }
   }
@@ -577,7 +580,6 @@ RewriteResponse ArithRewriter::postRewriteExpert(TNode t)
     case Kind::ARCCOTANGENT:
     case Kind::SQRT: return postRewriteTranscendental(t);
     case Kind::IAND: return postRewriteIAnd(t);
-    case Kind::POW2: return postRewritePow2(t);
     default: Unreachable();
   }
 }
@@ -1156,21 +1158,18 @@ RewriteResponse ArithRewriter::postRewriteIAnd(TNode t)
 RewriteResponse ArithRewriter::postRewritePow2(TNode t)
 {
   Assert(t.getKind() == Kind::POW2);
-  NodeManager* nm = nodeManager();
   // if constant, we eliminate
   if (t[0].isConst())
   {
     // pow2 is only supported for integers
     Assert(t[0].getType().isInteger());
-    Integer i = t[0].getConst<Rational>().getNumerator();
-    if (i < 0)
+    // use the evaluator definition for rewriting this
+    Evaluator eval(nullptr);
+    Node ret = eval.eval(t, {}, {});
+    if (!ret.isNull())
     {
-      return RewriteResponse(REWRITE_DONE, rewriter::mkConst(d_nm, Integer(0)));
+      return RewriteResponse(REWRITE_DONE, ret);
     }
-    // (pow2 t) ---> (pow 2 t) and continue rewriting to eliminate pow
-    Node two = rewriter::mkConst(d_nm, Integer(2));
-    Node ret = nm->mkNode(Kind::POW, two, t[0]);
-    return RewriteResponse(REWRITE_AGAIN, ret);
   }
   return RewriteResponse(REWRITE_DONE, t);
 }
