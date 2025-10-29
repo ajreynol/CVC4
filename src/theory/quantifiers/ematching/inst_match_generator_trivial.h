@@ -57,6 +57,8 @@ class InstMatchGeneratorTrivial : public IMGenerator
   context::CDHashSet<Node> d_terms;
   /** The variable number for each argument */
   std::vector<uint64_t> d_varNum;
+  /** Terms used for instantiation */
+  std::vector<Node> d_tvec;
 };
 
 }  // namespace inst

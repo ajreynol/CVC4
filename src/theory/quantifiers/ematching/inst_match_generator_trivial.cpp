@@ -41,6 +41,7 @@ InstMatchGeneratorTrivial::InstMatchGeneratorTrivial(Env& env,
   }
   TermDb* tdb = d_treg.getTermDatabase();
   d_op = tdb->getMatchOperator(d_pat);
+  d_tvec.resize(d_quant[0].getNumChildren());
 }
 
 void InstMatchGeneratorTrivial::resetInstantiationRound()
@@ -52,11 +53,21 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
 {
   TermDb* tdb = d_treg.getTermDatabase();
   DbList* dbl = tdb->getGroundTermList(d_op);
+  if (dbl==nullptr)
+  {
+    return 0;
+  }
   context::CDList<Node>& list = dbl->d_list;
   uint64_t addedLemmas = 0;
   bool initTrie = false;
-  for (const Node& n : list)
+  Trace("trivial-trigger") << "Process trivial trigger " << d_pat << ", #terms=" << list.size() << std::endl;
+  size_t procTerms = 0;
+  size_t tli = 0;
+  size_t tlLimit = list.size();
+  while (tli < tlLimit)
   {
+    Node n = list[tli];
+    ++tli;
     // if already considered this term
     if (d_terms.find(n) != d_terms.end())
     {
@@ -64,30 +75,33 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
     }
     if (!initTrie)
     {
+      Trace("trivial-trigger-debug") << "...initialize trie" << std::endl;
       d_treg.getTermDatabase()->getTermArgTrie(d_op);
       initTrie = true;
     }
+      Trace("trivial-trigger-debug") << "...check active " << n << std::endl;
     // not active based on e.g. relevant policy
-    if (!tdb->isTermActive(n))
+    if (!tdb->isTermActive(n) || !tdb->hasTermCurrent(n))
     {
       continue;
     }
-    d_terms.insert(n);
-    Assert(n.getNumChildren() == d_quant[0].getNumChildren());
+    ++procTerms;
+    Assert(n.getNumChildren() == d_varNum.size());
     // it is an instantiation
-    std::vector<Node> terms;
-    terms.resize(n.getNumChildren());
     for (size_t i = 0, nvars = d_varNum.size(); i < nvars; i++)
     {
-      Assert(v.first < n.getNumChildren());
-      terms[d_varNum[i]] = n[i];
+      Assert(d_varNum[i] < n.getNumChildren());
+      d_tvec[d_varNum[i]] = n[i];
     }
-    if (sendInstantiation(terms,
+    if (sendInstantiation(d_tvec,
                           InferenceId::QUANTIFIERS_INST_E_MATCHING_TRIVIAL))
     {
+      // now we can cache
+      d_terms.insert(n);
       addedLemmas++;
     }
   }
+  Trace("trivial-trigger") << "...lemmas/processed/total " << addedLemmas << "/" << procTerms << "/" << list.size() << std::endl;
   return addedLemmas;
 }
 

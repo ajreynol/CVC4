@@ -24,6 +24,7 @@
 #include "theory/quantifiers/ematching/inst_match_generator_multi.h"
 #include "theory/quantifiers/ematching/inst_match_generator_multi_linear.h"
 #include "theory/quantifiers/ematching/inst_match_generator_simple.h"
+#include "theory/quantifiers/ematching/inst_match_generator_trivial.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/ematching/trigger_trie.h"
 #include "theory/quantifiers/inst_match.h"
@@ -96,7 +97,13 @@ Trigger::Trigger(Env& env,
   }
   QuantifiersStatistics& stats = qs.getStats();
   if( d_nodes.size()==1 ){
-    if (TriggerTermInfo::isSimpleTrigger(d_nodes[0]))
+    if (TriggerTermInfo::isTrivialTrigger(d_nodes[0]))
+    {
+      d_mg = new InstMatchGeneratorTrivial(env, this, q, d_nodes[0]);
+      ++(stats.d_trivial_triggers);
+      output(OutputTag::TRIGGER) << " :trivial";
+    }
+    else if (TriggerTermInfo::isSimpleTrigger(d_nodes[0]))
     {
       d_mg = new InstMatchGeneratorSimple(env, this, q, d_nodes[0]);
       ++(stats.d_simple_triggers);

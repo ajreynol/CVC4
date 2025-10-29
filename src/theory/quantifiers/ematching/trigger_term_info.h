@@ -121,6 +121,8 @@ class TriggerTermInfo
                                       bool& hasPol,
                                       bool& pol,
                                       Node& lit);
+  /** is n a trivial trigger (see inst_match_generator_trivial.h)? */
+  static bool isTrivialTrigger(Node n);
   /** is n a simple trigger (see inst_match_generator.h)? */
   static bool isSimpleTrigger(Node n);
   /** get trigger weight

@@ -16,6 +16,7 @@
 #include "theory/quantifiers/ematching/trigger_term_info.h"
 
 #include "theory/quantifiers/term_util.h"
+#include "theory/quantifiers/ematching/inst_match_generator_trivial.h"
 
 using namespace cvc5::internal::kind;
 
@@ -108,6 +109,15 @@ bool TriggerTermInfo::isUsableRelationTrigger(Node n,
     }
   }
   return false;
+}
+
+bool TriggerTermInfo::isTrivialTrigger(Node n)
+{
+  if (!isSimpleTrigger(n))
+  {
+    return false;
+  }
+  return InstMatchGeneratorTrivial::isTrivialTrigger(n);
 }
 
 bool TriggerTermInfo::isSimpleTrigger(Node n)
