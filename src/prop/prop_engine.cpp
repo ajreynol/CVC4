@@ -230,12 +230,14 @@ void PropEngine::assertTrustedLemmaInternal(theory::InferenceId id,
   Node node = trn.getNode();
   if (local)
   {
+    ++(d_stats.d_localLemmas);
     // if local, filter here
-    if (d_localLemmas.find(node) != d_localLemmas.end())
+    if (d_localLemmas.find(node)!=d_localLemmas.end())
     {
       return;
     }
     d_localLemmas.insert(node);
+    ++(d_stats.d_localLemmasUnique);
   }
   Trace("prop::lemmas") << "assertLemma(" << node << ")" << std::endl;
   if (isOutputOn(OutputTag::LEMMAS))
@@ -852,7 +854,9 @@ modes::LearnedLitType PropEngine::getLiteralType(const Node& lit) const
 }
 
 PropEngine::Statistics::Statistics(StatisticsRegistry& sr)
-    : d_numInputAtoms(sr.registerInt("prop::PropEngine::numInputAtoms"))
+    : d_numInputAtoms(sr.registerInt("prop::PropEngine::numInputAtoms")),
+      d_localLemmas(sr.registerInt("prop::PropEngine::localLemmas")),
+      d_localLemmasUnique(sr.registerInt("prop::PropEngine::localLemmasUnique"))
 {
 }
 
