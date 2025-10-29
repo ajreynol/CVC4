@@ -1310,6 +1310,10 @@ void TheoryDatatypes::checkCycles() {
             return;
           }
         }
+        else
+        {
+          Trace("datatypes-cycle-check") << "...do not check cycle for " << tn << std::endl;
+        }
       }
       else
       {

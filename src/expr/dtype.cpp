@@ -64,7 +64,8 @@ DType::DType(std::string name, const std::vector<TypeNode>& params, bool isCo)
       d_sygusAllowAll(false),
       d_card(CardinalityUnknown()),
       d_wellFounded(0),
-      d_nestedRecursion(0)
+      d_nestedRecursion(0),
+      d_recursion(0)
 {
 }
 
@@ -628,6 +629,7 @@ bool DType::isRecursive() const
     // already computed
     return d_recursion == 1;
   }
+  Trace("datatypes-init") << "DType::isRecursive " << d_self << std::endl;
   std::unordered_set<TypeNode> sft = getSubfieldTypes();
   std::vector<TypeNode> toProcess;
   std::unordered_set<TypeNode> processed;
@@ -636,6 +638,7 @@ bool DType::isRecursive() const
   while (i < toProcess.size())
   {
     TypeNode t = toProcess[i];
+    Trace("datatypes-init") << "...look at " << t << std::endl;
     i++;
     if (!processed.insert(t).second)
     {
@@ -643,6 +646,7 @@ bool DType::isRecursive() const
     }
     if (t == d_self)
     {
+      Trace("datatypes-init") << "...recursive" << std::endl;
       d_recursion = 1;
       return true;
     }
@@ -654,6 +658,7 @@ bool DType::isRecursive() const
       toProcess.insert(toProcess.end(), sft.begin(), sft.end());
     }
   }
+  Trace("datatypes-init") << "...not recursive" << std::endl;
   d_recursion = -1;
   return false;
 }
