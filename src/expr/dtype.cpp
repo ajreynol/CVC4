@@ -43,7 +43,8 @@ DType::DType(std::string name, bool isCo)
       d_sygusAllowAll(false),
       d_card(CardinalityUnknown()),
       d_wellFounded(0),
-      d_nestedRecursion(0)
+      d_nestedRecursion(0),
+      d_recursion(0)
 {
 }
 
@@ -617,6 +618,44 @@ bool DType::isWellFounded() const
                           << std::endl;
   d_wellFounded = 1;
   return true;
+}
+
+bool DType::isRecursive() const
+{
+  Assert(isResolved());
+  if (d_recursion != 0)
+  {
+    // already computed
+    return d_recursion == 1;
+  }
+  std::unordered_set<TypeNode> sft = getSubfieldTypes();
+  std::vector<TypeNode> toProcess;
+  std::unordered_set<TypeNode> processed;
+  toProcess.insert(toProcess.end(), sft.begin(), sft.end());
+  size_t i = 0;
+  while (i<toProcess.size())
+  {
+    TypeNode t = toProcess[i];
+    i++;
+    if (!processed.insert(t).second)
+    {
+      continue;
+    }
+    if (t==d_self)
+    {
+      d_recursion = 1;
+      return true;
+    }
+    if (t.isDatatype())
+    {
+      // look in the subfield types of the datatype
+      const DType& dt = t.getDType();
+      sft = dt.getSubfieldTypes();
+      toProcess.insert(toProcess.end(), sft.begin(), sft.end());
+    }
+  }
+  d_recursion = -1;
+  return false;
 }
 
 bool DType::computeWellFounded(std::vector<TypeNode>& processing) const

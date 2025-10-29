@@ -1283,8 +1283,9 @@ void TheoryDatatypes::checkCycles() {
     Node eqc = (*eqcs_i);
     TypeNode tn = eqc.getType();
     if( tn.isDatatype() ) {
-      if( !tn.isCodatatype() ){
-        if (options().datatypes.dtCyclic)
+      const DType& dt = t.getDType();
+      if( !dt.isCodatatype() ){
+        if (dt.isRecursive() && options().datatypes.dtCyclic)
         {
           //do cycle checks
           Trace("datatypes-cycle-check") << "...search for cycle starting at " << eqc << std::endl;

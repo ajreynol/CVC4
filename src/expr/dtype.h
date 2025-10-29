@@ -298,6 +298,12 @@ class DType
    */
   bool isWellFounded() const;
   /**
+   * Does this datatype have recursion? This is true if this datatype
+   * definition contains itself as a subfield type, possibly through
+   * other datatype arguments.
+   */
+  bool isRecursive() const;
+  /**
    * Does this datatype have nested recursion? This is true if this datatype
    * definition contains itself as an alien subfield type, or a variant
    * of itself as an alien subfield type (if this datatype is parametric).
@@ -631,6 +637,12 @@ class DType
    * does not.
    */
   mutable int d_nestedRecursion;
+  /**
+   * Cache of whether this datatype has recursion, where 0 means we have
+   * not computed this information, 1 means it has recursion, -1 means it
+   * does not.
+   */
+  mutable int d_recursion;
   /** cache of ground term for this datatype */
   mutable std::map<TypeNode, Node> d_groundTerm;
   /** cache of ground values for this datatype */
