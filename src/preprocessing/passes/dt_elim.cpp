@@ -141,18 +141,18 @@ void DtElimConverter::computePolicies(const std::vector<Node>& assertions)
         break;
       }
     }
-    /*
     // FIXME
     if (ncons >= 2)
     {
       noElimDt.push_back(tn);
       continue;
     }
-    */
+    /*
     if (!isEnum)
     {
       continue;
     }
+    */
     DtElimPolicy policy = DtElimPolicy::NONE;
     if (isEnum)
     {
@@ -351,8 +351,8 @@ Node DtElimConverter::postConvert(Node n)
           }
           Assert(tna.isDatatype());
           const DType& dt = tna.getDType();
-          bool isInline = false;
-          //bool isInline = (dt.getNumConstructors() == 1);
+          //bool isInline = false;
+          bool isInline = (dt.getNumConstructors() == 1);
           if (isInline)
           {
             Node dv = d_nm->mkBoundVar(tna);
@@ -770,10 +770,12 @@ Node DtElimConverter::getModelElimination(const Node& v)
       cur = d_nm->mkNode(Kind::ITE, tester, its->second, cur);
     }
   }
+  /*
   if (!vars.empty())
   {
     cur = d_nm->mkNode(Kind::LAMBDA, d_nm->mkNode(Kind::BOUND_VAR_LIST, vars), cur);
   }
+  */
   Trace("dt-elim") << "*** Overall elimination for " << v << " is " << cur
                    << std::endl;
   d_modelSubs[v] = cur;
