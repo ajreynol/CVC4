@@ -43,12 +43,15 @@ class InstMatchGeneratorTrivial : public IMGenerator
   uint64_t addInstantiations(InstMatch& m) override;
   /** Get active score. */
   int getActiveScore() override;
-
+  /** Is trivial trigger? */
+  static bool isTrivialTrigger(const Node& pat);
  private:
   /** quantified formula for the trigger term */
   Node d_quant;
   /** the trigger term */
   Node d_pat;
+  /** The match operator d_match_pattern (see TermDb::getMatchOperator). */
+  Node d_op;
   /** List of terms we have matched */
   context::CDHashSet<Node> d_terms;
   /** The variable number for each argument */

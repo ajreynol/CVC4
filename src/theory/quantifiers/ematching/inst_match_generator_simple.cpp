@@ -201,10 +201,9 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
 int InstMatchGeneratorSimple::getActiveScore()
 {
   TermDb* tdb = d_treg.getTermDatabase();
-  Node f = tdb->getMatchOperator(d_match_pattern);
-  size_t ngt = tdb->getNumGroundTerms(f);
+  size_t ngt = tdb->getNumGroundTerms(d_op);
   Trace("trigger-active-sel-debug") << "Number of ground terms for (simple) "
-                                    << f << " is " << ngt << std::endl;
+                                    << d_op << " is " << ngt << std::endl;
   return static_cast<int>(ngt);
 }
 
