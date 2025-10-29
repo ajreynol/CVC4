@@ -220,7 +220,7 @@ class TermDb : public QuantifiersUtil {
   /** get eligible term in equivalence class of r */
   Node getEligibleTermInEqc(TNode r);
 
-  void debugNotifyTriggerProcess(inst::Trigger* t);
+  void debugNotifyTriggerProcess(inst::Trigger* t, size_t numInst);
  protected:
   /** The quantifiers state object */
   QuantifiersState& d_qstate;
@@ -243,6 +243,7 @@ class TermDb : public QuantifiersUtil {
   size_t d_totalTerms;
   std::unordered_set<inst::Trigger*> d_procTriggers;
   std::unordered_set<Node> d_procTriggerNodes;
+  std::unordered_set<inst::Trigger*> d_instTriggers;
   expr::TermCanonize d_tcanont;
   /** map from types to ground terms for that type */
   TypeNodeDbListMap d_typeMap;

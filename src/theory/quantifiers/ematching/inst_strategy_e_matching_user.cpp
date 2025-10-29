@@ -108,8 +108,8 @@ InstStrategyStatus InstStrategyUserPatterns::process(Node q,
       Trace("process-trigger") << "..." << std::endl;
     }
     quantifiers::TermDb* tdb = d_treg.getTermDatabase();
-    tdb->debugNotifyTriggerProcess(t);
     unsigned numInst = t->addInstantiations();
+    tdb->debugNotifyTriggerProcess(t, numInst);
     Trace("process-trigger")
         << "  Done, numInst = " << numInst << "." << std::endl;
     if (d_qstate.isInConflict())

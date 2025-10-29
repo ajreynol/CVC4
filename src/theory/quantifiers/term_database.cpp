@@ -729,9 +729,11 @@ bool TermDb::reset( Theory::Effort effort ){
   d_rlvTerms = 0;
   d_totalTerms = 0;
   Trace("ajr-temp-rd") << "Prev triggers (unique-ae/total): " << d_procTriggerNodes.size() << " / " << d_procTriggers.size() << std::endl;
+  Trace("ajr-temp-rd") << "Instantiated triggers: " << d_instTriggers.size() << std::endl;
   
   d_procTriggers.clear();
   d_procTriggerNodes.clear();
+  d_instTriggers.clear();
 
   Assert(d_qstate.getEqualityEngine()->consistent());
 
@@ -823,7 +825,7 @@ TNode TermDb::getCongruentTerm(Node f, const std::vector<TNode>& args)
   return d_func_map_trie[f].existsTerm( args );
 }
 
-void TermDb::debugNotifyTriggerProcess(inst::Trigger* t)
+void TermDb::debugNotifyTriggerProcess(inst::Trigger* t, size_t numInst)
 {
   if (!d_procTriggers.insert(t).second)
   {
@@ -833,6 +835,10 @@ void TermDb::debugNotifyTriggerProcess(inst::Trigger* t)
   Node tnc = d_tcanont.getCanonicalTerm(tn);
   d_procTriggerNodes.insert(tnc);
   Trace("ajr-temp-t") << "Process trigger: " << t << " " << tn << std::endl;
+  if (numInst>0)
+  {
+    d_instTriggers.insert(t);
+  }
 }
   
 }  // namespace quantifiers
