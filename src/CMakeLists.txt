@@ -835,6 +835,8 @@ libcvc5_add_sources(
   theory/quantifiers/ematching/inst_match_generator_multi_linear.h
   theory/quantifiers/ematching/inst_match_generator_simple.cpp
   theory/quantifiers/ematching/inst_match_generator_simple.h
+  theory/quantifiers/ematching/inst_match_generator_trivial.cpp
+  theory/quantifiers/ematching/inst_match_generator_trivial.h
   theory/quantifiers/ematching/inst_strategy.cpp
   theory/quantifiers/ematching/inst_strategy.h
   theory/quantifiers/ematching/inst_strategy_e_matching.cpp

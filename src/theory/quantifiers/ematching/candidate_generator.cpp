@@ -68,9 +68,11 @@ void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
   d_termIter = 0;
   d_eqc = eqc;
   d_op = op;
-  d_termIterList = d_treg.getTermDatabase()->getGroundTermList(d_op);
   if (eqc.isNull())
   {
+    // ensure we've computed the trie
+    d_treg.getTermDatabase()->getTermArgTrie(op);
+    d_termIterList = d_treg.getTermDatabase()->getGroundTermList(d_op);
     d_mode = cand_term_db;
   }else{
     if( isExcludedEqc( eqc ) ){
