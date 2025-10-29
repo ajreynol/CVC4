@@ -1283,7 +1283,7 @@ void TheoryDatatypes::checkCycles() {
     Node eqc = (*eqcs_i);
     TypeNode tn = eqc.getType();
     if( tn.isDatatype() ) {
-      const DType& dt = t.getDType();
+      const DType& dt = tn.getDType();
       if( !dt.isCodatatype() ){
         if (dt.isRecursive() && options().datatypes.dtCyclic)
         {
