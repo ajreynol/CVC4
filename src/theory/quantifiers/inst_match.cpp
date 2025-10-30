@@ -142,6 +142,11 @@ bool InstMatch::set(size_t i, TNode n)
   return true;
 }
 
+void InstMatch::overwrite(size_t i, TNode n)
+{
+  d_vals[i] = n;
+}
+
 void InstMatch::reset(size_t i)
 {
   Assert(!d_vals[i].isNull());

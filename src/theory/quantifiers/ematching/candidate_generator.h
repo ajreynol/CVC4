@@ -176,6 +176,7 @@ class CandidateGeneratorInc : public CandidateGenerator
   /** Pattern information variable numbers and non-ground */
   std::vector<size_t> d_cvars;
   std::vector<bool> d_cng;
+  std::vector<size_t> d_bindings;
   /** The iteration information */
   std::vector<TNodeTrie*> d_stack;
   std::vector<std::map<TNode, TNodeTrie>::iterator> d_stackIter;

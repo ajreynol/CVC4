@@ -213,12 +213,86 @@ void CandidateGeneratorInc::reset(Node eqc)
   {
     tat = d_treg.getTermDatabase()->getTermArgTrie(eqc, d_op);
   }
+  d_bindings.clear();
   d_stack.emplace_back(tat);
+  d_stackIter.emplace_back(tat->d_data.begin());
 }
 
 Node CandidateGeneratorInc::getNextCandidate()
-{ 
-  return Node::null();
+{
+  size_t nargs = d_pat.getNumChildren();
+  Assert (nargs>0);
+  Node ret;
+  do
+  {
+    // popped to beginning, we failed to generate a candidate
+    if (d_stack.empty())
+    {
+      return Node::null();
+    }
+    Assert (d_stackIter.size()==d_stack.size());
+    size_t aindex = d_stack.size()-1;
+    Assert (aindex<nargs);
+    TNodeTrie* tat = d_stack.back();
+    std::map<TNode, TNodeTrie>::iterator& it = d_stackIter.back();
+    if (aindex==nargs)
+    {
+      ret = tat->getData();
+      d_stack.pop_back();
+      d_stackIter.pop_back();
+    }
+    else if (it==tat->d_data.end())
+    {
+      d_stack.pop_back();
+      d_stackIter.pop_back();
+      if (!d_bindings.empty() && d_bindings.back()==aindex)
+      {
+        // clean up the binding
+        Assert (aindex<d_cvars.size());
+        size_t vnum = d_cvars[aindex];
+        d_match.reset(vnum);
+        d_bindings.pop_back();
+      }
+    }
+    else 
+    {
+      TNode g = it->first;
+      ++it;
+      if (d_cng[aindex])
+      {
+        size_t vnum = d_cvars[aindex];
+        if (vnum>0)
+        {
+          vnum--;
+          bool isBind = d_match.get(vnum).isNull();
+          if (!d_match.set(vnum, g))
+          {
+            continue;
+          }
+          if (isBind)
+          {
+            d_bindings.push_back(aindex);
+          }
+        }
+      }
+      else if (!d_qs.areEqual(d_pat[aindex], g))
+      {
+        continue;
+      }
+      // success, push
+      TNodeTrie* tatc = &it->second;
+      d_stack.emplace_back(tatc);
+      d_stackIter.emplace_back(tatc->d_data.begin());
+    }
+  }while (ret.isNull());
+  // set the instantiation match to the exact bindings
+  for (size_t i : d_bindings)
+  {
+    Assert (i<ret.getNumChildren());
+    size_t vnum = d_cvars[i];
+    d_match.overwrite(vnum, ret[i]);
+  }
+  return ret;
 }
 
 CandidateGeneratorQELitDeq::CandidateGeneratorQELitDeq(Env& env,
