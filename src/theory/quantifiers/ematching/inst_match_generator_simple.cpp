@@ -216,6 +216,10 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
   std::map<TNode, TNodeTrie>::iterator it = tat->d_data.find(r);
   if (it != tat->d_data.end())
   {
+    if (!d_terms.empty() && !hasTerm(argIndex + 1, &(it->second)))
+    {
+      return;
+    }
     addInstantiations(m, addedLemmas, argIndex + 1, &(it->second));
   }
 }
