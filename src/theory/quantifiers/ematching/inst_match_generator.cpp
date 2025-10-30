@@ -232,8 +232,8 @@ void InstMatchGenerator::initialize(Node q,
     }
     if (d_cg == nullptr)
     {
-      CandidateGeneratorQE* cg =
-          new CandidateGeneratorQE(d_env, d_qstate, d_treg, d_match_pattern);
+      CandidateGeneratorInc* cg =
+          new CandidateGeneratorInc(d_env, d_qstate, d_treg, d_match_pattern);
       // we will be scanning lists trying to find ground terms whose operator
       // is the same as d_match_operator's.
       d_cg = cg;
@@ -242,7 +242,7 @@ void InstMatchGenerator::initialize(Node q,
       if (d_pattern.getKind() == Kind::NOT
           && d_pattern[0].getKind() == Kind::EQUAL)
       {
-        cg->excludeEqc(d_eq_class_rel);
+        //cg->excludeEqc(d_eq_class_rel);
         d_eq_class_rel = Node::null();
       }
     }
@@ -441,6 +441,7 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
   {
     for (int& pv : prev)
     {
+      Trace("matching-debug2") << "...RESET " << pv << std::endl;
       m.reset(pv);
     }
   }
@@ -500,8 +501,11 @@ bool InstMatchGenerator::reset(Node eqc)
   d_cg->reset( d_eq_class );
   d_needsReset = false;
   
+  d_needsFirstCandidate = true;
   //generate the first candidate preemptively
   d_curr_first_candidate = Node::null();
+  return true;
+#if 0
   Node t;
   do {
     t = d_cg->getNextCandidate();
@@ -512,6 +516,7 @@ bool InstMatchGenerator::reset(Node eqc)
   Trace("matching-summary") << "Reset " << d_match_pattern << " in " << eqc << " returns " << !d_curr_first_candidate.isNull() << "." << std::endl;
 
   return !d_curr_first_candidate.isNull();
+#endif
 }
 
 int InstMatchGenerator::getNextMatch(InstMatch& m)
@@ -523,6 +528,12 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
   d_curr_matched = Node::null();
   Trace("matching") << this << " " << d_match_pattern << " get next match " << m << " in eq class " << d_eq_class << std::endl;
   int success = -1;
+  if (d_needsFirstCandidate)
+  {
+    d_curr_first_candidate = d_qstate.isInConflict() ? Node::null() : d_cg->getNextCandidate(m);
+    d_needsFirstCandidate = false;
+    Trace("matching") << "got first candidate now " << m << std::endl;
+  }
   Node t = d_curr_first_candidate;
   do{
     Trace("matching-debug2") << "Matching candidate : " << t << std::endl;
@@ -540,14 +551,16 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
       }
       //get the next candidate term t
       if( success<0 ){
-        t = d_qstate.isInConflict() ? Node::null() : d_cg->getNextCandidate();
+        t = d_qstate.isInConflict() ? Node::null() : d_cg->getNextCandidate(m);
       }else{
-        d_curr_first_candidate = d_cg->getNextCandidate();
+        d_curr_first_candidate = d_cg->getNextCandidate(m);
       }
+      Trace("matching") << "got next candidate now " << m << std::endl;
     }
   }while( success<0 && !t.isNull() );
   d_curr_matched = t;
   if( success<0 ){
+    d_cg->clearCandidate(m);
     Trace("matching-summary") << "..." << d_match_pattern << " failed, reset." << std::endl;
     Trace("matching") << this << " failed, reset " << d_eq_class << std::endl;
     //we failed, must reset

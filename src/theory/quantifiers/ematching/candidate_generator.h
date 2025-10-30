@@ -75,9 +75,9 @@ class CandidateGenerator : protected EnvObj
    */
   virtual void reset( Node eqc ) = 0;
   /** get the next candidate */
-  virtual Node getNextCandidate() = 0;
+  virtual Node getNextCandidate(InstMatch& m) = 0;
   /** clear the candidate */
-  virtual void clearCandidate() {}
+  virtual void clearCandidate(InstMatch& m) {}
   /** is n a legal candidate? */
   bool isLegalCandidate(const Node& n);
   /** Identify this generator (for debugging, etc..) */
@@ -110,7 +110,7 @@ class CandidateGeneratorQE : public CandidateGenerator
   /** reset */
   void reset(Node eqc) override;
   /** get next candidate */
-  Node getNextCandidate() override;
+  Node getNextCandidate(InstMatch& m) override;
   /** tell this class to exclude candidates from equivalence class r */
   void excludeEqc(Node r) { d_exclude_eqc[r] = true; }
   /** is r an excluded equivalence class? */
@@ -159,20 +159,17 @@ class CandidateGeneratorInc : public CandidateGenerator
   CandidateGeneratorInc(Env& env,
                         QuantifiersState& qs,
                         TermRegistry& tr,
-                        const Node& pat,
-                        InstMatch& im);
+                        const Node& pat);
   /** reset */
   void reset(Node eqc) override;
   /** get next candidate */
-  Node getNextCandidate() override;
+  Node getNextCandidate(InstMatch& m) override;
   /** Identify this generator (for debugging, etc..) */
   std::string identify() const override { return "CandidateGeneratorInc"; }
   /** Clear candidate */
-  void clearCandidate() override;
+  void clearCandidate(InstMatch& m) override;
 
  private:
-  /** The inst match to populate */
-  InstMatch& d_match;
   /** The pattern */
   Node d_pat;
   /** operator you are looking for */
@@ -204,7 +201,7 @@ class CandidateGeneratorQELitDeq : public CandidateGenerator
   /** reset */
   void reset(Node eqc) override;
   /** get next candidate */
-  Node getNextCandidate() override;
+  Node getNextCandidate(InstMatch& m) override;
   /** Identify this generator (for debugging, etc..) */
   std::string identify() const override { return "CandidateGeneratorQELitDeq"; }
 
@@ -247,7 +244,7 @@ class CandidateGeneratorQEAll : public CandidateGenerator
   /** reset */
   void reset(Node eqc) override;
   /** get next candidate */
-  Node getNextCandidate() override;
+  Node getNextCandidate(InstMatch& m) override;
 };
 
 /** candidate generation constructor expand
@@ -268,7 +265,7 @@ class CandidateGeneratorConsExpand : public CandidateGeneratorQE
   /** reset */
   void reset(Node eqc) override;
   /** get next candidate */
-  Node getNextCandidate() override;
+  Node getNextCandidate(InstMatch& m) override;
   /** Identify this generator (for debugging, etc..) */
   std::string identify() const override
   {
@@ -301,7 +298,7 @@ class CandidateGeneratorSelector : public CandidateGeneratorQE
    * UF corresponding to an invocation of applying this selector to an
    * application of the wrong constructor.
    */
-  Node getNextCandidate() override;
+  Node getNextCandidate(InstMatch& m) override;
   /** Identify this generator (for debugging, etc..) */
   std::string identify() const override { return "CandidateGeneratorSelector"; }
 

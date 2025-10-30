@@ -271,6 +271,7 @@ class InstMatchGenerator : public IMGenerator {
   * the first candidate term to match during reset().
   */
   Node d_curr_first_candidate;
+  bool d_needsFirstCandidate;
   /** Indepdendent generate
   * If this flag is true, failures to match should be cached.
   */

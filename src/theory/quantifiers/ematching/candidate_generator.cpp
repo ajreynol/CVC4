@@ -113,7 +113,7 @@ bool CandidateGeneratorQE::isLegalOpCandidate(const Node& n)
   return false;
 }
 
-Node CandidateGeneratorQE::getNextCandidate(){
+Node CandidateGeneratorQE::getNextCandidate(InstMatch& m){
   return getNextCandidateInternal();
 }
 
@@ -169,9 +169,8 @@ Node CandidateGeneratorQE::getNextCandidateInternal()
 CandidateGeneratorInc::CandidateGeneratorInc(Env& env,
                                              QuantifiersState& qs,
                                              TermRegistry& tr,
-                                             const Node& pat,
-                                             InstMatch& im)
-    : CandidateGenerator(env, qs, tr), d_match(im), d_pat(pat)
+                                             const Node& pat)
+    : CandidateGenerator(env, qs, tr), d_pat(pat)
 {
   d_op = d_treg.getTermDatabase()->getMatchOperator(pat);
   Assert(!d_op.isNull());
@@ -204,6 +203,7 @@ void CandidateGeneratorInc::reset(Node eqc)
 {
   d_stack.clear();
   d_stackIter.clear();
+  d_bindings.clear();
   TNodeTrie* tat;
   if (eqc.isNull())
   {
@@ -213,13 +213,16 @@ void CandidateGeneratorInc::reset(Node eqc)
   {
     tat = d_treg.getTermDatabase()->getTermArgTrie(eqc, d_op);
   }
-  d_bindings.clear();
-  d_stack.emplace_back(tat);
-  d_stackIter.emplace_back(tat->d_data.begin());
+  if (tat!=nullptr)
+  {
+    d_stack.emplace_back(tat);
+    d_stackIter.emplace_back(tat->d_data.begin());
+  }
 }
 
-Node CandidateGeneratorInc::getNextCandidate()
+Node CandidateGeneratorInc::getNextCandidate(InstMatch& m)
 {
+  Trace("cg-inc") << "getNextCandidate begin " << d_pat << std::endl;
   size_t nargs = d_pat.getNumChildren();
   Assert(nargs > 0);
   Node ret;
@@ -228,35 +231,45 @@ Node CandidateGeneratorInc::getNextCandidate()
     // popped to beginning, we failed to generate a candidate
     if (d_stack.empty())
     {
+      Trace("cg-inc") << "...stack popped, fail" << std::endl;
       return Node::null();
     }
+    Trace("cg-inc") << "working on size " << d_stack.size() << std::endl;
     Assert(d_stackIter.size() == d_stack.size());
     size_t aindex = d_stack.size() - 1;
-    Assert(aindex < nargs);
+    Assert(aindex <= nargs);
     TNodeTrie* tat = d_stack.back();
+    Assert (tat!=nullptr);
     std::map<TNode, TNodeTrie>::iterator& it = d_stackIter.back();
     if (aindex == nargs)
     {
       ret = tat->getData();
       d_stack.pop_back();
       d_stackIter.pop_back();
+      Trace("cg-inc") << "...got return " << ret << std::endl;
     }
     else if (it == tat->d_data.end())
     {
+      Trace("cg-inc") << ".....pop" << std::endl;
       d_stack.pop_back();
       d_stackIter.pop_back();
       if (!d_bindings.empty() && d_bindings.back() == aindex)
       {
+        Trace("cg-inc") << "...pop binding " << aindex << std::endl;
         // clean up the binding
         Assert(aindex < d_cvars.size());
-        size_t vnum = d_cvars[aindex];
-        d_match.reset(vnum);
+        size_t vnum = d_cvars[aindex]-1;
+        Trace("cg-inc") << "...vnum is " << vnum << std::endl;
+        m.reset(vnum);
         d_bindings.pop_back();
       }
     }
     else
     {
       TNode g = it->first;
+      TNodeTrie* tatc = &it->second;
+      Trace("cg-inc") << "look at " << g << std::endl;
+      Assert (!g.isNull());
       ++it;
       if (d_cng[aindex])
       {
@@ -264,46 +277,62 @@ Node CandidateGeneratorInc::getNextCandidate()
         if (vnum > 0)
         {
           vnum--;
-          bool isBind = d_match.get(vnum).isNull();
-          if (!d_match.set(vnum, g))
+          bool isBind = m.get(vnum).isNull();
+          if (!m.set(vnum, g))
           {
+            Trace("cg-inc") << "...not equal (var)" << std::endl;
             continue;
           }
           if (isBind)
           {
+            Trace("cg-inc") << "...is binding " << aindex << std::endl;
+            Trace("cg-inc") << "...vnum is " << vnum << std::endl;
             d_bindings.push_back(aindex);
           }
         }
       }
       else if (!d_qs.areEqual(d_pat[aindex], g))
       {
+        Trace("cg-inc") << "...not equal (ground)" << std::endl;
         continue;
       }
+      Trace("cg-inc") << "....push " << std::endl;
       // success, push
-      TNodeTrie* tatc = &it->second;
-      d_stack.emplace_back(tatc);
-      d_stackIter.emplace_back(tatc->d_data.begin());
+      Assert (tatc!=nullptr);
+      d_stack.push_back(tatc);
+      d_stackIter.push_back(tatc->d_data.begin());
     }
   } while (ret.isNull());
-  // set the instantiation match to the exact bindings
-  for (size_t i : d_bindings)
+  if (!ret.isNull())
   {
-    Assert(i < ret.getNumChildren());
-    size_t vnum = d_cvars[i];
-    d_match.overwrite(vnum, ret[i]);
+    // set the instantiation match to the exact bindings
+    for (size_t i : d_bindings)
+    {
+      Assert(i < ret.getNumChildren());
+      size_t vnum = d_cvars[i]-1;
+      Trace("cg-inc") << "...overwrite " << vnum << " to " << ret[i] << std::endl;
+      m.overwrite(vnum, ret[i]);
+    }
+    Trace("cg-inc") << "Returns, match is now " << m << std::endl;
   }
   return ret;
 }
 
-void CandidateGeneratorInc::clearCandidate()
+void CandidateGeneratorInc::clearCandidate(InstMatch& m)
 {
+  Trace("cg-inc") << "clearCandidate begin " << d_pat << std::endl;
   while (!d_bindings.empty())
   {
     size_t aindex = d_bindings.back();
+    Trace("cg-inc") << "...clear binding " << aindex << std::endl;
     Assert(aindex < d_cvars.size());
-    size_t vnum = d_cvars[aindex];
-    d_match.reset(vnum);
+    size_t vnum = d_cvars[aindex]-1;
+    Trace("cg-inc") << "...vnum is " << vnum << std::endl;
+    m.reset(vnum);
+    d_bindings.pop_back();
   }
+  d_stack.clear();
+  d_stackIter.clear();
 }
 
 CandidateGeneratorQELitDeq::CandidateGeneratorQELitDeq(Env& env,
@@ -322,7 +351,7 @@ void CandidateGeneratorQELitDeq::reset( Node eqc ){
   d_eqc_false = eq::EqClassIterator(falset, ee);
 }
 
-Node CandidateGeneratorQELitDeq::getNextCandidate(){
+Node CandidateGeneratorQELitDeq::getNextCandidate(InstMatch& m){
   //get next candidate term in equivalence class
   while( !d_eqc_false.isFinished() ){
     Node n = (*d_eqc_false);
@@ -358,7 +387,7 @@ void CandidateGeneratorQEAll::reset( Node eqc ) {
   d_firstTime = true;
 }
 
-Node CandidateGeneratorQEAll::getNextCandidate() {
+Node CandidateGeneratorQEAll::getNextCandidate(InstMatch& m) {
   quantifiers::TermDb* tdb = d_treg.getTermDatabase();
   while( !d_eq.isFinished() ){
     TNode n = (*d_eq);
@@ -429,7 +458,7 @@ void CandidateGeneratorConsExpand::reset(Node eqc)
   }
 }
 
-Node CandidateGeneratorConsExpand::getNextCandidate()
+Node CandidateGeneratorConsExpand::getNextCandidate(InstMatch& m)
 {
   // get the next term from the base class
   Node curr = getNextCandidateInternal();
@@ -474,7 +503,7 @@ void CandidateGeneratorSelector::reset(Node eqc)
   resetForOperator(eqc, d_selOp);
 }
 
-Node CandidateGeneratorSelector::getNextCandidate()
+Node CandidateGeneratorSelector::getNextCandidate(InstMatch& m)
 {
   Node nextc = getNextCandidateInternal();
   if (!nextc.isNull())
