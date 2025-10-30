@@ -99,13 +99,13 @@ class InstMatchGeneratorSimple : public IMGenerator
                          uint64_t& addedLemmas,
                          size_t argIndex,
                          TNodeTrie* tat);
-  /** 
+  /**
    * Get the term argument trie we are considering, based on d_eq/d_pol.
    */
   TNodeTrie* getTermArgTrie();
   /**
-   * Add instantiations based on the list of terms we have not yet matched against.
-   * This is done when d_terms is non-empty.
+   * Add instantiations based on the list of terms we have not yet matched
+   * against. This is done when d_terms is non-empty.
    */
   uint64_t addInstantiationsIncremental(TNodeTrie* tat);
 };

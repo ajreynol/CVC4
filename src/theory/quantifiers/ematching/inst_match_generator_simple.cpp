@@ -33,7 +33,9 @@ InstMatchGeneratorSimple::InstMatchGeneratorSimple(Env& env,
                                                    Trigger* tparent,
                                                    Node q,
                                                    Node pat)
-    : IMGenerator(env, tparent), d_quant(q), d_match_pattern(pat),
+    : IMGenerator(env, tparent),
+      d_quant(q),
+      d_match_pattern(pat),
       d_terms(d_env.getUserContext())
 {
   if (d_match_pattern.getKind() == Kind::NOT)
@@ -55,7 +57,8 @@ InstMatchGeneratorSimple::InstMatchGeneratorSimple(Env& env,
   for (size_t i = 0, nchild = d_match_pattern.getNumChildren(); i < nchild; i++)
   {
     Node p = d_match_pattern[i];
-    if (p.getKind() == Kind::INST_CONSTANT && TermUtil::getInstConstAttr(p) == q)
+    if (p.getKind() == Kind::INST_CONSTANT
+        && TermUtil::getInstConstAttr(p) == q)
     {
       // check independent of options
       if (TermUtil::getInstConstAttr(p) == q)
@@ -87,7 +90,7 @@ uint64_t InstMatchGeneratorSimple::addInstantiations(InstMatch& m)
   // get the term arg trie to consider, if it null or we found a conflict
   // during term indexing, we are done
   TNodeTrie* tat = getTermArgTrie();
-  if (tat==nullptr || d_qstate.isInConflict())
+  if (tat == nullptr || d_qstate.isInConflict())
   {
     return 0;
   }
@@ -97,7 +100,7 @@ uint64_t InstMatchGeneratorSimple::addInstantiations(InstMatch& m)
   // as a disadvantage we do not cache.
   if (!d_terms.empty())
   {
-    //return addInstantiationsIncremental(tat);
+    // return addInstantiationsIncremental(tat);
   }
   Trace("simple-trigger-debug")
       << "Adding instantiations based on " << tat << " from " << d_op << " "
@@ -141,7 +144,7 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
     TNode t = tat->getData();
     Trace("simple-trigger") << "Actual term is " << t << std::endl;
     // convert to actual used terms
-    Assert (d_tvec.size()==t.getNumChildren());
+    Assert(d_tvec.size() == t.getNumChildren());
     for (size_t i = 0, nvars = d_varNum.size(); i < nvars; i++)
     {
       if (d_isVar[i])
@@ -232,13 +235,15 @@ uint64_t InstMatchGeneratorSimple::addInstantiationsIncremental(TNodeTrie* tat)
   size_t depth = d_match_pattern.getNumChildren();
   if (!d_eqc.isNull() && !d_pol)
   {
-    depth = depth+1;
+    depth = depth + 1;
   }
   // get the list of non-redundant terms from the arg trie of the operator
   std::vector<Node> list = tat->getLeaves(depth);
   uint64_t addedLemmas = 0;
-  Trace("trivial-trigger") << "Process trivial trigger " << d_match_pattern << " " << d_eqc << " " << d_pol
-                           << ", #terms=" << list.size() << ", depth was " << depth << std::endl;
+  Trace("trivial-trigger") << "Process trivial trigger " << d_match_pattern
+                           << " " << d_eqc << " " << d_pol
+                           << ", #terms=" << list.size() << ", depth was "
+                           << depth << std::endl;
   size_t procTerms = 0;
   size_t tli = 0;
   size_t tlLimit = list.size();
