@@ -33,7 +33,8 @@ InstMatchGeneratorSimple::InstMatchGeneratorSimple(Env& env,
                                                    Trigger* tparent,
                                                    Node q,
                                                    Node pat)
-    : IMGenerator(env, tparent), d_quant(q), d_match_pattern(pat)
+    : IMGenerator(env, tparent), d_quant(q), d_match_pattern(pat),
+      d_terms(d_env.getUserContext())
 {
   if (d_match_pattern.getKind() == Kind::NOT)
   {
@@ -71,7 +72,9 @@ InstMatchGeneratorSimple::InstMatchGeneratorSimple(Env& env,
   d_op = tdb->getMatchOperator(d_match_pattern);
 }
 
-void InstMatchGeneratorSimple::resetInstantiationRound() {}
+void InstMatchGeneratorSimple::resetInstantiationRound() {
+  d_hasTerm.clear();
+}
 uint64_t InstMatchGeneratorSimple::addInstantiations(InstMatch& m)
 {
   uint64_t addedLemmas = 0;
@@ -98,8 +101,7 @@ uint64_t InstMatchGeneratorSimple::addInstantiations(InstMatch& m)
         {
           if (t.first != r)
           {
-            m.resetAll();
-            addInstantiations(m, addedLemmas, 0, &(t.second));
+            addInstantiationsStart(m, addedLemmas, &(t.second));
             if (d_qstate.isInConflict())
             {
               break;
@@ -115,12 +117,23 @@ uint64_t InstMatchGeneratorSimple::addInstantiations(InstMatch& m)
       << d_eqc << std::endl;
   if (tat && !d_qstate.isInConflict())
   {
-    m.resetAll();
-    addInstantiations(m, addedLemmas, 0, tat);
+    addInstantiationsStart(m, addedLemmas, tat);
   }
   return addedLemmas;
 }
 
+void InstMatchGeneratorSimple::addInstantiationsStart(InstMatch& m,
+                        uint64_t& addedLemmas,
+                        TNodeTrie* tat)
+{
+  if (!d_terms.empty() && !hasTerm(0, tat))
+  {
+    return;
+  }
+  m.resetAll();
+  addInstantiations(m, addedLemmas, 0, tat);
+}
+  
 void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
                                                  uint64_t& addedLemmas,
                                                  size_t argIndex,
@@ -151,6 +164,7 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
     if (sendInstantiation(terms,
                           InferenceId::QUANTIFIERS_INST_E_MATCHING_SIMPLE))
     {
+      d_terms.insert(t);
       addedLemmas++;
       Trace("simple-trigger")
           << "-> Produced instantiation " << terms << std::endl;
@@ -164,6 +178,12 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
     {
       for (std::pair<const TNode, TNodeTrie>& tt : tat->d_data)
       {
+        // if there is no term in the subtrie which we haven't instantiated
+        // via, don't recurse
+        if (!d_terms.empty() && !hasTerm(argIndex+1, &(tt.second)))
+        {
+          continue;
+        }
         Node t = tt.first;
         // using representatives, just check if equal
         Assert(t.getType() == d_match_pattern_arg_types[argIndex]);
@@ -196,6 +216,36 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
   {
     addInstantiations(m, addedLemmas, argIndex + 1, &(it->second));
   }
+}
+bool InstMatchGeneratorSimple::hasTerm(size_t argIndex,
+                         TNodeTrie* tat)
+{  
+  std::map<TNodeTrie*, bool>::iterator it = d_hasTerm.find(tat);
+  if (it!=d_hasTerm.end())
+  {
+    return it->second;
+  }
+  bool ret;
+  if (argIndex == d_match_pattern.getNumChildren())
+  {
+    TNode t = tat->getData();
+    // true if it is a term
+    ret = (d_terms.find(t)==d_terms.end());
+  }
+  else
+  {
+    ret = false;
+    for (std::pair<const TNode, TNodeTrie>& tt : tat->d_data)
+    {
+      if (hasTerm(argIndex+1, &(tt.second)))
+      {
+        ret = true;
+        break;
+      }
+    }
+  }
+  d_hasTerm[tat] = ret;
+  return ret;
 }
 
 int InstMatchGeneratorSimple::getActiveScore()
