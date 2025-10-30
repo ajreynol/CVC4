@@ -18,7 +18,6 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__INST_MATCH_GENERATOR_TRIVIAL_H
 #define CVC5__THEORY__QUANTIFIERS__INST_MATCH_GENERATOR_TRIVIAL_H
 
-#include <map>
 #include <vector>
 
 #include "theory/quantifiers/ematching/inst_match_generator.h"
@@ -29,7 +28,14 @@ namespace quantifiers {
 namespace inst {
 
 /**
- * InstMatchGeneratorTrivial class
+ * InstMatchGeneratorTrivial class. This is used for triggers of the form
+ * f(x1...xn) where x1...xn are unique variables.
+ *
+ * The key advantage of this match generator is that it is optimized to work
+ * incrementally, i.e. it tracks the terms that it has processed successfully
+ * as instantiations already and only subsequently considers terms that have
+ * not yet been considered. This avoids repeated calls to matching, and in
+ * particular entailment checking.
  */
 class InstMatchGeneratorTrivial : public IMGenerator
 {
@@ -55,9 +61,9 @@ class InstMatchGeneratorTrivial : public IMGenerator
   Node d_op;
   /** List of terms we have matched */
   context::CDHashSet<Node> d_terms;
-  /** The variable number for each argument */
+  /** The variable number for each argument of the pattern */
   std::vector<uint64_t> d_varNum;
-  /** Terms used for instantiation */
+  /** Temporary vector for terms used for instantiation */
   std::vector<Node> d_tvec;
 };
 

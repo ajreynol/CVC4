@@ -57,6 +57,7 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
   {
     return 0;
   }
+  // get the list of non-redundant terms from the arg trie of the operator
   std::vector<Node> list = tat->getLeaves(d_tvec.size());
   uint64_t addedLemmas = 0;
   Trace("trivial-trigger") << "Process trivial trigger " << d_pat << ", #terms=" << list.size() << std::endl;
@@ -72,15 +73,12 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
     {
       continue;
     }
-      Trace("trivial-trigger-debug") << "...check active " << n << std::endl;
-    // not active based on e.g. relevant policy
-    if (!tdb->isTermActive(n) || !tdb->hasTermCurrent(n))
-    {
-      continue;
-    }
+    Trace("trivial-trigger-debug") << "...check active " << n << std::endl;
+    // should be relevant if it was indexed
+    Assert (tdb->hasTermCurrent(n));
     ++procTerms;
     Assert(n.getNumChildren() == d_varNum.size());
-    // it is an instantiation
+    // it is an instantiation, map it based on the variable order
     for (size_t i = 0, nvars = d_varNum.size(); i < nvars; i++)
     {
       Assert(d_varNum[i] < n.getNumChildren());
