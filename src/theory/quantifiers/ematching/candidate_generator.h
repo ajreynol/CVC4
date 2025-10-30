@@ -147,7 +147,32 @@ class CandidateGeneratorQE : public CandidateGenerator
   virtual bool isLegalOpCandidate(const Node& n);
   /** the equivalence classes that we have excluded from candidate generation */
   std::map< Node, bool > d_exclude_eqc;
+};
 
+class CandidateGeneratorInc : public CandidateGenerator
+{
+ public:
+   CandidateGeneratorInc(Env& env,
+                       QuantifiersState& qs,
+                       TermRegistry& tr,
+                       const Node& pat
+                       InstMatch& im);
+  /** reset */
+  void reset(Node eqc) override;
+  /** get next candidate */
+  Node getNextCandidate() override;
+  /** Identify this generator (for debugging, etc..) */
+  std::string identify() const override { return "CandidateGeneratorInc"; }
+ private:
+  /** The inst match to populate */
+  InstMatch& d_match;
+  /** The pattern */
+  Node d_pat;
+  /** operator you are looking for */
+  Node d_op;
+  /** The iteration information */
+  std::vector<TNodeTrie*> d_stack;
+  std::vector<std::map<TNode, TNodeTrie>::iterator> d_stackIter;
 };
 
 /**

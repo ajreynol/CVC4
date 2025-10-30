@@ -166,6 +166,22 @@ Node CandidateGeneratorQE::getNextCandidateInternal()
   return Node::null();
 }
 
+CandidateGeneratorInc::CandidateGeneratorInc(Env& env,
+                    QuantifiersState& qs,
+                    TermRegistry& tr,
+                    const Node& pat
+                    InstMatch& im) : CandidateGenerator(env, qs, tr), d_pat(pat), d_im(im) {}
+
+void CandidateGeneratorInc::reset(Node eqc)
+{
+
+}
+
+Node CandidateGeneratorInc::getNextCandidate()
+{
+  return Node::null();
+}
+
 CandidateGeneratorQELitDeq::CandidateGeneratorQELitDeq(Env& env,
                                                        QuantifiersState& qs,
                                                        TermRegistry& tr,
