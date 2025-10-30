@@ -21,6 +21,8 @@
 #include "smt/env_obj.h"
 #include "theory/theory.h"
 #include "theory/uf/equality_engine.h"
+#include "expr/node_trie.h"
+#include "theory/quantifiers/inst_match.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -155,7 +157,7 @@ class CandidateGeneratorInc : public CandidateGenerator
    CandidateGeneratorInc(Env& env,
                        QuantifiersState& qs,
                        TermRegistry& tr,
-                       const Node& pat
+                       const Node& pat,
                        InstMatch& im);
   /** reset */
   void reset(Node eqc) override;

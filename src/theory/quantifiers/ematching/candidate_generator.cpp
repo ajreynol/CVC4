@@ -169,12 +169,25 @@ Node CandidateGeneratorQE::getNextCandidateInternal()
 CandidateGeneratorInc::CandidateGeneratorInc(Env& env,
                     QuantifiersState& qs,
                     TermRegistry& tr,
-                    const Node& pat
-                    InstMatch& im) : CandidateGenerator(env, qs, tr), d_pat(pat), d_im(im) {}
+                    const Node& pat,
+                    InstMatch& im) : CandidateGenerator(env, qs, tr), d_match(im), d_pat(pat) {
+  d_op = d_treg.getTermDatabase()->getMatchOperator(pat);
+  Assert(!d_op.isNull());
+                      
+                    }
 
 void CandidateGeneratorInc::reset(Node eqc)
 {
-
+  d_stack.clear();
+  d_stackIter.clear();
+  TNodeTrie* tat;
+  if (eqc.isNull())
+  {
+    tat = d_treg.getTermDatabase()->getTermArgTrie(d_op);
+  }else{
+    tat = d_treg.getTermDatabase()->getTermArgTrie(eqc, d_op);
+  }
+  d_stack.emplace_back(tat);
 }
 
 Node CandidateGeneratorInc::getNextCandidate()
