@@ -185,7 +185,7 @@ CandidateGeneratorInc::CandidateGeneratorInc(Env& env,
       d_cng.push_back(true);
       if (p.getKind() == Kind::INST_CONSTANT)
       {
-        d_cvars.push_back(p.getAttribute(InstVarNumAttribute())+1);
+        d_cvars.push_back(p.getAttribute(InstVarNumAttribute()) + 1);
       }
       else
       {
@@ -221,7 +221,7 @@ void CandidateGeneratorInc::reset(Node eqc)
 Node CandidateGeneratorInc::getNextCandidate()
 {
   size_t nargs = d_pat.getNumChildren();
-  Assert (nargs>0);
+  Assert(nargs > 0);
   Node ret;
   do
   {
@@ -230,38 +230,38 @@ Node CandidateGeneratorInc::getNextCandidate()
     {
       return Node::null();
     }
-    Assert (d_stackIter.size()==d_stack.size());
-    size_t aindex = d_stack.size()-1;
-    Assert (aindex<nargs);
+    Assert(d_stackIter.size() == d_stack.size());
+    size_t aindex = d_stack.size() - 1;
+    Assert(aindex < nargs);
     TNodeTrie* tat = d_stack.back();
     std::map<TNode, TNodeTrie>::iterator& it = d_stackIter.back();
-    if (aindex==nargs)
+    if (aindex == nargs)
     {
       ret = tat->getData();
       d_stack.pop_back();
       d_stackIter.pop_back();
     }
-    else if (it==tat->d_data.end())
+    else if (it == tat->d_data.end())
     {
       d_stack.pop_back();
       d_stackIter.pop_back();
-      if (!d_bindings.empty() && d_bindings.back()==aindex)
+      if (!d_bindings.empty() && d_bindings.back() == aindex)
       {
         // clean up the binding
-        Assert (aindex<d_cvars.size());
+        Assert(aindex < d_cvars.size());
         size_t vnum = d_cvars[aindex];
         d_match.reset(vnum);
         d_bindings.pop_back();
       }
     }
-    else 
+    else
     {
       TNode g = it->first;
       ++it;
       if (d_cng[aindex])
       {
         size_t vnum = d_cvars[aindex];
-        if (vnum>0)
+        if (vnum > 0)
         {
           vnum--;
           bool isBind = d_match.get(vnum).isNull();
@@ -284,11 +284,11 @@ Node CandidateGeneratorInc::getNextCandidate()
       d_stack.emplace_back(tatc);
       d_stackIter.emplace_back(tatc->d_data.begin());
     }
-  }while (ret.isNull());
+  } while (ret.isNull());
   // set the instantiation match to the exact bindings
   for (size_t i : d_bindings)
   {
-    Assert (i<ret.getNumChildren());
+    Assert(i < ret.getNumChildren());
     size_t vnum = d_cvars[i];
     d_match.overwrite(vnum, ret[i]);
   }
