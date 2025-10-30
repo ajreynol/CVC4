@@ -100,7 +100,7 @@ uint64_t InstMatchGeneratorSimple::addInstantiations(InstMatch& m)
   // as a disadvantage we do not cache.
   if (!d_terms.empty())
   {
-    // return addInstantiationsIncremental(tat);
+    return addInstantiationsIncremental(tat);
   }
   Trace("simple-trigger-debug")
       << "Adding instantiations based on " << tat << " from " << d_op << " "
@@ -231,9 +231,10 @@ TNodeTrie* InstMatchGeneratorSimple::getTermArgTrie()
 
 uint64_t InstMatchGeneratorSimple::addInstantiationsIncremental(TNodeTrie* tat)
 {
+  bool isDeq = (!d_eqc.isNull() && !d_pol);
   // depending on whether d_eqc is null, we are either at depth or depth+1
   size_t depth = d_match_pattern.getNumChildren();
-  if (!d_eqc.isNull() && !d_pol)
+  if (isDeq)
   {
     depth = depth + 1;
   }
@@ -253,6 +254,11 @@ uint64_t InstMatchGeneratorSimple::addInstantiationsIncremental(TNodeTrie* tat)
     ++tli;
     // if already considered this term
     if (d_terms.find(n) != d_terms.end())
+    {
+      continue;
+    }
+    // filter if disequality here
+    if (isDeq && d_qstate.getRepresentative(n)==d_eqc)
     {
       continue;
     }
