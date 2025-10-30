@@ -42,6 +42,13 @@ namespace inst {
  * The implementation traverses the term indices in TermDatabase for adding
  * instantiations, which is more efficient than the techniques required for
  * handling non-simple single triggers.
+ *
+ * We furthermore optimize this class by storing the list of terms we have
+ * already successfully matched by this class in the current user context.
+ * Note that matching a simple trigger against a ground term always generates
+ * the same instantiation. Thus, it is unecessary to match these terms again.
+ * We track whether a subtrie of the overall index contains leaves that are
+ * all in d_terms, and skip over such tries eagerly, for the sake of efficiency.
  */
 class InstMatchGeneratorSimple : public IMGenerator
 {
@@ -88,7 +95,10 @@ class InstMatchGeneratorSimple : public IMGenerator
    * local to the instantiation round.
    */
   std::map<TNodeTrie*, bool> d_hasTerm;
-  /** List of terms we have matched */
+  /**
+   * List of terms we have matched. This is stored in a user context dependent
+   * manner.
+   */
   context::CDHashSet<Node> d_terms;
   /** add instantiations, helper function.
    *

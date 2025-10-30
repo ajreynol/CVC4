@@ -126,6 +126,8 @@ void InstMatchGeneratorSimple::addInstantiationsStart(InstMatch& m,
                                                       uint64_t& addedLemmas,
                                                       TNodeTrie* tat)
 {
+  // if there are no terms in this trie that we haven't already instantiated
+  // with, we return.
   if (!d_terms.empty() && !hasTerm(0, tat))
   {
     return;
