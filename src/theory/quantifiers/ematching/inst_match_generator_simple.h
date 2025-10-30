@@ -83,7 +83,7 @@ class InstMatchGeneratorSimple : public IMGenerator
    * child is not a variable.
    */
   std::map<size_t, int> d_var_num;
-  /** 
+  /**
    * Mapping from TNodeTrie* to if they have a leaf that is not in d_terms,
    * local to the instantiation round.
    */
@@ -98,8 +98,8 @@ class InstMatchGeneratorSimple : public IMGenerator
    * @param tat the term index we are currently traversing.
    */
   void addInstantiationsStart(InstMatch& m,
-                         uint64_t& addedLemmas,
-                         TNodeTrie* tat);
+                              uint64_t& addedLemmas,
+                              TNodeTrie* tat);
   /** add instantiations, helper function.
    *
    * @param m the current match we are building,
@@ -114,8 +114,7 @@ class InstMatchGeneratorSimple : public IMGenerator
                          size_t argIndex,
                          TNodeTrie* tat);
   /** Has term? */
-  bool hasTerm(size_t argIndex,
-                         TNodeTrie* tat);
+  bool hasTerm(size_t argIndex, TNodeTrie* tat);
 };
 
 }  // namespace inst
