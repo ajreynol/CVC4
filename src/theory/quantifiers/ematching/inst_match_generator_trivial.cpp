@@ -19,6 +19,7 @@
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_util.h"
+#include "theory/quantifiers/quantifiers_state.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -53,7 +54,7 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
 {
   TermDb* tdb = d_treg.getTermDatabase();
   TNodeTrie* tat = tdb->getTermArgTrie(d_op);
-  if (tat == nullptr)
+  if (tat == nullptr || d_qstate.isInConflict())
   {
     return 0;
   }
