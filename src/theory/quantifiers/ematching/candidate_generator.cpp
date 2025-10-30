@@ -295,6 +295,17 @@ Node CandidateGeneratorInc::getNextCandidate()
   return ret;
 }
 
+void CandidateGeneratorInc::clearCandidate()
+{
+  while (!d_bindings.empty())
+  {
+    size_t aindex = d_bindings.back();
+    Assert(aindex < d_cvars.size());
+    size_t vnum = d_cvars[aindex];
+    d_match.reset(vnum);
+  }
+}
+
 CandidateGeneratorQELitDeq::CandidateGeneratorQELitDeq(Env& env,
                                                        QuantifiersState& qs,
                                                        TermRegistry& tr,

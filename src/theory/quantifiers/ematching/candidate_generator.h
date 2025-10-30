@@ -76,6 +76,8 @@ class CandidateGenerator : protected EnvObj
   virtual void reset( Node eqc ) = 0;
   /** get the next candidate */
   virtual Node getNextCandidate() = 0;
+  /** clear the candidate */
+  virtual void clearCandidate() {}
   /** is n a legal candidate? */
   bool isLegalCandidate(const Node& n);
   /** Identify this generator (for debugging, etc..) */
@@ -165,6 +167,8 @@ class CandidateGeneratorInc : public CandidateGenerator
   Node getNextCandidate() override;
   /** Identify this generator (for debugging, etc..) */
   std::string identify() const override { return "CandidateGeneratorInc"; }
+  /** Clear candidate */
+  void clearCandidate() override;
 
  private:
   /** The inst match to populate */
