@@ -81,7 +81,9 @@ class InstMatchGeneratorSimple : public IMGenerator
   /** List of terms we have matched */
   context::CDHashSet<Node> d_terms;
   /** The variable number for each argument of the pattern */
-  std::vector<int> d_varNum;
+  std::vector<size_t> d_varNum;
+  /** Is variable */
+  std::vector<bool> d_isVar;
   /** Temporary vector for terms used for instantiation */
   std::vector<Node> d_tvec;
   /** add instantiations, helper function.
@@ -97,11 +99,15 @@ class InstMatchGeneratorSimple : public IMGenerator
                          uint64_t& addedLemmas,
                          size_t argIndex,
                          TNodeTrie* tat);
+  /** 
+   * Get the term argument trie we are considering, based on d_eq/d_pol.
+   */
+  TNodeTrie* getTermArgTrie();
   /**
    * Add instantiations based on the list of terms we have not yet matched against.
    * This is done when d_terms is non-empty.
    */
-  uint64_t addInstantiationsIncremental();
+  uint64_t addInstantiationsIncremental(TNodeTrie* tat);
 };
 
 }  // namespace inst
