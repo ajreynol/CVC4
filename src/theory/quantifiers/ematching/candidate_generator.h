@@ -173,6 +173,9 @@ class CandidateGeneratorInc : public CandidateGenerator
   Node d_pat;
   /** operator you are looking for */
   Node d_op;
+  /** Pattern information variable numbers and non-ground */
+  std::vector<size_t> d_cvars;
+  std::vector<bool> d_cng;
   /** The iteration information */
   std::vector<TNodeTrie*> d_stack;
   std::vector<std::map<TNode, TNodeTrie>::iterator> d_stackIter;

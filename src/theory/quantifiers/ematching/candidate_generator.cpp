@@ -175,6 +175,29 @@ CandidateGeneratorInc::CandidateGeneratorInc(Env& env,
 {
   d_op = d_treg.getTermDatabase()->getMatchOperator(pat);
   Assert(!d_op.isNull());
+  // collect information about children of the pattern
+  for (size_t i = 0, size = d_pat.getNumChildren(); i < size; i++)
+  {
+    Node p = d_pat[i];
+    Node qa = quantifiers::TermUtil::getInstConstAttr(p);
+    if (!qa.isNull())
+    {
+      d_cng.push_back(true);
+      if (p.getKind() == Kind::INST_CONSTANT)
+      {
+        d_cvars.push_back(p.getAttribute(InstVarNumAttribute())+1);
+      }
+      else
+      {
+        d_cvars.push_back(0);
+      }
+    }
+    else
+    {
+      d_cng.push_back(false);
+      d_cvars.push_back(0);
+    }
+  }
 }
 
 void CandidateGeneratorInc::reset(Node eqc)
@@ -193,7 +216,10 @@ void CandidateGeneratorInc::reset(Node eqc)
   d_stack.emplace_back(tat);
 }
 
-Node CandidateGeneratorInc::getNextCandidate() { return Node::null(); }
+Node CandidateGeneratorInc::getNextCandidate()
+{ 
+  return Node::null();
+}
 
 CandidateGeneratorQELitDeq::CandidateGeneratorQELitDeq(Env& env,
                                                        QuantifiersState& qs,
