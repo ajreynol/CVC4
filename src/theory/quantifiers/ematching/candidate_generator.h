@@ -18,11 +18,11 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__CANDIDATE_GENERATOR_H
 #define CVC5__THEORY__QUANTIFIERS__CANDIDATE_GENERATOR_H
 
+#include "expr/node_trie.h"
 #include "smt/env_obj.h"
+#include "theory/quantifiers/inst_match.h"
 #include "theory/theory.h"
 #include "theory/uf/equality_engine.h"
-#include "expr/node_trie.h"
-#include "theory/quantifiers/inst_match.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -154,17 +154,18 @@ class CandidateGeneratorQE : public CandidateGenerator
 class CandidateGeneratorInc : public CandidateGenerator
 {
  public:
-   CandidateGeneratorInc(Env& env,
-                       QuantifiersState& qs,
-                       TermRegistry& tr,
-                       const Node& pat,
-                       InstMatch& im);
+  CandidateGeneratorInc(Env& env,
+                        QuantifiersState& qs,
+                        TermRegistry& tr,
+                        const Node& pat,
+                        InstMatch& im);
   /** reset */
   void reset(Node eqc) override;
   /** get next candidate */
   Node getNextCandidate() override;
   /** Identify this generator (for debugging, etc..) */
   std::string identify() const override { return "CandidateGeneratorInc"; }
+
  private:
   /** The inst match to populate */
   InstMatch& d_match;
