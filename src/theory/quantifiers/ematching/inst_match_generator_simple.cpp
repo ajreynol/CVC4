@@ -76,6 +76,7 @@ InstMatchGeneratorSimple::InstMatchGeneratorSimple(Env& env,
     {
       d_varNum.push_back(0);
       d_isVar.push_back(false);
+      d_groundArgs.push_back(i);
     }
     d_match_pattern_arg_types.push_back(p.getType());
   }
@@ -262,23 +263,37 @@ uint64_t InstMatchGeneratorSimple::addInstantiationsIncremental(TNodeTrie* tat)
     {
       continue;
     }
-    Trace("trivial-trigger-debug") << "...check active " << n << std::endl;
     // should be relevant if it was indexed
     Assert(d_treg.getTermDatabase()->hasTermCurrent(n));
     ++procTerms;
-    Assert(n.getNumChildren() == d_varNum.size());
-    // it is an instantiation, map it based on the variable order
-    for (size_t i = 0, nvars = d_varNum.size(); i < nvars; i++)
+    bool success = true;
+    // check whether ground arguments are equal
+    for (size_t nga : d_groundArgs)
     {
-      Assert(d_varNum[i] < n.getNumChildren());
-      d_tvec[d_varNum[i]] = n[i];
+      if (!d_qstate.areEqual(d_match_pattern[nga], n[nga]))
+      {
+        success = false;
+      }
     }
-    if (sendInstantiation(d_tvec,
-                          InferenceId::QUANTIFIERS_INST_E_MATCHING_SIMPLE))
+    if (success)
     {
-      // now we can cache
-      d_terms.insert(n);
-      addedLemmas++;
+      Assert(n.getNumChildren() == d_varNum.size());
+      // it is an instantiation, map it based on the variable order
+      for (size_t i = 0, nvars = d_varNum.size(); i < nvars; i++)
+      {
+        if (d_isVar[i])
+        {
+          Assert(d_varNum[i] < n.getNumChildren());
+          d_tvec[d_varNum[i]] = n[i];
+        }
+      }
+      if (sendInstantiation(d_tvec,
+                            InferenceId::QUANTIFIERS_INST_E_MATCHING_SIMPLE))
+      {
+        // now we can cache
+        d_terms.insert(n);
+        addedLemmas++;
+      }
     }
   }
   Trace("trivial-trigger") << "...lemmas/processed/total " << addedLemmas << "/"

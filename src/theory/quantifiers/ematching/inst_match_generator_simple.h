@@ -84,6 +84,8 @@ class InstMatchGeneratorSimple : public IMGenerator
   std::vector<size_t> d_varNum;
   /** Is variable */
   std::vector<bool> d_isVar;
+  /** Non-variable arguments */
+  std::vector<size_t> d_groundArgs;
   /** Temporary vector for terms used for instantiation */
   std::vector<Node> d_tvec;
   /** add instantiations, helper function.
