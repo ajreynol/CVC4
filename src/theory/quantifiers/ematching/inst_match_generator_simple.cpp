@@ -33,7 +33,8 @@ InstMatchGeneratorSimple::InstMatchGeneratorSimple(Env& env,
                                                    Trigger* tparent,
                                                    Node q,
                                                    Node pat)
-    : IMGenerator(env, tparent), d_quant(q), d_match_pattern(pat)
+    : IMGenerator(env, tparent), d_quant(q), d_match_pattern(pat),
+      d_terms(d_env.getUserContext())
 {
   if (d_match_pattern.getKind() == Kind::NOT)
   {
@@ -53,22 +54,28 @@ InstMatchGeneratorSimple::InstMatchGeneratorSimple(Env& env,
   Assert(TriggerTermInfo::isSimpleTrigger(d_match_pattern));
   for (size_t i = 0, nchild = d_match_pattern.getNumChildren(); i < nchild; i++)
   {
-    if (d_match_pattern[i].getKind() == Kind::INST_CONSTANT)
+    Node p = d_match_pattern[i];
+    if (p.getKind() == Kind::INST_CONSTANT && TermUtil::getInstConstAttr(p) == q)
     {
       // check independent of options
-      if (TermUtil::getInstConstAttr(d_match_pattern[i]) == q)
+      if (TermUtil::getInstConstAttr(p) == q)
       {
-        d_var_num[i] = d_match_pattern[i].getAttribute(InstVarNumAttribute());
+        d_varNum.push_back(p.getAttribute(InstVarNumAttribute()));
       }
       else
       {
-        d_var_num[i] = -1;
+        d_varNum.push_back(-1);
       }
     }
-    d_match_pattern_arg_types.push_back(d_match_pattern[i].getType());
+    else
+    {
+      d_varNum.push_back(-1);
+    }
+    d_match_pattern_arg_types.push_back(p.getType());
   }
   TermDb* tdb = d_treg.getTermDatabase();
   d_op = tdb->getMatchOperator(d_match_pattern);
+  d_tvec.resize(d_quant[0].getNumChildren());
 }
 
 void InstMatchGeneratorSimple::resetInstantiationRound() {}
@@ -134,32 +141,30 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
     TNode t = tat->getData();
     Trace("simple-trigger") << "Actual term is " << t << std::endl;
     // convert to actual used terms
-    std::vector<Node> terms;
-    terms.resize(d_quant[0].getNumChildren());
-    for (const auto& v : d_var_num)
+    Assert (d_tvec.size()==t.getNumChildren());
+    for (size_t i = 0, nvars = d_varNum.size(); i < nvars; i++)
     {
-      if (v.second >= 0)
+      if (d_varNum[i]>=0)
       {
-        Assert(v.first < t.getNumChildren());
-        Trace("simple-trigger")
-            << "...set " << v.second << " " << t[v.first] << std::endl;
-        terms[v.second] = t[v.first];
+        Assert(d_varNum[i] < t.getNumChildren());
+        d_tvec[d_varNum[i]] = t[i];
       }
     }
     // we do not need the trigger parent for simple triggers (no post-processing
     // required)
-    if (sendInstantiation(terms,
+    if (sendInstantiation(d_tvec,
                           InferenceId::QUANTIFIERS_INST_E_MATCHING_SIMPLE))
     {
+      d_terms.insert(t);
       addedLemmas++;
       Trace("simple-trigger")
-          << "-> Produced instantiation " << terms << std::endl;
+          << "-> Produced instantiation " << d_tvec << std::endl;
     }
     return;
   }
   if (d_match_pattern[argIndex].getKind() == Kind::INST_CONSTANT)
   {
-    int v = d_var_num[argIndex];
+    int v = d_varNum[argIndex];
     if (v != -1)
     {
       for (std::pair<const TNode, TNodeTrie>& tt : tat->d_data)
@@ -201,11 +206,59 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
 int InstMatchGeneratorSimple::getActiveScore()
 {
   TermDb* tdb = d_treg.getTermDatabase();
-  Node f = tdb->getMatchOperator(d_match_pattern);
-  size_t ngt = tdb->getNumGroundTerms(f);
+  size_t ngt = tdb->getNumGroundTerms(d_op);
   Trace("trigger-active-sel-debug") << "Number of ground terms for (simple) "
-                                    << f << " is " << ngt << std::endl;
+                                    << d_op << " is " << ngt << std::endl;
   return static_cast<int>(ngt);
+}
+
+uint64_t InstMatchGeneratorSimple::addInstantiationsIncremental()
+{
+  TermDb* tdb = d_treg.getTermDatabase();
+  TNodeTrie* tat = tdb->getTermArgTrie(d_op);
+  if (tat == nullptr || d_qstate.isInConflict())
+  {
+    return 0;
+  }
+  // get the list of non-redundant terms from the arg trie of the operator
+  std::vector<Node> list = tat->getLeaves(d_tvec.size());
+  uint64_t addedLemmas = 0;
+  Trace("trivial-trigger") << "Process trivial trigger " << d_match_pattern
+                           << ", #terms=" << list.size() << std::endl;
+  size_t procTerms = 0;
+  size_t tli = 0;
+  size_t tlLimit = list.size();
+  while (tli < tlLimit)
+  {
+    Node n = list[tli];
+    ++tli;
+    // if already considered this term
+    if (d_terms.find(n) != d_terms.end())
+    {
+      continue;
+    }
+    Trace("trivial-trigger-debug") << "...check active " << n << std::endl;
+    // should be relevant if it was indexed
+    Assert(tdb->hasTermCurrent(n));
+    ++procTerms;
+    Assert(n.getNumChildren() == d_varNum.size());
+    // it is an instantiation, map it based on the variable order
+    for (size_t i = 0, nvars = d_varNum.size(); i < nvars; i++)
+    {
+      Assert(d_varNum[i] < n.getNumChildren());
+      d_tvec[d_varNum[i]] = n[i];
+    }
+    if (sendInstantiation(d_tvec,
+                          InferenceId::QUANTIFIERS_INST_E_MATCHING_SIMPLE))
+    {
+      // now we can cache
+      d_terms.insert(n);
+      addedLemmas++;
+    }
+  }
+  Trace("trivial-trigger") << "...lemmas/processed/total " << addedLemmas << "/"
+                           << procTerms << "/" << list.size() << std::endl;
+  return addedLemmas;
 }
 
 }  // namespace inst

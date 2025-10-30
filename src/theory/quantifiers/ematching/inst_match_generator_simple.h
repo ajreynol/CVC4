@@ -78,11 +78,12 @@ class InstMatchGeneratorSimple : public IMGenerator
   std::vector<TypeNode> d_match_pattern_arg_types;
   /** The match operator d_match_pattern (see TermDb::getMatchOperator). */
   Node d_op;
-  /**
-   * Map from child number of d_match_pattern to variable index, or -1 if the
-   * child is not a variable.
-   */
-  std::map<size_t, int> d_var_num;
+  /** List of terms we have matched */
+  context::CDHashSet<Node> d_terms;
+  /** The variable number for each argument of the pattern */
+  std::vector<uint64_t> d_varNum;
+  /** Temporary vector for terms used for instantiation */
+  std::vector<Node> d_tvec;
   /** add instantiations, helper function.
    *
    * @param m the current match we are building,
@@ -96,6 +97,11 @@ class InstMatchGeneratorSimple : public IMGenerator
                          uint64_t& addedLemmas,
                          size_t argIndex,
                          TNodeTrie* tat);
+  /**
+   * Add instantiations based on the list of terms we have not yet matched against.
+   * This is done when d_terms is non-empty.
+   */
+  uint64_t addInstantiationsIncremental();
 };
 
 }  // namespace inst
