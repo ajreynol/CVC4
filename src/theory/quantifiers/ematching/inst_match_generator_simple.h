@@ -81,7 +81,7 @@ class InstMatchGeneratorSimple : public IMGenerator
   /** List of terms we have matched */
   context::CDHashSet<Node> d_terms;
   /** The variable number for each argument of the pattern */
-  std::vector<uint64_t> d_varNum;
+  std::vector<int> d_varNum;
   /** Temporary vector for terms used for instantiation */
   std::vector<Node> d_tvec;
   /** add instantiations, helper function.
