@@ -52,14 +52,13 @@ void InstMatchGeneratorTrivial::resetInstantiationRound()
 uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
 {
   TermDb* tdb = d_treg.getTermDatabase();
-  DbList* dbl = tdb->getGroundTermList(d_op);
-  if (dbl==nullptr)
+  TNodeTrie* tat = tdb->getTermArgTrie(d_op);
+  if (tat==nullptr)
   {
     return 0;
   }
-  context::CDList<Node>& list = dbl->d_list;
+  std::vector<Node> list = tat->getLeaves(d_tvec.size());
   uint64_t addedLemmas = 0;
-  bool initTrie = false;
   Trace("trivial-trigger") << "Process trivial trigger " << d_pat << ", #terms=" << list.size() << std::endl;
   size_t procTerms = 0;
   size_t tli = 0;
@@ -72,12 +71,6 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
     if (d_terms.find(n) != d_terms.end())
     {
       continue;
-    }
-    if (!initTrie)
-    {
-      Trace("trivial-trigger-debug") << "...initialize trie" << std::endl;
-      d_treg.getTermDatabase()->getTermArgTrie(d_op);
-      initTrie = true;
     }
       Trace("trivial-trigger-debug") << "...check active " << n << std::endl;
     // not active based on e.g. relevant policy
