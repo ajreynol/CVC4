@@ -53,14 +53,15 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
 {
   TermDb* tdb = d_treg.getTermDatabase();
   TNodeTrie* tat = tdb->getTermArgTrie(d_op);
-  if (tat==nullptr)
+  if (tat == nullptr)
   {
     return 0;
   }
   // get the list of non-redundant terms from the arg trie of the operator
   std::vector<Node> list = tat->getLeaves(d_tvec.size());
   uint64_t addedLemmas = 0;
-  Trace("trivial-trigger") << "Process trivial trigger " << d_pat << ", #terms=" << list.size() << std::endl;
+  Trace("trivial-trigger") << "Process trivial trigger " << d_pat
+                           << ", #terms=" << list.size() << std::endl;
   size_t procTerms = 0;
   size_t tli = 0;
   size_t tlLimit = list.size();
@@ -75,7 +76,7 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
     }
     Trace("trivial-trigger-debug") << "...check active " << n << std::endl;
     // should be relevant if it was indexed
-    Assert (tdb->hasTermCurrent(n));
+    Assert(tdb->hasTermCurrent(n));
     ++procTerms;
     Assert(n.getNumChildren() == d_varNum.size());
     // it is an instantiation, map it based on the variable order
@@ -92,7 +93,8 @@ uint64_t InstMatchGeneratorTrivial::addInstantiations(InstMatch& m)
       addedLemmas++;
     }
   }
-  Trace("trivial-trigger") << "...lemmas/processed/total " << addedLemmas << "/" << procTerms << "/" << list.size() << std::endl;
+  Trace("trivial-trigger") << "...lemmas/processed/total " << addedLemmas << "/"
+                           << procTerms << "/" << list.size() << std::endl;
   return addedLemmas;
 }
 

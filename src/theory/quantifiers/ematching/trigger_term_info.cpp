@@ -15,8 +15,8 @@
 
 #include "theory/quantifiers/ematching/trigger_term_info.h"
 
-#include "theory/quantifiers/term_util.h"
 #include "theory/quantifiers/ematching/inst_match_generator_trivial.h"
+#include "theory/quantifiers/term_util.h"
 
 using namespace cvc5::internal::kind;
 

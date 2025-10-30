@@ -53,7 +53,7 @@ CandidateGeneratorQE::CandidateGeneratorQE(Env& env,
                                            TermRegistry& tr,
                                            Node pat)
     : CandidateGenerator(env, qs, tr),
-    d_pat(pat),
+      d_pat(pat),
       d_termIter(0),
       d_mode(cand_term_none)
 {
@@ -72,7 +72,7 @@ void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
   {
     TNodeTrie* tat = d_treg.getTermDatabase()->getTermArgTrie(d_op);
     d_termIterList.clear();
-    if (tat!=nullptr)
+    if (tat != nullptr)
     {
       d_termIterList = tat->getLeaves(d_pat.getNumChildren());
       d_mode = cand_term_db;
@@ -274,7 +274,7 @@ void CandidateGeneratorConsExpand::reset(Node eqc)
     {
       TNodeTrie* tat = d_treg.getTermDatabase()->getTermArgTrie(d_op);
       d_termIterList.clear();
-      if (tat!=nullptr)
+      if (tat != nullptr)
       {
         d_termIterList = tat->getLeaves(d_pat.getNumChildren());
         d_mode = cand_term_db;
