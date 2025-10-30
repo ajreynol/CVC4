@@ -113,7 +113,13 @@ class InstMatchGeneratorSimple : public IMGenerator
                          uint64_t& addedLemmas,
                          size_t argIndex,
                          TNodeTrie* tat);
-  /** Has term? */
+  /**
+   * Return true if tat has a leaf that is not in d_terms.
+   * @param argIndex the argument index in d_match_pattern we are currently
+   * matching with tat,
+   * @param tat the term index we are currently traversing.
+   * 
+   */
   bool hasTerm(size_t argIndex, TNodeTrie* tat);
 };
 

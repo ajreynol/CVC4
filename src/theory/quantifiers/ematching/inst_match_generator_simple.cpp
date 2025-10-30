@@ -222,13 +222,14 @@ bool InstMatchGeneratorSimple::hasTerm(size_t argIndex, TNodeTrie* tat)
   std::map<TNodeTrie*, bool>::iterator it = d_hasTerm.find(tat);
   if (it != d_hasTerm.end())
   {
+    // already computed
     return it->second;
   }
   bool ret;
   if (argIndex == d_match_pattern.getNumChildren())
   {
     TNode t = tat->getData();
-    // true if it is a term
+    // true if it is not a term in d_terms
     ret = (d_terms.find(t) == d_terms.end());
   }
   else
