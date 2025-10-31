@@ -121,15 +121,35 @@ void QuantifiersState::debugPrintEqualityEngine(const char* c) const
   eq::EqualityEngine* ee = getEqualityEngine();
   eq::EqClassesIterator eqcs_i = eq::EqClassesIterator(ee);
   std::map<TypeNode, uint64_t> tnum;
+  std::map<TypeNode, uint64_t> ttnum;
+  std::map<TypeNode, std::vector<uint64_t>> teqcs;
   while (!eqcs_i.isFinished())
   {
-    tnum[(*eqcs_i).getType()]++;
+    Node eqc = (*eqcs_i);
+    TypeNode eqct = eqc.getType();
+    tnum[eqct]++;
     ++eqcs_i;
+    eq::EqClassIterator eqci = eq::EqClassIterator(eqc, ee);
+    uint64_t esize = 0; 
+    while (!eqci.isFinished())
+    {
+      ++eqci;
+      ++esize;
+    }
+    ttnum[eqct] += esize;
+    teqcs[eqct].push_back(esize);
   }
   Trace(c) << ee->debugPrintEqc() << std::endl;
   for (const std::pair<const TypeNode, uint64_t>& t : tnum)
   {
-    Trace(c) << "# eqc for " << t.first << " : " << t.second << std::endl;
+    Trace(c) << "# eqc for " << t.first << " : " << t.second << " / #terms " << ttnum[t.first];
+    Trace(c) << " [";
+    std::vector<uint64_t>& tes = teqcs[t.first];
+    for (uint64_t i : tes)
+    {
+      Trace(c) << " " << i;
+    }
+    Trace(c) << " ]" << std::endl;
   }
 }
 
