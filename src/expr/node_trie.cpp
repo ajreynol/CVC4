@@ -124,4 +124,28 @@ template std::vector<Node> NodeTemplateTrie<false>::getLeaves(
 template std::vector<Node> NodeTemplateTrie<true>::getLeaves(
     size_t depth) const;
 
+template <bool ref_count>
+size_t NodeTemplateTrie<ref_count>::getSize() const
+{
+  size_t sz = 0;
+  std::vector<Node> vec;
+  std::vector<const NodeTemplateTrie<ref_count>*> visit;
+  visit.emplace_back(this);
+  do
+  {
+    sz++;
+    const NodeTemplateTrie<ref_count>* curr = visit.back();
+    visit.pop_back();
+    for (const std::pair<const NodeTemplate<ref_count>,
+                         NodeTemplateTrie<ref_count>>& p : curr->d_data)
+    {
+      visit.emplace_back(&p.second);
+    }
+  } while (!visit.empty());
+  return sz;
+}
+
+template size_t NodeTemplateTrie<false>::getSize() const;
+template size_t NodeTemplateTrie<true>::getSize() const;
+    
 }  // namespace cvc5::internal

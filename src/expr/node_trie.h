@@ -106,6 +106,10 @@ class NodeTemplateTrie
    * actual depth of the trie.
    */
   std::vector<Node> getLeaves(size_t depth) const;
+  /**
+   * size
+   */ 
+  size_t getSize() const;
 }; /* class NodeTemplateTrie */
 
 template <bool ref_count>

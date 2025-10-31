@@ -75,6 +75,9 @@ void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
     if (tat != nullptr)
     {
       d_termIterList = tat->getLeaves(d_pat.getNumChildren());
+      size_t csz = tat->getSize()-(d_termIterList.size()+1);
+      size_t usz = d_termIterList.size()*d_pat.getNumChildren();
+      Trace("ajr-temp") << "Term arg trie size/leaves: " << d_op << " " << csz << " " << usz << std::endl;
       d_mode = cand_term_db;
     }
     else
@@ -237,6 +240,16 @@ Node CandidateGeneratorInc::getNextCandidate(InstMatch& m)
     Trace("cg-inc") << "working on size " << d_stack.size() << std::endl;
     Assert(d_stackIter.size() == d_stack.size());
     size_t aindex = d_stack.size() - 1;
+    if (!d_bindings.empty() && d_bindings.back() == aindex)
+    {
+      Trace("cg-inc") << "...pop binding " << aindex << std::endl;
+      // clean up the binding
+      Assert(aindex < d_cvars.size());
+      size_t vnum = d_cvars[aindex]-1;
+      Trace("cg-inc") << "...vnum is " << vnum << std::endl;
+      m.reset(vnum);
+      d_bindings.pop_back();
+    }
     Assert(aindex <= nargs);
     TNodeTrie* tat = d_stack.back();
     Assert (tat!=nullptr);
@@ -253,16 +266,6 @@ Node CandidateGeneratorInc::getNextCandidate(InstMatch& m)
       Trace("cg-inc") << ".....pop" << std::endl;
       d_stack.pop_back();
       d_stackIter.pop_back();
-      if (!d_bindings.empty() && d_bindings.back() == aindex)
-      {
-        Trace("cg-inc") << "...pop binding " << aindex << std::endl;
-        // clean up the binding
-        Assert(aindex < d_cvars.size());
-        size_t vnum = d_cvars[aindex]-1;
-        Trace("cg-inc") << "...vnum is " << vnum << std::endl;
-        m.reset(vnum);
-        d_bindings.pop_back();
-      }
     }
     else
     {

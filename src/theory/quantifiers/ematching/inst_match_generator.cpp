@@ -232,8 +232,8 @@ void InstMatchGenerator::initialize(Node q,
     }
     if (d_cg == nullptr)
     {
-      CandidateGeneratorInc* cg =
-          new CandidateGeneratorInc(d_env, d_qstate, d_treg, d_match_pattern);
+      CandidateGeneratorQE* cg =
+          new CandidateGeneratorQE(d_env, d_qstate, d_treg, d_match_pattern);
       // we will be scanning lists trying to find ground terms whose operator
       // is the same as d_match_operator's.
       d_cg = cg;
@@ -242,7 +242,7 @@ void InstMatchGenerator::initialize(Node q,
       if (d_pattern.getKind() == Kind::NOT
           && d_pattern[0].getKind() == Kind::EQUAL)
       {
-        //cg->excludeEqc(d_eq_class_rel);
+        cg->excludeEqc(d_eq_class_rel);
         d_eq_class_rel = Node::null();
       }
     }
