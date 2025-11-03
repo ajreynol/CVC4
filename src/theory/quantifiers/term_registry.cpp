@@ -43,7 +43,8 @@ TermRegistry::TermRegistry(Env& env,
       d_sygusTdb(nullptr),
       d_vtsCache(new VtsTermCache(env)),
       d_ievalMan(new ieval::InstEvaluatorManager(env, qs, *d_termDb.get())),
-      d_qmodel(nullptr)
+      d_qmodel(nullptr),
+      d_aee(new AnalyzeEqualityEngine(env, qs, qr, *this))
 {
   if (options().quantifiers.oracles)
   {
@@ -168,6 +169,8 @@ TermEnumeration* TermRegistry::getTermEnumeration() const
 TermPools* TermRegistry::getTermPools() const { return d_termPools.get(); }
 
 VtsTermCache* TermRegistry::getVtsTermCache() const { return d_vtsCache.get(); }
+
+AnalyzeEqualityEngine* TermRegistry::getAnalyzeEqualityEngine() const { return d_aee.get(); }
 
 BvInverter* TermRegistry::getBvInverter() const { return d_bvInvert.get(); }
 

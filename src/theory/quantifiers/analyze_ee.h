@@ -42,7 +42,20 @@ class AnalyzeEqualityEngine : public QuantifiersUtil
   bool reset(Theory::Effort e) override;
   /** identify */
   std::string identify() const override { return "AnalyzeEqualityEngine"; }
-
+private:
+  /** Reference to the quantifiers state object */
+  QuantifiersState& d_qs;
+  /** Reference to the quantifiers registry */
+  QuantifiersRegistry& d_qreg;
+  /** Reference to the term registry */
+  TermRegistry& d_treg;
+  class EqcInfo
+  {
+  public:
+    std::vector<Node> d_terms;
+  };
+  std::map<Node, EqcInfo> d_einfo;
+  std::unordered_set<Node> d_es;
 };/* class AnalyzeEqualityEngine */
 
 }  // namespace quantifiers

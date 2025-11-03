@@ -105,6 +105,7 @@ QuantifiersEngine::QuantifiersEngine(Env& env,
   d_util.push_back(qim.getInstantiate());
   d_util.push_back(tr.getTermPools());
   d_util.push_back(tr.getInstEvaluatorManager());
+  d_util.push_back(tr.getAnalyzeEqualityEngine());
 }
 
 QuantifiersEngine::~QuantifiersEngine() {}

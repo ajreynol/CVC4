@@ -28,6 +28,7 @@
 #include "theory/quantifiers/entailment_check.h"
 #include "theory/quantifiers/ieval/inst_evaluator_manager.h"
 #include "theory/quantifiers/sygus/term_database_sygus.h"
+#include "theory/quantifiers/analyze_ee.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_enumeration.h"
 #include "theory/quantifiers/term_pools.h"
@@ -106,6 +107,8 @@ class TermRegistry : protected EnvObj
   TermPools* getTermPools() const;
   /** get the virtual term substitution term cache utility */
   VtsTermCache* getVtsTermCache() const;
+  /** get the analyze */
+  AnalyzeEqualityEngine* getAnalyzeEqualityEngine() const;
   /** get the bv inverter utility */
   BvInverter* getBvInverter() const;
   /** get the instantiation evaluator manager */
@@ -156,6 +159,8 @@ class TermRegistry : protected EnvObj
   std::unique_ptr<BvInverter> d_bvInvert;
   /** extended model object */
   FirstOrderModel* d_qmodel;
+  /** */
+  std::unique_ptr<AnalyzeEqualityEngine> d_aee;
 };
 
 }  // namespace quantifiers
