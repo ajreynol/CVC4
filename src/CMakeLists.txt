@@ -791,6 +791,8 @@ libcvc5_add_sources(
   theory/output_channel.h
   theory/quantifiers/alpha_equivalence.cpp
   theory/quantifiers/alpha_equivalence.h
+  theory/quantifiers/analyze_ee.cpp
+  theory/quantifiers/analyze_ee.h
   theory/quantifiers/bv_inverter.cpp
   theory/quantifiers/bv_inverter.h
   theory/quantifiers/bv_inverter_utils.cpp
