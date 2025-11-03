@@ -35,10 +35,12 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
   {
     return true;
   }
+  std::vector<Node> allTerms;
   TermDb* tdb = d_treg.getTermDatabase();
   size_t addEqc = 0;
   size_t changeEqc = 0;
   size_t unchangeEqc = 0;
+  std::unordered_set<Node> unchangedEqc;
   size_t remEqc = 0;
   Trace("analyze-ee") << "Analyze equality engine" << std::endl;
   std::unordered_set<Node> esNew;
@@ -59,6 +61,7 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
         continue;
       }
       etermsNew.emplace_back(n);
+      allTerms.push_back(n);
     }
     if (etermsNew.empty())
     {
@@ -103,6 +106,7 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
     else
     {
       unchangeEqc++;
+      unchangedEqc.insert(eqc);
     }
   }
   for (const Node& eqc : d_es)
@@ -114,8 +118,40 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
       remEqc++;
     }
   }
-  Trace("analyze-ee") << "Add/unchange/change/rem: " << addEqc << "/" << unchangeEqc << "/" << changeEqc << "/" << remEqc << std::endl;
+  Trace("analyze-ee") << "Add/unchange/change/rem eqc: " << addEqc << "/" << unchangeEqc << "/" << changeEqc << "/" << remEqc << std::endl;
   d_es = esNew;
+  size_t unchangedTerms = 0;
+  size_t changedTerms = 0;
+  for (const Node& n : allTerms)
+  {
+    if (tdb->getMatchOperator(n).isNull())
+    {
+      continue;
+    }
+    bool changed = false;
+    for (const Node& nc : n)
+    {
+      if (!ee->hasTerm(nc))
+      {
+        continue;
+      }
+      Node r = ee->getRepresentative(nc);
+      if (unchangedEqc.find(r)==unchangedEqc.end())
+      {
+        changed = true;
+        break;
+      }
+    }
+    if (changed)
+    {
+      changedTerms++;
+    }
+    else
+    {
+      unchangedTerms++;
+    }
+  }
+  Trace("analyze-ee") << "Unchanged/changed terms: " << unchangedTerms << "/" << changedTerms << std::endl;
   return true;
 }
 
