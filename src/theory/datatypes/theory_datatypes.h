@@ -272,8 +272,24 @@ private:
   Node getSingletonLemma( TypeNode tn, bool pol );
   /** get instantiate cons */
   Node getInstantiateCons(Node n, const DType& dt, int index);
-  /** check instantiate, return true if an inference was generated. */
+  /**
+   * Check instantiate, return true if an inference was generated.
+   * An inference is of the form e.g.
+   *   (=> (is-cons x) (= x (cons (head x) (tail x))), where
+   * this may be a fact or lemma based on the options.
+   * @param eqc The equivalence class information for n.
+   * @param n The representative.
+   * @return true iff we generated an inference.
+   */
   bool instantiate(EqcInfo* eqc, Node n);
+  /**
+   * Check instantiate, helper for above.
+   * @param eqc The information for the equivalence class of n.
+   * @param n The term.
+   * @param index The index of the constructor we know n is.
+   * @param exp The explanation for why n has constructor type index.
+   * @return true iff we generated an inference.
+   */
   bool instantiate(EqcInfo* eqc, Node n, int index, Node exp);
 
  private:
