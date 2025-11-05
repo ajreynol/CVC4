@@ -196,6 +196,20 @@ bool Instantiate::addInstantiationInternal(
   {
     // determine if it is an instantiation type that is treated as local
     isLocal = isLocalInstId(id);
+    // heuristic cutoff??
+    if (false && isLocal)
+    {
+      std::vector<Node> children;
+      children.push_back(q);
+      children.insert(children.end(), terms.begin(), terms.end());
+      Node sexpr = nodeManager()->mkNode(Kind::SEXPR, children);
+      d_localTest[sexpr]++;
+      Trace("ajr-temp-local") << "#local " << d_localTest[sexpr] << std::endl;
+      if (d_localTest[sexpr]>4)
+      {
+        isLocal = false;
+      }
+    }
   }
 
   // Note we check for entailment before checking for term vector duplication.

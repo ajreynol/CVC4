@@ -347,6 +347,7 @@ class Instantiate : public QuantifiersUtil
    * is disabled, we use d_imt for performance reasons.
    */
   std::map<Node, InstMatchTrie> d_imt;
+  std::map<Node, size_t> d_localTest;
   /** A user dependent trie of instantiations */
   NodeInstTrieMap d_uimt;
   /**
