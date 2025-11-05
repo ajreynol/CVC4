@@ -455,7 +455,8 @@ int InstMatchGenerator::continueNextMatch(InstMatch& m, InferenceId id)
   if (d_active_add)
   {
     std::vector<Node> mc = m.get();
-    return sendInstantiation(mc, id) ? 1 : -1;
+    Node src;
+    return sendInstantiation(mc, id, src) ? 1 : -1;
   }
   return 1;
 }
@@ -567,7 +568,8 @@ uint64_t InstMatchGenerator::addInstantiations(InstMatch& m)
   {
     if( !d_active_add ){
       std::vector<Node> mc = m.get();
-      if (sendInstantiation(mc, InferenceId::UNKNOWN))
+      Node src;
+      if (sendInstantiation(mc, InferenceId::UNKNOWN, src))
       {
         addedLemmas++;
         if (d_qstate.isInConflict())

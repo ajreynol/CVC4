@@ -128,6 +128,8 @@ class TermRegistry : protected EnvObj
   /** get the model utility */
   FirstOrderModel* getModel() const;
 
+  /** set provenance */
+  void setProvanence(const Node& t, const Node& inst);
  private:
   /**
    * Add term n, which notifies the term database that the ground term n

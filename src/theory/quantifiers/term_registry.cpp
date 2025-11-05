@@ -187,6 +187,12 @@ ieval::InstEvaluator* TermRegistry::getEvaluator(Node q,
 
 FirstOrderModel* TermRegistry::getModel() const { return d_qmodel; }
 
+void TermRegistry::setProvanence(const Node& t, const Node& inst)
+{
+  
+}
+
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

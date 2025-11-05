@@ -200,9 +200,19 @@ uint64_t Trigger::addInstantiations()
   return gtAddedLemmas + addedLemmas;
 }
 
-bool Trigger::sendInstantiation(std::vector<Node>& m, InferenceId id)
+bool Trigger::sendInstantiation(std::vector<Node>& m, InferenceId id, const Node& src)
 {
-  return d_qim.getInstantiate()->addInstantiation(d_quant, m, id, d_trNode);
+  Instantiate * inst = d_qim.getInstantiate();
+  if (inst->addInstantiation(d_quant, m, id, d_trNode))
+  {
+    if (!src.isNull())
+    {
+      Node f = inst->getInstantiation(d_quant, m);
+      d_treg.setProvanence(src, f);
+    }
+    return true;
+  }
+  return false;
 }
 
 int Trigger::getActiveScore() { return d_mg->getActiveScore(); }

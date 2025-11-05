@@ -204,7 +204,7 @@ uint64_t HigherOrderTrigger::addInstantiations()
   return addedHoLemmas + addedFoLemmas;
 }
 
-bool HigherOrderTrigger::sendInstantiation(std::vector<Node>& m, InferenceId id)
+bool HigherOrderTrigger::sendInstantiation(std::vector<Node>& m, InferenceId id, const Node& src)
 {
   if (options().quantifiers.hoMatching)
   {
