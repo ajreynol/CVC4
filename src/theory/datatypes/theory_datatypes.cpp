@@ -1552,17 +1552,28 @@ Node TheoryDatatypes::searchForCycle(TNode n,
 
 void TheoryDatatypes::checkSplit()
 {
-  // get the relevant term set, currently all datatype equivalence classes
-  // in the equality engine
-  std::set<Node> termSetReps;
-  eq::EqClassesIterator eqcs_i = eq::EqClassesIterator(d_equalityEngine);
-  while (!eqcs_i.isFinished())
+  Trace("datatypes-debug") << "Check splits" << std::endl;
+  // We first compute the set of asserted terms. This is a subset of those
+  // in the equality engine, which may include preregistered but not asserted
+  // terms.
+  std::set<Node> termSet;
+  collectAssertedTermsForModel(termSet);
+  // The set of equivalence classes for which there is a relevant term.
+  std::unordered_set<Node> termSetReps;
+  // The set of equivalence classes that have a selector applied to them.
+  std::unordered_set<Node> termSetSelReps;
+  for (const Node& t : termSet)
   {
-    Node eqc = (*eqcs_i);
-    ++eqcs_i;
-    if (eqc.getType().isDatatype())
+    Trace("datatypes-debug") << "- term: " << t << std::endl;
+    if (t.getType().isDatatype())
     {
-      termSetReps.insert(eqc);
+      termSetReps.insert(d_equalityEngine->getRepresentative(t));
+    }
+    Kind tk = t.getKind();
+    // height bound is also considered a selector
+    if (tk == Kind::APPLY_SELECTOR || tk == Kind::DT_HEIGHT_BOUND)
+    {
+      termSetSelReps.insert(d_equalityEngine->getRepresentative(t[0]));
     }
   }
   std::map<TypeNode, Node> rec_singletons;
@@ -1676,7 +1687,7 @@ void TheoryDatatypes::checkSplit()
       Trace("datatypes-debug") << "...returned " << ifin << std::endl;
       if (!ifin)
       {
-        if (!eqc || !eqc->d_selectors)
+        if (termSetSelReps.find(n)==termSetSelReps.end())
         {
           needSplit = false;
           break;

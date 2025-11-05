@@ -122,9 +122,12 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
   d_es = esNew;
   size_t unchangedTerms = 0;
   size_t changedTerms = 0;
+  d_changedOps.clear();
+  std::unordered_set<Node> allOp;
   for (const Node& n : allTerms)
   {
-    if (tdb->getMatchOperator(n).isNull())
+    Node op = tdb->getMatchOperator(n);
+    if (op.isNull())
     {
       continue;
     }
@@ -142,9 +145,11 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
         break;
       }
     }
+    allOp.insert(op);
     if (changed)
     {
       changedTerms++;
+      d_changedOps.insert(op);
     }
     else
     {
@@ -152,9 +157,12 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
     }
   }
   Trace("analyze-ee") << "Unchanged/changed terms: " << unchangedTerms << "/" << changedTerms << std::endl;
+  Trace("analyze-ee") << "Changed/total ops: " << d_changedOps.size() << "/" << allOp.size() << std::endl;
   return true;
 }
 
+bool AnalyzeEqualityEngine::isChangedOp(const Node& op) const { return d_changedOps.find(op)!=d_changedOps.end(); }
+  
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

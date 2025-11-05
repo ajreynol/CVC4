@@ -42,6 +42,8 @@ class AnalyzeEqualityEngine : public QuantifiersUtil
   bool reset(Theory::Effort e) override;
   /** identify */
   std::string identify() const override { return "AnalyzeEqualityEngine"; }
+  /** Is changed op? */
+  bool isChangedOp(const Node& op) const;
 private:
   /** Reference to the quantifiers state object */
   QuantifiersState& d_qs;
@@ -56,6 +58,7 @@ private:
   };
   std::map<Node, EqcInfo> d_einfo;
   std::unordered_set<Node> d_es;
+  std::unordered_set<Node> d_changedOps;
 };/* class AnalyzeEqualityEngine */
 
 }  // namespace quantifiers

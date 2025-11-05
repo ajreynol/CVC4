@@ -31,8 +31,10 @@
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_registry.h"
+#include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/quantifiers_state.h"
 #include "theory/quantifiers/term_util.h"
+#include "theory/quantifiers/analyze_ee.h"
 #include "theory/valuation.h"
 
 using namespace cvc5::internal::kind;
@@ -152,6 +154,21 @@ Node Trigger::getInstPattern() const
 
 uint64_t Trigger::addInstantiations()
 {
+  // check if changed??
+  //AnalyzeEqualityEngine* aee = d_treg.getAnalyzeEqualityEngine();
+  //TermDb* tdb = d_treg.getTermDatabase();
+  //bool hasChanged = false;
+  //for (const Node& n : d_nodes)
+  //{
+  //  Node op = tdb->getMatchOperator(n);
+  //  Assert(!op.isNull()) << "Null op for: " << n;
+  //  if (aee->isChangedOp(op))
+  //  {
+  //    hasChanged = true;
+  //    break;
+  //  }
+  //}
+  
   uint64_t gtAddedLemmas = 0;
   if (!d_groundTerms.empty())
   {
