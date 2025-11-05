@@ -171,7 +171,9 @@ class HigherOrderTrigger : public Trigger
   * matching ground terms to function applications with variable heads.
   * See examples (EX1)-(EX3) above.
   */
-  bool sendInstantiation(std::vector<Node>& m, InferenceId id, const Node& src) override;
+  bool sendInstantiation(std::vector<Node>& m,
+                         InferenceId id,
+                         const Node& src) override;
 
  private:
   //-------------------- current information about the match

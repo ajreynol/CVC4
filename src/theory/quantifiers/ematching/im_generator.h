@@ -107,7 +107,9 @@ class IMGenerator : protected EnvObj
    * indicating that an instantiation was enqueued in the quantifier engine's
    * lemma cache.
    */
-  bool sendInstantiation(std::vector<Node>& terms, InferenceId id, const Node& src);
+  bool sendInstantiation(std::vector<Node>& terms,
+                         InferenceId id,
+                         const Node& src);
   /** The parent trigger that owns this */
   Trigger* d_tparent;
   /** Reference to the state of the quantifiers engine */

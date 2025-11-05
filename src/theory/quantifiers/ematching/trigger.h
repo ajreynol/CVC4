@@ -172,7 +172,9 @@ class Trigger : protected EnvObj
    * but in some cases (e.g. higher-order) we may modify m before calling
    * Instantiate::addInstantiation(...).
    */
-  virtual bool sendInstantiation(std::vector<Node>& m, InferenceId id, const Node& src);
+  virtual bool sendInstantiation(std::vector<Node>& m,
+                                 InferenceId id,
+                                 const Node& src);
   /**
    * Ensure that all ground subterms of n have been preprocessed. This makes
    * calls to the provided valuation to obtain the preprocessed form of these

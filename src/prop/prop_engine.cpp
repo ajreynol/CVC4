@@ -232,7 +232,7 @@ void PropEngine::assertTrustedLemmaInternal(theory::InferenceId id,
   {
     ++(d_stats.d_localLemmas);
     // if local, filter here
-    if (d_localLemmas.find(node)!=d_localLemmas.end())
+    if (d_localLemmas.find(node) != d_localLemmas.end())
     {
       return;
     }

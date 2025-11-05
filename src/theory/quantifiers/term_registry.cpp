@@ -170,7 +170,10 @@ TermPools* TermRegistry::getTermPools() const { return d_termPools.get(); }
 
 VtsTermCache* TermRegistry::getVtsTermCache() const { return d_vtsCache.get(); }
 
-AnalyzeEqualityEngine* TermRegistry::getAnalyzeEqualityEngine() const { return d_aee.get(); }
+AnalyzeEqualityEngine* TermRegistry::getAnalyzeEqualityEngine() const
+{
+  return d_aee.get();
+}
 
 BvInverter* TermRegistry::getBvInverter() const { return d_bvInvert.get(); }
 
@@ -187,11 +190,7 @@ ieval::InstEvaluator* TermRegistry::getEvaluator(Node q,
 
 FirstOrderModel* TermRegistry::getModel() const { return d_qmodel; }
 
-void TermRegistry::setProvanence(const Node& t, const Node& inst)
-{
-  
-}
-
+void TermRegistry::setProvanence(const Node& t, const Node& inst) {}
 
 }  // namespace quantifiers
 }  // namespace theory

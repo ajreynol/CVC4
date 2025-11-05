@@ -23,12 +23,12 @@
 
 #include "context/cdhashset.h"
 #include "smt/env_obj.h"
+#include "theory/quantifiers/analyze_ee.h"
 #include "theory/quantifiers/bv_inverter.h"
 #include "theory/quantifiers/cegqi/vts_term_cache.h"
 #include "theory/quantifiers/entailment_check.h"
 #include "theory/quantifiers/ieval/inst_evaluator_manager.h"
 #include "theory/quantifiers/sygus/term_database_sygus.h"
-#include "theory/quantifiers/analyze_ee.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_enumeration.h"
 #include "theory/quantifiers/term_pools.h"
@@ -130,6 +130,7 @@ class TermRegistry : protected EnvObj
 
   /** set provenance */
   void setProvanence(const Node& t, const Node& inst);
+
  private:
   /**
    * Add term n, which notifies the term database that the ground term n

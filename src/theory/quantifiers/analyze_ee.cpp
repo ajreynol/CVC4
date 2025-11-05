@@ -16,22 +16,25 @@
 #include "theory/quantifiers/analyze_ee.h"
 
 #include "theory/quantifiers/quantifiers_state.h"
-#include "theory/uf/equality_engine.h"
 #include "theory/quantifiers/term_registry.h"
+#include "theory/uf/equality_engine.h"
 
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
 AnalyzeEqualityEngine::AnalyzeEqualityEngine(Env& env,
-                QuantifiersState& qs,
-                QuantifiersRegistry& qr,
-                TermRegistry& tr) : QuantifiersUtil(env), d_qs(qs), d_qreg(qr), d_treg(tr) {}
+                                             QuantifiersState& qs,
+                                             QuantifiersRegistry& qr,
+                                             TermRegistry& tr)
+    : QuantifiersUtil(env), d_qs(qs), d_qreg(qr), d_treg(tr)
+{
+}
 AnalyzeEqualityEngine::~AnalyzeEqualityEngine() {}
 
 bool AnalyzeEqualityEngine::reset(Theory::Effort e)
 {
-  if (e!=Theory::Effort::EFFORT_FULL && e!=Theory::Effort::EFFORT_LAST_CALL)
+  if (e != Theory::Effort::EFFORT_FULL && e != Theory::Effort::EFFORT_LAST_CALL)
   {
     return true;
   }
@@ -80,16 +83,21 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
     if (!wasNew)
     {
       std::sort(etermsNew.begin(), etermsNew.end());
-      for (size_t i=0; i<2; i++)
+      for (size_t i = 0; i < 2; i++)
       {
-        std::vector<Node>& v1 = i==0 ? ei.d_terms : etermsNew;
-        std::vector<Node>& v2 = i==1 ? ei.d_terms : etermsNew;
+        std::vector<Node>& v1 = i == 0 ? ei.d_terms : etermsNew;
+        std::vector<Node>& v2 = i == 1 ? ei.d_terms : etermsNew;
         std::vector<Node> diff;
-        std::set_difference(v1.begin(), v1.end(), v2.begin(), v2.end(),
-            std::inserter(diff, diff.begin()));
+        std::set_difference(v1.begin(),
+                            v1.end(),
+                            v2.begin(),
+                            v2.end(),
+                            std::inserter(diff, diff.begin()));
         if (!diff.empty())
         {
-          Trace("analyze-ee-debug") << "  Diff (" << (i==0 ? "remove) " : "add) ") << eqc << ": " << diff << std::endl;
+          Trace("analyze-ee-debug")
+              << "  Diff (" << (i == 0 ? "remove) " : "add) ") << eqc << ": "
+              << diff << std::endl;
           changed = true;
         }
       }
@@ -111,14 +119,16 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
   }
   for (const Node& eqc : d_es)
   {
-    if (esNew.find(eqc)==esNew.end())
+    if (esNew.find(eqc) == esNew.end())
     {
       Trace("analyze-ee-debug") << "  Delete eqc: " << eqc << std::endl;
       d_einfo.erase(eqc);
       remEqc++;
     }
   }
-  Trace("analyze-ee") << "Add/unchange/change/rem eqc: " << addEqc << "/" << unchangeEqc << "/" << changeEqc << "/" << remEqc << std::endl;
+  Trace("analyze-ee") << "Add/unchange/change/rem eqc: " << addEqc << "/"
+                      << unchangeEqc << "/" << changeEqc << "/" << remEqc
+                      << std::endl;
   d_es = esNew;
   size_t unchangedTerms = 0;
   size_t changedTerms = 0;
@@ -139,7 +149,7 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
         continue;
       }
       Node r = ee->getRepresentative(nc);
-      if (unchangedEqc.find(r)==unchangedEqc.end())
+      if (unchangedEqc.find(r) == unchangedEqc.end())
       {
         changed = true;
         break;
@@ -156,13 +166,18 @@ bool AnalyzeEqualityEngine::reset(Theory::Effort e)
       unchangedTerms++;
     }
   }
-  Trace("analyze-ee") << "Unchanged/changed terms: " << unchangedTerms << "/" << changedTerms << std::endl;
-  Trace("analyze-ee") << "Changed/total ops: " << d_changedOps.size() << "/" << allOp.size() << std::endl;
+  Trace("analyze-ee") << "Unchanged/changed terms: " << unchangedTerms << "/"
+                      << changedTerms << std::endl;
+  Trace("analyze-ee") << "Changed/total ops: " << d_changedOps.size() << "/"
+                      << allOp.size() << std::endl;
   return true;
 }
 
-bool AnalyzeEqualityEngine::isChangedOp(const Node& op) const { return d_changedOps.find(op)!=d_changedOps.end(); }
-  
+bool AnalyzeEqualityEngine::isChangedOp(const Node& op) const
+{
+  return d_changedOps.find(op) != d_changedOps.end();
+}
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

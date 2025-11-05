@@ -76,11 +76,14 @@ void CandidateGeneratorQE::resetDebug()
   Trace("ajr-temp") << "Round summary:" << std::endl;
   for (std::pair<const Node, size_t>& p : s_eqcCount)
   {
-    Trace("ajr-temp") << "- eqc matched " << p.second << ", size " << s_eqcSize[p.first] << ", total " << s_eqcTotal[p.first] << std::endl;
+    Trace("ajr-temp") << "- eqc matched " << p.second << ", size "
+                      << s_eqcSize[p.first] << ", total " << s_eqcTotal[p.first]
+                      << std::endl;
   }
   for (std::pair<const Node, size_t>& p : s_opCount)
   {
-    Trace("ajr-temp") << "- op " << p.first << " matched " << p.second << ", size " << s_opSize[p.first] << std::endl;
+    Trace("ajr-temp") << "- op " << p.first << " matched " << p.second
+                      << ", size " << s_opSize[p.first] << std::endl;
   }
   s_eqcCount.clear();
   s_eqcSize.clear();
@@ -98,7 +101,7 @@ void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
   if (eqc.isNull())
   {
     d_mode = cand_term_db;
-    if (d_termIterList!=nullptr)
+    if (d_termIterList != nullptr)
     {
       s_opCount[d_op]++;
       s_opSize[d_op] = d_termIterList->d_list.size();
@@ -117,10 +120,11 @@ void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
           d_eqc_iter = eq::EqClassIterator( rep, ee );
           d_mode = cand_term_eqc;
           s_eqcCount[rep]++;
-          if (s_eqcSize.find(rep)==s_eqcSize.end())
+          if (s_eqcSize.find(rep) == s_eqcSize.end())
           {
-            eq::EqClassIterator tmp( rep, ee );
-            while( !tmp.isFinished() ){
+            eq::EqClassIterator tmp(rep, ee);
+            while (!tmp.isFinished())
+            {
               ++tmp;
               s_eqcSize[rep]++;
             }

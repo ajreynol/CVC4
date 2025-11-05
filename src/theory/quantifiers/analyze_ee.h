@@ -34,9 +34,9 @@ class AnalyzeEqualityEngine : public QuantifiersUtil
 {
  public:
   AnalyzeEqualityEngine(Env& env,
-                 QuantifiersState& qs,
-                 QuantifiersRegistry& qr,
-                 TermRegistry& tr);
+                        QuantifiersState& qs,
+                        QuantifiersRegistry& qr,
+                        TermRegistry& tr);
   virtual ~AnalyzeEqualityEngine();
   /** Reset. */
   bool reset(Theory::Effort e) override;
@@ -44,7 +44,8 @@ class AnalyzeEqualityEngine : public QuantifiersUtil
   std::string identify() const override { return "AnalyzeEqualityEngine"; }
   /** Is changed op? */
   bool isChangedOp(const Node& op) const;
-private:
+
+ private:
   /** Reference to the quantifiers state object */
   QuantifiersState& d_qs;
   /** Reference to the quantifiers registry */
@@ -53,13 +54,13 @@ private:
   TermRegistry& d_treg;
   class EqcInfo
   {
-  public:
+   public:
     std::vector<Node> d_terms;
   };
   std::map<Node, EqcInfo> d_einfo;
   std::unordered_set<Node> d_es;
   std::unordered_set<Node> d_changedOps;
-};/* class AnalyzeEqualityEngine */
+}; /* class AnalyzeEqualityEngine */
 
 }  // namespace quantifiers
 }  // namespace theory

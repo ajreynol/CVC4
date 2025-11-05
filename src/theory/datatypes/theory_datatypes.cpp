@@ -1687,7 +1687,7 @@ void TheoryDatatypes::checkSplit()
       Trace("datatypes-debug") << "...returned " << ifin << std::endl;
       if (!ifin)
       {
-        if (termSetSelReps.find(n)==termSetSelReps.end())
+        if (termSetSelReps.find(n) == termSetSelReps.end())
         {
           needSplit = false;
           break;

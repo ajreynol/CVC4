@@ -19,6 +19,7 @@
 #include "options/base_options.h"
 #include "options/quantifiers_options.h"
 #include "smt/env.h"
+#include "theory/quantifiers/analyze_ee.h"
 #include "theory/quantifiers/ematching/candidate_generator.h"
 #include "theory/quantifiers/ematching/inst_match_generator.h"
 #include "theory/quantifiers/ematching/inst_match_generator_multi.h"
@@ -31,10 +32,9 @@
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_registry.h"
-#include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_util.h"
-#include "theory/quantifiers/analyze_ee.h"
 #include "theory/valuation.h"
 
 using namespace cvc5::internal::kind;
@@ -155,10 +155,10 @@ Node Trigger::getInstPattern() const
 uint64_t Trigger::addInstantiations()
 {
   // check if changed??
-  //AnalyzeEqualityEngine* aee = d_treg.getAnalyzeEqualityEngine();
-  //TermDb* tdb = d_treg.getTermDatabase();
-  //bool hasChanged = false;
-  //for (const Node& n : d_nodes)
+  // AnalyzeEqualityEngine* aee = d_treg.getAnalyzeEqualityEngine();
+  // TermDb* tdb = d_treg.getTermDatabase();
+  // bool hasChanged = false;
+  // for (const Node& n : d_nodes)
   //{
   //  Node op = tdb->getMatchOperator(n);
   //  Assert(!op.isNull()) << "Null op for: " << n;
@@ -168,7 +168,7 @@ uint64_t Trigger::addInstantiations()
   //    break;
   //  }
   //}
-  
+
   uint64_t gtAddedLemmas = 0;
   if (!d_groundTerms.empty())
   {
@@ -200,9 +200,11 @@ uint64_t Trigger::addInstantiations()
   return gtAddedLemmas + addedLemmas;
 }
 
-bool Trigger::sendInstantiation(std::vector<Node>& m, InferenceId id, const Node& src)
+bool Trigger::sendInstantiation(std::vector<Node>& m,
+                                InferenceId id,
+                                const Node& src)
 {
-  Instantiate * inst = d_qim.getInstantiate();
+  Instantiate* inst = d_qim.getInstantiate();
   if (inst->addInstantiation(d_quant, m, id, d_trNode))
   {
     if (!src.isNull())

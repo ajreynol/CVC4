@@ -130,7 +130,7 @@ void QuantifiersState::debugPrintEqualityEngine(const char* c) const
     tnum[eqct]++;
     ++eqcs_i;
     eq::EqClassIterator eqci = eq::EqClassIterator(eqc, ee);
-    uint64_t esize = 0; 
+    uint64_t esize = 0;
     while (!eqci.isFinished())
     {
       ++eqci;
@@ -142,7 +142,8 @@ void QuantifiersState::debugPrintEqualityEngine(const char* c) const
   Trace(c) << ee->debugPrintEqc() << std::endl;
   for (const std::pair<const TypeNode, uint64_t>& t : tnum)
   {
-    Trace(c) << "# eqc for " << t.first << " : " << t.second << " / #terms " << ttnum[t.first];
+    Trace(c) << "# eqc for " << t.first << " : " << t.second << " / #terms "
+             << ttnum[t.first];
     Trace(c) << " [";
     std::vector<uint64_t>& tes = teqcs[t.first];
     for (uint64_t i : tes)

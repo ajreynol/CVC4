@@ -205,7 +205,7 @@ bool Instantiate::addInstantiationInternal(
       Node sexpr = nodeManager()->mkNode(Kind::SEXPR, children);
       d_localTest[sexpr]++;
       Trace("ajr-temp-local") << "#local " << d_localTest[sexpr] << std::endl;
-      if (d_localTest[sexpr]>4)
+      if (d_localTest[sexpr] > 4)
       {
         isLocal = false;
       }

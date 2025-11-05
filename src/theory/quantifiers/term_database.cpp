@@ -27,9 +27,9 @@
 #include "proof/proof_generator.h"
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
-#include "theory/quantifiers/ematching/trigger_term_info.h"
 #include "theory/quantifiers/ematching/candidate_generator.h"
 #include "theory/quantifiers/ematching/trigger.h"
+#include "theory/quantifiers/ematching/trigger_term_info.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_registry.h"
@@ -330,7 +330,7 @@ void TermDb::addTerm(Node n)
       dlo->d_list.push_back(n);
       // If we are higher-order, we may need to register more terms.
       addTermInternal(n);
-      d_indexedTerms = d_indexedTerms+1;
+      d_indexedTerms = d_indexedTerms + 1;
     }
   }
   else
@@ -530,7 +530,7 @@ void TermDb::computeUfTerms( TNode f ) {
     d_ncongTerms += nonCongruentCount;
     d_rlvTerms += relevantCount;
     d_totalTerms += it->second->d_list.size();
-    
+
     if (TraceIsOn("tdb"))
     {
       Trace("tdb") << "Term db size [" << f << "] : " << nonCongruentCount
@@ -700,7 +700,8 @@ bool TermDb::reset( Theory::Effort effort ){
   d_roundDepth = d_roundDepth + 1;
   Trace("ajr-temp-rd") << "==============================" << std::endl;
   Trace("ajr-temp-rd") << "Round depth is " << d_roundDepth.get() << std::endl;
-  Trace("ajr-temp-rd") << "SAT context level is " << context()->getLevel() << std::endl;
+  Trace("ajr-temp-rd") << "SAT context level is " << context()->getLevel()
+                       << std::endl;
   inst::CandidateGeneratorQE::resetDebug();
   d_op_nonred_count.clear();
   d_arg_reps.clear();
@@ -719,18 +720,23 @@ bool TermDb::reset( Theory::Effort effort ){
   // 3. The number of pre-registered matchable terms whose operator we
   // built an index for.
   // 4. The total number of pre-registered matchable terms.
-  if (d_indTerms>0)
+  if (d_indTerms > 0)
   {
-    Trace("ajr-temp-rd") << "Prev (ncong/rlv/proc/total): " << d_ncongTerms << " / " << d_rlvTerms << " / " << d_totalTerms << " / " << d_indTerms << std::endl;
+    Trace("ajr-temp-rd") << "Prev (ncong/rlv/proc/total): " << d_ncongTerms
+                         << " / " << d_rlvTerms << " / " << d_totalTerms
+                         << " / " << d_indTerms << std::endl;
   }
   d_indTerms = d_indexedTerms.get();
   d_congTerms = 0;
   d_ncongTerms = 0;
   d_rlvTerms = 0;
   d_totalTerms = 0;
-  Trace("ajr-temp-rd") << "Prev triggers (unique-ae/total): " << d_procTriggerNodes.size() << " / " << d_procTriggers.size() << std::endl;
-  Trace("ajr-temp-rd") << "Instantiated triggers: " << d_instTriggers.size() << std::endl;
-  
+  Trace("ajr-temp-rd") << "Prev triggers (unique-ae/total): "
+                       << d_procTriggerNodes.size() << " / "
+                       << d_procTriggers.size() << std::endl;
+  Trace("ajr-temp-rd") << "Instantiated triggers: " << d_instTriggers.size()
+                       << std::endl;
+
   d_procTriggers.clear();
   d_procTriggerNodes.clear();
   d_instTriggers.clear();
@@ -764,7 +770,8 @@ bool TermDb::reset( Theory::Effort effort ){
         nfacts++;
         setHasTerm((*it).d_assertion);
       }
-      Trace("ajr-temp-rd") << "#" << theoryId << " assertions: " << nfacts << std::endl;
+      Trace("ajr-temp-rd") << "#" << theoryId << " assertions: " << nfacts
+                           << std::endl;
       totalFacts += nfacts;
     }
     Trace("ajr-temp-rd") << "# assertions total: " << totalFacts << std::endl;
@@ -835,12 +842,12 @@ void TermDb::debugNotifyTriggerProcess(inst::Trigger* t, size_t numInst)
   Node tnc = d_tcanont.getCanonicalTerm(tn);
   d_procTriggerNodes.insert(tnc);
   Trace("ajr-temp-t") << "Process trigger: " << t << " " << tn << std::endl;
-  if (numInst>0)
+  if (numInst > 0)
   {
     d_instTriggers.insert(t);
   }
 }
-  
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal
