@@ -346,14 +346,12 @@ void Theory::collectAssertedTerms(std::set<Node>& termSet,
   }
 }
 void Theory::collectAssertedTermsForModel(std::set<Node>& termSet,
-                                          bool includeShared)
+                                          bool includeShared) const
 {
   // use the irrelevant model kinds from the theory state
   const std::set<Kind>& irrKinds =
       d_theoryState->getModel()->getIrrelevantKinds();
   collectAssertedTerms(termSet, includeShared, irrKinds);
-  // also include additionally relevant terms
-  computeRelevantTerms(termSet);
 }
 
 void Theory::collectTerms(TNode n,

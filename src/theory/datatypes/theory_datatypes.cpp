@@ -1552,28 +1552,17 @@ Node TheoryDatatypes::searchForCycle(TNode n,
 
 void TheoryDatatypes::checkSplit()
 {
-  Trace("datatypes-debug") << "Check splits" << std::endl;
-  // We first compute the set of asserted terms. This is a subset of those
-  // in the equality engine, which may include preregistered but not asserted
-  // terms.
-  std::set<Node> termSet;
-  collectAssertedTermsForModel(termSet);
-  // The set of equivalence classes for which there is a relevant term.
-  std::unordered_set<Node> termSetReps;
-  // The set of equivalence classes that have a selector applied to them.
-  std::unordered_set<Node> termSetSelReps;
-  for (const Node& t : termSet)
+  // get the relevant term set, currently all datatype equivalence classes
+  // in the equality engine
+  std::set<Node> termSetReps;
+  eq::EqClassesIterator eqcs_i = eq::EqClassesIterator(d_equalityEngine);
+  while (!eqcs_i.isFinished())
   {
-    Trace("datatypes-debug") << "- term: " << t << std::endl;
-    if (t.getType().isDatatype())
+    Node eqc = (*eqcs_i);
+    ++eqcs_i;
+    if (eqc.getType().isDatatype())
     {
-      termSetReps.insert(d_equalityEngine->getRepresentative(t));
-    }
-    Kind tk = t.getKind();
-    // height bound is also considered a selector
-    if (tk == Kind::APPLY_SELECTOR || tk == Kind::DT_HEIGHT_BOUND)
-    {
-      termSetSelReps.insert(d_equalityEngine->getRepresentative(t[0]));
+      termSetReps.insert(eqc);
     }
   }
   std::map<TypeNode, Node> rec_singletons;
@@ -1683,11 +1672,12 @@ void TheoryDatatypes::checkSplit()
       // on those that are interpreted-finite when finite model
       // finding is disabled, but as a heuristic we choose to split
       // on those too.
-      bool ifin = dt[j].getCardinalityClass(tn) != CardinalityClass::INFINITE;
+      bool ifin = isCardinalityClassFinite(dt[j].getCardinalityClass(tn),
+                                  options().quantifiers.finiteModelFind);
       Trace("datatypes-debug") << "...returned " << ifin << std::endl;
       if (!ifin)
       {
-        if (termSetSelReps.find(n)==termSetSelReps.end())
+        if (!eqc || !eqc->d_selectors)
         {
           needSplit = false;
           break;
