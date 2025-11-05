@@ -1235,17 +1235,22 @@ bool TheoryDatatypes::instantiate(EqcInfo* eqc, Node n)
     exp = getLabel(n);
     tt = exp[0];
   }
-  TypeNode ttn = tt.getType();
+  return instantiate(eqc, tt, index, exp);
+}
+
+bool TheoryDatatypes::instantiate(EqcInfo* eqc, Node n, int index, Node exp)
+{
+  TypeNode ttn = n.getType();
   const DType& dt = ttn.getDType();
   // instantiate this equivalence class
   eqc->d_inst = true;
-  Node tt_cons = getInstantiateCons(tt, dt, index);
-  if (tt == tt_cons)
+  Node tt_cons = getInstantiateCons(n, dt, index);
+  if (n == tt_cons)
   {
     // not necessary
     return false;
   }
-  Node eq = tt.eqNode(tt_cons);
+  Node eq = n.eqNode(tt_cons);
   // Determine if the equality must be sent out as a lemma. Notice that
   // we  keep new equalities from the instantiate rule internal
   // as long as they are for datatype constructors that have no arguments that
@@ -1698,10 +1703,15 @@ void TheoryDatatypes::checkSplit()
     {
       // this may not be necessary?
       // if only one constructor, then this term must be this constructor
-      Node t = utils::mkTester(n, 0, dt);
-      d_im.addPendingInference(t, InferenceId::DATATYPES_SPLIT, d_true);
-      Trace("datatypes-infer")
-          << "DtInfer : 1-cons (full) : " << t << std::endl;
+      //Node t = utils::mkTester(n, 0, dt);
+      //d_im.addPendingInference(t, InferenceId::DATATYPES_SPLIT, d_true);
+      //Trace("datatypes-infer")
+       //   << "DtInfer : 1-cons (full) : " << t << std::endl;
+      if (eqc==nullptr)
+      {
+        eqc = getOrMakeEqcInfo(n, true);
+      }
+      instantiate(eqc, n, 0, d_true);
     }
     else
     {

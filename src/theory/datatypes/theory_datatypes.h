@@ -274,6 +274,7 @@ private:
   Node getInstantiateCons(Node n, const DType& dt, int index);
   /** check instantiate, return true if an inference was generated. */
   bool instantiate(EqcInfo* eqc, Node n);
+  bool instantiate(EqcInfo* eqc, Node n, int index, Node exp);
 
  private:
   //equality queries
