@@ -562,7 +562,7 @@ class Theory : protected EnvObj
                             const std::set<Kind>& irrKinds) const;
   /** Same as above, using the irrelevant model kinds for irrKinds.*/
   void collectAssertedTermsForModel(std::set<Node>& termSet,
-                                    bool includeShared = true);
+                                    bool includeShared = true) const;
   /**
    * Helper function for collectAssertedTerms, adds all subterms
    * belonging to this theory to termSet.
