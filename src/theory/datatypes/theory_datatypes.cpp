@@ -1701,17 +1701,21 @@ void TheoryDatatypes::checkSplit()
     }
     if (dt.getNumConstructors() == 1)
     {
-      // this may not be necessary?
-      // if only one constructor, then this term must be this constructor
-      //Node t = utils::mkTester(n, 0, dt);
-      //d_im.addPendingInference(t, InferenceId::DATATYPES_SPLIT, d_true);
-      //Trace("datatypes-infer")
-       //   << "DtInfer : 1-cons (full) : " << t << std::endl;
+      // If only one constructor, then this term must be this constructor
+      // We shortcut constructing utils::mkTester(n, 0, dt) and directly
+      // call the instantiate inference here.
       if (eqc==nullptr)
       {
         eqc = getOrMakeEqcInfo(n, true);
       }
-      instantiate(eqc, n, 0, d_true);
+      if (instantiate(eqc, n, 0, d_true))
+      {
+        // may have been processed as a fact or lemma, we return if a lemma
+        if (d_im.hasPendingLemma() && !options().datatypes.dtBlastSplits)
+        {
+          return;
+        }
+      }
     }
     else
     {
