@@ -81,6 +81,7 @@ const char* toString(InferenceId i)
     case InferenceId::ARITH_NL_RES_INFER_BOUNDS:
       return "ARITH_NL_RES_INFER_BOUNDS";
     case InferenceId::ARITH_NL_TANGENT_PLANE: return "ARITH_NL_TANGENT_PLANE";
+    case InferenceId::ARITH_NL_FLATTEN_MON: return "ARITH_NL_FLATTEN_MON";
     case InferenceId::ARITH_NL_T_SINE_SYMM: return "ARITH_NL_T_SINE_SYMM";
     case InferenceId::ARITH_NL_T_SINE_BOUNDARY_REDUCE:
       return "ARITH_NL_T_SINE_BOUNDARY_REDUCE";
@@ -533,6 +534,7 @@ const char* toString(InferenceId i)
     case InferenceId::STRINGS_EXTF_D: return "STRINGS_EXTF_D";
     case InferenceId::STRINGS_EXTF_D_N: return "STRINGS_EXTF_D_N";
     case InferenceId::STRINGS_EXTF_EQ_REW: return "STRINGS_EXTF_EQ_REW";
+    case InferenceId::STRINGS_EXTF_REW_SAME: return "STRINGS_EXTF_REW_SAME";
     case InferenceId::STRINGS_CTN_TRANS: return "STRINGS_CTN_TRANS";
     case InferenceId::STRINGS_CTN_DECOMPOSE: return "STRINGS_CTN_DECOMPOSE";
     case InferenceId::STRINGS_CTN_NEG_EQUAL: return "STRINGS_CTN_NEG_EQUAL";
@@ -553,6 +555,9 @@ const char* toString(InferenceId i)
       return "STRINGS_RE_EQ_ELIM_EQUIV";
 
     case InferenceId::UF_BREAK_SYMMETRY: return "UF_BREAK_SYMMETRY";
+    case InferenceId::UF_NOT_DISTINCT_ELIM: return "UF_NOT_DISTINCT_ELIM";
+    case InferenceId::UF_DISTINCT_DEQ: return "UF_DISTINCT_DEQ";
+    case InferenceId::UF_DISTINCT_DEQ_MODEL: return "UF_DISTINCT_DEQ_MODEL";
     case InferenceId::UF_CARD_CLIQUE: return "UF_CARD_CLIQUE";
     case InferenceId::UF_CARD_COMBINED: return "UF_CARD_COMBINED";
     case InferenceId::UF_CARD_ENFORCE_NEGATIVE: return "UF_CARD_ENFORCE_NEGATIVE";
