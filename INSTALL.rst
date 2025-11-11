@@ -330,7 +330,7 @@ Dependencies for Language Bindings
   - `Cython <https://cython.org/>`_ >= 3.0.0
   - `pip <https://pip.pypa.io/>`_ >= 23.0
   - `pytest <https://docs.pytest.org/en/6.2.x/>`_
-  - `repairwheel <https://github.com/jvolkman/repairwheel>`_ >= 0.3.1
+  - `repairwheel <https://github.com/jvolkman/repairwheel>`_ >= 0.3.2
   - `setuptools <https://setuptools.pypa.io/>`_ >= 66.1.0
   - The source for the `pythonic API <https://github.com/cvc5/cvc5_pythonic_api>`_
 
@@ -417,8 +417,9 @@ The API tests are not built by default.
 
 .. code::
 
-    make apitests                         # build and run all API C++ tests
+    make apitests                         # build and run all API tests
     make capitests                        # build and run all API C tests
+    make cppapitests                      # build and run all API C++ tests
     make <api_test>                       # build test/api/cpp/<api_test>.cpp
     make capi_<api_test>                  # build test/api/c/<api_test>.c
     ctest api/cpp/<api_test>              # run test/api/cpp/<api_test><.ext>

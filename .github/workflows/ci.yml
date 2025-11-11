@@ -1,4 +1,5 @@
 on: [push, pull_request]
+
 name: CI
 
 # Prevents github from relying on clones of homebrew-core or homebrew-cask.
@@ -60,6 +61,17 @@ jobs:
             exclude_regress: 3-4
             run_regression_args: --tester base --tester proof --tester cpc --tester model --tester synth --tester abduct --tester dump
 
+          - name: ubuntu:stable-mode
+            os: ubuntu-22.04
+            config: stable-mode --auto-download --all-bindings --editline -DBUILD_GMP=1
+            cache-key: production-stable
+            strip-bin: strip
+            python-bindings: true
+            java-bindings: true
+            check-examples: true
+            exclude_regress: 3-4
+            run_regression_args: --tester base --tester proof --tester cpc --tester model --tester dump
+
           - name: ubuntu:production-arm64
             os: ubuntu-22.04-arm
             config: production --auto-download --all-bindings --editline -DBUILD_GMP=1
@@ -79,7 +91,7 @@ jobs:
             strip-bin: aarch64-linux-gnu-strip
 
           - name: macos:production
-            os: macos-13
+            os: macos-15-intel
             config: production --auto-download --all-bindings --editline -DBUILD_GMP=1
             cache-key: production
             strip-bin: strip
@@ -92,7 +104,7 @@ jobs:
             run_regression_args: --tester base --tester model --tester synth --tester abduct --tester dump
 
           - name: macos:production-arm64
-            os: macos-14
+            os: macos-15
             config: production --auto-download --all-bindings --editline -DBUILD_GMP=1
             cache-key: production-arm64
             strip-bin: strip
@@ -106,7 +118,7 @@ jobs:
             run_regression_args: --tester base --tester model --tester synth --tester abduct --tester dump
 
           - name: macos:production-arm64-cross
-            os: macos-13
+            os: macos-15-intel
             config: production --auto-download --all-bindings --editline --arm64
             cache-key: production-arm64-cross
             strip-bin: strip
@@ -205,7 +217,7 @@ jobs:
             gpl-tag: -gpl
 
           - name: macos:production-gpl
-            os: macos-13
+            os: macos-15-intel
             config: production --auto-download --editline --gpl --cln --glpk --cocoa -DBUILD_GMP=1 -DBUILD_CLN=1
             cache-key: production-gpl
             strip-bin: strip
@@ -214,7 +226,7 @@ jobs:
             gpl-tag: -gpl
 
           - name: macos:production-arm64-gpl
-            os: macos-14
+            os: macos-15
             config: production --auto-download --editline --gpl --cln --glpk --cocoa -DBUILD_GMP=1 -DBUILD_CLN=1
             cache-key: production-arm64-gpl
             strip-bin: strip
@@ -247,7 +259,6 @@ jobs:
       cancel-in-progress: ${{ github.repository != 'cvc5/cvc5' || startsWith(github.ref, 'refs/pull/') }}
 
     steps:
-
     - uses: actions/checkout@v4
 
     # Ensure that the Java bindings, Java API tests, and Java examples are compatible
