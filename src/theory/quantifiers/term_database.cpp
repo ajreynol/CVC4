@@ -772,6 +772,15 @@ TNode TermDb::getCongruentTerm(Node f, const std::vector<TNode>& args)
   return d_func_map_trie[f].existsTerm( args );
 }
 
+void TermDb::setInstantiationExplanation(const Node& q,
+                      const std::vector<Node>& terms,
+                      InferenceId id,
+                      const Node& pfArg,
+                      const Node& exp)
+{
+  
+}
+
 }  // namespace quantifiers
 }  // namespace theory
 }  // namespace cvc5::internal

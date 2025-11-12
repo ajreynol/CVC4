@@ -32,6 +32,7 @@
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_registry.h"
 #include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_util.h"
 #include "theory/valuation.h"
 
@@ -200,6 +201,7 @@ bool Trigger::sendInstantiation(std::vector<Node>& m, InferenceId id)
   {
     Trace("ajr-temp-exp") << "Explanation for " << d_trNode << " " << m << " is: " << std::endl;
     Trace("ajr-temp-exp") << "  " << cexp << std::endl;
+    d_treg.getTermDatabase()->setInstantiationExplanation(d_quant, m, d_id, d_trNode, cexp);
   }
   return true;
 }

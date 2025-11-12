@@ -28,6 +28,7 @@
 #include "theory/quantifiers/quant_util.h"
 #include "theory/theory.h"
 #include "theory/type_enumerator.h"
+#include "theory/inference_id.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -214,6 +215,12 @@ class TermDb : public QuantifiersUtil {
   bool isTermEligibleForInstantiation(TNode n, TNode f);
   /** get eligible term in equivalence class of r */
   Node getEligibleTermInEqc(TNode r);
+  /** set instantiation explanation */
+  void setInstantiationExplanation(const Node& q,
+                        const std::vector<Node>& terms,
+                        InferenceId id,
+                        const Node& pfArg,
+                        const Node& exp);
 
  protected:
   /** The quantifiers state object */
