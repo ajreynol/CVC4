@@ -698,9 +698,9 @@ void TermDb::presolve() {}
 
 bool TermDb::reset( Theory::Effort effort ){
   d_roundDepth = d_roundDepth + 1;
-  Trace("ajr-temp-rd") << "==============================" << std::endl;
-  Trace("ajr-temp-rd") << "Round depth is " << d_roundDepth.get() << std::endl;
-  Trace("ajr-temp-rd") << "SAT context level is " << context()->getLevel()
+  Trace("ajr-temp-stats") << "==============================" << std::endl;
+  Trace("ajr-temp-stats") << "Round depth is " << d_roundDepth.get() << std::endl;
+  Trace("ajr-temp-stats") << "SAT context level is " << context()->getLevel()
                        << std::endl;
   inst::CandidateGeneratorQE::resetDebug();
   d_op_nonred_count.clear();
@@ -722,7 +722,7 @@ bool TermDb::reset( Theory::Effort effort ){
   // 4. The total number of pre-registered matchable terms.
   if (d_indTerms > 0)
   {
-    Trace("ajr-temp-rd") << "Prev (ncong/rlv/proc/total): " << d_ncongTerms
+    Trace("ajr-temp-stats") << "Prev (ncong/rlv/proc/total): " << d_ncongTerms
                          << " / " << d_rlvTerms << " / " << d_totalTerms
                          << " / " << d_indTerms << std::endl;
   }
@@ -731,10 +731,10 @@ bool TermDb::reset( Theory::Effort effort ){
   d_ncongTerms = 0;
   d_rlvTerms = 0;
   d_totalTerms = 0;
-  Trace("ajr-temp-rd") << "Prev triggers (unique-ae/total): "
+  Trace("ajr-temp-stats") << "Prev triggers (unique-ae/total): "
                        << d_procTriggerNodes.size() << " / "
                        << d_procTriggers.size() << std::endl;
-  Trace("ajr-temp-rd") << "Instantiated triggers: " << d_instTriggers.size()
+  Trace("ajr-temp-stats") << "Instantiated triggers: " << d_instTriggers.size()
                        << std::endl;
 
   d_procTriggers.clear();
@@ -770,11 +770,11 @@ bool TermDb::reset( Theory::Effort effort ){
         nfacts++;
         setHasTerm((*it).d_assertion);
       }
-      Trace("ajr-temp-rd") << "#" << theoryId << " assertions: " << nfacts
+      Trace("ajr-temp-stats") << "#" << theoryId << " assertions: " << nfacts
                            << std::endl;
       totalFacts += nfacts;
     }
-    Trace("ajr-temp-rd") << "# assertions total: " << totalFacts << std::endl;
+    Trace("ajr-temp-stats") << "# assertions total: " << totalFacts << std::endl;
   }
   // finish reset
   return finishResetInternal(effort);

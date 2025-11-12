@@ -348,6 +348,8 @@ class Instantiate : public QuantifiersUtil
    */
   std::map<Node, InstMatchTrie> d_imt;
   std::map<Node, size_t> d_localTest;
+  size_t d_localTotal;
+  std::unordered_set<Node> d_locals;
   /** A user dependent trie of instantiations */
   NodeInstTrieMap d_uimt;
   /**

@@ -67,6 +67,8 @@ Instantiate::~Instantiate() {}
 
 bool Instantiate::reset(Theory::Effort e)
 {
+  Trace("ajr-temp-stats") << "==============================" << std::endl;
+  Trace("ajr-temp-stats") << "#local unique/total: " << d_locals.size() << " / " << d_localTotal << std::endl;
   Trace("inst-debug") << "Reset, effort " << e << std::endl;
   // clear explicitly recorded instantiations
   d_recordedInst.clear();
@@ -192,23 +194,26 @@ bool Instantiate::addInstantiationInternal(
   }
 #endif
   bool isLocal = false;
+  Node sexpr;
   if (options().quantifiers.instLocal)
   {
     // determine if it is an instantiation type that is treated as local
     isLocal = isLocalInstId(id);
     // heuristic cutoff??
-    if (false && isLocal)
+    if (isLocal)
     {
       std::vector<Node> children;
       children.push_back(q);
       children.insert(children.end(), terms.begin(), terms.end());
-      Node sexpr = nodeManager()->mkNode(Kind::SEXPR, children);
+      sexpr = nodeManager()->mkNode(Kind::SEXPR, children);
       d_localTest[sexpr]++;
       Trace("ajr-temp-local") << "#local " << d_localTest[sexpr] << std::endl;
+#if 0
       if (d_localTest[sexpr] > 4)
       {
         isLocal = false;
       }
+#endif
     }
   }
 
@@ -414,6 +419,11 @@ bool Instantiate::addInstantiationInternal(
     QuantAttributes::setInstantiationLevelAttr(lem[1], maxInstLevel + 1);
   }
   Trace("inst-add-debug") << " --> Success." << std::endl;
+  if (isLocal)
+  {
+    d_locals.insert(sexpr);
+    d_localTotal++;
+  }
   ++(d_statistics.d_instantiations);
   return true;
 }
