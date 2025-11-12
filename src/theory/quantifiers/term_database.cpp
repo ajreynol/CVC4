@@ -773,12 +773,11 @@ TNode TermDb::getCongruentTerm(Node f, const std::vector<TNode>& args)
 }
 
 void TermDb::setInstantiationExplanation(const Node& q,
-                      const std::vector<Node>& terms,
-                      InferenceId id,
-                      const Node& pfArg,
-                      const Node& exp)
+                                         const std::vector<Node>& terms,
+                                         InferenceId id,
+                                         const Node& pfArg,
+                                         const Node& exp)
 {
-  
 }
 
 }  // namespace quantifiers

@@ -57,6 +57,7 @@ class InstMatchGeneratorSimple : public IMGenerator
   int getActiveScore() override;
   /** get current explanation */
   Node getCurrentExplanation() override { return d_currentMatch; }
+
  private:
   /** quantified formula for the trigger term */
   Node d_quant;

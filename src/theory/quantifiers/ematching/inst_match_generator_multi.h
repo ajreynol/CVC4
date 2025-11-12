@@ -55,6 +55,7 @@ class InstMatchGeneratorMulti : public IMGenerator
   uint64_t addInstantiations(InstMatch& m) override;
   /** */
   Node getCurrentExplanation() override;
+
  private:
   /** process new match
    *
