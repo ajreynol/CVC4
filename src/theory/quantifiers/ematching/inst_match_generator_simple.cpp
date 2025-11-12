@@ -146,6 +146,7 @@ void InstMatchGeneratorSimple::addInstantiations(InstMatch& m,
         terms[v.second] = t[v.first];
       }
     }
+    d_currentMatch = t;
     // we do not need the trigger parent for simple triggers (no post-processing
     // required)
     if (sendInstantiation(terms,

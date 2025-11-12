@@ -141,6 +141,8 @@ class InstMatchGenerator : public IMGenerator {
    * Returns the term we are currently matching.
    */
   Node getCurrentMatch() { return d_curr_matched; }
+  /** get current explanation */
+  Node getCurrentExplanation() override { return d_curr_matched; }
   /** set that this match generator is independent
    *
   * A match generator is indepndent when this generator fails to produce a

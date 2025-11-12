@@ -96,6 +96,10 @@ class IMGenerator : protected EnvObj
    * A heuristic value indicating how active this generator is.
    */
   virtual int getActiveScore() { return 0; }
+  /**
+   * Get current match
+   */
+  virtual Node getCurrentExplanation() { return Node::null(); }
 
  protected:
   /** send instantiation

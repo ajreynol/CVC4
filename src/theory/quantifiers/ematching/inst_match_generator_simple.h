@@ -55,12 +55,15 @@ class InstMatchGeneratorSimple : public IMGenerator
   uint64_t addInstantiations(InstMatch& m) override;
   /** Get active score. */
   int getActiveScore() override;
-
+  /** get current explanation */
+  Node getCurrentExplanation() override { return d_currentMatch; }
  private:
   /** quantified formula for the trigger term */
   Node d_quant;
   /** the trigger term */
   Node d_match_pattern;
+  /** current match */
+  Node d_currentMatch;
   /** equivalence class polarity information
    *
    * This stores the required polarity/equivalence class with this trigger.

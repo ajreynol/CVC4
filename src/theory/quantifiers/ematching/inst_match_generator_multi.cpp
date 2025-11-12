@@ -303,6 +303,17 @@ void InstMatchGeneratorMulti::processNewInstantiations(InstMatch& m,
   }
 }
 
+Node InstMatchGeneratorMulti::getCurrentExplanation()
+{
+  std::vector<Node> exp;
+  for (size_t i = 0, csize = d_children.size(); i < csize; i++)
+  {
+    Node e = d_children[i]->getCurrentExplanation();
+    exp.push_back(e);
+  }
+  return Node::null();
+}
+
 }  // namespace inst
 }  // namespace quantifiers
 }  // namespace theory

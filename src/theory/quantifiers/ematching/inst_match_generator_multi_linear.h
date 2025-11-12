@@ -73,6 +73,8 @@ class InstMatchGeneratorMultiLinear : public InstMatchGenerator
   bool reset(Node eqc) override;
   /** Get the next match. */
   int getNextMatch(InstMatch& m) override;
+  /** get current explanation */
+  Node getCurrentExplanation() override;
 
  protected:
   /** reset the children of this generator */
