@@ -286,6 +286,7 @@ void TermDb::eqNotifyMerge(TNode t1, TNode t2)
 {
   if (options().quantifiers.termDbMode == options::TermDbMode::RELEVANT)
   {
+    Trace("ajr-temp") << "Merging " << t1 << " " << t2 << " " << context()->getLevel() << std::endl;
     // Since the equivalence class of t1 and t2 merged, we now consider these
     // two terms to be relevant in the current context. Note technically this
     // does not mean that these terms are in assertions, e.g. t1 and t2 may be
@@ -671,9 +672,14 @@ void TermDb::setHasTerm(Node n)
   {
     cur = visit.back();
     visit.pop_back();
+    if (cur.isClosure())
+    {
+      continue;
+    }
     if (d_has_map.find(cur) == d_has_map.end())
     {
       d_has_map.insert(cur);
+      Trace("ajr-temp") << "Term: " << cur << " at depth " << context()->getLevel() << std::endl;
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
   } while (!visit.empty());
@@ -712,7 +718,9 @@ bool TermDb::reset( Theory::Effort effort ){
            it != it_end;
            ++it)
       {
-        setHasTerm((*it).d_assertion);
+        TNode lit = (*it).d_assertion;
+        TNode atom = lit.getKind()==Kind::NOT ? lit[0] : lit;
+        setHasTerm(atom);
       }
     }
   }
