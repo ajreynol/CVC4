@@ -57,7 +57,8 @@ Trigger::Trigger(Env& env,
       d_qreg(qr),
       d_treg(tr),
       d_quant(q),
-      d_instMatch(env, qs, tr, q)
+      d_instMatch(env, qs, tr, q),
+      d_id(InferenceId::NONE)
 {
   // set evaluator mode to "no entail"
   d_instMatch.setEvaluatorMode(ieval::TermEvaluatorMode::NO_ENTAIL);
@@ -98,21 +99,25 @@ Trigger::Trigger(Env& env,
   if( d_nodes.size()==1 ){
     if (TriggerTermInfo::isSimpleTrigger(d_nodes[0]))
     {
+      d_id = InferenceId::QUANTIFIERS_INST_E_MATCHING_SIMPLE;
       d_mg = new InstMatchGeneratorSimple(env, this, q, d_nodes[0]);
       ++(stats.d_simple_triggers);
       output(OutputTag::TRIGGER) << " :simple";
     }else{
+      d_id = InferenceId::QUANTIFIERS_INST_E_MATCHING;
       d_mg = InstMatchGenerator::mkInstMatchGenerator(env, this, q, d_nodes[0]);
       ++(stats.d_triggers);
     }
   }else{
     if (options().quantifiers.multiTriggerCache)
     {
+      d_id = InferenceId::QUANTIFIERS_INST_E_MATCHING_MT;
       d_mg = new InstMatchGeneratorMulti(env, this, q, d_nodes);
       output(OutputTag::TRIGGER) << " :multi-cache";
     }
     else
     {
+      d_id = InferenceId::QUANTIFIERS_INST_E_MATCHING_MTL;
       d_mg =
           InstMatchGenerator::mkInstMatchGeneratorMulti(env, this, q, d_nodes);
       output(OutputTag::TRIGGER) << " :multi";
@@ -185,7 +190,18 @@ uint64_t Trigger::addInstantiations()
 
 bool Trigger::sendInstantiation(std::vector<Node>& m, InferenceId id)
 {
-  return d_qim.getInstantiate()->addInstantiation(d_quant, m, id, d_trNode);
+  if (!d_qim.getInstantiate()->addInstantiation(d_quant, m, d_id, d_trNode))
+  {
+    return false;
+  }
+  // also track explanation?
+  Node cexp = d_mg->getCurrentExplanation();
+  if (!cexp.isNull())
+  {
+    Trace("ajr-temp-exp") << "Explanation for " << d_trNode << " " << m << " is: " << std::endl;
+    Trace("ajr-temp-exp") << "  " << cexp << std::endl;
+  }
+  return true;
 }
 
 int Trigger::getActiveScore() { return d_mg->getActiveScore(); }

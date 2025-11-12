@@ -520,13 +520,13 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
     Trace("matching") << "Reset not done yet, must do the reset..." << std::endl;
     reset(d_eq_class);
   }
-  d_curr_matched = Node::null();
   Trace("matching") << this << " " << d_match_pattern << " get next match " << m << " in eq class " << d_eq_class << std::endl;
   int success = -1;
   Node t = d_curr_first_candidate;
   do{
     Trace("matching-debug2") << "Matching candidate : " << t << std::endl;
     Assert(!d_qstate.isInConflict());
+    d_curr_matched = t;
     //if t not null, try to fit it into match m
     if( !t.isNull() ){
       if( d_curr_exclude_match.find( t )==d_curr_exclude_match.end() ){
@@ -546,7 +546,6 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
       }
     }
   }while( success<0 && !t.isNull() );
-  d_curr_matched = t;
   if( success<0 ){
     Trace("matching-summary") << "..." << d_match_pattern << " failed, reset." << std::endl;
     Trace("matching") << this << " failed, reset " << d_eq_class << std::endl;

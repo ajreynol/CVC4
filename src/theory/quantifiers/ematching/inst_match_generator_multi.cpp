@@ -311,7 +311,7 @@ Node InstMatchGeneratorMulti::getCurrentExplanation()
     Node e = d_children[i]->getCurrentExplanation();
     exp.push_back(e);
   }
-  return Node::null();
+  return nodeManager()->mkNode(Kind::SEXPR, exp);
 }
 
 }  // namespace inst

@@ -230,6 +230,8 @@ class Trigger : protected EnvObj
    * incremental entailment checking.
    */
   InstMatch d_instMatch;
+  /** The inference id */
+  InferenceId d_id;
 }; /* class Trigger */
 
 }  // namespace inst

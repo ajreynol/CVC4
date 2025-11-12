@@ -172,7 +172,6 @@ int InstMatchGeneratorMultiLinear::getNextMatch(InstMatch& m)
   }
   return ret_val;
 }
-
 Node InstMatchGeneratorMultiLinear::getCurrentExplanation()
 {
   std::vector<Node> exp;
@@ -181,7 +180,7 @@ Node InstMatchGeneratorMultiLinear::getCurrentExplanation()
     Node e = d_children[i]->getCurrentExplanation();
     exp.push_back(e);
   }
-  return Node::null();
+  return nodeManager()->mkNode(Kind::SEXPR, exp);
 }
 
 }  // namespace inst
