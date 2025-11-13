@@ -229,8 +229,9 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         Node a = n[0].getKind() == Kind::TO_REAL ? n[0][0] : n[0];
         Node b = n[1].getKind() == Kind::TO_REAL ? n[1][0] : n[1];
         rewriter::Sum sum;
-        rewriter::addToSum(sum, a, false);
-        rewriter::addToSum(sum, b, true);
+        // allow dropping TO_REAL
+        rewriter::addToSumNoMixed(sum, a, false);
+        rewriter::addToSumNoMixed(sum, b, true);
         if (rewriter::isIntegral(sum))
         {
           std::pair<Node, Node> p = decomposeSum(d_nm, std::move(sum));
@@ -251,8 +252,9 @@ Node ArithRewriter::rewriteViaRule(ProofRewriteRule id, const Node& n)
         Node a = n[0].getKind() == Kind::TO_REAL ? n[0][0] : n[0];
         Node b = n[1].getKind() == Kind::TO_REAL ? n[1][0] : n[1];
         rewriter::Sum sum;
-        rewriter::addToSum(sum, a, false);
-        rewriter::addToSum(sum, b, true);
+        // allow dropping TO_REAL
+        rewriter::addToSumNoMixed(sum, a, false);
+        rewriter::addToSumNoMixed(sum, b, true);
         if (rewriter::isIntegral(sum))
         {
           // decompose the sum into a non-constant and constant part
@@ -1160,6 +1162,8 @@ RewriteResponse ArithRewriter::postRewritePow2(TNode t)
   if (t[0].isConst())
   {
     // pow2 is only supported for integers
+    Trace("arith-rewriter")
+        << "ArithRewriter::postRewritePow2, t:" << t << std::endl;
     Assert(t[0].getType().isInteger());
     // use the evaluator definition for rewriting this
     Evaluator eval(nullptr);
@@ -1192,13 +1196,16 @@ RewriteResponse ArithRewriter::postRewriteIntsLog2(TNode t)
   // if constant, we eliminate
   if (t[0].isConst())
   {
-    // pow2 is only supported for integers
+    // log2 is only supported for integers
     Assert(t[0].getType().isInteger());
     const Rational& r = t[0].getConst<Rational>();
+    // default to 0 for negative inputs
     if (r.sgn() < 0)
     {
       return RewriteResponse(REWRITE_DONE, rewriter::mkConst(d_nm, Integer(0)));
     }
+    // for non-negative inputs, this
+    // is captured by `length()` of `Integer`.
     Integer i = r.getNumerator();
     size_t const length = i.length();
     return RewriteResponse(REWRITE_DONE,
