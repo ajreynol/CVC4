@@ -116,6 +116,7 @@ TermDb::TermDb(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr)
       d_opMap(context()),
       d_inactive_map(context()),
       d_has_map(context()),
+      d_hasMapLevel(context()),
       d_dcproof(options().smt.produceProofs ? new DeqCongProofGenerator(d_env)
                                             : nullptr)
 {
@@ -587,6 +588,30 @@ bool TermDb::hasTermCurrent(const Node& n, bool useMode) const
   return false;
 }
 
+size_t TermDb::hasTermLevel(const Node& n) const
+{
+  if (n.getKind()==Kind::SEXPR)
+  {
+    std::vector<Node> terms(n.begin(), n.end());
+    size_t maxLevel = 0;
+    for (const Node& t : terms)
+    {
+      size_t level = hasTermLevel(t);
+      if (level>maxLevel)
+      {
+        maxLevel = level;
+      }
+    }
+    return maxLevel;
+  }
+  context::CDHashMap<Node, size_t>::const_iterator it = d_hasMapLevel.find(n);
+  if (it != d_hasMapLevel.end())
+  {
+    return it->second;
+  }
+  return 0;
+}
+
 bool TermDb::isTermEligibleForInstantiation(TNode n, TNode f)
 {
   if (options().quantifiers.instMaxLevel != -1)
@@ -680,6 +705,7 @@ void TermDb::setHasTerm(Node n)
     {
       d_has_map.insert(cur);
       Trace("ajr-temp") << "Term: " << cur << " at depth " << context()->getLevel() << std::endl;
+      d_hasMapLevel[cur] = context()->getLevel();
       visit.insert(visit.end(), cur.begin(), cur.end());
     }
   } while (!visit.empty());
@@ -786,6 +812,9 @@ void TermDb::setInstantiationExplanation(const Node& q,
                                          const Node& pfArg,
                                          const Node& exp)
 {
+  Trace("ajr-temp-exp") << "Explanation for " << q << " " << terms
+                        << " is: " << std::endl;
+  Trace("ajr-temp-exp") << "  " << exp << std::endl;
 }
 
 }  // namespace quantifiers

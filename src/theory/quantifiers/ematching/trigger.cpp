@@ -186,17 +186,28 @@ uint64_t Trigger::addInstantiations()
 
 bool Trigger::sendInstantiation(std::vector<Node>& m, InferenceId id)
 {
+  Node cexp;
+  // see if we should add it non-locally
+  if (options().quantifiers.instLocal)
+  {
+    cexp = d_mg->getCurrentExplanation();
+    if (!cexp.isNull())
+    {
+      size_t hasLevel = d_treg.getTermDatabase()->hasTermLevel(cexp);
+      if (hasLevel==1)
+      {
+        id = InferenceId::QUANTIFIERS_INST_E_MATCHING_NO_LOCAL;
+      }
+    }
+  }
+  
   if (!d_qim.getInstantiate()->addInstantiation(d_quant, m, id, d_trNode))
   {
     return false;
   }
   // also track explanation?
-  Node cexp = d_mg->getCurrentExplanation();
   if (!cexp.isNull())
   {
-    Trace("ajr-temp-exp") << "Explanation for " << d_trNode << " " << m
-                          << " is: " << std::endl;
-    Trace("ajr-temp-exp") << "  " << cexp << std::endl;
     d_treg.getTermDatabase()->setInstantiationExplanation(
         d_quant, m, id, d_trNode, cexp);
   }

@@ -211,6 +211,7 @@ class TermDb : public QuantifiersUtil {
    * Otherwise, it returns the lookup in the map d_has_map.
    */
   bool hasTermCurrent(const Node& n, bool useMode = true) const;
+  size_t hasTermLevel(const Node& n) const;
   /** is term eligble for instantiation? */
   bool isTermEligibleForInstantiation(TNode n, TNode f);
   /** get eligible term in equivalence class of r */
@@ -266,6 +267,8 @@ class TermDb : public QuantifiersUtil {
   std::map<Node, std::vector<std::vector<TNode>>> d_fmapRelDom;
   /** has map */
   context::CDHashSet<Node> d_has_map;
+  /** Mapping terms to the context level they were added */
+  context::CDHashMap<Node, size_t> d_hasMapLevel;
   /** map from reps to a term in eqc in d_has_map */
   std::map<Node, Node> d_term_elig_eqc;
   /**
