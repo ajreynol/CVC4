@@ -65,9 +65,9 @@ ProofFinalCallback::ProofFinalCallback(Env& env)
       d_numFinalProofs(
           statisticsRegistry().registerInt("finalProofs::numFinalProofs")),
       d_pedanticFailure(false),
+      d_checkProofHoles(false),
       d_pfHole(false),
-      d_pfHoleEoUnh(false),
-      d_checkProofHoles(false)
+      d_pfHoleEoUnh(false)
 {
   d_minPedanticLevel += 10;
 }
