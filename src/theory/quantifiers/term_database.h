@@ -214,7 +214,13 @@ class TermDb : public QuantifiersUtil {
   bool isTermEligibleForInstantiation(TNode n, TNode f);
   /** get eligible term in equivalence class of r */
   Node getEligibleTermInEqc(TNode r);
-  /** set has term */
+  /**
+   * Set has term. This marks that n should be added to the term indicies
+   * used for E-matching when term-db is RELEVANT. This method is called on all
+   * terms that appear in assertions, and on all terms that appear in the master
+   * equality engine at last call effort.
+   * @param n the term to add.
+   */
   void setHasTerm(Node n);
 
  protected:
