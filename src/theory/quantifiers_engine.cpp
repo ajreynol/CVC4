@@ -189,12 +189,12 @@ void QuantifiersEngine::ppNotifyAssertions(
 void QuantifiersEngine::check( Theory::Effort e ){
   IncompleteId setModelUnsoundId = IncompleteId::NONE;
   checkInternal(e, setModelUnsoundId);
-    //SAT case
+  // SAT case
   if (e == Theory::EFFORT_LAST_CALL && !d_qim.hasSentLemma())
   {
     // if we are about to say "unknown", see if anything can be done as a last
     // resort to avoid this
-    if (setModelUnsoundId!=IncompleteId::NONE)
+    if (setModelUnsoundId != IncompleteId::NONE)
     {
       // check if we should check again
       bool recheck = shouldRecheck(e, setModelUnsoundId);
@@ -208,23 +208,24 @@ void QuantifiersEngine::check( Theory::Effort e ){
     }
     if (!d_qim.hasSentLemma())
     {
-      if (setModelUnsoundId!=IncompleteId::NONE)
+      if (setModelUnsoundId != IncompleteId::NONE)
       {
         Trace("quant-engine") << "Set incomplete flag." << std::endl;
         d_qim.setModelUnsound(setModelUnsoundId);
       }
-      //output debug stats
+      // output debug stats
       d_qim.getInstantiate()->debugPrintModel();
     }
   }
   d_qim.clearPending();
 }
 
-bool QuantifiersEngine::shouldRecheck(Theory::Effort e, IncompleteId setModelUnsoundId)
+bool QuantifiersEngine::shouldRecheck(Theory::Effort e,
+                                      IncompleteId setModelUnsoundId)
 {
   // special case: IncompleteId::QUANTIFIERS_RECORDED_INST indicates we wish
-  // to intentionally answer unknown for partial quantifier elimination 
-  if (setModelUnsoundId==IncompleteId::QUANTIFIERS_RECORDED_INST)
+  // to intentionally answer unknown for partial quantifier elimination
+  if (setModelUnsoundId == IncompleteId::QUANTIFIERS_RECORDED_INST)
   {
     return false;
   }
@@ -233,8 +234,8 @@ bool QuantifiersEngine::shouldRecheck(Theory::Effort e, IncompleteId setModelUns
   if (options().quantifiers.termDbMode == options::TermDbMode::RELEVANT)
   {
     TermDb* tdb = d_treg.getTermDatabase();
-    eq::EqualityEngine * ee = d_qstate.getEqualityEngine();
-    Assert (ee->consistent());
+    eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
+    Assert(ee->consistent());
     eq::EqClassesIterator eqcsi = eq::EqClassesIterator(ee);
     while (!eqcsi.isFinished())
     {
@@ -250,8 +251,10 @@ bool QuantifiersEngine::shouldRecheck(Theory::Effort e, IncompleteId setModelUns
   }
   return false;
 }
-  
-void QuantifiersEngine::checkInternal(Theory::Effort e, IncompleteId& setModelUnsoundId){
+
+void QuantifiersEngine::checkInternal(Theory::Effort e,
+                                      IncompleteId& setModelUnsoundId)
+{
   QuantifiersStatistics& stats = d_qstate.getStats();
   CodeTimer codeTimer(stats.d_time);
   Assert(d_qstate.getEqualityEngine() != nullptr);
@@ -483,7 +486,7 @@ void QuantifiersEngine::checkInternal(Theory::Effort e, IncompleteId& setModelUn
               setModelUnsoundId = IncompleteId::QUANTIFIERS;
             }
             //if we have a chance not to set incomplete
-            if (setModelUnsoundId==IncompleteId::NONE)
+            if (setModelUnsoundId == IncompleteId::NONE)
             {
               //check if we should set the incomplete flag
               for (QuantifiersModule*& mdl : d_modules)
@@ -497,7 +500,7 @@ void QuantifiersEngine::checkInternal(Theory::Effort e, IncompleteId& setModelUn
                   break;
                 }
               }
-              if (setModelUnsoundId==IncompleteId::NONE)
+              if (setModelUnsoundId == IncompleteId::NONE)
               {
                 //look at individual quantified formulas, one module must claim completeness for each one
                 for( unsigned i=0; i<d_model->getNumAssertedQuantifiers(); i++ ){
@@ -526,9 +529,9 @@ void QuantifiersEngine::checkInternal(Theory::Effort e, IncompleteId& setModelUn
                 }
               }
             }
-            // if setModelUnsoundId is not set, we will answer SAT, otherwise we will
-            // run at quant_e QEFFORT_LAST_CALL
-            if (setModelUnsoundId==IncompleteId::NONE)
+            // if setModelUnsoundId is not set, we will answer SAT, otherwise we
+            // will run at quant_e QEFFORT_LAST_CALL
+            if (setModelUnsoundId == IncompleteId::NONE)
             {
               break;
             }

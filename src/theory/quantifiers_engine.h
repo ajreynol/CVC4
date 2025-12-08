@@ -153,7 +153,7 @@ class QuantifiersEngine : protected EnvObj
   std::vector<Node> getOracleFuns() const;
   //----------end user interface for instantiations
  private:
-  /** 
+  /**
    * Check at level, setting setModelUnsoundId to an IncompleteId if we are
    * "unknown" instead of "unsat".
    * @param e the effort level

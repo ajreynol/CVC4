@@ -215,7 +215,7 @@ class TermDb : public QuantifiersUtil {
   /** get eligible term in equivalence class of r */
   Node getEligibleTermInEqc(TNode r);
   /** set has term */
-  void setHasTerm( Node n );
+  void setHasTerm(Node n);
 
  protected:
   /** The quantifiers state object */
