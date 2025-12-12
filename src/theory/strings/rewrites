@@ -291,6 +291,11 @@
   (str.replace_all t s r)
   t)
 
+(define-cond-rule str-replace-all-empty ((t ?Seq) (s ?Seq) (r ?Seq))
+  (= (str.len s) 0)
+  (str.replace_all t s r)
+  t)
+
 (define-rule str-replace-re-none ((t ?Seq) (r ?Seq))
   (str.replace_re t re.none r)
   t)
@@ -334,9 +339,13 @@
   (- 1))
 
 (define-cond-rule str-indexof-contains-pre ((t1 ?Seq) (t2 ?Seq :list) (s ?Seq) (n Int))
-  (str.contains (str.substr t1 n (str.len t1)) s)
+  (and (> (str.len s) 0) (str.contains (str.substr t1 n (str.len t1)) s))
   (str.indexof (str.++ t1 t2) s n)
   (str.indexof t1 s n))
+
+(define-rule str-indexof-contains-concat-pre ((t1 ?Seq :list) (t ?Seq) (t2 ?Seq :list) (s ?Seq))
+  (str.indexof (str.++ t1 t s t2) t 0)
+  (str.indexof (str.++ t1 t) t 0))
 
 (define-cond-rule str-indexof-find-emp ((t ?Seq) (emp ?Seq) (n Int))
   (and (= (str.len emp) 0) (>= (str.len t) n) (>= n 0))
@@ -395,6 +404,10 @@
   (= (str.to_int s2) (- 1))
   (str.to_int (str.++ s1 s2 s3))
   (- 1))
+
+(define-rule str-is-digit-elim ((s String))
+  (str.is_digit s)
+  (and (<= 48 (str.to_code s)) (<= (str.to_code s) 57)))
 
 (define-rule str-leq-empty ((s String))
   (str.<= "" s)
@@ -587,6 +600,16 @@
 
 (define-rule re-star-star ((x RegLan)) (re.* (re.* x)) (re.* x))
 
+(define-cond-rule re-range-non-singleton-1 ((s String) (t String))
+  (not (= (str.len s) 1))
+  (re.range s t)
+  re.none)
+  
+(define-cond-rule re-range-non-singleton-2 ((s String) (t String))
+  (not (= (str.len t) 1))
+  (re.range s t)
+  re.none)
+
 (define-rule re-star-union-drop-emp ((x RegLan :list) (y RegLan :list))
   (re.* (re.union x (str.to_re "") y))
   (re.* (re.union x y)))
@@ -596,14 +619,14 @@
   (re.loop n m r)
   re.none)
 
-(define-cond-rule re-inter-cstring ((xs RegLan :list) (ys RegLan :list) (s String))
-  (str.in_re s (re.inter xs ys))
-  (re.inter xs (str.to_re s) ys) 
+(define-cond-rule re-inter-cstring ((x RegLan) (ys RegLan :list) (s String))
+  (str.in_re s (re.inter (str.to_re s) x ys))
+  (re.inter (str.to_re s) x ys) 
   (str.to_re s))
 
-(define-cond-rule re-inter-cstring-neg ((xs RegLan :list) (ys RegLan :list) (s String))
-  (not (str.in_re s (re.inter xs ys)))
-  (re.inter xs (str.to_re s) ys)
+(define-cond-rule re-inter-cstring-neg ((x RegLan) (ys RegLan :list) (s String))
+  (not (str.in_re s (re.inter (str.to_re s) x ys)))
+  (re.inter (str.to_re s) x ys)
   re.none)
 
 (define-cond-rule str-substr-len-include ((s1 ?Seq) (s2 ?Seq :list) (n Int) (m Int))

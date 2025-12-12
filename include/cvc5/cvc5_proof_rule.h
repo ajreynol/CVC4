@@ -2886,22 +2886,37 @@ enum ENUM(ProofRewriteRule)
    *
    * .. math::
    *
-   *   \forall X.\> F = \forall X_1.\> F
+   *   Q X.\> F = Q X_1.\> F
    *
-   * where :math:`X_1` is the subset of :math:`X` that appear free in :math:`F`
-   * and :math:`X_1` does not contain duplicate variables.
+   * where :math:`Q` is either :math:`\forall or :math:`\exists` and :math:`X_1` is the subset of :math:`X`
+   * that appear free in :math:`F` and :math:`X_1` does not contain duplicate variables.
    *
    * \endverbatim
    */
   EVALUE(QUANT_UNUSED_VARS),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Quantifiers -- Macro eliminate shadowing**
+   *
+   * .. math::
+   *
+   *   Q X.\> F = Q X.\> G
+   *
+   * where :math:`Q` is either :math:`\forall` or :math:`\exists` and
+   * :math:`Q X.\> G` has no instances of variable shadowing.
+   *
+   * \endverbatim
+   */
+  EVALUE(MACRO_QUANT_ELIM_SHADOW),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Quantifiers -- Macro merge prenex**
    *
    * .. math::
    *
-   *   \forall X_1.\> \ldots \forall X_n.\> F = \forall X.\> F
+   *   Q X_1.\> \ldots Q X_n.\> F = Q X.\> F
    *
+   * where :math:`Q` is either :math:`\forall` or :math:`\exists` and :math:`X_1` is the subset of :math:`X`
    * where :math:`X_1 \ldots X_n` are lists of variables and :math:`X` is the
    * result of removing duplicates from :math:`X_1 \ldots X_n`.
    *
@@ -2914,9 +2929,9 @@ enum ENUM(ProofRewriteRule)
    *
    * .. math::
    *
-   *   \forall X_1.\> \ldots \forall X_n.\> F = \forall X_1 \ldots X_n.\> F
+   *   Q X_1.\> \ldots Q X_n.\> F = Q X_1 \ldots X_n.\> F
    *
-   * where :math:`X_1 \ldots X_n` are lists of variables.
+   * where :math:`Q` is either :math:`\forall` or :math:`\exists` and :math:`X_1 \ldots X_n` are lists of variables.
    *
    * \endverbatim
    */
@@ -4551,6 +4566,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_REPLACE_FIND_PRE),
   /** Auto-generated from RARE rule str-replace-all-no-contains */
   EVALUE(STR_REPLACE_ALL_NO_CONTAINS),
+  /** Auto-generated from RARE rule str-replace-all-empty */
+  EVALUE(STR_REPLACE_ALL_EMPTY),
   /** Auto-generated from RARE rule str-replace-re-none */
   EVALUE(STR_REPLACE_RE_NONE),
   /** Auto-generated from RARE rule str-replace-re-all-none */
@@ -4571,6 +4588,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_INDEXOF_OOB2),
   /** Auto-generated from RARE rule str-indexof-contains-pre */
   EVALUE(STR_INDEXOF_CONTAINS_PRE),
+  /** Auto-generated from RARE rule str-indexof-contains-concat-pre */
+  EVALUE(STR_INDEXOF_CONTAINS_CONCAT_PRE),
   /** Auto-generated from RARE rule str-indexof-find-emp */
   EVALUE(STR_INDEXOF_FIND_EMP),
   /** Auto-generated from RARE rule str-indexof-eq-irr */
@@ -4597,6 +4616,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(STR_TO_UPPER_FROM_INT),
   /** Auto-generated from RARE rule str-to-int-concat-neg-one */
   EVALUE(STR_TO_INT_CONCAT_NEG_ONE),
+  /** Auto-generated from RARE rule str-is-digit-elim */
+  EVALUE(STR_IS_DIGIT_ELIM),
   /** Auto-generated from RARE rule str-leq-empty */
   EVALUE(STR_LEQ_EMPTY),
   /** Auto-generated from RARE rule str-leq-empty-eq */
@@ -4691,6 +4712,10 @@ enum ENUM(ProofRewriteRule)
   EVALUE(RE_STAR_EMP),
   /** Auto-generated from RARE rule re-star-star */
   EVALUE(RE_STAR_STAR),
+  /** Auto-generated from RARE rule re-range-non-singleton-1 */
+  EVALUE(RE_RANGE_NON_SINGLETON_1),
+  /** Auto-generated from RARE rule re-range-non-singleton-2 */
+  EVALUE(RE_RANGE_NON_SINGLETON_2),
   /** Auto-generated from RARE rule re-star-union-drop-emp */
   EVALUE(RE_STAR_UNION_DROP_EMP),
   /** Auto-generated from RARE rule re-loop-neg */
