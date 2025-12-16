@@ -29,6 +29,7 @@
 #include "theory/strings/theory_strings_utils.h"
 #include "theory/strings/word.h"
 #include "util/statistics_registry.h"
+#include "expr/term_context_stack.h"
 
 using namespace cvc5::internal::kind;
 
@@ -1451,17 +1452,67 @@ Node InferProofCons::convertCoreSubs(Env& env,
                             "StrTConv",
                             &sctc);
   // add the rewrites for nested contexts up to idMax.
-  for (size_t i = minIndex; i <= maxIndex; i++)
+  for (const Node& s : exp)
   {
-    for (const Node& s : exp)
-    {
-      Trace("strings-ipc-subs")
-          << "--- rewrite " << s << ", id " << i << std::endl;
-      Assert(s.getKind() == Kind::EQUAL);
-      tconv.addRewriteStep(s[0], s[1], pf, false, TrustId::NONE, false, i);
-    }
+    Trace("strings-ipc-subs")
+        << "--- rewrite " << s << std::endl;
+    Assert(s.getKind() == Kind::EQUAL);
+    tconv.addRewriteStep(s[0], s[1], pf, false, TrustId::NONE, false, 0);
   }
-  std::shared_ptr<ProofNode> pfn = tconv.getProofForRewriting(src);
+  Trace("strings-ipc-subs") << "Apply to " << src << std::endl;
+  std::shared_ptr<ProofNode> pfn;
+  if (maxIndex==1)
+  {
+    TConvProofGenerator tconv2(env,
+                              nullptr,
+                              TConvPolicy::ONCE,
+                              TConvCachePolicy::NEVER,
+                              "StrTConv2",
+                              &sctc);
+    TCtxStack ctx(&sctc);
+    ctx.pushInitial(src);
+    std::pair<Node, uint32_t> initial = ctx.getCurrent();
+    std::pair<Node, uint32_t> curr;
+    std::unordered_set<std::pair<Node, uint32_t>, PairHashFunction<Node, uint32_t, std::hash<Node>>> visited;
+    Node node;
+    uint32_t nodeVal;
+    while (!ctx.empty())
+    {
+      curr = ctx.getCurrent();
+      ctx.pop();
+      node = curr.first;
+      nodeVal = curr.second;
+      if (!visited.insert(curr).second)
+      {
+        // already computed
+        continue;
+      }
+      if (nodeVal>1)
+      {
+        continue;
+      }
+      if (minIndex<=nodeVal && nodeVal<=maxIndex)
+      {
+        Trace("strings-ipc-subs") << "...inner apply to " << node << std::endl;
+        std::shared_ptr<ProofNode> pfni = tconv.getProofForRewriting(node);
+        pf->addProof(pfni);
+        Node eq = pfni->getResult();
+        Trace("strings-ipc-subs") << "...got " << eq[1] << std::endl;
+        Assert (eq.getKind()==Kind::EQUAL);
+        tconv2.addRewriteStep(eq[0], eq[1], pf, false, TrustId::NONE, false, 0);
+      }
+      size_t nchild = node.getNumChildren();
+      for (size_t i = 0; i < nchild; i++)
+      {
+        ctx.pushChild(node, nodeVal, i);
+      }
+    }
+    pfn = tconv2.getProofForRewriting(src);
+  }
+  else
+  {
+    pfn = tconv.getProofForRewriting(src);
+  }
   Node res = pfn->getResult();
   Assert(res.getKind() == Kind::EQUAL);
   if (res[0] != res[1])
