@@ -231,6 +231,19 @@ void TheoryUF::notifyFact(TNode atom, bool pol, TNode fact, bool isInternal)
 }
 //--------------------------------- end standard check
 
+TrustNode TheoryUF::ppStaticRewrite(TNode n)
+{
+  if (options().uf.ufEagerDistinct)
+  {
+    if (n.getKind() == Kind::DISTINCT)
+    {
+      Node bn = TheoryUfRewriter::blastDistinct(nodeManager(), n);
+      return TrustNode::mkTrustRewrite(n, bn);
+    }
+  }
+  return TrustNode::null();
+}
+
 TrustNode TheoryUF::ppRewrite(TNode node, std::vector<SkolemLemma>& lems)
 {
   Trace("uf-exp-def") << "TheoryUF::ppRewrite: expanding definition : " << node

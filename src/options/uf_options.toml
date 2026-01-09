@@ -11,6 +11,14 @@ name   = "Uninterpreted Functions Theory"
   help       = "use UF symmetry breaker (Deharbe et al., CADE 2011)"
 
 [[option]]
+  name       = "ufEagerDistinct"
+  category   = "regular"
+  long       = "uf-eager-distinct"
+  type       = "bool"
+  default    = "true"
+  help       = "eagerly expand distinct constraints"
+
+[[option]]
   name       = "ufssAbortCardinality"
   category   = "regular"
   long       = "uf-ss-abort-card=N"
