@@ -203,8 +203,10 @@ uint64_t Trigger::addInstantiations()
 bool Trigger::sendInstantiation(std::vector<Node>& m)
 {
   Instantiate* inst = d_qim.getInstantiate();
+  InferenceId id = d_mg->getInferenceId();
   if (inst->addInstantiation(d_quant, m, id, d_trNode))
   {
+    Node src;
     if (!src.isNull())
     {
       Node f = inst->getInstantiation(d_quant, m);
