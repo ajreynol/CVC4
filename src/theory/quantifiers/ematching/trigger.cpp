@@ -200,9 +200,7 @@ uint64_t Trigger::addInstantiations()
   return gtAddedLemmas + addedLemmas;
 }
 
-bool Trigger::sendInstantiation(std::vector<Node>& m,
-                                InferenceId id,
-                                const Node& src)
+bool Trigger::sendInstantiation(std::vector<Node>& m)
 {
   Instantiate* inst = d_qim.getInstantiate();
   if (inst->addInstantiation(d_quant, m, id, d_trNode))

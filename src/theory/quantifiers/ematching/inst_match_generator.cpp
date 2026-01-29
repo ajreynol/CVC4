@@ -434,7 +434,7 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
     if (success)
     {
       Trace("matching-debug2") << "Continue next " << d_next << std::endl;
-      ret_val = continueNextMatch(m, InferenceId::QUANTIFIERS_INST_E_MATCHING);
+      ret_val = continueNextMatch(m);
     }
   }
   if (ret_val < 0)
@@ -447,7 +447,7 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
   return ret_val;
 }
 
-int InstMatchGenerator::continueNextMatch(InstMatch& m, InferenceId id)
+int InstMatchGenerator::continueNextMatch(InstMatch& m)
 {
   if( d_next!=NULL ){
     return d_next->getNextMatch(m);
@@ -455,8 +455,7 @@ int InstMatchGenerator::continueNextMatch(InstMatch& m, InferenceId id)
   if (d_active_add)
   {
     std::vector<Node> mc = m.get();
-    Node src;
-    return sendInstantiation(mc, id, src) ? 1 : -1;
+    return sendInstantiation(mc) ? 1 : -1;
   }
   return 1;
 }
@@ -568,8 +567,7 @@ uint64_t InstMatchGenerator::addInstantiations(InstMatch& m)
   {
     if( !d_active_add ){
       std::vector<Node> mc = m.get();
-      Node src;
-      if (sendInstantiation(mc, InferenceId::UNKNOWN, src))
+      if (sendInstantiation(mc))
       {
         addedLemmas++;
         if (d_qstate.isInConflict())

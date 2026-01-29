@@ -400,6 +400,8 @@ void QuantifiersEngine::check( Theory::Effort e ){
       }else{
         if (quant_e == QuantifiersModule::QEFFORT_CONFLICT)
         {
+          // increment the instantiation round counter only if we did not find a
+          // conflict or lemma at QEFFORT_CONFLICT above.
           d_qstate.incrementInstRoundCounters(e);
         }
         else if (quant_e == QuantifiersModule::QEFFORT_MODEL)
@@ -493,6 +495,8 @@ void QuantifiersEngine::check( Theory::Effort e ){
     Trace("quant-engine-debug2") << "Finished quantifiers engine check." << std::endl;
   }else{
     Trace("quant-engine-debug2") << "Quantifiers Engine does not need check." << std::endl;
+    // increment counter
+    d_qstate.incrementInstRoundCounters(e);
   }
 
   //SAT case

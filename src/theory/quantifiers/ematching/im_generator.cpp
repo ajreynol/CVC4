@@ -32,11 +32,9 @@ IMGenerator::IMGenerator(Env& env, Trigger* tparent)
 {
 }
 
-bool IMGenerator::sendInstantiation(std::vector<Node>& terms,
-                                    InferenceId id,
-                                    const Node& src)
+bool IMGenerator::sendInstantiation(std::vector<Node>& terms)
 {
-  return d_tparent->sendInstantiation(terms, id, src);
+  return d_tparent->sendInstantiation(terms);
 }
 
 }  // namespace inst

@@ -22,6 +22,7 @@
 #include "proof/proof_node_algorithm.h"
 #include "proof/proof_node_manager.h"
 #include "smt/env.h"
+#include "util/rational.h"
 
 namespace cvc5::internal {
 
@@ -60,11 +61,86 @@ Node SubtypeElimConverterCallback::convert(Node res,
   }
   // get the converted form of the conclusion, which we must prove.
   Node resc = d_nconv.convert(res);
+  // trivial case: use refl. This handles all cases where e.g. rewriting
+  // introduced mixed arithmetic. This happens commonly so we shortcut as
+  // an optimization here.
+  if (resc.getKind() == Kind::EQUAL && resc[0] == resc[1])
+  {
+    cdp->addStep(resc, ProofRule::REFL, {}, {resc[0]});
+    return resc;
+  }
   // in very rare cases a direct child may already be the proof we want
   if (std::find(children.begin(), children.end(), resc) != children.end())
   {
     return resc;
   }
+  NodeManager* nm = nodeManager();
+  // cases where arguments may need additional fixing before trying
+  // proof rule
+  switch (id)
+  {
+    case ProofRule::ARITH_MULT_SIGN:
+    {
+      Trace("pf-subtype-elim")
+          << "preconvert arith mult sign " << cargs << std::endl;
+      // For example, if x:Real, y:Int, this rule with the arguments
+      // (and (> x 0.0) (> y 0)), (* x y) proves
+      // (=> (and (> x 0.0) (> y 0)) (> (* x y) 0.0)). Subtype elimination
+      // converts this initially to (and (> x 0.0) (> y 0)), (* x (to_real y)),
+      // which is not a valid proof step since y does not match (to_real y).
+      // This further converts the arguments to
+      // (and (> x 0.0) (> (to_real y) 0.0)), (* x (to_real y)).
+      Assert(cargs.size() == 2 && cargs[1].getKind() == Kind::NONLINEAR_MULT);
+      std::vector<Node> premise;
+      if (cargs[0].getKind() == Kind::AND)
+      {
+        premise.insert(premise.end(), cargs[0].begin(), cargs[0].end());
+      }
+      else
+      {
+        premise.push_back(cargs[0]);
+      }
+      // map premises to their index
+      std::map<Node, size_t> premiseIndex;
+      for (size_t i = 0, nprem = premise.size(); i < nprem; i++)
+      {
+        Node p = premise[i];
+        bool neg = p.getKind() == Kind::NOT;
+        Node atom = neg ? p[0] : p;
+        Assert(atom.getNumChildren() == 2);
+        premiseIndex[atom[0]] = i;
+      }
+      std::vector<Node> nconj;
+      bool childChanged = false;
+      // for each to_real(x) in the monomial, go back and modify the premise
+      // x ~ 0 to to_real(x) ~ 0.0
+      std::map<Node, size_t>::iterator itp;
+      for (size_t i = 0, nchild = cargs[1].getNumChildren(); i < nchild; i++)
+      {
+        if (cargs[1][i].getKind() == Kind::TO_REAL)
+        {
+          itp = premiseIndex.find(cargs[1][i][0]);
+          Assert(itp != premiseIndex.end());
+          Node p = premise[itp->second];
+          bool neg = p.getKind() == Kind::NOT;
+          Node atom = neg ? p[0] : p;
+          Assert(atom[1].isConst() && atom[1].getConst<Rational>().sgn() == 0);
+          childChanged = true;
+          Node newAtom = nm->mkNode(
+              atom.getKind(), cargs[1][i], nm->mkConstReal(Rational(0)));
+          newAtom = neg ? newAtom.notNode() : newAtom;
+          premise[itp->second] = newAtom;
+        }
+      }
+      if (childChanged)
+      {
+        cargs[0] = nm->mkAnd(premise);
+      }
+    }
+    break;
+    default: break;
+  }
+
   Node newRes;
   // check if succeeds with no changes
   if (tryWith(id, children, cargs, resc, newRes, cdp))
@@ -127,7 +203,6 @@ Node SubtypeElimConverterCallback::convert(Node res,
     case ProofRule::ARITH_SUM_UB:
     {
       success = true;
-      NodeManager* nm = nodeManager();
       Assert(resc.getNumChildren() == 2);
       Assert(resc[0].getNumChildren() == children.size());
       Assert(resc[1].getNumChildren() == children.size());
@@ -170,7 +245,6 @@ Node SubtypeElimConverterCallback::convert(Node res,
       //
       // there t'~s' is a predicate over reals and t~s is a mixed integer
       // predicate.
-      NodeManager* nm = nodeManager();
       Node sc = resc[0][0];
       Node relOld = resc[0][1];
       Node relNew = nm->mkNode(relOld.getKind(), resc[1][0][1], resc[1][1][1]);
