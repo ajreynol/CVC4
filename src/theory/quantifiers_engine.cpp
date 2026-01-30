@@ -399,6 +399,8 @@ void QuantifiersEngine::check( Theory::Effort e ){
       }else{
         if (quant_e == QuantifiersModule::QEFFORT_CONFLICT)
         {
+          // increment the instantiation round counter only if we did not find a
+          // conflict or lemma at QEFFORT_CONFLICT above.
           d_qstate.incrementInstRoundCounters(e);
         }
         else if (quant_e == QuantifiersModule::QEFFORT_MODEL)
@@ -492,6 +494,8 @@ void QuantifiersEngine::check( Theory::Effort e ){
     Trace("quant-engine-debug2") << "Finished quantifiers engine check." << std::endl;
   }else{
     Trace("quant-engine-debug2") << "Quantifiers Engine does not need check." << std::endl;
+    // increment counter
+    d_qstate.incrementInstRoundCounters(e);
   }
 
   //SAT case
@@ -648,10 +652,18 @@ void QuantifiersEngine::assertQuantifier( Node f, bool pol ){
     mdl->assertNode(f);
   }
   // add term to the registry
-  d_treg.addTerm(d_qreg.getInstConstantBody(f), true);
+  d_treg.addQuantifierBody(d_qreg.getInstConstantBody(f));
 }
 
-void QuantifiersEngine::eqNotifyNewClass(TNode t) { d_treg.addTerm(t); }
+void QuantifiersEngine::eqNotifyNewClass(TNode t)
+{
+  d_treg.eqNotifyNewClass(t);
+}
+
+void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
+{
+  d_treg.eqNotifyMerge(t1, t2);
+}
 
 void QuantifiersEngine::markRelevant( Node q ) {
   d_model->markRelevant( q );

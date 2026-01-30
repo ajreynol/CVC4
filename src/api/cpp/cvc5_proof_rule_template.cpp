@@ -53,8 +53,7 @@ const char* toString(ProofRule rule)
     case ProofRule::CHAIN_RESOLUTION: return "CHAIN_RESOLUTION";
     case ProofRule::FACTORING: return "FACTORING";
     case ProofRule::REORDERING: return "REORDERING";
-    case ProofRule::MACRO_RESOLUTION: return "MACRO_RESOLUTION";
-    case ProofRule::MACRO_RESOLUTION_TRUST: return "MACRO_RESOLUTION_TRUST";
+    case ProofRule::CHAIN_M_RESOLUTION: return "CHAIN_M_RESOLUTION";
     case ProofRule::SPLIT: return "SPLIT";
     case ProofRule::EQ_RESOLVE: return "EQ_RESOLVE";
     case ProofRule::MODUS_PONENS: return "MODUS_PONENS";
@@ -107,6 +106,7 @@ const char* toString(ProofRule rule)
     case ProofRule::TRANS: return "TRANS";
     case ProofRule::CONG: return "CONG";
     case ProofRule::NARY_CONG: return "NARY_CONG";
+    case ProofRule::PAIRWISE_CONG: return "PAIRWISE_CONG";
     case ProofRule::TRUE_INTRO: return "TRUE_INTRO";
     case ProofRule::TRUE_ELIM: return "TRUE_ELIM";
     case ProofRule::FALSE_INTRO: return "FALSE_INTRO";
@@ -244,6 +244,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::MACRO_ARITH_STRING_PRED_ENTAIL:
       return "macro-arith-string-pred-entail";
     case ProofRewriteRule::ARITH_POW_ELIM: return "arith-pow-elim";
+    case ProofRewriteRule::DISTINCT_FALSE: return "distinct-false";
+    case ProofRewriteRule::DISTINCT_TRUE: return "distinct-true";
     case ProofRewriteRule::BETA_REDUCE: return "beta-reduce";
     case ProofRewriteRule::LAMBDA_ELIM: return "lambda-elim";
     case ProofRewriteRule::MACRO_LAMBDA_CAPTURE_AVOID:
@@ -256,6 +258,8 @@ const char* toString(cvc5::ProofRewriteRule rule)
       return "arrays-eq-range-expand";
     case ProofRewriteRule::EXISTS_ELIM: return "exists-elim";
     case ProofRewriteRule::QUANT_UNUSED_VARS: return "quant-unused-vars";
+    case ProofRewriteRule::MACRO_QUANT_ELIM_SHADOW:
+      return "macro-quant-elim-shadow";
     case ProofRewriteRule::MACRO_QUANT_MERGE_PRENEX:
       return "macro-quant-merge-prenex";
     case ProofRewriteRule::QUANT_MERGE_PRENEX: return "quant-merge-prenex";
@@ -340,6 +344,7 @@ const char* toString(cvc5::ProofRewriteRule rule)
     case ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL:
       return "str-replace-re-all-eval";
     case ProofRewriteRule::RE_LOOP_ELIM: return "re-loop-elim";
+    case ProofRewriteRule::RE_EQ_ELIM: return "re-eq-elim";
     case ProofRewriteRule::MACRO_RE_INTER_UNION_INCLUSION:
       return "macro-re-inter-union-inclusion";
     case ProofRewriteRule::RE_INTER_INCLUSION: return "re-inter-inclusion";

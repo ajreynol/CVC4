@@ -55,7 +55,11 @@ enum class InternalSkolemId
   /** Input variables for quantifier elimination of closed formulas */
   QE_CLOSED_INPUT,
   /** Skolem used for marking a quantified attribute */
-  QUANTIFIERS_ATTRIBUTE_INTERNAL
+  QUANTIFIERS_ATTRIBUTE_INTERNAL,
+  /** Skolem used for subsolver in get-value */
+  GET_VALUE_PURIFY,
+  /** Input variables for normalizing inputs */
+  NORMALIZE_INPUT_VARIABLE
 };
 /** Converts an internal skolem function name to a string. */
 const char* toString(InternalSkolemId id);

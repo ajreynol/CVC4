@@ -198,7 +198,7 @@
 ;   corresponding to decomposing s at position n, and that the decomposed term
 ;   has length n.
 (declare-rule string_decompose ((U Type) (s (Seq U)) (n Int) (b Bool))
-  :premises ((>= (str.len s) n))
+  :premises ((>= n 0) (>= (str.len s) n))
   :args (b)
   :conclusion (eo::ite b
                 (eo::define ((kp (@purify ($str_prefix_rem s n)))
@@ -359,9 +359,9 @@
         (eo::define ((n ($str_fixed_len_re r1)))
           (eo::ite rev
           (or (not (str.in_re ($str_suffix s n) r1))
-              (not (str.in_re ($str_prefix s (- (str.len s) n)) ($singleton_elim ($str_re_rev rev r2)))))
+              (not (str.in_re ($str_prefix s (- (str.len s) n)) (eo::list_singleton_elim re.++ ($str_re_rev rev r2)))))
           (or (not (str.in_re ($str_prefix s n) r1))
-              (not (str.in_re ($str_suffix_rem s n) ($singleton_elim r2)))))))
+              (not (str.in_re ($str_suffix_rem s n) (eo::list_singleton_elim re.++ r2)))))))
   )
 )
 
@@ -406,7 +406,7 @@
         (or (< @var.str_index 0)
             (< (str.len t) @var.str_index)
             (not (str.in_re ($str_prefix t @var.str_index) r1))
-            (not (str.in_re ($str_suffix_rem t @var.str_index) ($singleton_elim r2))))))
+            (not (str.in_re ($str_suffix_rem t @var.str_index) (eo::list_singleton_elim re.++ r2))))))
   )
 )
 
@@ -551,6 +551,17 @@
   :requires (((eo::is_neg (eo::add (eo::neg l) u)) false)
              (($str_mk_re_loop_elim l (eo::add (eo::neg l) u) r1) r2))
   :conclusion (= (re.loop l u r1) r2)
+)
+
+; rule: re-eq-elim
+; implements: ProofRewriteRule::RE_EQ_ELIM
+; args:
+; - eq Bool: The equality to prove whose left hand side is an equality between regular expressions.
+; conclusion: The given equality.
+(declare-rule re-eq-elim ((r1 RegLan) (r2 RegLan) (Q Bool))
+  :args ((= (= r1 r2) Q))
+  :requires ((Q (forall ((@var.re_eq String)) (= (str.in_re @var.re_eq r1) (str.in_re @var.re_eq r2)))))
+  :conclusion (= (= r1 r2) Q)
 )
 
 ; rule: re-inter-inclusion
@@ -874,7 +885,7 @@
 ;   The result of evaluating (str.replace_re_all s r t).
 (define $str_eval_replace_re_all ((s String) (r RegLan) (t String))
   (eo::define ((rnemp (re.inter r (re.comp (str.to_re ""))))) ; looking for non-empty matches
-  ($singleton_elim ($str_eval_replace_re_all_rec s rnemp t ($str_first_match s rnemp)))))
+  (eo::list_singleton_elim str.++ ($str_eval_replace_re_all_rec s rnemp t ($str_first_match s rnemp)))))
 
 ; rule: str-replace-re-all-eval
 ; implements: ProofRewriteRule::STR_REPLACE_RE_ALL_EVAL
@@ -959,8 +970,9 @@
   (($seq_eval_replace_all_rec s t u n lent)   (eo::define ((snext ($seq_subsequence (eo::add n lent) ($str_value_len s) s)))
                                               (eo::list_concat seq.++
                                                 ($seq_subsequence 0 n s)
-                                                u
-                                                ($seq_eval_replace_all_rec snext t u ($seq_find snext t 0) lent))))
+                                                (eo::list_concat seq.++
+                                                  u
+                                                  ($seq_eval_replace_all_rec snext t u ($seq_find snext t 0) lent)))))
   )
 )
 
@@ -988,8 +1000,9 @@
                                               t
                                               ($str_nary_elim (eo::list_concat seq.++
                                                 ($seq_subsequence 0 i tn)
-                                                ($str_nary_intro r)
-                                                ($seq_subsequence (eo::add i ($str_value_len sn)) ($str_value_len tn) tn))))))))
+                                                (eo::list_concat seq.++
+                                                  ($str_nary_intro r)
+                                                  ($seq_subsequence (eo::add i ($str_value_len sn)) ($str_value_len tn) tn)))))))))
     (($seq_eval (seq.replace_all t s r))  (eo::define ((tn ($str_nary_intro t)))
                                           (eo::define ((sn ($str_nary_intro s)))
                                           (eo::define ((rn ($str_nary_intro r)))

@@ -744,11 +744,13 @@ std::string ParserState::stripQuotes(const std::string& s)
 
 Term ParserState::mkCharConstant(const std::string& s)
 {
-  Assert(s.find_first_not_of("0123456789abcdefABCDEF", 0) == std::string::npos
-         && s.size() <= 5 && s.size() > 0)
-      << "Unexpected string for hexadecimal character " << s;
-  wchar_t val = static_cast<wchar_t>(std::stoul(s, 0, 16));
-  return d_tm.mkString(std::wstring(1, val));
+  if (!(s.find_first_not_of("0123456789abcdefABCDEF", 0) == std::string::npos
+        && s.size() <= 5 && s.size() > 0))
+  {
+    parseError("Unexpected string for hexadecimal character: `" + s + "'");
+  }
+  char32_t val = static_cast<char32_t>(std::stoul(s, 0, 16));
+  return d_tm.mkString(std::u32string(1, val));
 }
 
 uint32_t stringToUnsigned(const std::string& str)

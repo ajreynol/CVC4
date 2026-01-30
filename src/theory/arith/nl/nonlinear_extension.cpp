@@ -53,11 +53,13 @@ NonlinearExtension::NonlinearExtension(Env& env, TheoryArith& containing)
       d_factoringSlv(d_env, &d_extState),
       d_monomialBoundsSlv(d_env, &d_extState),
       d_monomialSlv(d_env, &d_extState),
+      d_fmSlv(d_env, d_astate, d_im),
       d_splitZeroSlv(d_env, &d_extState),
       d_tangentPlaneSlv(d_env, &d_extState),
       d_covSlv(d_env, d_im, d_model),
       d_icpSlv(d_env, d_im),
       d_iandSlv(env, d_im, d_model),
+      d_piandSlv(env, d_im, d_model),
       d_pow2Slv(env, d_im, d_model)
 {
   d_extTheory.addFunctionKind(Kind::NONLINEAR_MULT);
@@ -65,6 +67,7 @@ NonlinearExtension::NonlinearExtension(Env& env, TheoryArith& containing)
   d_extTheory.addFunctionKind(Kind::SINE);
   d_extTheory.addFunctionKind(Kind::PI);
   d_extTheory.addFunctionKind(Kind::IAND);
+  d_extTheory.addFunctionKind(Kind::PIAND);
   d_extTheory.addFunctionKind(Kind::POW2);
   d_true = nodeManager()->mkConst(true);
 }
@@ -273,6 +276,21 @@ void NonlinearExtension::checkFullEffort(std::map<Node, Node>& arithModel,
     // no non-linear constraints, we are done
     return;
   }
+  Trace("nl-ext-mv") << "Shared terms : " << std::endl;
+  // For the purposes of ensuring we do not introduce inconsistencies for
+  // theory combination, we first record the model values for all shared
+  // terms, if they exist.
+  const context::CDList<TNode>& sts = d_astate.getSharedTerms();
+  // A mapping from shared terms to their model value, prior to
+  // processing the model below.
+  std::unordered_map<TNode, Node> revSharedTermsPre;
+  for (TNode st : sts)
+  {
+    Node stv = d_model.computeAbstractModelValue(st);
+    Trace("nl-model-final")
+        << "- shared term value " << st << " = " << stv << std::endl;
+    revSharedTermsPre[st] = stv;
+  }
   if (TraceIsOn("nl-model-final"))
   {
     Trace("nl-model-final") << "MODEL INPUT:" << std::endl;
@@ -307,6 +325,46 @@ void NonlinearExtension::checkFullEffort(std::map<Node, Node>& arithModel,
           << "  " << m.first << " -> " << m.second << std::endl;
     }
     Trace("nl-model-final") << "END" << std::endl;
+  }
+  if (res == Result::SAT)
+  {
+    d_model.reset(arithModel);
+    // Go back and see if we made two shared terms equal that were disequal prior
+    // to modifying the model. If we did so for two terms t and s, then we must
+    // split on t = s.
+    std::unordered_map<TNode, std::vector<Node>> sharedTermsPost;
+    for (TNode st : sts)
+    {
+      Node stv = d_model.computeAbstractModelValue(st);
+      Trace("nl-model-final")
+          << "- shared term value (post) " << st << " = " << stv << std::endl;
+      sharedTermsPost[stv].emplace_back(st);
+    }
+    std::unordered_map<TNode, Node>::iterator itrs;
+    for (const std::pair<const TNode, std::vector<Node>>& stp : sharedTermsPost)
+    {
+      Node cv;
+      for (TNode st : stp.second)
+      {
+        itrs = revSharedTermsPre.find(st);
+        Assert(itrs != revSharedTermsPre.end());
+        Node stv = itrs->second;
+        if (cv.isNull())
+        {
+          cv = stv;
+        }
+        else if (stv != cv)
+        {
+          Trace("nl-model-final")
+              << "*** Identified two shared terms that were disequal: " << st
+              << " " << stp.second[0] << std::endl;
+          Node eq = st.eqNode(stp.second[0]);
+          Node split = eq.orNode(eq.negate());
+          NlLemma nlem(InferenceId::ARITH_NL_SHARED_TERM_SPLIT, split);
+          d_im.addPendingLemma(nlem);
+        }
+      }
+    }
   }
 }
 
@@ -478,6 +536,11 @@ void NonlinearExtension::runStrategy(Theory::Effort effort,
         break;
       case InferStep::IAND_FULL: d_iandSlv.checkFullRefine(); break;
       case InferStep::IAND_INITIAL: d_iandSlv.checkInitialRefine(); break;
+      case InferStep::PIAND_INIT:
+        d_piandSlv.initLastCall(assertions, false_asserts, xts);
+        break;
+      case InferStep::PIAND_FULL: d_piandSlv.checkFullRefine(); break;
+      case InferStep::PIAND_INITIAL: d_piandSlv.checkInitialRefine(); break;
       case InferStep::POW2_INIT:
         d_pow2Slv.initLastCall(assertions, false_asserts, xts);
         break;
@@ -492,6 +555,12 @@ void NonlinearExtension::runStrategy(Theory::Effort effort,
         d_monomialBoundsSlv.init();
         d_monomialSlv.init(xts);
         break;
+      case InferStep::NL_FLATTEN_MON:
+      {
+        std::vector<Node>& mvec = d_extState.d_ms_vars;
+        d_fmSlv.check(mvec);
+      }
+      break;
       case InferStep::NL_MONOMIAL_INFER_BOUNDS:
         d_monomialBoundsSlv.checkBounds(assertions, false_asserts);
         break;

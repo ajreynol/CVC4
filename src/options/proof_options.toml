@@ -46,7 +46,7 @@ name   = "Proof"
   category   = "expert"
   long       = "proof-elim-subtypes"
   type       = "bool"
-  default    = "false"
+  default    = "true"
   help       = "Eliminate subtypes (mixed arithmetic) in proofs"
 
 [[option]]
@@ -126,6 +126,14 @@ name   = "Proof"
   type       = "uint64_t"
   default    = "5"
   help       = "the matching recursion limit for reconstructing proofs of theory rewrites"
+
+[[option]]
+  name       = "proofChainMRes"
+  category   = "regular"
+  long       = "proof-chain-m-res"
+  type       = "bool"
+  default    = "true"
+  help       = "Use chain multiset resolution"
 
 [[option]]
   name       = "proofRewriteRconsStepLimit"
@@ -269,3 +277,11 @@ name   = "Proof"
   type       = "bool"
   default    = "false"
   help       = "Use the proof rule (fixed point) convert"
+
+[[option]]
+  name       = "proofPreSimpLookahead"
+  category   = "expert"
+  long       = "proof-pre-simp-lookahead=N"
+  type       = "uint64_t"
+  default    = "2"
+  help       = "the lookahead depth for merging proofs at previsit"

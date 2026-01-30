@@ -32,18 +32,18 @@ extern int optreset;
 
 // clean up
 #ifdef CVC5_IS_NOT_REALLY_BSD
-#  undef _BSD_SOURCE
+#undef _BSD_SOURCE
 #endif /* CVC5_IS_NOT_REALLY_BSD */
+
+#include <cstring>
+#include <iostream>
+#include <limits>
 
 #include "base/check.h"
 #include "base/output.h"
 #include "options/option_exception.h"
 #include "options/options_public.h"
 #include "util/didyoumean.h"
-
-#include <cstring>
-#include <iostream>
-#include <limits>
 
 namespace cvc5::main {
 
@@ -94,8 +94,7 @@ void printUsage(const std::string& binary, std::ostream& os, bool printRegular)
   os << optionsFootnote << std::endl;
 }
 
-void printUsageCategories(cvc5::Solver& solver,
-                          std::ostream& os)
+void printUsageCategories(cvc5::Solver& solver, std::ostream& os)
 {
   std::stringstream ssCommon;
   std::stringstream ssRegular;
@@ -104,11 +103,11 @@ void printUsageCategories(cvc5::Solver& solver,
   for (const auto& name : options::getNames())
   {
     auto info = solver.getOptionInfo(name);
-    if (info.isExpert)
+    if (info.category == cvc5::modes::OptionCategory::EXPERT)
     {
       ssExpert << "- " << name << std::endl;
     }
-    else if (info.isRegular)
+    else if (info.category == cvc5::modes::OptionCategory::REGULAR)
     {
       if (info.noSupports.empty())
       {
@@ -116,12 +115,27 @@ void printUsageCategories(cvc5::Solver& solver,
       }
       else
       {
-        ssRegularNoSupport << "- " << name << std::endl;
+        ssRegularNoSupport << "- " << name << " [";
+        bool firstTime = true;
+        for (std::string ns : info.noSupports)
+        {
+          if (!firstTime)
+          {
+            ssRegularNoSupport << ", ";
+          }
+          firstTime = false;
+          ssRegularNoSupport << ns;
+        }
+        ssRegularNoSupport << "]" << std::endl;
       }
+    }
+    else if (info.category == cvc5::modes::OptionCategory::COMMON)
+    {
+      ssCommon << "- " << name << std::endl;
     }
     else
     {
-      ssCommon << "- " << name << std::endl;
+      Assert(info.category == cvc5::modes::OptionCategory::UNDOCUMENTED);
     }
   }
   os << "Common options:" << std::endl;
@@ -194,8 +208,8 @@ void parseInternal(cvc5::Solver& solver,
   // This can be = 1 in newer GNU getopt, but older (< 2007) require = 0.
   optind = 0;
 #if HAVE_DECL_OPTRESET
-  optreset = 1; // on BSD getopt() (e.g. Mac OS), might need this
-#endif /* HAVE_DECL_OPTRESET */
+  optreset = 1;  // on BSD getopt() (e.g. Mac OS), might need this
+#endif           /* HAVE_DECL_OPTRESET */
 
   // We must parse the binary name, which is manually ignored below. Setting
   // this to 1 leads to incorrect behavior on some platforms.

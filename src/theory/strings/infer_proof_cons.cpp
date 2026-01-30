@@ -64,10 +64,8 @@ class StringCoreTermContext : public TermContext
   }
 };
 
-InferProofCons::InferProofCons(Env& env,
-                               context::Context* c,
-                               SequencesStatistics& statistics)
-    : EnvObj(env), d_lazyFactMap(c), d_statistics(statistics)
+InferProofCons::InferProofCons(Env& env, context::Context* c)
+    : EnvObj(env), d_lazyFactMap(c)
 {
 }
 
@@ -203,14 +201,17 @@ bool InferProofCons::convert(Env& env,
     case InferenceId::STRINGS_LEN_NORM:
     case InferenceId::STRINGS_NORMAL_FORM:
     case InferenceId::STRINGS_CODE_PROXY:
+    case InferenceId::STRINGS_EXTF_REW_SAME:
+    case InferenceId::STRINGS_I_CYCLE_CONFLICT:
     {
       size_t idMax = 0;
-      // These three inference assume the substitution is applied to the
+      // These inferences assume the substitution is applied to the
       // *arguments* of extended functions and the length function, so we
       // will allow the substitutions to fire in term context value one.
       if (infer == InferenceId::STRINGS_EXTF
           || infer == InferenceId::STRINGS_EXTF_N
-          || infer == InferenceId::STRINGS_LEN_NORM)
+          || infer == InferenceId::STRINGS_LEN_NORM
+          || infer == InferenceId::STRINGS_EXTF_REW_SAME)
       {
         idMax = 1;
       }
@@ -222,8 +223,13 @@ bool InferProofCons::convert(Env& env,
       Trace("strings-ipc-core") << "Rewrote conclusion" << std::endl;
       Trace("strings-ipc-core") << "- " << conc << std::endl;
       Trace("strings-ipc-core") << "- to " << concr << std::endl;
-      if (psb.applyPredIntro(concr, {}))
+      if (psb.applyPredIntro(concr,
+                             {},
+                             MethodId::SB_DEFAULT,
+                             MethodId::SBA_SEQUENTIAL,
+                             MethodId::RW_EXT_REWRITE))
       {
+        // maybe extended rewrite
         useBuffer = true;
       }
     }
@@ -717,8 +723,16 @@ bool InferProofCons::convert(Env& env,
         if (convertLengthPf(lenReq, ps.d_children, psb))
         {
           Trace("strings-ipc-deq") << "...success length" << std::endl;
+          Node nPos =
+              nm->mkNode(Kind::GEQ, conc[1][1], nm->mkConstInt(Rational(0)));
+          psb.applyPredIntro(nPos,
+                             {},
+                             MethodId::SB_DEFAULT,
+                             MethodId::SBA_SEQUENTIAL,
+                             MethodId::RW_EXT_REWRITE);
           // make the proof
           std::vector<Node> childrenMain;
+          childrenMain.push_back(nPos);
           childrenMain.push_back(lenReq);
           std::vector<Node> argsMain;
           argsMain.push_back(nodeIsRev);
