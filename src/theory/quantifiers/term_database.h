@@ -216,9 +216,10 @@ class TermDb : public QuantifiersUtil {
   Node getEligibleTermInEqc(TNode r);
   /**
    * Set has term. This marks that n should be added to the term indicies
-   * used for E-matching when term-db is RELEVANT. This method is called on all
-   * terms that appear in assertions, and on all terms that appear in the master
-   * equality engine at last call effort.
+   * used for E-matching when term-db is RELEVANT or RELEVANT_ALL_DELAY. This
+   * method is called on all terms that appear in assertions, and on all terms
+   * that appear in the master equality engine at last call effort if term-db is
+   * RELEVANT_ALL_DELAY.
    * @param n the term to add.
    */
   void setHasTerm(Node n);
@@ -230,6 +231,8 @@ class TermDb : public QuantifiersUtil {
   QuantifiersInferenceManager* d_qim;
   /** The quantifiers registry */
   QuantifiersRegistry& d_qreg;
+  /** Whether we are tracking relevant terms */
+  bool d_trackRlv;
   /** A context for the data structures below, when not context-dependent */
   context::Context d_termsContext;
   /** The context we are using for the data structures below */
