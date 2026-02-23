@@ -25,10 +25,9 @@ namespace cvc5::internal {
 namespace theory {
 namespace strings {
 
-EagerSolver::EagerSolver(Env& env, SolverState& state, TermRegistry& treg)
+EagerSolver::EagerSolver(Env& env, SolverState& state)
     : EnvObj(env),
       d_state(state),
-      d_treg(treg),
       d_aent(env.getNodeManager(), env.getRewriter()),
       d_rent(env.getNodeManager(), env.getRewriter())
 {
@@ -160,8 +159,8 @@ bool EagerSolver::checkForMergeConflict(Node a,
 
 void EagerSolver::notifyFact(TNode atom,
                              bool polarity,
-                             TNode fact,
-                             bool isInternal)
+                             CVC5_UNUSED TNode fact,
+                             CVC5_UNUSED bool isInternal)
 {
   if (atom.getKind() == Kind::STRING_IN_REGEXP)
   {

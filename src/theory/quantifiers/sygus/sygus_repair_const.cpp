@@ -35,10 +35,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-SygusRepairConst::SygusRepairConst(Env& env,
-                                   QuantifiersInferenceManager& qim,
-                                   TermDbSygus* tds)
-    : EnvObj(env), d_qim(qim), d_tds(tds), d_allow_constant_grammar(false)
+SygusRepairConst::SygusRepairConst(Env& env, TermDbSygus* tds)
+    : EnvObj(env), d_tds(tds), d_allow_constant_grammar(false)
 {
 }
 
@@ -173,8 +171,7 @@ bool SygusRepairConst::repairSolution(Node sygusBody,
   }
 
   Trace("sygus-repair-const") << "Get first-order query..." << std::endl;
-  Node fo_body =
-      getFoQuery(sygusBody, candidates, candidate_skeletons, sk_vars);
+  Node fo_body = getFoQuery(sygusBody, candidates, candidate_skeletons);
 
   Trace("sygus-repair-const-debug") << "...got : " << fo_body << std::endl;
   Assert(!expr::hasFreeVar(fo_body));
@@ -383,8 +380,7 @@ Node SygusRepairConst::getSkeleton(Node n,
 
 Node SygusRepairConst::getFoQuery(Node body,
                                   const std::vector<Node>& candidates,
-                                  const std::vector<Node>& candidate_skeletons,
-                                  const std::vector<Node>& sk_vars)
+                                  const std::vector<Node>& candidate_skeletons)
 {
   Trace("sygus-repair-const") << "  Substitute skeletons..." << std::endl;
   body = body.substitute(candidates.begin(),

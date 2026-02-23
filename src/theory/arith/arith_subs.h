@@ -52,6 +52,14 @@ class ArithSubs : public Subs
    * Should traverse, returns true if the above method traverses n.
    */
   static bool shouldTraverse(const Node& n, bool traverseNlMult = true);
+  /**
+   * Check if the node n has an arithmetic subterm t.
+   * @param n The node to search in
+   * @param t The subterm to search for
+   * @param traverseNlMult Whether to traverse applications of NONLINEAR_MULT.
+   * @return true iff t is a subterm in n
+   */
+  static bool hasArithSubterm(TNode n, TNode t, bool traverseNlMult = true);
 };
 
 /**
@@ -60,16 +68,20 @@ class ArithSubs : public Subs
 class ArithSubsTermContext : public TermContext
 {
  public:
-  ArithSubsTermContext() {}
+  ArithSubsTermContext(bool traverseMult = true) : d_traverseMult(traverseMult)
+  {
+  }
   /** The initial value: valid. */
   uint32_t initialValue() const override { return 0; }
   /** Compute the value of the index^th child of t whose hash is tval */
-  uint32_t computeValue(TNode t, uint32_t tval, size_t index) const override
+  uint32_t computeValue(TNode t,
+                        uint32_t tval,
+                        CVC5_UNUSED size_t index) const override
   {
     if (tval == 0)
     {
       // if we should not traverse, return 1
-      if (!ArithSubs::shouldTraverse(t))
+      if (!ArithSubs::shouldTraverse(t, d_traverseMult))
       {
         return 1;
       }
@@ -77,6 +89,10 @@ class ArithSubsTermContext : public TermContext
     }
     return tval;
   }
+
+ private:
+  /** Should we traverse (non-linear) multiplication? */
+  bool d_traverseMult;
 };
 
 }  // namespace arith

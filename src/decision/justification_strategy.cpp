@@ -62,6 +62,7 @@ void JustificationStrategy::presolve()
 
 SatLiteral JustificationStrategy::getNextInternal(bool& stopSearch)
 {
+  CodeTimer codeTimer(d_stats.d_time);
   // ensure we have an assertion
   if (!refreshCurrentAssertion())
   {
@@ -419,7 +420,7 @@ JustifyNode JustificationStrategy::getNextJustifyNode(
   else
   {
     // curr should not be an atom
-    Assert(false);
+    DebugUnhandled();
   }
   // we return null if we have determined the value of the current node
   if (value != SAT_VALUE_UNKNOWN)

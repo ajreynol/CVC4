@@ -55,9 +55,7 @@ class InferProofCons : protected EnvObj, public ProofGenerator
   typedef context::CDHashMap<Node, std::shared_ptr<InferInfo>> NodeInferInfoMap;
 
  public:
-  InferProofCons(Env& env,
-                 context::Context* c,
-                 SequencesStatistics& statistics);
+  InferProofCons(Env& env, context::Context* c);
   ~InferProofCons() {}
   /**
    * This is called to notify that ii is an inference that may need a proof
@@ -196,7 +194,6 @@ class InferProofCons : protected EnvObj, public ProofGenerator
    * the requirements of the given proof rule (possibly in its reverse form).
    * If necessary, we rewrite eq to a new equality eqr and add a proof of eqr
    * from eq as a step to psb and return eqr. Otherwise, eq is returned.
-   * @param env Reference to the environment
    * @param psb Reference to proof step buffer.
    * @param rule The rule whose premise is eq.
    * @param eq The equality to ensure constants are spliced in.
@@ -205,8 +202,7 @@ class InferProofCons : protected EnvObj, public ProofGenerator
    * @param isRev Whether rule is being applied in the reverse direction.
    * @return The result of splicing the appropriate constants (if any) in eq.
    */
-  static Node spliceConstants(Env& env,
-                              ProofRule rule,
+  static Node spliceConstants(ProofRule rule,
                               TheoryProofStepBuffer& psb,
                               const Node& eq,
                               const Node& conc,
@@ -230,8 +226,6 @@ class InferProofCons : protected EnvObj, public ProofGenerator
                                            TheoryProofStepBuffer& psb);
   /** The lazy fact map */
   NodeInferInfoMap d_lazyFactMap;
-  /** Reference to the statistics for the theory of strings/sequences. */
-  SequencesStatistics& d_statistics;
 };
 
 }  // namespace strings

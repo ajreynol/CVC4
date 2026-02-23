@@ -97,7 +97,7 @@ Rational toRationalAbove(const poly::Value& v)
   {
     return toRational(as_rational(v));
   }
-  Assert(false) << "Can not convert " << v << " to rational.";
+  DebugUnhandled() << "Can not convert " << v << " to rational.";
   return Rational();
 }
 Rational toRationalBelow(const poly::Value& v)
@@ -118,7 +118,7 @@ Rational toRationalBelow(const poly::Value& v)
   {
     return toRational(as_rational(v));
   }
-  Assert(false) << "Can not convert " << v << " to rational.";
+  DebugUnhandled() << "Can not convert " << v << " to rational.";
   return Rational();
 }
 
@@ -280,7 +280,7 @@ std::ostream& operator<<(std::ostream& os, const VariableInformation& vi)
   }
   else
   {
-    os << "Info for " << vi.var << ": ";
+    os << "Info for " << stream_variable(*(vi.polyCtx), vi.var) << ": ";
     os << "max deg " << vi.max_degree;
     os << ", max lc deg: " << vi.max_lc_degree;
     os << ", max term tdeg: " << vi.max_terms_tdegree;
@@ -314,7 +314,7 @@ void getVariableInformation(VariableInformation& vi,
         for (std::size_t i = 0; i < m->n; ++i)
         {
           tdeg += m->p[i].d;
-          if (m->p[i].x == info->var)
+          if (poly::Variable(m->p[i].x) == info->var)
           {
             info->max_degree = std::max(info->max_degree, m->p[i].d);
             info->sum_term_degree += m->p[i].d;

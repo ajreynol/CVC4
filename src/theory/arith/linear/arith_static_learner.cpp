@@ -96,14 +96,11 @@ void ArithStaticLearner::staticLearning(TNode n,
     }
     processed.insert(n);
 
-    process(n,learned, defTrue);
-
+    process(n, learned);
   }
 }
 
-void ArithStaticLearner::process(TNode n,
-                                 std::vector<TrustNode>& learned,
-                                 const TNodeSet& defTrue)
+void ArithStaticLearner::process(TNode n, std::vector<TrustNode>& learned)
 {
   Trace("arith::static") << "===================== looking at " << n << endl;
 
@@ -434,7 +431,7 @@ std::shared_ptr<ProofNode> ArithStaticLearner::getProofFor(Node fact)
     else
     {
       // this should always hold unless the rewriter for ITE changes
-      Assert(false) << "...failed rewrite " << eq2 << std::endl;
+      DebugUnhandled() << "...failed rewrite " << eq2 << std::endl;
       cdp.addTrustedStep(fact, TrustId::ARITH_STATIC_LEARN, {}, {});
       return cdp.getProofFor(fact);
     }

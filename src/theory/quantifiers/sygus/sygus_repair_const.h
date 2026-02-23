@@ -52,9 +52,7 @@ class TermDbSygus;
 class SygusRepairConst : protected EnvObj
 {
  public:
-  SygusRepairConst(Env& env,
-                   QuantifiersInferenceManager& qim,
-                   TermDbSygus* tds);
+  SygusRepairConst(Env& env, TermDbSygus* tds);
   ~SygusRepairConst() {}
   /** initialize
    *
@@ -107,8 +105,6 @@ class SygusRepairConst : protected EnvObj
   static bool mustRepair(Node n);
 
  private:
-  /** Reference to the quantifiers inference manager */
-  QuantifiersInferenceManager& d_qim;
   /** pointer to the sygus term database of d_qe */
   TermDbSygus* d_tds;
   /**
@@ -161,8 +157,7 @@ class SygusRepairConst : protected EnvObj
    */
   Node getFoQuery(Node body,
                   const std::vector<Node>& candidates,
-                  const std::vector<Node>& candidate_skeletons,
-                  const std::vector<Node>& sk_vars);
+                  const std::vector<Node>& candidate_skeletons);
 };
 
 }  // namespace quantifiers

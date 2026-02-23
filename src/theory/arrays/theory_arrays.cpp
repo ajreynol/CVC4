@@ -295,7 +295,8 @@ Node TheoryArrays::solveWrite(TNode term, bool solve1, bool solve2, bool ppCheck
   return term;
 }
 
-TrustNode TheoryArrays::ppRewrite(TNode term, std::vector<SkolemLemma>& lems)
+TrustNode TheoryArrays::ppRewrite(TNode term,
+                                  CVC5_UNUSED std::vector<SkolemLemma>& lems)
 {
   // first, check for logic exceptions
   Kind k = term.getKind();
@@ -908,7 +909,7 @@ void TheoryArrays::checkPair(TNode r1, TNode r2)
   switch (eqStatusDomain) {
     case EQUALITY_TRUE_AND_PROPAGATED:
       // Should have been propagated to us
-      Assert(false);
+      DebugUnhandled();
       break;
     case EQUALITY_TRUE:
       // Missed propagation - need to add the pair so that theory engine can force propagation
@@ -919,7 +920,7 @@ void TheoryArrays::checkPair(TNode r1, TNode r2)
                                   "called when false in model"
                                << std::endl;
       // Should have been propagated to us
-      Assert(false);
+      DebugUnhandled();
       break;
     case EQUALITY_FALSE: CVC5_FALLTHROUGH;
     case EQUALITY_FALSE_IN_MODEL:
@@ -1322,8 +1323,11 @@ void TheoryArrays::postCheck(Effort level)
                   << endl;
 }
 
-bool TheoryArrays::preNotifyFact(
-    TNode atom, bool pol, TNode fact, bool isPrereg, bool isInternal)
+bool TheoryArrays::preNotifyFact(TNode atom,
+                                 CVC5_UNUSED bool pol,
+                                 CVC5_UNUSED TNode fact,
+                                 bool isPrereg,
+                                 bool isInternal)
 {
   if (!isInternal && !isPrereg)
   {

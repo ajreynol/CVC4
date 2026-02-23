@@ -96,7 +96,7 @@ class ArithRewriter : public TheoryRewriter
   /** rewrite absolute */
   RewriteResponse rewriteAbs(TNode t);
   /** rewrite integer division and modulus */
-  RewriteResponse rewriteIntsDivMod(TNode t, bool pre);
+  RewriteResponse rewriteIntsDivMod(TNode t);
   /** rewrite integer total division and total modulus */
   RewriteResponse rewriteIntsDivModTotal(TNode t, bool pre);
   /** rewrite to_int and is_int */
@@ -104,9 +104,11 @@ class ArithRewriter : public TheoryRewriter
 
   /** postRewrite IAND */
   RewriteResponse postRewriteIAnd(TNode t);
+  /** postRewrite PIAND */
+  RewriteResponse postRewritePIAnd(TNode t);
   /** postRewrite POW2 */
   RewriteResponse postRewritePow2(TNode t);
-  /** postRewrite INTS_LOG2 */
+  /** postRewrite INTS_IS_POW2 */
   RewriteResponse postRewriteIntsIsPow2(TNode t);
   /** postRewrite INTS_LOG2 */
   RewriteResponse postRewriteIntsLog2(TNode t);

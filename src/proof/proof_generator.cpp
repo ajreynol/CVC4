@@ -40,7 +40,7 @@ ProofGenerator::ProofGenerator() {}
 
 ProofGenerator::~ProofGenerator() {}
 
-std::shared_ptr<ProofNode> ProofGenerator::getProofFor(Node f)
+std::shared_ptr<ProofNode> ProofGenerator::getProofFor(CVC5_UNUSED Node f)
 {
   Unreachable() << "ProofGenerator::getProofFor: " << identify()
                 << " has no implementation" << std::endl;
@@ -69,7 +69,7 @@ bool ProofGenerator::addProofTo(Node f,
   else
   {
     Trace("pfgen") << "...failed, no proof" << std::endl;
-    Assert(false) << "Failed to get proof from generator for fact " << f;
+    DebugUnhandled() << "Failed to get proof from generator for fact " << f;
   }
   return false;
 }

@@ -230,7 +230,7 @@ Node Env::rewriteViaMethod(TNode n, MethodId idr)
   }
   if (idr == MethodId::RW_EXT_REWRITE)
   {
-    return d_rewriter->extendedRewrite(n);
+    return d_rewriter->extendedRewrite(n, false);
   }
   if (idr == MethodId::RW_EXT_REWRITE_AGG)
   {
@@ -259,6 +259,11 @@ bool Env::isFiniteType(TypeNode tn) const
 {
   return isCardinalityClassFinite(tn.getCardinalityClass(),
                                   d_options.quantifiers.finiteModelFind);
+}
+
+bool Env::isFiniteCardinalityClass(CardinalityClass cc) const
+{
+  return isCardinalityClassFinite(cc, d_options.quantifiers.finiteModelFind);
 }
 
 bool Env::isFirstClassType(TypeNode tn) const
@@ -384,7 +389,7 @@ Node Env::getSharableFormula(const Node& n) const
         if (!skm->isSkolemFunction(s, id, cacheVal))
         {
           // kind SKOLEM should imply that it is a skolem function
-          Assert(false);
+          DebugUnhandled();
           return Node::null();
         }
         if (!cacheVal.isNull()

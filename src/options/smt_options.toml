@@ -217,7 +217,7 @@ name   = "SMT Layer"
 
 [[option]]
   name       = "unsatAssumptions"
-  category   = "regular"
+  category   = "common"
   long       = "produce-unsat-assumptions"
   type       = "bool"
   default    = "false"
@@ -435,7 +435,7 @@ name   = "SMT Layer"
 
 [[option]]
   name       = "solveIntAsBV"
-  category   = "regular"
+  category   = "expert"
   long       = "solve-int-as-bv=N"
   type       = "uint64_t"
   default    = "0"
@@ -547,3 +547,11 @@ name   = "SMT Layer"
   type       = "uint64_t"
   default    = "10000"
   help       = "timeout (in milliseconds) for satisfiability checks for timeout cores"
+
+[[option]]
+  name       = "printDefs"
+  category   = "expert"
+  long       = "output-print-defs"
+  type       = "bool"
+  default    = "true"
+  help       = "print define-fun commands for top-level substitutions when dumping assertions"

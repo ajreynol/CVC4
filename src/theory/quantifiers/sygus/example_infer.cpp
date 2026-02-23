@@ -24,11 +24,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-ExampleInfer::ExampleInfer(NodeManager* nm, TermDbSygus* tds)
-    : d_nm(nm), d_tds(tds)
-{
-  d_isExamples = false;
-}
+ExampleInfer::ExampleInfer(NodeManager* nm) : d_nm(nm) { d_isExamples = false; }
 
 ExampleInfer::~ExampleInfer() {}
 
@@ -238,7 +234,7 @@ void ExampleInfer::getExample(Node f, unsigned i, std::vector<Node>& ex) const
   }
   else
   {
-    Assert(false);
+    DebugUnhandled();
   }
 }
 
@@ -262,7 +258,7 @@ Node ExampleInfer::getExampleOut(Node f, unsigned i) const
     Assert(i < it->second.size());
     return it->second[i];
   }
-  Assert(false);
+  DebugUnhandled();
   return Node::null();
 }
 
