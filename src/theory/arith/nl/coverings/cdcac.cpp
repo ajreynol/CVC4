@@ -181,7 +181,6 @@ std::vector<CACInterval> CDCAC::getUnsatIntervals(std::size_t cur_variable)
             d_constraints.varMapper(),
             p,
             d_assignment,
-            sc,
             i,
             n,
             res.back().d_id);
@@ -353,7 +352,7 @@ PolyVector CDCAC::requiredCoefficients(const poly::Polynomial& p)
                                                 d_constraints.varMapper(),
                                                 d_env.getRewriter());
     default:
-      Assert(false);
+      DebugUnhandled();
       return requiredCoefficientsOriginal(p, d_assignment);
   }
 }

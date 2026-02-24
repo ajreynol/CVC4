@@ -1170,8 +1170,7 @@ bool SortModel::checkLastCall()
       {
         std::stringstream ss;
         ss << "r_" << d_type;
-        Node nn = NodeManager::mkDummySkolem(
-            ss.str(), d_type, "enumeration to meet negative card constraint");
+        Node nn = NodeManager::mkDummySkolem(ss.str(), d_type);
         d_fresh_aloc_reps.push_back( nn );
       }
       if (d_maxNegCard == 0)
@@ -1564,7 +1563,7 @@ void CardinalityExtension::check(Theory::Effort level)
     else
     {
       // unhandled uf ss mode
-      Assert(false);
+      DebugUnhandled();
     }
     Trace("uf-ss-solver") << "Done CardinalityExtension: check " << level
                           << std::endl;

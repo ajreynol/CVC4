@@ -1629,7 +1629,7 @@ void Smt2Printer::toStreamModelSort(std::ostream& out,
       }
       else
       {
-        Assert(false)
+        DebugUnhandled()
             << "model domain element is not an uninterpreted sort value: "
             << trn;
         out << trn;
@@ -2234,8 +2234,8 @@ void Smt2Printer::toStreamSkolem(std::ostream& out,
   }
 }
 
-void Smt2Printer::toStreamCmdEmpty(std::ostream& out,
-                                   const std::string& name) const
+void Smt2Printer::toStreamCmdEmpty(CVC5_UNUSED std::ostream& out,
+                                   CVC5_UNUSED const std::string& name) const
 {
 }
 

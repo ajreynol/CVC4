@@ -91,7 +91,11 @@ Term ParserState::getExpressionForNameAndType(const std::string& name, Sort t)
   return expr;
 }
 
-bool ParserState::getTesterName(Term cons, std::string& name) { return false; }
+bool ParserState::getTesterName(CVC5_UNUSED Term cons,
+                                CVC5_UNUSED std::string& name)
+{
+  return false;
+}
 
 Kind ParserState::getKindForFunction(Term fun)
 {
@@ -609,7 +613,7 @@ bool ParserState::isDeclared(const std::string& name, SymbolType type)
     case SYM_SORT: return d_symtab->isBoundType(name);
     case SYM_VERBATIM: Unreachable();
   }
-  Assert(false);  // Unhandled(type);
+  DebugUnhandled();  // Unhandled(type);
   return false;
 }
 
@@ -645,7 +649,7 @@ void ParserState::checkDeclaration(const std::string& varName,
 
     case CHECK_NONE: break;
 
-    default: Assert(false);  // Unhandled(check);
+    default: DebugUnhandled();  // Unhandled(check);
   }
 }
 
@@ -719,7 +723,7 @@ void ParserState::pushGetValueScope()
       }
       else
       {
-        Assert(false)
+        DebugUnhandled()
             << "model domain element is not an uninterpreted sort value: " << e;
       }
     }
