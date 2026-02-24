@@ -234,14 +234,15 @@ std::shared_ptr<ProofNode> ArithNlCompareProofGenerator::getProofFor(Node fact)
           if (itd == deq.end())
           {
             // maybe it was v != 0 when we are looking for to_real(v) != 0.0
-            if (etgt.getKind()==Kind::TO_REAL)
+            if (etgt.getKind() == Kind::TO_REAL)
             {
               // look for v, will fix below
               itd = deq.find(etgt[0]);
             }
             if (itd == deq.end())
             {
-              DebugUnhandled() << "ArithNlCompareProofGenerator failed explain deq";
+              DebugUnhandled()
+                  << "ArithNlCompareProofGenerator failed explain deq";
               expSuccess = false;
               break;
             }
