@@ -4026,6 +4026,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_DIV_ELIM_TO_REAL1),
   /** Auto-generated from RARE rule arith-div-elim-to-real2 */
   EVALUE(ARITH_DIV_ELIM_TO_REAL2),
+  /** Auto-generated from RARE rule arith-mod-over-mod-1 */
+  EVALUE(ARITH_MOD_OVER_MOD_1),
   /** Auto-generated from RARE rule arith-mod-over-mod */
   EVALUE(ARITH_MOD_OVER_MOD),
   /** Auto-generated from RARE rule arith-int-eq-conflict */
