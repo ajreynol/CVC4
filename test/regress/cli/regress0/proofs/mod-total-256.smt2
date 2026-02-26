@@ -1,7 +1,6 @@
 ; EXPECT: unsat
 (set-logic ALL)
-(declare-const x Int)
-(declare-sort m 0)
-(declare-datatypes ((u 0)) (((u))))
-(assert (exists ((b u)) (not (=> (bvule ((_ int_to_bv 8) (mod x 256)) (_ bv0 8)) false (forall ((o m)) false)))))
+(declare-fun index () Int)
+(assert (not
+(= (mod_total (mod_total index 256) 256) (mod_total index 256))))
 (check-sat)

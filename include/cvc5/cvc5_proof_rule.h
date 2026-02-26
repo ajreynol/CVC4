@@ -4030,6 +4030,8 @@ enum ENUM(ProofRewriteRule)
   EVALUE(ARITH_MOD_OVER_MOD_1),
   /** Auto-generated from RARE rule arith-mod-over-mod */
   EVALUE(ARITH_MOD_OVER_MOD),
+  /** Auto-generated from RARE rule arith-mod-over-mod-mult */
+  EVALUE(ARITH_MOD_OVER_MOD_MULT),
   /** Auto-generated from RARE rule arith-int-eq-conflict */
   EVALUE(ARITH_INT_EQ_CONFLICT),
   /** Auto-generated from RARE rule arith-int-geq-tighten */
