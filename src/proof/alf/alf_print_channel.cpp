@@ -293,7 +293,7 @@ void CpcLogosLeanChannelOut::printStep(const std::string& rname,
                                        const std::vector<Node>& args,
                                        bool isPop)
 {
-  d_cmdList << "(CCmdList.cons (CCmd.step_" << (isPop ? "pop_" : "") << rname;
+  d_cmdList << "(CCmdList.cons (CCmd." << rname;
   for (const Node& a : args)
   {
     d_cmdList << " ";
@@ -308,7 +308,7 @@ void CpcLogosLeanChannelOut::printStep(const std::string& rname,
     for (size_t j = 0, npremises = pindices.size(); j < npremises; j++)
     {
       std::stringstream retNext;
-      retNext << "(CIndexList.cons " << pindices[j] << " " << ret << ")";
+      retNext << "(CIndexList.cons (Term.Numeral " << pindices[j] << ") " << ret << ")";
       ret = retNext.str();
     }
     d_cmdList << ret;
@@ -318,7 +318,7 @@ void CpcLogosLeanChannelOut::printStep(const std::string& rname,
     // otherwise, premises are arguments
     for (size_t j = 0, npremises = pindices.size(); j < npremises; j++)
     {
-      d_cmdList << " " << pindices[j];
+      d_cmdList << " (Term.Numeral " << pindices[j] << ")";
     }
   }
   d_cmdList << ")" << std::endl;
@@ -341,7 +341,7 @@ void CpcLogosLeanChannelOut::finalize()
 {
   d_out << "(__eo_checker_is_refutation" << std::endl;
   d_out << d_assumeList.str();
-  d_out << "Term.true" << d_assumeListEnd.str() << std::endl;
+  d_out << "(Term.Boolean true)" << d_assumeListEnd.str() << std::endl;
   d_out << d_cmdList.str();
   d_out << "CCmdList.nil" << d_cmdListEnd.str() << std::endl;
   d_out << ")" << std::endl;

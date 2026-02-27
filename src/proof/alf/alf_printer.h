@@ -185,6 +185,8 @@ class AlfPrinter : protected EnvObj
   context::CDHashSet<const ProofNode*> d_alreadyPrinted;
   /** Mapping assumed formulas to identifiers */
   context::CDHashMap<Node, size_t> d_passumeMap;
+  /** */
+  bool d_isCpcLogos;
   /** The (dummy) type used for proof terms */
   TypeNode d_pfType;
   /** term prefix */

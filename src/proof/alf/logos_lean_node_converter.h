@@ -35,8 +35,12 @@ class LogosLeanNodeConverter : public AlfNodeConverter
 
   /** Convert at post-order traversal */
   Node postConvert(Node n) override;
+  /** Should we traverse n? */
+  bool shouldTraverse(Node n) override;
  private:
    std::string cleanSmtId(const std::string& str);
+   size_t d_constIdCount;
+   std::map<Node, size_t> d_constId;
 };
 
 }  // namespace proof

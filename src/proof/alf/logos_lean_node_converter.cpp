@@ -27,8 +27,14 @@ namespace proof {
 LogosLeanNodeConverter::LogosLeanNodeConverter(NodeManager* nm)
     : AlfNodeConverter(nm)
 {
+  d_constIdCount = 0;
 }
 LogosLeanNodeConverter::~LogosLeanNodeConverter() {}
+
+bool LogosLeanNodeConverter::shouldTraverse(Node n)
+{
+  return true;
+}
 
 Node LogosLeanNodeConverter::postConvert(Node n)
 {
@@ -89,9 +95,17 @@ Node LogosLeanNodeConverter::postConvert(Node n)
     // convert to curried apply
     std::stringstream ssOp;
     ssOp << printer::smt2::Smt2Printer::smtKindString(k);
-    std::string id = cleanSmtId(ssOp.str());
+    std::string id = "Term." + cleanSmtId(ssOp.str());
     std::vector<Node> args(n.begin(), n.end());
-    return mkInternalApp(id, args, n.getType());
+    return convert(mkInternalApp(id, args, n.getType()));
+  }
+  else if (n.isVar() && d_symbols.find(n)==d_symbols.end())
+  {
+    d_constIdCount++;
+    std::stringstream ss;
+    ss << "Term.UConst " << d_constIdCount;
+    Node tnn = typeAsNode(n.getType());
+    return mkInternalApp(ss.str(), {tnn}, n.getType());
   }
   
   return n;
