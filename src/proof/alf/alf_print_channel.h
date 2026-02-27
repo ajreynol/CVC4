@@ -178,10 +178,6 @@ class CpcLogosLeanChannelOut : public AlfPrintChannelOut
                       const std::vector<size_t>& premises,
                       const std::vector<Node>& args,
                       TNode conc) override;
-  /**
-   * Print type node to stream in the expected format of ALF.
-   */
-  void printTypeNodeInternal(std::ostream& out, TypeNode tn);
   std::ostream& getOStream() { return d_out; }
   /**
    * Dump the accumulated output to d_out.
@@ -189,10 +185,6 @@ class CpcLogosLeanChannelOut : public AlfPrintChannelOut
   void finalize();
 
  private:
-  /**
-   * Print node to stream in the expected format of ALF.
-   */
-  void printNodeLogosLean(std::ostream& out, Node n);
   /** The assumption list */
   std::stringstream d_assumeList;
   std::stringstream d_assumeListEnd;

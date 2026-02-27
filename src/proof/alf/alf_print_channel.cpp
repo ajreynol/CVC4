@@ -273,14 +273,14 @@ void CpcLogosLeanChannelOut::printAssume(TNode n, size_t i, bool isPush)
   if (isPush)
   {
     d_cmdList << "(CCmdList.cons (CCmd.assume_push ";
-    printNodeLogosLean(d_cmdList, n);
+    printNodeInternal(d_cmdList, n);
     d_cmdList << ")" << std::endl;
     d_cmdListEnd << ")";
   }
   else
   {
     d_assumeList << "(Term.Apply (Term.Apply Term.and ";
-    printNodeLogosLean(d_assumeList, n);
+    printNodeInternal(d_assumeList, n);
     d_assumeList << ")" << std::endl;
     d_assumeListEnd << ")";
   }
@@ -297,7 +297,7 @@ void CpcLogosLeanChannelOut::printStep(const std::string& rname,
   for (const Node& a : args)
   {
     d_cmdList << " ";
-    printNodeLogosLean(d_cmdList, a);
+    printNodeInternal(d_cmdList, a);
   }
   // FIXME
   std::vector<size_t> pindices = premises;
@@ -335,27 +335,6 @@ void CpcLogosLeanChannelOut::printTrustStep(ProofRule r,
   std::stringstream ss;
   ss << "The proof was incomplete, due to rule " << r;
   InternalError() << ss.str();
-}
-
-void CpcLogosLeanChannelOut::printNodeLogosLean(std::ostream& out, Node n)
-{
-  // FIXME
-  if (d_lbind)
-  {
-    // use the toStream with custom letification method
-    Printer::getPrinter(out)->toStream(out, n, d_lbind, true);
-  }
-  else
-  {
-    // just use default print
-    Printer::getPrinter(out)->toStream(out, n);
-  }
-}
-
-void CpcLogosLeanChannelOut::printTypeNodeInternal(std::ostream& out,
-                                                   TypeNode tn)
-{
-  tn.toStream(out);
 }
 
 void CpcLogosLeanChannelOut::finalize()
