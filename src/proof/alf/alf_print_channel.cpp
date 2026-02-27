@@ -66,12 +66,12 @@ void AlfPrintChannelOut::printStep(const std::string& rname,
   printStepInternal(rname, n, i, premises, args, isPop, false);
 }
 void AlfPrintChannelOut::printStepInternal(const std::string& rname,
-                                   TNode n,
-                                   size_t i,
-                                   const std::vector<size_t>& premises,
-                                   const std::vector<Node>& args,
-                                   bool isPop,
-                                   bool reqPremises)
+                                           TNode n,
+                                           size_t i,
+                                           const std::vector<size_t>& premises,
+                                           const std::vector<Node>& args,
+                                           bool isPop,
+                                           bool reqPremises)
 {
   d_out << "(" << (isPop ? "step-pop" : "step") << " @p" << i;
   if (!n.isNull())
@@ -246,9 +246,8 @@ void AlfPrintChannelPre::processInternal(const Node& n)
   d_keep.insert(n);  // probably not necessary
 }
 
-
 CpcLogosLeanChannelOut::CpcLogosLeanChannelOut(std::ostream& out,
-                                       const LetBinding* lbind)
+                                               const LetBinding* lbind)
     : AlfPrintChannelOut(out, lbind, false)
 {
   d_premiseList["arith_sum_ub"] = true;
@@ -288,11 +287,11 @@ void CpcLogosLeanChannelOut::printAssume(TNode n, size_t i, bool isPush)
 }
 
 void CpcLogosLeanChannelOut::printStep(const std::string& rname,
-                                   TNode n,
-                                   size_t i,
-                                   const std::vector<size_t>& premises,
-                                   const std::vector<Node>& args,
-                                   bool isPop)
+                                       TNode n,
+                                       size_t i,
+                                       const std::vector<size_t>& premises,
+                                       const std::vector<Node>& args,
+                                       bool isPop)
 {
   d_cmdList << "(CCmdList.cons (CCmd.step_" << (isPop ? "pop_" : "") << rname;
   for (const Node& a : args)
@@ -303,10 +302,10 @@ void CpcLogosLeanChannelOut::printStep(const std::string& rname,
   // FIXME
   std::vector<size_t> pindices = premises;
   // determine if premise list, if so, package as list
-  if (d_premiseList.find(rname)!=d_premiseList.end())
+  if (d_premiseList.find(rname) != d_premiseList.end())
   {
     std::string ret = "CIndexList.nil";
-    for (size_t j=0, npremises=pindices.size(); j<npremises; j++)
+    for (size_t j = 0, npremises = pindices.size(); j < npremises; j++)
     {
       std::stringstream retNext;
       retNext << "(CIndexList.cons " << pindices[j] << " " << ret << ")";
@@ -317,7 +316,7 @@ void CpcLogosLeanChannelOut::printStep(const std::string& rname,
   else
   {
     // otherwise, premises are arguments
-    for (size_t j=0, npremises=pindices.size(); j<npremises; j++)
+    for (size_t j = 0, npremises = pindices.size(); j < npremises; j++)
     {
       d_cmdList << " " << pindices[j];
     }
@@ -327,11 +326,11 @@ void CpcLogosLeanChannelOut::printStep(const std::string& rname,
 }
 
 void CpcLogosLeanChannelOut::printTrustStep(ProofRule r,
-                                        TNode n,
-                                        size_t i,
-                                        const std::vector<size_t>& premises,
-                                        const std::vector<Node>& args,
-                                        TNode nc)
+                                            TNode n,
+                                            size_t i,
+                                            const std::vector<size_t>& premises,
+                                            const std::vector<Node>& args,
+                                            TNode nc)
 {
   std::stringstream ss;
   ss << "The proof was incomplete, due to rule " << r;
@@ -353,7 +352,8 @@ void CpcLogosLeanChannelOut::printNodeLogosLean(std::ostream& out, Node n)
   }
 }
 
-void CpcLogosLeanChannelOut::printTypeNodeInternal(std::ostream& out, TypeNode tn)
+void CpcLogosLeanChannelOut::printTypeNodeInternal(std::ostream& out,
+                                                   TypeNode tn)
 {
   tn.toStream(out);
 }

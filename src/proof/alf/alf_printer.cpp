@@ -833,7 +833,8 @@ void AlfPrinter::print(std::ostream& out,
   options::ioutils::applyPrintArithLitToken(out, true);
   options::ioutils::applyPrintSkolemDefinitions(out, true);
   // allocate a print channel
-  if (options().proof.proofFormatMode==options::ProofFormatMode::CPC_LOGOS_LEAN)
+  if (options().proof.proofFormatMode
+      == options::ProofFormatMode::CPC_LOGOS_LEAN)
   {
     CpcLogosLeanChannelOut cllout(out, d_lbindUse);
     print(cllout, pfn, psm, false);
@@ -849,7 +850,7 @@ void AlfPrinter::print(std::ostream& out,
 void AlfPrinter::print(AlfPrintChannelOut& aout,
                        std::shared_ptr<ProofNode> pfn,
                        ProofScopeMode psm,
-             bool printDeclPreamble)
+                       bool printDeclPreamble)
 {
   std::ostream& out = aout.getOStream();
   Assert(d_pletMap.empty());

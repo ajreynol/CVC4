@@ -158,13 +158,11 @@ class AlfPrintChannelPre : public AlfPrintChannel
   void processInternal(const Node& n);
 };
 
-
 /** Prints the proof to output stream d_out */
 class CpcLogosLeanChannelOut : public AlfPrintChannelOut
 {
  public:
-  CpcLogosLeanChannelOut(std::ostream& out,
-                  const LetBinding* lbind);
+  CpcLogosLeanChannelOut(std::ostream& out, const LetBinding* lbind);
   void printNode(TNode n) override;
   void printTypeNode(TypeNode tn) override;
   void printAssume(TNode n, size_t i, bool isPush) override;
@@ -187,6 +185,7 @@ class CpcLogosLeanChannelOut : public AlfPrintChannelOut
   std::ostream& getOStream() { return d_out; }
 
   void finalize();
+
  private:
   /**
    * Print node to stream in the expected format of ALF.
