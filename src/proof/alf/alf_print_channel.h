@@ -183,7 +183,9 @@ class CpcLogosLeanChannelOut : public AlfPrintChannelOut
    */
   void printTypeNodeInternal(std::ostream& out, TypeNode tn);
   std::ostream& getOStream() { return d_out; }
-
+  /**
+   * Dump the accumulated output to d_out.
+   */
   void finalize();
 
  private:
