@@ -10,16 +10,16 @@
  * Implementation of ALF node conversion
  */
 
-
 #include "proof/alf/logos_lean_node_converter.h"
 
 namespace cvc5::internal {
 namespace proof {
 
-  LogosLeanNodeConverter::LogosLeanNodeConverter(NodeManager* nm) : AlfNodeConverter(nm){}
-  LogosLeanNodeConverter::~LogosLeanNodeConverter(){}
-
+LogosLeanNodeConverter::LogosLeanNodeConverter(NodeManager* nm)
+    : AlfNodeConverter(nm)
+{
+}
+LogosLeanNodeConverter::~LogosLeanNodeConverter() {}
 
 }  // namespace proof
 }  // namespace cvc5::internal
-

@@ -23,7 +23,6 @@
 namespace cvc5::internal {
 namespace proof {
 
-
 /**
  * This is a helper class for the ALF printer that converts nodes into
  * form that ALF expects. It should only be used by the ALF printer.
