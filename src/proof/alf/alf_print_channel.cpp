@@ -29,11 +29,9 @@ AlfPrintChannel::~AlfPrintChannel() {}
 
 AlfPrintChannelOut::AlfPrintChannelOut(std::ostream& out,
                                        const LetBinding* lbind,
-                                       const std::string& tprefix,
                                        bool trackWarn)
     : d_out(out),
       d_lbind(lbind),
-      d_termLetPrefix(tprefix),
       d_trackWarn(trackWarn)
 {
 }
@@ -67,14 +65,13 @@ void AlfPrintChannelOut::printStep(const std::string& rname,
 {
   printStepInternal(rname, n, i, premises, args, isPop, false);
 }
-
 void AlfPrintChannelOut::printStepInternal(const std::string& rname,
-                                           TNode n,
-                                           size_t i,
-                                           const std::vector<size_t>& premises,
-                                           const std::vector<Node>& args,
-                                           bool isPop,
-                                           bool reqPremises)
+                                   TNode n,
+                                   size_t i,
+                                   const std::vector<size_t>& premises,
+                                   const std::vector<Node>& args,
+                                   bool isPop,
+                                   bool reqPremises)
 {
   d_out << "(" << (isPop ? "step-pop" : "step") << " @p" << i;
   if (!n.isNull())
@@ -247,6 +244,128 @@ void AlfPrintChannelPre::processInternal(const Node& n)
     d_lbind->process(n);
   }
   d_keep.insert(n);  // probably not necessary
+}
+
+
+CpcLogosLeanChannelOut::CpcLogosLeanChannelOut(std::ostream& out,
+                                       const LetBinding* lbind)
+    : AlfPrintChannelOut(out, lbind, false)
+{
+  d_premiseList["arith_sum_ub"] = true;
+  d_premiseList["arith_mult_abs_comparison"] = true;
+  /// FIXME: more
+}
+
+void CpcLogosLeanChannelOut::printNode(TNode n)
+{
+  d_out << " ";
+  printNodeInternal(d_out, n);
+}
+
+void CpcLogosLeanChannelOut::printTypeNode(TypeNode tn)
+{
+  d_out << " ";
+  printTypeNodeInternal(d_out, tn);
+}
+
+void CpcLogosLeanChannelOut::printAssume(TNode n, size_t i, bool isPush)
+{
+  Assert(!n.isNull());
+  if (isPush)
+  {
+    d_cmdList << "(CCmdList.cons (CCmd.assume_push ";
+    printNodeLogosLean(d_cmdList, n);
+    d_cmdList << ")" << std::endl;
+    d_cmdListEnd << ")";
+  }
+  else
+  {
+    d_assumeList << "(Term.Apply (Term.Apply Term.and ";
+    printNodeLogosLean(d_assumeList, n);
+    d_assumeList << ")" << std::endl;
+    d_assumeListEnd << ")";
+  }
+}
+
+void CpcLogosLeanChannelOut::printStep(const std::string& rname,
+                                   TNode n,
+                                   size_t i,
+                                   const std::vector<size_t>& premises,
+                                   const std::vector<Node>& args,
+                                   bool isPop)
+{
+  d_cmdList << "(CCmdList.cons (CCmd.step_" << (isPop ? "pop_" : "") << rname;
+  for (const Node& a : args)
+  {
+    d_cmdList << " ";
+    printNodeLogosLean(d_cmdList, a);
+  }
+  // FIXME
+  std::vector<size_t> pindices = premises;
+  // determine if premise list, if so, package as list
+  if (d_premiseList.find(rname)!=d_premiseList.end())
+  {
+    std::string ret = "CIndexList.nil";
+    for (size_t j=0, npremises=pindices.size(); j<npremises; j++)
+    {
+      std::stringstream retNext;
+      retNext << "(CIndexList.cons " << pindices[j] << " " << ret << ")";
+      ret = retNext.str();
+    }
+    d_cmdList << ret;
+  }
+  else
+  {
+    // otherwise, premises are arguments
+    for (size_t j=0, npremises=pindices.size(); j<npremises; j++)
+    {
+      d_cmdList << " " << pindices[j];
+    }
+  }
+  d_cmdList << ")" << std::endl;
+  d_cmdListEnd << ")";
+}
+
+void CpcLogosLeanChannelOut::printTrustStep(ProofRule r,
+                                        TNode n,
+                                        size_t i,
+                                        const std::vector<size_t>& premises,
+                                        const std::vector<Node>& args,
+                                        TNode nc)
+{
+  std::stringstream ss;
+  ss << "The proof was incomplete, due to rule " << r;
+  InternalError() << ss.str();
+}
+
+void CpcLogosLeanChannelOut::printNodeLogosLean(std::ostream& out, Node n)
+{
+  // FIXME
+  if (d_lbind)
+  {
+    // use the toStream with custom letification method
+    Printer::getPrinter(out)->toStream(out, n, d_lbind, true);
+  }
+  else
+  {
+    // just use default print
+    Printer::getPrinter(out)->toStream(out, n);
+  }
+}
+
+void CpcLogosLeanChannelOut::printTypeNodeInternal(std::ostream& out, TypeNode tn)
+{
+  tn.toStream(out);
+}
+
+void CpcLogosLeanChannelOut::finalize()
+{
+  d_out << "(__eo_checker_is_refutation" << std::endl;
+  d_out << d_assumeList.str();
+  d_out << "Term.true" << d_assumeListEnd.str() << std::endl;
+  d_out << d_cmdList.str();
+  d_out << "CCmdList.nil" << d_cmdListEnd.str() << std::endl;
+  d_out << ")" << std::endl;
 }
 
 }  // namespace proof

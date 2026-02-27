@@ -24,6 +24,9 @@ name   = "Proof"
 [[option.mode.CPC]]
   name       = "cpc"
   help       = "Output Cooperating Proof Calculus proof"
+[[option.mode.CPC_LOGOS_LEAN]]
+  name       = "cpc-logos-lean"
+  help       = "Output Cooperating Proof Calculus proof for Logos in Lean"
 
 [[option]]
   name       = "proofPrintConclusion"

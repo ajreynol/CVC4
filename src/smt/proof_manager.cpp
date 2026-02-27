@@ -330,7 +330,7 @@ void PfManager::printProof(std::ostream& out,
     proof::DotPrinter dotPrinter(d_env);
     dotPrinter.print(out, fp.get());
   }
-  else if (mode == options::ProofFormatMode::CPC)
+  else if (mode == options::ProofFormatMode::CPC || mode == options::ProofFormatMode::CPC_LOGOS_LEAN)
   {
     proof::AlfNodeConverter atp(nodeManager());
     proof::AlfPrinter alfp(d_env, atp, d_rewriteDb.get());

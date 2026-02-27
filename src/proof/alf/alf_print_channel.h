@@ -72,7 +72,6 @@ class AlfPrintChannelOut : public AlfPrintChannel
  public:
   AlfPrintChannelOut(std::ostream& out,
                      const LetBinding* lbind,
-                     const std::string& tprefix,
                      bool trackWarn);
   void printNode(TNode n) override;
   void printTypeNode(TypeNode tn) override;
@@ -100,7 +99,7 @@ class AlfPrintChannelOut : public AlfPrintChannel
   void printTypeNodeInternal(std::ostream& out, TypeNode tn);
   std::ostream& getOStream() { return d_out; }
 
- private:
+ protected:
   /**
    * Helper for print steps. We set reqPremises to true if we require printing
    * premises even if empty.
@@ -116,8 +115,6 @@ class AlfPrintChannelOut : public AlfPrintChannel
   std::ostream& d_out;
   /** The let binding */
   const LetBinding* d_lbind;
-  /** term prefix */
-  std::string d_termLetPrefix;
   /**
    * The set of ProofRule that we have output a warning about, i.e. the rules
    * associated with trusted steps.
@@ -159,6 +156,50 @@ class AlfPrintChannelPre : public AlfPrintChannel
   std::unordered_set<Node> d_keep;
   /** Process that we will print node n in the final proof */
   void processInternal(const Node& n);
+};
+
+
+/** Prints the proof to output stream d_out */
+class CpcLogosLeanChannelOut : public AlfPrintChannelOut
+{
+ public:
+  CpcLogosLeanChannelOut(std::ostream& out,
+                  const LetBinding* lbind);
+  void printNode(TNode n) override;
+  void printTypeNode(TypeNode tn) override;
+  void printAssume(TNode n, size_t i, bool isPush) override;
+  void printStep(const std::string& rname,
+                 TNode n,
+                 size_t i,
+                 const std::vector<size_t>& premises,
+                 const std::vector<Node>& args,
+                 bool isPop = false) override;
+  void printTrustStep(ProofRule r,
+                      TNode n,
+                      size_t i,
+                      const std::vector<size_t>& premises,
+                      const std::vector<Node>& args,
+                      TNode conc) override;
+  /**
+   * Print type node to stream in the expected format of ALF.
+   */
+  void printTypeNodeInternal(std::ostream& out, TypeNode tn);
+  std::ostream& getOStream() { return d_out; }
+
+  void finalize();
+ private:
+  /**
+   * Print node to stream in the expected format of ALF.
+   */
+  void printNodeLogosLean(std::ostream& out, Node n);
+  /** The assumption list */
+  std::stringstream d_assumeList;
+  std::stringstream d_assumeListEnd;
+  /** The command list */
+  std::stringstream d_cmdList;
+  std::stringstream d_cmdListEnd;
+  /** premise list? */
+  std::map<std::string, bool> d_premiseList;
 };
 
 }  // namespace proof

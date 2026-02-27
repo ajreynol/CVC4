@@ -62,7 +62,8 @@ class AlfPrinter : protected EnvObj
    */
   void print(AlfPrintChannelOut& out,
              std::shared_ptr<ProofNode> pfn,
-             ProofScopeMode psm = ProofScopeMode::DEFINITIONS_AND_ASSERTIONS);
+             ProofScopeMode psm = ProofScopeMode::DEFINITIONS_AND_ASSERTIONS,
+             bool printDeclPreamble = true);
   /**
    * Print the proof, assuming that previous proofs have been printed on this
    * printer that have (partially) given the definition of subterms and

@@ -833,13 +833,23 @@ void AlfPrinter::print(std::ostream& out,
   options::ioutils::applyPrintArithLitToken(out, true);
   options::ioutils::applyPrintSkolemDefinitions(out, true);
   // allocate a print channel
-  AlfPrintChannelOut aprint(out, d_lbindUse, d_termLetPrefix, true);
-  print(aprint, pfn, psm);
+  if (options().proof.proofFormatMode==options::ProofFormatMode::CPC_LOGOS_LEAN)
+  {
+    CpcLogosLeanChannelOut cllout(out, d_lbindUse);
+    print(cllout, pfn, psm, false);
+    cllout.finalize();
+  }
+  else
+  {
+    AlfPrintChannelOut aprint(out, d_lbindUse, true);
+    print(aprint, pfn, psm, !options().proof.proofPrintReference);
+  }
 }
 
 void AlfPrinter::print(AlfPrintChannelOut& aout,
                        std::shared_ptr<ProofNode> pfn,
-                       ProofScopeMode psm)
+                       ProofScopeMode psm,
+             bool printDeclPreamble)
 {
   std::ostream& out = aout.getOStream();
   Assert(d_pletMap.empty());
@@ -888,7 +898,7 @@ void AlfPrinter::print(AlfPrintChannelOut& aout,
     if (i == 1)
     {
       // do not need to print DSL rules
-      if (!options().proof.proofPrintReference)
+      if (printDeclPreamble)
       {
         // [1] print the declarations
         printer::smt2::Smt2Printer alfp(printer::smt2::Variant::alf_variant);
