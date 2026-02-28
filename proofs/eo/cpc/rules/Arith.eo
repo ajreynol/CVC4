@@ -548,12 +548,12 @@
 ;   (-> R1 R2 R3) to acccount for the fact that its return type involves
 ;   eo::requires and hence is not Bool.
 (declare-rule arith_poly_norm_rel
-  ((U Type) (U1 Type) (U2 Type) (V Type) (V1 Type) (V2 Type)
-   (R1 Type) (R2 Type) (R3 Type) (r (-> R1 R2 R3))
-   (x U) (y V) (cx U) (cy V) (x1 U1) (x2 U2) (y1 V1) (y2 V2))
-  :premises ((= (* cx x) (* cy y)))
+  ((U Type) (V Type) (V1 Type) (W Type) (R Type) (r (-> R R Bool))
+   (x U) (y U) (cx U) (cy U) (x1 V) (x2 V) (y1 W) (y2 W) (zero U :list))
+  :premises ((= (* cx x zero) (* cy y zero)))
   :args ((= (r x1 x2) (r y1 y2)))
-  :requires ((($is_poly_norm_rel_consts (r cx cy)) true)
+  :requires (((eo::to_q zero) 0/1)
+             (($is_poly_norm_rel_consts (r cx cy)) true)
              (($is_eq_maybe_to_real x (- x1 x2)) true)
              (($is_eq_maybe_to_real y (- y1 y2)) true))
   :conclusion (= (r x1 x2) (r y1 y2))
