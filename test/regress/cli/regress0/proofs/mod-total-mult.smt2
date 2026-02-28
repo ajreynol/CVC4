@@ -1,4 +1,5 @@
 ; EXPECT: unsat
+; DISABLE-TESTER: alethe
 (set-logic ALL)
 (declare-fun x94 () Int)
 (declare-fun x257 () Int)

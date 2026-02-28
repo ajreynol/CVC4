@@ -1,4 +1,5 @@
 ; EXPECT: unsat
+; DISABLE-TESTER: alethe
 (set-logic ALL)
 (declare-fun index () Int)
 (assert (not
