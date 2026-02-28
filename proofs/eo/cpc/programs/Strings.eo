@@ -1422,7 +1422,7 @@
     (eo::ite (eo::is_neg q) false ($str_arith_entail_simple_rec p)))
   (($str_arith_entail_simple_rec (@poly (@mon (eo::List::cons (str.len s) t) q) p))
     ($str_arith_entail_simple_rec (@poly (@mon t q) p)))
-  (($str_arith_entail_simple_rec (@poly (@mon 1 q) p))
+  (($str_arith_entail_simple_rec (@poly (@mon eo::List::nil q) p))
     (eo::ite (eo::is_neg q) false ($str_arith_entail_simple_rec p)))
   )
 )
