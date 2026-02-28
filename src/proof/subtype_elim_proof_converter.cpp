@@ -159,6 +159,36 @@ Node SubtypeElimConverterCallback::convert(Node res,
     break;
     case ProofRule::ARITH_MULT_ABS_COMPARISON:
     {
+      if (resc[0].getType().isReal())
+      {
+        for (size_t i=0, nchildren=children.size(); i<nchildren; i++)
+        {
+          Node p = children[i];
+          TypeNode tn;
+          if (p.getKind()==Kind::AND)
+          {
+            Assert (p.getNumChildren()==2 && p[0].getKind()==Kind::EQUAL);
+            if (p[0][0].getType().isInteger())
+            {
+              Trace("pf-subtype-elim") << "...convert integer to real " << p << std::endl;
+
+            }
+          }
+          else
+          {
+            Assert (p.getKind()==Kind::GT);
+            if (p[0].getType().isInteger())
+            {
+              Trace("pf-subtype-elim") << "...convert integer to real " << p << std::endl;
+              Node pr = mk->mkNode(Kind::GT, theory::arith::castToReal(nm, p[0]), theory::arith::castToReal(nm, p[1]));
+              if (prove(p, pr, cdp))
+              {
+                children[i] = pr;
+              }
+            }
+          }
+        }
+      }
     }
     break;
     default: break;
