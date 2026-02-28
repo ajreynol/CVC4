@@ -277,7 +277,7 @@
 ; conclusion: The tangent plane lemma at (a,b) for (x,y).
 (declare-rule arith_mult_tangent ((R Type) (S Type) (x R) (y S) (a R) (b S) (s Bool))
   :args (x y a b s)
-  :conclusion (eo::define ((tp (- (+ (* b x) (* a y)) (* a b))))
+  :conclusion (eo::define ((tp ($arith_mk_binary_minus (+ (* b x) (* a y)) (* a b))))
               (eo::define ((r1 (eo::ite s >= <=)))
               (eo::define ((r2 (eo::ite s <= >=)))
                 (= (r1 (* x y) tp)
