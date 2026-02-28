@@ -321,7 +321,7 @@
 ; - m T: The monomial we are considering.
 ; return: >
 ;   Whether the monomial we have processed is entailed to be positive (resp. negative).
-(program $mk_arith_mult_sign_sgn ((T Type) (F Bool :list) (l Bool) (t T) (z T) (m T :list) (sgn Bool))
+(program $mk_arith_mult_sign_sgn ((T Type) (F Bool :list) (l Bool) (t T) (z T) (m T :list) (sgn Bool) (one T))
   :signature (Bool Bool T) Bool
   (
   (($mk_arith_mult_sign_sgn sgn (and (not (= t z)) F) (* t t m))  ; ensures non-empty
@@ -334,7 +334,7 @@
       (eo::requires (eo::to_z z) 0
         ($mk_arith_mult_sign_sgn (eo::not sgn) F ($strip_even_exponent t m))))
   ; base case
-  (($mk_arith_mult_sign_sgn sgn true 1)   sgn)  
+  (($mk_arith_mult_sign_sgn sgn true one)   (eo::requires (eo::to_q one) 1/1 sgn))
   ; handles the singleton antecedant case
   (($mk_arith_mult_sign_sgn sgn l m)      ($mk_arith_mult_sign_sgn sgn (and l) m))
   )
