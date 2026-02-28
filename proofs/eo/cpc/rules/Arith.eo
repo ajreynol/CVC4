@@ -440,7 +440,7 @@
 ; args:
 ; - t T: The term we are considering, which is expected to be an application of an extended arithmetic operator.
 ; return: the reduction predicate for term t.
-(program $arith_reduction_pred ((T Type) (r Real) (a Int) (b Int) (u T) (v T))
+(program $arith_reduction_pred ((T Type) (U Type) (V Type) (r Real) (a Int) (b Int) (u U) (v V))
   :signature (T) Bool
   (
   (($arith_reduction_pred (is_int u))       (eo::define ((k (@purify (to_int u))))
