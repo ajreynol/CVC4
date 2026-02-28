@@ -38,11 +38,13 @@ Node getNullTerminator(NodeManager* nm, Kind k, TypeNode tn)
     case Kind::ADD:
       // Note that we ignore the type. This is safe since ADD is permissive
       // for subtypes.
-      nullTerm = tn.isInteger() ? nm->mkConstInt(Rational(0)) : nm->mkConstReal(Rational(0));
+      nullTerm = tn.isInteger() ? nm->mkConstInt(Rational(0))
+                                : nm->mkConstReal(Rational(0));
       break;
     case Kind::MULT:
     case Kind::NONLINEAR_MULT:
-      nullTerm = tn.isInteger() ? nm->mkConstInt(Rational(1)) : nm->mkConstReal(Rational(1));
+      nullTerm = tn.isInteger() ? nm->mkConstInt(Rational(1))
+                                : nm->mkConstReal(Rational(1));
       break;
     case Kind::STRING_CONCAT:
       // handles strings and sequences

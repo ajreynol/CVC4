@@ -162,25 +162,35 @@ Node SubtypeElimConverterCallback::convert(Node res,
     {
       if (resc[0].getType().isReal())
       {
-        for (size_t i=0, nchildren=children.size(); i<nchildren; i++)
+        for (size_t i = 0, nchildren = children.size(); i < nchildren; i++)
         {
           Node p = children[i];
           TypeNode tn;
           std::vector<Node> toConvert;
-          if (p.getKind()==Kind::AND)
+          if (p.getKind() == Kind::AND)
           {
-            Assert (p.getNumChildren()==2 && p[0].getKind()==Kind::EQUAL && p[0][0].getKind()==Kind::ABS && p[0][1].getKind()==Kind::ABS && p[1].getKind()==Kind::NOT && p[1][0].getKind()==Kind::EQUAL);
+            Assert(p.getNumChildren() == 2 && p[0].getKind() == Kind::EQUAL
+                   && p[0][0].getKind() == Kind::ABS
+                   && p[0][1].getKind() == Kind::ABS
+                   && p[1].getKind() == Kind::NOT
+                   && p[1][0].getKind() == Kind::EQUAL);
             if (p[0][0].getType().isInteger())
             {
               toConvert.push_back(p[0]);
               toConvert.push_back(p[1]);
-              cdp->addStep(p[0], ProofRule::AND_ELIM, {p}, {nm->mkConstInt(Rational(0))});
-              cdp->addStep(p[1], ProofRule::AND_ELIM, {p}, {nm->mkConstInt(Rational(1))});
+              cdp->addStep(p[0],
+                           ProofRule::AND_ELIM,
+                           {p},
+                           {nm->mkConstInt(Rational(0))});
+              cdp->addStep(p[1],
+                           ProofRule::AND_ELIM,
+                           {p},
+                           {nm->mkConstInt(Rational(1))});
             }
           }
           else
           {
-            Assert (p.getKind()==Kind::GT);
+            Assert(p.getKind() == Kind::GT);
             if (p[0].getType().isInteger())
             {
               toConvert.push_back(p);
@@ -191,13 +201,14 @@ Node SubtypeElimConverterCallback::convert(Node res,
             std::vector<Node> converted;
             for (const Node& c : toConvert)
             {
-              Trace("pf-subtype-elim") << "...convert integer to real " << c << std::endl;
-              Node catom = c.getKind()==Kind::NOT ? c[0] : c;
-              Assert (catom.getNumChildren()==2);
+              Trace("pf-subtype-elim")
+                  << "...convert integer to real " << c << std::endl;
+              Node catom = c.getKind() == Kind::NOT ? c[0] : c;
+              Assert(catom.getNumChildren() == 2);
               std::vector<Node> cc;
-              for (size_t j=0; j<2; j++)
+              for (size_t j = 0; j < 2; j++)
               {
-                if (catom[j].getKind()==Kind::ABS)
+                if (catom[j].getKind() == Kind::ABS)
                 {
                   Node ar = theory::arith::castToReal(nm, catom[j][0]);
                   cc.push_back(nm->mkNode(Kind::ABS, ar));
@@ -210,9 +221,9 @@ Node SubtypeElimConverterCallback::convert(Node res,
               Node cn = nm->mkNode(catom.getKind(), cc);
               Node equiv = catom.eqNode(cn);
               cdp->addTrustedStep(equiv, TrustId::SUBTYPE_ELIMINATION, {}, {});
-              if (c.getKind()==Kind::NOT)
+              if (c.getKind() == Kind::NOT)
               {
-                Assert (cn.getKind()==Kind::EQUAL);
+                Assert(cn.getKind() == Kind::EQUAL);
                 std::vector<Node> congArgs;
                 ProofRule cr = expr::getCongRule(c, congArgs);
                 cdp->addStep(c.eqNode(cn.notNode()), cr, {equiv}, cargs);
@@ -223,7 +234,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
               converted.push_back(cn);
             }
             Node newChild;
-            if (toConvert.size()==2)
+            if (toConvert.size() == 2)
             {
               newChild = nm->mkNode(Kind::AND, converted);
               cdp->addStep(newChild, ProofRule::AND_INTRO, converted, {});
@@ -232,7 +243,8 @@ Node SubtypeElimConverterCallback::convert(Node res,
             {
               newChild = converted[0];
             }
-              Trace("pf-subtype-elim") << "...update " << childrenc[i] << " to " << newChild << std::endl;
+            Trace("pf-subtype-elim") << "...update " << childrenc[i] << " to "
+                                     << newChild << std::endl;
             childrenc[i] = newChild;
           }
         }
@@ -311,7 +323,8 @@ Node SubtypeElimConverterCallback::convert(Node res,
       // reprove what is necessary for the sum for each child
       for (size_t i = 0, nchild = childrenc.size(); i < nchild; i++)
       {
-        Node newRel = nm->mkNode(childrenc[i].getKind(), resc[0][i], resc[1][i]);
+        Node newRel =
+            nm->mkNode(childrenc[i].getKind(), resc[0][i], resc[1][i]);
         if (!prove(childrenc[i], newRel, cdp))
         {
           success = false;
@@ -409,8 +422,8 @@ Node SubtypeElimConverterCallback::convert(Node res,
       for (const Node& mc : matchConds)
       {
         Trace("pf-subtype-elim") << "- match condition " << mc << std::endl;
-        AlwaysAssert (d_nconv.convert(mc[0])==mc[0]);
-        AlwaysAssert (d_nconv.convert(mc[1])==mc[1]);
+        AlwaysAssert(d_nconv.convert(mc[0]) == mc[0]);
+        AlwaysAssert(d_nconv.convert(mc[1]) == mc[1]);
         tcpg.addRewriteStep(mc[0],
                             mc[1],
                             nullptr,
