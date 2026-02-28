@@ -1414,7 +1414,7 @@
 ; return: >
 ;   true if we can show p is greater than or equal 0 using the fact that length
 ;   is non-negative and basic properties of arithmetic.
-(program $str_arith_entail_simple_rec ((s String) (q Real) (p @Polynomial) (t Int :list))
+(program $str_arith_entail_simple_rec ((s String) (q Real) (p @Polynomial :list) (t Int :list))
   :signature (@Polynomial) Bool
   (
   (($str_arith_entail_simple_rec @poly.zero) true)

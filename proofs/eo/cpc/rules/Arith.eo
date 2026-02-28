@@ -16,8 +16,8 @@
 ; return: >
 ;   The relation that is implied when applications of the relations r1 and
 ;   r2 are added together for ProofRule::ARITH_SUM_UB and applied to a and b.
-(program $arith_rel_sum ((T Type) (U Type) (V Type) (W Type) (a V) (b W))
-  :signature (T U V W) Bool
+(program $arith_rel_sum ((T Type) (U Type) (V Type) (a V) (b V))
+  :signature (T U V V) Bool
   (
     (($arith_rel_sum < < a b) (< a b))
     (($arith_rel_sum < = a b) (< a b))
@@ -31,18 +31,31 @@
   )
 )
 
+; program: $mk_arith_sum_ub_rec
+; args:
+; - F Bool: A conjunction of arithmetic relations.
+; - acc Bool: The current return value.
+; return: the arithmetic relation that is implied by adding each of the relations in F together.
+(program $mk_arith_sum_ub_rec ((T Type) (r1 (-> T T Bool)) (a1 T) (b1 T) (tail Bool :list)
+                               (r2 (-> T T Bool)) (a2 T :list) (b2 T :list) (acc Bool))
+  :signature (Bool Bool) Bool
+  (
+    (($mk_arith_sum_ub_rec true acc)                          acc)
+    (($mk_arith_sum_ub_rec (and (r1 a1 b1) tail) (r2 a2 b2)) ($mk_arith_sum_ub_rec tail ($arith_rel_sum r1 r2 (+ a1 a2) (+ b1 b2))))
+
+  )
+)
 ; program: $mk_arith_sum_ub
 ; args:
 ; - F Bool: A conjunction of arithmetic relations.
 ; - acc Bool: The current return value.
 ; return: the arithmetic relation that is implied by adding each of the relations in F together.
-(program $mk_arith_sum_ub ((T Type) (U Type) (r1 (-> T U Bool)) (a1 T) (b1 U) (tail Bool :list)
-                           (S Type) (V Type) (r2 (-> S V Bool)) (a2 S :list) (b2 V :list) (acc Bool))
-  :signature (Bool Bool) Bool
+(program $mk_arith_sum_ub ((T Type) (r (-> T T Bool)) (a T) (b T) (tail Bool))
+  :signature (Bool) Bool
   (
-    (($mk_arith_sum_ub true acc)                      acc)
-    (($mk_arith_sum_ub (and (r1 a1 b1) tail) (r2 a2 b2)) ($mk_arith_sum_ub tail ($arith_rel_sum r1 r2 (+ a1 a2) (+ b1 b2))))
-
+  (($mk_arith_sum_ub (and (r a b) tail))
+    ($mk_arith_sum_ub_rec (eo::list_rev and (and (r a b) tail))
+      (eo::define ((zero ($arith_mk_zero (eo::typeof a)))) (= zero zero))))
   )
 )
 
@@ -55,7 +68,7 @@
 ;   relations in F together.
 (declare-rule arith_sum_ub ((F Bool))
   :premise-list F and
-  :conclusion ($mk_arith_sum_ub (eo::list_rev and F) (= 0 0))
+  :conclusion ($mk_arith_sum_ub F)
 )
 
 ;;;;; ProofRule::ARITH_MULT_POS
@@ -67,7 +80,7 @@
 ; return: >
 ;   the result of multiply the atom by m. This is used to compute the
 ;   conclusion of the ProofRule::ARITH_MULT_POS rule.
-(program $mk_arith_mult_pos ((T Type) (U Type) (S Type) (r (-> T U Bool)) (a T) (b U) (m S))
+(program $mk_arith_mult_pos ((T Type) (r (-> T T Bool)) (a T) (b T) (m T))
   :signature (S Bool) Bool
   (
     (($mk_arith_mult_pos m (r a b)) (r (* m a) (* m b)))
@@ -98,8 +111,8 @@
 ;   The relation that is obtained by flipping its arguments, applied to a and b.
 ;   This is used for determining the relation obtained when both sides are
 ;   multiplied by a negative term.
-(program $arith_rel_inv ((T Type) (U Type) (V Type) (a U) (b V))
-  :signature (T U V) Bool
+(program $arith_rel_inv ((T Type) (U Type) (a U) (b U))
+  :signature (T U U) Bool
   (
     (($arith_rel_inv = a b) (= a b))
     (($arith_rel_inv < a b) (> a b))
@@ -116,7 +129,7 @@
 ; return: >
 ;   the result of multiply the atom by m and invert its relation.
 ;   This is used to compute the conclusion of the ProofRule::ARITH_MULT_NEG rule.
-(program $mk_arith_mult_neg ((T Type) (U Type) (S Type) (r (-> T U Bool)) (a T) (b U) (m S))
+(program $mk_arith_mult_neg ((T Type) (r (-> T T Bool)) (a T) (b T) (m T))
   :signature (S Bool) Bool
   (
     (($mk_arith_mult_neg m (r a b)) ($arith_rel_inv r (* m a) (* m b)))
