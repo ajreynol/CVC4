@@ -226,11 +226,11 @@ Node SubtypeElimConverterCallback::convert(Node res,
                 Assert(cn.getKind() == Kind::EQUAL);
                 std::vector<Node> congArgs;
                 ProofRule cr = expr::getCongRule(c, congArgs);
-                cdp->addStep(c.eqNode(cn.notNode()), cr, {equiv}, cargs);
+                cdp->addStep(c.eqNode(cn.notNode()), cr, {equiv}, congArgs);
                 cn = cn.notNode();
                 equiv = c.eqNode(cn);
               }
-              cdp->addStep(cn, ProofRule::EQ_RESOLVE, {equiv, c}, {});
+              cdp->addStep(cn, ProofRule::EQ_RESOLVE, {c, equiv}, {});
               converted.push_back(cn);
             }
             Node newChild;
