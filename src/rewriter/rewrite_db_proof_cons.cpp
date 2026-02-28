@@ -23,6 +23,7 @@
 #include "theory/builtin/proof_checker.h"
 #include "theory/rewriter.h"
 #include "util/bitvector.h"
+#include "expr/subtype_elim_node_converter.h"
 
 using namespace cvc5::internal::kind;
 
@@ -387,6 +388,11 @@ RewriteProofStatus RewriteDbProofCons::proveInternal(const Node& eqi)
 
 RewriteProofStatus RewriteDbProofCons::proveInternalViaStrategy(const Node& eqi)
 {
+  SubtypeElimNodeConverter senc(nodeManager());
+  if (senc.convert(eqi[0])!=eqi[0] || senc.convert(eqi[1])!=eqi[1])
+  {
+    Assert(false) << "Proving a subgoal with mixed arithmetic: " << eqi;
+  }
   Assert(eqi.getKind() == Kind::EQUAL);
   if (proveWithRule(RewriteProofStatus::CONG, eqi, {}, {}, false, false, true))
   {

@@ -157,6 +157,10 @@ Node SubtypeElimConverterCallback::convert(Node res,
       }
     }
     break;
+    case ProofRule::ARITH_MULT_ABS_COMPARISON:
+    {
+    }
+    break;
     default: break;
   }
 
@@ -327,6 +331,8 @@ Node SubtypeElimConverterCallback::convert(Node res,
       for (const Node& mc : matchConds)
       {
         Trace("pf-subtype-elim") << "- match condition " << mc << std::endl;
+        AlwaysAssert (d_nconv.convert(mc[0])==mc[0]);
+        AlwaysAssert (d_nconv.convert(mc[1])==mc[1]);
         tcpg.addRewriteStep(mc[0],
                             mc[1],
                             nullptr,
