@@ -211,27 +211,3 @@
 ; return: the polynomial corresponding to the (normalized) form of b.
 (define $get_bv_poly_norm ((m Int :implicit) (w Int) (b (BitVec m)))
   ($poly_mod_coeffs ($get_bv_poly_norm_rec b) w))
-
-; program: $arith_poly_to_term_rec
-; args:
-; - p @Polynomial: The polynomial to convert to a term.
-; return: The term corresponding to the polynomial p.
-; note: This method always returns a term of type Real and is not in n-ary
-;       form, as 0/1 instead of 0 is used as the last element.
-; note: This is a helper for $arith_poly_to_term below.
-(program $arith_poly_to_term_rec ((T Type) (p @Polynomial :list) (a T) (c Real))
-  :signature (@Polynomial) Real
-  (
-    (($arith_poly_to_term_rec @poly.zero) 0/1)
-    (($arith_poly_to_term_rec (@poly (@mon a c) p)) (+ (* c a) ($arith_poly_to_term_rec p)))
-  )
-)
-
-; define: $arith_poly_to_term
-; args:
-; - t T: The term to normalize. This is expected to be a term whose type is Int or Real.
-; return: >
-;   a term corresponding to the polynomial obtained by converting t to a polynomial.
-;   This can be used for normalizing terms according to arithmetic.
-(define $arith_poly_to_term ((T Type :implicit) (t T))
-  ($arith_poly_to_term_rec ($get_arith_poly_norm t)))
