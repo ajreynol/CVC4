@@ -71,9 +71,7 @@
 ; - a X: The first monomial variable to multiply.
 ; - c Y: The second monomial variable to multiply.
 ; return: the multiplication of the given monomial variables.
-(program $mvar_mul_mvar ((T Type) (U Type) (V Type) (W Type) (X Type) (Y Type) (Z Type)
-                         (a1 T) (a2 U :list) (c1 V) (c2 W :list)
-                         (m Int) (ba1 (BitVec m)) (ba2 (BitVec m) :list) (bc1 (BitVec m)) (bc2 (BitVec m) :list))
+(program $mvar_mul_mvar ((T Type) (U Type) (a1 T) (a2 eo::List :list) (c1 U) (c2 eo::List :list))
   :signature (eo::List eo::List) eo::List
   (
     (($mvar_mul_mvar (eo::List::cons a1 a2) (eo::List::cons c1 c2))
@@ -91,7 +89,7 @@
 ; - a @Monomial: The first monomial to multiply.
 ; - b @Monomial: The second monomial to multiply.
 ; return: the multiplication of the given monomials.
-(program $mon_mul_mon ((T Type) (U Type) (a1 T) (a2 U) (c1 Real) (c2 Real))
+(program $mon_mul_mon ((a1 eo::List) (a2 eo::List) (c1 Real) (c2 Real))
   :signature (@Monomial @Monomial) @Monomial
   (
     (($mon_mul_mon (@mon a1 c1) (@mon a2 c2))  (@mon ($mvar_mul_mvar a1 a2) (eo::mul c1 c2)))

@@ -52,7 +52,6 @@
 ; Core operators of arithmetic, which are used in mixed Int/Real arithmetic.
 ; Using integer nil terminators ensures typing is accurate.
 ; disclaimer: >
-;   This function is overloaded in SMT-LIB and does not permit mixed arithmetic.
 ;   This function is declared to be :left-assoc in SMT-LIB. We declare
 ;   it with right-assoc-nil to model cvc5's treatment of variadic functions.
 (declare-parameterized-const + ((T Type :implicit))
@@ -61,26 +60,20 @@
 (declare-parameterized-const - ((T Type :implicit) (U Type :implicit))
   (-> T T (eo::requires ($is_arith_type T) true T)) :left-assoc)
 ; disclaimer: >
-;   This function is overloaded in SMT-LIB and does not permit mixed arithmetic.
 ;   This function is declared to be :left-assoc in SMT-LIB. We declare
 ;   it with right-assoc-nil to model cvc5's treatment of variadic functions.
 (declare-parameterized-const * ((T Type :implicit) (U Type :implicit))
   (-> T T (eo::requires ($is_arith_type T) true T)) :right-assoc-nil ($arith_mk_one T))
 
-; Core arithmetic predicates
-; disclaimer: This function is overloaded in SMT-LIB and does not permit mixed arithmetic.
 (declare-parameterized-const < ((T Type :implicit))
   (-> T T (eo::requires ($is_arith_type T) true Bool))
       :chainable and)
-; disclaimer: This function is overloaded in SMT-LIB and does not permit mixed arithmetic.
 (declare-parameterized-const <= ((T Type :implicit))
   (-> T T (eo::requires ($is_arith_type T) true Bool))
       :chainable and)
-; disclaimer: This function is overloaded in SMT-LIB and does not permit mixed arithmetic.
 (declare-parameterized-const > ((T Type :implicit))
   (-> T T (eo::requires ($is_arith_type T) true Bool))
       :chainable and)
-; disclaimer: This function is overloaded in SMT-LIB and does not permit mixed arithmetic.
 (declare-parameterized-const >= ((T Type :implicit))
   (-> T T (eo::requires ($is_arith_type T) true Bool))
       :chainable and)
@@ -99,10 +92,8 @@
 (declare-parameterized-const abs ((T Type :implicit))
   (-> T (eo::requires ($is_arith_type T) true T)))
 
-; Unary negation, which is overloaded with binary subtraction. We distinguish
-; these two operators in Eunoia based on their arity when applied, and with
-; eo::as when they are used in higher-order contexts, e.g. as an argument to
-; the cong proof rule.
-; disclaimer: This function is overloaded in SMT-LIB.
+; Unary negation, which is overloaded with binary subtraction. Note we declare
+; unary negation after binary substraction, meaning that in contexts where it is
+; overloaded, unary negation takes precedence.
 (declare-parameterized-const - ((T Type :implicit))
   (-> T (eo::requires ($is_arith_type T) true T)))

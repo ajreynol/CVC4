@@ -16,8 +16,8 @@
 ; return: >
 ;   The relation that is implied when applications of the relations r1 and
 ;   r2 are added together for ProofRule::ARITH_SUM_UB and applied to a and b.
-(program $arith_rel_sum ((T Type) (U Type) (V Type) (a V) (b V))
-  :signature (T U V V) Bool
+(program $arith_rel_sum ((T Type) (a T) (b T))
+  :signature ((-> T T Bool) (-> T T Bool) T T) Bool
   (
     (($arith_rel_sum < < a b) (< a b))
     (($arith_rel_sum < = a b) (< a b))
@@ -40,15 +40,15 @@
                                (r2 (-> T T Bool)) (a2 T :list) (b2 T :list) (acc Bool))
   :signature (Bool Bool) Bool
   (
-    (($mk_arith_sum_ub_rec true acc)                          acc)
-    (($mk_arith_sum_ub_rec (and (r1 a1 b1) tail) (r2 a2 b2)) ($mk_arith_sum_ub_rec tail ($arith_rel_sum r1 r2 (+ a1 a2) (+ b1 b2))))
+    (($mk_arith_sum_ub_rec true acc) acc)
+    (($mk_arith_sum_ub_rec (and (r1 a1 b1) tail) (r2 a2 b2))
+      ($mk_arith_sum_ub_rec tail ($arith_rel_sum r1 r2 (+ a1 a2) (+ b1 b2))))
 
   )
 )
 ; program: $mk_arith_sum_ub
 ; args:
 ; - F Bool: A conjunction of arithmetic relations.
-; - acc Bool: The current return value.
 ; return: the arithmetic relation that is implied by adding each of the relations in F together.
 (program $mk_arith_sum_ub ((T Type) (r (-> T T Bool)) (a T) (b T) (tail Bool :list))
   :signature (Bool) Bool
@@ -111,8 +111,8 @@
 ;   The relation that is obtained by flipping its arguments, applied to a and b.
 ;   This is used for determining the relation obtained when both sides are
 ;   multiplied by a negative term.
-(program $arith_rel_inv ((T Type) (U Type) (a U) (b U))
-  :signature (T U U) Bool
+(program $arith_rel_inv ((T Type) (a T) (b T))
+  :signature ((-> T T Bool) T T) Bool
   (
     (($arith_rel_inv = a b) (= a b))
     (($arith_rel_inv < a b) (> a b))
@@ -160,8 +160,8 @@
 ; return: >
 ;   The relation that, along with r1 and r2, forms a trichotomy over
 ;   arithmetic values, applied to a and b.
-(program $arith_rel_trichotomy ((T Type) (U Type) (V Type) (a V) (b V))
-  :signature (T U V V) Bool
+(program $arith_rel_trichotomy ((T Type) (a T) (b T))
+  :signature ((-> T T Bool) (-> T T Bool) T T) Bool
   (
     (($arith_rel_trichotomy = < a b) (> a b))
     (($arith_rel_trichotomy = > a b) (< a b))
@@ -179,8 +179,8 @@
 ; - b W: The second term in the relation.
 ; return: >
 ;   The relation corresponding to the negation of r, applied to a and b.
-(program $arith_rel_neg ((T Type) (U Type) (a U) (b U))
-  :signature (T U U) Bool
+(program $arith_rel_neg ((T Type) (a T) (b T))
+  :signature ((-> T T Bool) T T) Bool
   (
     (($arith_rel_neg < a b) (>= a b))
     (($arith_rel_neg <= a b) (> a b))
@@ -193,7 +193,7 @@
 ; args:
 ; - F Bool: An arithmetic literal, possibly negated or doubly negated.
 ; return: a literal equivalent to F that eliminates its negations, if any.
-(program $arith_normalize_lit ((T Type) (U Type) (r (-> T U Bool)) (a T) (b U))
+(program $arith_normalize_lit ((T Type) (r (-> T T Bool)) (a T) (b T))
   :signature (Bool) Bool
   (
     (($arith_normalize_lit (not (not (r a b)))) (r a b))
@@ -321,7 +321,7 @@
 ; - m T: The monomial we are considering.
 ; return: >
 ;   Whether the monomial we have processed is entailed to be positive (resp. negative).
-(program $mk_arith_mult_sign_sgn ((T Type) (U Type) (V Type) (F Bool :list) (l Bool) (t T) (z U) (m V :list) (sgn Bool))
+(program $mk_arith_mult_sign_sgn ((T Type) (F Bool :list) (l Bool) (t T) (z T) (m T :list) (sgn Bool))
   :signature (Bool Bool T) Bool
   (
   (($mk_arith_mult_sign_sgn sgn (and (not (= t z)) F) (* t t m))  ; ensures non-empty
@@ -367,8 +367,7 @@
 ;   premises F.
 ; note: This program is a helper for $mk_arith_mult_abs_comparison.
 (program $mk_arith_mult_abs_comparison_rec
-  ((T Type) (U Type) (V Type) (W Type) (X Type)
-   (a W) (b X) (r (-> W X Bool)) (t T) (u U) (z V) (B Bool :list))
+  ((T Type) (a T) (b T) (r (-> T T Bool)) (t T) (u T) (z T) (B Bool :list))
   :signature (Bool Bool) Bool
   (
     (($mk_arith_mult_abs_comparison_rec (and (r (abs t) (abs u)) B) (r a b))
@@ -389,7 +388,7 @@
 ; return: >
 ;   The literal proven by arith_mult_abs_comparison given premises F.
 (program $mk_arith_mult_abs_comparison
-  ((T Type) (U Type) (V Type) (r T) (t T) (u U) (z V) (B Bool :list))
+  ((T Type) (r T) (t T) (u T) (z T) (B Bool :list))
   :signature (Bool) Bool
   (
     (($mk_arith_mult_abs_comparison (and (> (abs t) (abs u)) B))
@@ -453,7 +452,7 @@
 ; args:
 ; - t T: The term we are considering, which is expected to be an application of an extended arithmetic operator.
 ; return: the reduction predicate for term t.
-(program $arith_reduction_pred ((T Type) (U Type) (V Type) (r Real) (a Int) (b Int) (u U) (v V))
+(program $arith_reduction_pred ((T Type) (r Real) (a Int) (b Int) (u T) (v T))
   :signature (T) Bool
   (
   (($arith_reduction_pred (is_int u))       (eo::define ((k (@purify (to_int u))))
@@ -515,7 +514,7 @@
 ;   formula of the form (= (r x1 x2) (r y1 y2)), where it is already known that
 ;   (= (* cx (- x1 x2)) (* cy (- y1 y2))). If r is any of <, <=, >=, or >, the
 ;   scaling factors must have the same sign. Returns false for any other relation.
-(program $is_poly_norm_rel_consts ((T Type) (U Type) (cx T) (cy U) (b Bool))
+(program $is_poly_norm_rel_consts ((T Type) (cx T) (cy T) (b Bool))
   :signature (Bool) Bool
   (
     (($is_poly_norm_rel_consts (< cx cy))  (eo::eq ($sgn cx) ($sgn cy)))
@@ -561,7 +560,7 @@
 ;   (-> R1 R2 R3) to acccount for the fact that its return type involves
 ;   eo::requires and hence is not Bool.
 (declare-rule arith_poly_norm_rel
-  ((U Type) (V Type) (V1 Type) (W Type) (R Type) (r (-> R R Bool))
+  ((U Type) (V Type) (W Type) (R Type) (r (-> R R Bool))
    (x U) (y U) (cx U) (cy U) (x1 V) (x2 V) (y1 W) (y2 W) (zero U :list))
   :premises ((= (* cx x zero) (* cy y zero)))
   :args ((= (r x1 x2) (r y1 y2)))
