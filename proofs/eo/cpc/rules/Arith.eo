@@ -50,7 +50,7 @@
 ; - F Bool: A conjunction of arithmetic relations.
 ; - acc Bool: The current return value.
 ; return: the arithmetic relation that is implied by adding each of the relations in F together.
-(program $mk_arith_sum_ub ((T Type) (r (-> T T Bool)) (a T) (b T) (tail Bool))
+(program $mk_arith_sum_ub ((T Type) (r (-> T T Bool)) (a T) (b T) (tail Bool :list))
   :signature (Bool) Bool
   (
   (($mk_arith_sum_ub (and (r a b) tail))
@@ -81,7 +81,7 @@
 ;   the result of multiply the atom by m. This is used to compute the
 ;   conclusion of the ProofRule::ARITH_MULT_POS rule.
 (program $mk_arith_mult_pos ((T Type) (r (-> T T Bool)) (a T) (b T) (m T))
-  :signature (S Bool) Bool
+  :signature (T Bool) Bool
   (
     (($mk_arith_mult_pos m (r a b)) (r (* m a) (* m b)))
   )
@@ -130,7 +130,7 @@
 ;   the result of multiply the atom by m and invert its relation.
 ;   This is used to compute the conclusion of the ProofRule::ARITH_MULT_NEG rule.
 (program $mk_arith_mult_neg ((T Type) (r (-> T T Bool)) (a T) (b T) (m T))
-  :signature (S Bool) Bool
+  :signature (T Bool) Bool
   (
     (($mk_arith_mult_neg m (r a b)) ($arith_rel_inv r (* m a) (* m b)))
   )
@@ -160,8 +160,8 @@
 ; return: >
 ;   The relation that, along with r1 and r2, forms a trichotomy over
 ;   arithmetic values, applied to a and b.
-(program $arith_rel_trichotomy ((T Type) (U Type) (V Type) (W Type) (a V) (b W))
-  :signature (T U V W) Bool
+(program $arith_rel_trichotomy ((T Type) (U Type) (V Type) (a V) (b V))
+  :signature (T U V V) Bool
   (
     (($arith_rel_trichotomy = < a b) (> a b))
     (($arith_rel_trichotomy = > a b) (< a b))
@@ -179,8 +179,8 @@
 ; - b W: The second term in the relation.
 ; return: >
 ;   The relation corresponding to the negation of r, applied to a and b.
-(program $arith_rel_neg ((T Type) (U Type) (V Type) (a U) (b V))
-  :signature (T U V) Bool
+(program $arith_rel_neg ((T Type) (U Type) (a U) (b U))
+  :signature (T U U) Bool
   (
     (($arith_rel_neg < a b) (>= a b))
     (($arith_rel_neg <= a b) (> a b))
@@ -208,7 +208,7 @@
 ; - F2: The first arithmetic atom, which is an application of a binary arithmetic relation over the same terms as F1.
 ; return: The relation that along with F1 and F2 forms a trichotomy.
 (program $mk_arith_trichotomy
-  ((T Type) (U Type) (S Type) (r1 (-> T U Bool)) (r2 (-> T U Bool)) (a T) (b U))
+  ((T Type) (r1 (-> T T Bool)) (r2 (-> T T Bool)) (a T) (b T))
   :signature (Bool Bool) Bool
   (
     (($mk_arith_trichotomy (r1 a b) (r2 a b)) ($arith_rel_trichotomy r1 r2 a b))
@@ -282,13 +282,13 @@
 ; rule: arith_mult_tangent
 ; implements: ProofRule::ARITH_MULT_TANGENT
 ; args:
-; - x R: The first arithmetic term.
-; - y S: The second arithmetic term.
-; - a R: The point of x we are considering.
-; - b S: The point of y we are considering.
+; - x T: The first arithmetic term.
+; - y T: The second arithmetic term.
+; - a T: The point of x we are considering.
+; - b T: The point of y we are considering.
 ; - s Bool: Which direction the tangent plane is for, where true is >=, false is <=.
 ; conclusion: The tangent plane lemma at (a,b) for (x,y).
-(declare-rule arith_mult_tangent ((R Type) (S Type) (x R) (y S) (a R) (b S) (s Bool))
+(declare-rule arith_mult_tangent ((T Type) (x T) (y T) (a T) (b T) (s Bool))
   :args (x y a b s)
   :conclusion (eo::define ((tp ($arith_mk_binary_minus (+ (* b x) (* a y)) (* a b))))
               (eo::define ((r1 (eo::ite s >= <=)))
@@ -306,8 +306,8 @@
 ; - m U: The monomial to process.
 ; return: >
 ;   The result of stripping even exponent of t from the beginning of m.
-(program $strip_even_exponent ((T Type) (t T) (U Type) (V Type) (m V :list))
-  :signature (T U) U
+(program $strip_even_exponent ((T Type) (t T) (m T :list))
+  :signature (T T) T
   (
   (($strip_even_exponent t (* t t m)) ($strip_even_exponent t m))
   (($strip_even_exponent t m)         m)
