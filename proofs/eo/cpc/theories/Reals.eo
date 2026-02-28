@@ -2,6 +2,9 @@
 
 ; Real-specific operators of arithmetic.
 
+; disclaimer: This function accepts only Reals as arguments in SMT-LIB.
+; We extend it to be overloaded. Furthermore note that SMT-LIB rational
+; values are interpreted as real division of integer values.
 (declare-parameterized-const / ((T Type :implicit))
   (-> T T
       (eo::requires ($is_arith_type T) true
