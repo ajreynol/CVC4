@@ -72,6 +72,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
   {
     return resc;
   }
+  std::vector<Node> childrenc = children;
   NodeManager* nm = nodeManager();
   // cases where arguments may need additional fixing before trying
   // proof rule
@@ -165,13 +166,16 @@ Node SubtypeElimConverterCallback::convert(Node res,
         {
           Node p = children[i];
           TypeNode tn;
+          std::vector<Node> toConvert;
           if (p.getKind()==Kind::AND)
           {
-            Assert (p.getNumChildren()==2 && p[0].getKind()==Kind::EQUAL);
+            Assert (p.getNumChildren()==2 && p[0].getKind()==Kind::EQUAL && p[0][0].getKind()==Kind::ABS && p[0][1].getKind()==Kind::ABS && p[1].getKind()==Kind::NOT && p[1][0].getKind()==Kind::EQUAL);
             if (p[0][0].getType().isInteger())
             {
-              Trace("pf-subtype-elim") << "...convert integer to real " << p << std::endl;
-
+              toConvert.push_back(p[0]);
+              toConvert.push_back(p[1]);
+              cdp->addStep(p[0], ProofRule::AND_ELIM, {p}, {nm->mkConstInt(Rational(0))});
+              cdp->addStep(p[1], ProofRule::AND_ELIM, {p}, {nm->mkConstInt(Rational(1))});
             }
           }
           else
@@ -179,13 +183,57 @@ Node SubtypeElimConverterCallback::convert(Node res,
             Assert (p.getKind()==Kind::GT);
             if (p[0].getType().isInteger())
             {
-              Trace("pf-subtype-elim") << "...convert integer to real " << p << std::endl;
-              Node pr = mk->mkNode(Kind::GT, theory::arith::castToReal(nm, p[0]), theory::arith::castToReal(nm, p[1]));
-              if (prove(p, pr, cdp))
-              {
-                children[i] = pr;
-              }
+              toConvert.push_back(p);
             }
+          }
+          if (!toConvert.empty())
+          {
+            std::vector<Node> converted;
+            for (const Node& c : toConvert)
+            {
+              Trace("pf-subtype-elim") << "...convert integer to real " << c << std::endl;
+              Node catom = c.getKind()==Kind::NOT ? c[0] : c;
+              Assert (catom.getNumChildren()==2);
+              std::vector<Node> cc;
+              for (size_t j=0; j<2; j++)
+              {
+                if (catom[j].getKind()==Kind::ABS)
+                {
+                  Node ar = theory::arith::castToReal(nm, catom[j][0]);
+                  cc.push_back(nm->mkNode(Kind::ABS, ar));
+                }
+                else
+                {
+                  cc.push_back(theory::arith::castToReal(nm, catom[j]));
+                }
+              }
+              Node cn = nm->mkNode(catom.getKind(), cc);
+              Node equiv = catom.eqNode(cn);
+              cdp->addTrustedStep(equiv, TrustId::SUBTYPE_ELIMINATION, {}, {});
+              if (c.getKind()==Kind::NOT)
+              {
+                Assert (cn.getKind()==Kind::EQUAL);
+                std::vector<Node> congArgs;
+                ProofRule cr = expr::getCongRule(c, congArgs);
+                cdp->addStep(c.eqNode(cn.notNode()), cr, {equiv}, cargs);
+                cn = cn.notNode();
+                equiv = c.eqNode(cn);
+              }
+              cdp->addStep(cn, ProofRule::EQ_RESOLVE, {equiv, c}, {});
+              converted.push_back(cn);
+            }
+            Node newChild;
+            if (toConvert.size()==2)
+            {
+              newChild = nm->mkNode(Kind::AND, converted);
+              cdp->addStep(newChild, ProofRule::AND_INTRO, converted, {});
+            }
+            else
+            {
+              newChild = converted[0];
+            }
+              Trace("pf-subtype-elim") << "...update " << childrenc[i] << " to " << newChild << std::endl;
+            childrenc[i] = newChild;
           }
         }
       }
@@ -196,7 +244,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
 
   Node newRes;
   // check if succeeds with no changes
-  if (tryWith(id, children, cargs, resc, newRes, cdp))
+  if (tryWith(id, childrenc, cargs, resc, newRes, cdp))
   {
     Assert(newRes == resc);
     return resc;
@@ -207,7 +255,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
     // happen.
     Trace("pf-subtype-elim")
         << "Failed to convert subtyping " << id << std::endl;
-    Trace("pf-subtype-elim") << "Premises: " << children << std::endl;
+    Trace("pf-subtype-elim") << "Premises: " << childrenc << std::endl;
     Trace("pf-subtype-elim") << "Args: " << cargs << std::endl;
     return newRes;
   }
@@ -215,7 +263,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
   // and resc is what we need to prove.
   Trace("pf-subtype-elim") << "Introduction of subtyping via rule " << id
                            << std::endl;
-  Trace("pf-subtype-elim") << "Premises: " << children << std::endl;
+  Trace("pf-subtype-elim") << "Premises: " << childrenc << std::endl;
   Trace("pf-subtype-elim") << "Args: " << cargs << std::endl;
   Trace("pf-subtype-elim") << "...gives " << newRes << std::endl;
   Trace("pf-subtype-elim") << "...wants " << resc << std::endl;
@@ -261,10 +309,10 @@ Node SubtypeElimConverterCallback::convert(Node res,
       Assert(resc[1].getNumChildren() == children.size());
       std::vector<Node> newChildren;
       // reprove what is necessary for the sum for each child
-      for (size_t i = 0, nchild = children.size(); i < nchild; i++)
+      for (size_t i = 0, nchild = childrenc.size(); i < nchild; i++)
       {
-        Node newRel = nm->mkNode(children[i].getKind(), resc[0][i], resc[1][i]);
-        if (!prove(children[i], newRel, cdp))
+        Node newRel = nm->mkNode(childrenc[i].getKind(), resc[0][i], resc[1][i]);
+        if (!prove(childrenc[i], newRel, cdp))
         {
           success = false;
           break;
@@ -395,7 +443,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
     // if we did not succeed, just add a trust step
     Trace("pf-subtype-elim-warn")
         << "WARNING: Introduction of subtyping via rule " << id << std::endl;
-    cdp->addTrustedStep(resc, TrustId::SUBTYPE_ELIMINATION, children, {});
+    cdp->addTrustedStep(resc, TrustId::SUBTYPE_ELIMINATION, childrenc, {});
   }
   return resc;
 }
