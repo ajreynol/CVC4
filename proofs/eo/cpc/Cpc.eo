@@ -139,12 +139,12 @@
       (($run_evaluate (xor b b2))          (eo::xor ($run_evaluate b) ($run_evaluate b2)))
   
       ; arithmetic
-      (($run_evaluate (< x z))             (eo::is_neg ($arith_eval_qsub ($run_evaluate x) ($run_evaluate z))))
-      (($run_evaluate (<= x z))            (eo::define ((d ($arith_eval_qsub ($run_evaluate x) ($run_evaluate z))))
-                                             (eo::or (eo::is_neg d) (eo::eq d 0/1))))
-      (($run_evaluate (> x z))             (eo::is_neg ($arith_eval_qsub ($run_evaluate z) ($run_evaluate x))))
-      (($run_evaluate (>= x z))            (eo::define ((d ($arith_eval_qsub ($run_evaluate z) ($run_evaluate x))))
-                                             (eo::or (eo::is_neg d) (eo::eq d 0/1))))
+      (($run_evaluate (< x z))             (eo::is_neg (eo::add ($run_evaluate x) (eo::neg ($run_evaluate z)))))
+      (($run_evaluate (<= x z))            (eo::define ((d (eo::add ($run_evaluate x) (eo::neg ($run_evaluate z)))))
+                                             (eo::or (eo::is_neg d) (eo::eq (eo::to_q d) 0/1))))
+      (($run_evaluate (> x z))             (eo::is_neg (eo::add ($run_evaluate z) (eo::neg ($run_evaluate x)))))
+      (($run_evaluate (>= x z))            (eo::define ((d (eo::add ($run_evaluate z) (eo::neg ($run_evaluate x)))))
+                                             (eo::or (eo::is_neg d) (eo::eq (eo::to_q d) 0/1))))
       (($run_evaluate (+ x ys))            (eo::add ($run_evaluate x) ($run_evaluate ys)))
       (($run_evaluate (- x z))             (eo::add ($run_evaluate x) (eo::neg ($run_evaluate z))))
       (($run_evaluate (* x ys))            (eo::mul ($run_evaluate x) ($run_evaluate ys)))
