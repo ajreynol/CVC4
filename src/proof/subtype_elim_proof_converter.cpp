@@ -160,10 +160,20 @@ Node SubtypeElimConverterCallback::convert(Node res,
     break;
     case ProofRule::ARITH_MULT_ABS_COMPARISON:
     {
+      // if the conclusion is a predicate over reals, we ensure that all premises are reals.
       if (resc[0].getType().isReal())
       {
         for (size_t i = 0, nchildren = children.size(); i < nchildren; i++)
         {
+          // the following proves either
+          // (and (= (abs (to_real a)) (abs (to_real b))) (not (= (abs (to_real a)) 0.0)))
+          // from
+          // (and (= (abs a) (abs b)) (not (= (abs a) 0)))
+          // or
+          // (<> (abs (to_real a)) (abs (to_real b)))
+          // from
+          // (<> (abs a) (abs b))
+          // We first find the literals we need to convert.
           Node p = children[i];
           TypeNode tn;
           std::vector<Node> toConvert;
@@ -176,6 +186,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
                    && p[1][0].getKind() == Kind::EQUAL);
             if (p[0][0].getType().isInteger())
             {
+              // if the former case, we decompose using AND_ELIM and recombine using AND_INTRO below.
               toConvert.push_back(p[0]);
               toConvert.push_back(p[1]);
               cdp->addStep(p[0],
@@ -190,7 +201,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
           }
           else
           {
-            Assert(p.getKind() == Kind::GT);
+            Assert(p.getNumChildren()==2);
             if (p[0].getType().isInteger())
             {
               toConvert.push_back(p);
@@ -219,10 +230,20 @@ Node SubtypeElimConverterCallback::convert(Node res,
                 }
               }
               Node cn = nm->mkNode(catom.getKind(), cc);
+              if (cc[0]==cc[1])
+              {
+                // optimization: use REFL
+                Assert (c.getKind()!=Kind::NOT);
+                cdp->addStep(cn, ProofRule::REFL, {}, {cc[0]});
+                converted.push_back(cn);
+                continue;
+              }
               Node equiv = catom.eqNode(cn);
+              // assume we can prove (<> (abs a) (abs b)) == (<> (abs (to_real a)) (abs (to_real b)))
               cdp->addTrustedStep(equiv, TrustId::SUBTYPE_ELIMINATION, {}, {});
               if (c.getKind() == Kind::NOT)
               {
+                // do congruence over NOT if necessary
                 Assert(cn.getKind() == Kind::EQUAL);
                 std::vector<Node> congArgs;
                 ProofRule cr = expr::getCongRule(c, congArgs);
@@ -236,6 +257,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
             Node newChild;
             if (toConvert.size() == 2)
             {
+              // recombine if we are handling an AND premise
               newChild = nm->mkNode(Kind::AND, converted);
               cdp->addStep(newChild, ProofRule::AND_INTRO, converted, {});
             }
@@ -243,6 +265,7 @@ Node SubtypeElimConverterCallback::convert(Node res,
             {
               newChild = converted[0];
             }
+            // update the premise with the appropriate formula
             Trace("pf-subtype-elim") << "...update " << childrenc[i] << " to "
                                      << newChild << std::endl;
             childrenc[i] = newChild;
@@ -422,8 +445,8 @@ Node SubtypeElimConverterCallback::convert(Node res,
       for (const Node& mc : matchConds)
       {
         Trace("pf-subtype-elim") << "- match condition " << mc << std::endl;
-        AlwaysAssert(d_nconv.convert(mc[0]) == mc[0]);
-        AlwaysAssert(d_nconv.convert(mc[1]) == mc[1]);
+        // should not introduce subgoals with mixed arithmetic here
+        Assert(d_nconv.convert(mc) == mc);
         tcpg.addRewriteStep(mc[0],
                             mc[1],
                             nullptr,
