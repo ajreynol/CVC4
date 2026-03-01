@@ -82,12 +82,8 @@
 ; disclaimer: The type of this function in SMT-LIB only accepts an Int as argument.
 (declare-parameterized-const to_real ((T Type :implicit))
   (-> T (eo::requires ($is_arith_type T) true Real)))
-; disclaimer: The type of this function in SMT-LIB only accepts a Real as argument.
-(declare-parameterized-const to_int ((T Type :implicit))
-  (-> T (eo::requires ($is_arith_type T) true Int)))
-; disclaimer: The type of this function in SMT-LIB only accepts a Real as argument.
-(declare-parameterized-const is_int ((T Type :implicit))
-  (-> T (eo::requires ($is_arith_type T) true Bool)))
+(declare-const to_int (-> Real Int))
+(declare-const is_int (-> Real Bool))
 ; disclaimer: The type of this function in SMT-LIB only accepts an Int as argument.
 (declare-parameterized-const abs ((T Type :implicit))
   (-> T (eo::requires ($is_arith_type T) true T)))
