@@ -43,6 +43,28 @@ namespace {
 // A helper function to compute 2^b as a Rational
 Rational intpow2(uint32_t b) { return Rational(Integer(2).pow(b), Integer(1)); }
 
+void collectUfAppsForQuantifierMatrix(
+    TNode n, std::unordered_set<Node>& applys, bool underBinder = false)
+{
+  if (underBinder)
+  {
+    return;
+  }
+  if (n.getKind() == Kind::APPLY_UF)
+  {
+    applys.insert(n);
+  }
+  else if (n.getKind() == Kind::FORALL || n.getKind() == Kind::EXISTS
+           || n.getKind() == Kind::LAMBDA)
+  {
+    return;
+  }
+  for (const Node& cn : n)
+  {
+    collectUfAppsForQuantifierMatrix(cn, applys);
+  }
+}
+
 }  // namespace
 
 IntBlaster::IntBlaster(Env& env,
@@ -1056,12 +1078,24 @@ Node IntBlaster::translateQuantifiedFormula(Node quantifiedNode)
     }
   }
 
-  // collect range constraints for UF applciations
-  // that involve quantified variables
+  // Collect range constraints for UF applications in the current matrix.
+  // Applications under nested binders are handled by those binders instead.
   std::unordered_set<Node> applys;
-  expr::getKindSubterms(quantifiedNode[1], Kind::APPLY_UF, true, applys);
-  if (applys.size() > 0) {
-     throw LogicException("bv-to-int does not support the combination of quantifiers and uninterpreted functions");
+  collectUfAppsForQuantifierMatrix(quantifiedNode[1], applys);
+  for (const Node& app : applys)
+  {
+    if (!app.getType().isBitVector() || !expr::hasBoundVar(app))
+    {
+      continue;
+    }
+    Node trApp = d_intblastCache[app];
+    Assert(!trApp.isNull());
+    trApp = trApp.substitute(oldBoundVars.begin(),
+                             oldBoundVars.end(),
+                             newBoundVars.begin(),
+                             newBoundVars.end());
+    rangeConstraints.push_back(
+        mkRangeConstraint(trApp, app.getType().getBitVectorSize()));
   }
 
   // the body of the quantifier
@@ -1080,7 +1114,7 @@ Node IntBlaster::translateQuantifiedFormula(Node quantifiedNode)
       k == Kind::FORALL ? Kind::IMPLIES : Kind::AND, ranges, matrix);
   // create the new quantified formula and return it.
   Node newBoundVarsList = d_nm->mkNode(Kind::BOUND_VAR_LIST, newBoundVars);
-  Node result = d_nm->mkNode(Kind::FORALL, newBoundVarsList, matrix);
+  Node result = d_nm->mkNode(k, newBoundVarsList, matrix);
   return result;
 }
 
