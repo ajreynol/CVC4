@@ -1054,8 +1054,11 @@ Node IntBlaster::translateQuantifiedFormula(Node quantifiedNode)
   std::vector<Node> oldBoundVars;
   std::vector<Node> newBoundVars;
 
-  // range constraints for quantified variables and terms
-  std::vector<Node> rangeConstraints;
+  // Range constraints for quantified variables and translated terms.
+  // For universals, variable ranges are assumptions, while translated term
+  // ranges are obligations.
+  std::vector<Node> varRangeConstraints;
+  std::vector<Node> termRangeConstraints;
 
   // collect range constraints for quantified variables
   for (Node bv : quantifiedNode[0])
@@ -1068,7 +1071,7 @@ Node IntBlaster::translateQuantifiedFormula(Node quantifiedNode)
       // original bit-width.
       Node newBoundVar = d_intblastCache[bv];
       newBoundVars.push_back(newBoundVar);
-      rangeConstraints.push_back(
+      varRangeConstraints.push_back(
           mkRangeConstraint(newBoundVar, bv.getType().getBitVectorSize()));
     }
     else
@@ -1094,7 +1097,7 @@ Node IntBlaster::translateQuantifiedFormula(Node quantifiedNode)
                              oldBoundVars.end(),
                              newBoundVars.begin(),
                              newBoundVars.end());
-    rangeConstraints.push_back(
+    termRangeConstraints.push_back(
         mkRangeConstraint(trApp, app.getType().getBitVectorSize()));
   }
 
@@ -1105,13 +1108,20 @@ Node IntBlaster::translateQuantifiedFormula(Node quantifiedNode)
                              oldBoundVars.end(),
                              newBoundVars.begin(),
                              newBoundVars.end());
-  // A node to represent all the range constraints.
-  Node ranges = d_nm->mkAnd(rangeConstraints);
-  // Add the range constraints to the body of the quantifier.
-  // For "exists", this is added conjunctively
-  // For "forall", this is added to the left side of an implication.
-  matrix = d_nm->mkNode(
-      k == Kind::FORALL ? Kind::IMPLIES : Kind::AND, ranges, matrix);
+  Node varRanges = d_nm->mkAnd(varRangeConstraints);
+  Node termRanges = d_nm->mkAnd(termRangeConstraints);
+  if (k == Kind::FORALL)
+  {
+    // Bound variable ranges restrict the domain we quantify over. Range
+    // constraints for translated UF applications remain part of the obligation.
+    matrix = d_nm->mkNode(Kind::IMPLIES,
+                          varRanges,
+                          d_nm->mkNode(Kind::AND, termRanges, matrix));
+  }
+  else
+  {
+    matrix = d_nm->mkNode(Kind::AND, varRanges, termRanges, matrix);
+  }
   // create the new quantified formula and return it.
   Node newBoundVarsList = d_nm->mkNode(Kind::BOUND_VAR_LIST, newBoundVars);
   Node result = d_nm->mkNode(k, newBoundVarsList, matrix);
