@@ -68,9 +68,8 @@ IntBlaster::~IntBlaster() {}
 
 std::shared_ptr<ProofNode> IntBlaster::getProofFor(Node fact)
 {
-  // proofs not yet supported
   CDProof cdp(d_env);
-  cdp.addTrustedStep(fact, TrustId::INT_BLASTER, {}, {});
+  cdp.addStep(fact, ProofRule::INT_BLASTER, {}, {fact});
   return cdp.getProofFor(fact);
 }
 

@@ -1381,6 +1381,18 @@ enum ENUM(ProofRule)
   EVALUE(BV_BITBLAST_STEP),
   /**
    * \verbatim embed:rst:leading-asterisk
+   * **Bit-vectors -- Int-blaster**
+   *
+   * .. math::
+   *
+   *   \inferrule{- \mid F}{F}
+   *
+   * where :math:`F` is a formula produced by the int-blaster.
+   * \endverbatim
+   */
+  EVALUE(INT_BLASTER),
+  /**
+   * \verbatim embed:rst:leading-asterisk
    * **Bit-vectors -- Bit-vector eager atom**
    *
    * .. math::

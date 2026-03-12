@@ -117,6 +117,7 @@ const char* toString(ProofRule rule)
     //================================================= Bit-Vector rules
     case ProofRule::MACRO_BV_BITBLAST: return "MACRO_BV_BITBLAST";
     case ProofRule::BV_BITBLAST_STEP: return "BV_BITBLAST_STEP";
+    case ProofRule::INT_BLASTER: return "INT_BLASTER";
     case ProofRule::BV_EAGER_ATOM: return "BV_EAGER_ATOM";
     case ProofRule::BV_POLY_NORM: return "BV_POLY_NORM";
     case ProofRule::BV_POLY_NORM_EQ: return "BV_POLY_NORM_EQ";
