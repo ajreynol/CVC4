@@ -521,18 +521,126 @@
 
 ;;;;; trusted
 
+; program: $intblast_term
+; args:
+; - t (BitVec n): The bit-vector term to translate.
+; return: >
+;   A sketch of the sum-based int-blasting translation for t. This covers the
+;   common term forms emitted by ProofRule::INT_BLASTER in CPC proofs and falls
+;   back to a purification of ubv_to_int for unsupported terms.
+(program $intblast_term
+  ((n Int) (m Int)
+   (a (BitVec n)) (b (BitVec n)) (c (BitVec m))
+   (i Int) (j Int))
+  :signature ((BitVec n)) Int
+  (
+    (($intblast_term (bvadd a b))
+      (eo::define ((w ($bv_bitwidth (eo::typeof a))))
+        (mod_total (+ ($intblast_term a) ($intblast_term b))
+                   ($arith_eval_int_pow_2 w))))
+    (($intblast_term (bvsub a b))
+      (eo::define ((w ($bv_bitwidth (eo::typeof a))))
+        (mod_total (- ($intblast_term a) ($intblast_term b))
+                   ($arith_eval_int_pow_2 w))))
+    (($intblast_term (bvneg a))
+      (eo::define ((w ($bv_bitwidth (eo::typeof a))))
+        (mod_total (- ($arith_eval_int_pow_2 w) ($intblast_term a))
+                   ($arith_eval_int_pow_2 w))))
+    (($intblast_term (bvnot a))
+      (eo::define ((w ($bv_bitwidth (eo::typeof a))))
+        (- (+ ($arith_eval_int_pow_2 w) -1) ($intblast_term a))))
+    (($intblast_term (concat a c))
+      (eo::define ((cw ($bv_bitwidth (eo::typeof c))))
+        (+ (* ($arith_eval_int_pow_2 cw) ($intblast_term a))
+           ($intblast_term c))))
+    (($intblast_term (extract i j a))
+      (eo::define ((width (+ i (- j) 1)))
+        (mod_total (div_total ($intblast_term a) ($arith_eval_int_pow_2 j))
+                   ($arith_eval_int_pow_2 width))))
+    (($intblast_term (zero_extend i a))
+      ($intblast_term a))
+    (($intblast_term (sign_extend i a))
+      (eo::define ((w ($bv_bitwidth (eo::typeof a))))
+      (eo::define ((wm1 (+ w -1)))
+        (ite (= (extract wm1 wm1 a) #b0)
+             ($intblast_term a)
+             (+ (* ($arith_eval_int_pow_2 w)
+                   (+ ($arith_eval_int_pow_2 i) -1))
+                ($intblast_term a))))))
+    (($intblast_term a)
+      (eo::ite (eo::is_bin a) (eo::to_z a) (@purify (ubv_to_int a))))
+  )
+)
+
+; program: $intblast_formula
+; args:
+; - F Bool: The formula to translate.
+; return: >
+;   A sketch of the sum-based int-blasting translation for F. This is intended
+;   to match the formulas printed for ProofRule::INT_BLASTER in CPC output.
+(program $intblast_formula
+  ((n Int) (a (BitVec n)) (b (BitVec n)) (F Bool) (G Bool))
+  :signature (Bool) Bool
+  (
+    (($intblast_formula (= a b))
+      (= ($intblast_term a) ($intblast_term b)))
+    (($intblast_formula (bvult a b))
+      (< ($intblast_term a) ($intblast_term b)))
+    (($intblast_formula (bvule a b))
+      (<= ($intblast_term a) ($intblast_term b)))
+    (($intblast_formula (bvugt a b))
+      (> ($intblast_term a) ($intblast_term b)))
+    (($intblast_formula (bvuge a b))
+      (>= ($intblast_term a) ($intblast_term b)))
+    (($intblast_formula (not F))
+      (not ($intblast_formula F)))
+    (($intblast_formula (and F G))
+      (and ($intblast_formula F) ($intblast_formula G)))
+    (($intblast_formula (or F G))
+      (or ($intblast_formula F) ($intblast_formula G)))
+    (($intblast_formula F) F)
+  )
+)
+
+; program: $is_intblast_conclusion
+; args:
+; - F Bool: The candidate conclusion of an int-blast proof step.
+; return: >
+;   true iff F matches one of the currently supported sum-based int-blaster
+;   conclusion shapes: a translated rewrite equality or a standard range lemma.
+(program $is_intblast_conclusion
+  ((n Int) (a (BitVec n)) (p Int) (F Bool) (G Bool))
+  :signature (Bool) Bool
+  (
+    (($is_intblast_conclusion (= F G))
+      (eo::or (eo::eq ($intblast_formula F) G)
+              (eo::eq ($intblast_formula G) F)))
+    (($is_intblast_conclusion (and (>= (@purify (ubv_to_int a)) 0)
+                                   (not (>= (@purify (ubv_to_int a)) p))))
+      (eo::eq p ($arith_eval_int_pow_2 ($bv_bitwidth (eo::typeof a)))))
+    (($is_intblast_conclusion (and (not (>= (@purify (ubv_to_int a)) p))
+                                   (>= (@purify (ubv_to_int a)) 0)))
+      (eo::eq p ($arith_eval_int_pow_2 ($bv_bitwidth (eo::typeof a)))))
+    (($is_intblast_conclusion F) false)
+  )
+)
+
 ; rule: int-blast
 ; implements: ProofRule::INT_BLASTER
 ; args:
 ; - F Bool: The formula concluded by a sum-based int-blasting proof step.
+; requires: >
+;   F is either a range lemma for a purified ubv_to_int term or an equality
+;   between a Boolean BV formula and its sum-based int-blasting translation.
 ; conclusion: The given formula F.
 ; note: >
-;   This is a dedicated placeholder for int-blaster proof steps that are not
-;   yet formalized in the CPC signature.
+;   This is a sketch of the sum-based int-blaster rule. It is intentionally
+;   limited to the conclusion shapes currently emitted by the CPC printer for
+;   --solve-bv-as-int=sum and does not yet cover the bitwise/iand variants.
 (declare-rule int-blast ((F Bool))
     :args (F)
+    :requires ((($is_intblast_conclusion F) true))
     :conclusion F
-    :sorry
 )
 
 ; rule: trust
