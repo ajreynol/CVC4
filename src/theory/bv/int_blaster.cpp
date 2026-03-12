@@ -73,6 +73,21 @@ std::shared_ptr<ProofNode> IntBlaster::getProofFor(Node fact)
   return cdp.getProofFor(fact);
 }
 
+Node IntBlaster::checkProof(Node fact)
+{
+  Node res = checkBitwiseProof(fact);
+  if (!res.isNull())
+  {
+    return res;
+  }
+  res = checkRangeProof(fact);
+  if (!res.isNull())
+  {
+    return res;
+  }
+  return checkRewriteProof(fact);
+}
+
 std::string IntBlaster::identify() const { return "IntBlaster"; }
 
 void IntBlaster::addRangeConstraint(Node node,
@@ -1185,6 +1200,156 @@ Node IntBlaster::createBVNegNode(Node n, uint32_t bvsize)
 Node IntBlaster::createBVNotNode(Node n, uint32_t bvsize)
 {
   return d_nm->mkNode(Kind::SUB, maxInt(bvsize), n);
+}
+
+Node IntBlaster::checkRewriteProof(Node fact)
+{
+  if (fact.getKind() != Kind::EQUAL)
+  {
+    return Node::null();
+  }
+  std::vector<TrustNode> lemmas;
+  std::map<Node, Node> skolems;
+  TrustNode tr = trustedIntBlast(fact[0], lemmas, skolems);
+  if (!tr.isNull() && tr.getProven() == fact)
+  {
+    return fact;
+  }
+  return Node::null();
+}
+
+Node IntBlaster::checkRangeProof(Node fact)
+{
+  if (fact.getKind() != Kind::AND || fact.getNumChildren() != 2)
+  {
+    return Node::null();
+  }
+  Node lower;
+  Node upper;
+  if (fact[0].getKind() == Kind::LEQ && fact[1].getKind() == Kind::LT)
+  {
+    lower = fact[0];
+    upper = fact[1];
+  }
+  else if (fact[1].getKind() == Kind::LEQ && fact[0].getKind() == Kind::LT)
+  {
+    lower = fact[1];
+    upper = fact[0];
+  }
+  else
+  {
+    return Node::null();
+  }
+  if (lower[0] != d_zero || lower[1] != upper[0])
+  {
+    return Node::null();
+  }
+  uint32_t bvsize;
+  if (!getRangeConstraintBitWidth(lower[1], bvsize))
+  {
+    return Node::null();
+  }
+  return mkRangeConstraint(lower[1], bvsize) == fact ? fact : Node::null();
+}
+
+Node IntBlaster::checkBitwiseProof(Node fact)
+{
+  if (fact.getKind() != Kind::EQUAL)
+  {
+    return Node::null();
+  }
+  Node extract;
+  Node rhs;
+  if (!fact[0].isNull())
+  {
+    extract = fact[0];
+    rhs = fact[1];
+  }
+  Node base;
+  uint32_t high;
+  uint32_t low;
+  if (!getIExtract(extract, base, high, low))
+  {
+    extract = fact[1];
+    rhs = fact[0];
+    if (!getIExtract(extract, base, high, low))
+    {
+      return Node::null();
+    }
+  }
+  Node unpurified = SkolemManager::getUnpurifiedForm(base);
+  if (unpurified.getKind() != Kind::IAND)
+  {
+    return Node::null();
+  }
+  Node expected =
+      d_iandUtils.createBitwiseIAndNode(unpurified[0], unpurified[1], high, low);
+  return rhs == expected ? fact : Node::null();
+}
+
+bool IntBlaster::getPow2(TNode n, uint32_t& k) const
+{
+  if (n.getKind() == Kind::POW && n.getNumChildren() == 2
+      && n[0].getKind() == Kind::CONST_INTEGER
+      && n[0].getConst<Rational>() == Rational(2))
+  {
+    return n[1].getKind() == Kind::CONST_INTEGER
+           && n[1].getConst<Rational>().sgn() >= 0
+           && n[1].getConst<Rational>().getNumerator().fitsUnsignedInt()
+           && ((k = n[1].getConst<Rational>().getNumerator().toUnsignedInt()),
+               true);
+  }
+  return false;
+}
+
+bool IntBlaster::getIExtract(TNode n,
+                             Node& base,
+                             uint32_t& high,
+                             uint32_t& low) const
+{
+  if (n.getKind() != Kind::INTS_MODULUS_TOTAL || n[0].getKind() != Kind::INTS_DIVISION_TOTAL)
+  {
+    return false;
+  }
+  uint32_t width;
+  if (!getPow2(n[1], width) || !getPow2(n[0][1], low) || width == 0)
+  {
+    return false;
+  }
+  base = n[0][0];
+  high = low + width - 1;
+  return true;
+}
+
+bool IntBlaster::getRangeConstraintBitWidth(TNode term, uint32_t& bvsize) const
+{
+  Node cacheVal;
+  SkolemId id = SkolemId::NONE;
+  if (term.getKind() == Kind::SKOLEM)
+  {
+    Node unpurified = SkolemManager::getUnpurifiedForm(term);
+    if (unpurified.getKind() == Kind::BITVECTOR_UBV_TO_INT
+        && unpurified[0].getType().isBitVector())
+    {
+      bvsize = unpurified[0].getType().getBitVectorSize();
+      return true;
+    }
+    if (unpurified.getKind() == Kind::IAND)
+    {
+      bvsize = unpurified.getOperator().getConst<IntAnd>().d_size;
+      return true;
+    }
+  }
+  if (term.getKind() == Kind::APPLY_UF
+      && SkolemManager::isSkolemFunction(term.getOperator(), id, cacheVal)
+      && id == SkolemId::BV_TO_INT_UF && !cacheVal.isNull()
+      && cacheVal.getType().isFunction()
+      && cacheVal.getType().getRangeType().isBitVector())
+  {
+    bvsize = cacheVal.getType().getRangeType().getBitVectorSize();
+    return true;
+  }
+  return false;
 }
 
 }  // namespace cvc5::internal

@@ -12,7 +12,10 @@
 
 #include "theory/bv/proof_checker.h"
 
+#include "options/smt_options.h"
+#include "smt/env.h"
 #include "theory/arith/arith_poly_norm.h"
+#include "theory/bv/int_blaster.h"
 #include "theory/bv/theory_bv_utils.h"
 #include "util/bitvector.h"
 
@@ -20,7 +23,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace bv {
 
-BVProofRuleChecker::BVProofRuleChecker(NodeManager* nm) : ProofRuleChecker(nm)
+BVProofRuleChecker::BVProofRuleChecker(Env& env)
+    : ProofRuleChecker(env.getNodeManager()), d_env(env)
 {
 }
 void BVProofRuleChecker::registerTo(ProofChecker* pc)
@@ -56,7 +60,9 @@ Node BVProofRuleChecker::checkInternal(ProofRule id,
     Assert(children.empty());
     Assert(args.size() == 1);
     Assert(args[0].getType().isBoolean());
-    return args[0];
+    IntBlaster ib(
+        d_env, d_env.getOptions().smt.solveBVAsInt, d_env.getOptions().smt.BVAndIntegerGranularity);
+    return ib.checkProof(args[0]);
   }
   else if (id == ProofRule::BV_EAGER_ATOM)
   {

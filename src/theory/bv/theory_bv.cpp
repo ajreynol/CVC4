@@ -41,7 +41,7 @@ TheoryBV::TheoryBV(Env& env,
       d_notify(d_im),
       d_invalidateModelCache(context(), true),
       d_stats(statisticsRegistry(), "theory::bv::"),
-      d_checker(nodeManager())
+      d_checker(env)
 {
   switch (options().bv.bvSolver)
   {

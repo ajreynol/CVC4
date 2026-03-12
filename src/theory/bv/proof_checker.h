@@ -20,6 +20,7 @@
 #include "proof/proof_node.h"
 
 namespace cvc5::internal {
+class Env;
 namespace theory {
 namespace bv {
 
@@ -27,7 +28,7 @@ namespace bv {
 class BVProofRuleChecker : public ProofRuleChecker
 {
  public:
-  BVProofRuleChecker(NodeManager* nm);
+  BVProofRuleChecker(Env& env);
 
   /** Register all rules owned by this rule checker into pc. */
   void registerTo(ProofChecker* pc) override;
@@ -37,6 +38,10 @@ class BVProofRuleChecker : public ProofRuleChecker
   Node checkInternal(ProofRule id,
                      const std::vector<Node>& children,
                      const std::vector<Node>& args) override;
+
+ private:
+  /** The environment, used for replaying int-blaster steps. */
+  Env& d_env;
 };
 
 }  // namespace bv
