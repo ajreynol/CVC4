@@ -518,7 +518,10 @@ class SatProofManager : protected EnvObj
    * have been used as premises of resolution steps while explaining
    * propagations
    */
-  void explainLit(prop::SatLiteral lit, std::unordered_set<TNode>& premises);
+  void explainLit(prop::SatLiteral lit,
+                  std::unordered_set<TNode>& premises,
+                  std::unordered_set<TNode>& active,
+                  bool overwrite = false);
 
   /** Build refutation proof starting from conflict clause
    *

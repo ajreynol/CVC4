@@ -284,7 +284,7 @@ void SatProofManager::endResChain(Node conclusion,
   // post-processing.
   ProofStep ps(ProofRule::CHAIN_M_RESOLUTION, children, args);
   // note that we must tell the proof generator to overwrite if repeated
-  d_resChainPg.addStep(conclusion, ps);
+  d_resChainPg.addStep(conclusion, ps, CDPOverwrite::ALWAYS);
   // the premises of this resolution may not have been justified yet, so we do
   // not pass assumptions to check closedness
   d_resChains.addLazyStep(conclusion, &d_resChainPg);
@@ -370,11 +370,20 @@ void SatProofManager::processRedundantLit(
 }
 
 void SatProofManager::explainLit(SatLiteral lit,
-                                 std::unordered_set<TNode>& premises)
+                                 std::unordered_set<TNode>& premises,
+                                 std::unordered_set<TNode>& active,
+                                 bool overwrite)
 {
   Trace("sat-proof") << push << "SatProofManager::explainLit: Lit: " << lit;
   Node litNode = d_cnfStream->getNode(lit);
   Trace("sat-proof") << " [" << litNode << "]\n";
+  if (!active.insert(litNode).second)
+  {
+    Trace("sat-proof")
+        << "SatProofManager::explainLit: active explanation, ABORT\n"
+        << pop;
+    return;
+  }
   // We don't need to explain nodes who are inputs. Note that it's *necessary*
   // to avoid attempting such explanations because they can introduce cycles at
   // the node level. For example, if a literal l depends on an input clause C
@@ -385,6 +394,7 @@ void SatProofManager::explainLit(SatLiteral lit,
     Trace("sat-proof")
         << "SatProofManager::explainLit: input assumption, ABORT\n"
         << pop;
+    active.erase(litNode);
     return;
   }
   // We don't need to explain nodes who already have proofs.
@@ -393,11 +403,12 @@ void SatProofManager::explainLit(SatLiteral lit,
   // a proof for (= a b) this test would return true for (= b a), which could
   // lead to open proof. However we should never have two literals like this in
   // the SAT solver since they'd be rewritten to the same one
-  if (d_resChainPg.hasProofFor(litNode))
+  if (!overwrite && d_resChainPg.hasProofFor(litNode))
   {
     Trace("sat-proof") << "SatProofManager::explainLit: already justified "
                        << lit << ", ABORT\n"
                        << pop;
+    active.erase(litNode);
     return;
   }
   Minisat::Solver::TCRef reasonRef =
@@ -405,6 +416,7 @@ void SatProofManager::explainLit(SatLiteral lit,
   if (reasonRef == Minisat::Solver::TCRef_Undef)
   {
     Trace("sat-proof") << "SatProofManager::explainLit: no SAT reason\n" << pop;
+    active.erase(litNode);
     return;
   }
   Assert(reasonRef < d_solver->ca.size())
@@ -453,7 +465,7 @@ void SatProofManager::explainLit(SatLiteral lit,
       continue;
     }
     std::unordered_set<TNode> childPremises;
-    explainLit(~currLit, childPremises);
+    explainLit(~currLit, childPremises, active, overwrite);
     // save to resolution chain premises / arguments
     Assert(d_cnfStream->getNodeCache().find(currLit)
            != d_cnfStream->getNodeCache().end());
@@ -491,6 +503,7 @@ void SatProofManager::explainLit(SatLiteral lit,
     Trace("sat-proof") << "SatProofManager::explainLit: CYCLIC PROOF of " << lit
                        << " [" << litNode << "], ABORT\n"
                        << pop;
+    active.erase(litNode);
     return;
   }
   Trace("sat-proof") << pop;
@@ -499,12 +512,14 @@ void SatProofManager::explainLit(SatLiteral lit,
   args.push_back(nodeManager()->mkNode(Kind::SEXPR, pols));
   args.push_back(nodeManager()->mkNode(Kind::SEXPR, lits));
   ProofStep ps(ProofRule::CHAIN_M_RESOLUTION, children, args);
-  d_resChainPg.addStep(litNode, ps);
+  d_resChainPg.addStep(
+      litNode, ps, overwrite ? CDPOverwrite::ALWAYS : CDPOverwrite::NEVER);
   // the premises in the limit of the justification may correspond to other
   // links in the chain which have, themselves, literals yet to be justified. So
   // we are not ready yet to check closedness w.r.t. CNF transformation of the
   // preprocessed assertions
   d_resChains.addLazyStep(litNode, &d_resChainPg);
+  active.erase(litNode);
 }
 
 void SatProofManager::finalizeProof(Node inConflictNode,
@@ -608,6 +623,7 @@ void SatProofManager::finalizeProof(Node inConflictNode,
   // arguments for the resolution step to conclude false.
   std::vector<Node> children{inConflictNode}, args;
   std::unordered_set<TNode> premises;
+  std::unordered_set<TNode> active;
   std::vector<Node> pols;
   std::vector<Node> lits;
   for (unsigned i = 0, size = inConflict.size(); i < size; ++i)
@@ -615,7 +631,7 @@ void SatProofManager::finalizeProof(Node inConflictNode,
     Assert(d_cnfStream->getNodeCache().find(inConflict[i])
            != d_cnfStream->getNodeCache().end());
     std::unordered_set<TNode> childPremises;
-    explainLit(~inConflict[i], childPremises);
+    explainLit(~inConflict[i], childPremises, active, true);
     Node negatedLitNode = d_cnfStream->getNodeCache()[~inConflict[i]];
     // save to resolution chain premises / arguments
     children.push_back(negatedLitNode);
@@ -730,7 +746,7 @@ void SatProofManager::finalizeProof(Node inConflictNode,
       // connected because of the new justifications
       expanded = true;
       std::unordered_set<TNode> childPremises;
-      explainLit(it->second, childPremises);
+      explainLit(it->second, childPremises, active, true);
       // add the premises used in the justification. We know they will have
       // been as expanded as possible
       premises.insert(childPremises.begin(), childPremises.end());

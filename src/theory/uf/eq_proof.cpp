@@ -1138,8 +1138,7 @@ Node EqProof::addToProof(CDProof* p,
                ProofRule::TRANS,
                {transitivityChildren},
                {},
-               true,
-               CDPOverwrite::NEVER);
+               true);
     visited[d_node] = d_node;
     return d_node;
   }
