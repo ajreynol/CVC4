@@ -521,6 +521,23 @@
 
 ;;;;; trusted
 
+; define: $intblast_is_binary_assoc_app
+; args:
+; - f (-> T U V): A right-associative nil-terminated operator.
+; - t V: The candidate application.
+; return: true iff t is an application of f with exactly two children.
+(define $intblast_is_binary_assoc_app
+  ((T Type :implicit) (U Type :implicit) (V Type :implicit)
+   (f (-> T U V)) (t V))
+  (eo::eq (eo::list_len f t) 2))
+
+; note: >
+;   These are forward declarations of helpers defined after $intblast_term.
+;   Since forward declarations need a ground signature, we wrap the term in a
+;   singleton @List.
+(program $intblast_term_bvadd () :signature (@List) Int)
+(program $intblast_term_concat () :signature (@List) Int)
+
 ; program: $intblast_term
 ; args:
 ; - t (BitVec n): The bit-vector term to translate.
@@ -530,14 +547,10 @@
 ;   back to a purification of ubv_to_int for unsupported terms.
 (program $intblast_term
   ((n Int) (m Int)
-   (a (BitVec n)) (b (BitVec n)) (c (BitVec m))
+   (t (BitVec n)) (a (BitVec n)) (b (BitVec n)) (c (BitVec m))
    (i Int) (j Int))
   :signature ((BitVec n)) Int
   (
-    (($intblast_term (bvadd a b))
-      (eo::define ((w ($bv_bitwidth (eo::typeof a))))
-        (mod_total (+ ($intblast_term a) ($intblast_term b))
-                   ($arith_eval_int_pow_2 w))))
     (($intblast_term (bvsub a b))
       (eo::define ((w ($bv_bitwidth (eo::typeof a))))
         (mod_total (- ($intblast_term a) ($intblast_term b))
@@ -549,10 +562,6 @@
     (($intblast_term (bvnot a))
       (eo::define ((w ($bv_bitwidth (eo::typeof a))))
         (- (+ ($arith_eval_int_pow_2 w) -1) ($intblast_term a))))
-    (($intblast_term (concat a c))
-      (eo::define ((cw ($bv_bitwidth (eo::typeof c))))
-        (+ (* ($arith_eval_int_pow_2 cw) ($intblast_term a))
-           ($intblast_term c))))
     (($intblast_term (extract i j a))
       (eo::define ((width (+ i (- j) 1)))
         (mod_total (div_total ($intblast_term a) ($arith_eval_int_pow_2 j))
@@ -567,8 +576,46 @@
              (+ (* ($arith_eval_int_pow_2 w)
                    (+ ($arith_eval_int_pow_2 i) -1))
                 ($intblast_term a))))))
-    (($intblast_term a)
-      (eo::ite (eo::is_bin a) (eo::to_z a) (@purify (ubv_to_int a))))
+    (($intblast_term t)
+      (eo::ite (eo::and ($is_app bvadd t)
+                        ($intblast_is_binary_assoc_app bvadd t))
+        ($intblast_term_bvadd (@list t @list.nil))
+        (eo::ite (eo::and ($is_app concat t)
+                          ($intblast_is_binary_assoc_app concat t))
+          ($intblast_term_concat (@list t @list.nil))
+          (eo::ite (eo::is_bin t) (eo::to_z t) (@purify (ubv_to_int t))))))
+  )
+)
+
+; program: $intblast_term_bvadd
+; args:
+; - ts @List: A singleton list containing a binary bvadd application.
+; return: The sum-based int-blasting translation of that term.
+(program $intblast_term_bvadd ((n Int) (t (BitVec n)))
+  :signature (@List) Int
+  (
+    (($intblast_term_bvadd (@list t @list.nil))
+      (eo::define ((a ($assoc_nil_nth bvadd t 0)))
+      (eo::define ((b ($assoc_nil_nth bvadd t 1)))
+      (eo::define ((w ($bv_bitwidth (eo::typeof t))))
+        (mod_total (+ ($intblast_term a) ($intblast_term b))
+                   ($arith_eval_int_pow_2 w))))))
+  )
+)
+
+; program: $intblast_term_concat
+; args:
+; - ts @List: A singleton list containing a binary concat application.
+; return: The sum-based int-blasting translation of that term.
+(program $intblast_term_concat ((n Int) (t (BitVec n)))
+  :signature (@List) Int
+  (
+    (($intblast_term_concat (@list t @list.nil))
+      (eo::define ((a ($assoc_nil_nth concat t 0)))
+      (eo::define ((b ($assoc_nil_nth concat t 1)))
+      (eo::define ((bw ($bv_bitwidth (eo::typeof b))))
+        (+ (* ($arith_eval_int_pow_2 bw) ($intblast_term a))
+           ($intblast_term b))))))
   )
 )
 
