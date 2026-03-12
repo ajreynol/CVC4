@@ -12,6 +12,7 @@
 
 #include "parser/smt2/smt2_term_parser.h"
 
+#include <charconv>
 #include <string.h>
 
 #include "base/check.h"
@@ -107,6 +108,9 @@ Term Smt2TermParser::parseTerm()
   std::vector<std::pair<ParseOp, std::vector<Term>>> tstack;
   // Let bindings, dynamically allocated for each let in scope.
   std::vector<std::vector<std::pair<std::string, Term>>> letBinders;
+  xstack.reserve(8);
+  tstack.reserve(8);
+  letBinders.reserve(2);
   Solver* slv = d_state.getSolver();
   TermManager& tm = slv->getTermManager();
   do
@@ -1043,10 +1047,13 @@ uint32_t Smt2TermParser::tokenStrToUnsigned()
   {
     d_lex.parseError("Negative numerals are forbidden in indices");
   }
-  uint32_t result;
-  std::stringstream ss;
-  ss << token;
-  ss >> result;
+  uint32_t result = 0;
+  auto [ptr, ec] =
+      std::from_chars(token.data(), token.data() + token.size(), result);
+  if (ec != std::errc() || ptr != token.data() + token.size())
+  {
+    d_lex.parseError("Invalid numeral in index");
+  }
   return result;
 }
 
@@ -1297,14 +1304,11 @@ ParseOp Smt2TermParser::continueParseIndexedIdentifier(bool isOperator)
     }
     else
     {
-      // In some cases, we don't know which kind to use until we know the type
-      // of the arguments, which is the case for:
-      // - to_fp
-      // - (_ tuple.select n) and (_ tuple.update n)
-      // For consistency, we always construct the op lazily.
+      // Most indexed operators have a final kind at parse time. Only a small
+      // subset stays unresolved until we know the argument types.
       p.d_name = name;
       p.d_indices = numerals;
-      p.d_kind = Kind::UNDEFINED_KIND;
+      p.d_kind = d_state.getIndexedOpKind(name);
     }
   }
   // otherwise, indexed by symbols

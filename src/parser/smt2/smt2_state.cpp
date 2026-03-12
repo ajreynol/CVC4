@@ -12,6 +12,7 @@
 #include "parser/smt2/smt2_state.h"
 
 #include <algorithm>
+#include <iterator>
 
 #include "base/check.h"
 #include "base/output.h"
@@ -20,6 +21,21 @@
 
 namespace cvc5 {
 namespace parser {
+
+namespace {
+
+std::vector<Term> prependTerm(Term head, std::vector<Term>& args)
+{
+  std::vector<Term> prefixed;
+  prefixed.reserve(args.size() + 1);
+  prefixed.push_back(std::move(head));
+  prefixed.insert(prefixed.end(),
+                  std::make_move_iterator(args.begin()),
+                  std::make_move_iterator(args.end()));
+  return prefixed;
+}
+
+}  // namespace
 
 Smt2State::Smt2State(ParserStateCallback* psc,
                      Solver* solver,
@@ -1233,7 +1249,7 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
       // output: (nullable.lift f x y)
       ParserState::checkDeclaration(p.d_name, DeclarationCheck::CHECK_DECLARED);
       Term function = getVariable(p.d_name);
-      args.insert(args.begin(), function);
+      args = prependTerm(function, args);
       return d_tm.mkTerm(Kind::NULLABLE_LIFT, args);
     }
     else
@@ -1245,7 +1261,7 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
   if (!p.d_indices.empty())
   {
     Op op;
-    Kind k = getIndexedOpKind(p.d_name);
+    Kind k = p.d_kind;
     if (k == Kind::UNDEFINED_KIND)
     {
       // Resolve indexed symbols that cannot be resolved without knowing the
@@ -1367,7 +1383,7 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
       Trace("parser") << "Got function kind " << kind << " for expression "
                       << std::endl;
     }
-    args.insert(args.begin(), p.d_expr);
+    args = prependTerm(p.d_expr, args);
   }
   else
   {
@@ -1463,7 +1479,7 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
       {
         checkFunctionLike(v);
         kind = getKindForFunction(v);
-        args.insert(args.begin(), v);
+        args = prependTerm(v, args);
       }
       else
       {
@@ -1472,6 +1488,7 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
         // in which case we may find it after knowing the types of its
         // arguments.
         std::vector<Sort> argTypes;
+        argTypes.reserve(args.size());
         for (std::vector<Term>::iterator i = args.begin(); i != args.end(); ++i)
         {
           argTypes.push_back((*i).getSort());
@@ -1481,7 +1498,7 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
         {
           checkFunctionLike(fop);
           kind = getKindForFunction(fop);
-          args.insert(args.begin(), fop);
+          args = prependTerm(fop, args);
         }
         else
         {
@@ -1540,7 +1557,7 @@ Term Smt2State::applyParseOp(const ParseOp& p, std::vector<Term>& args)
   {
     Term iop = mkIndexedOp(p.d_kind, {p.d_name}, args);
     kind = p.d_kind;
-    args.insert(args.begin(), iop);
+    args = prependTerm(iop, args);
   }
   else if (p.d_kind != Kind::NULL_TERM)
   {

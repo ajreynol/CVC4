@@ -61,10 +61,12 @@ struct ParseOp
   /** The expression associated with the parsed operator, if it exists */
   cvc5::Term d_expr;
   /**
-   * The indices if the operator is indexed, but cvc5::Op is the null operator.
-   * This is the case for operator symbols that cannot be resolved to a kind
-   * without parsing the arguments. This is currently only the case for
-   * `to_fp`.
+   * The indices if the operator is indexed.
+   *
+   * In this case, d_kind is either the final kind for the indexed operator, or
+   * UNDEFINED_KIND for indexed operators that cannot be resolved without the
+   * argument types. This is currently only the case for `to_fp`,
+   * `tuple.select`, and `tuple.update`.
    */
   std::vector<uint32_t> d_indices;
 
