@@ -52,6 +52,7 @@ CandidateGeneratorQE::CandidateGeneratorQE(Env& env,
     : CandidateGenerator(env, qs, tr),
       d_termIter(0),
       d_termIterList(nullptr),
+      d_patArity(pat.getNumChildren()),
       d_mode(cand_term_none)
 {
   d_op = d_treg.getTermDatabase()->getMatchOperator(pat);
@@ -63,6 +64,7 @@ void CandidateGeneratorQE::reset(Node eqc) { resetForOperator(eqc, d_op); }
 void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
 {
   d_termIter = 0;
+  d_termIterVec.clear();
   d_eqc = eqc;
   d_op = op;
   d_termIterList = d_treg.getTermDatabase()->getGroundTermList(d_op);
@@ -77,10 +79,17 @@ void CandidateGeneratorQE::resetForOperator(Node eqc, Node op)
       if( ee->hasTerm( eqc ) ){
         TNodeTrie* tat = d_treg.getTermDatabase()->getTermArgTrie(eqc, op);
         if( tat ){
-          //create an equivalence class iterator in eq class eqc
-          Node rep = ee->getRepresentative( eqc );
-          d_eqc_iter = eq::EqClassIterator( rep, ee );
-          d_mode = cand_term_eqc;
+          if (d_patArity > 0)
+          {
+            d_termIterVec = tat->getLeaves(d_patArity);
+            d_mode = cand_term_tindex;
+          }
+          else
+          {
+            Node rep = ee->getRepresentative(eqc);
+            d_eqc_iter = eq::EqClassIterator(rep, ee);
+            d_mode = cand_term_eqc;
+          }
         }else{
           d_mode = cand_term_none;
         }   
@@ -141,6 +150,18 @@ Node CandidateGeneratorQE::getNextCandidateInternal()
       Node n = *d_eqc_iter;
       ++d_eqc_iter;
       if( isLegalOpCandidate( n ) ){
+        Trace("cand-gen-qe") << "...returning " << n << std::endl;
+        return n;
+      }
+    }
+  }else if( d_mode==cand_term_tindex ){
+    Trace("cand-gen-qe") << "...get next candidate in term index" << std::endl;
+    while (d_termIter < d_termIterVec.size())
+    {
+      Node n = d_termIterVec[d_termIter];
+      d_termIter++;
+      if (isLegalOpCandidate(n))
+      {
         Trace("cand-gen-qe") << "...returning " << n << std::endl;
         return n;
       }

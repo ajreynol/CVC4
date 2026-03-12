@@ -15,6 +15,8 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__CANDIDATE_GENERATOR_H
 #define CVC5__THEORY__QUANTIFIERS__CANDIDATE_GENERATOR_H
 
+#include <vector>
+
 #include "smt/env_obj.h"
 #include "theory/theory.h"
 #include "theory/uf/equality_engine.h"
@@ -123,10 +125,14 @@ class CandidateGeneratorQE : public CandidateGenerator
   Node d_op;
   /** the equality class iterator (for cand_term_eqc) */
   eq::EqClassIterator d_eqc_iter;
+  /** candidates from the term index (for cand_term_tindex) */
+  std::vector<Node> d_termIterVec;
   /** the TermDb index of the current ground term (for cand_term_db) */
   size_t d_termIter;
   /** the TermDb index of the current ground term (for cand_term_db) */
   DbList* d_termIterList;
+  /** arity of the pattern we are matching */
+  size_t d_patArity;
   /** the current equivalence class */
   Node d_eqc;
   /** candidate generation modes */
@@ -134,6 +140,7 @@ class CandidateGeneratorQE : public CandidateGenerator
     cand_term_db,
     cand_term_ident,
     cand_term_eqc,
+    cand_term_tindex,
     cand_term_none,
   };
   /** the current mode of this candidate generator */
