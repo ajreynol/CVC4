@@ -118,7 +118,7 @@ BVSolverBitblast::BVSolverBitblast(Env& env,
       d_epg(env.isTheoryProofProducing()
                 ? new EagerProofGenerator(env, userContext(), "")
                 : nullptr),
-      d_bvProofChecker(nodeManager()),
+      d_bvProofChecker(env),
       d_factLiteralCache(context()),
       d_literalFactCache(context()),
       d_propagate(options().bv.bitvectorPropagate),
