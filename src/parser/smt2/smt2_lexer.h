@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <istream>
 #include <map>
+#include <string_view>
 #include <vector>
 
 #include "base/check.h"
@@ -40,6 +41,8 @@ class Smt2Lexer : public Lexer
  public:
   Smt2Lexer(bool isStrict, bool isSygus);
   const char* tokenStr() const override;
+  /** View of the current token string, excluding the null terminator. */
+  std::string_view tokenStrView() const;
   /** Are we in strict mode? */
   bool isStrict() const;
   /** Are we parsing sygus? */

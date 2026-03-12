@@ -47,8 +47,6 @@ class Smt2CmdParser
   Smt2State& d_state;
   /** The term parser */
   Smt2TermParser& d_tparser;
-  /** Map strings to tokens */
-  std::map<std::string, Token> d_table;
 };
 
 }  // namespace parser

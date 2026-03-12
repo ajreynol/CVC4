@@ -73,6 +73,11 @@ const char* Smt2Lexer::tokenStr() const
   Assert(!d_token.empty() && d_token.back() == 0);
   return d_token.data();
 }
+std::string_view Smt2Lexer::tokenStrView() const
+{
+  Assert(!d_token.empty() && d_token.back() == 0);
+  return std::string_view(d_token.data(), d_token.size() - 1);
+}
 bool Smt2Lexer::isStrict() const { return d_isStrict; }
 bool Smt2Lexer::isSygus() const { return d_isSygus; }
 

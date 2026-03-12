@@ -89,6 +89,15 @@ enum class ParseCtx
   TERM_ANNOTATE_NEXT_ATTR
 };
 
+struct ParseFrame
+{
+  ParseFrame() { d_args.reserve(2); }
+  explicit ParseFrame(ParseOp op) : d_op(std::move(op)) { d_args.reserve(2); }
+
+  ParseOp d_op;
+  std::vector<Term> d_args;
+};
+
 Smt2TermParser::Smt2TermParser(Smt2Lexer& lex, Smt2State& state)
     : d_lex(lex), d_state(state)
 {
@@ -105,7 +114,7 @@ Term Smt2TermParser::parseTerm()
   // The stack(s) containing the parse context, and the recipe for the
   // current we are building.
   std::vector<ParseCtx> xstack;
-  std::vector<std::pair<ParseOp, std::vector<Term>>> tstack;
+  std::vector<ParseFrame> tstack;
   // Let bindings, dynamically allocated for each let in scope.
   std::vector<std::vector<std::pair<std::string, Term>>> letBinders;
   xstack.reserve(8);
@@ -159,7 +168,7 @@ Term Smt2TermParser::parseTerm()
                 // a qualified identifier operator
                 ParseOp op = continueParseQualifiedIdentifier(true);
                 xstack.emplace_back(ParseCtx::NEXT_ARG);
-                tstack.emplace_back(op, std::vector<Term>());
+                tstack.emplace_back(std::move(op));
               }
               break;
               case Token::INDEX_TOK:
@@ -167,7 +176,7 @@ Term Smt2TermParser::parseTerm()
                 // an indexed identifier operator
                 ParseOp op = continueParseIndexedIdentifier(true);
                 xstack.emplace_back(ParseCtx::NEXT_ARG);
-                tstack.emplace_back(op, std::vector<Term>());
+                tstack.emplace_back(std::move(op));
               }
               break;
               default:
@@ -180,7 +189,7 @@ Term Smt2TermParser::parseTerm()
           case Token::LET_TOK:
           {
             xstack.emplace_back(ParseCtx::LET_NEXT_BIND);
-            tstack.emplace_back(ParseOp(), std::vector<Term>());
+            tstack.emplace_back();
             needsUpdateCtx = true;
             letBinders.emplace_back();
           }
@@ -232,7 +241,9 @@ Term Smt2TermParser::parseTerm()
             {
               xstack.emplace_back(ParseCtx::NEXT_ARG);
             }
-            tstack.emplace_back(op, args);
+            ParseFrame frame(std::move(op));
+            frame.d_args = std::move(args);
+            tstack.emplace_back(std::move(frame));
           }
           break;
           case Token::UNTERMINATED_QUOTED_SYMBOL:
@@ -255,8 +266,8 @@ Term Smt2TermParser::parseTerm()
               tok, "Mismatched parentheses in SMT-LIBv2 term");
         }
         // Construct the application term specified by tstack.back()
-        ParseOp& op = tstack.back().first;
-        ret = d_state.applyParseOp(op, tstack.back().second);
+        ParseOp& op = tstack.back().d_op;
+        ret = d_state.applyParseOp(op, tstack.back().d_args);
         // process the scope change if a closure
         if (xstack.back() == ParseCtx::CLOSURE_NEXT_ARG)
         {
@@ -347,7 +358,7 @@ Term Smt2TermParser::parseTerm()
         {
           Assert(!ret.isNull());
           // add it to the list of arguments and clear
-          tstack.back().second.push_back(ret);
+          tstack.back().d_args.push_back(ret);
           ret = Term();
         }
         break;
@@ -360,7 +371,7 @@ Term Smt2TermParser::parseTerm()
             Assert(!letBinders.empty());
             std::vector<std::pair<std::string, Term>>& bs = letBinders.back();
             // add binding from the symbol to ret
-            bs.emplace_back(tstack.back().first.d_name, ret);
+            bs.emplace_back(tstack.back().d_op.d_name, ret);
             ret = Term();
             // close the current binding
             d_lex.eatToken(Token::RPAREN_TOK);
@@ -375,7 +386,7 @@ Term Smt2TermParser::parseTerm()
           {
             // (, another binding: setup parsing the next term
             // get the symbol and store in the ParseOp
-            tstack.back().first.d_name = parseSymbol(CHECK_NONE, SYM_VARIABLE);
+            tstack.back().d_op.d_name = parseSymbol(CHECK_NONE, SYM_VARIABLE);
           }
           else
           {
@@ -413,7 +424,7 @@ Term Smt2TermParser::parseTerm()
         {
           Assert(!ret.isNull());
           // add the head
-          tstack.back().second.push_back(ret);
+          tstack.back().d_args.push_back(ret);
           Sort retSort = ret.getSort();
           // eagerly check if datatype
           if (!retSort.isDatatype())
@@ -422,8 +433,8 @@ Term Smt2TermParser::parseTerm()
           }
           // we use a placeholder to store the type (retSort), which is
           // used during MATCH_NEXT_CASE
-          tstack.back().first.d_kind = Kind::INTERNAL_KIND;
-          tstack.back().first.d_expr = tm.mkConst(retSort);
+          tstack.back().d_op.d_kind = Kind::INTERNAL_KIND;
+          tstack.back().d_op.d_expr = tm.mkConst(retSort);
           ret = Term();
           xstack[xstack.size() - 1] = ParseCtx::MATCH_NEXT_CASE;
           needsUpdateCtx = true;
@@ -434,7 +445,7 @@ Term Smt2TermParser::parseTerm()
           if (!ret.isNull())
           {
             // add it to the list of arguments and clear
-            tstack.back().second.push_back(ret);
+            tstack.back().d_args.push_back(ret);
             ret = Term();
             // pop the scope
             d_state.popScope();
@@ -450,10 +461,10 @@ Term Smt2TermParser::parseTerm()
             // push the scope
             d_state.pushScope();
             // parse the pattern, which also does the binding
-            Assert(!tstack.back().first.d_expr.isNull());
+            Assert(!tstack.back().d_op.d_expr.isNull());
             std::vector<Term> boundVars;
             Term pattern = parseMatchCasePattern(
-                tstack.back().first.d_expr.getSort(), boundVars);
+                tstack.back().d_op.d_expr.getSort(), boundVars);
             // If we bound variables when parsing the pattern, we will construct
             // a match bind case
             ParseOp op;
@@ -471,14 +482,16 @@ Term Smt2TermParser::parseTerm()
             args.push_back(pattern);
             // we now look for the body of the case + closing right parenthesis
             xstack.emplace_back(ParseCtx::NEXT_ARG);
-            tstack.emplace_back(op, args);
+            ParseFrame frame(std::move(op));
+            frame.d_args = std::move(args);
+            tstack.emplace_back(std::move(frame));
           }
           else
           {
             // Finished with match, now just wait for the closing right
             // parenthesis. Set the kind to construct as MATCH and clear the
             // head sort.
-            ParseOp& op = tstack.back().first;
+            ParseOp& op = tstack.back().d_op;
             op.d_kind = Kind::MATCH;
             op.d_expr = Term();
             xstack[xstack.size() - 1] = ParseCtx::NEXT_ARG;
@@ -489,7 +502,7 @@ Term Smt2TermParser::parseTerm()
         case ParseCtx::TERM_ANNOTATE_BODY:
         {
           // save ret as the expression and clear
-          tstack.back().first.d_expr = ret;
+          tstack.back().d_op.d_expr = ret;
           ret = Term();
           // now parse attribute list
           xstack[xstack.size() - 1] = ParseCtx::TERM_ANNOTATE_NEXT_ATTR;
@@ -510,13 +523,13 @@ Term Smt2TermParser::parseTerm()
             // if we got here, we either:
             // (1) parsed a single term (the current ParseOp::d_kind was set)
             // (2) a list of terms in a nested context.
-            if (tstack.back().first.d_kind != Kind::NULL_TERM)
+            if (tstack.back().d_op.d_kind != Kind::NULL_TERM)
             {
               // if (1), apply d_kind to the argument and reset d_kind
-              ret = tm.mkTerm(tstack.back().first.d_kind, {ret});
-              tstack.back().first.d_kind = Kind::NULL_TERM;
+              ret = tm.mkTerm(tstack.back().d_op.d_kind, {ret});
+              tstack.back().d_op.d_kind = Kind::NULL_TERM;
             }
-            tstack.back().second.push_back(ret);
+            tstack.back().d_args.push_back(ret);
             ret = Term();
           }
           // see if there is another keyword
@@ -540,16 +553,16 @@ Term Smt2TermParser::parseTerm()
             }
             else if (key == ":named")
             {
-              Assert(!tstack.back().first.d_expr.isNull());
+              Assert(!tstack.back().d_op.d_expr.isNull());
               // expression is the body of the term annotation
               std::string sym = parseSymbol(CHECK_UNDECLARED, SYM_VARIABLE);
-              d_state.notifyNamedExpression(tstack.back().first.d_expr, sym);
+              d_state.notifyNamedExpression(tstack.back().d_op.d_expr, sym);
               needsUpdateCtx = true;
             }
             else if (key == ":no-pattern")
             {
               // a single term, set the current kind
-              tstack.back().first.d_kind = Kind::INST_NO_PATTERN;
+              tstack.back().d_op.d_kind = Kind::INST_NO_PATTERN;
             }
             else if (key == ":pattern")
             {
@@ -623,7 +636,7 @@ Term Smt2TermParser::parseTerm()
                 // parenthesis.
                 ParseOp op;
                 op.d_kind = attrKind;
-                tstack.emplace_back(op, std::vector<Term>());
+                tstack.emplace_back(std::move(op));
                 xstack.emplace_back(ParseCtx::NEXT_ARG);
               }
             }
@@ -635,21 +648,21 @@ Term Smt2TermParser::parseTerm()
               Term keyword = tm.mkString(keyName);
               Term iattr =
                   tm.mkTerm(Kind::INST_ATTRIBUTE, {keyword, attrValue});
-              tstack.back().second.push_back(iattr);
+              tstack.back().d_args.push_back(iattr);
               needsUpdateCtx = true;
             }
           }
           // if we instead saw a RPAREN_TOK, we are finished
           else
           {
-            Assert(!tstack.back().first.d_expr.isNull());
+            Assert(!tstack.back().d_op.d_expr.isNull());
             // finished parsing attributes, we will return the original term
-            ret = tstack.back().first.d_expr;
+            ret = tstack.back().d_op.d_expr;
             Term ipl;
             // if args non-empty, construct an instantiation pattern list
-            if (!tstack.back().second.empty())
+            if (!tstack.back().d_args.empty())
             {
-              ipl = tm.mkTerm(Kind::INST_PATTERN_LIST, tstack.back().second);
+              ipl = tm.mkTerm(Kind::INST_PATTERN_LIST, tstack.back().d_args);
             }
             xstack.pop_back();
             tstack.pop_back();
@@ -658,7 +671,7 @@ Term Smt2TermParser::parseTerm()
             if (!ipl.isNull())
             {
               if (tstack.empty() || xstack.back() != ParseCtx::CLOSURE_NEXT_ARG
-                  || tstack.back().second.size() != 1)
+                  || tstack.back().d_args.size() != 1)
               {
                 d_lex.parseError(
                     "Patterns and quantifier attributes should be applied to "
@@ -666,8 +679,8 @@ Term Smt2TermParser::parseTerm()
               }
               // Push ret and the instantiation pattern list and clear. We
               // wait for the closing parenthesis, which should follow.
-              tstack.back().second.push_back(ret);
-              tstack.back().second.push_back(ipl);
+              tstack.back().d_args.push_back(ret);
+              tstack.back().d_args.push_back(ipl);
               ret = Term();
             }
           }
@@ -908,9 +921,9 @@ std::vector<std::string> Smt2TermParser::parseSymbolList(DeclarationCheck check,
 std::string Smt2TermParser::parseKeyword()
 {
   d_lex.eatToken(Token::KEYWORD);
-  std::string s = d_lex.tokenStr();
+  std::string_view s = d_lex.tokenStrView();
   // strip off the initial colon
-  return s.erase(0, 1);
+  return std::string(s.substr(1));
 }
 
 Grammar* Smt2TermParser::parseGrammar(const std::vector<Term>& sygusVars)
@@ -1034,8 +1047,8 @@ uint32_t Smt2TermParser::parseIntegerNumeral()
 
 uint32_t Smt2TermParser::tokenStrToUnsigned()
 {
+  std::string_view token = d_lex.tokenStrView();
   // forbid leading zeroes if in strict mode
-  std::string token = d_lex.tokenStr();
   if (d_lex.isStrict())
   {
     if (token.size() > 1 && token[0] == '0')
@@ -1059,16 +1072,13 @@ uint32_t Smt2TermParser::tokenStrToUnsigned()
 
 std::string Smt2TermParser::tokenStrToSymbol(Token tok)
 {
-  std::string id;
+  std::string_view token = d_lex.tokenStrView();
   switch (tok)
   {
-    case Token::SYMBOL: id = d_lex.tokenStr(); break;
+    case Token::SYMBOL: return std::string(token);
     case Token::QUOTED_SYMBOL:
-      id = d_lex.tokenStr();
       // strip off the quotes
-      id = id.erase(0, 1);
-      id = id.erase(id.size() - 1, 1);
-      break;
+      return std::string(token.substr(1, token.size() - 2));
     case Token::UNTERMINATED_QUOTED_SYMBOL:
       d_lex.parseError("Expected SMT-LIBv2 symbol", true);
       break;
@@ -1076,7 +1086,7 @@ std::string Smt2TermParser::tokenStrToSymbol(Token tok)
       d_lex.unexpectedTokenError(tok, "Expected SMT-LIBv2 symbol");
       break;
   }
-  return id;
+  return std::string();
 }
 
 std::vector<std::string> Smt2TermParser::parseNumeralList()
