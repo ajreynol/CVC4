@@ -521,6 +521,20 @@
 
 ;;;;; trusted
 
+; rule: int-blast
+; args:
+; - F Bool: The formula concluded by a sum-based int-blasting proof step.
+; conclusion: The given formula F.
+; note: >
+;   This rule is currently used for TrustId::INT_BLASTER steps produced by
+;   cvc5 when using --solve-bv-as-int=sum. It is a dedicated placeholder for
+;   int-blaster proof steps that are not yet formalized in the CPC signature.
+(declare-rule int-blast ((F Bool))
+    :args (F)
+    :conclusion F
+    :sorry
+)
+
 ; rule: trust
 ; premsies:
 ; - P: A conjunction of the premises passed to this rule.

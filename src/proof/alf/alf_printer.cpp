@@ -23,6 +23,7 @@
 #include "expr/sequence.h"
 #include "expr/subs.h"
 #include "options/main_options.h"
+#include "options/smt_options.h"
 #include "options/strings_options.h"
 #include "printer/printer.h"
 #include "printer/smt2/smt2_printer.h"
@@ -196,6 +197,14 @@ bool AlfPrinter::isHandled(const Options& opts, const ProofNode* pfn)
     case ProofRule::BV_BITBLAST_STEP:
     {
       return isHandledBitblastStep(pfn->getArguments()[0]);
+    }
+    break;
+    case ProofRule::TRUST:
+    {
+      TrustId tid;
+      return getTrustId(pfn->getArguments()[0], tid)
+             && tid == TrustId::INT_BLASTER
+             && opts.smt.solveBVAsInt == options::SolveBVAsIntMode::SUM;
     }
     break;
     case ProofRule::THEORY_REWRITE:
@@ -634,6 +643,15 @@ std::string AlfPrinter::getRuleName(const ProofNode* pfn) const
     std::stringstream ss;
     ss << id;
     return ss.str();
+  }
+  else if (r == ProofRule::TRUST)
+  {
+    TrustId tid;
+    if (getTrustId(pfn->getArguments()[0], tid)
+        && tid == TrustId::INT_BLASTER)
+    {
+      return "int-blast";
+    }
   }
   else if (r == ProofRule::ENCODE_EQ_INTRO || r == ProofRule::HO_APP_ENCODE
            || r == ProofRule::BV_EAGER_ATOM)
@@ -1142,6 +1160,16 @@ void AlfPrinter::getArgsFromProofRule(const ProofNode* pn,
       Assert(pargs.size() == 2);
       args.push_back(d_tproc.convert(pargs[1]));
       return;
+    }
+    break;
+    case ProofRule::TRUST:
+    {
+      TrustId tid;
+      if (getTrustId(pargs[0], tid) && tid == TrustId::INT_BLASTER)
+      {
+        args.push_back(d_tproc.convert(res));
+        return;
+      }
     }
     break;
     default: break;
