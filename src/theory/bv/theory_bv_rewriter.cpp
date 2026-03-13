@@ -561,17 +561,13 @@ RewriteResponse TheoryBVRewriter::RewriteMult(TNode node, bool prerewrite)
 
 RewriteResponse TheoryBVRewriter::RewriteAdd(TNode node, bool prerewrite)
 {
-  Node resultNode = node;
+  Node resultNode =
+      LinearRewriteStrategy<RewriteRule<AddCombineLikeTerms>>::apply(node);
+
   if (prerewrite)
   {
-    resultNode =
-        LinearRewriteStrategy<RewriteRule<FlattenAssocCommut>>::apply(node);
     return RewriteResponse(REWRITE_DONE, resultNode);
   }
-
-  resultNode =
-      LinearRewriteStrategy<RewriteRule<FlattenAssocCommut>,
-                            RewriteRule<AddCombineLikeTerms>>::apply(node);
 
   if (node != resultNode)
   {

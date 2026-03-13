@@ -280,6 +280,176 @@ static inline void addToChildren(TNode term,
   }
 }
 
+struct AddTermCollection
+{
+  explicit AddTermCollection(unsigned size)
+      : d_constSum(size, static_cast<unsigned>(0)), d_hasNestedAdd(false)
+  {
+  }
+
+  /** The first-occurrence order of non-constant terms. */
+  std::vector<Node> d_order;
+  /** The accumulated coefficient for each non-constant term. */
+  std::unordered_map<Node, BitVector> d_coeffs;
+  /** The accumulated constant part. */
+  BitVector d_constSum;
+  /** True if a nested bvadd was flattened while collecting this term. */
+  bool d_hasNestedAdd;
+};
+
+static inline void addToCoefMap(AddTermCollection& coll,
+                                TNode term,
+                                const BitVector& coef)
+{
+  if (coef == BitVector(coef.getSize(), static_cast<unsigned>(0)))
+  {
+    return;
+  }
+  auto [it, inserted] = coll.d_coeffs.emplace(term, coef);
+  if (inserted)
+  {
+    coll.d_order.push_back(term);
+    return;
+  }
+  it->second = it->second + coef;
+}
+
+static inline void updateAddTermCollection(TNode current,
+                                           unsigned size,
+                                           AddTermCollection& coll)
+{
+  switch (current.getKind())
+  {
+    case Kind::BITVECTOR_MULT:
+    {
+      // Look for c * term, where c is a constant.
+      BitVector coeff;
+      Node term;
+      if (current.getNumChildren() == 2)
+      {
+        // Mult should be normalized with only one constant at end.
+        Assert(!current[0].isConst());
+        if (current[1].isConst())
+        {
+          coeff = current[1].getConst<BitVector>();
+          term = current[0];
+        }
+      }
+      else if (current[current.getNumChildren() - 1].isConst())
+      {
+        NodeBuilder nb(current.getNodeManager(), Kind::BITVECTOR_MULT);
+        TNode::iterator child_it = current.begin();
+        for (; (child_it + 1) != current.end(); ++child_it)
+        {
+          Assert(!(*child_it).isConst());
+          nb << (*child_it);
+        }
+        term = nb;
+        coeff = (*child_it).getConst<BitVector>();
+      }
+      if (term.isNull())
+      {
+        coeff = BitVector(size, static_cast<unsigned>(1));
+        term = current;
+      }
+      if (term.getKind() == Kind::BITVECTOR_SUB)
+      {
+        addToCoefMap(coll, term[0], coeff);
+        addToCoefMap(coll, term[1], -coeff);
+      }
+      else if (term.getKind() == Kind::BITVECTOR_NEG)
+      {
+        addToCoefMap(coll, term[0], -BitVector(size, coeff));
+      }
+      else
+      {
+        addToCoefMap(coll, term, coeff);
+      }
+      break;
+    }
+    case Kind::BITVECTOR_SUB:
+      // Turn into a + (-1) * b.
+      Assert(current.getNumChildren() == 2);
+      addToCoefMap(coll, current[0], BitVector(size, static_cast<unsigned>(1)));
+      addToCoefMap(coll, current[1], -BitVector(size, static_cast<unsigned>(1)));
+      break;
+    case Kind::BITVECTOR_NEG:
+      addToCoefMap(coll, current[0], -BitVector(size, static_cast<unsigned>(1)));
+      break;
+    case Kind::CONST_BITVECTOR:
+      coll.d_constSum = coll.d_constSum + current.getConst<BitVector>();
+      break;
+    default:
+      addToCoefMap(coll, current, BitVector(size, static_cast<unsigned>(1)));
+      break;
+  }
+}
+
+static inline void mergeAddTermCollection(const AddTermCollection& src,
+                                          AddTermCollection& dst)
+{
+  dst.d_constSum = dst.d_constSum + src.d_constSum;
+  for (const Node& term : src.d_order)
+  {
+    auto it = src.d_coeffs.find(term);
+    Assert(it != src.d_coeffs.end());
+    addToCoefMap(dst, term, it->second);
+  }
+}
+
+static inline const AddTermCollection& collectAddTerms(
+    TNode node,
+    unsigned size,
+    std::unordered_map<Node, AddTermCollection>& cache)
+{
+  auto [it, inserted] = cache.try_emplace(node, size);
+  if (!inserted)
+  {
+    return it->second;
+  }
+
+  AddTermCollection& coll = it->second;
+  for (const Node& child : node)
+  {
+    if (child.getKind() == Kind::BITVECTOR_ADD)
+    {
+      coll.d_hasNestedAdd = true;
+      mergeAddTermCollection(collectAddTerms(child, size, cache), coll);
+      continue;
+    }
+    updateAddTermCollection(child, size, coll);
+  }
+  return coll;
+}
+
+static inline Node normalizeAdd(TNode node)
+{
+  NodeManager* nm = node.getNodeManager();
+  unsigned size = utils::getSize(node);
+  std::unordered_map<Node, AddTermCollection> cache;
+  const AddTermCollection& coll = collectAddTerms(node, size, cache);
+
+  std::vector<Node> children;
+  for (const Node& term : coll.d_order)
+  {
+    auto it = coll.d_coeffs.find(term);
+    Assert(it != coll.d_coeffs.end());
+    addToChildren(term, size, it->second, children);
+  }
+  if (coll.d_constSum != BitVector(size, static_cast<unsigned>(0)))
+  {
+    children.push_back(utils::mkConst(nm, coll.d_constSum));
+  }
+
+  if (!coll.d_hasNestedAdd && children.size() == node.getNumChildren())
+  {
+    return node;
+  }
+
+  return children.empty() ? utils::mkZero(nm, size)
+                          : utils::mkNaryNode(nm, Kind::BITVECTOR_ADD, children);
+}
+
 template <>
 inline bool RewriteRule<AddCombineLikeTerms>::applies(TNode node)
 {
@@ -291,47 +461,7 @@ inline Node RewriteRule<AddCombineLikeTerms>::apply(TNode node)
 {
   Trace("bv-rewrite") << "RewriteRule<AddCombineLikeTerms>(" << node << ")"
                       << std::endl;
-  NodeManager* nm = node.getNodeManager();
-  unsigned size = utils::getSize(node);
-  BitVector constSum(size, (unsigned)0);
-  std::map<Node, BitVector> factorToCoefficient;
-
-  // combine like-terms
-  for (size_t i = 0, n = node.getNumChildren(); i < n; ++i)
-  {
-    TNode current = node[i];
-    updateCoefMap(current, size, factorToCoefficient, constSum);
-  }
-
-  std::vector<Node> children;
-
-  // construct result
-  std::map<Node, BitVector>::const_iterator it = factorToCoefficient.begin();
-
-  for (; it != factorToCoefficient.end(); ++it)
-  {
-    addToChildren(it->first, size, it->second, children);
-  }
-
-  if (constSum != BitVector(size, (unsigned)0))
-  {
-    children.push_back(utils::mkConst(nm, constSum));
-  }
-
-  size_t csize = children.size();
-  if (csize == node.getNumChildren())
-  {
-    // If we couldn't combine any terms, we don't perform the rewrite. This is
-    // important because we are otherwise reordering terms in the addition
-    // based on the node ids of the terms that are multiplied with the
-    // coefficients. Due to garbage collection we may see different id orders
-    // for those nodes even when we perform one rewrite directly after the
-    // other, so the rewrite wouldn't be idempotent.
-    return node;
-  }
-
-  return csize == 0 ? utils::mkZero(nm, size)
-                    : utils::mkNaryNode(nm, Kind::BITVECTOR_ADD, children);
+  return normalizeAdd(node);
 }
 
 template<> inline
