@@ -23,6 +23,17 @@ namespace cvc5::internal {
 namespace theory {
 namespace eq {
 
+namespace {
+
+bool isTrackedAssumption(const std::unordered_set<Node>& assumptions,
+                         const Node& conclusion)
+{
+  return !conclusion.isNull()
+         && assumptions.find(conclusion) != assumptions.end();
+}
+
+}  // namespace
+
 void EqProof::debug_print(const char* c, unsigned tb) const
 {
   std::stringstream ss;
@@ -1023,15 +1034,23 @@ Node EqProof::addToProof(CDProof* p,
                    && d_node[0][0].isConst() && d_node[0][1].isConst())))
         << ". Conclusion " << d_node << " from " << d_id
         << " was expected to be (= (f t1 ... tn) c) or (not (= c1 c2))\n";
-    Assert(!assumptions.count(d_node))
-        << "Conclusion " << d_node << " from " << d_id << " is an assumption\n";
+    Node conclusion =
+        d_node.getKind() == Kind::NOT
+            ? d_node[0].eqNode(d_node.getNodeManager()->mkConst<bool>(false))
+            : d_node;
+    // As with transitivity, if this conclusion is already tracked as an
+    // assumption, reconstructing it is spurious and may introduce open
+    // assumptions in proof fragments that are ultimately discarded.
+    if (isTrackedAssumption(assumptions, conclusion))
+    {
+      visited[d_node] = conclusion;
+      return conclusion;
+    }
     // The step has the form (not (= c1 c2)). We conclude it via
     // MACRO_SR_PRED_INTRO and turn it into an equality with false, so that the
     // rest of the reconstruction works
     if (d_children.empty())
     {
-      Node conclusion =
-          d_node[0].eqNode(d_node.getNodeManager()->mkConst<bool>(false));
       p->addStep(d_node, ProofRule::MACRO_SR_PRED_INTRO, {}, {d_node});
       p->addStep(conclusion,
                  ProofRule::FALSE_INTRO,
@@ -1253,6 +1272,11 @@ Node EqProof::addToProof(CDProof* p,
   // conclusion in case it involves n-ary steps.
   Assert(d_node.getKind() == Kind::EQUAL)
       << "EqProof::addToProof: conclusion " << d_node << " is not equality\n";
+  if (isTrackedAssumption(assumptions, d_node))
+  {
+    visited[d_node] = d_node;
+    return d_node;
+  }
   // The given conclusion is taken as ground truth. If the premises do not
   // align, for example with (= (f t1) (f t2)) but a premise being (= t2 t1), we
   // use (= t1 t2) as a premise and rely on a symmetry step to justify it.

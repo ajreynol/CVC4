@@ -1503,6 +1503,7 @@ set(regress_0_tests
   regress0/proofs/issue11750.smt2
   regress0/proofs/issue12254-pf-arith-cm.smt2
   regress0/proofs/issue12255-cyclic-arith-rcons.smt2
+  regress0/proofs/issue777-eqproof-assumption-short-circuit.smt2
   regress0/proofs/issue8983-trust-subs.smt2
   regress0/proofs/issue9156-doublePropProof.smt2
   regress0/proofs/issue9172-doublePropProof.smt2
