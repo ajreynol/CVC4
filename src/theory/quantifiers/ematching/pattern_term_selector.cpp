@@ -85,6 +85,11 @@ bool PatternTermSelector::isUsable(Node n, Node q) const
     {
       continue;
     }
+    if (d_purifyTriggers && cur.getKind() == Kind::BITVECTOR_CONCAT)
+    {
+      visit.insert(visit.end(), cur.begin(), cur.end());
+      continue;
+    }
     if (d_purifyTriggers)
     {
       Node x = getInversionVariable(cur);

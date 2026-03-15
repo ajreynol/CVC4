@@ -661,6 +661,11 @@ InstMatchGenerator* InstMatchGenerator::getInstMatchGenerator(Env& env,
                                                               Node q,
                                                               Node n)
 {
+  if (env.getOptions().quantifiers.purifyTriggers
+      && n.getKind() == Kind::BITVECTOR_CONCAT)
+  {
+    return new VarMatchGeneratorBvConcat(env, tparent, q, n);
+  }
   // maybe variable match generator
   if (n.getKind() != Kind::INST_CONSTANT)
   {
