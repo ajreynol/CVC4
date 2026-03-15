@@ -1744,6 +1744,7 @@ set(regress_0_tests
   regress0/quantifiers/proj-issue763-no-gt-purify-bool.smt2
   regress0/quantifiers/proj-issue770-msum-subtype.smt2
   regress0/quantifiers/pure_dt_cbqi.smt2
+  regress0/quantifiers/purify-bv-concat.smt2
   regress0/quantifiers/qarray-sel-over-store.smt2
   regress0/quantifiers/qbv-inequality2.smt2
   regress0/quantifiers/qbv-multi-lit-uge.smt2
