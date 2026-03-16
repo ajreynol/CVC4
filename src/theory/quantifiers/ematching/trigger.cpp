@@ -17,6 +17,7 @@
 #include "options/quantifiers_options.h"
 #include "smt/env.h"
 #include "theory/quantifiers/ematching/candidate_generator.h"
+#include "theory/quantifiers/ematching/inst_match_generator_direct.h"
 #include "theory/quantifiers/ematching/inst_match_generator.h"
 #include "theory/quantifiers/ematching/inst_match_generator_multi.h"
 #include "theory/quantifiers/ematching/inst_match_generator_multi_linear.h"
@@ -98,7 +99,15 @@ Trigger::Trigger(Env& env,
       d_mg = new InstMatchGeneratorSimple(env, this, q, d_nodes[0]);
       ++(stats.d_simple_triggers);
       output(OutputTag::TRIGGER) << " :simple";
-    }else{
+    }
+    else if (InstMatchGeneratorDirect::isApplicable(q, d_nodes[0]))
+    {
+      d_mg = new InstMatchGeneratorDirect(env, this, q, d_nodes[0]);
+      ++(stats.d_triggers);
+      output(OutputTag::TRIGGER) << " :direct";
+    }
+    else
+    {
       d_mg = InstMatchGenerator::mkInstMatchGenerator(env, this, q, d_nodes[0]);
       ++(stats.d_triggers);
     }

@@ -840,6 +840,8 @@ libcvc5_add_sources(
   theory/quantifiers/ematching/ho_trigger.h
   theory/quantifiers/ematching/im_generator.cpp
   theory/quantifiers/ematching/im_generator.h
+  theory/quantifiers/ematching/inst_match_generator_direct.cpp
+  theory/quantifiers/ematching/inst_match_generator_direct.h
   theory/quantifiers/ematching/inst_match_generator.cpp
   theory/quantifiers/ematching/inst_match_generator.h
   theory/quantifiers/ematching/inst_match_generator_multi.cpp
