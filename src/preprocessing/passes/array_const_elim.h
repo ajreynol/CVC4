@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "context/cdhashset.h"
+#include "expr/node.h"
 #include "preprocessing/preprocessing_pass.h"
 
 namespace cvc5::internal {

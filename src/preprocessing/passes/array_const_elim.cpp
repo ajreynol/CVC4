@@ -15,6 +15,7 @@
 #include "expr/array_store_all.h"
 #include "expr/skolem_manager.h"
 #include "preprocessing/assertion_pipeline.h"
+#include "preprocessing/preprocessing_pass_context.h"
 #include "theory/rewriter.h"
 
 namespace cvc5::internal {
@@ -30,6 +31,8 @@ ArrayConstElim::ArrayConstElim(PreprocessingPassContext* preprocContext)
 PreprocessingPassResult ArrayConstElim::applyInternal(
     AssertionPipeline* assertionsToPreprocess)
 {
+  d_preprocContext->spendResource(Resource::PreprocessStep);
+
   std::vector<Node> newAsserts;
   std::unordered_map<Node, Node> visited;
   for (size_t i = 0, size = assertionsToPreprocess->size(); i < size; ++i)
@@ -45,12 +48,20 @@ PreprocessingPassResult ArrayConstElim::applyInternal(
           << "*** Preprocess ArrayConstElim " << prev << std::endl;
       Trace("array-const-elim")
           << "   ...got " << (*assertionsToPreprocess)[i] << std::endl;
+      if (assertionsToPreprocess->isInConflict())
+      {
+        return PreprocessingPassResult::CONFLICT;
+      }
     }
   }
   for (const Node& na : newAsserts)
   {
     assertionsToPreprocess->push_back(
         na, false, nullptr, TrustId::PREPROCESS_ARRAY_CONST_ELIM_LEMMA, true);
+    if (assertionsToPreprocess->isInConflict())
+    {
+      return PreprocessingPassResult::CONFLICT;
+    }
   }
   return PreprocessingPassResult::NO_CONFLICT;
 }
