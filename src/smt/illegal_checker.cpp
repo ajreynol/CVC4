@@ -49,9 +49,10 @@ IllegalChecker::IllegalChecker(Env& e)
   // Note that we don't guard against HO_APPLY, since it can naturally be
   // handled in proofs.
 
-  // Array constants are not supported unless arraysExp is enabled
+  // Array constants are not supported unless arraysExp is enabled, except in
+  // quantified array logics where preprocessing can eliminate them eagerly.
   if (logicInfo().isTheoryEnabled(theory::THEORY_ARRAYS)
-      && !options().arrays.arraysExp)
+      && !options().arrays.arraysExp && !logicInfo().isQuantified())
   {
     d_illegalKinds.insert(Kind::STORE_ALL);
   }

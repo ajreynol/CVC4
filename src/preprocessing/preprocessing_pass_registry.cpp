@@ -21,6 +21,7 @@
 #include "base/check.h"
 #include "base/map_util.h"
 #include "base/output.h"
+#include "preprocessing/passes/array_const_elim.h"
 #include "preprocessing/passes/ackermann.h"
 #include "preprocessing/passes/apply_substs.h"
 #include "preprocessing/passes/bool_to_bv.h"
@@ -122,6 +123,7 @@ PreprocessingPass* callCtor(PreprocessingPassContext* ppCtx)
 PreprocessingPassRegistry::PreprocessingPassRegistry()
 {
   registerPassInfo("apply-substs", callCtor<ApplySubsts>);
+  registerPassInfo("array-const-elim", callCtor<ArrayConstElim>);
   registerPassInfo("bv-gauss", callCtor<BVGauss>);
   registerPassInfo("static-learning", callCtor<StaticLearning>);
   registerPassInfo("ite-simp", callCtor<ITESimp>);

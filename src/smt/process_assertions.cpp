@@ -237,6 +237,11 @@ bool ProcessAssertions::apply(AssertionPipeline& ap)
 
   if (logicInfo().isQuantified())
   {
+    if (logicInfo().isTheoryEnabled(THEORY_ARRAYS)
+        && !options().arrays.arraysExp)
+    {
+      applyPass("array-const-elim", ap);
+    }
     // remove rewrite rules, apply pre-skolemization to existential quantifiers
     applyPass("quantifiers-preprocess", ap);
 

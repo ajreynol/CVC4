@@ -40,6 +40,10 @@ const char* toString(TrustId id)
     case TrustId::THEORY_PREPROCESS_LEMMA: return "THEORY_PREPROCESS_LEMMA";
     case TrustId::THEORY_EXPAND_DEF: return "THEORY_EXPAND_DEF";
     // preprocess passes
+    case TrustId::PREPROCESS_ARRAY_CONST_ELIM:
+      return "PREPROCESS_ARRAY_CONST_ELIM";
+    case TrustId::PREPROCESS_ARRAY_CONST_ELIM_LEMMA:
+      return "PREPROCESS_ARRAY_CONST_ELIM_LEMMA";
     case TrustId::PREPROCESS_BV_GUASS: return "PREPROCESS_BV_GUASS";
     case TrustId::PREPROCESS_BV_GUASS_LEMMA: return "PREPROCESS_BV_GUASS_LEMMA";
     case TrustId::PREPROCESS_BV_TO_BOOL: return "PREPROCESS_BV_TO_BOOL";

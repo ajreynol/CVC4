@@ -54,6 +54,9 @@ enum class TrustId : uint32_t
   /** A expanding of definitions of the input formula made without a proof */
   THEORY_EXPAND_DEF,
   /** Specific preprocessing passes */
+  /** ArrayConstElim preprocessing pass */
+  PREPROCESS_ARRAY_CONST_ELIM,
+  PREPROCESS_ARRAY_CONST_ELIM_LEMMA,
   /** BvGauss */
   PREPROCESS_BV_GUASS,
   PREPROCESS_BV_GUASS_LEMMA,
