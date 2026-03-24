@@ -19,6 +19,7 @@
 #include "expr/node_algorithm.h"
 #include "expr/skolem_manager.h"
 #include "options/quantifiers_options.h"
+#include "options/smt_options.h"
 #include "preprocessing/assertion_pipeline.h"
 #include "theory/rewriter.h"
 #include "theory/uf/function_const.h"
@@ -31,7 +32,7 @@ namespace preprocessing {
 namespace passes {
 
 HoElim::HoElim(PreprocessingPassContext* preprocContext)
-    : PreprocessingPass(preprocContext, "ho-elim")
+    : PreprocessingPass(preprocContext, "ho-elim"), d_modelUnsound(false)
 {
   d_hoElimSc = nodeManager()->mkSortConstructor("@ho-elim-sort", 1);
 }
@@ -185,6 +186,10 @@ Node HoElim::eliminateHo(Node n)
         {
           if (tn.isFunction())
           {
+            if (cur.getKind() != Kind::BOUND_VARIABLE)
+            {
+              d_modelUnsound = true;
+            }
             TypeNode ut = getUSort(tn);
             if (cur.getKind() == Kind::BOUND_VARIABLE)
             {
@@ -312,6 +317,7 @@ PreprocessingPassResult HoElim::applyInternal(
   {
     return PreprocessingPassResult::NO_CONFLICT;
   }
+  d_modelUnsound = false;
   // step [1]: apply lambda lifting to eliminate all lambdas
   NodeManager* nm = nodeManager();
   std::vector<Node> axioms;
@@ -478,6 +484,13 @@ PreprocessingPassResult HoElim::applyInternal(
       assertionsToPreprocess->push_back(
           axr, false, nullptr, TrustId::PREPROCESS_HO_ELIM_LEMMA);
     }
+  }
+  if (d_modelUnsound && options().smt.produceModels)
+  {
+    // HO elimination replaces free function-valued symbols with terms over an
+    // uninterpreted encoding sort. We do not yet reconstruct those symbols for
+    // user-visible models, so model production is incomplete on this path.
+    assertionsToPreprocess->markModelUnsound();
   }
 
   return PreprocessingPassResult::NO_CONFLICT;

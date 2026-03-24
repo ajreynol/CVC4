@@ -146,6 +146,11 @@ class HoElim : public PreprocessingPass
   std::map<TypeNode, TypeNode> d_ftypeMap;
   /** The sort constructor for sorts we introduce */
   TypeNode d_hoElimSc;
+  /**
+   * Whether this pass encoded a free function-typed symbol in a way that we do
+   * not currently reconstruct for user-visible models.
+   */
+  bool d_modelUnsound;
 };
 
 }  // namespace passes
