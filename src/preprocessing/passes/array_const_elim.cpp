@@ -18,6 +18,8 @@
 #include "preprocessing/preprocessing_pass_context.h"
 #include "theory/rewriter.h"
 
+#include <unordered_set>
+
 namespace cvc5::internal {
 namespace preprocessing {
 namespace passes {
@@ -70,63 +72,111 @@ Node ArrayConstElim::eliminate(TNode n,
                                std::unordered_map<Node, Node>& visited,
                                std::vector<Node>& newAsserts)
 {
-  std::unordered_map<Node, Node>::const_iterator it = visited.find(n);
-  if (it != visited.end())
+  struct ArrayConstInfo
   {
-    return it->second;
+    std::vector<Node> d_indices;
+    std::vector<Node> d_values;
+    Node d_defaultValue;
+  };
+
+  if (visited.find(n) != visited.end())
+  {
+    return visited[n];
   }
 
-  std::vector<Node> indices;
-  std::vector<Node> values;
-  Node defaultValue;
-  if (getArrayConstantDef(n, indices, values, defaultValue))
+  NodeManager* nm = nodeManager();
+  std::unordered_map<Node, ArrayConstInfo> acInfo;
+  std::unordered_set<Node> onStack;
+  std::vector<TNode> visit;
+  visit.push_back(n);
+  while (!visit.empty())
   {
-    NodeManager* nm = nodeManager();
-    Node sk = SkolemManager::mkPurifySkolem(n);
-    if (d_defined.find(n) == d_defined.end())
+    TNode cur = visit.back();
+    if (visited.find(cur) != visited.end())
     {
-      d_defined.insert(n);
-      Node bvar = NodeManager::mkBoundVar(n.getType().getArrayIndexType());
-      Node body = eliminate(defaultValue, visited, newAsserts);
-      for (size_t i = indices.size(); i > 0; --i)
+      visit.pop_back();
+      continue;
+    }
+    if (onStack.insert(cur).second)
+    {
+      ArrayConstInfo aci;
+      if (getArrayConstantDef(cur, aci.d_indices, aci.d_values, aci.d_defaultValue))
       {
-        Node idx = eliminate(indices[i - 1], visited, newAsserts);
-        Node val = eliminate(values[i - 1], visited, newAsserts);
-        body = nm->mkNode(Kind::ITE, bvar.eqNode(idx), val, body);
+        acInfo.emplace(cur, std::move(aci));
+        visit.push_back(acInfo[cur].d_defaultValue);
+        for (const Node& idx : acInfo[cur].d_indices)
+        {
+          visit.push_back(idx);
+        }
+        for (const Node& val : acInfo[cur].d_values)
+        {
+          visit.push_back(val);
+        }
+        continue;
       }
-      Node bvl = nm->mkNode(Kind::BOUND_VAR_LIST, bvar);
-      Node sel = nm->mkNode(Kind::SELECT, sk, bvar);
-      newAsserts.push_back(
-          nm->mkNode(Kind::FORALL, bvl, sel.eqNode(body)));
-      Trace("array-const-elim")
-          << "- introduced " << sk << " for " << n << std::endl;
+      if (cur.getNumChildren() == 0)
+      {
+        visited[cur] = cur;
+        visit.pop_back();
+        onStack.erase(cur);
+        continue;
+      }
+      for (const Node& cn : cur)
+      {
+        visit.push_back(cn);
+      }
+      continue;
     }
-    visited[n] = sk;
-    return sk;
-  }
 
-  Node ret = n;
-  if (n.getNumChildren() > 0)
-  {
-    std::vector<Node> children;
-    bool childChanged = false;
-    if (n.getMetaKind() == kind::metakind::PARAMETERIZED)
+    Node ret = cur;
+    std::unordered_map<Node, ArrayConstInfo>::const_iterator ita =
+        acInfo.find(cur);
+    if (ita != acInfo.end())
     {
-      children.push_back(n.getOperator());
+      Node sk = SkolemManager::mkPurifySkolem(cur);
+      if (d_defined.find(cur) == d_defined.end())
+      {
+        d_defined.insert(cur);
+        Node bvar = NodeManager::mkBoundVar(cur.getType().getArrayIndexType());
+        Node body = visited[ita->second.d_defaultValue];
+        for (size_t i = ita->second.d_indices.size(); i > 0; --i)
+        {
+          Node idx = visited[ita->second.d_indices[i - 1]];
+          Node val = visited[ita->second.d_values[i - 1]];
+          body = nm->mkNode(Kind::ITE, bvar.eqNode(idx), val, body);
+        }
+        Node bvl = nm->mkNode(Kind::BOUND_VAR_LIST, bvar);
+        Node sel = nm->mkNode(Kind::SELECT, sk, bvar);
+        newAsserts.push_back(nm->mkNode(Kind::FORALL, bvl, sel.eqNode(body)));
+        Trace("array-const-elim")
+            << "- introduced " << sk << " for " << cur << std::endl;
+      }
+      ret = sk;
     }
-    for (const Node& cn : n)
+    else
     {
-      Node nc = eliminate(cn, visited, newAsserts);
-      childChanged = childChanged || nc != cn;
-      children.push_back(nc);
+      std::vector<Node> children;
+      bool childChanged = false;
+      if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
+      {
+        children.push_back(cur.getOperator());
+      }
+      for (const Node& cn : cur)
+      {
+        Node nc = visited[cn];
+        childChanged = childChanged || nc != cn;
+        children.push_back(nc);
+      }
+      if (childChanged)
+      {
+        ret = nm->mkNode(cur.getKind(), children);
+      }
     }
-    if (childChanged)
-    {
-      ret = nodeManager()->mkNode(n.getKind(), children);
-    }
+    visited[cur] = ret;
+    visit.pop_back();
+    onStack.erase(cur);
   }
-  visited[n] = ret;
-  return ret;
+  return visited[n];
 }
 
 bool ArrayConstElim::getArrayConstantDef(TNode n,
