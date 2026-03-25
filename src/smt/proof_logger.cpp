@@ -203,9 +203,11 @@ void ProofLoggerCpc::logTheoryLemmaProof(std::shared_ptr<ProofNode>& pfn)
   Trace("pf-log") << "; log theory lemma proof start " << pfn->getResult()
                   << std::endl;
   d_lemmaPfs.emplace_back(pfn);
+  std::shared_ptr<ProofNode> ppn = pfn->clone();
+  ppn = d_pm->connectProofToAssertions(ppn, d_as, ProofScopeMode::NONE);
   if (!d_isIncrementalDump || !d_printedLemmas.contains(pfn->getResult()))
   {
-    d_alfp.printNext(d_aout, pfn);
+    d_alfp.printNext(d_aout, ppn);
     if (d_isIncrementalDump)
     {
       d_printedLemmas.insert(pfn->getResult());
