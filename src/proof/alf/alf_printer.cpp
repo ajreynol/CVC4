@@ -47,7 +47,7 @@ AlfPrinter::AlfPrinter(Env& env,
     : EnvObj(env),
       d_tproc(atp),
       d_pfIdCounter(0),
-      d_alreadyPrinted(&d_passumeCtx),
+      d_alreadyPrinted(&d_printCtx),
       d_passumeMap(&d_passumeCtx),
       d_termLetPrefix("@t"),
       d_rdb(rdb),
@@ -859,8 +859,10 @@ void AlfPrinter::print(AlfPrintChannelOut& aout,
                        ProofScopeMode psm)
 {
   std::ostream& out = aout.getOStream();
-  Assert(d_pletMap.empty());
   d_pfIdCounter = 0;
+  d_pletMap.clear();
+  d_printCtx.push();
+  Assert(d_pletMap.empty());
 
   const ProofNode* ascope = nullptr;
   const ProofNode* dscope = nullptr;
@@ -956,11 +958,131 @@ void AlfPrinter::print(AlfPrintChannelOut& aout,
     // [5] print proof body
     printProofInternal(ao, pnBody, i == 1);
   }
+  d_printCtx.pop();
+  d_pletMap.clear();
+}
+
+void AlfPrinter::printIncremental(AlfPrintChannelOut& aout,
+                                  std::shared_ptr<ProofNode> pfn,
+                                  ProofScopeMode psm)
+{
+  std::ostream& out = aout.getOStream();
+  d_pletMap.clear();
+  d_printCtx.push();
+  Assert(d_pletMap.empty());
+
+  const ProofNode* ascope = nullptr;
+  const ProofNode* dscope = nullptr;
+  const ProofNode* pnBody = nullptr;
+  if (psm == ProofScopeMode::NONE)
+  {
+    pnBody = pfn.get();
+  }
+  else if (psm == ProofScopeMode::UNIFIED)
+  {
+    ascope = pfn.get();
+    Assert(ascope->getRule() == ProofRule::SCOPE);
+    pnBody = pfn->getChildren()[0].get();
+  }
+  else if (psm == ProofScopeMode::DEFINITIONS_AND_ASSERTIONS)
+  {
+    dscope = pfn.get();
+    Assert(dscope->getRule() == ProofRule::SCOPE);
+    ascope = pfn->getChildren()[0].get();
+    Assert(ascope->getRule() == ProofRule::SCOPE);
+    pnBody = pfn->getChildren()[0]->getChildren()[0].get();
+  }
+
+  const std::vector<Node>& definitions =
+      dscope != nullptr ? dscope->getArguments() : d_emptyVec;
+  const std::vector<Node>& assertions =
+      ascope != nullptr ? ascope->getArguments() : d_emptyVec;
+
+  std::unordered_set<Node> toPrint;
+  std::unordered_set<Node> processed;
+  bool wasAlloc = false;
+  for (const Node& n : assertions)
+  {
+    if (processed.find(n) != processed.end())
+    {
+      continue;
+    }
+    processed.insert(n);
+    if (d_passumeMap.find(n) == d_passumeMap.end())
+    {
+      toPrint.insert(n);
+      allocateAssumeId(n, wasAlloc);
+    }
+  }
+  for (const Node& n : definitions)
+  {
+    if (n.getKind() != Kind::EQUAL || processed.find(n) != processed.end())
+    {
+      continue;
+    }
+    processed.insert(n);
+    if (d_passumeMap.find(n) == d_passumeMap.end())
+    {
+      toPrint.insert(n);
+      allocateAssumeId(n, wasAlloc);
+    }
+  }
+
+  for (size_t i = 0; i < 2; i++)
+  {
+    AlfPrintChannel* ao = i == 0 ? static_cast<AlfPrintChannel*>(&d_aletify)
+                                 : static_cast<AlfPrintChannel*>(&aout);
+    if (i == 1)
+    {
+      printLetList(out, d_lbind);
+    }
+    processed.clear();
+    for (const Node& n : assertions)
+    {
+      if (processed.find(n) != processed.end())
+      {
+        continue;
+      }
+      processed.insert(n);
+      size_t id = allocateAssumeId(n, wasAlloc);
+      if (i == 1 && toPrint.find(n) == toPrint.end())
+      {
+        continue;
+      }
+      Node nc = d_tproc.convert(n);
+      ao->printAssume(nc, id, false);
+    }
+    for (const Node& n : definitions)
+    {
+      if (n.getKind() != Kind::EQUAL)
+      {
+        continue;
+      }
+      if (processed.find(n) != processed.end())
+      {
+        continue;
+      }
+      processed.insert(n);
+      size_t id = allocateAssumeId(n, wasAlloc);
+      if (i == 1 && toPrint.find(n) == toPrint.end())
+      {
+        continue;
+      }
+      Node f = d_tproc.convert(n[0]);
+      Node lam = d_tproc.convert(n[1]);
+      ao->printStep("refl", f.eqNode(lam), id, {}, {lam});
+    }
+    printProofInternal(ao, pnBody, i == 1);
+  }
+  d_printCtx.pop();
+  d_pletMap.clear();
 }
 
 void AlfPrinter::printNext(AlfPrintChannelOut& aout,
                            std::shared_ptr<ProofNode> pfn)
 {
+  d_pletMap.clear();
+  d_printCtx.push();
   const ProofNode* pnBody = pfn.get();
   // print with letification
   printProofInternal(&d_aletify, pnBody, false);
@@ -971,6 +1093,8 @@ void AlfPrinter::printNext(AlfPrintChannelOut& aout,
   printLetList(out, d_lbind);
   // print the proof
   printProofInternal(&aout, pnBody, true);
+  d_printCtx.pop();
+  d_pletMap.clear();
 }
 
 void AlfPrinter::printProofInternal(AlfPrintChannel* out,
@@ -1041,6 +1165,7 @@ void AlfPrinter::printStepPre(AlfPrintChannel* out, const ProofNode* pn)
     // The assumptions only are valid within the body of the SCOPE, thus
     // we push a context scope.
     d_passumeCtx.push();
+    d_printCtx.push();
     const std::vector<Node>& args = pn->getArguments();
     for (const Node& a : args)
     {
@@ -1282,12 +1407,17 @@ void AlfPrinter::printStepPost(AlfPrintChannel* out, const ProofNode* pn)
     }
     // We are done with the assumptions in scope, pop a context.
     d_passumeCtx.pop();
+    d_printCtx.pop();
   }
   else
   {
     out->printStep(rname, conclusionPrint, id, premises, args);
   }
 }
+
+void AlfPrinter::pushCurrentContext() { d_passumeCtx.push(); }
+
+void AlfPrinter::popCurrentContext() { d_passumeCtx.pop(); }
 
 size_t AlfPrinter::allocateAssumePushId(const ProofNode* pn, const Node& a)
 {

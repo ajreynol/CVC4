@@ -15,6 +15,10 @@
 #ifndef CVC5__SMT__PROOF_LOGGER_H
 #define CVC5__SMT__PROOF_LOGGER_H
 
+#include <string>
+#include <unordered_set>
+
+#include "context/cdhashset.h"
 #include "proof/alf/alf_node_converter.h"
 #include "proof/alf/alf_printer.h"
 #include "proof/proof_node.h"
@@ -131,6 +135,29 @@ class ProofLoggerCpc : public ProofLogger
   void logSatRefutationProof(std::shared_ptr<ProofNode>& pfn) override;
 
  private:
+  /** Synchronize the emitted script context with the current user level. */
+  void syncScriptContext();
+  /** Print only declaration/definition lines that have not been printed yet. */
+  void printDeclarationsOnce(const std::vector<Node>& definitions,
+                             const std::vector<Node>& assertions);
+  /** Mark that we emitted proof script output. */
+  void notifyOutput();
+  /** Are we streaming a single incremental dump-proofs CPC script? */
+  bool d_isIncrementalDump;
+  /** Have we already printed an exit command? */
+  bool d_printedExit;
+  /** Has this logger emitted any output? */
+  bool d_hasOutput;
+  /** The current level of the emitted script context. */
+  uint32_t d_scriptLevel;
+  /** Context for tracking which clauses have been emitted in the script. */
+  context::Context d_scriptCtx;
+  /** The set of input clauses already emitted for the current script scope. */
+  context::CDHashSet<Node> d_printedInputs;
+  /** The set of lemma clauses already emitted for the current script scope. */
+  context::CDHashSet<Node> d_printedLemmas;
+  /** Preamble commands that were already emitted. */
+  std::unordered_set<std::string> d_preambleLines;
   /** Pointer to the proof manager, for connecting proofs to inputsw */
   smt::PfManager* d_pm;
   /** Pointer to the proof node manager */

@@ -12,8 +12,14 @@
 
 #include "smt/proof_logger.h"
 
+#include <sstream>
+
+#include "options/base_options.h"
+#include "options/main_options.h"
+#include "printer/smt2/smt2_printer.h"
 #include "proof/proof.h"
 #include "proof/proof_node_manager.h"
+#include "smt/print_benchmark.h"
 #include "smt/proof_manager.h"
 
 namespace cvc5::internal {
@@ -23,6 +29,13 @@ ProofLoggerCpc::ProofLoggerCpc(Env& env,
                                smt::PfManager* pm,
                                smt::Assertions& as)
     : ProofLogger(env),
+      d_isIncrementalDump(options().base.incrementalSolving
+                          && options().driver.dumpProofs),
+      d_printedExit(false),
+      d_hasOutput(false),
+      d_scriptLevel(0),
+      d_printedInputs(&d_scriptCtx),
+      d_printedLemmas(&d_scriptCtx),
       d_pm(pm),
       d_pnm(pm->getProofNodeManager()),
       d_as(as),
@@ -39,7 +52,76 @@ ProofLoggerCpc::ProofLoggerCpc(Env& env,
   options::ioutils::applyPrintSkolemDefinitions(out, true);
 }
 
-ProofLoggerCpc::~ProofLoggerCpc() {}
+ProofLoggerCpc::~ProofLoggerCpc()
+{
+  if (d_isIncrementalDump && d_hasOutput && !d_printedExit)
+  {
+    d_aout.getOStream() << "(exit)" << std::endl;
+  }
+}
+
+void ProofLoggerCpc::notifyOutput() { d_hasOutput = true; }
+
+void ProofLoggerCpc::syncScriptContext()
+{
+  if (!d_isIncrementalDump)
+  {
+    return;
+  }
+  std::ostream& out = d_aout.getOStream();
+  uint32_t level = userContext()->getLevel();
+  if (level > 0)
+  {
+    --level;
+  }
+  while (d_scriptLevel < level)
+  {
+    out << "(push 1)" << std::endl;
+    d_alfp.pushCurrentContext();
+    d_scriptCtx.push();
+    ++d_scriptLevel;
+    notifyOutput();
+  }
+  while (d_scriptLevel > level)
+  {
+    out << "(pop 1)" << std::endl;
+    d_alfp.popCurrentContext();
+    d_scriptCtx.pop();
+    --d_scriptLevel;
+    notifyOutput();
+  }
+}
+
+void ProofLoggerCpc::printDeclarationsOnce(
+    const std::vector<Node>& definitions, const std::vector<Node>& assertions)
+{
+  printer::smt2::Smt2Printer alfp(printer::smt2::Variant::alf_variant);
+  smt::PrintBenchmark pb(nodeManager(), &alfp, false, &d_atp);
+  std::stringstream outDecl;
+  std::stringstream outDef;
+  options::ioutils::applyPrintArithLitToken(outDef, true);
+  pb.printDeclarationsFrom(outDecl, outDef, definitions, assertions);
+
+  std::ostream& out = d_aout.getOStream();
+  auto emitUniqueLines = [&](const std::string& block) {
+    std::stringstream ss(block);
+    std::string line;
+    while (std::getline(ss, line))
+    {
+      if (line.empty())
+      {
+        continue;
+      }
+      if (d_preambleLines.insert(line).second)
+      {
+        out << line << std::endl;
+        notifyOutput();
+      }
+    }
+  };
+  emitUniqueLines(outDecl.str());
+  emitUniqueLines(outDef.str());
+}
 
 void ProofLoggerCpc::logCnfPreprocessInputs(const std::vector<Node>& inputs)
 {
@@ -51,7 +133,11 @@ void ProofLoggerCpc::logCnfPreprocessInputs(const std::vector<Node>& inputs)
   std::shared_ptr<ProofNode> pfn = cdp.getProofFor(conc);
   ProofScopeMode m = ProofScopeMode::DEFINITIONS_AND_ASSERTIONS;
   d_ppProof = d_pm->connectProofToAssertions(pfn, d_as, m);
-  d_alfp.print(d_aout, d_ppProof, m);
+  syncScriptContext();
+  printDeclarationsOnce(d_ppProof->getArguments(),
+                        d_ppProof->getChildren()[0]->getArguments());
+  d_alfp.printIncremental(d_aout, d_ppProof, m);
+  notifyOutput();
   Trace("pf-log") << "; log: cnf preprocess input proof end" << std::endl;
 }
 
@@ -59,21 +145,26 @@ void ProofLoggerCpc::logCnfPreprocessInputProofs(
     std::vector<std::shared_ptr<ProofNode>>& pfns)
 {
   Trace("pf-log") << "; log: cnf preprocess input proof start" << std::endl;
-  // if the assertions are empty, we do nothing. We will answer sat.
-  std::shared_ptr<ProofNode> pfn;
-  if (!pfns.empty())
+  syncScriptContext();
+  ProofScopeMode m = ProofScopeMode::DEFINITIONS_AND_ASSERTIONS;
+  for (std::shared_ptr<ProofNode>& pfn : pfns)
   {
-    if (pfns.size() == 1)
+    Node res = pfn->getResult();
+    if (d_isIncrementalDump && d_printedInputs.contains(res))
     {
-      pfn = pfns[0];
+      continue;
     }
-    else
-    {
-      pfn = d_pnm->mkNode(ProofRule::AND_INTRO, pfns, {});
-    }
-    ProofScopeMode m = ProofScopeMode::DEFINITIONS_AND_ASSERTIONS;
     d_ppProof = d_pm->connectProofToAssertions(pfn, d_as, m);
-    d_alfp.print(d_aout, d_ppProof, m);
+    Assert(d_ppProof->getRule() == ProofRule::SCOPE);
+    Assert(d_ppProof->getChildren()[0]->getRule() == ProofRule::SCOPE);
+    printDeclarationsOnce(d_ppProof->getArguments(),
+                          d_ppProof->getChildren()[0]->getArguments());
+    d_alfp.printIncremental(d_aout, d_ppProof, m);
+    if (d_isIncrementalDump)
+    {
+      d_printedInputs.insert(res);
+    }
+    notifyOutput();
   }
   Trace("pf-log") << "; log: cnf preprocess input proof end" << std::endl;
 }
@@ -83,7 +174,15 @@ void ProofLoggerCpc::logTheoryLemmaProof(std::shared_ptr<ProofNode>& pfn)
   Trace("pf-log") << "; log theory lemma proof start " << pfn->getResult()
                   << std::endl;
   d_lemmaPfs.emplace_back(pfn);
-  d_alfp.printNext(d_aout, pfn);
+  if (!d_isIncrementalDump || !d_printedLemmas.contains(pfn->getResult()))
+  {
+    d_alfp.printNext(d_aout, pfn);
+    if (d_isIncrementalDump)
+    {
+      d_printedLemmas.insert(pfn->getResult());
+    }
+    notifyOutput();
+  }
   Trace("pf-log") << "; log theory lemma proof end" << std::endl;
 }
 
@@ -93,7 +192,15 @@ void ProofLoggerCpc::logTheoryLemma(const Node& n)
   std::shared_ptr<ProofNode> ptl =
       d_pnm->mkTrustedNode(TrustId::THEORY_LEMMA, {}, {}, n);
   d_lemmaPfs.emplace_back(ptl);
-  d_alfp.printNext(d_aout, ptl);
+  if (!d_isIncrementalDump || !d_printedLemmas.contains(n))
+  {
+    d_alfp.printNext(d_aout, ptl);
+    if (d_isIncrementalDump)
+    {
+      d_printedLemmas.insert(n);
+    }
+    notifyOutput();
+  }
   Trace("pf-log") << "; log theory lemma end" << std::endl;
 }
 
@@ -112,8 +219,12 @@ void ProofLoggerCpc::logSatRefutation()
       d_pnm->mkNode(ProofRule::SAT_REFUTATION, premises, {}, f);
   d_alfp.printNext(d_aout, psr);
   Trace("pf-log") << "; log SAT refutation end" << std::endl;
-  // for now, to avoid checking failure
-  d_aout.getOStream() << "(exit)" << std::endl;
+  notifyOutput();
+  if (!d_isIncrementalDump)
+  {
+    d_aout.getOStream() << "(exit)" << std::endl;
+    d_printedExit = true;
+  }
 }
 
 void ProofLoggerCpc::logSatRefutationProof(std::shared_ptr<ProofNode>& pfn)
@@ -124,8 +235,12 @@ void ProofLoggerCpc::logSatRefutationProof(std::shared_ptr<ProofNode>& pfn)
       d_pm->connectProofToAssertions(pfn, d_as, ProofScopeMode::NONE);
   d_alfp.printNext(d_aout, spf);
   Trace("pf-log") << "; log SAT refutation proof end" << std::endl;
-  // for now, to avoid checking failure
-  d_aout.getOStream() << "(exit)" << std::endl;
+  notifyOutput();
+  if (!d_isIncrementalDump)
+  {
+    d_aout.getOStream() << "(exit)" << std::endl;
+    d_printedExit = true;
+  }
 }
 
 }  // namespace cvc5::internal

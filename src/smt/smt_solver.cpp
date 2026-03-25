@@ -20,6 +20,7 @@
 #include "options/ff_options.h"
 #include "options/fp_options.h"
 #include "options/main_options.h"
+#include "options/proof_options.h"
 #include "options/sets_options.h"
 #include "options/smt_options.h"
 #include "preprocessing/assertion_pipeline.h"
@@ -88,7 +89,10 @@ void SmtSolver::finishInit()
   d_propEngine->finishInit();
   finishInitPreprocessor();
 
-  if (options().proof.proofLog)
+  bool incrementalDumpProofLog =
+      options().base.incrementalSolving && options().driver.dumpProofs
+      && options().proof.proofFormatMode == options::ProofFormatMode::CPC;
+  if (options().proof.proofLog || incrementalDumpProofLog)
   {
     smt::PfManager* pm = d_env.getProofManager();
     if (pm != nullptr)

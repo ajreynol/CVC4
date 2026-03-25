@@ -18,6 +18,7 @@
 #define CVC5__PROOF__ALF_PROOF_PRINTER_H
 
 #include <iostream>
+#include <map>
 
 #include "context/cdhashmap.h"
 #include "context/cdhashset.h"
@@ -64,6 +65,15 @@ class AlfPrinter : protected EnvObj
              std::shared_ptr<ProofNode> pfn,
              ProofScopeMode psm = ProofScopeMode::DEFINITIONS_AND_ASSERTIONS);
   /**
+   * Print a proof incrementally. This assumes declarations have been handled
+   * externally and prints only new assumptions/definitions followed by the
+   * proof body.
+   */
+  void printIncremental(
+      AlfPrintChannelOut& out,
+      std::shared_ptr<ProofNode> pfn,
+      ProofScopeMode psm = ProofScopeMode::DEFINITIONS_AND_ASSERTIONS);
+  /**
    * Print the proof, assuming that previous proofs have been printed on this
    * printer that have (partially) given the definition of subterms and
    * subproofs in pfn.
@@ -84,6 +94,9 @@ class AlfPrinter : protected EnvObj
    * class.
    */
   LetBinding* getLetBinding();
+  /** Push/pop an external scope for top-level assumptions. */
+  void pushCurrentContext();
+  void popCurrentContext();
 
   /** Return true if it is possible to trust the topmost application in pfn */
   static bool isHandled(const Options& opts, const ProofNode* pfn);
@@ -173,6 +186,7 @@ class AlfPrinter : protected EnvObj
   /** Assume id counter */
   size_t d_pfIdCounter;
   /** Mapping proofs to identifiers */
+  context::Context d_printCtx;
   std::map<const ProofNode*, size_t> d_pletMap;
   /**
    * Context for d_passumeMap, which is pushed and popped when we encounter

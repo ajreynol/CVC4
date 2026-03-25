@@ -337,6 +337,17 @@ class CpcTester(Tester):
             and benchmark_info.expected_output.strip() == "unsat"
         )
 
+    def strip_cpc_proof_body(self, output):
+        if output.startswith("unsat\n(\n".encode()) and output.endswith("\n)\n".encode()):
+            return output[8:-2], EXIT_OK
+        lines = output.decode().splitlines()
+        lines = [line for line in lines if line.strip() != "unsat"]
+        body = "\n".join(lines).strip()
+        if not body:
+            print_error("Failed to parse result for proof")
+            return output, EXIT_FAILURE
+        return (body + "\n").encode(), EXIT_OK
+
     def run_internal(self, benchmark_info):
         exit_code = EXIT_OK
         with tempfile.NamedTemporaryFile() as tmpf:
@@ -361,8 +372,7 @@ class CpcTester(Tester):
             # note this line is not necessary if in a safe build
             if not benchmark_info.safe_mode:
                 tmpf.write(("(include \"" + cpc_sig_dir + "/cpc/expert/CpcExpert.eo\")").encode())
-            # strip the unsat and parentheses
-            output, exit_code = self.strip_proof_body(output)
+            output, exit_code = self.strip_cpc_proof_body(output)
             if exit_code == EXIT_FAILURE:
                 return EXIT_FAILURE
             tmpf.write(output)

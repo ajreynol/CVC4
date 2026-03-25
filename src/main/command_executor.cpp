@@ -165,7 +165,11 @@ bool CommandExecutor::doCommandSingleton(Cmd* cmd)
     {
       getterCommands.emplace_back(new GetModelCommand());
     }
-    if (d_solver->getOptionInfo("dump-proofs").boolValue() && isResultUnsat)
+    bool incrementalDumpProofs = d_solver->getOptionInfo("dump-proofs").boolValue()
+                                 && d_solver->getOptionInfo("incremental")
+                                        .boolValue();
+    if (d_solver->getOptionInfo("dump-proofs").boolValue() && isResultUnsat
+        && !incrementalDumpProofs)
     {
       getterCommands.emplace_back(new GetProofCommand());
     }
