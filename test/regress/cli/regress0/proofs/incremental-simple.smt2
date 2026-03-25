@@ -1,3 +1,7 @@
+; COMMAND-LINE: --incremental
+; EXPECT: unsat
+; EXPECT: unsat
+; EXPECT: unsat
 (set-logic ALL)
 (declare-fun x () Int)
 (push)

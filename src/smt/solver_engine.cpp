@@ -55,6 +55,7 @@
 #include "smt/model_blocker.h"
 #include "smt/model_core_builder.h"
 #include "smt/preprocessor.h"
+#include "smt/proof_logger.h"
 #include "smt/proof_manager.h"
 #include "smt/quant_elim_solver.h"
 #include "smt/set_defaults.h"
@@ -2139,6 +2140,10 @@ void SolverEngine::push()
   Trace("smt") << "SMT push()" << endl;
   d_smtDriver->refreshAssertions();
   d_ctxManager->userPush();
+  if (ProofLogger* pl = d_env->getProofLogger())
+  {
+    pl->notifyPush();
+  }
 }
 
 void SolverEngine::pop()
@@ -2146,6 +2151,10 @@ void SolverEngine::pop()
   beginCall();
   Trace("smt") << "SMT pop()" << endl;
   d_ctxManager->userPop();
+  if (ProofLogger* pl = d_env->getProofLogger())
+  {
+    pl->notifyPop();
+  }
 
   // clear the learned literals from the preprocessor
   d_smtSolver->getPreprocessor()->clearLearnedLiterals();

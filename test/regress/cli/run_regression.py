@@ -332,9 +332,11 @@ class CpcTester(Tester):
         super().__init__("cpc")
 
     def applies(self, benchmark_info):
+        expected_output_lines = benchmark_info.expected_output.split()
         return (
             benchmark_info.benchmark_ext != ".sy"
-            and benchmark_info.expected_output.strip() == "unsat"
+            and expected_output_lines
+            and all(line == "unsat" for line in expected_output_lines)
         )
 
     def strip_cpc_proof_body(self, output):

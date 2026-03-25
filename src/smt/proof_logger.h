@@ -53,7 +53,7 @@ class ProofLogger : protected EnvObj
  public:
   /** */
   ProofLogger(Env& env) : EnvObj(env){}
-  ~ProofLogger(){}
+  virtual ~ProofLogger() {}
   /**
    * Called when preprocessing is complete with the list of input clauses,
    * after preprocessing and conversion to CNF.
@@ -105,6 +105,10 @@ class ProofLogger : protected EnvObj
       CVC5_UNUSED std::shared_ptr<ProofNode>& pfn)
   {
   }
+  /** Called when the user issues a push command. */
+  virtual void notifyPush() {}
+  /** Called when the user issues a pop command. */
+  virtual void notifyPop() {}
 };
 
 /**
@@ -133,6 +137,10 @@ class ProofLoggerCpc : public ProofLogger
   void logSatRefutation() override;
   /** Log SAT refutation proof */
   void logSatRefutationProof(std::shared_ptr<ProofNode>& pfn) override;
+  /** Notify that the user pushed a context. */
+  void notifyPush() override;
+  /** Notify that the user popped a context. */
+  void notifyPop() override;
 
  private:
   /** Synchronize the emitted script context with the current user level. */

@@ -62,6 +62,35 @@ ProofLoggerCpc::~ProofLoggerCpc()
 
 void ProofLoggerCpc::notifyOutput() { d_hasOutput = true; }
 
+void ProofLoggerCpc::notifyPush()
+{
+  if (!d_isIncrementalDump)
+  {
+    return;
+  }
+  std::ostream& out = d_aout.getOStream();
+  out << "(push 1)" << std::endl;
+  d_alfp.pushCurrentContext();
+  d_scriptCtx.push();
+  ++d_scriptLevel;
+  notifyOutput();
+}
+
+void ProofLoggerCpc::notifyPop()
+{
+  if (!d_isIncrementalDump)
+  {
+    return;
+  }
+  Assert(d_scriptLevel > 0);
+  std::ostream& out = d_aout.getOStream();
+  out << "(pop 1)" << std::endl;
+  d_alfp.popCurrentContext();
+  d_scriptCtx.pop();
+  --d_scriptLevel;
+  notifyOutput();
+}
+
 void ProofLoggerCpc::syncScriptContext()
 {
   if (!d_isIncrementalDump)
