@@ -12,6 +12,8 @@
 
 #include "proof/proof.h"
 
+#include <unordered_set>
+
 #include "proof/proof_checker.h"
 #include "proof/proof_node.h"
 #include "proof/proof_node_manager.h"
@@ -91,9 +93,6 @@ std::shared_ptr<ProofNode> CDProof::getProofSymm(Node fact)
   {
     // The symmetric fact exists, and the current one either does not, or is
     // an assumption. We make a new proof that applies SYMM to pfs.
-    std::vector<std::shared_ptr<ProofNode>> pschild;
-    pschild.push_back(pfs);
-    std::vector<Node> args;
     ProofNodeManager* pnm = getManager();
     if (pf == nullptr)
     {
@@ -105,11 +104,11 @@ std::shared_ptr<ProofNode> CDProof::getProofSymm(Node fact)
     }
     else if (!isAssumption(pfs.get()))
     {
-      // if its not an assumption, make the connection
-      Trace("cdproof") << "...update symm" << std::endl;
-      // update pf
-      bool sret = pnm->updateNode(pf.get(), ProofRule::SYMM, pschild, args);
-      AlwaysAssert(sret);
+      // Keep the direct assumption as-is. Updating it to a symmetry step can
+      // introduce a cycle if the opposite-direction proof was itself built
+      // from this assumption (for example, via a fresh SYMM node above).
+      // The scope-closure logic can safely reorient assumptions later.
+      Trace("cdproof") << "...keep existing assumption" << std::endl;
     }
   }
   else
@@ -194,7 +193,39 @@ bool CDProof::addStep(Node expected,
   bool ret = true;
   // create or update it
   std::shared_ptr<ProofNode> pthis;
-  if (pprev == nullptr)
+  // Assumptions may already be referenced by symmetry wrappers that were built
+  // while this fact was still open. Only replace them when the pending step
+  // would otherwise mutate a node that is reachable from one of its children,
+  // which would create a cycle in the proof DAG.
+  bool replaceAssumption = false;
+  if (pprev != nullptr && isAssumption(pprev.get()))
+  {
+    std::unordered_set<const ProofNode*> visited;
+    std::vector<const ProofNode*> visit;
+    for (const std::shared_ptr<ProofNode>& pc : pchildren)
+    {
+      visit.push_back(pc.get());
+    }
+    while (!visit.empty())
+    {
+      const ProofNode* cur = visit.back();
+      visit.pop_back();
+      if (!visited.insert(cur).second)
+      {
+        continue;
+      }
+      if (cur == pprev.get())
+      {
+        replaceAssumption = true;
+        break;
+      }
+      for (const std::shared_ptr<ProofNode>& cc : cur->getChildren())
+      {
+        visit.push_back(cc.get());
+      }
+    }
+  }
+  if (pprev == nullptr || replaceAssumption)
   {
     Trace("cdproof") << "  new node " << expected << "..." << std::endl;
     pthis = pnm->mkNode(id, pchildren, args, expected);
@@ -204,7 +235,7 @@ bool CDProof::addStep(Node expected,
       Trace("cdproof") << "...fail, proof checking" << std::endl;
       return false;
     }
-    d_nodes.insert(expected, pthis);
+    d_nodes[expected] = pthis;
   }
   else
   {
