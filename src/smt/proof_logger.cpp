@@ -42,8 +42,8 @@ ProofLoggerCpc::ProofLoggerCpc(Env& env,
       d_atp(nodeManager()),
       // we use thresh 1 since terms may come incrementally and would benefit
       // from previous eager letification
-      d_alfp(env, d_atp, pm->getRewriteDatabase(), 1),
-      d_aout(out, d_alfp.getLetBinding(), "@t", false)
+      d_eop(env, d_atp, pm->getRewriteDatabase(), 1),
+      d_eout(out, d_eop.getLetBinding(), "@t", false)
 {
   Trace("pf-log-debug") << "Make proof logger" << std::endl;
   // global options on out
@@ -154,7 +154,7 @@ void ProofLoggerCpc::printDeclarationsOnce(
 
 void ProofLoggerCpc::logCnfPreprocessInputs(const std::vector<Node>& inputs)
 {
-  d_aout.getOStream() << "; log start" << std::endl;
+  d_eout.getOStream() << "; log start" << std::endl;
   Trace("pf-log") << "; log: cnf preprocess input proof start" << std::endl;
   CDProof cdp(d_env);
   Node conc = nodeManager()->mkAnd(inputs);
@@ -165,7 +165,7 @@ void ProofLoggerCpc::logCnfPreprocessInputs(const std::vector<Node>& inputs)
   syncScriptContext();
   printDeclarationsOnce(d_ppProof->getArguments(),
                         d_ppProof->getChildren()[0]->getArguments());
-  d_alfp.printIncremental(d_aout, d_ppProof, m);
+  d_eop.printIncremental(d_eout, d_ppProof, m);
   notifyOutput();
   Trace("pf-log") << "; log: cnf preprocess input proof end" << std::endl;
 }
@@ -188,7 +188,7 @@ void ProofLoggerCpc::logCnfPreprocessInputProofs(
     Assert(d_ppProof->getChildren()[0]->getRule() == ProofRule::SCOPE);
     printDeclarationsOnce(d_ppProof->getArguments(),
                           d_ppProof->getChildren()[0]->getArguments());
-    d_alfp.printIncremental(d_aout, d_ppProof, m);
+    d_eop.printIncremental(d_eout, d_ppProof, m);
     if (d_isIncrementalDump)
     {
       d_printedInputs.insert(res);
@@ -207,7 +207,7 @@ void ProofLoggerCpc::logTheoryLemmaProof(std::shared_ptr<ProofNode>& pfn)
   ppn = d_pm->connectProofToAssertions(ppn, d_as, ProofScopeMode::NONE);
   if (!d_isIncrementalDump || !d_printedLemmas.contains(pfn->getResult()))
   {
-    d_alfp.printNext(d_aout, ppn);
+    d_eop.printNext(d_eout, ppn);
     if (d_isIncrementalDump)
     {
       d_printedLemmas.insert(pfn->getResult());
@@ -225,7 +225,7 @@ void ProofLoggerCpc::logTheoryLemma(const Node& n)
   d_lemmaPfs.emplace_back(ptl);
   if (!d_isIncrementalDump || !d_printedLemmas.contains(n))
   {
-    d_alfp.printNext(d_aout, ptl);
+    d_eop.printNext(d_eout, ptl);
     if (d_isIncrementalDump)
     {
       d_printedLemmas.insert(n);
@@ -248,12 +248,12 @@ void ProofLoggerCpc::logSatRefutation()
   Node f = nodeManager()->mkConst(false);
   std::shared_ptr<ProofNode> psr =
       d_pnm->mkNode(ProofRule::SAT_REFUTATION, premises, {}, f);
-  d_alfp.printNext(d_aout, psr);
+  d_eop.printNext(d_eout, psr);
   Trace("pf-log") << "; log SAT refutation end" << std::endl;
   notifyOutput();
   if (!d_isIncrementalDump)
   {
-    d_aout.getOStream() << "(exit)" << std::endl;
+    d_eout.getOStream() << "(exit)" << std::endl;
     d_printedExit = true;
   }
 }
@@ -264,12 +264,12 @@ void ProofLoggerCpc::logSatRefutationProof(std::shared_ptr<ProofNode>& pfn)
   // connect to preprocessed
   std::shared_ptr<ProofNode> spf =
       d_pm->connectProofToAssertions(pfn, d_as, ProofScopeMode::NONE);
-  d_alfp.printNext(d_aout, spf);
+  d_eop.printNext(d_eout, spf);
   Trace("pf-log") << "; log SAT refutation proof end" << std::endl;
   notifyOutput();
   if (!d_isIncrementalDump)
   {
-    d_aout.getOStream() << "(exit)" << std::endl;
+    d_eout.getOStream() << "(exit)" << std::endl;
     d_printedExit = true;
   }
 }
