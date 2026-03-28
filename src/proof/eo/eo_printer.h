@@ -70,7 +70,7 @@ class EoPrinter : protected EnvObj
    * proof body.
    */
   void printIncremental(
-      AlfPrintChannelOut& out,
+      EoPrintChannelOut& out,
       std::shared_ptr<ProofNode> pfn,
       ProofScopeMode psm = ProofScopeMode::DEFINITIONS_AND_ASSERTIONS);
   /**

@@ -56,7 +56,7 @@ ProofLoggerCpc::~ProofLoggerCpc()
 {
   if (d_isIncrementalDump && d_hasOutput && !d_printedExit)
   {
-    d_aout.getOStream() << "(exit)" << std::endl;
+    d_eout.getOStream() << "(exit)" << std::endl;
   }
 }
 
@@ -68,9 +68,9 @@ void ProofLoggerCpc::notifyPush()
   {
     return;
   }
-  std::ostream& out = d_aout.getOStream();
+  std::ostream& out = d_eout.getOStream();
   out << "(push 1)" << std::endl;
-  d_alfp.pushCurrentContext();
+  d_eop.pushCurrentContext();
   d_scriptCtx.push();
   ++d_scriptLevel;
   notifyOutput();
@@ -83,9 +83,9 @@ void ProofLoggerCpc::notifyPop()
     return;
   }
   Assert(d_scriptLevel > 0);
-  std::ostream& out = d_aout.getOStream();
+  std::ostream& out = d_eout.getOStream();
   out << "(pop 1)" << std::endl;
-  d_alfp.popCurrentContext();
+  d_eop.popCurrentContext();
   d_scriptCtx.pop();
   --d_scriptLevel;
   notifyOutput();
@@ -97,7 +97,7 @@ void ProofLoggerCpc::syncScriptContext()
   {
     return;
   }
-  std::ostream& out = d_aout.getOStream();
+  std::ostream& out = d_eout.getOStream();
   uint32_t level = userContext()->getLevel();
   if (level > 0)
   {
@@ -106,7 +106,7 @@ void ProofLoggerCpc::syncScriptContext()
   while (d_scriptLevel < level)
   {
     out << "(push 1)" << std::endl;
-    d_alfp.pushCurrentContext();
+    d_eop.pushCurrentContext();
     d_scriptCtx.push();
     ++d_scriptLevel;
     notifyOutput();
@@ -114,7 +114,7 @@ void ProofLoggerCpc::syncScriptContext()
   while (d_scriptLevel > level)
   {
     out << "(pop 1)" << std::endl;
-    d_alfp.popCurrentContext();
+    d_eop.popCurrentContext();
     d_scriptCtx.pop();
     --d_scriptLevel;
     notifyOutput();
@@ -124,14 +124,14 @@ void ProofLoggerCpc::syncScriptContext()
 void ProofLoggerCpc::printDeclarationsOnce(
     const std::vector<Node>& definitions, const std::vector<Node>& assertions)
 {
-  printer::smt2::Smt2Printer alfp(printer::smt2::Variant::alf_variant);
+  printer::smt2::Smt2Printer alfp(printer::smt2::Variant::eo_variant);
   smt::PrintBenchmark pb(nodeManager(), &alfp, false, &d_atp);
   std::stringstream outDecl;
   std::stringstream outDef;
   options::ioutils::applyPrintArithLitToken(outDef, true);
   pb.printDeclarationsFrom(outDecl, outDef, definitions, assertions);
 
-  std::ostream& out = d_aout.getOStream();
+  std::ostream& out = d_eout.getOStream();
   auto emitUniqueLines = [&](const std::string& block) {
     std::stringstream ss(block);
     std::string line;

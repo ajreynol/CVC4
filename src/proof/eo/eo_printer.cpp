@@ -963,7 +963,7 @@ void EoPrinter::print(EoPrintChannelOut& aout,
   d_pletMap.clear();
 }
 
-void AlfPrinter::printIncremental(AlfPrintChannelOut& aout,
+void EoPrinter::printIncremental(EoPrintChannelOut& aout,
                                   std::shared_ptr<ProofNode> pfn,
                                   ProofScopeMode psm)
 {
@@ -1031,8 +1031,8 @@ void AlfPrinter::printIncremental(AlfPrintChannelOut& aout,
 
   for (size_t i = 0; i < 2; i++)
   {
-    AlfPrintChannel* ao = i == 0 ? static_cast<AlfPrintChannel*>(&d_aletify)
-                                 : static_cast<AlfPrintChannel*>(&aout);
+    EoPrintChannel* ao = i == 0 ? static_cast<EoPrintChannel*>(&d_eletify)
+                                 : static_cast<EoPrintChannel*>(&aout);
     if (i == 1)
     {
       printLetList(out, d_lbind);
