@@ -79,12 +79,12 @@ bool QuantifiersState::getInstWhenNeedsCheck(Theory::Effort e) const
   {
     performCheck =
         ((e == Theory::EFFORT_FULL && d_ierCounter % d_instWhenPhase != 0)
-         || e == Theory::EFFORT_LAST_CALL);
+         || (e == Theory::EFFORT_LAST_CALL && !d_valuation.needCheck()));
   }
   else if (options().quantifiers.instWhenMode
            == options::InstWhenMode::FULL_DELAY_LAST_CALL)
   {
-    performCheck = ((e == Theory::EFFORT_FULL && !d_valuation.needCheck()
+    performCheck = !d_valuation.needCheck() && ((e == Theory::EFFORT_FULL
                      && d_ierCounter % d_instWhenPhase != 0)
                     || e == Theory::EFFORT_LAST_CALL);
   }
