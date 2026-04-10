@@ -16,17 +16,19 @@
 
 ; program: $mk_skolems
 ; args:
-; - arg1 @List: The bound variable list to process.
-; - arg2 Bool: The body of the quantified formula. This impacts the definition of the introduced skolems.
-; - arg3 Int: The number of indices we have already processed in arg1.
+; - vl T: The bound variable list to process.
+; - vlo U: The original bound variable list.
+; - F Bool: The body of the quantified formula. This impacts the definition of the introduced skolems.
+; - i Int: The number of indices we have already processed in arg1.
 ; return: >
 ;   The list of skolem variables for the quantified formula whose bound variable list
 ;   is arg1 and whose body is arg2.
-(program $mk_skolems ((x @List) (xs @List :list) (F Bool) (i Int))
-  :signature (@List Bool Int) @List
+(program $mk_skolems 
+  ((T Type) (U Type) (V Type) (x T) (xs U :list) (vl V) (F Bool) (i Int))
+  :signature (T U Bool Int) @List
   (
-    (($mk_skolems (@list x xs) F i) (eo::cons @list (@quantifiers_skolemize F i) ($mk_skolems xs F (eo::add i 1))))
-    (($mk_skolems @list.nil F i)    @list.nil)
+    (($mk_skolems (@varlist x xs) vl F i) (eo::cons @list (@quantifiers_skolemize vl F i) ($mk_skolems xs vl F (eo::add i 1))))
+    (($mk_skolems @varlist.nil vl F i)    @list.nil)
   )
 )
 
@@ -39,7 +41,7 @@
 ;   introduced via $mk_skolems.
 (declare-rule skolemize ((x @List) (G Bool))
   :premises ((not (forall x G)))
-  :conclusion ($substitute_simul (not G) x ($mk_skolems x (forall x G) 0))
+  :conclusion ($substitute_simul (not G) x ($mk_skolems x x G 0))
 )
 
 ; rule: skolem_intro

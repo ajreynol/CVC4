@@ -3,8 +3,9 @@
 (include "../../theories/BitVectors.eo")
 
 ; witness for invertibility condition
-(declare-parameterized-const @witness_inv_condition ((F Bool :opaque))
-  ($assoc_nil_nth_type @list ($get_var_list F) 0))
+(declare-parameterized-const @witness_inv_condition
+  ((T Type :implicit) (vl T :opaque) (F Bool :opaque))
+  T)
 
 ;;;;; ProofRule::EXISTS_INV_CONDITION
 
@@ -73,5 +74,5 @@
 ;   as given by the @witness_inv_condition skolem.
 (declare-rule exists_inv_condition ((n Int) (x (BitVec n)) (R Bool))
   :args ((exists (@list x) R))
-  :conclusion (=> ($mk_invertibility_condition x R) ($substitute x (@witness_inv_condition (exists (@list x) R)) R))
+  :conclusion (=> ($mk_invertibility_condition x R) ($substitute x (@witness_inv_condition x R) R))
 )
