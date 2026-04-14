@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <map>
+#include <unordered_set>
 
 #include "expr/attribute.h"
 #include "expr/node_algorithm.h"
@@ -30,6 +31,7 @@
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/term_util.h"
+#include "theory/uf/equality_engine_iterator.h"
 
 // #define MULTI_TRIGGER_NEW
 
@@ -70,9 +72,15 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
     Trace("eager-inst") << "EagerInst::check, effort = " << e
                         << ", #dirtyOps = " << d_dirtyOps.size()
                         << ", #dirtyQuants = " << d_dirtyQuants.size()
+                        << ", #dirtyTriggers = " << d_dirtyTriggers.size()
                         << ", pendingMerge = " << d_hasPendingMerge
                         << std::endl;
-    for (const std::pair<const Node, bool>& dq : d_dirtyQuants)
+    std::map<Node, bool> dirtyQuants = d_dirtyQuants;
+    for (const std::pair<const Node, bool>& dq : d_dirtyTriggerQuants)
+    {
+      dirtyQuants[dq.first] = true;
+    }
+    for (const std::pair<const Node, bool>& dq : dirtyQuants)
     {
       std::map<Node, QuantInfo>::const_iterator it = d_qinfo.find(dq.first);
       if (it == d_qinfo.end())
@@ -90,9 +98,15 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
                           << ", groundTerms=" << ngt << std::endl;
     }
   }
-  for (const std::pair<const Node, bool>& dq : d_dirtyQuants)
+  std::map<Node, bool> dirtyQuants = d_dirtyQuants;
+  for (const std::pair<const Node, bool>& dq : d_dirtyTriggerQuants)
+  {
+    dirtyQuants[dq.first] = true;
+  }
+  for (const std::pair<const Node, bool>& dq : dirtyQuants)
   {
     Node q = dq.first;
+    bool allDirty = d_dirtyQuants.find(q) != d_dirtyQuants.end();
     if (!d_qreg.hasOwnership(q, this) || !fm->isQuantifierAsserted(q)
         || !fm->isQuantifierActive(q))
     {
@@ -106,6 +120,11 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
     for (TriggerInfo& ti : it->second.d_triggers)
     {
       if (ti.d_trigger == nullptr)
+      {
+        continue;
+      }
+      if (!allDirty
+          && d_dirtyTriggers.find(ti.d_trigger) == d_dirtyTriggers.end())
       {
         continue;
       }
@@ -140,17 +159,6 @@ void EagerInst::reset_round(Theory::Effort e)
         ti.d_trigger->resetInstantiationRound();
       }
     }
-  }
-  if (!d_hasPendingMerge)
-  {
-    return;
-  }
-  // A merge can potentially change the viability of every stored trigger. We
-  // conservatively mark all watched quantifiers dirty and let later matching
-  // code decide what to revisit.
-  for (const std::pair<const Node, QuantInfo>& qi : d_qinfo)
-  {
-    markQuantifierDirty(qi.first);
   }
 }
 
@@ -208,16 +216,78 @@ void EagerInst::notifyAssertedTerm(TNode t)
   }
 }
 
-void EagerInst::eqNotifyMerge(CVC5_UNUSED TNode t1, CVC5_UNUSED TNode t2)
+void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
 {
-  if (d_opWatchList.empty())
+  if (d_mergeOpWatchList.empty() && d_mergeGroundWatchList.empty()
+      && d_mergeAllWatchList.empty())
   {
     return;
   }
-  // Any equality merge may enable new matches through congruence or ancestor
-  // terms, so we conservatively remember that a merge happened. Later work can
-  // refine this to operator- or path-based filtering.
-  d_hasPendingMerge = true;
+  bool marked = false;
+  for (inst::Trigger* tr : d_mergeAllWatchList)
+  {
+    markTriggerDirty(tr);
+    marked = true;
+  }
+  if (!d_mergeOpWatchList.empty() || !d_mergeGroundWatchList.empty())
+  {
+    Node rep = getRepresentative(t1);
+    eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
+    std::unordered_set<TNode> visited;
+    std::vector<TNode> visit;
+    if (!rep.isNull() && ee->hasTerm(rep))
+    {
+      eq::EqClassIterator eqc_i(rep, ee);
+      while (!eqc_i.isFinished())
+      {
+        visit.push_back(*eqc_i);
+        ++eqc_i;
+      }
+    }
+    else
+    {
+      visit.push_back(t1);
+      visit.push_back(t2);
+    }
+    while (!visit.empty())
+    {
+      TNode cur = visit.back();
+      visit.pop_back();
+      if (!visited.insert(cur).second)
+      {
+        continue;
+      }
+      Node op = getTermDatabase()->getMatchOperator(cur);
+      if (!op.isNull())
+      {
+        std::map<Node, std::vector<inst::Trigger*>>::const_iterator ito =
+            d_mergeOpWatchList.find(op);
+        if (ito != d_mergeOpWatchList.end())
+        {
+          for (inst::Trigger* tr : ito->second)
+          {
+            markTriggerDirty(tr);
+            marked = true;
+          }
+        }
+      }
+      std::map<Node, std::vector<inst::Trigger*>>::const_iterator itg =
+          d_mergeGroundWatchList.find(cur);
+      if (itg != d_mergeGroundWatchList.end())
+      {
+        for (inst::Trigger* tr : itg->second)
+        {
+          markTriggerDirty(tr);
+          marked = true;
+        }
+      }
+      if (!cur.isClosure())
+      {
+        visit.insert(visit.end(), cur.begin(), cur.end());
+      }
+    }
+  }
+  d_hasPendingMerge = d_hasPendingMerge || marked;
 }
 
 void EagerInst::registerWatchInfo(Node q)
@@ -273,6 +343,7 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
     return false;
   }
   TriggerInfo ti;
+  std::map<Node, size_t> varUseCount;
   for (const Node& pat : pats)
   {
     PatternInfo pi;
@@ -285,11 +356,29 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
     for (const Node& v : pi.d_vars)
     {
       pushBackUnique(ti.d_vars, v);
+      varUseCount[v]++;
     }
+    for (const Node& op : pi.d_mergeOps)
+    {
+      pushBackUnique(ti.d_mergeOps, op);
+    }
+    for (const Node& gt : pi.d_groundTerms)
+    {
+      pushBackUnique(ti.d_groundTerms, gt);
+    }
+    ti.d_needsAnyMerge = ti.d_needsAnyMerge || pi.d_hasRepeatedVar;
   }
   if (ti.d_vars.size() != d_qreg.getNumInstantiationConstants(q))
   {
     return false;
+  }
+  for (const std::pair<const Node, size_t>& v : varUseCount)
+  {
+    if (v.second > 1)
+    {
+      ti.d_needsAnyMerge = true;
+      break;
+    }
   }
   ti.d_trigger = d_trdb->mkTrigger(
       q,
@@ -310,6 +399,19 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
     {
       return false;
     }
+  }
+  d_triggerOwner[ti.d_trigger] = q;
+  for (const Node& op : ti.d_mergeOps)
+  {
+    pushBackUniqueTrigger(d_mergeOpWatchList[op], ti.d_trigger);
+  }
+  for (const Node& gt : ti.d_groundTerms)
+  {
+    pushBackUniqueTrigger(d_mergeGroundWatchList[gt], ti.d_trigger);
+  }
+  if (ti.d_needsAnyMerge)
+  {
+    pushBackUniqueTrigger(d_mergeAllWatchList, ti.d_trigger);
   }
   qi.d_triggers.push_back(ti);
   for (const Node& op : ti.d_watchedOps)
@@ -350,6 +452,20 @@ bool EagerInst::getPatternInfo(Node q, Node pat, PatternInfo& pinfo) const
       }
       continue;
     }
+    if (cur != pat)
+    {
+      Node op = getTermDatabase()->getMatchOperator(cur);
+      if (!op.isNull())
+      {
+        pushBackUnique(pinfo.d_mergeOps, op);
+      }
+      std::vector<Node> gvars;
+      TermUtil::computeInstConstContainsForQuant(q, cur, gvars);
+      if (gvars.empty())
+      {
+        pushBackUnique(pinfo.d_groundTerms, cur);
+      }
+    }
     if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
     {
       visit.push_back(cur.getOperator());
@@ -381,18 +497,44 @@ void EagerInst::markOperatorDirty(Node op)
   }
 }
 
+void EagerInst::markTriggerDirty(inst::Trigger* tr)
+{
+  if (tr == nullptr)
+  {
+    return;
+  }
+  d_dirtyTriggers[tr] = true;
+  std::map<inst::Trigger*, Node>::const_iterator it = d_triggerOwner.find(tr);
+  if (it != d_triggerOwner.end())
+  {
+    d_dirtyTriggerQuants[it->second] = true;
+  }
+}
+
 void EagerInst::markQuantifierDirty(Node q) { d_dirtyQuants[q] = true; }
 
 bool EagerInst::hasPendingWork() const
 {
-  return d_hasPendingMerge || !d_dirtyOps.empty() || !d_dirtyQuants.empty();
+  return d_hasPendingMerge || !d_dirtyOps.empty() || !d_dirtyQuants.empty()
+         || !d_dirtyTriggers.empty();
 }
 
 void EagerInst::clearPending()
 {
   d_dirtyOps.clear();
   d_dirtyQuants.clear();
+  d_dirtyTriggerQuants.clear();
+  d_dirtyTriggers.clear();
   d_hasPendingMerge = false;
+}
+
+void EagerInst::pushBackUniqueTrigger(std::vector<inst::Trigger*>& triggers,
+                                      inst::Trigger* tr)
+{
+  if (std::find(triggers.begin(), triggers.end(), tr) == triggers.end())
+  {
+    triggers.push_back(tr);
+  }
 }
 
 }  // namespace quantifiers

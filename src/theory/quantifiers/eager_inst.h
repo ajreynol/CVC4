@@ -59,6 +59,10 @@ class EagerInst : public QuantifiersModule
     Node d_op;
     /** Instantiation constants occurring in the pattern. */
     std::vector<Node> d_vars;
+    /** Nested match operators whose equivalence classes can affect matching. */
+    std::vector<Node> d_mergeOps;
+    /** Ground subterms whose equivalence classes can affect matching. */
+    std::vector<Node> d_groundTerms;
     /** Whether the pattern repeats one of its instantiation constants. */
     bool d_hasRepeatedVar = false;
   };
@@ -74,6 +78,12 @@ class EagerInst : public QuantifiersModule
     std::vector<Node> d_watchedOps;
     /** All instantiation constants covered by the trigger. */
     std::vector<Node> d_vars;
+    /** Nested match operators watched for equality merges. */
+    std::vector<Node> d_mergeOps;
+    /** Ground subterms watched for equality merges. */
+    std::vector<Node> d_groundTerms;
+    /** Whether any equality merge can affect this trigger. */
+    bool d_needsAnyMerge = false;
   };
 
   /** Quantifier-local eager-inst metadata. */
@@ -144,12 +154,17 @@ class EagerInst : public QuantifiersModule
   static void pushBackUnique(std::vector<Node>& nodes, Node n);
   /** Mark all quantifiers watching op as dirty. */
   void markOperatorDirty(Node op);
+  /** Mark trigger tr as dirty. */
+  void markTriggerDirty(inst::Trigger* tr);
   /** Mark q as dirty. */
   void markQuantifierDirty(Node q);
   /** Whether we currently have pending work. */
   bool hasPendingWork() const;
   /** Clear pending dirty state after a check. */
   void clearPending();
+  /** Add trigger to triggers if it is not already present. */
+  static void pushBackUniqueTrigger(std::vector<inst::Trigger*>& triggers,
+                                    inst::Trigger* tr);
 
   /** Watch information for quantifiers. */
   std::map<Node, QuantInfo> d_qinfo;
@@ -157,10 +172,22 @@ class EagerInst : public QuantifiersModule
   std::unique_ptr<inst::TriggerDatabase> d_trdb;
   /** Reverse watch list from operator to quantifiers. */
   std::map<Node, std::vector<Node>> d_opWatchList;
+  /** Reverse watch list from merge-relevant operator to triggers. */
+  std::map<Node, std::vector<inst::Trigger*>> d_mergeOpWatchList;
+  /** Reverse watch list from merge-relevant ground term to triggers. */
+  std::map<Node, std::vector<inst::Trigger*>> d_mergeGroundWatchList;
+  /** Triggers that should be revisited on any equality merge. */
+  std::vector<inst::Trigger*> d_mergeAllWatchList;
+  /** Trigger owner map. */
+  std::map<inst::Trigger*, Node> d_triggerOwner;
   /** Dirty operators since the last eager-inst check. */
   std::map<Node, bool> d_dirtyOps;
   /** Dirty quantifiers since the last eager-inst check. */
   std::map<Node, bool> d_dirtyQuants;
+  /** Quantifiers with at least one dirty trigger since the last check. */
+  std::map<Node, bool> d_dirtyTriggerQuants;
+  /** Dirty triggers since the last eager-inst check. */
+  std::map<inst::Trigger*, bool> d_dirtyTriggers;
   /** Whether some relevant equality merge happened since the last check. */
   bool d_hasPendingMerge;
 };
