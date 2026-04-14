@@ -1,10 +1,7 @@
 ###############################################################################
-# Top contributors (to current version):
-#   Aina Niemetz, Mathias Preiner, Gereon Kremer
-#
 # This file is part of the cvc5 project.
 #
-# Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
+# Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
 # in the top-level source directory and their institutional affiliations.
 # All rights reserved.  See the file COPYING in the top-level source
 # directory for licensing information.
@@ -115,11 +112,15 @@ cvc5_set_option(USE_PYTHON_VENV ON)
 
 # >> 2-valued: ON OFF
 #    > for options where we don't need to detect if set by user (default: OFF)
+option(ENABLE_CLANG_TIDY       "Enable clang-tidy static analysis during build")
 option(ENABLE_COVERAGE         "Enable support for gcov coverage testing")
 option(ENABLE_DEBUG_CONTEXT_MM "Enable the debug context memory manager")
 option(ENABLE_PROFILING        "Enable support for gprof profiling")
 
 option(TREAT_WARNING_AS_ERROR  "Treat warnings on building as errors")
+
+# Ensure cvc5 does not use LibPoly's global context by stripping all related code
+option(NO_GLOBAL_POLY_CTX      "Remove global context from LibPoly source code")
 
 # Optional dependencies
 #
@@ -131,6 +132,7 @@ option(USE_CRYPTOMINISAT "Use CryptoMiniSat SAT solver")
 option(USE_EDITLINE      "Use Editline for better interactive support")
 option(USE_GLPK          "Use GLPK simplex solver")
 option(USE_KISSAT        "Use Kissat SAT solver")
+option(USE_MPFR          "Use MPFR for FP constant folding instead of SymFPU")
 option(USE_POLY          "Use LibPoly for polynomial arithmetic")
 
 # Custom install directories for dependencies
@@ -184,7 +186,13 @@ else()
   set(TOOLCHAIN_PREFIX wasm64-unknown-emscripten)
   string(TOLOWER ".${WASM}" WASM_EXTENSION)
   set(CMAKE_EXECUTABLE_SUFFIX ${WASM_EXTENSION})
-  string(APPEND CMAKE_EXE_LINKER_FLAGS " ${WASM_FLAGS}")
+  set(WASM_FLAGS_CONFIGURE "${WASM_FLAGS}")
+  set(WASM_EXPORTED_FUNCTIONS_FLAG "")
+  if(WASM_FLAGS MATCHES "(-s *EXPORTED_FUNCTIONS=[^ ]+)")
+    set(WASM_EXPORTED_FUNCTIONS_FLAG "${CMAKE_MATCH_1}")
+    string(REPLACE "${CMAKE_MATCH_1}" "" WASM_FLAGS_CONFIGURE "${WASM_FLAGS}")
+  endif()
+  string(APPEND CMAKE_EXE_LINKER_FLAGS " ${WASM_FLAGS_CONFIGURE}")
 endif()
 
 #-----------------------------------------------------------------------------#
@@ -192,6 +200,17 @@ endif()
 
 set(OPTIMIZATION_LEVEL 3)
 set(GPL_LIBS "")
+
+if(ENABLE_CLANG_TIDY)
+  if(NOT ENABLE_ASSERTIONS)
+    message(FATAL_ERROR
+      "Use of clang-tidy requires building with assertions enabled.")
+  endif()
+  set(CMAKE_CXX_CLANG_TIDY "clang-tidy")
+  if(TREAT_WARNING_AS_ERROR)
+    set(CMAKE_CXX_CLANG_TIDY "${CMAKE_CXX_CLANG_TIDY};-warnings-as-errors=*")
+  endif()
+endif()
 
 #-----------------------------------------------------------------------------#
 # Determine number of threads available, used to configure (default) parallel
@@ -236,25 +255,35 @@ include(Config${CMAKE_BUILD_TYPE})
 #-----------------------------------------------------------------------------#
 # Compiler flags
 
+check_min_compiler_version("GNU" 10)
+check_min_compiler_version("Clang" 12)
+
 add_check_c_cxx_flag("-O${OPTIMIZATION_LEVEL}")
 add_check_c_cxx_flag("-Wall")
-add_check_c_cxx_supression_flag("-Wno-unused-private-field")
-add_check_c_cxx_supression_flag("-Wno-dangling-reference")
+add_check_c_cxx_flag("-Wextra")
 add_check_c_flag("-fexceptions")
 add_check_cxx_flag("-Wsuggest-override")
 add_check_cxx_flag("-Wnon-virtual-dtor")
 add_check_c_cxx_flag("-Wimplicit-fallthrough")
 add_check_c_cxx_flag("-Wshadow")
+add_check_c_cxx_flag("-Wtype-limits")
 add_check_c_cxx_flag("-fno-operator-names")
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13
+   AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 14)
+  # GCC 13 introduced -Wdangling-reference, but the
+  # [[gnu::no_dangling]] attribute to suppress it was only
+  # added in GCC 14, so disable the warning for GCC 13.
+  add_cxx_flag("-Wno-dangling-reference")
+endif()
 
 # Assume no dynamic initialization of thread-local variables in non-defining
 # translation units. This option should result in better performance and works
 # around crashing issues with our Windows build.
-add_check_cxx_flag("-fno-extern-tls-init")
-
-# Disable -Wclass-memaccess to suppress 'no trivial copy-assignment' in MiniSat
-# code.
-add_check_cxx_supression_flag("-Wno-class-memaccess")
+if(NOT ENABLE_CLANG_TIDY)
+  add_check_cxx_flag("-fno-extern-tls-init")
+endif()
 
 if (WIN32)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--stack,100000000")
@@ -583,7 +612,7 @@ if(ENABLE_SAFE_MODE)
 endif()
 
 if(USE_POLY)
-  find_package(Poly 0.2.0 REQUIRED)
+  find_package(Poly 0.2.1 REQUIRED)
   add_definitions(-DCVC5_USE_POLY)
   set(CVC5_USE_POLY_IMP 1)
 else()
@@ -599,12 +628,18 @@ endif()
 if(USE_EDITLINE)
   find_package(Editline REQUIRED)
   set(HAVE_LIBEDITLINE 1)
-  if(Editline_COMPENTRY_FUNC_RETURNS_CHARPTR)
-    set(EDITLINE_COMPENTRY_FUNC_RETURNS_CHARP 1)
-  endif()
 endif()
 
+# SymFPU is always needed for the symbolic FP word blaster in the theory solver.
 find_package(SymFPU REQUIRED)
+
+if(USE_MPFR)
+  find_package(MPFR REQUIRED)
+  add_definitions(-DCVC5_USE_MPFR)
+  set(CVC5_USE_MPFR TRUE)
+else()
+  set(CVC5_USE_MPFR FALSE)
+endif()
 
 if(GPL_LIBS)
   if(NOT ENABLE_GPL)
@@ -632,6 +667,11 @@ else()
   if(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     cvc5_set_option(STATIC_BINARY ON)
   endif()
+endif()
+
+# Re-apply EXPORTED_FUNCTIONS after configure checks complete
+if(NOT "${WASM_EXPORTED_FUNCTIONS_FLAG}" STREQUAL "")
+  string(APPEND CMAKE_EXE_LINKER_FLAGS " ${WASM_EXPORTED_FUNCTIONS_FLAG}")
 endif()
 
 #-----------------------------------------------------------------------------#
@@ -805,6 +845,11 @@ if(CVC5_USE_CLN_IMP)
   print_config("MP library                " "cln" FOUND_SYSTEM ${CLN_FOUND_SYSTEM})
 else()
   print_config("MP library                " "gmp" FOUND_SYSTEM ${GMP_FOUND_SYSTEM})
+endif()
+if(CVC5_USE_MPFR)
+  print_config("FP literal backend        " "mpfr" FOUND_SYSTEM ${MPFR_FOUND_SYSTEM})
+else()
+  print_config("FP literal backend        " "symfpu" FOUND_SYSTEM ${SymFPU_FOUND_SYSTEM})
 endif()
 print_config("Editline                  " ${USE_EDITLINE})
 message("")

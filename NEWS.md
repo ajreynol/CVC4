@@ -1,12 +1,53 @@
 This file contains a summary of important user-visible changes.
 
-cvc5 1.3.2 prerelease
+cvc5 1.3.4 prerelease
 =====================
 
 ## Changes
 
+- We now require GCC >= 10 and Clang >= 12.
+- Update SymFPU. Issue with divider encoding now fixed in SymFPU (related
+  issues: #9505, #11139, #12335).
+- Fixes parsing issues related to unchecked overflowing of indexed
+  bit-vector operators. This impacts bit-vector operators having width
+  that is greater than or equal to `2^32`.
+- Fixes a bug where the character code point `\u{30000}` was incorrectly
+  treated as a valid code point.
+- Fixes a parsing bug with option `--parse-skolem-definitions`.
+- Fixes a soundness bug in the `--learned-rewrite` preprocessing pass.
+- We now allow using option `--solve-bv-as-int` with quantifiers, even if the
+  quantified variables occur under UFs.
+- Fixes an issue where the parser would abort prematurely when `get-value` was
+  called after an unsat response when uninterpreted sorts are present.
+
+cvc5 1.3.3
+==========
+
+## Changes
+
+- Fixes a bug with `get-assertions` which cleared the previous solving state.
+- We now use a lazy approach for handling `distinct` constraints.
+- Minor improvement to the strategy used for non-linear arithmetic when both
+  incremental linearization and cylindrical algebraic coverings are used in
+  combination.
+- Fixes the SyGuS solver for corner cases of unconstrained queries.
+
+
+cvc5 1.3.2
+==========
+
+## Changes
+
+- Fixes a bug related to variable elimination for quantified formulas that have
+  variable shadowing.
 - We now use a more efficient version of resolution by default in CPC proofs
   (proof rule `CHAIN_M_RESOLUTION`) for representing SAT proofs from Minisat.
+- CPC proofs now have no mixed arithmetic by default.
+- Updates to the linear and non-linear arithmetic solver, including a new
+  lemma schema for multiplication (`--nl-ext-flatten-mon`), as well as
+  minor improvements to the Diophantine Equation solver.
+- Minor updates and fixes to the CPC proof signature. The current CPC proofs are
+  checkable by Ethos 0.2.2 (`./contrib/get-ethos-checker`).
 
 cvc5 1.3.1
 ==========

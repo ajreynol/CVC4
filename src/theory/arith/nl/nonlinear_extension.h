@@ -1,10 +1,7 @@
 /******************************************************************************
- * Top contributors (to current version):
- *   Andrew Reynolds, Gereon Kremer, Tim King
- *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -34,6 +31,7 @@
 #include "theory/arith/nl/iand_solver.h"
 #include "theory/arith/nl/icp/icp_solver.h"
 #include "theory/arith/nl/nl_model.h"
+#include "theory/arith/nl/piand_solver.h"
 #include "theory/arith/nl/pow2_solver.h"
 #include "theory/arith/nl/stats.h"
 #include "theory/arith/nl/strategy.h"
@@ -45,7 +43,7 @@
 namespace cvc5::internal {
 namespace theory {
 namespace eq {
-  class EqualityEngine;
+class EqualityEngine;
 }
 namespace arith {
 
@@ -185,8 +183,7 @@ class NonlinearExtension : EnvObj
    *
    * This method adds lemmas to d_im directly.
    */
-  void runStrategy(Theory::Effort effort,
-                   const std::vector<Node>& assertions,
+  void runStrategy(const std::vector<Node>& assertions,
                    const std::vector<Node>& false_asserts,
                    const std::vector<Node>& xts);
 
@@ -250,6 +247,13 @@ class NonlinearExtension : EnvObj
    * constraints involving integer and.
    */
   IAndSolver d_iandSlv;
+
+  /** The parametric integer and solver
+   *
+   * This is the subsolver responsible for running the procedure for
+   * constraints involving parametric integer and.
+   */
+  PIAndSolver d_piandSlv;
 
   /** The pow2 solver
    *

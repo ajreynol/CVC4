@@ -1,3 +1,14 @@
+###############################################################################
+# This file is part of the cvc5 project.
+#
+# Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
+# in the top-level source directory and their institutional affiliations.
+# All rights reserved.  See the file COPYING in the top-level source
+# directory for licensing information.
+# #############################################################################
+#
+# The base Python API.
+##
 from collections import defaultdict
 from fractions import Fraction
 from functools import wraps
@@ -3539,7 +3550,7 @@ cdef class Solver:
 
             .. code-block:: smtlib
 
-                ( check-synth )
+                ( check-synth-next )
 
             :return: The result of the check, which is "solution" if the check
                      found a solution in which case solutions are available via
@@ -5425,7 +5436,7 @@ cdef class Statistics:
         """
             Get all statistics as a dictionary.
 
-            :param internal:  True to also inclue internal statistics.
+            :param internal:  True to also include internal statistics.
             :param defaulted: True to also include unchanged statistics.
             :return: A dictionary with all available statistics.
         """

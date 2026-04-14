@@ -1,10 +1,7 @@
 /******************************************************************************
- * Top contributors (to current version):
- *   Andrew Reynolds, Gereon Kremer, Andres Noetzli
- *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -92,7 +89,7 @@ bool Instantiate::reset(Theory::Effort e)
   return true;
 }
 
-void Instantiate::registerQuantifier(Node q) {}
+void Instantiate::registerQuantifier(CVC5_UNUSED Node q) {}
 bool Instantiate::checkComplete(IncompleteId& incId)
 {
   if (!d_recordedInst.empty())
@@ -110,16 +107,13 @@ void Instantiate::addRewriter(InstantiationRewriter* ir)
   d_instRewrite.push_back(ir);
 }
 
-bool Instantiate::addInstantiation(Node q,
-                                   std::vector<Node>& terms,
-                                   InferenceId id,
-                                   Node pfArg,
-                                   bool doVts)
+bool Instantiate::addInstantiation(
+    Node q, std::vector<Node>& terms, InferenceId id, Node pfArg, bool doVts)
 {
   // do the instantiation
   bool ret = addInstantiationInternal(q, terms, id, pfArg, doVts);
   // process the instantiation with callbacks via term registry
-  d_treg.processInstantiation(q, terms, ret);
+  d_treg.processInstantiation(q, terms);
   // return whether the instantiation was successful
   return ret;
 }
@@ -158,7 +152,7 @@ bool Instantiate::addInstantiationInternal(
   {
     TypeNode tn = q[0][i].getType();
     Assert(!terms[i].isNull());
-    Assert (terms[i].getType()==tn);
+    Assert(terms[i].getType() == tn);
     bool bad_inst = false;
     if (TermUtil::containsUninterpretedConstant(terms[i]))
     {
@@ -166,7 +160,7 @@ bool Instantiate::addInstantiationInternal(
                     << terms[i] << std::endl;
       bad_inst = true;
     }
-    else if (terms[i].getType() != q[0][i].getType())
+    else if (!CVC5_EQUAL(terms[i].getType(), q[0][i].getType()))
     {
       Trace("inst") << "***& inst bad type : " << terms[i] << " "
                     << terms[i].getType() << "/" << q[0][i].getType()
@@ -205,7 +199,7 @@ bool Instantiate::addInstantiationInternal(
       {
         Trace("inst") << "   " << terms[j] << std::endl;
       }
-      Assert(false);
+      DebugUnhandled();
     }
   }
 #endif
@@ -767,8 +761,7 @@ void Instantiate::getInstantiationTermVectors(
   }
   else
   {
-    std::map<Node, InstMatchTrie>::const_iterator it =
-        d_imt.find(q);
+    std::map<Node, InstMatchTrie>::const_iterator it = d_imt.find(q);
     if (it != d_imt.end())
     {
       it->second.getInstantiations(q, tvecs);

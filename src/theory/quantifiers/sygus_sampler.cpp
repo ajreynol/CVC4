@@ -1,10 +1,7 @@
 /******************************************************************************
- * Top contributors (to current version):
- *   Andrew Reynolds, Mathias Preiner, Gereon Kremer
- *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -44,7 +41,7 @@ SygusSampler::SygusSampler(Env& env)
 {
 }
 
-void SygusSampler::initialize(TypeNode tn,
+void SygusSampler::initialize(CVC5_UNUSED TypeNode tn,
                               const std::vector<Node>& vars,
                               unsigned nsamples,
                               bool unique_type_ids)
@@ -203,7 +200,7 @@ void SygusSampler::initializeSamples(unsigned nsamples)
         if (sts[j] != d_var_sygus_types.end())
         {
           unsigned ntypes = sts[j]->second.size();
-          if(ntypes > 0)
+          if (ntypes > 0)
           {
             unsigned index = Random::getRandom().pick(0, ntypes - 1);
             if (index < ntypes)
@@ -262,7 +259,6 @@ bool SygusSampler::PtTrie::add(std::vector<Node>& pt)
     curr = &(curr->d_children[pt[i]]);
   }
   bool retVal = curr->d_children.empty();
-  curr = &(curr->d_children[Node::null()]);
   return retVal;
 }
 
@@ -591,7 +587,7 @@ Node SygusSampler::getRandomValue(TypeNode tn)
       }
       ret = d_env.getRewriter()->rewrite(ret);
       Assert(ret.isConst());
-      Assert(ret.getType()==tn);
+      Assert(ret.getType() == tn);
       return ret;
     }
   }
@@ -689,7 +685,7 @@ Node SygusSampler::getSygusRandomValue(TypeNode tn,
       Trace("sygus-sample-grammar") << "...after rewrite " << ret << std::endl;
       // A rare case where we generate a non-constant value from constant
       // leaves is (/ n 0).
-      if(ret.isConst())
+      if (ret.isConst())
       {
         return ret;
       }

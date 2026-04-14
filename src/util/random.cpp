@@ -1,10 +1,7 @@
 /******************************************************************************
- * Top contributors (to current version):
- *   Aina Niemetz
- *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2025 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -18,6 +15,7 @@
 #include "util/random.h"
 
 #include <cfloat>
+
 #include "base/check.h"
 
 namespace cvc5::internal {
@@ -60,7 +58,7 @@ double Random::pickDouble(double from, double to)
 bool Random::pickWithProb(double probability)
 {
   Assert(probability <= 1);
-  uint64_t p = (uint64_t) (probability * 1000);
+  uint64_t p = (uint64_t)(probability * 1000);
   uint64_t r = pick(0, 999);
   return r < p;
 }
