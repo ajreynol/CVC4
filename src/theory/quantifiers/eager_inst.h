@@ -19,7 +19,6 @@
 #define CVC5__THEORY__QUANTIFIERS__EAGER_INST_H
 
 #include <map>
-#include <memory>
 #include <vector>
 
 #include "smt/env_obj.h"
@@ -29,27 +28,37 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-namespace inst {
-class Trigger;
-class TriggerDatabase;
-}  // namespace inst
+class InstMatch;
 
 /**
- * Eager instantiation scaffolding.
+ * Eager instantiation.
  *
- * The long-term goal for this module is to support an incremental, E-graph
- * driven instantiation flow in the spirit of de Moura/Bjorner's
- * "Efficient E-matching for SMT solvers". The current implementation is a
- * setup pass: it records simple user-pattern metadata, establishes watch lists
- * by operator, and maintains dirty bookkeeping from equality-engine events.
- *
- * In particular, this gives us:
- * - a stable place to store quantifier-local pattern information,
- * - explicit notification requirements for QuantifiersEngine, and
- * - a minimal event queue that later matching code can consume.
+ * This module maintains a small incremental term database that is populated
+ * only from notification events. It uses the resulting indexed terms to drive
+ * a lightweight eager matcher for user-provided patterns.
  */
 class EagerInst : public QuantifiersModule
 {
+  /** A small incremental term database for eager instantiation. */
+  struct EagerTermDatabase
+  {
+    /** Clear the database. */
+    void clear();
+    /**
+     * Add term t to the database.
+     * Returns true if t was newly added.
+     */
+    bool addTerm(Node t, Node op);
+    /** Return the ground terms for operator op, if any. */
+    const std::vector<Node>* getGroundTerms(Node op) const;
+    /** Return the number of ground terms for operator op. */
+    size_t getNumGroundTerms(Node op) const;
+    /** Terms we have already indexed from notifications. */
+    std::map<Node, bool> d_terms;
+    /** Indexed ground terms by match operator. */
+    std::map<Node, std::vector<Node>> d_opTerms;
+  };
+
   /** A simple atomic pattern term we may eventually match eagerly. */
   struct PatternInfo
   {
@@ -67,13 +76,16 @@ class EagerInst : public QuantifiersModule
     bool d_hasRepeatedVar = false;
   };
 
-  /** A multi-pattern / trigger candidate comprising one or more pattern terms. */
+  /** A multi-pattern / trigger candidate comprising one or more pattern terms.
+   */
   struct TriggerInfo
   {
     /** The pattern terms comprising the trigger. */
     std::vector<PatternInfo> d_patterns;
-    /** The backend trigger used for matching. */
-    inst::Trigger* d_trigger = nullptr;
+    /** The proof argument describing this trigger. */
+    Node d_pfArg;
+    /** A stable identifier for this trigger. */
+    uint64_t d_id = 0;
     /** The operators watched for this trigger. */
     std::vector<Node> d_watchedOps;
     /** All instantiation constants covered by the trigger. */
@@ -130,7 +142,8 @@ class EagerInst : public QuantifiersModule
    * This is intended for future, more aggressive eager processing.
    */
   bool needsNotifyMergeTerms() const;
-  /** Whether this module wants recursive asserted-term notifications on facts. */
+  /** Whether this module wants recursive asserted-term notifications on facts.
+   */
   bool needsNotifyAssertedTerms() const;
   /** Whether this module wants direct equality-merge notifications. */
   bool needsNotifyMerges() const;
@@ -150,44 +163,61 @@ class EagerInst : public QuantifiersModule
   bool registerTriggerInfo(Node q, const std::vector<Node>& pats);
   /** Get simple pattern info for pat, returns false if unsupported. */
   bool getPatternInfo(Node q, Node pat, PatternInfo& pinfo) const;
+  /** Index terms reachable from notification term t. */
+  void indexTerms(TNode t);
   /** Index repeated-variable merge dependencies for ground term t. */
   void indexParentOperators(TNode t);
+  /** Add instantiations for trigger ti of quantified formula q. */
+  void addInstantiations(Node q, const TriggerInfo& ti, uint64_t& addedLemmas);
+  /** Recursive helper for addInstantiations. */
+  void addInstantiations(Node q,
+                         const TriggerInfo& ti,
+                         size_t pindex,
+                         InstMatch& m,
+                         std::vector<size_t>& assigned,
+                         uint64_t& addedLemmas);
+  /** Match pattern pat against term t. */
+  bool matchPattern(Node q,
+                    TNode pat,
+                    TNode t,
+                    InstMatch& m,
+                    std::vector<size_t>& assigned) const;
+  /** Add purification lemmas for ground trigger subterms if necessary. */
+  void addGroundTermLemmas(const TriggerInfo& ti, uint64_t& addedLemmas);
   /** Add n to nodes if it is not already present. */
   static void pushBackUnique(std::vector<Node>& nodes, Node n);
   /** Whether trigger tr has ground terms for each watched operator. */
-  bool isTriggerActive(inst::Trigger* tr) const;
+  bool isTriggerActive(uint64_t tr) const;
   /** Mark active triggers watching op as dirty. */
   void markOperatorDirty(Node op);
   /** Mark trigger tr as dirty. */
-  void markTriggerDirty(inst::Trigger* tr);
-  /** Mark q as dirty. */
-  void markQuantifierDirty(Node q);
+  void markTriggerDirty(uint64_t tr);
   /** Whether we currently have pending work. */
   bool hasPendingWork() const;
   /** Clear pending dirty state after a check. */
   void clearPending();
   /** Add trigger to triggers if it is not already present. */
-  static void pushBackUniqueTrigger(std::vector<inst::Trigger*>& triggers,
-                                    inst::Trigger* tr);
+  static void pushBackUniqueTrigger(std::vector<uint64_t>& triggers,
+                                    uint64_t tr);
 
   /** Watch information for quantifiers. */
   std::map<Node, QuantInfo> d_qinfo;
-  /** Trigger database owning the backend trigger objects. */
-  std::unique_ptr<inst::TriggerDatabase> d_trdb;
+  /** Incremental term database for eager instantiation. */
+  EagerTermDatabase d_termDb;
   /** Reverse watch list from operator to quantifiers. */
   std::map<Node, std::vector<Node>> d_opWatchList;
   /** Reverse watch list from operator to triggers. */
-  std::map<Node, std::vector<inst::Trigger*>> d_opTriggerWatchList;
+  std::map<Node, std::vector<uint64_t>> d_opTriggerWatchList;
   /** Reverse watch list from merge-relevant operator to triggers. */
-  std::map<Node, std::vector<inst::Trigger*>> d_mergeOpWatchList;
+  std::map<Node, std::vector<uint64_t>> d_mergeOpWatchList;
   /** Reverse watch list from merge-relevant ground term to triggers. */
-  std::map<Node, std::vector<inst::Trigger*>> d_mergeGroundWatchList;
+  std::map<Node, std::vector<uint64_t>> d_mergeGroundWatchList;
   /** Reverse watch list from parent operator to repeated-variable triggers. */
-  std::map<Node, std::vector<inst::Trigger*>> d_mergeParentOpWatchList;
+  std::map<Node, std::vector<uint64_t>> d_mergeParentOpWatchList;
   /** Trigger owner map. */
-  std::map<inst::Trigger*, Node> d_triggerOwner;
+  std::map<uint64_t, Node> d_triggerOwner;
   /** Root operators watched by each trigger. */
-  std::map<inst::Trigger*, std::vector<Node>> d_triggerOps;
+  std::map<uint64_t, std::vector<Node>> d_triggerOps;
   /** Reverse index from a term to parent operators that contain it. */
   std::map<Node, std::vector<Node>> d_parentOpIndex;
   /** Dirty operators since the last eager-inst check. */
@@ -197,9 +227,11 @@ class EagerInst : public QuantifiersModule
   /** Quantifiers with at least one dirty trigger since the last check. */
   std::map<Node, bool> d_dirtyTriggerQuants;
   /** Dirty triggers since the last eager-inst check. */
-  std::map<inst::Trigger*, bool> d_dirtyTriggers;
+  std::map<uint64_t, bool> d_dirtyTriggers;
   /** Whether some relevant equality merge happened since the last check. */
   bool d_hasPendingMerge;
+  /** The next eager trigger identifier. */
+  uint64_t d_nextTriggerId;
 };
 
 }  // namespace quantifiers
