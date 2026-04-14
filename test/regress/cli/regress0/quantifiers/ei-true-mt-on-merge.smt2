@@ -1,4 +1,4 @@
-; COMMAND-LINE: --eager-inst --no-e-matching
+; COMMAND-LINE: --eager-inst --no-e-matching --no-cbqi
 ; EXPECT: unsat
 (set-logic ALL)
 (declare-fun P (Int Int) Bool)
