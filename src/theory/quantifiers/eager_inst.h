@@ -150,9 +150,13 @@ class EagerInst : public QuantifiersModule
   bool registerTriggerInfo(Node q, const std::vector<Node>& pats);
   /** Get simple pattern info for pat, returns false if unsupported. */
   bool getPatternInfo(Node q, Node pat, PatternInfo& pinfo) const;
+  /** Index repeated-variable merge dependencies for ground term t. */
+  void indexParentOperators(TNode t);
   /** Add n to nodes if it is not already present. */
   static void pushBackUnique(std::vector<Node>& nodes, Node n);
-  /** Mark all quantifiers watching op as dirty. */
+  /** Whether trigger tr has ground terms for each watched operator. */
+  bool isTriggerActive(inst::Trigger* tr) const;
+  /** Mark active triggers watching op as dirty. */
   void markOperatorDirty(Node op);
   /** Mark trigger tr as dirty. */
   void markTriggerDirty(inst::Trigger* tr);
@@ -172,14 +176,20 @@ class EagerInst : public QuantifiersModule
   std::unique_ptr<inst::TriggerDatabase> d_trdb;
   /** Reverse watch list from operator to quantifiers. */
   std::map<Node, std::vector<Node>> d_opWatchList;
+  /** Reverse watch list from operator to triggers. */
+  std::map<Node, std::vector<inst::Trigger*>> d_opTriggerWatchList;
   /** Reverse watch list from merge-relevant operator to triggers. */
   std::map<Node, std::vector<inst::Trigger*>> d_mergeOpWatchList;
   /** Reverse watch list from merge-relevant ground term to triggers. */
   std::map<Node, std::vector<inst::Trigger*>> d_mergeGroundWatchList;
-  /** Triggers that should be revisited on any equality merge. */
-  std::vector<inst::Trigger*> d_mergeAllWatchList;
+  /** Reverse watch list from parent operator to repeated-variable triggers. */
+  std::map<Node, std::vector<inst::Trigger*>> d_mergeParentOpWatchList;
   /** Trigger owner map. */
   std::map<inst::Trigger*, Node> d_triggerOwner;
+  /** Root operators watched by each trigger. */
+  std::map<inst::Trigger*, std::vector<Node>> d_triggerOps;
+  /** Reverse index from a term to parent operators that contain it. */
+  std::map<Node, std::vector<Node>> d_parentOpIndex;
   /** Dirty operators since the last eager-inst check. */
   std::map<Node, bool> d_dirtyOps;
   /** Dirty quantifiers since the last eager-inst check. */

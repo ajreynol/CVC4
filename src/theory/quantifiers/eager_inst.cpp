@@ -56,12 +56,12 @@ void EagerInst::presolve() { clearPending(); }
 
 bool EagerInst::needsCheck(Theory::Effort e)
 {
-  return e >= Theory::EFFORT_STANDARD && hasPendingWork();
+  return e == Theory::EFFORT_STANDARD && hasPendingWork();
 }
 
 void EagerInst::check(Theory::Effort e, QEffort quant_e)
 {
-  if (quant_e != QEFFORT_STANDARD)
+  if (e != Theory::EFFORT_STANDARD || quant_e != QEFFORT_STANDARD)
   {
     return;
   }
@@ -146,7 +146,7 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
 
 void EagerInst::reset_round(Theory::Effort e)
 {
-  if (e < Theory::EFFORT_STANDARD)
+  if (e != Theory::EFFORT_STANDARD)
   {
     return;
   }
@@ -181,9 +181,17 @@ void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 void EagerInst::assertNode(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
-  if (d_qinfo.find(q) != d_qinfo.end())
+  std::map<Node, QuantInfo>::const_iterator it = d_qinfo.find(q);
+  if (it == d_qinfo.end())
   {
-    markQuantifierDirty(q);
+    return;
+  }
+  for (const TriggerInfo& ti : it->second.d_triggers)
+  {
+    if (isTriggerActive(ti.d_trigger))
+    {
+      markTriggerDirty(ti.d_trigger);
+    }
   }
 }
 
@@ -210,6 +218,7 @@ void EagerInst::notifyAssertedTerm(TNode t)
   {
     return;
   }
+  indexParentOperators(t);
   if (d_opWatchList.find(op) != d_opWatchList.end())
   {
     markOperatorDirty(op);
@@ -219,17 +228,13 @@ void EagerInst::notifyAssertedTerm(TNode t)
 void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
 {
   if (d_mergeOpWatchList.empty() && d_mergeGroundWatchList.empty()
-      && d_mergeAllWatchList.empty())
+      && d_mergeParentOpWatchList.empty())
   {
     return;
   }
   bool marked = false;
-  for (inst::Trigger* tr : d_mergeAllWatchList)
-  {
-    markTriggerDirty(tr);
-    marked = true;
-  }
-  if (!d_mergeOpWatchList.empty() || !d_mergeGroundWatchList.empty())
+  if (!d_mergeOpWatchList.empty() || !d_mergeGroundWatchList.empty()
+      || !d_mergeParentOpWatchList.empty())
   {
     Node rep = getRepresentative(t1);
     eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
@@ -266,8 +271,11 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
         {
           for (inst::Trigger* tr : ito->second)
           {
-            markTriggerDirty(tr);
-            marked = true;
+            if (isTriggerActive(tr))
+            {
+              markTriggerDirty(tr);
+              marked = true;
+            }
           }
         }
       }
@@ -277,8 +285,33 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
       {
         for (inst::Trigger* tr : itg->second)
         {
-          markTriggerDirty(tr);
-          marked = true;
+          if (isTriggerActive(tr))
+          {
+            markTriggerDirty(tr);
+            marked = true;
+          }
+        }
+      }
+      std::map<Node, std::vector<Node>>::const_iterator itp =
+          d_parentOpIndex.find(cur);
+      if (itp != d_parentOpIndex.end())
+      {
+        for (const Node& pop : itp->second)
+        {
+          std::map<Node, std::vector<inst::Trigger*>>::const_iterator itmp =
+              d_mergeParentOpWatchList.find(pop);
+          if (itmp == d_mergeParentOpWatchList.end())
+          {
+            continue;
+          }
+          for (inst::Trigger* tr : itmp->second)
+          {
+            if (isTriggerActive(tr))
+            {
+              markTriggerDirty(tr);
+              marked = true;
+            }
+          }
         }
       }
       if (!cur.isClosure())
@@ -401,6 +434,7 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
     }
   }
   d_triggerOwner[ti.d_trigger] = q;
+  d_triggerOps[ti.d_trigger] = ti.d_watchedOps;
   for (const Node& op : ti.d_mergeOps)
   {
     pushBackUniqueTrigger(d_mergeOpWatchList[op], ti.d_trigger);
@@ -411,13 +445,17 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
   }
   if (ti.d_needsAnyMerge)
   {
-    pushBackUniqueTrigger(d_mergeAllWatchList, ti.d_trigger);
+    for (const Node& op : ti.d_watchedOps)
+    {
+      pushBackUniqueTrigger(d_mergeParentOpWatchList[op], ti.d_trigger);
+    }
   }
   qi.d_triggers.push_back(ti);
   for (const Node& op : ti.d_watchedOps)
   {
     pushBackUnique(qi.d_watchedOps, op);
     pushBackUnique(d_opWatchList[op], q);
+    pushBackUniqueTrigger(d_opTriggerWatchList[op], ti.d_trigger);
   }
   return true;
 }
@@ -475,6 +513,32 @@ bool EagerInst::getPatternInfo(Node q, Node pat, PatternInfo& pinfo) const
   return !pinfo.d_vars.empty();
 }
 
+void EagerInst::indexParentOperators(TNode t)
+{
+  Node op = getTermDatabase()->getMatchOperator(t);
+  if (op.isNull())
+  {
+    return;
+  }
+  std::unordered_set<TNode> visited;
+  std::vector<TNode> visit;
+  visit.insert(visit.end(), t.begin(), t.end());
+  while (!visit.empty())
+  {
+    TNode cur = visit.back();
+    visit.pop_back();
+    if (!visited.insert(cur).second)
+    {
+      continue;
+    }
+    pushBackUnique(d_parentOpIndex[cur], op);
+    if (!cur.isClosure())
+    {
+      visit.insert(visit.end(), cur.begin(), cur.end());
+    }
+  }
+}
+
 void EagerInst::pushBackUnique(std::vector<Node>& nodes, Node n)
 {
   if (std::find(nodes.begin(), nodes.end(), n) == nodes.end())
@@ -483,17 +547,39 @@ void EagerInst::pushBackUnique(std::vector<Node>& nodes, Node n)
   }
 }
 
+bool EagerInst::isTriggerActive(inst::Trigger* tr) const
+{
+  std::map<inst::Trigger*, std::vector<Node>>::const_iterator it =
+      d_triggerOps.find(tr);
+  if (it == d_triggerOps.end())
+  {
+    return false;
+  }
+  for (const Node& op : it->second)
+  {
+    if (getTermDatabase()->getNumGroundTerms(op) == 0)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
 void EagerInst::markOperatorDirty(Node op)
 {
   d_dirtyOps[op] = true;
-  std::map<Node, std::vector<Node>>::const_iterator it = d_opWatchList.find(op);
-  if (it == d_opWatchList.end())
+  std::map<Node, std::vector<inst::Trigger*>>::const_iterator it =
+      d_opTriggerWatchList.find(op);
+  if (it == d_opTriggerWatchList.end())
   {
     return;
   }
-  for (const Node& q : it->second)
+  for (inst::Trigger* tr : it->second)
   {
-    markQuantifierDirty(q);
+    if (isTriggerActive(tr))
+    {
+      markTriggerDirty(tr);
+    }
   }
 }
 
