@@ -15,10 +15,14 @@
 
 #include "theory/quantifiers/eager_inst.h"
 
+#include <algorithm>
+#include <map>
+
 #include "expr/attribute.h"
 #include "expr/node_algorithm.h"
 #include "options/base_options.h"
 #include "options/quantifiers_options.h"
+#include "theory/quantifiers/ematching/trigger_term_info.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/term_util.h"
@@ -34,18 +38,17 @@ EagerInst::EagerInst(Env& env,
                      QuantifiersInferenceManager& qim,
                      QuantifiersRegistry& qr,
                      TermRegistry& tr)
-    : QuantifiersModule(env, qs, qim, qr, tr)
+    : QuantifiersModule(env, qs, qim, qr, tr), d_hasPendingMerge(false)
 {
 }
 
 EagerInst::~EagerInst() {}
 
-void EagerInst::presolve() {}
+void EagerInst::presolve() { clearPending(); }
 
 bool EagerInst::needsCheck(Theory::Effort e)
 {
-  // TODO: determine when to check
-  return false;
+  return e >= Theory::EFFORT_FULL && hasPendingWork();
 }
 
 void EagerInst::check(Theory::Effort e, QEffort quant_e)
@@ -54,29 +57,77 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
   {
     return;
   }
-  // TODO: maybe use this checkpoint to flush buffers?
+  beginCallDebug();
+  if (TraceIsOn("eager-inst"))
+  {
+    Trace("eager-inst") << "EagerInst::check, effort = " << e
+                        << ", #dirtyOps = " << d_dirtyOps.size()
+                        << ", #dirtyQuants = " << d_dirtyQuants.size()
+                        << ", pendingMerge = " << d_hasPendingMerge
+                        << std::endl;
+    for (const std::pair<const Node, bool>& dq : d_dirtyQuants)
+    {
+      std::map<Node, QuantInfo>::const_iterator it = d_qinfo.find(dq.first);
+      if (it == d_qinfo.end())
+      {
+        continue;
+      }
+      size_t ngt = 0;
+      for (const Node& op : it->second.d_watchedOps)
+      {
+        ngt += getTermDatabase()->getNumGroundTerms(op);
+      }
+      Trace("eager-inst") << "  dirty quant " << dq.first << ", triggers="
+                          << it->second.d_triggers.size()
+                          << ", watchedOps=" << it->second.d_watchedOps.size()
+                          << ", groundTerms=" << ngt << std::endl;
+    }
+  }
+  clearPending();
+  endCallDebug();
 }
 
-void EagerInst::reset_round(Theory::Effort e) {}
+void EagerInst::reset_round(Theory::Effort e)
+{
+  if (e < Theory::EFFORT_FULL || !d_hasPendingMerge)
+  {
+    return;
+  }
+  // A merge can potentially change the viability of every stored trigger. We
+  // conservatively mark all watched quantifiers dirty and let later matching
+  // code decide what to revisit.
+  for (const std::pair<const Node, QuantInfo>& qi : d_qinfo)
+  {
+    markQuantifierDirty(qi.first);
+  }
+}
 
 void EagerInst::preRegisterQuantifier(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
-  // TODO: maybe determine watch information?
+  registerWatchInfo(q);
 }
 
 void EagerInst::ppNotifyAssertions(const std::vector<Node>& assertions)
 {
-  // TODO: set up watched ops?
+  if (TraceIsOn("eager-inst-debug"))
+  {
+    Trace("eager-inst-debug")
+        << "EagerInst::ppNotifyAssertions, #assertions = " << assertions.size()
+        << ", watchedOps = " << d_opWatchList.size() << std::endl;
+  }
 }
 
 void EagerInst::assertNode(Node q)
 {
   Assert(q.getKind() == Kind::FORALL);
-  // TODO: maybe determine watch information?
+  if (d_qinfo.find(q) != d_qinfo.end())
+  {
+    markQuantifierDirty(q);
+  }
 }
 
-void EagerInst::checkOwnership(Node q)
+void EagerInst::checkOwnership(CVC5_UNUSED Node q)
 {
   // TODO: maybe take full ownership if the quantified formula has a trivial
   // trigger which we are complete for?
@@ -84,18 +135,171 @@ void EagerInst::checkOwnership(Node q)
 
 std::string EagerInst::identify() const { return "eager-inst"; }
 
+bool EagerInst::needsNotifyNewClass() const { return true; }
+
+bool EagerInst::needsNotifyMergeTerms() const { return false; }
+
+bool EagerInst::needsNotifyAssertedTerms() const { return false; }
+
+bool EagerInst::needsNotifyMerges() const { return true; }
+
 void EagerInst::notifyAssertedTerm(TNode t)
 {
   if (t.getKind() != Kind::APPLY_UF)
   {
     return;
   }
-  // TODO: may impact matches
+  Node op = t.getOperator();
+  if (d_opWatchList.find(op) != d_opWatchList.end())
+  {
+    markOperatorDirty(op);
+  }
 }
 
-void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
+void EagerInst::eqNotifyMerge(CVC5_UNUSED TNode t1, CVC5_UNUSED TNode t2)
 {
-  // TODO: may impact matches
+  if (d_opWatchList.empty())
+  {
+    return;
+  }
+  // Any equality merge may enable new matches through congruence or ancestor
+  // terms, so we conservatively remember that a merge happened. Later work can
+  // refine this to operator- or path-based filtering.
+  d_hasPendingMerge = true;
+}
+
+void EagerInst::registerWatchInfo(Node q)
+{
+  if (q.getNumChildren() != 3)
+  {
+    return;
+  }
+  Node pats = d_qreg.substituteBoundVariablesToInstConstants(q[2], q);
+  bool changed = false;
+  for (const Node& pat : pats)
+  {
+    if (pat.getKind() != Kind::INST_PATTERN)
+    {
+      continue;
+    }
+    changed = registerTriggerInfo(q, std::vector<Node>(pat.begin(), pat.end()))
+              || changed;
+  }
+  if (TraceIsOn("eager-inst-debug") && changed)
+  {
+    std::map<Node, QuantInfo>::const_iterator it = d_qinfo.find(q);
+    Assert(it != d_qinfo.end());
+    Trace("eager-inst-debug") << "Registered eager-inst watch info for " << q
+                              << ", triggers = " << it->second.d_triggers.size()
+                              << ", watchedOps = " << it->second.d_watchedOps
+                              << std::endl;
+  }
+}
+
+bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
+{
+  if (pats.empty())
+  {
+    return false;
+  }
+  TriggerInfo ti;
+  for (const Node& pat : pats)
+  {
+    PatternInfo pi;
+    if (!getPatternInfo(q, pat, pi))
+    {
+      return false;
+    }
+    ti.d_patterns.push_back(pi);
+    pushBackUnique(ti.d_watchedOps, pi.d_op);
+    for (const Node& v : pi.d_vars)
+    {
+      pushBackUnique(ti.d_vars, v);
+    }
+  }
+  if (ti.d_vars.size() != d_qreg.getNumInstantiationConstants(q))
+  {
+    return false;
+  }
+  QuantInfo& qi = d_qinfo[q];
+  qi.d_triggers.push_back(ti);
+  for (const Node& op : ti.d_watchedOps)
+  {
+    pushBackUnique(qi.d_watchedOps, op);
+    pushBackUnique(d_opWatchList[op], q);
+  }
+  return true;
+}
+
+bool EagerInst::getPatternInfo(Node q, Node pat, PatternInfo& pinfo) const
+{
+  if (!inst::TriggerTermInfo::isSimpleTrigger(pat) || pat.getKind() != Kind::APPLY_UF)
+  {
+    return false;
+  }
+  pinfo.d_pattern = pat;
+  pinfo.d_op = pat.getOperator();
+  TermUtil::computeInstConstContainsForQuant(q, pat, pinfo.d_vars);
+  std::map<Node, size_t> counts;
+  std::vector<Node> visit;
+  visit.push_back(pat);
+  while (!visit.empty())
+  {
+    Node cur = visit.back();
+    visit.pop_back();
+    if (cur.getKind() == Kind::INST_CONSTANT
+        && TermUtil::getInstConstAttr(cur) == q)
+    {
+      counts[cur]++;
+      if (counts[cur] > 1)
+      {
+        pinfo.d_hasRepeatedVar = true;
+      }
+      continue;
+    }
+    if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
+    {
+      visit.push_back(cur.getOperator());
+    }
+    visit.insert(visit.end(), cur.begin(), cur.end());
+  }
+  return !pinfo.d_vars.empty();
+}
+
+void EagerInst::pushBackUnique(std::vector<Node>& nodes, Node n)
+{
+  if (std::find(nodes.begin(), nodes.end(), n) == nodes.end())
+  {
+    nodes.push_back(n);
+  }
+}
+
+void EagerInst::markOperatorDirty(Node op)
+{
+  d_dirtyOps[op] = true;
+  std::map<Node, std::vector<Node>>::const_iterator it = d_opWatchList.find(op);
+  if (it == d_opWatchList.end())
+  {
+    return;
+  }
+  for (const Node& q : it->second)
+  {
+    markQuantifierDirty(q);
+  }
+}
+
+void EagerInst::markQuantifierDirty(Node q) { d_dirtyQuants[q] = true; }
+
+bool EagerInst::hasPendingWork() const
+{
+  return d_hasPendingMerge || !d_dirtyOps.empty() || !d_dirtyQuants.empty();
+}
+
+void EagerInst::clearPending()
+{
+  d_dirtyOps.clear();
+  d_dirtyQuants.clear();
+  d_hasPendingMerge = false;
 }
 
 }  // namespace quantifiers

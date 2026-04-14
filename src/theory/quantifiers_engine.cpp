@@ -128,11 +128,10 @@ void QuantifiersEngine::finishInit(TheoryEngine* te)
   if (d_qmodules->d_ei != nullptr)
   {
     d_hasEagerInst = true;
-    // TODO: determine which notifications are needed
-    d_eagerInstNewEqc = false;
-    d_eagerInstEqcMerge = false;
-    d_eagerInstAssert = false;
-    d_eagerTrackMerge = false;
+    d_eagerInstNewEqc = d_qmodules->d_ei->needsNotifyNewClass();
+    d_eagerInstEqcMerge = d_qmodules->d_ei->needsNotifyMergeTerms();
+    d_eagerInstAssert = d_qmodules->d_ei->needsNotifyAssertedTerms();
+    d_eagerTrackMerge = d_qmodules->d_ei->needsNotifyMerges();
   }
   // handle any circular dependencies
 
