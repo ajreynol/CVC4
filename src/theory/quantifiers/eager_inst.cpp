@@ -78,10 +78,8 @@ void EagerInst::assertNode(Node q)
 
 void EagerInst::checkOwnership(Node q)
 {
-  if (d_ownedQuants.find(q) != d_ownedQuants.end())
-  {
-    d_qreg.setOwner(q, this, 2);
-  }
+  // TODO: maybe take full ownership if the quantified formula has a trivial
+  // trigger which we are complete for?
 }
 
 std::string EagerInst::identify() const { return "eager-inst"; }

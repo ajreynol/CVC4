@@ -92,8 +92,14 @@ class QuantifiersEngine : protected EnvObj
   void assertQuantifier(Node q, bool pol);
   /** notification when master equality engine is updated */
   void eqNotifyNewClass(TNode t);
-  /** notification when master equality engine merges two classes*/
+  /** notification when master equality engine is updated */
   void eqNotifyMerge(TNode t1, TNode t2);
+  /**  */
+  void eqNotifyDisequal(TNode t1, TNode t2);
+  /** */
+  void eqNotifyConstantTermMerge(TNode t1, TNode t2);
+  /** */
+  void preNotifyFact(TNode fact);
   /** mark relevant quantified formula, this will indicate it should be checked
    * before the others */
   void markRelevant(Node q);
@@ -172,6 +178,9 @@ class QuantifiersEngine : protected EnvObj
   void registerQuantifierInternal(Node q);
   /** reduceQuantifier, return true if reduced */
   bool reduceQuantifier(Node q);
+  /** */
+  void notifyAssertedTermRec(TNode t);
+  void notifyAssertedTerm(TNode t);
 
   /** The quantifiers state object */
   quantifiers::QuantifiersState& d_qstate;
@@ -207,7 +216,16 @@ class QuantifiersEngine : protected EnvObj
   BoolMap d_quants_red;
   /** Number of rounds we have instantiated */
   uint32_t d_numInstRoundsLemma;
-}; /* class QuantifiersEngine */
+  /** Track asserted terms? */
+  bool d_hasEagerInst;
+  /** */
+  bool d_eagerInstNewEqc;
+  bool d_eagerInstEqcMerge;
+  bool d_eagerInstAssert;
+  bool d_eagerTrackMerge;
+  /** quantifiers pre-registered */
+  NodeSet d_assertedTerms;
+};
 
 }  // namespace theory
 }  // namespace cvc5::internal

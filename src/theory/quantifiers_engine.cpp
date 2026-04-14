@@ -59,7 +59,13 @@ QuantifiersEngine::QuantifiersEngine(Env& env,
       d_model(nullptr),
       d_quants_prereg(userContext()),
       d_quants_red(userContext()),
-      d_numInstRoundsLemma(0)
+      d_numInstRoundsLemma(0),
+      d_hasEagerInst(false),
+      d_eagerInstNewEqc(false),
+      d_eagerInstEqcMerge(false),
+      d_eagerInstAssert(false),
+      d_eagerTrackMerge(false),
+      d_assertedTerms(context())
 {
   options::FmfMbqiMode mmode = options().quantifiers.fmfMbqiMode;
   Trace("quant-init-debug")
@@ -119,7 +125,15 @@ void QuantifiersEngine::finishInit(TheoryEngine* te)
   {
     d_util.push_back(d_qmodules->d_rel_dom.get());
   }
-
+  if (d_qmodules->d_ei != nullptr)
+  {
+    d_hasEagerInst = true;
+    // TODO: determine which notifications are needed
+    d_eagerInstNewEqc = false;
+    d_eagerInstEqcMerge = false;
+    d_eagerInstAssert = false;
+    d_eagerTrackMerge = false;
+  }
   // handle any circular dependencies
 
   // quantifiers bound inference needs to be informed of the bounded integers
@@ -714,11 +728,73 @@ void QuantifiersEngine::assertQuantifier(Node f, bool pol)
 void QuantifiersEngine::eqNotifyNewClass(TNode t)
 {
   d_treg.eqNotifyNewClass(t);
+  if (d_eagerInstNewEqc)
+  {
+    notifyAssertedTerm(t);
+  }
 }
 
 void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
 {
   d_treg.eqNotifyMerge(t1, t2);
+  if (d_eagerInstEqcMerge)
+  {
+    for (size_t i = 0; i < 2; i++)
+    {
+      TNode t = i == 0 ? t1 : t2;
+      notifyAssertedTermRec(t);
+    }
+  }
+  if (d_eagerTrackMerge)
+  {
+    Assert(d_qmodules->d_ei != nullptr);
+    d_qmodules->d_ei->eqNotifyMerge(t1, t2);
+  }
+}
+
+void QuantifiersEngine::notifyAssertedTermRec(TNode t)
+{
+  NodeSet::const_iterator it;
+  std::vector<TNode> visit;
+  TNode cur;
+  visit.push_back(t);
+  do
+  {
+    cur = visit.back();
+    visit.pop_back();
+    if (cur.isClosure())
+    {
+      continue;
+    }
+    it = d_assertedTerms.find(cur);
+    if (it != d_assertedTerms.end())
+    {
+      continue;
+    }
+    d_assertedTerms.insert(cur);
+    notifyAssertedTerm(cur);
+    visit.insert(visit.end(), cur.begin(), cur.end());
+  } while (!visit.empty());
+}
+
+void QuantifiersEngine::notifyAssertedTerm(TNode t)
+{
+  if (d_qmodules->d_ei != nullptr)
+  {
+    d_qmodules->d_ei->notifyAssertedTerm(t);
+  }
+}
+
+void QuantifiersEngine::eqNotifyDisequal(TNode t1, TNode t2) {}
+
+void QuantifiersEngine::eqNotifyConstantTermMerge(TNode t1, TNode t2) {}
+
+void QuantifiersEngine::preNotifyFact(TNode fact)
+{
+  if (d_eagerInstAssert)
+  {
+    notifyAssertedTermRec(fact);
+  }
 }
 
 void QuantifiersEngine::markRelevant(Node q) { d_model->markRelevant(q); }

@@ -50,15 +50,11 @@ class MasterNotifyClass : public theory::eq::EqualityEngineNotify
     return true;
   }
   void eqNotifyConstantTermMerge(CVC5_UNUSED TNode t1,
-                                 CVC5_UNUSED TNode t2) override
-  {
-  }
+                                 CVC5_UNUSED TNode t2) override;
   void eqNotifyMerge(CVC5_UNUSED TNode t1, CVC5_UNUSED TNode t2) override;
   void eqNotifyDisequal(CVC5_UNUSED TNode t1,
                         CVC5_UNUSED TNode t2,
-                        CVC5_UNUSED TNode reason) override
-  {
-  }
+                        CVC5_UNUSED TNode reason) override;
 
  private:
   /** Pointer to quantifiers engine */

@@ -1804,6 +1804,14 @@ name   = "Quantifiers"
   help = "Only infer ground definitions for functions that result in triggers for all free variables."
 
 [[option]]
+  name       = "eagerInst"
+  category   = "expert"
+  long       = "eager-inst"
+  type       = "bool"
+  default    = "false"
+  help       = "do eager instantiation"
+
+[[option]]
   name       = "quantDynamicSplit"
   category   = "regular"
   long       = "quant-dsplit=MODE"
