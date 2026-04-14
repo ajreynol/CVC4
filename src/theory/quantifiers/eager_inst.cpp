@@ -56,7 +56,7 @@ void EagerInst::presolve() { clearPending(); }
 
 bool EagerInst::needsCheck(Theory::Effort e)
 {
-  return e >= Theory::EFFORT_FULL && hasPendingWork();
+  return e >= Theory::EFFORT_STANDARD && hasPendingWork();
 }
 
 void EagerInst::check(Theory::Effort e, QEffort quant_e)
@@ -146,7 +146,7 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
 
 void EagerInst::reset_round(Theory::Effort e)
 {
-  if (e < Theory::EFFORT_FULL)
+  if (e < Theory::EFFORT_STANDARD)
   {
     return;
   }
