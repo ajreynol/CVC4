@@ -38,43 +38,6 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-void EagerInst::EagerTermDatabase::clear()
-{
-  d_terms.clear();
-  d_opTerms.clear();
-}
-
-bool EagerInst::EagerTermDatabase::addTerm(Node t, Node op)
-{
-  if (d_terms.find(t) != d_terms.end())
-  {
-    return false;
-  }
-  d_terms[t] = true;
-  if (!op.isNull())
-  {
-    d_opTerms[op].push_back(t);
-  }
-  return true;
-}
-
-const std::vector<Node>* EagerInst::EagerTermDatabase::getGroundTerms(
-    Node op) const
-{
-  std::map<Node, std::vector<Node>>::const_iterator it = d_opTerms.find(op);
-  if (it == d_opTerms.end())
-  {
-    return nullptr;
-  }
-  return &it->second;
-}
-
-size_t EagerInst::EagerTermDatabase::getNumGroundTerms(Node op) const
-{
-  const std::vector<Node>* gts = getGroundTerms(op);
-  return gts == nullptr ? 0 : gts->size();
-}
-
 EagerInst::EagerInst(Env& env,
                      QuantifiersState& qs,
                      QuantifiersInferenceManager& qim,

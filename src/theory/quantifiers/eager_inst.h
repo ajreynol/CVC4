@@ -22,6 +22,8 @@
 #include <vector>
 
 #include "smt/env_obj.h"
+#include "theory/quantifiers/eager/eager_info.h"
+#include "theory/quantifiers/eager/eager_term_database.h"
 #include "theory/quantifiers/quant_module.h"
 
 namespace cvc5::internal {
@@ -39,74 +41,10 @@ class InstMatch;
  */
 class EagerInst : public QuantifiersModule
 {
-  /** A small incremental term database for eager instantiation. */
-  struct EagerTermDatabase
-  {
-    /** Clear the database. */
-    void clear();
-    /**
-     * Add term t to the database.
-     * Returns true if t was newly added.
-     */
-    bool addTerm(Node t, Node op);
-    /** Return the ground terms for operator op, if any. */
-    const std::vector<Node>* getGroundTerms(Node op) const;
-    /** Return the number of ground terms for operator op. */
-    size_t getNumGroundTerms(Node op) const;
-    /** Terms we have already indexed from notifications. */
-    std::map<Node, bool> d_terms;
-    /** Indexed ground terms by match operator. */
-    std::map<Node, std::vector<Node>> d_opTerms;
-  };
-
-  /** A simple atomic pattern term we may eventually match eagerly. */
-  struct PatternInfo
-  {
-    /** The pattern in instantiation-constant form. */
-    Node d_pattern;
-    /** The match operator of the pattern. */
-    Node d_op;
-    /** Instantiation constants occurring in the pattern. */
-    std::vector<Node> d_vars;
-    /** Nested match operators whose equivalence classes can affect matching. */
-    std::vector<Node> d_mergeOps;
-    /** Ground subterms whose equivalence classes can affect matching. */
-    std::vector<Node> d_groundTerms;
-    /** Whether the pattern repeats one of its instantiation constants. */
-    bool d_hasRepeatedVar = false;
-  };
-
-  /** A multi-pattern / trigger candidate comprising one or more pattern terms.
-   */
-  struct TriggerInfo
-  {
-    /** The pattern terms comprising the trigger. */
-    std::vector<PatternInfo> d_patterns;
-    /** The proof argument describing this trigger. */
-    Node d_pfArg;
-    /** A stable identifier for this trigger. */
-    uint64_t d_id = 0;
-    /** The operators watched for this trigger. */
-    std::vector<Node> d_watchedOps;
-    /** All instantiation constants covered by the trigger. */
-    std::vector<Node> d_vars;
-    /** Nested match operators watched for equality merges. */
-    std::vector<Node> d_mergeOps;
-    /** Ground subterms watched for equality merges. */
-    std::vector<Node> d_groundTerms;
-    /** Whether any equality merge can affect this trigger. */
-    bool d_needsAnyMerge = false;
-  };
-
-  /** Quantifier-local eager-inst metadata. */
-  struct QuantInfo
-  {
-    /** Trigger candidates extracted from its user patterns. */
-    std::vector<TriggerInfo> d_triggers;
-    /** Operators watched by any trigger candidate. */
-    std::vector<Node> d_watchedOps;
-    bool empty() const { return d_triggers.empty(); }
-  };
+  using EagerTermDatabase = eager::TermDatabase;
+  using PatternInfo = eager::PatternInfo;
+  using TriggerInfo = eager::TriggerInfo;
+  using QuantInfo = eager::QuantInfo;
 
  public:
   EagerInst(Env& env,
