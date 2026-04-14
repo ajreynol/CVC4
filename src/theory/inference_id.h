@@ -360,6 +360,8 @@ enum class InferenceId
   QUANTIFIERS_INST_E_MATCHING_VAR_GEN,
   // E-matching based on relational triggers
   QUANTIFIERS_INST_E_MATCHING_RELATIONAL,
+  // eager instantiation using the E-matching backend
+  QUANTIFIERS_INST_EAGER_INST,
   // conflicting instantiation from conflict-based instantiation
   QUANTIFIERS_INST_CBQI_CONFLICT,
   // propagating instantiation from conflict-based instantiation

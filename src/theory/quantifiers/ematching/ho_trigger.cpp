@@ -40,8 +40,10 @@ HigherOrderTrigger::HigherOrderTrigger(
     Node q,
     std::vector<Node>& nodes,
     std::map<Node, std::vector<Node> >& ho_apps,
-    bool isUser)
-    : Trigger(env, qs, qim, qr, tr, q, nodes, isUser), d_ho_var_apps(ho_apps)
+    bool isUser,
+    InferenceId iid)
+    : Trigger(env, qs, qim, qr, tr, q, nodes, isUser, iid),
+      d_ho_var_apps(ho_apps)
 {
   NodeManager* nm = nodeManager();
   // process the higher-order variable applications
@@ -387,7 +389,10 @@ bool HigherOrderTrigger::sendInstantiation(std::vector<Node>& m,
   {
     // we now have an instantiation to try
     return d_qim.getInstantiate()->addInstantiation(
-        d_quant, m, InferenceId::QUANTIFIERS_INST_E_MATCHING_HO);
+        d_quant,
+        m,
+        getInstantiationInferenceId(
+            InferenceId::QUANTIFIERS_INST_E_MATCHING_HO));
   }
   else
   {

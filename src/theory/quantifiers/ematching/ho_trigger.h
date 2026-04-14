@@ -97,7 +97,8 @@ class HigherOrderTrigger : public Trigger
                      Node q,
                      std::vector<Node>& nodes,
                      std::map<Node, std::vector<Node> >& ho_apps,
-                     bool isUser = false);
+                     bool isUser = false,
+                     InferenceId iid = InferenceId::UNKNOWN);
   virtual ~HigherOrderTrigger();
 
   /** Collect higher order var apply terms

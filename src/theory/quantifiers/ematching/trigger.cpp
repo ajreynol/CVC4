@@ -47,13 +47,15 @@ Trigger::Trigger(Env& env,
                  TermRegistry& tr,
                  Node q,
                  std::vector<Node>& nodes,
-                 bool isUser)
+                 bool isUser,
+                 InferenceId iid)
     : EnvObj(env),
       d_qstate(qs),
       d_qim(qim),
       d_qreg(qr),
       d_treg(tr),
       d_quant(q),
+      d_instId(iid),
       d_instMatch(env, qs, tr, q)
 {
   // set evaluator mode to "no entail"
@@ -184,8 +186,13 @@ uint64_t Trigger::addInstantiations()
 
 bool Trigger::sendInstantiation(std::vector<Node>& m)
 {
-  InferenceId id = d_mg->getInferenceId();
+  InferenceId id = getInstantiationInferenceId(d_mg->getInferenceId());
   return d_qim.getInstantiate()->addInstantiation(d_quant, m, id, d_trNode);
+}
+
+InferenceId Trigger::getInstantiationInferenceId(InferenceId iid) const
+{
+  return d_instId == InferenceId::UNKNOWN ? iid : d_instId;
 }
 
 int Trigger::getActiveScore() { return d_mg->getActiveScore(); }

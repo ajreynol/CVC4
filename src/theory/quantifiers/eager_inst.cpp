@@ -292,7 +292,13 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
     return false;
   }
   ti.d_trigger = d_trdb->mkTrigger(
-      q, pats, true, inst::TriggerDatabase::TR_GET_OLD, 0, true);
+      q,
+      pats,
+      true,
+      inst::TriggerDatabase::TR_GET_OLD,
+      0,
+      true,
+      InferenceId::QUANTIFIERS_INST_EAGER_INST);
   if (ti.d_trigger == nullptr)
   {
     return false;
