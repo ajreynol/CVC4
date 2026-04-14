@@ -22,7 +22,11 @@
 #include "expr/node_algorithm.h"
 #include "options/base_options.h"
 #include "options/quantifiers_options.h"
+#include "theory/quantifiers/ematching/pattern_term_selector.h"
+#include "theory/quantifiers/ematching/trigger.h"
+#include "theory/quantifiers/ematching/trigger_database.h"
 #include "theory/quantifiers/ematching/trigger_term_info.h"
+#include "theory/quantifiers/first_order_model.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/term_util.h"
@@ -38,7 +42,9 @@ EagerInst::EagerInst(Env& env,
                      QuantifiersInferenceManager& qim,
                      QuantifiersRegistry& qr,
                      TermRegistry& tr)
-    : QuantifiersModule(env, qs, qim, qr, tr), d_hasPendingMerge(false)
+    : QuantifiersModule(env, qs, qim, qr, tr),
+      d_trdb(new inst::TriggerDatabase(env, qs, qim, qr, tr)),
+      d_hasPendingMerge(false)
 {
 }
 
@@ -58,6 +64,7 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
     return;
   }
   beginCallDebug();
+  FirstOrderModel* fm = d_treg.getModel();
   if (TraceIsOn("eager-inst"))
   {
     Trace("eager-inst") << "EagerInst::check, effort = " << e
@@ -83,13 +90,58 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
                           << ", groundTerms=" << ngt << std::endl;
     }
   }
+  for (const std::pair<const Node, bool>& dq : d_dirtyQuants)
+  {
+    Node q = dq.first;
+    if (!d_qreg.hasOwnership(q, this) || !fm->isQuantifierAsserted(q)
+        || !fm->isQuantifierActive(q))
+    {
+      continue;
+    }
+    std::map<Node, QuantInfo>::iterator it = d_qinfo.find(q);
+    if (it == d_qinfo.end())
+    {
+      continue;
+    }
+    for (TriggerInfo& ti : it->second.d_triggers)
+    {
+      if (ti.d_trigger == nullptr)
+      {
+        continue;
+      }
+      ti.d_trigger->reset(Node::null());
+      ti.d_trigger->addInstantiations();
+      if (d_qstate.isInConflict())
+      {
+        break;
+      }
+    }
+    if (d_qstate.isInConflict())
+    {
+      break;
+    }
+  }
   clearPending();
   endCallDebug();
 }
 
 void EagerInst::reset_round(Theory::Effort e)
 {
-  if (e < Theory::EFFORT_FULL || !d_hasPendingMerge)
+  if (e < Theory::EFFORT_FULL)
+  {
+    return;
+  }
+  for (std::pair<const Node, QuantInfo>& qi : d_qinfo)
+  {
+    for (TriggerInfo& ti : qi.second.d_triggers)
+    {
+      if (ti.d_trigger != nullptr)
+      {
+        ti.d_trigger->resetInstantiationRound();
+      }
+    }
+  }
+  if (!d_hasPendingMerge)
   {
     return;
   }
@@ -145,11 +197,11 @@ bool EagerInst::needsNotifyMerges() const { return true; }
 
 void EagerInst::notifyAssertedTerm(TNode t)
 {
-  if (t.getKind() != Kind::APPLY_UF)
+  Node op = getTermDatabase()->getMatchOperator(t);
+  if (op.isNull())
   {
     return;
   }
-  Node op = t.getOperator();
   if (d_opWatchList.find(op) != d_opWatchList.end())
   {
     markOperatorDirty(op);
@@ -174,6 +226,7 @@ void EagerInst::registerWatchInfo(Node q)
   {
     return;
   }
+  inst::PatternTermSelector pts(options(), q, options::TriggerSelMode::ALL);
   Node pats = d_qreg.substituteBoundVariablesToInstConstants(q[2], q);
   bool changed = false;
   for (const Node& pat : pats)
@@ -182,8 +235,25 @@ void EagerInst::registerWatchInfo(Node q)
     {
       continue;
     }
-    changed = registerTriggerInfo(q, std::vector<Node>(pat.begin(), pat.end()))
-              || changed;
+    std::vector<Node> nodes;
+    for (const Node& p : pat)
+    {
+      if (std::find(nodes.begin(), nodes.end(), p) != nodes.end())
+      {
+        continue;
+      }
+      Node pu = pts.getIsUsableTrigger(p, q);
+      if (pu.isNull())
+      {
+        nodes.clear();
+        break;
+      }
+      nodes.push_back(pu);
+    }
+    if (!nodes.empty())
+    {
+      changed = registerTriggerInfo(q, nodes) || changed;
+    }
   }
   if (TraceIsOn("eager-inst-debug") && changed)
   {
@@ -221,7 +291,20 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
   {
     return false;
   }
+  ti.d_trigger = d_trdb->mkTrigger(
+      q, pats, true, inst::TriggerDatabase::TR_GET_OLD, 0, true);
+  if (ti.d_trigger == nullptr)
+  {
+    return false;
+  }
   QuantInfo& qi = d_qinfo[q];
+  for (const TriggerInfo& qe : qi.d_triggers)
+  {
+    if (qe.d_trigger == ti.d_trigger)
+    {
+      return false;
+    }
+  }
   qi.d_triggers.push_back(ti);
   for (const Node& op : ti.d_watchedOps)
   {
@@ -233,12 +316,16 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
 
 bool EagerInst::getPatternInfo(Node q, Node pat, PatternInfo& pinfo) const
 {
-  if (!inst::TriggerTermInfo::isSimpleTrigger(pat) || pat.getKind() != Kind::APPLY_UF)
+  if (!TermUtil::hasInstConstAttr(pat))
   {
     return false;
   }
   pinfo.d_pattern = pat;
-  pinfo.d_op = pat.getOperator();
+  pinfo.d_op = getTermDatabase()->getMatchOperator(pat);
+  if (pinfo.d_op.isNull())
+  {
+    return false;
+  }
   TermUtil::computeInstConstContainsForQuant(q, pat, pinfo.d_vars);
   std::map<Node, size_t> counts;
   std::vector<Node> visit;

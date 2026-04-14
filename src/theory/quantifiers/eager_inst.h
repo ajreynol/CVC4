@@ -19,6 +19,7 @@
 #define CVC5__THEORY__QUANTIFIERS__EAGER_INST_H
 
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "smt/env_obj.h"
@@ -27,6 +28,11 @@
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
+
+namespace inst {
+class Trigger;
+class TriggerDatabase;
+}  // namespace inst
 
 /**
  * Eager instantiation scaffolding.
@@ -62,6 +68,8 @@ class EagerInst : public QuantifiersModule
   {
     /** The pattern terms comprising the trigger. */
     std::vector<PatternInfo> d_patterns;
+    /** The backend trigger used for matching. */
+    inst::Trigger* d_trigger = nullptr;
     /** The operators watched for this trigger. */
     std::vector<Node> d_watchedOps;
     /** All instantiation constants covered by the trigger. */
@@ -145,6 +153,8 @@ class EagerInst : public QuantifiersModule
 
   /** Watch information for quantifiers. */
   std::map<Node, QuantInfo> d_qinfo;
+  /** Trigger database owning the backend trigger objects. */
+  std::unique_ptr<inst::TriggerDatabase> d_trdb;
   /** Reverse watch list from operator to quantifiers. */
   std::map<Node, std::vector<Node>> d_opWatchList;
   /** Dirty operators since the last eager-inst check. */
