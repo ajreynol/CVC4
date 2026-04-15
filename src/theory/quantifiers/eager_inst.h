@@ -135,8 +135,6 @@ class EagerInst : public QuantifiersModule
   std::map<uint64_t, Node> d_triggerOwner;
   /** Root operators watched by each trigger. */
   std::map<uint64_t, std::vector<Node>> d_triggerOps;
-  /** Reverse index from a term to parent operators that contain it. */
-  std::map<Node, std::vector<Node>> d_parentOpIndex;
   /** Dirty operators since the last eager-inst check. */
   std::map<Node, bool> d_dirtyOps;
   /** Dirty quantifiers since the last eager-inst check. */

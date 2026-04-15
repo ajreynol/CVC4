@@ -18,9 +18,11 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_TERM_DATABASE_H
 #define CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_TERM_DATABASE_H
 
-#include <map>
-#include <vector>
+#include <memory>
 
+#include "context/cdhashmap.h"
+#include "context/cdhashset.h"
+#include "context/cdlist.h"
 #include "expr/node.h"
 
 namespace cvc5::internal {
@@ -28,29 +30,50 @@ namespace theory {
 namespace quantifiers {
 namespace eager {
 
+/** Context-dependent list of nodes. */
+class NodeList
+{
+ public:
+  NodeList(context::Context* c) : d_list(c) {}
+  /** The list. */
+  context::CDList<Node> d_list;
+};
+
 /**
  * A small incremental term database used by eager instantiation.
  */
 class TermDatabase
 {
+  using NodeSet = context::CDHashSet<Node>;
+  using NodeListMap = context::CDHashMap<Node, std::shared_ptr<NodeList>>;
+
  public:
-  /** Clear the database. */
-  void clear();
+  TermDatabase(context::Context* c);
   /**
    * Add term t to the database.
    * Returns true if t was newly added.
    */
   bool addTerm(Node t, Node op);
   /** Return the ground terms for operator op, if any. */
-  const std::vector<Node>* getGroundTerms(Node op) const;
+  const NodeList* getGroundTerms(Node op) const;
   /** Return the number of ground terms for operator op. */
   size_t getNumGroundTerms(Node op) const;
+  /** Add parent operator op for term t. */
+  void addParentOperator(Node t, Node op);
+  /** Return the parent operators for term t, if any. */
+  const NodeList* getParentOperators(Node t) const;
 
  private:
+  /** Get or make the list in map for key. */
+  NodeList* getOrMkList(NodeListMap& map, Node key);
   /** Terms we have already indexed from notifications. */
-  std::map<Node, bool> d_terms;
+  NodeSet d_terms;
   /** Indexed ground terms by match operator. */
-  std::map<Node, std::vector<Node>> d_opTerms;
+  NodeListMap d_opTerms;
+  /** Reverse index from a term to parent operators that contain it. */
+  NodeListMap d_parentOps;
+  /** SAT context. */
+  context::Context* d_context;
 };
 
 }  // namespace eager

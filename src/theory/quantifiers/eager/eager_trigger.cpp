@@ -74,12 +74,12 @@ bool matchPattern(Node q,
   Node pop = tdb.getMatchOperator(pat);
   if (!pop.isNull() && tdb.getMatchOperator(t) != pop)
   {
-    const std::vector<Node>* gts = termDb.getGroundTerms(pop);
+    const NodeList* gts = termDb.getGroundTerms(pop);
     if (gts == nullptr)
     {
       return false;
     }
-    for (const Node& gt : *gts)
+    for (const Node& gt : gts->d_list)
     {
       if (gt != t && !qstate.areEqual(gt, t))
       {
@@ -173,12 +173,12 @@ void addInstantiations(QuantifiersState& qstate,
     return;
   }
   const PatternInfo& pi = ti.d_patterns[pindex];
-  const std::vector<Node>* gts = termDb.getGroundTerms(pi.d_op);
+  const NodeList* gts = termDb.getGroundTerms(pi.d_op);
   if (gts == nullptr)
   {
     return;
   }
-  for (const Node& gt : *gts)
+  for (const Node& gt : gts->d_list)
   {
     size_t startAssigned = assigned.size();
     if (matchPattern(q, tdb, qstate, termDb, pi.d_pattern, gt, m, assigned))

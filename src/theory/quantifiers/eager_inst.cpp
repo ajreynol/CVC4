@@ -40,6 +40,7 @@ EagerInst::EagerInst(Env& env,
                      QuantifiersRegistry& qr,
                      TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
+      d_termDb(context()),
       d_hasPendingMerge(false),
       d_nextTriggerId(0)
 {
@@ -273,11 +274,10 @@ void EagerInst::eqNotifyMerge(TNode t1, TNode t2)
           }
         }
       }
-      std::map<Node, std::vector<Node>>::const_iterator itp =
-          d_parentOpIndex.find(cur);
-      if (itp != d_parentOpIndex.end())
+      const eager::NodeList* parents = d_termDb.getParentOperators(cur);
+      if (parents != nullptr)
       {
-        for (const Node& pop : itp->second)
+        for (const Node& pop : parents->d_list)
         {
           std::map<Node, std::vector<uint64_t>>::const_iterator itmp =
               d_mergeParentOpWatchList.find(pop);
@@ -495,7 +495,7 @@ void EagerInst::indexParentOperators(TNode t)
     {
       continue;
     }
-    pushBackUnique(d_parentOpIndex[cur], op);
+    d_termDb.addParentOperator(cur, op);
     if (!cur.isClosure())
     {
       visit.insert(visit.end(), cur.begin(), cur.end());
