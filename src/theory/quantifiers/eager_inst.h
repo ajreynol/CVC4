@@ -30,8 +30,6 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-class InstMatch;
-
 /**
  * Eager instantiation.
  *
@@ -99,29 +97,10 @@ class EagerInst : public QuantifiersModule
   void registerWatchInfo(Node q);
   /** Register a trigger candidate for q, returns true if accepted. */
   bool registerTriggerInfo(Node q, const std::vector<Node>& pats);
-  /** Get simple pattern info for pat, returns false if unsupported. */
-  bool getPatternInfo(Node q, Node pat, PatternInfo& pinfo) const;
   /** Index terms reachable from notification term t. */
   void indexTerms(TNode t);
   /** Index repeated-variable merge dependencies for ground term t. */
   void indexParentOperators(TNode t);
-  /** Add instantiations for trigger ti of quantified formula q. */
-  void addInstantiations(Node q, const TriggerInfo& ti, uint64_t& addedLemmas);
-  /** Recursive helper for addInstantiations. */
-  void addInstantiations(Node q,
-                         const TriggerInfo& ti,
-                         size_t pindex,
-                         InstMatch& m,
-                         std::vector<size_t>& assigned,
-                         uint64_t& addedLemmas);
-  /** Match pattern pat against term t. */
-  bool matchPattern(Node q,
-                    TNode pat,
-                    TNode t,
-                    InstMatch& m,
-                    std::vector<size_t>& assigned) const;
-  /** Add purification lemmas for ground trigger subterms if necessary. */
-  void addGroundTermLemmas(const TriggerInfo& ti, uint64_t& addedLemmas);
   /** Add n to nodes if it is not already present. */
   static void pushBackUnique(std::vector<Node>& nodes, Node n);
   /** Whether trigger tr has ground terms for each watched operator. */

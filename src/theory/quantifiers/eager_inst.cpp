@@ -19,17 +19,13 @@
 #include <map>
 #include <unordered_set>
 
-#include "expr/attribute.h"
 #include "expr/node_algorithm.h"
-#include "expr/skolem_manager.h"
 #include "options/base_options.h"
 #include "options/quantifiers_options.h"
+#include "theory/quantifiers/eager/eager_trigger.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/first_order_model.h"
-#include "theory/quantifiers/inst_match.h"
-#include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
-#include "theory/quantifiers/term_util.h"
 #include "theory/uf/equality_engine_iterator.h"
 
 // #define MULTI_TRIGGER_NEW
@@ -128,7 +124,15 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
         continue;
       }
       uint64_t addedLemmas = 0;
-      addInstantiations(q, ti, addedLemmas);
+      eager::addInstantiations(d_env,
+                               d_qstate,
+                               d_qim,
+                               d_treg,
+                               *getTermDatabase(),
+                               d_termDb,
+                               q,
+                               ti,
+                               addedLemmas);
       if (d_qstate.isInConflict())
       {
         break;
@@ -357,7 +361,7 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
   for (const Node& pat : pats)
   {
     PatternInfo pi;
-    if (!getPatternInfo(q, pat, pi))
+    if (!eager::getPatternInfo(*getTermDatabase(), q, pat, pi))
     {
       return false;
     }
@@ -439,59 +443,6 @@ bool EagerInst::registerTriggerInfo(Node q, const std::vector<Node>& pats)
   return true;
 }
 
-bool EagerInst::getPatternInfo(Node q, Node pat, PatternInfo& pinfo) const
-{
-  if (!TermUtil::hasInstConstAttr(pat))
-  {
-    return false;
-  }
-  pinfo.d_pattern = pat;
-  pinfo.d_op = getTermDatabase()->getMatchOperator(pat);
-  if (pinfo.d_op.isNull())
-  {
-    return false;
-  }
-  TermUtil::computeInstConstContainsForQuant(q, pat, pinfo.d_vars);
-  std::map<Node, size_t> counts;
-  std::vector<Node> visit;
-  visit.push_back(pat);
-  while (!visit.empty())
-  {
-    Node cur = visit.back();
-    visit.pop_back();
-    if (cur.getKind() == Kind::INST_CONSTANT
-        && TermUtil::getInstConstAttr(cur) == q)
-    {
-      counts[cur]++;
-      if (counts[cur] > 1)
-      {
-        pinfo.d_hasRepeatedVar = true;
-      }
-      continue;
-    }
-    if (cur != pat)
-    {
-      Node op = getTermDatabase()->getMatchOperator(cur);
-      if (!op.isNull())
-      {
-        pushBackUnique(pinfo.d_mergeOps, op);
-      }
-      std::vector<Node> gvars;
-      TermUtil::computeInstConstContainsForQuant(q, cur, gvars);
-      if (gvars.empty() && !cur.getType().isFunction())
-      {
-        pushBackUnique(pinfo.d_groundTerms, cur);
-      }
-    }
-    if (cur.getMetaKind() == kind::metakind::PARAMETERIZED)
-    {
-      visit.push_back(cur.getOperator());
-    }
-    visit.insert(visit.end(), cur.begin(), cur.end());
-  }
-  return !pinfo.d_vars.empty();
-}
-
 void EagerInst::indexTerms(TNode t)
 {
   Trace("eager-inst-debug") << "EagerInst::indexTerms " << t << std::endl;
@@ -524,167 +475,6 @@ void EagerInst::indexTerms(TNode t)
     }
     visit.insert(visit.end(), cur.begin(), cur.end());
   }
-}
-
-void EagerInst::addGroundTermLemmas(const TriggerInfo& ti,
-                                    uint64_t& addedLemmas)
-{
-  eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
-  for (const Node& gt : ti.d_groundTerms)
-  {
-    if (!gt.getType().isFunction() && !ee->hasTerm(gt)
-        && !gt.getType().isBoolean())
-    {
-      Node k = SkolemManager::mkPurifySkolem(gt);
-      Node eq = k.eqNode(gt);
-      Trace("eager-inst-debug")
-          << "EagerInst: ground term purify lemma: " << eq << std::endl;
-      d_qim.addPendingLemma(eq, InferenceId::QUANTIFIERS_GT_PURIFY);
-      addedLemmas++;
-    }
-  }
-}
-
-void EagerInst::addInstantiations(Node q,
-                                  const TriggerInfo& ti,
-                                  uint64_t& addedLemmas)
-{
-  addGroundTermLemmas(ti, addedLemmas);
-  if (d_qstate.isInConflict())
-  {
-    return;
-  }
-  InstMatch m(d_env, d_qstate, d_treg, q);
-  m.setEvaluatorMode(ieval::TermEvaluatorMode::NO_ENTAIL);
-  std::vector<size_t> assigned;
-  addInstantiations(q, ti, 0, m, assigned, addedLemmas);
-}
-
-void EagerInst::addInstantiations(Node q,
-                                  const TriggerInfo& ti,
-                                  size_t pindex,
-                                  InstMatch& m,
-                                  std::vector<size_t>& assigned,
-                                  uint64_t& addedLemmas)
-{
-  if (pindex == ti.d_patterns.size())
-  {
-    if (!m.isComplete())
-    {
-      return;
-    }
-    std::vector<Node> terms(m.get().begin(), m.get().end());
-    if (d_qim.getInstantiate()->addInstantiation(
-            q, terms, InferenceId::QUANTIFIERS_INST_EAGER_INST, ti.d_pfArg))
-    {
-      addedLemmas++;
-    }
-    return;
-  }
-  const PatternInfo& pi = ti.d_patterns[pindex];
-  const std::vector<Node>* gts = d_termDb.getGroundTerms(pi.d_op);
-  if (gts == nullptr)
-  {
-    return;
-  }
-  for (const Node& gt : *gts)
-  {
-    size_t startAssigned = assigned.size();
-    if (matchPattern(q, pi.d_pattern, gt, m, assigned))
-    {
-      addInstantiations(q, ti, pindex + 1, m, assigned, addedLemmas);
-    }
-    while (assigned.size() > startAssigned)
-    {
-      size_t i = assigned.back();
-      assigned.pop_back();
-      m.reset(i);
-    }
-    if (d_qstate.isInConflict())
-    {
-      break;
-    }
-  }
-}
-
-bool EagerInst::matchPattern(Node q,
-                             TNode pat,
-                             TNode t,
-                             InstMatch& m,
-                             std::vector<size_t>& assigned) const
-{
-  if (pat.getKind() == Kind::INST_CONSTANT
-      && TermUtil::getInstConstAttr(pat) == q)
-  {
-    size_t vn = pat.getAttribute(InstVarNumAttribute());
-    bool wasSet = !m.get(vn).isNull();
-    if (!m.set(vn, t))
-    {
-      return false;
-    }
-    if (!wasSet)
-    {
-      assigned.push_back(vn);
-    }
-    return !d_qstate.isInConflict();
-  }
-  if (!TermUtil::hasInstConstAttr(pat))
-  {
-    return pat == t || d_qstate.areEqual(pat, t);
-  }
-  Node pop = getTermDatabase()->getMatchOperator(pat);
-  if (!pop.isNull() && getTermDatabase()->getMatchOperator(t) != pop)
-  {
-    const std::vector<Node>* gts = d_termDb.getGroundTerms(pop);
-    if (gts == nullptr)
-    {
-      return false;
-    }
-    for (const Node& gt : *gts)
-    {
-      if (gt != t && !d_qstate.areEqual(gt, t))
-      {
-        continue;
-      }
-      size_t startAssigned = assigned.size();
-      if (matchPattern(q, pat, gt, m, assigned))
-      {
-        return true;
-      }
-      while (assigned.size() > startAssigned)
-      {
-        size_t i = assigned.back();
-        assigned.pop_back();
-        m.reset(i);
-      }
-    }
-    return false;
-  }
-  if (pat.getKind() != t.getKind()
-      || pat.getNumChildren() != t.getNumChildren())
-  {
-    return false;
-  }
-  if (pat.getMetaKind() == kind::metakind::PARAMETERIZED)
-  {
-    if (t.getMetaKind() != kind::metakind::PARAMETERIZED
-        || pat.getOperator() != t.getOperator())
-    {
-      return false;
-    }
-  }
-  else if (t.getMetaKind() == kind::metakind::PARAMETERIZED)
-  {
-    return false;
-  }
-  for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
-  {
-    if (!matchPattern(q, pat[i], t[i], m, assigned))
-    {
-      return false;
-    }
-  }
-  return true;
 }
 
 void EagerInst::indexParentOperators(TNode t)
