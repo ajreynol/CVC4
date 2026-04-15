@@ -68,78 +68,94 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
   }
   beginCallDebug();
   FirstOrderModel* fm = d_treg.getModel();
-  if (TraceIsOn("eager-inst"))
+  size_t pass = 0;
+  while (hasPendingWork() && !d_qstate.isInConflict())
   {
-    Trace("eager-inst") << "EagerInst::check, effort = " << e
-                        << ", #dirtyOps = " << d_dirtyOps.size()
-                        << ", #dirtyQuants = " << d_dirtyQuants.size()
-                        << ", #dirtyTriggers = " << d_dirtyTriggers.size()
-                        << ", pendingMerge = " << d_hasPendingMerge
-                        << std::endl;
     std::map<Node, bool> dirtyQuants = d_dirtyQuants;
     for (const std::pair<const Node, bool>& dq : d_dirtyTriggerQuants)
     {
       dirtyQuants[dq.first] = true;
     }
+    std::map<Node, bool> allDirtyQuants = d_dirtyQuants;
+    std::map<uint64_t, bool> dirtyTriggers = d_dirtyTriggers;
+    if (TraceIsOn("eager-inst"))
+    {
+      Trace("eager-inst") << "EagerInst::check, effort = " << e
+                          << ", pass = " << pass
+                          << ", #dirtyOps = " << d_dirtyOps.size()
+                          << ", #dirtyQuants = " << d_dirtyQuants.size()
+                          << ", #dirtyTriggers = " << d_dirtyTriggers.size()
+                          << ", pendingMerge = " << d_hasPendingMerge
+                          << std::endl;
+      for (const std::pair<const Node, bool>& dq : dirtyQuants)
+      {
+        std::map<Node, QuantInfo>::const_iterator it = d_qinfo.find(dq.first);
+        if (it == d_qinfo.end())
+        {
+          continue;
+        }
+        size_t ngt = 0;
+        for (const Node& op : it->second.d_watchedOps)
+        {
+          ngt += d_termDb.getNumGroundTerms(op);
+        }
+        Trace("eager-inst") << "  dirty quant " << dq.first
+                            << ", triggers=" << it->second.d_triggers.size()
+                            << ", watchedOps=" << it->second.d_watchedOps.size()
+                            << ", groundTerms=" << ngt << std::endl;
+      }
+    }
+    clearPending();
+    uint64_t addedLemmasThisPass = 0;
     for (const std::pair<const Node, bool>& dq : dirtyQuants)
     {
-      std::map<Node, QuantInfo>::const_iterator it = d_qinfo.find(dq.first);
+      Node q = dq.first;
+      bool allDirty = allDirtyQuants.find(q) != allDirtyQuants.end();
+      if (!d_qreg.hasOwnership(q, this) || !fm->isQuantifierAsserted(q)
+          || !fm->isQuantifierActive(q))
+      {
+        continue;
+      }
+      std::map<Node, QuantInfo>::iterator it = d_qinfo.find(q);
       if (it == d_qinfo.end())
       {
         continue;
       }
-      size_t ngt = 0;
-      for (const Node& op : it->second.d_watchedOps)
+      for (TriggerInfo& ti : it->second.d_triggers)
       {
-        ngt += d_termDb.getNumGroundTerms(op);
+        if (!allDirty && dirtyTriggers.find(ti.d_id) == dirtyTriggers.end())
+        {
+          continue;
+        }
+        uint64_t addedLemmas = 0;
+        std::vector<Node> addedInstantiations;
+        eager::addInstantiations(d_env,
+                                 d_qstate,
+                                 d_qim,
+                                 d_treg,
+                                 *getTermDatabase(),
+                                 d_termDb,
+                                 q,
+                                 ti,
+                                 addedLemmas,
+                                 addedInstantiations);
+        addedLemmasThisPass += addedLemmas;
+        for (const Node& inst : addedInstantiations)
+        {
+          indexTerms(inst);
+        }
+        if (d_qstate.isInConflict())
+        {
+          break;
+        }
       }
-      Trace("eager-inst") << "  dirty quant " << dq.first
-                          << ", triggers=" << it->second.d_triggers.size()
-                          << ", watchedOps=" << it->second.d_watchedOps.size()
-                          << ", groundTerms=" << ngt << std::endl;
-    }
-  }
-  std::map<Node, bool> dirtyQuants = d_dirtyQuants;
-  for (const std::pair<const Node, bool>& dq : d_dirtyTriggerQuants)
-  {
-    dirtyQuants[dq.first] = true;
-  }
-  for (const std::pair<const Node, bool>& dq : dirtyQuants)
-  {
-    Node q = dq.first;
-    bool allDirty = d_dirtyQuants.find(q) != d_dirtyQuants.end();
-    if (!d_qreg.hasOwnership(q, this) || !fm->isQuantifierAsserted(q)
-        || !fm->isQuantifierActive(q))
-    {
-      continue;
-    }
-    std::map<Node, QuantInfo>::iterator it = d_qinfo.find(q);
-    if (it == d_qinfo.end())
-    {
-      continue;
-    }
-    for (TriggerInfo& ti : it->second.d_triggers)
-    {
-      if (!allDirty && d_dirtyTriggers.find(ti.d_id) == d_dirtyTriggers.end())
-      {
-        continue;
-      }
-      uint64_t addedLemmas = 0;
-      eager::addInstantiations(d_env,
-                               d_qstate,
-                               d_qim,
-                               d_treg,
-                               *getTermDatabase(),
-                               d_termDb,
-                               q,
-                               ti,
-                               addedLemmas);
       if (d_qstate.isInConflict())
       {
         break;
       }
     }
-    if (d_qstate.isInConflict())
+    pass++;
+    if (addedLemmasThisPass == 0)
     {
       break;
     }

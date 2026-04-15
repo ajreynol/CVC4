@@ -16,6 +16,7 @@
 #include "theory/quantifiers/eager/eager_trigger.h"
 
 #include <algorithm>
+#include <functional>
 #include <vector>
 
 #include "theory/quantifiers/inst_match.h"
@@ -58,33 +59,90 @@ bool isPotentialGroundMatch(QuantifiersState& qstate, TNode a, TNode b)
   return true;
 }
 
-bool matchPattern(Node q,
+void clearAssigned(InstMatch& m,
+                   std::vector<size_t>& assigned,
+                   size_t startAssigned)
+{
+  while (assigned.size() > startAssigned)
+  {
+    size_t i = assigned.back();
+    assigned.pop_back();
+    m.reset(i);
+  }
+}
+
+void matchPattern(Node q,
                   TermDb& tdb,
                   QuantifiersState& qstate,
                   const TermDatabase& termDb,
                   TNode pat,
                   TNode t,
                   InstMatch& m,
-                  std::vector<size_t>& assigned)
+                  std::vector<size_t>& assigned,
+                  const std::function<void()>& onMatch);
+
+void matchChildren(Node q,
+                   TermDb& tdb,
+                   QuantifiersState& qstate,
+                   const TermDatabase& termDb,
+                   TNode pat,
+                   TNode t,
+                   size_t cindex,
+                   InstMatch& m,
+                   std::vector<size_t>& assigned,
+                   const std::function<void()>& onMatch)
+{
+  if (cindex == pat.getNumChildren())
+  {
+    onMatch();
+    return;
+  }
+  matchPattern(
+      q, tdb, qstate, termDb, pat[cindex], t[cindex], m, assigned, [&]() {
+        matchChildren(
+            q, tdb, qstate, termDb, pat, t, cindex + 1, m, assigned, onMatch);
+      });
+}
+
+void matchPattern(Node q,
+                  TermDb& tdb,
+                  QuantifiersState& qstate,
+                  const TermDatabase& termDb,
+                  TNode pat,
+                  TNode t,
+                  InstMatch& m,
+                  std::vector<size_t>& assigned,
+                  const std::function<void()>& onMatch)
 {
   if (pat.getKind() == Kind::INST_CONSTANT
       && TermUtil::getInstConstAttr(pat) == q)
   {
     size_t vn = pat.getAttribute(InstVarNumAttribute());
-    bool wasSet = !m.get(vn).isNull();
-    if (!m.set(vn, t))
+    Node prev = m.get(vn);
+    if (!prev.isNull())
     {
-      return false;
+      if (isPotentialGroundMatch(qstate, prev, t))
+      {
+        onMatch();
+      }
+      return;
     }
-    if (!wasSet)
+    size_t startAssigned = assigned.size();
+    if (m.set(vn, t) && !qstate.isInConflict())
     {
       assigned.push_back(vn);
+      onMatch();
     }
-    return !qstate.isInConflict();
+    clearAssigned(m, assigned, startAssigned);
+    return;
   }
   if (!TermUtil::hasInstConstAttr(pat))
   {
-    return isPotentialGroundMatch(qstate, pat, t);
+    if (isPotentialGroundMatch(qstate, pat, t))
+    {
+      onMatch();
+    }
+    return;
   }
   Node pop = tdb.getMatchOperator(pat);
   if (!pop.isNull() && tdb.getMatchOperator(t) != pop)
@@ -92,7 +150,7 @@ bool matchPattern(Node q,
     const NodeList* gts = termDb.getGroundTerms(pop);
     if (gts == nullptr)
     {
-      return false;
+      return;
     }
     for (const Node& gt : gts->d_list)
     {
@@ -100,45 +158,32 @@ bool matchPattern(Node q,
       {
         continue;
       }
-      size_t startAssigned = assigned.size();
-      if (matchPattern(q, tdb, qstate, termDb, pat, gt, m, assigned))
+      matchPattern(q, tdb, qstate, termDb, pat, gt, m, assigned, onMatch);
+      if (qstate.isInConflict())
       {
-        return true;
-      }
-      while (assigned.size() > startAssigned)
-      {
-        size_t i = assigned.back();
-        assigned.pop_back();
-        m.reset(i);
+        return;
       }
     }
-    return false;
+    return;
   }
   if (pat.getKind() != t.getKind()
       || pat.getNumChildren() != t.getNumChildren())
   {
-    return false;
+    return;
   }
   if (pat.getMetaKind() == kind::metakind::PARAMETERIZED)
   {
     if (t.getMetaKind() != kind::metakind::PARAMETERIZED
         || pat.getOperator() != t.getOperator())
     {
-      return false;
+      return;
     }
   }
   else if (t.getMetaKind() == kind::metakind::PARAMETERIZED)
   {
-    return false;
+    return;
   }
-  for (size_t i = 0, nchild = pat.getNumChildren(); i < nchild; i++)
-  {
-    if (!matchPattern(q, tdb, qstate, termDb, pat[i], t[i], m, assigned))
-    {
-      return false;
-    }
-  }
-  return true;
+  matchChildren(q, tdb, qstate, termDb, pat, t, 0, m, assigned, onMatch);
 }
 
 void addInstantiations(QuantifiersState& qstate,
@@ -150,7 +195,8 @@ void addInstantiations(QuantifiersState& qstate,
                        size_t pindex,
                        InstMatch& m,
                        std::vector<size_t>& assigned,
-                       uint64_t& addedLemmas)
+                       uint64_t& addedLemmas,
+                       std::vector<Node>& addedInstantiations)
 {
   if (pindex == ti.d_patterns.size())
   {
@@ -163,6 +209,8 @@ void addInstantiations(QuantifiersState& qstate,
             q, terms, InferenceId::QUANTIFIERS_INST_EAGER_INST, ti.d_pfArg))
     {
       addedLemmas++;
+      addedInstantiations.push_back(
+          qim.getInstantiate()->getInstantiation(q, terms, false));
     }
     return;
   }
@@ -174,9 +222,7 @@ void addInstantiations(QuantifiersState& qstate,
   }
   for (const Node& gt : gts->d_list)
   {
-    size_t startAssigned = assigned.size();
-    if (matchPattern(q, tdb, qstate, termDb, pi.d_pattern, gt, m, assigned))
-    {
+    matchPattern(q, tdb, qstate, termDb, pi.d_pattern, gt, m, assigned, [&]() {
       addInstantiations(qstate,
                         qim,
                         tdb,
@@ -186,14 +232,9 @@ void addInstantiations(QuantifiersState& qstate,
                         pindex + 1,
                         m,
                         assigned,
-                        addedLemmas);
-    }
-    while (assigned.size() > startAssigned)
-    {
-      size_t i = assigned.back();
-      assigned.pop_back();
-      m.reset(i);
-    }
+                        addedLemmas,
+                        addedInstantiations);
+    });
     if (qstate.isInConflict())
     {
       break;
@@ -264,13 +305,23 @@ void addInstantiations(Env& env,
                        const TermDatabase& termDb,
                        Node q,
                        const TriggerInfo& ti,
-                       uint64_t& addedLemmas)
+                       uint64_t& addedLemmas,
+                       std::vector<Node>& addedInstantiations)
 {
   InstMatch m(env, qstate, treg, q);
   m.setEvaluatorMode(ieval::TermEvaluatorMode::NO_ENTAIL);
   std::vector<size_t> assigned;
-  addInstantiations(
-      qstate, qim, tdb, termDb, q, ti, 0, m, assigned, addedLemmas);
+  addInstantiations(qstate,
+                    qim,
+                    tdb,
+                    termDb,
+                    q,
+                    ti,
+                    0,
+                    m,
+                    assigned,
+                    addedLemmas,
+                    addedInstantiations);
 }
 
 }  // namespace eager

@@ -19,6 +19,7 @@
 #define CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_TRIGGER_H
 
 #include <cstdint>
+#include <vector>
 
 #include "expr/node.h"
 #include "theory/quantifiers/eager/eager_info.h"
@@ -51,7 +52,8 @@ void addInstantiations(Env& env,
                        const TermDatabase& termDb,
                        Node q,
                        const TriggerInfo& ti,
-                       uint64_t& addedLemmas);
+                       uint64_t& addedLemmas,
+                       std::vector<Node>& addedInstantiations);
 
 }  // namespace eager
 }  // namespace quantifiers
