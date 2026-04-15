@@ -57,12 +57,14 @@ bool EagerInst::needsCheck(Theory::Effort e)
     Trace("eager-inst-debug") << "EagerInst::needsCheck(" << e << ") => "
                               << hasPendingWork() << std::endl;
   }
-  return e >= Theory::EFFORT_LAST_CALL && hasPendingWork();
+  return (e == Theory::EFFORT_STANDARD || e >= Theory::EFFORT_LAST_CALL)
+         && hasPendingWork();
 }
 
 void EagerInst::check(Theory::Effort e, QEffort quant_e)
 {
-  if (e < Theory::EFFORT_LAST_CALL || quant_e != QEFFORT_STANDARD)
+  if ((e != Theory::EFFORT_STANDARD && e < Theory::EFFORT_LAST_CALL)
+      || quant_e != QEFFORT_STANDARD)
   {
     return;
   }
@@ -104,6 +106,8 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
   {
     dirtyQuants[dq.first] = true;
   }
+  std::map<uint64_t, bool> keepDirtyTriggers;
+  std::map<Node, bool> keepDirtyTriggerQuants;
   for (const std::pair<const Node, bool>& dq : dirtyQuants)
   {
     Node q = dq.first;
@@ -134,6 +138,11 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
                                q,
                                ti,
                                addedLemmas);
+      if (e == Theory::EFFORT_STANDARD && addedLemmas == 0)
+      {
+        keepDirtyTriggers[ti.d_id] = true;
+        keepDirtyTriggerQuants[q] = true;
+      }
       if (d_qstate.isInConflict())
       {
         break;
@@ -145,12 +154,17 @@ void EagerInst::check(Theory::Effort e, QEffort quant_e)
     }
   }
   clearPending();
+  if (e == Theory::EFFORT_STANDARD)
+  {
+    d_dirtyTriggers.swap(keepDirtyTriggers);
+    d_dirtyTriggerQuants.swap(keepDirtyTriggerQuants);
+  }
   endCallDebug();
 }
 
 void EagerInst::reset_round(Theory::Effort e)
 {
-  if (e < Theory::EFFORT_LAST_CALL)
+  if (e != Theory::EFFORT_STANDARD && e < Theory::EFFORT_LAST_CALL)
   {
     return;
   }
