@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "expr/skolem_manager.h"
 #include "theory/quantifiers/inst_match.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
@@ -26,7 +25,6 @@
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_util.h"
-#include "theory/uf/equality_engine.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -41,6 +39,23 @@ void pushBackUnique(std::vector<Node>& nodes, Node n)
   {
     nodes.push_back(n);
   }
+}
+
+bool isPotentialGroundMatch(QuantifiersState& qstate, TNode a, TNode b)
+{
+  if (a == b || qstate.areEqual(a, b))
+  {
+    return true;
+  }
+  if (a.getType() != b.getType() || a.getType().isBoolean()
+      || a.getType().isFunction() || (a.isConst() && b.isConst())
+      || qstate.areDisequal(a, b))
+  {
+    return false;
+  }
+  Trace("eager-inst-debug")
+      << "EagerInst: potential ground match " << a << " ~ " << b << std::endl;
+  return true;
 }
 
 bool matchPattern(Node q,
@@ -69,7 +84,7 @@ bool matchPattern(Node q,
   }
   if (!TermUtil::hasInstConstAttr(pat))
   {
-    return pat == t || qstate.areEqual(pat, t);
+    return isPotentialGroundMatch(qstate, pat, t);
   }
   Node pop = tdb.getMatchOperator(pat);
   if (!pop.isNull() && tdb.getMatchOperator(t) != pop)
@@ -81,7 +96,7 @@ bool matchPattern(Node q,
     }
     for (const Node& gt : gts->d_list)
     {
-      if (gt != t && !qstate.areEqual(gt, t))
+      if (!isPotentialGroundMatch(qstate, gt, t))
       {
         continue;
       }
@@ -124,27 +139,6 @@ bool matchPattern(Node q,
     }
   }
   return true;
-}
-
-void addGroundTermLemmas(QuantifiersState& qstate,
-                         QuantifiersInferenceManager& qim,
-                         const TriggerInfo& ti,
-                         uint64_t& addedLemmas)
-{
-  eq::EqualityEngine* ee = qstate.getEqualityEngine();
-  for (const Node& gt : ti.d_groundTerms)
-  {
-    if (!gt.getType().isFunction() && !ee->hasTerm(gt)
-        && !gt.getType().isBoolean())
-    {
-      Node k = SkolemManager::mkPurifySkolem(gt);
-      Node eq = k.eqNode(gt);
-      Trace("eager-inst-debug")
-          << "EagerInst: ground term purify lemma: " << eq << std::endl;
-      qim.addPendingLemma(eq, InferenceId::QUANTIFIERS_GT_PURIFY);
-      addedLemmas++;
-    }
-  }
 }
 
 void addInstantiations(QuantifiersState& qstate,
@@ -272,11 +266,6 @@ void addInstantiations(Env& env,
                        const TriggerInfo& ti,
                        uint64_t& addedLemmas)
 {
-  addGroundTermLemmas(qstate, qim, ti, addedLemmas);
-  if (qstate.isInConflict())
-  {
-    return;
-  }
   InstMatch m(env, qstate, treg, q);
   m.setEvaluatorMode(ieval::TermEvaluatorMode::NO_ENTAIL);
   std::vector<size_t> assigned;
