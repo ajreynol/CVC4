@@ -88,6 +88,7 @@ class EagerInst : public QuantifiersModule
   NodePairSet d_instTerms;
   NodeSet d_ownedQuants;
   NodePairMap d_patRegister;
+  NodeMap d_autoPatterns;
   NodeSet d_filteringSingleTriggers;
   size_t d_tmpAddedLemmas;
   bool d_instOutput;
@@ -114,8 +115,12 @@ class EagerInst : public QuantifiersModule
   context::CDO<size_t> d_eagerCount;
   /** Number of patterns */
   IntStat d_statUserPats;
+  /** Number of auto patterns */
+  IntStat d_statAutoPats;
   /** Number of cd patterns */
   IntStat d_statUserPatsCd;
+  /** Number of auto cd patterns */
+  IntStat d_statAutoPatsCd;
   /** Number of single patterns */
   IntStat d_statSinglePat;
   /** Number of single patterns */
@@ -212,6 +217,14 @@ class EagerInst : public QuantifiersModule
   void addWatches(EagerFailExp& failExp);
   /** */
   Node getPatternFor(const Node& pat, const Node& q);
+  /**
+   * Get the pattern list for q in inst-constant form. If q has user patterns,
+   * they are returned. Otherwise, we infer auto-generated patterns. Sets
+   * isAutoPattern to true iff the result was inferred.
+   */
+  Node getPatternListFor(const Node& q, bool& isAutoPattern);
+  /** Infer an auto-generated pattern list for q in inst-constant form. */
+  Node inferPatternListFor(const Node& q);
 
   /** */
   void resumeWatchList(

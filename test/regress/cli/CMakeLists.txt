@@ -1694,6 +1694,7 @@ set(regress_0_tests
   regress0/quantifiers/delta-simp.smt2
   regress0/quantifiers/double-pattern.smt2
   regress0/quantifiers/ei-already-f.smt2
+  regress0/quantifiers/ei-auto-trigger.smt2
   regress0/quantifiers/ei-on-cd.smt2
   regress0/quantifiers/ei-on-merge.smt2
   regress0/quantifiers/ei-on-merge-f.smt2

@@ -15,10 +15,15 @@
 
 #include "theory/quantifiers/eager_inst.h"
 
+#include <algorithm>
+
 #include "expr/attribute.h"
 #include "expr/node_algorithm.h"
 #include "options/base_options.h"
 #include "options/quantifiers_options.h"
+#include "options/smt_options.h"
+#include "theory/quantifiers/ematching/pattern_term_selector.h"
+#include "theory/quantifiers/ematching/trigger_database.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/term_util.h"
@@ -40,6 +45,7 @@ EagerInst::EagerInst(Env& env,
       d_instTerms(userContext()),
       d_ownedQuants(context()),
       d_patRegister(userContext()),
+      d_autoPatterns(userContext()),
       d_filteringSingleTriggers(userContext()),
       // d_etrie(context()),
       d_ppQuants(userContext()),
@@ -56,8 +62,11 @@ EagerInst::EagerInst(Env& env,
       d_eagerQiCount(context()),
       d_eagerCount(context()),
       d_statUserPats(statisticsRegistry().registerInt("EagerInst::userPats")),
+      d_statAutoPats(statisticsRegistry().registerInt("EagerInst::autoPats")),
       d_statUserPatsCd(
           statisticsRegistry().registerInt("EagerInst::userPatsCd")),
+      d_statAutoPatsCd(
+          statisticsRegistry().registerInt("EagerInst::autoPatsCd")),
       d_statSinglePat(
           statisticsRegistry().registerInt("EagerInst::patternSingle")),
       d_statFilteringSinglePat(statisticsRegistry().registerInt(
@@ -221,9 +230,16 @@ void EagerInst::ppNotifyAssertionInternal(TNode n,
       visited.insert(cur);
       // if a quantified formula with a pattern, mark the watched operators,
       // which are those appearing not at top-level in the patterns
-      if (cur.getKind() == Kind::FORALL && cur.getNumChildren() == 3)
+      if (cur.getKind() == Kind::FORALL)
       {
-        for (TNode pl : cur[2])
+        bool isAutoPattern = false;
+        Node ipl = getPatternListFor(cur, isAutoPattern);
+        if (ipl.isNull())
+        {
+          visit.insert(visit.end(), cur.begin(), cur.end());
+          continue;
+        }
+        for (TNode pl : ipl)
         {
           if (pl.getKind() == Kind::INST_PATTERN)
           {
@@ -294,15 +310,14 @@ void EagerInst::registerQuant(const Node& q)
 void EagerInst::registerQuantInternal(const Node& q)
 {
   Trace("eager-inst-register") << "Assert " << q << std::endl;
-  if (q.getNumChildren() != 3)
+  if (options().smt.produceUnsatCores || options().smt.checkUnsatCores)
   {
-    Trace("eager-inst-warn")
-        << "Unhandled quantified formula (no patterns) " << q << std::endl;
     return;
   }
   if (options().quantifiers.eagerInstMacroOnly)
   {
-    if (!(q[1].getKind() == Kind::EQUAL && q[2].getNumChildren() == 1
+    if (!(q.getNumChildren() == 3 && q[1].getKind() == Kind::EQUAL
+          && q[2].getNumChildren() == 1
           && q[2][0].getKind() == Kind::INST_PATTERN
           && q[2][0].getNumChildren() == 1 && q[1][0] == q[2][0][0]))
     {
@@ -310,9 +325,17 @@ void EagerInst::registerQuantInternal(const Node& q)
     }
     Trace("eager-inst-macro") << "Macro " << q << std::endl;
   }
-  Node ipl = q[2];
+  bool isAutoPattern = false;
+  Node ipl = getPatternListFor(q, isAutoPattern);
+  if (ipl.isNull())
+  {
+    Trace("eager-inst-warn")
+        << "Unhandled quantified formula (no usable patterns) " << q
+        << std::endl;
+    return;
+  }
   bool isPp = (d_ppQuants.find(q) != d_ppQuants.end());
-  bool owner = isPp;
+  bool owner = false;
   bool hasPat = false;
   // ensure we have enough in the instantiation vector
   size_t nvars = q[0].getNumChildren();
@@ -339,6 +362,15 @@ void EagerInst::registerQuantInternal(const Node& q)
     {
       TNode pc = upat[i];
       TNode op = d_tdb->getMatchOperator(pc);
+      if (!TermUtil::hasInstConstAttr(pc) || pc.getKind() == Kind::INST_CONSTANT
+          || op.isNull())
+      {
+        Trace("eager-inst-warn") << "Unhandled pattern: " << pc << std::endl;
+        owner = false;
+        d_patRegister[std::pair<Node, Node>(pat, q)] = d_null;
+        success = false;
+        break;
+      }
       EagerOpInfo* eoi = getOrMkOpInfo(op, true);
       CDEagerTrie* cet = eoi->getPatternTrie();
       EagerTrie* et = cet->addPattern(d_tdb, pc);
@@ -394,11 +426,25 @@ void EagerInst::registerQuantInternal(const Node& q)
       hasPat = true;
       if (!isPp)
       {
-        ++d_statUserPatsCd;
+        if (isAutoPattern)
+        {
+          ++d_statAutoPatsCd;
+        }
+        else
+        {
+          ++d_statUserPatsCd;
+        }
       }
       else
       {
-        ++d_statUserPats;
+        if (isAutoPattern)
+        {
+          ++d_statAutoPats;
+        }
+        else
+        {
+          ++d_statUserPats;
+        }
       }
     }
     if (owner)
@@ -452,6 +498,10 @@ std::string EagerInst::identify() const { return "eager-inst"; }
 void EagerInst::notifyAssertedTerm(TNode t)
 {
   if (t.getKind() != Kind::APPLY_UF)
+  {
+    return;
+  }
+  if (TermUtil::hasInstConstAttr(t))
   {
     return;
   }
@@ -1025,6 +1075,10 @@ void EagerInst::processMultiTriggerInstantiations(const Node& q,
 bool EagerInst::doInstantiation(const Node& pat, TNode n, EagerFailExp& failExp)
 {
   Trace("eager-inst-inst") << "Instantiate based on " << pat << std::endl;
+  if (d_qstate.isInConflict())
+  {
+    return false;
+  }
   Node q = TermUtil::getInstConstAttr(pat);
   Assert(!q.isNull());
   Assert(q[0].getNumChildren() <= d_inst.size());
@@ -1039,6 +1093,10 @@ bool EagerInst::doInstantiation(const Node& pat, TNode n, EagerFailExp& failExp)
 
 bool EagerInst::doInstantiation(const Node& q, const Node& pat, const Node& n)
 {
+  if (d_qstate.isInConflict())
+  {
+    return false;
+  }
   Assert(!q.isNull());
   Assert(q[0].getNumChildren() <= d_inst.size());
   std::pair<Node, Node> key(n, pat);
@@ -1663,6 +1721,172 @@ void EagerInst::resumeWatchList(
   }
   // no longer valid
   ewl->d_valid = false;
+}
+
+Node EagerInst::getPatternListFor(const Node& q, bool& isAutoPattern)
+{
+  isAutoPattern = false;
+  if (q.getNumChildren() == 3)
+  {
+    for (const Node& pat : q[2])
+    {
+      if (pat.getKind() == Kind::INST_PATTERN)
+      {
+        return q[2];
+      }
+    }
+  }
+  NodeMap::iterator it = d_autoPatterns.find(q);
+  if (it != d_autoPatterns.end())
+  {
+    isAutoPattern = true;
+    return it->second;
+  }
+  Node ipl = inferPatternListFor(q);
+  d_autoPatterns.insert(q, ipl);
+  isAutoPattern = true;
+  return ipl;
+}
+
+Node EagerInst::inferPatternListFor(const Node& q)
+{
+  std::vector<Node> excluded;
+  if (q.getNumChildren() == 3)
+  {
+    Node ipl = d_qreg.substituteBoundVariablesToInstConstants(q[2], q);
+    for (const Node& pat : ipl)
+    {
+      if (pat.getKind() == Kind::INST_NO_PATTERN && pat.getNumChildren() == 1)
+      {
+        excluded.push_back(pat[0]);
+      }
+    }
+  }
+  std::vector<Node> patTermsF;
+  std::map<Node, inst::TriggerTermInfo> tinfo;
+  NodeManager* nm = nodeManager();
+  if (options().quantifiers.quantFunWellDefined)
+  {
+    Node hd = QuantAttributes::getFunDefHead(q);
+    if (!hd.isNull())
+    {
+      hd = d_qreg.substituteBoundVariablesToInstConstants(hd, q);
+      patTermsF.push_back(hd);
+      tinfo[hd].init(q, hd);
+    }
+  }
+  if (patTermsF.empty())
+  {
+    Node bd = d_qreg.getInstConstantBody(q);
+    inst::PatternTermSelector pts(d_env.getOptions(),
+                                  q,
+                                  options().quantifiers.triggerSelMode,
+                                  excluded,
+                                  true);
+    pts.collect(bd, patTermsF, tinfo);
+    if (options().quantifiers.relationalTriggers)
+    {
+      std::sort(patTermsF.begin(),
+                patTermsF.end(),
+                [](Node a, Node b) {
+                  int32_t wa = inst::TriggerTermInfo::getTriggerWeight(a);
+                  int32_t wb = inst::TriggerTermInfo::getTriggerWeight(b);
+                  return wa == wb ? a < b : wa < wb;
+                });
+    }
+  }
+  if (patTermsF.empty())
+  {
+    return d_null;
+  }
+  std::map<Node, bool> vcMap;
+  std::map<Node, bool> rmPatTermsF;
+  int32_t lastWeight = -1;
+  bool ntrivTriggers = options().quantifiers.relationalTriggers;
+  for (const Node& p : patTermsF)
+  {
+    Assert(p.getKind() != Kind::NOT);
+    bool newVar = false;
+    inst::TriggerTermInfo& tip = tinfo[p];
+    for (const Node& v : tip.d_fv)
+    {
+      if (vcMap.emplace(v, true).second)
+      {
+        newVar = true;
+      }
+    }
+    int32_t currW = inst::TriggerTermInfo::getTriggerWeight(p);
+    if (ntrivTriggers && !newVar && lastWeight != -1 && currW > lastWeight
+        && currW >= 2)
+    {
+      Trace("eager-inst-register")
+          << "...exclude expendable non-trivial trigger : " << p << std::endl;
+      rmPatTermsF[p] = true;
+    }
+    else
+    {
+      lastWeight = currW;
+    }
+  }
+  if (!vcMap.empty() && vcMap.size() < q[0].getNumChildren())
+  {
+    Trace("eager-inst-warn")
+        << "Failed to infer eager-inst patterns for " << q
+        << " since trigger terms cover only " << vcMap.size() << "/"
+        << q[0].getNumChildren() << " variables" << std::endl;
+    return d_null;
+  }
+  std::vector<Node> patTermsSingle;
+  std::vector<Node> patTermsMulti;
+  auto addPatternToPool = [&](Node pat, unsigned numFv) {
+    if (numFv == q[0].getNumChildren())
+    {
+      patTermsSingle.push_back(pat);
+    }
+    else
+    {
+      patTermsMulti.push_back(pat);
+    }
+  };
+  for (const Node& patf : patTermsF)
+  {
+    if (rmPatTermsF.find(patf) != rmPatTermsF.end())
+    {
+      continue;
+    }
+    if (d_tdb->getMatchOperator(patf).isNull())
+    {
+      Trace("eager-inst-register")
+          << "...skip unsupported inferred pattern: " << patf << std::endl;
+      continue;
+    }
+    Assert(tinfo.find(patf) != tinfo.end());
+    addPatternToPool(patf, tinfo[patf].d_fv.size());
+  }
+  std::vector<Node> ipats;
+  for (const Node& pat : patTermsSingle)
+  {
+    ipats.push_back(nm->mkNode(Kind::INST_PATTERN, pat));
+  }
+  if ((ipats.empty() || options().quantifiers.multiTriggerWhenSingle)
+      && !patTermsMulti.empty())
+  {
+    std::vector<Node> trNodes;
+    if (inst::TriggerDatabase::mkTriggerTerms(
+            q, patTermsMulti, q[0].getNumChildren(), trNodes))
+    {
+      ipats.push_back(nm->mkNode(Kind::INST_PATTERN, trNodes));
+    }
+  }
+  if (ipats.empty())
+  {
+    return d_null;
+  }
+  Node ipl = nm->mkNode(Kind::INST_PATTERN_LIST, ipats);
+  Trace("eager-inst-register")
+      << "Inferred eager-inst pattern list for " << q << ": " << ipl
+      << std::endl;
+  return ipl;
 }
 
 Node EagerInst::getPatternFor(const Node& pat, const Node& q)
