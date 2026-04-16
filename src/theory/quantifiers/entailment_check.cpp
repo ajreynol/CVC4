@@ -246,6 +246,12 @@ TNode EntailmentCheck::getEntailedTerm2(TNode n,
         TNode nn = d_tdb.getCongruentTerm(f, args);
         Trace("term-db-entail")
             << "  got congruent term " << nn << " for " << n << std::endl;
+        if (!nn.isNull() && !d_qstate.hasTerm(nn))
+        {
+          Trace("term-db-entail")
+              << "  congruent term is not in the equality engine" << std::endl;
+          return TNode::null();
+        }
         return nn;
       }
     }
@@ -365,7 +371,14 @@ bool EntailmentCheck::isEntailed2(TNode n,
     TNode n1 = getEntailedTerm2(n, subs, subsRep);
     if (!n1.isNull())
     {
-      Assert(d_qstate.hasTerm(n1));
+      if (n1.isConst())
+      {
+        return n1.getConst<bool>() == pol;
+      }
+      if (!d_qstate.hasTerm(n1))
+      {
+        return false;
+      }
       n1 = d_qstate.getRepresentative(n1);
       if (n1.isConst())
       {
