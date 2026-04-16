@@ -1,6 +1,4 @@
 ; COMMAND-LINE: --eager-inst --no-e-matching --no-cbqi
-; DISABLE-TESTER: unsat-core
-; DISABLE-TESTER: proof
 (set-logic ALL)
 (set-info :status unsat)
 

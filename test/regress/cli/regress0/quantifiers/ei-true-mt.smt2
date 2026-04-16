@@ -1,6 +1,4 @@
 ; COMMAND-LINE: --eager-inst --no-e-matching
-; DISABLE-TESTER: unsat-core
-; DISABLE-TESTER: proof
 (set-logic ALL)
 (set-info :status unsat)
 (declare-fun P (Int Int) Bool)

@@ -310,7 +310,11 @@ void EagerInst::registerQuant(const Node& q)
 void EagerInst::registerQuantInternal(const Node& q)
 {
   Trace("eager-inst-register") << "Assert " << q << std::endl;
-  if (options().smt.produceUnsatCores || options().smt.checkUnsatCores)
+  // Proof/unsat-core modes enable proof-producing E-matching. Prefer that
+  // path when it is available, but still allow eager-inst to be the active
+  // engine for benchmarks that explicitly disable E-matching.
+  if ((options().smt.produceUnsatCores || options().smt.checkUnsatCores)
+      && options().quantifiers.eMatching)
   {
     return;
   }
