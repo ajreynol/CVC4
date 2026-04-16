@@ -31,7 +31,11 @@ namespace quantifiers {
 
 void EagerWatchList::add(const EagerTrie* et, TNode t)
 {
-  d_matchJobs.push_back(std::pair<const EagerTrie*, TNode>(et, t));
+  WatchJob wj(et, t);
+  if (d_matchJobSet.insert(wj))
+  {
+    d_matchJobs.push_back(std::pair<const EagerTrie*, TNode>(et, t));
+  }
 }
 
 void EagerWatchList::addMatchJobs(EagerWatchList* ewl)
@@ -39,7 +43,7 @@ void EagerWatchList::addMatchJobs(EagerWatchList* ewl)
   context::CDList<std::pair<const EagerTrie*, TNode>>& wmj = ewl->d_matchJobs;
   for (const std::pair<const EagerTrie*, TNode>& p : wmj)
   {
-    d_matchJobs.push_back(p);
+    add(p.first, p.second);
   }
 }
 

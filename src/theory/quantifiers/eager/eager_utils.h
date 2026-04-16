@@ -18,10 +18,12 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_UTILS_H
 #define CVC5__THEORY__QUANTIFIERS__EAGER__EAGER_UTILS_H
 
+#include "context/cdhashset.h"
 #include "smt/env_obj.h"
 #include "theory/quantifiers/eager/eager_ground_trie.h"
 #include "theory/quantifiers/eager/eager_trie.h"
 #include "theory/quantifiers/quant_module.h"
+#include "util/hash.h"
 
 namespace cvc5::internal {
 namespace theory {
@@ -35,12 +37,23 @@ using EagerFailExp =
 
 class EagerWatchList
 {
+  using WatchJob = std::pair<const EagerTrie*, Node>;
+  using WatchJobHash =
+      PairHashFunction<const EagerTrie*,
+                       Node,
+                       std::hash<const EagerTrie*>,
+                       std::hash<Node>>;
+
  public:
-  EagerWatchList(context::Context* c) : d_valid(c, true), d_matchJobs(c) {}
+  EagerWatchList(context::Context* c)
+      : d_valid(c, true), d_matchJobs(c), d_matchJobSet(c)
+  {
+  }
   void add(const EagerTrie* et, TNode t);
   void addMatchJobs(EagerWatchList* ewl);
   context::CDO<bool> d_valid;
   context::CDList<std::pair<const EagerTrie*, TNode>> d_matchJobs;
+  context::CDHashSet<WatchJob, WatchJobHash> d_matchJobSet;
 };
 
 class EagerRepInfo

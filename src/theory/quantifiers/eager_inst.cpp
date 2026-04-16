@@ -708,6 +708,28 @@ void EagerInst::processInstantiation(const EagerTrie* et,
     {
       processMultiTriggerInstantiation(m.first, m.second, n, failWatch);
     }
+    bool addMtWatches = true;
+    for (const std::pair<Node, size_t>& m : mctx)
+    {
+      const Node& mpat = m.first;
+      size_t numFullPatterns = 0;
+      for (size_t i = 0, npats = mpat.getNumChildren(); i < npats; i++)
+      {
+        if (d_qreg.hasAllInstantiationConstants(mpat[i], epi->getQuantFormula()))
+        {
+          numFullPatterns++;
+        }
+      }
+      if (numFullPatterns == 1)
+      {
+        addMtWatches = false;
+        break;
+      }
+    }
+    if (!addMtWatches)
+    {
+      continue;
+    }
     for (std::pair<const TNode, std::unordered_set<TNode>>& fw : failWatch)
     {
       std::map<TNode, std::pair<EagerWatchVec, EagerWatchVec>>& wmj =
