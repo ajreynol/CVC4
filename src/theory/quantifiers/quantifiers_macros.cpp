@@ -163,8 +163,7 @@ bool QuantifiersMacros::preservesTriggerVariables(const Options& opts,
   quantifiers::TermUtil::computeInstConstContainsForQuant(q, icn, var);
   Trace("macros-debug2") << "Get trigger variables for " << icn << std::endl;
   std::vector<Node> trigger_var;
-  inst::PatternTermSelector::getTriggerVariables(
-      opts, icn, q, trigger_var);
+  inst::PatternTermSelector::getTriggerVariables(opts, icn, q, trigger_var);
   Trace("macros-debug2") << "Done." << std::endl;
   // only if all variables are also trigger variables
   return trigger_var.size() >= var.size();
@@ -273,9 +272,8 @@ Node QuantifiersMacros::solveEq(Node n, Node ndef)
   Trace("macros-debug") << "Add macro eq for " << n << std::endl;
   Trace("macros-debug") << "  def: " << ndef << std::endl;
   std::vector<Node> vars(n.begin(), n.end());
-  Node fdef = nm->mkNode(Kind::LAMBDA,
-                         nm->mkNode(Kind::BOUND_VAR_LIST, vars),
-                         ndef);
+  Node fdef =
+      nm->mkNode(Kind::LAMBDA, nm->mkNode(Kind::BOUND_VAR_LIST, vars), ndef);
   // If the definition has a free variable, it is malformed. This can happen
   // if the right hand side of a macro definition contains a variable not
   // contained in the left hand side
