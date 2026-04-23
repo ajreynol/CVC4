@@ -105,6 +105,31 @@ QuantInfo::QuantInfo(Env& env,
       std::vector<size_t> bvars;
       d_mg->determineVariableOrder(bvars);
     }
+    if (d_mg->isValid())
+    {
+      bool hasAppliedUfAux = false;
+      for (size_t j = q[0].getNumChildren(), nvars = d_vars.size(); j < nvars;
+           j++)
+      {
+        if (d_vars[j].getKind() == Kind::APPLY_UF)
+        {
+          hasAppliedUfAux = true;
+          break;
+        }
+      }
+      // Large flattened UF encodings, e.g. graph-preservation constraints,
+      // tend to force QCF into an exhaustive search over auxiliary function
+      // applications while other quantifier modules return quickly.
+      if (hasAppliedUfAux && d_mg->getNode().getKind() == Kind::OR
+          && d_mg->d_children.size() > 32)
+      {
+        Trace("qcf-invalid")
+            << "QCF invalid : large UF-disjunction with auxiliary "
+               "applications."
+            << std::endl;
+        d_mg->setInvalid();
+      }
+    }
   }
   else
   {
@@ -1754,11 +1779,26 @@ void MatchGen::reset(bool tgt)
   else if (d_type == typ_var)
   {
     Assert(isHandledUfTerm(d_n));
-    TNode f = d_parent->getTermDatabase()->getMatchOperator(d_n);
+    TermDb* tdb = d_parent->getTermDatabase();
+    TNode f = tdb->getMatchOperator(d_n);
     Trace("qcf-match-debug")
         << "       reset: Var will match operators of " << f << std::endl;
-    TNodeTrie* qni =
-        d_parent->getTermDatabase()->getTermArgTrie(Node::null(), f);
+    // If this variable is already constrained to a ground value, use the trie
+    // partitioned by the result equivalence class to avoid exploring
+    // applications that cannot match.
+    TNode cval = d_qi->getCurrentValue(d_n);
+    int cvn = d_qi->getVarNum(cval);
+    TNodeTrie* qni = nullptr;
+    bool useResultTrie = false;
+    if (cvn == -1 && cval != d_n)
+    {
+      useResultTrie = true;
+      qni = tdb->getTermArgTrie(d_parent->getRepresentative(cval), f);
+    }
+    if (!useResultTrie && (qni == nullptr || qni->empty()))
+    {
+      qni = tdb->getTermArgTrie(Node::null(), f);
+    }
     if (qni == nullptr || qni->empty())
     {
       // inform irrelevant quantifiers
@@ -2288,6 +2328,7 @@ bool MatchGen::doMatching()
   }
   Assert(d_type == typ_var);
   Assert(d_qni_size > 0);
+  auto isLeafIndex = [this](size_t index) { return index + 1 == d_qni_size; };
   bool invalidMatch;
   do
   {
@@ -2297,85 +2338,104 @@ bool MatchGen::doMatching()
     if (d_qn.size() == d_qni.size() + 1)
     {
       size_t index = d_qni.size();
-      // initialize
-      TNode val;
-      std::map<size_t, size_t>::iterator itv = d_qni_var_num.find(index);
-      if (itv != d_qni_var_num.end())
+      if (isLeafIndex(index))
       {
-        // get the representative variable this variable is equal to
-        size_t repVar = d_qi->getCurrentRepVar(itv->second);
-        Trace("qcf-match-debug")
-            << "       Match " << index << " is a variable " << itv->second
-            << ", which is repVar " << repVar << std::endl;
-        // get the value the rep variable
-        if (!d_qi->d_match[repVar].isNull())
+        std::map<TNode, TNodeTrie>::iterator it = d_qn[index]->d_data.begin();
+        if (it != d_qn[index]->d_data.end())
         {
-          val = d_qi->d_match[repVar];
-          Trace("qcf-match-debug")
-              << "       Variable is already bound to " << val << std::endl;
+          d_qni.push_back(it);
         }
         else
         {
-          // binding a variable
-          d_qni_bound[index] = repVar;
-          std::map<TNode, TNodeTrie>::iterator it = d_qn[index]->d_data.begin();
-          if (it != d_qn[index]->d_data.end())
-          {
-            d_qni.push_back(it);
-            // set the match
-            if (it->first.getType() == d_qi->d_var_types[repVar]
-                && d_qi->setMatch(d_qni_bound[index], it->first, true, true))
-            {
-              Trace("qcf-match-debug")
-                  << "       Binding variable" << std::endl;
-              if (d_qn.size() < d_qni_size)
-              {
-                d_qn.push_back(&it->second);
-              }
-            }
-            else
-            {
-              Trace("qcf-match")
-                  << "       Binding variable, currently fail." << std::endl;
-              invalidMatch = true;
-            }
-          }
-          else
-          {
-            Trace("qcf-match-debug")
-                << "       Binding variable, fail, no more variables to bind"
-                << std::endl;
-            d_qn.pop_back();
-          }
+          Trace("qcf-match-debug")
+              << "       Binding variable, fail, no more terms to bind"
+              << std::endl;
+          d_qn.pop_back();
         }
       }
       else
       {
-        Trace("qcf-match-debug")
-            << "       Match " << index << " is ground term" << std::endl;
-        Assert(d_qni_gterm.find(index) != d_qni_gterm.end());
-        val = d_qni_gterm[index];
-        Assert(!val.isNull());
-      }
-      if (!val.isNull())
-      {
-        Node valr = d_parent->getRepresentative(val);
-        // constrained by val
-        std::map<TNode, TNodeTrie>::iterator it =
-            d_qn[index]->d_data.find(valr);
-        if (it != d_qn[index]->d_data.end())
+        size_t qindex = index + 1;
+        // initialize
+        TNode val;
+        std::map<size_t, size_t>::iterator itv = d_qni_var_num.find(qindex);
+        if (itv != d_qni_var_num.end())
         {
-          Trace("qcf-match-debug") << "       Match" << std::endl;
-          d_qni.push_back(it);
-          if (d_qn.size() < d_qni_size)
+          // get the representative variable this variable is equal to
+          size_t repVar = d_qi->getCurrentRepVar(itv->second);
+          Trace("qcf-match-debug")
+              << "       Match " << qindex << " is a variable "
+              << itv->second << ", which is repVar " << repVar << std::endl;
+          // get the value of the representative variable
+          if (!d_qi->d_match[repVar].isNull())
           {
-            d_qn.push_back(&it->second);
+            val = d_qi->d_match[repVar];
+            Trace("qcf-match-debug")
+                << "       Variable is already bound to " << val << std::endl;
+          }
+          else
+          {
+            // binding an argument variable
+            d_qni_bound[qindex] = repVar;
+            std::map<TNode, TNodeTrie>::iterator it = d_qn[index]->d_data.begin();
+            if (it != d_qn[index]->d_data.end())
+            {
+              d_qni.push_back(it);
+              // set the match
+              if (it->first.getType() == d_qi->d_var_types[repVar]
+                  && d_qi->setMatch(d_qni_bound[qindex], it->first, true, true))
+              {
+                Trace("qcf-match-debug") << "       Binding variable"
+                                         << std::endl;
+                if (d_qn.size() < d_qni_size)
+                {
+                  d_qn.push_back(&it->second);
+                }
+              }
+              else
+              {
+                Trace("qcf-match")
+                    << "       Binding variable, currently fail." << std::endl;
+                invalidMatch = true;
+              }
+            }
+            else
+            {
+              Trace("qcf-match-debug")
+                  << "       Binding variable, fail, no more variables to bind"
+                  << std::endl;
+              d_qn.pop_back();
+            }
           }
         }
         else
         {
-          Trace("qcf-match-debug") << "       Failed to match" << std::endl;
-          d_qn.pop_back();
+          Trace("qcf-match-debug")
+              << "       Match " << qindex << " is ground term" << std::endl;
+          Assert(d_qni_gterm.find(qindex) != d_qni_gterm.end());
+          val = d_qni_gterm[qindex];
+          Assert(!val.isNull());
+        }
+        if (!val.isNull())
+        {
+          Node valr = d_parent->getRepresentative(val);
+          // constrained by val
+          std::map<TNode, TNodeTrie>::iterator it =
+              d_qn[index]->d_data.find(valr);
+          if (it != d_qn[index]->d_data.end())
+          {
+            Trace("qcf-match-debug") << "       Match" << std::endl;
+            d_qni.push_back(it);
+            if (d_qn.size() < d_qni_size)
+            {
+              d_qn.push_back(&it->second);
+            }
+          }
+          else
+          {
+            Trace("qcf-match-debug") << "       Failed to match" << std::endl;
+            d_qn.pop_back();
+          }
         }
       }
     }
@@ -2385,41 +2445,45 @@ bool MatchGen::doMatching()
       size_t index = d_qni.size() - 1;
       // increment if binding this variable
       bool success = false;
-      std::map<size_t, size_t>::iterator itb = d_qni_bound.find(index);
-      if (itb != d_qni_bound.end())
+      if (!isLeafIndex(index))
       {
-        d_qni[index]++;
-        if (d_qni[index] != d_qn[index]->d_data.end())
+        size_t qindex = index + 1;
+        std::map<size_t, size_t>::iterator itb = d_qni_bound.find(qindex);
+        if (itb != d_qni_bound.end())
         {
-          success = true;
-          if (d_qi->setMatch(itb->second, d_qni[index]->first, true, true))
+          d_qni[index]++;
+          if (d_qni[index] != d_qn[index]->d_data.end())
           {
-            Trace("qcf-match-debug")
-                << "       Bind next variable" << std::endl;
-            if (d_qn.size() < d_qni_size)
+            success = true;
+            if (d_qi->setMatch(itb->second, d_qni[index]->first, true, true))
             {
-              d_qn.push_back(&d_qni[index]->second);
+              Trace("qcf-match-debug") << "       Bind next variable"
+                                       << std::endl;
+              if (d_qn.size() < d_qni_size)
+              {
+                d_qn.push_back(&d_qni[index]->second);
+              }
+            }
+            else
+            {
+              Trace("qcf-match-debug")
+                  << "       Bind next variable, currently fail" << std::endl;
+              invalidMatch = true;
             }
           }
           else
           {
+            d_qi->unsetMatch(itb->second);
+            d_qi->d_match_term[itb->second] = TNode::null();
             Trace("qcf-match-debug")
-                << "       Bind next variable, currently fail" << std::endl;
-            invalidMatch = true;
+                << "       Bind next variable, no more variables to bind"
+                << std::endl;
           }
         }
         else
         {
-          d_qi->unsetMatch(itb->second);
-          d_qi->d_match_term[itb->second] = TNode::null();
-          Trace("qcf-match-debug")
-              << "       Bind next variable, no more variables to bind"
-              << std::endl;
+          // TODO : if it equal to something else, also try that
         }
-      }
-      else
-      {
-        // TODO : if it equal to something else, also try that
       }
       // if not incrementing, move to next
       if (!success)
@@ -2431,10 +2495,9 @@ bool MatchGen::doMatching()
   } while ((!d_qn.empty() && d_qni.size() != d_qni_size) || invalidMatch);
   if (d_qni.size() == d_qni_size)
   {
-    Assert(!d_qni[d_qni.size() - 1]->second.d_data.empty());
-    TNode t = d_qni[d_qni.size() - 1]->second.d_data.begin()->first;
-    Trace("qcf-match-debug")
-        << "       " << d_n << " matched " << t << std::endl;
+    TNode t = d_qni[d_qni.size() - 1]->first;
+    Trace("qcf-match-debug") << "       " << d_n << " matched " << t
+                             << std::endl;
     d_qi->d_match_term[d_qni_var_num[0]] = t;
     // set the match terms
     Node q = d_qi->getQuantifiedFormula();
