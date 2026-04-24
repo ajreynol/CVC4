@@ -16,6 +16,7 @@
 #define CVC5__THEORY__QUANTIFIERS__EMATCHING__EMATCHING_FILTER_H
 
 #include <map>
+#include <vector>
 
 #include "theory/quantifiers/quant_module.h"
 
@@ -49,10 +50,22 @@ class EmatchingFilter : public QuantifiersModule
   std::string identify() const override;
 
  private:
+  /** Snapshot current master equality engine events and compute their delta. */
+  void updateMasterEqEvents();
+  /** Print the current round master equality engine event delta. */
+  void traceMasterEqEventDiff(size_t previousSize) const;
   /** Compute whether quantified formula q should be excluded. */
   bool shouldExclude(Node q) const;
   /** Cached exclusion decision per quantified formula. */
   std::map<Node, bool> d_excluded;
+  /** Whether we already have a master equality event snapshot. */
+  bool d_hasMasterEqEventSnapshot;
+  /** The most recent master equality engine event snapshot. */
+  std::vector<TermRegistry::MasterEqEvent> d_masterEqEventSnapshot;
+  /** Events removed from the previous snapshot. */
+  std::vector<TermRegistry::MasterEqEvent> d_masterEqEventsRemoved;
+  /** Events added since the previous snapshot. */
+  std::vector<TermRegistry::MasterEqEvent> d_masterEqEventsAdded;
 };
 
 }  // namespace quantifiers

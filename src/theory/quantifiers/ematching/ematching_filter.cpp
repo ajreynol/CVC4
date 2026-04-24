@@ -12,6 +12,8 @@
 
 #include "theory/quantifiers/ematching/ematching_filter.h"
 
+#include <algorithm>
+
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
@@ -21,15 +23,23 @@ EmatchingFilter::EmatchingFilter(Env& env,
                                  QuantifiersInferenceManager& qim,
                                  QuantifiersRegistry& qr,
                                  TermRegistry& tr)
-    : QuantifiersModule(env, qs, qim, qr, tr)
+    : QuantifiersModule(env, qs, qim, qr, tr),
+      d_hasMasterEqEventSnapshot(false)
 {
 }
 
-bool EmatchingFilter::needsCheck(CVC5_UNUSED Theory::Effort e) { return false; }
-
-void EmatchingFilter::check(CVC5_UNUSED Theory::Effort e,
-                            CVC5_UNUSED QEffort quant_e)
+bool EmatchingFilter::needsCheck(Theory::Effort e)
 {
+  return d_qstate.getInstWhenNeedsCheck(e);
+}
+
+void EmatchingFilter::check(CVC5_UNUSED Theory::Effort e, QEffort quant_e)
+{
+  if (quant_e != QEFFORT_STANDARD)
+  {
+    return;
+  }
+  updateMasterEqEvents();
 }
 
 void EmatchingFilter::registerQuantifier(Node q)
@@ -44,6 +54,62 @@ bool EmatchingFilter::exclude(Node q) const
 }
 
 std::string EmatchingFilter::identify() const { return "ematching-filter"; }
+
+void EmatchingFilter::updateMasterEqEvents()
+{
+  std::vector<TermRegistry::MasterEqEvent> currentEvents;
+  d_treg.getMasterEqEvents(currentEvents);
+  const size_t previousSize = d_masterEqEventSnapshot.size();
+  d_masterEqEventsRemoved.clear();
+  d_masterEqEventsAdded.clear();
+  if (d_hasMasterEqEventSnapshot)
+  {
+    size_t prefix = 0;
+    size_t maxPrefix =
+        std::min(d_masterEqEventSnapshot.size(), currentEvents.size());
+    while (prefix < maxPrefix
+           && d_masterEqEventSnapshot[prefix] == currentEvents[prefix])
+    {
+      ++prefix;
+    }
+    d_masterEqEventsRemoved.insert(d_masterEqEventsRemoved.end(),
+                                   d_masterEqEventSnapshot.begin() + prefix,
+                                   d_masterEqEventSnapshot.end());
+    d_masterEqEventsAdded.insert(d_masterEqEventsAdded.end(),
+                                 currentEvents.begin() + prefix,
+                                 currentEvents.end());
+  }
+  d_masterEqEventSnapshot.swap(currentEvents);
+  if (TraceIsOn("ematching-filter-events"))
+  {
+    traceMasterEqEventDiff(previousSize);
+  }
+  d_hasMasterEqEventSnapshot = true;
+}
+
+void EmatchingFilter::traceMasterEqEventDiff(size_t previousSize) const
+{
+  Trace("ematching-filter-events")
+      << "Master equality engine events: previous=" << previousSize
+      << ", current="
+      << d_masterEqEventSnapshot.size();
+  if (!d_hasMasterEqEventSnapshot)
+  {
+    Trace("ematching-filter-events") << " (initial snapshot)." << std::endl;
+    return;
+  }
+  Trace("ematching-filter-events")
+      << ", removed=" << d_masterEqEventsRemoved.size()
+      << ", added=" << d_masterEqEventsAdded.size() << "." << std::endl;
+  for (const TermRegistry::MasterEqEvent& event : d_masterEqEventsRemoved)
+  {
+    Trace("ematching-filter-events") << "  removed: " << event << std::endl;
+  }
+  for (const TermRegistry::MasterEqEvent& event : d_masterEqEventsAdded)
+  {
+    Trace("ematching-filter-events") << "  added: " << event << std::endl;
+  }
+}
 
 bool EmatchingFilter::shouldExclude(CVC5_UNUSED Node q) const
 {

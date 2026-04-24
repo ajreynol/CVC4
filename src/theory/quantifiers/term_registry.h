@@ -15,9 +15,11 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__TERM_REGISTRY_H
 #define CVC5__THEORY__QUANTIFIERS__TERM_REGISTRY_H
 
+#include <iosfwd>
 #include <map>
 #include <unordered_set>
 
+#include "context/cdlist.h"
 #include "context/cdhashset.h"
 #include "smt/env_obj.h"
 #include "theory/quantifiers/bv_inverter.h"
@@ -43,6 +45,34 @@ class OracleChecker;
 class TermRegistry : protected EnvObj
 {
  public:
+  /** The kinds of master equality engine events we track. */
+  enum class MasterEqEventKind
+  {
+    /** A new equivalence class was created. */
+    NEW_CLASS,
+    /** Two equivalence classes were merged. */
+    MERGE,
+  };
+  /** A master equality engine event recorded by this registry. */
+  struct MasterEqEvent
+  {
+    MasterEqEvent(MasterEqEventKind kind, Node first, Node second = Node::null())
+        : d_kind(kind), d_first(first), d_second(second)
+    {
+    }
+    bool operator==(const MasterEqEvent& other) const
+    {
+      return d_kind == other.d_kind && d_first == other.d_first
+             && d_second == other.d_second;
+    }
+    /** The kind of event. */
+    MasterEqEventKind d_kind;
+    /** The first term for this event. */
+    Node d_first;
+    /** The second term for this event, if any. */
+    Node d_second;
+  };
+
   TermRegistry(Env& env, QuantifiersState& qs, QuantifiersRegistry& qr);
   /** Finish init, which sets the inference manager on modules of this class */
   void finishInit(FirstOrderModel* fm, QuantifiersInferenceManager* qim);
@@ -53,6 +83,8 @@ class TermRegistry : protected EnvObj
   void eqNotifyNewClass(TNode t);
   /** notification when master equality engine merges two classes*/
   void eqNotifyMerge(TNode t1, TNode t2);
+  /** Copy the currently recorded master equality engine events to `events`. */
+  void getMasterEqEvents(std::vector<MasterEqEvent>& events) const;
 
   /** get term for type
    *
@@ -128,6 +160,10 @@ class TermRegistry : protected EnvObj
    * @param withinQuant whether n occurs within a quantified formula body
    */
   void addTermInternal(TNode n, bool withinQuant = false);
+  /** Whether master equality engine events should be recorded. */
+  const bool d_recordMasterEqEvents;
+  /** Master equality engine events in the current SAT context. */
+  context::CDList<MasterEqEvent> d_masterEqEvents;
   /** term enumeration utility */
   std::unique_ptr<TermEnumeration> d_termEnum;
   /** term enumeration utility */
@@ -149,6 +185,9 @@ class TermRegistry : protected EnvObj
   /** extended model object */
   FirstOrderModel* d_qmodel;
 };
+
+std::ostream& operator<<(std::ostream& out,
+                         const TermRegistry::MasterEqEvent& event);
 
 }  // namespace quantifiers
 }  // namespace theory

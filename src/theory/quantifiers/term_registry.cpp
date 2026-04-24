@@ -32,6 +32,8 @@ TermRegistry::TermRegistry(Env& env,
                            QuantifiersState& qs,
                            QuantifiersRegistry& qr)
     : EnvObj(env),
+      d_recordMasterEqEvents(options().quantifiers.filterEMatching),
+      d_masterEqEvents(context()),
       d_termEnum(new TermEnumeration),
       d_termPools(new TermPools(env, qs)),
       d_termDb(logicInfo().isHigherOrder() ? new HoTermDb(env, qs, qr)
@@ -72,12 +74,33 @@ void TermRegistry::finishInit(FirstOrderModel* fm,
 
 void TermRegistry::addQuantifierBody(TNode n) { addTermInternal(n, true); }
 
-void TermRegistry::eqNotifyNewClass(TNode t) { addTermInternal(t, false); }
+void TermRegistry::eqNotifyNewClass(TNode t)
+{
+  if (d_recordMasterEqEvents)
+  {
+    d_masterEqEvents.emplace_back(MasterEqEventKind::NEW_CLASS, t);
+  }
+  addTermInternal(t, false);
+}
 
 void TermRegistry::eqNotifyMerge(TNode t1, TNode t2)
 {
+  if (d_recordMasterEqEvents)
+  {
+    d_masterEqEvents.emplace_back(MasterEqEventKind::MERGE, t1, t2);
+  }
   // notify the term database
   d_termDb->eqNotifyMerge(t1, t2);
+}
+
+void TermRegistry::getMasterEqEvents(std::vector<MasterEqEvent>& events) const
+{
+  events.clear();
+  events.reserve(d_masterEqEvents.size());
+  for (const MasterEqEvent& event : d_masterEqEvents)
+  {
+    events.push_back(event);
+  }
 }
 
 void TermRegistry::addTermInternal(TNode n, bool withinQuant)
@@ -178,6 +201,20 @@ ieval::InstEvaluator* TermRegistry::getEvaluator(Node q,
 }
 
 FirstOrderModel* TermRegistry::getModel() const { return d_qmodel; }
+
+std::ostream& operator<<(std::ostream& out,
+                         const TermRegistry::MasterEqEvent& event)
+{
+  if (event.d_kind == TermRegistry::MasterEqEventKind::NEW_CLASS)
+  {
+    out << "(new-class " << event.d_first << ")";
+  }
+  else
+  {
+    out << "(merge " << event.d_first << " " << event.d_second << ")";
+  }
+  return out;
+}
 
 }  // namespace quantifiers
 }  // namespace theory
