@@ -2349,8 +2349,8 @@ bool MatchGen::doMatching()
           // get the representative variable this variable is equal to
           size_t repVar = d_qi->getCurrentRepVar(itv->second);
           Trace("qcf-match-debug")
-              << "       Match " << qindex << " is a variable "
-              << itv->second << ", which is repVar " << repVar << std::endl;
+              << "       Match " << qindex << " is a variable " << itv->second
+              << ", which is repVar " << repVar << std::endl;
           // get the value of the representative variable
           if (!d_qi->d_match[repVar].isNull())
           {
@@ -2362,7 +2362,8 @@ bool MatchGen::doMatching()
           {
             // binding an argument variable
             d_qni_bound[qindex] = repVar;
-            std::map<TNode, TNodeTrie>::iterator it = d_qn[index]->d_data.begin();
+            std::map<TNode, TNodeTrie>::iterator it =
+                d_qn[index]->d_data.begin();
             if (it != d_qn[index]->d_data.end())
             {
               d_qni.push_back(it);
@@ -2370,8 +2371,8 @@ bool MatchGen::doMatching()
               if (it->first.getType() == d_qi->d_var_types[repVar]
                   && d_qi->setMatch(d_qni_bound[qindex], it->first, true, true))
               {
-                Trace("qcf-match-debug") << "       Binding variable"
-                                         << std::endl;
+                Trace("qcf-match-debug")
+                    << "       Binding variable" << std::endl;
                 if (d_qn.size() < d_qni_size)
                 {
                   d_qn.push_back(&it->second);
@@ -2442,8 +2443,8 @@ bool MatchGen::doMatching()
             success = true;
             if (d_qi->setMatch(itb->second, d_qni[index]->first, true, true))
             {
-              Trace("qcf-match-debug") << "       Bind next variable"
-                                       << std::endl;
+              Trace("qcf-match-debug")
+                  << "       Bind next variable" << std::endl;
               if (d_qn.size() < d_qni_size)
               {
                 d_qn.push_back(&d_qni[index]->second);
@@ -2481,8 +2482,8 @@ bool MatchGen::doMatching()
   if (d_qni.size() == d_qni_size)
   {
     TNode t = d_qni[d_qni.size() - 1]->first;
-    Trace("qcf-match-debug") << "       " << d_n << " matched " << t
-                             << std::endl;
+    Trace("qcf-match-debug")
+        << "       " << d_n << " matched " << t << std::endl;
     d_qi->d_match_term[d_qni_var_num[0]] = t;
     // set the match terms
     Node q = d_qi->getQuantifiedFormula();
