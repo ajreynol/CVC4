@@ -95,6 +95,56 @@ InstStrategyAutoGenTriggers::InstStrategyAutoGenTriggers(
   }
 }
 
+uint64_t InstStrategyAutoGenTriggers::getNumTriggers(Node q)
+{
+  options::UserPatMode upMode = getInstUserPatMode();
+  if (hasUserPatterns(q)
+      && (upMode == options::UserPatMode::TRUST
+          || upMode == options::UserPatMode::STRICT))
+  {
+    return 0;
+  }
+  uint64_t numTriggers =
+      d_auto_gen_trigger[0][q].size() + d_auto_gen_trigger[1][q].size();
+  if (numTriggers > 0 || d_madeTriggers.find(q) != d_madeTriggers.end())
+  {
+    return numTriggers;
+  }
+  if (!generatePatternTerms(q))
+  {
+    return 0;
+  }
+  std::vector<Node>& patTermsSingle = d_patTerms[0][q];
+  if (!patTermsSingle.empty())
+  {
+    size_t numSingleTriggersToUse = patTermsSingle.size();
+    if (options().quantifiers.relevantTriggers)
+    {
+      sortPatTermsByRelevance(patTermsSingle);
+      numSingleTriggersToUse = 1;
+      unsigned nqfsCurr = d_quant_rel->getNumQuantifiersForSymbol(
+          patTermsSingle[0].getOperator());
+      while (numSingleTriggersToUse < patTermsSingle.size()
+             && d_quant_rel->getNumQuantifiersForSymbol(
+                    patTermsSingle[numSingleTriggersToUse].getOperator())
+                    <= nqfsCurr)
+      {
+        numSingleTriggersToUse++;
+      }
+    }
+    numTriggers += numSingleTriggersToUse;
+    if (!options().quantifiers.multiTriggerWhenSingle)
+    {
+      return numTriggers;
+    }
+  }
+  if (!d_patTerms[1][q].empty())
+  {
+    numTriggers++;
+  }
+  return numTriggers;
+}
+
 void InstStrategyAutoGenTriggers::processResetInstantiationRound(
     CVC5_UNUSED Theory::Effort effort)
 {

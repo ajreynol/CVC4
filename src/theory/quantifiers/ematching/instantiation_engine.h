@@ -54,6 +54,8 @@ class InstantiationEngine : public QuantifiersModule
   std::string identify() const override;
 
  private:
+  /** Print a summary of filtered and unfiltered E-matching triggers. */
+  void traceFilterSummary();
   /** Assert that an excluded quantified formula would not instantiate. */
   void assertExcludedQuantifierHasNoInstantiations(Node q,
                                                    Theory::Effort effort);
@@ -73,10 +75,8 @@ class InstantiationEngine : public QuantifiersModule
   std::unique_ptr<InstStrategyAutoGenTriggers> d_i_ag;
   /** current processing quantified formulas */
   std::vector<Node> d_quants;
-#ifdef CVC5_ASSERTIONS
   /** Quantified formulas excluded from the current E-matching round. */
   std::vector<Node> d_excludedQuants;
-#endif
   /** all triggers will be stored in this database */
   inst::TriggerDatabase d_trdb;
   /** for computing relevance of quantifiers */

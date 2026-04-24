@@ -30,6 +30,7 @@ InstStrategy::InstStrategy(Env& env,
 }
 InstStrategy::~InstStrategy() {}
 void InstStrategy::presolve() {}
+uint64_t InstStrategy::getNumTriggers(CVC5_UNUSED Node q) { return 0; }
 std::string InstStrategy::identify() const { return std::string("Unknown"); }
 
 options::UserPatMode InstStrategy::getInstUserPatMode() const

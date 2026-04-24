@@ -293,6 +293,14 @@ name   = "Quantifiers"
   help       = "whether to do heuristic E-matching"
 
 [[option]]
+  name       = "filterEMatching"
+  category   = "expert"
+  long       = "filter-e-matching"
+  type       = "bool"
+  default    = "false"
+  help       = "conservatively filter quantified formulas from E-matching"
+
+[[option]]
   name       = "termDbMode"
   category   = "regular"
   long       = "term-db-mode=MODE"

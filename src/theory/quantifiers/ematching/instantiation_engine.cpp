@@ -43,9 +43,7 @@ InstantiationEngine::InstantiationEngine(Env& env,
       d_isup(),
       d_i_ag(),
       d_quants(),
-#ifdef CVC5_ASSERTIONS
       d_excludedQuants(),
-#endif
       d_trdb(d_env, qs, qim, qr, tr),
       d_quant_rel(nullptr)
 {
@@ -165,9 +163,7 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
   // collect all active quantified formulas belonging to this
   bool quantActive = false;
   d_quants.clear();
-#ifdef CVC5_ASSERTIONS
   d_excludedQuants.clear();
-#endif
   FirstOrderModel* m = d_treg.getModel();
   size_t nquant = m->getNumAssertedQuantifiers();
   for (size_t i = 0; i < nquant; i++)
@@ -182,12 +178,14 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
       quantActive = true;
       d_quants.push_back(q);
     }
-#ifdef CVC5_ASSERTIONS
     else
     {
       d_excludedQuants.push_back(q);
     }
-#endif
+  }
+  if (d_emFilter != nullptr)
+  {
+    traceFilterSummary();
   }
   Trace("inst-engine-debug")
       << "InstEngine: check: # asserted quantifiers " << d_quants.size() << "/";
@@ -298,6 +296,35 @@ bool InstantiationEngine::isEligibleForProcessing(Node q)
     return false;
   }
   return true;
+}
+
+void InstantiationEngine::traceFilterSummary()
+{
+  if (!TraceIsOn("ematching-filter"))
+  {
+    return;
+  }
+  uint64_t numFilteredTriggers = 0;
+  uint64_t numUnfilteredTriggers = 0;
+  for (const Node& q : d_excludedQuants)
+  {
+    for (InstStrategy* is : d_instStrategies)
+    {
+      numFilteredTriggers += is->getNumTriggers(q);
+    }
+  }
+  for (const Node& q : d_quants)
+  {
+    for (InstStrategy* is : d_instStrategies)
+    {
+      numUnfilteredTriggers += is->getNumTriggers(q);
+    }
+  }
+  Trace("ematching-filter")
+      << "E-matching filter summary: filtered=" << numFilteredTriggers
+      << ", unfiltered=" << numUnfilteredTriggers << " triggers (filtered="
+      << d_excludedQuants.size() << ", unfiltered=" << d_quants.size()
+      << " quantified formulas)." << std::endl;
 }
 
 void InstantiationEngine::assertExcludedQuantifierHasNoInstantiations(

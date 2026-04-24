@@ -35,6 +35,16 @@ InstStrategyUserPatterns::InstStrategyUserPatterns(
 }
 InstStrategyUserPatterns::~InstStrategyUserPatterns() {}
 
+uint64_t InstStrategyUserPatterns::getNumTriggers(Node q)
+{
+  uint64_t numTriggers = d_user_gen[q].size();
+  if (getInstUserPatMode() == options::UserPatMode::RESORT)
+  {
+    numTriggers += d_user_gen_wait[q].size();
+  }
+  return numTriggers;
+}
+
 std::string InstStrategyUserPatterns::identify() const
 {
   return std::string("UserPatterns");

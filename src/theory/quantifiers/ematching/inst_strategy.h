@@ -63,6 +63,8 @@ class InstStrategy : protected EnvObj
   virtual void processResetInstantiationRound(Theory::Effort effort) = 0;
   /** process method, returns a status */
   virtual InstStrategyStatus process(Node f, Theory::Effort effort, int e) = 0;
+  /** Get the number of triggers this strategy may use for q this round. */
+  virtual uint64_t getNumTriggers(Node q);
   /** identify */
   virtual std::string identify() const;
 

@@ -66,8 +66,11 @@ void QuantifiersModules::initialize(Env& env,
   }
   if (options.quantifiers.eMatching)
   {
-    d_em_filter.reset(new EmatchingFilter(env, qs, qim, qr, tr));
-    modules.push_back(d_em_filter.get());
+    if (options.quantifiers.filterEMatching)
+    {
+      d_em_filter.reset(new EmatchingFilter(env, qs, qim, qr, tr));
+      modules.push_back(d_em_filter.get());
+    }
     d_inst_engine.reset(
         new InstantiationEngine(env, qs, qim, qr, tr, d_em_filter.get()));
     modules.push_back(d_inst_engine.get());

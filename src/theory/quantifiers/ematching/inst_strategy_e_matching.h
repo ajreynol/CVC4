@@ -90,6 +90,8 @@ class InstStrategyAutoGenTriggers : public InstStrategy
                               QuantRelevance* qrlv);
   ~InstStrategyAutoGenTriggers() {}
 
+  /** Get the number of triggers this strategy may use for q this round. */
+  uint64_t getNumTriggers(Node q) override;
   /** get auto-generated trigger */
   inst::Trigger* getAutoGenTrigger(Node q);
   /** identify */

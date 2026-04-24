@@ -42,6 +42,8 @@ class InstStrategyUserPatterns : public InstStrategy
   ~InstStrategyUserPatterns();
   /** add pattern */
   void addUserPattern(Node q, Node pat);
+  /** Get the number of triggers this strategy may use for q this round. */
+  uint64_t getNumTriggers(Node q) override;
   /** identify */
   std::string identify() const override;
 
