@@ -1783,22 +1783,7 @@ void MatchGen::reset(bool tgt)
     TNode f = tdb->getMatchOperator(d_n);
     Trace("qcf-match-debug")
         << "       reset: Var will match operators of " << f << std::endl;
-    // If this variable is already constrained to a ground value, use the trie
-    // partitioned by the result equivalence class to avoid exploring
-    // applications that cannot match.
-    TNode cval = d_qi->getCurrentValue(d_n);
-    int cvn = d_qi->getVarNum(cval);
-    TNodeTrie* qni = nullptr;
-    bool useResultTrie = false;
-    if (cvn == -1 && cval != d_n)
-    {
-      useResultTrie = true;
-      qni = tdb->getTermArgTrie(d_parent->getRepresentative(cval), f);
-    }
-    if (!useResultTrie && (qni == nullptr || qni->empty()))
-    {
-      qni = tdb->getTermArgTrie(Node::null(), f);
-    }
+    TNodeTrie* qni = tdb->getTermArgTrie(Node::null(), f);
     if (qni == nullptr || qni->empty())
     {
       // inform irrelevant quantifiers
