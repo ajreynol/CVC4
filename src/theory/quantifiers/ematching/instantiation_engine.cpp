@@ -13,10 +13,12 @@
 #include "theory/quantifiers/ematching/instantiation_engine.h"
 
 #include "options/quantifiers_options.h"
+#include "theory/quantifiers/ematching/ematching_filter.h"
 #include "theory/quantifiers/ematching/inst_strategy_e_matching.h"
 #include "theory/quantifiers/ematching/inst_strategy_e_matching_user.h"
 #include "theory/quantifiers/ematching/trigger.h"
 #include "theory/quantifiers/first_order_model.h"
+#include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_attributes.h"
 #include "theory/quantifiers/term_database.h"
 #include "theory/quantifiers/term_util.h"
@@ -33,12 +35,17 @@ InstantiationEngine::InstantiationEngine(Env& env,
                                          QuantifiersState& qs,
                                          QuantifiersInferenceManager& qim,
                                          QuantifiersRegistry& qr,
-                                         TermRegistry& tr)
+                                         TermRegistry& tr,
+                                         EmatchingFilter* emFilter)
     : QuantifiersModule(env, qs, qim, qr, tr),
+      d_emFilter(emFilter),
       d_instStrategies(),
       d_isup(),
       d_i_ag(),
       d_quants(),
+#ifdef CVC5_ASSERTIONS
+      d_excludedQuants(),
+#endif
       d_trdb(d_env, qs, qim, qr, tr),
       d_quant_rel(nullptr)
 {
@@ -158,16 +165,29 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
   // collect all active quantified formulas belonging to this
   bool quantActive = false;
   d_quants.clear();
+#ifdef CVC5_ASSERTIONS
+  d_excludedQuants.clear();
+#endif
   FirstOrderModel* m = d_treg.getModel();
   size_t nquant = m->getNumAssertedQuantifiers();
   for (size_t i = 0; i < nquant; i++)
   {
     Node q = m->getAssertedQuantifier(i, true);
-    if (shouldProcess(q) && m->isQuantifierActive(q))
+    if (!isEligibleForProcessing(q) || !m->isQuantifierActive(q))
+    {
+      continue;
+    }
+    if (shouldProcess(q))
     {
       quantActive = true;
       d_quants.push_back(q);
     }
+#ifdef CVC5_ASSERTIONS
+    else
+    {
+      d_excludedQuants.push_back(q);
+    }
+#endif
   }
   Trace("inst-engine-debug")
       << "InstEngine: check: # asserted quantifiers " << d_quants.size() << "/";
@@ -180,6 +200,15 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
   {
     d_quants.clear();
   }
+#ifdef CVC5_ASSERTIONS
+  if (!d_qstate.isInConflict())
+  {
+    for (const Node& q : d_excludedQuants)
+    {
+      assertExcludedQuantifierHasNoInstantiations(q, e);
+    }
+  }
+#endif
   endCallDebug();
 }
 
@@ -204,7 +233,7 @@ void InstantiationEngine::checkOwnership(Node q)
 
 void InstantiationEngine::registerQuantifier(Node q)
 {
-  if (!shouldProcess(q))
+  if (!isEligibleForProcessing(q))
   {
     return;
   }
@@ -249,6 +278,15 @@ void InstantiationEngine::addUserNoPattern(Node q, Node pat)
 
 bool InstantiationEngine::shouldProcess(Node q)
 {
+  if (!isEligibleForProcessing(q))
+  {
+    return false;
+  }
+  return d_emFilter == nullptr || !d_emFilter->exclude(q);
+}
+
+bool InstantiationEngine::isEligibleForProcessing(Node q)
+{
   if (!d_qreg.hasOwnership(q, this))
   {
     return false;
@@ -260,6 +298,39 @@ bool InstantiationEngine::shouldProcess(Node q)
     return false;
   }
   return true;
+}
+
+void InstantiationEngine::assertExcludedQuantifierHasNoInstantiations(
+    Node q, Theory::Effort effort)
+{
+  if (d_emFilter == nullptr || !d_emFilter->exclude(q))
+  {
+    return;
+  }
+  uint32_t numInst =
+      d_qim.getInstantiate()->getNumInstantiationsThisRound(q);
+  int e = 0;
+  int eLimit = effort == Theory::EFFORT_LAST_CALL ? 10 : 2;
+  bool finished = false;
+  while (!finished && e <= eLimit)
+  {
+    finished = true;
+    for (InstStrategy* is : d_instStrategies)
+    {
+      InstStrategyStatus quantStatus = is->process(q, effort, e);
+      Assert(d_qim.getInstantiate()->getNumInstantiationsThisRound(q) == numInst)
+          << "E-matching exclusion was not conservative for " << q;
+      if (d_qstate.isInConflict())
+      {
+        return;
+      }
+      if (quantStatus == InstStrategyStatus::STATUS_UNFINISHED)
+      {
+        finished = false;
+      }
+    }
+    e++;
+  }
 }
 
 }  // namespace quantifiers

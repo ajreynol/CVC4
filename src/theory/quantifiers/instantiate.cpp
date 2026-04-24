@@ -781,6 +781,12 @@ void Instantiate::notifyEndRound()
   }
 }
 
+uint32_t Instantiate::getNumInstantiationsThisRound(Node q) const
+{
+  std::map<Node, uint32_t>::const_iterator it = d_instDebugTemp.find(q);
+  return it == d_instDebugTemp.end() ? 0 : it->second;
+}
+
 void Instantiate::debugPrintModel()
 {
   if (TraceIsOn("inst-per-quant"))

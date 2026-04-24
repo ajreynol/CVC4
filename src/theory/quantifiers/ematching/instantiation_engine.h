@@ -26,6 +26,7 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+class EmatchingFilter;
 class InstStrategyUserPatterns;
 class InstStrategyAutoGenTriggers;
 
@@ -36,7 +37,8 @@ class InstantiationEngine : public QuantifiersModule
                       QuantifiersState& qs,
                       QuantifiersInferenceManager& qim,
                       QuantifiersRegistry& qr,
-                      TermRegistry& tr);
+                      TermRegistry& tr,
+                      EmatchingFilter* emFilter);
   ~InstantiationEngine();
   void presolve() override;
   bool needsCheck(Theory::Effort e) override;
@@ -52,10 +54,17 @@ class InstantiationEngine : public QuantifiersModule
   std::string identify() const override;
 
  private:
+  /** Assert that an excluded quantified formula would not instantiate. */
+  void assertExcludedQuantifierHasNoInstantiations(Node q,
+                                                   Theory::Effort effort);
+  /** Return true if E-matching can be applied to quantified formula q. */
+  bool isEligibleForProcessing(Node q);
   /** do instantiation round */
   void doInstantiationRound(Theory::Effort effort);
   /** Return true if this module should process quantified formula q */
   bool shouldProcess(Node q);
+  /** Conservative filter for excluding formulas from E-matching. */
+  EmatchingFilter* d_emFilter;
   /** instantiation strategies */
   std::vector<InstStrategy*> d_instStrategies;
   /** user-pattern instantiation strategy */
@@ -64,6 +73,10 @@ class InstantiationEngine : public QuantifiersModule
   std::unique_ptr<InstStrategyAutoGenTriggers> d_i_ag;
   /** current processing quantified formulas */
   std::vector<Node> d_quants;
+#ifdef CVC5_ASSERTIONS
+  /** Quantified formulas excluded from the current E-matching round. */
+  std::vector<Node> d_excludedQuants;
+#endif
   /** all triggers will be stored in this database */
   inst::TriggerDatabase d_trdb;
   /** for computing relevance of quantifiers */

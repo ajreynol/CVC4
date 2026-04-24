@@ -24,6 +24,7 @@ namespace quantifiers {
 QuantifiersModules::QuantifiersModules()
     : d_rel_dom(nullptr),
       d_alpha_equiv(nullptr),
+      d_em_filter(nullptr),
       d_inst_engine(nullptr),
       d_model_engine(nullptr),
       d_bint(nullptr),
@@ -65,7 +66,10 @@ void QuantifiersModules::initialize(Env& env,
   }
   if (options.quantifiers.eMatching)
   {
-    d_inst_engine.reset(new InstantiationEngine(env, qs, qim, qr, tr));
+    d_em_filter.reset(new EmatchingFilter(env, qs, qim, qr, tr));
+    modules.push_back(d_em_filter.get());
+    d_inst_engine.reset(
+        new InstantiationEngine(env, qs, qim, qr, tr, d_em_filter.get()));
     modules.push_back(d_inst_engine.get());
   }
   if (options.quantifiers.cegqi)

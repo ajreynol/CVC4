@@ -242,6 +242,8 @@ class Instantiate : public QuantifiersUtil
    * applicable, and prints to out if the option debug-inst is enabled.
    */
   void notifyEndRound();
+  /** Get the number of instantiations added for q in the current round. */
+  uint32_t getNumInstantiationsThisRound(Node q) const;
   /** debug print model, called once, before we terminate with sat/unknown. */
   void debugPrintModel();
 
