@@ -487,6 +487,8 @@ void InstMatchGenerator::resetInstantiationRound()
   {
     d_next->resetInstantiationRound();
   }
+  d_failed_match_cache.clear();
+  d_no_candidate_eq_class_cache.clear();
   d_curr_exclude_match.clear();
 }
 
@@ -511,6 +513,21 @@ bool InstMatchGenerator::reset(Node eqc)
   // we have a specific equivalence class in mind
   // we are producing matches for f(E) ~ t, where E is a non-ground vector of
   // terms, and t is a ground term just look in equivalence class of the RHS
+  Node eqcKey;
+  if (!d_eq_class.isNull())
+  {
+    eqcKey = d_qstate.getRepresentative(d_eq_class);
+  }
+  if (d_no_candidate_eq_class_cache.find(eqcKey)
+      != d_no_candidate_eq_class_cache.end())
+  {
+    d_needsReset = false;
+    d_curr_first_candidate = Node::null();
+    Trace("matching-summary")
+        << "Cached empty reset " << d_match_pattern << " in " << eqc
+        << std::endl;
+    return false;
+  }
   d_cg->reset(d_eq_class);
   d_needsReset = false;
 
@@ -529,6 +546,10 @@ bool InstMatchGenerator::reset(Node eqc)
       << "Reset " << d_match_pattern << " in " << eqc << " returns "
       << !d_curr_first_candidate.isNull() << "." << std::endl;
 
+  if (d_curr_first_candidate.isNull())
+  {
+    d_no_candidate_eq_class_cache.insert(eqcKey);
+  }
   return !d_curr_first_candidate.isNull();
 }
 
@@ -557,7 +578,30 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
         Assert(t.getType() == d_match_pattern_type);
         Trace("matching-summary")
             << "Try " << d_match_pattern << " : " << t << std::endl;
-        success = getMatch(t, m);
+        FailedMatchKey currState;
+        if (!d_eq_class.isNull())
+        {
+          currState.d_eqClass = d_qstate.getRepresentative(d_eq_class);
+        }
+        currState.d_match = m.get();
+        std::map<Node, std::set<FailedMatchKey>>::const_iterator itc =
+            d_failed_match_cache.find(t);
+        if (itc != d_failed_match_cache.end()
+            && itc->second.find(currState) != itc->second.end())
+        {
+          Trace("matching-summary")
+              << "Cached failure for " << d_match_pattern << " : " << t
+              << std::endl;
+          success = -1;
+        }
+        else
+        {
+          success = getMatch(t, m);
+          if (success < 0 && !d_qstate.isInConflict())
+          {
+            d_failed_match_cache[t].insert(currState);
+          }
+        }
         if (d_independent_gen && success < 0)
         {
           Assert(d_eq_class.isNull() || !d_eq_class_rel.isNull());

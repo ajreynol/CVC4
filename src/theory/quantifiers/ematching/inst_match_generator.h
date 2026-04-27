@@ -16,6 +16,8 @@
 #define CVC5__THEORY__QUANTIFIERS__INST_MATCH_GENERATOR_H
 
 #include <map>
+#include <set>
+#include <vector>
 
 #include "expr/node.h"
 #include "theory/quantifiers/ematching/im_generator.h"
@@ -272,6 +274,35 @@ class InstMatchGenerator : public IMGenerator
    * extended syntax (! ... :no-pattern).
    */
   std::map<Node, bool> d_curr_exclude_match;
+  /** Key for caching failed matches. */
+  struct FailedMatchKey
+  {
+    /** The equivalence class this generator is currently matching in. */
+    Node d_eqClass;
+    /** The partial instantiation when the match was attempted. */
+    std::vector<Node> d_match;
+    bool operator<(const FailedMatchKey& k) const
+    {
+      if (d_eqClass < k.d_eqClass)
+      {
+        return true;
+      }
+      if (k.d_eqClass < d_eqClass)
+      {
+        return false;
+      }
+      return d_match < k.d_match;
+    }
+  };
+  /** Failed match cache
+   *
+   * Maps a candidate term to states for which matching this generator cannot
+   * lead to an instantiation in the current instantiation round. This avoids
+   * recomputing the same failed nested E-matching searches.
+   */
+  std::map<Node, std::set<FailedMatchKey>> d_failed_match_cache;
+  /** Equivalence classes with no available candidates this round. */
+  std::set<Node> d_no_candidate_eq_class_cache;
   /** Current first candidate
    * Used in a key fail-quickly optimization which generates
    * the first candidate term to match during reset().
