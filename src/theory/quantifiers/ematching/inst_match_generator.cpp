@@ -430,10 +430,13 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
   if (success)
   {
     Trace("matching-debug2") << "Reset children..." << std::endl;
+    std::vector<Node> context = d_ancestor_match_context;
+    context.push_back(t);
     // now, fit children into match
     // we will be requesting candidates for matching terms for each child
     for (size_t i = 0, size = d_children.size(); i < size; i++)
     {
+      d_children[i]->setAncestorMatchContext(d_ancestor_match_context);
       if (!d_children[i]->reset(t[d_children_index[i]]))
       {
         success = false;
@@ -443,6 +446,10 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
     if (success)
     {
       Trace("matching-debug2") << "Continue next " << d_next << std::endl;
+      if (d_next != nullptr)
+      {
+        d_next->setAncestorMatchContext(context);
+      }
       ret_val = continueNextMatch(m);
     }
   }
@@ -488,7 +495,9 @@ void InstMatchGenerator::resetInstantiationRound()
     d_next->resetInstantiationRound();
   }
   d_failed_match_cache.clear();
+  d_failed_reset_cache.clear();
   d_no_candidate_eq_class_cache.clear();
+  d_ancestor_match_context.clear();
   d_curr_exclude_match.clear();
 }
 
@@ -565,6 +574,30 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
   Trace("matching") << this << " " << d_match_pattern << " get next match " << m
                     << " in eq class " << d_eq_class << std::endl;
   int success = -1;
+  FailedMatchKey currState;
+  if (!d_eq_class.isNull())
+  {
+    currState.d_eqClass = d_qstate.getRepresentative(d_eq_class);
+  }
+  currState.d_context = d_ancestor_match_context;
+  for (Node& c : currState.d_context)
+  {
+    c = d_qstate.getRepresentative(c);
+  }
+  currState.d_match = m.get();
+  for (Node& mt : currState.d_match)
+  {
+    if (!mt.isNull())
+    {
+      mt = d_qstate.getRepresentative(mt);
+    }
+  }
+  if (d_failed_reset_cache.find(currState) != d_failed_reset_cache.end())
+  {
+    Trace("matching-summary")
+        << "Cached exhaustive failure for " << d_match_pattern << std::endl;
+    return -1;
+  }
   Node t = d_curr_first_candidate;
   do
   {
@@ -578,12 +611,6 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
         Assert(t.getType() == d_match_pattern_type);
         Trace("matching-summary")
             << "Try " << d_match_pattern << " : " << t << std::endl;
-        FailedMatchKey currState;
-        if (!d_eq_class.isNull())
-        {
-          currState.d_eqClass = d_qstate.getRepresentative(d_eq_class);
-        }
-        currState.d_match = m.get();
         std::map<Node, std::set<FailedMatchKey>>::const_iterator itc =
             d_failed_match_cache.find(t);
         if (itc != d_failed_match_cache.end()
@@ -625,6 +652,10 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
     Trace("matching-summary")
         << "..." << d_match_pattern << " failed, reset." << std::endl;
     Trace("matching") << this << " failed, reset " << d_eq_class << std::endl;
+    if (!d_qstate.isInConflict())
+    {
+      d_failed_reset_cache.insert(currState);
+    }
     // we failed, must reset
     reset(d_eq_class);
   }

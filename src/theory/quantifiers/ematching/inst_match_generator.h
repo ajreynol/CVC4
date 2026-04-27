@@ -142,6 +142,11 @@ class InstMatchGenerator : public IMGenerator
    * Returns the term we are currently matching.
    */
   Node getCurrentMatch() { return d_curr_matched; }
+  /** Set the ancestor match context for this generator. */
+  void setAncestorMatchContext(const std::vector<Node>& context)
+  {
+    d_ancestor_match_context = context;
+  }
   /** set that this match generator is independent
    *
    * A match generator is indepndent when this generator fails to produce a
@@ -226,6 +231,8 @@ class InstMatchGenerator : public IMGenerator
   Node d_match_pattern;
   /** The current term we are matching. */
   Node d_curr_matched;
+  /** The concrete candidate terms matched by parent generators. */
+  std::vector<Node> d_ancestor_match_context;
   /** do we need to call reset on this generator? */
   bool d_needsReset;
   /** candidate generator
@@ -279,6 +286,8 @@ class InstMatchGenerator : public IMGenerator
   {
     /** The equivalence class this generator is currently matching in. */
     Node d_eqClass;
+    /** The concrete candidate terms matched by parent generators. */
+    std::vector<Node> d_context;
     /** The partial instantiation when the match was attempted. */
     std::vector<Node> d_match;
     bool operator<(const FailedMatchKey& k) const
@@ -288,6 +297,14 @@ class InstMatchGenerator : public IMGenerator
         return true;
       }
       if (k.d_eqClass < d_eqClass)
+      {
+        return false;
+      }
+      if (d_context < k.d_context)
+      {
+        return true;
+      }
+      if (k.d_context < d_context)
       {
         return false;
       }
@@ -301,6 +318,13 @@ class InstMatchGenerator : public IMGenerator
    * recomputing the same failed nested E-matching searches.
    */
   std::map<Node, std::set<FailedMatchKey>> d_failed_match_cache;
+  /**
+   * Failed reset cache.
+   *
+   * Stores states for which this generator has already exhausted all
+   * candidates without producing a match in the current instantiation round.
+   */
+  std::set<FailedMatchKey> d_failed_reset_cache;
   /** Equivalence classes with no available candidates this round. */
   std::set<Node> d_no_candidate_eq_class_cache;
   /** Current first candidate
