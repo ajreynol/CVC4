@@ -191,8 +191,6 @@ Trigger::Trigger(Env& env,
 
 Trigger::~Trigger() { delete d_mg; }
 
-Node Trigger::getQuantifier() const { return d_quant; }
-
 bool Trigger::isUserTrigger() const { return d_isUser; }
 
 void Trigger::resetInstantiationRound() { d_mg->resetInstantiationRound(); }

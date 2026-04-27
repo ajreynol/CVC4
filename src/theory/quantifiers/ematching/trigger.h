@@ -118,8 +118,6 @@ class Trigger : protected EnvObj
           std::vector<Node>& nodes,
           bool isUser = false);
   virtual ~Trigger();
-  /** Get the quantified formula this trigger is for. */
-  Node getQuantifier() const;
   /** Return whether this trigger came from a user-provided pattern. */
   bool isUserTrigger() const;
   /** get the generator associated with this trigger */
