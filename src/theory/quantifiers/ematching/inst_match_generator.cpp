@@ -532,9 +532,8 @@ bool InstMatchGenerator::reset(Node eqc)
   {
     d_needsReset = false;
     d_curr_first_candidate = Node::null();
-    Trace("matching-summary")
-        << "Cached empty reset " << d_match_pattern << " in " << eqc
-        << std::endl;
+    Trace("matching-summary") << "Cached empty reset " << d_match_pattern
+                              << " in " << eqc << std::endl;
     return false;
   }
   d_cg->reset(d_eq_class);
@@ -616,9 +615,8 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
         if (itc != d_failed_match_cache.end()
             && itc->second.find(currState) != itc->second.end())
         {
-          Trace("matching-summary")
-              << "Cached failure for " << d_match_pattern << " : " << t
-              << std::endl;
+          Trace("matching-summary") << "Cached failure for " << d_match_pattern
+                                    << " : " << t << std::endl;
           success = -1;
         }
         else
