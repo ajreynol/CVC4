@@ -142,18 +142,6 @@ void EmatchingFilter::updateMasterEqEvents()
 
 void EmatchingFilter::updateTriggerProcessingNeeds()
 {
-  bool hasNonAdditiveChanges = !d_masterEqEventsRemoved.empty();
-  if (!hasNonAdditiveChanges)
-  {
-    for (const TermRegistry::MasterEqEvent& event : d_masterEqEventsAdded)
-    {
-      if (event.d_kind != TermRegistry::MasterEqEventKind::NEW_CLASS)
-      {
-        hasNonAdditiveChanges = true;
-        break;
-      }
-    }
-  }
   for (std::pair<inst::Trigger* const, bool>& entry : d_registeredTriggers)
   {
     inst::Trigger* tr = entry.first;
@@ -161,23 +149,21 @@ void EmatchingFilter::updateTriggerProcessingNeeds()
     {
       continue;
     }
-    bool needsProcessing = hasNonAdditiveChanges;
-    if (!needsProcessing)
+    bool needsProcessing = false;
+    for (const TermRegistry::MasterEqEvent& event : d_masterEqEventsAdded)
     {
-      if (!tr->supportsRelevantTermFiltering())
+      if (event.d_kind == TermRegistry::MasterEqEventKind::NEW_CLASS)
       {
-        needsProcessing = true;
+        needsProcessing = tr->isRelevantTerm(event.d_first);
       }
-      else
+      else if (event.d_kind == TermRegistry::MasterEqEventKind::MERGE)
       {
-        for (const TermRegistry::MasterEqEvent& event : d_masterEqEventsAdded)
-        {
-          if (tr->isRelevantTerm(event.d_first))
-          {
-            needsProcessing = true;
-            break;
-          }
-        }
+        needsProcessing = tr->isRelevantTerm(event.d_first)
+                          || tr->isRelevantTerm(event.d_second);
+      }
+      if (needsProcessing)
+      {
+        break;
       }
     }
     d_triggerNeedsProcessing[tr] = needsProcessing;

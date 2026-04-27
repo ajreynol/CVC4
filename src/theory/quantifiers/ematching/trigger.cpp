@@ -91,14 +91,14 @@ Trigger::Trigger(Env& env,
     if (!TriggerTermInfo::isSimpleTrigger(n))
     {
       d_supportsRelevantTermFiltering = false;
-      break;
     }
-    Node t = getSimpleTriggerMatchTerm(n);
+    Node t = TriggerTermInfo::isSimpleTrigger(n) ? getSimpleTriggerMatchTerm(n)
+                                                 : n;
     Node op = tdb->getMatchOperator(t);
     if (op.isNull())
     {
       d_supportsRelevantTermFiltering = false;
-      break;
+      continue;
     }
     if (std::find(d_relevantMatchOps.begin(), d_relevantMatchOps.end(), op)
         == d_relevantMatchOps.end())
@@ -186,15 +186,6 @@ bool Trigger::isMultiTrigger() const { return d_nodes.size() > 1; }
 
 bool Trigger::isRelevantTerm(TNode n) const
 {
-  if (std::find(d_groundTerms.begin(), d_groundTerms.end(), n)
-      != d_groundTerms.end())
-  {
-    return true;
-  }
-  if (!d_supportsRelevantTermFiltering)
-  {
-    return true;
-  }
   Node op = d_treg.getTermDatabase()->getMatchOperator(n);
   return !op.isNull()
          && std::find(d_relevantMatchOps.begin(), d_relevantMatchOps.end(), op)
