@@ -958,10 +958,10 @@ void SolverEngine::assertFormulaInternal(const Node& formula)
   // Otherwise we will have an assumption with mixed arithmetic which is
   // not permitted in proofs that cannot be eliminated, and will require a
   // trust step.
-  // We don't care if we are an internal subsolver, as this rewriting only
-  // impacts having exportable, complete proofs, which is not an issue for
-  // internal subsolvers.
-  if (d_env->isProofProducing() && !d_isInternalSubsolver)
+  // Internal subsolvers may also be asked to check or print their proofs
+  // directly, e.g. after get-timeout-core, so they must keep their asserted
+  // formulas aligned with the proof-level subtype elimination as well.
+  if (d_env->isProofProducing())
   {
     if (options().proof.proofElimSubtypes)
     {
