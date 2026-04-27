@@ -73,6 +73,7 @@ Trigger::Trigger(Env& env,
       d_qreg(qr),
       d_treg(tr),
       d_quant(q),
+      d_isUser(isUser),
       d_instMatch(env, qs, tr, q)
 {
   // set evaluator mode to "no entail"
@@ -92,18 +93,30 @@ Trigger::Trigger(Env& env,
     {
       d_supportsRelevantTermFiltering = false;
     }
-    Node t = TriggerTermInfo::isSimpleTrigger(n) ? getSimpleTriggerMatchTerm(n)
-                                                 : n;
-    Node op = tdb->getMatchOperator(t);
-    if (op.isNull())
+    std::vector<TNode> visit;
+    visit.push_back(TriggerTermInfo::isSimpleTrigger(n)
+                        ? getSimpleTriggerMatchTerm(n)
+                        : n);
+    do
+    {
+      TNode cur = visit.back();
+      visit.pop_back();
+      if (!TermUtil::hasInstConstAttr(cur))
+      {
+        continue;
+      }
+      Node op = tdb->getMatchOperator(cur);
+      if (!op.isNull()
+          && std::find(d_relevantMatchOps.begin(), d_relevantMatchOps.end(), op)
+                 == d_relevantMatchOps.end())
+      {
+        d_relevantMatchOps.push_back(op);
+      }
+      visit.insert(visit.end(), cur.begin(), cur.end());
+    } while (!visit.empty());
+    if (d_relevantMatchOps.empty())
     {
       d_supportsRelevantTermFiltering = false;
-      continue;
-    }
-    if (std::find(d_relevantMatchOps.begin(), d_relevantMatchOps.end(), op)
-        == d_relevantMatchOps.end())
-    {
-      d_relevantMatchOps.push_back(op);
     }
   }
   if (TraceIsOn("trigger"))
@@ -177,6 +190,10 @@ Trigger::Trigger(Env& env,
 }
 
 Trigger::~Trigger() { delete d_mg; }
+
+Node Trigger::getQuantifier() const { return d_quant; }
+
+bool Trigger::isUserTrigger() const { return d_isUser; }
 
 void Trigger::resetInstantiationRound() { d_mg->resetInstantiationRound(); }
 

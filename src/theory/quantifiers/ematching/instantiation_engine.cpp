@@ -300,22 +300,22 @@ bool InstantiationEngine::isEligibleForProcessing(Node q)
 
 void InstantiationEngine::traceFilterSummary()
 {
-  if (!TraceIsOn("ematching-filter"))
+  if (TraceIsOn("ematching-filter"))
   {
-    return;
+    uint64_t numFilteredTriggers = d_emFilter->getNumFilteredTriggers();
+    uint64_t numUnfilteredTriggers = d_emFilter->getNumUnfilteredTriggers();
+    Trace("ematching-filter")
+        << "E-matching filter summary: filtered=" << numFilteredTriggers
+        << ", unfiltered=" << numUnfilteredTriggers << " triggers (excluded="
+        << d_excludedQuants.size() << ", active=" << d_quants.size()
+        << " quantified formulas)." << std::endl;
   }
-  uint64_t numFilteredTriggers = d_emFilter->getNumFilteredTriggers();
-  uint64_t numUnfilteredTriggers = d_emFilter->getNumUnfilteredTriggers();
-  Trace("ematching-filter")
-      << "E-matching filter summary: filtered=" << numFilteredTriggers
-      << ", unfiltered=" << numUnfilteredTriggers << " triggers (excluded="
-      << d_excludedQuants.size() << ", active=" << d_quants.size()
-      << " quantified formulas)." << std::endl;
 }
 
 void InstantiationEngine::assertExcludedQuantifierHasNoInstantiations(
     Node q, Theory::Effort effort)
 {
+#ifdef CVC5_ASSERTIONS
   if (d_emFilter == nullptr || !d_emFilter->exclude(q))
   {
     return;
@@ -344,6 +344,10 @@ void InstantiationEngine::assertExcludedQuantifierHasNoInstantiations(
     }
     e++;
   }
+#else
+  (void)q;
+  (void)effort;
+#endif
 }
 
 }  // namespace quantifiers

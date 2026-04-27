@@ -58,7 +58,33 @@ void EmatchingFilter::registerQuantifier(Node q)
 bool EmatchingFilter::exclude(Node q) const
 {
   std::map<Node, bool>::const_iterator it = d_excluded.find(q);
-  return it != d_excluded.end() && it->second;
+  if (it != d_excluded.end() && it->second)
+  {
+    return true;
+  }
+  std::map<Node, std::vector<inst::Trigger*> >::const_iterator itt =
+      d_triggers.find(q);
+  if (itt == d_triggers.end() || itt->second.empty())
+  {
+    return false;
+  }
+  for (inst::Trigger* tr : itt->second)
+  {
+    if (tr->isUserTrigger())
+    {
+      return false;
+    }
+    std::map<inst::Trigger*, bool>::const_iterator itp =
+        d_triggersProcessed.find(tr);
+    std::map<inst::Trigger*, bool>::const_iterator itd =
+        d_triggerNeedsProcessing.find(tr);
+    if (itp == d_triggersProcessed.end() || itd == d_triggerNeedsProcessing.end()
+        || !itp->second || itd->second)
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 void EmatchingFilter::registerTrigger(inst::Trigger* tr)
@@ -68,6 +94,12 @@ void EmatchingFilter::registerTrigger(inst::Trigger* tr)
     return;
   }
   d_registeredTriggers[tr] = true;
+  Node q = tr->getQuantifier();
+  std::vector<inst::Trigger*>& triggers = d_triggers[q];
+  if (std::find(triggers.begin(), triggers.end(), tr) == triggers.end())
+  {
+    triggers.push_back(tr);
+  }
   d_triggersProcessed[tr] = false;
   d_triggerNeedsProcessing[tr] = true;
 }
@@ -75,6 +107,11 @@ void EmatchingFilter::registerTrigger(inst::Trigger* tr)
 bool EmatchingFilter::shouldProcessTrigger(inst::Trigger* tr)
 {
   registerTrigger(tr);
+  if (tr != nullptr && tr->isUserTrigger())
+  {
+    accountTriggerDecision(tr, true);
+    return true;
+  }
   bool shouldProcess =
       !d_triggersProcessed[tr] || d_triggerNeedsProcessing[tr];
   accountTriggerDecision(tr, shouldProcess);
@@ -145,7 +182,8 @@ void EmatchingFilter::updateTriggerProcessingNeeds()
   for (std::pair<inst::Trigger* const, bool>& entry : d_registeredTriggers)
   {
     inst::Trigger* tr = entry.first;
-    if (tr == nullptr || d_triggerNeedsProcessing[tr] || !d_triggersProcessed[tr])
+    if (tr == nullptr || tr->isUserTrigger() || d_triggerNeedsProcessing[tr]
+        || !d_triggersProcessed[tr])
     {
       continue;
     }
