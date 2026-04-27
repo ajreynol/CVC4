@@ -62,7 +62,11 @@ void EmatchingFilter::updateMasterEqEvents()
   const size_t previousSize = d_masterEqEventSnapshot.size();
   d_masterEqEventsRemoved.clear();
   d_masterEqEventsAdded.clear();
-  if (d_hasMasterEqEventSnapshot)
+  if (!d_hasMasterEqEventSnapshot)
+  {
+    d_masterEqEventsAdded = currentEvents;
+  }
+  else
   {
     size_t prefix = 0;
     size_t maxPrefix =
@@ -93,11 +97,6 @@ void EmatchingFilter::traceMasterEqEventDiff(size_t previousSize) const
       << "Master equality engine events: previous=" << previousSize
       << ", current="
       << d_masterEqEventSnapshot.size();
-  if (!d_hasMasterEqEventSnapshot)
-  {
-    Trace("ematching-filter-events") << " (initial snapshot)." << std::endl;
-    return;
-  }
   Trace("ematching-filter-events")
       << ", removed=" << d_masterEqEventsRemoved.size()
       << ", added=" << d_masterEqEventsAdded.size() << "." << std::endl;
