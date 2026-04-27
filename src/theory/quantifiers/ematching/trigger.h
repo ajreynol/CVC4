@@ -118,8 +118,6 @@ class Trigger : protected EnvObj
           std::vector<Node>& nodes,
           bool isUser = false);
   virtual ~Trigger();
-  /** Return whether this trigger came from a user-provided pattern. */
-  bool isUserTrigger() const;
   /** get the generator associated with this trigger */
   IMGenerator* getGenerator() { return d_mg; }
   /** Reset instantiation round.
@@ -239,8 +237,6 @@ class Trigger : protected EnvObj
   TermRegistry& d_treg;
   /** The quantified formula this trigger is for. */
   Node d_quant;
-  /** Whether this was a user trigger. */
-  bool d_isUser;
   /** match generator
    *
    * This is the back-end utility that implements the underlying matching

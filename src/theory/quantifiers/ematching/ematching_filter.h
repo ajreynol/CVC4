@@ -34,9 +34,9 @@ class Trigger;
  * run E-matching. Quantified formulas excluded by this class should not produce
  * instantiations when E-matching is run on them.
  *
- * The filter tracks equality-engine events and marks auto-generated triggers
- * dirty when new events are relevant to their match operators. User triggers
- * are always processed.
+ * The filter tracks equality-engine events and marks triggers dirty when new
+ * events are relevant to their match operators. At last-call effort, all
+ * triggers are processed as a conservative backstop.
  */
 class EmatchingFilter : public QuantifiersModule
 {
@@ -78,6 +78,8 @@ class EmatchingFilter : public QuantifiersModule
   bool shouldExclude(Node q) const;
   /** Cached exclusion decision per quantified formula. */
   std::map<Node, bool> d_excluded;
+  /** Current effort for the filter. */
+  Theory::Effort d_effort;
   /** Whether we already have a master equality event snapshot. */
   bool d_hasMasterEqEventSnapshot;
   /** The most recent master equality engine event snapshot. */

@@ -26,6 +26,7 @@ EmatchingFilter::EmatchingFilter(Env& env,
                                  QuantifiersRegistry& qr,
                                  TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
+      d_effort(Theory::EFFORT_STANDARD),
       d_hasMasterEqEventSnapshot(false),
       d_numFilteredTriggers(0),
       d_numUnfilteredTriggers(0)
@@ -37,12 +38,13 @@ bool EmatchingFilter::needsCheck(Theory::Effort e)
   return d_qstate.getInstWhenNeedsCheck(e);
 }
 
-void EmatchingFilter::check(CVC5_UNUSED Theory::Effort e, QEffort quant_e)
+void EmatchingFilter::check(Theory::Effort e, QEffort quant_e)
 {
   if (quant_e != QEFFORT_STANDARD)
   {
     return;
   }
+  d_effort = e;
   d_accountedTriggers.clear();
   d_numFilteredTriggers = 0;
   d_numUnfilteredTriggers = 0;
@@ -75,11 +77,6 @@ void EmatchingFilter::registerTrigger(inst::Trigger* tr)
 bool EmatchingFilter::shouldProcessTrigger(inst::Trigger* tr)
 {
   registerTrigger(tr);
-  if (tr != nullptr && tr->isUserTrigger())
-  {
-    accountTriggerDecision(tr, true);
-    return true;
-  }
   bool shouldProcess =
       !d_triggersProcessed[tr] || d_triggerNeedsProcessing[tr];
   accountTriggerDecision(tr, shouldProcess);
@@ -150,9 +147,13 @@ void EmatchingFilter::updateTriggerProcessingNeeds()
   for (std::pair<inst::Trigger* const, bool>& entry : d_registeredTriggers)
   {
     inst::Trigger* tr = entry.first;
-    if (tr == nullptr || tr->isUserTrigger() || d_triggerNeedsProcessing[tr]
-        || !d_triggersProcessed[tr])
+    if (tr == nullptr || d_triggerNeedsProcessing[tr] || !d_triggersProcessed[tr])
     {
+      continue;
+    }
+    if (d_effort >= Theory::EFFORT_LAST_CALL)
+    {
+      d_triggerNeedsProcessing[tr] = true;
       continue;
     }
     bool needsProcessing = false;

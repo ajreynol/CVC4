@@ -73,7 +73,6 @@ Trigger::Trigger(Env& env,
       d_qreg(qr),
       d_treg(tr),
       d_quant(q),
-      d_isUser(isUser),
       d_instMatch(env, qs, tr, q)
 {
   // set evaluator mode to "no entail"
@@ -190,8 +189,6 @@ Trigger::Trigger(Env& env,
 }
 
 Trigger::~Trigger() { delete d_mg; }
-
-bool Trigger::isUserTrigger() const { return d_isUser; }
 
 void Trigger::resetInstantiationRound() { d_mg->resetInstantiationRound(); }
 
