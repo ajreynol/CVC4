@@ -13,6 +13,7 @@
 #include "theory/quantifiers/ematching/inst_strategy_e_matching.h"
 
 #include "options/base_options.h"
+#include "theory/quantifiers/ematching/ematching_filter.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/ematching/trigger_database.h"
 #include "theory/quantifiers/quant_relevance.h"
@@ -77,8 +78,9 @@ InstStrategyAutoGenTriggers::InstStrategyAutoGenTriggers(
     QuantifiersInferenceManager& qim,
     QuantifiersRegistry& qr,
     TermRegistry& tr,
+    EmatchingFilter* emFilter,
     QuantRelevance* qrlv)
-    : InstStrategy(env, td, qs, qim, qr, tr), d_quant_rel(qrlv)
+    : InstStrategy(env, td, qs, qim, qr, tr, emFilter), d_quant_rel(qrlv)
 {
   // how to select trigger terms
   d_tr_strategy = options().quantifiers.triggerSelMode;
@@ -275,10 +277,21 @@ InstStrategyStatus InstStrategyAutoGenTriggers::process(
         continue;
       }
       d_processed_trigger[f][tr] = true;
+      if (d_emFilter != nullptr && !d_emFilter->shouldProcessTrigger(tr))
+      {
+        Trace("ematching-filter")
+            << "Skip auto-generated trigger due to no relevant new terms."
+            << std::endl;
+        continue;
+      }
       Trace("process-trigger") << "  Process ";
       tr->debugPrint("process-trigger");
       Trace("process-trigger") << "..." << std::endl;
       unsigned numInst = tr->addInstantiations();
+      if (d_emFilter != nullptr)
+      {
+        d_emFilter->notifyTriggerProcessed(tr);
+      }
       hasInst = numInst > 0 || hasInst;
       Trace("process-trigger")
           << "  Done, numInst = " << numInst << "." << std::endl;
@@ -677,6 +690,10 @@ void InstStrategyAutoGenTriggers::addTrigger(inst::Trigger* tr, Node q)
   {
     tr->resetInstantiationRound();
     tr->reset(Node::null());
+    if (d_emFilter != nullptr)
+    {
+      d_emFilter->registerTrigger(tr);
+    }
   }
   agt[tr] = true;
 }

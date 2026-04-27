@@ -24,8 +24,15 @@ InstStrategy::InstStrategy(Env& env,
                            QuantifiersState& qs,
                            QuantifiersInferenceManager& qim,
                            QuantifiersRegistry& qr,
-                           TermRegistry& tr)
-    : EnvObj(env), d_td(td), d_qstate(qs), d_qim(qim), d_qreg(qr), d_treg(tr)
+                           TermRegistry& tr,
+                           EmatchingFilter* emFilter)
+    : EnvObj(env),
+      d_td(td),
+      d_qstate(qs),
+      d_qim(qim),
+      d_qreg(qr),
+      d_treg(tr),
+      d_emFilter(emFilter)
 {
 }
 InstStrategy::~InstStrategy() {}

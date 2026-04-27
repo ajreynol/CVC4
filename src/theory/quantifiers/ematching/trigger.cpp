@@ -12,6 +12,8 @@
 
 #include "theory/quantifiers/ematching/trigger.h"
 
+#include <algorithm>
+
 #include "expr/skolem_manager.h"
 #include "options/base_options.h"
 #include "options/quantifiers_options.h"
@@ -29,6 +31,8 @@
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_registry.h"
 #include "theory/quantifiers/quantifiers_state.h"
+#include "theory/quantifiers/term_database.h"
+#include "theory/quantifiers/term_registry.h"
 #include "theory/quantifiers/term_util.h"
 #include "theory/valuation.h"
 
@@ -38,6 +42,20 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 namespace inst {
+
+namespace {
+
+Node getSimpleTriggerMatchTerm(Node n)
+{
+  Node t = n.getKind() == Kind::NOT ? n[0] : n;
+  if (t.getKind() == Kind::EQUAL && !TermUtil::hasInstConstAttr(t[1]))
+  {
+    t = t[0];
+  }
+  return t;
+}
+
+}  // namespace
 
 /** trigger class constructor */
 Trigger::Trigger(Env& env,
@@ -49,6 +67,7 @@ Trigger::Trigger(Env& env,
                  std::vector<Node>& nodes,
                  bool isUser)
     : EnvObj(env),
+      d_supportsRelevantTermFiltering(true),
       d_qstate(qs),
       d_qim(qim),
       d_qreg(qr),
@@ -65,6 +84,27 @@ Trigger::Trigger(Env& env,
   {
     Node np = ensureGroundTermPreprocessed(val, n, d_groundTerms);
     d_nodes.push_back(np);
+  }
+  TermDb* tdb = d_treg.getTermDatabase();
+  for (const Node& n : d_nodes)
+  {
+    if (!TriggerTermInfo::isSimpleTrigger(n))
+    {
+      d_supportsRelevantTermFiltering = false;
+      break;
+    }
+    Node t = getSimpleTriggerMatchTerm(n);
+    Node op = tdb->getMatchOperator(t);
+    if (op.isNull())
+    {
+      d_supportsRelevantTermFiltering = false;
+      break;
+    }
+    if (std::find(d_relevantMatchOps.begin(), d_relevantMatchOps.end(), op)
+        == d_relevantMatchOps.end())
+    {
+      d_relevantMatchOps.push_back(op);
+    }
   }
   if (TraceIsOn("trigger"))
   {
@@ -143,6 +183,28 @@ void Trigger::resetInstantiationRound() { d_mg->resetInstantiationRound(); }
 void Trigger::reset(Node eqc) { d_mg->reset(eqc); }
 
 bool Trigger::isMultiTrigger() const { return d_nodes.size() > 1; }
+
+bool Trigger::isRelevantTerm(TNode n) const
+{
+  if (std::find(d_groundTerms.begin(), d_groundTerms.end(), n)
+      != d_groundTerms.end())
+  {
+    return true;
+  }
+  if (!d_supportsRelevantTermFiltering)
+  {
+    return true;
+  }
+  Node op = d_treg.getTermDatabase()->getMatchOperator(n);
+  return !op.isNull()
+         && std::find(d_relevantMatchOps.begin(), d_relevantMatchOps.end(), op)
+                != d_relevantMatchOps.end();
+}
+
+bool Trigger::supportsRelevantTermFiltering() const
+{
+  return d_supportsRelevantTermFiltering;
+}
 
 Node Trigger::getInstPattern() const
 {

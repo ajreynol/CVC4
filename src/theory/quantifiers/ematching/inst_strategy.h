@@ -26,6 +26,8 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+class EmatchingFilter;
+
 namespace inst {
 class TriggerDatabase;
 }
@@ -55,7 +57,8 @@ class InstStrategy : protected EnvObj
                QuantifiersState& qs,
                QuantifiersInferenceManager& qim,
                QuantifiersRegistry& qr,
-               TermRegistry& tr);
+               TermRegistry& tr,
+               EmatchingFilter* emFilter);
   virtual ~InstStrategy();
   /** presolve */
   virtual void presolve();
@@ -84,6 +87,8 @@ class InstStrategy : protected EnvObj
   QuantifiersRegistry& d_qreg;
   /** Reference to the term registry */
   TermRegistry& d_treg;
+  /** Optional E-matching filter for per-trigger skipping. */
+  EmatchingFilter* d_emFilter;
 }; /* class InstStrategy */
 
 }  // namespace quantifiers

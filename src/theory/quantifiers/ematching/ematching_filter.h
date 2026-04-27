@@ -15,6 +15,7 @@
 #ifndef CVC5__THEORY__QUANTIFIERS__EMATCHING__EMATCHING_FILTER_H
 #define CVC5__THEORY__QUANTIFIERS__EMATCHING__EMATCHING_FILTER_H
 
+#include <cstdint>
 #include <map>
 #include <vector>
 
@@ -23,6 +24,10 @@
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
+
+namespace inst {
+class Trigger;
+}
 
 /**
  * A conservative estimate of quantified formulas for which it is not useful to
@@ -46,12 +51,26 @@ class EmatchingFilter : public QuantifiersModule
   void registerQuantifier(Node q) override;
   /** Returns true if quantified formula q should be excluded from E-matching. */
   bool exclude(Node q) const;
+  /** Register a trigger that may be filtered by this class. */
+  void registerTrigger(inst::Trigger* tr);
+  /** Returns true if trigger tr should be processed this round. */
+  bool shouldProcessTrigger(inst::Trigger* tr);
+  /** Notify that trigger tr has been fully processed this round. */
+  void notifyTriggerProcessed(inst::Trigger* tr);
+  /** Get the number of filtered triggers in the current round. */
+  uint64_t getNumFilteredTriggers() const;
+  /** Get the number of unfiltered triggers in the current round. */
+  uint64_t getNumUnfilteredTriggers() const;
   /** Identify this module. */
   std::string identify() const override;
 
  private:
   /** Snapshot current master equality engine events and compute their delta. */
   void updateMasterEqEvents();
+  /** Update trigger dirty bits based on the current master equality event diff. */
+  void updateTriggerProcessingNeeds();
+  /** Account for a trigger filtering decision. */
+  void accountTriggerDecision(inst::Trigger* tr, bool shouldProcess);
   /** Print the current round master equality engine event delta. */
   void traceMasterEqEventDiff(size_t previousSize) const;
   /** Compute whether quantified formula q should be excluded. */
@@ -66,6 +85,18 @@ class EmatchingFilter : public QuantifiersModule
   std::vector<TermRegistry::MasterEqEvent> d_masterEqEventsRemoved;
   /** Events added since the previous snapshot. */
   std::vector<TermRegistry::MasterEqEvent> d_masterEqEventsAdded;
+  /** The set of triggers registered with this filter. */
+  std::map<inst::Trigger*, bool> d_registeredTriggers;
+  /** Whether a trigger has been processed since it was registered. */
+  std::map<inst::Trigger*, bool> d_triggersProcessed;
+  /** Whether a trigger must be reprocessed due to relevant EE changes. */
+  std::map<inst::Trigger*, bool> d_triggerNeedsProcessing;
+  /** Whether a trigger decision has already been counted this round. */
+  std::map<inst::Trigger*, bool> d_accountedTriggers;
+  /** Number of filtered triggers in the current round. */
+  uint64_t d_numFilteredTriggers;
+  /** Number of unfiltered triggers in the current round. */
+  uint64_t d_numUnfilteredTriggers;
 };
 
 }  // namespace quantifiers

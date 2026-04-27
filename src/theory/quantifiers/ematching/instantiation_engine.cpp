@@ -58,13 +58,13 @@ InstantiationEngine::InstantiationEngine(Env& env,
     if (options().quantifiers.userPatternsQuant != options::UserPatMode::IGNORE)
     {
       d_isup.reset(
-          new InstStrategyUserPatterns(d_env, d_trdb, qs, qim, qr, tr));
+          new InstStrategyUserPatterns(d_env, d_trdb, qs, qim, qr, tr, emFilter));
       d_instStrategies.push_back(d_isup.get());
     }
 
     // auto-generated patterns
     d_i_ag.reset(new InstStrategyAutoGenTriggers(
-        d_env, d_trdb, qs, qim, qr, tr, d_quant_rel.get()));
+        d_env, d_trdb, qs, qim, qr, tr, emFilter, d_quant_rel.get()));
     d_instStrategies.push_back(d_i_ag.get());
   }
 }
@@ -183,10 +183,6 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
       d_excludedQuants.push_back(q);
     }
   }
-  if (d_emFilter != nullptr)
-  {
-    traceFilterSummary();
-  }
   Trace("inst-engine-debug")
       << "InstEngine: check: # asserted quantifiers " << d_quants.size() << "/";
   Trace("inst-engine-debug") << nquant << " " << quantActive << std::endl;
@@ -197,6 +193,10 @@ void InstantiationEngine::check(Theory::Effort e, QEffort quant_e)
   else
   {
     d_quants.clear();
+  }
+  if (d_emFilter != nullptr)
+  {
+    traceFilterSummary();
   }
 #ifdef CVC5_ASSERTIONS
   if (!d_qstate.isInConflict())
@@ -304,26 +304,12 @@ void InstantiationEngine::traceFilterSummary()
   {
     return;
   }
-  uint64_t numFilteredTriggers = 0;
-  uint64_t numUnfilteredTriggers = 0;
-  for (const Node& q : d_excludedQuants)
-  {
-    for (InstStrategy* is : d_instStrategies)
-    {
-      numFilteredTriggers += is->getNumTriggers(q);
-    }
-  }
-  for (const Node& q : d_quants)
-  {
-    for (InstStrategy* is : d_instStrategies)
-    {
-      numUnfilteredTriggers += is->getNumTriggers(q);
-    }
-  }
+  uint64_t numFilteredTriggers = d_emFilter->getNumFilteredTriggers();
+  uint64_t numUnfilteredTriggers = d_emFilter->getNumUnfilteredTriggers();
   Trace("ematching-filter")
       << "E-matching filter summary: filtered=" << numFilteredTriggers
-      << ", unfiltered=" << numUnfilteredTriggers << " triggers (filtered="
-      << d_excludedQuants.size() << ", unfiltered=" << d_quants.size()
+      << ", unfiltered=" << numUnfilteredTriggers << " triggers (excluded="
+      << d_excludedQuants.size() << ", active=" << d_quants.size()
       << " quantified formulas)." << std::endl;
 }
 

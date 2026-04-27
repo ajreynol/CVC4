@@ -14,6 +14,8 @@
 
 #include <algorithm>
 
+#include "theory/quantifiers/ematching/trigger.h"
+
 namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
@@ -24,7 +26,9 @@ EmatchingFilter::EmatchingFilter(Env& env,
                                  QuantifiersRegistry& qr,
                                  TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
-      d_hasMasterEqEventSnapshot(false)
+      d_hasMasterEqEventSnapshot(false),
+      d_numFilteredTriggers(0),
+      d_numUnfilteredTriggers(0)
 {
 }
 
@@ -39,7 +43,11 @@ void EmatchingFilter::check(CVC5_UNUSED Theory::Effort e, QEffort quant_e)
   {
     return;
   }
+  d_accountedTriggers.clear();
+  d_numFilteredTriggers = 0;
+  d_numUnfilteredTriggers = 0;
   updateMasterEqEvents();
+  updateTriggerProcessingNeeds();
 }
 
 void EmatchingFilter::registerQuantifier(Node q)
@@ -51,6 +59,43 @@ bool EmatchingFilter::exclude(Node q) const
 {
   std::map<Node, bool>::const_iterator it = d_excluded.find(q);
   return it != d_excluded.end() && it->second;
+}
+
+void EmatchingFilter::registerTrigger(inst::Trigger* tr)
+{
+  if (tr == nullptr || d_registeredTriggers.find(tr) != d_registeredTriggers.end())
+  {
+    return;
+  }
+  d_registeredTriggers[tr] = true;
+  d_triggersProcessed[tr] = false;
+  d_triggerNeedsProcessing[tr] = true;
+}
+
+bool EmatchingFilter::shouldProcessTrigger(inst::Trigger* tr)
+{
+  registerTrigger(tr);
+  bool shouldProcess =
+      !d_triggersProcessed[tr] || d_triggerNeedsProcessing[tr];
+  accountTriggerDecision(tr, shouldProcess);
+  return shouldProcess;
+}
+
+void EmatchingFilter::notifyTriggerProcessed(inst::Trigger* tr)
+{
+  registerTrigger(tr);
+  d_triggersProcessed[tr] = true;
+  d_triggerNeedsProcessing[tr] = false;
+}
+
+uint64_t EmatchingFilter::getNumFilteredTriggers() const
+{
+  return d_numFilteredTriggers;
+}
+
+uint64_t EmatchingFilter::getNumUnfilteredTriggers() const
+{
+  return d_numUnfilteredTriggers;
 }
 
 std::string EmatchingFilter::identify() const { return "ematching-filter"; }
@@ -89,6 +134,68 @@ void EmatchingFilter::updateMasterEqEvents()
     traceMasterEqEventDiff(previousSize);
   }
   d_hasMasterEqEventSnapshot = true;
+}
+
+void EmatchingFilter::updateTriggerProcessingNeeds()
+{
+  bool hasNonAdditiveChanges = !d_masterEqEventsRemoved.empty();
+  if (!hasNonAdditiveChanges)
+  {
+    for (const TermRegistry::MasterEqEvent& event : d_masterEqEventsAdded)
+    {
+      if (event.d_kind != TermRegistry::MasterEqEventKind::NEW_CLASS)
+      {
+        hasNonAdditiveChanges = true;
+        break;
+      }
+    }
+  }
+  for (std::pair<inst::Trigger* const, bool>& entry : d_registeredTriggers)
+  {
+    inst::Trigger* tr = entry.first;
+    if (tr == nullptr || d_triggerNeedsProcessing[tr] || !d_triggersProcessed[tr])
+    {
+      continue;
+    }
+    bool needsProcessing = hasNonAdditiveChanges;
+    if (!needsProcessing)
+    {
+      if (!tr->supportsRelevantTermFiltering())
+      {
+        needsProcessing = true;
+      }
+      else
+      {
+        for (const TermRegistry::MasterEqEvent& event : d_masterEqEventsAdded)
+        {
+          if (tr->isRelevantTerm(event.d_first))
+          {
+            needsProcessing = true;
+            break;
+          }
+        }
+      }
+    }
+    d_triggerNeedsProcessing[tr] = needsProcessing;
+  }
+}
+
+void EmatchingFilter::accountTriggerDecision(inst::Trigger* tr,
+                                             bool shouldProcess)
+{
+  if (tr == nullptr || d_accountedTriggers.find(tr) != d_accountedTriggers.end())
+  {
+    return;
+  }
+  d_accountedTriggers[tr] = true;
+  if (shouldProcess)
+  {
+    ++d_numUnfilteredTriggers;
+  }
+  else
+  {
+    ++d_numFilteredTriggers;
+  }
 }
 
 void EmatchingFilter::traceMasterEqEventDiff(size_t previousSize) const

@@ -12,6 +12,7 @@
 
 #include "theory/quantifiers/ematching/inst_strategy_e_matching_user.h"
 
+#include "theory/quantifiers/ematching/ematching_filter.h"
 #include "theory/quantifiers/ematching/pattern_term_selector.h"
 #include "theory/quantifiers/ematching/trigger_database.h"
 #include "theory/quantifiers/quantifiers_state.h"
@@ -29,8 +30,9 @@ InstStrategyUserPatterns::InstStrategyUserPatterns(
     QuantifiersState& qs,
     QuantifiersInferenceManager& qim,
     QuantifiersRegistry& qr,
-    TermRegistry& tr)
-    : InstStrategy(env, td, qs, qim, qr, tr)
+    TermRegistry& tr,
+    EmatchingFilter* emFilter)
+    : InstStrategy(env, td, qs, qim, qr, tr, emFilter)
 {
 }
 InstStrategyUserPatterns::~InstStrategyUserPatterns() {}
@@ -97,6 +99,10 @@ InstStrategyStatus InstStrategyUserPatterns::process(
       if (t)
       {
         d_user_gen[q].push_back(t);
+        if (d_emFilter != nullptr)
+        {
+          d_emFilter->registerTrigger(t);
+        }
       }
     }
     ugw.clear();
@@ -105,6 +111,12 @@ InstStrategyStatus InstStrategyUserPatterns::process(
   std::vector<Trigger*>& ug = d_user_gen[q];
   for (Trigger* t : ug)
   {
+    if (d_emFilter != nullptr && !d_emFilter->shouldProcessTrigger(t))
+    {
+      Trace("ematching-filter")
+          << "Skip user trigger due to no relevant new terms." << std::endl;
+      continue;
+    }
     if (TraceIsOn("process-trigger"))
     {
       Trace("process-trigger") << "  Process (user) ";
@@ -112,6 +124,10 @@ InstStrategyStatus InstStrategyUserPatterns::process(
       Trace("process-trigger") << "..." << std::endl;
     }
     unsigned numInst = t->addInstantiations();
+    if (d_emFilter != nullptr)
+    {
+      d_emFilter->notifyTriggerProcessed(t);
+    }
     Trace("process-trigger")
         << "  Done, numInst = " << numInst << "." << std::endl;
     if (d_qstate.isInConflict())
@@ -160,6 +176,10 @@ void InstStrategyUserPatterns::addUserPattern(Node q, Node pat)
   if (t)
   {
     d_user_gen[q].push_back(t);
+    if (d_emFilter != nullptr)
+    {
+      d_emFilter->registerTrigger(t);
+    }
   }
   else
   {
