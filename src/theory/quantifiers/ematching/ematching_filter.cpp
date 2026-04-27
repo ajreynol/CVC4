@@ -129,6 +129,10 @@ void EmatchingFilter::updateMasterEqEvents()
                                  currentEvents.end());
   }
   d_masterEqEventSnapshot.swap(currentEvents);
+  Trace("ematching-filter")
+      << "Master equality engine events: New=" << d_masterEqEventsAdded.size()
+      << ", Same=" << previousSize - d_masterEqEventsRemoved.size()
+      << ", Deleted=" << d_masterEqEventsRemoved.size() << std::endl;
   if (TraceIsOn("ematching-filter-events"))
   {
     traceMasterEqEventDiff(previousSize);
