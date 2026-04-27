@@ -279,7 +279,7 @@ InstStrategyStatus InstStrategyAutoGenTriggers::process(
       d_processed_trigger[f][tr] = true;
       if (d_emFilter != nullptr && !d_emFilter->shouldProcessTrigger(tr))
       {
-        Trace("ematching-filter")
+        Trace("ematching-filter-skip")
             << "Skip auto-generated trigger due to no relevant new terms."
             << std::endl;
         continue;

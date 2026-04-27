@@ -113,7 +113,7 @@ InstStrategyStatus InstStrategyUserPatterns::process(
   {
     if (d_emFilter != nullptr && !d_emFilter->shouldProcessTrigger(t))
     {
-      Trace("ematching-filter")
+      Trace("ematching-filter-skip")
           << "Skip user trigger due to no relevant new terms." << std::endl;
       continue;
     }
