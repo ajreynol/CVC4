@@ -2139,7 +2139,7 @@ enum ENUM(ProofRule)
    *
    *   \inferrule{- \mid m, l \diamond r}{(m > 0 \land l \diamond r) \rightarrow m \cdot l \diamond m \cdot r}
    *
-   * where :math:`\diamond \in \{=, \neq, <, \leq, >, \geq\}`.
+   * where :math:`\diamond \in \{=, <, \leq, >, \geq\}`.
    * \endverbatim
    */
   EVALUE(ARITH_MULT_POS),
@@ -2151,9 +2151,8 @@ enum ENUM(ProofRule)
    *
    *   \inferrule{- \mid m, l \diamond r}{(m < 0 \land l \diamond r) \rightarrow m \cdot l \diamond_{inv} m \cdot r}
    *
-   * where :math:`\diamond \in \{=, \neq, <, \leq, >, \geq\}` and
-   * :math:`\diamond_{inv}` is the inverted relation symbol. The inverse of
-   * :math:`\neq` is itself.
+   * where :math:`\diamond \in \{=, <, \leq, >, \geq\}` and
+   * :math:`\diamond_{inv}` is the inverted relation symbol.
    * \endverbatim
    */
   EVALUE(ARITH_MULT_NEG),

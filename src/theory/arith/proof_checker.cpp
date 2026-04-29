@@ -85,8 +85,11 @@ Node ArithProofRuleChecker::checkInternal(ProofRule id,
       Assert(args.size() == 2);
       Node mult = args[0];
       Kind rel = args[1].getKind();
-      Assert(rel == Kind::EQUAL || rel == Kind::DISTINCT || rel == Kind::LT
-             || rel == Kind::LEQ || rel == Kind::GT || rel == Kind::GEQ);
+      if (rel != Kind::EQUAL && rel != Kind::LT && rel != Kind::LEQ
+          && rel != Kind::GT && rel != Kind::GEQ)
+      {
+        return Node::null();
+      }
       Node lhs = args[1][0];
       Node rhs = args[1][1];
       Node zero = nm->mkConstRealOrInt(mult.getType(), Rational(0));
@@ -103,9 +106,12 @@ Node ArithProofRuleChecker::checkInternal(ProofRule id,
       Assert(args.size() == 2);
       Node mult = args[0];
       Kind rel = args[1].getKind();
-      Assert(rel == Kind::EQUAL || rel == Kind::DISTINCT || rel == Kind::LT
-             || rel == Kind::LEQ || rel == Kind::GT || rel == Kind::GEQ);
-      Kind rel_inv = (rel == Kind::DISTINCT ? rel : reverseRelationKind(rel));
+      if (rel != Kind::EQUAL && rel != Kind::LT && rel != Kind::LEQ
+          && rel != Kind::GT && rel != Kind::GEQ)
+      {
+        return Node::null();
+      }
+      Kind rel_inv = reverseRelationKind(rel);
       Node lhs = args[1][0];
       Node rhs = args[1][1];
       Node zero = nm->mkConstRealOrInt(mult.getType(), Rational(0));
