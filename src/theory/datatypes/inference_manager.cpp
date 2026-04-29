@@ -68,6 +68,32 @@ void InferenceManager::process()
   }
   // process pending lemmas, used infrequently, only for definitional lemmas
   doPendingLemmas();
+  if (hasSentLemma())
+  {
+    // Sending lemmas may trigger equality engine notifications and SAT
+    // backtracking. Any internal facts queued before this point may have stale
+    // explanations and will be regenerated in a later check.
+    clearPendingFacts();
+    return;
+  }
+  // Since datatype facts may be queued from equality engine notifications,
+  // facts can become stale if another theory sends a lemma and causes
+  // backtracking before we process them. If we detect this, clear the whole
+  // queue; the facts will be regenerated in a later check if still relevant.
+  for (const std::unique_ptr<TheoryInference>& fact : d_pendingFact)
+  {
+    SimpleTheoryInternalFact* sf =
+        dynamic_cast<SimpleTheoryInternalFact*>(fact.get());
+    if (sf != nullptr && !sf->d_exp.isNull() && !sf->d_exp.isConst())
+    {
+      std::vector<Node> pexp{sf->d_exp};
+      if (!isFactCurrent(pexp))
+      {
+        clearPendingFacts();
+        return;
+      }
+    }
+  }
   // now process the pending facts
   doPendingFacts();
 }
@@ -158,6 +184,54 @@ Node InferenceManager::prepareDtInference(Node conc,
     ipc->notifyFact(di);
   }
   return conc;
+}
+
+bool InferenceManager::isFactCurrent(const std::vector<Node>& exp) const
+{
+  std::vector<Node> expc = exp;
+  NodeManager* nm = nodeManager();
+  for (size_t i = 0; i < expc.size(); i++)
+  {
+    Node e = expc[i];
+    bool epol = e.getKind() != Kind::NOT;
+    Node eatom = epol ? e : e[0];
+    if (eatom.getKind() == Kind::AND)
+    {
+      if (!epol)
+      {
+        return false;
+      }
+      expc.insert(expc.end(), eatom.begin(), eatom.end());
+    }
+    else if (eatom.getKind() == Kind::EQUAL)
+    {
+      if (!d_theoryState.hasTerm(eatom[0]) || !d_theoryState.hasTerm(eatom[1]))
+      {
+        return false;
+      }
+      if (epol && !d_theoryState.areEqual(eatom[0], eatom[1]))
+      {
+        return false;
+      }
+      if (!epol && !d_theoryState.areDisequal(eatom[0], eatom[1]))
+      {
+        return false;
+      }
+    }
+    else
+    {
+      if (!d_theoryState.hasTerm(eatom))
+      {
+        return false;
+      }
+      Node bval = nm->mkConst(epol);
+      if (!d_theoryState.areEqual(eatom, bval))
+      {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 }  // namespace datatypes

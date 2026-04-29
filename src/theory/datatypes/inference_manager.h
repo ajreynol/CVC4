@@ -15,6 +15,8 @@
 #ifndef CVC5__THEORY__DATATYPES__INFERENCE_MANAGER_H
 #define CVC5__THEORY__DATATYPES__INFERENCE_MANAGER_H
 
+#include <vector>
+
 #include "expr/node.h"
 #include "theory/datatypes/infer_proof_cons.h"
 #include "theory/inference_manager_buffered.h"
@@ -96,6 +98,8 @@ class InferenceManager : public InferenceManagerBuffered
                           Node exp,
                           InferenceId id,
                           InferProofCons* ipc);
+  /** Return true if exp still holds in the current equality engine. */
+  bool isFactCurrent(const std::vector<Node>& exp) const;
   /** The false node */
   Node d_false;
   /** The inference to proof converter */
