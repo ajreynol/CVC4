@@ -404,13 +404,15 @@ class PropEngine : protected EnvObj
    * formula to assert to the CNF stream, ppLemmas are the skolem definitions
    * obtained from preprocessing it, and removable is whether the lemma is
    * removable.
+   * @param isConflict Whether trn originated from a theory conflict.
    */
   void assertLemmasInternal(theory::InferenceId id,
                             TrustNode trn,
                             const std::vector<theory::SkolemLemma>& ppLemmas,
                             bool removable,
                             bool inprocess,
-                            bool local);
+                            bool local,
+                            bool isConflict);
 
   /**
    * Indicates that the SAT solver is currently solving something and we should

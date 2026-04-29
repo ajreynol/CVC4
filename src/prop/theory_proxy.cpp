@@ -176,7 +176,8 @@ void TheoryProxy::notifySkolemDefinition(Node a, TNode skolem)
 void TheoryProxy::notifyAssertion(Node a,
                                   TNode skolem,
                                   bool isLemma,
-                                  bool local)
+                                  bool local,
+                                  bool isConflict)
 {
   // ignore constants
   if (a.isConst())
@@ -193,7 +194,7 @@ void TheoryProxy::notifyAssertion(Node a,
   {
     // Otherwise, if it is not a skolem definition, or we are treating
     // skolem definitions as ordinary assertions, we add it now.
-    d_decisionEngine->addAssertions({a});
+    d_decisionEngine->addAssertions({a}, isConflict);
   }
   // Otherwise, it is a skolem definition that will be activated dynamically
   // in TheoryProxy::theoryCheck.

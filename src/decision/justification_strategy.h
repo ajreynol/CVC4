@@ -145,7 +145,8 @@ class JustificationStrategy : public DecisionEngine
    * All input assertions and lemmas not marked "local" are added via this call.
    * @param lems The lemmas to add.
    */
-  void addAssertions(const std::vector<TNode>& lems) override;
+  void addAssertions(const std::vector<TNode>& lems,
+                     bool isConflict = false) override;
   /**
    * Adds assertions lems to satisfy that persist in the SAT context.
    * This is triggered when a literal lit is sent to TheoryEngine that contains
@@ -157,10 +158,14 @@ class JustificationStrategy : public DecisionEngine
 
  private:
   /**
-   * Helper method to insert assertions in `lems` to `d_assertions` or
-   * `d_localAssertions` when `local` is true.
+   * Helper method to insert assertions in `lems` to the proper assertion list.
+   * If local is true, this inserts to `d_localAssertions`. Otherwise, this
+   * inserts to `d_conflictAssertions` if `conflict` is true, and `d_assertions`
+   * otherwise.
    */
-  void insertToAssertionList(const std::vector<TNode>& lems, bool local);
+  void insertToAssertionList(const std::vector<TNode>& lems,
+                             bool local,
+                             bool conflict = false);
   /**
    * Refresh current assertion. This ensures that d_stack has a current
    * assertion to satisfy. If it does not already have one, we take the next
@@ -175,12 +180,14 @@ class JustificationStrategy : public DecisionEngine
    * Implements the above function for the case where d_stack must get a new
    * assertion to satisfy.
    *
-   * @param local If this is true, we pull the next assertion from
-   * the list of relevant local assertions.
+   * This pulls the next assertion from `al`.
+   *
+   * @param al The list to get the next assertion from.
+   * @param doWatchStatus Whether to notify `al` of the status of the assertion.
    * @return true if we successfully initialized d_stack with the next
    * assertion to satisfy.
    */
-  bool refreshCurrentAssertionFromList(bool local);
+  bool refreshCurrentAssertionFromList(AssertionList& al, bool doWatchStatus);
   /**
    * Let n be the node referenced by ji.
    *
@@ -203,6 +210,8 @@ class JustificationStrategy : public DecisionEngine
   static bool isTheoryLiteral(TNode n);
   /** The assertions, which are user-context dependent. */
   AssertionList d_assertions;
+  /** The conflict assertions, which are user-context dependent. */
+  AssertionList d_conflictAssertions;
   /** The local assertions, which are SAT-context depdendent */
   AssertionList d_localAssertions;
 
@@ -217,9 +226,13 @@ class JustificationStrategy : public DecisionEngine
   Node d_currUnderStatus;
   /** Whether we have added a decision while considering d_currUnderStatus */
   bool d_currStatusDec;
+  /** The assertion list currently being watched for status */
+  AssertionList* d_currStatusList;
   //------------------------------------ options
   /** using relevancy order */
   bool d_useRlvOrder;
+  /** Whether conflict clauses have priority over other theory lemmas */
+  bool d_conflictFirst;
   /** using stop only */
   bool d_decisionStopOnly;
   /** skolem mode */

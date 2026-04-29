@@ -30,13 +30,18 @@ JustificationStrategy::JustificationStrategy(Env& env,
           context(),
           options()
               .decision.jhRlvOrder),  // assertions are user-context dependent
+      d_conflictAssertions(userContext(),
+                           context(),
+                           options().decision.jhRlvOrder),
       d_localAssertions(
           context(), context()),  // local assertions are SAT-context dependent
       d_jcache(context(), ss, cs),
       d_stack(context()),
       d_lastDecisionLit(context()),
       d_currStatusDec(false),
+      d_currStatusList(nullptr),
       d_useRlvOrder(options().decision.jhRlvOrder),
+      d_conflictFirst(options().decision.jhConflictFirst),
       d_decisionStopOnly(options().decision.decisionMode
                          == options::DecisionMode::STOPONLY),
       d_jhSkMode(options().decision.jhSkolemMode),
@@ -50,8 +55,10 @@ void JustificationStrategy::presolve()
   d_lastDecisionLit = Node::null();
   d_currUnderStatus = Node::null();
   d_currStatusDec = false;
+  d_currStatusList = nullptr;
   // reset the dynamic assertion list data
   d_assertions.presolve();
+  d_conflictAssertions.presolve();
   d_localAssertions.presolve();
   // clear the stack
   d_stack.clear();
@@ -137,7 +144,8 @@ SatLiteral JustificationStrategy::getNextInternal(bool& stopSearch)
           ds = DecisionStatus::NO_DECISION;
           ++(d_stats.d_numStatusNoDecision);
         }
-        d_assertions.notifyStatus(d_currUnderStatus, ds);
+        Assert(d_currStatusList != nullptr);
+        d_currStatusList->notifyStatus(d_currUnderStatus, ds);
       }
       // we did not find a next node for current, refresh current assertion
       d_stack.clear();
@@ -447,10 +455,11 @@ JustifyNode JustificationStrategy::getNextJustifyNode(
 
 bool JustificationStrategy::isDone() { return !refreshCurrentAssertion(); }
 
-void JustificationStrategy::addAssertions(const std::vector<TNode>& lems)
+void JustificationStrategy::addAssertions(const std::vector<TNode>& lems,
+                                          bool isConflict)
 {
   Trace("jh-assert") << "addAssertions " << lems << std::endl;
-  insertToAssertionList(lems, false);
+  insertToAssertionList(lems, false, d_conflictFirst && isConflict);
 }
 
 void JustificationStrategy::addLocalAssertions(const std::vector<TNode>& lems)
@@ -460,10 +469,12 @@ void JustificationStrategy::addLocalAssertions(const std::vector<TNode>& lems)
 }
 
 void JustificationStrategy::insertToAssertionList(
-    const std::vector<TNode>& lems, bool local)
+    const std::vector<TNode>& lems, bool local, bool conflict)
 {
   std::vector<TNode> toProcess(lems.begin(), lems.end());
-  AssertionList& al = local ? d_localAssertions : d_assertions;
+  AssertionList& al =
+      local ? d_localAssertions
+            : (conflict ? d_conflictAssertions : d_assertions);
   IntStat& sizeStat =
       local ? d_stats.d_maxSkolemDefsSize : d_stats.d_maxAssertionsSize;
   // always miniscope AND and negated OR immediately
@@ -497,7 +508,9 @@ void JustificationStrategy::insertToAssertionList(
     {
       al.addAssertion(curr);
       // take stats
-      sizeStat.maxAssign(al.size());
+      sizeStat.maxAssign(local ? al.size()
+                               : d_assertions.size()
+                                     + d_conflictAssertions.size());
     }
     else
     {
@@ -521,7 +534,9 @@ bool JustificationStrategy::refreshCurrentAssertion()
     if (curr != d_currUnderStatus && !d_currUnderStatus.isNull())
     {
       ++(d_stats.d_numStatusBacktrack);
-      d_assertions.notifyStatus(d_currUnderStatus, DecisionStatus::BACKTRACK);
+      Assert(d_currStatusList != nullptr);
+      d_currStatusList->notifyStatus(d_currUnderStatus,
+                                     DecisionStatus::BACKTRACK);
       // we've backtracked to another assertion which may be partially
       // processed. don't track its status?
       d_currUnderStatus = Node::null();
@@ -531,21 +546,31 @@ bool JustificationStrategy::refreshCurrentAssertion()
     return true;
   }
   bool skFirst = (d_jhSkMode != options::JutificationSkolemMode::LAST);
-  // use main assertions first
-  if (refreshCurrentAssertionFromList(skFirst))
+  if (skFirst && refreshCurrentAssertionFromList(d_localAssertions, false))
   {
     return true;
   }
-  // if satisfied all main assertions, use the skolem assertions, which may
-  // fail
-  return refreshCurrentAssertionFromList(!skFirst);
+  // use conflict assertions before other assertions if the option is enabled
+  if (d_conflictFirst
+      && refreshCurrentAssertionFromList(d_conflictAssertions, true))
+  {
+    return true;
+  }
+  // use main assertions
+  if (refreshCurrentAssertionFromList(d_assertions, true))
+  {
+    return true;
+  }
+  // if satisfied all main assertions, use the skolem assertions when they are
+  // configured to be last.
+  return !skFirst && refreshCurrentAssertionFromList(d_localAssertions, false);
 }
 
-bool JustificationStrategy::refreshCurrentAssertionFromList(bool local)
+bool JustificationStrategy::refreshCurrentAssertionFromList(
+    AssertionList& al, bool doWatchStatus)
 {
-  AssertionList& al = local ? d_localAssertions : d_assertions;
-  bool doWatchStatus = !local;
   d_currUnderStatus = Node::null();
+  d_currStatusList = nullptr;
   TNode curr = al.getNextAssertion();
   SatValue currValue;
   while (!curr.isNull())
@@ -564,6 +589,7 @@ bool JustificationStrategy::refreshCurrentAssertionFromList(bool local)
       {
         // initially, mark that we have not found a decision in this
         d_currUnderStatus = d_stack.getCurrentAssertion();
+        d_currStatusList = &al;
         d_currStatusDec = false;
       }
       return true;
@@ -574,7 +600,7 @@ bool JustificationStrategy::refreshCurrentAssertionFromList(bool local)
     {
       // mark that we did not find a decision in it
       ++(d_stats.d_numStatusNoDecision);
-      d_assertions.notifyStatus(curr, DecisionStatus::NO_DECISION);
+      al.notifyStatus(curr, DecisionStatus::NO_DECISION);
     }
     // already justified, immediately skip
     curr = al.getNextAssertion();
