@@ -186,6 +186,7 @@ void PropEngine::assertLemma(theory::InferenceId id,
   bool removable = isLemmaPropertyRemovable(p);
   bool local = isLemmaPropertyLocal(p);
   bool inprocess = isLemmaPropertyInprocess(p);
+  bool isConflict = tlemma.getKind() == TrustNodeKind::CONFLICT;
 
   // call preprocessor
   std::vector<theory::SkolemLemma> ppLemmas;
@@ -219,7 +220,8 @@ void PropEngine::assertLemma(theory::InferenceId id,
   }
 
   // now, assert the lemmas
-  assertLemmasInternal(id, tplemma, ppLemmas, removable, inprocess, local);
+  assertLemmasInternal(
+      id, tplemma, ppLemmas, removable, inprocess, local, isConflict);
 }
 
 void PropEngine::assertTrustedLemmaInternal(theory::InferenceId id,
@@ -314,7 +316,8 @@ void PropEngine::assertLemmasInternal(
     const std::vector<theory::SkolemLemma>& ppLemmas,
     bool removable,
     bool inprocess,
-    bool local)
+    bool local,
+    bool isConflict)
 {
   // notify skolem definitions first to ensure that the computation of
   // when a literal contains a skolem is accurate in the calls below.
@@ -355,7 +358,8 @@ void PropEngine::assertLemmasInternal(
   if (!trn.isNull())
   {
     // notify the theory proxy of the lemma
-    d_theoryProxy->notifyAssertion(trn.getProven(), TNode::null(), true, local);
+    d_theoryProxy->notifyAssertion(
+        trn.getProven(), TNode::null(), true, local, isConflict);
   }
   for (const theory::SkolemLemma& lem : ppLemmas)
   {
@@ -627,6 +631,7 @@ Node PropEngine::getPreprocessedTerm(TNode n)
   assertLemmasInternal(theory::InferenceId::THEORY_PP_SKOLEM_LEM,
                        trnNull,
                        newLemmas,
+                       false,
                        false,
                        false,
                        false);
