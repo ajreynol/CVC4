@@ -297,12 +297,18 @@ bool EqEngineManagerCentral::eqNotifyTriggerTermEquality(TheoryId tag,
   {
     return false;
   }
-  // no need to propagate shared term equalities to the UF theory
-  if (tag == THEORY_UF)
+  // No need to propagate shared term equalities to theories whose
+  // explanations are fully handled via the central equality engine. They
+  // already observe the merge/disequality in their official equality engine.
+  // Other theories, e.g. arrays, arithmetic and bit-vectors, still expect
+  // explicit assertions for their theory-specific bookkeeping.
+  if (usesCentralEqualityEngine(options(), tag)
+      && Theory::expUsingCentralEqualityEngine(tag) && tag != THEORY_BV)
   {
     return true;
   }
-  // propagate shared equality
+  // The tagged theory has a separate equality engine, or still uses asserted
+  // shared equalities for bookkeeping, so communicate explicitly.
   return d_sharedSolver.propagateSharedEquality(tag, a, b, value);
 }
 
