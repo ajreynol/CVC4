@@ -1,3 +1,4 @@
+; COMMAND-LINE: --ee-mode=central
 (set-logic ALL)
 (set-option :produce-models true)
 (set-info :status sat)

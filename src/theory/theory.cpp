@@ -649,7 +649,7 @@ eq::EqualityEngine* Theory::getEqualityEngine()
 
 bool Theory::expUsingCentralEqualityEngine(TheoryId id)
 {
-  return id != THEORY_ARITH && id != THEORY_ARRAYS;
+  return id != THEORY_ARITH && id != THEORY_ARRAYS && id != THEORY_BV;
 }
 
 theory::Assertion Theory::get()
