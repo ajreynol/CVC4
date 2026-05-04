@@ -211,7 +211,8 @@ void TheorySep::postProcessModel(TheoryModel* m)
       Assert(l.isConst());
       pto_children.push_back(l);
       Trace("sep-model") << " " << l << " -> ";
-      if (d_pto_model[l].isNull())
+      Node ptoData = getPtoModelData(d_pto_model, l, blbl);
+      if (ptoData.isNull())
       {
         Trace("sep-model") << "_";
         TypeEnumerator te_range(d_type_data);
@@ -244,8 +245,8 @@ void TheorySep::postProcessModel(TheoryModel* m)
       }
       else
       {
-        Trace("sep-model") << d_pto_model[l];
-        Node vpto = m->getValue(d_pto_model[l]);
+        Trace("sep-model") << ptoData;
+        Node vpto = m->getValue(ptoData);
         Assert(vpto.isConst());
         pto_children.push_back(vpto);
       }
@@ -413,6 +414,8 @@ void TheorySep::reduceFact(TNode atom, bool polarity, TNode fact)
         d_im.lemma(nrlem, InferenceId::SEP_NIL_NOT_IN_HEAP);
         // make disjoint heap
         makeDisjointHeap(labels[1], {slbl, labels[0]});
+        d_wandNonBaseLabels[labels[0]] = true;
+        d_wandNonBaseLabels[labels[1]] = true;
       }
       conc = nm->mkNode(Kind::AND, children);
     }
@@ -429,16 +432,21 @@ void TheorySep::reduceFact(TNode atom, bool polarity, TNode fact)
       // A is the disjoint union of B and C.
       if (!sharesRootLabel(slbl, d_base_label))
       {
-        std::map<Node, std::vector<Node> >::iterator itc =
+        std::map<Node, std::vector<std::vector<Node> > >::iterator itc =
             d_childrenMap.find(slbl);
         if (itc != d_childrenMap.end())
         {
-          std::vector<Node> disjs;
-          for (const Node& c : itc->second)
+          std::vector<Node> dconjs;
+          for (const std::vector<Node>& children : itc->second)
           {
-            disjs.push_back(nm->mkNode(Kind::SEP_LABEL, satom, c));
+            std::vector<Node> disjs;
+            for (const Node& c : children)
+            {
+              disjs.push_back(nm->mkNode(Kind::SEP_LABEL, satom, c));
+            }
+            dconjs.push_back(nm->mkNode(Kind::OR, disjs));
           }
-          Node conc2 = nm->mkNode(Kind::OR, disjs);
+          Node conc2 = nm->mkAnd(dconjs);
           conc = conc.isNull() ? conc2 : nm->mkNode(Kind::AND, conc, conc2);
         }
       }
@@ -588,11 +596,11 @@ void TheorySep::postCheck(Effort level)
       if (satom.getKind() == Kind::SEP_PTO)
       {
         Node vv = d_valuation.getModel()->getRepresentative(satom[0]);
-        if (d_pto_model.find(vv) == d_pto_model.end())
+        if (getPtoModelData(d_pto_model, vv, slbl).isNull())
         {
           Trace("sep-process") << "Pto : " << satom[0] << " (" << vv << ") -> "
                                << satom[1] << std::endl;
-          d_pto_model[vv] = satom[1];
+          addPtoModel(vv, slbl, satom[1]);
 
           // replace this on pto-model since this term is more relevant
           Assert(vv.getType() == d_type_ref);
@@ -712,6 +720,11 @@ void TheorySep::postCheck(Effort level)
     {
       Trace("sep-process-debug")
           << "--> inactive negated assertion " << satom << std::endl;
+      if (satom.getKind() == Kind::SEP_WAND && polarity
+          && atom[1] != d_base_label)
+      {
+        needAddLemma = true;
+      }
       continue;
     }
     Assert(atom.getKind() == Kind::SEP_LABEL);
@@ -797,6 +810,11 @@ void TheorySep::postCheck(Effort level)
     }
     else
     {
+      if (satom.getKind() == Kind::SEP_WAND && polarity
+          && slbl == d_base_label)
+      {
+        needAddLemma = false;
+      }
       // this typically should not happen, should never happen for complete
       // base theories
       Trace("sep-process") << "*** repeated refinement lemma : " << lem
@@ -826,10 +844,11 @@ void TheorySep::postCheck(Effort level)
       Assert(hlmodel[j].getKind() == Kind::SET_SINGLETON);
       Node l = hlmodel[j][0];
       Trace("sep-process-debug") << "  location : " << l << std::endl;
-      if (!d_pto_model[l].isNull())
+      Node ptoData = getPtoModelData(d_pto_model, l, d_base_label);
+      if (!ptoData.isNull())
       {
         Trace("sep-process-debug")
-            << "  points-to data witness : " << d_pto_model[l] << std::endl;
+            << "  points-to data witness : " << ptoData << std::endl;
         continue;
       }
       needAddLemma = true;
@@ -1378,8 +1397,12 @@ void TheorySep::makeDisjointHeap(Node parent, const std::vector<Node>& children)
   Assert(children.size() >= 2);
   if (!sharesRootLabel(parent, d_base_label))
   {
-    Assert(d_childrenMap.find(parent) == d_childrenMap.end());
-    d_childrenMap[parent] = children;
+    std::vector<std::vector<Node> >& childDecomps = d_childrenMap[parent];
+    if (std::find(childDecomps.begin(), childDecomps.end(), children)
+        == childDecomps.end())
+    {
+      childDecomps.push_back(children);
+    }
   }
   // remember parent relationships
   for (const Node& c : children)
@@ -1517,7 +1540,7 @@ Node TheorySep::instantiateLabel(Node n,
                                  Node lbl,
                                  Node lbl_v,
                                  std::map<Node, Node>& visited,
-                                 std::map<Node, Node>& pto_model,
+                                 PtoModel& pto_model,
                                  TypeNode rtn,
                                  std::map<Node, bool>& active_lbl,
                                  unsigned ind)
@@ -1679,21 +1702,21 @@ Node TheorySep::instantiateLabel(Node n,
       std::vector<Node> children;
       if (inBaseHeap)
       {
-        Node s = nm->mkNode(Kind::SET_SINGLETON, n[0]);
+        Node plbl = nm->mkNode(Kind::SET_SINGLETON, n[0]);
         children.push_back(nodeManager()->mkNode(
             Kind::SEP_LABEL,
             nodeManager()->mkNode(Kind::SEP_PTO, n[0], n[1]),
-            s));
+            plbl));
       }
       else
       {
         // look up value of data
-        std::map<Node, Node>::iterator it = pto_model.find(vr);
-        if (it != pto_model.end())
+        Node ptoData = getPtoModelData(pto_model, vr, lbl);
+        if (!ptoData.isNull())
         {
-          if (n[1] != it->second)
+          if (n[1] != ptoData)
           {
-            children.push_back(nm->mkNode(Kind::EQUAL, n[1], it->second));
+            children.push_back(nm->mkNode(Kind::EQUAL, n[1], ptoData));
           }
         }
         else
@@ -1968,11 +1991,7 @@ bool TheorySep::checkPto(HeapAssertInfo* e, Node p, bool polarity)
       Assert(q.getKind() == Kind::SEP_LABEL && q[0].getKind() == Kind::SEP_PTO);
       Node qlbl = q[1];
       Node qval = q[0][1];
-      // We use instantiated labels where labels are set to singletons. We
-      // assume these always share a root label.
-      if (qlbl.getKind() != Kind::SET_SINGLETON
-          && plbl.getKind() != Kind::SET_SINGLETON
-          && !sharesRootLabel(plbl, qlbl))
+      if (!ptoLabelsMayShareHeap(plbl, qlbl))
       {
         Trace("sep-pto") << "Constraints " << p << " and " << q
                          << " do not share a root label" << std::endl;
@@ -2056,6 +2075,70 @@ bool TheorySep::checkPto(HeapAssertInfo* e, Node p, bool polarity)
     }
   }
   return ret;
+}
+
+void TheorySep::addPtoModel(Node loc, Node lbl, Node data)
+{
+  std::vector<std::pair<Node, Node> >& entries = d_pto_model[loc];
+  for (const std::pair<Node, Node>& e : entries)
+  {
+    if (e.first == lbl && e.second == data)
+    {
+      return;
+    }
+  }
+  entries.emplace_back(lbl, data);
+}
+
+Node TheorySep::getPtoModelData(const PtoModel& ptoModel,
+                                Node loc,
+                                Node lbl) const
+{
+  PtoModel::const_iterator it = ptoModel.find(loc);
+  if (it == ptoModel.end())
+  {
+    return Node::null();
+  }
+  for (const std::pair<Node, Node>& e : it->second)
+  {
+    if (ptoLabelsMayShareHeap(e.first, lbl))
+    {
+      return e.second;
+    }
+  }
+  return Node::null();
+}
+
+bool TheorySep::ptoLabelsMayShareHeap(Node p, Node q) const
+{
+  bool pSingleton = p.getKind() == Kind::SET_SINGLETON;
+  bool qSingleton = q.getKind() == Kind::SET_SINGLETON;
+  if (pSingleton && qSingleton)
+  {
+    return true;
+  }
+  if (pSingleton)
+  {
+    return !isWandNonBaseLabel(q);
+  }
+  if (qSingleton)
+  {
+    return !isWandNonBaseLabel(p);
+  }
+  return sharesRootLabel(p, q);
+}
+
+bool TheorySep::isWandNonBaseLabel(Node lbl) const
+{
+  std::vector<Node> roots = getRootLabels(lbl);
+  for (const Node& r : roots)
+  {
+    if (ContainsKey(d_wandNonBaseLabels, r))
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 void TheorySep::sendLemma(std::vector<Node>& ant,

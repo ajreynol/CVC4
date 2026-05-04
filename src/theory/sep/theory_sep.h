@@ -252,7 +252,9 @@ class TheorySep : public Theory
    * Maps label sets to their direct children. This map is only stored for
    * labels with children that do not share a root label with the base label.
    */
-  std::map<Node, std::vector<Node> > d_childrenMap;
+  std::map<Node, std::vector<std::vector<Node> > > d_childrenMap;
+  /** Labels that are roots of non-base heaps introduced by sep.wand. */
+  std::map<Node, bool> d_wandNonBaseLabels;
 
   /**
    * This sends the lemmas:
@@ -273,7 +275,8 @@ class TheorySep : public Theory
 
   // term model
   std::map<Node, Node> d_tmodel;
-  std::map<Node, Node> d_pto_model;
+  typedef std::map<Node, std::vector<std::pair<Node, Node> > > PtoModel;
+  PtoModel d_pto_model;
 
   /**
    * A heap assert info is maintained per set equivalence class. It is
@@ -351,13 +354,24 @@ class TheorySep : public Theory
    * if the constraint was redundant.
    */
   bool checkPto(HeapAssertInfo* e, Node p, bool polarity);
+  /** Add that loc points to data on label lbl in the current model. */
+  void addPtoModel(Node loc, Node lbl, Node data);
+  /**
+   * Get the data term associated with loc in ptoModel for a heap label that
+   * may share locations with lbl.
+   */
+  Node getPtoModelData(const PtoModel& ptoModel, Node loc, Node lbl) const;
+  /** Do pto assertions on labels p and q potentially refer to the same heap? */
+  bool ptoLabelsMayShareHeap(Node p, Node q) const;
+  /** Is lbl in a non-base heap introduced by a sep.wand extension? */
+  bool isWandNonBaseLabel(Node lbl) const;
   void computeLabelModel(Node lbl);
   Node instantiateLabel(Node n,
                         Node o_lbl,
                         Node lbl,
                         Node lbl_v,
                         std::map<Node, Node>& visited,
-                        std::map<Node, Node>& pto_model,
+                        PtoModel& pto_model,
                         TypeNode rtn,
                         std::map<Node, bool>& active_lbl,
                         unsigned ind = 0);
