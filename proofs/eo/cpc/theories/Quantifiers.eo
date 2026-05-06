@@ -1,20 +1,16 @@
 (include "../programs/Utils.eo")
 (include "../programs/Nary.eo")
-
 (include "../theories/Arith.eo")
-
 ; disclaimer: >
 ;   This function is a builtin function symbol of SMT-LIB denoting
 ;   universal quantification. We represent it as an ordinary function taking a
 ;   list as the first child to model cvc5's treatment of quantified formulas.
 (declare-const forall (-> @List Bool Bool) :binder @list)
-
 ; disclaimer: >
 ;   This function is a builtin function symbol of SMT-LIB denoting
 ;   existential quantification. We represent it as an ordinary function taking a
 ;   list as the first child to model cvc5's treatment of quantified formulas.
 (declare-const exists (-> @List Bool Bool) :binder @list)
-
 ; program: $get_var_list
 ; args:
 ; - F Bool: The quantified formula.
@@ -23,10 +19,9 @@
 (program $get_var_list ((Q (-> @List Bool Bool)) (xs @List) (G Bool) (i Int))
   :signature (Bool) @List
   (
-    (($get_var_list (Q xs G)) xs)
+  (($get_var_list (Q xs G)) xs)
   )
 )
-
 ; program: $get_var_type
 ; args:
 ; - v T: The variable
@@ -35,10 +30,9 @@
 (program $get_var_type ((s String) (T Type))
   :signature (T) Type
   (
-  (($get_var_type (eo::var s T)) T)
+  (($get_var_type (eo::var s T))  T)
   )
 )
-
 ; program: $get_nth_var_type
 ; args:
 ; - F Bool: The quantified formula.
@@ -52,7 +46,6 @@
   (($get_nth_var_type (Q xs G) i) ($get_var_type (eo::list_nth @list xs i)))
   )
 )
-
 ; skolems
 (declare-parameterized-const @quantifiers_skolemize
   ((F Bool :opaque) (i Int :opaque))

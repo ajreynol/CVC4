@@ -1,18 +1,14 @@
 (include "../theories/Builtin.eo")
 (include "../theories/Arith.eo")
-
 ; disclaimer: >
 ;   The types of functions over Strings is generalized in this
 ;   signature to support both strings and sequences. The SMT-LIB standard only
 ;   accepts strings.
-
 ; The sequence type.
 ; disclaimer: This sort is not in SMT-LIB.
 (declare-const Seq (-> Type Type))
-
 ; disclaimer: This sort is not in SMT-LIB.
 (declare-const Char Type)
-
 ; define: String
 ; return: >
 ;   The string type.
@@ -24,13 +20,10 @@
 ;   generalize it to be defined as a sequence of characters, for the purposes
 ;   of lifting the theory definition and proof rules for strings to sequences.
 (define String () (Seq Char))
-
 ; The regular expression type.
 (declare-const RegLan Type)
-
 ; String literals are strings.
 (declare-consts <string> String)
-
 ; Empty sequence
 ; note: >
 ;   This symbol is used as the term denoting the empty sequence.
@@ -39,7 +32,6 @@
 ;   defined as $seq_empty below. Note seq.empty is never used for strings.
 ; disclaimer: This function is not in SMT-LIB.
 (declare-parameterized-const seq.empty ((T Type :implicit)) (Seq T))
-
 ; define: $seq_empty
 ; args:
 ; - T Type: The string-like type.
@@ -57,17 +49,15 @@
   (($seq_empty T)       (as seq.empty T))
   )
 )
-
 ; Core functions of strings.
 (declare-parameterized-const str.len ((T Type :implicit)) (-> (Seq T) Int))
-
 ; disclaimer: >
 ;   This function is declared in SMT-LIB to be :left-assoc. We
 ;   declare it to be :right-assoc-nil to model cvc5's treatment of variadic
 ;   functions.
 (declare-parameterized-const str.++ ((T Type :implicit))
-  (-> (Seq T) (Seq T) (Seq T)) :right-assoc-nil ($seq_empty (Seq T)))
-
+  (-> (Seq T) (Seq T) (Seq T))
+  :right-assoc-nil ($seq_empty (Seq T)))
 ; Extended functions for strings.
 (declare-parameterized-const str.substr ((T Type :implicit))
   (-> (Seq T) Int Int (Seq T)))
@@ -105,17 +95,14 @@
 (declare-const str.replace_re_all (-> String RegLan String String))
 ; disclaimer: This function is not in SMT-LIB.
 (declare-const str.indexof_re (-> String RegLan Int Int))
-
 ; Regular expression operators.
 (declare-const re.allchar RegLan)
 (declare-const re.none RegLan)
 (declare-const re.all RegLan)
 (declare-const str.to_re (-> String RegLan))
-
 ; define: @re.empty
 ; return: The regular expression containing only the empty string.
 (define @re.empty () (str.to_re ""))
-
 (declare-const re.* (-> RegLan RegLan))
 (declare-const re.+ (-> RegLan RegLan))
 (declare-const re.^ (-> Int RegLan RegLan))
@@ -136,14 +123,11 @@
 (declare-const re.diff (-> RegLan RegLan RegLan))
 (declare-const re.loop (-> Int Int RegLan RegLan))
 (declare-const str.in_re (-> String RegLan Bool))
-
 ; Sequence-specific operators.
 ; disclaimer: This function is not in SMT-LIB.
 (declare-parameterized-const seq.unit ((T Type :implicit)) (-> T (Seq T)))
 ; disclaimer: This function is not in SMT-LIB.
-(declare-parameterized-const seq.nth ((T Type :implicit))
-  (-> (Seq T) Int T))
-
+(declare-parameterized-const seq.nth ((T Type :implicit)) (-> (Seq T) Int T))
 ; Sequence operators are automatically translated to the string operators.
 ; disclaimer: This function is not in SMT-LIB.
 (define seq.len () str.len)
@@ -169,11 +153,9 @@
 (define seq.update () str.update)
 ; disclaimer: This function is not in SMT-LIB.
 (define seq.at () str.at)
-
 ; Skolem functions for strings and sequences.
-
 (declare-parameterized-const @re_unfold_pos_component
-  ((s String :opaque) (r RegLan :opaque) (n Int :opaque)) 
+  ((s String :opaque) (r RegLan :opaque) (n Int :opaque))
   String)
 (declare-parameterized-const @strings_deq_diff
   ((T Type :implicit) (s (Seq T) :opaque) (t (Seq T) :opaque))
@@ -181,12 +163,12 @@
 (declare-parameterized-const @strings_stoi_result ((s String :opaque))
   (-> Int Int))
 (declare-parameterized-const @strings_stoi_non_digit ((s String :opaque)) Int)
-(declare-parameterized-const @strings_itos_result ((n Int :opaque))
-  (-> Int Int))
+(declare-parameterized-const @strings_itos_result ((n Int :opaque)) (-> Int Int)
+)
 (declare-parameterized-const @strings_num_occur
   ((T Type :implicit) (s (Seq T)) (t (Seq T)))
   Int)
-(declare-parameterized-const @strings_num_occur_re 
+(declare-parameterized-const @strings_num_occur_re
   ((e String :opaque) (b RegLan :opaque))
   Int)
 (declare-parameterized-const @strings_occur_index
@@ -198,6 +180,4 @@
 (declare-parameterized-const @strings_replace_all_result
   ((T Type :implicit) (t (Seq T) :opaque))
   (-> Int (Seq T)))
-
-(declare-parameterized-const @witness_string_length ((T Type))
-  (-> Int Int T))
+(declare-parameterized-const @witness_string_length ((T Type)) (-> Int Int T))
