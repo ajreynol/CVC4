@@ -1,6 +1,5 @@
 (include "../theories/Builtin.eo")
 (include "../theories/Quantifiers.eo")
-
 ; program: $contains_atomic_term
 ; args:
 ; - arg1 S: The term to process.
@@ -10,24 +9,28 @@
   ((T Type) (U Type) (S Type) (x U) (y S) (f (-> T S)) (a T))
   :signature (S U) Bool
   (
-  (($contains_atomic_term (f a) x)  (eo::ite ($contains_atomic_term f x) true ($contains_atomic_term a x)))
-  (($contains_atomic_term x y)      (eo::eq x y))
+  (($contains_atomic_term (f a) x)
+    (eo::ite ($contains_atomic_term f x) true ($contains_atomic_term a x)))
+  (($contains_atomic_term x y)  (eo::eq x y))
   )
 )
-
 ; program: $contains_atomic_term_list
 ; args:
 ; - t T: The term to process.
 ; - xs @List: The list of terms to find.
 ; return: true if any atomic (0-ary) subterm of t is in xs.
-(program $contains_atomic_term_list ((T Type) (U Type) (S Type) (x U) (f (-> T S)) (a T) (xs @List))
+(program $contains_atomic_term_list
+  ((T Type) (U Type) (S Type) (x U) (f (-> T S)) (a T) (xs @List))
   :signature (T @List) Bool
   (
-    (($contains_atomic_term_list (f a) xs)  (eo::ite ($contains_atomic_term_list f xs) true ($contains_atomic_term_list a xs)))
-    (($contains_atomic_term_list x xs)      (eo::not (eo::is_neg (eo::list_find @list xs x))))
+  (($contains_atomic_term_list (f a) xs)
+    (eo::ite ($contains_atomic_term_list f xs)
+      true
+      ($contains_atomic_term_list a xs)))
+  (($contains_atomic_term_list x xs)
+    (eo::not (eo::is_neg (eo::list_find @list xs x))))
   )
 )
-
 ; program: $contains_atomic_term_list_free_rec
 ; args:
 ; - t T: The term to process.
@@ -38,23 +41,25 @@
 ;   of t at that position or in the set of already bound variables bvs.
 ; note: Assumes applications with lists as their first argument are binders.
 (program $contains_atomic_term_list_free_rec
-  ((T Type) (U Type) (S Type) (x U) (q (-> @List T S)) (f (-> T S)) (a T) (xs @List) (bvs @List) (x U) (ys @List :list))
+  ((T Type) (U Type) (S Type) (x U) (q (-> @List T S)) (f (-> T S)) (a T)
+    (xs @List) (bvs @List) (x U) (ys @List :list))
   :signature (T @List @List) Bool
   (
-    ; we assume that any function taking a list as a first argument is a binder
-    (($contains_atomic_term_list_free_rec (q (@list x ys) a) xs bvs)
-      ; concatenate these variables to the list of bound variables
-      ($contains_atomic_term_list_free_rec a xs (eo::list_concat @list (@list x ys) bvs)))
-    ; otherwise normal recursion
-    (($contains_atomic_term_list_free_rec (f a) xs bvs)
-      (eo::ite ($contains_atomic_term_list_free_rec f xs bvs) true ($contains_atomic_term_list_free_rec a xs bvs)))
-    (($contains_atomic_term_list_free_rec x xs bvs)
-      (eo::ite (eo::is_neg (eo::list_find @list xs x)) 
-        false
-        (eo::is_neg (eo::list_find @list bvs x))))
+  ; we assume that any function taking a list as a first argument is a binder
+  (($contains_atomic_term_list_free_rec (q (@list x ys) a) xs bvs)
+    ($contains_atomic_term_list_free_rec a xs
+      (eo::list_concat @list (@list x ys) bvs)))
+  ; otherwise normal recursion
+  (($contains_atomic_term_list_free_rec (f a) xs bvs)
+    (eo::ite ($contains_atomic_term_list_free_rec f xs bvs)
+      true
+      ($contains_atomic_term_list_free_rec a xs bvs)))
+  (($contains_atomic_term_list_free_rec x xs bvs)
+    (eo::ite (eo::is_neg (eo::list_find @list xs x))
+      false
+      (eo::is_neg (eo::list_find @list bvs x))))
   )
 )
-
 ; define: $contains_atomic_term_list_free
 ; args:
 ; - t T: The term to process.
@@ -64,9 +69,8 @@
 ;   variable of t at that position.
 ; note: Assumes applications with lists as their first argument are binders.
 (define $contains_atomic_term_list_free ((T Type :implicit) (x T) (xs @List))
-  ($contains_atomic_term_list_free_rec x xs @list.nil))
-
-
+  ($contains_atomic_term_list_free_rec x xs @list.nil)
+)
 ; program: $substitute
 ; args:
 ; - arg1 S: The domain of the substitution.
@@ -77,7 +81,7 @@
 ; note: This method does not evaluate if variable capture is encountered.
 (program $substitute
   ((T Type) (U Type) (S Type) (x S) (y S) (f (-> T U)) (a T) (z U)
-   (q (-> @List T S)) (V Type) (v V) (vs @List :list))
+    (q (-> @List T S)) (V Type) (v V) (vs @List :list))
   :signature (S S U) U
   (
   ; we assume that any function taking a list as a first argument is a binder
@@ -85,12 +89,12 @@
   (($substitute x y (q (@list v vs) a))
     (eo::requires ($contains_atomic_term_list_free y (@list v vs)) false
       (q ($substitute x y (@list v vs)) ($substitute x y a))))
-  (($substitute x y (f a))              (_ ($substitute x y f) ($substitute x y a)))
-  (($substitute x y x)                  y)
-  (($substitute x y z)                  z)
+  (($substitute x y (f a))
+    (_ ($substitute x y f) ($substitute x y a)))
+  (($substitute x y x)  y)
+  (($substitute x y z)  z)
   )
 )
-
 ; program: $substitute_simul
 ; args:
 ; - s S: The term to substitute into.
@@ -100,8 +104,8 @@
 ; note: Assumes applications with lists as their first argument are binders.
 ; note: This method does not evaluate if variable capture is encountered.
 (program $substitute_simul
-  ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List :list) (ss @List :list) (s S) (y S)
-   (q (-> @List T S)) (V Type) (v V) (vs @List :list))
+  ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List :list) (ss @List :list)
+    (s S) (y S) (q (-> @List T S)) (V Type) (v V) (vs @List :list))
   :signature (S @List @List) S
   (
   ; we assume that any function taking a list as a first argument is a binder
@@ -109,12 +113,13 @@
   (($substitute_simul (q (@list v vs) a) xs ss)
     (eo::requires ($contains_atomic_term_list_free ss (@list v vs)) false
       (q ($substitute_simul (@list v vs) xs ss) ($substitute_simul a xs ss))))
-  (($substitute_simul (f a) xs ss)                  (_ ($substitute_simul f xs ss) ($substitute_simul a xs ss)))
-  (($substitute_simul x xs ss)                      (eo::define ((i (eo::list_find @list xs x)))
-                                                      (eo::ite (eo::is_neg i) x ($assoc_nil_nth @list ss i))))
+  (($substitute_simul (f a) xs ss)
+    (_ ($substitute_simul f xs ss) ($substitute_simul a xs ss)))
+  (($substitute_simul x xs ss)
+    (eo::define ((i (eo::list_find @list xs x)))
+    (eo::ite (eo::is_neg i) x ($assoc_nil_nth @list ss i))))
   )
 )
-
 ; program: $beta_reduce_type
 ; args:
 ; - T Type: A type.
@@ -124,11 +129,10 @@
 (program $beta_reduce_type ((T Type) (U Type) (x T) (xs @List :list))
   :signature (Type @List) Type
   (
-  (($beta_reduce_type (-> T U) (@list x xs)) ($beta_reduce_type U xs))
-  (($beta_reduce_type T @list.nil)           T)
+  (($beta_reduce_type (-> T U) (@list x xs))  ($beta_reduce_type U xs))
+  (($beta_reduce_type T @list.nil)            T)
   )
 )
-
 ; program: $beta_reduce
 ; args:
 ; - u U: >
@@ -137,14 +141,20 @@
 ; - ss @List: The accumulated list of arguments to pass to the lambda.
 ; return: the result of beta reduction.
 (program $beta_reduce
-  ((U Type) (T Type) (S Type) (u U) (f (-> T U)) (a T) (t S) (x T) (xs @List :list) (ss @List :list) (X Type))
-  :signature ((eo::quote u) (eo::quote ss)) ($beta_reduce_type (eo::typeof u) ss)
+  ((U Type) (T Type) (S Type) (u U) (f (-> T U)) (a T) (t S) (x T)
+    (xs @List :list) (ss @List :list) (X Type))
+  :signature
+    ((eo::quote u) (eo::quote ss))
+    ($beta_reduce_type (eo::typeof u) ss)
   (
-  ; handle higher-order case: if lambda is applied to one argument, it may be a partial application
+  ; handle higher-order case: if lambda is applied to one argument, it may be a
+  ; partial application
   (($beta_reduce (_ (lambda (@list x xs) t) a) @list.nil)
-                                    (eo::define ((st ($substitute x a t)))
-                                      (eo::ite (eo::eq xs @list.nil) st (lambda xs st))))
-  (($beta_reduce (lambda xs t) ss)  ($substitute_simul t xs ss))
-  (($beta_reduce (f a) ss)          ($beta_reduce f (@list a ss)))
+    (eo::define ((st ($substitute x a t)))
+    (eo::ite (eo::eq xs @list.nil) st (lambda xs st))))
+  (($beta_reduce (lambda xs t) ss)
+    ($substitute_simul t xs ss))
+  (($beta_reduce (f a) ss)
+    ($beta_reduce f (@list a ss)))
   )
 )

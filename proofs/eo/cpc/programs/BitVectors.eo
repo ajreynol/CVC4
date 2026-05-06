@@ -1,5 +1,4 @@
 (include "../theories/BitVectors.eo")
-
 ; define: $bv_sign_bit
 ; args:
 ; - b (BitVec m): The bitvector term.
@@ -7,16 +6,14 @@
 (define $bv_sign_bit ((m Int :implicit) (b (BitVec m)))
   (eo::define ((T (eo::typeof b)))
   (eo::define ((w ($bv_bitwidth T)))
-  (eo::define ((wm1 (eo::add w -1)))
-    (eo::extract b wm1 wm1)))))
-
+  (eo::define ((wm1 (eo::add w -1))) (eo::extract b wm1 wm1))))
+)
 ; define: $bv_ones
 ; args:
 ; - m Int: The bitwidth.
 ; return: The bitvector of width m containing all ones.
-(define $bv_ones ((m Int))
-  (eo::to_bin m (eo::add ($arith_eval_int_pow_2 m) -1)))
-
+(define $bv_ones ((m Int)) (eo::to_bin m (eo::add ($arith_eval_int_pow_2 m) -1))
+)
 ; define: $bv_to_signed_int
 ; args:
 ; - b (BitVec m): The bitvector term.
@@ -26,10 +23,10 @@
   (eo::define ((w ($bv_bitwidth T)))
   (eo::define ((wm1 (eo::add w -1)))
   (eo::define ((z (eo::to_z (eo::extract b 0 (eo::add w -2)))))
-    (eo::ite (eo::eq ($bv_sign_bit b) #b1)
-      (eo::add (eo::neg ($arith_eval_int_pow_2 wm1)) z)
-      z))))))
-
+  (eo::ite (eo::eq ($bv_sign_bit b) #b1)
+    (eo::add (eo::neg ($arith_eval_int_pow_2 wm1)) z)
+    z)))))
+)
 ; program: $bv_unfold_repeat_rec
 ; args:
 ; - n Int: The number of times to repeat, expected to be a non-negative numeral.
@@ -38,11 +35,11 @@
 (program $bv_unfold_repeat_rec ((m Int) (n Int) (b (BitVec m)))
   :signature ((eo::quote n) (BitVec m)) (BitVec (eo::mul n m))
   (
-    (($bv_unfold_repeat_rec 0 b)  (eo::to_bin 0 0))
-    (($bv_unfold_repeat_rec n b)  (_ concat b ($bv_unfold_repeat_rec (eo::add n -1) b)))
+  (($bv_unfold_repeat_rec 0 b)  (eo::to_bin 0 0))
+  (($bv_unfold_repeat_rec n b)
+    (_ concat b ($bv_unfold_repeat_rec (eo::add n -1) b)))
   )
 )
-
 ; program: $bv_repeat_eval_rec
 ; args:
 ; - n Int: The number of times to repeat, assumed to be a non-negative numeral.
@@ -51,11 +48,11 @@
 (program $bv_repeat_eval_rec ((m Int) (n Int) (b (BitVec m)))
   :signature ((eo::quote n) (BitVec m)) (BitVec (eo::mul n m))
   (
-    (($bv_repeat_eval_rec 0 b)  (eo::to_bin 0 0))
-    (($bv_repeat_eval_rec n b)  (eo::concat b ($bv_repeat_eval_rec (eo::add n -1) b)))
+  (($bv_repeat_eval_rec 0 b)  (eo::to_bin 0 0))
+  (($bv_repeat_eval_rec n b)
+    (eo::concat b ($bv_repeat_eval_rec (eo::add n -1) b)))
   )
 )
-
 ; define: $bv_unfold_repeat
 ; args:
 ; - n Int: The number of times to repeat, expected to be a non-negative numeral.
@@ -66,29 +63,31 @@
 (define $bv_unfold_repeat ((m Int :implicit) (n Int) (b (BitVec m)))
   (eo::ite (eo::and (eo::is_z n) (eo::not (eo::is_neg n)))
     ($bv_unfold_repeat_rec n b)
-    (repeat n b)))
-
+    (repeat n b))
+)
 ; program: $bv_get_first_const_child
 ; args:
 ; - a (BitVec n): The term to find a constant child in.
 ; return: >
 ;   The first direct child of a that it is a bitvector constant if one exists,
 ;   or the term @bv_empty otherwise.
-(program $bv_get_first_const_child ((n Int) (k Int) (f (-> (BitVec n) (BitVec n) (BitVec n))) (a (BitVec n)) (b (BitVec n) :list))
+(program $bv_get_first_const_child
+  ((n Int) (k Int) (f (-> (BitVec n) (BitVec n) (BitVec n))) (a (BitVec n))
+    (b (BitVec n) :list))
   :signature ((BitVec n)) (BitVec n)
   (
-    (($bv_get_first_const_child (f a b))  (eo::ite (eo::is_bin a) a ($bv_get_first_const_child b)))
+  (($bv_get_first_const_child (f a b))
+    (eo::ite (eo::is_bin a) a ($bv_get_first_const_child b)))
   )
 )
-
 ; define: $bv_bit_set
 ; args:
 ; - a (BitVec n): The bitvector to inspect, in little endian form.
 ; - i Int: The index of the bit.
 ; return: true if the i^th bit of a is set.
 (define $bv_bit_set ((n Int :implicit) (a (BitVec n)) (i Int))
-  (eo::eq (eo::extract a i i) #b1))
-  
+  (eo::eq (eo::extract a i i) #b1)
+)
 ; define: $nary_app
 ; args:
 ; - f (-> T U V): The function to apply, which is assumed to be
@@ -99,5 +98,8 @@
 ; note: >
 ;   This is a helpful method for constructing n-ary terms with exactly two
 ;   children.
-(define $nary_app ((T Type :implicit) (U Type :implicit) (V Type :implicit) (f (-> T U V)) (a T) (b U))
-  (f a (f b (eo::nil f (eo::typeof a)))))
+(define $nary_app
+  ((T Type :implicit) (U Type :implicit) (V Type :implicit) (f (-> T U V))
+    (a T) (b U))
+  (f a (f b (eo::nil f (eo::typeof a))))
+)

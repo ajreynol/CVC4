@@ -4,13 +4,14 @@
 ; - y T: The second term to compare.
 ; return: true if x >= y, where x and y are assumed to be arithmetic values.
 (define $compare_geq ((T Type :implicit) (x T) (y T))
-  (eo::ite (eo::eq x y) true (eo::gt x y)))
-
+  (eo::ite (eo::eq x y) true (eo::gt x y))
+)
 (declare-const @@Pair (-> Type Type Type))
 (define @Pair () @@Pair)
-(declare-parameterized-const @@pair ((U Type :implicit) (T Type :implicit)) (-> U T (@Pair U T)))
+(declare-parameterized-const @@pair ((U Type :implicit) (T Type :implicit))
+  (-> U T (@Pair U T))
+)
 (define @pair () @@pair)
-
 ; program: $pair_first
 ; args:
 ; - t (@Pair T S)
@@ -18,10 +19,9 @@
 (program $pair_first ((T Type) (S Type) (t T) (s S))
   :signature ((@Pair T S)) T
   (
-  (($pair_first (@pair t s)) t)
+  (($pair_first (@pair t s))  t)
   )
 )
-
 ; program: $pair_second
 ; args:
 ; - t (@Pair T S)
@@ -32,9 +32,7 @@
   (($pair_second (@pair t s)) s)
   )
 )
-
 ;; =============== untyped list
-
 ; untyped list.
 ; note: >
 ;   We use this as a synonym for eo::List. We use this syntax as it avoids
@@ -42,17 +40,16 @@
 (define @List () eo::List)
 (define @list.nil () eo::List::nil)
 (define @list () eo::List::cons)
-
 ;; =============== homogeneous list
-
 (declare-parameterized-const @@TypedList ((T Type)) Type)
 (declare-parameterized-const @@TypedList.nil ((T Type)) (@@TypedList T))
 (declare-parameterized-const @@TypedList.cons ((T Type :implicit))
-  (-> T (@@TypedList T) (@@TypedList T)) :right-assoc-nil (@@TypedList.nil T))
+  (-> T (@@TypedList T) (@@TypedList T))
+  :right-assoc-nil (@@TypedList.nil T)
+)
 (define @TList () @@TypedList)
 (define @tlist.nil () @@TypedList.nil)
 (define @tlist () @@TypedList.cons)
-
 ; program: $typed_list_element_type
 ; args:
 ; - T Type: the type in question
@@ -60,10 +57,9 @@
 (program $typed_list_element_type ((T Type))
   :signature (Type) Type
   (
-  (($typed_list_element_type (@TList T)) T)
+  (($typed_list_element_type (@TList T))  T)
   )
 )
-
 ; program: $typed_list_to_untyped
 ; args:
 ; - xs (@TList T): the typed list.
@@ -71,17 +67,14 @@
 (program $typed_list_to_untyped ((T Type) (x T) (xs (@TList T) :list))
   :signature ((@TList T)) @List
   (
-  (($typed_list_to_untyped (@tlist x xs))   (_ @list x ($typed_list_to_untyped xs)))
+  (($typed_list_to_untyped (@tlist x xs))
+    (_ @list x ($typed_list_to_untyped xs)))
   (($typed_list_to_untyped (@tlist.nil T))  @list.nil)
   )
 )
-
-  
 ;; =============== evaluation utilities
-
 ; note: This is a forward declaration of $evaluate_list defined in Cpc.eo.
 (program $evaluate_list () :signature (@List) @List)
-
 ; program: $evaluate_internal
 ; args:
 ; - t T: The original term.
@@ -93,18 +86,18 @@
   (($evaluate_internal t (@list tev)) tev)
   )
 )
-
 ; define: $evaluate
 ; args:
 ; - t S: The term to evaluate.
 ; return: The result of evaluating t.
 ; note: >
-;   This method is defined in terms of the forward declaration $evaluate_list here.
+; This method is defined in terms of the forward declaration $evaluate_list
+; here.
 ;   The implementation of this method depends on defining the evaluation for all
 ;   theories and thus is contained in Cpc.eo.
 (define $evaluate ((T Type :implicit) (t T))
-  ($evaluate_internal t ($evaluate_list (@list t))))
-
+  ($evaluate_internal t ($evaluate_list (@list t)))
+)
 ; program: $get_arg_list_rec
 ; args:
 ; - t S: The term to inspect.
@@ -112,35 +105,35 @@
 ; return: >
 ;   The list of arguments provided to the function at the head of t appended to
 ;   acc, or acc if t is not a function application.
-(program $get_arg_list_rec ((T Type) (S Type) (f (-> T S)) (x T) (y S) (acc @List))
+(program $get_arg_list_rec
+  ((T Type) (S Type) (f (-> T S)) (x T) (y S) (acc @List))
   :signature (S @List) @List
   (
-    (($get_arg_list_rec (f x) acc)  ($get_arg_list_rec f (_ @list x acc)))
-    (($get_arg_list_rec y acc)      acc)
+  (($get_arg_list_rec (f x) acc)  ($get_arg_list_rec f (_ @list x acc)))
+  (($get_arg_list_rec y acc)      acc)
   )
 )
-
 ; define: $get_arg_list
 ; args:
 ; - t T: The term to inspect.
 ; return: >
 ;   The list of arguments provided to the function at the head of t, or the nil
 ;   list if t is not a function application.
-(define $get_arg_list ((T Type :implicit) (t T)) ($get_arg_list_rec t @list.nil))
-
+(define $get_arg_list ((T Type :implicit) (t T)) ($get_arg_list_rec t @list.nil)
+)
 ; program: $is_app
 ; args:
 ; - f (-> T U): The function.
 ; - t S: The term to inspect.
 ; return: True if and only if t is an application of f.
-(program $is_app ((T Type) (S Type) (U Type) (f (-> T U)) (g (-> T S)) (x T) (y S))
+(program $is_app
+  ((T Type) (S Type) (U Type) (f (-> T U)) (g (-> T S)) (x T) (y S))
   :signature ((-> T U) S) Bool
   (
-    (($is_app f (g x))  ($is_app f g))
-    (($is_app f x)      (eo::eq f x))
+  (($is_app f (g x))  ($is_app f g))
+  (($is_app f x)      (eo::eq f x))
   )
 )
-
 ; program: $is_var_list
 ; args:
 ; - xs @List: The list of terms.
@@ -148,34 +141,34 @@
 (program $is_var_list ((U Type) (x U) (xs @List :list))
   :signature (@List) Bool
   (
-    (($is_var_list (@list x xs))  (eo::ite (eo::is_var x) ($is_var_list xs) false))
-    (($is_var_list @list.nil)     true)
+  (($is_var_list (@list x xs))
+    (eo::ite (eo::is_var x) ($is_var_list xs) false))
+  (($is_var_list @list.nil) true)
   )
 )
-
 ; define: $compare_var
 ; args:
 ; - a T: The first term to compare.
 ; - b U: The second term to compare.
-; return: true if a should be considered before b in an ordering where a and b are considered to be atomic variables.
+; return: true if a should be considered before b in an ordering where a and b
+; are considered to be atomic variables.
 ; note: >
 ;   This method is used to have a canonical ordering of variables.
-;   It could potentially be improved by having a builtin operator, e.g. eo::compare.
+; It could potentially be improved by having a builtin operator, e.g.
+; eo::compare.
 ;   The variable ordering always returns true for the variable with the lower
 ;   hash. This leads to best case performance if sorting a term with distinct
 ;   children, where if we ask for the hash of the children in order and prefer
 ;   the ones where this compare returns true, then the term remains unchanged.
 (define $compare_var ((T Type :implicit) (U Type :implicit) (a T) (b U))
-  (eo::cmp b a))
-
+  (eo::cmp b a)
+)
 ;; =============== for results
-
 ; Used for representing partial results of the method below.
 (declare-const @@result.null Bool)
 (define @result.null () @@result.null)
 (declare-const @@result.invalid Bool)
 (define @result.invalid () @@result.invalid)
-
 ; program: $result_combine
 ; args:
 ; - b1 Bool: The first Boolean result to combine.
@@ -184,13 +177,13 @@
 ;   The result of combining the two results if they agree, where @result.null
 ;   is treated as no result and @result.invalid is treated as an invalid result.
 ; note: >
-;   In summary, ($result_combine b1 ... ($result_combine bn @result.null)) returns
+; In summary, ($result_combine b1 ... ($result_combine bn @result.null)) returns
 ;   b1 if b1...bn are the same or @result.invalid otherwise.
 (program $result_combine ((b1 Bool) (b2 Bool))
   :signature (Bool Bool) Bool
   (
-    (($result_combine b1 @result.null) b1)
-    (($result_combine b1 b1)           b1)
-    (($result_combine b1 b2)           @result.invalid)
+  (($result_combine b1 @result.null)  b1)
+  (($result_combine b1 b1)            b1)
+  (($result_combine b1 b2)            @result.invalid)
   )
 )
