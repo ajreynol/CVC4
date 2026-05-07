@@ -1,10 +1,7 @@
 /******************************************************************************
- * Top contributors (to current version):
- *   Mudathir Mohamed, Andrew Reynolds, Kshitij Bansal
- *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -113,7 +110,7 @@ class TheorySetsPrivate : protected EnvObj
    *       (set.member x A)
    *     )
    *   )
-   *   where x is a fresh skolem   
+   *   where x is a fresh skolem
    */
   void checkMapDown();
   void checkGroups();
@@ -281,20 +278,20 @@ class TheorySetsPrivate : protected EnvObj
    * context.
    */
   NodeSet d_termProcessed;
-  
-  //propagation
+
+  // propagation
   class EqcInfo
   {
-  public:
-   EqcInfo(context::Context* c);
-   ~EqcInfo() {}
-   // singleton or emptyset equal to this eqc
-   context::CDO<Node> d_singleton;
+   public:
+    EqcInfo(context::Context* c);
+    ~EqcInfo() {}
+    // singleton or emptyset equal to this eqc
+    context::CDO<Node> d_singleton;
   };
   /** information necessary for equivalence classes */
-  std::map< Node, EqcInfo* > d_eqc_info;
+  std::map<Node, EqcInfo*> d_eqc_info;
   /** get or make eqc info */
-  EqcInfo* getOrMakeEqcInfo( TNode n, bool doMake = false );
+  EqcInfo* getOrMakeEqcInfo(TNode n, bool doMake = false);
 
   /** full check incomplete
    *
@@ -307,7 +304,6 @@ class TheorySetsPrivate : protected EnvObj
   IncompleteId d_fullCheckIncompleteId;
 
  public:
-
   /**
    * Constructs a new instance of TheorySetsPrivate w.r.t. the provided
    * contexts.
@@ -369,15 +365,13 @@ class TheorySetsPrivate : protected EnvObj
   SolverState& d_state;
   /** The inference manager of the sets solver */
   InferenceManager& d_im;
-  /** Reference to the skolem cache */
-  SkolemCache& d_skCache;
   /** The term registry */
   TermRegistry d_treg;
 
   /** Pointer to the equality engine of theory of sets */
   eq::EqualityEngine* d_equalityEngine;
 
-  bool isCareArg( Node n, unsigned a );
+  bool isCareArg(Node n, unsigned a);
 
   /** expand the definition of the choose operator */
   TrustNode expandChooseOperator(const Node& node,
@@ -387,16 +381,30 @@ class TheorySetsPrivate : protected EnvObj
   /** ensure that the set type is over first class type, throw logic exception
    * if not */
   void ensureFirstClassSetType(TypeNode tn) const;
+  /**
+   * Ensure cardinality is enabled, which may throw a logic exception if
+   * setCardExp is false.
+   */
+  void ensureCardinalityEnabled();
+  /**
+   * Ensure relations are enabled, which may throw a logic exception if
+   * relsExp is false.
+   */
+  void ensureRelationsEnabled();
   /** subtheory solver for the theory of relations */
   std::unique_ptr<TheorySetsRels> d_rels;
   /** subtheory solver for the theory of sets with cardinality */
   std::unique_ptr<CardinalityExtension> d_cardSolver;
+  /** Have we ever seen relations? */
+  bool d_hasEnabledRels;
   /** are relations enabled?
    *
    * This flag is set to true during a full effort check if any constraint
    * involving relational constraints is asserted to this theory.
    */
   bool d_rels_enabled;
+  /** Have we ever seen cardinality? */
+  bool d_hasEnabledCard;
   /** is cardinality enabled?
    *
    * This flag is set to true during a full effort check if any constraint

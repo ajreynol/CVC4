@@ -1,10 +1,7 @@
 /******************************************************************************
- * Top contributors (to current version):
- *   Andrew Reynolds, Gereon Kremer, Andres Noetzli
- *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -88,7 +85,10 @@ class InferenceManagerBuffered : public TheoryInferenceManager
    * @param exp The explanation in the equality engine of the theory
    * @param pg The proof generator which can provide a proof for conc
    */
-  void addPendingFact(Node conc, InferenceId id, Node exp, ProofGenerator* pg = nullptr);
+  void addPendingFact(Node conc,
+                      InferenceId id,
+                      Node exp,
+                      ProofGenerator* pg = nullptr);
   /**
    * Add pending fact, where fact can be a (derived) class of the
    * theory inference base class.
@@ -167,6 +167,11 @@ class InferenceManagerBuffered : public TheoryInferenceManager
    * these will be stale after the solver backtracks.
    */
   void notifyInConflict() override;
+
+  /**
+   * Returns the associated node manager
+   */
+  NodeManager* getNodeManager() const { return nodeManager(); }
 
  protected:
   /** A set of pending inferences to be processed as lemmas */

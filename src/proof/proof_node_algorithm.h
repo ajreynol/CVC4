@@ -1,10 +1,7 @@
 /******************************************************************************
- * Top contributors (to current version):
- *   Andrew Reynolds, Haniel Barbosa, Gereon Kremer
- *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -22,10 +19,12 @@
 
 #include "cvc5/cvc5_proof_rule.h"
 #include "expr/node.h"
+#include "smt/env.h"
 
 namespace cvc5::internal {
 
 class ProofNode;
+class CDProof;
 
 namespace expr {
 
@@ -66,6 +65,16 @@ void getFreeAssumptionsMap(
 void getSubproofRule(std::shared_ptr<ProofNode> pn,
                      ProofRule r,
                      std::vector<std::shared_ptr<ProofNode>>& pfs);
+
+/**
+ * Get the subproofs of pn that have a rule in rs.
+ * @param pn The proof node.
+ * @param rs The rules to find.
+ * @param pfs The list of subproofs of pn that have rule r.
+ */
+void getSubproofRules(std::shared_ptr<ProofNode> pn,
+                      std::unordered_set<ProofRule> rs,
+                      std::vector<std::shared_ptr<ProofNode>>& pfs);
 
 /**
  * Return true if pn contains a subproof whose rule is ASSUME. Notice that we
@@ -119,6 +128,25 @@ bool containsSubproof(ProofNode* pn,
  * of CONG, NARY_CONG or HO_CONG.
  */
 ProofRule getCongRule(const Node& n, std::vector<Node>& args);
+
+/**
+ * Prove congruence for left hand side term n.
+ * If n is a term of the form (f t1 ... tn), this proves
+ *  (= (f t1 ... sn) (f s1 .... sn))
+ * where si is different from ti iff premises[i] is the equality (= ti si).
+ * Note that we permit providing null premises[i] in which case si is ti
+ * and we prove (= ti ti) by REFL. For example, given
+ *   n = (f b a c) and premises = { null, a=b, null }
+ * we prove:
+ *   ----- REFL        ---- REFL
+ *   b = b      a = b  c = c
+ *   ------------------------ CONG
+ *   (f b a c) = (f b b c)
+ */
+Node proveCong(Env& env,
+               CDProof* cdp,
+               const Node& n,
+               const std::vector<Node>& premises);
 
 }  // namespace expr
 }  // namespace cvc5::internal

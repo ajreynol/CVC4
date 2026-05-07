@@ -1,10 +1,7 @@
 /******************************************************************************
- * Top contributors (to current version):
- *   Andrew Reynolds, Haniel Barbosa, Hans-Joerg Schurr
- *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -15,8 +12,12 @@
 
 #include "proof/proof_node_algorithm.h"
 
+#include "proof/proof.h"
+#include "proof/proof_checker.h"
 #include "proof/proof_node.h"
+#include "proof/proof_node_manager.h"
 #include "proof/proof_rule_checker.h"
+#include "theory/builtin/generic_op.h"
 
 namespace cvc5::internal {
 namespace expr {
@@ -91,6 +92,14 @@ void getSubproofRule(std::shared_ptr<ProofNode> pn,
                      ProofRule r,
                      std::vector<std::shared_ptr<ProofNode>>& pfs)
 {
+  std::unordered_set<ProofRule> rs{r};
+  getSubproofRules(pn, rs, pfs);
+}
+
+void getSubproofRules(std::shared_ptr<ProofNode> pn,
+                      std::unordered_set<ProofRule> rs,
+                      std::vector<std::shared_ptr<ProofNode>>& pfs)
+{
   // proof should not be cyclic
   std::unordered_set<ProofNode*> visited;
   std::unordered_set<ProofNode*>::iterator it;
@@ -105,7 +114,7 @@ void getSubproofRule(std::shared_ptr<ProofNode> pn,
     if (it == visited.end())
     {
       visited.insert(cur.get());
-      if (cur->getRule() == r)
+      if (rs.find(cur->getRule()) != rs.end())
       {
         pfs.push_back(cur);
       }
@@ -235,8 +244,8 @@ ProofRule getCongRule(const Node& n, std::vector<Node>& args)
   ProofRule r = ProofRule::CONG;
   switch (k)
   {
+    case Kind::DISTINCT: r = ProofRule::PAIRWISE_CONG; break;
     case Kind::APPLY_UF:
-    case Kind::DISTINCT:
     case Kind::FLOATINGPOINT_LT:
     case Kind::FLOATINGPOINT_LEQ:
     case Kind::FLOATINGPOINT_GT:
@@ -263,18 +272,39 @@ ProofRule getCongRule(const Node& n, std::vector<Node>& args)
       }
       break;
   }
-  // Add the arguments
-  args.push_back(ProofRuleChecker::mkKindNode(k));
-  if (kind::metaKindOf(k) == kind::metakind::PARAMETERIZED)
+  if (r != ProofRule::HO_CONG)
   {
-    args.push_back(n.getOperator());
-  }
-  else if (n.isClosure())
-  {
-    // bound variable list is an argument for closure over congruence
-    args.push_back(n[0]);
+    args.push_back(n);
   }
   return r;
+}
+
+Node proveCong(Env& env,
+               CDProof* cdp,
+               const Node& n,
+               const std::vector<Node>& premises)
+{
+  std::vector<Node> cpremises = premises;
+  std::vector<Node> cargs;
+  ProofRule cr = getCongRule(n, cargs);
+  cpremises.resize(n.getNumChildren());
+  // add REFL if a premise is not provided
+  for (size_t i = 0, npremises = cpremises.size(); i < npremises; i++)
+  {
+    if (cpremises[i].isNull())
+    {
+      Node refl = n[i].eqNode(n[i]);
+      cdp->addStep(refl, ProofRule::REFL, {}, {n[i]});
+      cpremises[i] = refl;
+    }
+  }
+  ProofChecker* pc = env.getProofNodeManager()->getChecker();
+  Node eq = pc->checkDebug(cr, cpremises, cargs);
+  if (!eq.isNull())
+  {
+    cdp->addStep(eq, cr, cpremises, cargs);
+  }
+  return eq;
 }
 
 }  // namespace expr

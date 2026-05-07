@@ -1,10 +1,7 @@
 /******************************************************************************
- * Top contributors (to current version):
- *   Aina Niemetz, Andrew Reynolds, Gereon Kremer
- *
  * This file is part of the cvc5 project.
  *
- * Copyright (c) 2009-2024 by the authors listed in the file AUTHORS
+ * Copyright (c) 2009-2026 by the authors listed in the file AUTHORS
  * in the top-level source directory and their institutional affiliations.
  * All rights reserved.  See the file COPYING in the top-level source
  * directory for licensing information.
@@ -108,11 +105,9 @@ struct APIStatistics
 /* Kind                                                                       */
 /* -------------------------------------------------------------------------- */
 
-#define KIND_ENUM(external_name, internal_name)                              \
-  {                                                                          \
-    external_name,                                                           \
-        std::make_pair(internal_name, std::string(#external_name).substr(6)) \
-  }
+#define KIND_ENUM(external_name, internal_name) \
+  {external_name,                               \
+   std::make_pair(internal_name, std::string(#external_name).substr(6))}
 
 /* Mapping from external (API) kind to internal kind. */
 const static std::unordered_map<Kind, std::pair<internal::Kind, std::string>>
@@ -148,7 +143,9 @@ const static std::unordered_map<Kind, std::pair<internal::Kind, std::string>>
         KIND_ENUM(Kind::ADD, internal::Kind::ADD),
         KIND_ENUM(Kind::MULT, internal::Kind::MULT),
         KIND_ENUM(Kind::IAND, internal::Kind::IAND),
+        KIND_ENUM(Kind::PIAND, internal::Kind::PIAND),
         KIND_ENUM(Kind::POW2, internal::Kind::POW2),
+        KIND_ENUM(Kind::LOG2, internal::Kind::INTS_LOG2),
         KIND_ENUM(Kind::SUB, internal::Kind::SUB),
         KIND_ENUM(Kind::NEG, internal::Kind::NEG),
         KIND_ENUM(Kind::DIVISION, internal::Kind::DIVISION),
@@ -240,7 +237,12 @@ const static std::unordered_map<Kind, std::pair<internal::Kind, std::string>>
         KIND_ENUM(Kind::BITVECTOR_ROTATE_RIGHT,
                   internal::Kind::BITVECTOR_ROTATE_RIGHT),
         KIND_ENUM(Kind::INT_TO_BITVECTOR, internal::Kind::INT_TO_BITVECTOR),
-        KIND_ENUM(Kind::BITVECTOR_TO_NAT, internal::Kind::BITVECTOR_TO_NAT),
+        KIND_ENUM(Kind::BITVECTOR_UBV_TO_INT,
+                  internal::Kind::BITVECTOR_UBV_TO_INT),
+        KIND_ENUM(Kind::BITVECTOR_SBV_TO_INT,
+                  internal::Kind::BITVECTOR_SBV_TO_INT),
+        // note we silently change BITVECTOR_TO_NAT to BITVECTOR_UBV_TO_INT
+        KIND_ENUM(Kind::BITVECTOR_TO_NAT, internal::Kind::BITVECTOR_UBV_TO_INT),
         KIND_ENUM(Kind::BITVECTOR_FROM_BOOLS,
                   internal::Kind::BITVECTOR_FROM_BOOLS),
         KIND_ENUM(Kind::BITVECTOR_BIT, internal::Kind::BITVECTOR_BIT),
@@ -376,6 +378,8 @@ const static std::unordered_map<Kind, std::pair<internal::Kind, std::string>>
         KIND_ENUM(Kind::BAG_CHOOSE, internal::Kind::BAG_CHOOSE),
         KIND_ENUM(Kind::BAG_MAP, internal::Kind::BAG_MAP),
         KIND_ENUM(Kind::BAG_FILTER, internal::Kind::BAG_FILTER),
+        KIND_ENUM(Kind::BAG_ALL, internal::Kind::BAG_ALL),
+        KIND_ENUM(Kind::BAG_SOME, internal::Kind::BAG_SOME),
         KIND_ENUM(Kind::BAG_FOLD, internal::Kind::BAG_FOLD),
         KIND_ENUM(Kind::BAG_PARTITION, internal::Kind::BAG_PARTITION),
         KIND_ENUM(Kind::TABLE_PRODUCT, internal::Kind::TABLE_PRODUCT),
@@ -460,11 +464,9 @@ const static std::unordered_map<Kind, std::pair<internal::Kind, std::string>>
 /* SortKind                                                                   */
 /* -------------------------------------------------------------------------- */
 
-#define SORT_KIND_ENUM(external_name, internal_name)                          \
-  {                                                                           \
-    external_name,                                                            \
-        std::make_pair(internal_name, std::string(#external_name).substr(10)) \
-  }
+#define SORT_KIND_ENUM(external_name, internal_name) \
+  {external_name,                                    \
+   std::make_pair(internal_name, std::string(#external_name).substr(10))}
 
 /* Mapping from external (API) kind to internal kind. */
 const static std::unordered_map<SortKind,
@@ -540,7 +542,9 @@ const static std::unordered_map<internal::Kind,
         {internal::Kind::MULT, Kind::MULT},
         {internal::Kind::NONLINEAR_MULT, Kind::MULT},
         {internal::Kind::IAND, Kind::IAND},
+        {internal::Kind::PIAND, Kind::PIAND},
         {internal::Kind::POW2, Kind::POW2},
+        {internal::Kind::INTS_LOG2, Kind::LOG2},
         {internal::Kind::SUB, Kind::SUB},
         {internal::Kind::NEG, Kind::NEG},
         {internal::Kind::DIVISION, Kind::DIVISION},
@@ -611,6 +615,7 @@ const static std::unordered_map<internal::Kind,
         {internal::Kind::BITVECTOR_SGE, Kind::BITVECTOR_SGE},
         {internal::Kind::BITVECTOR_ULTBV, Kind::BITVECTOR_ULTBV},
         {internal::Kind::BITVECTOR_SLTBV, Kind::BITVECTOR_SLTBV},
+        {internal::Kind::BITVECTOR_NEGO, Kind::BITVECTOR_NEGO},
         {internal::Kind::BITVECTOR_UADDO, Kind::BITVECTOR_UADDO},
         {internal::Kind::BITVECTOR_SADDO, Kind::BITVECTOR_SADDO},
         {internal::Kind::BITVECTOR_UMULO, Kind::BITVECTOR_UMULO},
@@ -637,7 +642,10 @@ const static std::unordered_map<internal::Kind,
         {internal::Kind::BITVECTOR_ROTATE_RIGHT, Kind::BITVECTOR_ROTATE_RIGHT},
         {internal::Kind::INT_TO_BITVECTOR_OP, Kind::INT_TO_BITVECTOR},
         {internal::Kind::INT_TO_BITVECTOR, Kind::INT_TO_BITVECTOR},
-        {internal::Kind::BITVECTOR_TO_NAT, Kind::BITVECTOR_TO_NAT},
+        // note that BITVECTOR_TO_NAT does not exist internally, only the
+        // case for BITVECTOR_UBV_TO_INT is given
+        {internal::Kind::BITVECTOR_UBV_TO_INT, Kind::BITVECTOR_UBV_TO_INT},
+        {internal::Kind::BITVECTOR_SBV_TO_INT, Kind::BITVECTOR_SBV_TO_INT},
         {internal::Kind::BITVECTOR_FROM_BOOLS, Kind::BITVECTOR_FROM_BOOLS},
         {internal::Kind::BITVECTOR_BIT_OP, Kind::BITVECTOR_BIT},
         {internal::Kind::BITVECTOR_BIT, Kind::BITVECTOR_BIT},
@@ -780,6 +788,8 @@ const static std::unordered_map<internal::Kind,
         {internal::Kind::BAG_CHOOSE, Kind::BAG_CHOOSE},
         {internal::Kind::BAG_MAP, Kind::BAG_MAP},
         {internal::Kind::BAG_FILTER, Kind::BAG_FILTER},
+        {internal::Kind::BAG_ALL, Kind::BAG_ALL},
+        {internal::Kind::BAG_SOME, Kind::BAG_SOME},
         {internal::Kind::BAG_FOLD, Kind::BAG_FOLD},
         {internal::Kind::BAG_PARTITION, Kind::BAG_PARTITION},
         {internal::Kind::TABLE_PRODUCT, Kind::TABLE_PRODUCT},
@@ -869,6 +879,7 @@ const static std::
             {internal::Kind::FUNCTION_TYPE, SortKind::FUNCTION_SORT},
             {internal::Kind::SEQUENCE_TYPE, SortKind::SEQUENCE_SORT},
             {internal::Kind::SET_TYPE, SortKind::SET_SORT},
+            {internal::Kind::SORT_TYPE, SortKind::UNINTERPRETED_SORT},
             {internal::Kind::TUPLE_TYPE, SortKind::TUPLE_SORT},
             {internal::Kind::NULLABLE_TYPE, SortKind::NULLABLE_SORT},
         };
@@ -2619,7 +2630,7 @@ Term Term::substitute(const Term& term, const Term& replacement) const
   CVC5_API_CHECK_NOT_NULL;
   CVC5_API_CHECK_TERM(term);
   CVC5_API_CHECK_TERM(replacement);
-  CVC5_API_CHECK(term.getSort() == replacement.getSort())
+  CVC5_API_CHECK(CVC5_EQUAL(term.getSort(), replacement.getSort()))
       << "expected terms of the same sort in substitute";
   //////// all checks before this line
   return Term(d_tm,
@@ -2835,25 +2846,6 @@ Term::const_iterator::const_iterator(TermManager* tm,
 {
 }
 
-Term::const_iterator::const_iterator(const const_iterator& it)
-    : d_tm(nullptr), d_origNode(nullptr)
-{
-  if (it.d_origNode != nullptr)
-  {
-    d_tm = it.d_tm;
-    d_origNode = it.d_origNode;
-    d_pos = it.d_pos;
-  }
-}
-
-Term::const_iterator& Term::const_iterator::operator=(const const_iterator& it)
-{
-  d_tm = it.d_tm;
-  d_origNode = it.d_origNode;
-  d_pos = it.d_pos;
-  return *this;
-}
-
 bool Term::const_iterator::operator==(const const_iterator& it) const
 {
   if (d_origNode == nullptr || it.d_origNode == nullptr)
@@ -2903,7 +2895,6 @@ Term Term::const_iterator::operator*() const
       Assert(idx > 0);
       --idx;
     }
-    Assert(idx >= 0);
     return Term(d_tm, (*d_origNode)[idx]);
   }
 }
@@ -3147,6 +3138,19 @@ std::wstring Term::getStringValue() const
   CVC5_API_TRY_CATCH_END;
 }
 
+std::u32string Term::getU32StringValue() const
+{
+  CVC5_API_TRY_CATCH_BEGIN;
+  CVC5_API_CHECK_NOT_NULL;
+  CVC5_API_ARG_CHECK_EXPECTED(d_node->getKind() == internal::Kind::CONST_STRING,
+                              *d_node)
+      << "Term to be a string value when calling getU32StringValue()";
+  //////// all checks before this line
+  return d_node->getConst<internal::String>().toU32String();
+  ////////
+  CVC5_API_TRY_CATCH_END;
+}
+
 std::vector<internal::Node> Term::termVectorToNodes(
     const std::vector<Term>& terms)
 {
@@ -3324,7 +3328,9 @@ std::string Term::getFiniteFieldValue() const
       d_node->getKind() == internal::Kind::CONST_FINITE_FIELD, *d_node)
       << "Term to be a finite field value when calling getFiniteFieldValue()";
   //////// all checks before this line
-  return d_node->getConst<internal::FiniteFieldValue>().toSignedInteger().toString();
+  return d_node->getConst<internal::FiniteFieldValue>()
+      .toSignedInteger()
+      .toString();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -3347,9 +3353,7 @@ std::string Term::getUninterpretedSortValue() const
       << "Term to be an abstract value when calling "
          "getUninterpretedSortValue()";
   //////// all checks before this line
-  std::stringstream ss;
-  ss << d_node->getConst<internal::UninterpretedSortValue>();
-  return ss.str();
+  return d_node->getConst<internal::UninterpretedSortValue>().getSymbol();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -3569,7 +3573,7 @@ std::vector<Term> Term::getSequenceValue() const
   //////// all checks before this line
   std::vector<Term> res;
   const internal::Sequence& seq = d_node->getConst<internal::Sequence>();
-  for (const auto& node: seq.getVec())
+  for (const auto& node : seq.getVec())
   {
     res.emplace_back(Term(d_tm, node));
   }
@@ -3670,7 +3674,8 @@ Term Term::getRealAlgebraicNumberLowerBound() const
 #ifdef CVC5_POLY_IMP
   const internal::RealAlgebraicNumber& ran =
       d_node->getOperator().getConst<internal::RealAlgebraicNumber>();
-  return Term(d_tm, internal::PolyConverter::ran_to_lower(ran));
+  return Term(d_tm,
+              internal::PolyConverter::ran_to_lower(d_tm->d_nm.get(), ran));
 #else
   return Term();
 #endif
@@ -3695,7 +3700,8 @@ Term Term::getRealAlgebraicNumberUpperBound() const
 #ifdef CVC5_POLY_IMP
   const internal::RealAlgebraicNumber& ran =
       d_node->getOperator().getConst<internal::RealAlgebraicNumber>();
-  return Term(d_tm, internal::PolyConverter::ran_to_upper(ran));
+  return Term(d_tm,
+              internal::PolyConverter::ran_to_upper(d_tm->d_nm.get(), ran));
 #else
   return Term();
 #endif
@@ -3717,11 +3723,10 @@ SkolemId Term::getSkolemId() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_CHECK_NOT_NULL;
-  internal::SkolemManager* skm = d_tm->d_nm->getSkolemManager();
-  CVC5_API_ARG_CHECK_EXPECTED(skm->isSkolemFunction(*d_node), *d_node)
+  CVC5_API_ARG_CHECK_EXPECTED(d_node->isSkolem(), *d_node)
       << "Term to be a skolem when calling getSkolemId";
   //////// all checks before this line
-  return skm->getId(*d_node);
+  return d_node->getSkolemId();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -3730,29 +3735,11 @@ std::vector<Term> Term::getSkolemIndices() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_CHECK_NOT_NULL;
-  internal::SkolemManager* skm = d_tm->d_nm->getSkolemManager();
-  CVC5_API_ARG_CHECK_EXPECTED(skm->isSkolemFunction(*d_node), *d_node)
+  CVC5_API_ARG_CHECK_EXPECTED(d_node->isSkolem(), *d_node)
       << "Term to be a skolem when calling getSkolemIndices";
   //////// all checks before this line
-  internal::Node cacheVal;
-  SkolemId id;
-  skm->isSkolemFunction(*d_node, id, cacheVal);
-  std::vector<Term> args;
-  if (!cacheVal.isNull())
-  {
-    if (cacheVal.getKind() == internal::Kind::SEXPR)
-    {
-      for (const internal::Node& nc : cacheVal)
-      {
-        args.push_back(Term(d_tm, nc));
-      }
-    }
-    else
-    {
-      args.push_back(Term(d_tm, cacheVal));
-    }
-  }
-  return args;
+  std::vector<internal::Node> indices = d_node->getSkolemIndices();
+  return Term::nodeVectorToTerms(d_tm, indices);
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -4343,17 +4330,6 @@ DatatypeConstructor::const_iterator::const_iterator()
 {
 }
 
-DatatypeConstructor::const_iterator&
-DatatypeConstructor::const_iterator::operator=(
-    const DatatypeConstructor::const_iterator& it)
-{
-  d_tm = it.d_tm;
-  d_int_stors = it.d_int_stors;
-  d_stors = it.d_stors;
-  d_idx = it.d_idx;
-  return *this;
-}
-
 const DatatypeSelector& DatatypeConstructor::const_iterator::operator*() const
 {
   return d_stors[d_idx];
@@ -4715,16 +4691,6 @@ Datatype::const_iterator::const_iterator()
 {
 }
 
-Datatype::const_iterator& Datatype::const_iterator::operator=(
-    const Datatype::const_iterator& it)
-{
-  d_tm = it.d_tm;
-  d_int_ctors = it.d_int_ctors;
-  d_ctors = it.d_ctors;
-  d_idx = it.d_idx;
-  return *this;
-}
-
 const DatatypeConstructor& Datatype::const_iterator::operator*() const
 {
   return d_ctors[d_idx];
@@ -4944,9 +4910,7 @@ struct Stat::StatData
 
 Stat::Stat() {}
 Stat::~Stat() {}
-Stat::Stat(const Stat& s)
-    : d_internal(s.d_internal),
-      d_default(s.d_default)
+Stat::Stat(const Stat& s) : d_internal(s.d_internal), d_default(s.d_default)
 {
   if (s.d_data)
   {
@@ -4975,7 +4939,8 @@ bool Stat::isInt() const
 int64_t Stat::getInt() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  CVC5_API_RECOVERABLE_CHECK(static_cast<bool>(d_data)) << "Stat holds no value";
+  CVC5_API_RECOVERABLE_CHECK(static_cast<bool>(d_data))
+      << "Stat holds no value";
   CVC5_API_RECOVERABLE_CHECK(isInt()) << "expected Stat of type int64_t.";
   return std::get<int64_t>(d_data->data);
   CVC5_API_TRY_CATCH_END;
@@ -4988,7 +4953,8 @@ bool Stat::isDouble() const
 double Stat::getDouble() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  CVC5_API_RECOVERABLE_CHECK(static_cast<bool>(d_data)) << "Stat holds no value";
+  CVC5_API_RECOVERABLE_CHECK(static_cast<bool>(d_data))
+      << "Stat holds no value";
   CVC5_API_RECOVERABLE_CHECK(isDouble()) << "expected Stat of type double.";
   return std::get<double>(d_data->data);
   CVC5_API_TRY_CATCH_END;
@@ -5001,7 +4967,8 @@ bool Stat::isString() const
 const std::string& Stat::getString() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  CVC5_API_RECOVERABLE_CHECK(static_cast<bool>(d_data)) << "Stat holds no value";
+  CVC5_API_RECOVERABLE_CHECK(static_cast<bool>(d_data))
+      << "Stat holds no value";
   CVC5_API_RECOVERABLE_CHECK(isString())
       << "expected Stat of type std::string.";
   return std::get<std::string>(d_data->data);
@@ -5015,7 +4982,8 @@ bool Stat::isHistogram() const
 const Stat::HistogramData& Stat::getHistogram() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
-  CVC5_API_RECOVERABLE_CHECK(static_cast<bool>(d_data)) << "Stat holds no value";
+  CVC5_API_RECOVERABLE_CHECK(static_cast<bool>(d_data))
+      << "Stat holds no value";
   CVC5_API_RECOVERABLE_CHECK(isHistogram())
       << "expected Stat of type histogram.";
   return std::get<HistogramData>(d_data->data);
@@ -5095,7 +5063,10 @@ Statistics::iterator::iterator(Statistics::BaseType::const_iterator it,
                                const Statistics::BaseType& base,
                                bool internal,
                                bool defaulted)
-    : d_it(it), d_base(&base), d_showInternal(internal), d_showDefault(defaulted)
+    : d_it(it),
+      d_base(&base),
+      d_showInternal(internal),
+      d_showDefault(defaulted)
 {
   while (!isVisible())
   {
@@ -5188,8 +5159,7 @@ ProofRewriteRule Proof::getRewriteRule() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_CHECK(d_proofNode->getRule() == ProofRule::DSL_REWRITE
-                 || d_proofNode->getRule()
-                        == ProofRule::THEORY_REWRITE)
+                 || d_proofNode->getRule() == ProofRule::THEORY_REWRITE)
       << "expected `getRule()` to return `DSL_REWRITE` or `THEORY_REWRITE`, "
          "got "
       << d_proofNode->getRule() << " instead.";
@@ -5279,22 +5249,20 @@ bool Proof::operator!=(const Proof& p) const
 /* -------------------------------------------------------------------------- */
 
 Plugin::Plugin(TermManager& tm)
-    : d_pExtToInt(new PluginInternal(tm.d_nm, tm, *this))
+    : d_pExtToInt(new PluginInternal(tm.d_nm.get(), tm, *this))
 {
 }
 
 std::vector<Term> Plugin::check() { return {}; }
-void Plugin::notifySatClause(const Term& clause) {}
-void Plugin::notifyTheoryLemma(const Term& lemma) {}
+void Plugin::notifySatClause(CVC5_UNUSED const Term& clause) {}
+void Plugin::notifyTheoryLemma(CVC5_UNUSED const Term& lemma) {}
 
 /* -------------------------------------------------------------------------- */
 /* TermManager                                                                */
 /* -------------------------------------------------------------------------- */
 
-TermManager::TermManager()
+TermManager::TermManager() : d_nm(std::make_unique<internal::NodeManager>())
 {
-  d_nm = internal::NodeManager::currentNM();
-
   if constexpr (internal::configuration::isStatisticsBuild())
   {
     d_statsReg.reset(new internal::StatisticsRegistry());
@@ -5424,8 +5392,8 @@ bool TermManager::isValidInteger(const std::string& s) const
 internal::Node TermManager::mkVarHelper(
     const internal::TypeNode& type, const std::optional<std::string>& symbol)
 {
-  internal::Node res =
-      symbol ? d_nm->mkBoundVar(*symbol, type) : d_nm->mkBoundVar(type);
+  internal::Node res = symbol ? internal::NodeManager::mkBoundVar(*symbol, type)
+                              : internal::NodeManager::mkBoundVar(type);
   (void)res.getType(true); /* kick off type checking */
   increment_vars_consts_stats(type, true);
   return res;
@@ -5658,7 +5626,7 @@ Term TermManager::mkTermHelper(const Op& op, const std::vector<Term>& children)
   const internal::Kind int_kind = extToIntKind(op.d_kind);
   std::vector<internal::Node> echildren = Term::termVectorToNodes(children);
 
-  internal::NodeBuilder nb(int_kind);
+  internal::NodeBuilder nb(d_nm.get(), int_kind);
   nb << *op.d_node;
   nb.append(echildren);
   internal::Node res = nb.constructNode();
@@ -5749,7 +5717,8 @@ Sort TermManager::mkFiniteFieldSort(const std::string& modulus, uint32_t base)
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
   internal::Integer m(modulus, base);
-  CVC5_API_ARG_CHECK_EXPECTED(m.isProbablePrime(), modulus) << "modulus is prime";
+  CVC5_API_ARG_CHECK_EXPECTED(m.isProbablePrime(), modulus)
+      << "modulus is prime";
   return Sort(this, d_nm->mkFiniteFieldType(m));
   ////////
   CVC5_API_TRY_CATCH_END;
@@ -6219,7 +6188,7 @@ Term TermManager::mkInteger(const std::string& s)
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_ARG_CHECK_EXPECTED(isValidInteger(s), s) << "an integer ";
   Term res = mkRealOrIntegerFromStrHelper(s);
-  CVC5_API_ARG_CHECK_EXPECTED(res.getSort() == getIntegerSort(), s)
+  CVC5_API_ARG_CHECK_EXPECTED(CVC5_EQUAL(res.getSort(), getIntegerSort()), s)
       << "a string representing an integer";
   //////// all checks before this line
   return res;
@@ -6232,7 +6201,7 @@ Term TermManager::mkInteger(int64_t val)
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
   Term res = TermManager::mkRationalValHelper(internal::Rational(val), true);
-  Assert(res.getSort() == getIntegerSort());
+  AssertEqual(res.getSort(), getIntegerSort());
   return res;
   ////////
   CVC5_API_TRY_CATCH_END;
@@ -6366,6 +6335,27 @@ Term TermManager::mkString(const std::string& s, bool useEscSequences)
 Term TermManager::mkString(const std::wstring& s)
 {
   CVC5_API_TRY_CATCH_BEGIN;
+  for (size_t i = 0, n = s.size(); i < n; ++i)
+  {
+    CVC5_API_CHECK(static_cast<unsigned>(s[i]) < internal::String::num_codes())
+        << "Expected unicode string whose characters are less than code point "
+        << internal::String::num_codes();
+  }
+  //////// all checks before this line
+  return mkValHelper(internal::String(s));
+  ////////
+  CVC5_API_TRY_CATCH_END;
+}
+
+Term TermManager::mkString(const std::u32string& s)
+{
+  CVC5_API_TRY_CATCH_BEGIN;
+  for (size_t i = 0, n = s.size(); i < n; ++i)
+  {
+    CVC5_API_CHECK(static_cast<unsigned>(s[i]) < internal::String::num_codes())
+        << "Expected unicode string whose characters are less than code point "
+        << internal::String::num_codes();
+  }
   //////// all checks before this line
   return mkValHelper(internal::String(s));
   ////////
@@ -6598,8 +6588,10 @@ Term TermManager::mkNullableLift(Kind kind, const std::vector<Term>& args)
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
   std::vector<internal::Node> vars;
-  for (const Term& t : args)
+  for (size_t i = 0, size = args.size(); i < size; ++i)
   {
+    const Term& t = args[i];
+    CVC5_API_TM_CHECK_TERM_AT_INDEX(t, args, i);
     internal::TypeNode type = t.d_node->getType();
     internal::TypeNode elementType = type[0];
     internal::Node var = mkVarHelper(elementType);
@@ -6658,7 +6650,7 @@ Term TermManager::mkTuple(const std::vector<Term>& terms)
   }
   internal::TypeNode tn = d_nm->mkTupleType(typeNodes);
   const internal::DType& dt = tn.getDType();
-  internal::NodeBuilder nb(extToIntKind(Kind::APPLY_CONSTRUCTOR));
+  internal::NodeBuilder nb(d_nm.get(), extToIntKind(Kind::APPLY_CONSTRUCTOR));
   nb << dt[0].getConstructor();
   nb.append(args);
   internal::Node res = nb.constructNode();
@@ -6677,7 +6669,7 @@ Term TermManager::mkNullableSome(const Term& term)
   internal::TypeNode typeNode = arg.getType();
   internal::TypeNode tn = d_nm->mkNullableType(typeNode);
   const internal::DType& dt = tn.getDType();
-  internal::NodeBuilder nb(extToIntKind(Kind::APPLY_CONSTRUCTOR));
+  internal::NodeBuilder nb(d_nm.get(), extToIntKind(Kind::APPLY_CONSTRUCTOR));
   nb << dt[1].getConstructor();
   nb.append(arg);
   internal::Node res = nb.constructNode();
@@ -6695,7 +6687,7 @@ Term TermManager::mkNullableNull(const Sort& sort)
   //////// all checks before this line
   internal::TypeNode tn = sort.getTypeNode();
   const internal::DType& dt = tn.getDType();
-  internal::NodeBuilder nb(extToIntKind(Kind::APPLY_CONSTRUCTOR));
+  internal::NodeBuilder nb(d_nm.get(), extToIntKind(Kind::APPLY_CONSTRUCTOR));
   nb << dt[0].getConstructor();
   internal::Node res = nb.constructNode();
   (void)res.getType(true); /* kick off type checking */
@@ -6708,6 +6700,8 @@ Term TermManager::mkNullableVal(const Term& term)
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_TM_CHECK_TERM(term);
+  Sort sort = term.getSort();
+  CVC5_API_ARG_CHECK_EXPECTED(sort.isNullable(), sort) << "nullable sort";
   //////// all checks before this line
   internal::Node arg = (*term.d_node);
   internal::TypeNode tn = arg.getType();
@@ -6725,6 +6719,8 @@ Term TermManager::mkNullableIsNull(const Term& term)
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_TM_CHECK_TERM(term);
+  Sort sort = term.getSort();
+  CVC5_API_ARG_CHECK_EXPECTED(sort.isNullable(), sort) << "nullable sort";
   //////// all checks before this line
   internal::Node arg = (*term.d_node);
   internal::TypeNode tn = arg.getType();
@@ -6742,6 +6738,8 @@ Term TermManager::mkNullableIsSome(const Term& term)
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_TM_CHECK_TERM(term);
+  Sort sort = term.getSort();
+  CVC5_API_ARG_CHECK_EXPECTED(sort.isNullable(), sort) << "nullable sort";
   //////// all checks before this line
   internal::Node arg = (*term.d_node);
   internal::TypeNode tn = arg.getType();
@@ -6799,7 +6797,8 @@ Solver::Solver(TermManager& tm, std::unique_ptr<internal::Options>&& original)
     : d_tm(tm)
 {
   d_originalOptions = std::move(original);
-  d_slv.reset(new internal::SolverEngine(d_originalOptions.get()));
+  d_slv.reset(
+      new internal::SolverEngine(tm.d_nm.get(), d_originalOptions.get()));
   d_slv->setSolver(this);
   d_rng.reset(new internal::Random(d_slv->getOptions().driver.seed));
 }
@@ -6822,7 +6821,6 @@ Solver::~Solver() {}
 Term Solver::synthFunHelper(const std::string& symbol,
                             const std::vector<Term>& boundVars,
                             const Sort& sort,
-                            bool isInv,
                             Grammar* grammar) const
 {
   // Note: boundVars, sort and grammar are checked in the caller to avoid
@@ -6860,10 +6858,7 @@ Term Solver::synthFunHelper(const std::string& symbol,
   std::vector<internal::Node> bvns = Term::termVectorToNodes(boundVars);
 
   d_slv->declareSynthFun(
-      fun,
-      grammar == nullptr ? funType : *grammar->resolve().d_type,
-      isInv,
-      bvns);
+      fun, grammar == nullptr ? funType : *grammar->resolve().d_type, bvns);
 
   return Term(&d_tm, fun);
 }
@@ -6873,21 +6868,14 @@ void Solver::ensureWellFormedTerm(const Term& t) const
   // only check if option is set
   if (d_slv->getOptions().expr.wellFormedChecking)
   {
-    bool wasShadow = false;
-    if (internal::expr::hasFreeOrShadowedVar(*t.d_node, wasShadow))
+    // Call isWellFormedTerm of the underlying solver, which checks if the
+    // given node has free variables. We do not check for variable shadowing,
+    // since this can be handled by our rewriter.
+    if (!d_slv->isWellFormedTerm(*t.d_node))
     {
       std::stringstream se;
-      se << "cannot process term " << *t.d_node << " with ";
-      if (wasShadow)
-      {
-        se << "shadowed variables " << std::endl;
-      }
-      else
-      {
-        std::unordered_set<internal::Node> fvs;
-        internal::expr::getFreeVariables(*t.d_node, fvs);
-        se << "free variables: " << fvs << std::endl;
-      }
+      se << "cannot process term " << *t.d_node << " with free variables"
+         << std::endl;
       throw CVC5ApiException(se.str().c_str());
     }
   }
@@ -7254,7 +7242,7 @@ Term Solver::simplify(const Term& term, bool applySubs)
   CVC5_API_SOLVER_CHECK_TERM(term);
   //////// all checks before this line
   Term res = Term(&d_tm, d_slv->simplify(*term.d_node, applySubs));
-  Assert(*res.getSort().d_type == *term.getSort().d_type);
+  AssertEqual(*res.getSort().d_type, *term.getSort().d_type);
   return res;
   ////////
   CVC5_API_TRY_CATCH_END;
@@ -7334,9 +7322,9 @@ Sort Solver::declareDatatype(
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_ARG_CHECK_EXPECTED(ctors.size() > 0, ctors)
       << "a datatype declaration with at least one constructor";
-  CVC5_API_SOLVER_CHECK_DTCTORDECLS(ctors);
   for (size_t i = 0, size = ctors.size(); i < size; i++)
   {
+    CVC5_API_SOLVER_CHECK_DTCTORDECL_AT_INDEX(ctors[i], ctorsr, i);
     CVC5_API_CHECK(!ctors[i].isResolved())
         << "cannot use a constructor for multiple datatypes";
   }
@@ -7404,9 +7392,10 @@ Term Solver::defineFun(const std::string& symbol,
       << "', found '" << term.getSort() << "'";
 
   std::vector<Sort> domain_sorts;
-  for (const auto& bv : bound_vars)
+  for (size_t i = 0, n = bound_vars.size(); i < n; ++i)
   {
-    domain_sorts.push_back(bv.getSort());
+    CVC5_API_SOLVER_CHECK_BOUND_VAR_AT_INDEX(bound_vars[i], bound_vars, i);
+    domain_sorts.push_back(bound_vars[i].getSort());
   }
   Sort fun_sort =
       domain_sorts.empty()
@@ -7415,8 +7404,7 @@ Term Solver::defineFun(const std::string& symbol,
                  d_tm.d_nm->mkFunctionType(
                      Sort::sortVectorToTypeNodes(domain_sorts), *sort.d_type));
   Term fun = d_tm.mkConst(fun_sort, symbol);
-
-  CVC5_API_SOLVER_CHECK_BOUND_VARS_DEF_FUN(fun, bound_vars, domain_sorts);
+  CVC5_API_SOLVER_CHECK_BOUND_VARS_DEF_FUN_SORTS(bound_vars, domain_sorts);
   //////// all checks before this line
 
   d_slv->defineFunction(
@@ -7448,9 +7436,10 @@ Term Solver::defineFunRec(const std::string& symbol,
       << "'";
 
   std::vector<Sort> domain_sorts;
-  for (const auto& bv : bound_vars)
+  for (size_t i = 0, n = bound_vars.size(); i < n; ++i)
   {
-    domain_sorts.push_back(bv.getSort());
+    CVC5_API_SOLVER_CHECK_BOUND_VAR_AT_INDEX(bound_vars[i], bound_vars, i);
+    domain_sorts.push_back(bound_vars[i].getSort());
   }
   Sort fun_sort =
       domain_sorts.empty()
@@ -7459,8 +7448,7 @@ Term Solver::defineFunRec(const std::string& symbol,
                  d_tm.d_nm->mkFunctionType(
                      Sort::sortVectorToTypeNodes(domain_sorts), *sort.d_type));
   Term fun = d_tm.mkConst(fun_sort, symbol);
-
-  CVC5_API_SOLVER_CHECK_BOUND_VARS_DEF_FUN(fun, bound_vars, domain_sorts);
+  CVC5_API_SOLVER_CHECK_BOUND_VARS_DEF_FUN_SORTS(bound_vars, domain_sorts);
   //////// all checks before this line
 
   d_slv->defineFunctionRec(
@@ -7490,7 +7478,7 @@ Term Solver::defineFunRec(const Term& fun,
   if (fun.getSort().isFunction())
   {
     std::vector<Sort> domain_sorts = fun.getSort().getFunctionDomainSorts();
-    CVC5_API_SOLVER_CHECK_BOUND_VARS_DEF_FUN(fun, bound_vars, domain_sorts);
+    CVC5_API_SOLVER_CHECK_BOUND_VARS_DEF_FUN_SORTS(bound_vars, domain_sorts);
     Sort codomain = fun.getSort().getFunctionCodomainSort();
     CVC5_API_CHECK(*codomain.d_type == term.d_node->getType())
         << "invalid sort of function body '" << term << "', expected '"
@@ -7549,7 +7537,8 @@ void Solver::defineFunsRec(const std::vector<Term>& funs,
     if (fun.getSort().isFunction())
     {
       std::vector<Sort> domain_sorts = fun.getSort().getFunctionDomainSorts();
-      CVC5_API_SOLVER_CHECK_BOUND_VARS_DEF_FUN(fun, bvars, domain_sorts);
+      CVC5_API_SOLVER_CHECK_BOUND_VARS(bvars);
+      CVC5_API_SOLVER_CHECK_BOUND_VARS_DEF_FUN_SORTS(bvars, domain_sorts);
       Sort codomain = fun.getSort().getFunctionCodomainSort();
       CVC5_API_ARG_AT_INDEX_CHECK_EXPECTED(
           codomain == term.getSort(), "sort of function body", terms, j)
@@ -7613,8 +7602,24 @@ std::string Solver::getOption(const std::string& option) const
 
 // Supports a visitor from a list of lambdas
 // Taken from https://en.cppreference.com/w/cpp/utility/variant/visit
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+template <class... Ts>
+struct overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+OptionInfo& OptionInfo::operator=(OptionInfo&& info)
+{
+  name = std::move(info.name);
+  aliases = std::move(info.aliases);
+  noSupports = std::move(info.noSupports);
+  setByUser = std::move(info.setByUser);
+  category = std::move(info.category);
+  valueInfo = std::move(info.valueInfo);
+  return *this;
+}
 
 bool OptionInfo::boolValue() const
 {
@@ -7683,6 +7688,10 @@ std::string OptionInfo::toString() const
   {
     internal::container_to_stream(os, aliases, ", ", "", ", ");
   }
+  if (!noSupports.empty())
+  {
+    internal::container_to_stream(os, noSupports, ", ", "", ", ");
+  }
   auto printNum = [&os](const std::string& type, const auto& vi) {
     os << " | " << type << " | " << vi.currentValue << " | default "
        << vi.defaultValue;
@@ -7701,7 +7710,7 @@ std::string OptionInfo::toString() const
     }
   };
   std::visit(overloaded{
-                 [&os](const OptionInfo::VoidInfo& vi) { os << " | void"; },
+                 [&os](const OptionInfo::VoidInfo&) { os << " | void"; },
                  [&os](const OptionInfo::ValueInfo<bool>& vi) {
                    os << std::boolalpha << " | bool | " << vi.currentValue
                       << " | default " << vi.defaultValue << std::noboolalpha;
@@ -7745,6 +7754,25 @@ std::vector<std::string> Solver::getOptionNames() const
   CVC5_API_TRY_CATCH_END;
 }
 
+// Helper function to convert internal category to external enum
+modes::OptionCategory convertOptionCategory(
+    internal::options::OptionInfo::Category internalCategory)
+{
+  switch (internalCategory)
+  {
+    case internal::options::OptionInfo::Category::REGULAR:
+      return modes::OptionCategory::REGULAR;
+    case internal::options::OptionInfo::Category::EXPERT:
+      return modes::OptionCategory::EXPERT;
+    case internal::options::OptionInfo::Category::COMMON:
+      return modes::OptionCategory::COMMON;
+    default:
+      Assert(internalCategory
+             == internal::options::OptionInfo::Category::UNDOCUMENTED);
+      return modes::OptionCategory::UNDOCUMENTED;
+  }
+}
+
 OptionInfo Solver::getOptionInfo(const std::string& option) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
@@ -7754,90 +7782,94 @@ OptionInfo Solver::getOptionInfo(const std::string& option) const
       << "Querying invalid or unknown option " << option;
   return std::visit(
       overloaded{
-          [&info](const internal::options::OptionInfo::VoidInfo& vi) {
-            return OptionInfo{
-                info.name,
-                info.aliases,
-                info.setByUser,
-                info.category
-                    == internal::options::OptionInfo::Category::EXPERT,
-                info.category
-                    == internal::options::OptionInfo::Category::REGULAR,
-                OptionInfo::VoidInfo{}};
+          [&info](const internal::options::OptionInfo::VoidInfo&) {
+            auto cat = convertOptionCategory(info.category);
+            return OptionInfo{info.name,
+                              info.aliases,
+                              info.noSupports,
+                              info.setByUser,
+                              cat == modes::OptionCategory::EXPERT,
+                              cat == modes::OptionCategory::REGULAR,
+                              convertOptionCategory(info.category),
+                              OptionInfo::VoidInfo{}};
           },
           [&info](const internal::options::OptionInfo::ValueInfo<bool>& vi) {
+            auto cat = convertOptionCategory(info.category);
             return OptionInfo{
                 info.name,
                 info.aliases,
+                info.noSupports,
                 info.setByUser,
-                info.category
-                    == internal::options::OptionInfo::Category::EXPERT,
-                info.category
-                    == internal::options::OptionInfo::Category::REGULAR,
+                cat == modes::OptionCategory::EXPERT,
+                cat == modes::OptionCategory::REGULAR,
+                convertOptionCategory(info.category),
                 OptionInfo::ValueInfo<bool>{vi.defaultValue, vi.currentValue}};
           },
           [&info](
               const internal::options::OptionInfo::ValueInfo<std::string>& vi) {
-            return OptionInfo{
-                info.name,
-                info.aliases,
-                info.setByUser,
-                info.category
-                    == internal::options::OptionInfo::Category::EXPERT,
-                info.category
-                    == internal::options::OptionInfo::Category::REGULAR,
-                OptionInfo::ValueInfo<std::string>{vi.defaultValue,
-                                                   vi.currentValue}};
+            auto cat = convertOptionCategory(info.category);
+            return OptionInfo{info.name,
+                              info.aliases,
+                              info.noSupports,
+                              info.setByUser,
+                              cat == modes::OptionCategory::EXPERT,
+                              cat == modes::OptionCategory::REGULAR,
+                              convertOptionCategory(info.category),
+                              OptionInfo::ValueInfo<std::string>{
+                                  vi.defaultValue, vi.currentValue}};
           },
           [&info](
               const internal::options::OptionInfo::NumberInfo<int64_t>& vi) {
+            auto cat = convertOptionCategory(info.category);
             return OptionInfo{
                 info.name,
                 info.aliases,
+                info.noSupports,
                 info.setByUser,
-                info.category
-                    == internal::options::OptionInfo::Category::EXPERT,
-                info.category
-                    == internal::options::OptionInfo::Category::REGULAR,
+                cat == modes::OptionCategory::EXPERT,
+                cat == modes::OptionCategory::REGULAR,
+                convertOptionCategory(info.category),
                 OptionInfo::NumberInfo<int64_t>{
                     vi.defaultValue, vi.currentValue, vi.minimum, vi.maximum}};
           },
           [&info](
               const internal::options::OptionInfo::NumberInfo<uint64_t>& vi) {
+            auto cat = convertOptionCategory(info.category);
             return OptionInfo{
                 info.name,
                 info.aliases,
+                info.noSupports,
                 info.setByUser,
-                info.category
-                    == internal::options::OptionInfo::Category::EXPERT,
-                info.category
-                    == internal::options::OptionInfo::Category::REGULAR,
+                cat == modes::OptionCategory::EXPERT,
+                cat == modes::OptionCategory::REGULAR,
+                convertOptionCategory(info.category),
                 OptionInfo::NumberInfo<uint64_t>{
                     vi.defaultValue, vi.currentValue, vi.minimum, vi.maximum}};
           },
           [&info](const internal::options::OptionInfo::NumberInfo<double>& vi) {
+            auto cat = convertOptionCategory(info.category);
             return OptionInfo{
                 info.name,
                 info.aliases,
+                info.noSupports,
                 info.setByUser,
-                info.category
-                    == internal::options::OptionInfo::Category::EXPERT,
-                info.category
-                    == internal::options::OptionInfo::Category::REGULAR,
+                cat == modes::OptionCategory::EXPERT,
+                cat == modes::OptionCategory::REGULAR,
+                convertOptionCategory(info.category),
                 OptionInfo::NumberInfo<double>{
                     vi.defaultValue, vi.currentValue, vi.minimum, vi.maximum}};
           },
           [&info](const internal::options::OptionInfo::ModeInfo& vi) {
-            return OptionInfo{
-                info.name,
-                info.aliases,
-                info.setByUser,
-                info.category
-                    == internal::options::OptionInfo::Category::EXPERT,
-                info.category
-                    == internal::options::OptionInfo::Category::REGULAR,
-                OptionInfo::ModeInfo{
-                    vi.defaultValue, vi.currentValue, vi.modes}};
+            auto cat = convertOptionCategory(info.category);
+            return OptionInfo{info.name,
+                              info.aliases,
+                              info.noSupports,
+                              info.setByUser,
+                              cat == modes::OptionCategory::EXPERT,
+                              cat == modes::OptionCategory::REGULAR,
+                              convertOptionCategory(info.category),
+                              OptionInfo::ModeInfo{
+                                  vi.defaultValue, vi.currentValue, vi.modes}};
           },
       },
       info.valueInfo);
@@ -8052,9 +8084,9 @@ Term Solver::getValueHelper(const Term& term) const
       << "cannot get value of term containing "
       << (wasShadow ? "shadowed" : "free") << " variables";
   //////// all checks before this line
-  internal::Node value = d_slv->getValue(*term.d_node);
+  internal::Node value = d_slv->getValue(*term.d_node, true);
   Term res = Term(&d_tm, value);
-  Assert(res.getSort() == term.getSort());
+  AssertEqual(res.getSort(), term.getSort());
   return res;
 }
 
@@ -8068,7 +8100,8 @@ Term Solver::getValue(const Term& term) const
   CVC5_API_RECOVERABLE_CHECK(d_slv->isSmtModeSat())
       << "cannot get value unless after a SAT or UNKNOWN response.";
   CVC5_API_SOLVER_CHECK_TERM(term);
-  CVC5_API_RECOVERABLE_CHECK(term.getSort().getTypeNode().isFirstClass())
+  CVC5_API_RECOVERABLE_CHECK(
+      d_slv->getEnv().isFirstClassType(term.getSort().getTypeNode()))
       << "cannot get value of a term that is not first class.";
   CVC5_API_RECOVERABLE_CHECK(!term.getSort().isDatatype()
                              || term.getSort().getDatatype().isWellFounded())
@@ -8091,7 +8124,8 @@ std::vector<Term> Solver::getValue(const std::vector<Term>& terms) const
       << "cannot get value unless after a SAT or UNKNOWN response.";
   for (const Term& t : terms)
   {
-    CVC5_API_RECOVERABLE_CHECK(t.getSort().getTypeNode().isFirstClass())
+    CVC5_API_RECOVERABLE_CHECK(
+        d_slv->getEnv().isFirstClassType(t.getSort().getTypeNode()))
         << "cannot get value of a term that is not first class.";
     CVC5_API_RECOVERABLE_CHECK(!t.getSort().isDatatype()
                                || t.getSort().getDatatype().isWellFounded())
@@ -8359,6 +8393,7 @@ Term Solver::getInterpolant(const Term& conj, Grammar& grammar) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_SOLVER_CHECK_TERM(conj);
+  CVC5_API_SOLVER_CHECK_GRAMMAR(grammar);
   CVC5_API_CHECK(d_slv->getOptions().smt.produceInterpolants)
       << "cannot get interpolant unless interpolants are enabled (try "
          "--"
@@ -8414,6 +8449,7 @@ Term Solver::getAbduct(const Term& conj, Grammar& grammar) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_SOLVER_CHECK_TERM(conj);
+  CVC5_API_SOLVER_CHECK_GRAMMAR(grammar);
   CVC5_API_CHECK(d_slv->getOptions().smt.produceAbducts)
       << "cannot get abduct unless abducts are enabled (try --"
       << internal::options::smt::longName::produceAbducts << ")";
@@ -8538,9 +8574,9 @@ void Solver::setInfo(const std::string& keyword, const std::string& value) const
          "'notes', 'smt-lib-version' or 'status'";
   CVC5_API_RECOVERABLE_ARG_CHECK_EXPECTED(
       keyword != "smt-lib-version" || value == "2" || value == "2.0"
-          || value == "2.5" || value == "2.6",
+          || value == "2.5" || value == "2.6" || value == "2.7",
       value)
-      << "'2.0', '2.5', '2.6'";
+      << "'2.0', '2.5', '2.6', '2.7'";
   CVC5_API_ARG_CHECK_EXPECTED(keyword != "status" || value == "sat"
                                   || value == "unsat" || value == "unknown",
                               value)
@@ -8675,11 +8711,12 @@ Term Solver::synthFun(const std::string& symbol,
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_SOLVER_CHECK_BOUND_VARS(boundVars);
   CVC5_API_SOLVER_CHECK_SORT(sort);
+  CVC5_API_SOLVER_CHECK_GRAMMAR(grammar);
   CVC5_API_CHECK(d_slv->getOptions().quantifiers.sygus)
       << "cannot call synthFun unless sygus is enabled (use --"
       << internal::options::quantifiers::longName::sygus << ")";
   //////// all checks before this line
-  return synthFunHelper(symbol, boundVars, sort, false, &grammar);
+  return synthFunHelper(symbol, boundVars, sort, &grammar);
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -8689,7 +8726,7 @@ void Solver::addSygusConstraint(const Term& term) const
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_SOLVER_CHECK_TERM(term);
   CVC5_API_ARG_CHECK_EXPECTED(
-      term.d_node->getType() == d_tm.d_nm->booleanType(), term)
+      CVC5_EQUAL(term.d_node->getType(), d_tm.d_nm->booleanType()), term)
       << "boolean term";
   CVC5_API_CHECK(d_slv->getOptions().quantifiers.sygus)
       << "cannot addSygusConstraint unless sygus is enabled (use --"
@@ -8715,7 +8752,7 @@ void Solver::addSygusAssume(const Term& term) const
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_SOLVER_CHECK_TERM(term);
   CVC5_API_ARG_CHECK_EXPECTED(
-      term.d_node->getType() == d_tm.d_nm->booleanType(), term)
+      CVC5_EQUAL(term.d_node->getType(), d_tm.d_nm->booleanType()), term)
       << "boolean term";
   CVC5_API_CHECK(d_slv->getOptions().quantifiers.sygus)
       << "cannot addSygusAssume unless sygus is enabled (use --"
@@ -8890,6 +8927,7 @@ Term Solver::findSynth(modes::FindSynthTarget fst) const
 Term Solver::findSynth(modes::FindSynthTarget fst, Grammar& grammar) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
+  CVC5_API_SOLVER_CHECK_GRAMMAR(grammar);
   for (const auto& sym : grammar.d_grammar->getNtSyms())
   {
     CVC5_API_CHECK(!grammar.d_grammar->getRulesFor(sym).empty())
