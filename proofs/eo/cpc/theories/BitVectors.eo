@@ -2,7 +2,7 @@
 (include "../programs/Arith.eo")
 
 ; note: We do not currently check that the index of this sort is positive.
-(declare-parameterized-const BitVec ((w Int)) (eo::requires (eo::is_z w) true Type))
+(declare-const BitVec (-> Int Type))
 (declare-consts <binary> (BitVec (eo::len eo::self)))
 
 ; program: $bv_bitwidth
