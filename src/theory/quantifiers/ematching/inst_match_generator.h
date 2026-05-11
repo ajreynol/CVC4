@@ -350,6 +350,9 @@ class InstMatchGenerator : public IMGenerator
    * d_match_pattern and t should have the same shape, that is,
    * their match operator (see TermDatabase::getMatchOperator) is the same.
    * only valid for use where !d_match_pattern.isNull().
+   *
+   * Returns a positive value on success, -2 for a cacheable matching failure,
+   * and -1 when matching succeeded but no instantiation was emitted.
    */
   int getMatch(Node t, InstMatch& m);
   /** Initialize this generator.

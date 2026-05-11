@@ -426,7 +426,7 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
       }
     }
   }
-  int ret_val = -1;
+  int ret_val = -2;
   if (success)
   {
     Trace("matching-debug2") << "Reset children..." << std::endl;
@@ -436,7 +436,7 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
     // we will be requesting candidates for matching terms for each child
     for (size_t i = 0, size = d_children.size(); i < size; i++)
     {
-      d_children[i]->setAncestorMatchContext(d_ancestor_match_context);
+      d_children[i]->setAncestorMatchContext(context);
       if (!d_children[i]->reset(t[d_children_index[i]]))
       {
         success = false;
@@ -573,6 +573,7 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
   Trace("matching") << this << " " << d_match_pattern << " get next match " << m
                     << " in eq class " << d_eq_class << std::endl;
   int success = -1;
+  bool cacheableFailure = true;
   FailedMatchKey currState;
   if (!d_eq_class.isNull())
   {
@@ -595,7 +596,7 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
   {
     Trace("matching-summary")
         << "Cached exhaustive failure for " << d_match_pattern << std::endl;
-    return -1;
+    return -2;
   }
   Node t = d_curr_first_candidate;
   do
@@ -617,15 +618,19 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
         {
           Trace("matching-summary") << "Cached failure for " << d_match_pattern
                                     << " : " << t << std::endl;
-          success = -1;
+          success = -2;
         }
         else
         {
           success = getMatch(t, m);
-          if (success < 0 && !d_qstate.isInConflict())
+          if (success == -2 && !d_qstate.isInConflict())
           {
             d_failed_match_cache[t].insert(currState);
           }
+        }
+        if (success == -1)
+        {
+          cacheableFailure = false;
         }
         if (d_independent_gen && success < 0)
         {
@@ -650,7 +655,7 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
     Trace("matching-summary")
         << "..." << d_match_pattern << " failed, reset." << std::endl;
     Trace("matching") << this << " failed, reset " << d_eq_class << std::endl;
-    if (!d_qstate.isInConflict())
+    if (cacheableFailure && !d_qstate.isInConflict())
     {
       d_failed_reset_cache.insert(currState);
     }
@@ -662,7 +667,7 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
     Trace("matching-summary")
         << "..." << d_match_pattern << " success." << std::endl;
   }
-  return success;
+  return success > 0 ? success : (cacheableFailure ? -2 : -1);
 }
 
 uint64_t InstMatchGenerator::addInstantiations(InstMatch& m)
