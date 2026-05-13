@@ -78,10 +78,7 @@ TheoryDatatypes::TheoryDatatypes(Env& env,
   // Thus, we should always check at STANDARD effort. We set d_checkEarlyExit
   // to false to disable an optimization in the base Theory class which would
   // otherwise skip these checks.
-  if (options().theory.eeMode == options::EqEngineMode::CENTRAL)
-  {
-    d_checkEarlyExit = false;
-  }
+  d_checkEarlyExit = false;
 }
 
 TheoryDatatypes::~TheoryDatatypes()
