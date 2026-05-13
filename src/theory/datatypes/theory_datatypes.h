@@ -213,8 +213,6 @@ class TheoryDatatypes : public Theory
   bool preCheck(Effort level) override;
   /** Post-check, called after the fact queue of the theory is processed. */
   void postCheck(Effort level) override;
-  /** Notify fact */
-  void notifyFact(TNode atom, bool pol, TNode fact, bool isInternal) override;
   //--------------------------------- end standard check
   void preRegisterTerm(TNode n) override;
   TrustNode ppRewrite(TNode n, std::vector<SkolemLemma>& lems) override;
@@ -236,6 +234,10 @@ class TheoryDatatypes : public Theory
   void addSelector(Node s, EqcInfo* eqc, Node n, bool assertFacts = true);
   /** add constructor */
   void addConstructor(Node c, EqcInfo* eqc, Node n);
+  /** process a Boolean fact, based on a merge with true or false */
+  void processBooleanFact(TNode atom, bool polarity);
+  /** process a merge of Boolean equivalence classes */
+  void processBooleanMerge(TNode t1, TNode t2);
   /** merge the equivalence class info of t1 and t2 */
   void merge(Node t1, Node t2);
   /** collapse selector, s is of the form sel( n ) where n = c */
