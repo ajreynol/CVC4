@@ -105,6 +105,13 @@ class SygusExtension : protected EnvObj
   void check();
 
  private:
+  /**
+   * Return true if atom has the given polarity in the current SAT assignment.
+   * SyGuS search bookkeeping is SAT-context sensitive, so callers may notify
+   * this class about equality-engine consequences, but this extension only
+   * reacts to facts that correspond to asserted SAT literals.
+   */
+  bool hasAssertedSatValue(TNode atom, bool polarity) const;
   /** The theory state of the datatype theory */
   TheoryState& d_state;
   /** The inference manager of the datatype theory */

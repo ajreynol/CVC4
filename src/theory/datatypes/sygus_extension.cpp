@@ -59,9 +59,19 @@ SygusExtension::SygusExtension(Env& env,
 
 SygusExtension::~SygusExtension() {}
 
+bool SygusExtension::hasAssertedSatValue(TNode atom, bool polarity) const
+{
+  bool satValue = false;
+  return d_state.hasSatValue(atom, satValue) && satValue == polarity;
+}
+
 /** add tester */
 void SygusExtension::assertTester(int tindex, TNode n, Node exp)
 {
+  if (!hasAssertedSatValue(exp, true))
+  {
+    return;
+  }
   registerTerm(n);
   // check if this is a relevant (sygus) term
   if (d_term_to_anchor.find(n) != d_term_to_anchor.end())
@@ -129,6 +139,10 @@ void SygusExtension::assertFact(Node n, bool polarity)
 {
   if (n.getKind() == Kind::DT_SYGUS_BOUND)
   {
+    if (!hasAssertedSatValue(n, polarity))
+    {
+      return;
+    }
     Node m = n[0];
     Trace("sygus-fair") << "Have sygus bound : " << n
                         << ", polarity=" << polarity << " on measure " << m
