@@ -80,10 +80,7 @@ class SygusExtension : protected EnvObj
    * If checkSatValue is true, this returns immediately unless exp is true in
    * the current SAT assignment.
    */
-  void assertTester(int tindex,
-                    TNode n,
-                    Node exp,
-                    bool checkSatValue = true);
+  void assertTester(int tindex, TNode n, Node exp, bool checkSatValue = true);
   /**
    * Notify this class that literal n has been asserted with the given
    * polarity. This method may send lemmas via inference manager, for instance
