@@ -283,8 +283,7 @@ bool TheoryDatatypes::needsCheckLastEffort()
 
 void TheoryDatatypes::processBooleanFact(TNode atom, bool polarity)
 {
-  Node fact = polarity ? Node(atom) : atom.notNode();
-  Trace("datatypes-debug") << "TheoryDatatypes::processBooleanFact : " << fact
+  Trace("datatypes-debug") << "TheoryDatatypes::processBooleanFact : " << atom << ", polarity " << polarity
                            << std::endl;
   // could be sygus-specific
   if (d_sygusExtension)
@@ -300,6 +299,7 @@ void TheoryDatatypes::processBooleanFact(TNode atom, bool polarity)
                        << std::endl;
     Node rep = getRepresentative(t_arg);
     EqcInfo* eqc = getOrMakeEqcInfo(rep, true);
+    Node fact = polarity ? Node(atom) : atom.notNode();
     addTester(tindex, fact, eqc, rep, t_arg);
     Trace("dt-tester") << "Done assert tester." << std::endl;
     Trace("dt-tester") << "Done pending merges." << std::endl;
@@ -480,21 +480,16 @@ void TheoryDatatypes::eqNotifyMerge(TNode t1, TNode t2)
   {
     // Predicate facts are represented as equality engine merges with the
     // Boolean constants. This includes tester and SyGuS bound facts.
-    processBooleanMerge(t1, t2);
-  }
-}
-
-void TheoryDatatypes::processBooleanMerge(TNode t1, TNode t2)
-{
-  Assert (!t2.isConst());
-  Assert (t1!=t2);
-  if (t1 == d_true)
-  {
-    processBooleanFact(t2, true);
-  }
-  else if (t1 == d_false)
-  {
-    processBooleanFact(t2, false);
+    Assert (!t2.isConst());
+    Assert (t1!=t2);
+    if (t1 == d_true)
+    {
+      processBooleanFact(t2, true);
+    }
+    else if (t1 == d_false)
+    {
+      processBooleanFact(t2, false);
+    }
   }
 }
 

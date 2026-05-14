@@ -236,8 +236,6 @@ class TheoryDatatypes : public Theory
   void addConstructor(Node c, EqcInfo* eqc, Node n);
   /** process a Boolean fact, based on a merge with true or false */
   void processBooleanFact(TNode atom, bool polarity);
-  /** process a merge of Boolean equivalence classes */
-  void processBooleanMerge(TNode t1, TNode t2);
   /** merge the equivalence class info of t1 and t2 */
   void merge(Node t1, Node t2);
   /** collapse selector, s is of the form sel( n ) where n = c */
