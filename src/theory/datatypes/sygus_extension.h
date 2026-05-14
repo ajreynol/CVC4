@@ -77,8 +77,13 @@ class SygusExtension : protected EnvObj
    * n. Exp is the literal corresponding to this tester. This method may send
    * lemmas via inference manager, for details see assertTesterInternal below.
    * These lemmas are sent out on the output channel of datatypes by the caller.
+   * If checkSatValue is true, this returns immediately unless exp is true in
+   * the current SAT assignment.
    */
-  void assertTester(int tindex, TNode n, Node exp);
+  void assertTester(int tindex,
+                    TNode n,
+                    Node exp,
+                    bool checkSatValue = true);
   /**
    * Notify this class that literal n has been asserted with the given
    * polarity. This method may send lemmas via inference manager, for instance
@@ -107,9 +112,9 @@ class SygusExtension : protected EnvObj
  private:
   /**
    * Return true if atom has the given polarity in the current SAT assignment.
-   * SyGuS search bookkeeping is SAT-context sensitive, so callers may notify
-   * this class about equality-engine consequences, but this extension only
-   * reacts to facts that correspond to asserted SAT literals.
+   * Tester bookkeeping is SAT-context sensitive, so callers may notify this
+   * class about equality-engine consequences that should not activate SyGuS
+   * symmetry-breaking state.
    */
   bool hasAssertedSatValue(TNode atom, bool polarity) const;
   /** The theory state of the datatype theory */

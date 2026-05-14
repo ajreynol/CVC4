@@ -66,9 +66,12 @@ bool SygusExtension::hasAssertedSatValue(TNode atom, bool polarity) const
 }
 
 /** add tester */
-void SygusExtension::assertTester(int tindex, TNode n, Node exp)
+void SygusExtension::assertTester(int tindex,
+                                  TNode n,
+                                  Node exp,
+                                  bool checkSatValue)
 {
-  if (!hasAssertedSatValue(exp, true))
+  if (checkSatValue && !hasAssertedSatValue(exp, true))
   {
     return;
   }
@@ -139,10 +142,8 @@ void SygusExtension::assertFact(Node n, bool polarity)
 {
   if (n.getKind() == Kind::DT_SYGUS_BOUND)
   {
-    if (!hasAssertedSatValue(n, polarity))
-    {
-      return;
-    }
+    // These bounds may be propagated by the fairness lemmas themselves. We must
+    // update the current search size whenever the equality engine asserts them.
     Node m = n[0];
     Trace("sygus-fair") << "Have sygus bound : " << n
                         << ", polarity=" << polarity << " on measure " << m
@@ -1696,9 +1697,14 @@ void SygusExtension::check()
 
           Trace("sygus-sb") << "  Mv[" << prog << "] = " << progv
                             << ", size = " << prog_szv << std::endl;
-          AlwaysAssert(
-              prog_szv.getConst<Rational>().getNumerator().toUnsignedInt()
-              <= getSearchSizeForAnchor(prog));
+          // If we sent lemmas while checking this value, the current model is
+          // already being rejected and may not satisfy all size invariants yet.
+          if (!d_im.hasSentLemma())
+          {
+            AlwaysAssert(
+                prog_szv.getConst<Rational>().getNumerator().toUnsignedInt()
+                <= getSearchSizeForAnchor(prog));
+          }
         }
 
         // register the search value ( prog -> progv ), this may invoke symmetry
@@ -1808,6 +1814,9 @@ bool SygusExtension::checkValue(Node n, TNode vn, int ind)
       return false;
     }
   }
+  // Ensure SyGuS has processed testers that are true in the datatype equality
+  // engine, even when they did not arrive as fresh SAT-level facts.
+  assertTester(cindex, n, tst, false);
   for (unsigned i = 0; i < vn.getNumChildren(); i++)
   {
     Node sel = nm->mkNode(

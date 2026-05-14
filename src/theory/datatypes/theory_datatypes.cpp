@@ -485,24 +485,35 @@ void TheoryDatatypes::eqNotifyMerge(TNode t1, TNode t2)
 
 void TheoryDatatypes::processBooleanMerge(TNode t1, TNode t2)
 {
-  bool polarity = false;
-  TNode atom;
   Node falseNode = nodeManager()->mkConst(false);
-  if (t1 == d_true || t1 == falseNode)
+  bool hasTrue = d_equalityEngine->hasTerm(d_true);
+  bool hasFalse = d_equalityEngine->hasTerm(falseNode);
+  // The terms passed to the merge callback are not necessarily the Boolean
+  // constants themselves. One side may be merged into an equivalence class that
+  // already contains true or false.
+  auto processBooleanTerm = [this, falseNode, hasTrue, hasFalse](TNode atom) {
+    if (atom == d_true || atom == falseNode)
+    {
+      return;
+    }
+    if (!d_equalityEngine->hasTerm(atom))
+    {
+      return;
+    }
+    if (hasTrue && d_equalityEngine->areEqual(atom, d_true))
+    {
+      processBooleanFact(atom, true);
+    }
+    else if (hasFalse && d_equalityEngine->areEqual(atom, falseNode))
+    {
+      processBooleanFact(atom, false);
+    }
+  };
+  processBooleanTerm(t1);
+  if (t2 != t1)
   {
-    polarity = t1 == d_true;
-    atom = t2;
+    processBooleanTerm(t2);
   }
-  else if (t2 == d_true || t2 == falseNode)
-  {
-    polarity = t2 == d_true;
-    atom = t1;
-  }
-  if (atom.isNull())
-  {
-    return;
-  }
-  processBooleanFact(atom, polarity);
 }
 
 void TheoryDatatypes::merge(Node t1, Node t2)
