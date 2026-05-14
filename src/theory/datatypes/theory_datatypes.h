@@ -297,6 +297,7 @@ class TheoryDatatypes : public Theory
   void computeRelevantTerms(std::set<Node>& termSet) override;
   /** Commonly used terms */
   Node d_true;
+  Node d_false;
   Node d_zero;
   /** sygus symmetry breaking utility */
   std::unique_ptr<SygusExtension> d_sygusExtension;

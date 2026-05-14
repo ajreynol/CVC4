@@ -65,6 +65,7 @@ TheoryDatatypes::TheoryDatatypes(Env& env,
       d_cpacb(*this)
 {
   d_true = nodeManager()->mkConst(true);
+  d_false = nodeManager()->mkConst(false);
   d_zero = nodeManager()->mkConstInt(Rational(0));
 
   // indicate we are using the default theory state object
@@ -485,34 +486,21 @@ void TheoryDatatypes::eqNotifyMerge(TNode t1, TNode t2)
 
 void TheoryDatatypes::processBooleanMerge(TNode t1, TNode t2)
 {
-  Node falseNode = nodeManager()->mkConst(false);
-  bool hasTrue = d_equalityEngine->hasTerm(d_true);
-  bool hasFalse = d_equalityEngine->hasTerm(falseNode);
-  // The terms passed to the merge callback are not necessarily the Boolean
-  // constants themselves. One side may be merged into an equivalence class that
-  // already contains true or false.
-  auto processBooleanTerm = [this, falseNode, hasTrue, hasFalse](TNode atom) {
-    if (atom == d_true || atom == falseNode)
-    {
-      return;
-    }
-    if (!d_equalityEngine->hasTerm(atom))
-    {
-      return;
-    }
-    if (hasTrue && d_equalityEngine->areEqual(atom, d_true))
-    {
-      processBooleanFact(atom, true);
-    }
-    else if (hasFalse && d_equalityEngine->areEqual(atom, falseNode))
-    {
-      processBooleanFact(atom, false);
-    }
-  };
-  processBooleanTerm(t1);
-  if (t2 != t1)
+  if (t1 == d_true)
   {
-    processBooleanTerm(t2);
+    processBooleanFact(t2, true);
+  }
+  else if (t2 == d_true)
+  {
+    processBooleanFact(t1, true);
+  }
+  else if (t1 == d_false)
+  {
+    processBooleanFact(t2, false);
+  }
+  else if (t2 == d_false)
+  {
+    processBooleanFact(t1, false);
   }
 }
 
