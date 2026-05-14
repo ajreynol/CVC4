@@ -389,6 +389,23 @@ class TheoryEngine : protected EnvObj
   }
 
   bool isTheoryEnabled(theory::TheoryId theoryId) const;
+  /**
+   * Return the theory that facts about atom should be routed to. This may differ
+   * from Env::theoryOf(atom), which is the syntactic owner used for e.g.
+   * rewriting.
+   */
+  theory::TheoryId theoryOfFact(TNode atom) const;
+  /** Return the fact-routing theory corresponding to theoryId. */
+  theory::TheoryId theoryOfFact(theory::TheoryId theoryId) const;
+  /**
+   * Return true if theoryId participates in theory combination. This may differ
+   * from isTheoryEnabled when a theory is solved via another mechanism, e.g. the
+   * central equality engine.
+   */
+  bool isTheoryCombinationEnabled(theory::TheoryId theoryId) const;
+  /** Filter theories to those participating in theory combination. */
+  theory::TheoryIdSet getTheoryCombinationTheories(
+      theory::TheoryIdSet theories) const;
   /** return the theory that should explain a propagation from TheoryId */
   theory::TheoryId theoryExpPropagation(theory::TheoryId tid) const;
 

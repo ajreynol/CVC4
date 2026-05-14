@@ -275,13 +275,13 @@ void SharedTermsVisitor::visit(TNode current, TNode parent)
   d_preregistered[current] =
       TheoryIdSetUtil::setUnion(preregTheories, visitedTheories);
 
-  // If there is more than two theories and a new one has been added notify the
-  // shared terms database
-  TheoryId currentTheoryId = d_env.theoryOf(current);
-  if (TheoryIdSetUtil::setDifference(
-          visitedTheories, TheoryIdSetUtil::setInsert(currentTheoryId)))
+  // If the term is shared between theories participating in theory combination,
+  // notify the shared terms database.
+  TheoryIdSet tcTheories =
+      d_engine->getTheoryCombinationTheories(visitedTheories);
+  if (TheoryIdSetUtil::setSize(tcTheories) > 1)
   {
-    d_sharedTerms.addSharedTerm(d_atom, current, visitedTheories);
+    d_sharedTerms.addSharedTerm(d_atom, current, tcTheories);
   }
 
   Assert(d_visited.find(current) != d_visited.end());

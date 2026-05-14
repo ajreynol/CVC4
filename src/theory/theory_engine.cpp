@@ -119,10 +119,12 @@ void TheoryEngine::finishInit()
 #ifdef CVC5_FOR_EACH_THEORY_STATEMENT
 #undef CVC5_FOR_EACH_THEORY_STATEMENT
 #endif
-#define CVC5_FOR_EACH_THEORY_STATEMENT(THEORY)                               \
-  if (theory::TheoryTraits<THEORY>::isParametric && isTheoryEnabled(THEORY)) \
-  {                                                                          \
-    paraTheories.push_back(theoryOf(THEORY));                                \
+#define CVC5_FOR_EACH_THEORY_STATEMENT(THEORY)       \
+  if (theory::TheoryTraits<THEORY>::isParametric      \
+      && isTheoryEnabled(THEORY)                      \
+      && isTheoryCombinationEnabled(THEORY))          \
+  {                                                   \
+    paraTheories.push_back(theoryOf(THEORY));         \
   }
   // Collect the parametric theories, which are given to the theory combination
   // manager below
@@ -734,6 +736,40 @@ bool TheoryEngine::isTheoryEnabled(theory::TheoryId theoryId) const
   return logicInfo().isTheoryEnabled(theoryId);
 }
 
+theory::TheoryId TheoryEngine::theoryOfFact(TNode atom) const
+{
+  return theoryOfFact(d_env.theoryOf(atom));
+}
+
+theory::TheoryId TheoryEngine::theoryOfFact(theory::TheoryId theoryId) const
+{
+  if (options().theory.eeMode == options::EqEngineMode::CENTRAL
+      && theoryId == theory::THEORY_DATATYPES)
+  {
+    return theory::THEORY_BUILTIN;
+  }
+  return theoryId;
+}
+
+bool TheoryEngine::isTheoryCombinationEnabled(
+    theory::TheoryId theoryId) const
+{
+  return theoryOfFact(theoryId) == theoryId;
+}
+
+theory::TheoryIdSet TheoryEngine::getTheoryCombinationTheories(
+    theory::TheoryIdSet theories) const
+{
+  for (TheoryId tid = THEORY_FIRST; tid != THEORY_LAST; ++tid)
+  {
+    if (!isTheoryCombinationEnabled(tid))
+    {
+      theories = theory::TheoryIdSetUtil::setRemove(tid, theories);
+    }
+  }
+  return theories;
+}
+
 theory::TheoryId TheoryEngine::theoryExpPropagation(theory::TheoryId tid) const
 {
   if (options().theory.eeMode == options::EqEngineMode::CENTRAL)
@@ -1063,6 +1099,16 @@ void TheoryEngine::assertToTheory(TNode assertion,
       << originalAssertion << "," << toTheoryId << ", " << fromTheoryId << ")"
       << endl;
 
+  TheoryId origToTheoryId = toTheoryId;
+  if (toTheoryId != THEORY_SAT_SOLVER)
+  {
+    toTheoryId = theoryOfFact(toTheoryId);
+  }
+  if (toTheoryId == fromTheoryId)
+  {
+    Assert(origToTheoryId != toTheoryId);
+    return;
+  }
   Assert(toTheoryId != fromTheoryId);
   if (toTheoryId != THEORY_SAT_SOLVER && !isTheoryEnabled(toTheoryId))
   {
@@ -1077,6 +1123,25 @@ void TheoryEngine::assertToTheory(TNode assertion,
 
   if (d_inConflict)
   {
+    return;
+  }
+
+  // determine the actual theory that will process/explain the fact, which is
+  // THEORY_BUILTIN if the theory uses the central equality engine
+  TheoryId toTheoryIdProp = theoryExpPropagation(toTheoryId);
+  // If sending to the shared solver, it's also simple. Do this before the
+  // no-sharing fast path since THEORY_BUILTIN is not a regular fact-processing
+  // theory.
+  if (toTheoryId == THEORY_BUILTIN)
+  {
+    if (markPropagation(
+            assertion, originalAssertion, toTheoryIdProp, fromTheoryId))
+    {
+      // assert to the shared solver
+      bool polarity = assertion.getKind() != Kind::NOT;
+      TNode atom = polarity ? assertion : assertion[0];
+      d_sharedSolver->assertShared(atom, polarity, assertion);
+    }
     return;
   }
 
@@ -1120,23 +1185,6 @@ void TheoryEngine::assertToTheory(TNode assertion,
     return;
   }
 
-  // determine the actual theory that will process/explain the fact, which is
-  // THEORY_BUILTIN if the theory uses the central equality engine
-  TheoryId toTheoryIdProp = theoryExpPropagation(toTheoryId);
-  // If sending to the shared solver, it's also simple
-  if (toTheoryId == THEORY_BUILTIN)
-  {
-    if (markPropagation(
-            assertion, originalAssertion, toTheoryIdProp, fromTheoryId))
-    {
-      // assert to the shared solver
-      bool polarity = assertion.getKind() != Kind::NOT;
-      TNode atom = polarity ? assertion : assertion[0];
-      d_sharedSolver->assertShared(atom, polarity, assertion);
-    }
-    return;
-  }
-
   // Things from the SAT solver are already normalized, so they go
   // directly to the apropriate theory
   if (fromTheoryId == THEORY_SAT_SOLVER)
@@ -1147,7 +1195,7 @@ void TheoryEngine::assertToTheory(TNode assertion,
     {
       // Is it preregistered
       bool preregistered = d_propEngine->isSatLiteral(assertion)
-                           && d_env.theoryOf(assertion) == toTheoryId;
+                           && theoryOfFact(assertion) == toTheoryId;
       // We assert it
       theoryOf(toTheoryId)->assertFact(assertion, preregistered);
       // Mark that we have more information
@@ -1218,7 +1266,7 @@ void TheoryEngine::assertToTheory(TNode assertion,
   {
     // Check if has been pre-registered with the theory
     bool preregistered = d_propEngine->isSatLiteral(assertion)
-                         && d_env.theoryOf(assertion) == toTheoryId;
+                         && theoryOfFact(assertion) == toTheoryId;
     // Assert away
     theoryOf(toTheoryId)->assertFact(assertion, preregistered);
     d_factsAsserted = true;
@@ -1257,14 +1305,17 @@ void TheoryEngine::assertFact(TNode literal)
       // Assert it to the the owning theory
       assertToTheory(literal,
                      literal,
-                     /* to */ d_env.theoryOf(atom),
+                     /* to */ theoryOfFact(atom),
                      /* from */ THEORY_SAT_SOLVER);
       // Shared terms manager will assert to interested theories directly, as
       // the terms become shared
-      assertToTheory(literal,
-                     literal,
-                     /* to */ THEORY_BUILTIN,
-                     /* from */ THEORY_SAT_SOLVER);
+      if (theoryOfFact(atom) != THEORY_BUILTIN)
+      {
+        assertToTheory(literal,
+                       literal,
+                       /* to */ THEORY_BUILTIN,
+                       /* from */ THEORY_SAT_SOLVER);
+      }
 
       // Now, let's check for any atom triggers from lemmas
       AtomRequests::atom_iterator it = d_atomRequests.getAtomIterator(atom);
@@ -1275,9 +1326,10 @@ void TheoryEngine::assertFact(TNode literal)
             polarity ? (Node)request.d_atom : request.d_atom.notNode();
         Trace("theory::atoms") << "TheoryEngine::assertFact(" << literal
                                << "): sending requested " << toAssert << endl;
-        assertToTheory(
-            toAssert, literal, request.d_toTheory, THEORY_SAT_SOLVER);
-        if (options().theory.eeMode == options::EqEngineMode::CENTRAL)
+        TheoryId requestTheory = theoryOfFact(request.d_toTheory);
+        assertToTheory(toAssert, literal, requestTheory, THEORY_SAT_SOLVER);
+        if (options().theory.eeMode == options::EqEngineMode::CENTRAL
+            && requestTheory != THEORY_BUILTIN)
         {
           // Also send to THEORY_BUILTIN, similar to above
           assertToTheory(toAssert,
@@ -1293,7 +1345,7 @@ void TheoryEngine::assertFact(TNode literal)
       // Not an equality, just assert to the appropriate theory
       assertToTheory(literal,
                      literal,
-                     /* to */ d_env.theoryOf(atom),
+                     /* to */ theoryOfFact(atom),
                      /* from */ THEORY_SAT_SOLVER);
     }
   }
@@ -1302,7 +1354,7 @@ void TheoryEngine::assertFact(TNode literal)
     // Assert the fact to the appropriate theory directly
     assertToTheory(literal,
                    literal,
-                   /* to */ d_env.theoryOf(atom),
+                   /* to */ theoryOfFact(atom),
                    /* from */ THEORY_SAT_SOLVER);
   }
 }
@@ -1511,6 +1563,7 @@ void TheoryEngine::ensureLemmaAtoms(TNode n, theory::TheoryId atomsTo)
 void TheoryEngine::ensureLemmaAtoms(const std::vector<TNode>& atoms,
                                     theory::TheoryId atomsTo)
 {
+  atomsTo = theoryOfFact(atomsTo);
   for (unsigned i = 0; i < atoms.size(); ++i)
   {
     // Non-equality atoms are either owned by theory or they don't make sense
@@ -1599,7 +1652,7 @@ void TheoryEngine::ensureLemmaAtoms(const std::vector<TNode>& atoms,
 
     // If the theory is asking about a different form, or the form is ok but if
     // will go to a different theory then we must figure it out
-    if (eqNormalized != eq || d_env.theoryOf(eq) != atomsTo)
+    if (eqNormalized != eq || theoryOfFact(eq) != atomsTo)
     {
       // If you get eqNormalized, send atoms[i] to atomsTo
       d_atomRequests.add(eqNormalized, eq, atomsTo);

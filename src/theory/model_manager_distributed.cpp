@@ -12,13 +12,50 @@
 
 #include "theory/model_manager_distributed.h"
 
+#include "options/theory_options.h"
 #include "smt/env.h"
 #include "theory/theory_engine.h"
 #include "theory/theory_model.h"
 #include "theory/theory_model_builder.h"
+#include "theory/uf/equality_engine_iterator.h"
 
 namespace cvc5::internal {
 namespace theory {
+
+namespace {
+
+bool isCentralModelTerm(Env& env, TheoryId theoryId, TNode n)
+{
+  return env.theoryOf(n) == theoryId || env.theoryOf(n.getType()) == theoryId;
+}
+
+void collectCentralModelTerms(Env& env,
+                              TheoryId theoryId,
+                              Theory* t,
+                              std::set<Node>& termSet)
+{
+  eq::EqualityEngine* ee = t->getEqualityEngine();
+  if (ee == nullptr)
+  {
+    return;
+  }
+  eq::EqClassesIterator eqcs(ee);
+  for (; !eqcs.isFinished(); ++eqcs)
+  {
+    TNode eqc = *eqcs;
+    eq::EqClassIterator terms(eqc, ee);
+    for (; !terms.isFinished(); ++terms)
+    {
+      TNode term = *terms;
+      if (isCentralModelTerm(env, theoryId, term))
+      {
+        termSet.insert(term);
+      }
+    }
+  }
+}
+
+}  // namespace
 
 ModelManagerDistributed::ModelManagerDistributed(Env& env,
                                                  TheoryEngine& te,
@@ -91,6 +128,11 @@ bool ModelManagerDistributed::prepareModel()
     // collect the asserted terms
     std::set<Node> termSet;
     t->collectAssertedTermsForModel(termSet);
+    if (options().theory.eeMode == options::EqEngineMode::CENTRAL
+        && !d_te.isTheoryCombinationEnabled(theoryId))
+    {
+      collectCentralModelTerms(d_env, theoryId, t, termSet);
+    }
     // also get relevant terms
     t->computeRelevantTerms(termSet);
     if (!t->collectModelInfo(d_model.get(), termSet))
