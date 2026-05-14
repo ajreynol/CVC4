@@ -486,21 +486,15 @@ void TheoryDatatypes::eqNotifyMerge(TNode t1, TNode t2)
 
 void TheoryDatatypes::processBooleanMerge(TNode t1, TNode t2)
 {
+  Assert (!t2.isConst());
+  Assert (t1!=t2);
   if (t1 == d_true)
   {
     processBooleanFact(t2, true);
   }
-  else if (t2 == d_true)
-  {
-    processBooleanFact(t1, true);
-  }
   else if (t1 == d_false)
   {
     processBooleanFact(t2, false);
-  }
-  else if (t2 == d_false)
-  {
-    processBooleanFact(t1, false);
   }
 }
 
