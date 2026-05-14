@@ -119,12 +119,11 @@ void TheoryEngine::finishInit()
 #ifdef CVC5_FOR_EACH_THEORY_STATEMENT
 #undef CVC5_FOR_EACH_THEORY_STATEMENT
 #endif
-#define CVC5_FOR_EACH_THEORY_STATEMENT(THEORY)       \
-  if (theory::TheoryTraits<THEORY>::isParametric      \
-      && isTheoryEnabled(THEORY)                      \
-      && isTheoryCombinationEnabled(THEORY))          \
-  {                                                   \
-    paraTheories.push_back(theoryOf(THEORY));         \
+#define CVC5_FOR_EACH_THEORY_STATEMENT(THEORY)                              \
+  if (theory::TheoryTraits<THEORY>::isParametric && isTheoryEnabled(THEORY) \
+      && isTheoryCombinationEnabled(THEORY))                                \
+  {                                                                         \
+    paraTheories.push_back(theoryOf(THEORY));                               \
   }
   // Collect the parametric theories, which are given to the theory combination
   // manager below
@@ -751,8 +750,7 @@ theory::TheoryId TheoryEngine::theoryOfFact(theory::TheoryId theoryId) const
   return theoryId;
 }
 
-bool TheoryEngine::isTheoryCombinationEnabled(
-    theory::TheoryId theoryId) const
+bool TheoryEngine::isTheoryCombinationEnabled(theory::TheoryId theoryId) const
 {
   return theoryOfFact(theoryId) == theoryId;
 }

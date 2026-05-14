@@ -317,8 +317,8 @@ void TheoryDatatypes::processBooleanFact(TNode atom, bool polarity)
   {
     Trace("dt-tester-debug") << "Assert (non-tester) : " << atom << std::endl;
   }
-  Trace("datatypes-debug") << "TheoryDatatypes::processBooleanFact : finished " << atom
-                           << ", polarity " << polarity << std::endl;
+  Trace("datatypes-debug") << "TheoryDatatypes::processBooleanFact : finished "
+                           << atom << ", polarity " << polarity << std::endl;
 }
 
 void TheoryDatatypes::preRegisterTerm(TNode n)
