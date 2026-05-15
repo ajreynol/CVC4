@@ -388,7 +388,13 @@ void TheoryDatatypes::preRegisterTerm(TNode n)
       }
       break;
   }
-  d_im.process();
+  // In central EE mode, this may be called while we are handling central EE
+  // notifications.  Defer queued inferences to check(), where explanations
+  // have been fully routed through the central equality engine.
+  if (options().theory.eeMode != options::EqEngineMode::CENTRAL)
+  {
+    d_im.process();
+  }
 }
 
 TrustNode TheoryDatatypes::ppRewrite(TNode in, std::vector<SkolemLemma>& lems)
