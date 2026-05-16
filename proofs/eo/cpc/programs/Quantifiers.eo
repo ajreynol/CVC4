@@ -100,7 +100,7 @@
 ; note: Assumes applications with lists as their first argument are binders.
 ; note: This method does not evaluate if variable capture is encountered.
 (program $substitute_simul
-  ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List :list) (ss @List :list) (s S) (y S)
+  ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List :list) (ss @List :list)
    (q (-> @List T S)) (V Type) (v V) (vs @List :list))
   :signature (S @List @List) S
   (
