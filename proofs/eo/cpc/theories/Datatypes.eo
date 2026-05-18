@@ -24,7 +24,10 @@
 (declare-const Tuple (-> Type Type Type) :right-assoc-nil UnitTuple)
 
 (declare-const tuple.unit UnitTuple)
-(declare-parameterized-const tuple ((T Type :implicit) (U Type :implicit)) (-> T U (_ Tuple T U)) :right-assoc-nil tuple.unit)
+(declare-parameterized-const tuple ((T Type :implicit) (U Type :implicit))
+  ; U must be a Tuple type
+  (-> T U (eo::requires (eo::is_ok (eo::list_len Tuple U)) true (_ Tuple T U)))
+  :right-assoc-nil tuple.unit)
 (declare-parameterized-const tuple.select ((T Type :implicit) (i Int :opaque)) (-> T (eo::list_nth Tuple T i)))
 
 ; disclaimer: This function is not in the SMT-LIB standard.
