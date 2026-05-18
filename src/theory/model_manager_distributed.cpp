@@ -12,50 +12,13 @@
 
 #include "theory/model_manager_distributed.h"
 
-#include "options/theory_options.h"
 #include "smt/env.h"
 #include "theory/theory_engine.h"
 #include "theory/theory_model.h"
 #include "theory/theory_model_builder.h"
-#include "theory/uf/equality_engine_iterator.h"
 
 namespace cvc5::internal {
 namespace theory {
-
-namespace {
-
-bool isCentralModelTerm(Env& env, TheoryId theoryId, TNode n)
-{
-  return env.theoryOf(n) == theoryId || env.theoryOf(n.getType()) == theoryId;
-}
-
-void collectCentralModelTerms(Env& env,
-                              TheoryId theoryId,
-                              Theory* t,
-                              std::set<Node>& termSet)
-{
-  eq::EqualityEngine* ee = t->getEqualityEngine();
-  if (ee == nullptr)
-  {
-    return;
-  }
-  eq::EqClassesIterator eqcs(ee);
-  for (; !eqcs.isFinished(); ++eqcs)
-  {
-    TNode eqc = *eqcs;
-    eq::EqClassIterator terms(eqc, ee);
-    for (; !terms.isFinished(); ++terms)
-    {
-      TNode term = *terms;
-      if (isCentralModelTerm(env, theoryId, term))
-      {
-        termSet.insert(term);
-      }
-    }
-  }
-}
-
-}  // namespace
 
 ModelManagerDistributed::ModelManagerDistributed(Env& env,
                                                  TheoryEngine& te,
@@ -101,10 +64,11 @@ bool ModelManagerDistributed::prepareModel()
   // Collect model info from the theories
   Trace("model-builder") << "ModelManagerDistributed: Collect model info..."
                          << std::endl;
-  // Consult each active theory to get all relevant information concerning the
-  // model, which includes both dump their equality information and assigning
-  // values. Notice the order of theories here is important and is the same
-  // as the list in CVC5_FOR_EACH_THEORY in theory_engine.cpp.
+  // Consult each active theory that participates in theory combination to get
+  // all relevant information concerning the model, which includes both dump
+  // their equality information and assigning values. Notice the order of
+  // theories here is important and is the same as the list in
+  // CVC5_FOR_EACH_THEORY in theory_engine.cpp.
   const LogicInfo& logicInfo = d_env.getLogicInfo();
   for (TheoryId theoryId = theory::THEORY_FIRST; theoryId < theory::THEORY_LAST;
        ++theoryId)
@@ -114,7 +78,6 @@ bool ModelManagerDistributed::prepareModel()
       // theory not active, skip
       continue;
     }
-    Theory* t = d_te.theoryOf(theoryId);
     if (theoryId == TheoryId::THEORY_BOOL
         || theoryId == TheoryId::THEORY_BUILTIN)
     {
@@ -123,16 +86,19 @@ bool ModelManagerDistributed::prepareModel()
           << " as it does not contribute to the model anyway" << std::endl;
       continue;
     }
+    if (!d_te.isTheoryCombinationEnabled(theoryId))
+    {
+      Trace("model-builder")
+          << "  Skipping theory " << theoryId
+          << " as it is not part of theory combination" << std::endl;
+      continue;
+    }
+    Theory* t = d_te.theoryOf(theoryId);
     Trace("model-builder") << "  CollectModelInfo on theory: " << theoryId
                            << std::endl;
     // collect the asserted terms
     std::set<Node> termSet;
     t->collectAssertedTermsForModel(termSet);
-    if (options().theory.eeMode == options::EqEngineMode::CENTRAL
-        && !d_te.isTheoryCombinationEnabled(theoryId))
-    {
-      collectCentralModelTerms(d_env, theoryId, t, termSet);
-    }
     // also get relevant terms
     t->computeRelevantTerms(termSet);
     if (!t->collectModelInfo(d_model.get(), termSet))
