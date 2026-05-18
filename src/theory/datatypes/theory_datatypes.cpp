@@ -1041,12 +1041,8 @@ void TheoryDatatypes::collapseSelector(Node s, Node c)
       // Since collapsing selectors may generate new terms, we must send
       // this out as a lemma if it is of an external type, or otherwise we
       // may ask for the equality status of terms that only datatypes knows
-      // about, see issue #5344. In central EE mode, the explanation may have
-      // been learned via central notifications and should not be required to
-      // hold in the equality engine at the later pending-fact flush.
-      bool forceLemma =
-          !s.getType().isDatatype()
-          || options().theory.eeMode == options::EqEngineMode::CENTRAL;
+      // about, see issue #5344.
+      bool forceLemma = !s.getType().isDatatype();
       Trace("datatypes-infer") << "DtInfer : collapse sel";
       Trace("datatypes-infer") << " : " << eq << " by " << eq_exp << std::endl;
       d_im.addPendingInference(

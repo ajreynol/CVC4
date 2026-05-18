@@ -14,6 +14,7 @@
 
 #include "expr/dtype.h"
 #include "options/datatypes_options.h"
+#include "options/theory_options.h"
 #include "proof/eager_proof_generator.h"
 #include "theory/rewriter.h"
 #include "theory/theory.h"
@@ -47,8 +48,11 @@ void InferenceManager::addPendingInference(Node conc,
                  << std::endl;
   // if we are forcing the inference to be processed as a lemma, if the
   // dtInferAsLemmas option is set, or if the inference must be sent as a lemma
-  // based on the policy in mustCommunicateFact.
+  // based on the policy in mustCommunicateFact. In central equality engine
+  // mode, explanations are owned by central equality notifications, so
+  // datatype inferences should not be replayed later as internal facts.
   if (forceLemma || options().datatypes.dtInferAsLemmas
+      || options().theory.eeMode == options::EqEngineMode::CENTRAL
       || DatatypesInference::mustCommunicateFact(conc, exp))
   {
     d_pendingLem.emplace_back(new DatatypesInference(this, conc, exp, id));
