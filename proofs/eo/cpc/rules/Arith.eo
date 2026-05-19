@@ -340,6 +340,21 @@
   )
 )
 
+; program: $to_cube
+; args:
+; - F Bool: The formula to convert to a cube.
+; return: >
+;   The result of converting F to a cube. In particular, if F is not
+;   an and-list, we return (and F), otherwise F is unchanged.
+(program $to_cube ((F1 Bool) (F2 Bool :list))
+  :signature (Bool) Bool
+  (
+  (($to_cube (and F1 F2)) (and F1 F2))
+  (($to_cube true)        true)
+  (($to_cube F1)          (and F1))
+  )
+)
+
 ; rule: arith_mult_sign
 ; implements: ProofRule::ARITH_MULT_SIGN
 ; args:
@@ -351,10 +366,9 @@
 (declare-rule arith_mult_sign ((T Type) (F Bool) (m T))
   :args (F m)
   :conclusion (=> F
-                (eo::define ((r (eo::ite ($mk_arith_mult_sign_sgn true F m) > <)))
+                (eo::define ((r (eo::ite ($mk_arith_mult_sign_sgn true ($to_cube F) m) > <)))
                   (r m ($arith_mk_zero (eo::typeof m)))))
 )
-
 
 ;;;;; ProofRule::ARITH_MULT_ABS_COMPARISON
 
