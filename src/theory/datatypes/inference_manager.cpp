@@ -49,10 +49,16 @@ void InferenceManager::addPendingInference(Node conc,
   // if we are forcing the inference to be processed as a lemma, if the
   // dtInferAsLemmas option is set, or if the inference must be sent as a lemma
   // based on the policy in mustCommunicateFact. In central equality engine
-  // mode, explanations are owned by central equality notifications, so
-  // datatype inferences should not be replayed later as internal facts.
+  // mode, datatype inferences with nontrivial explanations are sent as lemmas,
+  // since explanations are owned by central equality notifications. However,
+  // trivially explained facts still need to be processed internally, since
+  // they update datatype-specific bookkeeping such as singleton constructor
+  // labels.
+  bool centralNeedsLemma =
+      options().theory.eeMode == options::EqEngineMode::CENTRAL
+      && !exp.isNull() && !exp.isConst();
   if (forceLemma || options().datatypes.dtInferAsLemmas
-      || options().theory.eeMode == options::EqEngineMode::CENTRAL
+      || centralNeedsLemma
       || DatatypesInference::mustCommunicateFact(conc, exp))
   {
     d_pendingLem.emplace_back(new DatatypesInference(this, conc, exp, id));

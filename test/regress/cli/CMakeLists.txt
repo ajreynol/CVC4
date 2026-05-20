@@ -741,6 +741,7 @@ set(regress_0_tests
   regress0/datatypes/cdt-non-canon-stream.smt2
   regress0/datatypes/central-ee-fluent-selector.smt2
   regress0/datatypes/central-ee-segment-model.smt2
+  regress0/datatypes/central-ee-singleton-split-quant.smt2
   regress0/datatypes/central-ee-splinterdb-inst.smt2
   regress0/datatypes/central-ee-verus-prereg.smt2
   regress0/datatypes/coda_simp_model.smt2
