@@ -739,6 +739,7 @@ set(regress_0_tests
   regress0/datatypes/cdt-enum-type-mismatch.smt2
   regress0/datatypes/cdt-model-cade15.smt2
   regress0/datatypes/cdt-non-canon-stream.smt2
+  regress0/datatypes/central-ee-dt-inst.smt2
   regress0/datatypes/central-ee-fluent-selector.smt2
   regress0/datatypes/central-ee-segment-model.smt2
   regress0/datatypes/central-ee-singleton-split-quant.smt2

@@ -51,12 +51,13 @@ void InferenceManager::addPendingInference(Node conc,
   // based on the policy in mustCommunicateFact. In central equality engine
   // mode, datatype inferences with nontrivial explanations are sent as lemmas,
   // since explanations are owned by central equality notifications. However,
-  // trivially explained facts still need to be processed internally, since
-  // they update datatype-specific bookkeeping such as singleton constructor
-  // labels.
+  // trivially explained facts and datatype instantiations still need to be
+  // processed internally, since they update datatype-specific bookkeeping such
+  // as constructor labels and selected constructors.
   bool centralNeedsLemma =
       options().theory.eeMode == options::EqEngineMode::CENTRAL
-      && !exp.isNull() && !exp.isConst();
+      && !exp.isNull() && !exp.isConst()
+      && id != InferenceId::DATATYPES_INST;
   if (forceLemma || options().datatypes.dtInferAsLemmas
       || centralNeedsLemma
       || DatatypesInference::mustCommunicateFact(conc, exp))
