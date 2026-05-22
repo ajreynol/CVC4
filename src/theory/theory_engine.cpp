@@ -1097,7 +1097,7 @@ void TheoryEngine::assertToTheory(TNode assertion,
       << originalAssertion << "," << toTheoryId << ", " << fromTheoryId << ")"
       << endl;
 
-  TheoryId origToTheoryId = toTheoryId;
+  TheoryId origToTheoryId CVC5_UNUSED = toTheoryId;
   if (toTheoryId != THEORY_SAT_SOLVER)
   {
     toTheoryId = theoryOfFact(toTheoryId);

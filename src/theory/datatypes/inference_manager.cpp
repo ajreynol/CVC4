@@ -29,6 +29,8 @@ namespace datatypes {
 
 InferenceManager::InferenceManager(Env& env, Theory& t, TheoryState& state)
     : InferenceManagerBuffered(env, t, state, "theory::datatypes::"),
+      d_nextPendingId(0),
+      d_validPendingIds(context()),
       d_ipc(isProofEnabled() ? new InferProofCons(env, context()) : nullptr),
       d_lemPg(isProofEnabled() ? new EagerProofGenerator(
                                      env, userContext(), "datatypes::lemPg")
@@ -63,11 +65,49 @@ void InferenceManager::addPendingInference(Node conc,
       || DatatypesInference::mustCommunicateFact(conc, exp))
   {
     d_pendingLem.emplace_back(new DatatypesInference(this, conc, exp, id));
+    d_pendingLemmaIds.push_back(allocatePendingId());
   }
   else
   {
     d_pendingFact.emplace_back(new DatatypesInference(this, conc, exp, id));
+    d_pendingFactIds.push_back(allocatePendingId());
   }
+}
+
+bool InferenceManager::addPendingLemma(Node lem,
+                                       InferenceId id,
+                                       LemmaProperty p,
+                                       ProofGenerator* pg,
+                                       bool checkCache)
+{
+  bool ret =
+      InferenceManagerBuffered::addPendingLemma(lem, id, p, pg, checkCache);
+  if (ret)
+  {
+    d_pendingLemmaIds.push_back(allocatePendingId());
+  }
+  return ret;
+}
+
+void InferenceManager::addPendingLemma(std::unique_ptr<TheoryInference> lemma)
+{
+  InferenceManagerBuffered::addPendingLemma(std::move(lemma));
+  d_pendingLemmaIds.push_back(allocatePendingId());
+}
+
+void InferenceManager::addPendingFact(Node conc,
+                                      InferenceId id,
+                                      Node exp,
+                                      ProofGenerator* pg)
+{
+  InferenceManagerBuffered::addPendingFact(conc, id, exp, pg);
+  d_pendingFactIds.push_back(allocatePendingId());
+}
+
+void InferenceManager::addPendingFact(std::unique_ptr<TheoryInference> fact)
+{
+  InferenceManagerBuffered::addPendingFact(std::move(fact));
+  d_pendingFactIds.push_back(allocatePendingId());
 }
 
 void InferenceManager::process()
@@ -80,9 +120,50 @@ void InferenceManager::process()
     return;
   }
   // process pending lemmas, used infrequently, only for definitional lemmas
-  doPendingLemmas();
+  processPendingLemmas();
   // now process the pending facts
-  doPendingFacts();
+  size_t i = 0;
+  while (!d_theoryState.isInConflict() && i < d_pendingFact.size())
+  {
+    Assert(i < d_pendingFactIds.size());
+    if (isPendingIdValid(d_pendingFactIds[i]))
+    {
+      assertInternalFactTheoryInference(d_pendingFact[i].get());
+    }
+    else
+    {
+      Trace("dt-im") << "Skipping stale pending fact id " << d_pendingFactIds[i]
+                     << std::endl;
+    }
+    i++;
+  }
+  clearPendingFacts();
+}
+
+void InferenceManager::clearPending()
+{
+  InferenceManagerBuffered::clearPending();
+  d_pendingLemmaIds.clear();
+  d_pendingFactIds.clear();
+}
+
+void InferenceManager::clearPendingFacts()
+{
+  InferenceManagerBuffered::clearPendingFacts();
+  d_pendingFactIds.clear();
+}
+
+void InferenceManager::clearPendingLemmas()
+{
+  InferenceManagerBuffered::clearPendingLemmas();
+  d_pendingLemmaIds.clear();
+}
+
+void InferenceManager::notifyInConflict()
+{
+  InferenceManagerBuffered::notifyInConflict();
+  d_pendingLemmaIds.clear();
+  d_pendingFactIds.clear();
 }
 
 bool InferenceManager::sendDtLemma(Node lem, InferenceId id, LemmaProperty p)
@@ -171,6 +252,45 @@ Node InferenceManager::prepareDtInference(Node conc,
     ipc->notifyFact(di);
   }
   return conc;
+}
+
+uint64_t InferenceManager::allocatePendingId()
+{
+  uint64_t id = d_nextPendingId++;
+  d_validPendingIds.insert(id);
+  return id;
+}
+
+void InferenceManager::processPendingLemmas()
+{
+  if (d_processingPendingLemmas)
+  {
+    // already processing
+    return;
+  }
+  d_processingPendingLemmas = true;
+  size_t i = 0;
+  while (i < d_pendingLem.size())
+  {
+    Assert(i < d_pendingLemmaIds.size());
+    if (isPendingIdValid(d_pendingLemmaIds[i]))
+    {
+      lemmaTheoryInference(d_pendingLem[i].get());
+    }
+    else
+    {
+      Trace("dt-im") << "Skipping stale pending lemma id "
+                     << d_pendingLemmaIds[i] << std::endl;
+    }
+    i++;
+  }
+  clearPendingLemmas();
+  d_processingPendingLemmas = false;
+}
+
+bool InferenceManager::isPendingIdValid(uint64_t id) const
+{
+  return d_validPendingIds.contains(id);
 }
 
 }  // namespace datatypes
