@@ -136,7 +136,7 @@
 (program $mk_arith_mult_neg ((T Type) (r (-> T T Bool)) (a T) (b T) (m T))
   :signature (T Bool) Bool
   (
-    (($mk_arith_mult_neg m (r a b)) ($arith_rel_inv r (* m a) (* m b)))
+  (($mk_arith_mult_neg m (r a b)) ($arith_rel_inv r (* m a) (* m b)))
   )
 )
 

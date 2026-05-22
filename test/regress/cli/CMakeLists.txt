@@ -1532,6 +1532,8 @@ set(regress_0_tests
   regress0/proofs/issue12255-cyclic-arith-rcons.smt2
   regress0/proofs/issue12574-check-proofs-int-to-bv.smt2
   regress0/proofs/issue12631-check-proofs-arith.smt2
+  regress0/proofs/issue12683-check-proofs-arith-mixed.smt2
+  regress0/proofs/issue12697-check-proofs-arith.smt2
   regress0/proofs/issue8983-trust-subs.smt2
   regress0/proofs/issue9156-doublePropProof.smt2
   regress0/proofs/issue9172-doublePropProof.smt2
@@ -2077,6 +2079,7 @@ set(regress_0_tests
   regress0/smtlib/issue4151.smt2
   regress0/smtlib/issue4552.smt2
   regress0/smtlib/issue4866.smt2
+  regress0/smtlib/issue12663.smt2
   regress0/smtlib/reason-unknown.smt2
   regress0/smtlib/reset-assertions-global.smt2
   regress0/smtlib/reset-assertions1.smt2
@@ -3890,7 +3893,6 @@ set(regress_1_tests
   regress1/sygus/issue3461.sy
   regress1/sygus/issue3514.smt2
   regress1/sygus/issue3507.smt2
-  regress1/sygus/issue3580.sy
   regress1/sygus/issue3633.smt2
   regress1/sygus/issue3634.smt2
   regress1/sygus/issue3635.smt2
@@ -4380,6 +4382,8 @@ set(regression_disabled_tests
   regress1/sygus/interpol_from_pono_3.smt2
   regress1/sygus/interpol_dt.smt2
   regress1/sygus/inv_gen_fig8.sy
+  # takes a long time (>300 seconds) when using libc++ builds on both Linux and macOS
+  regress1/sygus/issue3580.sy
   # timeout since nl-rlv is required; however it cannot be used with quantifiers
   regress1/sygus/issue3648.smt2
   # new reconstruct algorithm is slow at reconstructing random constants (see wishue #82)
