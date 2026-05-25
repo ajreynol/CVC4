@@ -872,19 +872,29 @@
 ; This rule may fail if s is not a str.++ application corresponding to a term
 ; in cvc5 rewritten form.
 
-; program: $str_flatten_word
+; program: $str_flatten_word_rec
+; args:
+; - ns (@TList Int): A list of indices to process in t.
+; - t String: A string term, assumed to be a string literal.
+; return: >
+;   The result of "flattening" t, for example given "AB", this returns the term
+;   (str.++ "A" (str.++ "B" "")).
+(program $str_flatten_word_rec ((U Type) (t (Seq U)) (n Int) (ns (@TList Int) :list))
+  :signature ((@TList Int) (Seq U)) (Seq U)
+  (
+  (($str_flatten_word_rec (@tlist.nil Int) t) "")
+  (($str_flatten_word_rec (@tlist n ns) t)    ($str_cons (eo::extract t n n) ($str_flatten_word_rec ns t)))
+  )
+)
+
+; define: $str_flatten_word
 ; args:
 ; - t String: A string term, assumed to be a string literal.
 ; return: >
 ;   The result of "flattening" t, for example given "AB", this returns the term
 ;   (str.++ "A" (str.++ "B" "")).
-(program $str_flatten_word ((U Type) (t (Seq U)))
-  :signature ((Seq U)) (Seq U)  ; NOTE: this could be string, but leads to upstream type checking issues
-  (
-    (($str_flatten_word "") "")
-    (($str_flatten_word t)  ($str_cons (eo::extract t 0 0) ($str_flatten_word (eo::extract t 1 (eo::len t)))))
-  )
-)
+(define $str_flatten_word ((U Type :implicit) (s (Seq U)))
+  ($str_flatten_word_rec ($iota (eo::len s)) s))
 
 ; program: $str_flatten
 ; args:
