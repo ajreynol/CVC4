@@ -1007,14 +1007,12 @@
 ;   We then decrement d until it is zero, while adding regular expressions
 ;   to a union, giving us (re.union r^n ... r^{n+d}).
 (program $str_mk_re_loop_elim_rec ((n Int) (d Int) (r RegLan) (rr RegLan :list))
-  :signature (Int Int RegLan RegLan) RegLan
+  :signature (Int RegLan RegLan) RegLan
   (
-    (($str_mk_re_loop_elim_rec 0 0 r rr)
-      (_ re.union (eo::list_singleton_elim re.++ rr) re.none))
-    (($str_mk_re_loop_elim_rec 0 d r rr)
-      (_ re.union (eo::list_singleton_elim re.++ rr) ($str_mk_re_loop_elim_rec 0 (eo::add d -1) r (re.++ r rr))))
-    (($str_mk_re_loop_elim_rec n d r rr)
-      ($str_mk_re_loop_elim_rec (eo::add n -1) d r (re.++ r rr)))
+  (($str_mk_re_loop_elim_rec 0 r rr)
+    (_ re.union (eo::list_singleton_elim re.++ rr) re.none))
+  (($str_mk_re_loop_elim_rec d r rr)
+    (_ re.union (eo::list_singleton_elim re.++ rr) ($str_mk_re_loop_elim_rec (eo::add d -1) r (re.++ r rr))))
   )
 )
 
@@ -1031,7 +1029,7 @@
 ;   where r^k is (re.++ r ... r), where r is repeated k times when k>1, or
 ;   r if k=1 or @re.empty if k=0.
 (define $str_mk_re_loop_elim ((n Int) (d Int) (r RegLan))
-  (eo::list_singleton_elim re.union ($str_mk_re_loop_elim_rec n d r @re.empty)))
+  (eo::list_singleton_elim re.union ($str_mk_re_loop_elim_rec d r (eo::list_repeat re.++ r n))))
 
 ; program: $str_mk_str_in_re_concat_star_char
 ; args:
