@@ -10,7 +10,7 @@
 (include "Datatypes.eo")
 
 ; note: This is a forward declaration of $are_distinct_terms_list below.
-(program $are_distinct_terms_list () :signature (@List Type) Bool)
+(program $are_distinct_terms_type ((T Type)) :signature (T T Type) Bool)
 
 ; define: $are_distinct_terms
 ; args:
@@ -19,7 +19,7 @@
 ; return: >
 ;   True if we can shown that t and s are semantically distinct, e.g. (not (= t s)) holds.
 (define $are_distinct_terms ((T Type :implicit) (t T) (s T))
-  (eo::ite (eo::eq t s) false ($are_distinct_terms_list (@list t s) (eo::typeof t))))
+  (eo::ite (eo::eq t s) false ($are_distinct_terms_type t s (eo::typeof t))))
 
 ; program: $some_pairwise_distinct_term
 ; args:
@@ -65,6 +65,28 @@
 
 ;;;;; Theory of sequences
 
+; program: $seq_distinct_terms_rec
+; args:
+; - t (Seq T): The first term, expected to be in n-ary form.
+; - s (Seq T): The second term, expected to be in n-ary form.
+; return: >
+;   True if we can derive that t and s are distinct based on their length,
+;   or by a character prefix that can be shown distinct.
+(program $seq_distinct_terms_rec
+  ((T Type) (t (Seq T)) (ts (Seq T) :list) (s (Seq T)) (ss (Seq T) :list)
+   (e1 T) (e2 T))
+  :signature ((Seq T) (Seq T)) Bool
+  (
+  ; handle singleton cases
+  (($seq_distinct_terms_rec (seq.++ (seq.unit e1) ts) (seq.++ (seq.unit e2) ss)) 
+    (eo::ite ($are_distinct_terms e1 e2)
+      true
+      ($seq_distinct_terms_rec ts ss)))
+   ; otherwise either the same, or we have different length
+  (($seq_distinct_terms_rec t s)  (eo::not (eo::eq t s)))
+  )
+)
+
 ; program: $seq_distinct_terms
 ; args:
 ; - t (Seq T): The first term.
@@ -72,19 +94,8 @@
 ; return: >
 ;   True if we can derive that t and s are distinct based on their length,
 ;   or by a character prefix that can be shown distinct.
-(program $seq_distinct_terms ((T Type) (t (Seq T)) (ts (Seq T) :list) (s (Seq T)) (ss (Seq T) :list) (e1 T) (e2 T))
-  :signature ((Seq T) (Seq T)) Bool
-  (
-  ; handle singleton cases
-  (($seq_distinct_terms (seq.unit e1) s)                                     ($seq_distinct_terms (seq.++ (seq.unit e1)) s))
-  (($seq_distinct_terms t (seq.unit e2))                                     ($seq_distinct_terms t (seq.++ (seq.unit e2))))
-  (($seq_distinct_terms (seq.++ (seq.unit e1) ts) (seq.++ (seq.unit e2) ss)) (eo::ite ($are_distinct_terms e1 e2)
-                                                                               true
-                                                                               ($seq_distinct_terms ts ss)))
-  (($seq_distinct_terms t t)                                                 false)
-  (($seq_distinct_terms t s)                                                 true) ; otherwise different length
-  )
-)
+(define $seq_distinct_terms ((T Type :implicit) (t (Seq T)) (s (Seq T)))
+  ($seq_distinct_terms_rec ($str_nary_intro t) ($str_nary_intro s)))
 
 ;;;;; Theory of datatypes
 
