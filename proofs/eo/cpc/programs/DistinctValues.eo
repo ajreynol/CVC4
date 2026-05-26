@@ -21,24 +21,6 @@
 (define $are_distinct_terms ((T Type :implicit) (t T) (s T))
   (eo::ite (eo::eq t s) false ($are_distinct_terms_type t s (eo::typeof t))))
 
-; program: $some_pairwise_distinct_term
-; args:
-; - ts T: The first list of terms.
-; - ss T: The second list of terms.
-; return: >
-;   True if there is some term in ts and ss at the same position which can be shown to be semantically distinct.
-;   This program expects ts and ss to be of the same length.
-(program $some_pairwise_distinct_term ((U Type) (t U) (s U) (ts @List :list) (ss @List :list))
-  :signature (@List @List) Bool
-  (
-  (($some_pairwise_distinct_term (@list t ts) (@list s ss))  (eo::ite ($are_distinct_terms t s)
-                                                                true
-                                                                ($some_pairwise_distinct_term ts ss)))
-  (($some_pairwise_distinct_term @list.nil @list.nil)        false)
-  ; unevaluated if different lengths
-  )
-)
-
 ;;;;; Theory of sets
 
 ; program: $set_is_not_subset
