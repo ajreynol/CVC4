@@ -80,58 +80,25 @@
 
 ; program: $dt_distinct_terms_arg
 ; args:
-; - t T: The first term, expected to be a datatype constructor app.
-; - s T: The second term, expected to be a datatype constructor of the same head as t.
+; - t T: The first term, expected to be of datatype type.
+; - s T: The second term, expected to be of datatype type.
 ; return: >
-;   True if we can show that t and s have a distinct
-(program $dt_distinct_terms_arg
+;   True if we can show that t and s denote distinct terms. This is true
+;   if t and s are distinct constructor applications, or are applications
+;   of the same constructor and one of their arguments can be shown distinct.
+(program $dt_distinct_terms
   ((T Type) (U Type) (ct T) (cs T) (f (-> U T)) (a U) (g (-> U T)) (b U))
   :signature (T T) Bool
   (
-  (($dt_distinct_terms_arg (f a) (g b))
-    (eo::ite ($are_distinct_terms_untyped a b) true ($dt_distinct_terms_arg f g)))
-  (($dt_distinct_terms_arg ct cs) false)
+  (($dt_distinct_terms (f a) (g b))
+    (eo::ite ($dt_distinct_terms f g) true ($are_distinct_terms_untyped a b)))
+  (($dt_distinct_terms ct (g a))  ($dt_distinct_terms ct g))
+  (($dt_distinct_terms (f a) cs)  ($dt_distinct_terms f cs))
+  (($dt_distinct_terms ct cs)
+    (eo::requires (eo::and ($dt_is_cons ct) ($dt_is_cons cs)) true
+      (eo::not (eo::eq ct cs))))
   )
 )
-
-; program: $dt_distinct_terms_rec
-; args:
-; - t1 W: A prefix of t we have yet to process.
-; - s1 X: A prefix of s we have yet to process.
-; - t T: The first term, expected to be of datatype type.
-; - s T: The second term, expected to be of datatype type.
-; return: >
-;   True if we can show that t and s denote distinct terms. This is true
-;   if t and s are distinct constructor applications, or are applications
-;   of the same constructor and one of their arguments can be shown distinct.
-(program $dt_distinct_terms_rec
-  ((T Type) (U Type) (W Type) (X Type) (ct W) (cs X)
-   (f (-> U W)) (g (-> U X)) (a U) (t T) (s T))
-  :signature (W X T T) Bool
-  (
-  (($dt_distinct_terms_rec (f a) cs t s) ($dt_distinct_terms_rec f cs t s))
-  (($dt_distinct_terms_rec ct (g a) t s) ($dt_distinct_terms_rec ct g t s))
-  (($dt_distinct_terms_rec ct cs t s)
-    (eo::ite (eo::eq ($dt_is_cons ct) true)
-      (eo::ite (eo::eq ct cs)
-        ; recurse on each argument
-        ($dt_distinct_terms_arg t s)  ; get the argument list of the datatypes
-        ; otherwise conflicting only if cs is also a constructor
-        (eo::eq ($dt_is_cons cs) true))
-      false))
-  )
-)
-
-; define: $dt_distinct_terms
-; args:
-; - t T: The first term, expected to be of datatype type.
-; - s T: The second term, expected to be of datatype type.
-; return: >
-;   True if we can show that t and s denote distinct terms. This is true
-;   if t and s are distinct constructor applications, or are applications
-;   of the same constructor and one of their arguments can be shown distinct.
-(define $dt_distinct_terms ((T Type :implicit) (t T) (s T))
-  ($dt_distinct_terms_rec t s t s))
 
 ;;;;; Definitions
 
