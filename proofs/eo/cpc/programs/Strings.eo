@@ -159,17 +159,19 @@
 ; - r RegLan: The regular language to check.
 ; returns: Bool
 ;   Whether the regular language r contains the empty string.
-(program $re_nullable ((r RegLan) (rr RegLan :list))
+(program $re_nullable ((r RegLan) (rr RegLan :list) (s String) (t String))
   :signature (RegLan) Bool
   (
-    (($re_nullable re.all)          true)
-    (($re_nullable @re.empty)       true)
-    (($re_nullable (re.* r))        true)
-    (($re_nullable (re.union r rr)) (eo::or ($re_nullable r) ($re_nullable rr)))
-    (($re_nullable (re.inter r rr)) (eo::and ($re_nullable r) ($re_nullable rr)))
-    (($re_nullable (re.++ r rr))    (eo::and ($re_nullable r) ($re_nullable rr)))
-    (($re_nullable (re.comp r))     (eo::not ($re_nullable r)))
-    (($re_nullable r)               false)
+  (($re_nullable re.all)          true)
+  (($re_nullable re.none)         false)
+  (($re_nullable re.allchar)      false)
+  (($re_nullable (str.to_re s))   (eo::requires (eo::is_str s) true (eo::eq s "")))
+  (($re_nullable (re.* r))        true)
+  (($re_nullable (re.range s t))  false)
+  (($re_nullable (re.union r rr)) (eo::or ($re_nullable r) ($re_nullable rr)))
+  (($re_nullable (re.inter r rr)) (eo::and ($re_nullable r) ($re_nullable rr)))
+  (($re_nullable (re.++ r rr))    (eo::and ($re_nullable r) ($re_nullable rr)))
+  (($re_nullable (re.comp r))     (eo::not ($re_nullable r)))
   )
 )
 
