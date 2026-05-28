@@ -981,8 +981,7 @@
 
 ; program: $str_mk_re_loop_elim_rec
 ; args:
-; - n Int: The minimum number of iterations for a re.loop term.
-; - d Int: The difference between the min and max iterations for a re.loop term.
+; - ns (@TList Int): A list of zeroes whose length is the difference between the min and max iterations for a re.loop term.
 ; - r RegLan: The regular expression argument of re.loop.
 ; - rr RegLan: The current accumulated regular expression.
 ; return: >
@@ -991,13 +990,14 @@
 ;   is zero, while accumulating rr. When n is zero, then rr is r^n.
 ;   We then decrement d until it is zero, while adding regular expressions
 ;   to a union, giving us (re.union r^n ... r^{n+d}).
-(program $str_mk_re_loop_elim_rec ((n Int) (d Int) (r RegLan) (rr RegLan :list))
-  :signature (Int RegLan RegLan) RegLan
+(program $str_mk_re_loop_elim_rec
+  ((n Int) (ns (@TList Int) :list) (r RegLan) (rr RegLan :list))
+  :signature ((@TList Int) RegLan RegLan) RegLan
   (
-  (($str_mk_re_loop_elim_rec 0 r rr)
+  (($str_mk_re_loop_elim_rec (@tlist.nil Int) r rr)
     (_ re.union (eo::list_singleton_elim re.++ rr) re.none))
-  (($str_mk_re_loop_elim_rec d r rr)
-    (_ re.union (eo::list_singleton_elim re.++ rr) ($str_mk_re_loop_elim_rec (eo::add d -1) r (re.++ r rr))))
+  (($str_mk_re_loop_elim_rec (@tlist 0 ns) r rr)
+    (_ re.union (eo::list_singleton_elim re.++ rr) ($str_mk_re_loop_elim_rec ns r (re.++ r rr))))
   )
 )
 
@@ -1014,7 +1014,8 @@
 ;   where r^k is (re.++ r ... r), where r is repeated k times when k>1, or
 ;   r if k=1 or @re.empty if k=0.
 (define $str_mk_re_loop_elim ((n Int) (d Int) (r RegLan))
-  (eo::list_singleton_elim re.union ($str_mk_re_loop_elim_rec d r (eo::list_repeat re.++ r n))))
+  (eo::list_singleton_elim re.union
+    ($str_mk_re_loop_elim_rec (eo::list_repeat @tlist 0 d) r (eo::list_repeat re.++ r n))))
 
 ; program: $str_mk_str_in_re_concat_star_char
 ; args:
