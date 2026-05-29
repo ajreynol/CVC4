@@ -128,7 +128,7 @@
   (($are_distinct_terms_type t s (BitVec n))  (eo::and (eo::is_bin t) (eo::is_bin s)))
   (($are_distinct_terms_type t s Bool)        (eo::and (eo::is_bool t) (eo::is_bool s)))
   (($are_distinct_terms_type st ss (Set U))   (eo::or ($set_is_not_subset st ss U) ($set_is_not_subset ss st U)))
-  (($are_distinct_terms_type sst sss (Seq U)) ($seq_distinct_terms ($str_nary_intro sst) ($str_nary_intro sss) U))
+  (($are_distinct_terms_type sst sss (Seq U)) ($seq_distinct_terms sst sss U))
   (($are_distinct_terms_type t s T)           ($dt_distinct_terms t s)) ; otherwise assume we are a user datatype
   )
 )
