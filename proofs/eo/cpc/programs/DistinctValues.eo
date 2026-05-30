@@ -52,10 +52,25 @@
 
 ;;;;; Theory of sequences
 
+
+; program: $seq_is_non_empty
+; args:
+; - t (Seq T): The term, expected to be a constant-like sequence.
+; return: >
+;   True if we can derive that t is not the empty sequence.
+(program $seq_is_non_empty ((T Type) (t (Seq T)) (ts (Seq T) :list) (e1 T))
+  :signature ((Seq T)) Bool
+  (
+  (($seq_is_non_empty (seq.++ (seq.unit e1) ts)) true)
+  (($seq_is_non_empty (seq.unit e1)) true)
+  (($seq_is_non_empty t) false)
+  )
+)
+
 ; program: $seq_distinct_terms
 ; args:
-; - t (Seq T): The first term, expected to be in n-ary form.
-; - s (Seq T): The second term, expected to be in n-ary form.
+; - t (Seq T): The first term, expected to be a constant-like sequence.
+; - s (Seq T): The second term, expected to be a constant-like sequence.
 ; return: >
 ;   True if we can derive that t and s are distinct based on their length,
 ;   or by a character prefix that can be shown distinct.
@@ -71,13 +86,11 @@
   (($seq_distinct_terms (seq.unit e1) (seq.unit e2) T)
     ($are_distinct_terms T e1 e2))
   (($seq_distinct_terms (seq.++ (seq.unit e1) ts) (seq.unit e2) T)
-    (eo::ite ($are_distinct_terms T e1 e2) true (eo::not (eo::eq ts (as seq.empty (Seq T))))))
+    (eo::ite ($are_distinct_terms T e1 e2) true ($seq_is_non_empty ts)))
   (($seq_distinct_terms (seq.unit e1) (seq.++ (seq.unit e2) ss) T)
-    (eo::ite ($are_distinct_terms T e1 e2) true (eo::not (eo::eq ss (as seq.empty (Seq T))))))
-  (($seq_distinct_terms (seq.unit e1) (as seq.empty (Seq U)) T) true)
-  (($seq_distinct_terms (as seq.empty (Seq U)) (seq.unit e2) T) true)
-  (($seq_distinct_terms (seq.++ (seq.unit e1) ts) (as seq.empty (Seq U)) T) true)
-  (($seq_distinct_terms (as seq.empty (Seq U)) (seq.++ (seq.unit e2) ss) T) true)
+    (eo::ite ($are_distinct_terms T e1 e2) true ($seq_is_non_empty ss)))
+  (($seq_distinct_terms t (as seq.empty (Seq U)) T) ($seq_is_non_empty t))
+  (($seq_distinct_terms (as seq.empty (Seq U)) s T) ($seq_is_non_empty s))
   (($seq_distinct_terms t s T) false)
   )
 )

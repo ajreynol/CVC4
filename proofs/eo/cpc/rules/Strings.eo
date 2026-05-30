@@ -930,7 +930,7 @@
 ; conclusion: The given equality.
 (declare-rule str-replace-re-all-eval ((s String) (r RegLan) (t String) (u String))
   :args ((= (str.replace_re_all s r t) u))
-  :requires ((($str_eval_replace_re_all s r t) u))
+  :requires (((eo::is_str s) true) (($str_eval_replace_re_all s r t) u))
   :conclusion (= (str.replace_re_all s r t) u)
 )
 
