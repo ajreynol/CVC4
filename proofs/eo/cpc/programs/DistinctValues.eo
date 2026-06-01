@@ -153,13 +153,13 @@
 ; - T Type: The type of the arguments.
 ; return: >
 ;   True if t can be shown to be disequal from all terms in xs.
-(program $are_distinct_terms_list_rec ((T Type) (t T) (s T) (xs @List :list))
-  :signature (T @List Type) Bool
+(program $are_distinct_terms_list_rec ((T Type) (t T) (s T) (xs (@TList T) :list))
+  :signature (T (@TList T) Type) Bool
   (
-  (($are_distinct_terms_list_rec t (@list s xs) T)  (eo::ite ($are_distinct_terms T t s)
+  (($are_distinct_terms_list_rec t (@tlist s xs) T)  (eo::ite ($are_distinct_terms T t s)
                                                       ($are_distinct_terms_list_rec t xs T)
                                                       false))
-  (($are_distinct_terms_list_rec t @list.nil T)     true)
+  (($are_distinct_terms_list_rec t (@tlist.nil T) T)  true)
   )
 )
 
@@ -169,12 +169,13 @@
 ; - T Type: The type of the terms in the list.
 ; return: >
 ;   True if each pair of terms in xs can be shown to be pairwise disequal.
-(program $are_distinct_terms_list ((T Type) (t T) (xs @List :list))
-  :signature (@List Type) Bool
+(program $are_distinct_terms_list ((T Type) (t T) (xs (@TList T) :list))
+  :signature ((@TList T) Type) Bool
   (
-  (($are_distinct_terms_list @list.nil T)     true)
-  (($are_distinct_terms_list (@list t xs) T)  (eo::ite ($are_distinct_terms_list_rec t xs T)
-                                                ($are_distinct_terms_list xs T)
-                                                false))
+  (($are_distinct_terms_list (@tlist.nil T) T)     true)
+  (($are_distinct_terms_list (@tlist t xs) T)  
+    (eo::ite ($are_distinct_terms_list_rec t xs T)
+      ($are_distinct_terms_list xs T)
+      false))
   )
 )
