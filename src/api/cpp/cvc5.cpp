@@ -68,6 +68,7 @@
 #include "smt/smt_mode.h"
 #include "smt/solver_engine.h"
 #include "theory/arith/nl/poly_conversion.h"
+#include "theory/builtin/generic_op.h"
 #include "theory/datatypes/project_op.h"
 #include "theory/logic_info.h"
 #include "theory/theory_model.h"
@@ -1048,6 +1049,53 @@ bool isApplyKind(internal::Kind k)
           || k == internal::Kind::APPLY_SELECTOR
           || k == internal::Kind::APPLY_TESTER
           || k == internal::Kind::APPLY_UPDATER);
+}
+
+/** Return the node that should be exposed by the API for a term. */
+internal::Node getApiTermNode(const internal::Node& node)
+{
+  if (!node.isNull() && node.getKind() == internal::Kind::APPLY_INDEXED_SYMBOLIC)
+  {
+    internal::Node concrete = internal::GenericOp::getConcreteApp(node);
+    if (concrete != node)
+    {
+      return concrete;
+    }
+  }
+  return node;
+}
+
+/** Convert a node kind to the external kind exposed by the API. */
+Kind getExtKindForNode(const internal::Node& node)
+{
+  /* Sequence kinds do not exist internally, so we must convert their internal
+   * (string) versions back to sequence. All operators where this is
+   * necessary are such that their first child is of sequence type, which
+   * we check here. */
+  if (node.getNumChildren() > 0 && node[0].getType().isSequence())
+  {
+    switch (node.getKind())
+    {
+      case internal::Kind::STRING_CONCAT: return Kind::SEQ_CONCAT;
+      case internal::Kind::STRING_LENGTH: return Kind::SEQ_LENGTH;
+      case internal::Kind::STRING_SUBSTR: return Kind::SEQ_EXTRACT;
+      case internal::Kind::STRING_UPDATE: return Kind::SEQ_UPDATE;
+      case internal::Kind::STRING_CHARAT: return Kind::SEQ_AT;
+      case internal::Kind::STRING_CONTAINS: return Kind::SEQ_CONTAINS;
+      case internal::Kind::STRING_INDEXOF: return Kind::SEQ_INDEXOF;
+      case internal::Kind::STRING_REPLACE: return Kind::SEQ_REPLACE;
+      case internal::Kind::STRING_REPLACE_ALL: return Kind::SEQ_REPLACE_ALL;
+      case internal::Kind::STRING_REV: return Kind::SEQ_REV;
+      case internal::Kind::STRING_PREFIX: return Kind::SEQ_PREFIX;
+      case internal::Kind::STRING_SUFFIX: return Kind::SEQ_SUFFIX;
+      default:
+        // fall through to conversion below
+        break;
+    }
+  }
+  // Notice that kinds like APPLY_TYPE_ASCRIPTION will be converted to
+  // INTERNAL_KIND.
+  return intToExtKind(node.getKind());
 }
 
 #ifdef CVC5_ASSERTIONS
@@ -2569,12 +2617,13 @@ size_t Term::getNumChildren() const
   CVC5_API_CHECK_NOT_NULL;
   //////// all checks before this line
 
+  internal::Node node = getApiTermNode(*d_node);
   // special case for apply kinds
-  if (isApplyKind(d_node->getKind()))
+  if (isApplyKind(node.getKind()))
   {
-    return d_node->getNumChildren() + 1;
+    return node.getNumChildren() + 1;
   }
-  return d_node->getNumChildren();
+  return node.getNumChildren();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -2583,18 +2632,21 @@ Term Term::operator[](size_t index) const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_CHECK_NOT_NULL;
-  CVC5_API_CHECK(index < getNumChildren()) << "index out of bound";
-  CVC5_API_CHECK(!isApplyKind(d_node->getKind()) || d_node->hasOperator())
+  internal::Node node = getApiTermNode(*d_node);
+  size_t nchildren = isApplyKind(node.getKind()) ? node.getNumChildren() + 1
+                                                 : node.getNumChildren();
+  CVC5_API_CHECK(index < nchildren) << "index out of bound";
+  CVC5_API_CHECK(!isApplyKind(node.getKind()) || node.hasOperator())
       << "expected apply kind to have operator when accessing child of Term";
   //////// all checks before this line
 
   // special cases for apply kinds
-  if (isApplyKind(d_node->getKind()))
+  if (isApplyKind(node.getKind()))
   {
     if (index == 0)
     {
       // return the operator
-      return Term(d_nm, d_node->getOperator());
+      return Term(d_nm, node.getOperator());
     }
     else
     {
@@ -2602,7 +2654,7 @@ Term Term::operator[](size_t index) const
     }
   }
   // otherwise we are looking up child at (index-1)
-  return Term(d_nm, (*d_node)[index]);
+  return Term(d_nm, node[index]);
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -2679,7 +2731,9 @@ bool Term::hasOp() const
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_CHECK_NOT_NULL;
   //////// all checks before this line
-  return d_node->hasOperator();
+  internal::Node node = getApiTermNode(*d_node);
+  return node.getKind() != internal::Kind::APPLY_INDEXED_SYMBOLIC
+         && node.hasOperator();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -2688,7 +2742,9 @@ Op Term::getOp() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   CVC5_API_CHECK_NOT_NULL;
-  CVC5_API_CHECK(d_node->hasOperator())
+  internal::Node node = getApiTermNode(*d_node);
+  CVC5_API_CHECK(node.getKind() != internal::Kind::APPLY_INDEXED_SYMBOLIC
+                 && node.hasOperator())
       << "expected Term to have an Op when calling getOp()";
   //////// all checks before this line
 
@@ -2697,20 +2753,20 @@ Op Term::getOp() const
   // indexed operators are stored in Ops
   // whereas functions and datatype operators are terms, and the Op
   // is one of the APPLY_* kinds
-  if (isApplyKind(d_node->getKind()))
+  if (isApplyKind(node.getKind()))
   {
-    return Op(d_nm, intToExtKind(d_node->getKind()));
+    return Op(d_nm, intToExtKind(node.getKind()));
   }
-  else if (d_node->getMetaKind() == internal::kind::metakind::PARAMETERIZED)
+  else if (node.getMetaKind() == internal::kind::metakind::PARAMETERIZED)
   {
     // it's an indexed operator
     // so we should return the indexed op
-    internal::Node op = d_node->getOperator();
-    return Op(d_nm, intToExtKind(d_node->getKind()), op);
+    internal::Node op = node.getOperator();
+    return Op(d_nm, intToExtKind(node.getKind()), op);
   }
   // Notice this is the only case where getKindHelper is used, since the
   // cases above do not have special cases for intToExtKind.
-  return Op(d_nm, getKindHelper());
+  return Op(d_nm, getExtKindForNode(node));
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -2842,7 +2898,7 @@ std::string Term::toString() const
 {
   CVC5_API_TRY_CATCH_BEGIN;
   //////// all checks before this line
-  return d_node->toString();
+  return getApiTermNode(*d_node).toString();
   ////////
   CVC5_API_TRY_CATCH_END;
 }
@@ -2914,24 +2970,38 @@ Term Term::const_iterator::operator*() const
 
 Term::const_iterator Term::begin() const
 {
-  return Term::const_iterator(d_nm, d_node, 0);
+  internal::Node node = getApiTermNode(*d_node);
+  if (node == *d_node)
+  {
+    return Term::const_iterator(d_nm, d_node, 0);
+  }
+  return Term::const_iterator(d_nm,
+                              std::make_shared<internal::Node>(node),
+                              0);
 }
 
 Term::const_iterator Term::end() const
 {
-  int endpos = d_node->getNumChildren();
+  internal::Node node = getApiTermNode(*d_node);
+  int endpos = node.getNumChildren();
   // special cases for APPLY_*
   // the API differs from the internal structure
   // the API takes a "higher-order" perspective and the applied
   //   function or datatype constructor/selector/tester is a Term
   // which means it needs to be one of the children, even though
   //   internally it is not
-  if (isApplyKind(d_node->getKind()))
+  if (isApplyKind(node.getKind()))
   {
     // one more child if this is a UF application (count the UF as a child)
     ++endpos;
   }
-  return Term::const_iterator(d_nm, d_node, endpos);
+  if (node == *d_node)
+  {
+    return Term::const_iterator(d_nm, d_node, endpos);
+  }
+  return Term::const_iterator(d_nm,
+                              std::make_shared<internal::Node>(node),
+                              endpos);
 }
 
 const internal::Node& Term::getNode(void) const { return *d_node; }
@@ -3810,34 +3880,7 @@ bool Term::isNullHelper() const
 
 Kind Term::getKindHelper() const
 {
-  /* Sequence kinds do not exist internally, so we must convert their internal
-   * (string) versions back to sequence. All operators where this is
-   * necessary are such that their first child is of sequence type, which
-   * we check here. */
-  if (d_node->getNumChildren() > 0 && (*d_node)[0].getType().isSequence())
-  {
-    switch (d_node->getKind())
-    {
-      case internal::Kind::STRING_CONCAT: return Kind::SEQ_CONCAT;
-      case internal::Kind::STRING_LENGTH: return Kind::SEQ_LENGTH;
-      case internal::Kind::STRING_SUBSTR: return Kind::SEQ_EXTRACT;
-      case internal::Kind::STRING_UPDATE: return Kind::SEQ_UPDATE;
-      case internal::Kind::STRING_CHARAT: return Kind::SEQ_AT;
-      case internal::Kind::STRING_CONTAINS: return Kind::SEQ_CONTAINS;
-      case internal::Kind::STRING_INDEXOF: return Kind::SEQ_INDEXOF;
-      case internal::Kind::STRING_REPLACE: return Kind::SEQ_REPLACE;
-      case internal::Kind::STRING_REPLACE_ALL: return Kind::SEQ_REPLACE_ALL;
-      case internal::Kind::STRING_REV: return Kind::SEQ_REV;
-      case internal::Kind::STRING_PREFIX: return Kind::SEQ_PREFIX;
-      case internal::Kind::STRING_SUFFIX: return Kind::SEQ_SUFFIX;
-      default:
-        // fall through to conversion below
-        break;
-    }
-  }
-  // Notice that kinds like APPLY_TYPE_ASCRIPTION will be converted to
-  // INTERNAL_KIND.
-  return intToExtKind(d_node->getKind());
+  return getExtKindForNode(getApiTermNode(*d_node));
 }
 
 /* -------------------------------------------------------------------------- */
