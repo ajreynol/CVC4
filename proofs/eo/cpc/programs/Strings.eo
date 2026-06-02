@@ -829,12 +829,6 @@
 ; return: true if the length of s evaluates to one, false otherwise.
 (define $str_check_length_one ((s String)) (eo::is_eq (eo::len s) 1))
 
-; define: $str_check_len_gt_one
-; args:
-; - s String: The string term.
-; return: true if the length of s evaluates to greater than one, false otherwise.
-(define $str_check_len_gt_one ((s String)) (eo::is_eq (eo::is_neg (eo::add 1 (eo::neg (eo::len s)))) true))
-
 ; Flatten constants in str.++ application s. Notice that the rewritten form
 ; of strings in cvc5 are such that constants are grouped into constants of
 ; length >=1 which we call "word" constants. For example, the cvc5 rewritten
@@ -893,7 +887,7 @@
   (
     (($str_flatten (str.++ t tail))
         ; otherwise, check whether t is a word constant of length greater than one
-        (eo::ite ($str_check_len_gt_one t)
+        (eo::ite (eo::is_str t)
           ; if so, we flatten the word using the method above and concatenate it.
           ($str_concat ($str_flatten_word t) ($str_flatten tail))
           ; if not, we just append it to the result of the recursive call
