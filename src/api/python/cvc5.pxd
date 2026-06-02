@@ -710,6 +710,7 @@ cdef extern from "<cvc5/cvc5.h>" namespace "cvc5":
         Term getResult() except +
         vector[Proof] getChildren() except +
         vector[Term] getArguments() except +
+        string getArgumentString(size_t i) except +
 
     cdef cppclass ProofHashFunction:
         ProofHashFunction() except +

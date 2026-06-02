@@ -6206,6 +6206,14 @@ cdef class Proof:
             args.append(_term(self.tm, a))
         return args
 
+    def getArgumentString(self, size_t i):
+        """
+            :param i: The index of the proof argument.
+            :return: The i-th argument of the root step of the proof as a
+                     diagnostic string printed with the internal AST printer.
+        """
+        return self.cproof.getArgumentString(i).decode()
+
 
 cdef public api:
     string cy_call_string_func(object self, string method, string *error):
@@ -6234,4 +6242,3 @@ cdef public api:
             func(_term(self._Plugin__term_manager(), t))
         except Exception as e:
             error[0] = traceback.format_exc().encode()
-

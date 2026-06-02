@@ -125,6 +125,21 @@ Java_io_github_cvc5_Proof_getArguments(JNIEnv* env, jobject, jlong pointer)
 
 /*
  * Class:     io_github_cvc5_Proof
+ * Method:    getArgumentString
+ * Signature: (JI)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_io_github_cvc5_Proof_getArgumentString(
+    JNIEnv* env, jobject, jlong pointer, jint i)
+{
+  CVC5_JAVA_API_TRY_CATCH_BEGIN;
+  Proof* current = reinterpret_cast<Proof*>(pointer);
+  std::string arg = current->getArgumentString(static_cast<size_t>(i));
+  return env->NewStringUTF(arg.c_str());
+  CVC5_JAVA_API_TRY_CATCH_END_RETURN(env, 0);
+}
+
+/*
+ * Class:     io_github_cvc5_Proof
  * Method:    equals
  * Signature: (JJ)Z
  */

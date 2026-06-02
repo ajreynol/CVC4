@@ -115,6 +115,77 @@ class TestCApiBlackProof : public ::testing::Test
     return proofs[0];
   }
 
+  Cvc5Proof create_theory_rewrite_proof()
+  {
+    cvc5_set_option(d_solver, "produce-proofs", "true");
+    cvc5_set_option(d_solver, "proof-granularity", "theory-rewrite");
+    Cvc5Term x = cvc5_mk_const(d_tm, d_int, "x");
+    Cvc5Term zero = cvc5_mk_integer_int64(d_tm, 0);
+    std::vector<Cvc5Term> args = {x, zero};
+    Cvc5Term geq = cvc5_mk_term(d_tm, CVC5_KIND_GEQ, args.size(), args.data());
+    args = {zero, x};
+    Cvc5Term leq = cvc5_mk_term(d_tm, CVC5_KIND_LEQ, args.size(), args.data());
+    args = {geq, leq};
+    cvc5_assert_formula(
+        d_solver,
+        cvc5_mk_term(d_tm, CVC5_KIND_DISTINCT, args.size(), args.data()));
+    Cvc5Result res = cvc5_check_sat(d_solver);
+    Assert(cvc5_result_is_unsat(res));
+    size_t size;
+    const Cvc5Proof* proofs =
+        cvc5_get_proof(d_solver, CVC5_PROOF_COMPONENT_FULL, &size);
+    Assert(size == 1);
+    return proofs[0];
+  }
+
+  Cvc5Proof find_proof_with_rule(Cvc5Proof proof, Cvc5ProofRule rule)
+  {
+    std::vector<Cvc5Proof> stack = {proof};
+    while (!stack.empty())
+    {
+      Cvc5Proof current = stack.back();
+      stack.pop_back();
+      if (cvc5_proof_get_rule(current) == rule)
+      {
+        return current;
+      }
+      size_t size;
+      const Cvc5Proof* children = cvc5_proof_get_children(current, &size);
+      for (size_t i = 0; i < size; ++i)
+      {
+        stack.push_back(children[i]);
+      }
+    }
+    return nullptr;
+  }
+
+  bool has_argument_string_with_prefix(Cvc5Proof proof, const char* prefix)
+  {
+    std::vector<Cvc5Proof> stack = {proof};
+    while (!stack.empty())
+    {
+      Cvc5Proof current = stack.back();
+      stack.pop_back();
+      size_t size;
+      (void)cvc5_proof_get_arguments(current, &size);
+      for (size_t i = 0; i < size; ++i)
+      {
+        if (std::string(cvc5_proof_get_argument_string(current, i))
+                .rfind(prefix, 0)
+            == 0)
+        {
+          return true;
+        }
+      }
+      const Cvc5Proof* children = cvc5_proof_get_children(current, &size);
+      for (size_t i = 0; i < size; ++i)
+      {
+        stack.push_back(children[i]);
+      }
+    }
+    return false;
+  }
+
   Cvc5TermManager* d_tm;
   Cvc5* d_solver;
   Cvc5Sort d_bool;
@@ -180,6 +251,29 @@ TEST_F(TestCApiBlackProof, get_arguments)
   ASSERT_DEATH(cvc5_proof_get_arguments(nullptr, &size), "invalid proof");
   ASSERT_DEATH(cvc5_proof_get_arguments(proof, nullptr),
                "unexpected NULL argument");
+}
+
+TEST_F(TestCApiBlackProof, get_argument_string)
+{
+  Cvc5Proof proof = create_rewrite_proof();
+  Cvc5Proof rewrite_proof =
+      find_proof_with_rule(proof, CVC5_PROOF_RULE_DSL_REWRITE);
+  ASSERT_NE(rewrite_proof, nullptr);
+  size_t size;
+  (void)cvc5_proof_get_arguments(rewrite_proof, &size);
+  ASSERT_GT(size, 0);
+  ASSERT_EQ(std::string(cvc5_proof_get_argument_string(rewrite_proof, 0)),
+            std::string(cvc5_proof_rewrite_rule_to_string(
+                cvc5_proof_get_rewrite_rule(rewrite_proof))));
+  ASSERT_DEATH(cvc5_proof_get_argument_string(nullptr, 0), "invalid proof");
+  ASSERT_DEATH(cvc5_proof_get_argument_string(rewrite_proof, size),
+               "index out of bounds");
+}
+
+TEST_F(TestCApiBlackProof, get_argument_string_theory_id)
+{
+  Cvc5Proof proof = create_theory_rewrite_proof();
+  ASSERT_TRUE(has_argument_string_with_prefix(proof, "THEORY_"));
 }
 
 TEST_F(TestCApiBlackProof, is_equal_disequal_hash)

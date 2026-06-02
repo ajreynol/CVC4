@@ -68,6 +68,40 @@ def create_rewrite_proof(tm, solver):
     return solver.getProof()[0]
 
 
+def create_theory_rewrite_proof(tm, solver):
+    solver.setOption("produce-proofs", "true")
+    solver.setOption("proof-granularity", "theory-rewrite")
+    int_sort = tm.getIntegerSort()
+    x = tm.mkConst(int_sort, "x")
+    zero = tm.mkInteger(0)
+    geq = tm.mkTerm(Kind.GEQ, x, zero)
+    leq = tm.mkTerm(Kind.LEQ, zero, x)
+    solver.assertFormula(tm.mkTerm(Kind.DISTINCT, geq, leq))
+    solver.checkSat()
+    return solver.getProof()[0]
+
+
+def find_proof_with_rule(proof, rule):
+    stack = [proof]
+    while stack:
+        current = stack.pop()
+        if current.getRule() == rule:
+            return current
+        stack.extend(current.getChildren())
+    return None
+
+
+def has_argument_string_with_prefix(proof, prefix):
+    stack = [proof]
+    while stack:
+        current = stack.pop()
+        for i in range(len(current.getArguments())):
+            if current.getArgumentString(i).startswith(prefix):
+                return True
+        stack.extend(current.getChildren())
+    return False
+
+
 def test_null_proof(solver):
   proof = cvc5.Proof()
   assert proof.getRule() == ProofRule.UNKNOWN
@@ -75,6 +109,8 @@ def test_null_proof(solver):
   assert proof.getResult().isNull()
   assert len(proof.getChildren()) == 0
   assert len(proof.getArguments()) == 0
+  with pytest.raises(RuntimeError):
+      proof.getArgumentString(0)
 
 
 def test_get_rule(tm, solver):
@@ -111,6 +147,22 @@ def test_get_children(tm, solver):
 def test_get_arguments(tm, solver):
     proof = create_proof(tm, solver)
     proof.getArguments()
+
+
+def test_get_argument_string(tm, solver):
+    proof = create_rewrite_proof(tm, solver)
+    rewrite_proof = find_proof_with_rule(proof, ProofRule.DSL_REWRITE)
+    assert rewrite_proof is not None
+    args = rewrite_proof.getArguments()
+    assert len(args) > 0
+    assert rewrite_proof.getArgumentString(0) == rewrite_proof.getRewriteRule().name
+    with pytest.raises(RuntimeError):
+        rewrite_proof.getArgumentString(len(args))
+
+
+def test_get_argument_string_theory_id(tm, solver):
+    proof = create_theory_rewrite_proof(tm, solver)
+    assert has_argument_string_with_prefix(proof, "THEORY_")
 
 
 def test_eq(tm, solver):

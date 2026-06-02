@@ -117,6 +117,20 @@ public class Proof extends AbstractPointer
   private native long[] getArguments(long pointer);
 
   /**
+   * Get the i-th argument of the root step of the proof as a diagnostic string
+   * printed with the internal AST printer.
+   *
+   * @param i The index of the proof argument.
+   * @return The i-th proof argument as a diagnostic string.
+   */
+  public String getArgumentString(int i)
+  {
+    return getArgumentString(pointer, i);
+  }
+
+  private native String getArgumentString(long pointer, int i);
+
+  /**
    * Referential equality operator.
    *
    * @param p The proof to compare to for equality.

@@ -89,6 +89,57 @@ class ProofTest
     return d_solver.getProof()[0];
   }
 
+  Proof createTheoryRewriteProof() throws CVC5ApiException
+  {
+    d_solver.setOption("produce-proofs", "true");
+    d_solver.setOption("proof-granularity", "theory-rewrite");
+    Sort intSort = d_tm.getIntegerSort();
+    Term x = d_tm.mkConst(intSort, "x");
+    Term zero = d_tm.mkInteger(0);
+    Term geq = d_tm.mkTerm(Kind.GEQ, new Term[] {x, zero});
+    Term leq = d_tm.mkTerm(Kind.LEQ, new Term[] {zero, x});
+    d_solver.assertFormula(d_tm.mkTerm(Kind.DISTINCT, new Term[] {geq, leq}));
+    d_solver.checkSat();
+    return d_solver.getProof()[0];
+  }
+
+  Proof findProofWithRule(Proof proof, ProofRule rule) throws CVC5ApiException
+  {
+    List<Proof> stack = new ArrayList<Proof>();
+    stack.add(proof);
+    while (!stack.isEmpty())
+    {
+      Proof current = stack.get(stack.size() - 1);
+      stack.remove(stack.size() - 1);
+      if (current.getRule() == rule)
+      {
+        return current;
+      }
+      stack.addAll(Arrays.asList(current.getChildren()));
+    }
+    return null;
+  }
+
+  boolean hasArgumentStringWithPrefix(Proof proof, String prefix)
+  {
+    List<Proof> stack = new ArrayList<Proof>();
+    stack.add(proof);
+    while (!stack.isEmpty())
+    {
+      Proof current = stack.get(stack.size() - 1);
+      stack.remove(stack.size() - 1);
+      for (int i = 0, nargs = current.getArguments().length; i < nargs; ++i)
+      {
+        if (current.getArgumentString(i).startsWith(prefix))
+        {
+          return true;
+        }
+      }
+      stack.addAll(Arrays.asList(current.getChildren()));
+    }
+    return false;
+  }
+
   @Test
   void nullProof() throws CVC5ApiException
   {
@@ -98,6 +149,7 @@ class ProofTest
     assertTrue(proof.getResult().isNull());
     assertTrue(proof.getChildren().length == 0);
     assertTrue(proof.getArguments().length == 0);
+    assertThrows(CVC5ApiException.class, () -> proof.getArgumentString(0));
   }
 
   @Test
@@ -161,6 +213,27 @@ class ProofTest
   {
     Proof proof = createProof();
     assertDoesNotThrow(() -> proof.getArguments());
+  }
+
+  @Test
+  void getArgumentString() throws CVC5ApiException
+  {
+    Proof proof = createRewriteProof();
+    Proof rewriteProof = findProofWithRule(proof, ProofRule.DSL_REWRITE);
+    assertNotNull(rewriteProof);
+    int nargs = rewriteProof.getArguments().length;
+    assertNotEquals(0, nargs);
+    assertEquals(rewriteProof.getRewriteRule().name(),
+        rewriteProof.getArgumentString(0));
+    assertThrows(CVC5ApiException.class,
+        () -> rewriteProof.getArgumentString(nargs));
+  }
+
+  @Test
+  void getArgumentStringTheoryId() throws CVC5ApiException
+  {
+    Proof proof = createTheoryRewriteProof();
+    assertTrue(hasArgumentStringWithPrefix(proof, "THEORY_"));
   }
 
   @Test

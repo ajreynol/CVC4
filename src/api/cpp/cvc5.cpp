@@ -61,7 +61,9 @@
 #include "options/options_public.h"
 #include "options/quantifiers_options.h"
 #include "options/smt_options.h"
+#include "printer/printer.h"
 #include "proof/proof_node.h"
+#include "proof/proof_node_to_sexpr.h"
 #include "proof/unsat_core.h"
 #include "smt/env.h"
 #include "smt/model.h"
@@ -5233,6 +5235,24 @@ const std::vector<Term> Proof::getArguments() const
     return args;
   }
   return std::vector<Term>();
+  ////////
+  CVC5_API_TRY_CATCH_END;
+}
+
+const std::string Proof::getArgumentString(size_t i) const
+{
+  CVC5_API_TRY_CATCH_BEGIN;
+  CVC5_API_CHECK(d_proofNode != nullptr
+                 && i < d_proofNode->getArguments().size())
+      << "index out of bounds";
+  //////// all checks before this line
+  internal::ProofNodeToSExpr pnts(d_nm.get());
+  internal::ProofNodeToSExpr::ArgFormat f =
+      pnts.getArgumentFormat(d_proofNode.get(), i);
+  internal::Node arg = pnts.getArgument(d_proofNode->getArguments()[i], f);
+  std::stringstream ss;
+  internal::Printer::getPrinter(internal::Language::LANG_AST)->toStream(ss, arg);
+  return ss.str();
   ////////
   CVC5_API_TRY_CATCH_END;
 }

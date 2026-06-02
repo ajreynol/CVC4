@@ -66,6 +66,58 @@ class TestApiBlackProof : public TestApi
     d_solver->checkSat();
     return d_solver->getProof().front();
   }
+
+  Proof createTheoryRewriteProof()
+  {
+    d_solver->setOption("produce-proofs", "true");
+    d_solver->setOption("proof-granularity", "theory-rewrite");
+    Sort intSort = d_tm.getIntegerSort();
+    Term x = d_tm.mkConst(intSort, "x");
+    Term zero = d_tm.mkInteger(0);
+    Term geq = d_tm.mkTerm(Kind::GEQ, {x, zero});
+    Term leq = d_tm.mkTerm(Kind::LEQ, {zero, x});
+    d_solver->assertFormula(d_tm.mkTerm(Kind::DISTINCT, {geq, leq}));
+    d_solver->checkSat();
+    return d_solver->getProof().front();
+  }
+
+  Proof findProofWithRule(const Proof& proof, ProofRule rule)
+  {
+    std::vector<Proof> stack{proof};
+    while (!stack.empty())
+    {
+      Proof current = stack.back();
+      stack.pop_back();
+      if (current.getRule() == rule)
+      {
+        return current;
+      }
+      std::vector<Proof> children = current.getChildren();
+      stack.insert(stack.end(), children.begin(), children.end());
+    }
+    return Proof();
+  }
+
+  bool hasArgumentStringWithPrefix(const Proof& proof, const std::string& prefix)
+  {
+    std::vector<Proof> stack{proof};
+    while (!stack.empty())
+    {
+      Proof current = stack.back();
+      stack.pop_back();
+      size_t nargs = current.getArguments().size();
+      for (size_t i = 0; i < nargs; ++i)
+      {
+        if (current.getArgumentString(i).rfind(prefix, 0) == 0)
+        {
+          return true;
+        }
+      }
+      std::vector<Proof> children = current.getChildren();
+      stack.insert(stack.end(), children.begin(), children.end());
+    }
+    return false;
+  }
 };
 
 TEST_F(TestApiBlackProof, nullProof)
@@ -77,6 +129,7 @@ TEST_F(TestApiBlackProof, nullProof)
   ASSERT_TRUE(proof.getResult().isNull());
   ASSERT_TRUE(proof.getChildren().empty());
   ASSERT_TRUE(proof.getArguments().empty());
+  ASSERT_THROW(proof.getArgumentString(0), CVC5ApiException);
 }
 
 TEST_F(TestApiBlackProof, getRule)
@@ -121,6 +174,24 @@ TEST_F(TestApiBlackProof, getArguments)
 {
   Proof proof = createProof();
   ASSERT_NO_THROW(proof.getArguments());
+}
+
+TEST_F(TestApiBlackProof, getArgumentString)
+{
+  Proof proof = createRewriteProof();
+  Proof rewriteProof = findProofWithRule(proof, ProofRule::DSL_REWRITE);
+  ASSERT_EQ(rewriteProof.getRule(), ProofRule::DSL_REWRITE);
+  ASSERT_FALSE(rewriteProof.getArguments().empty());
+  ASSERT_EQ(rewriteProof.getArgumentString(0),
+            std::to_string(rewriteProof.getRewriteRule()));
+  ASSERT_THROW(rewriteProof.getArgumentString(rewriteProof.getArguments().size()),
+               CVC5ApiException);
+}
+
+TEST_F(TestApiBlackProof, getArgumentStringTheoryId)
+{
+  Proof proof = createTheoryRewriteProof();
+  ASSERT_TRUE(hasArgumentStringWithPrefix(proof, "THEORY_"));
 }
 
 TEST_F(TestApiBlackProof, equalhash)

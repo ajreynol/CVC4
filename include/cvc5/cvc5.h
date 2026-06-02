@@ -3714,6 +3714,16 @@ class CVC5_EXPORT Proof
   const std::vector<Term> getArguments() const;
 
   /**
+   * Get the i-th argument of the root step of the proof as a diagnostic string
+   * printed with the internal AST printer. This is intended for proof arguments
+   * that may be internal identifiers instead of ordinary terms.
+   *
+   * @param i The index of the proof argument.
+   * @return The i-th proof argument as a diagnostic string.
+   */
+  const std::string getArgumentString(size_t i) const;
+
+  /**
    * Operator overloading for referential equality of two proofs.
    * @param p The proof to compare to for equality.
    * @return True if both proofs point to the same internal proof object.

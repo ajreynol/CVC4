@@ -3782,6 +3782,19 @@ CVC5_EXPORT const Cvc5Term* cvc5_proof_get_arguments(Cvc5Proof proof,
                                                      size_t* size);
 
 /**
+ * Get the i-th argument of the root step of a given proof as a diagnostic
+ * string printed with the internal AST printer.
+ *
+ * @param proof The proof.
+ * @param i     The index of the proof argument.
+ * @return The argument string.
+ * @note The returned char* pointer is only valid until the next call to this
+ *       function.
+ */
+CVC5_EXPORT const char* cvc5_proof_get_argument_string(Cvc5Proof proof,
+                                                       size_t i);
+
+/**
  * Compare two proofs for referential equality.
  * @param a The first proof.
  * @param b The second proof.
