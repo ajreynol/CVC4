@@ -10,9 +10,8 @@
  * White box testing of the Term class.
  */
 
-#include "test_api.h"
-
 #include "expr/node_manager.h"
+#include "test_api.h"
 #include "theory/builtin/generic_op.h"
 
 namespace cvc5::internal {
@@ -80,17 +79,13 @@ TEST_F(TestApiWhiteTerm, getOp)
       d_tm.mkTerm(cvc5::Kind::APPLY_SELECTOR, {tailOpTerm, consTerm});
 
   ASSERT_EQ(nilTerm.getOp(),
-            Op(d_solver->getTermManager().d_nm,
-               cvc5::Kind::APPLY_CONSTRUCTOR));
+            Op(d_solver->getTermManager().d_nm, cvc5::Kind::APPLY_CONSTRUCTOR));
   ASSERT_EQ(consTerm.getOp(),
-            Op(d_solver->getTermManager().d_nm,
-               cvc5::Kind::APPLY_CONSTRUCTOR));
+            Op(d_solver->getTermManager().d_nm, cvc5::Kind::APPLY_CONSTRUCTOR));
   ASSERT_EQ(headTerm.getOp(),
-            Op(d_solver->getTermManager().d_nm,
-               cvc5::Kind::APPLY_SELECTOR));
+            Op(d_solver->getTermManager().d_nm, cvc5::Kind::APPLY_SELECTOR));
   ASSERT_EQ(tailTerm.getOp(),
-            Op(d_solver->getTermManager().d_nm,
-               cvc5::Kind::APPLY_SELECTOR));
+            Op(d_solver->getTermManager().d_nm, cvc5::Kind::APPLY_SELECTOR));
 }
 
 TEST_F(TestApiWhiteTerm, applyIndexedSymbolic)
@@ -119,8 +114,7 @@ TEST_F(TestApiWhiteTerm, applyIndexedSymbolic)
   ASSERT_EQ(concreteOp[0], high);
   ASSERT_EQ(concreteOp[1], low);
   ASSERT_EQ(d_tm.mkTerm(concreteOp, children),
-            d_tm.mkTerm(d_tm.mkOp(cvc5::Kind::BITVECTOR_EXTRACT, {4, 0}),
-                        {b}));
+            d_tm.mkTerm(d_tm.mkOp(cvc5::Kind::BITVECTOR_EXTRACT, {4, 0}), {b}));
 
   Term i = d_tm.mkConst(d_tm.getIntegerSort(), "i");
   Node symbolicIndexed =

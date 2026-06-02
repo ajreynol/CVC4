@@ -1054,7 +1054,8 @@ bool isApplyKind(internal::Kind k)
 /** Return the node that should be exposed by the API for a term. */
 internal::Node getApiTermNode(const internal::Node& node)
 {
-  if (!node.isNull() && node.getKind() == internal::Kind::APPLY_INDEXED_SYMBOLIC)
+  if (!node.isNull()
+      && node.getKind() == internal::Kind::APPLY_INDEXED_SYMBOLIC)
   {
     internal::Node concrete = internal::GenericOp::getConcreteApp(node);
     if (concrete != node)
@@ -2975,9 +2976,7 @@ Term::const_iterator Term::begin() const
   {
     return Term::const_iterator(d_nm, d_node, 0);
   }
-  return Term::const_iterator(d_nm,
-                              std::make_shared<internal::Node>(node),
-                              0);
+  return Term::const_iterator(d_nm, std::make_shared<internal::Node>(node), 0);
 }
 
 Term::const_iterator Term::end() const
@@ -2999,9 +2998,8 @@ Term::const_iterator Term::end() const
   {
     return Term::const_iterator(d_nm, d_node, endpos);
   }
-  return Term::const_iterator(d_nm,
-                              std::make_shared<internal::Node>(node),
-                              endpos);
+  return Term::const_iterator(
+      d_nm, std::make_shared<internal::Node>(node), endpos);
 }
 
 const internal::Node& Term::getNode(void) const { return *d_node; }
