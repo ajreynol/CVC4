@@ -39,6 +39,7 @@
 ;   introduced via $mk_skolems.
 (declare-rule skolemize ((x @List) (G Bool))
   :premises ((not (forall x G)))
+  :requires (((eo::list_setof @list x) x))
   :conclusion ($substitute_simul (not G) x ($mk_skolems x (forall x G) 0))
 )
 
