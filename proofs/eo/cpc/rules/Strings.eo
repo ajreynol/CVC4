@@ -680,14 +680,15 @@
 ; - xs (@TList T): the remaining multiset (over)approximation of a string term.
 ; - nr (@TList T): the accumulated list of terms that were not removed from xs.
 ; return: >
-;   True if some accumulated string literal component is provably distinct from
+;   True if some accumulated non-empty value component is provably distinct from
 ;   every term in the remaining overapproximation xs.
 (program $str_is_multiset_subset_strict_done ((T Type) (s (Seq T)) (xs (@TList T)) (nr (@TList T) :list))
   :signature ((@TList T) (@TList T)) Bool
   (
   (($str_is_multiset_subset_strict_done xs (@tlist s nr)) 
-    ; A missing symbolic term may be empty, so only string literals witness strictness.
-    (eo::ite (eo::and (eo::is_str s)
+    ; A missing symbolic term may be empty, so only definitely non-empty
+    ; components witness strictness.
+    (eo::ite (eo::and (eo::gt ($str_value_len s) 0)
               ($are_distinct_terms_list_rec s xs (eo::typeof s)))
       true
       ($str_is_multiset_subset_strict_done xs nr)))
