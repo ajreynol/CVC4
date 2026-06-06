@@ -688,10 +688,13 @@
   (($str_is_multiset_subset_strict_done xs (@tlist s nr)) 
     ; A missing symbolic term may be empty, so only definitely non-empty
     ; components witness strictness.
-    (eo::ite (eo::and (eo::gt ($str_value_len s) 0)
-              ($are_distinct_terms_list_rec s xs (eo::typeof s)))
-      true
-      ($str_is_multiset_subset_strict_done xs nr)))
+    (eo::define ((ls ($str_value_len s)))
+    (eo::define ((rec ($str_is_multiset_subset_strict_done xs nr)))
+      (eo::ite (eo::is_z ls)
+        (eo::ite (eo::and (eo::gt ls 0) ($are_distinct_terms_list_rec s xs (eo::typeof s)))
+          true
+          rec)
+        rec))))
   (($str_is_multiset_subset_strict_done xs nr)           false)
   )
 )

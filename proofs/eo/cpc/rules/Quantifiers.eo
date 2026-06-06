@@ -154,7 +154,8 @@
 ; conclusion: The given equality.
 (declare-rule quant-unused-vars ((Q (-> @List Bool Bool)) (x @List) (F Bool) (G Bool))
   :args ((= (Q x F) G))
-  :requires ((($mk_quant Q ($mk_quant_unused_vars_rec x F) F) G))
+  :requires (((eo::or (eo::eq Q forall) (eo::eq Q exists)) true)
+             (($mk_quant Q ($mk_quant_unused_vars_rec x F) F) G))
   :conclusion (= (Q x F) G)
 )
 
