@@ -1778,7 +1778,7 @@
 (program $str_from_int_eval_rec ((s String) (n Int) (i Int) (js (@TList Int) :list))
   :signature ((@TList Int) Int String) String
   (
-  (($str_from_int_eval_rec is 0 s) (eo::ite (eo::eq s "") "0" s))
+  (($str_from_int_eval_rec js 0 s) (eo::ite (eo::eq s "") "0" s))
   (($str_from_int_eval_rec (@tlist i js) n s) 
     ($str_from_int_eval_rec
       js
