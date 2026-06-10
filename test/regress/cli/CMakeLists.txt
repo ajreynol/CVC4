@@ -198,6 +198,7 @@ set(regress_0_tests
   regress0/aufbv/dd.fifo32bc06k08.delta01.smtv1.smt2
   regress0/aufbv/diseqprop.01.smtv1.smt2
   regress0/aufbv/dubreva005ue.delta01.smtv1.smt2
+  regress0/aufbv/early-ite-removal-bv-pp-assert.smt2
   regress0/aufbv/fifo32bc06k08.delta01.smtv1.smt2
   regress0/aufbv/fifo32in06k08.delta01.smtv1.smt2
   regress0/aufbv/fuzz00.smtv1.smt2
@@ -883,6 +884,7 @@ set(regress_0_tests
   regress0/ff/issue11107.smt2
   regress0/ff/issue11932.smt2
   regress0/ff/issue11969.smt2
+  regress0/ff/issue12627.smt2
   regress0/ff/proj-issue705.smt2
   regress0/ff/proj-issue748-safe.smt2
   regress0/ff/randcompile-sound-3i-5t-circ.smt2
@@ -935,6 +937,8 @@ set(regress_0_tests
   regress0/fmf/quant_real_univ.cvc.smt2
   regress0/fmf/sat-logic.smt2
   regress0/fmf/sc_bad_model_1221.smt2
+  regress0/fmf/sort-infer-nonmonotonic-orig.smt2
+  regress0/fmf/sort-infer-original-injection.smt2
   regress0/fmf/sort-infer-typed-082718.smt2
   regress0/fmf/syn002-si-real-int.smt2
   regress0/fmf/tail_rec.smt2
@@ -958,10 +962,12 @@ set(regress_0_tests
   regress0/fp/issue6164.smt2
   regress0/fp/issue7002.smt2
   regress0/fp/issue7569.smt2
+  regress0/fp/issue7858-1.smt2
   regress0/fp/issue9078-1.smt2
   regress0/fp/issue9078-2.smt2
   regress0/fp/issue9078-3.smt2
   regress0/fp/issue9505.smt2
+  regress0/fp/issue9697.smt2
   regress0/fp/issue9854.smt2
   regress0/fp/issue9858.smt2
   regress0/fp/issue9864.smt2
@@ -1247,6 +1253,7 @@ set(regress_0_tests
   regress0/nl/piand-range.smt2
   regress0/nl/piand-symmetry.smt2
   regress0/nl/piand-symmetry-sat.smt2
+  regress0/nl/pow2-monotone-neg-soundness.smt2
   regress0/nl/pow2-native-0.smt2
   regress0/nl/pow2-native-1.smt2
   regress0/nl/pow2-native-2.smt2
@@ -1493,6 +1500,7 @@ set(regress_0_tests
   regress0/proofs/dd.fastclose.smt2
   regress0/proofs/dd.fastclose2.smt2
   regress0/proofs/dd.fastclose3.smt2
+  regress0/proofs/dd.read6-cadical.smt2
   regress0/proofs/dd.S715-026__dic_loop__ordering_buffers.adb_11_83_range_check___00.smt2
   regress0/proofs/dd_ada_open.smt2
   regress0/proofs/dd_alpha_eq_qpattern.smt2
@@ -1530,6 +1538,8 @@ set(regress_0_tests
   regress0/proofs/issue12255-cyclic-arith-rcons.smt2
   regress0/proofs/issue12574-check-proofs-int-to-bv.smt2
   regress0/proofs/issue12631-check-proofs-arith.smt2
+  regress0/proofs/issue12683-check-proofs-arith-mixed.smt2
+  regress0/proofs/issue12697-check-proofs-arith.smt2
   regress0/proofs/issue8983-trust-subs.smt2
   regress0/proofs/issue9156-doublePropProof.smt2
   regress0/proofs/issue9172-doublePropProof.smt2
@@ -1586,6 +1596,7 @@ set(regress_0_tests
   regress0/proofs/proj-issue777-open-eqproof.smt2
   regress0/proofs/proj-issue778-subtype-div.smt2
   regress0/proofs/proj-issue784-benchmark2.smt2
+  regress0/proofs/proj-issue787-bvxor-fixed-point.smt2
   regress0/proofs/proj-issue781-cyclic-pppg.smt2
   regress0/proofs/proj-issue781-cyclic-pppg-2.smt2
   regress0/proofs/proof-components.smt2
@@ -1685,6 +1696,7 @@ set(regress_0_tests
   regress0/quantifiers/dd_check_eq_bvnot_32bit.smt2
   regress0/quantifiers/dd_check_ic_sext_4_4.smt2
   regress0/quantifiers/dd.example10714-core-no-miniscope-user.smt2
+  regress0/quantifiers/dd.sparknacl-stream-bv-var-elim.smt2
   regress0/quantifiers/dd_german169_semi_eval.smt2
   regress0/quantifiers/dd_kmdf_osrubvfx2.smt2
   regress0/quantifiers/dd_nra_key_subtype_ineq.smt2
@@ -2074,6 +2086,7 @@ set(regress_0_tests
   regress0/smtlib/issue4151.smt2
   regress0/smtlib/issue4552.smt2
   regress0/smtlib/issue4866.smt2
+  regress0/smtlib/issue12663.smt2
   regress0/smtlib/reason-unknown.smt2
   regress0/smtlib/reset-assertions-global.smt2
   regress0/smtlib/reset-assertions1.smt2
@@ -3081,6 +3094,7 @@ set(regress_1_tests
   regress1/proofs/alpha-eq-var-shadow-name-only.smt2
   regress1/proofs/alpha-eq-var-shadow-name-only2.smt2
   regress1/proofs/base-lfsc-treesize.smt2
+  regress1/proofs/dd.SEQ035_size5.smt2
   regress1/proofs/eq-engine-corner-case-constants-disequal.smt2
   regress1/proofs/issue6625-unsat-core-proofs.smt2
   regress1/proofs/macro-res-exp-crowding-lit-inside-unit.smt2
@@ -3886,7 +3900,6 @@ set(regress_1_tests
   regress1/sygus/issue3461.sy
   regress1/sygus/issue3514.smt2
   regress1/sygus/issue3507.smt2
-  regress1/sygus/issue3580.sy
   regress1/sygus/issue3633.smt2
   regress1/sygus/issue3634.smt2
   regress1/sygus/issue3635.smt2
@@ -4376,6 +4389,8 @@ set(regression_disabled_tests
   regress1/sygus/interpol_from_pono_3.smt2
   regress1/sygus/interpol_dt.smt2
   regress1/sygus/inv_gen_fig8.sy
+  # takes a long time (>300 seconds) when using libc++ builds on both Linux and macOS
+  regress1/sygus/issue3580.sy
   # timeout since nl-rlv is required; however it cannot be used with quantifiers
   regress1/sygus/issue3648.smt2
   # new reconstruct algorithm is slow at reconstructing random constants (see wishue #82)
@@ -4511,8 +4526,14 @@ macro(cvc5_add_regression_test level file)
     ${wrapper}
     ${path_to_cvc5}/cvc5${CMAKE_EXECUTABLE_SUFFIX}
     ${CMAKE_CURRENT_LIST_DIR}/${file})
-  set_tests_properties(${file} PROPERTIES LABELS "regress${level}")
-  set_tests_properties(${file} PROPERTIES SKIP_RETURN_CODE 77)
+  # Let CTest report final run_regression.py timeouts as native Timeout
+  # results. The marker is printed only for the final timeout result or the
+  # TEST_TIMEOUT-derived watchdog in run_regression.py.
+  set_tests_properties(${file} PROPERTIES
+    LABELS "regress${level}"
+    SKIP_RETURN_CODE 77
+    TIMEOUT_AFTER_MATCH "1;CVC5_REGRESSION_CTEST_TIMEOUT"
+    ENVIRONMENT "CVC5_REGRESSION_TIMEOUT_AS_CTEST_TIMEOUT=1")
   # set_tests_properties(${file} PROPERTIES FIXTURES_REQUIRED build_regress_fixture)
 endmacro()
 
