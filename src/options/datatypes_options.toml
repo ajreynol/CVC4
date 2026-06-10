@@ -50,6 +50,14 @@ name   = "Datatypes Theory"
   help       = "when applicable, blast splitting lemmas for all variables at once"
 
 [[option]]
+  name       = "dtSplitRelevant"
+  category   = "expert"
+  long       = "dt-split-relevant"
+  type       = "bool"
+  default    = "false"
+  help       = "only add splitting lemmas for datatype terms that occur in asserted literals"
+
+[[option]]
   name       = "dtNestedRec"
   category   = "expert"
   long       = "dt-nested-rec"

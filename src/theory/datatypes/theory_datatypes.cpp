@@ -1792,17 +1792,34 @@ Node TheoryDatatypes::searchForCycle(TNode n,
 
 void TheoryDatatypes::checkSplit()
 {
-  // get the relevant term set, currently all datatype equivalence classes
-  // in the equality engine
+  // get the relevant term set
   std::set<Node> termSetReps;
-  eq::EqClassesIterator eqcs_i = eq::EqClassesIterator(d_equalityEngine);
-  while (!eqcs_i.isFinished())
+  if (options().datatypes.dtSplitRelevant)
   {
-    Node eqc = (*eqcs_i);
-    ++eqcs_i;
-    if (eqc.getType().isDatatype())
+    // only the equivalence classes of datatype terms occurring in asserted
+    // literals (and shared terms)
+    std::set<Node> termSet;
+    collectAssertedTerms(termSet, true, {});
+    for (const Node& t : termSet)
     {
-      termSetReps.insert(eqc);
+      if (t.getType().isDatatype() && d_equalityEngine->hasTerm(t))
+      {
+        termSetReps.insert(d_equalityEngine->getRepresentative(t));
+      }
+    }
+  }
+  else
+  {
+    // all datatype equivalence classes in the equality engine
+    eq::EqClassesIterator eqcs_i = eq::EqClassesIterator(d_equalityEngine);
+    while (!eqcs_i.isFinished())
+    {
+      Node eqc = (*eqcs_i);
+      ++eqcs_i;
+      if (eqc.getType().isDatatype())
+      {
+        termSetReps.insert(eqc);
+      }
     }
   }
   std::map<TypeNode, Node> rec_singletons;
