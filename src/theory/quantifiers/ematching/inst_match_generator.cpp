@@ -12,6 +12,8 @@
 
 #include "theory/quantifiers/ematching/inst_match_generator.h"
 
+#include <unordered_set>
+
 #include "expr/dtype_cons.h"
 #include "options/quantifiers_options.h"
 #include "theory/datatypes/theory_datatypes_utils.h"
@@ -43,6 +45,8 @@ InstMatchGenerator::InstMatchGenerator(Env& env, Trigger* tparent, Node pat)
   d_cg = nullptr;
   d_needsReset = true;
   d_active_add = true;
+  d_chain_env_valid = false;
+  d_scan_from_reset = false;
   Assert(pat.isNull() || quantifiers::TermUtil::hasInstConstAttr(pat));
   d_pattern = pat;
   d_match_pattern = pat;
@@ -430,13 +434,10 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
   if (success)
   {
     Trace("matching-debug2") << "Reset children..." << std::endl;
-    std::vector<Node> context = d_ancestor_match_context;
-    context.push_back(t);
     // now, fit children into match
     // we will be requesting candidates for matching terms for each child
     for (size_t i = 0, size = d_children.size(); i < size; i++)
     {
-      d_children[i]->setAncestorMatchContext(context);
       if (!d_children[i]->reset(t[d_children_index[i]]))
       {
         success = false;
@@ -446,10 +447,6 @@ int InstMatchGenerator::getMatch(Node t, InstMatch& m)
     if (success)
     {
       Trace("matching-debug2") << "Continue next " << d_next << std::endl;
-      if (d_next != nullptr)
-      {
-        d_next->setAncestorMatchContext(context);
-      }
       ret_val = continueNextMatch(m);
     }
   }
@@ -497,7 +494,6 @@ void InstMatchGenerator::resetInstantiationRound()
   d_failed_match_cache.clear();
   d_failed_reset_cache.clear();
   d_no_candidate_eq_class_cache.clear();
-  d_ancestor_match_context.clear();
   d_curr_exclude_match.clear();
 }
 
@@ -531,6 +527,7 @@ bool InstMatchGenerator::reset(Node eqc)
       != d_no_candidate_eq_class_cache.end())
   {
     d_needsReset = false;
+    d_scan_from_reset = true;
     d_curr_first_candidate = Node::null();
     Trace("matching-summary") << "Cached empty reset " << d_match_pattern
                               << " in " << eqc << std::endl;
@@ -538,6 +535,7 @@ bool InstMatchGenerator::reset(Node eqc)
   }
   d_cg->reset(d_eq_class);
   d_needsReset = false;
+  d_scan_from_reset = true;
 
   // generate the first candidate preemptively
   d_curr_first_candidate = Node::null();
@@ -574,26 +572,17 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
                     << " in eq class " << d_eq_class << std::endl;
   int success = -1;
   bool cacheableFailure = true;
-  FailedMatchKey currState;
-  if (!d_eq_class.isNull())
-  {
-    currState.d_eqClass = d_qstate.getRepresentative(d_eq_class);
-  }
-  currState.d_context = d_ancestor_match_context;
-  for (Node& c : currState.d_context)
-  {
-    c = d_qstate.getRepresentative(c);
-  }
-  currState.d_match = m.get();
-  for (Node& mt : currState.d_match)
-  {
-    if (!mt.isNull())
-    {
-      mt = d_qstate.getRepresentative(mt);
-    }
-  }
+  // Whether the candidate iteration below covers all candidates, which is
+  // the case if it starts from a fresh reset. If we are resuming
+  // mid-iteration after a previous successful match, an exhaustive failure
+  // below does not imply that candidates prior to the resume point fail, and
+  // hence the failure cannot be cached.
+  bool fullScan = d_scan_from_reset;
+  FailedMatchKey currState = computeFailedMatchKey(m);
   if (d_failed_reset_cache.find(currState) != d_failed_reset_cache.end())
   {
+    // The cached failure was recorded for a scan over all candidates; the
+    // candidates remaining in the current iteration are a subset of these.
     Trace("matching-summary")
         << "Cached exhaustive failure for " << d_match_pattern << std::endl;
     return -2;
@@ -655,7 +644,7 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
     Trace("matching-summary")
         << "..." << d_match_pattern << " failed, reset." << std::endl;
     Trace("matching") << this << " failed, reset " << d_eq_class << std::endl;
-    if (cacheableFailure && !d_qstate.isInConflict())
+    if (fullScan && cacheableFailure && !d_qstate.isInConflict())
     {
       d_failed_reset_cache.insert(currState);
     }
@@ -666,8 +655,88 @@ int InstMatchGenerator::getNextMatch(InstMatch& m)
   {
     Trace("matching-summary")
         << "..." << d_match_pattern << " success." << std::endl;
+    // We leave the candidate iteration mid-stream; a subsequent call to
+    // getNextMatch without an intervening reset will not cover all
+    // candidates.
+    d_scan_from_reset = false;
   }
-  return success > 0 ? success : (cacheableFailure ? -2 : -1);
+  return success > 0 ? success
+                     : ((fullScan && cacheableFailure) ? -2 : -1);
+}
+
+void InstMatchGenerator::computeChainEnv()
+{
+  Assert(!d_chain_env_valid);
+  // Collect the generators that are reset before they are queried during the
+  // search starting at this generator. Initially, these are the descendants
+  // of this generator, which are reset in getMatch for each candidate.
+  std::unordered_set<InstMatchGenerator*> covered;
+  std::vector<InstMatchGenerator*> toProcess = d_children;
+  while (!toProcess.empty())
+  {
+    InstMatchGenerator* g = toProcess.back();
+    toProcess.pop_back();
+    if (covered.insert(g).second)
+    {
+      toProcess.insert(
+          toProcess.end(), g->d_children.begin(), g->d_children.end());
+    }
+  }
+  for (InstMatchGenerator* g = d_next; g != nullptr; g = g->d_next)
+  {
+    if (covered.find(g) != covered.end())
+    {
+      // g is reset by a generator at or after this one in the chain before
+      // it is queried, hence its current equivalence class is irrelevant.
+      continue;
+    }
+    d_chain_env.push_back(g);
+    // the descendants of g are reset by g before they are queried
+    toProcess = g->d_children;
+    while (!toProcess.empty())
+    {
+      InstMatchGenerator* gc = toProcess.back();
+      toProcess.pop_back();
+      if (covered.insert(gc).second)
+      {
+        toProcess.insert(
+            toProcess.end(), gc->d_children.begin(), gc->d_children.end());
+      }
+    }
+  }
+  d_chain_env_valid = true;
+}
+
+InstMatchGenerator::FailedMatchKey InstMatchGenerator::computeFailedMatchKey(
+    InstMatch& m)
+{
+  if (!d_chain_env_valid)
+  {
+    computeChainEnv();
+  }
+  FailedMatchKey k;
+  if (!d_eq_class.isNull())
+  {
+    k.d_eqClass = d_qstate.getRepresentative(d_eq_class);
+  }
+  for (InstMatchGenerator* g : d_chain_env)
+  {
+    Node e = g->d_eq_class;
+    if (!e.isNull())
+    {
+      e = d_qstate.getRepresentative(e);
+    }
+    k.d_env.push_back(e);
+  }
+  k.d_match = m.get();
+  for (Node& mt : k.d_match)
+  {
+    if (!mt.isNull())
+    {
+      mt = d_qstate.getRepresentative(mt);
+    }
+  }
+  return k;
 }
 
 uint64_t InstMatchGenerator::addInstantiations(InstMatch& m)

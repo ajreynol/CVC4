@@ -33,7 +33,16 @@ class VarMatchGeneratorTermSubs : public InstMatchGenerator
 
   /** Reset */
   bool reset(Node eqc) override;
-  /** Get the next match. */
+  /** Get the next match.
+   *
+   * IMPORTANT: this method must return -1 (and never -2) on failure. Its
+   * behavior is not invariant modulo the equality engine, since it applies
+   * a term substitution and rewriting to the *concrete* term it was reset
+   * with, and moreover it consumes that term in the first call after a
+   * reset. Returning -1 ensures that generators upstream in the linked list
+   * do not record failures involving this generator in their failure caches
+   * (see InstMatchGenerator::getNextMatch).
+   */
   int getNextMatch(InstMatch& m) override;
   /** Get the inference id, for statistics. */
   InferenceId getInferenceId() override;

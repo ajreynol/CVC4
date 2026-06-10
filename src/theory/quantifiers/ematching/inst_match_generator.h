@@ -113,7 +113,26 @@ class InstMatchGenerator : public IMGenerator
   void resetInstantiationRound() override;
   /** Reset. */
   bool reset(Node eqc) override;
-  /** Get the next match. */
+  /** Get the next match.
+   *
+   * Returns a positive value if a match was produced (and, if active add is
+   * true, an instantiation was successfully added). Otherwise, it returns:
+   *   -2 if the search failed for reasons that are invariant modulo the
+   *      current equality engine, given the state captured by
+   *      FailedMatchKey. Such failures hold for the remainder of the
+   *      current instantiation round and are cached.
+   *   -1 if the search failed for reasons that may not persist, e.g. a
+   *      complete match was constructed but sendInstantiation rejected it
+   *      (which depends on concrete terms and the instantiation trie), or a
+   *      subgenerator whose behavior is not invariant modulo equality was
+   *      involved (see VarMatchGeneratorTermSubs).
+   *
+   * IMPORTANT: subclasses that override this method may only return -2 if
+   * their behavior is determined by the representatives of their current
+   * equivalence class and partial match; otherwise they must return -1 on
+   * failure, which (soundly) disables failure caching in generators upstream
+   * in the linked list.
+   */
   int getNextMatch(InstMatch& m) override;
   /** Add instantiations. */
   uint64_t addInstantiations(InstMatch& m) override;
@@ -142,11 +161,6 @@ class InstMatchGenerator : public IMGenerator
    * Returns the term we are currently matching.
    */
   Node getCurrentMatch() { return d_curr_matched; }
-  /** Set the ancestor match context for this generator. */
-  void setAncestorMatchContext(const std::vector<Node>& context)
-  {
-    d_ancestor_match_context = context;
-  }
   /** set that this match generator is independent
    *
    * A match generator is indepndent when this generator fails to produce a
@@ -231,8 +245,6 @@ class InstMatchGenerator : public IMGenerator
   Node d_match_pattern;
   /** The current term we are matching. */
   Node d_curr_matched;
-  /** The concrete candidate terms matched by parent generators. */
-  std::vector<Node> d_ancestor_match_context;
   /** do we need to call reset on this generator? */
   bool d_needsReset;
   /** candidate generator
@@ -281,13 +293,28 @@ class InstMatchGenerator : public IMGenerator
    * extended syntax (! ... :no-pattern).
    */
   std::map<Node, bool> d_curr_exclude_match;
-  /** Key for caching failed matches. */
+  /** Key for caching failed matches.
+   *
+   * This key captures the state that determines the outcome of the search
+   * performed by getNextMatch in the current instantiation round, *provided*
+   * the search fails without ever constructing a complete match. In that case,
+   * all failures are due to tests modulo the current equality engine
+   * (see InstMatch::set and QuantifiersState::areEqual), and hence the outcome
+   * is determined by:
+   * (1) the representative of the equivalence class we are matching in,
+   * (2) the representatives of the equivalence classes of the generators in
+   *     our continuation that we query without first resetting (d_chain_env),
+   * (3) the current partial match, modulo representatives.
+   * If the search constructs a complete match, its outcome additionally
+   * depends on concrete terms and the state of the instantiation trie
+   * (via sendInstantiation); such searches return -1 and are never cached.
+   */
   struct FailedMatchKey
   {
     /** The equivalence class this generator is currently matching in. */
     Node d_eqClass;
-    /** The concrete candidate terms matched by parent generators. */
-    std::vector<Node> d_context;
+    /** The equivalence classes of the generators in d_chain_env. */
+    std::vector<Node> d_env;
     /** The partial instantiation when the match was attempted. */
     std::vector<Node> d_match;
     bool operator<(const FailedMatchKey& k) const
@@ -300,17 +327,54 @@ class InstMatchGenerator : public IMGenerator
       {
         return false;
       }
-      if (d_context < k.d_context)
+      if (d_env < k.d_env)
       {
         return true;
       }
-      if (k.d_context < d_context)
+      if (k.d_env < d_env)
       {
         return false;
       }
       return d_match < k.d_match;
     }
   };
+  /** The continuation environment of this generator.
+   *
+   * These are the generators following this one in the d_next chain whose
+   * current equivalence class is read, but not set, by the search starting at
+   * this generator. A generator in the chain is reset before it is queried if
+   * and only if its parent occurs at or after this generator in the chain
+   * (its parent's getMatch resets it before querying it via continueNextMatch).
+   * The remaining ones were reset by generators that precede this one in the
+   * chain, and hence their equivalence classes are inputs to our search that,
+   * together with the current partial match, determine its outcome.
+   *
+   * For example, for trigger f( g( x ), h( y ) ), the chain is
+   * [ f( g( x ), h( y ) ) ] -> [ g( x ) ] -> [ h( y ) ], where matching a
+   * candidate f( s, t ) resets [ g( x ) ] to s and [ h( y ) ] to t. The
+   * continuation environment of [ g( x ) ] is { [ h( y ) ] }, since the
+   * search starting at [ g( x ) ] queries [ h( y ) ] for the equivalence
+   * class of t it was reset to by its parent.
+   *
+   * This is computed lazily by computeChainEnv.
+   */
+  std::vector<InstMatchGenerator*> d_chain_env;
+  /** Whether d_chain_env has been computed. */
+  bool d_chain_env_valid;
+  /** Compute d_chain_env, see above. */
+  void computeChainEnv();
+  /** Compute the failed match key for the current state of this generator
+   * and partial match m. */
+  FailedMatchKey computeFailedMatchKey(InstMatch& m);
+  /** Whether the current candidate iteration started from a fresh reset.
+   *
+   * This is set to true in reset() and cleared when getNextMatch produces a
+   * match, which leaves the candidate iteration mid-stream. Only iterations
+   * that start from a fresh reset cover all candidates, and thus only those
+   * may record entries in d_failed_reset_cache or report a cacheable (-2)
+   * failure when exhausted.
+   */
+  bool d_scan_from_reset;
   /** Failed match cache
    *
    * Maps a candidate term to states for which matching this generator cannot
@@ -351,8 +415,8 @@ class InstMatchGenerator : public IMGenerator
    * their match operator (see TermDatabase::getMatchOperator) is the same.
    * only valid for use where !d_match_pattern.isNull().
    *
-   * Returns a positive value on success, -2 for a cacheable matching failure,
-   * and -1 when matching succeeded but no instantiation was emitted.
+   * Returns a positive value on success; otherwise -2 or -1, with the same
+   * semantics as getNextMatch.
    */
   int getMatch(Node t, InstMatch& m);
   /** Initialize this generator.

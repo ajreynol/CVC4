@@ -57,7 +57,14 @@ class RelationalMatchGenerator : public InstMatchGenerator
 
   /** Reset */
   bool reset(Node eqc) override;
-  /** Get the next match. */
+  /** Get the next match.
+   *
+   * IMPORTANT: this method must return -1 (and never -2) on failure, since
+   * it generates candidate terms statefully (d_counter) across calls.
+   * Returning -1 ensures that generators upstream in the linked list do not
+   * record failures involving this generator in their failure caches (see
+   * InstMatchGenerator::getNextMatch).
+   */
   int getNextMatch(InstMatch& m) override;
   /** Get the inference id, for statistics. */
   InferenceId getInferenceId() override;
