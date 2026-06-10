@@ -24,6 +24,7 @@ namespace quantifiers {
 QuantifiersModules::QuantifiersModules()
     : d_rel_dom(nullptr),
       d_alpha_equiv(nullptr),
+      d_eager_inst(nullptr),
       d_inst_engine(nullptr),
       d_model_engine(nullptr),
       d_bint(nullptr),
@@ -48,6 +49,11 @@ void QuantifiersModules::initialize(Env& env,
 {
   // add quantifiers modules
   const Options& options = env.getOptions();
+  if (options.quantifiers.eagerInst)
+  {
+    d_eager_inst.reset(new EagerInstantiation(env, qs, qim, qr, tr));
+    modules.push_back(d_eager_inst.get());
+  }
   if (options.quantifiers.conflictBasedInst)
   {
     d_qcf.reset(new QuantConflictFind(env, qs, qim, qr, tr));
@@ -67,6 +73,12 @@ void QuantifiersModules::initialize(Env& env,
   {
     d_inst_engine.reset(new InstantiationEngine(env, qs, qim, qr, tr));
     modules.push_back(d_inst_engine.get());
+    if (d_eager_inst != nullptr)
+    {
+      // the eager instantiation module handles quantified formulas owned
+      // by the lazy instantiation engine
+      d_eager_inst->setLazyInstantiationEngine(d_inst_engine.get());
+    }
   }
   if (options.quantifiers.cegqi)
   {

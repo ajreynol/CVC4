@@ -17,6 +17,7 @@
 
 #include "theory/quantifiers/alpha_equivalence.h"
 #include "theory/quantifiers/conjecture_generator.h"
+#include "theory/quantifiers/eager_inst.h"
 #include "theory/quantifiers/ematching/instantiation_engine.h"
 #include "theory/quantifiers/fmf/bounded_integers.h"
 #include "theory/quantifiers/fmf/full_model_check.h"
@@ -73,6 +74,8 @@ class QuantifiersModules
   //------------------------------ quantifiers modules
   /** alpha equivalence */
   std::unique_ptr<AlphaEquivalence> d_alpha_equiv;
+  /** eager instantiation */
+  std::unique_ptr<EagerInstantiation> d_eager_inst;
   /** instantiation engine */
   std::unique_ptr<InstantiationEngine> d_inst_engine;
   /** model engine */

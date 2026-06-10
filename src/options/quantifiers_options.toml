@@ -293,6 +293,14 @@ name   = "Quantifiers"
   help       = "whether to do heuristic E-matching"
 
 [[option]]
+  name       = "eagerInst"
+  category   = "expert"
+  long       = "eager-inst"
+  type       = "bool"
+  default    = "false"
+  help       = "perform eager instantiation via E-matching on new terms at standard effort"
+
+[[option]]
   name       = "termDbMode"
   category   = "regular"
   long       = "term-db-mode=MODE"

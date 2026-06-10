@@ -18,6 +18,7 @@
 #include "options/smt_options.h"
 #include "options/strings_options.h"
 #include "options/uf_options.h"
+#include "theory/quantifiers/eager_inst.h"
 #include "theory/quantifiers/equality_query.h"
 #include "theory/quantifiers/first_order_model.h"
 #include "theory/quantifiers/fmf/first_order_model_fmc.h"
@@ -57,6 +58,7 @@ QuantifiersEngine::QuantifiersEngine(Env& env,
       d_qreg(qr),
       d_treg(tr),
       d_model(nullptr),
+      d_eagerInst(nullptr),
       d_quants_prereg(userContext()),
       d_quants_red(userContext()),
       d_numInstRoundsLemma(0)
@@ -115,6 +117,9 @@ void QuantifiersEngine::finishInit(TheoryEngine* te)
   d_qmodules.reset(new QuantifiersModules());
   d_qmodules->initialize(
       d_env, d_qstate, d_qim, d_qreg, d_treg, d_builder.get(), d_modules);
+  // store a direct pointer to the eager instantiation module, if it exists,
+  // since it receives notifications from the master equality engine
+  d_eagerInst = d_qmodules->d_eager_inst.get();
   if (d_qmodules->d_rel_dom.get())
   {
     d_util.push_back(d_qmodules->d_rel_dom.get());
@@ -184,6 +189,25 @@ void QuantifiersEngine::ppNotifyAssertions(const std::vector<Node>& assertions)
     mi->ppNotifyAssertions(assertions);
   }
 }
+void QuantifiersEngine::checkEager()
+{
+  if (d_eagerInst == nullptr)
+  {
+    return;
+  }
+  if (d_qstate.isInConflict() || !d_qstate.getEqualityEngine()->consistent())
+  {
+    return;
+  }
+  // Process E-matching against new terms. Note this does not reset the
+  // utilities of the quantifiers engine (e.g. TermDb), which would be
+  // too expensive to do at every standard effort check. The eager
+  // instantiation module does not depend on these utilities.
+  d_eagerInst->processNewTerms();
+  // flush any lemmas it generated
+  d_qim.doPending();
+}
+
 void QuantifiersEngine::check(Theory::Effort e)
 {
   IncompleteId setModelUnsoundId = IncompleteId::NONE;
@@ -775,6 +799,10 @@ void QuantifiersEngine::assertQuantifier(Node f, bool pol)
 void QuantifiersEngine::eqNotifyNewClass(TNode t)
 {
   d_treg.eqNotifyNewClass(t);
+  if (d_eagerInst != nullptr)
+  {
+    d_eagerInst->eqNotifyNewClass(t);
+  }
 }
 
 void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)

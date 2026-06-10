@@ -166,6 +166,12 @@ bool TheoryQuantifiers::collectModelValues(
 
 void TheoryQuantifiers::postCheck(Effort level)
 {
+  if (level == Theory::EFFORT_STANDARD)
+  {
+    // run eager instantiation if enabled, which processes E-matching
+    // against new terms
+    getQuantifiersEngine()->checkEager();
+  }
   // call the quantifiers engine to check
   getQuantifiersEngine()->check(level);
 }

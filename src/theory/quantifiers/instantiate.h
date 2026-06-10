@@ -142,6 +142,11 @@ class Instantiate : public QuantifiersUtil
    * step
    * @param doVts whether we must apply virtual term substitution to the
    * instantiation lemma.
+   * @param doEntailCheck whether to discard the instantiation if it is
+   * currently entailed (see (3) below). Callers that invoke this method
+   * outside of full effort instantiation rounds should disable this, since
+   * the entailment check relies on state of TermDb that is only valid
+   * during full effort rounds.
    *
    * This call may fail if it can be determined that the instantiation is not
    * relevant or legal in the current context. This happens if:
@@ -159,7 +164,8 @@ class Instantiate : public QuantifiersUtil
                         std::vector<Node>& terms,
                         InferenceId id,
                         Node pfArg = Node::null(),
-                        bool doVts = false);
+                        bool doVts = false,
+                        bool doEntailCheck = true);
   /**
    * Same as above, but we also compute a vector failMask indicating which
    * values in terms led to the instantiation not being added when this method
@@ -299,7 +305,8 @@ class Instantiate : public QuantifiersUtil
                                 std::vector<Node>& terms,
                                 InferenceId id,
                                 Node pfArg = Node::null(),
-                                bool doVts = false);
+                                bool doVts = false,
+                                bool doEntailCheck = true);
   /** record instantiation, return true if it was not a duplicate */
   bool recordInstantiationInternal(Node q,
                                    const std::vector<Node>& terms,

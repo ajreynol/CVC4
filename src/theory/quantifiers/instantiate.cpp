@@ -89,19 +89,27 @@ void Instantiate::addRewriter(InstantiationRewriter* ir)
   d_instRewrite.push_back(ir);
 }
 
-bool Instantiate::addInstantiation(
-    Node q, std::vector<Node>& terms, InferenceId id, Node pfArg, bool doVts)
+bool Instantiate::addInstantiation(Node q,
+                                   std::vector<Node>& terms,
+                                   InferenceId id,
+                                   Node pfArg,
+                                   bool doVts,
+                                   bool doEntailCheck)
 {
   // do the instantiation
-  bool ret = addInstantiationInternal(q, terms, id, pfArg, doVts);
+  bool ret = addInstantiationInternal(q, terms, id, pfArg, doVts, doEntailCheck);
   // process the instantiation with callbacks via term registry
   d_treg.processInstantiation(q, terms);
   // return whether the instantiation was successful
   return ret;
 }
 
-bool Instantiate::addInstantiationInternal(
-    Node q, std::vector<Node>& terms, InferenceId id, Node pfArg, bool doVts)
+bool Instantiate::addInstantiationInternal(Node q,
+                                           std::vector<Node>& terms,
+                                           InferenceId id,
+                                           Node pfArg,
+                                           bool doVts,
+                                           bool doEntailCheck)
 {
   // For resource-limiting (also does a time check).
   d_qim.safePoint(Resource::QuantifierStep);
@@ -205,7 +213,7 @@ bool Instantiate::addInstantiationInternal(
   // lead to very small gains).
 
   // check for positive entailment
-  if (options().quantifiers.instNoEntail)
+  if (doEntailCheck && options().quantifiers.instNoEntail)
   {
     EntailmentCheck* ec = d_treg.getEntailmentCheck();
     // should check consistency of equality engine

@@ -35,6 +35,7 @@ class RepSetIterator;
 namespace quantifiers {
 
 class QuantifiersModule;
+class EagerInstantiation;
 class FirstOrderModel;
 class Instantiate;
 class QModelBuilder;
@@ -80,6 +81,14 @@ class QuantifiersEngine : protected EnvObj
   void ppNotifyAssertions(const std::vector<Node>& assertions);
   /** check at level */
   void check(Theory::Effort e);
+  /**
+   * Check eager, called at standard effort checks. If eager instantiation
+   * is enabled, this processes E-matching on new terms and flushes the
+   * resulting instantiation lemmas. This is separate from check(e) above,
+   * since it does not reset the utilities of the quantifiers engine (e.g.
+   * the term database), which would be too expensive at standard effort.
+   */
+  void checkEager();
   /** notify that theories were combined */
   void notifyCombineTheories();
   /** preRegister quantifier
@@ -215,6 +224,13 @@ class QuantifiersEngine : protected EnvObj
    * The modules utility, which contains all of the quantifiers modules.
    */
   std::unique_ptr<quantifiers::QuantifiersModules> d_qmodules;
+  /**
+   * Pointer to the eager instantiation module owned by d_qmodules, or
+   * nullptr if eager instantiation is disabled. This module receives
+   * notifications from the master equality engine and is invoked at
+   * standard effort via checkEager().
+   */
+  quantifiers::EagerInstantiation* d_eagerInst;
   /** list of all quantifiers seen */
   std::map<Node, bool> d_quants;
   /** quantifiers pre-registered */
