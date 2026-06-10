@@ -1797,14 +1797,42 @@ void TheoryDatatypes::checkSplit()
   if (options().datatypes.dtSplitRelevant)
   {
     // only the equivalence classes of datatype terms occurring in asserted
-    // literals (and shared terms)
+    // literals (and shared terms), closed under the arguments of recorded
+    // constructor terms, since the value of a relevant term depends on the
+    // values of its subfields
     std::set<Node> termSet;
     collectAssertedTerms(termSet, true, {});
+    std::vector<Node> toProcess;
     for (const Node& t : termSet)
     {
       if (t.getType().isDatatype() && d_equalityEngine->hasTerm(t))
       {
-        termSetReps.insert(d_equalityEngine->getRepresentative(t));
+        Node r = d_equalityEngine->getRepresentative(t);
+        if (termSetReps.insert(r).second)
+        {
+          toProcess.push_back(r);
+        }
+      }
+    }
+    while (!toProcess.empty())
+    {
+      Node r = toProcess.back();
+      toProcess.pop_back();
+      EqcInfo* ei = getOrMakeEqcInfo(r);
+      if (!ei || ei->d_constructor.get().isNull())
+      {
+        continue;
+      }
+      for (const Node& nc : ei->d_constructor.get())
+      {
+        if (nc.getType().isDatatype() && d_equalityEngine->hasTerm(nc))
+        {
+          Node rc = d_equalityEngine->getRepresentative(nc);
+          if (termSetReps.insert(rc).second)
+          {
+            toProcess.push_back(rc);
+          }
+        }
       }
     }
   }
