@@ -806,7 +806,7 @@
       (eo::define ((res ($re_unfold_pos_concat_rec t r2 ro (eo::add i 1))))
       (eo::define ((c ($pair_first res)))
       (eo::define ((M ($pair_second res)))
-      (eo::define ((k (@re_unfold_pos_component i t ro)))
+      (eo::define ((k (@re_unfold_pos_component t ro i)))
         ; otherwise, make the skolem and append with constraint
         (@pair (_ str.++ k c)
                (_ and (str.in_re k r1) M)))))))

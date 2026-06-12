@@ -176,7 +176,7 @@
 ; Skolem functions for strings and sequences.
 
 (declare-parameterized-const @re_unfold_pos_component
-  ((n Int :opaque) (s String) (r RegLan)) 
+  ((s String :opaque) (r RegLan :opaque) (n Int :opaque)) 
   String)
 (declare-parameterized-const @strings_deq_diff
   ((T Type :implicit) (s (Seq T)) (t (Seq T)))
