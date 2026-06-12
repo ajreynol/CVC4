@@ -77,7 +77,7 @@
              (($is_var_list ts) true)
              (($contains_atomic_term_list_free t vs) false)
              (($contains_atomic_term_list t ts) false))
-  :conclusion (= t ($substitute_simul t vs ts))
+  :conclusion (= t ($rename_simul t vs ts))
 )
 
 ;;;;; ProofRule::QUANT_VAR_REORDERING

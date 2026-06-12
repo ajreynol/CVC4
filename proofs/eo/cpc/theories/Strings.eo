@@ -137,6 +137,9 @@
 (declare-parameterized-const re.loop ((l Int :opaque) (h Int :opaque)) (-> RegLan RegLan))
 (declare-const str.in_re (-> String RegLan Bool))
 
+; Not supported by cvc5, used to define semantics of @re_unfold_pos_component
+(declare-const str.indexof_re_split (-> String RegLan RegLan Int))
+
 ; Sequence-specific operators.
 ; disclaimer: This function is not in SMT-LIB.
 (declare-parameterized-const seq.unit ((T Type :implicit)) (-> T (Seq T)))
@@ -173,7 +176,7 @@
 ; Skolem functions for strings and sequences.
 
 (declare-parameterized-const @re_unfold_pos_component
-  ((n Int :opaque) (s String) (r RegLan))
+  ((n Int :opaque) (s String) (r RegLan)) 
   String)
 (declare-parameterized-const @strings_deq_diff
   ((T Type :implicit) (s (Seq T)) (t (Seq T)))

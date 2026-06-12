@@ -66,6 +66,35 @@
 (define $contains_atomic_term_list_free ((T Type :implicit) (x T) (xs @List))
   ($contains_atomic_term_list_free_rec x xs @list.nil))
 
+; program: $substitute_simul
+; args:
+; - s S: The term to substitute into.
+; - xs @List: The list of variables to substitute.
+; - ss @List: The terms to substitute.
+; return: the result of simultaneously substituting xs to ss in t.
+; note: Assumes applications with lists as their first argument are binders.
+; note: This method does not evaluate if variable capture is encountered.
+(program $substitute_simul
+  ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List :list) (ss @List :list)
+   (q (-> @List T S)) (V Type) (v V) (vs @List :list))
+  :signature (S @List @List) S
+  (
+  ; We assume that any function taking a list as a first argument is a binder
+  ; for binders, we ensure no variable capture, get stuck otherwise. Then,
+  ; we keep the binder and map all variables to themselves inside the binder.
+  (($substitute_simul (q (@list v vs) a) xs ss)
+    (eo::requires ($contains_atomic_term_list_free ss (@list v vs)) false
+      (q (@list v vs) 
+        ($substitute_simul a 
+          (eo::list_concat @list (@list v vs) xs) 
+          (eo::list_concat @list (@list v vs) ss)))))
+  (($substitute_simul (f a) xs ss) 
+    (_ ($substitute_simul f xs ss) ($substitute_simul a xs ss)))
+  (($substitute_simul x xs ss)
+    (eo::define ((i (eo::list_find @list xs x)))
+      (eo::ite (eo::is_neg i) x ($assoc_nil_nth @list ss i))))
+  )
+)
 
 ; program: $substitute
 ; args:
@@ -80,38 +109,35 @@
    (q (-> @List T S)) (V Type) (v V) (vs @List :list))
   :signature (S S U) U
   (
-  ; we assume that any function taking a list as a first argument is a binder
-  ; for binders, we ensure no variable capture, get stuck otherwise.
-  (($substitute x y (q (@list v vs) a))
-    (eo::requires ($contains_atomic_term_list_free y (@list v vs)) false
-      (q ($substitute x y (@list v vs)) ($substitute x y a))))
-  (($substitute x y (f a))              (_ ($substitute x y f) ($substitute x y a)))
-  (($substitute x y x)                  y)
-  (($substitute x y z)                  z)
+  (($substitute x y z) ($substitute_simul z (@list x) (@list y)))
   )
 )
 
-; program: $substitute_simul
+; program: $rename_simul
 ; args:
 ; - s S: The term to substitute into.
-; - xs @List: The list of variables to substitute.
-; - ss @List: The terms to substitute.
-; return: the result of simultaneously substituting xs to ss in t.
+; - xs @List: The list of variables to rename.
+; - ys @List: The list of variables xs are being renamed to.
+; return: the result of simultaneously renaming xs with ys in t.
 ; note: Assumes applications with lists as their first argument are binders.
 ; note: This method does not evaluate if variable capture is encountered.
-(program $substitute_simul
+; note: In contrast to $substitute_simul, this replaces xs occurring in binders
+; with the corresponding variable in ys.
+(program $rename_simul
   ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List :list) (ss @List :list)
    (q (-> @List T S)) (V Type) (v V) (vs @List :list))
   :signature (S @List @List) S
   (
   ; we assume that any function taking a list as a first argument is a binder
-  ; for binders, we ensure no variable capture, get stuck otherwise.
-  (($substitute_simul (q (@list v vs) a) xs ss)
+  ; for binders, we ensure no variable capture, get stuck otherwise. We apply
+  ; the substitution to the variable list and recurse.
+  (($rename_simul (q (@list v vs) a) xs ss)
     (eo::requires ($contains_atomic_term_list_free ss (@list v vs)) false
-      (q ($substitute_simul (@list v vs) xs ss) ($substitute_simul a xs ss))))
-  (($substitute_simul (f a) xs ss)                  (_ ($substitute_simul f xs ss) ($substitute_simul a xs ss)))
-  (($substitute_simul x xs ss)                      (eo::define ((i (eo::list_find @list xs x)))
-                                                      (eo::ite (eo::is_neg i) x ($assoc_nil_nth @list ss i))))
+      (q ($rename_simul (@list v vs) xs ss) ($rename_simul a xs ss))))
+  (($rename_simul (f a) xs ss) 
+    (_ ($rename_simul f xs ss) ($rename_simul a xs ss)))
+  (($rename_simul x xs ss)                      
+    (eo::define ((i (eo::list_find @list xs x)))
+      (eo::ite (eo::is_neg i) x ($assoc_nil_nth @list ss i))))
   )
 )
-
