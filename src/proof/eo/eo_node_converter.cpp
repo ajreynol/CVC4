@@ -374,10 +374,10 @@ Node EoNodeConverter::maybeMkSkolemFun(Node k)
           v = convert(v);
           hasChanged = hasChanged || v != orig;
         }
-        if (sfi==SkolemId::RE_UNFOLD_POS_COMPONENT)
+        if (sfi == SkolemId::RE_UNFOLD_POS_COMPONENT)
         {
           // must put index first
-          Assert (vals.size()==3);
+          Assert(vals.size() == 3);
           Node n = vals[2];
           vals[2] = vals[1];
           vals[1] = vals[0];
