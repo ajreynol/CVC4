@@ -265,6 +265,7 @@ void EagerInstantiation::promoteTerms(OpTermList& ol)
   {
     return;
   }
+  uint64_t genLimit = options().quantifiers.eagerInstGenLimit;
   while (i < nterms)
   {
     TNode t = ol.d_list[i];
@@ -274,6 +275,20 @@ void EagerInstantiation::promoteTerms(OpTermList& ol)
       // can happen if the term was removed by a backtrack after it was
       // queued
       continue;
+    }
+    if (genLimit > 0)
+    {
+      std::unordered_map<Node, uint64_t>::iterator itg = d_termGen.find(t);
+      if (itg != d_termGen.end() && itg->second >= genLimit)
+      {
+        // The term was introduced by a (deep) chain of eager
+        // instantiations; do not match it eagerly. Instantiations
+        // depending on it are found by the lazy engine.
+        Trace("eager-inst-debug2")
+            << "Eager inst: do not promote generation " << itg->second
+            << " term " << t << std::endl;
+        continue;
+      }
     }
     // The signature of t is the tuple of representatives of its arguments
     // (its operator is implied by the list it occurs in). Note that within
@@ -411,6 +426,16 @@ void EagerInstantiation::processNewTerms()
     context::CDList<Node>& terms = itt->second->d_unique;
     context::CDList<Node>& sigs = itt->second->d_uniqueSigs;
     size_t nterms = terms.size();
+    // Group the triggers that have terms to process by their cursor, so
+    // that we can iterate the term list once per group and look up the
+    // candidate triggers per term via the representative of their indexed
+    // ground argument. This avoids enumerating all (term, trigger)
+    // combinations for operators with many triggers that differ in a
+    // ground argument (e.g. has_type patterns). Cursors within a group
+    // are usually identical, since triggers of the same operator advance
+    // in lockstep unless they are activated at different times or
+    // processing was interrupted.
+    std::map<size_t, std::vector<EagerTrigger*>> groups;
     for (std::unique_ptr<EagerTrigger>& tr : ot.second)
     {
       size_t i = tr->d_procIdx.get();
@@ -427,41 +452,94 @@ void EagerInstantiation::processNewTerms()
         // the pattern cannot match this round; do not advance the cursor
         continue;
       }
+      groups[i].push_back(tr.get());
+    }
+    for (std::pair<const size_t, std::vector<EagerTrigger*>>& g : groups)
+    {
+      // Build the ground-argument index for this group: a trigger with at
+      // least one ground argument is indexed by the representative of its
+      // first one; the remaining triggers must be considered for every
+      // term.
+      std::vector<EagerTrigger*> unconstrained;
+      std::map<size_t, std::unordered_map<Node, std::vector<EagerTrigger*>>>
+          posIndex;
+      for (EagerTrigger* tr : g.second)
+      {
+        if (tr->d_groundPos.empty())
+        {
+          unconstrained.push_back(tr);
+        }
+        else
+        {
+          posIndex[tr->d_groundPos[0]][tr->d_groundReps[0]].push_back(tr);
+        }
+      }
       Trace("eager-inst-debug")
-          << "Eager inst: process terms [" << i << ", " << nterms << ") of "
-          << ot.first << " for " << tr->d_pattern << std::endl;
-      while (i < nterms)
+          << "Eager inst: process terms [" << g.first << ", " << nterms
+          << ") of " << ot.first << " for " << g.second.size() << " triggers"
+          << std::endl;
+      size_t i = g.first;
+      std::vector<EagerTrigger*> candidates;
+      while (i < nterms && !finished)
       {
         TNode t = terms[i];
         TNode sig = sigs[i];
         i++;
-        resourceManager()->spendResource(Resource::QuantifierStep);
-        ++d_statPairs;
-        processTermForTrigger(t, sig, *tr);
-        if (d_qstate.isInConflict())
+        candidates.clear();
+        candidates.insert(
+            candidates.end(), unconstrained.begin(), unconstrained.end());
+        for (std::pair<const size_t,
+                       std::unordered_map<Node, std::vector<EagerTrigger*>>>&
+                 pi : posIndex)
         {
-          // stop processing, but remember how far we got
-          break;
+          // the triggers whose indexed ground argument has the same
+          // representative as the corresponding argument of this term
+          std::unordered_map<Node, std::vector<EagerTrigger*>>::iterator
+              itpi = pi.second.find(sig[pi.first]);
+          if (itpi != pi.second.end())
+          {
+            candidates.insert(
+                candidates.end(), itpi->second.begin(), itpi->second.end());
+          }
         }
-        if (instLimit > 0
-            && d_statInst.get() - prevInst >= static_cast<int64_t>(instLimit))
+        for (EagerTrigger* tr : candidates)
         {
-          // met the limit of instantiations for this round
-          finished = true;
-          break;
-        }
-        if (pairLimit > 0
-            && d_statPairs.get() - prevPairs >= static_cast<int64_t>(pairLimit))
-        {
-          // met the limit of considered pairs for this round
-          finished = true;
-          break;
+          resourceManager()->spendResource(Resource::QuantifierStep);
+          ++d_statPairs;
+          processTermForTrigger(t, sig, *tr);
+          if (d_qstate.isInConflict())
+          {
+            // stop processing, but remember how far we got
+            finished = true;
+            break;
+          }
+          if (instLimit > 0
+              && d_statInst.get() - prevInst
+                     >= static_cast<int64_t>(instLimit))
+          {
+            // met the limit of instantiations for this round
+            finished = true;
+            break;
+          }
+          if (pairLimit > 0
+              && d_statPairs.get() - prevPairs
+                     >= static_cast<int64_t>(pairLimit))
+          {
+            // met the limit of considered pairs for this round
+            finished = true;
+            break;
+          }
         }
       }
-      tr->d_procIdx = i;
-      if (finished || d_qstate.isInConflict())
+      // Note that if we were interrupted while processing the candidate
+      // triggers of a term, the remaining candidates skip that term; such
+      // misses are found by the lazy instantiation engine.
+      for (EagerTrigger* tr : g.second)
       {
-        finished = true;
+        tr->d_procIdx = i;
+      }
+      if (finished)
+      {
         break;
       }
     }
@@ -594,6 +672,36 @@ void EagerInstantiation::processTermForTrigger(TNode t,
       ++d_statInst;
       Trace("eager-inst") << "Eager inst: success " << q << " with " << terms
                           << std::endl;
+      if (options().quantifiers.eagerInstGenLimit > 0)
+      {
+        // Compute the generation of this instantiation, which is one more
+        // than the maximal generation of the instantiating terms, and
+        // assign it to the (new) APPLY_UF subterms of the instance body.
+        uint64_t g = 0;
+        for (const Node& tt : terms)
+        {
+          std::unordered_map<Node, uint64_t>::iterator itg =
+              d_termGen.find(tt);
+          if (itg != d_termGen.end() && itg->second > g)
+          {
+            g = itg->second;
+          }
+        }
+        g++;
+        std::vector<Node> vars(q[0].begin(), q[0].end());
+        Node body = q[1].substitute(
+            vars.begin(), vars.end(), terms.begin(), terms.end());
+        std::unordered_set<Node> bts;
+        expr::getSubtermsKind(Kind::APPLY_UF, body, bts);
+        for (const Node& s : bts)
+        {
+          // keep the smaller generation if already assigned
+          if (d_termGen.find(s) == d_termGen.end())
+          {
+            d_termGen[s] = g;
+          }
+        }
+      }
     }
     if (d_qstate.isInConflict())
     {

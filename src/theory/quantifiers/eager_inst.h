@@ -267,6 +267,24 @@ class EagerInstantiation : public QuantifiersModule
   /** The terms whose parents have been registered in d_parents. */
   std::unordered_set<Node> d_parentsRegistered;
   /**
+   * The generation of terms, used for admission control (option
+   * --eager-inst-gen-limit). Terms of the input have generation 0 (they are
+   * absent from this map); the APPLY_UF subterms of the body of an
+   * instantiation that this module sends get generation
+   * (1 + the maximum generation of the instantiating terms), unless they
+   * already have a (smaller) generation. Terms whose generation meets the
+   * limit are not matched eagerly; instantiations depending on them are
+   * found by the lazy instantiation engine at full effort. This bounds the
+   * depth of eager instantiation chains (instances whose terms trigger
+   * further instances), which can otherwise flood the search with
+   * irrelevant instances.
+   *
+   * This map is context-independent: a term keeps its generation across
+   * backtracking, which is a sound over-approximation (the lemma that
+   * introduced it persists as well).
+   */
+  std::unordered_map<Node, uint64_t> d_termGen;
+  /**
    * Fingerprints of the instantiations this module has sent (SAT context).
    * A fingerprint is the quantified formula together with the tuple of
    * representatives of the instantiating terms. Matches whose fingerprint

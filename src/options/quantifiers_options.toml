@@ -317,6 +317,14 @@ name   = "Quantifiers"
   help       = "maximum number of instantiations added per round of eager instantiation (0: no limit)"
 
 [[option]]
+  name       = "eagerInstGenLimit"
+  category   = "expert"
+  long       = "eager-inst-gen-limit=N"
+  type       = "uint64_t"
+  default    = "1"
+  help       = "do not eagerly match terms whose generation (depth of the chain of eager instantiations that introduced them) is N or more; such terms are handled by lazy instantiation only (0: no limit)"
+
+[[option]]
   name       = "eagerInstPairLimit"
   category   = "expert"
   long       = "eager-inst-pair-limit=N"
