@@ -24,11 +24,14 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
-EagerInstantiation::EagerTrigger::EagerTrigger(context::Context* c,
-                                               const Node& q,
-                                               const Node& pattern)
+EagerInstantiation::EagerTrigger::EagerTrigger(
+    context::Context* c,
+    const Node& q,
+    const Node& pattern,
+    const std::vector<Node>& otherPatterns)
     : d_quant(q),
       d_pattern(pattern),
+      d_otherPatterns(otherPatterns),
       d_procIdx(c, 0),
       d_roundStamp(0),
       d_roundActive(false)
@@ -50,6 +53,7 @@ EagerInstantiation::EagerInstantiation(Env& env,
     : QuantifiersModule(env, qs, qim, qr, tr),
       d_activeQuants(context()),
       d_sentFps(context()),
+      d_rlvTerms(context()),
       d_mergeQueue(context()),
       d_mergeIdx(context(), 0),
       d_round(0),
@@ -81,7 +85,8 @@ bool EagerInstantiation::needsCheck(Theory::Effort e)
     // stopped due to the instantiation limit.
     return false;
   }
-  if (options().quantifiers.eagerInstMerge
+  if ((options().quantifiers.eagerInstMerge
+       || options().quantifiers.eagerInstRlv)
       && d_mergeIdx.get() < d_mergeQueue.size())
   {
     return true;
@@ -142,30 +147,39 @@ void EagerInstantiation::registerQuantifier(Node q)
   std::unordered_set<Node> qvars(q[0].begin(), q[0].end());
   for (const Node& ipl : q[2])
   {
-    // only consider single triggers; multi-triggers are handled by the
-    // lazy instantiation engine
-    if (ipl.getKind() != Kind::INST_PATTERN || ipl.getNumChildren() != 1)
+    if (ipl.getKind() != Kind::INST_PATTERN || ipl.getNumChildren() == 0)
     {
       continue;
     }
-    Node pat = ipl[0];
-    // only consider applications of uninterpreted functions
-    if (pat.getKind() != Kind::APPLY_UF)
+    if (ipl.getNumChildren() > 1 && !options().quantifiers.eagerInstMulti)
     {
       Trace("eager-inst-reject")
-          << "Eager inst: reject pattern kind " << pat.getKind() << " : "
-          << pat << std::endl;
+          << "Eager inst: reject multi-trigger (disabled) : " << ipl
+          << std::endl;
       continue;
     }
-    // the pattern must contain all variables of q
+    // all patterns must be applications of uninterpreted functions
+    bool allUf = true;
+    for (const Node& pat : ipl)
+    {
+      if (pat.getKind() != Kind::APPLY_UF)
+      {
+        Trace("eager-inst-reject")
+            << "Eager inst: reject pattern kind " << pat.getKind() << " : "
+            << pat << std::endl;
+        allUf = false;
+        break;
+      }
+    }
+    if (!allUf)
+    {
+      continue;
+    }
+    // the patterns must contain all variables of q
     std::unordered_set<Node> fvs;
-    expr::getFreeVariables(pat, fvs);
-    if (fvs.size() != qvars.size())
+    for (const Node& pat : ipl)
     {
-      Trace("eager-inst-reject")
-          << "Eager inst: reject pattern (covers " << fvs.size() << "/"
-          << qvars.size() << " vars) : " << pat << std::endl;
-      continue;
+      expr::getFreeVariables(pat, fvs);
     }
     bool covers = true;
     for (const Node& v : qvars)
@@ -179,15 +193,30 @@ void EagerInstantiation::registerQuantifier(Node q)
     if (!covers)
     {
       Trace("eager-inst-reject")
-          << "Eager inst: reject pattern (different vars) : " << pat
+          << "Eager inst: reject pattern (does not cover vars) : " << ipl
           << std::endl;
       continue;
     }
-    Node op = pat.getOperator();
-    d_opTriggers[op].emplace_back(
-        std::make_unique<EagerTrigger>(context(), q, pat));
-    Trace("eager-inst") << "Eager inst: trigger for " << q << " : " << pat
-                        << std::endl;
+    // For a multi-trigger, we register one trigger per focus pattern, so
+    // that a new term with the operator of any of the patterns initiates
+    // matching.
+    for (size_t fi = 0, npats = ipl.getNumChildren(); fi < npats; fi++)
+    {
+      std::vector<Node> others;
+      for (size_t j = 0; j < npats; j++)
+      {
+        if (j != fi)
+        {
+          others.push_back(ipl[j]);
+        }
+      }
+      Node op = ipl[fi].getOperator();
+      d_opTriggers[op].emplace_back(
+          std::make_unique<EagerTrigger>(context(), q, ipl[fi], others));
+      Trace("eager-inst") << "Eager inst: trigger for " << q << " : "
+                          << ipl[fi]
+                          << (others.empty() ? "" : " (multi)") << std::endl;
+    }
   }
 }
 
@@ -223,13 +252,13 @@ void EagerInstantiation::eqNotifyNewClass(TNode t)
 
 void EagerInstantiation::eqNotifyMerge(TNode t1, TNode t2)
 {
-  if (!options().quantifiers.eagerInstMerge)
+  if (!options().quantifiers.eagerInstMerge
+      && !options().quantifiers.eagerInstRlv)
   {
     return;
   }
-  // Only enqueue; the merged class is inspected at the next processing
-  // round. Note we only need one of the terms, since by then they are in
-  // the same class.
+  // Only enqueue; the merged terms are inspected at the next processing
+  // round.
   d_mergeQueue.push_back(std::pair<Node, Node>(t1, t2));
 }
 
@@ -266,6 +295,7 @@ void EagerInstantiation::promoteTerms(OpTermList& ol)
     return;
   }
   uint64_t genLimit = options().quantifiers.eagerInstGenLimit;
+  bool rlv = options().quantifiers.eagerInstRlv;
   while (i < nterms)
   {
     TNode t = ol.d_list[i];
@@ -275,6 +305,24 @@ void EagerInstantiation::promoteTerms(OpTermList& ol)
       // can happen if the term was removed by a backtrack after it was
       // queued
       continue;
+    }
+    if (rlv && !d_rlvTerms.contains(t))
+    {
+      Node r = ee->getRepresentative(t);
+      if (r == t)
+      {
+        eq::EqClassIterator eqc(r, ee);
+        ++eqc;
+        if (eqc.isFinished())
+        {
+          // The term is in a singleton class and not marked relevant: the
+          // search has not engaged it yet. Defer; it is re-enqueued when
+          // it participates in a merge (processMerges).
+          Trace("eager-inst-debug2")
+              << "Eager inst: defer irrelevant " << t << std::endl;
+          continue;
+        }
+      }
     }
     if (genLimit > 0)
     {
@@ -319,24 +367,52 @@ void EagerInstantiation::processMerges()
     return;
   }
   eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
-  // The terms re-appended this round, to avoid duplicate work when a term
-  // is involved in several merges.
+  bool doParents = options().quantifiers.eagerInstMerge;
+  bool doRlv = options().quantifiers.eagerInstRlv;
+  // The terms re-appended/activated this round, to avoid duplicate work
+  // when a term is involved in several merges.
   std::unordered_set<Node> repushed;
+  std::unordered_set<Node> activated;
   while (i < endIdx)
   {
     const std::pair<Node, Node>& m = d_mergeQueue[i];
     i++;
-    // Re-append the parents of the two merged terms, with fresh
-    // signatures, so that all triggers re-match them. Note we do not
-    // consider the parents of the other members of the merged classes:
-    // congruences propagated by the merge generate their own merge
-    // notifications, which covers the parents of congruent members.
-    // Matches that become possible for a parent of another member of the
-    // merged classes (via deep matching into the grown class) are missed
-    // here; these are found by the lazy instantiation engine.
     for (size_t j = 0; j < 2; j++)
     {
       TNode u = j == 0 ? m.first : m.second;
+      if (doRlv && activated.insert(u).second)
+      {
+        // The merge follows from an asserted literal (or a congruence
+        // entailed by one), hence mark u and its APPLY_UF subterms
+        // relevant and re-enqueue them for promotion, in case they were
+        // previously deferred.
+        std::unordered_set<Node> sub;
+        expr::getSubtermsKind(Kind::APPLY_UF, u, sub);
+        if (u.getKind() == Kind::APPLY_UF)
+        {
+          sub.insert(u);
+        }
+        for (const Node& s : sub)
+        {
+          if (!d_rlvTerms.contains(s))
+          {
+            d_rlvTerms.insert(s);
+            getOpTermList(s.getOperator()).d_list.push_back(s);
+          }
+        }
+      }
+      if (!doParents)
+      {
+        continue;
+      }
+      // Re-append the parents of the two merged terms, with fresh
+      // signatures, so that all triggers re-match them. Note we do not
+      // consider the parents of the other members of the merged classes:
+      // congruences propagated by the merge generate their own merge
+      // notifications, which covers the parents of congruent members.
+      // Matches that become possible for a parent of another member of the
+      // merged classes (via deep matching into the grown class) are missed
+      // here; these are found by the lazy instantiation engine.
       std::map<Node, std::vector<Node>>::iterator itp = d_parents.find(u);
       if (itp == d_parents.end())
       {
@@ -408,7 +484,8 @@ void EagerInstantiation::processNewTerms()
   int64_t prevInst = d_statInst.get();
   uint64_t instLimit = options().quantifiers.eagerInstLimit;
   uint64_t pairLimit = options().quantifiers.eagerInstPairLimit;
-  if (options().quantifiers.eagerInstMerge)
+  if (options().quantifiers.eagerInstMerge
+      || options().quantifiers.eagerInstRlv)
   {
     processMerges();
   }
@@ -616,6 +693,17 @@ void EagerInstantiation::processTermForTrigger(TNode t,
   std::map<Node, Node> binding;
   std::vector<std::map<Node, Node>> matches;
   matchRec(0, todo, binding, matches);
+  if (!tr.d_otherPatterns.empty() && !matches.empty())
+  {
+    // for a multi-trigger, extend the matches of the focus pattern to the
+    // remaining patterns, matching against existing terms
+    std::vector<std::map<Node, Node>> fullMatches;
+    for (std::map<Node, Node>& m : matches)
+    {
+      matchMultiRec(tr, 0, m, fullMatches);
+    }
+    matches = std::move(fullMatches);
+  }
   // We skip instantiations whose fingerprint (the quantified formula and
   // the tuple of representatives of the terms) we have already sent, so
   // that we send at most one instantiation per equivalence-class tuple.
@@ -706,6 +794,60 @@ void EagerInstantiation::processTermForTrigger(TNode t,
     if (d_qstate.isInConflict())
     {
       return;
+    }
+  }
+}
+
+void EagerInstantiation::matchMultiRec(
+    const EagerTrigger& tr,
+    size_t patIdx,
+    std::map<Node, Node>& binding,
+    std::vector<std::map<Node, Node>>& matches)
+{
+  // A hard cap on the matches considered per focus pair, to bound the
+  // cross-product enumeration of multi-trigger matching. Matches beyond
+  // this limit are found by the lazy instantiation engine.
+  constexpr size_t multiMatchLimit = 1000;
+  if (patIdx == tr.d_otherPatterns.size())
+  {
+    matches.push_back(binding);
+    return;
+  }
+  const Node& p = tr.d_otherPatterns[patIdx];
+  Node op = p.getOperator();
+  std::map<Node, std::unique_ptr<OpTermList>>::iterator itt =
+      d_opTerms.find(op);
+  if (itt == d_opTerms.end())
+  {
+    return;
+  }
+  context::CDList<Node>& terms = itt->second->d_unique;
+  eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
+  size_t nterms = terms.size();
+  std::vector<std::pair<TNode, TNode>> todo;
+  for (size_t i = 0; i < nterms; i++)
+  {
+    if (matches.size() >= multiMatchLimit)
+    {
+      return;
+    }
+    TNode u = terms[i];
+    if (!ee->hasTerm(u))
+    {
+      continue;
+    }
+    ++d_statPairs;
+    Assert(u.getNumChildren() == p.getNumChildren());
+    todo.clear();
+    for (size_t j = 0, nchild = p.getNumChildren(); j < nchild; j++)
+    {
+      todo.emplace_back(p[j], u[j]);
+    }
+    std::vector<std::map<Node, Node>> sub;
+    matchRec(0, todo, binding, sub);
+    for (std::map<Node, Node>& sm : sub)
+    {
+      matchMultiRec(tr, patIdx + 1, sm, matches);
     }
   }
 }

@@ -301,6 +301,22 @@ name   = "Quantifiers"
   help       = "perform eager instantiation via E-matching on new terms at standard effort"
 
 [[option]]
+  name       = "eagerInstRlv"
+  category   = "expert"
+  long       = "eager-inst-rlv"
+  type       = "bool"
+  default    = "false"
+  help       = "defer eager matching of terms in singleton equivalence classes until they participate in a merge; this approximates relevancy, since terms of clauses that the search has not engaged (e.g. instance lemmas at preregistration) do not trigger eager instantiation"
+
+[[option]]
+  name       = "eagerInstMulti"
+  category   = "expert"
+  long       = "eager-inst-multi"
+  type       = "bool"
+  default    = "true"
+  help       = "whether eager instantiation handles multi-triggers"
+
+[[option]]
   name       = "eagerInstMerge"
   category   = "expert"
   long       = "eager-inst-merge"

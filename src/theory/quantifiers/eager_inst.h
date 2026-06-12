@@ -63,11 +63,14 @@ namespace quantifiers {
  * parent index, and re-append the parents of all members of a merged
  * class to the respective term lists, so that all triggers re-match them.
  *
- * The current implementation handles single triggers whose pattern is an
- * APPLY_UF application and whose free variables span the variables of the
- * quantified formula. All other triggers (multi-triggers, relational
- * triggers, triggers with interpreted symbols) are left to the lazy
- * instantiation engine.
+ * The current implementation handles single and multi-triggers whose
+ * patterns are APPLY_UF applications and whose free variables (unioned
+ * over the patterns) span the variables of the quantified formula. A
+ * multi-trigger is compiled to one trigger per "focus" pattern; a new
+ * term matching the focus is extended to full matches by matching the
+ * remaining patterns against existing terms. All other triggers
+ * (relational triggers, triggers with interpreted symbols) are left to
+ * the lazy instantiation engine.
  *
  * Trace tags:
  * - eager-inst: trigger registration, activation, added instantiations
@@ -133,15 +136,31 @@ class EagerInstantiation : public QuantifiersModule
   void processNewTerms();
 
  private:
-  /** An eager trigger, a single pattern for a quantified formula. */
+  /**
+   * An eager trigger for a quantified formula.
+   *
+   * For a single trigger, d_pattern is its pattern and d_otherPatterns is
+   * empty. A multi-trigger with patterns (p1 ... pk) is compiled to k
+   * eager triggers, one per "focus" pattern pi (stored in d_pattern, with
+   * the remaining patterns in d_otherPatterns). Each focus trigger is
+   * registered under the operator of its focus pattern, so that a new
+   * term with that operator extends to full matches where the other
+   * patterns are matched against existing terms.
+   */
   struct EagerTrigger
   {
-    EagerTrigger(context::Context* c, const Node& q, const Node& pattern);
+    EagerTrigger(context::Context* c,
+                 const Node& q,
+                 const Node& pattern,
+                 const std::vector<Node>& otherPatterns);
     /** The quantified formula */
     Node d_quant;
-    /** The pattern, an APPLY_UF application whose free variables are the
-     * bound variables of d_quant */
+    /** The focus pattern, an APPLY_UF application */
     Node d_pattern;
+    /** The remaining patterns of the multi-trigger, if any. The union of
+     * the free variables of d_pattern and these patterns are the bound
+     * variables of d_quant. */
+    std::vector<Node> d_otherPatterns;
     /**
      * The index of the next unprocessed term in the unique term list of
      * the operator of d_pattern (SAT context). This only advances while
@@ -244,6 +263,16 @@ class EagerInstantiation : public QuantifiersModule
                 std::vector<std::pair<TNode, TNode>>& todo,
                 std::map<Node, Node>& binding,
                 std::vector<std::map<Node, Node>>& matches);
+  /**
+   * Extend the binding (a match of the focus pattern of tr) to the
+   * remaining patterns of multi-trigger tr starting at pattern index
+   * patIdx, matching them against the existing terms with their operator.
+   * Complete bindings are appended to matches.
+   */
+  void matchMultiRec(const EagerTrigger& tr,
+                     size_t patIdx,
+                     std::map<Node, Node>& binding,
+                     std::vector<std::map<Node, Node>>& matches);
   /** Pointer to the lazy instantiation engine, if it exists. */
   QuantifiersModule* d_instEngine = nullptr;
   /** Map from operators to the triggers whose pattern head is that
@@ -295,6 +324,17 @@ class EagerInstantiation : public QuantifiersModule
    * (congruent) terms across rounds.
    */
   NodeSet d_sentFps;
+  /**
+   * The terms marked relevant (SAT context), used by --eager-inst-rlv.
+   * When two classes merge (which only happens due to an asserted literal
+   * or a congruence following from one), the merged terms and their
+   * APPLY_UF subterms are marked relevant. Terms in singleton classes
+   * that are not marked relevant are deferred at promotion: they belong
+   * to clauses the search has not engaged (e.g. instance lemmas at
+   * preregistration). They are re-enqueued for promotion when they are
+   * marked relevant.
+   */
+  NodeSet d_rlvTerms;
   /** The queue of unprocessed merges (SAT context). */
   context::CDList<std::pair<Node, Node>> d_mergeQueue;
   /** The index of the next unprocessed merge in d_mergeQueue. */
