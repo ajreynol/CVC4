@@ -1,4 +1,4 @@
-; COMMAND-LINE: --eager-inst --no-e-matching
+; COMMAND-LINE: --eager-inst --eager-inst-merge --no-e-matching
 (set-logic ALL)
 (set-info :status unsat)
 (declare-fun P (Int Int) Bool)

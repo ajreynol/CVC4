@@ -13,6 +13,7 @@
 #include "theory/quantifiers/eager_inst.h"
 
 #include "expr/node_algorithm.h"
+#include "options/quantifiers_options.h"
 #include "theory/quantifiers/instantiate.h"
 #include "theory/quantifiers/quantifiers_inference_manager.h"
 #include "theory/quantifiers/quantifiers_registry.h"
@@ -23,6 +24,24 @@ namespace cvc5::internal {
 namespace theory {
 namespace quantifiers {
 
+EagerInstantiation::EagerTrigger::EagerTrigger(context::Context* c,
+                                               const Node& q,
+                                               const Node& pattern)
+    : d_quant(q),
+      d_pattern(pattern),
+      d_procIdx(c, 0),
+      d_roundStamp(0),
+      d_roundActive(false)
+{
+  for (size_t i = 0, nchild = pattern.getNumChildren(); i < nchild; i++)
+  {
+    if (!expr::hasBoundVar(pattern[i]))
+    {
+      d_groundPos.push_back(i);
+    }
+  }
+}
+
 EagerInstantiation::EagerInstantiation(Env& env,
                                        QuantifiersState& qs,
                                        QuantifiersInferenceManager& qim,
@@ -30,6 +49,10 @@ EagerInstantiation::EagerInstantiation(Env& env,
                                        TermRegistry& tr)
     : QuantifiersModule(env, qs, qim, qr, tr),
       d_activeQuants(context()),
+      d_sentFps(context()),
+      d_mergeQueue(context()),
+      d_mergeIdx(context(), 0),
+      d_round(0),
       d_procTime(statisticsRegistry().registerTimer(
           "theory::quantifiers::eagerInst::processTime")),
       d_addInstTime(statisticsRegistry().registerTimer(
@@ -39,7 +62,9 @@ EagerInstantiation::EagerInstantiation(Env& env,
       d_statMatches(statisticsRegistry().registerInt(
           "theory::quantifiers::eagerInst::numMatches")),
       d_statInst(statisticsRegistry().registerInt(
-          "theory::quantifiers::eagerInst::numInstantiations"))
+          "theory::quantifiers::eagerInst::numInstantiations")),
+      d_statRematch(statisticsRegistry().registerInt(
+          "theory::quantifiers::eagerInst::numTermsRematched"))
 {
 }
 
@@ -52,8 +77,14 @@ bool EagerInstantiation::needsCheck(Theory::Effort e)
     // We process new terms at standard effort via a direct call to
     // processNewTerms from the quantifiers engine. We only require a check
     // at full effort if there are still unprocessed pairs, e.g. if the
-    // previous standard effort check was interrupted by a conflict.
+    // previous standard effort check was interrupted by a conflict or
+    // stopped due to the instantiation limit.
     return false;
+  }
+  if (options().quantifiers.eagerInstMerge
+      && d_mergeIdx.get() < d_mergeQueue.size())
+  {
+    return true;
   }
   for (const std::pair<const Node, std::vector<std::unique_ptr<EagerTrigger>>>&
            ot : d_opTriggers)
@@ -179,7 +210,27 @@ void EagerInstantiation::eqNotifyNewClass(TNode t)
   if (t.getKind() == Kind::APPLY_UF)
   {
     getOpTermList(t.getOperator()).d_list.push_back(t);
+    // register t in the parent index, once globally
+    if (d_parentsRegistered.insert(t).second)
+    {
+      for (const Node& tc : t)
+      {
+        d_parents[tc].push_back(t);
+      }
+    }
   }
+}
+
+void EagerInstantiation::eqNotifyMerge(TNode t1, TNode t2)
+{
+  if (!options().quantifiers.eagerInstMerge)
+  {
+    return;
+  }
+  // Only enqueue; the merged class is inspected at the next processing
+  // round. Note we only need one of the terms, since by then they are in
+  // the same class.
+  d_mergeQueue.push_back(std::pair<Node, Node>(t1, t2));
 }
 
 EagerInstantiation::OpTermList& EagerInstantiation::getOpTermList(
@@ -194,6 +245,17 @@ EagerInstantiation::OpTermList& EagerInstantiation::getOpTermList(
   return *it->second;
 }
 
+Node EagerInstantiation::computeSig(TNode t)
+{
+  eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
+  std::vector<Node> sigc;
+  for (const Node& tc : t)
+  {
+    sigc.push_back(ee->getRepresentative(tc));
+  }
+  return nodeManager()->mkNode(Kind::SEXPR, sigc);
+}
+
 void EagerInstantiation::promoteTerms(OpTermList& ol)
 {
   eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
@@ -203,7 +265,6 @@ void EagerInstantiation::promoteTerms(OpTermList& ol)
   {
     return;
   }
-  std::vector<Node> sigc;
   while (i < nterms)
   {
     TNode t = ol.d_list[i];
@@ -218,16 +279,12 @@ void EagerInstantiation::promoteTerms(OpTermList& ol)
     // (its operator is implied by the list it occurs in). Note that within
     // a SAT context, congruences are never undone, so the promotion
     // decision remains valid for the lifetime of this list entry.
-    sigc.clear();
-    for (const Node& tc : t)
-    {
-      sigc.push_back(ee->getRepresentative(tc));
-    }
-    Node sig = nodeManager()->mkNode(Kind::SEXPR, sigc);
+    Node sig = computeSig(t);
     if (!ol.d_sigs.contains(sig))
     {
       ol.d_sigs.insert(sig);
       ol.d_unique.push_back(t);
+      ol.d_uniqueSigs.push_back(sig);
     }
     else
     {
@@ -238,6 +295,91 @@ void EagerInstantiation::promoteTerms(OpTermList& ol)
   ol.d_rawIdx = i;
 }
 
+void EagerInstantiation::processMerges()
+{
+  size_t i = d_mergeIdx.get();
+  size_t endIdx = d_mergeQueue.size();
+  if (i >= endIdx)
+  {
+    return;
+  }
+  eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
+  // The terms re-appended this round, to avoid duplicate work when a term
+  // is involved in several merges.
+  std::unordered_set<Node> repushed;
+  while (i < endIdx)
+  {
+    const std::pair<Node, Node>& m = d_mergeQueue[i];
+    i++;
+    // Re-append the parents of the two merged terms, with fresh
+    // signatures, so that all triggers re-match them. Note we do not
+    // consider the parents of the other members of the merged classes:
+    // congruences propagated by the merge generate their own merge
+    // notifications, which covers the parents of congruent members.
+    // Matches that become possible for a parent of another member of the
+    // merged classes (via deep matching into the grown class) are missed
+    // here; these are found by the lazy instantiation engine.
+    for (size_t j = 0; j < 2; j++)
+    {
+      TNode u = j == 0 ? m.first : m.second;
+      std::map<Node, std::vector<Node>>::iterator itp = d_parents.find(u);
+      if (itp == d_parents.end())
+      {
+        continue;
+      }
+      for (const Node& p : itp->second)
+      {
+        if (!repushed.insert(p).second)
+        {
+          continue;
+        }
+        if (!ee->hasTerm(p))
+        {
+          continue;
+        }
+        // only re-append if some trigger may consider it
+        Node pop = p.getOperator();
+        if (d_opTriggers.find(pop) == d_opTriggers.end())
+        {
+          continue;
+        }
+        Trace("eager-inst-debug")
+            << "Eager inst: re-match " << p << " due to merge on " << u
+            << std::endl;
+        OpTermList& ol = getOpTermList(pop);
+        ol.d_unique.push_back(p);
+        ol.d_uniqueSigs.push_back(computeSig(p));
+        ++d_statRematch;
+      }
+    }
+  }
+  d_mergeIdx = i;
+}
+
+void EagerInstantiation::refreshTriggerCache(EagerTrigger& tr)
+{
+  if (tr.d_roundStamp == d_round)
+  {
+    return;
+  }
+  tr.d_roundStamp = d_round;
+  tr.d_roundActive = true;
+  tr.d_groundReps.clear();
+  eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
+  for (size_t pos : tr.d_groundPos)
+  {
+    TNode g = tr.d_pattern[pos];
+    if (!ee->hasTerm(g))
+    {
+      // a ground argument of the pattern does not occur in the equality
+      // engine, hence the pattern cannot match this round
+      tr.d_roundActive = false;
+      return;
+    }
+    tr.d_groundReps.push_back(ee->getRepresentative(g));
+  }
+}
+
 void EagerInstantiation::processNewTerms()
 {
   if (d_qstate.isInConflict() || !d_qstate.getEqualityEngine()->consistent())
@@ -245,9 +387,17 @@ void EagerInstantiation::processNewTerms()
     return;
   }
   CodeTimer codeTimer(d_procTime);
+  d_round++;
   int64_t prevPairs = d_statPairs.get();
   int64_t prevMatches = d_statMatches.get();
   int64_t prevInst = d_statInst.get();
+  uint64_t instLimit = options().quantifiers.eagerInstLimit;
+  uint64_t pairLimit = options().quantifiers.eagerInstPairLimit;
+  if (options().quantifiers.eagerInstMerge)
+  {
+    processMerges();
+  }
+  bool finished = false;
   for (std::pair<const Node, std::vector<std::unique_ptr<EagerTrigger>>>& ot :
        d_opTriggers)
   {
@@ -259,6 +409,7 @@ void EagerInstantiation::processNewTerms()
     }
     promoteTerms(*itt->second);
     context::CDList<Node>& terms = itt->second->d_unique;
+    context::CDList<Node>& sigs = itt->second->d_uniqueSigs;
     size_t nterms = terms.size();
     for (std::unique_ptr<EagerTrigger>& tr : ot.second)
     {
@@ -270,29 +421,51 @@ void EagerInstantiation::processNewTerms()
         // against all existing terms if it is asserted later
         continue;
       }
+      refreshTriggerCache(*tr);
+      if (!tr->d_roundActive)
+      {
+        // the pattern cannot match this round; do not advance the cursor
+        continue;
+      }
       Trace("eager-inst-debug")
           << "Eager inst: process terms [" << i << ", " << nterms << ") of "
           << ot.first << " for " << tr->d_pattern << std::endl;
       while (i < nterms)
       {
         TNode t = terms[i];
+        TNode sig = sigs[i];
         i++;
         resourceManager()->spendResource(Resource::QuantifierStep);
         ++d_statPairs;
-        processTermForTrigger(t, *tr);
+        processTermForTrigger(t, sig, *tr);
         if (d_qstate.isInConflict())
         {
           // stop processing, but remember how far we got
           break;
         }
+        if (instLimit > 0
+            && d_statInst.get() - prevInst >= static_cast<int64_t>(instLimit))
+        {
+          // met the limit of instantiations for this round
+          finished = true;
+          break;
+        }
+        if (pairLimit > 0
+            && d_statPairs.get() - prevPairs >= static_cast<int64_t>(pairLimit))
+        {
+          // met the limit of considered pairs for this round
+          finished = true;
+          break;
+        }
       }
       tr->d_procIdx = i;
-      if (d_qstate.isInConflict())
+      if (finished || d_qstate.isInConflict())
       {
+        finished = true;
         break;
       }
     }
-    if (d_qstate.isInConflict())
+    if (finished)
     {
       break;
     }
@@ -311,7 +484,9 @@ void EagerInstantiation::processNewTerms()
   }
 }
 
-void EagerInstantiation::processTermForTrigger(TNode t, const EagerTrigger& tr)
+void EagerInstantiation::processTermForTrigger(TNode t,
+                                               TNode sig,
+                                               const EagerTrigger& tr)
 {
   eq::EqualityEngine* ee = d_qstate.getEqualityEngine();
   Assert(ee->hasTerm(t));
@@ -322,14 +497,36 @@ void EagerInstantiation::processTermForTrigger(TNode t, const EagerTrigger& tr)
   // Cheap top-level filter before doing any allocation: ground arguments of
   // the pattern must be equal to the corresponding argument of t. This
   // rejects the vast majority of pairs for operators with many triggers
-  // that differ in a ground argument (e.g. has_type patterns).
-  for (size_t i = 0; i < nchild; i++)
+  // that differ in a ground argument (e.g. has_type patterns). When the
+  // signature of t is available and was computed this round, this amounts
+  // to pointer comparisons against the cached representatives of the
+  // ground arguments of the pattern. A stale signature (computed at an
+  // earlier round, which can occur when a trigger is catching up after
+  // late activation) may spuriously reject; such misses are found by the
+  // lazy instantiation engine.
+  if (!tr.d_groundPos.empty())
   {
-    TNode pc = pat[i];
-    if (!expr::hasBoundVar(pc)
-        && (!ee->hasTerm(pc) || !ee->areEqual(pc, t[i])))
+    Assert(tr.d_roundStamp == d_round && tr.d_roundActive);
+    if (!sig.isNull())
     {
-      return;
+      for (size_t k = 0, ngp = tr.d_groundPos.size(); k < ngp; k++)
+      {
+        if (sig[tr.d_groundPos[k]] != tr.d_groundReps[k])
+        {
+          return;
+        }
+      }
+    }
+    else
+    {
+      for (size_t k = 0, ngp = tr.d_groundPos.size(); k < ngp; k++)
+      {
+        TNode pc = pat[tr.d_groundPos[k]];
+        if (!ee->hasTerm(pc) || !ee->areEqual(pc, t[tr.d_groundPos[k]]))
+        {
+          return;
+        }
+      }
     }
   }
   // match the arguments of the pattern against the arguments of t
@@ -341,16 +538,16 @@ void EagerInstantiation::processTermForTrigger(TNode t, const EagerTrigger& tr)
   std::map<Node, Node> binding;
   std::vector<std::map<Node, Node>> matches;
   matchRec(0, todo, binding, matches);
-  // The instantiations we send, indexed by the tuple of representatives
-  // of the terms, so that we send at most one instantiation per
-  // equivalence-class tuple.
-  std::set<std::vector<Node>> seenInsts;
-  std::vector<Node> instSig;
+  // We skip instantiations whose fingerprint (the quantified formula and
+  // the tuple of representatives of the terms) we have already sent, so
+  // that we send at most one instantiation per equivalence-class tuple.
+  std::vector<Node> instFp;
   Instantiate* ie = d_qim.getInstantiate();
   for (const std::map<Node, Node>& m : matches)
   {
     std::vector<Node> terms;
-    instSig.clear();
+    instFp.clear();
+    instFp.push_back(q);
     bool success = true;
     for (const Node& v : q[0])
     {
@@ -362,12 +559,19 @@ void EagerInstantiation::processTermForTrigger(TNode t, const EagerTrigger& tr)
         break;
       }
       terms.push_back(itm->second);
-      instSig.push_back(ee->getRepresentative(itm->second));
+      instFp.push_back(ee->getRepresentative(itm->second));
     }
-    if (!success || !seenInsts.insert(instSig).second)
+    if (!success)
     {
       continue;
     }
+    Node fp = nodeManager()->mkNode(Kind::SEXPR, instFp);
+    if (d_sentFps.contains(fp))
+    {
+      // duplicate modulo equality of an instantiation we already sent
+      continue;
+    }
+    d_sentFps.insert(fp);
     Trace("eager-inst-debug")
         << "Eager inst: match " << q << " with " << terms << " from term "
         << t << std::endl;

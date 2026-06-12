@@ -808,6 +808,10 @@ void QuantifiersEngine::eqNotifyNewClass(TNode t)
 void QuantifiersEngine::eqNotifyMerge(TNode t1, TNode t2)
 {
   d_treg.eqNotifyMerge(t1, t2);
+  if (d_eagerInst != nullptr)
+  {
+    d_eagerInst->eqNotifyMerge(t1, t2);
+  }
 }
 
 void QuantifiersEngine::markRelevant(Node q) { d_model->markRelevant(q); }

@@ -301,6 +301,30 @@ name   = "Quantifiers"
   help       = "perform eager instantiation via E-matching on new terms at standard effort"
 
 [[option]]
+  name       = "eagerInstMerge"
+  category   = "expert"
+  long       = "eager-inst-merge"
+  type       = "bool"
+  default    = "false"
+  help       = "whether eager instantiation re-matches terms affected by merges in the equality engine"
+
+[[option]]
+  name       = "eagerInstLimit"
+  category   = "expert"
+  long       = "eager-inst-limit=N"
+  type       = "uint64_t"
+  default    = "0"
+  help       = "maximum number of instantiations added per round of eager instantiation (0: no limit)"
+
+[[option]]
+  name       = "eagerInstPairLimit"
+  category   = "expert"
+  long       = "eager-inst-pair-limit=N"
+  type       = "uint64_t"
+  default    = "2000"
+  help       = "maximum number of (term, trigger) pairs considered per round of eager instantiation (0: no limit); this paces eager instantiation so that the SAT solver makes progress between rounds"
+
+[[option]]
   name       = "termDbMode"
   category   = "regular"
   long       = "term-db-mode=MODE"

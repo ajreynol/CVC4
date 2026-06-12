@@ -17,6 +17,7 @@
 
 #include <map>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 #include "context/cdhashset.h"
@@ -33,37 +34,40 @@ namespace quantifiers {
 /**
  * EagerInstantiation
  *
- * This module performs E-matching eagerly: it watches new term notifications
- * from the master equality engine and matches them against (user-provided)
- * triggers as soon as possible, that is, at standard effort checks, instead
- * of waiting for a full effort instantiation round. It is intended to run
- * concurrently with the (lazy) InstantiationEngine, which remains the
- * backstop for completeness.
+ * This module performs E-matching eagerly: it watches new term and merge
+ * notifications from the master equality engine and matches them against
+ * (user-provided) triggers as soon as possible, that is, at standard effort
+ * checks, instead of waiting for a full effort instantiation round. It is
+ * intended to run concurrently with the (lazy) InstantiationEngine, which
+ * remains the backstop for completeness.
  *
  * In contrast to the lazy E-matching infrastructure (TermDb,
  * InstMatchGenerator, etc.), which re-enumerates candidate terms per
  * instantiation round, this module is incremental: each pair of a ground
  * term and a trigger is considered (at the top level) at most once per
- * SAT context. This is implemented by maintaining, per operator, the
- * (context-dependent) list of ground terms with that operator, and, per
- * trigger, a (context-dependent) cursor into that list. The cursor of a
- * trigger only advances while its quantified formula is asserted, so that
- * a quantified formula that becomes asserted late in the SAT context still
- * matches against all existing terms. Matching of subterms is performed
- * modulo the master equality engine at the time the pair is processed.
+ * SAT context, unless a merge makes new matches possible for the term
+ * (see "merge-driven re-matching" below). This is implemented by
+ * maintaining, per operator, the (context-dependent) list of ground terms
+ * with that operator, and, per trigger, a (context-dependent) cursor into
+ * that list. The cursor of a trigger only advances while its quantified
+ * formula is asserted, so that a quantified formula that becomes asserted
+ * late in the SAT context still matches against all existing terms.
+ * Matching of subterms is performed modulo the master equality engine at
+ * the time the pair is processed.
+ *
+ * Merge-driven re-matching: when two equivalence classes merge, matches
+ * that were not possible before may become possible, but only for terms
+ * that have a direct subterm in the merged class (matching of deeper
+ * subterms is modulo the equality engine and hence considers the merged
+ * classes when their parent is re-matched). We maintain a (syntactic)
+ * parent index, and re-append the parents of all members of a merged
+ * class to the respective term lists, so that all triggers re-match them.
  *
  * The current implementation handles single triggers whose pattern is an
  * APPLY_UF application and whose free variables span the variables of the
  * quantified formula. All other triggers (multi-triggers, relational
  * triggers, triggers with interpreted symbols) are left to the lazy
  * instantiation engine.
- *
- * Limitations (planned future work):
- * - Merges in the master equality engine do not (yet) trigger re-matching
- *   of already processed (term, trigger) pairs. A match that becomes
- *   possible only due to a merge of two existing equivalence classes is
- *   found later by the lazy engine at full effort.
- * - No generation/cost-based throttling of eager instances yet.
  *
  * Trace tags:
  * - eager-inst: trigger registration, activation, added instantiations
@@ -109,6 +113,13 @@ class EagerInstantiation : public QuantifiersModule
    */
   void eqNotifyNewClass(TNode t);
   /**
+   * Notification from the master equality engine that the classes of t1
+   * and t2 were merged. This method only enqueues the pair; re-matching is
+   * performed in the next call to processNewTerms. It is safe to call this
+   * method while the equality engine is mid-operation.
+   */
+  void eqNotifyMerge(TNode t1, TNode t2);
+  /**
    * Process all unprocessed (term, trigger) pairs, matching terms against
    * the triggers of asserted quantified formulas and sending instantiation
    * lemmas via the inference manager. Lemmas are buffered in the inference
@@ -125,29 +136,104 @@ class EagerInstantiation : public QuantifiersModule
   /** An eager trigger, a single pattern for a quantified formula. */
   struct EagerTrigger
   {
-    EagerTrigger(context::Context* c, const Node& q, const Node& pattern)
-        : d_quant(q), d_pattern(pattern), d_procIdx(c, 0)
-    {
-    }
+    EagerTrigger(context::Context* c, const Node& q, const Node& pattern);
     /** The quantified formula */
     Node d_quant;
     /** The pattern, an APPLY_UF application whose free variables are the
      * bound variables of d_quant */
     Node d_pattern;
     /**
-     * The index of the next unprocessed term in the term list of the
-     * operator of d_pattern (SAT context). This only advances while
+     * The index of the next unprocessed term in the unique term list of
+     * the operator of d_pattern (SAT context). This only advances while
      * d_quant is asserted.
      */
     context::CDO<size_t> d_procIdx;
+    /** The argument positions of d_pattern that are ground */
+    std::vector<size_t> d_groundPos;
+    //----- per-round cache, valid when d_roundStamp matches the current round
+    /** The round this cache was computed at */
+    uint64_t d_roundStamp;
+    /** Whether all ground arguments of the pattern occur in the equality
+     * engine this round; if not, the pattern cannot match */
+    bool d_roundActive;
+    /** The representatives of the ground arguments, aligned with
+     * d_groundPos */
+    std::vector<Node> d_groundReps;
   };
   /**
-   * Match the term t against trigger tr, whose pattern has the same
-   * operator as t, and send the resulting instantiations. Performs a
-   * cheap top-level filter (ground pattern arguments must be equal to the
-   * corresponding arguments of t) before running full matching.
+   * The (context-dependent) lists of ground terms for one operator.
+   *
+   * Terms arrive in d_list (the raw list) via eqNotifyNewClass. During
+   * processing, raw terms are promoted (once, tracked by d_rawIdx) to
+   * d_unique if no term with the same signature (the representatives of
+   * its arguments) has been promoted already, as recorded in d_sigs.
+   * Triggers match against d_unique only, since terms that are congruent
+   * to an already promoted term produce the same matches modulo equality.
+   * This is important since (1) most new terms are introduced by
+   * instantiation lemmas, which heavily overlap with existing terms, and
+   * (2) each unique term is matched by all triggers with this operator,
+   * hence deduplication must happen before the per-trigger loop.
+   * The signature of each promoted term is stored in d_uniqueSigs (aligned
+   * with d_unique), which enables cheap filtering against the ground
+   * arguments of patterns.
+   *
+   * Terms may additionally be re-appended to d_unique by merge-driven
+   * re-matching (with their new signature), in which case they are
+   * processed again by all triggers.
+   *
+   * Note that within a SAT context, merges only coarsen the congruence
+   * relation, so terms that are congruent at promotion time remain
+   * congruent; backtracking pops all structures consistently.
    */
-  void processTermForTrigger(TNode t, const EagerTrigger& tr);
+  class OpTermList
+  {
+   public:
+    OpTermList(context::Context* c)
+        : d_list(c), d_unique(c), d_uniqueSigs(c), d_sigs(c), d_rawIdx(c, 0)
+    {
+    }
+    /** The raw list of terms with this operator */
+    context::CDList<Node> d_list;
+    /** The congruence-deduplicated list of terms */
+    context::CDList<Node> d_unique;
+    /** The signatures of the terms in d_unique, aligned with d_unique */
+    context::CDList<Node> d_uniqueSigs;
+    /** The set of signatures of the terms promoted to d_unique */
+    NodeSet d_sigs;
+    /** The index of the next raw term to consider for promotion */
+    context::CDO<size_t> d_rawIdx;
+  };
+  /** Get (or create) the term lists for operator op. */
+  OpTermList& getOpTermList(const Node& op);
+  /**
+   * Return the signature of term t, the tuple of representatives of its
+   * arguments (the operator is implied by the list the term occurs in).
+   */
+  Node computeSig(TNode t);
+  /**
+   * Promote all unpromoted raw terms of ol to its unique list, if their
+   * signature is new.
+   */
+  void promoteTerms(OpTermList& ol);
+  /**
+   * Process all unprocessed merges: for each merged class, re-append the
+   * (syntactic) parents of its members to the unique term lists of their
+   * operators, so that all triggers re-match them.
+   */
+  void processMerges();
+  /**
+   * Refresh the per-round cache of tr (the representatives of the ground
+   * arguments of its pattern), if it is not valid for the current round.
+   */
+  void refreshTriggerCache(EagerTrigger& tr);
+  /**
+   * Match the term t against trigger tr, whose pattern has the same
+   * operator as t, and send the resulting instantiations. The term sig,
+   * if non-null, is the signature of t, which is used for cheap filtering:
+   * the ground arguments of the pattern must have the same representative
+   * as the corresponding argument of t.
+   */
+  void processTermForTrigger(TNode t, TNode sig, const EagerTrigger& tr);
   /**
    * Continue matching the list of (pattern, ground term) constraints in
    * todo starting at index i, where binding is the current (partial) map
@@ -167,51 +253,36 @@ class EagerInstantiation : public QuantifiersModule
   /** The set of quantified formulas currently asserted (SAT context). */
   NodeSet d_activeQuants;
   /**
-   * The (context-dependent) lists of ground terms for one operator.
-   *
-   * Terms arrive in d_list (the raw list) via eqNotifyNewClass. During
-   * processing, raw terms are promoted (once, tracked by d_rawIdx) to
-   * d_unique if no term with the same signature (the representatives of
-   * its arguments) has been promoted already, as recorded in d_sigs.
-   * Triggers match against d_unique only, since terms that are congruent
-   * to an already promoted term produce the same matches modulo equality.
-   * This is important since (1) most new terms are introduced by
-   * instantiation lemmas, which heavily overlap with existing terms, and
-   * (2) each unique term is matched by all triggers with this operator,
-   * hence deduplication must happen before the per-trigger loop.
-   *
-   * Note that within a SAT context, merges only coarsen the congruence
-   * relation, so terms that are congruent at promotion time remain
-   * congruent; backtracking pops all structures consistently.
-   */
-  class OpTermList
-  {
-   public:
-    OpTermList(context::Context* c)
-        : d_list(c), d_unique(c), d_sigs(c), d_rawIdx(c, 0)
-    {
-    }
-    /** The raw list of terms with this operator */
-    context::CDList<Node> d_list;
-    /** The congruence-deduplicated list of terms */
-    context::CDList<Node> d_unique;
-    /** The signatures of the terms in d_unique */
-    NodeSet d_sigs;
-    /** The index of the next raw term to consider for promotion */
-    context::CDO<size_t> d_rawIdx;
-  };
-  /** Get (or create) the term lists for operator op. */
-  OpTermList& getOpTermList(const Node& op);
-  /**
-   * Promote all unpromoted raw terms of ol to its unique list, if their
-   * signature is new.
-   */
-  void promoteTerms(OpTermList& ol);
-  /**
    * Map from operators to the (SAT-context dependent) lists of ground terms
    * with that operator that have been added to the master equality engine.
    */
   std::map<Node, std::unique_ptr<OpTermList>> d_opTerms;
+  /**
+   * The (syntactic) parent index: maps each term to the APPLY_UF terms
+   * that have it as a direct argument. This is context-independent; stale
+   * entries (whose parent is not in the equality engine) are filtered at
+   * use. Used for merge-driven re-matching.
+   */
+  std::map<Node, std::vector<Node>> d_parents;
+  /** The terms whose parents have been registered in d_parents. */
+  std::unordered_set<Node> d_parentsRegistered;
+  /**
+   * Fingerprints of the instantiations this module has sent (SAT context).
+   * A fingerprint is the quantified formula together with the tuple of
+   * representatives of the instantiating terms. Matches whose fingerprint
+   * is present are duplicates modulo equality of an instantiation we have
+   * already sent (whose lemma persists), and are skipped without
+   * consulting the instantiation utility. This is important since the
+   * same instantiation is typically re-derived many times from different
+   * (congruent) terms across rounds.
+   */
+  NodeSet d_sentFps;
+  /** The queue of unprocessed merges (SAT context). */
+  context::CDList<std::pair<Node, Node>> d_mergeQueue;
+  /** The index of the next unprocessed merge in d_mergeQueue. */
+  context::CDO<size_t> d_mergeIdx;
+  /** The current processing round, for the per-round trigger caches. */
+  uint64_t d_round;
   /** Total time spent in processNewTerms */
   TimerStat d_procTime;
   /** Time spent sending instantiations (subsumed by the above) */
@@ -222,6 +293,8 @@ class EagerInstantiation : public QuantifiersModule
   IntStat d_statMatches;
   /** Number of instantiations successfully added */
   IntStat d_statInst;
+  /** Number of terms re-appended due to merges */
+  IntStat d_statRematch;
 };
 
 }  // namespace quantifiers
