@@ -173,9 +173,24 @@ Node EoNodeConverter::postConvert(Node n)
     // non-closure operator here, since we will be traversing over it
     // during letification.
     std::vector<Node> args;
-    args.insert(args.end(),
-                n.begin(),
-                n.begin() + getNumChildrenToProcessForClosure(k));
+    args.push_back(vl);
+    if (k == Kind::SET_COMPREHENSION)
+    {
+      // Set comprehension is the only binder that has two body children: a
+      // predicate (n[1]) and an element term (n[2]). The binder utilities in
+      // the Eunoia signature (see programs/Quantifiers.eo) assume binders have
+      // exactly two children, namely a variable list and a single body. We
+      // thus combine the predicate and element into a single body term using
+      // the internal @set.comprehension.body operator, so that the
+      // comprehension is printed as
+      //   (set.comprehension <vars> (@set.comprehension.body <pred> <elem>)).
+      Node body = mkInternalApp("@set.comprehension.body", {n[1], n[2]}, tn);
+      args.push_back(body);
+    }
+    else
+    {
+      args.push_back(n[1]);
+    }
     return mkInternalApp(
         printer::smt2::Smt2Printer::smtKindString(k), args, tn);
   }
@@ -408,11 +423,6 @@ Node EoNodeConverter::typeAsNode(TypeNode tn)
   Node ret = mkInternalSymbol(ss.str(), d_sortType, true);
   d_typeAsNode[tn] = ret;
   return ret;
-}
-
-size_t EoNodeConverter::getNumChildrenToProcessForClosure(Kind k) const
-{
-  return k == Kind::SET_COMPREHENSION ? 3 : 2;
 }
 
 Node EoNodeConverter::mkList(const std::vector<Node>& args)
