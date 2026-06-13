@@ -1297,6 +1297,29 @@ void EoPrinter::printStepPost(EoPrintChannel* out, const ProofNode* pn)
     // We are done with the assumptions in scope, pop a context.
     d_passumeCtx.pop();
   }
+  else if (r == ProofRule::CONG
+           && pn->getResult()[0].getKind() == Kind::SET_COMPREHENSION)
+  {
+    // Set comprehension is printed as a binder with a single body term
+    // (@set.comprehension.body <pred> <elem>), see EoNodeConverter. The
+    // congruence proof from cvc5 however provides one equality premise per
+    // congruened child (the predicate and the element). We thus first prove
+    // the equality of the body terms by congruence over @set.comprehension.body
+    // and then conclude the equality of the comprehensions by congruence over
+    // set.comprehension. This way both steps check against the generic cong
+    // rule in the signature.
+    Assert(args.size() == 1 && conclusion.getKind() == Kind::EQUAL);
+    Node bodyLhs = conclusion[0][conclusion[0].getNumChildren() - 1];
+    Node bodyRhs = conclusion[1][conclusion[1].getNumChildren() - 1];
+    Node bodyEq = bodyLhs.eqNode(bodyRhs);
+    // auxiliary step proving the equality of the body terms
+    d_pfIdCounter++;
+    size_t bid = d_pfIdCounter;
+    out->printStep(rname, bodyEq, bid, premises, {bodyLhs});
+    // the main step concludes the comprehension equality from the body equality
+    std::vector<size_t> bodyPremise{bid};
+    out->printStep(rname, conclusionPrint, id, bodyPremise, args);
+  }
   else
   {
     out->printStep(rname, conclusionPrint, id, premises, args);
