@@ -1,70 +1,56 @@
 (include "../theories/Builtin.eo")
 (include "../theories/Quantifiers.eo")
 
-; program: $contains_atomic_term
-; args:
-; - arg1 S: The term to process.
-; - arg2 U: The atomic (0-ary) term to find.
-; return: The result is true if arg2 is a subterm of arg1.
-(program $contains_atomic_term
-  ((T Type) (U Type) (S Type) (x U) (y S) (f (-> T S)) (a T))
-  :signature (S U) Bool
-  (
-  (($contains_atomic_term (f a) x)  (eo::ite ($contains_atomic_term f x) true ($contains_atomic_term a x)))
-  (($contains_atomic_term x y)      (eo::eq x y))
-  )
-)
-
-; program: $contains_atomic_term_list
-; args:
-; - t T: The term to process.
-; - xs @List: The list of terms to find.
-; return: true if any atomic (0-ary) subterm of t is in xs.
-(program $contains_atomic_term_list ((T Type) (U Type) (S Type) (x U) (f (-> T S)) (a T) (xs @List))
-  :signature (T @List) Bool
-  (
-    (($contains_atomic_term_list (f a) xs)  (eo::ite ($contains_atomic_term_list f xs) true ($contains_atomic_term_list a xs)))
-    (($contains_atomic_term_list x xs)      (eo::not (eo::is_neg (eo::list_find @list xs x))))
-  )
-)
-
 ; program: $contains_atomic_term_list_free_rec
 ; args:
 ; - t T: The term to process.
-; - xs @List: The list of terms to find.
+; - xs @List: The list of variables to find.
 ; - bvs @List: The current bound variables.
 ; return: >
 ;   true if any atomic (0-ary) subterm of t is in xs and is not a bound variable
 ;   of t at that position or in the set of already bound variables bvs.
 ; note: Assumes applications with lists as their first argument are binders.
 (program $contains_atomic_term_list_free_rec
-  ((T Type) (U Type) (S Type) (x U) (q (-> @List T S)) (f (-> T S)) (a T) (xs @List) (bvs @List) (x U) (ys @List :list))
+  ((T Type) (U Type) (S Type) (x U) (q (-> @List T S)) (f (-> T S)) (a T)
+   (xs @List) (bvs @List) (x U) (ys @List :list) (s String))
   :signature (T @List @List) Bool
   (
-    ; we assume that any function taking a list as a first argument is a binder
-    (($contains_atomic_term_list_free_rec (q (@list x ys) a) xs bvs)
-      ; concatenate these variables to the list of bound variables
-      ($contains_atomic_term_list_free_rec a xs (eo::list_concat @list (@list x ys) bvs)))
-    ; otherwise normal recursion
-    (($contains_atomic_term_list_free_rec (f a) xs bvs)
-      (eo::ite ($contains_atomic_term_list_free_rec f xs bvs) true ($contains_atomic_term_list_free_rec a xs bvs)))
-    (($contains_atomic_term_list_free_rec x xs bvs)
-      (eo::ite (eo::is_neg (eo::list_find @list xs x)) 
-        false
-        (eo::is_neg (eo::list_find @list bvs x))))
+  ; we assume that any function taking a list as a first argument is a binder
+  (($contains_atomic_term_list_free_rec (q (@list x ys) a) xs bvs)
+    ; concatenate these variables to the list of bound variables
+    ($contains_atomic_term_list_free_rec a xs (eo::list_concat @list (@list x ys) bvs)))
+  ; otherwise normal recursion
+  (($contains_atomic_term_list_free_rec (f a) xs bvs)
+    (eo::ite ($contains_atomic_term_list_free_rec f xs bvs) true ($contains_atomic_term_list_free_rec a xs bvs)))
+  (($contains_atomic_term_list_free_rec (eo::var s T) xs bvs)
+    (eo::ite (eo::is_neg (eo::list_find @list xs (eo::var s T)))
+      false
+      (eo::is_neg (eo::list_find @list bvs (eo::var s T)))))
+  (($contains_atomic_term_list_free_rec x xs bvs) false)
   )
 )
 
 ; define: $contains_atomic_term_list_free
 ; args:
 ; - t T: The term to process.
-; - xs @List: The list of terms to find.
+; - xs @List: The list of variables to find.
 ; return: >
 ;   true if any atomic (0-ary) subterm of t is in xs and is not a bound
 ;   variable of t at that position.
 ; note: Assumes applications with lists as their first argument are binders.
 (define $contains_atomic_term_list_free ((T Type :implicit) (x T) (xs @List))
   ($contains_atomic_term_list_free_rec x xs @list.nil))
+
+; define: $contains_atomic_term_free
+; args:
+; - t T: The term to process.
+; - y S: The variable to find.
+; return: >
+;   true if any atomic (0-ary) subterm of t is in xs and is not a bound
+;   variable of t at that position.
+; note: Assumes applications with lists as their first argument are binders.
+(define $contains_atomic_term_free ((T Type :implicit) (S Type :implicit) (x T) (y S))
+  ($contains_atomic_term_list_free_rec x (@list y) @list.nil))
 
 ; program: $substitute_simul
 ; args:
@@ -76,7 +62,7 @@
 ; note: This method does not evaluate if variable capture is encountered.
 (program $substitute_simul
   ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List :list) (ss @List :list)
-   (q (-> @List T S)) (V Type) (v V) (vs @List :list))
+   (q (-> @List T S)) (V Type) (v V) (vs @List :list) (s String))
   :signature (S @List @List) S
   (
   ; We assume that any function taking a list as a first argument is a binder
@@ -90,9 +76,10 @@
           (eo::list_concat @list (@list v vs) ss)))))
   (($substitute_simul (f a) xs ss) 
     (_ ($substitute_simul f xs ss) ($substitute_simul a xs ss)))
-  (($substitute_simul x xs ss)
-    (eo::define ((i (eo::list_find @list xs x)))
-      (eo::ite (eo::is_neg i) x ($assoc_nil_nth @list ss i))))
+  (($substitute_simul (eo::var s S) xs ss)
+    (eo::define ((i (eo::list_find @list xs (eo::var s S))))
+      (eo::ite (eo::is_neg i) (eo::var s S) ($assoc_nil_nth @list ss i))))
+  (($substitute_simul x xs ss) x)
   )
 )
 
@@ -125,7 +112,7 @@
 ; with the corresponding variable in ys.
 (program $rename_simul
   ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List :list) (ss @List :list)
-   (q (-> @List T S)) (V Type) (v V) (vs @List :list))
+   (q (-> @List T S)) (V Type) (v V) (vs @List :list) (s String))
   :signature (S @List @List) S
   (
   ; we assume that any function taking a list as a first argument is a binder
@@ -136,9 +123,10 @@
       (q ($rename_simul (@list v vs) xs ss) ($rename_simul a xs ss))))
   (($rename_simul (f a) xs ss) 
     (_ ($rename_simul f xs ss) ($rename_simul a xs ss)))
-  (($rename_simul x xs ss)                      
-    (eo::define ((i (eo::list_find @list xs x)))
-      (eo::ite (eo::is_neg i) x ($assoc_nil_nth @list ss i))))
+  (($rename_simul (eo::var s S) xs ss)
+    (eo::define ((i (eo::list_find @list xs (eo::var s S))))
+      (eo::ite (eo::is_neg i) (eo::var s S) ($assoc_nil_nth @list ss i))))
+  (($rename_simul x xs ss) x)
   )
 )
 
