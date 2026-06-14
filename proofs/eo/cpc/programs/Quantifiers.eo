@@ -141,3 +141,30 @@
       (eo::ite (eo::is_neg i) x ($assoc_nil_nth @list ss i))))
   )
 )
+
+; program: $is_closed_rec
+; args:
+; - s S: The term.
+; - xs @List: The current bound variables.
+; return: true iff s is closed, assuming xs are bound.
+; note: Assumes applications with lists as their first argument are binders.
+(program $is_closed_rec
+  ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List)
+   (q (-> @List T S)) (V Type) (v V) (vs @List :list) (s String))
+  :signature (S @List) Bool
+  (
+  (($is_closed_rec (q (@list v vs) a) xs)
+    (eo::and ($is_closed_rec q xs) ($is_closed_rec a (eo::list_concat @list (@list v vs) xs))))
+  (($is_closed_rec (f a) xs)
+    (eo::and ($is_closed_rec f xs) ($is_closed_rec a xs)))
+  (($is_closed_rec (eo::var s S) xs) (eo::not (eo::is_neg (eo::list_find @list xs (eo::var s S)))))
+  (($is_closed_rec x xs) true)
+  )
+)
+
+; program: $is_closed
+; args:
+; - t T: The term
+; return: true iff t is closed, i.e. has no free variables.
+(define $is_closed ((T Type :implicit) (t T))
+  ($is_closed_rec t @list.nil))

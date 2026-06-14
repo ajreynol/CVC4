@@ -25,7 +25,9 @@
 ; return: >
 ;   the log base 2 of x. If x is not strictly positive, we return 0.
 (define $arith_eval_int_log_2 ((x Int))
-  (eo::ite (eo::is_z x) (eo::log 2 x) 0))
+  (eo::ite (eo::is_z x)
+    (eo::ite (eo::is_neg x) 0 (eo::log 2 x))
+    (int.log2 x)))
 
 ; define: $arith_eval_int_pow_2
 ; args:
