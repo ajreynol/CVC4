@@ -12,7 +12,8 @@
 ; note: Assumes applications with lists as their first argument are binders.
 (program $contains_atomic_term_list_free_rec
   ((T Type) (U Type) (S Type) (x U) (q (-> @List T S)) (f (-> T S)) (a T)
-   (xs @List) (bvs @List) (x U) (ys @List :list) (s String))
+   (xs @List) (bvs @List) (x U) (ys @List :list) (s String)
+   (F Bool) (n Int) (r RegLan))
   :signature (T @List @List) Bool
   (
   ; we assume that any function taking a list as a first argument is a binder
@@ -26,6 +27,12 @@
     (eo::ite (eo::is_neg (eo::list_find @list xs (eo::var s T)))
       false
       (eo::is_neg (eo::list_find @list bvs (eo::var s T)))))
+  ; symbols that are opaque but may contain free variables
+  (($contains_atomic_term_list_free_rec (@quantifiers_skolemize F n) xs bvs)
+    ($contains_atomic_term_list_free_rec F xs bvs))
+  (($contains_atomic_term_list_free_rec (@re_unfold_pos_component s r n) xs bvs)
+    (eo::ite ($contains_atomic_term_list_free_rec s xs bvs) true ($contains_atomic_term_list_free_rec r xs bvs)))
+  ; otherwise false
   (($contains_atomic_term_list_free_rec x xs bvs) false)
   )
 )
@@ -85,20 +92,14 @@
 
 ; program: $substitute
 ; args:
-; - arg1 S: The domain of the substitution.
-; - arg2 S: The range of the substitution.
-; - arg3 U: The term to process.
-; return: the result of replacing all occurrences of arg1 with arg2 in arg3.
+; - x S: The domain of the substitution.
+; - y S: The range of the substitution.
+; - z U: The term to process.
+; return: the result of replacing all occurrences of x with y in z.
 ; note: Assumes applications with lists as their first argument are binders.
 ; note: This method does not evaluate if variable capture is encountered.
-(program $substitute
-  ((T Type) (U Type) (S Type) (x S) (y S) (f (-> T U)) (a T) (z U)
-   (q (-> @List T S)) (V Type) (v V) (vs @List :list))
-  :signature (S S U) U
-  (
-  (($substitute x y z) ($substitute_simul z (@list x) (@list y)))
-  )
-)
+(define $substitute ((U Type :implicit) (S Type :implicit) (x S) (y S) (z U))
+  ($substitute_simul z (@list x) (@list y)))
 
 ; program: $rename_simul
 ; args:
