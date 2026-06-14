@@ -122,7 +122,9 @@
 (program $get_unused_vars ((Q (-> @List Bool Bool)) (x @List) (y @List) (F Bool))
   :signature (Bool Bool) @List
   (
-  (($get_unused_vars (Q x F) (Q y F)) (eo::list_diff @list (eo::list_setof @list x) y))
+  (($get_unused_vars (Q x F) (Q y F)) (eo::define ((sx (eo::list_setof @list x)))
+                                      (eo::requires (eo::list_minclude @list sx y) true
+                                        (eo::list_diff @list sx y))))
   (($get_unused_vars (Q x F) F)       (eo::list_setof @list x))
   )
 )
