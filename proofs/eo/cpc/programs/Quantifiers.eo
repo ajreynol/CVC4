@@ -23,6 +23,7 @@
   ; otherwise normal recursion
   (($contains_atomic_term_list_free_rec (f a) xs bvs)
     (eo::ite ($contains_atomic_term_list_free_rec f xs bvs) true ($contains_atomic_term_list_free_rec a xs bvs)))
+  ; if in xs, check whether or not it is bound in bvs
   (($contains_atomic_term_list_free_rec (eo::var s T) xs bvs)
     (eo::ite (eo::is_neg (eo::list_find @list xs (eo::var s T)))
       false
@@ -92,9 +93,11 @@
             (eo::list_concat @list (@list v vs) ss))))))
   (($substitute_simul_rec isr (f a) xs ss)
     (_ ($substitute_simul_rec isr f xs ss) ($substitute_simul_rec isr a xs ss)))
+  ; if a variable, check if it is in the substitution list
   (($substitute_simul_rec isr (eo::var s S) xs ss)
     (eo::define ((i (eo::list_find @list xs (eo::var s S))))
       (eo::ite (eo::is_neg i) (eo::var s S) ($assoc_nil_nth @list ss i))))
+  ; otherwise unchanged
   (($substitute_simul_rec isr x xs ss) x)
   )
 )
