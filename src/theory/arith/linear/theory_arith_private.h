@@ -511,6 +511,16 @@ class TheoryArithPrivate : protected EnvObj
    * true if a conflict or lemma was emitted.
    */
   bool postCheck(Theory::Effort level);
+  /**
+   * Run the deferred Diophantine equation solver at last call effort, when
+   * option arithDioSolverLastCall is enabled. This invokes callDioSolver to
+   * check for a Diophantine conflict among the fixed integer variables, and
+   * flushes any decomposition lemmas. If a conflict or lemma is produced, it
+   * is emitted on the output channel and this method returns true.
+   *
+   * @return true if a conflict or lemma was emitted.
+   */
+  bool lastCallEffortDioSolve();
   //--------------------------------- end standard check
   /**
    * Found non-linear? This returns true if this solver ever encountered

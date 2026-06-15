@@ -1703,6 +1703,58 @@ Node TheoryArithPrivate::callDioSolver()
   return d_diosolver.processEquationsForConflict();
 }
 
+bool TheoryArithPrivate::lastCallEffortDioSolve()
+{
+  Assert(options().arith.arithDioSolver
+         && options().arith.arithDioSolverLastCall);
+  // If we are already in conflict, there is nothing to do.
+  if (anyConflict())
+  {
+    return false;
+  }
+  // Run the (deferred) Diophantine conflict detection. This mirrors the
+  // full-effort path in postCheck, but is run here at last call effort.
+  Node possibleConflict = callDioSolver();
+  if (possibleConflict != Node::null())
+  {
+    revertOutOfConflict();
+    Trace("arith::conflict") << "dio conflict (last call)   "
+                             << possibleConflict << endl;
+    Pf pf;
+    if (isProofEnabled())
+    {
+      std::vector<Node> assump;
+      if (possibleConflict.getKind() == Kind::AND)
+      {
+        assump.insert(
+            assump.end(), possibleConflict.begin(), possibleConflict.end());
+      }
+      else
+      {
+        assump.push_back(possibleConflict);
+      }
+      Node npc = possibleConflict.notNode();
+      ArithProofRCons arc(d_env, TrustId::ARITH_DIO_LEMMA);
+      pf = arc.getProofFor(npc);
+    }
+    raiseBlackBoxConflict(possibleConflict, pf);
+    outputConflicts();
+    return true;
+  }
+  // Flush any decomposition lemmas the Diophantine solver produced, which
+  // are required for completeness.
+  bool emitted = false;
+  while (d_diosolver.hasMoreDecompositionLemmas())
+  {
+    Node decompositionLemma = d_diosolver.nextDecompositionLemma();
+    Trace("arith::lemma") << "dio decomposition lemma (last call) "
+                          << decompositionLemma << endl;
+    outputLemma(decompositionLemma, InferenceId::ARITH_DIO_DECOMPOSITION);
+    emitted = true;
+  }
+  return emitted;
+}
+
 ConstraintP TheoryArithPrivate::constraintFromFactQueue(TNode assertion)
 {
   Kind simpleKind = Comparison::comparisonKind(assertion);
@@ -3901,7 +3953,12 @@ bool TheoryArithPrivate::postCheck(Theory::Effort effortLevel)
       && !hasIntegerModel())
   {
     Node possibleConflict = Node::null();
-    if (!emmittedConflictOrSplit && options().arith.arithDioSolver)
+    // When dio-solver-last-call is enabled, we defer the (potentially
+    // expensive) Diophantine conflict detection to last call effort (see
+    // lastCallEffortDioSolve), and rely on branching to handle integer
+    // variables during the search.
+    if (!emmittedConflictOrSplit && options().arith.arithDioSolver
+        && !options().arith.arithDioSolverLastCall)
     {
       possibleConflict = callDioSolver();
       if (possibleConflict != Node::null())
@@ -3934,7 +3991,8 @@ bool TheoryArithPrivate::postCheck(Theory::Effort effortLevel)
     }
 
     if (!emmittedConflictOrSplit && d_hasDoneWorkSinceCut
-        && options().arith.arithDioSolver)
+        && options().arith.arithDioSolver
+        && !options().arith.arithDioSolverLastCall)
     {
       if (getDioCuttingResource())
       {

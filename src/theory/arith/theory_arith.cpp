@@ -323,6 +323,13 @@ bool TheoryArith::preNotifyFact(
 
 bool TheoryArith::needsCheckLastEffort()
 {
+  // If we are deferring Diophantine conflict detection to last call, run it
+  // now. Any conflict or lemma is emitted directly on the output channel by
+  // the linear solver, which will trigger a subsequent check.
+  if (options().arith.arithDioSolver && options().arith.arithDioSolverLastCall)
+  {
+    d_internal.lastCallEffortDioSolve();
+  }
   if (d_nonlinearExtension != nullptr)
   {
     // If we computed lemmas in the last FULL_EFFORT check, send them now.

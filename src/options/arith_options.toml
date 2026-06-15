@@ -126,6 +126,14 @@ name   = "Arithmetic Theory"
   default    = "true"
   help       = "turns on Linear Diophantine Equation solver (Griggio, JSAT 2012)"
 
+[[option]]
+  name       = "arithDioSolverLastCall"
+  category   = "expert"
+  long       = "dio-solver-last-call"
+  type       = "bool"
+  default    = "false"
+  help       = "defer Diophantine equation solver conflict detection to last call effort, instead of running it at every full effort check"
+
 # Whether to split (= x y) into (and (<= x y) (>= x y)) in
 # arithmetic preprocessing.
 [[option]]

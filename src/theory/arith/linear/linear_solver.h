@@ -92,6 +92,12 @@ class LinearSolver : protected EnvObj
    * true if a conflict or lemma was emitted.
    */
   bool postCheck(Theory::Effort level);
+  /**
+   * Run the deferred Diophantine equation solver at last call effort (see
+   * TheoryArithPrivate::lastCallEffortDioSolve). Returns true if a conflict
+   * or lemma was emitted.
+   */
+  bool lastCallEffortDioSolve();
   //--------------------------------- end standard check
   /**
    * Found non-linear? This returns true if this solver ever encountered

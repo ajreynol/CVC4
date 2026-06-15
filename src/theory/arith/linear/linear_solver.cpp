@@ -78,6 +78,10 @@ bool LinearSolver::postCheck(Theory::Effort level)
 {
   return d_internal.postCheck(level);
 }
+bool LinearSolver::lastCallEffortDioSolve()
+{
+  return d_internal.lastCallEffortDioSolve();
+}
 bool LinearSolver::foundNonlinear() const
 {
   return d_internal.foundNonlinear();
