@@ -116,8 +116,8 @@
 ; - t (Set T): The set to insert into.
 ; return: >
 ;   The union of elements in es with t.
-(program $set_eval_insert ((T Type) (x T) (xs @List :list) (t (Set T)))
-  :signature (@List (Set T)) (Set T)
+(program $set_eval_insert ((T Type) (x T) (xs (@TList T) :list) (t (Set T)))
+  :signature ((@TList T) (Set T)) (Set T)
   (
     (($set_eval_insert (@tlist x xs) t) (set.union (set.singleton x) ($set_eval_insert xs t)))
     (($set_eval_insert (@tlist.nil T) t)    t)
