@@ -481,14 +481,13 @@
 ; program: $bv_const_to_bitlist_rec
 ; args:
 ; - c (BitVec n): The bitvector constant to process.
-; - i Int: The index we are currently processing.
-; - n Int: The bitwidth of c.
-; return: the bitlist for a starting with index i.
-(program $bv_const_to_bitlist_rec ((n Int) (c (BitVec n)) (i Int))
-  :signature ((BitVec n) (eo::quote i) Int) (BitVec (eo::add n (eo::neg i)))
+; - xs (@TList Int): The list of bits left to process.
+; return: the bitlist for a, for bits listed by xs.
+(program $bv_const_to_bitlist_rec ((n Int) (c (BitVec n)) (i Int) (xs (@TList Int) :list))
+  :signature ((BitVec n) (eo::quote xs)) (BitVec (eo::list_len @tlist xs))
   (
-    (($bv_const_to_bitlist_rec c n n)   @bv_empty)
-    (($bv_const_to_bitlist_rec c i n)   (_ @from_bools ($bv_bit_set c i) ($bv_const_to_bitlist_rec c (eo::add i 1) n)))
+    (($bv_const_to_bitlist_rec c (@tlist.nil Int))   @bv_empty)
+    (($bv_const_to_bitlist_rec c (@tlist i xs))   (_ @from_bools ($bv_bit_set c i) ($bv_const_to_bitlist_rec c xs)))
   )
 )
 
@@ -497,7 +496,7 @@
 ; - a (BitVec n): The bitvector constant to bitblast.
 ; return: the bitblasted term for a, which is its reverse bitlist.
 (define $bv_mk_bitblast_step_const ((n Int :implicit) (a (BitVec n)))
-  ($bv_const_to_bitlist_rec a 0 (eo::len a)))
+  ($bv_const_to_bitlist_rec a ($iota (eo::len a))))
 
 ;;; shifts
 
