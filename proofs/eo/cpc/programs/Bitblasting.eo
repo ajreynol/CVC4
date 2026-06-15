@@ -486,8 +486,9 @@
 (program $bv_const_to_bitlist_rec ((n Int) (c (BitVec n)) (i Int) (xs (@TList Int) :list))
   :signature ((BitVec n) (eo::quote xs)) (BitVec (eo::list_len @tlist xs))
   (
-    (($bv_const_to_bitlist_rec c (@tlist.nil Int))   @bv_empty)
-    (($bv_const_to_bitlist_rec c (@tlist i xs))   (_ @from_bools ($bv_bit_set c i) ($bv_const_to_bitlist_rec c xs)))
+  (($bv_const_to_bitlist_rec c (@tlist.nil Int))   @bv_empty)
+  (($bv_const_to_bitlist_rec c (@tlist i xs))
+    (_ @from_bools ($bv_bit_set c i) ($bv_const_to_bitlist_rec c xs)))
   )
 )
 
