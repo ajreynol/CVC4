@@ -20,8 +20,6 @@
 ;   True if we can shown that t and s are semantically distinct, e.g. (not (= t s)) holds.
 (define $are_distinct_terms ((T Type) (t T) (s T))
   (eo::ite (eo::eq t s) false ($are_distinct_terms_type t s T)))
-(define $are_distinct_terms_untyped ((T Type :implicit) (t T) (s T))
-  ($are_distinct_terms (eo::typeof t) t s))
 
 ;;;;; Theory of sets
 
@@ -113,7 +111,7 @@
     ; Note that if the operators were shown to be distinct, then we return true.
     ; If we returned false, then f and g are (partial) applications of the same
     ; constructor, hence a and b have the same type and we recurse.
-    (eo::ite ($dt_distinct_terms f g) true ($are_distinct_terms_untyped a b)))
+    (eo::ite ($dt_distinct_terms f g) true ($are_distinct_terms (eo::typeof a) a b)))
   (($dt_distinct_terms ct (g a))  ($dt_distinct_terms ct g))
   (($dt_distinct_terms (f a) cs)  ($dt_distinct_terms f cs))
   (($dt_distinct_terms ct cs)
