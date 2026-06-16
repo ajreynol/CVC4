@@ -1718,8 +1718,8 @@ bool TheoryArithPrivate::lastCallEffortDioSolve()
   if (possibleConflict != Node::null())
   {
     revertOutOfConflict();
-    Trace("arith::conflict") << "dio conflict (last call)   "
-                             << possibleConflict << endl;
+    Trace("arith::conflict")
+        << "dio conflict (last call)   " << possibleConflict << endl;
     Pf pf;
     if (isProofEnabled())
     {
