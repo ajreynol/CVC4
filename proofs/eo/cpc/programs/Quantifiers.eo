@@ -17,7 +17,8 @@
     (eo::and ($is_closed_rec q xs) ($is_closed_rec a (eo::list_concat @list (@list v vs) xs))))
   (($is_closed_rec (f a) xs)
     (eo::and ($is_closed_rec f xs) ($is_closed_rec a xs)))
-  (($is_closed_rec (eo::var s S) xs) (eo::not (eo::is_neg (eo::list_find @list xs (eo::var s S)))))
+  (($is_closed_rec (eo::var s S) xs)
+    (eo::not (eo::is_neg (eo::list_find @list xs (eo::var s S)))))
   ; symbols that are opaque but may contain free variables
   (($is_closed_rec (@quantifiers_skolemize F n) xs) ($is_closed_rec F xs))
   (($is_closed_rec (@re_unfold_pos_component s r n) xs)
@@ -61,13 +62,10 @@
     (eo::ite (eo::is_neg (eo::list_find @list xs (eo::var s T)))
       false
       (eo::is_neg (eo::list_find @list bvs (eo::var s T)))))
-  ; symbols that are opaque but may contain free variables
-  (($contains_atomic_term_list_free_rec (@quantifiers_skolemize F n) xs bvs)
-    ($contains_atomic_term_list_free_rec F xs bvs))
-  (($contains_atomic_term_list_free_rec (@re_unfold_pos_component s r n) xs bvs)
-    (eo::ite ($contains_atomic_term_list_free_rec s xs bvs) true ($contains_atomic_term_list_free_rec r xs bvs)))
-  ; otherwise false
-  (($contains_atomic_term_list_free_rec x xs bvs) false)
+  ; Otherwise false. We also double check that x is closed, in case x is an
+  ; application of an operator with opaque arguments.
+  (($contains_atomic_term_list_free_rec x xs bvs)
+    (eo::requires ($is_closed x) true false))
   )
 )
 
@@ -133,16 +131,9 @@
       (eo::ite (eo::is_neg ib)
         (eo::ite (eo::is_neg i) (eo::var s S) ($assoc_nil_nth @list ss i))
         (eo::var s S)))))
-  ; symbols that are opaque but may contain free variables
-  ; these should be closed, we confirm they are here.
-  (($substitute_simul_rec isr (@quantifiers_skolemize F n) xs ss bvs)
-    (eo::define ((t (@quantifiers_skolemize F n)))
-      (eo::requires ($is_closed t) true t)))
-  (($substitute_simul_rec isr (@re_unfold_pos_component s r n) xs ss bvs)
-    (eo::define ((t (@re_unfold_pos_component s r n)))
-      (eo::requires ($is_closed t) true t)))
-  ; otherwise unchanged
-  (($substitute_simul_rec isr x xs ss bvs) x)
+  ; Otherwise no change. We also double check that x is closed, in case x is an
+  ; application of an operator with opaque arguments.
+  (($substitute_simul_rec isr x xs ss bvs) (eo::requires ($is_closed x) true x))
   )
 )
 
