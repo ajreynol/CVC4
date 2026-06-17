@@ -1077,7 +1077,11 @@
     (($seq_eval (seq.suffixof t s))       ($seq_is_prefix ($str_to_nary_form t true) ($str_to_nary_form s true)))
     (($seq_eval (seq.at t n))             (eo::define ((tn ($str_nary_intro t)))
                                             ($str_nary_elim ($seq_subsequence n (eo::add n 1) tn))))
-    (($seq_eval (seq.rev t))              ($str_nary_elim ($str_to_nary_form t true)))
+    (($seq_eval (seq.rev t))
+      ; note nary_elim does not recursively flatten, hence we must confirm we
+      ; are constant-like by calling $str_value_len.
+      (eo::requires (eo::is_z ($str_value_len t)) true
+        ($str_nary_elim ($str_to_nary_form t true))))
     (($seq_eval t)                        t)
   )
 )
