@@ -51,6 +51,13 @@
   )
 )
 
+; define: $is_seq_const
+; args:
+; - s (Seq T): The sequence term.
+; return: true iff s is a constant-like sequence
+(define $is_seq_const ((T Type :implicit) (s (Seq T)))
+  (eo::ite (eo::is_str s) false (eo::is_z ($str_value_len s))))
+
 ; define: $str_concat
 ; args:
 ; - x (Seq T): The first string.
