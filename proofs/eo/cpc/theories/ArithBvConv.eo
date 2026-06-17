@@ -1,7 +1,8 @@
 (include "../theories/BitVectors.eo")
 (include "../theories/Ints.eo")
 
-(declare-parameterized-const int_to_bv ((w Int :opaque)) (-> Int (BitVec w)))
+(declare-parameterized-const int_to_bv ((w Int :opaque))
+  (-> Int (eo::requires ($is_numeral w) true (BitVec w))))
 
 (declare-parameterized-const ubv_to_int ((m Int :implicit)) (-> (BitVec m) Int))
 

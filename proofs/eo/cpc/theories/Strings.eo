@@ -119,7 +119,7 @@
 (declare-const re.* (-> RegLan RegLan))
 (declare-const re.+ (-> RegLan RegLan))
 (declare-parameterized-const re.^ ((i Int :opaque))
-  (-> RegLan (eo::requires (eo::gt i -1) true RegLan)))
+  (-> RegLan (eo::requires ($is_numeral i) true RegLan)))
 (declare-const re.opt (-> RegLan RegLan))
 (declare-const re.comp (-> RegLan RegLan))
 (declare-const re.range (-> String String RegLan))
@@ -136,7 +136,7 @@
 (declare-const re.union (-> RegLan RegLan RegLan) :right-assoc-nil re.none)
 (declare-const re.diff (-> RegLan RegLan RegLan))
 (declare-parameterized-const re.loop ((l Int :opaque) (h Int :opaque))
-  (-> RegLan (eo::requires (eo::gt l -1) true (eo::requires (eo::gt h -1) true RegLan))))
+  (-> RegLan (eo::requires ($is_numeral l) true (eo::requires ($is_numeral h) true RegLan))))
 (declare-const str.in_re (-> String RegLan Bool))
 
 ; Not supported by cvc5, used to define semantics of @re_unfold_pos_component
