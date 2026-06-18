@@ -47,6 +47,7 @@ namespace prop {
 class PropEngine;
 class CnfStream;
 class SkolemDefManager;
+class InstLemmaManager;
 class ZeroLevelLearner;
 
 /**
@@ -243,6 +244,17 @@ class TheoryProxy : protected EnvObj, public Registrar
 
   /** The skolem definition manager */
   SkolemDefManager* d_skdm;
+
+  /**
+   * Whether we dynamically activate instantiation lemmas in the decision
+   * engine based on whether their associated quantified formula is asserted
+   * (option jhRlvInst).
+   */
+  bool d_trackInstLemmas;
+  /**
+   * The instantiation lemma manager, allocated when d_trackInstLemmas is true.
+   */
+  std::unique_ptr<InstLemmaManager> d_ilm;
 
   /** The zero level learner */
   std::unique_ptr<ZeroLevelLearner> d_zll;

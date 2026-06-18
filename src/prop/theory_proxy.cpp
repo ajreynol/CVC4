@@ -26,6 +26,7 @@
 #include "options/prop_options.h"
 #include "options/smt_options.h"
 #include "prop/cnf_stream.h"
+#include "prop/inst_lemma_manager.h"
 #include "prop/proof_cnf_stream.h"
 #include "prop/prop_engine.h"
 #include "prop/skolem_def_manager.h"
@@ -53,6 +54,8 @@ TheoryProxy::TheoryProxy(Env& env,
       d_queue(context()),
       d_tpp(env, *theoryEngine),
       d_skdm(skdm),
+      d_trackInstLemmas(false),
+      d_ilm(nullptr),
       d_zll(nullptr),
       d_prr(nullptr),
       d_stopSearch(userContext(), false),
@@ -86,6 +89,13 @@ void TheoryProxy::finishInit(CDCLTSatSolver* ss, CnfStream* cs)
     {
       d_dmTrackActiveSkDefs = true;
       d_trackActiveSkDefs = true;
+    }
+    // dynamically activate instantiation lemmas based on whether their
+    // associated quantified formula is asserted
+    if (options().decision.jhRlvInst)
+    {
+      d_trackInstLemmas = true;
+      d_ilm = std::make_unique<InstLemmaManager>(context(), userContext());
     }
   }
   else
@@ -184,7 +194,20 @@ void TheoryProxy::notifyAssertion(Node a,
     return;
   }
   // notify the decision engine
-  if (local)
+  if (d_trackInstLemmas && isLemma && a.getKind() == Kind::IMPLIES
+      && a[0].getKind() == Kind::FORALL)
+  {
+    // It is an instantiation lemma (=> q body). We do not add it to the
+    // decision engine now; instead we record it and activate it dynamically
+    // in TheoryProxy::theoryCheck when its quantified formula q is asserted.
+    std::vector<TNode> activeInstLemmas;
+    d_ilm->notifyInstLemma(a[0], a, activeInstLemmas);
+    if (!activeInstLemmas.empty())
+    {
+      d_decisionEngine->addLocalAssertions(activeInstLemmas);
+    }
+  }
+  else if (local)
   {
     // If it is marked local, add as local assertions.
     d_decisionEngine->addLocalAssertions({a});
@@ -257,6 +280,26 @@ void TheoryProxy::theoryCheck(theory::Theory::Effort effort)
         // if we are doing a FULL effort check (propagating with no remaining
         // decisions) and a new skolem definition becomes active, then the SAT
         // assignment is not complete.
+        if (effort == theory::Theory::EFFORT_FULL)
+        {
+          Trace("theory-proxy") << "...change check to STANDARD!" << std::endl;
+          effort = theory::Theory::EFFORT_STANDARD;
+        }
+        d_activatedSkDefs = true;
+      }
+    }
+    if (d_trackInstLemmas)
+    {
+      Assert(d_ilm != nullptr);
+      // If the assertion is a quantified formula, this activates the
+      // instantiation lemmas that were generated for it.
+      std::vector<TNode> activeInstLemmas;
+      d_ilm->notifyAsserted(assertion, activeInstLemmas);
+      if (!activeInstLemmas.empty())
+      {
+        d_decisionEngine->addLocalAssertions(activeInstLemmas);
+        // as with skolem definitions, newly activated instantiation lemmas
+        // mean the SAT assignment is not complete at FULL effort.
         if (effort == theory::Theory::EFFORT_FULL)
         {
           Trace("theory-proxy") << "...change check to STANDARD!" << std::endl;

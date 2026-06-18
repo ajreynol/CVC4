@@ -1774,6 +1774,7 @@ set(regress_0_tests
   regress0/quantifiers/issue9602-rewrite-pow-type.smt2
   regress0/quantifiers/issue9640-vts-iff.smt2
   regress0/quantifiers/issue10067-cegqi-inf-int.smt2
+  regress0/quantifiers/jh-rlv-inst.smt2
   regress0/quantifiers/lra-triv-gn.smt2
   regress0/quantifiers/macro-back-subs-sat.smt2
   regress0/quantifiers/macros-int-real.smt2

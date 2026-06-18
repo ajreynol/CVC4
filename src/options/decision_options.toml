@@ -57,3 +57,11 @@ name   = "Decision Heuristics"
 [[option.mode.ALWAYS]]
   name = "always"
   help = "skolems are always relevant"
+
+[[option]]
+  name       = "jhRlvInst"
+  category   = "expert"
+  long       = "jh-rlv-inst"
+  type       = "bool"
+  default    = "false"
+  help       = "in the justification heuristic, dynamically activate instantiation lemmas based on whether their associated quantified formula is asserted, analogous to skolem definitions"
