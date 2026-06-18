@@ -1403,43 +1403,13 @@
   )
 )
 
-; The following recognizers accept both the shallow form (re.allchar) and the
-; deep flat form ((re.++ re.allchar @re.empty)) of re.allchar. Deep flattening
-; rewrites the body of (re.* re.allchar) to (re.* (re.++ re.allchar @re.empty)),
-; so the deep-flat inclusion test must recognize that shape rather than matching
-; (re.* re.allchar) literally.
-
-; define: $re_is_allchar
-; args:
-; - r RegLan: The regular expression to consider.
-; return: >
-;   true iff r is re.allchar, possibly as a singleton flat list
-;   (re.++ re.allchar @re.empty). We compare against re.allchar after collapsing
-;   a singleton re.++ list with $re_nary_elim, which handles both forms uniformly.
-;   Note we cannot pattern match (re.++ re.allchar @re.empty) directly, since in a
-;   non-tail position @re.empty is parsed as a list element rather than the nil
-;   terminator.
-(define $re_is_allchar ((r RegLan)) (eo::eq ($re_nary_elim r) re.allchar))
-
-; program: $re_is_sigma_star
-; args:
-; - r RegLan: The regular expression to consider.
-; return: >
-;   true iff r is (re.* x) where x is re.allchar (in shallow or deep flat form),
-;   i.e. r denotes Sigma*.
-(program $re_is_sigma_star ((r RegLan) (b RegLan))
-  :signature (RegLan) Bool
-  (
-    (($re_is_sigma_star (re.* b)) ($re_is_allchar b))
-    (($re_is_sigma_star r)        false)
-  )
-)
-
 ; The following three programs are the deep-flat-form twins of
 ; $str_re_includes_lhs_union / _rhs_inter / _lhs_star above. They are identical
 ; except that they recurse into $str_re_includes_core (which assumes deep flat
-; form) rather than the raw $str_re_includes, and the star case uses $re_is_allchar
-; to recognize Sigma* in deep flat form. They are used by $str_re_includes_core.
+; form) rather than the raw $str_re_includes, and the star case matches the deep
+; flat form of Sigma*. In deep flat form the body of every re.* is itself a re.++
+; list, so (re.* re.allchar) consistently appears as (re.* (re.++ re.allchar)).
+; They are used by $str_re_includes_core.
 
 ; program: $str_re_includes_lhs_union_core
 ; args:
@@ -1477,7 +1447,7 @@
 (program $str_re_includes_lhs_star_core ((r1 RegLan) (r2 RegLan))
   :signature (RegLan RegLan) Bool
   (
-  (($str_re_includes_lhs_star_core (re.* r1) r2) (eo::ite ($re_is_allchar r1)
+  (($str_re_includes_lhs_star_core (re.* r1) r2) (eo::ite (eo::eq r1 (re.++ re.allchar))
                                               true
                                               ($str_re_includes_core r1 ($str_maybe_get_star_body r2)))) ; use body if a star
   (($str_re_includes_lhs_star_core r1 r2)        false)
@@ -1492,18 +1462,14 @@
 ;   This method is used for checking if there is no upper bound on the number of
 ;   arbitrary characters that can be consumed at the current position.
 ; note: >
-;   The head h is matched generically and dispatched with $re_is_sigma_star /
-;   $re_is_allchar so that this recognizes the deep flat form, where (re.* re.allchar)
-;   appears as (re.* (re.++ re.allchar @re.empty)).
-(program $re_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list) (h RegLan))
+;   r is assumed to be in deep flat form, where (re.* re.allchar) appears as
+;   (re.* (re.++ re.allchar)).
+(program $re_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list))
   :signature (RegLan) Bool
   (
-  (($re_is_unbound_wildcard (re.++ h r2))  (eo::ite ($re_is_sigma_star h)
-                                             true
-                                             (eo::ite ($re_is_allchar h)
-                                               ($re_is_unbound_wildcard r2)
-                                               false)))
-  (($re_is_unbound_wildcard r1)            false)
+  (($re_is_unbound_wildcard (re.++ (re.* (re.++ re.allchar)) r2))  true)
+  (($re_is_unbound_wildcard (re.++ re.allchar r2))                 ($re_is_unbound_wildcard r2))
+  (($re_is_unbound_wildcard r1)                                    false)
   )
 )
 
@@ -1540,13 +1506,13 @@
               ($str_re_includes_rec (re.++ r1 r2) r4)
               false)
       true
-    (eo::ite (eo::ite ($re_is_sigma_star r1)         ; can skip LHS if it is sigma star
+    (eo::ite (eo::ite (eo::eq r1 (re.* (re.++ re.allchar)))  ; can skip LHS if it is sigma star
               ($str_re_includes_rec r2 (re.++ r3 r4))
               false)
       true
       false))))
   ; handles the case where there is a leftover (re.* re.allchar) on the LHS
-  (($str_re_includes_rec (re.++ r1 r2) @re.empty)       (eo::and ($re_is_sigma_star r1) (eo::eq r2 @re.empty)))
+  (($str_re_includes_rec (re.++ r1 r2) @re.empty)       (eo::and (eo::eq r1 (re.* (re.++ re.allchar))) (eo::eq r2 @re.empty)))
   (($str_re_includes_rec r1 r3)                         false)
   )
 )
