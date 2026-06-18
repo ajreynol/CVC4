@@ -1199,6 +1199,8 @@
 ;   (1) (optionally) reverse,
 ;   (2) collect constants
 ;   (3) eliminate n-ary form to its element if the term is a singleton list.
+;   Note s is assumed to be a str.++ list; callers that may pass a bare string
+;   (e.g. a single character) must first apply $str_nary_intro.
 (define $str_from_flat_form ((U Type :implicit) (s (Seq U)) (rev Bool))
   ; reverse, collect, elim
   ($str_nary_elim ($str_collect ($str_rev rev s))))
@@ -1313,7 +1315,10 @@
     (($re_unflatten rev true (re.++ a b))      (_ re.++ ($re_unflatten rev false a) ($re_unflatten rev true b)))
     (($re_unflatten rev true c)                c) ; @re.empty terminator
     ; component mode
-    (($re_unflatten rev false (str.to_re s))   (str.to_re ($str_from_flat_form s rev)))
+    ; s may be a bare character (the inclusion recursion peels str.to_re contents
+    ; one character at a time), so we $str_nary_intro before $str_from_flat_form,
+    ; which assumes a str.++ list.
+    (($re_unflatten rev false (str.to_re s))   (str.to_re ($str_from_flat_form ($str_nary_intro s) rev)))
     (($re_unflatten rev false (re.* body))     (re.* ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true body)))))
     (($re_unflatten rev false (re.inter c1 c2)) (_ re.inter ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
     (($re_unflatten rev false (re.union c1 c2)) (_ re.union ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
@@ -1334,6 +1339,17 @@
 
 ; note: This is a forward declaration of $str_re_includes below.
 (program $str_re_includes () :signature (RegLan RegLan) Bool)
+
+; note: >
+;   This is a forward declaration of $str_re_includes_core below. This is the
+;   deep-flat-form variant of $str_re_includes: it assumes both of its arguments
+;   are already in deep flat form (see $re_to_flat_form_deep). It is used by
+;   $str_re_includes_rec so that the recursion never has to (re)convert one of its
+;   arguments out of and back into flat form, which is what makes the inclusion
+;   test structurally recursive. The "raw" $str_re_includes below remains the
+;   public entry point: it handles the top-level base cases on the original
+;   (non-flat) term and then converts once to deep flat form.
+(program $str_re_includes_core () :signature (RegLan RegLan) Bool)
 
 ; program: $str_re_includes_lhs_union
 ; args:
@@ -1419,6 +1435,87 @@
   )
 )
 
+; The following recognizers accept both the shallow form (re.allchar) and the
+; deep flat form ((re.++ re.allchar @re.empty)) of re.allchar. Deep flattening
+; rewrites the body of (re.* re.allchar) to (re.* (re.++ re.allchar @re.empty)),
+; so the deep-flat inclusion test must recognize that shape rather than matching
+; (re.* re.allchar) literally.
+
+; define: $re_is_allchar
+; args:
+; - r RegLan: The regular expression to consider.
+; return: >
+;   true iff r is re.allchar, possibly as a singleton flat list
+;   (re.++ re.allchar @re.empty). We compare against re.allchar after collapsing
+;   a singleton re.++ list with $re_nary_elim, which handles both forms uniformly.
+;   Note we cannot pattern match (re.++ re.allchar @re.empty) directly, since in a
+;   non-tail position @re.empty is parsed as a list element rather than the nil
+;   terminator.
+(define $re_is_allchar ((r RegLan)) (eo::eq ($re_nary_elim r) re.allchar))
+
+; program: $re_is_sigma_star
+; args:
+; - r RegLan: The regular expression to consider.
+; return: >
+;   true iff r is (re.* x) where x is re.allchar (in shallow or deep flat form),
+;   i.e. r denotes Sigma*.
+(program $re_is_sigma_star ((r RegLan) (b RegLan))
+  :signature (RegLan) Bool
+  (
+    (($re_is_sigma_star (re.* b)) ($re_is_allchar b))
+    (($re_is_sigma_star r)        false)
+  )
+)
+
+; The following three programs are the deep-flat-form twins of
+; $str_re_includes_lhs_union / _rhs_inter / _lhs_star above. They are identical
+; except that they recurse into $str_re_includes_core (which assumes deep flat
+; form) rather than the raw $str_re_includes, and the star case uses $re_is_allchar
+; to recognize Sigma* in deep flat form. They are used by $str_re_includes_core.
+
+; program: $str_re_includes_lhs_union_core
+; args:
+; - r RegLan: The first regular expression (deep flat form).
+; - s RegLan: The second regular expression (deep flat form).
+; return: true if r is (re.union r1 ... rn) and s is contained in some ri.
+(program $str_re_includes_lhs_union_core ((r1 RegLan) (r2 RegLan :list) (r3 RegLan))
+  :signature (RegLan RegLan) Bool
+  (
+  (($str_re_includes_lhs_union_core (re.union r1 r2) r3) (eo::ite ($str_re_includes_core r1 r3) true ($str_re_includes_lhs_union_core r2 r3)))
+  (($str_re_includes_lhs_union_core r1 r3)               false)
+  )
+)
+
+; program: $str_re_includes_rhs_inter_core
+; args:
+; - r RegLan: The first regular expression (deep flat form).
+; - s RegLan: The second regular expression (deep flat form).
+; return: true if s is (re.inter s1 ... sn) and r is contained in some si.
+(program $str_re_includes_rhs_inter_core ((r1 RegLan) (r2 RegLan :list) (r3 RegLan))
+  :signature (RegLan RegLan) Bool
+  (
+  (($str_re_includes_rhs_inter_core r1 (re.inter r3 r2)) (eo::ite ($str_re_includes_core r1 r3) true ($str_re_includes_rhs_inter_core r1 r2)))
+  (($str_re_includes_rhs_inter_core r1 r3)               false)
+  )
+)
+
+; program: $str_re_includes_lhs_star_core
+; args:
+; - r RegLan: The first regular expression (deep flat form).
+; - s RegLan: The second regular expression (deep flat form).
+; return: >
+;   true if r is (re.* r1) and either s is included in r1, or s1 is included in r1
+;   where s is of the form (re.* s1).
+(program $str_re_includes_lhs_star_core ((r1 RegLan) (r2 RegLan))
+  :signature (RegLan RegLan) Bool
+  (
+  (($str_re_includes_lhs_star_core (re.* r1) r2) (eo::ite ($re_is_allchar r1)
+                                              true
+                                              ($str_re_includes_core r1 ($str_maybe_get_star_body r2)))) ; use body if a star
+  (($str_re_includes_lhs_star_core r1 r2)        false)
+  )
+)
+
 ; program: $re_is_unbound_wildcard
 ; args:
 ; - r RegLan: The regular expression to consider.
@@ -1426,12 +1523,19 @@
 ;   true if r is of the form (re.++ re.allchar ... re.allchar (re.* re.allchar) ...).
 ;   This method is used for checking if there is no upper bound on the number of
 ;   arbitrary characters that can be consumed at the current position.
-(program $re_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list))
+; note: >
+;   The head h is matched generically and dispatched with $re_is_sigma_star /
+;   $re_is_allchar so that this recognizes the deep flat form, where (re.* re.allchar)
+;   appears as (re.* (re.++ re.allchar @re.empty)).
+(program $re_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list) (h RegLan))
   :signature (RegLan) Bool
   (
-  (($re_is_unbound_wildcard (re.++ (re.* re.allchar) r2))  true)
-  (($re_is_unbound_wildcard (re.++ re.allchar r2))         ($re_is_unbound_wildcard r2))
-  (($re_is_unbound_wildcard r1)                            false)
+  (($re_is_unbound_wildcard (re.++ h r2))  (eo::ite ($re_is_sigma_star h)
+                                             true
+                                             (eo::ite ($re_is_allchar h)
+                                               ($re_is_unbound_wildcard r2)
+                                               false)))
+  (($re_is_unbound_wildcard r1)            false)
   )
 )
 
@@ -1441,7 +1545,13 @@
 ; - r2 RegLan: The second regular expression.
 ; return: >
 ;   true if we can infer r2 is included in r1. We assume that r1 and r2
-;   are re.++ lists that have been put into normal form with $re_to_flat_form.
+;   are re.++ lists that have been put into deep flat form with
+;   $re_to_flat_form_deep. Because the form is deep, every component (including
+;   re.* bodies and re.inter / re.union children) is already flat, so the base
+;   inclusion check on the leading components recurses directly into
+;   $str_re_includes_core with no flat-form conversion. Every recursive call is
+;   thus on a strict subterm (a shorter re.++ tail, or a leading component), which
+;   makes this method structurally recursive.
 (program $str_re_includes_rec ((s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
   :signature (RegLan RegLan) Bool
   (
@@ -1454,7 +1564,7 @@
   (($str_re_includes_rec r1 (re.++ (str.to_re "") r4))              ($str_re_includes_rec r1 r4))
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4))
-    (eo::ite (eo::ite ($str_re_includes ($re_from_flat_form r1 false) ($re_from_flat_form r3 false)) ; can skip both if we have a base inclusion
+    (eo::ite (eo::ite ($str_re_includes_core r1 r3) ; can skip both if we have a base inclusion
                ($str_re_includes_rec r2 r4)
                false)
       true
@@ -1462,14 +1572,59 @@
               ($str_re_includes_rec (re.++ r1 r2) r4)
               false)
       true
-    (eo::ite (eo::ite (eo::eq r1 (re.* re.allchar))         ; can skip LHS if it is sigma star
+    (eo::ite (eo::ite ($re_is_sigma_star r1)         ; can skip LHS if it is sigma star
               ($str_re_includes_rec r2 (re.++ r3 r4))
               false)
       true
       false))))
   ; handles the case where there is a leftover (re.* re.allchar) on the LHS
-  (($str_re_includes_rec (re.++ r1 r2) @re.empty)       (eo::and (eo::eq r1 (re.* re.allchar)) (eo::eq r2 @re.empty)))
+  (($str_re_includes_rec (re.++ r1 r2) @re.empty)       (eo::and ($re_is_sigma_star r1) (eo::eq r2 @re.empty)))
   (($str_re_includes_rec r1 r3)                         false)
+  )
+)
+
+; program: $str_re_includes_core
+; args:
+; - r1 RegLan: The first regular expression, assumed to be in deep flat form.
+; - r2 RegLan: The second regular expression, assumed to be in deep flat form.
+; return: >
+;   true if we can infer that all strings in r2 are also in r1. This is the
+;   deep-flat-form variant of $str_re_includes: it is invoked by
+;   $str_re_includes_rec on the leading components of the (deep flat) concatenation
+;   lists it processes, and it dispatches to the deep-flat helpers above. Because
+;   its arguments are already in deep flat form, it never reconverts to flat form;
+;   the only place it (cheaply, non-recursively) reshapes a term is $re_nary_intro,
+;   which wraps a bare component into a singleton re.++ list before handing it to
+;   $str_re_includes_rec. The leaf membership / range checks unflatten locally
+;   (terminating, not recursive into this group).
+(program $str_re_includes_core ((s1 String) (s2 String) (s3 String) (s4 String) (r1 RegLan) (r3 RegLan))
+  :signature (RegLan RegLan) Bool
+  (
+  (($str_re_includes_core r1 r1)                               true)
+  ; r1 is un-deep-flattened to a normal regular expression for evaluation. s1 may
+  ; be a bare character (the recursion in $str_re_includes_rec peels str.to_re
+  ; contents one character at a time) or a flat str.++ list; $str_eval_str_in_re
+  ; normalizes either via $str_to_flat_form (idempotent on already-flat strings).
+  (($str_re_includes_core r1 (str.to_re s1))                   ($str_eval_str_in_re s1 ($re_from_flat_form_deep ($re_nary_intro r1) false))) ; requires constant s1/r1
+  (($str_re_includes_core (str.to_re s1) r1)                   false)
+  (($str_re_includes_core (re.range s1 s2) (re.range s3 s4))   (eo::define ((z1 (eo::to_z s1)))
+                                                          (eo::define ((z2 (eo::to_z s2)))
+                                                          (eo::define ((z3 (eo::to_z s3)))
+                                                          (eo::define ((z4 (eo::to_z s4)))
+                                                          (eo::requires (eo::is_neg z1) false
+                                                          (eo::requires (eo::is_neg z2) false
+                                                          (eo::requires (eo::is_neg z3) false
+                                                          (eo::requires (eo::is_neg z4) false
+                                                            (eo::and ($compare_geq z2 z3) ($compare_geq z3 z1)
+                                                                  ($compare_geq z2 z4) ($compare_geq z4 z1)))))))))))
+  (($str_re_includes_core r1 r3)                               (eo::ite (eo::eq ($str_re_includes_lhs_union_core r1 r3) true) true
+                                                          (eo::ite (eo::eq ($str_re_includes_rhs_inter_core r1 r3) true) true
+                                                          (eo::ite (eo::eq ($str_re_includes_lhs_star_core r1 r3) true) true
+                                                          ; don't recurse if we checked one of the 3 cases above
+                                                          (eo::ite ($str_re_includes_is_rec r1 r3)
+                                                              ($str_re_includes_rec ($re_nary_intro r1) ($re_nary_intro r3))
+                                                              false)))))
+
   )
 )
 
@@ -1478,7 +1633,11 @@
 ; - r1 RegLan: The first regular expression.
 ; - r2 RegLan: The second regular expression.
 ; return: >
-;   true if we can infer that all strings in r2 are also in r1.
+;   true if we can infer that all strings in r2 are also in r1. This is the public
+;   entry point. It handles the top-level base cases (equality, single-string
+;   membership, character ranges) and the top-level union / intersection / star
+;   heuristics on the original (non-flat) term, and otherwise converts once to deep
+;   flat form and hands off to the structurally recursive $str_re_includes_rec.
 (program $str_re_includes ((s1 String) (s2 String) (s3 String) (s4 String) (r1 RegLan) (r3 RegLan))
   :signature (RegLan RegLan) Bool
   (
@@ -1500,7 +1659,7 @@
                                                           (eo::ite (eo::eq ($str_re_includes_lhs_star r1 r3) true) true
                                                           ; don't recurse if we checked one of the 3 cases above
                                                           (eo::ite ($str_re_includes_is_rec r1 r3)
-                                                              ($str_re_includes_rec ($re_to_flat_form r1 false) ($re_to_flat_form r3 false))
+                                                              ($str_re_includes_rec ($re_to_flat_form_deep r1 false) ($re_to_flat_form_deep r3 false))
                                                               false)))))
 
   )
