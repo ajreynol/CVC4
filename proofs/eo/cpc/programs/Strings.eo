@@ -1218,38 +1218,6 @@
 (define $str_from_nary_form ((U Type :implicit) (s (Seq U)) (rev Bool))
   ($str_nary_elim ($str_rev rev s)))
 
-; program: $re_str_from_flat_form
-; args:
-; - rev Bool: Whether to reverse the strings that occur in r.
-; - r RegLan: The regular expression to process.
-; return:
-;   The result of converting the strings s occurring as direct
-;   children (str.to_re s) of regular expression concatenation r from their flat
-;   form, reversing if rev is true.
-(program $re_str_from_flat_form ((r1 RegLan) (r2 RegLan :list) (s String) (rev Bool))
-  :signature (Bool RegLan) RegLan
-  (
-    (($re_str_from_flat_form rev (re.++ (str.to_re s) r2))  (_ re.++ (str.to_re ($str_from_flat_form s rev)) ($re_str_from_flat_form rev r2)))
-    (($re_str_from_flat_form rev (re.++ r1 r2))             (_ re.++ r1 ($re_str_from_flat_form rev r2)))
-    (($re_str_from_flat_form rev r1)                        r1)
-  )
-)
-
-; define: $re_from_flat_form
-; args:
-; - r RegLan: The regular expression to process.
-; - rev Bool: Whether to reverse the content of r.
-; return: >
-;   Converts a regular expression term in "flat form" to a term that is in a form
-;   that corresponds to one in cvc5 rewritten form. This is the dual method to
-;   $re_to_flat_form. This consists of the following steps:
-;   (1) convert the strings s occurring as direct children (str.to_re s) from their flat form,
-;   (2) (optionally) reverse,
-;   (3) eliminate n-ary form to its element if the term is a singleton list.
-(define $re_from_flat_form ((r RegLan) (rev Bool))
-  ; (un?)flatten, reverse, elim
-  ($re_nary_elim ($str_re_rev rev ($re_str_from_flat_form rev r))))
-
 ;;;;; deep flat form (used by $str_re_consume)
 ;
 ; The "deep" flat form is like $re_to_flat_form, but additionally puts the body
