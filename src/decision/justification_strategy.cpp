@@ -32,11 +32,14 @@ JustificationStrategy::JustificationStrategy(Env& env,
               .decision.jhRlvOrder),  // assertions are user-context dependent
       d_localAssertions(
           context(), context()),  // local assertions are SAT-context dependent
+      d_instRevisit(
+          context(), context()),  // revisit lemmas are SAT-context dependent
       d_jcache(context(), ss, cs),
       d_stack(context()),
       d_lastDecisionLit(context()),
       d_currStatusDec(false),
       d_useRlvOrder(options().decision.jhRlvOrder),
+      d_trackInstLemmas(options().decision.jhRlvInst),
       d_decisionStopOnly(options().decision.decisionMode
                          == options::DecisionMode::STOPONLY),
       d_jhSkMode(options().decision.jhSkolemMode),
@@ -53,6 +56,7 @@ void JustificationStrategy::presolve()
   // reset the dynamic assertion list data
   d_assertions.presolve();
   d_localAssertions.presolve();
+  d_instRevisit.presolve();
   // clear the stack
   d_stack.clear();
 }
@@ -450,22 +454,26 @@ bool JustificationStrategy::isDone() { return !refreshCurrentAssertion(); }
 void JustificationStrategy::addAssertions(const std::vector<TNode>& lems)
 {
   Trace("jh-assert") << "addAssertions " << lems << std::endl;
-  insertToAssertionList(lems, false);
+  insertToAssertionList(lems, d_assertions, d_stats.d_maxAssertionsSize);
 }
 
 void JustificationStrategy::addLocalAssertions(const std::vector<TNode>& lems)
 {
   Trace("jh-assert") << "addLocalAssertions: " << lems << std::endl;
-  insertToAssertionList(lems, true);
+  insertToAssertionList(lems, d_localAssertions, d_stats.d_maxSkolemDefsSize);
+}
+
+void JustificationStrategy::notifyInstLemmasActive(
+    const std::vector<TNode>& lems)
+{
+  Trace("jh-assert") << "notifyInstLemmasActive: " << lems << std::endl;
+  insertToAssertionList(lems, d_instRevisit, d_stats.d_maxAssertionsSize);
 }
 
 void JustificationStrategy::insertToAssertionList(
-    const std::vector<TNode>& lems, bool local)
+    const std::vector<TNode>& lems, AssertionList& al, IntStat& sizeStat)
 {
   std::vector<TNode> toProcess(lems.begin(), lems.end());
-  AssertionList& al = local ? d_localAssertions : d_assertions;
-  IntStat& sizeStat =
-      local ? d_stats.d_maxSkolemDefsSize : d_stats.d_maxAssertionsSize;
   // always miniscope AND and negated OR immediately
   size_t index = 0;
   // must keep some intermediate nodes below around for ref counting
@@ -530,21 +538,28 @@ bool JustificationStrategy::refreshCurrentAssertion()
     }
     return true;
   }
+  // First, revisit instantiation lemmas whose quantified formula has just
+  // become asserted (option jhRlvInst). These are SAT-context dependent.
+  if (d_trackInstLemmas && refreshCurrentAssertionFromList(d_instRevisit, false))
+  {
+    return true;
+  }
   bool skFirst = (d_jhSkMode != options::JutificationSkolemMode::LAST);
   // use main assertions first
-  if (refreshCurrentAssertionFromList(skFirst))
+  if (refreshCurrentAssertionFromList(
+          skFirst ? d_localAssertions : d_assertions, !skFirst))
   {
     return true;
   }
   // if satisfied all main assertions, use the skolem assertions, which may
   // fail
-  return refreshCurrentAssertionFromList(!skFirst);
+  return refreshCurrentAssertionFromList(
+      skFirst ? d_assertions : d_localAssertions, skFirst);
 }
 
-bool JustificationStrategy::refreshCurrentAssertionFromList(bool local)
+bool JustificationStrategy::refreshCurrentAssertionFromList(AssertionList& al,
+                                                            bool doWatchStatus)
 {
-  AssertionList& al = local ? d_localAssertions : d_assertions;
-  bool doWatchStatus = !local;
   d_currUnderStatus = Node::null();
   TNode curr = al.getNextAssertion();
   SatValue currValue;
@@ -553,6 +568,15 @@ bool JustificationStrategy::refreshCurrentAssertionFromList(bool local)
     Trace("jh-process") << "Check assertion " << curr << std::endl;
     // we never add theory literals to our assertions lists
     Assert(!isTheoryLiteral(curr));
+    // If this is an instantiation lemma whose quantified formula is not
+    // currently asserted, skip it. It will be revisited (via d_instRevisit)
+    // if and when its quantified formula becomes asserted.
+    if (isInactiveInstLemma(curr))
+    {
+      Trace("jh-process") << "...skip inactive inst lemma" << std::endl;
+      curr = al.getNextAssertion();
+      continue;
+    }
     currValue = d_jcache.lookupValue(curr);
     if (currValue == SAT_VALUE_UNKNOWN)
     {
@@ -585,6 +609,23 @@ bool JustificationStrategy::refreshCurrentAssertionFromList(bool local)
 bool JustificationStrategy::isTheoryLiteral(TNode n)
 {
   return expr::isTheoryAtom(n.getKind() == Kind::NOT ? n[0] : n);
+}
+
+bool JustificationStrategy::isInactiveInstLemma(TNode curr)
+{
+  if (!d_trackInstLemmas)
+  {
+    return false;
+  }
+  // an instantiation lemma has the form (=> q body) where q is a quantified
+  // formula
+  if (curr.getKind() != Kind::IMPLIES || curr[0].getKind() != Kind::FORALL)
+  {
+    return false;
+  }
+  // it is inactive (should be skipped) iff its quantified formula q is not
+  // currently asserted (assigned true)
+  return d_jcache.lookupValue(curr[0]) != SAT_VALUE_TRUE;
 }
 
 }  // namespace decision

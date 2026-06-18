@@ -56,6 +56,17 @@ class DecisionEngine : protected EnvObj
    * @param lems The lemmas to add.
    */
   virtual void addLocalAssertions(CVC5_UNUSED const std::vector<TNode>& lems) {}
+  /**
+   * Notify that the given instantiation lemmas have become active, i.e. their
+   * associated quantified formula has just been asserted. These lemmas are
+   * already present as (user-context) assertions, but may have been skipped
+   * while their quantified formula was not asserted; this call prompts the
+   * decision engine to revisit them in the current SAT context.
+   * @param lems The instantiation lemmas to revisit.
+   */
+  virtual void notifyInstLemmasActive(CVC5_UNUSED const std::vector<TNode>& lems)
+  {
+  }
 
  protected:
   /** Get next internal, the engine-specific implementation of getNext */

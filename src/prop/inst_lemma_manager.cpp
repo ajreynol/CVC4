@@ -35,24 +35,15 @@ InstLemmaManager::NodeList* InstLemmaManager::getOrMkList(TNode q)
   return lems.get();
 }
 
-void InstLemmaManager::notifyInstLemma(TNode q,
-                                       Node lem,
-                                       std::vector<TNode>& activatedLemmas)
+void InstLemmaManager::notifyInstLemma(TNode q, Node lem)
 {
   Trace("inst-lemma-mgr") << "notifyInstLemma: " << lem << " for " << q
                           << std::endl;
   getOrMkList(q)->push_back(lem);
-  // If the quantified formula is already active in the current SAT context,
-  // then this newly added lemma should be activated immediately.
-  if (d_qactive.find(q) != d_qactive.end())
-  {
-    Trace("inst-lemma-mgr") << "...activate (q already asserted)" << std::endl;
-    activatedLemmas.push_back(lem);
-  }
 }
 
 void InstLemmaManager::notifyAsserted(TNode literal,
-                                      std::vector<TNode>& activatedLemmas)
+                                      std::vector<TNode>& revisitLemmas)
 {
   // we only care about asserted quantified formulas
   if (literal.getKind() != Kind::FORALL)
@@ -61,7 +52,7 @@ void InstLemmaManager::notifyAsserted(TNode literal,
   }
   if (d_qactive.find(literal) != d_qactive.end())
   {
-    // already active
+    // already active in the current SAT context, no need to revisit again
     return;
   }
   Trace("inst-lemma-mgr") << "notifyAsserted: " << literal << std::endl;
@@ -71,8 +62,8 @@ void InstLemmaManager::notifyAsserted(TNode literal,
   {
     for (const Node& lem : *it->second)
     {
-      Trace("inst-lemma-mgr") << "...activate " << lem << std::endl;
-      activatedLemmas.push_back(lem);
+      Trace("inst-lemma-mgr") << "...revisit " << lem << std::endl;
+      revisitLemmas.push_back(lem);
     }
   }
 }

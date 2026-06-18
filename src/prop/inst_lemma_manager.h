@@ -29,18 +29,19 @@ namespace prop {
 
 /**
  * This class manages the mapping between quantified formulas and the
- * instantiation lemmas that were generated for them. It is used to manage
- * which instantiation lemmas are relevant in the current context, namely an
- * instantiation lemma (=> q body) for quantified formula q is relevant when q
- * is asserted.
+ * instantiation lemmas that were generated for them.
  *
- * This is the analog of SkolemDefManager for instantiation lemmas: instead of
- * activating a skolem definition when its skolem appears in an asserted
- * literal, it activates the instantiation lemmas of a quantified formula when
- * that quantified formula is asserted.
+ * An instantiation lemma (=> q body) for quantified formula q is added to the
+ * decision engine as an ordinary (user-context) assertion. However, the
+ * decision engine only attempts to satisfy it (i.e. make its body relevant)
+ * when q is asserted. This class records the association q -> lemmas, and is
+ * used to prompt the decision engine to revisit the lemmas of q when q becomes
+ * asserted (which is necessary when q is asserted after the decision engine has
+ * already iterated past the lemma in the current SAT context).
  *
  * It tracks (in a SAT-context-dependent manner) which quantified formulas are
- * "active", i.e. have been asserted in the current SAT context.
+ * "active", i.e. have been asserted in the current SAT context, so that the
+ * revisit notification is sent at most once per activation of q.
  */
 class InstLemmaManager
 {
@@ -56,26 +57,24 @@ class InstLemmaManager
 
   /**
    * Notify that lem is an instantiation lemma associated with quantified
-   * formula q. This records the lemma. If q is already active in the current
-   * SAT context, lem is added to activatedLemmas so that it can be activated
-   * immediately.
+   * formula q. This records the association q -> lem.
    *
    * @param q The quantified formula the lemma was generated for
    * @param lem The instantiation lemma
-   * @param activatedLemmas The list to add lem to if q is already active
    */
-  void notifyInstLemma(TNode q, Node lem, std::vector<TNode>& activatedLemmas);
+  void notifyInstLemma(TNode q, Node lem);
 
   /**
    * Notify that the given literal has been asserted. If literal is a quantified
    * formula that has not yet been marked active in the current SAT context,
    * it is marked active and all of its recorded instantiation lemmas are added
-   * to activatedLemmas.
+   * to revisitLemmas, so that the decision engine can be prompted to revisit
+   * them.
    *
    * @param literal The literal that became asserted
-   * @param activatedLemmas The list to add activated instantiation lemmas to
+   * @param revisitLemmas The list to add the instantiation lemmas of literal to
    */
-  void notifyAsserted(TNode literal, std::vector<TNode>& activatedLemmas);
+  void notifyAsserted(TNode literal, std::vector<TNode>& revisitLemmas);
 
  private:
   /** Get (or make) the lemma list for quantified formula q */

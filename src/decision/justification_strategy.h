@@ -154,13 +154,28 @@ class JustificationStrategy : public DecisionEngine
    * @param lems The lemmas to add.
    */
   void addLocalAssertions(const std::vector<TNode>& lems) override;
+  /**
+   * Notify that the given instantiation lemmas have become active (their
+   * quantified formula was just asserted). They are added to the SAT-context
+   * revisit list so that they are reconsidered in the current SAT context.
+   * @param lems The instantiation lemmas to revisit.
+   */
+  void notifyInstLemmasActive(const std::vector<TNode>& lems) override;
 
  private:
   /**
-   * Helper method to insert assertions in `lems` to `d_assertions` or
-   * `d_localAssertions` when `local` is true.
+   * Helper method to insert assertions in `lems` to assertion list `al`, using
+   * `sizeStat` to track its maximum size.
    */
-  void insertToAssertionList(const std::vector<TNode>& lems, bool local);
+  void insertToAssertionList(const std::vector<TNode>& lems,
+                             AssertionList& al,
+                             IntStat& sizeStat);
+  /**
+   * Is curr an instantiation lemma (=> q body) whose quantified formula q is
+   * not currently asserted? Such lemmas are skipped by the decision engine
+   * until q becomes asserted (option jhRlvInst).
+   */
+  bool isInactiveInstLemma(TNode curr);
   /**
    * Refresh current assertion. This ensures that d_stack has a current
    * assertion to satisfy. If it does not already have one, we take the next
@@ -175,12 +190,13 @@ class JustificationStrategy : public DecisionEngine
    * Implements the above function for the case where d_stack must get a new
    * assertion to satisfy.
    *
-   * @param local If this is true, we pull the next assertion from
-   * the list of relevant local assertions.
+   * @param al The assertion list to pull the next assertion from.
+   * @param doWatchStatus Whether to track the decision status of the assertion
+   * we select (used for dynamic ordering of the main assertion list).
    * @return true if we successfully initialized d_stack with the next
    * assertion to satisfy.
    */
-  bool refreshCurrentAssertionFromList(bool local);
+  bool refreshCurrentAssertionFromList(AssertionList& al, bool doWatchStatus);
   /**
    * Let n be the node referenced by ji.
    *
@@ -205,6 +221,13 @@ class JustificationStrategy : public DecisionEngine
   AssertionList d_assertions;
   /** The local assertions, which are SAT-context depdendent */
   AssertionList d_localAssertions;
+  /**
+   * Instantiation lemmas to revisit, which are SAT-context dependent. These are
+   * (a subset of) the assertions in d_assertions whose quantified formula has
+   * become asserted in the current SAT context and which may have been skipped
+   * earlier in this context. Used only when option jhRlvInst is enabled.
+   */
+  AssertionList d_instRevisit;
 
   /** A justification cache */
   JustifyCache d_jcache;
@@ -220,6 +243,8 @@ class JustificationStrategy : public DecisionEngine
   //------------------------------------ options
   /** using relevancy order */
   bool d_useRlvOrder;
+  /** dynamically gate instantiation lemmas on their quantified formula */
+  bool d_trackInstLemmas;
   /** using stop only */
   bool d_decisionStopOnly;
   /** skolem mode */

@@ -197,15 +197,14 @@ void TheoryProxy::notifyAssertion(Node a,
   if (d_trackInstLemmas && isLemma && a.getKind() == Kind::IMPLIES
       && a[0].getKind() == Kind::FORALL)
   {
-    // It is an instantiation lemma (=> q body). We do not add it to the
-    // decision engine now; instead we record it and activate it dynamically
-    // in TheoryProxy::theoryCheck when its quantified formula q is asserted.
-    std::vector<TNode> activeInstLemmas;
-    d_ilm->notifyInstLemma(a[0], a, activeInstLemmas);
-    if (!activeInstLemmas.empty())
-    {
-      d_decisionEngine->addLocalAssertions(activeInstLemmas);
-    }
+    // It is an instantiation lemma (=> q body). We add it as an ordinary
+    // (user-context) assertion. The decision engine will only attempt to
+    // satisfy it (i.e. make its body relevant) when its quantified formula q
+    // is asserted; see JustificationStrategy. We additionally record the
+    // association q -> lemma so that the decision engine can be prompted to
+    // revisit the lemma when q is asserted in TheoryProxy::theoryCheck.
+    d_ilm->notifyInstLemma(a[0], a);
+    d_decisionEngine->addAssertions({a});
   }
   else if (local)
   {
@@ -291,15 +290,17 @@ void TheoryProxy::theoryCheck(theory::Theory::Effort effort)
     if (d_trackInstLemmas)
     {
       Assert(d_ilm != nullptr);
-      // If the assertion is a quantified formula, this activates the
-      // instantiation lemmas that were generated for it.
-      std::vector<TNode> activeInstLemmas;
-      d_ilm->notifyAsserted(assertion, activeInstLemmas);
-      if (!activeInstLemmas.empty())
+      // If the assertion is a quantified formula q that just became asserted,
+      // prompt the decision engine to revisit the instantiation lemmas of q.
+      // This is necessary because the decision engine may have already iterated
+      // past these lemmas (skipping them) while q was not asserted.
+      std::vector<TNode> revisitInstLemmas;
+      d_ilm->notifyAsserted(assertion, revisitInstLemmas);
+      if (!revisitInstLemmas.empty())
       {
-        d_decisionEngine->addLocalAssertions(activeInstLemmas);
-        // as with skolem definitions, newly activated instantiation lemmas
-        // mean the SAT assignment is not complete at FULL effort.
+        d_decisionEngine->notifyInstLemmasActive(revisitInstLemmas);
+        // newly relevant instantiation lemmas mean the SAT assignment is not
+        // complete at FULL effort.
         if (effort == theory::Theory::EFFORT_FULL)
         {
           Trace("theory-proxy") << "...change check to STANDARD!" << std::endl;
