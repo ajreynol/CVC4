@@ -1156,38 +1156,6 @@
       ($str_first_match_rec_smallest s r 0)
       -1)))
 
-; program: $re_str_to_flat_form
-; args:
-; - rev Bool: Whether to reverse the strings that occur in r.
-; - r RegLan: The regular expression to process.
-; return: 
-;   The result of converting the strings s occurring as direct
-;   children (str.to_re s) of regular expression concatenation r to their flat
-;   form, reversing if rev is true.
-(program $re_str_to_flat_form ((r1 RegLan) (r2 RegLan :list) (s String) (rev Bool))
-  :signature (Bool RegLan) RegLan
-  (
-    (($re_str_to_flat_form rev (re.++ (str.to_re s) r2))  (_ re.++ (str.to_re ($str_to_flat_form s rev)) ($re_str_to_flat_form rev r2)))
-    (($re_str_to_flat_form rev (re.++ r1 r2))             (_ re.++ r1 ($re_str_to_flat_form rev r2)))
-    (($re_str_to_flat_form rev r1)                        r1)
-  )
-)
-
-; define: $re_to_flat_form
-; args:
-; - r RegLan: The regular expression to process.
-; - rev Bool: Whether to reverse the content of r.
-; return: >
-;   Converts a regular expression term to "flat form". This consists of the
-;   following steps:
-;   (1) convert r to n-ary form if it not already a re.++ application,
-;   (2) (optionally) reverse,
-;   (3) convert the strings s occurring as direct children (str.to_re s) of the
-;   result to their flat form. Note that other strings in r, i.e. those that
-;   occur beneath other children remain unchanged.
-(define $re_to_flat_form ((r RegLan) (rev Bool))
-  ($re_str_to_flat_form rev ($str_re_rev rev ($re_nary_intro r))))
-
 ; define: $str_from_flat_form
 ; args:
 ; - s (Seq U): The string term.
@@ -1218,15 +1186,15 @@
 (define $str_from_nary_form ((U Type :implicit) (s (Seq U)) (rev Bool))
   ($str_nary_elim ($str_rev rev s)))
 
-;;;;; deep flat form (used by $str_re_consume)
+;;;;; flat form (used by $str_re_consume and $str_re_includes)
 ;
-; The "deep" flat form is like $re_to_flat_form, but additionally puts the body
-; of every re.* and the children of every re.inter / re.union into flat form as
-; well. This is used by $str_re_consume so that $str_re_consume_rec never has to
-; (re)convert one of its recursive arguments to flat form: every regular
-; expression it recurses on is already flat. Note we cannot make $re_to_flat_form
-; itself deep, since $str_re_includes relies on the shallow form (e.g. it matches
-; (re.* re.allchar) literally, which deep flattening would rewrite).
+; The "flat form" of a regular expression flattens the strings occurring as
+; (str.to_re s) children, and additionally puts the body of every re.* and the
+; children of every re.inter / re.union into flat form as well. This is used by
+; $str_re_consume and $str_re_includes so that their recursive workers never have
+; to (re)convert one of their recursive arguments to flat form: every regular
+; expression they recurse on is already flat. This is what makes those methods
+; structurally recursive.
 ;
 ; Flattening and un-flattening are each a single recursive program. The boolean
 ; argument distinguishes the two roles a regular expression plays: as a re.++
@@ -1242,7 +1210,7 @@
 ; - rev Bool: Whether to reverse content.
 ; - aslist Bool: Whether r is treated as a re.++ list (true) or a component (false).
 ; - r RegLan: The regular expression to flatten.
-; return: The deep flat form of r.
+; return: The flat form of r.
 (program $re_flatten ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
   :signature (Bool Bool RegLan) RegLan
   (
@@ -1259,22 +1227,23 @@
   )
 )
 
-; define: $re_to_flat_form_deep
+; define: $re_to_flat_form
 ; args:
 ; - r RegLan: The regular expression to process.
 ; - rev Bool: Whether to reverse the content of r.
 ; return: >
-;   Like $re_to_flat_form, but additionally flattens the body of every re.* and
-;   the children of every re.inter / re.union. The top-level component order is
-;   reversed once (non-recursively) by $str_re_rev.
-(define $re_to_flat_form_deep ((r RegLan) (rev Bool))
+;   Converts a regular expression term to "flat form": flattens the strings
+;   occurring as (str.to_re s) children, and recursively flattens the body of every
+;   re.* and the children of every re.inter / re.union. The top-level component
+;   order is reversed once (non-recursively) by $str_re_rev.
+(define $re_to_flat_form ((r RegLan) (rev Bool))
   ($str_re_rev rev ($re_flatten rev true r)))
 
 ; program: $re_unflatten
 ; args:
 ; - rev Bool: Whether to reverse content.
 ; - aslist Bool: Whether r is treated as a re.++ list (true) or a component (false).
-; - r RegLan: The regular expression (in deep flat form) to un-flatten.
+; - r RegLan: The regular expression (in flat form) to un-flatten.
 ; return: The dual of $re_flatten.
 (program $re_unflatten ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
   :signature (Bool Bool RegLan) RegLan
@@ -1294,21 +1263,21 @@
   )
 )
 
-; define: $re_from_flat_form_deep
+; define: $re_from_flat_form
 ; args:
-; - r RegLan: The regular expression in deep flat form.
+; - r RegLan: The regular expression in flat form.
 ; - rev Bool: Whether to reverse the content of r.
 ; return: >
-;   The dual of $re_to_flat_form_deep: converts r (deep flat form) back to the
-;   form used elsewhere, recursively un-flattening re.* bodies and re.inter /
-;   re.union children.
-(define $re_from_flat_form_deep ((r RegLan) (rev Bool))
+;   The dual of $re_to_flat_form: converts r (flat form) back to the form used
+;   elsewhere, recursively un-flattening re.* bodies and re.inter / re.union
+;   children.
+(define $re_from_flat_form ((r RegLan) (rev Bool))
   ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true r))))
 
 ; note: >
-;   Forward declaration of $str_re_includes_flat below. This is the deep-flat-form
+;   Forward declaration of $str_re_includes_flat below. This is the flat-form
 ;   inclusion dispatcher: it assumes both of its arguments are already in
-;   (operator-preserving) deep flat form, so the recursion never reconverts to flat
+;   (operator-preserving) flat form, so the recursion never reconverts to flat
 ;   form, which is what makes the inclusion test structurally recursive. The public
 ;   $str_re_includes below flattens its arguments once and calls it.
 (program $str_re_includes_flat () :signature (RegLan RegLan) Bool)
@@ -1348,8 +1317,8 @@
 )
 
 ; The following three programs are helpers for $str_re_includes_flat, dispatching
-; the union / intersection / star inclusion heuristics. They operate on deep flat
-; form, recursing back into $str_re_includes_flat. In deep flat form the body of
+; the union / intersection / star inclusion heuristics. They operate on flat
+; form, recursing back into $str_re_includes_flat. In flat form the body of
 ; every re.* and the children of every re.union / re.inter are themselves re.++
 ; lists; in particular (re.* re.allchar) appears as (re.* (re.++ re.allchar)),
 ; which the star case matches. Before recursing on such a body / child, we apply
@@ -1361,8 +1330,8 @@
 
 ; program: $str_re_includes_lhs_union
 ; args:
-; - r RegLan: The first regular expression (deep flat form).
-; - s RegLan: The second regular expression (deep flat form).
+; - r RegLan: The first regular expression (flat form).
+; - s RegLan: The second regular expression (flat form).
 ; return: true if r is (re.union r1 ... rn) and s is contained in some ri.
 (program $str_re_includes_lhs_union ((r1 RegLan) (r2 RegLan :list) (r3 RegLan))
   :signature (RegLan RegLan) Bool
@@ -1374,8 +1343,8 @@
 
 ; program: $str_re_includes_rhs_inter
 ; args:
-; - r RegLan: The first regular expression (deep flat form).
-; - s RegLan: The second regular expression (deep flat form).
+; - r RegLan: The first regular expression (flat form).
+; - s RegLan: The second regular expression (flat form).
 ; return: true if s is (re.inter s1 ... sn) and r is contained in some si.
 (program $str_re_includes_rhs_inter ((r1 RegLan) (r2 RegLan :list) (r3 RegLan))
   :signature (RegLan RegLan) Bool
@@ -1387,8 +1356,8 @@
 
 ; program: $str_re_includes_lhs_star
 ; args:
-; - r RegLan: The first regular expression (deep flat form).
-; - s RegLan: The second regular expression (deep flat form).
+; - r RegLan: The first regular expression (flat form).
+; - s RegLan: The second regular expression (flat form).
 ; return: >
 ;   true if r is (re.* r1) and either s is included in r1, or s1 is included in r1
 ;   where s is of the form (re.* s1).
@@ -1410,7 +1379,7 @@
 ;   This method is used for checking if there is no upper bound on the number of
 ;   arbitrary characters that can be consumed at the current position.
 ; note: >
-;   r is assumed to be in deep flat form, where (re.* re.allchar) appears as
+;   r is assumed to be in flat form, where (re.* re.allchar) appears as
 ;   (re.* (re.++ re.allchar)).
 (program $re_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list))
   :signature (RegLan) Bool
@@ -1427,8 +1396,8 @@
 ; - r2 RegLan: The second regular expression.
 ; return: >
 ;   true if we can infer r2 is included in r1. We assume that r1 and r2
-;   are re.++ lists that have been put into deep flat form with
-;   $re_to_flat_form_deep_top. Because the form is deep, every component (including
+;   are re.++ lists that have been put into flat form with
+;   $re_to_flat_form_top. Because the form is deep, every component (including
 ;   re.* bodies and re.inter / re.union children) is already flat, so the base
 ;   inclusion check on the leading components recurses directly into
 ;   $str_re_includes_flat with no flat-form conversion. Every recursive call is
@@ -1467,30 +1436,30 @@
 
 ; program: $str_re_includes_flat
 ; args:
-; - r1 RegLan: The first regular expression, assumed to be in deep flat form.
-; - r2 RegLan: The second regular expression, assumed to be in deep flat form.
+; - r1 RegLan: The first regular expression, assumed to be in flat form.
+; - r2 RegLan: The second regular expression, assumed to be in flat form.
 ; return: >
 ;   true if we can infer that all strings in r2 are also in r1. This is the deep-
 ;   flat-form inclusion dispatcher. It is invoked both by the public $str_re_includes
 ;   (on the whole, once-flattened term) and by $str_re_includes_rec (on the leading
 ;   components of the concatenation lists it processes). Because its arguments are
-;   always in deep flat form, it never reconverts to flat form; the only place it
+;   always in flat form, it never reconverts to flat form; the only place it
 ;   (cheaply, non-recursively) reshapes a term is $re_nary_intro, which wraps a bare
 ;   component into a singleton re.++ list before handing it to $str_re_includes_rec.
 ;   The leaf membership / range checks unflatten locally (terminating, not recursive
-;   into this group). Since the input is operator-preserving deep flat form (see
-;   $re_to_flat_form_deep_top), a top-level re.* / re.union / re.inter is still
+;   into this group). Since the input is operator-preserving flat form (see
+;   $re_to_flat_form_top), a top-level re.* / re.union / re.inter is still
 ;   visible here, so the union / intersection / star heuristics apply to the whole
 ;   term and not just to its leading component.
 (program $str_re_includes_flat ((s1 String) (s2 String) (s3 String) (s4 String) (r1 RegLan) (r3 RegLan))
   :signature (RegLan RegLan) Bool
   (
   (($str_re_includes_flat r1 r1)                               true)
-  ; r1 is un-deep-flattened to a normal regular expression for evaluation. s1 may
+  ; r1 is un-flattened to a normal regular expression for evaluation. s1 may
   ; be a bare character (the recursion in $str_re_includes_rec peels str.to_re
   ; contents one character at a time) or a flat str.++ list; $str_eval_str_in_re
   ; normalizes either via $str_to_flat_form (idempotent on already-flat strings).
-  (($str_re_includes_flat r1 (str.to_re s1))                   ($str_eval_str_in_re s1 ($re_from_flat_form_deep ($re_nary_intro r1) false))) ; requires constant s1/r1
+  (($str_re_includes_flat r1 (str.to_re s1))                   ($str_eval_str_in_re s1 ($re_from_flat_form ($re_nary_intro r1) false))) ; requires constant s1/r1
   (($str_re_includes_flat (str.to_re s1) r1)                   false)
   (($str_re_includes_flat (re.range s1 s2) (re.range s3 s4))   (eo::define ((z1 (eo::to_z s1)))
                                                           (eo::define ((z2 (eo::to_z s2)))
@@ -1513,21 +1482,21 @@
   )
 )
 
-; define: $re_to_flat_form_deep_top
+; define: $re_to_flat_form_top
 ; args:
 ; - r RegLan: The regular expression to process.
 ; - rev Bool: Whether to reverse the content of r.
 ; return: >
-;   The deep flat form of r used by the inclusion test. This differs from
-;   $re_to_flat_form_deep only at the top level: $re_nary_elim collapses the result
+;   The flat form of r used by the inclusion test. This differs from
+;   $re_to_flat_form only at the top level: $re_nary_elim collapses the result
 ;   when it is a singleton re.++ list, so a top-level re.* / re.union / re.inter /
 ;   base is left as a single component (with its body / children flattened) rather
 ;   than being wrapped into a singleton list, while a genuine (multi-component)
 ;   re.++ stays a list. This keeps the top-level operator visible to
 ;   $str_re_includes_flat so that its union / intersection / star heuristics apply to
 ;   the whole term, not just to its leading component.
-(define $re_to_flat_form_deep_top ((r RegLan) (rev Bool))
-  ($re_nary_elim ($re_to_flat_form_deep r rev)))
+(define $re_to_flat_form_top ((r RegLan) (rev Bool))
+  ($re_nary_elim ($re_to_flat_form r rev)))
 
 ; define: $str_re_includes
 ; args:
@@ -1535,13 +1504,13 @@
 ; - r2 RegLan: The second regular expression.
 ; return: >
 ;   true if we can infer that all strings in r2 are also in r1. This is the public
-;   entry point. It converts both arguments once to (operator-preserving) deep flat
+;   entry point. It converts both arguments once to (operator-preserving) flat
 ;   form and hands off to the structurally recursive $str_re_includes_flat. The
 ;   one-time conversion here is what lets the rest of the family avoid reconverting
 ;   during recursion, which is what makes the inclusion test structurally recursive.
 (define $str_re_includes ((r1 RegLan) (r3 RegLan))
   (eo::ite (eo::eq r1 r3) true
-    ($str_re_includes_flat ($re_to_flat_form_deep_top r1 false) ($re_to_flat_form_deep_top r3 false))))
+    ($str_re_includes_flat ($re_to_flat_form_top r1 false) ($re_to_flat_form_top r3 false))))
 ; program: $str_arith_entail_simple_rec
 ; args:
 ; - p @Polynomial: A polynomial term to process.
@@ -1703,13 +1672,13 @@
 ;   regular expression as argument r. Otherwise, this argument is @result.null.
 ; - rev Bool: >
 ;   Indicates whether s and r were reversed. This flag is now only informational:
-;   r is expected to already be in deep flat form (see $re_to_flat_form_deep),
+;   r is expected to already be in flat form (see $re_to_flat_form),
 ;   including its re.* bodies and re.inter / re.union children, so this method
 ;   never needs to (re)convert one of its recursive arguments to flat form.
 ; return: >
 ;   The result of implied consumption of string s in regular expression r.
 ; note: >
-;   Since r is in deep flat form, every recursive call either (1) strictly shrinks
+;   Since r is in flat form, every recursive call either (1) strictly shrinks
 ;   the string argument (consuming a prefix), or (2) recurses on a strict subterm
 ;   of r (its tail r2, a re.* body r3, or a re.inter / re.union child r1). The sole
 ;   exception is the re.* "consume one copy and repeat" case, which recurses with
@@ -1741,8 +1710,8 @@
         (str.in_re (str.++ s1 s2) (re.++ re.allchar r2))))
     (($str_re_consume_rec (str.++ s1 s2) (re.++ (re.* r3) r2) @result.null rev)
       (eo::define ((r1 (re.* r3)))
-      ; see what happens if we unroll once. Note r3 is already in deep flat form
-      ; (see $re_to_flat_form_deep), so we recurse on it directly.
+      ; see what happens if we unroll once. Note r3 is already in flat form
+      ; (see $re_to_flat_form), so we recurse on it directly.
       (eo::define ((res ($str_re_consume_rec (str.++ s1 s2) r3 @result.null rev)))
       (eo::ite (eo::eq res false)
         ; We can't unroll even once, thus we must skip it.
@@ -1776,7 +1745,7 @@
     (($str_re_consume_rec s1 (re.++ @re.empty r2) @result.null rev)
       ($str_re_consume_rec s1 r2 @result.null rev)) ; finished current component
     ; Intersection reports conflicts eagerly, and otherwise combines the results.
-    ; Note r1 is already in deep flat form, so we recurse on it directly.
+    ; Note r1 is already in flat form, so we recurse on it directly.
     (($str_re_consume_rec s1 (re.inter r1 r2) b rev)   (eo::define ((bb ($str_re_consume_rec s1 r1 @result.null rev)))
                                                          (eo::ite (eo::eq bb false)
                                                            false
@@ -1784,7 +1753,7 @@
     (($str_re_consume_rec s1 re.all @result.null rev)  (str.in_re "" @re.empty)) ; only used if re.all appears in unexpected position
     (($str_re_consume_rec s1 re.all b rev)             b)                        ; end of re.inter
     ; Union ignores conflicts, and otherwise combines the results. We report a conflict if all children give conflicts.
-    ; Note r1 is already in deep flat form, so we recurse on it directly.
+    ; Note r1 is already in flat form, so we recurse on it directly.
     (($str_re_consume_rec s1 (re.union r1 r2) b rev)   (eo::define ((bb ($str_re_consume_rec s1 r1 @result.null rev)))
                                                          (eo::ite (eo::eq bb false)
                                                            ($str_re_consume_rec s1 r2 b rev)
@@ -1809,7 +1778,7 @@
 ;   back from flat form when applicable.
 (define $str_re_consume_process ((s String) (r RegLan) (oneDir Bool))
   (eo::define ((ss ($str_to_flat_form s true)))
-  (eo::define ((rr ($re_to_flat_form_deep r true)))
+  (eo::define ((rr ($re_to_flat_form r true)))
   (eo::define ((resrev ($str_re_consume_rec ss rr @result.null true)))
   (eo::ite (eo::eq resrev false)
     false
@@ -1818,13 +1787,13 @@
     ; we revert if oneDir is true and we didn't fully consume
     (eo::define ((revert (eo::and oneDir (eo::not (eo::eq r1 @re.empty)))))
     (eo::define ((s1r ($str_rev true (eo::ite revert ss s1)))
-                  (r1r ($re_to_flat_form_deep (eo::ite revert rr r1) true)))
+                  (r1r ($re_to_flat_form (eo::ite revert rr r1) true)))
     (eo::define ((resfwd ($str_re_consume_rec s1r r1r @result.null false)))
     (eo::ite (eo::eq resfwd false)
       false
       (eo::define ((s2 ($str_membership_str resfwd)))
       (eo::define ((r2 ($str_membership_re resfwd)))
-        (str.in_re ($str_from_flat_form s2 false) ($re_from_flat_form_deep r2 false)))))))))))))))
+        (str.in_re ($str_from_flat_form s2 false) ($re_from_flat_form r2 false)))))))))))))))
 
 ; program: $str_re_consume
 ; args:
