@@ -1289,7 +1289,7 @@
 (program $str_maybe_get_star_body ((r RegLan))
   :signature (RegLan) RegLan
   (
-    (($str_maybe_get_star_body (re.* r)) r)
+    (($str_maybe_get_star_body (re.++ (re.* r))) r)
     (($str_maybe_get_star_body r)        r)
   )
 )
@@ -1362,8 +1362,8 @@
 (program $re_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list))
   :signature (RegLan) Bool
   (
-  (($re_is_unbound_wildcard (re.++ (re.* (re.++ re.allchar)) r2))  true)
-  (($re_is_unbound_wildcard (re.++ re.allchar r2))                 ($re_is_unbound_wildcard r2))
+  (($re_is_unbound_wildcard (re.++ (re.++ (re.* (re.++ re.allchar))) r2))  true)
+  (($re_is_unbound_wildcard (re.++ (re.++ re.allchar) r2))                 ($re_is_unbound_wildcard r2))
   (($re_is_unbound_wildcard r1)                                    false)
   )
 )
