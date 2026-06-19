@@ -1548,6 +1548,7 @@ set(regress_0_tests
   regress0/proofs/issue12683-check-proofs-arith-mixed.smt2
   regress0/proofs/issue12696-check-proofs-subtype.smt2
   regress0/proofs/issue12697-check-proofs-arith.smt2
+  regress0/proofs/issue12746-bv-invert-solve-mult.smt2
   regress0/proofs/issue12708-check-proofs-arith-cm.smt2
   regress0/proofs/issue12709-open-sat-proof.smt2
   regress0/proofs/issue8983-trust-subs.smt2
@@ -1639,6 +1640,7 @@ set(regress_0_tests
   regress0/prop/cadical_bug5.smt2
   regress0/prop/cadical_bug6.smt2
   regress0/prop/cadical_bug7.smt2
+  regress0/prop/cadical_bug8.smt2
   regress0/prop/issue11867.smt2
   regress0/prop/red-psyco-134.smt2
   regress0/push-pop/boolean/fuzz_12.smt2
