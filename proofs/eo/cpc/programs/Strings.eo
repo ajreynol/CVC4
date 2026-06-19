@@ -1344,18 +1344,6 @@
 (define $str_re_includes ((r1 RegLan) (r3 RegLan))
   (eo::ite (eo::eq r1 r3) true ($str_re_includes_rec r1 r3)))
 
-; program $str_maybe_get_star_body
-; args:
-; - r RegLan: The regular expression
-; return: The body of r if it is a star, or r itself otherwise.
-(program $str_maybe_get_star_body ((r RegLan))
-  :signature (RegLan) RegLan
-  (
-    (($str_maybe_get_star_body (re.* r)) r)
-    (($str_maybe_get_star_body r)        r)
-  )
-)
-
 ; The following three programs are helpers for $str_re_includes_base, dispatching
 ; the union / intersection / star inclusion heuristics. They recurse back into
 ; $str_re_includes_rec on a union / intersection child or a star body (each a re.++
@@ -1386,7 +1374,8 @@
 (program $str_re_includes_rhs_inter ((r1 RegLan) (r2 RegLan :list) (r3 RegLan))
   :signature (RegLan RegLan) Bool
   (
-  (($str_re_includes_rhs_inter r1 (re.inter r3 r2)) (eo::ite ($str_re_includes r1 r3) true ($str_re_includes_rhs_inter r1 r2)))
+  (($str_re_includes_rhs_inter r1 (re.inter r3 r2)) 
+    (eo::ite ($str_re_includes r1 r3) true ($str_re_includes_rhs_inter r1 r2)))
   (($str_re_includes_rhs_inter r1 r3)               false)
   )
 )
@@ -1401,9 +1390,9 @@
 (program $str_re_includes_lhs_star ((r1 RegLan) (r2 RegLan))
   :signature (RegLan RegLan) Bool
   (
-  (($str_re_includes_lhs_star (re.* r1) r2) (eo::ite (eo::eq r1 (re.++ re.allchar))
-                                              true
-                                              ($str_re_includes r1 ($str_maybe_get_star_body r2)))) ; use body if a star
+  (($str_re_includes_lhs_star (re.* (re.++ re.allchar)) r2) true)
+  (($str_re_includes_lhs_star (re.* r1) (re.* r2)) ($str_re_includes r1 r2)) ; use body if a star
+  (($str_re_includes_lhs_star (re.* r1) r2) ($str_re_includes r1 r2))
   (($str_re_includes_lhs_star r1 r2)        false)
   )
 )
@@ -1493,15 +1482,15 @@
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4))
     (eo::ite (eo::ite ($str_re_includes_base r1 r3) ; can skip both if we have a base inclusion
-               ($str_re_includes_rec r2 r4)
+               ($str_re_includes r2 r4)
                false)
       true
     (eo::ite (eo::ite ($re_is_unbound_wildcard (re.++ r1 r2))  ; can skip RHS if unbounded wildcard
-              (eo::ite (eo::eq (re.++ r1 r2) r4) true ($str_re_includes_rec (re.++ r1 r2) r4))
+              (eo::ite (eo::eq (re.++ r1 r2) r4) true ($str_re_includes (re.++ r1 r2) r4))
               false)
       true
     (eo::ite (eo::ite (eo::eq r1 (re.* (re.++ re.allchar)))  ; can skip LHS if it is sigma star
-              ($str_re_includes_rec r2 (re.++ r3 r4))
+              ($str_re_includes r2 (re.++ r3 r4))
               false)
       true
       false))))
