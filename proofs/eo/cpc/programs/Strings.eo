@@ -1331,6 +1331,19 @@
 ;   $str_re_includes below flattens its arguments once and calls it.
 (program $str_re_includes_rec () :signature (RegLan RegLan) Bool)
 
+; define: $str_re_includes
+; args:
+; - r1 RegLan: The first regular expression.
+; - r2 RegLan: The second regular expression.
+; return: >
+;   true if we can infer that all strings in r2 are also in r1. This is the public
+;   entry point. It converts both arguments once to (operator-preserving) flat
+;   form and hands off to the structurally recursive $str_re_includes_rec. The
+;   one-time conversion here is what lets the rest of the family avoid reconverting
+;   during recursion, which is what makes the inclusion test structurally recursive.
+(define $str_re_includes ((r1 RegLan) (r3 RegLan))
+  (eo::ite (eo::eq r1 r3) true ($str_re_includes_rec r1 r3)))
+
 ; program $str_maybe_get_star_body
 ; args:
 ; - r RegLan: The regular expression
@@ -1360,7 +1373,7 @@
 (program $str_re_includes_lhs_union ((r1 RegLan) (r2 RegLan :list) (r3 RegLan))
   :signature (RegLan RegLan) Bool
   (
-  (($str_re_includes_lhs_union (re.union r1 r2) r3) (eo::ite ($str_re_includes_rec r1 r3) true ($str_re_includes_lhs_union r2 r3)))
+  (($str_re_includes_lhs_union (re.union r1 r2) r3) (eo::ite ($str_re_includes r1 r3) true ($str_re_includes_lhs_union r2 r3)))
   (($str_re_includes_lhs_union r1 r3)               false)
   )
 )
@@ -1373,7 +1386,7 @@
 (program $str_re_includes_rhs_inter ((r1 RegLan) (r2 RegLan :list) (r3 RegLan))
   :signature (RegLan RegLan) Bool
   (
-  (($str_re_includes_rhs_inter r1 (re.inter r3 r2)) (eo::ite ($str_re_includes_rec r1 r3) true ($str_re_includes_rhs_inter r1 r2)))
+  (($str_re_includes_rhs_inter r1 (re.inter r3 r2)) (eo::ite ($str_re_includes r1 r3) true ($str_re_includes_rhs_inter r1 r2)))
   (($str_re_includes_rhs_inter r1 r3)               false)
   )
 )
@@ -1390,7 +1403,7 @@
   (
   (($str_re_includes_lhs_star (re.* r1) r2) (eo::ite (eo::eq r1 (re.++ re.allchar))
                                               true
-                                              ($str_re_includes_rec r1 ($str_maybe_get_star_body r2)))) ; use body if a star
+                                              ($str_re_includes r1 ($str_maybe_get_star_body r2)))) ; use body if a star
   (($str_re_includes_lhs_star r1 r2)        false)
   )
 )
@@ -1419,7 +1432,6 @@
    (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
   :signature (RegLan RegLan) Bool
   (
-  (($str_re_includes_base r1 r1)                               true)
   ; r1 is un-flattened to a normal regular expression for evaluation. Since the
   ; flat form splits every str.to_re into single-character components, s1 is a
   ; single character (a flat str.++ list of length one is also accepted, as
@@ -1471,7 +1483,6 @@
    (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
   :signature (RegLan RegLan) Bool
   (
-  (($str_re_includes_rec r1 r1)                               true)
   ; When either side is a singleton list, there is no list structure left to
   ; decompose on it, so we hand its sole component (and the whole other side) to
   ; $str_re_includes_base for component-level reasoning (equality, string membership,
@@ -1486,7 +1497,7 @@
                false)
       true
     (eo::ite (eo::ite ($re_is_unbound_wildcard (re.++ r1 r2))  ; can skip RHS if unbounded wildcard
-              ($str_re_includes_rec (re.++ r1 r2) r4)
+              (eo::ite (eo::eq (re.++ r1 r2) r4) true ($str_re_includes_rec (re.++ r1 r2) r4))
               false)
       true
     (eo::ite (eo::ite (eo::eq r1 (re.* (re.++ re.allchar)))  ; can skip LHS if it is sigma star
@@ -1499,20 +1510,6 @@
   (($str_re_includes_rec r1 r3)                         false)
   )
 )
-
-; define: $str_re_includes
-; args:
-; - r1 RegLan: The first regular expression.
-; - r2 RegLan: The second regular expression.
-; return: >
-;   true if we can infer that all strings in r2 are also in r1. This is the public
-;   entry point. It converts both arguments once to (operator-preserving) flat
-;   form and hands off to the structurally recursive $str_re_includes_rec. The
-;   one-time conversion here is what lets the rest of the family avoid reconverting
-;   during recursion, which is what makes the inclusion test structurally recursive.
-(define $str_re_includes ((r1 RegLan) (r3 RegLan))
-  (eo::ite (eo::eq r1 r3) true
-    ($str_re_includes_rec ($re_to_flat_form r1 false) ($re_to_flat_form r3 false))))
 
 ; program: $str_arith_entail_simple_rec
 ; args:
