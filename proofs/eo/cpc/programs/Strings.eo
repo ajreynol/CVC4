@@ -1362,8 +1362,8 @@
 (program $re_is_unbound_wildcard ((r1 RegLan) (r2 RegLan :list))
   :signature (RegLan) Bool
   (
-  (($re_is_unbound_wildcard (re.++ (re.++ (re.* (re.++ re.allchar))) r2))  true)
-  (($re_is_unbound_wildcard (re.++ (re.++ re.allchar) r2))                 ($re_is_unbound_wildcard r2))
+  (($re_is_unbound_wildcard (re.++ (re.* (re.++ re.allchar)) r2))  true)
+  (($re_is_unbound_wildcard (re.++ re.allchar r2))                 ($re_is_unbound_wildcard r2))
   (($re_is_unbound_wildcard r1)                                    false)
   )
 )
@@ -1386,7 +1386,8 @@
 ;   visible here, so the union / intersection / star heuristics apply to the whole
 ;   term and not just to its leading component.
 (program $str_re_includes_rec
-  ((s1 String) (s2 String) (s3 String) (s4 String) (r1 RegLan) (r2 RegLan) (r3 RegLan) (r4 RegLan))
+  ((s1 String) (s2 String) (s3 String) (s4 String) (st String :list)
+   (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
   :signature (RegLan RegLan) Bool
   (
   (($str_re_includes_rec r1 r1)                               true)
@@ -1412,13 +1413,21 @@
   (($str_re_includes_rec (re.++ (re.union r1 r2)) r3)    ($str_re_includes_lhs_union (re.union r1 r2) r3))
   (($str_re_includes_rec (re.++ (re.* r1)) r3)           ($str_re_includes_lhs_star (re.* r1) r3))
   ; consider components one at a time
-  (($str_re_includes_rec (re.++ (str.to_re (str.++ s1 s2)) r2) r3)  ($str_re_includes_rec (re.++ (str.to_re s1) (str.to_re s2) r2) r3))
+  (($str_re_includes_rec (re.++ (str.to_re (str.++ s1 st)) r2) r3)  ($str_re_includes_rec (re.++ (str.to_re s1) (str.to_re st) r2) r3))
   (($str_re_includes_rec (re.++ (str.to_re "") r2) r3)              ($str_re_includes_rec r2 r3))
-  (($str_re_includes_rec r1 (re.++ (str.to_re (str.++ s1 s2)) r4))  ($str_re_includes_rec r1 (re.++ (str.to_re s1) (str.to_re s2) r4)))
+  (($str_re_includes_rec r1 (re.++ (str.to_re (str.++ s1 st)) r4))  ($str_re_includes_rec r1 (re.++ (str.to_re s1) (str.to_re st) r4)))
   (($str_re_includes_rec r1 (re.++ (str.to_re "") r4))              ($str_re_includes_rec r1 r4))
+  ; Both sides are singleton lists whose sole components were not resolved by any
+  ; leaf case above (equality, string membership, range, or the union / star /
+  ; inter heuristics). There is no list structure left to decompose, so the
+  ; multi-component recursion below would not make progress (it would re-wrap each
+  ; bare component into the same singleton list and loop). We conservatively return
+  ; false, matching the behavior of the (removed) $str_re_includes_is_rec guard,
+  ; which only recursed when at least one side was a genuine concatenation.
+  (($str_re_includes_rec (re.++ r1) (re.++ r3))                     false)
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4))
-    (eo::ite (eo::ite ($str_re_includes_rec r1 r3) ; can skip both if we have a base inclusion
+    (eo::ite (eo::ite ($str_re_includes_rec ($re_nary_intro r1) ($re_nary_intro r3)) ; can skip both if we have a base inclusion
                ($str_re_includes_rec r2 r4)
                false)
       true
