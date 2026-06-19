@@ -1339,6 +1339,7 @@
   :signature (RegLan) RegLan
   (
     (($str_maybe_get_star_body (re.++ (re.* r))) r)
+    (($str_maybe_get_star_body (re.* r)) r)
     (($str_maybe_get_star_body r)        r)
   )
 )
@@ -1428,7 +1429,7 @@
   ; single character (a flat str.++ list of length one is also accepted, as
   ; $str_eval_str_in_re normalizes via $str_to_flat_form).
   (($str_re_includes_base r1 (str.to_re s1))
-    ($str_eval_str_in_re s1 ($re_from_flat_form ($re_nary_intro r1) false))) ; requires constant s1/r1
+    ($str_eval_str_in_re s1 r1)) ; requires constant s1/r1
   (($str_re_includes_base (str.to_re s1) r1)                   false)
   (($str_re_includes_base (re.range s1 s2) (re.range s3 s4))   (eo::define ((z1 (eo::to_z s1)))
                                                           (eo::define ((z2 (eo::to_z s2)))
