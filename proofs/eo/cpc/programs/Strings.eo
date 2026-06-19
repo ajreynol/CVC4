@@ -1232,21 +1232,21 @@
 (program $re_flatten ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
   :signature (Bool Bool RegLan) RegLan
   (
-    ; list mode: map flattening over the re.++ list (head as component, tail as list)
-    (($re_flatten rev true @re.empty)        @re.empty)
-    ; a str.to_re component is split into a concatenation of single-character
-    ; str.to_re terms, spliced into the surrounding list. The split is done in
-    ; forward order; the (order) reversal is applied once, non-recursively, by the
-    ; enclosing $str_re_rev, so the single characters need no per-string reversal.
-    (($re_flatten rev true (re.++ (str.to_re s) b))  ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) ($re_flatten rev true b)))
-    (($re_flatten rev true (re.++ a b))      (_ re.++ ($re_flatten rev false a) ($re_flatten rev true b)))
-    (($re_flatten rev true (str.to_re s))    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) @re.empty)) ; bare str.to_re
-    (($re_flatten rev true c)                (_ re.++ ($re_flatten rev false c) @re.empty)) ; bare component -> singleton list
-    ; component mode (str.to_re is handled in list mode above)
-    (($re_flatten rev false (re.* body))     (re.* ($str_re_rev rev ($re_flatten rev true body))))
-    (($re_flatten rev false (re.inter c1 c2)) (_ re.inter ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
-    (($re_flatten rev false (re.union c1 c2)) (_ re.union ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
-    (($re_flatten rev false c)               c)
+  ; list mode: map flattening over the re.++ list (head as component, tail as list)
+  (($re_flatten rev true @re.empty)        @re.empty)
+  ; a str.to_re component is split into a concatenation of single-character
+  ; str.to_re terms, spliced into the surrounding list. The split is done in
+  ; forward order; the (order) reversal is applied once, non-recursively, by the
+  ; enclosing $str_re_rev, so the single characters need no per-string reversal.
+  (($re_flatten rev true (re.++ (str.to_re s) b))  ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) ($re_flatten rev true b)))
+  (($re_flatten rev true (re.++ a b))      (_ re.++ ($re_flatten rev false a) ($re_flatten rev true b)))
+  (($re_flatten rev true (str.to_re s))    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) @re.empty)) ; bare str.to_re
+  (($re_flatten rev true c)                (_ re.++ ($re_flatten rev false c) @re.empty)) ; bare component -> singleton list
+  ; component mode (str.to_re is handled in list mode above)
+  (($re_flatten rev false (re.* body))     (re.* ($str_re_rev rev ($re_flatten rev true body))))
+  (($re_flatten rev false (re.inter c1 c2)) (_ re.inter ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
+  (($re_flatten rev false (re.union c1 c2)) (_ re.union ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
+  (($re_flatten rev false c)               c)
   )
 )
 
@@ -1276,17 +1276,17 @@
 (program $re_unflatten ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
   :signature (Bool Bool RegLan) RegLan
   (
-    ; list mode: a maximal run of (single-character) str.to_re components is merged
-    ; back into one str.to_re (collecting their characters); other components are
-    ; un-flattened individually.
-    (($re_unflatten rev true (re.++ (str.to_re s) b))  ($re_unflatten_str rev ($str_nary_intro s) b))
-    (($re_unflatten rev true (re.++ a b))      (_ re.++ ($re_unflatten rev false a) ($re_unflatten rev true b)))
-    (($re_unflatten rev true c)                c) ; @re.empty terminator
-    ; component mode (str.to_re is handled in list mode above)
-    (($re_unflatten rev false (re.* body))     (re.* ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true body)))))
-    (($re_unflatten rev false (re.inter c1 c2)) (_ re.inter ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
-    (($re_unflatten rev false (re.union c1 c2)) (_ re.union ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
-    (($re_unflatten rev false c)               c)
+  ; list mode: a maximal run of (single-character) str.to_re components is merged
+  ; back into one str.to_re (collecting their characters); other components are
+  ; un-flattened individually.
+  (($re_unflatten rev true (re.++ (str.to_re s) b))  ($re_unflatten_str rev ($str_nary_intro s) b))
+  (($re_unflatten rev true (re.++ a b))      (_ re.++ ($re_unflatten rev false a) ($re_unflatten rev true b)))
+  (($re_unflatten rev true c)                c) ; @re.empty terminator
+  ; component mode (str.to_re is handled in list mode above)
+  (($re_unflatten rev false (re.* body))     (re.* ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true body)))))
+  (($re_unflatten rev false (re.inter c1 c2)) (_ re.inter ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
+  (($re_unflatten rev false (re.union c1 c2)) (_ re.union ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
+  (($re_unflatten rev false c)               c)
   )
 )
 

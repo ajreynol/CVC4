@@ -1045,7 +1045,8 @@
   (
     ; handle sequence-specific operators here
     (($seq_eval (seq.nth t n))            (eo::define ((res (eo::list_nth seq.++ ($str_to_nary_form t false) n)))
-                                            ($seq_element_of_unit res)))
+                                            (eo::requires ($is_seq_const t) true
+                                              ($seq_element_of_unit res))))
     (($seq_eval (seq.len t))              ($str_value_len ($str_nary_intro t)))
     (($seq_eval (seq.++ t ts))            ($str_nary_elim (eo::list_concat seq.++ ($str_nary_intro t) ($str_nary_intro ($seq_eval ts)))))
     (($seq_eval (seq.extract t n m))      (eo::define ((tn ($str_nary_intro t)))
