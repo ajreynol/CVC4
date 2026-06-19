@@ -1417,6 +1417,44 @@
   )
 )
 
+(program $str_re_includes_base
+  ((s1 String) (s2 String) (s3 String) (s4 String)
+   (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
+  :signature (RegLan RegLan) Bool
+  (
+  (($str_re_includes_base r1 r1)                               true)
+  ; r1 is un-flattened to a normal regular expression for evaluation. Since the
+  ; flat form splits every str.to_re into single-character components, s1 is a
+  ; single character (a flat str.++ list of length one is also accepted, as
+  ; $str_eval_str_in_re normalizes via $str_to_flat_form).
+  (($str_re_includes_base r1 (str.to_re s1))
+    ($str_eval_str_in_re s1 ($re_from_flat_form ($re_nary_intro r1) false))) ; requires constant s1/r1
+  (($str_re_includes_base (str.to_re s1) r1)                   false)
+  (($str_re_includes_base (re.range s1 s2) (re.range s3 s4))   (eo::define ((z1 (eo::to_z s1)))
+                                                          (eo::define ((z2 (eo::to_z s2)))
+                                                          (eo::define ((z3 (eo::to_z s3)))
+                                                          (eo::define ((z4 (eo::to_z s4)))
+                                                          (eo::requires (eo::is_neg z1) false
+                                                          (eo::requires (eo::is_neg z2) false
+                                                          (eo::requires (eo::is_neg z3) false
+                                                          (eo::requires (eo::is_neg z4) false
+                                                            (eo::and ($compare_geq z2 z3) ($compare_geq z3 z1)
+                                                                  ($compare_geq z2 z4) ($compare_geq z4 z1)))))))))))
+
+  (($str_re_includes_base r1 (re.inter r3 r2))    ($str_re_includes_rhs_inter r1 (re.inter r3 r2)))
+  (($str_re_includes_base (re.union r1 r2) r3)    ($str_re_includes_lhs_union (re.union r1 r2) r3))
+  (($str_re_includes_base (re.* r1) r3)           ($str_re_includes_lhs_star (re.* r1) r3))
+  ; Both sides are singleton lists whose sole components were not resolved by any
+  ; leaf case above (equality, string membership, range, or the union / star /
+  ; inter heuristics). There is no list structure left to decompose, so the
+  ; multi-component recursion below would not make progress (it would re-wrap each
+  ; bare component into the same singleton list and loop). We conservatively return
+  ; false, matching the behavior of the (removed) $str_re_includes_is_rec guard,
+  ; which only recursed when at least one side was a genuine concatenation.
+  (($str_re_includes_base r1 r3)                     false)
+  )
+)
+
 ; program: $str_re_includes_rec
 ; args:
 ; - r1 RegLan: The first regular expression, assumed to be in flat form.
@@ -1440,27 +1478,6 @@
   :signature (RegLan RegLan) Bool
   (
   (($str_re_includes_rec r1 r1)                               true)
-  ; r1 is un-flattened to a normal regular expression for evaluation. Since the
-  ; flat form splits every str.to_re into single-character components, s1 is a
-  ; single character (a flat str.++ list of length one is also accepted, as
-  ; $str_eval_str_in_re normalizes via $str_to_flat_form).
-  (($str_re_includes_rec r1 (re.++ (str.to_re s1)))
-    ($str_eval_str_in_re s1 ($re_from_flat_form ($re_nary_intro r1) false))) ; requires constant s1/r1
-  (($str_re_includes_rec (re.++ (str.to_re s1)) r1)                   false)
-  (($str_re_includes_rec (re.++ (re.range s1 s2)) (re.++ (re.range s3 s4)))   (eo::define ((z1 (eo::to_z s1)))
-                                                          (eo::define ((z2 (eo::to_z s2)))
-                                                          (eo::define ((z3 (eo::to_z s3)))
-                                                          (eo::define ((z4 (eo::to_z s4)))
-                                                          (eo::requires (eo::is_neg z1) false
-                                                          (eo::requires (eo::is_neg z2) false
-                                                          (eo::requires (eo::is_neg z3) false
-                                                          (eo::requires (eo::is_neg z4) false
-                                                            (eo::and ($compare_geq z2 z3) ($compare_geq z3 z1)
-                                                                  ($compare_geq z2 z4) ($compare_geq z4 z1)))))))))))
-
-  (($str_re_includes_rec r1 (re.++ (re.inter r3 r2)))    ($str_re_includes_rhs_inter r1 (re.inter r3 r2)))
-  (($str_re_includes_rec (re.++ (re.union r1 r2)) r3)    ($str_re_includes_lhs_union (re.union r1 r2) r3))
-  (($str_re_includes_rec (re.++ (re.* r1)) r3)           ($str_re_includes_lhs_star (re.* r1) r3))
   ; Both sides are singleton lists whose sole components were not resolved by any
   ; leaf case above (equality, string membership, range, or the union / star /
   ; inter heuristics). There is no list structure left to decompose, so the
@@ -1468,10 +1485,12 @@
   ; bare component into the same singleton list and loop). We conservatively return
   ; false, matching the behavior of the (removed) $str_re_includes_is_rec guard,
   ; which only recursed when at least one side was a genuine concatenation.
-  (($str_re_includes_rec (re.++ r1) (re.++ r3))                     false)
+  (($str_re_includes_rec (re.++ r1) (re.++ r3)) ($str_re_includes_base r1 r3))
+  (($str_re_includes_rec (re.++ r1) r3) ($str_re_includes_base r1 r3))
+  (($str_re_includes_rec r1 (re.++ r3)) ($str_re_includes_base r1 r3))
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4))
-    (eo::ite (eo::ite ($str_re_includes_rec (re.++ r1) (re.++ r3)) ; can skip both if we have a base inclusion
+    (eo::ite (eo::ite ($str_re_includes_base r1 r3) ; can skip both if we have a base inclusion
                ($str_re_includes_rec r2 r4)
                false)
       true
