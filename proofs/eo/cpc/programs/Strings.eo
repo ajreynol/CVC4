@@ -1477,8 +1477,9 @@
   ; $str_re_includes_base for component-level reasoning (equality, string membership,
   ; range, or the union / star / inter heuristics). $re_nary_elim collapses the other
   ; side too when it is itself a singleton list.
-  (($str_re_includes_rec (re.++ r1) r3) ($str_re_includes_base r1 ($re_nary_elim r3)))
-  (($str_re_includes_rec r1 (re.++ r3)) ($str_re_includes_base ($re_nary_elim r1) r3))
+  (($str_re_includes_rec (re.++ r1) (re.++ r3)) ($str_re_includes_base r1 r3))
+  (($str_re_includes_rec (re.++ r1) r3) ($str_re_includes_base r1 r3))
+  (($str_re_includes_rec r1 (re.++ r3)) ($str_re_includes_base r1 r3))
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4))
     (eo::ite (eo::ite ($str_re_includes_base r1 r3) ; can skip both if we have a base inclusion
