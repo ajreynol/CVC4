@@ -1427,7 +1427,7 @@
   (($str_re_includes_rec (re.++ r1) (re.++ r3))                     false)
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4))
-    (eo::ite (eo::ite ($str_re_includes_rec ($re_nary_intro r1) ($re_nary_intro r3)) ; can skip both if we have a base inclusion
+    (eo::ite (eo::ite ($str_re_includes_rec (re.++ r1) (re.++ r3)) ; can skip both if we have a base inclusion
                ($str_re_includes_rec r2 r4)
                false)
       true
