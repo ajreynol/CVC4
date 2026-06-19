@@ -1205,6 +1205,24 @@
 ; the lexicographic measure (size of r, aslist). The (order) reversal is applied
 ; non-recursively by $str_re_rev, so no auxiliary invariance lemma is required.
 
+; program: $re_split_str_to_re
+; args:
+; - s (Seq U): A string in flat form, i.e. a str.++ list whose elements are single
+;   characters (for constants) or non-constant terms.
+; - tail RegLan: The (already-flattened) re.++ list to append after the components.
+; return: >
+;   The re.++ list that prepends (str.to_re ci) for every element ci of s onto
+;   tail. For example, given (str.++ "a" (str.++ "b" "")) and (re.++ X @re.empty),
+;   this returns (re.++ (str.to_re "a") (str.to_re "b") X @re.empty). The empty
+;   string yields no component, so tail is returned unchanged.
+(program $re_split_str_to_re ((U Type) (c (Seq U)) (s (Seq U) :list) (tail RegLan))
+  :signature ((Seq U) RegLan) RegLan
+  (
+    (($re_split_str_to_re (str.++ c s) tail)  (_ re.++ (str.to_re c) ($re_split_str_to_re s tail)))
+    (($re_split_str_to_re c tail)             tail) ; empty-string terminator
+  )
+)
+
 ; program: $re_flatten
 ; args:
 ; - rev Bool: Whether to reverse content.
@@ -1215,11 +1233,16 @@
   :signature (Bool Bool RegLan) RegLan
   (
     ; list mode: map flattening over the re.++ list (head as component, tail as list)
-    (($re_flatten rev true (re.++ a b))      (_ re.++ ($re_flatten rev false a) ($re_flatten rev true b)))
     (($re_flatten rev true @re.empty)        @re.empty)
+    ; a str.to_re component is split into a concatenation of single-character
+    ; str.to_re terms, spliced into the surrounding list. The split is done in
+    ; forward order; the (order) reversal is applied once, non-recursively, by the
+    ; enclosing $str_re_rev, so the single characters need no per-string reversal.
+    (($re_flatten rev true (re.++ (str.to_re s) b))  ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) ($re_flatten rev true b)))
+    (($re_flatten rev true (re.++ a b))      (_ re.++ ($re_flatten rev false a) ($re_flatten rev true b)))
+    (($re_flatten rev true (str.to_re s))    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) @re.empty)) ; bare str.to_re
     (($re_flatten rev true c)                (_ re.++ ($re_flatten rev false c) @re.empty)) ; bare component -> singleton list
-    ; component mode
-    (($re_flatten rev false (str.to_re s))   (str.to_re ($str_to_flat_form s rev)))
+    ; component mode (str.to_re is handled in list mode above)
     (($re_flatten rev false (re.* body))     (re.* ($str_re_rev rev ($re_flatten rev true body))))
     (($re_flatten rev false (re.inter c1 c2)) (_ re.inter ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
     (($re_flatten rev false (re.union c1 c2)) (_ re.union ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
@@ -1245,21 +1268,47 @@
 ; - aslist Bool: Whether r is treated as a re.++ list (true) or a component (false).
 ; - r RegLan: The regular expression (in flat form) to un-flatten.
 ; return: The dual of $re_flatten.
+; note: >
+;   Forward declaration of $re_unflatten_str, used by $re_unflatten below to merge
+;   a maximal run of single-character str.to_re components back into one str.to_re.
+(program $re_unflatten_str () :signature (Bool String RegLan) RegLan)
+
 (program $re_unflatten ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
   :signature (Bool Bool RegLan) RegLan
   (
-    ; list mode: map un-flattening over the re.++ list
+    ; list mode: a maximal run of (single-character) str.to_re components is merged
+    ; back into one str.to_re (collecting their characters); other components are
+    ; un-flattened individually.
+    (($re_unflatten rev true (re.++ (str.to_re s) b))  ($re_unflatten_str rev ($str_nary_intro s) b))
     (($re_unflatten rev true (re.++ a b))      (_ re.++ ($re_unflatten rev false a) ($re_unflatten rev true b)))
     (($re_unflatten rev true c)                c) ; @re.empty terminator
-    ; component mode
-    ; s may be a bare character (the inclusion recursion peels str.to_re contents
-    ; one character at a time), so we $str_nary_intro before $str_from_flat_form,
-    ; which assumes a str.++ list.
-    (($re_unflatten rev false (str.to_re s))   (str.to_re ($str_from_flat_form ($str_nary_intro s) rev)))
+    ; component mode (str.to_re is handled in list mode above)
     (($re_unflatten rev false (re.* body))     (re.* ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true body)))))
     (($re_unflatten rev false (re.inter c1 c2)) (_ re.inter ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
     (($re_unflatten rev false (re.union c1 c2)) (_ re.union ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
     (($re_unflatten rev false c)               c)
+  )
+)
+
+; program: $re_unflatten_str
+; args:
+; - rev Bool: Whether to reverse content.
+; - acc String: The accumulated string (a str.++ list of single characters, in
+;   flat-form / list order) for the current run of str.to_re components.
+; - r RegLan: The remaining re.++ list to process.
+; return: >
+;   Collects a maximal run of (str.to_re ...) components from the head of r,
+;   concatenating their strings into acc, then emits a single un-flattened
+;   (str.to_re ...) (applying $str_from_flat_form, which performs the per-string
+;   reversal and collects adjacent constants) followed by the un-flattening of the
+;   remainder of r.
+(program $re_unflatten_str ((rev Bool) (acc String) (s String) (b RegLan :list))
+  :signature (Bool String RegLan) RegLan
+  (
+    (($re_unflatten_str rev acc (re.++ (str.to_re s) b))
+       ($re_unflatten_str rev ($str_concat acc ($str_nary_intro s)) b))
+    (($re_unflatten_str rev acc b)
+       (_ re.++ (str.to_re ($str_from_flat_form acc rev)) ($re_unflatten rev true b)))
   )
 )
 
@@ -1386,16 +1435,16 @@
 ;   visible here, so the union / intersection / star heuristics apply to the whole
 ;   term and not just to its leading component.
 (program $str_re_includes_rec
-  ((s1 String) (s2 String) (s3 String) (s4 String) (st String :list)
+  ((s1 String) (s2 String) (s3 String) (s4 String)
    (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
   :signature (RegLan RegLan) Bool
   (
   (($str_re_includes_rec r1 r1)                               true)
-  ; r1 is un-flattened to a normal regular expression for evaluation. s1 may
-  ; be a bare character (the recursion in $str_re_includes_rec peels str.to_re
-  ; contents one character at a time) or a flat str.++ list; $str_eval_str_in_re
-  ; normalizes either via $str_to_flat_form (idempotent on already-flat strings).
-  (($str_re_includes_rec r1 (re.++ (str.to_re s1)))                   
+  ; r1 is un-flattened to a normal regular expression for evaluation. Since the
+  ; flat form splits every str.to_re into single-character components, s1 is a
+  ; single character (a flat str.++ list of length one is also accepted, as
+  ; $str_eval_str_in_re normalizes via $str_to_flat_form).
+  (($str_re_includes_rec r1 (re.++ (str.to_re s1)))
     ($str_eval_str_in_re s1 ($re_from_flat_form ($re_nary_intro r1) false))) ; requires constant s1/r1
   (($str_re_includes_rec (re.++ (str.to_re s1)) r1)                   false)
   (($str_re_includes_rec (re.++ (re.range s1 s2)) (re.++ (re.range s3 s4)))   (eo::define ((z1 (eo::to_z s1)))
@@ -1412,11 +1461,6 @@
   (($str_re_includes_rec r1 (re.++ (re.inter r3 r2)))    ($str_re_includes_rhs_inter r1 (re.inter r3 r2)))
   (($str_re_includes_rec (re.++ (re.union r1 r2)) r3)    ($str_re_includes_lhs_union (re.union r1 r2) r3))
   (($str_re_includes_rec (re.++ (re.* r1)) r3)           ($str_re_includes_lhs_star (re.* r1) r3))
-  ; consider components one at a time
-  (($str_re_includes_rec (re.++ (str.to_re (str.++ s1 st)) r2) r3)  ($str_re_includes_rec (re.++ (str.to_re s1) (str.to_re st) r2) r3))
-  (($str_re_includes_rec (re.++ (str.to_re "") r2) r3)              ($str_re_includes_rec r2 r3))
-  (($str_re_includes_rec r1 (re.++ (str.to_re (str.++ s1 st)) r4))  ($str_re_includes_rec r1 (re.++ (str.to_re s1) (str.to_re st) r4)))
-  (($str_re_includes_rec r1 (re.++ (str.to_re "") r4))              ($str_re_includes_rec r1 r4))
   ; Both sides are singleton lists whose sole components were not resolved by any
   ; leaf case above (equality, string membership, range, or the union / star /
   ; inter heuristics). There is no list structure left to decompose, so the
@@ -1636,17 +1680,22 @@
 ;   lexicographic measure (length of s, size of r).
 (program $str_re_consume_rec
   ((s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list) (b Bool) (rev Bool)
-   (s3 String) (s4 String :list) (s5 String) (r3 RegLan))
+   (s3 String) (s5 String) (r3 RegLan))
   :signature (String RegLan Bool Bool) Bool
   (
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ (str.to_re (str.++ s3 s4)) r2) @result.null rev)
-      (eo::ite (eo::eq s1 s3)
-        ($str_re_consume_rec s2 (re.++ (str.to_re s4) r2) @result.null rev)
-        (eo::ite (eo::and ($str_check_length_one s1) ($str_check_length_one s3))
-          false                                       ; conflicting characters
-          (str.in_re (str.++ s1 s2) (re.++ (str.to_re (str.++ s3 s4)) r2))))) ; otherwise stuck
+    ; an empty (str.to_re "") component, including the @re.empty terminator, is
+    ; skipped; matched before the str.to_re case below since @re.empty is
+    ; (str.to_re "")
     (($str_re_consume_rec (str.++ s1 s2) (re.++ @re.empty r2) @result.null rev)
       ($str_re_consume_rec (str.++ s1 s2) r2 @result.null rev)) ; finished current component
+    ; str.to_re components are single characters in flat form, so each is consumed
+    ; in one step
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ (str.to_re s3) r2) @result.null rev)
+      (eo::ite (eo::eq s1 s3)
+        ($str_re_consume_rec s2 r2 @result.null rev)  ; consumed this character, move on
+        (eo::ite (eo::and ($str_check_length_one s1) ($str_check_length_one s3))
+          false                                       ; conflicting characters
+          (str.in_re (str.++ s1 s2) (re.++ (str.to_re s3) r2))))) ; otherwise stuck
     (($str_re_consume_rec (str.++ s1 s2) (re.++ (re.range s3 s5) r2) @result.null rev)
       (eo::ite (eo::and ($str_check_length_one s1) ($str_is_char_range s3 s5))
         (eo::ite ($str_eval_str_in_re s1 (re.range s3 s5))
