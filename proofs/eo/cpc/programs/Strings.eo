@@ -35,28 +35,46 @@
   )
 )
 
+; program: $is_seq_const_rec
+; args:
+; - s (Seq T): The sequence term.
+; return: true if s is a sequence constant.
+(program $is_seq_const_rec ((T Type) (e T) (ss (Seq T) :list))
+  :signature ((Seq T)) Int
+  (
+  (($is_seq_const_rec (seq.++ (seq.unit e) ss))   ($is_seq_const_rec ss))
+  (($is_seq_const_rec (as seq.empty (Seq T)))     true)
+  (($is_seq_const_rec ss)                         false)
+  )
+)
+
+; program: $is_seq_const
+; args:
+; - s (Seq T): The sequence term.
+; return: true if s is a sequence constant.
+(program $is_seq_const ((T Type) (e T) (ss (Seq T)))
+  :signature ((Seq T)) Int
+  (
+  (($is_seq_const (seq.unit e)) true)
+  (($is_seq_const ss)           ($is_seq_const_rec ss))
+  )
+)
+
 ; program: $str_value_len
 ; args:
 ; - s (Seq T): The sequence term.
 ; return: >
 ;   The length of s, if it denotes a "value-like" sequence, that
 ;   is, either a string literal or a concatenation of sequence units.
-(program $str_value_len ((T Type) (s (Seq T)) (e T) (ss (Seq T) :list))
+(program $str_value_len ((T Type) (e T) (s (Seq T)))
   :signature ((Seq T)) Int
   (
-    (($str_value_len (seq.++ (seq.unit e) ss))  (eo::add 1 ($str_value_len ss)))
-    (($str_value_len (as seq.empty (Seq T)))    0)
-    (($str_value_len (seq.unit e))              1)
-    (($str_value_len s)                         (eo::requires (eo::is_str s) true (eo::len s)))
+  (($str_value_len (seq.unit e))  1)
+  (($str_value_len s)
+    (eo::ite (eo::is_str s) (eo::len s)
+      (eo::requires ($is_seq_const s) true (eo::list_len seq.++ s))))
   )
 )
-
-; define: $is_seq_const
-; args:
-; - s (Seq T): The sequence term.
-; return: true iff s is a constant-like sequence
-(define $is_seq_const ((T Type :implicit) (s (Seq T)))
-  (eo::ite (eo::is_str s) false (eo::is_z ($str_value_len s))))
 
 ; define: $str_concat
 ; args:
