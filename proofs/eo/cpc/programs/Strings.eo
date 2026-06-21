@@ -38,7 +38,7 @@
 ; program: $is_seq_const_rec
 ; args:
 ; - s (Seq T): The sequence term.
-; return: true if s is a sequence constant.
+; return: true if s is a (non standalone seq.unit) sequence constant.
 (program $is_seq_const_rec ((T Type) (e T) (ss (Seq T) :list))
   :signature ((Seq T)) Int
   (
@@ -98,8 +98,7 @@
 ;   The result of prepending string x to string y where the former is treated
 ;   as an element and the latter is treated as a list.
 (define $str_cons ((T Type :implicit) (x (Seq T)) (y (Seq T)))
-  (_ str.++ x y)
-)
+  (_ str.++ x y))
 
 ; define: $str_is_code_point
 ; args:
