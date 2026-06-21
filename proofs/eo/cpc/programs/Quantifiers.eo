@@ -9,12 +9,18 @@
 ; note: Assumes applications with lists as their first argument are binders.
 (program $is_closed_rec
   ((T Type) (S Type) (x S) (f (-> T S)) (a T) (xs @List)
-   (q (-> @List T S)) (V Type) (v V) (vs @List :list) (s String)
+   (V Type) (v V) (vs @List :list) (s String)
    (F Bool) (n Int) (r RegLan))
   :signature (S @List) Bool
   (
-  (($is_closed_rec (q (@list v vs) a) xs)
-    (eo::and ($is_closed_rec q xs) ($is_closed_rec a (eo::list_concat @list (@list v vs) xs))))
+  ; quantifiers cases
+  (($is_closed_rec (forall (@list v vs) a) xs)
+    ($is_closed_rec a (eo::list_concat @list (@list v vs) xs)))
+  (($is_closed_rec (exists (@list v vs) a) xs)
+    ($is_closed_rec a (eo::list_concat @list (@list v vs) xs)))
+  (($is_closed_rec (lambda (@list v vs) a) xs)
+    ($is_closed_rec a (eo::list_concat @list (@list v vs) xs)))
+  ; apply case
   (($is_closed_rec (f a) xs)
     (eo::and ($is_closed_rec f xs) ($is_closed_rec a xs)))
   (($is_closed_rec (eo::var s S) xs)
@@ -46,14 +52,18 @@
 ;   of t at that position or in the set of already bound variables bvs.
 ; note: Assumes applications with lists as their first argument are binders.
 (program $contains_atomic_term_list_free_rec
-  ((T Type) (U Type) (S Type) (x U) (q (-> @List T S)) (f (-> T S)) (a T)
+  ((T Type) (U Type) (S Type) (x U) (f (-> T S)) (a T)
    (xs @List) (bvs @List) (x U) (ys @List :list) (s String)
    (F Bool) (n Int) (r RegLan))
   :signature (T @List @List) Bool
   (
-  ; we assume that any function taking a list as a first argument is a binder
-  (($contains_atomic_term_list_free_rec (q (@list x ys) a) xs bvs)
-    ; concatenate these variables to the list of bound variables
+  ; quantifiers cases
+  ; concatenate these variables to the list of bound variables
+  (($contains_atomic_term_list_free_rec (forall (@list x ys) a) xs bvs)
+    ($contains_atomic_term_list_free_rec a xs (eo::list_concat @list (@list x ys) bvs)))
+  (($contains_atomic_term_list_free_rec (exists (@list x ys) a) xs bvs)
+    ($contains_atomic_term_list_free_rec a xs (eo::list_concat @list (@list x ys) bvs)))
+  (($contains_atomic_term_list_free_rec (lambda (@list x ys) a) xs bvs)
     ($contains_atomic_term_list_free_rec a xs (eo::list_concat @list (@list x ys) bvs)))
   ; otherwise normal recursion
   (($contains_atomic_term_list_free_rec (f a) xs bvs)
@@ -92,6 +102,20 @@
 (define $contains_atomic_term_free ((T Type :implicit) (S Type :implicit) (x T) (y S))
   ($contains_atomic_term_list_free_rec x (@list y) @list.nil))
 
+(program $substitute_simul_rec ((S Type)) :signature (Bool S @List @List @List) S)
+
+(define $substitute_simul_quant_rec
+  ((S Type :implicit) (T Type :implicit) (isr Bool)
+   (q (-> @List T S)) (vars @List) (body S) (xs @List) (ss @List) (bvs @List))
+  (eo::requires ($contains_atomic_term_list_free ss vars) false
+    (eo::ite isr
+      (q
+        ($substitute_simul_rec isr vars xs ss bvs)
+        ($substitute_simul_rec isr body xs ss bvs))
+      (q vars
+        ($substitute_simul_rec isr body xs ss
+          (eo::list_concat @list vars bvs))))))
+
 ; program: $substitute_simul_rec
 ; args:
 ; - isRename Bool: true iff this substitution should rename binders.
@@ -113,16 +137,13 @@
   ; If isr is true, we substitute the binder and its body.
   ; If isr is false, we keep the binder and map all variables to themselves
   ; inside the binder.
-  (($substitute_simul_rec isr (q (@list v vs) a) xs ss bvs)
-    (eo::requires ($contains_atomic_term_list_free ss (@list v vs)) false
-      (eo::ite isr
-        (q
-          ($substitute_simul_rec isr (@list v vs) xs ss bvs)
-          ($substitute_simul_rec isr a xs ss bvs))
-        (q
-          (@list v vs)
-          ($substitute_simul_rec isr a xs ss
-            (eo::list_concat @list (@list v vs) bvs))))))
+  (($substitute_simul_rec isr (forall (@list v vs) a) xs ss bvs)
+    ($substitute_simul_quant_rec isr forall (@list v vs) a xs ss bvs))
+  (($substitute_simul_rec isr (exists (@list v vs) a) xs ss bvs)
+    ($substitute_simul_quant_rec isr exists (@list v vs) a xs ss bvs))
+  (($substitute_simul_rec isr (lambda (@list v vs) a) xs ss bvs)
+    ($substitute_simul_quant_rec isr lambda (@list v vs) a xs ss bvs))
+  ; apply case
   (($substitute_simul_rec isr (f a) xs ss bvs)
     (_ ($substitute_simul_rec isr f xs ss bvs) ($substitute_simul_rec isr a xs ss bvs)))
   ; if a variable, check if it is in the substitution list
