@@ -1648,18 +1648,26 @@
 
 ; note: >
 ;   Forward declarations of the intersection / union helpers, which are mutually
-;   recursive with $str_re_consume_rec below: it dispatches a (re.inter ...) or
+;   recursive with $str_re_consume_rec below: it dispatches a (re.inter ...) /
 ;   (re.union ...) argument to them, and they consume each child via
 ;   $str_re_consume_rec. They return the same kind of result as $str_re_consume_rec
 ;   (a residual (str.in_re sr rr), false for a conflict, or the membership unchanged
 ;   when stuck), so no separate "result" encoding is needed.
-(program $str_re_consume_inter () :signature (String RegLan) Bool)
-(program $str_re_consume_union () :signature (String RegLan) Bool)
+(program $str_re_consume_inter () :signature (String RegLan String) Bool)
+(program $str_re_consume_union () :signature (String RegLan String) Bool)
 
 ; program: $str_re_consume_rec
 ; args:
 ; - s String: The string argument of the membership to rewrite.
 ; - r RegLan: The regular expression argument of the membership to rewrite.
+; - fuel String: >
+;   Overapproximation fuel: a flat-form string whose length is an upper bound on the
+;   number of re.* unrollings that can still occur. It is threaded unchanged through
+;   every recursive call except the re.* "consume one copy and repeat" step, whose
+;   clause matches the fuel as (str.++ fc fr) and recurses on the peeled tail fr. The
+;   fuel passed in by $str_re_consume_process is the (flat-form) input string itself,
+;   whose length bounds the unrollings since each unrolling consumes at least one
+;   character.
 ; return: >
 ;   The result of implied consumption of string s in regular expression r: false if
 ;   the membership is unsatisfiable, (str.in_re sr rr) for the residual string sr
@@ -1671,86 +1679,95 @@
 ;   results directly. This replaces the previous @result.null / @result.invalid /
 ;   $result_combine accumulator that was threaded as an extra argument.
 ; note: >
-;   Since r is in flat form, every recursive call either (1) strictly shrinks
-;   the string argument (consuming a prefix), or (2) recurses on a strict subterm
-;   of r (its tail r2, a re.* body r3, or a re.inter / re.union child r1). The sole
-;   exception is the re.* "consume one copy and repeat" case, which recurses with
-;   the same r but a strictly shorter string sr, guarded by the check that sr
-;   differs from the input string. Thus the method terminates under the
-;   lexicographic measure (length of s, size of r).
+;   Since r is in flat form, every recursive call either (1) recurses on a strict
+;   subterm of r (its tail r2, a re.* body r3, or a re.inter / re.union child r1), or
+;   (2) is the re.* "consume one copy and repeat" step, which recurses on a strict
+;   subterm of the fuel (the tail fr of the matched (str.++ fc fr)). Thus the method
+;   terminates under the lexicographic measure (length of fuel, size of r), both of
+;   which are syntactic: the repeat step no longer relies on the residual sr being a
+;   strict suffix of the input string.
 (program $str_re_consume_rec
   ((s1 String) (s2 String :list) (r1 RegLan) (r2 RegLan :list)
-   (s3 String) (s5 String) (r3 RegLan))
-  :signature (String RegLan) Bool
+   (s3 String) (s5 String) (r3 RegLan) (fuel String) (fc String) (fr String :list))
+  :signature (String RegLan String) Bool
   (
     ; an empty (str.to_re "") component, including the @re.empty terminator, is
     ; skipped; matched before the str.to_re case below since @re.empty is
     ; (str.to_re "")
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ @re.empty r2))
-      ($str_re_consume_rec (str.++ s1 s2) r2)) ; finished current component
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ @re.empty r2) fuel)
+      ($str_re_consume_rec (str.++ s1 s2) r2 fuel)) ; finished current component
     ; str.to_re components are single characters in flat form, so each is consumed
     ; in one step
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ (str.to_re s3) r2))
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ (str.to_re s3) r2) fuel)
       (eo::ite (eo::eq s1 s3)
-        ($str_re_consume_rec s2 r2)  ; consumed this character, move on
+        ($str_re_consume_rec s2 r2 fuel)  ; consumed this character, move on
         (eo::ite (eo::and ($str_check_length_one s1) ($str_check_length_one s3))
           false                                       ; conflicting characters
           (str.in_re (str.++ s1 s2) (re.++ (str.to_re s3) r2))))) ; otherwise stuck
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ (re.range s3 s5) r2))
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ (re.range s3 s5) r2) fuel)
       (eo::ite (eo::and ($str_check_length_one s1) ($str_is_char_range s3 s5))
         (eo::ite ($str_eval_str_in_re s1 (re.range s3 s5))
-          ($str_re_consume_rec s2 r2)
+          ($str_re_consume_rec s2 r2 fuel)
           false)
         (str.in_re (str.++ s1 s2) (re.++ (re.range s3 s5) r2))))
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ re.allchar r2))
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ re.allchar r2) fuel)
       (eo::ite ($str_check_length_one s1)
-        ($str_re_consume_rec s2 r2)
+        ($str_re_consume_rec s2 r2 fuel)
         (str.in_re (str.++ s1 s2) (re.++ re.allchar r2))))
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ (re.* r3) r2))
+    ; the fuel is matched as (str.++ fc fr) so that the "consume one copy and repeat"
+    ; branch below can recurse on the peeled tail fr, a strict subterm of the fuel
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ (re.* r3) r2) (str.++ fc fr))
       (eo::define ((r1 (re.* r3)))
+      (eo::define ((fuel (str.++ fc fr)))
       ; see what happens if we unroll once. Note r3 is already in flat form
       ; (see $re_to_flat_form), so we recurse on it directly.
-      (eo::define ((res ($str_re_consume_rec (str.++ s1 s2) r3)))
+      (eo::define ((res ($str_re_consume_rec (str.++ s1 s2) r3 fuel)))
       (eo::ite (eo::eq res false)
         ; We can't unroll even once, thus we must skip it.
-        ($str_re_consume_rec (str.++ s1 s2) r2)
+        ($str_re_consume_rec (str.++ s1 s2) r2 fuel)
         (eo::ite (eo::eq ($str_membership_re res) @re.empty)
           ; If we fully consumed, now we go back and check if we get a conflict if we skip.
-          (eo::define ((res2 ($str_re_consume_rec (str.++ s1 s2) r2)))
+          (eo::define ((res2 ($str_re_consume_rec (str.++ s1 s2) r2 fuel)))
           (eo::ite (eo::is_eq res2 false)
             ; Skipping would give a conflict.
             (eo::define ((sr ($str_membership_str res)))
             (eo::ite (eo::eq (str.++ s1 s2) sr)
               ; if we did not consume anything, we are stuck.
               (str.in_re (str.++ s1 s2) (re.++ r1 r2))
-              ; otherwise, we continue with the RE consumed once.
-              ($str_re_consume_rec sr (re.++ r1 r2))))
+              ; otherwise, we continue with the RE consumed once, on the peeled fuel fr
+              ; so that this repeat recurses on a strict subterm of the fuel.
+              ($str_re_consume_rec sr (re.++ r1 r2) fr)))
             ; Otherwise we are stuck.
             (str.in_re (str.++ s1 s2) (re.++ r1 r2))))
           ; Otherwise we are stuck.
-          (str.in_re (str.++ s1 s2) (re.++ r1 r2)))))))
-    (($str_re_consume_rec (str.++ s1 s2) (re.++ r1 r2))
+          (str.in_re (str.++ s1 s2) (re.++ r1 r2))))))))
+    ; out of fuel: unreachable in practice, since the fuel length is at least the
+    ; (non-empty) string length here; returning the membership unchanged is sound and
+    ; keeps the program total
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ (re.* r3) r2) fuel)
+      (str.in_re (str.++ s1 s2) (re.++ (re.* r3) r2)))
+    (($str_re_consume_rec (str.++ s1 s2) (re.++ r1 r2) fuel)
       ; r1 is an intersection / union component; consume it as a whole
-      (eo::define ((res ($str_re_consume_rec (str.++ s1 s2) r1)))
+      (eo::define ((res ($str_re_consume_rec (str.++ s1 s2) r1 fuel)))
       (eo::ite (eo::is_eq res false)
         ; conflict
         false
         (eo::ite (eo::is_eq ($str_membership_re res) @re.empty)
           ; the component was fully consumed, continue with its residual
-          ($str_re_consume_rec ($str_membership_str res) r2)
+          ($str_re_consume_rec ($str_membership_str res) r2 fuel)
           ; otherwise we are stuck
           (str.in_re (str.++ s1 s2) (re.++ r1 r2))))))
-    (($str_re_consume_rec s1 (re.++ @re.empty r2))
-      ($str_re_consume_rec s1 r2)) ; finished current component
+    (($str_re_consume_rec s1 (re.++ @re.empty r2) fuel)
+      ($str_re_consume_rec s1 r2 fuel)) ; finished current component
     ; intersection and union are handled by dedicated helpers
-    (($str_re_consume_rec s1 (re.inter r1 r2))  ($str_re_consume_inter s1 (re.inter r1 r2)))
-    (($str_re_consume_rec s1 (re.union r1 r2))  ($str_re_consume_union s1 (re.union r1 r2)))
+    (($str_re_consume_rec s1 (re.inter r1 r2) fuel)  ($str_re_consume_inter s1 (re.inter r1 r2) fuel))
+    (($str_re_consume_rec s1 (re.union r1 r2) fuel)  ($str_re_consume_union s1 (re.union r1 r2) fuel))
     ; re.all matches every string (consumes the whole remainder); used only if
     ; re.all appears in an unexpected position
-    (($str_re_consume_rec s1 re.all)   (str.in_re "" @re.empty))
+    (($str_re_consume_rec s1 re.all fuel)   (str.in_re "" @re.empty))
     ; re.none is the empty language; used only if re.none appears in an unexpected position
-    (($str_re_consume_rec s1 re.none)  false)
-    (($str_re_consume_rec s1 r1)       (str.in_re s1 r1))
+    (($str_re_consume_rec s1 re.none fuel)  false)
+    (($str_re_consume_rec s1 r1 fuel)       (str.in_re s1 r1))
   )
 )
 
@@ -1766,32 +1783,32 @@
 ;   every remaining child to agree, which is the structural replacement for the old
 ;   $result_combine accumulator.
 (program $str_re_consume_inter_rec
-  ((s String) (c1 RegLan) (c2 RegLan :list) (sr String) (orig RegLan))
-  :signature (String RegLan String RegLan) Bool
+  ((s String) (c1 RegLan) (c2 RegLan :list) (sr String) (orig RegLan) (fuel String))
+  :signature (String RegLan String RegLan String) Bool
   (
   ; every child agreed on residual sr
-  (($str_re_consume_inter_rec s re.all sr orig)  (str.in_re sr @re.empty))
-  (($str_re_consume_inter_rec s (re.inter c1 c2) sr orig)
-    (eo::define ((res ($str_re_consume_rec s c1)))
+  (($str_re_consume_inter_rec s re.all sr orig fuel)  (str.in_re sr @re.empty))
+  (($str_re_consume_inter_rec s (re.inter c1 c2) sr orig fuel)
+    (eo::define ((res ($str_re_consume_rec s c1 fuel)))
     (eo::ite (eo::is_eq res false)
       false                                   ; this child conflicts
       (eo::ite (eo::and (eo::eq ($str_membership_re res) @re.empty)
                         (eo::eq ($str_membership_str res) sr))
-        ($str_re_consume_inter_rec s c2 sr orig)
+        ($str_re_consume_inter_rec s c2 sr orig fuel)
         (str.in_re s orig)))))                ; this child disagrees -> stuck
   )
 )
 (program $str_re_consume_inter
-  ((s String) (c1 RegLan) (c2 RegLan :list))
-  :signature (String RegLan) Bool
+  ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
+  :signature (String RegLan String) Bool
   (
-  (($str_re_consume_inter s (re.inter c1 c2))
-    (eo::define ((res ($str_re_consume_rec s c1)))
+  (($str_re_consume_inter s (re.inter c1 c2) fuel)
+    (eo::define ((res ($str_re_consume_rec s c1 fuel)))
     (eo::ite (eo::is_eq res false)
       false
       (eo::ite (eo::eq ($str_membership_re res) @re.empty)
         ; first child fully consumed; require the remaining children to agree
-        ($str_re_consume_inter_rec s c2 ($str_membership_str res) (re.inter c1 c2))
+        ($str_re_consume_inter_rec s c2 ($str_membership_str res) (re.inter c1 c2) fuel)
         (str.in_re s (re.inter c1 c2))))))    ; first child did not fully consume -> stuck
   )
 )
@@ -1808,33 +1825,33 @@
 ;   requires every remaining feasible child to agree, which is the structural
 ;   replacement for the old $result_combine accumulator.
 (program $str_re_consume_union_rec
-  ((s String) (c1 RegLan) (c2 RegLan :list) (sr String) (orig RegLan))
-  :signature (String RegLan String RegLan) Bool
+  ((s String) (c1 RegLan) (c2 RegLan :list) (sr String) (orig RegLan) (fuel String))
+  :signature (String RegLan String RegLan String) Bool
   (
   ; reached the terminator with an established residual sr
-  (($str_re_consume_union_rec s re.none sr orig)  (str.in_re sr @re.empty))
-  (($str_re_consume_union_rec s (re.union c1 c2) sr orig)
-    (eo::define ((res ($str_re_consume_rec s c1)))
+  (($str_re_consume_union_rec s re.none sr orig fuel)  (str.in_re sr @re.empty))
+  (($str_re_consume_union_rec s (re.union c1 c2) sr orig fuel)
+    (eo::define ((res ($str_re_consume_rec s c1 fuel)))
     (eo::ite (eo::is_eq res false)
-      ($str_re_consume_union_rec s c2 sr orig)   ; conflicting child, ignore
+      ($str_re_consume_union_rec s c2 sr orig fuel)   ; conflicting child, ignore
       (eo::ite (eo::and (eo::eq ($str_membership_re res) @re.empty)
                         (eo::eq ($str_membership_str res) sr))
-        ($str_re_consume_union_rec s c2 sr orig)
+        ($str_re_consume_union_rec s c2 sr orig fuel)
         (str.in_re s orig)))))                       ; this child disagrees -> stuck
   )
 )
 (program $str_re_consume_union
-  ((s String) (c1 RegLan) (c2 RegLan :list) (rev Bool))
-  :signature (String RegLan) Bool
+  ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
+  :signature (String RegLan String) Bool
   (
-  (($str_re_consume_union s re.none)  false)     ; every child was a conflict
-  (($str_re_consume_union s (re.union c1 c2))
-    (eo::define ((res ($str_re_consume_rec s c1)))
+  (($str_re_consume_union s re.none fuel)  false)     ; every child was a conflict
+  (($str_re_consume_union s (re.union c1 c2) fuel)
+    (eo::define ((res ($str_re_consume_rec s c1 fuel)))
     (eo::ite (eo::is_eq res false)
-      ($str_re_consume_union s c2)               ; conflicting child, skip
+      ($str_re_consume_union s c2 fuel)               ; conflicting child, skip
       (eo::ite (eo::eq ($str_membership_re res) @re.empty)
         ; first feasible child fully consumed; require remaining feasible children to agree
-        ($str_re_consume_union_rec s c2 ($str_membership_str res) (re.union c1 c2))
+        ($str_re_consume_union_rec s c2 ($str_membership_str res) (re.union c1 c2) fuel)
         (str.in_re s (re.union c1 c2))))))           ; first feasible child did not fully consume -> stuck
   )
 )
@@ -1854,7 +1871,9 @@
 (define $str_re_consume_process ((s String) (r RegLan) (oneDir Bool))
   (eo::define ((ss ($str_to_flat_form s true)))
   (eo::define ((rr ($re_to_flat_form r true)))
-  (eo::define ((resrev ($str_re_consume_rec ss rr)))
+  ; the flat-form string ss is used as the initial overapproximation fuel: its
+  ; length bounds the number of re.* unrollings (each consumes >= 1 character)
+  (eo::define ((resrev ($str_re_consume_rec ss rr ss)))
   (eo::ite (eo::eq resrev false)
     false
     (eo::define ((s1 ($str_membership_str resrev)))
@@ -1863,7 +1882,7 @@
     (eo::define ((revert (eo::and oneDir (eo::not (eo::eq r1 @re.empty)))))
     (eo::define ((s1r ($str_rev true (eo::ite revert ss s1)))
                   (r1r ($re_to_flat_form (eo::ite revert rr r1) true)))
-    (eo::define ((resfwd ($str_re_consume_rec s1r r1r)))
+    (eo::define ((resfwd ($str_re_consume_rec s1r r1r s1r)))
     (eo::ite (eo::eq resfwd false)
       false
       (eo::define ((s2 ($str_membership_str resfwd)))
