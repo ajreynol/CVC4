@@ -1075,7 +1075,9 @@
                                           (eo::define ((sn ($str_nary_intro s)))
                                           (eo::define ((tl ($str_value_len t)))
                                           (eo::requires ($is_seq_const s) true
-                                            ($seq_find ($seq_subsequence n tl tn) sn n))))))
+                                          (eo::ite (eo::is_neg n) -1
+                                          (eo::ite (eo::gt n tl) -1
+                                            ($seq_find ($seq_subsequence n tl tn) sn n))))))))
     (($seq_eval (seq.prefixof t s))       ($seq_is_prefix ($str_nary_intro t) ($str_nary_intro s)))
     (($seq_eval (seq.suffixof t s))       ($seq_is_prefix ($str_to_nary_form t true) ($str_to_nary_form s true)))
     (($seq_eval (seq.at t n))             (eo::define ((tn ($str_nary_intro t)))
