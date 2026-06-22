@@ -1121,7 +1121,7 @@
 ; returns: Bool
 ;   Checks if string literal s is accepted by the regular language L(r).
 (define $str_eval_str_in_re ((s String) (r RegLan))
-  ($str_eval_str_in_re_rec ($str_to_flat_form s false) r))
+  (eo::requires (eo::is_str s) true ($str_eval_str_in_re_rec ($str_to_flat_form s false) r)))
 
 ; define: $str_first_match
 ; args:
@@ -1212,7 +1212,7 @@
   :signature ((Seq U) RegLan) RegLan
   (
   (($re_split_str_to_re (str.++ c s) tail)  (_ re.++ (str.to_re c) ($re_split_str_to_re s tail)))
-  (($re_split_str_to_re "" tail)            tail) ; empty-string terminator
+  (($re_split_str_to_re c tail)             tail) ; empty-string terminator
   )
 )
 
