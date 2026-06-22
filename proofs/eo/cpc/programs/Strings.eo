@@ -1775,41 +1775,36 @@
 ; args:
 ; - s String: The string argument of the membership.
 ; - r RegLan: An intersection (re.inter c1 ... re.all), each child in flat form.
+; - fuel String: Overapproximation fuel, forwarded to $str_re_consume_rec.
 ; return: >
 ;   false if consuming s in some child is a conflict; (str.in_re sr @re.empty) when
 ;   every child fully consumes s down to the same residual sr; otherwise the
-;   membership is returned unchanged to signal that no consumption is possible. The
-;   first child establishes the residual sr; $str_re_consume_inter_rec then requires
-;   every remaining child to agree, which is the structural replacement for the old
-;   $result_combine accumulator.
-(program $str_re_consume_inter_rec
-  ((s String) (c1 RegLan) (c2 RegLan :list) (sr String) (orig RegLan) (fuel String))
-  :signature (String RegLan String RegLan String) Bool
-  (
-  ; every child agreed on residual sr
-  (($str_re_consume_inter_rec s re.all sr orig fuel)  (str.in_re sr @re.empty))
-  (($str_re_consume_inter_rec s (re.inter c1 c2) sr orig fuel)
-    (eo::define ((res ($str_re_consume_rec s c1 fuel)))
-    (eo::ite (eo::is_eq res false)
-      false                                   ; this child conflicts
-      (eo::ite (eo::and (eo::eq ($str_membership_re res) @re.empty)
-                        (eo::eq ($str_membership_str res) sr))
-        ($str_re_consume_inter_rec s c2 sr orig fuel)
-        (str.in_re s orig)))))                ; this child disagrees -> stuck
-  )
-)
+;   membership is returned unchanged to signal that no consumption is possible.
+; note: >
+;   Implemented as a single right fold over the children, with no separate residual /
+;   accumulator argument. Each child's result must agree with the folded result of the
+;   remaining children, where "agree" means consuming to the same residual (tested by
+;   equating the two (str.in_re sr @re.empty) results). The last child is detected by
+;   its (re.inter) tail being the nil re.all (tested with eo::eq, since a literal nil
+;   is not matched in list-tail position), so the empty intersection is never reached.
 (program $str_re_consume_inter
   ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
   :signature (String RegLan String) Bool
   (
+  (($str_re_consume_inter s (re.inter c1) fuel) ($str_re_consume_rec s c1 fuel))
   (($str_re_consume_inter s (re.inter c1 c2) fuel)
-    (eo::define ((res ($str_re_consume_rec s c1 fuel)))
-    (eo::ite (eo::is_eq res false)
-      false
-      (eo::ite (eo::eq ($str_membership_re res) @re.empty)
-        ; first child fully consumed; require the remaining children to agree
-        ($str_re_consume_inter_rec s c2 ($str_membership_str res) (re.inter c1 c2) fuel)
-        (str.in_re s (re.inter c1 c2))))))    ; first child did not fully consume -> stuck
+    (eo::define ((a ($str_re_consume_rec s c1 fuel)))
+    (eo::ite (eo::is_eq a false)
+      false                                          ; this child conflicts
+      (eo::ite (eo::eq ($str_membership_re a) @re.empty)
+        ; this child fully consumed; reconcile with the remaining children
+        (eo::define ((b ($str_re_consume_inter s c2 fuel)))
+        (eo::ite (eo::is_eq b false)
+          false
+          (eo::ite (eo::eq a b)
+            a                                      ; all children agree on the residual
+            (str.in_re s (re.inter c1 c2)))))     ; children disagree -> stuck
+        (str.in_re s (re.inter c1 c2))))))           ; this child not fully consumed -> stuck
   )
 )
 
@@ -1817,42 +1812,37 @@
 ; args:
 ; - s String: The string argument of the membership.
 ; - r RegLan: A union (re.union c1 ... re.none), each child in flat form.
+; - fuel String: Overapproximation fuel, forwarded to $str_re_consume_rec.
 ; return: >
 ;   false if every child is a conflict; (str.in_re sr @re.empty) when every
 ;   non-conflicting child fully consumes s down to the same residual sr; otherwise
-;   the membership is returned unchanged. Conflicting children are ignored. The
-;   first feasible child establishes the residual sr; $str_re_consume_union_rec then
-;   requires every remaining feasible child to agree, which is the structural
-;   replacement for the old $result_combine accumulator.
-(program $str_re_consume_union_rec
-  ((s String) (c1 RegLan) (c2 RegLan :list) (sr String) (orig RegLan) (fuel String))
-  :signature (String RegLan String RegLan String) Bool
-  (
-  ; reached the terminator with an established residual sr
-  (($str_re_consume_union_rec s re.none sr orig fuel)  (str.in_re sr @re.empty))
-  (($str_re_consume_union_rec s (re.union c1 c2) sr orig fuel)
-    (eo::define ((res ($str_re_consume_rec s c1 fuel)))
-    (eo::ite (eo::is_eq res false)
-      ($str_re_consume_union_rec s c2 sr orig fuel)   ; conflicting child, ignore
-      (eo::ite (eo::and (eo::eq ($str_membership_re res) @re.empty)
-                        (eo::eq ($str_membership_str res) sr))
-        ($str_re_consume_union_rec s c2 sr orig fuel)
-        (str.in_re s orig)))))                       ; this child disagrees -> stuck
-  )
-)
+;   the membership is returned unchanged. Conflicting children are ignored.
+; note: >
+;   Implemented as a single right fold over the children (dual to
+;   $str_re_consume_inter): a conflicting head is skipped in favour of the folded
+;   result of the remaining children, and a feasible head must agree with that result
+;   (or the remaining children must all be conflicts, in which case the head's result
+;   stands). The last child is detected by its (re.union) tail being the nil re.none
+;   (tested with eo::eq), so the empty union is never reached.
 (program $str_re_consume_union
   ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
   :signature (String RegLan String) Bool
   (
-  (($str_re_consume_union s re.none fuel)  false)     ; every child was a conflict
+  (($str_re_consume_union s (re.union c1) fuel)
+    ($str_re_consume_rec s c1 fuel))
   (($str_re_consume_union s (re.union c1 c2) fuel)
-    (eo::define ((res ($str_re_consume_rec s c1 fuel)))
-    (eo::ite (eo::is_eq res false)
-      ($str_re_consume_union s c2 fuel)               ; conflicting child, skip
-      (eo::ite (eo::eq ($str_membership_re res) @re.empty)
-        ; first feasible child fully consumed; require remaining feasible children to agree
-        ($str_re_consume_union_rec s c2 ($str_membership_str res) (re.union c1 c2) fuel)
-        (str.in_re s (re.union c1 c2))))))           ; first feasible child did not fully consume -> stuck
+    (eo::define ((a ($str_re_consume_rec s c1 fuel)))
+    (eo::ite (eo::is_eq a false)
+      ($str_re_consume_union s c2 fuel)
+      (eo::ite (eo::eq ($str_membership_re a) @re.empty)
+        ; this child fully consumed; reconcile with the remaining children
+        (eo::define ((b ($str_re_consume_union s c2 fuel)))
+        (eo::ite (eo::is_eq b false)
+          a                                        ; remaining children all conflict -> just this child
+          (eo::ite (eo::eq a b)
+            a                                      ; feasible children agree on the residual
+            (str.in_re s (re.union c1 c2)))))     ; children disagree -> stuck
+        (str.in_re s (re.union c1 c2))))))           ; this feasible child not fully consumed -> stuck
   )
 )
 
