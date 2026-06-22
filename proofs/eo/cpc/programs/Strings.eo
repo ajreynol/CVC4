@@ -35,28 +35,46 @@
   )
 )
 
+; program: $is_seq_const_rec
+; args:
+; - s (Seq T): The sequence term.
+; return: true if s is a (non standalone seq.unit) sequence constant.
+(program $is_seq_const_rec ((T Type) (e T) (ss (Seq T) :list))
+  :signature ((Seq T)) Int
+  (
+  (($is_seq_const_rec (seq.++ (seq.unit e) ss))   ($is_seq_const_rec ss))
+  (($is_seq_const_rec (as seq.empty (Seq T)))     true)
+  (($is_seq_const_rec ss)                         false)
+  )
+)
+
+; program: $is_seq_const
+; args:
+; - s (Seq T): The sequence term.
+; return: true if s is a sequence constant.
+(program $is_seq_const ((T Type) (e T) (ss (Seq T)))
+  :signature ((Seq T)) Int
+  (
+  (($is_seq_const (seq.unit e)) true)
+  (($is_seq_const ss)           ($is_seq_const_rec ss))
+  )
+)
+
 ; program: $str_value_len
 ; args:
 ; - s (Seq T): The sequence term.
 ; return: >
 ;   The length of s, if it denotes a "value-like" sequence, that
 ;   is, either a string literal or a concatenation of sequence units.
-(program $str_value_len ((T Type) (s (Seq T)) (e T) (ss (Seq T) :list))
+(program $str_value_len ((T Type) (e T) (s (Seq T)))
   :signature ((Seq T)) Int
   (
-    (($str_value_len (seq.++ (seq.unit e) ss))  (eo::add 1 ($str_value_len ss)))
-    (($str_value_len (as seq.empty (Seq T)))    0)
-    (($str_value_len (seq.unit e))              1)
-    (($str_value_len s)                         (eo::requires (eo::is_str s) true (eo::len s)))
+  (($str_value_len (seq.unit e))  1)
+  (($str_value_len s)
+    (eo::ite (eo::is_str s) (eo::len s)
+      (eo::requires ($is_seq_const s) true (eo::list_len seq.++ s))))
   )
 )
-
-; define: $is_seq_const
-; args:
-; - s (Seq T): The sequence term.
-; return: true iff s is a constant-like sequence
-(define $is_seq_const ((T Type :implicit) (s (Seq T)))
-  (eo::ite (eo::is_str s) false (eo::is_z ($str_value_len s))))
 
 ; define: $str_concat
 ; args:
@@ -80,8 +98,7 @@
 ;   The result of prepending string x to string y where the former is treated
 ;   as an element and the latter is treated as a list.
 (define $str_cons ((T Type :implicit) (x (Seq T)) (y (Seq T)))
-  (_ str.++ x y)
-)
+  (_ str.++ x y))
 
 ; define: $str_is_code_point
 ; args:
@@ -448,15 +465,8 @@
 ;   The result of ensuring that the input t is a str.++ list.
 ;   In particular, if it is not a str.++ and not the empty string, then we
 ;   return (str.++ t empty) where empty is the empty string for the type of t.
-(program $str_nary_intro
-  ((T Type) (t (Seq T)) (ss (Seq T) :list))
-  :signature ((Seq T)) (Seq T)
-  (
-  (($str_nary_intro (str.++ t ss)) (str.++ t ss))
-  (($str_nary_intro t)             (eo::define ((nil ($seq_empty (eo::typeof t))))
-                                      (eo::ite (eo::eq t nil) t (_ str.++ t nil))))
-  )
-)
+(define $str_nary_intro ((T Type :implicit) (t (Seq T)))
+  (eo::list_singleton_intro str.++ t))
 
 ; program: $re_nary_intro
 ; args:
@@ -465,14 +475,8 @@
 ;   Regular expression nary-intro, which returns the regular expression equivalent
 ;   to t that is a re.++ list. In particular, if t is not a re.++ and not the empty
 ;   regular expression, then we return (re.++ t @re.empty).
-(program $re_nary_intro ((t RegLan) (ss RegLan :list))
-    :signature (RegLan) RegLan
-    (
-        (($re_nary_intro (re.++ t ss))    (re.++ t ss))
-        (($re_nary_intro @re.empty)       @re.empty)
-        (($re_nary_intro t)               (_ re.++ t @re.empty))
-    )
-)
+(define $re_nary_intro ((r RegLan))
+  (eo::list_singleton_intro re.++ r))
 
 ; program: $str_nary_elim
 ; args:
@@ -481,14 +485,8 @@
 ;   The result of ensuring that the input t is not a singleton str.++
 ;   application. In particular, if t is of the form (str.++ t1 empty) where
 ;   empty is the empty string for the type of t, we return t1.
-(program $str_nary_elim ((T Type) (t (Seq T)) (ss (Seq T) :list))
-    :signature ((Seq T)) (Seq T)
-    (
-        (($str_nary_elim (str.++ t ss)) (eo::define ((nil ($seq_empty (eo::typeof t))))
-                                           (eo::ite (eo::eq ss nil) t (str.++ t ss))))
-        (($str_nary_elim t)             ($str_self_if_empty t))
-    )
-)
+(define $str_nary_elim ((T Type :implicit) (t (Seq T)))
+  (eo::list_singleton_elim str.++ t))
 
 ; program: $re_nary_elim
 ; args:
@@ -497,13 +495,8 @@
 ;   Regular expression nary-elimination, which ensures that the input t is not a
 ;   singleton re.++ application. In particular, if t is of the form
 ;   (re.++ t1 @re.empty), we return t1.
-(program $re_nary_elim ((t RegLan) (ss RegLan :list))
-    :signature (RegLan) RegLan
-    (
-        (($re_nary_elim (re.++ t ss)) (eo::ite (eo::eq ss @re.empty) t (re.++ t ss)))
-        (($re_nary_elim t)            t)
-    )
-)
+(define $re_nary_elim ((r RegLan))
+  (eo::list_singleton_elim re.++ r))
 
 ;;-------------------- Reductions
 
@@ -1218,8 +1211,8 @@
 (program $re_split_str_to_re ((U Type) (c (Seq U)) (s (Seq U) :list) (tail RegLan))
   :signature ((Seq U) RegLan) RegLan
   (
-    (($re_split_str_to_re (str.++ c s) tail)  (_ re.++ (str.to_re c) ($re_split_str_to_re s tail)))
-    (($re_split_str_to_re c tail)             tail) ; empty-string terminator
+  (($re_split_str_to_re (str.++ c s) tail)  (_ re.++ (str.to_re c) ($re_split_str_to_re s tail)))
+  (($re_split_str_to_re "" tail)            tail) ; empty-string terminator
   )
 )
 
