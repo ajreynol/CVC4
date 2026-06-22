@@ -21,9 +21,9 @@
     (eo::not (eo::is_neg (eo::list_find @list xs (eo::var s S)))))
   ; symbols that are opaque but may contain free variables
   ; we require the indices to be standalone closed
-  (($is_closed_rec (@quantifiers_skolemize F n) xs) ($is_closed_rec F @list.nil))
+  (($is_closed_rec (@quantifiers_skolemize F n) xs) ($is_closed_rec F xs))
   (($is_closed_rec (@re_unfold_pos_component s r n) xs)
-    (eo::and ($is_closed_rec s @list.nil) ($is_closed_rec r @list.nil)))
+    (eo::and ($is_closed_rec s xs) ($is_closed_rec r xs)))
   ; otherwise true
   (($is_closed_rec x xs) true)
   )

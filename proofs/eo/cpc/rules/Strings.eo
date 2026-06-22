@@ -1053,17 +1053,21 @@
                                             ($str_nary_elim ($seq_subsequence n (eo::add n m) tn))))
     (($seq_eval (seq.contains t s))       (eo::define ((tn ($str_nary_intro t)))
                                           (eo::define ((sn ($str_nary_intro s)))
-                                            (eo::not (eo::is_neg ($seq_find tn sn 0))))))
+                                          (eo::requires ($is_seq_const t) true
+                                          (eo::requires ($is_seq_const s) true
+                                            (eo::not (eo::is_neg ($seq_find tn sn 0))))))))
     (($seq_eval (seq.replace t s r))      (eo::define ((tn ($str_nary_intro t)))
                                           (eo::define ((sn ($str_nary_intro s)))
                                           (eo::define ((i ($seq_find tn sn 0)))
+                                          (eo::requires ($is_seq_const t) true
+                                          (eo::requires ($is_seq_const s) true
                                           (eo::ite (eo::is_neg i)
                                             t
                                             ($str_nary_elim (eo::list_concat seq.++
                                               ($seq_subsequence 0 i tn)
                                               (eo::list_concat seq.++
                                                 ($str_nary_intro r)
-                                                ($seq_subsequence (eo::add i ($str_value_len s)) ($str_value_len t) tn)))))))))
+                                                ($seq_subsequence (eo::add i ($str_value_len s)) ($str_value_len t) tn)))))))))))
     (($seq_eval (seq.replace_all t s r))  (eo::define ((tn ($str_nary_intro t)))
                                           (eo::define ((sn ($str_nary_intro s)))
                                           (eo::define ((rn ($str_nary_intro r)))
