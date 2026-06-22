@@ -26,16 +26,8 @@
   (-> (-> T U U) U (Set T) U))
 
 ; Experimental sets operators.
-; The body of a set comprehension, which pairs the comprehension's predicate
-; with its element term. This wrapper exists so that set.comprehension is a
-; binder with exactly two children (a variable list and a single body), as
-; assumed by the binder utilities in programs/Quantifiers.eo. Note this
-; intentionally does not match the SMT-LIB input syntax for set comprehension.
-(declare-const @SetComprehensionBody (-> Type Type))
-(declare-parameterized-const @set.comprehension.body ((T Type :implicit))
-  (-> Bool T (@SetComprehensionBody T)))
 (declare-parameterized-const set.comprehension ((T Type :implicit))
-  (-> @List (@SetComprehensionBody T) (Set T)) :binder @list)
+  (-> @List Bool T (Set T)) :binder @list)
 
 ; program: $tuple_type_join
 ; args:

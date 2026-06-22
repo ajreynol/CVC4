@@ -111,6 +111,13 @@ class EoNodeConverter : public BaseEoNodeConverter
    * passed as arguments to terms and proof rules.
    */
   Node typeAsNode(TypeNode tni) override;
+  /**
+   * Number of children for closure that we should process. In particular,
+   * we ignore patterns for FORALL, so this method returns 2, indicating we
+   * should ignore the 3rd child of a FORALL if it exists. It returns 3 for
+   * SET_COMPREHENSION, and 2 otherwise.
+   */
+  size_t getNumChildrenToProcessForClosure(Kind k) const;
 
  private:
   /**
