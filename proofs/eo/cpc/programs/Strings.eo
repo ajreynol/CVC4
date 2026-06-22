@@ -1784,9 +1784,8 @@
 ;   Implemented as a single right fold over the children, with no separate residual /
 ;   accumulator argument. Each child's result must agree with the folded result of the
 ;   remaining children, where "agree" means consuming to the same residual (tested by
-;   equating the two (str.in_re sr @re.empty) results). The last child is detected by
-;   its (re.inter) tail being the nil re.all (tested with eo::eq, since a literal nil
-;   is not matched in list-tail position), so the empty intersection is never reached.
+;   equating the two (str.in_re sr @re.empty) results). The last child is matched by the
+;   single-element pattern (re.inter c1), so the empty intersection is never reached.
 (program $str_re_consume_inter
   ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
   :signature (String RegLan String) Bool
@@ -1822,8 +1821,8 @@
 ;   $str_re_consume_inter): a conflicting head is skipped in favour of the folded
 ;   result of the remaining children, and a feasible head must agree with that result
 ;   (or the remaining children must all be conflicts, in which case the head's result
-;   stands). The last child is detected by its (re.union) tail being the nil re.none
-;   (tested with eo::eq), so the empty union is never reached.
+;   stands). The last child is matched by the single-element pattern (re.union c1), so
+;   the empty union is never reached.
 (program $str_re_consume_union
   ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
   :signature (String RegLan String) Bool
