@@ -92,7 +92,7 @@
 (include "./programs/AciNorm.eo")
 
 ; FIXME temporary
-(include "./expert/Lambda.eo")
+;(include "./expert/Lambda.eo")
 
 ; disclaimer: >
 ;   All symbols prefixed by @ are not part of the SMT-LIB standard
