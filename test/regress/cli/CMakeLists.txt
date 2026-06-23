@@ -65,6 +65,7 @@ set(regress_0_tests
   regress0/arith/integers/arith-interval.cvc.smt2
   regress0/arith/integers/issue6146-stale-vars.smt2
   regress0/arith/issue12058.smt2
+  regress0/arith/issue12754-div-zero-intreal.smt2
   regress0/arith/issue1399.smt2
   regress0/arith/issue3412.smt2
   regress0/arith/issue3413.smt2
@@ -2176,6 +2177,7 @@ set(regress_0_tests
   regress0/strings/issue12027-str-ae.smt2
   regress0/strings/issue12241-aci.smt2
   regress0/strings/issue12322-pf-eager-len-re.smt2
+  regress0/strings/issue12756-str-inc-model.smt2
   regress0/strings/issue1189.smt2
   regress0/strings/issue2958.smt2
   regress0/strings/issue3440.smt2

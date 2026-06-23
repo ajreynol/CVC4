@@ -2005,6 +2005,7 @@
   (eo::ite (eo::is_z n)
     (eo::ite (eo::is_neg n)
       ""
+      ; number of digits to process determined by log base 10
       ($str_from_int_eval_rec ($iota (eo::add (eo::log 10 n) 1)) n ""))
     (str.from_int n)))
 
