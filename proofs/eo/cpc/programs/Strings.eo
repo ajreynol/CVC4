@@ -1475,15 +1475,18 @@
   (($str_re_includes_rec r1 (re.++ r3)) ($str_re_includes_base r1 r3))
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4))
-    (eo::ite (eo::ite ($str_re_includes_base r1 r3) ; can skip both if we have a base inclusion
+    ; can skip both if we have a base inclusion
+    (eo::ite (eo::ite (eo::ite (eo::eq r1 r3) true ($str_re_includes_base r1 r3))
                ($str_re_includes r2 r4)
                false)
       true
-    (eo::ite (eo::ite ($re_is_unbound_wildcard (re.++ r1 r2))  ; can skip RHS if unbounded wildcard
+    ; can skip RHS if unbounded wildcard
+    (eo::ite (eo::ite ($re_is_unbound_wildcard (re.++ r1 r2))
               (eo::ite (eo::eq (re.++ r1 r2) r4) true ($str_re_includes (re.++ r1 r2) r4))
               false)
       true
-    (eo::ite (eo::ite (eo::eq r1 (re.* (re.++ re.allchar)))  ; can skip LHS if it is sigma star
+    ; can skip LHS if it is sigma star
+    (eo::ite (eo::ite (eo::eq r1 (re.* (re.++ re.allchar)))
               ($str_re_includes r2 (re.++ r3 r4))
               false)
       true
