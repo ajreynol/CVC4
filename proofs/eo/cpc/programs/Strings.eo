@@ -1467,12 +1467,15 @@
   (
   ; When either side is a singleton list, there is no list structure left to
   ; decompose on it, so we hand its sole component (and the whole other side) to
-  ; $str_re_includes_base for component-level reasoning (equality, string membership,
-  ; range, or the union / star / inter heuristics). $re_nary_elim collapses the other
-  ; side too when it is itself a singleton list.
-  (($str_re_includes_rec (re.++ r1) (re.++ r3)) ($str_re_includes_base r1 r3))
-  (($str_re_includes_rec (re.++ r1) r3) ($str_re_includes_base r1 r3))
-  (($str_re_includes_rec r1 (re.++ r3)) ($str_re_includes_base r1 r3))
+  ; $str_re_includes_base for component-level reasoning (string membership, range,
+  ; or the union / star / inter heuristics). $re_nary_elim collapses the other side
+  ; too when it is itself a singleton list. Equal components are handled here by the
+  ; caller via eo::eq, so that $str_re_includes_base need only reason about non-equal
+  ; components; this matters when the same compound component (e.g. a re.union) is
+  ; reached via two contexts whose flat forms differ only by a singleton re.++ wrapper.
+  (($str_re_includes_rec (re.++ r1) (re.++ r3)) (eo::ite (eo::eq r1 r3) true ($str_re_includes_base r1 r3)))
+  (($str_re_includes_rec (re.++ r1) r3) (eo::ite (eo::eq r1 r3) true ($str_re_includes_base r1 r3)))
+  (($str_re_includes_rec r1 (re.++ r3)) (eo::ite (eo::eq r1 r3) true ($str_re_includes_base r1 r3)))
   ; otherwise we recurse for three possible cases
   (($str_re_includes_rec (re.++ r1 r2) (re.++ r3 r4))
     ; can skip both if we have a base inclusion
