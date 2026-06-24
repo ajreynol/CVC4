@@ -1236,6 +1236,12 @@
   (($re_flatten rev true (str.to_re s))    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) @re.empty)) ; bare str.to_re
   (($re_flatten rev true c)                (_ re.++ ($re_flatten rev false c) @re.empty)) ; bare component -> singleton list
   ; component mode (str.to_re is handled in list mode above)
+  ; A bare re.all / re.none terminator must be returned as-is: it matches the
+  ; (re.inter c1 c2) / (re.union c1 c2) patterns below as a singleton list, so without
+  ; these cases the terminator of an intersection / union tail would be wrongly
+  ; flattened into a spurious component.
+  (($re_flatten rev false re.all)          re.all)
+  (($re_flatten rev false re.none)         re.none)
   (($re_flatten rev false (re.* body))     (re.* ($str_re_rev rev ($re_flatten rev true body))))
   (($re_flatten rev false (re.inter c1 c2)) (_ re.inter ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
   (($re_flatten rev false (re.union c1 c2)) (_ re.union ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
@@ -1823,7 +1829,12 @@
           (eo::ite (eo::eq a b)
             a                                      ; all children agree on the residual
             (str.in_re s (re.inter c1 c2)))))     ; children disagree -> stuck
-        (str.in_re s (re.inter c1 c2))))))           ; this child not fully consumed -> stuck
+        ; this child did not fully consume, so we cannot determine a residual from it.
+        ; The intersection is still false if any remaining child conflicts (s is then in
+        ; no superset of the intersection); otherwise we are stuck.
+        (eo::ite (eo::is_eq ($str_re_consume_inter s c2 fuel) false)
+          false
+          (str.in_re s (re.inter c1 c2)))))))
   )
 )
 
