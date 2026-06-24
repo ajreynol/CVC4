@@ -1762,11 +1762,6 @@
     ; intersection and union are handled by dedicated helpers
     (($str_re_consume_rec s1 (re.inter r1 r2) fuel)  ($str_re_consume_inter s1 (re.inter r1 r2) fuel))
     (($str_re_consume_rec s1 (re.union r1 r2) fuel)  ($str_re_consume_union s1 (re.union r1 r2) fuel))
-    ; re.all matches every string (consumes the whole remainder); used only if
-    ; re.all appears in an unexpected position
-    (($str_re_consume_rec s1 re.all fuel)   (str.in_re "" @re.empty))
-    ; re.none is the empty language; used only if re.none appears in an unexpected position
-    (($str_re_consume_rec s1 re.none fuel)  false)
     (($str_re_consume_rec s1 r1 fuel)       (str.in_re s1 r1))
   )
 )
