@@ -1196,7 +1196,7 @@
 ; (aslist = false). Every recursive call is on a strict subterm of the input,
 ; except the aslist true->false step on the same term, so termination holds by
 ; the lexicographic measure (size of r, aslist). The (order) reversal is applied
-; non-recursively by $str_re_rev, so no auxiliary invariance lemma is required.
+; non-recursively by $str_re_rev.
 
 ; program: $re_split_str_to_re
 ; args:
@@ -1222,7 +1222,9 @@
 ; - aslist Bool: Whether r is treated as a re.++ list (true) or a component (false).
 ; - r RegLan: The regular expression to flatten.
 ; return: The flat form of r.
-(program $re_flatten ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
+(program $re_flatten
+  ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String)
+   (body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
   :signature (Bool Bool RegLan) RegLan
   (
   ; list mode: map flattening over the re.++ list (head as component, tail as list)
@@ -1231,15 +1233,16 @@
   ; str.to_re terms, spliced into the surrounding list. The split is done in
   ; forward order; the (order) reversal is applied once, non-recursively, by the
   ; enclosing $str_re_rev, so the single characters need no per-string reversal.
-  (($re_flatten rev true (re.++ (str.to_re s) b))  ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) ($re_flatten rev true b)))
+  (($re_flatten rev true (re.++ (str.to_re s) b))
+    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) ($re_flatten rev true b)))
   (($re_flatten rev true (re.++ a b))      (_ re.++ ($re_flatten rev false a) ($re_flatten rev true b)))
   (($re_flatten rev true (str.to_re s))    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) @re.empty)) ; bare str.to_re
   (($re_flatten rev true c)                (_ re.++ ($re_flatten rev false c) @re.empty)) ; bare component -> singleton list
   ; component mode (str.to_re is handled in list mode above)
   ; A bare re.all / re.none terminator must be returned as-is: it matches the
   ; (re.inter c1 c2) / (re.union c1 c2) patterns below as a singleton list, so without
-  ; these cases the terminator of an intersection / union tail would be wrongly
-  ; flattened into a spurious component.
+  ; re.all and re.none only occur as the nil terminator of re.inter and re.union,
+  ; we return these unchanged.
   (($re_flatten rev false re.all)          re.all)
   (($re_flatten rev false re.none)         re.none)
   (($re_flatten rev false (re.* body))     (re.* ($str_re_rev rev ($re_flatten rev true body))))
@@ -1261,18 +1264,20 @@
 (define $re_to_flat_form ((r RegLan) (rev Bool))
   ($str_re_rev rev ($re_flatten rev true r)))
 
+; note: >
+;   Forward declaration of $re_unflatten_str, used by $re_unflatten below to merge
+;   a maximal run of single-character str.to_re components back into one str.to_re.
+(program $re_unflatten_str () :signature (Bool String RegLan) RegLan)
+
 ; program: $re_unflatten
 ; args:
 ; - rev Bool: Whether to reverse content.
 ; - aslist Bool: Whether r is treated as a re.++ list (true) or a component (false).
 ; - r RegLan: The regular expression (in flat form) to un-flatten.
 ; return: The dual of $re_flatten.
-; note: >
-;   Forward declaration of $re_unflatten_str, used by $re_unflatten below to merge
-;   a maximal run of single-character str.to_re components back into one str.to_re.
-(program $re_unflatten_str () :signature (Bool String RegLan) RegLan)
-
-(program $re_unflatten ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
+(program $re_unflatten
+  ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan)
+   (c1 RegLan) (c2 RegLan :list) (c RegLan))
   :signature (Bool Bool RegLan) RegLan
   (
   ; list mode: a maximal run of (single-character) str.to_re components is merged
@@ -1283,8 +1288,10 @@
   (($re_unflatten rev true c)                c) ; @re.empty terminator
   ; component mode (str.to_re is handled in list mode above)
   (($re_unflatten rev false (re.* body))     (re.* ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true body)))))
-  (($re_unflatten rev false (re.inter c1 c2)) (_ re.inter ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
-  (($re_unflatten rev false (re.union c1 c2)) (_ re.union ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
+  (($re_unflatten rev false (re.inter c1 c2))
+    (_ re.inter ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
+  (($re_unflatten rev false (re.union c1 c2))
+    (_ re.union ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
   (($re_unflatten rev false c)               c)
   )
 )
@@ -1473,18 +1480,10 @@
 ; - r1 RegLan: The first regular expression, assumed to be in flat form.
 ; - r2 RegLan: The second regular expression, assumed to be in flat form and distinct from r1.
 ; return: >
-;   true if we can infer that all strings in r2 are also in r1. This is the deep-
-;   flat-form inclusion dispatcher. It is invoked both by the public $str_re_includes
-;   (on the whole, once-flattened term) and by $str_re_includes_rec (on the leading
-;   components of the concatenation lists it processes). Because its arguments are
-;   always in flat form, it never reconverts to flat form; the only place it
-;   (cheaply, non-recursively) reshapes a term is $re_nary_intro, which wraps a bare
-;   component into a singleton re.++ list before handing it to $str_re_includes_rec.
-;   The leaf membership / range checks unflatten locally (terminating, not recursive
-;   into this group). Since the input is operator-preserving flat form (see
-;   $re_to_flat_form_top), a top-level re.* / re.union / re.inter is still
-;   visible here, so the union / intersection / star heuristics apply to the whole
-;   term and not just to its leading component.
+;   true if we can infer that all strings in r2 are also in r1. We either
+;   call $str_re_includes_base if either r1 or r2 is not a (non-singleton)
+;   concatenation. Otherwise we use three heuristics if both r1 and r2 are
+;   concatenations.
 (program $str_re_includes_rec
   ((s1 String) (s2 String) (s3 String) (s4 String)
    (r1 RegLan) (r2 RegLan :list) (r3 RegLan) (r4 RegLan :list))
@@ -1493,11 +1492,7 @@
   ; When either side is a singleton list, there is no list structure left to
   ; decompose on it, so we hand its sole component (and the whole other side) to
   ; $str_re_includes_base for component-level reasoning (string membership, range,
-  ; or the union / star / inter heuristics). $re_nary_elim collapses the other side
-  ; too when it is itself a singleton list. Equal components are handled here by the
-  ; caller via eo::eq, so that $str_re_includes_base need only reason about non-equal
-  ; components; this matters when the same compound component (e.g. a re.union) is
-  ; reached via two contexts whose flat forms differ only by a singleton re.++ wrapper.
+  ; or the union / star / inter heuristics).
   (($str_re_includes_rec (re.++ r1) (re.++ r3)) ($str_re_includes_base r1 r3))
   (($str_re_includes_rec (re.++ r1) r3) ($str_re_includes_base r1 r3))
   (($str_re_includes_rec r1 (re.++ r3)) ($str_re_includes_base r1 r3))
@@ -1520,7 +1515,8 @@
       true
       false))))
   ; handles the case where there is a leftover (re.* re.allchar) on the LHS
-  (($str_re_includes_rec (re.++ r1 r2) @re.empty)       (eo::and (eo::eq r1 (re.* (re.++ re.allchar))) (eo::eq r2 @re.empty)))
+  (($str_re_includes_rec (re.++ r1 r2) @re.empty)
+    (eo::and (eo::eq r1 (re.* (re.++ re.allchar))) (eo::eq r2 @re.empty)))
   (($str_re_includes_rec r1 r3)                         false)
   )
 )
@@ -1678,14 +1674,88 @@
 )
 
 ; note: >
-;   Forward declarations of the intersection / union helpers, which are mutually
-;   recursive with $str_re_consume_rec below: it dispatches a (re.inter ...) /
-;   (re.union ...) argument to them, and they consume each child via
-;   $str_re_consume_rec. They return the same kind of result as $str_re_consume_rec
-;   (a residual (str.in_re sr rr), false for a conflict, or the membership unchanged
-;   when stuck), so no separate "result" encoding is needed.
-(program $str_re_consume_inter () :signature (String RegLan String) Bool)
-(program $str_re_consume_union () :signature (String RegLan String) Bool)
+;   Forward declarations of the main method for $str_re_consume_rec below.
+;   This is used by the intersection and union helpers below.
+(program $str_re_consume_rec () :signature (String RegLan String) Bool)
+
+; program: $str_re_consume_inter
+; args:
+; - s String: The string argument of the membership.
+; - r RegLan: An intersection (re.inter c1 ... re.all), each child in flat form.
+; - fuel String: Overapproximation fuel, forwarded to $str_re_consume_rec.
+; return: >
+;   false if consuming s in some child is a conflict; (str.in_re sr @re.empty) when
+;   every child fully consumes s down to the same residual sr; otherwise the
+;   membership is returned unchanged to signal that no consumption is possible.
+; note: >
+;   Implemented as a single right fold over the children, with no separate residual /
+;   accumulator argument. Each child's result must agree with the folded result of the
+;   remaining children, where "agree" means consuming to the same residual (tested by
+;   equating the two (str.in_re sr @re.empty) results). The last child is matched by the
+;   single-element pattern (re.inter c1), so the empty intersection is never reached.
+(program $str_re_consume_inter
+  ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
+  :signature (String RegLan String) Bool
+  (
+  (($str_re_consume_inter s (re.inter c1) fuel) ($str_re_consume_rec s c1 fuel))
+  (($str_re_consume_inter s (re.inter c1 c2) fuel)
+    (eo::define ((a ($str_re_consume_rec s c1 fuel)))
+    (eo::ite (eo::is_eq a false)
+      false                                          ; this child conflicts
+      (eo::ite (eo::eq ($str_membership_re a) @re.empty)
+        ; this child fully consumed; reconcile with the remaining children
+        (eo::define ((b ($str_re_consume_inter s c2 fuel)))
+        (eo::ite (eo::is_eq b false)
+          false
+          (eo::ite (eo::eq a b)
+            a                                      ; all children agree on the residual
+            (str.in_re s (re.inter c1 c2)))))     ; children disagree -> stuck
+        ; this child did not fully consume, so we cannot determine a residual from it.
+        ; The intersection is still false if any remaining child conflicts (s is then in
+        ; no superset of the intersection); otherwise we are stuck.
+        (eo::ite (eo::is_eq ($str_re_consume_inter s c2 fuel) false)
+          false
+          (str.in_re s (re.inter c1 c2)))))))
+  )
+)
+
+; program: $str_re_consume_union
+; args:
+; - s String: The string argument of the membership.
+; - r RegLan: A union (re.union c1 ... re.none), each child in flat form.
+; - fuel String: Overapproximation fuel, forwarded to $str_re_consume_rec.
+; return: >
+;   false if every child is a conflict; (str.in_re sr @re.empty) when every
+;   non-conflicting child fully consumes s down to the same residual sr; otherwise
+;   the membership is returned unchanged. Conflicting children are ignored.
+; note: >
+;   Implemented as a single right fold over the children (dual to
+;   $str_re_consume_inter): a conflicting head is skipped in favour of the folded
+;   result of the remaining children, and a feasible head must agree with that result
+;   (or the remaining children must all be conflicts, in which case the head's result
+;   stands). The last child is matched by the single-element pattern (re.union c1), so
+;   the empty union is never reached.
+(program $str_re_consume_union
+  ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
+  :signature (String RegLan String) Bool
+  (
+  (($str_re_consume_union s (re.union c1) fuel)
+    ($str_re_consume_rec s c1 fuel))
+  (($str_re_consume_union s (re.union c1 c2) fuel)
+    (eo::define ((a ($str_re_consume_rec s c1 fuel)))
+    (eo::ite (eo::is_eq a false)
+      ($str_re_consume_union s c2 fuel)
+      (eo::ite (eo::eq ($str_membership_re a) @re.empty)
+        ; this child fully consumed; reconcile with the remaining children
+        (eo::define ((b ($str_re_consume_union s c2 fuel)))
+        (eo::ite (eo::is_eq b false)
+          a                                        ; remaining children all conflict -> just this child
+          (eo::ite (eo::eq a b)
+            a                                      ; feasible children agree on the residual
+            (str.in_re s (re.union c1 c2)))))     ; children disagree -> stuck
+        (str.in_re s (re.union c1 c2))))))           ; this feasible child not fully consumed -> stuck
+  )
+)
 
 ; program: $str_re_consume_rec
 ; args:
@@ -1794,85 +1864,6 @@
     (($str_re_consume_rec s1 (re.inter r1 r2) fuel)  ($str_re_consume_inter s1 (re.inter r1 r2) fuel))
     (($str_re_consume_rec s1 (re.union r1 r2) fuel)  ($str_re_consume_union s1 (re.union r1 r2) fuel))
     (($str_re_consume_rec s1 r1 fuel)       (str.in_re s1 r1))
-  )
-)
-
-; program: $str_re_consume_inter
-; args:
-; - s String: The string argument of the membership.
-; - r RegLan: An intersection (re.inter c1 ... re.all), each child in flat form.
-; - fuel String: Overapproximation fuel, forwarded to $str_re_consume_rec.
-; return: >
-;   false if consuming s in some child is a conflict; (str.in_re sr @re.empty) when
-;   every child fully consumes s down to the same residual sr; otherwise the
-;   membership is returned unchanged to signal that no consumption is possible.
-; note: >
-;   Implemented as a single right fold over the children, with no separate residual /
-;   accumulator argument. Each child's result must agree with the folded result of the
-;   remaining children, where "agree" means consuming to the same residual (tested by
-;   equating the two (str.in_re sr @re.empty) results). The last child is matched by the
-;   single-element pattern (re.inter c1), so the empty intersection is never reached.
-(program $str_re_consume_inter
-  ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
-  :signature (String RegLan String) Bool
-  (
-  (($str_re_consume_inter s (re.inter c1) fuel) ($str_re_consume_rec s c1 fuel))
-  (($str_re_consume_inter s (re.inter c1 c2) fuel)
-    (eo::define ((a ($str_re_consume_rec s c1 fuel)))
-    (eo::ite (eo::is_eq a false)
-      false                                          ; this child conflicts
-      (eo::ite (eo::eq ($str_membership_re a) @re.empty)
-        ; this child fully consumed; reconcile with the remaining children
-        (eo::define ((b ($str_re_consume_inter s c2 fuel)))
-        (eo::ite (eo::is_eq b false)
-          false
-          (eo::ite (eo::eq a b)
-            a                                      ; all children agree on the residual
-            (str.in_re s (re.inter c1 c2)))))     ; children disagree -> stuck
-        ; this child did not fully consume, so we cannot determine a residual from it.
-        ; The intersection is still false if any remaining child conflicts (s is then in
-        ; no superset of the intersection); otherwise we are stuck.
-        (eo::ite (eo::is_eq ($str_re_consume_inter s c2 fuel) false)
-          false
-          (str.in_re s (re.inter c1 c2)))))))
-  )
-)
-
-; program: $str_re_consume_union
-; args:
-; - s String: The string argument of the membership.
-; - r RegLan: A union (re.union c1 ... re.none), each child in flat form.
-; - fuel String: Overapproximation fuel, forwarded to $str_re_consume_rec.
-; return: >
-;   false if every child is a conflict; (str.in_re sr @re.empty) when every
-;   non-conflicting child fully consumes s down to the same residual sr; otherwise
-;   the membership is returned unchanged. Conflicting children are ignored.
-; note: >
-;   Implemented as a single right fold over the children (dual to
-;   $str_re_consume_inter): a conflicting head is skipped in favour of the folded
-;   result of the remaining children, and a feasible head must agree with that result
-;   (or the remaining children must all be conflicts, in which case the head's result
-;   stands). The last child is matched by the single-element pattern (re.union c1), so
-;   the empty union is never reached.
-(program $str_re_consume_union
-  ((s String) (c1 RegLan) (c2 RegLan :list) (fuel String))
-  :signature (String RegLan String) Bool
-  (
-  (($str_re_consume_union s (re.union c1) fuel)
-    ($str_re_consume_rec s c1 fuel))
-  (($str_re_consume_union s (re.union c1 c2) fuel)
-    (eo::define ((a ($str_re_consume_rec s c1 fuel)))
-    (eo::ite (eo::is_eq a false)
-      ($str_re_consume_union s c2 fuel)
-      (eo::ite (eo::eq ($str_membership_re a) @re.empty)
-        ; this child fully consumed; reconcile with the remaining children
-        (eo::define ((b ($str_re_consume_union s c2 fuel)))
-        (eo::ite (eo::is_eq b false)
-          a                                        ; remaining children all conflict -> just this child
-          (eo::ite (eo::eq a b)
-            a                                      ; feasible children agree on the residual
-            (str.in_re s (re.union c1 c2)))))     ; children disagree -> stuck
-        (str.in_re s (re.union c1 c2))))))           ; this feasible child not fully consumed -> stuck
   )
 )
 
