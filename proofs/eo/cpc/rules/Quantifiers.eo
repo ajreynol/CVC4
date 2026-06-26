@@ -2,7 +2,7 @@
 (include "../programs/Datatypes.eo")
 (include "../theories/Quantifiers.eo")
 
-(program $is_instantiation 
+(program $is_instantiation
   ((T Type) (xs @List :list) (ts @List :list) (t T) (s String))
   :signature (@List @List) Bool
   (
