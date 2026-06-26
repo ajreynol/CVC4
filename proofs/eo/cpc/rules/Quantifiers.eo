@@ -2,6 +2,16 @@
 (include "../programs/Datatypes.eo")
 (include "../theories/Quantifiers.eo")
 
+(program $is_instantiation 
+  ((T Type) (xs @List :list) (ts @List :list) (t T) (s String))
+  :signature (@List @List) Bool
+  (
+  (($is_instantiation @list.nil @list.nil) true)
+  (($is_instantiation (@list (eo::var s T) xs) (@list t ts))
+    (eo::requires (eo::typeof t) T ($is_instantiation xs ts)))
+  )
+)
+
 ; rule: instantiate
 ; implements: ProofRule::INSTANTIATE.
 ; premises:
@@ -12,6 +22,7 @@
 (declare-rule instantiate ((F Bool) (xs @List) (ts @List))
   :premises ((forall xs F))
   :args (ts)
+  :requires ((($is_instantiation xs ts) true))
   :conclusion ($substitute_simul F xs ts))
 
 ; program: $mk_skolems
