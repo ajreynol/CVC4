@@ -322,6 +322,7 @@ set(regress_0_tests
   regress0/bv/bug734.smt2
   regress0/bv/bv-abstr-bug2.smt2
   regress0/bv/bv-card-conflict.smt2
+  regress0/bv/bv-gauss-elim-urem-neg-rhs.smt2
   regress0/bv/bv-int-collapse1.smt2
   regress0/bv/bv-int-collapse2.smt2
   regress0/bv/bv-missing-dsl-rew.smt2
@@ -1530,6 +1531,8 @@ set(regress_0_tests
   regress0/proofs/dsl-cong-eval-cr.smt2
   regress0/proofs/dsl-no-eval.smt2
   regress0/proofs/dsl-rule-comp-types.smt2
+  regress0/proofs/dt-cons-eq-clash-qfdt.smt2
+  regress0/proofs/dt-cons-eq-clash-ufdt.smt2
   regress0/proofs/equal-eval-rw_340.smt2
   regress0/proofs/eval-rhs.smt2
   regress0/proofs/exists-shadow-simple.smt2
