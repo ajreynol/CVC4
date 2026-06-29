@@ -9,13 +9,13 @@
 (set-logic QF_S)
 (declare-const x String)
 (define-fun UNION () RegLan
-  (re.union (str.to_re "af-south-1") (str.to_re "us-east-1") (str.to_re "us-west-2")))
+  (re.union (str.to_re "qq-delta-1") (str.to_re "zn-alfa-1") (str.to_re "zn-brav-2")))
 (define-fun R1 () RegLan
-  (re.++ (str.to_re "arn:aws:s3:")
-         (re.inter UNION (re.++ (str.to_re "af") re.allchar (str.to_re "south-1")))
-         (str.to_re ":job")))
+  (re.++ (str.to_re "tag:svc:qx:")
+         (re.inter UNION (re.++ (str.to_re "qq") re.allchar (str.to_re "delta-1")))
+         (str.to_re ":tsk")))
 (define-fun R2 () RegLan
-  (re.++ (str.to_re "arn:aws:s3:") UNION (str.to_re ":job")))
+  (re.++ (str.to_re "tag:svc:qx:") UNION (str.to_re ":tsk")))
 (assert (str.in_re x R1))
 (assert (not (str.in_re x R2)))
 (check-sat)
