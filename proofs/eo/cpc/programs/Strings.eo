@@ -1197,8 +1197,11 @@
 ; is flattened, descending into re.* bodies and re.inter / re.union children
 ; (aslist = false). Every recursive call is on a strict subterm of the input,
 ; except the aslist true->false step on the same term, so termination holds by
-; the lexicographic measure (size of r, aslist). The (order) reversal is applied
-; non-recursively by $str_re_rev.
+; the lexicographic measure (size of r, aslist). Flattening and un-flattening
+; produce / consume content in forward order; the (order) reversal is factored out
+; into the shared helper $re_rev_rec, which recursively reverses the entire regular
+; expression (the order of every re.++ list) and is applied once by
+; $re_to_flat_form / $re_from_flat_form.
 
 ; program: $re_split_str_to_re
 ; args:
@@ -1218,39 +1221,100 @@
   )
 )
 
-; program: $re_flatten
+; note: >
+;   Forward declaration of $re_rev_comp, used by $re_rev_map below to recursively
+;   reverse the content of a single component.
+(program $re_rev_comp () :signature (RegLan) RegLan)
+
+; program: $re_rev_map
+; args:
+; - r RegLan: A re.++ list (in flat form).
+; return: >
+;   The result of recursively reversing the content of every component of r, with
+;   the list order of r itself preserved. Used by $re_rev_rec (which reverses the
+;   list order) and by $re_rev_comp (for re.* bodies and re.inter / re.union
+;   children).
+(program $re_rev_map
+  ((a RegLan) (b RegLan :list))
+  :signature (RegLan) RegLan
+  (
+  (($re_rev_map @re.empty)    @re.empty)
+  (($re_rev_map (re.++ a b))  (_ re.++ ($re_rev_comp a) ($re_rev_map b)))
+  )
+)
+
+; program: $re_rev_comp
+; args:
+; - c RegLan: A single component (in flat form).
+; return: >
+;   The component with its content recursively reversed: the body of a re.* and
+;   each child of a re.inter / re.union is reversed (order of its re.++ list and,
+;   recursively, the content of its components). Single-character str.to_re
+;   components and the re.all / re.none terminators are returned unchanged. As in
+;   $re_flatten, a bare re.all / re.none must be matched before the
+;   (re.inter c1 c2) / (re.union c1 c2) patterns, since it matches them as a
+;   singleton list.
+(program $re_rev_comp
+  ((body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
+  :signature (RegLan) RegLan
+  (
+  (($re_rev_comp re.all)           re.all)
+  (($re_rev_comp re.none)          re.none)
+  (($re_rev_comp (re.* body))      (re.* ($re_rev_map (eo::list_rev re.++ body))))
+  (($re_rev_comp (re.inter c1 c2)) (_ re.inter ($re_rev_map (eo::list_rev re.++ c1)) ($re_rev_comp c2)))
+  (($re_rev_comp (re.union c1 c2)) (_ re.union ($re_rev_map (eo::list_rev re.++ c1)) ($re_rev_comp c2)))
+  (($re_rev_comp c)                c)
+  )
+)
+
+; define: $re_rev_rec
 ; args:
 ; - rev Bool: Whether to reverse content.
+; - r RegLan: A re.++ list (in flat form).
+; return: >
+;   If rev is true, the result of recursively reversing r: the order of its
+;   top-level re.++ list and, recursively, the content of every re.* body and
+;   re.inter / re.union child. If rev is false, r is returned unchanged. This is
+;   the shared reversal that $re_to_flat_form / $re_from_flat_form factor out of
+;   $re_flatten / $re_unflatten. It is its own inverse: applying it twice restores
+;   the original term.
+(define $re_rev_rec ((rev Bool) (r RegLan))
+  (eo::ite rev ($re_rev_map (eo::list_rev re.++ r)) r))
+
+; program: $re_flatten
+; args:
 ; - aslist Bool: Whether r is treated as a re.++ list (true) or a component (false).
 ; - r RegLan: The regular expression to flatten.
-; return: The flat form of r.
+; return: >
+;   The flat form of r, with content in forward (non-reversed) order. The (order)
+;   reversal is applied separately, by $re_rev_rec in $re_to_flat_form.
 (program $re_flatten
-  ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String)
+  ((aslist Bool) (a RegLan) (b RegLan :list) (s String)
    (body RegLan) (c1 RegLan) (c2 RegLan :list) (c RegLan))
-  :signature (Bool Bool RegLan) RegLan
+  :signature (Bool RegLan) RegLan
   (
   ; list mode: map flattening over the re.++ list (head as component, tail as list)
-  (($re_flatten rev true @re.empty)        @re.empty)
+  (($re_flatten true @re.empty)        @re.empty)
   ; a str.to_re component is split into a concatenation of single-character
   ; str.to_re terms, spliced into the surrounding list. The split is done in
-  ; forward order; the (order) reversal is applied once, non-recursively, by the
-  ; enclosing $str_re_rev, so the single characters need no per-string reversal.
-  (($re_flatten rev true (re.++ (str.to_re s) b))
-    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) ($re_flatten rev true b)))
-  (($re_flatten rev true (re.++ a b))      (_ re.++ ($re_flatten rev false a) ($re_flatten rev true b)))
-  (($re_flatten rev true (str.to_re s))    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) @re.empty)) ; bare str.to_re
-  (($re_flatten rev true c)                (_ re.++ ($re_flatten rev false c) @re.empty)) ; bare component -> singleton list
+  ; forward order; the (order) reversal is applied once, non-recursively, by
+  ; $re_rev_rec, so the single characters need no per-string reversal.
+  (($re_flatten true (re.++ (str.to_re s) b))
+    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) ($re_flatten true b)))
+  (($re_flatten true (re.++ a b))      (_ re.++ ($re_flatten false a) ($re_flatten true b)))
+  (($re_flatten true (str.to_re s))    ($re_split_str_to_re ($str_flatten ($str_nary_intro s)) @re.empty)) ; bare str.to_re
+  (($re_flatten true c)                (_ re.++ ($re_flatten false c) @re.empty)) ; bare component -> singleton list
   ; component mode (str.to_re is handled in list mode above)
   ; A bare re.all / re.none terminator must be returned as-is: it matches the
   ; (re.inter c1 c2) / (re.union c1 c2) patterns below as a singleton list, so without
   ; re.all and re.none only occur as the nil terminator of re.inter and re.union,
   ; we return these unchanged.
-  (($re_flatten rev false re.all)          re.all)
-  (($re_flatten rev false re.none)         re.none)
-  (($re_flatten rev false (re.* body))     (re.* ($str_re_rev rev ($re_flatten rev true body))))
-  (($re_flatten rev false (re.inter c1 c2)) (_ re.inter ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
-  (($re_flatten rev false (re.union c1 c2)) (_ re.union ($str_re_rev rev ($re_flatten rev true c1)) ($re_flatten rev false c2)))
-  (($re_flatten rev false c)               c)
+  (($re_flatten false re.all)          re.all)
+  (($re_flatten false re.none)         re.none)
+  (($re_flatten false (re.* body))     (re.* ($re_flatten true body)))
+  (($re_flatten false (re.inter c1 c2)) (_ re.inter ($re_flatten true c1) ($re_flatten false c2)))
+  (($re_flatten false (re.union c1 c2)) (_ re.union ($re_flatten true c1) ($re_flatten false c2)))
+  (($re_flatten false c)               c)
   )
 )
 
@@ -1261,62 +1325,64 @@
 ; return: >
 ;   Converts a regular expression term to "flat form": flattens the strings
 ;   occurring as (str.to_re s) children, and recursively flattens the body of every
-;   re.* and the children of every re.inter / re.union. The top-level component
-;   order is reversed once (non-recursively) by $str_re_rev.
+;   re.* and the children of every re.inter / re.union. The content order is
+;   reversed (recursively, at every re.++ list) by $re_rev_rec when rev is true.
 (define $re_to_flat_form ((r RegLan) (rev Bool))
-  ($str_re_rev rev ($re_flatten rev true r)))
+  ($re_rev_rec rev ($re_flatten true r)))
 
 ; note: >
 ;   Forward declaration of $re_unflatten_str, used by $re_unflatten below to merge
 ;   a maximal run of single-character str.to_re components back into one str.to_re.
-(program $re_unflatten_str () :signature (Bool String RegLan) RegLan)
+(program $re_unflatten_str () :signature (String RegLan) RegLan)
 
 ; program: $re_unflatten
 ; args:
-; - rev Bool: Whether to reverse content.
 ; - aslist Bool: Whether r is treated as a re.++ list (true) or a component (false).
-; - r RegLan: The regular expression (in flat form) to un-flatten.
-; return: The dual of $re_flatten.
+; - r RegLan: The regular expression (in forward-order flat form) to un-flatten.
+; return: >
+;   The dual of $re_flatten. The (order) reversal is applied separately, by
+;   $re_rev_rec in $re_from_flat_form (which reverses its input before
+;   un-flattening), so this program operates on forward-order content.
 (program $re_unflatten
-  ((rev Bool) (aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan)
+  ((aslist Bool) (a RegLan) (b RegLan :list) (s String) (body RegLan)
    (c1 RegLan) (c2 RegLan :list) (c RegLan))
-  :signature (Bool Bool RegLan) RegLan
+  :signature (Bool RegLan) RegLan
   (
   ; list mode: a maximal run of (single-character) str.to_re components is merged
   ; back into one str.to_re (collecting their characters); other components are
   ; un-flattened individually.
-  (($re_unflatten rev true (re.++ (str.to_re s) b))  ($re_unflatten_str rev ($str_nary_intro s) b))
-  (($re_unflatten rev true (re.++ a b))      (_ re.++ ($re_unflatten rev false a) ($re_unflatten rev true b)))
-  (($re_unflatten rev true c)                c) ; @re.empty terminator
+  (($re_unflatten true (re.++ (str.to_re s) b))  ($re_unflatten_str ($str_nary_intro s) b))
+  (($re_unflatten true (re.++ a b))      (_ re.++ ($re_unflatten false a) ($re_unflatten true b)))
+  (($re_unflatten true c)                c) ; @re.empty terminator
   ; component mode (str.to_re is handled in list mode above)
-  (($re_unflatten rev false (re.* body))     (re.* ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true body)))))
-  (($re_unflatten rev false (re.inter c1 c2))
-    (_ re.inter ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
-  (($re_unflatten rev false (re.union c1 c2))
-    (_ re.union ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true c1))) ($re_unflatten rev false c2)))
-  (($re_unflatten rev false c)               c)
+  (($re_unflatten false (re.* body))     (re.* ($re_nary_elim ($re_unflatten true body))))
+  (($re_unflatten false (re.inter c1 c2))
+    (_ re.inter ($re_nary_elim ($re_unflatten true c1)) ($re_unflatten false c2)))
+  (($re_unflatten false (re.union c1 c2))
+    (_ re.union ($re_nary_elim ($re_unflatten true c1)) ($re_unflatten false c2)))
+  (($re_unflatten false c)               c)
   )
 )
 
 ; program: $re_unflatten_str
 ; args:
-; - rev Bool: Whether to reverse content.
 ; - acc String: The accumulated string (a str.++ list of single characters, in
 ;   flat-form / list order) for the current run of str.to_re components.
 ; - r RegLan: The remaining re.++ list to process.
 ; return: >
 ;   Collects a maximal run of (str.to_re ...) components from the head of r,
 ;   concatenating their strings into acc, then emits a single un-flattened
-;   (str.to_re ...) (applying $str_from_flat_form, which performs the per-string
-;   reversal and collects adjacent constants) followed by the un-flattening of the
-;   remainder of r.
-(program $re_unflatten_str ((rev Bool) (acc String) (s String) (b RegLan :list))
-  :signature (Bool String RegLan) RegLan
+;   (str.to_re ...) (applying $str_from_flat_form, which collects adjacent
+;   constants) followed by the un-flattening of the remainder of r. The content is
+;   in forward order (any reversal was already undone by $re_rev_rec), so no
+;   per-string reversal is applied here.
+(program $re_unflatten_str ((acc String) (s String) (b RegLan :list))
+  :signature (String RegLan) RegLan
   (
-    (($re_unflatten_str rev acc (re.++ (str.to_re s) b))
-       ($re_unflatten_str rev ($str_concat acc ($str_nary_intro s)) b))
-    (($re_unflatten_str rev acc b)
-       (_ re.++ (str.to_re ($str_from_flat_form acc rev)) ($re_unflatten rev true b)))
+    (($re_unflatten_str acc (re.++ (str.to_re s) b))
+       ($re_unflatten_str ($str_concat acc ($str_nary_intro s)) b))
+    (($re_unflatten_str acc b)
+       (_ re.++ (str.to_re ($str_from_flat_form acc false)) ($re_unflatten true b)))
   )
 )
 
@@ -1327,9 +1393,11 @@
 ; return: >
 ;   The dual of $re_to_flat_form: converts r (flat form) back to the form used
 ;   elsewhere, recursively un-flattening re.* bodies and re.inter / re.union
-;   children.
+;   children. When rev is true, the content order is first undone (recursively) by
+;   $re_rev_rec, which is its own inverse, reducing un-flattening to the
+;   forward-order case.
 (define $re_from_flat_form ((r RegLan) (rev Bool))
-  ($re_nary_elim ($str_re_rev rev ($re_unflatten rev true r))))
+  ($re_nary_elim ($re_unflatten true ($re_rev_rec rev r))))
 
 ; note: >
 ;   Forward declaration of $str_re_includes_rec below. This is the flat-form
