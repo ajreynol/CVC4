@@ -1226,7 +1226,7 @@
 ;   reverse the content of a single component.
 (program $re_rev_comp () :signature (RegLan) RegLan)
 
-; program: $re_rev_map
+; program: $re_rev_map_rev
 ; args:
 ; - r RegLan: A re.++ list (in flat form).
 ; return: >
@@ -1234,12 +1234,12 @@
 ;   the list order of r itself preserved. Used by $re_rev_rec (which reverses the
 ;   list order) and by $re_rev_comp (for re.* bodies and re.inter / re.union
 ;   children).
-(program $re_rev_map
-  ((a RegLan) (b RegLan :list))
-  :signature (RegLan) RegLan
+(program $re_rev_map_rev
+  ((a RegLan) (b RegLan :list) (acc RegLan :list))
+  :signature (RegLan RegLan) RegLan
   (
-  (($re_rev_map @re.empty)    @re.empty)
-  (($re_rev_map (re.++ a b))  (_ re.++ ($re_rev_comp a) ($re_rev_map b)))
+  (($re_rev_map_rev @re.empty acc)    acc)
+  (($re_rev_map_rev (re.++ a b) acc)  ($re_rev_map_rev b (re.++ ($re_rev_comp a) acc)))
   )
 )
 
@@ -1260,9 +1260,9 @@
   (
   (($re_rev_comp re.all)           re.all)
   (($re_rev_comp re.none)          re.none)
-  (($re_rev_comp (re.* body))      (re.* ($re_rev_map (eo::list_rev re.++ body))))
-  (($re_rev_comp (re.inter c1 c2)) (_ re.inter ($re_rev_map (eo::list_rev re.++ c1)) ($re_rev_comp c2)))
-  (($re_rev_comp (re.union c1 c2)) (_ re.union ($re_rev_map (eo::list_rev re.++ c1)) ($re_rev_comp c2)))
+  (($re_rev_comp (re.* body))      (re.* ($re_rev_map_rev body @re.empty)))
+  (($re_rev_comp (re.inter c1 c2)) (_ re.inter ($re_rev_map_rev c1 @re.empty) ($re_rev_comp c2)))
+  (($re_rev_comp (re.union c1 c2)) (_ re.union ($re_rev_map_rev c1 @re.empty) ($re_rev_comp c2)))
   (($re_rev_comp c)                c)
   )
 )
@@ -1279,7 +1279,7 @@
 ;   $re_flatten / $re_unflatten. It is its own inverse: applying it twice restores
 ;   the original term.
 (define $re_rev_rec ((rev Bool) (r RegLan))
-  (eo::ite rev ($re_rev_map (eo::list_rev re.++ r)) r))
+  (eo::ite rev ($re_rev_map_rev r @re.empty) r))
 
 ; program: $re_flatten
 ; args:
