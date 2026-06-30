@@ -13,6 +13,7 @@
 #include "decision/justification_strategy.h"
 
 #include "expr/node_algorithm.h"
+#include "options/main_options.h"
 #include "prop/skolem_def_manager.h"
 
 using namespace cvc5::internal::kind;
@@ -28,10 +29,15 @@ JustificationStrategy::JustificationStrategy(Env& env,
       d_assertions(
           userContext(),
           context(),
+          options().decision.jhRlvOrder,
           options()
-              .decision.jhRlvOrder),  // assertions are user-context dependent
+              .decision.jhRandom),  // assertions are user-context dependent
       d_localAssertions(
-          context(), context()),  // local assertions are SAT-context dependent
+          context(),
+          context(),
+          false,
+          options()
+              .decision.jhRandom),  // local assertions are SAT-context dependent
       d_jcache(context(), ss, cs),
       d_stack(context()),
       d_lastDecisionLit(context()),
@@ -39,6 +45,8 @@ JustificationStrategy::JustificationStrategy(Env& env,
       d_useRlvOrder(options().decision.jhRlvOrder),
       d_decisionStopOnly(options().decision.decisionMode
                          == options::DecisionMode::STOPONLY),
+      d_jhRandom(options().decision.jhRandom),
+      d_seed(options().driver.seed),
       d_jhSkMode(options().decision.jhSkolemMode),
       d_jhSkRlvMode(options().decision.jhSkolemRlvMode),
       d_stats(statisticsRegistry())
@@ -232,6 +240,19 @@ JustifyNode JustificationStrategy::getNextJustifyNode(
   Assert(ck != Kind::NOT);
   // get the next child index to process
   size_t i = ji->getNextChildIndex();
+  // For the randomized heuristic, when processing a symmetric connective
+  // (AND/OR), explore its children in a random order. The children of other
+  // connectives have positional meaning, so their order is left unchanged.
+  // Note i is the logical child index that drives the control flow below; the
+  // actual child position is obtained via ji->mapChildIndex(i) when accessing
+  // curr. The permutation is keyed deterministically on the node (via its
+  // seed), so it is stable across backtracking even though it is stored in a
+  // context-independent member that may be overwritten when the justify info
+  // is reused for another node.
+  if (d_jhRandom && (ck == Kind::AND || ck == Kind::OR))
+  {
+    ji->ensureChildPermutation(curr.getNumChildren(), nodeSeed(curr));
+  }
   Trace("jh-debug") << "getNextJustifyNode " << curr << " / " << currPol
                     << ", index = " << i
                     << ", last child value = " << lastChildVal << std::endl;
@@ -335,14 +356,26 @@ JustifyNode JustificationStrategy::getNextJustifyNode(
         value = val1;
       }
       // if first branch is already wrong or second branch is already correct,
-      // try to make condition false. Note that we arbitrarily choose true here
-      // if both children are unknown. If both children have the same value
-      // and that value is not unknown, desiredVal will be ignored, since
-      // value is set above.
-      desiredVal =
-          (val1 == invertValue(currDesiredVal) || val2 == currDesiredVal)
-              ? SAT_VALUE_FALSE
-              : SAT_VALUE_TRUE;
+      // try to make condition false. Note that if both children are unknown the
+      // choice is arbitrary: we default to true, but randomize it when using
+      // the randomized heuristic. If both children have the same value and that
+      // value is not unknown, desiredVal will be ignored, since value is set
+      // above.
+      if (val1 == invertValue(currDesiredVal) || val2 == currDesiredVal)
+      {
+        desiredVal = SAT_VALUE_FALSE;
+      }
+      else if (d_jhRandom && val1 == SAT_VALUE_UNKNOWN
+               && val2 == SAT_VALUE_UNKNOWN)
+      {
+        // The choice of condition polarity is arbitrary here (both branches
+        // are unknown). Randomize it deterministically based on the node.
+        desiredVal = randomChoice(curr, 0) ? SAT_VALUE_TRUE : SAT_VALUE_FALSE;
+      }
+      else
+      {
+        desiredVal = SAT_VALUE_TRUE;
+      }
     }
     else if (i == 1)
     {
@@ -372,8 +405,11 @@ JustifyNode JustificationStrategy::getNextJustifyNode(
       SatValue val1 = d_jcache.lookupValue(curr[1]);
       if (val1 == SAT_VALUE_UNKNOWN)
       {
-        // not forced, arbitrarily choose true
-        desiredVal = SAT_VALUE_TRUE;
+        // not forced, the choice is arbitrary; choose true, or randomize it
+        // deterministically based on the node when using the randomized
+        // heuristic
+        desiredVal = (d_jhRandom && !randomChoice(curr, 1)) ? SAT_VALUE_FALSE
+                                                            : SAT_VALUE_TRUE;
       }
       else
       {
@@ -433,16 +469,25 @@ JustifyNode JustificationStrategy::getNextJustifyNode(
     // return null, indicating there is nothing left to do for current
     return JustifyNode(TNode::null(), SAT_VALUE_UNKNOWN);
   }
-  Trace("jh-debug") << "getJustifyNode: return " << curr[i]
-                    << " with desired value " << desiredVal << std::endl;
   // The next child should be a valid argument in curr. Otherwise, we did not
   // recognize when its value could be inferred above.
   Assert(i < curr.getNumChildren()) << curr.getKind() << " had no value";
+  // Map the logical child index to the actual child position. This is the
+  // identity unless we are randomizing the order of children of curr, which we
+  // only do for symmetric connectives (AND/OR). We must not apply the
+  // permutation for other connectives, both because their children have
+  // positional meaning and because a stale permutation (which is not restored
+  // on backtracking) may be present for this justify info.
+  size_t childIndex =
+      (d_jhRandom && (ck == Kind::AND || ck == Kind::OR)) ? ji->mapChildIndex(i)
+                                                          : i;
+  Trace("jh-debug") << "getJustifyNode: return " << curr[childIndex]
+                    << " with desired value " << desiredVal << std::endl;
   // should set a desired value
   Assert(desiredVal != SAT_VALUE_UNKNOWN)
       << "Child " << i << " of " << curr.getKind() << " had no desired value";
   // return the justify node
-  return JustifyNode(curr[i], desiredVal);
+  return JustifyNode(curr[childIndex], desiredVal);
 }
 
 bool JustificationStrategy::isDone() { return !refreshCurrentAssertion(); }
@@ -585,6 +630,25 @@ bool JustificationStrategy::refreshCurrentAssertionFromList(bool local)
 bool JustificationStrategy::isTheoryLiteral(TNode n)
 {
   return expr::isTheoryAtom(n.getKind() == Kind::NOT ? n[0] : n);
+}
+
+uint64_t JustificationStrategy::nodeSeed(TNode n) const
+{
+  // mix the random seed with the node identifier (splitmix64-style finalizer)
+  uint64_t x = d_seed + static_cast<uint64_t>(n.getId()) * 0x9e3779b97f4a7c15ULL;
+  x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+  x = x ^ (x >> 31);
+  return x;
+}
+
+bool JustificationStrategy::randomChoice(TNode n, uint64_t salt) const
+{
+  // deterministic pseudo-random bit derived from the node's seed and salt
+  uint64_t x = nodeSeed(n) ^ (salt * 0x9e3779b97f4a7c15ULL);
+  x = (x ^ (x >> 33)) * 0xff51afd7ed558ccdULL;
+  x = x ^ (x >> 33);
+  return (x & 1u) != 0;
 }
 
 }  // namespace decision

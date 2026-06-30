@@ -60,10 +60,14 @@ class AssertionList
    * @param dyn Whether to use a dynamic ordering of the assertions. If this
    * flag is true, then getNextAssertion will return the most important next
    * assertion to consider based on heuristics in response to notifyStatus.
+   * @param rand Whether to use a randomized ordering of the assertions. If this
+   * flag is true, then getNextAssertion will return assertions in a random
+   * order. This takes precedence over dyn.
    */
   AssertionList(context::Context* ac,
                 context::Context* ic,
-                bool useDyn = false);
+                bool useDyn = false,
+                bool useRand = false);
   virtual ~AssertionList() {}
   /** Presolve, which clears the dynamic assertion order */
   void presolve();
@@ -75,6 +79,11 @@ class AssertionList
   TNode getNextAssertion();
   /** Get the number of assertions */
   size_t size() const;
+  /**
+   * Get the next assertion using a randomized order, and increment
+   * d_assertionIndex. Used when d_usingRandom is true.
+   */
+  TNode getNextAssertionRandom();
   /**
    * Notify status, which indicates the status of the assertion n, where n
    * is the assertion last returned by getNextAssertion above (independent of
@@ -97,6 +106,17 @@ class AssertionList
   std::unordered_set<TNode> d_dlistSet;
   /** The index of the next assertion to satify */
   context::CDO<size_t> d_dindex;
+  // --------------------------- randomized assertions
+  /** are we using a randomized ordering? */
+  bool d_usingRandom;
+  /**
+   * A permutation of the indices [0, d_assertions.size()) giving the random
+   * order in which assertions are visited. This is extended lazily as
+   * assertions are added by inserting each new index at a random position
+   * within the not-yet-visited region (see getNextAssertionRandom). We index
+   * into this via d_assertionIndex when d_usingRandom is true.
+   */
+  std::vector<size_t> d_rlist;
 };
 
 }  // namespace decision

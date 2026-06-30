@@ -201,6 +201,21 @@ class JustificationStrategy : public DecisionEngine
   JustifyNode getNextJustifyNode(JustifyInfo* ji, prop::SatValue& lastChildVal);
   /** Is n a theory literal? */
   static bool isTheoryLiteral(TNode n);
+  /**
+   * Derive a deterministic seed for the node n, combining the random seed with
+   * the identifier of n. Used by the randomized heuristic so that the random
+   * choices made for n (the order of its children, the polarity of arbitrary
+   * choices) are a deterministic function of n. This is required for
+   * correctness, since these choices must be stable across backtracking (see
+   * JustifyInfo::ensureChildPermutation), and additionally makes the randomized
+   * heuristic fully reproducible for a given seed.
+   */
+  uint64_t nodeSeed(TNode n) const;
+  /**
+   * Make a deterministic pseudo-random Boolean choice for node n. The salt
+   * distinguishes independent choices for the same node.
+   */
+  bool randomChoice(TNode n, uint64_t salt) const;
   /** The assertions, which are user-context dependent. */
   AssertionList d_assertions;
   /** The local assertions, which are SAT-context depdendent */
@@ -222,6 +237,10 @@ class JustificationStrategy : public DecisionEngine
   bool d_useRlvOrder;
   /** using stop only */
   bool d_decisionStopOnly;
+  /** using randomized order */
+  bool d_jhRandom;
+  /** the random seed, used by the randomized heuristic */
+  uint64_t d_seed;
   /** skolem mode */
   options::JutificationSkolemMode d_jhSkMode;
   /** skolem relevancy mode */

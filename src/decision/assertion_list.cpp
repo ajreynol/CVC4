@@ -12,6 +12,8 @@
 
 #include "decision/assertion_list.h"
 
+#include "util/random.h"
+
 namespace cvc5::internal {
 namespace decision {
 
@@ -35,11 +37,13 @@ std::ostream& operator<<(std::ostream& out, DecisionStatus s)
 
 AssertionList::AssertionList(context::Context* ac,
                              context::Context* ic,
-                             bool useDyn)
+                             bool useDyn,
+                             bool useRand)
     : d_assertions(ac),
       d_assertionIndex(ic),
       d_usingDynamic(useDyn),
-      d_dindex(ic)
+      d_dindex(ic),
+      d_usingRandom(useRand)
 {
 }
 
@@ -49,6 +53,7 @@ void AssertionList::presolve()
   d_assertionIndex = 0;
   d_dlist.clear();
   d_dindex = 0;
+  d_rlist.clear();
 }
 
 void AssertionList::addAssertion(TNode n) { d_assertions.push_back(n); }
@@ -56,6 +61,11 @@ void AssertionList::addAssertion(TNode n) { d_assertions.push_back(n); }
 TNode AssertionList::getNextAssertion()
 {
   size_t fromIndex;
+  if (d_usingRandom)
+  {
+    // randomized ordering takes precedence over the dynamic ordering
+    return getNextAssertionRandom();
+  }
   if (d_usingDynamic)
   {
     // is a dynamic assertion ready?
@@ -81,6 +91,51 @@ TNode AssertionList::getNextAssertion()
                      << std::endl;
   return d_assertions[fromIndex];
 }
+TNode AssertionList::getNextAssertionRandom()
+{
+  size_t asize = d_assertions.size();
+  // The current position in the (random) traversal. Indices in d_rlist before
+  // this position have already been returned in the current context.
+  size_t fromIndex = d_assertionIndex.get();
+  // Reconcile the permutation with the current set of assertions. If
+  // assertions were removed (e.g. due to a user-context pop), the stored
+  // permutation may reference stale indices, so we rebuild it from scratch. In
+  // this case we also reset the traversal position, since the permutation no
+  // longer corresponds to what we have already visited.
+  if (d_rlist.size() > asize)
+  {
+    d_rlist.clear();
+    fromIndex = 0;
+    d_assertionIndex = 0;
+  }
+  // Extend the permutation to cover any newly added assertions. Each new index
+  // is inserted at a uniformly random position within the *not-yet-visited*
+  // region [fromIndex, size]. Restricting to the unvisited region is crucial
+  // for correctness: assertions may be added during search (e.g. lemmas or
+  // skolem definitions), and inserting one before the current position would
+  // cause it to be silently skipped, leaving an assertion unsatisfied.
+  // Inserting each new index uniformly within the unvisited suffix yields a
+  // uniformly random order of the unvisited assertions.
+  while (d_rlist.size() < asize)
+  {
+    size_t newIndex = d_rlist.size();
+    size_t lb = fromIndex < newIndex ? fromIndex : newIndex;
+    size_t pos = Random::getRandom().pick<size_t>(lb, newIndex);
+    d_rlist.insert(d_rlist.begin() + pos, newIndex);
+  }
+  Assert(fromIndex <= asize);
+  if (fromIndex == asize)
+  {
+    return Node::null();
+  }
+  // increment for the next iteration
+  d_assertionIndex = d_assertionIndex + 1;
+  TNode ret = d_assertions[d_rlist[fromIndex]];
+  Trace("jh-status") << "Assertion " << ret.getId() << " from random list"
+                     << std::endl;
+  return ret;
+}
+
 size_t AssertionList::size() const { return d_assertions.size(); }
 
 void AssertionList::notifyStatus(TNode n, DecisionStatus s)
