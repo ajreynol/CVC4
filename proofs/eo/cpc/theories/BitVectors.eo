@@ -207,4 +207,5 @@
   :right-assoc-nil @bv_empty)
 
 ; symbolic constant
-(declare-parameterized-const @bv ((value Int :opaque) (w Int :opaque)) (BitVec w))
+(declare-parameterized-const @bv ((value Int :opaque) (w Int :opaque)) 
+  (eo::requires ($is_numeral w) true (BitVec w)))
