@@ -32,12 +32,11 @@ JustificationStrategy::JustificationStrategy(Env& env,
           options().decision.jhRlvOrder,
           options()
               .decision.jhRandom),  // assertions are user-context dependent
-      d_localAssertions(
-          context(),
-          context(),
-          false,
-          options()
-              .decision.jhRandom),  // local assertions are SAT-context dependent
+      d_localAssertions(context(),
+                        context(),
+                        false,
+                        options().decision.jhRandom),  // local assertions are
+                                                       // SAT-context dependent
       d_jcache(context(), ss, cs),
       d_stack(context()),
       d_lastDecisionLit(context()),
@@ -478,9 +477,9 @@ JustifyNode JustificationStrategy::getNextJustifyNode(
   // permutation for other connectives, both because their children have
   // positional meaning and because a stale permutation (which is not restored
   // on backtracking) may be present for this justify info.
-  size_t childIndex =
-      (d_jhRandom && (ck == Kind::AND || ck == Kind::OR)) ? ji->mapChildIndex(i)
-                                                          : i;
+  size_t childIndex = (d_jhRandom && (ck == Kind::AND || ck == Kind::OR))
+                          ? ji->mapChildIndex(i)
+                          : i;
   Trace("jh-debug") << "getJustifyNode: return " << curr[childIndex]
                     << " with desired value " << desiredVal << std::endl;
   // should set a desired value
@@ -635,7 +634,8 @@ bool JustificationStrategy::isTheoryLiteral(TNode n)
 uint64_t JustificationStrategy::nodeSeed(TNode n) const
 {
   // mix the random seed with the node identifier (splitmix64-style finalizer)
-  uint64_t x = d_seed + static_cast<uint64_t>(n.getId()) * 0x9e3779b97f4a7c15ULL;
+  uint64_t x =
+      d_seed + static_cast<uint64_t>(n.getId()) * 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
   x = x ^ (x >> 31);
